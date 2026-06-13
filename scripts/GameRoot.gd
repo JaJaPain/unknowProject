@@ -1,6 +1,7 @@
 extends Node3D
 
 signal system_changed(system_id: String, arrival_gate_id: String)
+signal startup_load_completed(save_loaded: bool)
 
 const SYSTEM_SCENES: Dictionary = {
 	"start_system": preload("res://scenes/systems/system_start.tscn"),
@@ -22,12 +23,16 @@ var jump_request_pending: bool = false
 var arrival_cooldown_until_msec: int = 0
 var system_states: Dictionary = {}
 var last_arrival_gate_id: String = ""
+var startup_save_loaded: bool = false
+var startup_load_finished: bool = false
 
 func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--services-smoke-test" in OS.get_cmdline_user_args():
+	if "--core-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_core_smoke_test")
+	elif "--services-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_services_smoke_test")
 	elif "--mission-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_smoke_test")
@@ -260,6 +265,9 @@ func save_game() -> bool:
 	file.store_string(JSON.stringify(save_data))
 	return true
 
+func request_autosave() -> bool:
+	return save_game()
+
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
 		return false
@@ -279,7 +287,9 @@ func delete_savegame() -> void:
 
 func _load_startup_save() -> void:
 	await get_tree().process_frame
-	await load_game()
+	startup_save_loaded = await load_game()
+	startup_load_finished = true
+	startup_load_completed.emit(startup_save_loaded)
 
 func _is_valid_save_data(data: Variant) -> bool:
 	if not data is Dictionary:
@@ -307,6 +317,8 @@ func _apply_save_data(data: Dictionary) -> void:
 	var ui := GlobalState.get_ui_manager()
 	if ui:
 		ui.call_deferred("refresh_overview")
+		if ui.has_method("refresh_restored_state"):
+			ui.call_deferred("refresh_restored_state")
 
 func _load_system_without_transition(system_id: String) -> void:
 	var packed_system := SYSTEM_SCENES.get(system_id) as PackedScene
@@ -422,12 +434,26 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Out-of-range jump was not rejected.")
 		return
 	_position_player_for_gate_test(outbound_gate)
+	player.rotate_y(PI)
+	if get_jump_block_reason(outbound_gate) != "Align the ship with the jumpgate.":
+		_fail_jump_smoke_test("Misaligned jump was not rejected.")
+		return
+	_position_player_for_gate_test(outbound_gate)
 	if get_jump_block_reason(outbound_gate) != "" or not request_gate_jump(outbound_gate):
 		_fail_jump_smoke_test("Could not request outbound jump.")
+		return
+	await get_tree().process_frame
+	if not transition_in_progress \
+			or player.is_physics_processing() \
+			or player.is_processing_unhandled_input():
+		_fail_jump_smoke_test("Player controls were not locked during the jump transition.")
 		return
 	await system_changed
 	if GlobalState.current_system_id != "test_system":
 		_fail_jump_smoke_test("Outbound jump loaded the wrong system.")
+		return
+	if not player.is_physics_processing() or not player.is_processing_unhandled_input():
+		_fail_jump_smoke_test("Player controls were not restored after arrival.")
 		return
 	if not is_equal_approx(player.get("health"), starting_health) or not is_equal_approx(player.get("current_shield"), starting_shield):
 		_fail_jump_smoke_test("Player health or shield changed during travel.")
@@ -451,8 +477,11 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Camera pivot did not follow the player across the system change.")
 		return
 
-	arrival_cooldown_until_msec = 0
 	_position_player_for_gate_test(return_gate)
+	if get_jump_block_reason(return_gate) != "Gate drive is recalibrating after arrival.":
+		_fail_jump_smoke_test("Arrival cooldown did not prevent an immediate return jump.")
+		return
+	arrival_cooldown_until_msec = 0
 	if not request_gate_jump(return_gate):
 		_fail_jump_smoke_test("Could not request return jump.")
 		return
@@ -474,6 +503,86 @@ func _run_jump_smoke_test() -> void:
 			return
 
 	print("[JumpSmokeTest] PASS: two-way travel and player runtime state verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _run_core_smoke_test() -> void:
+	await get_tree().process_frame
+	var ui := GlobalState.get_ui_manager()
+	var system_root := get_active_system_root()
+	if not ui or not system_root or not player or player.destroyed:
+		_fail_core_smoke_test("Playable scene references were unavailable.")
+		return
+
+	GlobalState.paused = false
+	player.is_docked = false
+	player.nav_mode = "MANUAL"
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	var initial_position := player.global_position
+	player.double_click_move(initial_position + Vector3(0.0, 0.0, -80.0))
+	GlobalState.paused = true
+	player.call("_physics_process", 0.25)
+	if player.global_position.distance_to(initial_position) > 0.01 \
+			or not is_equal_approx(player.current_speed, 0.0):
+		_fail_core_smoke_test("Pause did not stop player movement.")
+		return
+	GlobalState.paused = false
+	player.call("_physics_process", 0.25)
+	if player.global_position.distance_to(initial_position) <= 0.01 \
+			or player.current_speed <= 0.0:
+		_fail_core_smoke_test("Manual fly-to movement did not resume after pause.")
+		return
+
+	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
+	if not camera:
+		_fail_core_smoke_test("Player camera was unavailable.")
+		return
+	var original_zoom := camera.position.z
+	var zoom_event := InputEventMouseButton.new()
+	zoom_event.button_index = MOUSE_BUTTON_WHEEL_UP
+	zoom_event.pressed = true
+	player.call("_unhandled_input", zoom_event)
+	if camera.position.z >= original_zoom:
+		_fail_core_smoke_test("Camera zoom input did not respond.")
+		return
+
+	var station := GlobalState.get_primary_station()
+	if not station:
+		_fail_core_smoke_test("Primary station was unavailable for targeting.")
+		return
+	ui.overview_collapsed = false
+	ui.call("update_overview_list", [station])
+	await get_tree().process_frame
+	var target_button: Button = null
+	for child in ui.overview_list.get_children():
+		if child is Button:
+			target_button = child
+			break
+	if not target_button:
+		_fail_core_smoke_test("Overview did not create a target row.")
+		return
+	target_button.emit_signal("pressed")
+	if GlobalState.active_target != station:
+		_fail_core_smoke_test("Overview row did not select the intended target.")
+		return
+
+	var approach_event := InputEventAction.new()
+	approach_event.action = "override_approach"
+	approach_event.pressed = true
+	player.call("_unhandled_input", approach_event)
+	if player.nav_mode != "APPROACH":
+		_fail_core_smoke_test("Approach override did not engage.")
+		return
+	var orbit_event := InputEventAction.new()
+	orbit_event.action = "override_orbit"
+	orbit_event.pressed = true
+	player.call("_unhandled_input", orbit_event)
+	if player.nav_mode != "ORBIT":
+		_fail_core_smoke_test("Orbit override did not replace approach mode.")
+		return
+
+	print("[CoreSmokeTest] PASS: startup, pause, movement, camera, targeting, and navigation overrides verified.")
 	delete_savegame()
 	get_tree().quit(0)
 
@@ -523,11 +632,23 @@ func _run_dock_smoke_test() -> void:
 			return
 
 		var ui := GlobalState.get_ui_manager()
-		if ui and ui.has_method("undock_player"):
+		if not ui or not ui.dock_panel.visible:
+			_fail_dock_smoke_test("Dock UI did not open for '%s'." % station.name)
+			return
+		await get_tree().process_frame
+		if not FileAccess.file_exists(SAVE_PATH):
+			_fail_dock_smoke_test("Docking at '%s' did not create an autosave." % station.name)
+			return
+		if ui.has_method("undock_player"):
 			ui.undock_player()
 		await get_tree().process_frame
+		if player.is_docked \
+				or player.nav_mode != "MANUAL" \
+				or ui.dock_panel.visible:
+			_fail_dock_smoke_test("Undocking did not restore flight state for '%s'." % station.name)
+			return
 
-	print("[DockSmokeTest] PASS: all active-system dockables completed approach and docking.")
+	print("[DockSmokeTest] PASS: docking, dock autosave, UI, and undocking verified for all active-system dockables.")
 	delete_savegame()
 	get_tree().quit(0)
 
@@ -1257,6 +1378,11 @@ func _fail_restart_smoke_test(message: String) -> void:
 
 func _fail_dock_smoke_test(message: String) -> void:
 	push_error("[DockSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
+
+func _fail_core_smoke_test(message: String) -> void:
+	push_error("[CoreSmokeTest] FAIL: " + message)
 	delete_savegame()
 	get_tree().quit(1)
 

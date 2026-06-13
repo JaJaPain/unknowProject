@@ -168,6 +168,7 @@ var is_llm_ready: bool = false
 var is_tts_ready: bool = false
 var last_llm_attempt: int = 0
 var last_tts_attempt: int = 0
+var startup_save_loaded: bool = false
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -270,6 +271,22 @@ func _ready():
 	last_tts_attempt = TTSInterface.tts_connection_attempts
 	_update_connection_status_display()
 	call_deferred("_check_both_services_ready")
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_signal("startup_load_completed"):
+		game_root.startup_load_completed.connect(_on_startup_load_completed)
+		if bool(game_root.get("startup_load_finished")):
+			_on_startup_load_completed(bool(game_root.get("startup_save_loaded")))
+
+func _on_startup_load_completed(save_loaded: bool) -> void:
+	startup_save_loaded = save_loaded
+	if save_loaded:
+		refresh_restored_state()
+
+func refresh_restored_state() -> void:
+	_on_credits_changed(GlobalState.player_credits)
+	_on_cargo_changed(GlobalState.cargo)
+	_update_quest_tracker()
+	refresh_overview()
 
 func _process(delta):
 	if GlobalState.paused: return
@@ -1802,6 +1819,9 @@ func toggle_dock_menu(station: Node3D):
 		if GlobalState.player:
 			GlobalState.player.is_docked = true
 			GlobalState.player.velocity = Vector3.ZERO
+		var game_root := get_tree().current_scene
+		if game_root and game_root.has_method("request_autosave"):
+			game_root.call_deferred("request_autosave")
 
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
@@ -4200,9 +4220,10 @@ func _on_tts_cache_completed():
 		GlobalState.paused = false # Resume gameplay!
 		print("[TRACE] [UIManager] Loading Screen completed. Game started!")
 		# Trigger Kaelen's intro popup 1s after loading — safely AFTER the overlay is gone
-		get_tree().create_timer(1.0).timeout.connect(func():
-			show_kaelen_intro()
-		)
+		if not startup_save_loaded:
+			get_tree().create_timer(1.0).timeout.connect(func():
+				show_kaelen_intro()
+			)
 	)
 
 
