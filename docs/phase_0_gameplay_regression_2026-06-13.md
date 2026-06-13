@@ -33,6 +33,7 @@ Result values:
 | Mining and economy | PASS | Extraction, cargo limits, storage, sale, and upgrade rules verified. |
 | Combat and death | PASS | Hostility, safe zones, projectiles, damage, rewards, reputation, death, and restart verified. |
 | Missions and dialogue resilience | PASS | Fallback, objective consistency, mission lifecycle, naming, and TTS failure verified. |
+| Station services and persistence | PASS | Repair, upgrade UI, storage, save/load, outposts, gossip, and pickup routing verified. |
 
 ## Session A: Core Flight, Mining, Docking, And Restoration
 
@@ -88,18 +89,18 @@ Result values:
 
 | Test | Result | Notes |
 | --- | --- | --- |
-| Repair service restores hull and charges correctly | NOT RUN | |
-| Station storage persists through travel | NOT RUN | |
-| Upgrade panel shows current power use | NOT RUN | |
+| Repair service restores hull and charges correctly | PASS | Full and partial repairs charged exactly two credits per hull point. |
+| Station storage persists through travel | PASS | Stored ore survived outbound and return gate travel without changing. |
+| Upgrade panel shows current power use | PASS | Maintenance UI displayed the 300 / 300 MW starter load. |
 | Valid upgrade purchase applies stats and costs | PASS | Powerplant then engine purchase applied tier, cost, capacity, and speed. |
 | Invalid over-budget upgrade is rejected | PASS | Mining upgrade was rejected without charging when power was capped. |
-| Upgrade state survives gate travel | NOT RUN | |
-| Upgrade state survives autosave and relaunch | NOT RUN | |
-| Outposts show the correct limited service menus | NOT RUN | |
-| Hear Gossip displays and speaks an NPC line | NOT RUN | |
-| Mechanic pickup mission can be accepted | NOT RUN | |
-| Pickup occurs only at the assigned outpost | NOT RUN | |
-| Returning the part completes the mission | NOT RUN | |
+| Upgrade state survives gate travel | PASS | Engine tier and speed remained intact across outbound and return jumps. |
+| Upgrade state survives autosave and relaunch | PASS | Tier, path, power capacity, speed, and stored ore restored. |
+| Outposts show the correct limited service menus | PASS | Commerce, agents, repairs, maintenance, and upgrades remained hidden. |
+| Hear Gossip displays and speaks an NPC line | PASS | Button path displayed the line and emitted NPC voice routing data. |
+| Mechanic pickup mission can be accepted | PASS | Real pickup quest state and destination fields were accepted. |
+| Pickup occurs only at the assigned outpost | PASS | Wrong outpost refused; assigned outpost loaded the part. |
+| Returning the part completes the mission | PASS | Main-station delivery cleared cargo, completed the quest, and paid credits. |
 
 ## Session E: Gate Presentation And Edge Cases
 
@@ -196,3 +197,35 @@ Change:
 - Moved special-cargo validation ahead of all payout and reputation changes.
 - Added checks proving the wrong part grants nothing and the assigned part
   completes and clears cargo normally.
+
+### Stored Ore Upgrade Purchase
+
+Status: FIXED.
+
+Observed:
+
+- The upgrade engine accepted ore from cargo plus station storage, but the
+  maintenance UI rejected the same purchase unless all ore was in cargo.
+
+Change:
+
+- Maintenance purchase validation now totals cargo ore and stored ore using the
+  same rule as the upgrade engine.
+- Added a UI-path test that buys power and engine upgrades using stored ore.
+
+### Upgrade Save Restoration
+
+Status: FIXED.
+
+Observed:
+
+- JSON restored upgrade tiers as numeric values such as `2.0`, while upgrade
+  tables are keyed by integers. Loading a save with upgraded equipment failed
+  while applying stats.
+
+Change:
+
+- Loaded upgrade tiers are normalized to integers and paths to strings before
+  applying equipment stats.
+- Added save/load coverage for storage, powerplant tier, engine tier, power
+  capacity, and engine speed.
