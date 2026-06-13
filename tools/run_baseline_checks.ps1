@@ -78,6 +78,11 @@ try {
     Invoke-BaselineStep "Godot import and parse" {
         & $godot --headless --editor --path $root --quit
     }
+    Invoke-BaselineStep "Domain ID and validation foundation" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_domain_foundation_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline

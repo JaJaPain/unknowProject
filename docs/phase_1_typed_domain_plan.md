@@ -279,6 +279,8 @@ Exit test:
 
 ### Checkpoint 2: ID And Validation Foundation
 
+Status: Complete
+
 Deliverables:
 
 - ID validation helpers
@@ -291,6 +293,15 @@ Exit test:
 
 - malformed IDs and definitions fail with useful messages
 - valid authored IDs round-trip without changing
+
+Implementation record:
+
+- `scripts/domain/DomainId.gd`
+- `scripts/domain/ValidationResult.gd`
+- `scripts/domain/DomainDefinition.gd`
+- `scripts/domain/DomainJson.gd`
+- `tests/domain/run_domain_foundation_tests.gd`
+- domain tests added to `tools/run_baseline_checks.ps1`
 
 ### Checkpoint 3: System And Gate Registry
 
