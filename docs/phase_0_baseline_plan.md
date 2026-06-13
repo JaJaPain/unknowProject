@@ -215,3 +215,21 @@ Result: COMPLETE
   `phase_0_gameplay_regression_2026-06-13.md`.
 - Remaining headless LLM/TTS shutdown warnings are documented as non-blocking
   cleanup work for the defect and performance baseline.
+
+## Checkpoint 4 Status
+
+Date: 2026-06-13
+
+Result: DEVELOPMENT BASELINE COMPLETE
+
+- Recorded hardware, renderer, startup, LLM, TTS, FPS, memory, render load,
+  save size, and content-size measurements.
+- Added a rendered `--performance-baseline` diagnostic for repeatable station,
+  asteroid-field, and combat sampling.
+- Documented defects, measurement limitations, and the risk of assuming a 12B
+  4-bit model fits an 8 GB card alongside the rendered game.
+- Release-target validation still requires an 8 GB GPU and an exported build.
+
+Detailed result:
+
+- `docs/phase_0_performance_baseline_2026-06-13.md`
