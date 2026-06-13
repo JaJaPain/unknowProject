@@ -3,10 +3,6 @@ extends Node3D
 signal system_changed(system_id: String, arrival_gate_id: String)
 signal startup_load_completed(save_loaded: bool)
 
-const SYSTEM_SCENES: Dictionary = {
-	"start_system": preload("res://scenes/systems/system_start.tscn"),
-	"test_system": preload("res://scenes/systems/system_test.tscn"),
-}
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 0.9
@@ -26,9 +22,16 @@ var last_arrival_gate_id: String = ""
 var startup_save_loaded: bool = false
 var startup_load_finished: bool = false
 var scene_ready_msec: int = 0
+var system_registry: SystemRegistry
 
 func _ready() -> void:
 	scene_ready_msec = Time.get_ticks_msec()
+	system_registry = SystemRegistry.load_default()
+	if not system_registry.is_valid():
+		push_error(
+			"[GameRoot] System registry is invalid: %s" %
+			system_registry.validation.summary()
+		)
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
@@ -98,19 +101,29 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if transition_in_progress:
 		jump_request_pending = false
 		return
-	var packed_system := SYSTEM_SCENES.get(destination_system_id) as PackedScene
+	var runtime_system_id := system_registry.runtime_system_id(
+		destination_system_id
+	)
+	var runtime_gate_id := system_registry.runtime_gate_id(arrival_gate_id)
+	var packed_system := system_registry.load_scene(destination_system_id)
 	if not packed_system:
 		jump_request_pending = false
 		push_warning("[GameRoot] Unknown destination system '%s'." % destination_system_id)
 		return
+	if runtime_system_id.is_empty() or runtime_gate_id.is_empty():
+		jump_request_pending = false
+		push_warning(
+			"[GameRoot] Destination system or arrival gate is not registered."
+		)
+		return
 
 	var new_system := packed_system.instantiate() as Node3D
-	var arrival_gate := _find_gate_in_tree(new_system, arrival_gate_id)
+	var arrival_gate := _find_gate_in_tree(new_system, runtime_gate_id)
 	if not arrival_gate:
 		new_system.free()
 		jump_request_pending = false
 		push_error("[GameRoot] Destination gate '%s' was not found in '%s'." % [
-			arrival_gate_id, destination_system_id
+			runtime_gate_id, runtime_system_id
 		])
 		return
 
@@ -141,13 +154,13 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 
 	system_container.add_child(new_system)
 	GlobalState.active_system_root = new_system
-	GlobalState.current_system_id = destination_system_id
+	GlobalState.current_system_id = runtime_system_id
 	await get_tree().process_frame
-	_restore_system_state(destination_system_id, new_system)
+	_restore_system_state(runtime_system_id, new_system)
 
 	var arrival_transform: Transform3D = arrival_gate.call("get_arrival_transform")
 	player.global_transform = arrival_transform
-	last_arrival_gate_id = arrival_gate_id
+	last_arrival_gate_id = runtime_gate_id
 
 	if player.has_method("sync_camera_to_ship"):
 		player.sync_camera_to_ship()
@@ -159,7 +172,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	_prepare_player_after_system_change()
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)
 	transition_in_progress = false
-	system_changed.emit(destination_system_id, arrival_gate_id)
+	system_changed.emit(runtime_system_id, runtime_gate_id)
 	save_game()
 
 	var ui := GlobalState.get_ui_manager()
@@ -300,7 +313,7 @@ func _is_valid_save_data(data: Variant) -> bool:
 		return false
 	if int(data.get("version", -1)) != SAVE_VERSION:
 		return false
-	if not SYSTEM_SCENES.has(str(data.get("current_system_id", ""))):
+	if not system_registry.has_system(str(data.get("current_system_id", ""))):
 		return false
 	return data.get("player", null) is Dictionary \
 		and data.get("global", null) is Dictionary \
@@ -325,7 +338,8 @@ func _apply_save_data(data: Dictionary) -> void:
 			ui.call_deferred("refresh_restored_state")
 
 func _load_system_without_transition(system_id: String) -> void:
-	var packed_system := SYSTEM_SCENES.get(system_id) as PackedScene
+	var runtime_system_id := system_registry.runtime_system_id(system_id)
+	var packed_system := system_registry.load_scene(system_id)
 	if not packed_system:
 		return
 	GlobalState.active_target = null
@@ -338,9 +352,9 @@ func _load_system_without_transition(system_id: String) -> void:
 	var new_system := packed_system.instantiate() as Node3D
 	system_container.add_child(new_system)
 	GlobalState.active_system_root = new_system
-	GlobalState.current_system_id = system_id
+	GlobalState.current_system_id = runtime_system_id
 	await get_tree().process_frame
-	_restore_system_state(system_id, new_system)
+	_restore_system_state(runtime_system_id, new_system)
 
 func _capture_player_state() -> Dictionary:
 	return {

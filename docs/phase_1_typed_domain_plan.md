@@ -305,6 +305,8 @@ Implementation record:
 
 ### Checkpoint 3: System And Gate Registry
 
+Status: Complete
+
 Deliverables:
 
 - `SystemDefinition` and `GateDefinition`
@@ -318,6 +320,15 @@ Exit test:
 - current systems load and transition through the registry
 - bad or unpaired gates fail clearly during validation
 - no system scene is selected by a display name or node name
+
+Implementation record:
+
+- `data/systems/system_registry.json`
+- `scripts/domain/SystemDefinition.gd`
+- `scripts/domain/GateDefinition.gd`
+- `scripts/registry/SystemRegistry.gd`
+- `tests/registry/run_system_registry_tests.gd`
+- `GameRoot` scene selection and save validation routed through the registry
 
 ### Checkpoint 4: Persistent Entity Identity
 
