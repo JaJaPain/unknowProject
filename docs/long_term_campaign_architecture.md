@@ -36,9 +36,95 @@ load only one major AI model at a time. Exact allocations must be based on
 measurements from representative gameplay scenes rather than advertised model
 sizes.
 
-### Selected Senior Model
+### Model-Agnostic Integration
 
-The selected senior model is **Gemma 4 12B IT Unified**, using a 4-bit GGUF.
+The game must depend on AI capabilities, not model brands or provider-specific
+request formats.
+
+Game systems request bounded capabilities such as:
+
+- plan a campaign arc
+- produce structured mission dialogue
+- summarize campaign history
+- classify or review an image
+- synthesize speech for a voice profile
+
+A provider adapter translates that request for Ollama, another local runtime,
+or a future supported backend. Provider URLs, model names, context limits,
+quantization choices, and generation settings belong in external profiles
+rather than gameplay code.
+
+Each capability declares:
+
+- a versioned input and output schema
+- required modalities
+- minimum context and memory requirements
+- latency class
+- validation rules
+- deterministic or curated fallback behavior
+- ordered compatible model profiles
+
+Saved campaigns store generated results, provenance, schema versions, and asset
+hashes. They must not require the same model to remain installed in order to
+load or continue playing. Replacing a model may affect future generated content
+but may not rewrite established campaign canon.
+
+Model changes must pass a capability test suite before a profile can be marked
+compatible. This tests schema compliance, PG-13 restrictions, protected canon,
+speaker rules, timeout behavior, and fallback handling.
+
+No gameplay, campaign, mission, NPC, or asset system may call Ollama or another
+provider directly. Those calls belong behind provider adapters and the model
+scheduler.
+
+### Unified Speech Service
+
+All spoken dialogue uses one provider-neutral `SpeechService`. Kaelen, faction
+agents, minor NPCs, mechanics, station services, mission dialogue, and future
+characters must not call a TTS engine or provider endpoint directly.
+
+Game systems submit a speech request containing:
+
+- text to speak
+- stable speaker or voice-profile ID
+- delivery priority
+- optional interaction or dialogue ID
+- whether playback should interrupt, queue, or only pre-cache
+
+The speech service owns:
+
+- text cleanup and speaker-rule validation
+- voice-profile resolution
+- provider selection and request translation
+- synthesis, cancellation, queueing, and pre-caching
+- audio decoding and playback
+- cache keys and cache lifetime
+- background-audio ducking
+- connection status, timeout handling, and silent fallback
+
+Characters store stable voice-profile IDs such as `voice.kaelen.v1`, not Kokoro
+voice names. A replaceable provider profile maps that stable ID to the active
+engine's voice, speed, pitch, style, language, and other supported settings.
+Changing TTS engines therefore requires updating or generating provider
+mappings rather than editing every NPC or dialogue caller.
+
+The initial provider adapter may continue using the current Kokoro service.
+Future adapters may use another local engine or platform-specific speech
+backend while preserving the same game-facing calls.
+
+Speech caching must include the normalized text, stable voice-profile version,
+provider-profile version, synthesis settings, and output format. This prevents
+an engine or voice update from accidentally reusing incompatible cached audio.
+
+Tone and canon rules belong before provider synthesis. In particular, Kaelen's
+`Shiny` rule and every other speaker's `Indy` rule must behave identically
+regardless of which TTS provider is active.
+
+### Initial Senior Model Profile
+
+The initial senior-model profile is **Gemma 4 12B IT Unified**, using a 4-bit
+GGUF. This is a replaceable deployment profile, not a permanent game
+dependency.
 
 Primary deployment:
 
