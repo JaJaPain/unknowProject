@@ -27,7 +27,9 @@ func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--dock-smoke-test" in OS.get_cmdline_user_args():
+	if "--restart-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_restart_smoke_test")
+	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_jump_smoke_test")
@@ -471,6 +473,43 @@ func _run_dock_smoke_test() -> void:
 	print("[DockSmokeTest] PASS: all active-system dockables completed approach and docking.")
 	delete_savegame()
 	get_tree().quit(0)
+
+func _run_restart_smoke_test() -> void:
+	await get_tree().process_frame
+	var ui := GlobalState.get_ui_manager()
+	if not ui:
+		_fail_restart_smoke_test("UIManager was not found.")
+		return
+
+	var loading_deadline_msec := Time.get_ticks_msec() + 60000
+	while Time.get_ticks_msec() < loading_deadline_msec:
+		var panel = ui.get("loading_panel")
+		if panel == null or not is_instance_valid(panel):
+			break
+		await get_tree().create_timer(0.05).timeout
+
+	var loading_panel = ui.get("loading_panel")
+	if loading_panel != null and is_instance_valid(loading_panel):
+		_fail_restart_smoke_test("Loading screen did not complete.")
+		return
+
+	var phase := int(Engine.get_meta("restart_smoke_phase", 0))
+	if phase == 0:
+		Engine.set_meta("restart_smoke_phase", 1)
+		ui.call("_restart_game")
+		return
+
+	Engine.remove_meta("restart_smoke_phase")
+	print("[RestartSmokeTest] PASS: restarted scene adopted warm service state and completed loading.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _fail_restart_smoke_test(message: String) -> void:
+	if Engine.has_meta("restart_smoke_phase"):
+		Engine.remove_meta("restart_smoke_phase")
+	push_error("[RestartSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
 
 func _fail_dock_smoke_test(message: String) -> void:
 	push_error("[DockSmokeTest] FAIL: " + message)

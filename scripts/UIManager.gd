@@ -260,6 +260,17 @@ func _ready():
 	TTSInterface.tts_connection_attempt.connect(_on_tts_connection_attempt)
 	TTSInterface.tts_connection_established.connect(_on_tts_connected)
 
+	# Autoloads survive reload_current_scene(). On restart the services may
+	# already be connected, so their one-time connection signals will not fire
+	# again for this new UIManager. Adopt the current state immediately instead
+	# of leaving the loading screen stuck at its initial 5%.
+	is_llm_ready = LLMInterface.llm_connected
+	is_tts_ready = TTSInterface.tts_connected
+	last_llm_attempt = LLMInterface.connection_attempts
+	last_tts_attempt = TTSInterface.tts_connection_attempts
+	_update_connection_status_display()
+	call_deferred("_check_both_services_ready")
+
 func _process(delta):
 	if GlobalState.paused: return
 	
