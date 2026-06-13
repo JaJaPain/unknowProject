@@ -27,7 +27,9 @@ func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--economy-smoke-test" in OS.get_cmdline_user_args():
+	if "--combat-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_combat_smoke_test")
+	elif "--economy-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_economy_smoke_test")
 	elif "--autopilot-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_autopilot_smoke_test")
@@ -688,6 +690,159 @@ func _run_economy_smoke_test() -> void:
 	print("[EconomySmokeTest] PASS: mining, cargo limits, storage, sale, and upgrades verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+func _run_combat_smoke_test() -> void:
+	await get_tree().process_frame
+	var phase := int(Engine.get_meta("combat_smoke_phase", 0))
+	if phase == 1:
+		Engine.remove_meta("combat_smoke_phase")
+		var restarted_ui := GlobalState.get_ui_manager()
+		var restarted_death_panel = restarted_ui.get("death_panel") if restarted_ui else null
+		if player.destroyed \
+				or not is_equal_approx(player.health, player.max_health) \
+				or GlobalState.player_credits != 50 \
+				or QuestManager.is_quest_active() \
+				or restarted_death_panel == null \
+				or restarted_death_panel.visible:
+			_fail_combat_smoke_test("Restarting from death did not create a fresh game.")
+			return
+		print("[CombatSmokeTest] PASS: hostility, projectiles, damage, rewards, reputation, quest progress, death, and restart verified.")
+		delete_savegame()
+		get_tree().quit(0)
+		return
+
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+
+	var npc_scene := load("res://scenes/npc_ship.tscn") as PackedScene
+	var projectile_scene := load("res://scenes/projectile.tscn") as PackedScene
+	if not npc_scene or not projectile_scene:
+		_fail_combat_smoke_test("Combat scenes could not be loaded.")
+		return
+
+	var test_npc := npc_scene.instantiate()
+	test_npc.name = "CombatSmokeTarget"
+	test_npc.faction = "aurelia"
+	test_npc.ship_role = "Gunner"
+	get_active_system_root().add_child(test_npc)
+	test_npc.global_position = Vector3(25.0, 0.0, 180.0)
+	await get_tree().process_frame
+
+	# Major factions with ordinary hostility should stand down in a station
+	# safe zone, then acquire the player once both ships move outside it.
+	GlobalState.active_system_entities = [test_npc]
+	GlobalState.reputations["aurelia"] = -20.0
+	player.global_position = Vector3(0.0, 0.0, 180.0)
+	test_npc.target = null
+	test_npc.call("_physics_process", 0.016)
+	if test_npc.target != null:
+		_fail_combat_smoke_test("A major-faction ship attacked inside the safe zone.")
+		return
+
+	player.global_position = Vector3(1000.0, 0.0, 1000.0)
+	test_npc.global_position = Vector3(1040.0, 0.0, 1000.0)
+	test_npc.target = null
+	test_npc.call("_physics_process", 0.016)
+	if test_npc.target != player:
+		_fail_combat_smoke_test("A hostile major-faction ship did not engage outside the safe zone.")
+		return
+
+	# Extremely poor standing overrides station protection.
+	player.global_position = Vector3(0.0, 0.0, 180.0)
+	test_npc.global_position = Vector3(25.0, 0.0, 180.0)
+	GlobalState.reputations["aurelia"] = -50.0
+	test_npc.target = null
+	test_npc.call("_physics_process", 0.016)
+	if test_npc.target != player:
+		_fail_combat_smoke_test("Sworn hostility did not override safe-zone protection.")
+		return
+
+	# Same-faction projectiles must be ignored. Player projectiles must apply
+	# their damage and the immediate reputation penalty.
+	test_npc.target = null
+	test_npc.health = 40.0
+	GlobalState.reputations["aurelia"] = -20.0
+	var friendly_projectile := projectile_scene.instantiate()
+	friendly_projectile.faction = "aurelia"
+	friendly_projectile.damage = 8.0
+	get_active_system_root().add_child(friendly_projectile)
+	friendly_projectile.call("_on_body_entered", test_npc)
+	if not is_equal_approx(test_npc.health, 40.0):
+		_fail_combat_smoke_test("Friendly projectile damaged a same-faction ship.")
+		return
+	friendly_projectile.queue_free()
+
+	var player_projectile := projectile_scene.instantiate()
+	player_projectile.faction = "player"
+	player_projectile.damage = 8.0
+	get_active_system_root().add_child(player_projectile)
+	player_projectile.call("_on_body_entered", test_npc)
+	if not is_equal_approx(test_npc.health, 32.0) \
+			or not is_equal_approx(float(GlobalState.reputations["aurelia"]), -22.0):
+		_fail_combat_smoke_test("Player projectile damage or hit reputation penalty was incorrect.")
+		return
+
+	QuestManager.active_quest = {
+		"title": "Combat Smoke Contract",
+		"objective_type": "KILL_SHIPS",
+		"target_faction": "aurelia",
+		"current_count": 0,
+		"count_required": 1,
+	}
+	var credits_before_kill := GlobalState.player_credits
+	var vanguard_rep_before := float(GlobalState.reputations["vanguard"])
+	var destroyed_pool_before := GlobalState.destroyed_ships_pool
+	test_npc.call("take_damage", 1000.0, "player")
+	var wreck_found := false
+	for wreck in get_tree().get_nodes_in_group("wreckage"):
+		if wreck.name.begins_with(test_npc.name):
+			wreck_found = true
+			break
+	if not bool(test_npc.destroyed) \
+			or GlobalState.player_credits != credits_before_kill + 15 \
+			or GlobalState.destroyed_ships_pool != destroyed_pool_before + 1 \
+			or test_npc in GlobalState.active_system_entities \
+			or not wreck_found \
+			or not is_equal_approx(float(GlobalState.reputations["aurelia"]), -44.0) \
+			or not is_equal_approx(
+				float(GlobalState.reputations["vanguard"]),
+				vanguard_rep_before + 10.0
+			) \
+			or int(QuestManager.active_quest.get("current_count", 0)) != 1:
+		_fail_combat_smoke_test("Kill rewards, reputation, or quest progress were incorrect.")
+		return
+
+	# Player damage consumes shields first, spills excess into hull, and fatal
+	# damage opens the real death panel.
+	GlobalState.shield_capacity = 10.0
+	player.current_shield = 10.0
+	player.health = 100.0
+	player.call("take_damage", 15.0, "aurelia")
+	if not is_equal_approx(player.current_shield, 0.0) \
+			or not is_equal_approx(player.health, 95.0):
+		_fail_combat_smoke_test("Player shields did not absorb damage before hull.")
+		return
+	player.call("take_damage", 1000.0, "aurelia")
+	var ui := GlobalState.get_ui_manager()
+	var death_panel = ui.get("death_panel") if ui else null
+	if not bool(player.destroyed) \
+			or death_panel == null \
+			or not is_instance_valid(death_panel) \
+			or not death_panel.visible:
+		_fail_combat_smoke_test("Fatal player damage did not show the death screen.")
+		return
+
+	Engine.set_meta("combat_smoke_phase", 1)
+	ui.call("_restart_game")
+
+func _fail_combat_smoke_test(message: String) -> void:
+	if Engine.has_meta("combat_smoke_phase"):
+		Engine.remove_meta("combat_smoke_phase")
+	push_error("[CombatSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
 
 func _fail_economy_smoke_test(message: String) -> void:
 	push_error("[EconomySmokeTest] FAIL: " + message)
