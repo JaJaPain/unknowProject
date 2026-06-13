@@ -200,3 +200,18 @@ Hands-on result:
 - Restart returned the player to the beginning with fresh gameplay state.
 
 Checkpoint 1 result: COMPLETE
+
+## Checkpoint 3 Status
+
+Date: 2026-06-13
+
+Result: COMPLETE
+
+- Every gameplay regression area has an explicit result.
+- Core flight, docking, mining, economy, combat, missions, services, upgrades,
+  gate travel, autosave, startup restoration, LLM fallback, and TTS failure
+  behavior passed automated or hands-on verification.
+- Defects found during the pass were fixed and recorded in
+  `phase_0_gameplay_regression_2026-06-13.md`.
+- Remaining headless LLM/TTS shutdown warnings are documented as non-blocking
+  cleanup work for the defect and performance baseline.

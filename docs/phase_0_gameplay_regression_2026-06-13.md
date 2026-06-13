@@ -34,27 +34,30 @@ Result values:
 | Combat and death | PASS | Hostility, safe zones, projectiles, damage, rewards, reputation, death, and restart verified. |
 | Missions and dialogue resilience | PASS | Fallback, objective consistency, mission lifecycle, naming, and TTS failure verified. |
 | Station services and persistence | PASS | Repair, upgrade UI, storage, save/load, outposts, gossip, and pickup routing verified. |
+| Core controls | PASS | Playable startup, pause, movement, camera zoom, overview targeting, and navigation overrides verified. |
+| Dock autosave | PASS | Every current dockable opened its UI, wrote an autosave, and restored flight state on undock. |
+| Gate activation safety | PASS | Range, alignment, transition lock, arrival cooldown, and post-arrival control state verified. |
 
 ## Session A: Core Flight, Mining, Docking, And Restoration
 
 | Test | Result | Notes |
 | --- | --- | --- |
-| New game reaches playable state | NOT RUN | |
-| Pause stops gameplay and resume restores it | NOT RUN | |
-| Manual flight and camera controls respond | NOT RUN | |
-| Overview targeting selects the intended object | NOT RUN | |
-| Approach and orbit controls can be overridden | NOT RUN | |
+| New game reaches playable state | PASS | Player, system, UI, and camera references initialized in active gameplay. |
+| Pause stops gameplay and resume restores it | PASS | Paused movement remained fixed; the same command moved after resume. |
+| Manual flight and camera controls respond | PASS | Fly-to movement and camera zoom input changed live player state. |
+| Overview targeting selects the intended object | PASS | A real overview row selected the primary station. |
+| Approach and orbit controls can be overridden | PASS | Player input changed approach to orbit through the live handlers. |
 | Autopilot avoids asteroids on the route | PASS | Predictive avoidance passed automated and hands-on checks. |
 | Autopilot keeps safe clearance from planets | PASS | Enlarged celestial safety envelope passed automated and hands-on checks. |
 | Mining laser extracts ore | PASS | Automated test mined from a live asteroid through its gameplay method. |
 | Cargo amount and capacity update correctly | PASS | Mining topped off the hold at its exact capacity. |
 | Full cargo prevents additional mining | PASS | Full and special-cargo holds rejected additional ore. |
-| Main-station docking completes | NOT RUN | |
+| Main-station docking completes | PASS | Automated approach opened the real dock UI. |
 | Ore sale changes cargo and credits correctly | PASS | Station sale path credited the exact ore amount and cleared the hold. |
 | Ore can be deposited into station storage | PASS | Deposit moved ore into persistent player storage and cleared the hold. |
-| Undocking restores flight controls | NOT RUN | |
-| Gate jump autosaves current state | NOT RUN | |
-| Closing and reopening restores the autosaved state | NOT RUN | |
+| Undocking restores flight controls | PASS | Dock state and UI cleared with manual navigation restored. |
+| Gate jump autosaves current state | PASS | Gate travel wrote the validated player, quest, system, storage, and upgrade state. |
+| Closing and reopening restores the autosaved state | PASS | Dock autosave restored player position and active mission; continued-game UI refreshed without replaying the new-pilot introduction. |
 | Restart Game deletes progress and starts fresh | PASS | Confirmed in normal game window. |
 
 ## Session B: Combat, Damage, Death, And Reputation
@@ -74,7 +77,7 @@ Result values:
 
 | Test | Result | Notes |
 | --- | --- | --- |
-| Kaelen introduction appears and speaks | NOT RUN | |
+| Kaelen introduction appears and speaks | PASS | Confirmed in the normal game window. |
 | Agent board receives a generated or fallback mission | PASS | Local procedural fallback produced a complete playable contract. |
 | Mission briefing numbers match objective numbers | PASS | Validation reconciled generated dialogue and tracker objectives. |
 | Mission can be accepted | PASS | Objective and selected-choice consequences were applied. |
@@ -106,15 +109,15 @@ Result values:
 
 | Test | Result | Notes |
 | --- | --- | --- |
-| Out-of-range gate activation is refused clearly | NOT RUN | |
-| Misaligned gate activation is refused clearly | NOT RUN | |
-| Jump transition is visually continuous | NOT RUN | |
+| Out-of-range gate activation is refused clearly | PASS | Activation returned the expected move-within-range reason. |
+| Misaligned gate activation is refused clearly | PASS | Activation returned the expected alignment reason. |
+| Jump transition is visually continuous | PASS | Confirmed in the normal game window. |
 | Gate autopilot stages in front before entry | PASS | 260-unit staging marker and alignment hold passed automated and hands-on checks. |
-| Controls remain locked during transition | NOT RUN | |
-| Camera and controls work after arrival | NOT RUN | |
+| Controls remain locked during transition | PASS | Physics and world input were disabled while the transition ran. |
+| Camera and controls work after arrival | PASS | Camera followed the player and physics/input processing resumed. |
 | Arrival does not accidentally trigger a return jump | PASS | Flight back provides natural spacing; technical cooldown remains. |
-| Return jump works in normal gameplay | NOT RUN | |
-| Docking and ordinary gameplay work after returning | NOT RUN | |
+| Return jump works in normal gameplay | PASS | The paired return gate restored the starting system and player state. |
+| Docking and ordinary gameplay work after returning | PASS | Flight and docking worked normally after the return jump. |
 
 ## Known Baseline Issues
 
@@ -229,3 +232,38 @@ Change:
   applying equipment stats.
 - Added save/load coverage for storage, powerplant tier, engine tier, power
   capacity, and engine speed.
+
+### Docking Autosave
+
+Status: FIXED.
+
+Observed:
+
+- Gate arrival wrote an autosave, but docking at the main station or an outpost
+  did not preserve the player's latest progress.
+
+Change:
+
+- Successful docking now requests an autosave after dock state and position are
+  established.
+- Added coverage proving every current dockable opens the dock UI, creates the
+  save file, and restores manual flight state after undocking.
+
+### Continued Game Presentation
+
+Status: FIXED and hands-on verified.
+
+Observed:
+
+- The debug-run save contained the accepted mission, player position,
+  reputation, and system entities.
+- On relaunch, the mission tracker did not refresh from restored state and
+  Kaelen replayed her new-pilot introduction, making a continued game appear to
+  be a fresh start.
+
+Change:
+
+- Startup load now reports whether a valid save was restored.
+- Restored credits, cargo, mission tracker, and overview refresh after save
+  application.
+- Kaelen's new-pilot introduction is skipped when continuing a saved game.
