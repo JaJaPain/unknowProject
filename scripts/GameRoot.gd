@@ -27,7 +27,9 @@ func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--combat-smoke-test" in OS.get_cmdline_user_args():
+	if "--mission-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_mission_smoke_test")
+	elif "--combat-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_combat_smoke_test")
 	elif "--economy-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_economy_smoke_test")
@@ -836,6 +838,205 @@ func _run_combat_smoke_test() -> void:
 
 	Engine.set_meta("combat_smoke_phase", 1)
 	ui.call("_restart_game")
+
+func _run_mission_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+
+	var fallback_holder := {
+		"quest": {},
+		"called": false,
+	}
+	LLMInterface.last_history_text = ""
+	LLMInterface.request_start_time = Time.get_ticks_msec()
+	LLMInterface.active_callback = func(quest_data: Dictionary, is_fallback: bool) -> void:
+		fallback_holder["quest"] = quest_data
+		fallback_holder["called"] = is_fallback
+	LLMInterface.call("_trigger_fallback")
+	var fallback_result: Dictionary = fallback_holder["quest"]
+	if not bool(fallback_holder["called"]) \
+			or fallback_result.is_empty() \
+			or not fallback_result.has("objective") \
+			or not fallback_result.has("choices"):
+		_fail_mission_smoke_test("Local fallback did not produce a playable contract.")
+		return
+	var fallback_objective: Dictionary = fallback_result["objective"]
+	var fallback_type := str(fallback_objective.get("type", ""))
+	var fallback_dialogue := str(fallback_result.get("dialogue", ""))
+	if fallback_type == "DELIVER_ORE" \
+			and not fallback_dialogue.contains(str(int(fallback_objective["amount_required"]))):
+		_fail_mission_smoke_test("Fallback ore dialogue did not match its objective amount.")
+		return
+	if fallback_type == "KILL_SHIPS" \
+			and not fallback_dialogue.contains(str(int(fallback_objective["count_required"]))):
+		_fail_mission_smoke_test("Fallback kill dialogue did not match its objective count.")
+		return
+
+	var mismatched_quest := {
+		"title": "Number Reconciliation",
+		"faction": "zenith",
+		"agent_name": "Director Voss",
+		"dialogue": "Deliver 30 m3 of ore to the station.",
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 80.0,
+			"reward_credits": 100,
+		},
+		"choices": [],
+	}
+	LLMInterface.call("_validate_quest_data", mismatched_quest)
+	if not is_equal_approx(float(mismatched_quest["objective"]["amount_required"]), 30.0) \
+			or not str(mismatched_quest["dialogue"]).contains("30"):
+		_fail_mission_smoke_test("Generated briefing and objective numbers were not reconciled.")
+		return
+
+	var accept_choice := {
+		"text": "Accepted.",
+		"consequence": {
+			"credits_immediate": 10,
+			"reputation_change": {"zenith": 2.0},
+			"reward_credits_multiplier": 1.0,
+		},
+	}
+	QuestManager.accept_quest(mismatched_quest, accept_choice)
+	if not QuestManager.is_quest_active() \
+			or QuestManager.active_quest.get("objective_type", "") != "DELIVER_ORE" \
+			or not is_equal_approx(float(QuestManager.active_quest["amount_required"]), 30.0) \
+			or GlobalState.player_credits != 60 \
+			or not is_equal_approx(float(GlobalState.reputations["zenith"]), 52.0):
+		_fail_mission_smoke_test("Mission acceptance did not apply objective and choice consequences.")
+		return
+
+	GlobalState.add_ore(12.0)
+	if not is_equal_approx(QuestManager.deliver_partial(12.0), 12.0) \
+			or not is_equal_approx(float(QuestManager.active_quest["partial_delivered"]), 12.0) \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Partial ore delivery did not bank progress correctly.")
+		return
+	GlobalState.add_ore(18.0)
+	if not QuestManager.is_quest_completed():
+		_fail_mission_smoke_test("Ore mission did not become complete at the required total.")
+		return
+	var credits_before_completion := GlobalState.player_credits
+	QuestManager.complete_quest()
+	if QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_completion + 100 \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Final ore delivery did not pay and clear the mission.")
+		return
+
+	QuestManager.active_quest = {
+		"title": "Kill Progress",
+		"faction": "vanguard",
+		"objective_type": "KILL_SHIPS",
+		"target_faction": "reavers",
+		"current_count": 0,
+		"count_required": 2,
+		"reward_credits": 50,
+		"reward_credits_multiplier": 1.0,
+		"choice_text_selected": "Accepted.",
+	}
+	GlobalState.ship_destroyed.emit("reavers")
+	GlobalState.ship_destroyed.emit("reavers")
+	if not QuestManager.is_quest_completed() \
+			or int(QuestManager.active_quest["current_count"]) != 2:
+		_fail_mission_smoke_test("Kill mission progress did not reach completion.")
+		return
+	QuestManager.complete_quest()
+
+	QuestManager.active_quest = {
+		"title": "Abandonment Test",
+		"faction": "aurelia",
+		"objective_type": "DELIVER_ORE",
+	}
+	var aurelia_before_abandon := float(GlobalState.reputations["aurelia"])
+	QuestManager.abandon_quest()
+	if QuestManager.is_quest_active() \
+			or not is_equal_approx(
+				float(GlobalState.reputations["aurelia"]),
+				aurelia_before_abandon - 3.0
+			):
+		_fail_mission_smoke_test("Mission abandonment did not apply the approved small penalty.")
+		return
+
+	QuestManager.active_quest = {
+		"title": "Pickup Validation",
+		"faction": "zenith",
+		"agent_name": "Jenna Kross",
+		"objective_type": "PICKUP_SPECIAL",
+		"part_name": "Plasma Coupler",
+		"target_outpost": "kova",
+		"target_outpost_display": "Kova Station",
+		"target_npc": "Cassen Vane",
+		"destination": "Grease Monkeys",
+		"picked_up": true,
+		"reward_credits": 75,
+		"reward_credits_multiplier": 1.0,
+		"choice_text_selected": "Accepted.",
+	}
+	GlobalState.accept_special("Wrong Part", "Test", "Kova", "Grease Monkeys")
+	var credits_before_wrong_part := GlobalState.player_credits
+	var zenith_before_wrong_part := float(GlobalState.reputations["zenith"])
+	QuestManager.complete_quest()
+	if not QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_wrong_part \
+			or not is_equal_approx(
+				float(GlobalState.reputations["zenith"]),
+				zenith_before_wrong_part
+			):
+		_fail_mission_smoke_test("Wrong pickup cargo granted mission rewards.")
+		return
+	GlobalState.clear_cargo()
+	GlobalState.accept_special("Plasma Coupler", "Test", "Kova", "Grease Monkeys")
+	QuestManager.complete_quest()
+	if QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_wrong_part + 75 \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Correct pickup cargo did not complete cleanly.")
+		return
+
+	var non_kaelen_line := GlobalState.apply_tone_guard(
+		"Shiny, your cargo is ready.",
+		"af_aoede"
+	)
+	var kaelen_line := GlobalState.apply_tone_guard(
+		"Shiny, your cargo is ready.",
+		GlobalState.KAELEN_VOICE_ID
+	)
+	if non_kaelen_line != "Indy, your cargo is ready." \
+			or kaelen_line != "Shiny, your cargo is ready.":
+		_fail_mission_smoke_test("Speaker naming guard did not preserve Indy and Shiny rules.")
+		return
+
+	var ui := GlobalState.get_ui_manager()
+	if not ui:
+		_fail_mission_smoke_test("UIManager was unavailable for dialogue resilience test.")
+		return
+	ui.agent_dialogue_label.text = "Readable fallback dialogue."
+	TTSInterface.is_requesting = true
+	TTSInterface.call(
+		"_on_request_completed",
+		HTTPRequest.RESULT_CANT_CONNECT,
+		0,
+		PackedStringArray(),
+		PackedByteArray()
+	)
+	if TTSInterface.is_requesting \
+			or ui.agent_dialogue_label.text != "Readable fallback dialogue.":
+		_fail_mission_smoke_test("TTS failure disrupted readable dialogue or left the request stuck.")
+		return
+
+	print("[MissionSmokeTest] PASS: fallback, objective consistency, acceptance, progress, completion, abandonment, pickup validation, naming, and TTS resilience verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _fail_mission_smoke_test(message: String) -> void:
+	push_error("[MissionSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
 
 func _fail_combat_smoke_test(message: String) -> void:
 	if Engine.has_meta("combat_smoke_phase"):

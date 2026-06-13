@@ -256,6 +256,16 @@ func mark_pickup_complete() -> bool:
 func complete_quest():
 	if not is_quest_active() or not is_quest_completed():
 		return
+
+	if active_quest["objective_type"] == "PICKUP_SPECIAL":
+		var expected_part: String = active_quest.get("part_name", "")
+		if GlobalState.cargo_type != GlobalState.CargoType.SPECIAL:
+			print("[QuestManager] PICKUP_SPECIAL: cannot complete, hold is empty")
+			return
+		if GlobalState.cargo_special.get("name", "") != expected_part:
+			print("[QuestManager] PICKUP_SPECIAL: cannot complete, hold has '%s', expected '%s'" % [
+				GlobalState.cargo_special.get("name", ""), expected_part])
+			return
 		
 	var final_payout = int(active_quest["reward_credits"] * active_quest["reward_credits_multiplier"])
 	GlobalState.player_credits += final_payout
@@ -274,14 +284,6 @@ func complete_quest():
 	# expected part — if not, refuse to complete (player has the wrong item
 	# or the hold was cleared manually).
 	elif active_quest["objective_type"] == "PICKUP_SPECIAL":
-		var expected_part: String = active_quest.get("part_name", "")
-		if GlobalState.cargo_type != GlobalState.CargoType.SPECIAL:
-			print("[QuestManager] PICKUP_SPECIAL: cannot complete, hold is empty")
-			return
-		if GlobalState.cargo_special.get("name", "") != expected_part:
-			print("[QuestManager] PICKUP_SPECIAL: cannot complete, hold has '%s', expected '%s'" % [
-				GlobalState.cargo_special.get("name", ""), expected_part])
-			return
 		GlobalState.clear_cargo()
 
 	# Append to history file log
@@ -297,7 +299,7 @@ func abandon_quest():
 		return
 		
 	# Apply standing penalty
-	GlobalState.adjust_reputation(active_quest["faction"], -5.0)
+	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
 	
 	# Append to history file log
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
