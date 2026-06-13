@@ -1032,6 +1032,82 @@ func _validate_quest_data(quest_data: Dictionary):
 		if not obj.has("destination"):
 			obj["destination"] = "Main Station"
 
+	# Last line of defense: reconciliation above may pull an out-of-range
+	# number from the dialogue, then clamping can make the two disagree again.
+	# Patch only the objective number so display text and TTS use the final value.
+	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+
+func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: String, obj: Dictionary):
+	var original_dialogue = str(quest_data.get("dialogue", ""))
+	if original_dialogue.is_empty():
+		return
+
+	var dialogue = original_dialogue.to_lower()
+	var number_start = -1
+	var number_end = -1
+	var replacement = ""
+
+	if obj_type == "DELIVER_ORE":
+		var ore_context_words = ["m³", "m3", "cubic", "ore", "silicate", "tonne",
+			"metric", "cargo", "shipment", "deliver", "haul"]
+		var i = 0
+		while i < dialogue.length():
+			if dialogue[i] >= "0" and dialogue[i] <= "9":
+				var j = i
+				var num_str = ""
+				while j < dialogue.length() and ((dialogue[j] >= "0" and dialogue[j] <= "9") or dialogue[j] == "."):
+					num_str += dialogue[j]
+					j += 1
+				var num_val = float(num_str)
+				if num_val >= 10.0 and num_val <= 500.0:
+					var after = dialogue.substr(j, 25)
+					for context_word in ore_context_words:
+						if after.find(context_word) != -1:
+							number_start = i
+							number_end = j
+							break
+				if number_start != -1:
+					break
+				i = j
+			else:
+				i += 1
+		replacement = str(int(round(float(obj.get("amount_required", 25.0)))))
+	elif obj_type == "KILL_SHIPS":
+		var ship_words = ["ship", "contact", "target", "vessel", "hostile", "raider",
+			"patrol", "interceptor", "sentinel", "fighter", "bogey", "hull"]
+		var kill_verbs = ["destroy", "eliminate", "kill", "clear", "remove", "engage", "take"]
+		for i in range(dialogue.length()):
+			if dialogue[i] < "1" or dialogue[i] > "9":
+				continue
+			var after = dialogue.substr(i + 1, 25)
+			var before_start = max(0, i - 15)
+			var before = dialogue.substr(before_start, i - before_start)
+			var is_objective_number = false
+			for ship_word in ship_words:
+				if after.find(ship_word) != -1:
+					is_objective_number = true
+					break
+			if not is_objective_number:
+				for kill_verb in kill_verbs:
+					if before.find(kill_verb) != -1:
+						is_objective_number = true
+						break
+			if is_objective_number:
+				number_start = i
+				number_end = i + 1
+				break
+		replacement = str(int(obj.get("count_required", 3)))
+
+	if number_start == -1:
+		return
+
+	var current_number = original_dialogue.substr(number_start, number_end - number_start)
+	if current_number == replacement:
+		return
+
+	quest_data["dialogue"] = original_dialogue.substr(0, number_start) + replacement + original_dialogue.substr(number_end)
+	print("[LLMInterface] ⚠ VALIDATE: Final objective changed after validation. Rewrote dialogue number from %s to %s for display and TTS." % [current_number, replacement])
+
 func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictionary):
 	# Look for patterns like "3 ships", "kill 4", "destroy 2", "four contacts", etc.
 	var json_count = int(obj.get("count_required", 3))
@@ -1167,6 +1243,10 @@ func _trigger_fallback():
 	
 	var orig_reward = selected_quest["objective"]["reward_credits"]
 	selected_quest["objective"]["reward_credits"] = int(orig_reward * randf_range(0.9, 1.2))
+
+	# Fallback objectives are randomized after their canned dialogue is chosen.
+	# Keep that dialogue aligned before the UI displays it or TTS speaks it.
+	_sync_dialogue_to_validated_objective(selected_quest, type, selected_quest["objective"])
 	
 	if active_callback.is_valid():
 		active_callback.call(selected_quest, true)
