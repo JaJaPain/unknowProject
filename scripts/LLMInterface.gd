@@ -463,6 +463,9 @@ func _ready():
 
 	_load_kaelen_intro_stats()
 	_load_world_lore()
+	if "--baseline-offline" in OS.get_cmdline_user_args():
+		print("[LLMInterface] Baseline offline mode: model discovery disabled.")
+		return
 	_discover_ollama_model()
 
 func _load_world_lore():
