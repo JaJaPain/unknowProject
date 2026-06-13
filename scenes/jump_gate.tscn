@@ -68,6 +68,10 @@ shape = SubResource("CylinderShape_activation")
 position = Vector3(0, 0, 140)
 rotation = Vector3(0, 3.14159, 0)
 
+[node name="ApproachMarker" type="Marker3D" parent="."]
+position = Vector3(0, 0, 260)
+rotation = Vector3(0, 3.14159, 0)
+
 [node name="GateLight" type="OmniLight3D" parent="."]
 light_color = Color(0.25, 0.75, 1, 1)
 light_energy = 5.0

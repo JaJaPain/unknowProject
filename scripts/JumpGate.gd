@@ -10,6 +10,7 @@ extends StaticBody3D
 
 @onready var model_anchor: Node3D = $ModelAnchor
 @onready var arrival_marker: Marker3D = $ArrivalMarker
+@onready var approach_marker: Marker3D = $ApproachMarker
 @onready var portal_surface: MeshInstance3D = $PortalSurface
 @onready var gate_light: OmniLight3D = $GateLight
 
@@ -39,6 +40,9 @@ func _exit_tree() -> void:
 
 func get_arrival_transform() -> Transform3D:
 	return arrival_marker.global_transform
+
+func get_approach_position() -> Vector3:
+	return approach_marker.global_position
 
 func is_player_in_activation_range() -> bool:
 	var player := GlobalState.player

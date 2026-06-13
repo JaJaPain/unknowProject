@@ -34,6 +34,8 @@ var nav_mode: String = "MANUAL":
 				dock_stuck_timer = 0.0
 				last_dock_distance = INF
 				last_dock_target = null
+			if val != "JUMP_APPROACH":
+				staged_jump_gate_id = 0
 			if val in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
 				is_aligning = false
 				is_aligning = true
@@ -46,6 +48,9 @@ var last_nav_mode: String = "MANUAL"
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
+var staged_jump_gate_id: int = 0
+var avoidance_obstacle_id: int = 0
+var avoidance_side: Vector3 = Vector3.ZERO
 var rmb_down_time: float = 0.0
 var last_target: Node3D = null
 var drones: Array[Node3D] = []
@@ -76,6 +81,7 @@ func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
 
 func _on_target_changed(new_target: Node3D):
+	staged_jump_gate_id = 0
 	if new_target == null:
 		mining_laser.visible = false
 		if nav_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
@@ -311,7 +317,20 @@ func _physics_process(delta: float):
 					nav_mode = "MANUAL"
 
 			"JUMP_APPROACH":
-				target_position = active_target.global_position
+				var gate_instance_id := active_target.get_instance_id()
+				var approach_position: Vector3 = active_target.global_position
+				if active_target.has_method("get_approach_position"):
+					approach_position = active_target.call("get_approach_position") as Vector3
+
+				if staged_jump_gate_id != gate_instance_id:
+					if _is_inside_gate_entry_corridor(active_target, approach_position):
+						staged_jump_gate_id = gate_instance_id
+					elif global_position.distance_to(approach_position) <= 18.0:
+						staged_jump_gate_id = gate_instance_id
+
+				target_position = active_target.global_position \
+					if staged_jump_gate_id == gate_instance_id \
+					else approach_position
 					
 			"MINE":
 				# Refuse to mine when a special item is loaded OR when
@@ -388,66 +407,16 @@ func _physics_process(delta: float):
 	# Move and steer
 	if target_position != null:
 		var dest = target_position as Vector3
-		
-		# Raycast to detect if a large celestial body blocks the path
-		var final_steer_target = dest
-		var space_state = get_world_3d().direct_space_state
-		var query = PhysicsRayQueryParameters3D.create(global_position, dest)
-		query.exclude = [self.get_rid()]
-		var result = space_state.intersect_ray(query)
-		
-		if result and is_instance_valid(result.collider):
-			var collider = result.collider
-			# Do not avoid the target we are actively trying to reach
-			if collider != active_target:
-				if collider.is_in_group("station") or collider.is_in_group("asteroid") or collider.name == "GasGiant" or collider.name == "RockyPlanet":
-					var obstacle_pos = collider.global_position
-					var ray_vec = dest - global_position
-					var ray_dir = ray_vec.normalized()
-					
-					var to_obstacle = obstacle_pos - global_position
-					var proj = to_obstacle.project(ray_dir)
-					var perp = to_obstacle - proj
-					
-					var avoid_dir = Vector3.ZERO
-					if perp.length() < 0.5:
-						# If perfectly aligned, steer horizontally relative to the ray
-						avoid_dir = Vector3(-ray_dir.z, 0, ray_dir.x).normalized()
-					else:
-						avoid_dir = -perp.normalized()
-						
-					# Determine radius and safety buffer for detour
-					var radius = 50.0
-					var safety_margin = 40.0
-					
-					var shape_owner = collider.find_child("CollisionShape3D", true, false)
-					if shape_owner and shape_owner is CollisionShape3D and shape_owner.shape:
-						var shape = shape_owner.shape
-						var obj_scale = collider.scale.x
-						if shape is SphereShape3D:
-							radius = shape.radius * obj_scale
-						elif shape is BoxShape3D:
-							radius = (shape.size.length() * 0.5) * obj_scale
-							
-					if collider.name == "GasGiant":
-						safety_margin = 150.0
-					elif collider.name == "RockyPlanet":
-						safety_margin = 80.0
-					elif collider.is_in_group("station"):
-						safety_margin = 35.0
-					elif collider.is_in_group("asteroid"):
-						safety_margin = 12.0
-						
-					final_steer_target = obstacle_pos + avoid_dir * (radius + safety_margin)
-					
+		var avoidance := _get_autopilot_avoidance(dest, active_target)
+		var final_steer_target: Vector3 = avoidance.get("steer_target", dest)
 		steer_towards(final_steer_target, delta)
 		
-		var target_speed = max_speed * GlobalState.engine_speed_mult
+		var speed_limit: float = max_speed * GlobalState.engine_speed_mult
+		var target_speed: float = speed_limit
 		
 		# Proportional speed controller to maintain safe distance from targets
 		if active_target and is_instance_valid(active_target):
 			var dist = global_position.distance_to(active_target.global_position)
-			var speed_limit = max_speed * GlobalState.engine_speed_mult
 			
 			if nav_mode == "APPROACH":
 				var target_stop_dist = 60.0
@@ -461,7 +430,20 @@ func _physics_process(delta: float):
 					target_stop_dist = 60.0
 				target_speed = clamp((dist - target_stop_dist) * 4.0, -speed_limit, speed_limit)
 			elif nav_mode == "JUMP_APPROACH":
-				target_speed = clamp((dist - 85.0) * 4.0, -speed_limit, speed_limit)
+				if staged_jump_gate_id == active_target.get_instance_id():
+					var direction_to_gate: Vector3 = (
+						active_target.global_position - global_position
+					).normalized()
+					var facing_gate: bool = (-global_transform.basis.z).angle_to(direction_to_gate) < 0.08
+					target_speed = clamp((dist - 85.0) * 4.0, -speed_limit, speed_limit) \
+						if facing_gate else 0.0
+				else:
+					var remaining_to_stage := global_position.distance_to(target_position as Vector3)
+					target_speed = clampf(
+						(remaining_to_stage - 8.0) * 2.5,
+						0.0,
+						speed_limit * 0.75
+					)
 			elif nav_mode == "MINE" and active_target.is_in_group("asteroid"):
 				# Keep 35m from mined asteroids to prevent crashing
 				target_speed = clamp((dist - 35.0) * 3.0, -speed_limit, speed_limit)
@@ -471,6 +453,17 @@ func _physics_process(delta: float):
 			elif nav_mode == "DOCK":
 				var remaining_dock_distance := global_position.distance_to(target_position as Vector3)
 				target_speed = clamp(remaining_dock_distance * 2.0, 0.0, speed_limit)
+
+		# Give the ship time to turn around nearby obstacles instead of charging
+		# toward a detour point at full cruise speed.
+		if bool(avoidance.get("is_avoiding", false)):
+			var obstacle_distance := float(avoidance.get("obstacle_distance", 9999.0))
+			var avoidance_speed_limit: float = speed_limit * clampf(
+				obstacle_distance / 180.0,
+				0.3,
+				0.75
+			)
+			target_speed = min(target_speed, avoidance_speed_limit)
 			
 		# Calculate acceleration taking cargo mass into account
 		var accel = 15.0 * GlobalState.acceleration_mult
@@ -527,6 +520,168 @@ func _physics_process(delta: float):
 				is_aligning = false
 		else:
 			is_aligning = false
+
+func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -> Dictionary:
+	var route := destination - global_position
+	var route_length := route.length()
+	if route_length < 1.0:
+		_clear_avoidance_state()
+		return {"steer_target": destination, "is_avoiding": false}
+
+	var route_direction := route / route_length
+	var best_obstacle: Node3D = null
+	var best_clearance := 0.0
+	var best_distance_to_route := INF
+	var best_distance_along_route := INF
+
+	for obstacle in _get_autopilot_obstacles():
+		if obstacle == navigation_target or obstacle == self:
+			continue
+		if obstacle.get("destroyed"):
+			continue
+
+		var to_obstacle := obstacle.global_position - global_position
+		var distance_along_route := clampf(to_obstacle.dot(route_direction), 0.0, route_length)
+		# Ignore objects behind the ship and objects beyond the destination.
+		if to_obstacle.dot(route_direction) <= 0.0 or distance_along_route >= route_length:
+			continue
+
+		var closest_route_point := global_position + route_direction * distance_along_route
+		var distance_to_route := obstacle.global_position.distance_to(closest_route_point)
+		var required_clearance := _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
+		if distance_to_route >= required_clearance:
+			continue
+
+		# Favor the first obstacle on the route. The normalized penetration is a
+		# tiebreaker when large safety envelopes overlap.
+		var penetration: float = (required_clearance - distance_to_route) / maxf(required_clearance, 1.0)
+		var score: float = distance_along_route - penetration * 20.0
+		var best_score: float = best_distance_along_route - (
+			(best_clearance - best_distance_to_route) / maxf(best_clearance, 1.0)
+		) * 20.0
+		if best_obstacle == null or score < best_score:
+			best_obstacle = obstacle
+			best_clearance = required_clearance
+			best_distance_to_route = distance_to_route
+			best_distance_along_route = distance_along_route
+
+	if best_obstacle == null:
+		_clear_avoidance_state()
+		return {"steer_target": destination, "is_avoiding": false}
+
+	var obstacle_id: int = best_obstacle.get_instance_id()
+	if avoidance_obstacle_id != obstacle_id or avoidance_side.length_squared() < 0.5:
+		avoidance_obstacle_id = obstacle_id
+		avoidance_side = _choose_avoidance_side(
+			best_obstacle.global_position,
+			route_direction
+		)
+
+	# Aim slightly beyond the obstacle as well as to its side. That creates a
+	# smooth bypass rather than steering directly toward the edge of the safety
+	# envelope and then immediately turning back into it.
+	var forward_offset: float = minf(best_clearance * 0.65, 220.0)
+	var steer_target: Vector3 = best_obstacle.global_position \
+		+ avoidance_side * (best_clearance + 12.0) \
+		+ route_direction * forward_offset
+
+	return {
+		"steer_target": steer_target,
+		"is_avoiding": true,
+		"obstacle_distance": best_distance_along_route,
+		"obstacle": best_obstacle,
+	}
+
+func _is_inside_gate_entry_corridor(gate: Node3D, approach_position: Vector3) -> bool:
+	var entry_axis := approach_position - gate.global_position
+	var entry_length := entry_axis.length()
+	if entry_length < 1.0:
+		return true
+
+	entry_axis /= entry_length
+	var gate_to_player := global_position - gate.global_position
+	var axial_distance := gate_to_player.dot(entry_axis)
+	if axial_distance < 0.0 or axial_distance > entry_length:
+		return false
+
+	var closest_axis_point := gate.global_position + entry_axis * axial_distance
+	var radial_distance := global_position.distance_to(closest_axis_point)
+	return radial_distance <= 32.0
+
+func _get_autopilot_obstacles() -> Array[Node3D]:
+	var obstacles: Array[Node3D] = []
+	var seen: Dictionary = {}
+	for group_name in ["celestial", "asteroid", "station", "jumpgate", "ship"]:
+		for candidate in get_tree().get_nodes_in_group(group_name):
+			if not candidate is Node3D or candidate == self:
+				continue
+			var node := candidate as Node3D
+			var instance_id := node.get_instance_id()
+			if seen.has(instance_id):
+				continue
+			seen[instance_id] = true
+			obstacles.append(node)
+	return obstacles
+
+func _choose_avoidance_side(obstacle_position: Vector3, route_direction: Vector3) -> Vector3:
+	var closest_route_point := global_position + route_direction * clampf(
+		(obstacle_position - global_position).dot(route_direction),
+		0.0,
+		global_position.distance_to(obstacle_position)
+	)
+	var away_from_obstacle := closest_route_point - obstacle_position
+	away_from_obstacle -= route_direction * away_from_obstacle.dot(route_direction)
+	if away_from_obstacle.length_squared() > 0.01:
+		return away_from_obstacle.normalized()
+
+	var horizontal_side := route_direction.cross(Vector3.UP)
+	if horizontal_side.length_squared() < 0.01:
+		horizontal_side = route_direction.cross(Vector3.RIGHT)
+	return horizontal_side.normalized()
+
+func _get_obstacle_safety_margin(obstacle: Node3D) -> float:
+	if obstacle.is_in_group("celestial"):
+		var radius := _get_obstacle_radius(obstacle)
+		return max(100.0, radius * 0.25)
+	if obstacle.is_in_group("station"):
+		return 55.0
+	if obstacle.is_in_group("jumpgate"):
+		return 45.0
+	if obstacle.is_in_group("asteroid"):
+		return 20.0
+	if obstacle.is_in_group("ship"):
+		return 18.0
+	return 25.0
+
+func _get_obstacle_radius(obstacle: Node3D) -> float:
+	var collision := obstacle.find_child("CollisionShape3D", true, false) as CollisionShape3D
+	if not collision or not collision.shape:
+		return 12.0
+
+	var world_scale := collision.global_transform.basis.get_scale().abs()
+	if collision.shape is SphereShape3D:
+		var sphere := collision.shape as SphereShape3D
+		return sphere.radius * max(world_scale.x, world_scale.y, world_scale.z)
+	if collision.shape is BoxShape3D:
+		var box := collision.shape as BoxShape3D
+		return (box.size * 0.5 * world_scale).length()
+	if collision.shape is CylinderShape3D:
+		var cylinder := collision.shape as CylinderShape3D
+		return max(
+			cylinder.radius * max(world_scale.x, world_scale.z),
+			cylinder.height * 0.5 * world_scale.y
+		)
+	if collision.shape is CapsuleShape3D:
+		var capsule := collision.shape as CapsuleShape3D
+		return max(
+			capsule.radius * max(world_scale.x, world_scale.z),
+			capsule.height * 0.5 * world_scale.y
+		)
+	return 12.0
+
+func _clear_avoidance_state() -> void:
+	avoidance_obstacle_id = 0
+	avoidance_side = Vector3.ZERO
 
 func steer_towards(target_pos: Vector3, delta: float):
 	var to_target = target_pos - global_position

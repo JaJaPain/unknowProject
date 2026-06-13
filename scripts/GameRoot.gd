@@ -27,7 +27,11 @@ func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--restart-smoke-test" in OS.get_cmdline_user_args():
+	if "--economy-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_economy_smoke_test")
+	elif "--autopilot-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_autopilot_smoke_test")
+	elif "--restart-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_restart_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
@@ -361,6 +365,7 @@ func _apply_global_state(state: Dictionary) -> void:
 
 func _run_jump_smoke_test() -> void:
 	await get_tree().process_frame
+	GlobalState.paused = false
 	var starting_health: float = min(73.0, player.get("max_health"))
 	var starting_shield: float = min(17.0, GlobalState.shield_capacity)
 	player.set("health", starting_health)
@@ -370,6 +375,27 @@ func _run_jump_smoke_test() -> void:
 	if not outbound_gate:
 		_fail_jump_smoke_test("Outbound gate was not found.")
 		return
+	var approach_position: Vector3 = outbound_gate.call("get_approach_position")
+	if approach_position.distance_to(outbound_gate.global_position) < 200.0:
+		_fail_jump_smoke_test("Gate approach marker is too close for a clean alignment.")
+		return
+	GlobalState.active_target = outbound_gate
+	player.global_position = approach_position + outbound_gate.global_transform.basis.x.normalized() * 120.0
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	player.nav_mode = "JUMP_APPROACH"
+	player.call("_physics_process", 0.016)
+	if player.target_position == null \
+			or (player.target_position as Vector3).distance_to(approach_position) > 0.1:
+		_fail_jump_smoke_test(
+			"Jump autopilot did not stage at the gate approach marker. expected=%s actual=%s staged=%d" % [
+				str(approach_position),
+				str(player.target_position),
+				player.staged_jump_gate_id,
+			]
+		)
+		return
+	player.nav_mode = "MANUAL"
 	GlobalState.active_target = outbound_gate
 	if get_jump_block_reason(outbound_gate) != "Move within jump range before activation.":
 		_fail_jump_smoke_test("Out-of-range jump was not rejected.")
@@ -503,6 +529,175 @@ func _run_restart_smoke_test() -> void:
 	print("[RestartSmokeTest] PASS: restarted scene adopted warm service state and completed loading.")
 	delete_savegame()
 	get_tree().quit(0)
+
+func _run_autopilot_smoke_test() -> void:
+	await get_tree().process_frame
+	var original_transform := player.global_transform
+	var obstacle := StaticBody3D.new()
+	obstacle.name = "AutopilotSmokeObstacle"
+	var collision := CollisionShape3D.new()
+	collision.name = "CollisionShape3D"
+	var sphere := SphereShape3D.new()
+	sphere.radius = 8.0
+	collision.shape = sphere
+	obstacle.add_child(collision)
+	get_active_system_root().add_child(obstacle)
+
+	player.global_position = Vector3(10000.0, 0.0, 10000.0)
+	obstacle.global_position = Vector3(10200.0, 0.0, 10000.0)
+	obstacle.add_to_group("asteroid")
+	var asteroid_result: Dictionary = player.call(
+		"_get_autopilot_avoidance",
+		Vector3(10400.0, 0.0, 10000.0),
+		null
+	)
+	if not bool(asteroid_result.get("is_avoiding", false)) \
+			or asteroid_result.get("obstacle") != obstacle:
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test("Asteroid directly on route was not avoided.")
+		return
+
+	obstacle.remove_from_group("asteroid")
+	obstacle.add_to_group("celestial")
+	sphere.radius = 300.0
+	obstacle.global_position = Vector3(10250.0, 0.0, 10000.0)
+	player.global_position = Vector3(10000.0, 0.0, 10350.0)
+	player.call("_clear_avoidance_state")
+	var planet_result: Dictionary = player.call(
+		"_get_autopilot_avoidance",
+		Vector3(10500.0, 0.0, 10350.0),
+		null
+	)
+	if not bool(planet_result.get("is_avoiding", false)) \
+			or planet_result.get("obstacle") != obstacle:
+		var calculated_radius: float = player.call("_get_obstacle_radius", obstacle)
+		var calculated_margin: float = player.call("_get_obstacle_safety_margin", obstacle)
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet safety envelope was not enforced. radius=%.1f margin=%.1f result=%s" % [
+				calculated_radius,
+				calculated_margin,
+				str(planet_result),
+			]
+		)
+		return
+
+	obstacle.queue_free()
+	player.global_transform = original_transform
+	player.call("_clear_avoidance_state")
+	print("[AutopilotSmokeTest] PASS: asteroid route avoidance and planet safety clearance verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _run_economy_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+
+	var asteroid: Node = null
+	for candidate in get_tree().get_nodes_in_group("asteroid"):
+		if get_active_system_root().is_ancestor_of(candidate):
+			asteroid = candidate
+			break
+	if not asteroid:
+		_fail_economy_smoke_test("No asteroid was available for mining.")
+		return
+
+	asteroid.set("resources", 25.0)
+	GlobalState.mining_yield = 7.0
+	asteroid.call("mine")
+	if GlobalState.cargo_type != GlobalState.CargoType.ORE \
+			or not is_equal_approx(GlobalState.cargo, 7.0) \
+			or not is_equal_approx(float(asteroid.get("resources")), 18.0):
+		_fail_economy_smoke_test("Mining did not transfer ore into cargo correctly.")
+		return
+
+	GlobalState.cargo = GlobalState.cargo_max - 2.0
+	asteroid.call("mine")
+	if not is_equal_approx(GlobalState.cargo, GlobalState.cargo_max) \
+			or not is_equal_approx(float(asteroid.get("resources")), 16.0):
+		_fail_economy_smoke_test("Mining did not top off cargo at its exact capacity.")
+		return
+	asteroid.call("mine")
+	if not is_equal_approx(GlobalState.cargo, GlobalState.cargo_max) \
+			or not is_equal_approx(float(asteroid.get("resources")), 16.0):
+		_fail_economy_smoke_test("A full cargo hold accepted additional ore.")
+		return
+
+	GlobalState.clear_cargo()
+	if not GlobalState.accept_special(
+		"Economy Test Part",
+		"Regression cargo",
+		"Test Outpost",
+		"Main Station"
+	):
+		_fail_economy_smoke_test("Could not load special cargo for exclusivity test.")
+		return
+	asteroid.call("mine")
+	if GlobalState.cargo_type != GlobalState.CargoType.SPECIAL \
+			or not is_equal_approx(float(asteroid.get("resources")), 16.0):
+		_fail_economy_smoke_test("Mining replaced special cargo or consumed asteroid resources.")
+		return
+
+	GlobalState.clear_cargo()
+	GlobalState.add_ore(20.0)
+	if not GlobalState.deposit_ore(20.0) \
+			or not is_equal_approx(GlobalState.player_storage_ore, 20.0) \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_economy_smoke_test("Station ore storage did not receive deposited cargo.")
+		return
+
+	GlobalState.add_ore(12.0)
+	var credits_before_sale := GlobalState.player_credits
+	var ui := GlobalState.get_ui_manager()
+	if not ui:
+		_fail_economy_smoke_test("UIManager was not available for the ore sale.")
+		return
+	ui.call("_sell_ore")
+	if GlobalState.player_credits != credits_before_sale + 12 \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_economy_smoke_test("Selling ore did not update credits and clear cargo.")
+		return
+
+	GlobalState.player_credits = 2000
+	GlobalState.player_storage_ore = 250.0
+	if not GlobalState.purchase_upgrade("power", "standard") \
+			or int(GlobalState.current_upgrades["power"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.power_capacity, 350.0):
+		_fail_economy_smoke_test("A valid powerplant upgrade did not apply.")
+		return
+	if not GlobalState.purchase_upgrade("engine", "speed") \
+			or int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2):
+		_fail_economy_smoke_test("A valid engine upgrade did not apply.")
+		return
+
+	GlobalState.power_capacity = GlobalState.get_current_power_draw()
+	GlobalState.player_credits = 10000
+	GlobalState.player_storage_ore = 10000.0
+	var credits_before_rejection := GlobalState.player_credits
+	if GlobalState.purchase_upgrade("mining", "rapid") \
+			or GlobalState.player_credits != credits_before_rejection \
+			or int(GlobalState.current_upgrades["mining"]["tier"]) != 1:
+		_fail_economy_smoke_test("An over-budget upgrade was accepted or charged resources.")
+		return
+
+	print("[EconomySmokeTest] PASS: mining, cargo limits, storage, sale, and upgrades verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _fail_economy_smoke_test(message: String) -> void:
+	push_error("[EconomySmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
+
+func _fail_autopilot_smoke_test(message: String) -> void:
+	push_error("[AutopilotSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
 
 func _fail_restart_smoke_test(message: String) -> void:
 	if Engine.has_meta("restart_smoke_phase"):
