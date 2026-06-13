@@ -32,6 +32,7 @@ Result values:
 | Gate autopilot staging | PASS | Automated staging check and hands-on side approach confirmed. |
 | Mining and economy | PASS | Extraction, cargo limits, storage, sale, and upgrade rules verified. |
 | Combat and death | PASS | Hostility, safe zones, projectiles, damage, rewards, reputation, death, and restart verified. |
+| Missions and dialogue resilience | PASS | Fallback, objective consistency, mission lifecycle, naming, and TTS failure verified. |
 
 ## Session A: Core Flight, Mining, Docking, And Restoration
 
@@ -73,15 +74,15 @@ Result values:
 | Test | Result | Notes |
 | --- | --- | --- |
 | Kaelen introduction appears and speaks | NOT RUN | |
-| Agent board receives a generated or fallback mission | NOT RUN | |
-| Mission briefing numbers match objective numbers | NOT RUN | |
-| Mission can be accepted | NOT RUN | |
-| Kill mission progress updates and completes | NOT RUN | |
-| Ore mission supports partial and final delivery | NOT RUN | |
-| Mission abandonment removes it and changes reputation | NOT RUN | |
-| LLM timeout produces a playable fallback mission | NOT RUN | |
-| TTS failure leaves readable dialogue and playable UI | NOT RUN | |
-| Non-Kaelen speakers say Indy rather than Shiny | NOT RUN | |
+| Agent board receives a generated or fallback mission | PASS | Local procedural fallback produced a complete playable contract. |
+| Mission briefing numbers match objective numbers | PASS | Validation reconciled generated dialogue and tracker objectives. |
+| Mission can be accepted | PASS | Objective and selected-choice consequences were applied. |
+| Kill mission progress updates and completes | PASS | Matching destruction signals advanced and completed the objective. |
+| Ore mission supports partial and final delivery | PASS | Partial ore banked correctly; the final shipment paid and cleared cargo. |
+| Mission abandonment removes it and changes reputation | PASS | Contract cleared and applied the approved three-point penalty. |
+| LLM timeout produces a playable fallback mission | PASS | Failure path produced objective, dialogue, choices, and aligned numbers. |
+| TTS failure leaves readable dialogue and playable UI | PASS | Failed speech request ended cleanly without altering displayed text. |
+| Non-Kaelen speakers say Indy rather than Shiny | PASS | Tone guard rewrote non-Kaelen speech while preserving Kaelen's nickname. |
 
 ## Session D: Services And Upgrades
 
@@ -165,3 +166,33 @@ Change:
 - At the staging point, the ship slows and finishes turning toward the portal
   before beginning the final straight run.
 - The jump smoke test verifies marker distance and side-approach staging.
+
+### Mission Abandonment Penalty
+
+Status: FIXED.
+
+Observed:
+
+- The prototype removed five reputation points when abandoning a mission,
+  exceeding the approved small two-to-three-point campaign penalty.
+
+Change:
+
+- Reduced abandonment reputation loss to three points.
+- Added mission regression coverage for contract removal and exact reputation
+  change.
+
+### Pickup Reward Validation
+
+Status: FIXED.
+
+Observed:
+
+- A pickup mission with a stale `picked_up` flag could grant credits and
+  reputation before verifying that the assigned part remained in cargo.
+
+Change:
+
+- Moved special-cargo validation ahead of all payout and reputation changes.
+- Added checks proving the wrong part grants nothing and the assigned part
+  completes and clears cargo normally.
