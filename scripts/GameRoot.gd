@@ -25,12 +25,16 @@ var system_states: Dictionary = {}
 var last_arrival_gate_id: String = ""
 var startup_save_loaded: bool = false
 var startup_load_finished: bool = false
+var scene_ready_msec: int = 0
 
 func _ready() -> void:
+	scene_ready_msec = Time.get_ticks_msec()
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--core-smoke-test" in OS.get_cmdline_user_args():
+	if "--performance-baseline" in OS.get_cmdline_user_args():
+		call_deferred("_run_performance_baseline")
+	elif "--core-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_core_smoke_test")
 	elif "--services-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_services_smoke_test")
@@ -585,6 +589,130 @@ func _run_core_smoke_test() -> void:
 	print("[CoreSmokeTest] PASS: startup, pause, movement, camera, targeting, and navigation overrides verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+func _run_performance_baseline() -> void:
+	await get_tree().process_frame
+	var ui := GlobalState.get_ui_manager()
+	var playable_deadline := Time.get_ticks_msec() + 60000
+	while ui \
+			and ui.get("loading_panel") != null \
+			and is_instance_valid(ui.get("loading_panel")) \
+			and Time.get_ticks_msec() < playable_deadline:
+		await get_tree().create_timer(0.05).timeout
+	var playable_ready_msec := Time.get_ticks_msec()
+
+	GlobalState.paused = false
+	player.is_docked = false
+	player.nav_mode = "MANUAL"
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+
+	var results := {
+		"godot_version": Engine.get_version_info().get("string", "unknown"),
+		"renderer": RenderingServer.get_current_rendering_method(),
+		"display_server": DisplayServer.get_name(),
+		"resolution": [
+			DisplayServer.window_get_size().x,
+			DisplayServer.window_get_size().y,
+		],
+		"processor": OS.get_processor_name(),
+		"logical_processors": OS.get_processor_count(),
+		"scene_ready_ms": scene_ready_msec,
+		"playable_ready_ms": playable_ready_msec,
+		"save_bytes": FileAccess.get_file_as_bytes(SAVE_PATH).size() \
+			if FileAccess.file_exists(SAVE_PATH) else 0,
+		"samples": [],
+	}
+
+	var station := GlobalState.get_primary_station()
+	if station:
+		player.global_position = station.global_position + Vector3(0.0, 20.0, 180.0)
+		player.look_at(station.global_position, Vector3.UP)
+		player.sync_camera_to_ship()
+		results["samples"].append(await _capture_performance_sample("station", 3.0))
+
+	var asteroid: Node3D = null
+	for candidate in get_tree().get_nodes_in_group("asteroid"):
+		if candidate is Node3D and get_active_system_root().is_ancestor_of(candidate):
+			asteroid = candidate
+			break
+	if asteroid:
+		player.global_position = asteroid.global_position + Vector3(0.0, 12.0, 90.0)
+		player.look_at(asteroid.global_position, Vector3.UP)
+		player.sync_camera_to_ship()
+		results["samples"].append(await _capture_performance_sample("asteroid_field", 3.0))
+
+	var hostile: Node3D = null
+	for candidate in get_tree().get_nodes_in_group("ship"):
+		if candidate is Node3D \
+				and candidate != player \
+				and get_active_system_root().is_ancestor_of(candidate) \
+				and candidate.get("faction") in ["aurelia", "vanguard"]:
+			hostile = candidate
+			break
+	if hostile:
+		player.global_position = hostile.global_position + Vector3(0.0, 0.0, 45.0)
+		player.look_at(hostile.global_position, Vector3.UP)
+		player.sync_camera_to_ship()
+		GlobalState.active_target = hostile
+		player.nav_mode = "ATTACK"
+		results["samples"].append(await _capture_performance_sample("combat", 3.0))
+
+	print("[PerformanceBaseline] " + JSON.stringify(results))
+	get_tree().quit(0)
+
+func _capture_performance_sample(label: String, duration_seconds: float) -> Dictionary:
+	var fps_values: Array[float] = []
+	var process_ms_values: Array[float] = []
+	var physics_ms_values: Array[float] = []
+	await get_tree().create_timer(2.0).timeout
+	var deadline := Time.get_ticks_msec() + int(duration_seconds * 1000.0)
+	while Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+		fps_values.append(Performance.get_monitor(Performance.TIME_FPS))
+		process_ms_values.append(
+			Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+		)
+		physics_ms_values.append(
+			Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+		)
+	return {
+		"label": label,
+		"fps_avg": _average_float_values(fps_values),
+		"fps_min": _minimum_float_value(fps_values),
+		"frame_process_ms_avg": _average_float_values(process_ms_values),
+		"physics_ms_avg": _average_float_values(physics_ms_values),
+		"godot_static_memory_bytes": OS.get_static_memory_usage(),
+		"render_video_memory_bytes": int(
+			Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED)
+		),
+		"texture_memory_bytes": int(
+			Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+		),
+		"draw_calls": int(
+			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		),
+		"rendered_objects": int(
+			Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)
+		),
+		"node_count": int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
+	}
+
+func _average_float_values(values: Array[float]) -> float:
+	if values.is_empty():
+		return 0.0
+	var total := 0.0
+	for value in values:
+		total += value
+	return total / values.size()
+
+func _minimum_float_value(values: Array[float]) -> float:
+	if values.is_empty():
+		return 0.0
+	var minimum := values[0]
+	for value in values:
+		minimum = minf(minimum, value)
+	return minimum
 
 func _run_dock_smoke_test() -> void:
 	await get_tree().process_frame
