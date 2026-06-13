@@ -36,6 +36,41 @@ load only one major AI model at a time. Exact allocations must be based on
 measurements from representative gameplay scenes rather than advertised model
 sizes.
 
+### Selected Senior Model
+
+The selected senior model is **Gemma 4 12B IT Unified**, using a 4-bit GGUF.
+
+Primary deployment:
+
+- Ollama model: `gemma4:12b`
+- Ollama-reported package size: approximately 7.6 GB
+- Inputs: text and image
+- Advertised context capacity: 256K tokens
+
+Pinned GGUF source:
+
+- Repository: `unsloth/gemma-4-12b-it-GGUF`
+- Initial quant candidate: `UD-Q4_K_XL`
+- Direct Ollama command:
+  `ollama run hf.co/unsloth/gemma-4-12b-it-GGUF:UD-Q4_K_XL`
+- License: Apache 2.0
+
+The repository revision and downloaded file hash must be recorded before a
+release build.
+
+The reported 7.6 GB package size is not a safe peak-VRAM estimate. Runtime
+buffers, KV cache, image tokens, and Godot rendering also consume VRAM.
+Therefore:
+
+- Do not use the advertised 256K context during gameplay generation.
+- Start with a deliberately small context budget and increase only after
+  measurement.
+- Use low visual-token budgets for portrait classification.
+- Allow partial CPU offload when Godot is active.
+- Unload Gemma immediately after each director or portrait-review batch.
+- Keep a smaller-model or curated-rule fallback if Gemma cannot run with safe
+  rendering headroom on a particular 8 GB GPU.
+
 ## Approved Experience Rules
 
 ### The Player
@@ -146,6 +181,51 @@ sizes.
 - Economy controls should prevent mechanical exploits without punishing
   legitimate planning and merchant play.
 
+### Ore And Asteroid Composition
+
+Mining should support multiple resources rather than one universal ore.
+
+- Each asteroid receives a deterministic, campaign-persistent composition from
+  its seed, location, asteroid family, and system geology.
+- Most asteroids contain a dominant common ore and may contain one or more trace
+  materials.
+- A small percentage of asteroids contain a finite rare deposit.
+- Mining ticks draw from the asteroid's remaining composition rather than making
+  an unlimited independent rarity roll.
+- A rare material may appear as an occasional mining-tick discovery, but its
+  total available amount was fixed when the asteroid was created.
+- Rare deposits remain depleted after saving, leaving, and returning.
+- Mining fields maintain a target population range rather than a fixed permanent
+  list of rocks.
+- Depleting an asteroid permanently retires that asteroid ID and composition.
+- After enough universal time passes, the field may create a replacement
+  asteroid with a new stable ID, new position, new shape seed, and newly rolled
+  hidden composition.
+- Replacement positions must respect ring geometry, navigation clearance, and
+  minimum spacing from existing asteroids, stations, gates, and the player.
+- Replenishment is gradual, capped, and field-specific. A player cannot clear a
+  ring, wait briefly, and receive an immediate full reset.
+- Rare-deposit probability is applied to each replacement from the field's
+  geological profile. Depleting a known rare asteroid does not cause that same
+  location or identity to return.
+- Replenishment schedules and replacement seeds are campaign-persistent so
+  reloading cannot reroll the next asteroid.
+- Fields should never fall below a small gameplay-safe floor for long, even if
+  heavily mined. Emergency common-ore replenishment may occur before normal
+  replenishment, but it does not receive boosted rare-mineral odds.
+- Scanners and upgrades may gradually reveal composition quality without always
+  identifying exact quantities.
+- Different systems, planets, hazards, and faction territories should have
+  distinct geological probability profiles.
+- Missions, regional industry, upgrades, and faction demand should give each ore
+  a purpose beyond simply selling it for a higher price.
+- Cargo must eventually support mixed resource stacks rather than the current
+  single ore value.
+
+This preserves the excitement of a rare mining tick while preventing reload
+farming, infinite rare drops, and arbitrary changes to a previously known
+asteroid.
+
 ## Core Architecture Principle
 
 The LLM is a **story planner and writer**, not the authoritative game engine.
@@ -253,6 +333,79 @@ Each generated asset record includes:
 This registry allows portraits, ships, and future visual assets to remain stable
 even when an older checkpoint is loaded.
 
+### Generated Storage Policy
+
+- TTS audio is synthesized on demand and is not permanently stored per
+  character or dialogue line.
+- A small temporary session cache may avoid repeating speech synthesis during
+  the current play session.
+- Temporary TTS files are cleared automatically and do not become campaign
+  assets.
+- Character identity, voice selection, speaking style, relationships, and
+  memories are stored as compact structured records.
+- Human-readable Markdown character summaries may be derived from those records,
+  but Markdown is not the authoritative data source.
+- Persistent campaign growth primarily comes from portraits, generated ship
+  models, system specifications, and chronicle records.
+
+### Visual Asset Strategy
+
+Do not ask the text-to-image model to generate every visible texture. Use three
+tiers:
+
+**Procedural and reusable**
+
+- Planet surfaces use reusable shaders, masks, noise, gradients, cloud layers,
+  atmosphere parameters, rings, and curated material families.
+- Moons use the same system with different seeds and parameter ranges.
+- Asteroids use a small set of reusable rock materials, normal maps, and mesh
+  families with deterministic scale, shape, color, roughness, and damage
+  variation.
+- Asteroid silhouettes are produced from one shared subdivided base mesh using
+  deterministic vertex deformation: large directional stretching, several
+  frequencies of 3D noise, and a small number of broad dents.
+- Each asteroid stores only a deformation seed and compact shape parameters,
+  rather than a unique model file.
+- Use per-instance shader parameters or multimesh custom data so shape variety
+  does not require duplicating materials.
+- Asteroid collision begins with cheap approximate ellipsoids. A small reusable
+  pool of convex collision shapes may replace them if visual mismatch affects
+  navigation or mining.
+- Common station surfaces, metals, windows, lights, and industrial materials are
+  shared across systems.
+
+**AI-generated when identity matters**
+
+- NPC portraits.
+- Faction emblems, propaganda, station advertisements, and signage.
+- Story artifacts, transmissions, photographs, and unusual discoveries.
+- Rare landmark textures when a system needs a singular visual identity.
+- Optional source images used to derive masks or decals after validation.
+
+**Curated fallback library**
+
+- Tested planet, moon, asteroid, station, portrait, emblem, and story-art
+  assets remain available when generation fails or exceeds its time budget.
+
+Raw image-model output should not be treated as a ready-made planet material.
+If AI-generated surface art is used, a deterministic post-process must make it
+tileable, resize it, compress it, and validate obvious seams. Normal, roughness,
+metallic, emission, and atmospheric behavior should come from controlled game
+materials rather than trusting the image model to produce a coherent PBR set.
+
+Generated ship storage is controlled by:
+
+- Creating reusable faction and role variants rather than a unique mesh for
+  every disposable patrol ship.
+- Referencing shared textures instead of embedding duplicate copies where the
+  import pipeline permits it.
+- Stable seeds and content hashes for deduplication.
+- LOD generation and mesh compression.
+- Reserving bespoke ships for major NPCs, special factions, bosses, mysteries,
+  and important story events.
+- Campaign cleanup tools that can safely rebuild deterministic non-unique ships
+  from their saved specifications.
+
 ## System Content Model
 
 A typical generated system should use ranges rather than a rigid template:
@@ -300,7 +453,8 @@ persistent job queue.
 4. **Specialized Build Jobs**
    - Ship jobs call the procedural Blender generator with stable seeds.
    - Portrait jobs call the future text-to-image service.
-   - Vision validation checks portraits for severe defects.
+   - The selected Gemma model checks portraits for severe defects, identity
+     mismatch, PG-13 violations, and obvious visual corruption.
    - Dialogue and biography jobs create constrained text records.
    - Godot content jobs build data resources and placement manifests.
 
@@ -314,6 +468,7 @@ persistent job queue.
 
 7. **Fallback And Retry**
    - Retries only the failed component with a bounded attempt count.
+   - A failed portrait review returns structured defect tags to the image job.
    - Uses curated fallback portraits, ships, names, or missions when necessary.
    - Never blocks the main game indefinitely waiting for generation.
 
@@ -331,12 +486,57 @@ submits jobs, polls status, and imports completed outputs. This isolates crashes
 and keeps the render loop responsive. A model scheduler inside the worker must
 serialize GPU-heavy stages under the 8 GB VRAM budget.
 
-## Small-LLM Strategy
+## AI Authoring Hierarchy
 
 The current local model is capable of focused structured tasks, but the existing
 all-purpose prompting approach will not scale to campaign direction.
 
-Use several short roles with narrow schemas:
+### Senior Director: Gemma
+
+The 4-bit Gemma model owns infrequent, high-value work:
+
+- Create the campaign's underlying story premise.
+- Maintain the long-range story bible.
+- Plan major arcs, mysteries, reveals, and future branch possibilities.
+- Review major continuity changes.
+- Decide which established facts the smaller writer must honor.
+- Review generated NPC portraits before assignment.
+- Produce or approve the factual outline for Kaelen's eulogy.
+
+Gemma does not remain loaded during normal gameplay. Its work is queued,
+generated ahead of need, validated, stored as structured campaign data, and then
+unloaded.
+
+### Fast Writer: Small LLM
+
+The smaller model owns frequent bounded work:
+
+- Mission dialogue and short briefings.
+- NPC conversational turns.
+- Rumors, chatter, and local descriptions.
+- Kaelen reactions and transitions.
+- Variations written from an approved beat supplied by the story bible.
+
+The small model may embellish presentation, but it may not alter major canon,
+invent unsupported mechanics, kill protected characters, or redirect the
+campaign away from Gemma's approved arc.
+
+### Structured Handoff
+
+Gemma should produce compact records rather than a long prose novel:
+
+- Current arc and phase.
+- Known truth versus player-visible belief.
+- Active factions and motivations.
+- Required future beats and optional hooks.
+- Forbidden outcomes.
+- Kaelen's knowledge and limits.
+- Relevant NPC goals and secrets.
+- Supported mission-mechanic tags.
+- Tone weights for the current arc.
+
+The game retrieves only the fields relevant to the current scene. Focused roles
+then operate on that approved context:
 
 - **Story Director:** proposes arcs and next-system motives.
 - **Continuity Editor:** checks proposals against relevant canon.
@@ -563,6 +763,15 @@ Purpose: make systems change believably without direct LLM control.
 - Create faction influence, resources, goals, relationships, and conflict state.
 - Add coarse off-screen simulation using universal time.
 - Protect connected major NPCs from off-screen death.
+- Define the first 4-6 ore types, their rarity, value, uses, and regional demand.
+- Replace single-resource cargo with mixed resource stacks.
+- Add seeded asteroid composition and finite trace or rare deposits.
+- Add mining-field population ranges and universal-time replenishment.
+- Persist retired asteroid IDs, pending replacements, and replacement seeds so
+  save loading cannot reroll rare resources.
+- Add scanner information and mineral-discovery rules.
+- Prove the complete mining lifecycle in one handcrafted test field before
+  procedural systems receive geological profiles.
 - Add regional supply, demand, stock recovery, taxes, and access controls.
 - Add station storage and trade history.
 - Add high-reputation stock and enemy-faction suspicion.
