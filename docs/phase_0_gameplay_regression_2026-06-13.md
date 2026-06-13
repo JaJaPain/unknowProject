@@ -31,6 +31,7 @@ Result values:
 | Autopilot obstacle clearance | PASS | Automated geometry checks and hands-on flight confirmed. |
 | Gate autopilot staging | PASS | Automated staging check and hands-on side approach confirmed. |
 | Mining and economy | PASS | Extraction, cargo limits, storage, sale, and upgrade rules verified. |
+| Combat and death | PASS | Hostility, safe zones, projectiles, damage, rewards, reputation, death, and restart verified. |
 
 ## Session A: Core Flight, Mining, Docking, And Restoration
 
@@ -58,14 +59,14 @@ Result values:
 
 | Test | Result | Notes |
 | --- | --- | --- |
-| Player weapon damages a valid target | NOT RUN | |
-| Hostile ships engage under expected reputation rules | NOT RUN | |
-| Safe-zone behavior prevents inappropriate attacks | NOT RUN | |
-| Hull and shields update correctly under damage | NOT RUN | |
-| Destroyed ships produce expected rewards/state | NOT RUN | |
-| Faction reputation changes after hostile action | NOT RUN | |
-| Death screen appears when the player is destroyed | NOT RUN | |
-| Restart from death returns to a fresh game | NOT RUN | |
+| Player weapon damages a valid target | PASS | Player projectile damaged an enemy; same-faction projectile was ignored. |
+| Hostile ships engage under expected reputation rules | PASS | Major-faction enemy acquired the player outside station protection. |
+| Safe-zone behavior prevents inappropriate attacks | PASS | Ordinary hostility stood down; severe hostility correctly overrode protection. |
+| Hull and shields update correctly under damage | PASS | Shields absorbed damage first and excess spilled into hull. |
+| Destroyed ships produce expected rewards/state | PASS | Wreck, pool count, entity removal, credits, and quest signal verified. |
+| Faction reputation changes after hostile action | PASS | Hit, kill, and enemy-faction reputation changes matched the rules. |
+| Death screen appears when the player is destroyed | PASS | Fatal damage opened the real death panel. |
+| Restart from death returns to a fresh game | PASS | Death-screen restart reloaded fresh health, credits, quest, and UI state. |
 
 ## Session C: Missions, Dialogue, LLM, And TTS
 
