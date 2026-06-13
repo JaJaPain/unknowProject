@@ -4628,11 +4628,14 @@ func _attempt_upgrade(slot: String, path: String):
 	var power_diff = next_power - current_power
 	
 	var reason = ""
+	var available_ore := GlobalState.player_storage_ore
+	if GlobalState.cargo_type == GlobalState.CargoType.ORE:
+		available_ore += GlobalState.cargo
 	if slot != "power" and GlobalState.get_current_power_draw() + power_diff > GlobalState.power_capacity:
 		reason = "power"
 	elif GlobalState.player_credits < cost_cr:
 		reason = "credits"
-	elif GlobalState.cargo_type != GlobalState.CargoType.ORE or GlobalState.cargo < cost_ore:
+	elif available_ore < cost_ore:
 		reason = "ore"
 		
 	if reason != "":

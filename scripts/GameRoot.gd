@@ -27,7 +27,9 @@ func _ready() -> void:
 	var system_root := system_container.get_child(0) as Node3D
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = "start_system"
-	if "--mission-smoke-test" in OS.get_cmdline_user_args():
+	if "--services-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_services_smoke_test")
+	elif "--mission-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_smoke_test")
 	elif "--combat-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_combat_smoke_test")
@@ -357,7 +359,18 @@ func _capture_global_state() -> Dictionary:
 
 func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.player_credits = int(state.get("credits", 50))
-	GlobalState.current_upgrades = state.get("upgrades", GlobalState.current_upgrades).duplicate(true)
+	var loaded_upgrades: Dictionary = state.get(
+		"upgrades",
+		GlobalState.current_upgrades
+	).duplicate(true)
+	for system_name in GlobalState.current_upgrades.keys():
+		var fallback: Dictionary = GlobalState.current_upgrades[system_name]
+		var loaded: Dictionary = loaded_upgrades.get(system_name, fallback)
+		loaded_upgrades[system_name] = {
+			"tier": int(loaded.get("tier", fallback["tier"])),
+			"path": str(loaded.get("path", fallback["path"])),
+		}
+	GlobalState.current_upgrades = loaded_upgrades
 	GlobalState.apply_upgrade_stats()
 	GlobalState.player_storage_ore = float(state.get("storage_ore", 0.0))
 	GlobalState.cargo_type = int(state.get("cargo_type", GlobalState.CargoType.EMPTY))
@@ -374,6 +387,10 @@ func _run_jump_smoke_test() -> void:
 	var starting_shield: float = min(17.0, GlobalState.shield_capacity)
 	player.set("health", starting_health)
 	player.set("current_shield", starting_shield)
+	GlobalState.current_upgrades["power"] = {"tier": 2, "path": "standard"}
+	GlobalState.current_upgrades["engine"] = {"tier": 2, "path": "speed"}
+	GlobalState.player_storage_ore = 77.0
+	GlobalState.apply_upgrade_stats()
 
 	var outbound_gate := _find_gate(get_active_system_root(), "start_to_test")
 	if not outbound_gate:
@@ -415,6 +432,11 @@ func _run_jump_smoke_test() -> void:
 	if not is_equal_approx(player.get("health"), starting_health) or not is_equal_approx(player.get("current_shield"), starting_shield):
 		_fail_jump_smoke_test("Player health or shield changed during travel.")
 		return
+	if int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2) \
+			or not is_equal_approx(GlobalState.player_storage_ore, 77.0):
+		_fail_jump_smoke_test("Upgrade or station-storage state changed during outbound travel.")
+		return
 
 	var return_gate := _find_gate(get_active_system_root(), "test_to_start")
 	if not return_gate:
@@ -440,6 +462,11 @@ func _run_jump_smoke_test() -> void:
 		return
 	if not is_equal_approx(player.get("health"), starting_health) or not is_equal_approx(player.get("current_shield"), starting_shield):
 		_fail_jump_smoke_test("Player state changed on the return jump.")
+		return
+	if int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2) \
+			or not is_equal_approx(GlobalState.player_storage_ore, 77.0):
+		_fail_jump_smoke_test("Upgrade or station-storage state changed on the return jump.")
 		return
 
 	if "--save-smoke-test" in OS.get_cmdline_user_args():
@@ -1038,6 +1065,172 @@ func _fail_mission_smoke_test(message: String) -> void:
 	delete_savegame()
 	get_tree().quit(1)
 
+func _run_services_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+
+	var ui := GlobalState.get_ui_manager()
+	var system_root := get_active_system_root()
+	var main_station := GlobalState.get_primary_station()
+	var iron_reach: Node3D = null
+	var kova: Node3D = null
+	for station in get_tree().get_nodes_in_group("station"):
+		if station is Node3D and system_root.is_ancestor_of(station):
+			if station.name == "IronReachOutpost":
+				iron_reach = station
+			elif station.name == "KovaStation":
+				kova = station
+	if not ui or not main_station or not iron_reach or not kova:
+		_fail_services_smoke_test(
+			"Required station or UI nodes were unavailable. ui=%s main=%s iron=%s kova=%s" % [
+				str(ui != null),
+				str(main_station != null),
+				str(iron_reach != null),
+				str(kova != null),
+			]
+		)
+		return
+
+	# Full and partial repair paths must charge exactly two credits per hull point.
+	player.health = 70.0
+	GlobalState.player_credits = 100
+	ui.call("_repair_ship")
+	if not is_equal_approx(player.health, 100.0) or GlobalState.player_credits != 40:
+		_fail_services_smoke_test("Full repair did not restore hull and charge correctly.")
+		return
+	player.health = 70.0
+	GlobalState.player_credits = 20
+	ui.call("_repair_ship")
+	if not is_equal_approx(player.health, 80.0) or GlobalState.player_credits != 0:
+		_fail_services_smoke_test("Partial repair did not use all affordable credits correctly.")
+		return
+
+	# The maintenance display and purchase path must both include station ore.
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	GlobalState.player_credits = 2000
+	GlobalState.player_storage_ore = 250.0
+	ui.current_station = main_station
+	ui.current_submenu = ui.DockSubmenu.MAINTENANCE
+	ui.call("_render_dock_submenu")
+	ui.call("_refresh_upgrade_ui")
+	if not ui.su_ore_bank_lbl.text.contains("Power Draw: 300 / 300 MW"):
+		_fail_services_smoke_test("Upgrade panel did not show current power use.")
+		return
+	ui.call("_attempt_upgrade", "power", "standard")
+	ui.call("_attempt_upgrade", "engine", "speed")
+	if int(GlobalState.current_upgrades["power"]["tier"]) != 2 \
+			or int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.player_storage_ore, 50.0):
+		_fail_services_smoke_test("Stored ore could not fund valid upgrades through the UI.")
+		return
+
+	if not save_game():
+		_fail_services_smoke_test("Could not save upgraded service state.")
+		return
+	GlobalState.player_storage_ore = 0.0
+	GlobalState.current_upgrades = {
+		"weapons": {"tier": 1, "path": "base"},
+		"engine": {"tier": 1, "path": "base"},
+		"shields": {"tier": 1, "path": "base"},
+		"mining": {"tier": 1, "path": "base"},
+		"cargo": {"tier": 1, "path": "base"},
+		"power": {"tier": 1, "path": "base"},
+	}
+	GlobalState.apply_upgrade_stats()
+	if not await load_game() \
+			or not is_equal_approx(GlobalState.player_storage_ore, 50.0) \
+			or int(GlobalState.current_upgrades["power"]["tier"]) != 2 \
+			or int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2):
+		_fail_services_smoke_test("Storage or upgrades did not survive save and reload.")
+		return
+
+	# Outposts expose gossip and pickup routing, but not station commerce,
+	# agents, maintenance, repair, or upgrades.
+	ui.current_station = iron_reach
+	ui.current_submenu = ui.DockSubmenu.SERVICES
+	ui.call("_render_dock_submenu")
+	if ui.sell_btn.visible \
+			or ui.agent_service_btn.visible \
+			or ui.maintenance_bay_btn.visible \
+			or ui.repair_btn.visible \
+			or ui.ship_upgrades_btn.visible \
+			or not ui.hear_gossip_btn.visible:
+		_fail_services_smoke_test("Outpost service restrictions were not rendered correctly.")
+		return
+
+	var gossip_holder := {"flavor": {}}
+	var capture_gossip := func(flavor: Dictionary) -> void:
+		gossip_holder["flavor"] = flavor
+	GlobalState.npc_flavor_spoken.connect(capture_gossip, CONNECT_ONE_SHOT)
+	ui.call("_on_hear_gossip_pressed")
+	var flavor: Dictionary = gossip_holder["flavor"]
+	if flavor.is_empty() \
+			or str(flavor.get("line", "")).is_empty() \
+			or str(flavor.get("voice_id", "")).is_empty():
+		_fail_services_smoke_test("Hear Gossip did not emit display and voice data.")
+		return
+	if not ui.dock_message_slot.visible \
+			or ui.dock_message_line.text != GlobalState.apply_tone_guard(
+				str(flavor["line"]),
+				str(flavor["voice_id"])
+			):
+		_fail_services_smoke_test("Outpost gossip was not displayed in the dock UI.")
+		return
+
+	QuestManager.active_quest = {
+		"title": "Services Pickup",
+		"faction": "neutral",
+		"agent_name": "Jenna Kross",
+		"objective_type": "PICKUP_SPECIAL",
+		"target_outpost": "kova",
+		"target_outpost_display": "Kova Station",
+		"target_npc": "Cassen Vane",
+		"part_name": "Sensor Calibration Kit",
+		"destination": "Grease Monkeys",
+		"picked_up": false,
+		"reward_credits": 200,
+		"reward_credits_multiplier": 1.0,
+		"choice_text_selected": "I'll take it.",
+	}
+	GlobalState.clear_cargo()
+	ui.current_station = iron_reach
+	ui.call("_on_test_pickup_part_pressed")
+	if bool(QuestManager.active_quest["picked_up"]) \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_services_smoke_test("Pickup succeeded at the wrong outpost.")
+		return
+	ui.current_station = kova
+	ui.call("_on_test_pickup_part_pressed")
+	if not bool(QuestManager.active_quest["picked_up"]) \
+			or GlobalState.cargo_type != GlobalState.CargoType.SPECIAL \
+			or GlobalState.cargo_special.get("name", "") != "Sensor Calibration Kit":
+		_fail_services_smoke_test("Assigned outpost did not load the pickup cargo.")
+		return
+
+	var credits_before_delivery := GlobalState.player_credits
+	ui.current_station = main_station
+	ui.current_submenu = ui.DockSubmenu.MAINTENANCE
+	ui.call("_on_deliver_part_pressed")
+	if QuestManager.is_quest_active() \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY \
+			or GlobalState.player_credits != credits_before_delivery + 200:
+		_fail_services_smoke_test("Returning the assigned part did not complete and pay the mission.")
+		return
+
+	print("[ServicesSmokeTest] PASS: repairs, upgrade UI, stored ore, persistence, outpost restrictions, gossip, and pickup routing verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+func _fail_services_smoke_test(message: String) -> void:
+	push_error("[ServicesSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
+
 func _fail_combat_smoke_test(message: String) -> void:
 	if Engine.has_meta("combat_smoke_phase"):
 		Engine.remove_meta("combat_smoke_phase")
@@ -1114,6 +1307,11 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	if GlobalState.player_credits != 4321 or not is_equal_approx(GlobalState.cargo, 27.0):
 		_fail_jump_smoke_test("Global player state did not restore.")
+		return false
+	if int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
+			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2) \
+			or not is_equal_approx(GlobalState.player_storage_ore, 77.0):
+		_fail_jump_smoke_test("Upgrade or station-storage state did not restore.")
 		return false
 	if QuestManager.active_quest.get("title", "") != "Save Test Contract":
 		_fail_jump_smoke_test("Quest state did not restore.")
