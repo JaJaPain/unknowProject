@@ -233,3 +233,22 @@ Result: DEVELOPMENT BASELINE COMPLETE
 Detailed result:
 
 - `docs/phase_0_performance_baseline_2026-06-13.md`
+
+## Checkpoint 5 Status
+
+Date: 2026-06-13
+
+Result: COMPLETE
+
+- Added `tools/run_baseline_checks.ps1` as the single verification entry point.
+- The command checks the Git diff, Godot import/parse, core startup, two-way
+  gate and save restoration, and docking/autosave behavior.
+- Test user data is isolated under the ignored `.godot` directory.
+- Added `--baseline-offline` so core checks do not require LLM or TTS services.
+- The complete suite passed twice consecutively.
+
+Usage and expected output:
+
+- `docs/phase_0_baseline_checks.md`
+
+Phase 0 result: COMPLETE
