@@ -844,7 +844,9 @@ remain separate data.
 
 Purpose: establish a trustworthy baseline before foundational refactoring.
 
-- Finish the current jump-gate branch and hands-on regression pass.
+- Finish the current jump-gate branch and hands-on regression pass. Phase 1 is
+  complete and approved with 18 of 18 automated checks plus the normal-play
+  approval route passing.
 - Document current game loops and known defects.
 - Add repeatable startup, jump, save, docking, quest, and upgrade checks.
 - Record performance baselines and save representative prototype saves.

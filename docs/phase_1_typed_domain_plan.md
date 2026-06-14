@@ -1,6 +1,6 @@
 # Phase 1: Typed Domain Data And Stable IDs
 
-Status: Approved; implementation in progress
+Status: Complete and approved
 
 ## Purpose
 
@@ -387,7 +387,7 @@ Implementation record:
 
 ### Checkpoint 6: Unified Speech Compatibility Adapter
 
-Status: Implementation complete; manual audio approval pending
+Status: Complete; manual audio approval passed
 
 Deliverables:
 
@@ -498,6 +498,8 @@ Implemented:
 
 ### Checkpoint 9: Phase Regression And Approval
 
+Status: Complete and approved
+
 Deliverables:
 
 - run the existing offline baseline suite
@@ -514,6 +516,19 @@ Phase 1 exit criteria:
 - current gameplay remains intact
 - current saves migrate or fail safely and clearly
 - Phase 2 can build campaign persistence without parsing scene internals
+
+Automated result:
+
+- `main.tscn` no longer embeds the handcrafted starting system
+- startup and gate travel both resolve system scenes through `SystemRegistry`
+- registry tests prevent future direct system-scene embedding
+- dormant economy, service, combat, death, and restart checks were restored to
+  the standard baseline
+- complete automated baseline passing 18 of 18 steps
+- rendered station, asteroid-field, and combat measurements show no material
+  Phase 1 renderer or VRAM regression
+- hands-on startup, docking, save/relaunch, gate return, combat, death, and
+  restart route passed
 
 ## Proposed File Layout
 
