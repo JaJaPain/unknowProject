@@ -6,7 +6,7 @@ signal startup_load_completed(save_loaded: bool)
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 0.9
-const SAVE_VERSION := 1
+const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 
@@ -341,7 +341,7 @@ func save_game() -> bool:
 			QuestManager.last_validation_error
 		)
 		return false
-	var save_data := {
+	var runtime_save_data := {
 		"version": SAVE_VERSION,
 		"current_system_id": GlobalState.current_system_id,
 		"arrival_gate_id": last_arrival_gate_id,
@@ -350,11 +350,19 @@ func save_game() -> bool:
 		"quest": quest_state,
 		"systems": system_states.duplicate(true),
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if not file:
-		push_warning("[GameRoot] Could not open save file for writing.")
+	var prepared := SaveMigrator.prepare_for_save(
+		runtime_save_data,
+		system_registry
+	)
+	if not bool(prepared.get("ok", false)):
+		push_warning(
+			"[GameRoot] Save preparation failed: %s" %
+			prepared.get("error", "unknown error")
+		)
 		return false
-	file.store_string(JSON.stringify(save_data))
+	if not SaveMigrator.write_current(SAVE_PATH, prepared["data"]):
+		push_warning("[GameRoot] Could not write save file.")
+		return false
 	return true
 
 func request_autosave() -> bool:
@@ -363,14 +371,24 @@ func request_autosave() -> bool:
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if not file:
+	var loaded := SaveMigrator.load_for_runtime(
+		SAVE_PATH,
+		system_registry
+	)
+	if not bool(loaded.get("ok", false)):
+		push_warning(
+			"[GameRoot] Save could not be loaded: %s" %
+			loaded.get("error", "unknown error")
+		)
 		return false
-	var parsed = JSON.parse_string(file.get_as_text())
-	if not _is_valid_save_data(parsed):
-		push_warning("[GameRoot] Save file is missing, malformed, or unsupported.")
-		return false
-	await _apply_save_data(parsed)
+	if bool(loaded.get("migrated", false)):
+		print(
+			"[GameRoot] Save migrated to version %d. Backup: %s" % [
+				SAVE_VERSION,
+				loaded.get("backup_path", ""),
+			]
+		)
+	await _apply_save_data(loaded["data"])
 	return true
 
 func delete_savegame() -> void:
@@ -384,19 +402,10 @@ func _load_startup_save() -> void:
 	startup_load_completed.emit(startup_save_loaded)
 
 func _is_valid_save_data(data: Variant) -> bool:
-	if not data is Dictionary:
-		return false
-	if int(data.get("version", -1)) != SAVE_VERSION:
-		return false
-	if not system_registry.has_system(str(data.get("current_system_id", ""))):
-		return false
-	if not data.get("quest", null) is Dictionary:
-		return false
-	if not QuestManager.can_restore_active_quest(data.get("quest", {})):
-		return false
-	return data.get("player", null) is Dictionary \
-		and data.get("global", null) is Dictionary \
-		and data.get("systems", null) is Dictionary
+	return SaveMigrator.validate_current(
+		data,
+		system_registry
+	).is_valid()
 
 func _apply_save_data(data: Dictionary) -> void:
 	system_states = data.get("systems", {}).duplicate(true)
