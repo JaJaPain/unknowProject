@@ -1077,13 +1077,20 @@ func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: Str
 		replacement = str(int(round(float(obj.get("amount_required", 25.0)))))
 	elif obj_type == "KILL_SHIPS":
 		var ship_words = ["ship", "contact", "target", "vessel", "hostile", "raider",
-			"patrol", "interceptor", "sentinel", "fighter", "bogey", "hull"]
-		var kill_verbs = ["destroy", "eliminate", "kill", "clear", "remove", "engage", "take"]
+			"patrol", "interceptor", "sentinel", "fighter", "bogey", "hull",
+			"of them", "scraped", "off the lane"]
+		var kill_verbs = ["destroy", "eliminate", "kill", "clear", "remove", "engage",
+			"take", "wants", "bounty"]
 		for i in range(dialogue.length()):
 			if dialogue[i] < "1" or dialogue[i] > "9":
 				continue
-			var after = dialogue.substr(i + 1, 25)
-			var before_start = max(0, i - 15)
+			var digit_end = i + 1
+			while digit_end < dialogue.length() \
+					and dialogue[digit_end] >= "0" \
+					and dialogue[digit_end] <= "9":
+				digit_end += 1
+			var after = dialogue.substr(digit_end, 35)
+			var before_start = max(0, i - 25)
 			var before = dialogue.substr(before_start, i - before_start)
 			var is_objective_number = false
 			for ship_word in ship_words:
@@ -1097,8 +1104,47 @@ func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: Str
 						break
 			if is_objective_number:
 				number_start = i
-				number_end = i + 1
+				number_end = digit_end
 				break
+		if number_start == -1:
+			var number_phrases = {
+				"a couple": 2,
+				"a few": 3,
+				"handful": 3,
+				"several": 4,
+				"two": 2,
+				"three": 3,
+				"four": 4,
+				"five": 5,
+				"six": 6,
+			}
+			for phrase: String in number_phrases:
+				var phrase_start = dialogue.find(phrase)
+				while phrase_start != -1:
+					var phrase_end = phrase_start + phrase.length()
+					var after = dialogue.substr(phrase_end, 35)
+					var before_start = max(0, phrase_start - 25)
+					var before = dialogue.substr(
+						before_start,
+						phrase_start - before_start
+					)
+					var is_objective_phrase = false
+					for ship_word in ship_words:
+						if after.find(ship_word) != -1:
+							is_objective_phrase = true
+							break
+					if not is_objective_phrase:
+						for kill_verb in kill_verbs:
+							if before.find(kill_verb) != -1:
+								is_objective_phrase = true
+								break
+					if is_objective_phrase:
+						number_start = phrase_start
+						number_end = phrase_end
+						break
+					phrase_start = dialogue.find(phrase, phrase_end)
+				if number_start != -1:
+					break
 		replacement = str(int(obj.get("count_required", 3)))
 
 	if number_start == -1:
