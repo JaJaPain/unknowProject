@@ -184,6 +184,8 @@ Exit test:
 
 ### Checkpoint 2: Campaign Identity And Slot Registry
 
+Status: Complete on 2026-06-14.
+
 Deliverables:
 
 - exactly three stable slot IDs
