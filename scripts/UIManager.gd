@@ -255,6 +255,8 @@ func _ready():
 	# Initialize startup loading screen to pre-cache the first quest & TTS
 	_create_loading_screen()
 	GlobalState.paused = true
+	if "--baseline-offline" in OS.get_cmdline_user_args():
+		call_deferred("_complete_offline_loading_for_tests")
 	
 	LLMInterface.llm_connection_attempt.connect(_on_llm_connection_attempt)
 	LLMInterface.llm_connection_established.connect(_on_llm_connected)
@@ -276,6 +278,11 @@ func _ready():
 		game_root.startup_load_completed.connect(_on_startup_load_completed)
 		if bool(game_root.get("startup_load_finished")):
 			_on_startup_load_completed(bool(game_root.get("startup_save_loaded")))
+
+func _complete_offline_loading_for_tests() -> void:
+	if loading_panel and is_instance_valid(loading_panel):
+		loading_panel.queue_free()
+	GlobalState.paused = false
 
 func _on_startup_load_completed(save_loaded: bool) -> void:
 	startup_save_loaded = save_loaded

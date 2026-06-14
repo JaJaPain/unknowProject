@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/GameRoot.gd" id="1_root"]
-[ext_resource type="PackedScene" path="res://scenes/systems/system_start.tscn" id="2_system"]
 [ext_resource type="PackedScene" path="res://scenes/player_ship.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui_manager.tscn" id="4_ui"]
 [ext_resource type="PackedScene" path="res://scenes/jump_transition_fx.tscn" id="5_fx"]
@@ -10,8 +9,6 @@
 script = ExtResource("1_root")
 
 [node name="SystemContainer" type="Node3D" parent="."]
-
-[node name="StartSystem" parent="SystemContainer" instance=ExtResource("2_system")]
 
 [node name="PlayerShip" parent="." instance=ExtResource("3_player")]
 

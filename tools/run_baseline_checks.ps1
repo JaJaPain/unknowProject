@@ -117,6 +117,22 @@ try {
         & $godot --headless --path $root -- `
             --mission-smoke-test --no-save-load --baseline-offline
     }
+    Invoke-BaselineStep "Mining economy and upgrades" {
+        & $godot --headless --path $root -- `
+            --economy-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Station services and pickup routing" {
+        & $godot --headless --path $root -- `
+            --services-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Combat damage death and restart" {
+        & $godot --headless --path $root -- `
+            --combat-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Warm-service game restart" {
+        & $godot --headless --path $root -- `
+            --restart-smoke-test --no-save-load --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline

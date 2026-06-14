@@ -32,9 +32,22 @@ func _ready() -> void:
 			"[GameRoot] System registry is invalid: %s" %
 			system_registry.validation.summary()
 		)
-	var system_root := system_container.get_child(0) as Node3D
+		get_tree().quit(1)
+		return
+	var start_definition := system_registry.get_system("system.start")
+	var start_scene := system_registry.load_scene("system.start")
+	if start_definition == null or start_scene == null:
+		push_error("[GameRoot] Registered starting system could not be loaded.")
+		get_tree().quit(1)
+		return
+	var system_root := start_scene.instantiate() as Node3D
+	if system_root == null:
+		push_error("[GameRoot] Registered starting system has an invalid root.")
+		get_tree().quit(1)
+		return
+	system_container.add_child(system_root)
 	GlobalState.active_system_root = system_root
-	GlobalState.current_system_id = "start_system"
+	GlobalState.current_system_id = start_definition.legacy_id
 	if "--performance-baseline" in OS.get_cmdline_user_args():
 		call_deferred("_run_performance_baseline")
 	elif "--core-smoke-test" in OS.get_cmdline_user_args():
@@ -1597,6 +1610,16 @@ func _run_autopilot_smoke_test() -> void:
 	var rocky_id := rocky_planet.get_instance_id()
 	var rocky_engagements := 0
 	var previous_avoidance_id := 0
+	var live_asteroid_collision_layers := {}
+	for candidate in get_tree().get_nodes_in_group("asteroid"):
+		if candidate is CollisionObject3D \
+				and get_active_system_root().is_ancestor_of(candidate):
+			var collision_object := candidate as CollisionObject3D
+			live_asteroid_collision_layers[
+				collision_object.get_instance_id()
+			] = collision_object.collision_layer
+			collision_object.collision_layer = 0
+	await get_tree().physics_frame
 	var real_minimum_distance := player.global_position.distance_to(
 		rocky_planet.global_position
 	)
@@ -1758,6 +1781,13 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+
+	for instance_id: Variant in live_asteroid_collision_layers:
+		var asteroid_object := instance_from_id(int(instance_id))
+		if asteroid_object is CollisionObject3D:
+			(asteroid_object as CollisionObject3D).collision_layer = int(
+				live_asteroid_collision_layers[instance_id]
+			)
 
 	player.global_transform = original_transform
 	player.call("_clear_avoidance_state")

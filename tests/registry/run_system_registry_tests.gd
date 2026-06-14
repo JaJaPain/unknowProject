@@ -13,6 +13,7 @@ func _initialize() -> void:
 	if registry.is_valid():
 		_test_resolution(registry)
 		_test_scene_gate_metadata(registry)
+		_test_main_scene_has_no_embedded_system()
 	_test_invalid_pair()
 	_test_unknown_destination()
 	_test_missing_scene()
@@ -91,6 +92,14 @@ func _test_scene_gate_metadata(registry: SystemRegistry) -> void:
 			"Scene and registry gate counts differ for '%s'." % system.id
 		)
 		root.free()
+
+
+func _test_main_scene_has_no_embedded_system() -> void:
+	var main_scene := FileAccess.get_file_as_string("res://scenes/main.tscn")
+	_expect(
+		not main_scene.contains("res://scenes/systems/"),
+		"Main scene embeds a system instead of using SystemRegistry."
+	)
 
 
 func _test_invalid_pair() -> void:
