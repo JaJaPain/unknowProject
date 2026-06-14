@@ -433,8 +433,12 @@ derived and cached for LLM prompts.
 A small campaign-adjacent record may survive checkpoint loading:
 
 - Previous death category.
-- A few prior-timeline phrases or facts.
+- A few timestamped and timeline-tagged prior-timeline phrases or facts.
 - Number of timeline reversals.
+
+On rollback, Kaelen observations newer than the loaded checkpoint move into a
+bounded discarded-timeline archive. Campaign time and chronicle sequence, not
+wall-clock time, determine which observations belong to the discarded branch.
 
 This record must never alter balance, reveal future outcomes, or make ordinary
 NPCs remember discarded events.
@@ -913,18 +917,52 @@ Exit gate:
 
 Purpose: make permanence reliable before creating more content.
 
+Detailed implementation contract:
+
+- `docs/phase_2_campaign_store_plan.md`
+- `docs/phase_2_storage_contract.md`
+
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.
 - Add atomic writes, backups, schema versions, and migrations.
 - Define rewind behavior for older checkpoints.
 - Add cache integrity checks and missing-asset recovery.
-- Add multiple save slots and autosave rules.
+- Add three campaign slots. Each campaign has one rolling safe autosave and up
+  to three named manual checkpoint copies.
+- Create safe checkpoints only after successful docking or successful jump-gate
+  arrival. Additional safe checkpoint triggers may be added later only when
+  they cannot preserve an immediate tactical advantage.
+- Create an initial living safe checkpoint once a new campaign reaches playable
+  startup, so quitting before the first dock remains recoverable.
+- A manual save requested while flying copies the latest safe checkpoint. It
+  does not capture the ship's current position, nearby enemies, current hull or
+  shield damage, projectiles, aggro state, or other live tactical conditions.
+- A manual save requested while docked may first refresh the safe checkpoint
+  after docking state is fully established, then create the named copy.
+- Manual saving is unavailable while dead, during a jump transition, before the
+  first safe checkpoint exists, or while a save transaction is already active.
+- Loading after death restores the latest living checkpoint and updates only
+  Kaelen's restricted meta-memory outside the rewound timeline.
+- Kaelen memories record timeline, checkpoint, and chronicle sequence. Loading
+  an older checkpoint archives only observations newer than that checkpoint;
+  death category is retained only when the discarded branch ended in death.
+- Post `SYSTEM: Campaign checkpoint saved.` to system chat only after a complete
+  autosave transaction succeeds.
+- Coalesce repeated autosave requests so one gameplay action cannot flood the
+  chat with duplicate save messages.
+- Failed saves post a distinct non-TTS system warning and preserve the previous
+  valid checkpoint.
+- Manual save confirmation identifies the named checkpoint. Migration,
+  backup-recovery, and corruption-recovery messages clearly identify what was
+  restored without exposing filesystem paths to the player.
 
 Exit gate:
 
 - Generated identity data survives checkpoint loading unchanged.
 - Mutable state rewinds correctly.
 - Corrupted or partial writes recover safely.
+- Saving while flying and then loading restores the last dock or gate-arrival
+  checkpoint, never the in-flight tactical position.
 
 ### Phase 3: Universal Time
 
