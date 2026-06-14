@@ -753,6 +753,59 @@ Acceptance checks:
 - Existing autopilot, obstruction routing, docking, mining, combat, and overview
   selection regressions still pass.
 
+## System Sky And Stellar Lighting
+
+Every solar system should have a visible stellar identity and a lightly animated
+deep-space background.
+
+### System Sun
+
+- Each system specification includes one primary sun with a stable visual ID,
+  color temperature, apparent size, direction, brightness, and optional visual
+  variation tags.
+- The sun appears at an unreachable visual distance and provides the system's
+  principal directional light.
+- It is a sky and lighting element, not a physical travel destination.
+- The sun does not appear in the overview, cannot be targeted, and is excluded
+  from autopilot, collision, scanning, mining, mission, and persistence-entity
+  queries.
+- Flying toward it never makes it meaningfully closer. System boundaries or
+  background rendering preserve the distant illusion.
+- Light color and intensity must preserve readable ships, stations, planets,
+  asteroid fields, HUD markers, and faction colors.
+- Generated systems may vary sun color and apparent size within curated limits,
+  but story generation does not directly control raw lighting values.
+- Binary or unusual stellar arrangements are deferred until the single-sun
+  lighting and composition rules are proven.
+
+### Distant Starfield
+
+- Each system receives a sparse deterministic starfield generated from its
+  system seed.
+- Stars remain at background distance and do not move relative to local world
+  objects as the player flies.
+- A small subset may occasionally shimmer or blink with subtle, asynchronous
+  brightness changes.
+- Twinkling must be slow and restrained. The sky should feel alive without
+  resembling warning lights, weapons fire, target markers, or UI notifications.
+- Star animation uses a shared material or similarly batched technique rather
+  than one timer, light, or process callback per star.
+- Star count, brightness, color range, animation frequency, and overdraw receive
+  explicit performance budgets for the target hardware.
+- The starfield is decorative and is not stored as thousands of persistent
+  entities. Its seed and visual profile are sufficient to reproduce it.
+
+Acceptance checks:
+
+- The handcrafted and generated test systems each show a distinct distant sun
+  that consistently lights their contents.
+- The sun cannot be selected, reached, collided with, or listed in the overview.
+- The same system seed reproduces the same starfield and stellar presentation.
+- Occasional star shimmer is visible during a longer observation without
+  distracting from navigation or combat.
+- Stellar visuals remain inexpensive and do not materially reduce the Phase 0
+  performance baseline.
+
 ## Procedural Ship Integration
 
 The external ship generator already supports:
@@ -948,6 +1001,8 @@ Purpose: build playable systems from validated specifications.
 - Define the system specification schema.
 - Create reusable location, planet, moon, station, outpost, hazard, encounter,
   spawn, and gate components.
+- Add a non-traversable system sun, directional stellar lighting, and a seeded,
+  low-cost distant starfield with sparse shimmer.
 - Build deterministic layout from a system seed.
 - Add visual composition rules and performance budgets.
 - Generate both sides of a branch before advertising either.
