@@ -461,6 +461,8 @@ Implementation record:
 
 ### Checkpoint 8: Transitional Save Migration
 
+Status: Complete
+
 Deliverables:
 
 - one-time migration from the current save schema
@@ -477,6 +479,22 @@ Exit test:
 - an existing save migrates and resumes correctly
 - the original save remains available as a backup
 - a failed migration never overwrites the source save
+
+Implemented:
+
+- version-2 saves store canonical system and gate registry IDs
+- runtime compatibility aliases are restored only at the load boundary
+- version-1 saves receive deterministic mission normalization
+- the original version-1 file is copied to a timestamped backup
+- migrated output is written and validated through a temporary file before
+  replacement
+- replacement failure restores the source from its backup
+- damaged and unsupported saves fail clearly without rewriting their source
+- focused migration fixtures cover canonicalization, backup integrity,
+  runtime decoding, damaged JSON, and unsupported future versions
+- fallback combat dialogue synchronization recognizes digits, number words,
+  and quantity phrases
+- complete automated baseline passing 14 of 14 steps
 
 ### Checkpoint 9: Phase Regression And Approval
 
