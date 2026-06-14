@@ -166,6 +166,8 @@ updating `checkpoint_index.json` last.
 
 ### Checkpoint 1: Ownership And Schema Contract
 
+Status: Complete on 2026-06-14.
+
 Deliverables:
 
 - campaign, manifest, asset, checkpoint, map-knowledge, chronicle, and

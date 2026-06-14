@@ -113,6 +113,11 @@ try {
             "res://tests/persistence/run_save_migration_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Campaign storage schemas and ownership" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_campaign_schema_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Mission gameplay lifecycle" {
         & $godot --headless --path $root -- `
             --mission-smoke-test --no-save-load --baseline-offline
