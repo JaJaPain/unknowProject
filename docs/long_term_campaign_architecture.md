@@ -159,6 +159,42 @@ Therefore:
 
 ## Approved Experience Rules
 
+### Handcrafted Boundary
+
+Only the first solar system's physical layout and resident starting factions
+are fixed across campaigns.
+
+After the first system, each new campaign creates its own:
+
+- system topology and branch routes
+- planets, moons, rings, asteroid fields, hazards, and encounter zones
+- stations, outposts, gates, and deep-space locations
+- major, minor, pirate, and unknown faction presence
+- faction goals, influence, conflicts, alliances, and local reputation context
+- ships, NPCs, businesses, missions, ambient encounters, and story arcs
+- economy, ore distribution, regional demand, and notable rewards
+
+Generation is campaign-seeded. Content must be different between new
+playthroughs but deterministic and permanent inside one campaign. Reloading,
+revisiting, dying and restoring a checkpoint, or temporarily leaving a system
+must never reroll established people, factions, geography, resources, routes,
+or history.
+
+The current handcrafted test system is development scaffolding, not a fixed
+second campaign system. It may remain as an automated-test fixture, but the
+production campaign must replace it with a generated first destination.
+
+Fixed game-wide elements remain limited to rules and reusable building blocks:
+
+- Kaelen's identity, protection rules, and long-arc mystery
+- the player naming rules (`Shiny` from Kaelen and `Indy` from others)
+- supported gameplay capabilities and balance constraints
+- curated portrait, voice, ship-part, visual, and fallback libraries
+- PG-13 content policy and continuity validators
+
+These fixed building blocks constrain generation without predetermining the
+campaign's systems, inhabitants, factions, encounters, or story.
+
 ### The Player
 
 - The player has no canonical name, gender, body, or spoken voice.
@@ -925,16 +961,39 @@ Exit gate:
 Purpose: give story generation a safe vocabulary of mechanics.
 
 - Replace the single active quest with mission collections.
-- Define typed objective components and consequence components.
+- Replace hardcoded objective `match` branches with a mission capability
+  registry. A new capability registers its validator, runtime handler, event
+  subscriptions, progress formatter, save-state schema, and completion rules
+  without editing the mission core.
+- Define typed trigger, objective, consequence, turn-in, and cleanup components.
+- Allow a mission definition to compose several registered components instead
+  of requiring one monolithic mission type.
+- Add deterministic trigger capabilities for proximity, docking, entering a
+  zone, receiving a transmission, scanning, cargo possession, destruction,
+  elapsed campaign time, and prior event or relationship state.
+- Add explicit offered, discovered, accepted, active, ready-to-turn-in,
+  completed, failed, expired, and abandoned mission states.
+- Separate world encounters from mission ownership. An encounter may exist
+  before the player notices it, may offer a mission only after a trigger, and
+  must clean up or persist according to its own policy if ignored.
+- Define encounter eligibility data independently from mission execution:
+  rarity, cooldown, system tags, valid locations, required capabilities,
+  relationship bounds, campaign-time windows, recent-event exclusions, active
+  encounter budget, and repeat policy.
 - Port current kill, ore delivery, and special pickup missions.
 - Add abandonment with 2-3 reputation loss.
 - Add untimed persistence and timed expiration.
 - Add prerequisite, branching, follow-up, and cross-system mission support.
 - Keep deterministic validation and curated fallbacks.
+- Add extension tests proving a new authored mission capability can be
+  registered and saved without changing the mission manager, UI, or existing
+  capability implementations.
 
 Exit gate:
 
 - Multiple authored missions can coexist, expire, branch, and survive travel.
+- A test-only mission capability can be added through registration alone, and
+  all existing mission regression tests still pass unchanged.
 
 ### Phase 6: Faction And Economy Simulation
 
@@ -955,6 +1014,11 @@ Purpose: make systems change believably without direct LLM control.
 - Add regional supply, demand, stock recovery, taxes, and access controls.
 - Add station storage and trade history.
 - Add high-reputation stock and enemy-faction suspicion.
+- Add a deterministic ambient encounter scheduler. It periodically evaluates
+  registered encounter templates against current world state, pacing budgets,
+  cooldowns, location availability, campaign seed, and recent history.
+- The scheduler chooses whether an encounter occurs and which eligible template
+  receives an opportunity. No LLM call may directly spawn an encounter.
 
 Exit gate:
 
@@ -971,7 +1035,9 @@ Purpose: support branching campaigns before procedural branches are activated.
   an isolated quality-of-life improvement.
 - Separate physical campaign topology from player knowledge.
 - Support confirmed, hidden, rumored, blocked, and damaged routes.
-- Add two handcrafted branch destinations as a test.
+- Add two deterministic generated branch destinations as the production test.
+  Authored fixtures may still be used by automated tests, but no handcrafted
+  branch becomes permanent campaign content.
 - Add Kaelen's delayed gate-reveal eligibility.
 
 Exit gate:
@@ -1003,9 +1069,17 @@ Purpose: build playable systems from validated specifications.
 - Define the system specification schema.
 - Create reusable location, planet, moon, station, outpost, hazard, encounter,
   spawn, and gate components.
+- Support temporary and persistent deep-space encounter anchors that are not
+  tied to a planet, station, outpost, or asteroid field.
+- Allow encounter specifications to spawn ships or signals, broadcast a single
+  or repeated transmission, expose proximity or scan triggers, and remain
+  dormant until the player discovers them.
 - Add a non-traversable system sun, directional stellar lighting, and a seeded,
   low-cost distant starfield with sparse shimmer.
 - Build deterministic layout from a system seed.
+- Replace the development test system as the player's production first
+  destination. The generated destination is committed to the campaign before
+  its gate is revealed.
 - Add visual composition rules and performance budgets.
 - Generate both sides of a branch before advertising either.
 - Add automated structural and runtime validation.
@@ -1014,6 +1088,32 @@ Exit gate:
 
 - A generated system can be built, cached, loaded, left, revisited, and restored
   without the LLM being present.
+
+#### Reference Encounter: Stranded Pilot
+
+The first cross-phase proof of mission extensibility should be an authored
+stranded-pilot encounter:
+
+1. A seeded ship enters or is placed at a valid deep-space encounter anchor.
+2. This happens only when the ambient encounter scheduler selects the
+   `encounter.stranded_pilot` template from the currently eligible pool. It is
+   not attached to a fixed mission, system entry, date, or story beat.
+3. The ship becomes disabled and sends one system-chat distress transmission.
+4. Missing the transmission does not automatically add a mission.
+5. Approaching within a configured distance reveals the pilot and offers the
+   mission.
+6. Accepting it composes registered objectives such as repair assistance,
+   delivery, escort, towing support, threat removal, or passenger transport.
+7. Turn-in may occur at the stranded ship, an outpost, a main station, or
+   another registered destination.
+8. Ignoring, refusing, completing, abandoning, leaving the system, saving, and
+   returning all follow explicit encounter persistence and cleanup policies.
+
+The stranded pilot is a reference composition, not a special case in the
+mission manager. Its purpose is to prove that a new game loop can add
+registered capabilities and data without refactoring existing mission logic.
+It may never appear in a campaign, may appear only once, or may later appear in
+a meaningfully different form if its repeat policy and world conditions allow.
 
 ### Phase 10: Story Director
 
@@ -1024,6 +1124,13 @@ enforce it.
 - Maintain active arcs, unresolved hooks, and future branch proposals.
 - Use constrained schemas and continuity review.
 - Translate approved story intent into supported missions and simulation inputs.
+- Let the director select only registered mission and encounter capabilities;
+  it may compose supported pieces but may never invent an unimplemented
+  gameplay verb.
+- The story director may influence encounter weights or attach an approved
+  narrative hook, but the deterministic encounter scheduler owns runtime
+  eligibility and spawning. Story generation cannot guarantee that an ambient
+  event occurs.
 - Add PG-13 and Kaelen-protection validators.
 - Add graceful fallback arcs when the LLM is unavailable.
 
