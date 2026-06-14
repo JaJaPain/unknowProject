@@ -123,6 +123,11 @@ try {
             "res://tests/persistence/run_campaign_slot_registry_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Campaign transactions and recovery" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_campaign_transaction_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Mission gameplay lifecycle" {
         & $godot --headless --path $root -- `
             --mission-smoke-test --no-save-load --baseline-offline

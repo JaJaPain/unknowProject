@@ -204,6 +204,8 @@ Exit test:
 
 ### Checkpoint 3: Atomic Store And Recovery
 
+Status: Complete on 2026-06-14.
+
 Deliverables:
 
 - one reusable persistence service

@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_three_stable_slots()
 	_test_create_reopen_and_initial_checkpoint()
 	_test_slot_isolation_and_selection()
+	_test_registry_corruption_recovery()
 	_test_no_fourth_campaign()
 	_test_delete_is_isolated()
 	_cleanup()
@@ -146,6 +147,23 @@ func _test_no_fourth_campaign() -> void:
 	)
 
 
+func _test_registry_corruption_recovery() -> void:
+	var registry := RegistryType.open(TEST_ROOT)
+	var selected := registry.select_campaign("slot_02")
+	_expect(bool(selected.get("ok", false)), selected.get("error", ""))
+	_write_text("%s/slots.json" % TEST_ROOT, "{ damaged")
+	var recovered := RegistryType.open(TEST_ROOT)
+	_expect(
+		recovered.is_valid(),
+		"Campaign registry did not recover a damaged slots index."
+	)
+	_expect(
+		recovered.get_slot("slot_01").get("occupied") == true
+			and recovered.get_slot("slot_02").get("occupied") == true,
+		"Registry recovery lost a previously committed occupied slot."
+	)
+
+
 func _test_delete_is_isolated() -> void:
 	var registry := RegistryType.open(TEST_ROOT)
 	var slot_one_id := str(registry.get_slot("slot_01").get("campaign_id", ""))
@@ -210,6 +228,12 @@ func _cleanup() -> void:
 	if not DirAccess.dir_exists_absolute(absolute):
 		return
 	_remove_directory(absolute)
+
+
+func _write_text(path: String, text: String) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(text)
 
 
 func _remove_directory(path: String) -> void:

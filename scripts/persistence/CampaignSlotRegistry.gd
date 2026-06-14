@@ -6,6 +6,9 @@ const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 const SchemaType := preload(
 	"res://scripts/persistence/CampaignSchemaCatalog.gd"
 )
+const TransactionStoreType := preload(
+	"res://scripts/persistence/CampaignTransactionStore.gd"
+)
 const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
@@ -110,32 +113,23 @@ func create_campaign(
 	var campaign_path := "%s/%s" % [root_path, slot_id]
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(campaign_path)):
 		return _failure("Campaign slot directory already exists.")
-	if not _make_directory("%s/checkpoints/autosave" % campaign_path) \
-			or not _make_directory("%s/chronicle/segments" % campaign_path) \
-			or not _make_directory("%s/recovery" % campaign_path) \
-			or not _make_directory("%s/transactions" % campaign_path):
-		_remove_tree(campaign_path)
-		return _failure("Campaign directories could not be created.")
 
 	var document_paths := {
-		SchemaType.CAMPAIGN: "%s/campaign.json" % campaign_path,
-		SchemaType.MANIFEST: "%s/manifest.json" % campaign_path,
-		SchemaType.ASSET_REGISTRY: "%s/assets.json" % campaign_path,
-		SchemaType.KAELEN_META: "%s/kaelen_meta.json" % campaign_path,
+		SchemaType.CAMPAIGN: "campaign.json",
+		SchemaType.MANIFEST: "manifest.json",
+		SchemaType.ASSET_REGISTRY: "assets.json",
+		SchemaType.KAELEN_META: "kaelen_meta.json",
 		SchemaType.CHECKPOINT:
-			"%s/checkpoints/autosave/checkpoint.json" % campaign_path,
+			"checkpoints/autosave/checkpoint.json",
 		SchemaType.MAP_KNOWLEDGE:
-			"%s/checkpoints/autosave/map_knowledge.json" % campaign_path,
+			"checkpoints/autosave/map_knowledge.json",
 		SchemaType.CHRONICLE_SEGMENT:
-			"%s/chronicle/segments/segment_000001.json" % campaign_path,
+			"chronicle/segments/segment_000001.json",
 	}
+	var transaction_files: Dictionary = {}
 	for document in documents:
 		var document_type := str(document.get("document_type", ""))
-		if not _write_json(document_paths.get(document_type, ""), document):
-			_remove_tree(campaign_path)
-			return _failure(
-				"Initial campaign document '%s' could not be written." % document_type
-			)
+		transaction_files[document_paths.get(document_type, "")] = document
 
 	var checkpoint_index := {
 		"schema_version": 1,
@@ -148,12 +142,20 @@ func create_campaign(
 		},
 		"manual": [null, null, null],
 	}
-	if not _write_json(
-		"%s/checkpoint_index.json" % campaign_path,
-		checkpoint_index
-	):
+	transaction_files["checkpoint_index.json"] = checkpoint_index
+	var campaign_commit := TransactionStoreType.commit_json_set(
+		campaign_path,
+		"campaign_create",
+		transaction_files,
+		"checkpoint_index.json",
+		_validate_campaign_transaction_file
+	)
+	if not bool(campaign_commit.get("ok", false)):
 		_remove_tree(campaign_path)
-		return _failure("Initial checkpoint index could not be written.")
+		return _failure(
+			"Initial campaign transaction failed: %s" %
+			campaign_commit.get("error", "unknown error")
+		)
 
 	var now := int(Time.get_unix_time_from_system())
 	var slot_data := {
@@ -313,7 +315,22 @@ func _load_or_create() -> void:
 			)
 		return
 
-	var parsed := DomainJsonType.read_object(slots_path)
+	var recovered := TransactionStoreType.recover_index(
+		root_path,
+		"slots.json",
+		_validate_slot_registry_file
+	)
+	if not bool(recovered.get("ok", false)):
+		validation.add_error(
+			"slot_registry_unrecoverable",
+			recovered.get("error", "Campaign slot registry is unavailable."),
+			slots_path
+		)
+		return
+	var parsed := {
+		"data": recovered["data"],
+		"validation": ValidationResultType.new(),
+	}
 	validation.merge(parsed["validation"])
 	if not validation.is_valid():
 		return
@@ -587,7 +604,62 @@ func _write_slot_registry() -> bool:
 		"selected_slot_id": selected_slot_id,
 		"slots": enumerate_slots(),
 	}
-	return _write_json(slots_path, data)
+	var committed := TransactionStoreType.commit_json_set(
+		root_path,
+		"slot_registry",
+		{"slots.json": data},
+		"slots.json",
+		_validate_slot_registry_file
+	)
+	return bool(committed.get("ok", false))
+
+
+func _validate_slot_registry_file(
+	path: String,
+	data: Dictionary
+) -> ValidationResult:
+	var result := ValidationResultType.new()
+	if path.get_file() != "slots.json":
+		return result
+	if int(data.get("schema_version", -1)) != SLOT_REGISTRY_VERSION:
+		result.add_error(
+			"unsupported_slot_registry",
+			"Slot registry version is unsupported.",
+			"schema_version"
+		)
+	var raw_slots: Variant = data.get("slots", null)
+	if not raw_slots is Array or raw_slots.size() != SLOT_IDS.size():
+		result.add_error(
+			"invalid_slot_count",
+			"Slot registry must contain exactly three slots.",
+			"slots"
+		)
+	return result
+
+
+func _validate_campaign_transaction_file(
+	path: String,
+	data: Dictionary
+) -> ValidationResult:
+	var result := ValidationResultType.new()
+	if path.get_file() == "checkpoint_index.json":
+		if int(data.get("schema_version", -1)) != 1:
+			result.add_error(
+				"invalid_checkpoint_index",
+				"Checkpoint index version must be 1.",
+				"schema_version"
+			)
+		if not DomainIdType.is_valid(
+			data.get("active_checkpoint_id", ""),
+			"checkpoint"
+		):
+			result.add_error(
+				"invalid_checkpoint_index",
+				"Checkpoint index requires an active checkpoint ID.",
+				"active_checkpoint_id"
+			)
+		return result
+	return SchemaType.validate_document(data)
 
 
 func _write_json(path: String, data: Dictionary) -> bool:
