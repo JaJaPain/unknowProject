@@ -9,6 +9,12 @@ const SchemaType := preload(
 const TransactionStoreType := preload(
 	"res://scripts/persistence/CampaignTransactionStore.gd"
 )
+const ManifestStoreType := preload(
+	"res://scripts/persistence/CampaignManifestStore.gd"
+)
+const ContentRegistryType := preload(
+	"res://scripts/registry/GameContentRegistry.gd"
+)
 const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
@@ -103,6 +109,10 @@ func create_campaign(
 		initial_state,
 		system_registry
 	)
+	if documents.is_empty():
+		return _failure(
+			"Initial campaign canon could not be built from the registries."
+		)
 	var bundle_validation := SchemaType.validate_bundle(documents)
 	if not bundle_validation.is_valid():
 		return _failure(
@@ -142,6 +152,13 @@ func create_campaign(
 		},
 		"manual": [null, null, null],
 	}
+	var canon_index := ManifestStoreType.build_initial_canon_index(
+		documents[1],
+		documents[2]
+	)
+	transaction_files["canon/manifest_000001.json"] = documents[1]
+	transaction_files["canon/assets_000001.json"] = documents[2]
+	transaction_files["canon_index.json"] = canon_index
 	transaction_files["checkpoint_index.json"] = checkpoint_index
 	var campaign_commit := TransactionStoreType.commit_json_set(
 		campaign_path,
@@ -476,11 +493,6 @@ func _build_initial_documents(
 	if system_definition == null:
 		current_system_id = "system.start"
 		system_definition = system_registry.get_system(current_system_id)
-	var entity_ids: Array[String] = [current_system_id, "npc.kaelen"]
-	for station_id in system_definition.station_ids:
-		entity_ids.append(str(station_id))
-	for gate in system_definition.gates:
-		entity_ids.append(str(gate.id))
 	var hidden_gates: Array[String] = []
 	for gate in system_definition.gates:
 		hidden_gates.append(str(gate.id))
@@ -498,27 +510,18 @@ func _build_initial_documents(
 		"kaelen_meta_id": ids["kaelen"],
 		"current_timeline_id": ids["timeline"],
 	}
-	var manifest := {
-		"document_type": SchemaType.MANIFEST,
-		"schema_version": SchemaType.SCHEMA_VERSION,
-		"ownership": SchemaType.PERMANENT,
-		"id": ids["manifest"],
-		"campaign_id": campaign_id,
-		"entity_ids": entity_ids,
-		"canon_facts": [{
-			"fact_id": ids["fact"],
-			"subject_ids": ["npc.kaelen", current_system_id],
-			"value": true,
-		}],
-	}
-	var assets := {
-		"document_type": SchemaType.ASSET_REGISTRY,
-		"schema_version": SchemaType.SCHEMA_VERSION,
-		"ownership": SchemaType.PERMANENT,
-		"id": ids["assets"],
-		"campaign_id": campaign_id,
-		"assets": [],
-	}
+	var canon_result := ManifestStoreType.build_handcrafted_documents(
+		campaign_id,
+		ids["manifest"],
+		ids["assets"],
+		system_registry,
+		ContentRegistryType.shared(),
+		ids["fact"]
+	)
+	if not bool(canon_result.get("ok", false)):
+		return []
+	var manifest: Dictionary = canon_result["manifest"]
+	var assets: Dictionary = canon_result["assets"]
 	var checkpoint_state: Dictionary = initial_state.duplicate(true)
 	checkpoint_state.erase("current_system_id")
 	var checkpoint := {
@@ -659,6 +662,8 @@ func _validate_campaign_transaction_file(
 				"active_checkpoint_id"
 			)
 		return result
+	if path.get_file() == "canon_index.json":
+		return ManifestStoreType.validate_canon_index(path, data)
 	return SchemaType.validate_document(data)
 
 

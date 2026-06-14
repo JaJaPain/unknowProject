@@ -283,6 +283,39 @@ static func _validate_manifest(data: Dictionary, result: ValidationResult) -> vo
 	_require_id(data, "id", "manifest", result)
 	_require_id(data, "campaign_id", "campaign", result)
 	_validate_id_array(data, "entity_ids", "", result)
+	var raw_records: Variant = data.get("entity_records", [])
+	if not raw_records is Array:
+		result.add_error(
+			"invalid_type",
+			"entity_records must be an array.",
+			"entity_records"
+		)
+	else:
+		var seen_records: Dictionary = {}
+		for index in range(raw_records.size()):
+			var raw: Variant = raw_records[index]
+			if not raw is Dictionary:
+				result.add_error(
+					"invalid_type",
+					"Entity record must be an object.",
+					"entity_records.%d" % index
+				)
+				continue
+			var record := raw as Dictionary
+			var prefix := "entity_records.%d." % index
+			_require_id(record, "entity_id", "", result, prefix)
+			_require_nonempty_string(record, "entity_type", result, prefix)
+			_require_nonempty_string(record, "origin", result, prefix)
+			_require_nonempty_string(record, "source_registry", result, prefix)
+			_require_nonempty_string(record, "definition_hash", result, prefix)
+			var entity_id := str(record.get("entity_id", ""))
+			if not entity_id.is_empty() and seen_records.has(entity_id):
+				result.add_error(
+					"duplicate_entity_record",
+					"Duplicate entity record '%s'." % entity_id,
+					"%sentity_id" % prefix
+				)
+			seen_records[entity_id] = true
 	_validate_object_array(data, "canon_facts", result)
 	_reject_keys(data, _FORBIDDEN_MANIFEST_KEYS, result)
 	for index in range(data.get("canon_facts", []).size()):
@@ -324,6 +357,8 @@ static func _validate_asset_registry(
 		_require_nonempty_string(asset, "generator_version", result, prefix)
 		_require_nonempty_string(asset, "generation_seed", result, prefix)
 		_require_nonempty_string(asset, "provenance_hash", result, prefix)
+		_require_nonempty_string(asset, "source_path", result, prefix)
+		_require_nonempty_string(asset, "rebuild_instruction", result, prefix)
 		var status := str(asset.get("validation_status", ""))
 		if status not in ["approved", "fallback", "missing", "rebuild_required"]:
 			result.add_error(
@@ -568,6 +603,20 @@ static func _validate_manifest_links(
 	if not by_type.has(MANIFEST):
 		return
 	var manifest: Dictionary = by_type[MANIFEST]
+	var listed_ids: Dictionary = {}
+	for entity_id in manifest.get("entity_ids", []):
+		listed_ids[str(entity_id)] = true
+	for index in range(manifest.get("entity_records", []).size()):
+		var record: Variant = manifest["entity_records"][index]
+		if not record is Dictionary:
+			continue
+		var record_id := str(record.get("entity_id", ""))
+		if not listed_ids.has(record_id):
+			result.add_error(
+				"unlisted_entity_record",
+				"Entity record '%s' is absent from entity_ids." % record_id,
+				"manifest.entity_records.%d.entity_id" % index
+			)
 	for index in range(manifest.get("canon_facts", []).size()):
 		var fact: Variant = manifest["canon_facts"][index]
 		if not fact is Dictionary:

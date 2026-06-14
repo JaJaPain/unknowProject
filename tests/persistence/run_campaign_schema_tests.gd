@@ -235,7 +235,10 @@ func _asset_registry() -> Dictionary:
 			"generator_version": "portrait_sheet_v1",
 			"generation_seed": "fixed-kaelen",
 			"provenance_hash": "sha256:example",
+			"source_path": "res://assets/QuestGivers.png",
+			"fallback_path": "",
 			"validation_status": "approved",
+			"rebuild_instruction": "Restore the curated portrait source.",
 		}],
 	}
 

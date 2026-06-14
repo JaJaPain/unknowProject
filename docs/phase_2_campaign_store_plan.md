@@ -221,6 +221,8 @@ Exit test:
 
 ### Checkpoint 4: Campaign Manifest And Asset Registry
 
+Status: Complete on 2026-06-14.
+
 Deliverables:
 
 - permanent campaign manifest

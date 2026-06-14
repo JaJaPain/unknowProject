@@ -300,6 +300,17 @@ campaign's systems, inhabitants, factions, encounters, or story.
 - Old systems remain useful through allies, stored goods, rare stock, local
   opportunities, faction rewards, expensive high-reputation upgrades, and
   Kaelen's callbacks to previous characters.
+- Ship power-plant tiers provide a deliberate progression gate. Higher-tier
+  power plants require specific materials introduced in later systems, so the
+  player cannot unlock every ship upgrade while remaining in the opening
+  region.
+- Required upgrade materials must come from established system geology,
+  regional trade, missions, faction rewards, or other normal campaign sources.
+  They are not arbitrary blockers created only when the player opens the
+  upgrade screen.
+- Returning to an earlier trusted mechanic or faction vendor with later-system
+  materials may unlock powerful upgrades, giving the player another practical
+  reason to revisit old allies and stations.
 - Economy controls should prevent mechanical exploits without punishing
   legitimate planning and merchant play.
 
@@ -1047,6 +1058,12 @@ Purpose: make systems change believably without direct LLM control.
 - Persist retired asteroid IDs, pending replacements, and replacement seeds so
   save loading cannot reroll rare resources.
 - Add scanner information and mineral-discovery rules.
+- Define power-plant upgrade tiers and their material recipes. Advanced tiers
+  must require one or more resources whose normal sources are found in later
+  systems, tying ship capability growth to campaign travel.
+- Validate upgrade recipes against generated system geology and economy data so
+  every required material has at least one legitimate obtainable source in the
+  campaign.
 - Prove the complete mining lifecycle in one handcrafted test field before
   procedural systems receive geological profiles.
 - Add regional supply, demand, stock recovery, taxes, and access controls.
