@@ -17,10 +17,10 @@ func _ready():
 	randomize()
 	
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
-	_spawn_asteroid_ring(gas_giant.global_position, 850.0, 150.0, 75, "GasGiantBelt")
+	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")
 	
 	# Spawn Asteroid rings around Rocky Planet (radius 250, ring at 370, width 80)
-	_spawn_asteroid_ring(rocky_planet.global_position, 370.0, 80.0, 45, "RockyBelt")
+	_spawn_asteroid_ring(rocky_planet, 370.0, 80.0, 45, "RockyBelt")
 	
 	# Spawn NPC Ships
 	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0, "Logistics", "entity.start.patrol.zenith.logistics")
@@ -57,7 +57,14 @@ func _ready():
 	add_child(spawn_timer)
 
 
-func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: int, prefix: String):
+func _spawn_asteroid_ring(
+	planet: Node3D,
+	radius: float,
+	width: float,
+	count: int,
+	prefix: String
+):
+	var center := planet.global_position
 	for i in range(count):
 		var angle = randf() * TAU
 		var offset_r = randf_range(-width / 2.0, width / 2.0)
@@ -80,6 +87,7 @@ func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: i
 		ast.current_angle = angle
 		ast.orbit_y = y
 		ast.is_orbiting = true
+		ast.navigation_parent = planet
 		
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)

@@ -10,7 +10,7 @@ signal quest_abandoned()
 # for a PICKUP_SPECIAL quest is ready. UIManager listens for this to fire
 # the TTS pre-cache. We use a dedicated signal (vs. quest_progress_updated)
 # because the line arriving is a one-shot event, not a state diff.
-signal pickup_handoff_ready(line: String, voice_id: String, voice_speed: float, is_fallback: bool, npc_name: String)
+signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 
 var active_quest: Dictionary = {}
 
@@ -212,15 +212,14 @@ func _create_runtime_mission_id(quest_data: Dictionary) -> String:
 #
 # `is_fallback=true` means the line is canned, not LLM-generated. Useful
 # for trace logging and for any future "showed a fallback" telemetry.
-func set_pickup_handoff(line: String, voice_id: String, voice_speed: float, is_fallback: bool, npc_name: String) -> void:
+func set_pickup_handoff(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String) -> void:
 	if not is_quest_active() or active_quest.get("objective_type", "") != "PICKUP_SPECIAL":
 		return
 	active_quest["pickup_handoff_line"] = line
-	active_quest["pickup_handoff_voice_id"] = voice_id
-	active_quest["pickup_handoff_voice_speed"] = voice_speed
+	active_quest["pickup_handoff_voice_profile_id"] = voice_profile_id
 	active_quest["pickup_handoff_is_fallback"] = is_fallback
 	active_quest["pickup_handoff_npc"] = npc_name
-	pickup_handoff_ready.emit(line, voice_id, voice_speed, is_fallback, npc_name)
+	pickup_handoff_ready.emit(line, voice_profile_id, is_fallback, npc_name)
 
 
 # Bank a partial ore delivery. Returns the amount actually delivered (capped at remaining need).

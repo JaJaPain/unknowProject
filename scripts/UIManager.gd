@@ -258,17 +258,17 @@ func _ready():
 	
 	LLMInterface.llm_connection_attempt.connect(_on_llm_connection_attempt)
 	LLMInterface.llm_connection_established.connect(_on_llm_connected)
-	TTSInterface.tts_connection_attempt.connect(_on_tts_connection_attempt)
-	TTSInterface.tts_connection_established.connect(_on_tts_connected)
+	SpeechService.speech_connection_attempt.connect(_on_tts_connection_attempt)
+	SpeechService.speech_connection_established.connect(_on_tts_connected)
 
 	# Autoloads survive reload_current_scene(). On restart the services may
 	# already be connected, so their one-time connection signals will not fire
 	# again for this new UIManager. Adopt the current state immediately instead
 	# of leaving the loading screen stuck at its initial 5%.
 	is_llm_ready = LLMInterface.llm_connected
-	is_tts_ready = TTSInterface.tts_connected
+	is_tts_ready = SpeechService.speech_connected
 	last_llm_attempt = LLMInterface.connection_attempts
-	last_tts_attempt = TTSInterface.tts_connection_attempts
+	last_tts_attempt = SpeechService.connection_attempts
 	_update_connection_status_display()
 	call_deferred("_check_both_services_ready")
 	var game_root := get_tree().current_scene
@@ -1791,6 +1791,7 @@ func _on_pause_changed(is_paused: bool):
 func toggle_dock_menu(station: Node3D):
 	current_station = station
 	if dock_panel.visible or agent_panel.visible:
+		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
 		if GlobalState.player:
@@ -1845,7 +1846,7 @@ func toggle_dock_menu(station: Node3D):
 				# will dedupe via the "<voice>|<text>" cache key, so
 				# the dock-time pre-cache and the refresh-on-use
 				# paths both no-op on already-cached lines.
-				TTSInterface.cache_dialogue_audio(entry["line"], entry["voice_id"], entry["voice_speed"])
+				SpeechService.cache(entry["line"], entry["voice_profile_id"])
 			_outpost_flavor_precached[outpost_id] = prev_count + flavor_lines.size()
 
 		# Pre-cache Jenna's (mechanic) personalized greeting when the player
@@ -1953,11 +1954,13 @@ func _render_dock_submenu() -> void:
 
 
 func _on_maintenance_bay_pressed() -> void:
+	SpeechService.stop()
 	current_submenu = DockSubmenu.MAINTENANCE
 	_render_dock_submenu()
 
 
 func _on_back_to_services_pressed() -> void:
+	SpeechService.stop()
 	current_submenu = DockSubmenu.SERVICES
 	_render_dock_submenu()
 
@@ -2077,11 +2080,11 @@ func _cache_mechanic_intro() -> void:
 		_mechanic_precache_in_flight = false
 		print("[TRACE] [UIManager] Mechanic greeting cached. fallback=", is_fallback, " len=", line.length(), " offer=", _mechanic_pickup_offer.get("offer", false))
 		# Pre-cache the TTS so the line is instant when the player enters
-		# maintenance. Uses Jenna's voice (af_aoede) for consistency with
+		# maintenance. Uses Jenna's stable voice profile for consistency with
 		# her other flavor lines. Skipped on fallback (already in cache or
 		# too short to be worth caching).
 		if not is_fallback and line.strip_edges() != "":
-			TTSInterface.cache_dialogue_audio(line, "af_aoede", 1.0)
+			SpeechService.cache(line, "voice.jenna_kross.v1")
 		# If the player is already inside the maintenance submenu, refresh
 		# the chat box immediately (otherwise the cached line waits for
 		# next entry). _render_mechanic_intro will auto-play if the line
@@ -2369,10 +2372,13 @@ func _render_mechanic_intro() -> void:
 		mechanic_pickup_decline_btn.visible = show_offer_btns
 		
 	if line_changed:
-		var display_line: String = GlobalState.apply_tone_guard(line, "af_aoede")
+		var display_line: String = SpeechService.prepare_text(
+			line,
+			"voice.jenna_kross.v1"
+		)
 		if display_line != line:
 			mechanic_line_label.text = display_line
-		TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+		SpeechService.play(line, "voice.jenna_kross.v1")
 
 
 # ── Test quest: outpost pickup (DEBUG) ──────────────────────────────────────
@@ -2483,7 +2489,7 @@ func _on_deliver_part_pressed() -> void:
 	var salt: int = randi() % FALLBACK_MECHANIC_THANKS.size()
 	var line: String = FALLBACK_MECHANIC_THANKS[salt].replace("{part}", part_name)
 	
-	TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+	SpeechService.play(line, "voice.jenna_kross.v1")
 	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
 	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
 	_render_dock_submenu()
@@ -2571,7 +2577,7 @@ func _on_hear_gossip_pressed() -> void:
 	# likely cached and plays instantly.
 	var other_lines: Array = GlobalState.get_other_flavor_lines_for_npc(npc_name, line)
 	for entry in other_lines:
-		TTSInterface.cache_dialogue_audio(entry["line"], entry["voice_id"], entry["voice_speed"])
+		SpeechService.cache(entry["line"], entry["voice_profile_id"])
 
 
 # Signal handler for GlobalState.npc_flavor_spoken. Speaks the line in
@@ -2584,9 +2590,8 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 	var line: String = flavor.get("line", "")
 	if line == "":
 		return
-	var voice_id: String = flavor.get("voice_id", "af_bella")
-	var voice_speed: float = float(flavor.get("voice_speed", 1.0))
-	TTSInterface.play_dialogue_audio(line, voice_id, voice_speed)
+	var voice_profile_id: String = flavor.get("voice_profile_id", "voice.neutral.v1")
+	SpeechService.play(line, voice_profile_id)
 
 
 func undock_player():
@@ -2627,7 +2632,7 @@ func undock_player():
 		ask_for_part_btn.visible = false
 	
 	# Stop voice dialogue audio if playing
-	TTSInterface.play_dialogue_audio("")
+	SpeechService.stop()
 	
 	
 	# Give player a slight push away from station
@@ -2866,18 +2871,13 @@ func _on_selection_marker_draw():
 	screen_radius = max(screen_radius, 22.0)
 	screen_radius = screen_radius * 1.08 + 4.0
 	
-	# Raycast to check if the target is behind a solar body (GasGiant or RockyPlanet)
-	var blocked = false
-	var space_state = target.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(cam.global_position, target.global_position)
-	query.exclude = [GlobalState.player.get_rid()]
-	query.collide_with_areas = false
-	query.collide_with_bodies = true
-	var ray_res = space_state.intersect_ray(query)
-	if ray_res and is_instance_valid(ray_res.collider):
-		var collider = ray_res.collider
-		if collider != target and (collider.name == "GasGiant" or collider.name == "RockyPlanet"):
-			blocked = true
+	# The marker represents physical line of sight, while autopilot separately
+	# enforces a wider navigation lane outside planets and asteroid rings.
+	var blocked := false
+	if GlobalState.player.has_method("is_target_physically_visible"):
+		blocked = not bool(
+			GlobalState.player.call("is_target_physically_visible", target)
+		)
 			
 	var marker_color = Color(0.55, 0.55, 0.55, 0.75) if blocked else Color(0.0, 1.0, 0.0, 0.75)
 	
@@ -3165,9 +3165,14 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# No voice_id is available here, so derive from npc_name via
 	# GlobalState's minor-NPC registry. Falls back to neutral (i.e.
 	# guard runs) if unknown.
-	var display_voice: String = "neutral"
+	var display_voice: String = "voice.neutral.v1"
 	if npc_name != "" and GlobalState.MINOR_NPCS.has(npc_name):
-		display_voice = str(GlobalState.get_minor_npc_data(npc_name).get("voice_id", "neutral"))
+		display_voice = str(
+			GlobalState.get_minor_npc_data(npc_name).get(
+				"voice_profile_id",
+				"voice.neutral.v1"
+			)
+		)
 	text = GlobalState.apply_tone_guard(text, display_voice)
 
 	# Configure content.
@@ -3312,7 +3317,7 @@ func set_overview_collapsed(collapsed: bool):
 
 # Agent dialogue screen & Quest tracker HUD interactions
 func _on_talk_to_agent_pressed():
-	TTSInterface.start_interaction("Talk to Agent")
+	SpeechService.start_interaction("Talk to Agent")
 	dock_panel.visible = false
 	agent_panel.visible = true
 	
@@ -3325,7 +3330,10 @@ func _on_talk_to_agent_pressed():
 		agent_name_label.text = q["agent_name"].to_upper()
 		
 		# Update portrait and client logo
-		_update_agent_portrait(q.get("faction", "neutral"))
+		_update_agent_portrait(
+			q.get("faction", "neutral"),
+			q.get("agent_name", "")
+		)
 		
 		var type_str = "Clear Hostiles" if q["objective_type"] == "KILL_SHIPS" else "Deliver Resources"
 		agent_dialogue_label.text = "Active Contract: " + q["title"] + " (" + type_str + ")\n\n" + \
@@ -3390,14 +3398,14 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		# Pre-cache main briefing TTS
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":
-			TTSInterface.cache_dialogue_audio(dialogue, quest_data.get("faction", "neutral"))
+			SpeechService.cache(dialogue, quest_data.get("faction", "neutral"))
 			
 		# Pre-cache choice response TTS
 		var choices = quest_data.get("choices", [])
 		for choice in choices:
 			var response = choice.get("consequence", {}).get("dialogue_response", "")
 			if response != "":
-				TTSInterface.cache_dialogue_audio(response, quest_data.get("faction", "neutral"))
+				SpeechService.cache(response, quest_data.get("faction", "neutral"))
 		
 		# Fire-and-forget LLM call for Kaelen's unique handoff intro. Runs in
 		# the background while the player is still docking / loading. If it
@@ -3416,7 +3424,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 				cached_unique_intro = unique_line
 				print("[TRACE] [UIManager] Cached unique Kaelen intro: ", unique_line.left(60), "...")
 				# Pre-cache the TTS so playback is instant when the handoff fires
-				TTSInterface.cache_dialogue_audio(unique_line, "neutral")
+				SpeechService.cache(unique_line, "voice.kaelen.v1")
 			)
 				
 	# Only push to agent board UI if the player is actually waiting for it
@@ -3427,8 +3435,8 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		
 	# If loading panel is still visible, wait for TTS cache completion
 	if loading_panel and is_instance_valid(loading_panel):
-		TTSInterface.cache_queue_completed.connect(_on_tts_cache_completed)
-		if TTSInterface.active_cache_requests <= 0:
+		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
+		if SpeechService.active_cache_requests <= 0:
 			_on_tts_cache_completed()
 		else:
 			loading_bar.value = 80.0
@@ -3438,8 +3446,8 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	var now = Time.get_ticks_msec()
 	var elapsed_str = ""
-	if TTSInterface.last_interaction_time > 0.0:
-		elapsed_str = " (Elapsed since '%s': %.3fs)" % [TTSInterface.last_interaction_name, (now - TTSInterface.last_interaction_time) / 1000.0]
+	if SpeechService.last_interaction_time > 0.0:
+		elapsed_str = " (Elapsed since '%s': %.3fs)" % [SpeechService.last_interaction_name, (now - SpeechService.last_interaction_time) / 1000.0]
 	print("[TRACE] [UIManager] _on_quest_generated_received called%s is_fallback: %s" % [elapsed_str, str(is_fallback)])
 	
 	agent_back_btn.visible = true
@@ -3478,7 +3486,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	agent_back_btn.visible = true
 	
 	# Play Kaelen's intro line in her voice
-	TTSInterface.play_dialogue_audio(handoff_line, "neutral")
+	SpeechService.play(handoff_line, "voice.kaelen.v1")
 	
 	# Add a "Bring them in" button that transitions to the actual quest giver
 	var bring_in_btn = Button.new()
@@ -3495,15 +3503,22 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	# ── Step 2: The quest giver delivers their briefing ───────────────────────
 	var raw_dialogue = quest_data.get("dialogue", "")
-	var display_dialogue = TTSInterface.clean_dialogue_text(raw_dialogue)
+	var display_dialogue = SpeechService.clean_dialogue_text(raw_dialogue)
 	var note = " [Offline Backup]" if is_fallback else ""
 	
 	agent_name_label.text = quest_data.get("agent_name", "Broker Kaelen").to_upper()
-	_update_agent_portrait(quest_data.get("faction", "neutral"))
+	var agent_name := str(quest_data.get("agent_name", "Broker Kaelen"))
+	_update_agent_portrait(
+		quest_data.get("faction", "neutral"),
+		agent_name
+	)
 	agent_dialogue_label.text = display_dialogue + note
 	
 	# Play the quest giver's briefing voice
-	TTSInterface.play_dialogue_audio(quest_data.get("dialogue", ""), quest_data.get("faction", "neutral"))
+	SpeechService.play_for_npc(
+		quest_data.get("dialogue", ""),
+		agent_name
+	)
 	
 	# Append contract details block
 	var f_client = quest_data.get("faction", "neutral").to_upper()
@@ -3532,7 +3547,7 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 
 
 func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
-	TTSInterface.start_interaction("Select Choice: " + choice.get("text", ""))
+	SpeechService.start_interaction("Select Choice: " + choice.get("text", ""))
 	
 	cached_quest_data = {}
 	cached_quest_is_fallback = false
@@ -3554,7 +3569,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	var consequence = choice.get("consequence", {})
 	var raw_response = consequence.get("dialogue_response", "")
-	var clean_response = TTSInterface.clean_dialogue_text(raw_response)
+	var clean_response = SpeechService.clean_dialogue_text(raw_response)
 	# Safety net: if cleaning stripped everything (entire string was stage direction), use a fallback
 	if clean_response.length() < 5:
 		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
@@ -3562,7 +3577,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	agent_dialogue_label.text = clean_response
 	
 	# Play choice response voice audio (TTS also cleans internally)
-	TTSInterface.play_dialogue_audio(clean_response, quest_data.get("faction", "neutral"))
+	SpeechService.play(clean_response, quest_data.get("faction", "neutral"))
 	
 	agent_back_btn.visible = false
 	
@@ -3585,18 +3600,18 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 		cached_abandon_line = abn_line
 		print("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
 		# Pre-cache both in the background using neutral (Kaelen's) voice
-		TTSInterface.cache_dialogue_audio(comp_line, "neutral")
-		TTSInterface.cache_dialogue_audio(abn_line, "neutral")
+		SpeechService.cache(comp_line, "voice.kaelen.v1")
+		SpeechService.cache(abn_line, "voice.kaelen.v1")
 	)
 
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio
-	TTSInterface.play_dialogue_audio("")
+	SpeechService.stop()
 	agent_panel.visible = false
 	dock_panel.visible = true
 
 func _on_agent_complete_pressed():
-	TTSInterface.start_interaction("Complete Contract")
+	SpeechService.start_interaction("Complete Contract")
 	
 	is_waiting_for_agent_board = false
 	
@@ -3618,7 +3633,7 @@ func _on_agent_complete_pressed():
 	cached_abandon_line = ""
 	
 	agent_dialogue_label.text = completion_text
-	TTSInterface.play_dialogue_audio(completion_text, "neutral")
+	SpeechService.play(completion_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	
 	# If for some reason the cache is empty, request one now
@@ -3627,7 +3642,7 @@ func _on_agent_complete_pressed():
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_agent_abandon_pressed():
-	TTSInterface.start_interaction("Abandon Contract")
+	SpeechService.start_interaction("Abandon Contract")
 	
 	is_waiting_for_agent_board = false
 	
@@ -3649,7 +3664,7 @@ func _on_agent_abandon_pressed():
 	cached_abandon_line = ""
 	
 	agent_dialogue_label.text = abandon_text
-	TTSInterface.play_dialogue_audio(abandon_text, "neutral")
+	SpeechService.play(abandon_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	
 	# If for some reason the cache is empty, request one now
@@ -3658,7 +3673,7 @@ func _on_agent_abandon_pressed():
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_partial_delivery_pressed(deliverable: float):
-	TTSInterface.start_interaction("Partial Delivery")
+	SpeechService.start_interaction("Partial Delivery")
 	
 	# Clear buttons immediately to prevent double-tap
 	for child in agent_choices_container.get_children():
@@ -3685,15 +3700,15 @@ func _on_partial_delivery_pressed(deliverable: float):
 	LLMInterface.request_partial_delivery_line(
 		quest_title, actually_delivered, total_banked, required,
 		func(line: String):
-			var clean = TTSInterface.clean_dialogue_text(line)
+			var clean = SpeechService.clean_dialogue_text(line)
 			agent_dialogue_label.text = clean
-			TTSInterface.play_dialogue_audio(clean, "neutral")
+			SpeechService.play(clean, "voice.kaelen.v1")
 			
 			# Add back button so player can undock or check contract
 			var back_btn = Button.new()
 			back_btn.text = "Back to Services"
 			back_btn.pressed.connect(func():
-				TTSInterface.play_dialogue_audio("", "neutral")
+				SpeechService.stop()
 				agent_panel.visible = false
 				dock_panel.visible = true
 			)
@@ -3773,11 +3788,14 @@ func _update_quest_tracker_logo(faction: String):
 		else:
 			quest_tracker_logo.visible = false
 
-func _update_agent_portrait(faction: String):
+func _update_agent_portrait(faction: String, npc_name: String = ""):
 	if agent_portrait:
 		var portrait_id := "portrait.quest_givers.kaelen"
+		var npc_definition := GameContentRegistry.shared().npc_by_name(npc_name)
 		var faction_definition := GameContentRegistry.shared().faction(faction)
-		if faction_definition and not faction_definition.agent_portrait_id.is_empty():
+		if npc_definition != null:
+			portrait_id = str(npc_definition.portrait_id)
+		elif faction_definition and not faction_definition.agent_portrait_id.is_empty():
 			portrait_id = str(faction_definition.agent_portrait_id)
 		agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
 			portrait_id
@@ -3958,13 +3976,17 @@ func _complete_pickup_with_handoff() -> void:
 			"npc_name": picked_npc,
 			"line": display_line,
 			"color": npc_color,
-			"voice_id": QuestManager.active_quest.get("pickup_handoff_voice_id", "neutral"),
-			"voice_speed": 1.0,
+			"voice_profile_id": QuestManager.active_quest.get(
+				"pickup_handoff_voice_profile_id",
+				"voice.neutral.v1"
+			),
 		}
 		if GlobalState.MINOR_NPCS.has(picked_npc):
 			var npc_data := GlobalState.get_minor_npc_data(picked_npc)
-			flavor_dict["voice_id"] = npc_data.get("voice_id", flavor_dict["voice_id"])
-			flavor_dict["voice_speed"] = npc_data.get("voice_speed", flavor_dict["voice_speed"])
+			flavor_dict["voice_profile_id"] = npc_data.get(
+				"voice_profile_id",
+				flavor_dict["voice_profile_id"]
+			)
 		GlobalState.emit_npc_flavor(flavor_dict)
 	else:
 		push_warning("[UIManager] _complete_pickup_with_handoff: mark_pickup_complete returned false")
@@ -4033,14 +4055,20 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 				if line != "":
 					var is_valid: bool = _is_valid_outpost_handoff_line(line, part_name, client_name)
 					if is_valid:
-						var voice_id: String = "neutral"
-						var voice_speed: float = 1.0
+						var voice_profile_id := "voice.neutral.v1"
 						if GlobalState.MINOR_NPCS.has(npc_name):
 							var npc_data := GlobalState.get_minor_npc_data(npc_name)
-							voice_id = npc_data.get("voice_id", voice_id)
-							voice_speed = npc_data.get("voice_speed", voice_speed)
-						QuestManager.set_pickup_handoff(line, voice_id, voice_speed, false, npc_name)
-						TTSInterface.cache_dialogue_audio(line, voice_id, voice_speed)
+							voice_profile_id = npc_data.get(
+								"voice_profile_id",
+								voice_profile_id
+							)
+						QuestManager.set_pickup_handoff(
+							line,
+							voice_profile_id,
+							false,
+							npc_name
+						)
+						SpeechService.cache(line, voice_profile_id)
 						return
 					else:
 						var reason: String = _explain_outpost_handoff_rejection(line, part_name, client_name)
@@ -4074,13 +4102,16 @@ func _apply_pickup_handoff_fallback(npc_name: String, part_name: String, client_
 	var salt: int = randi() % FALLBACK_OUTPOST_HANDOFF.size()
 	var line: String = FALLBACK_OUTPOST_HANDOFF[salt].replace("{part}", part_name).replace("{client}", client_name)
 	
-	var voice_id: String = "neutral"
-	var voice_speed: float = 1.0
+	var voice_profile_id := "voice.neutral.v1"
 	if GlobalState.MINOR_NPCS.has(npc_name):
 		var npc_data := GlobalState.get_minor_npc_data(npc_name)
-		voice_id = npc_data.get("voice_id", voice_id)
-		voice_speed = npc_data.get("voice_speed", voice_speed)
-	QuestManager.set_pickup_handoff(line, voice_id, voice_speed, true, npc_name)
+		voice_profile_id = npc_data.get("voice_profile_id", voice_profile_id)
+	QuestManager.set_pickup_handoff(
+		line,
+		voice_profile_id,
+		true,
+		npc_name
+	)
 
 func _create_loading_screen():
 	loading_panel = Panel.new()
@@ -4190,17 +4221,17 @@ func _check_both_services_ready():
 			LLMInterface.llm_connection_attempt.disconnect(_on_llm_connection_attempt)
 		if LLMInterface.llm_connection_established.is_connected(_on_llm_connected):
 			LLMInterface.llm_connection_established.disconnect(_on_llm_connected)
-		if TTSInterface.tts_connection_attempt.is_connected(_on_tts_connection_attempt):
-			TTSInterface.tts_connection_attempt.disconnect(_on_tts_connection_attempt)
-		if TTSInterface.tts_connection_established.is_connected(_on_tts_connected):
-			TTSInterface.tts_connection_established.disconnect(_on_tts_connected)
+		if SpeechService.speech_connection_attempt.is_connected(_on_tts_connection_attempt):
+			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
+		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
+			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
 			
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_tts_cache_completed():
 	# Disconnect to prevent double trigger on future cache events
-	if TTSInterface.cache_queue_completed.is_connected(_on_tts_cache_completed):
-		TTSInterface.cache_queue_completed.disconnect(_on_tts_cache_completed)
+	if SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
 		
 	print("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
 	loading_bar.value = 100.0
@@ -4356,7 +4387,7 @@ func show_kaelen_intro():
 	dismiss_btn.pressed.connect(_dismiss)
 	
 	# ── Play Kaelen's voice ───────────────────────────────────────────────────
-	TTSInterface.play_dialogue_audio(line, "neutral")
+	SpeechService.play(line, "voice.kaelen.v1")
 	print("[UIManager] Kaelen intro shown: ", line.left(60), "...")
 
 func _style_action_button(btn: Button):
@@ -4662,7 +4693,7 @@ func _attempt_upgrade(slot: String, path: String):
 			_ore_idx = (_ore_idx + 1) % _insufficient_ore_lines.size()
 		# Replace generic red text with Jenna's dialogue
 		su_ship_sys_lbl.text += "\n\n[color=#FF7777]\"%s\"[/color]" % line
-		TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+		SpeechService.play(line, "voice.jenna_kross.v1")
 		return
 
 	if GlobalState.purchase_upgrade(slot, path):

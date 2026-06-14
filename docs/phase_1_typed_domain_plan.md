@@ -387,6 +387,8 @@ Implementation record:
 
 ### Checkpoint 6: Unified Speech Compatibility Adapter
 
+Status: Implementation complete; manual audio approval pending
+
 Deliverables:
 
 - one `SpeechService` game-facing contract
@@ -404,6 +406,22 @@ Exit test:
 - cached and uncached dialogue match the displayed text
 - changing a provider mapping does not require changing any dialogue caller
 - no gameplay or UI class calls a TTS endpoint directly
+
+Implementation record:
+
+- `scripts/speech/SpeechService.gd`
+- `scripts/speech/KokoroSpeechProvider.gd`
+- stable voice-profile routing for Kaelen, faction agents, minor NPCs, and
+  Jenna Kross
+- centralized text cleanup, Shiny/Indy tone guard, play, pre-cache, stop,
+  readiness, and cache completion API
+- compatibility use of the existing TTS transport beneath the provider adapter
+- gameplay and UI callers migrated away from provider voice names
+- `tests/speech/run_speech_service_tests.gd`
+- source guard preventing direct gameplay/UI TTS or provider-voice calls
+- complete automated baseline passing 11 of 11 steps
+- deterministic procedural second-system prototype for runtime generation,
+  stable identity, save restoration, and multi-obstacle navigation testing
 
 ### Checkpoint 7: Mission Contract Adapter
 

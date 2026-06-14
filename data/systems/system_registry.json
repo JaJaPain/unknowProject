@@ -39,12 +39,17 @@
 			"legacy_id": "test_system",
 			"display_name": "Uncharted Test System",
 			"scene_path": "res://scenes/systems/system_test.tscn",
-			"origin": "authored",
+			"origin": "generated",
 			"tags": [
 				"test_system",
-				"handcrafted"
+				"procedural_prototype",
+				"deterministic_seed"
 			],
-			"station_ids": [],
+			"station_ids": [
+				"station.test.cinder_exchange",
+				"station.test.halcyon_watch",
+				"station.test.lantern"
+			],
 			"faction_ids": [],
 			"gates": [
 				{

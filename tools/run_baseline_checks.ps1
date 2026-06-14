@@ -98,9 +98,18 @@ try {
             "res://tests/registry/run_game_content_registry_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Unified speech service" {
+        & $godot --headless --path $root --script `
+            "res://tests/speech/run_speech_service_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Autopilot obstacle and planet-circle navigation" {
+        & $godot --headless --path $root -- `
+            --autopilot-smoke-test --baseline-offline
     }
     Invoke-BaselineStep "Two-way gate and save restoration" {
         & $godot --headless --path $root -- `

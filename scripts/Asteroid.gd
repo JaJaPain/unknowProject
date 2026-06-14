@@ -12,6 +12,7 @@ var orbit_speed: float = 0.0
 var current_angle: float = 0.0
 var orbit_y: float = 0.0
 var is_orbiting: bool = false
+var navigation_parent: Node3D = null
 
 func _ready():
 	add_to_group("asteroid")

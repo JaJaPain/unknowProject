@@ -562,6 +562,10 @@ func _run_jump_smoke_test() -> void:
 	if not camera_pivot or camera_pivot.global_position.distance_to(player.global_position) > 0.1:
 		_fail_jump_smoke_test("Camera pivot did not follow the player across the system change.")
 		return
+	if not _verify_generated_test_system(return_gate):
+		return
+	player.global_position = expected_arrival
+	player.call("_clear_avoidance_state")
 
 	_position_player_for_gate_test(return_gate)
 	if get_jump_block_reason(return_gate) != "Gate drive is recalibrating after arrival.":
@@ -591,6 +595,442 @@ func _run_jump_smoke_test() -> void:
 	print("[JumpSmokeTest] PASS: two-way travel and player runtime state verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+func _verify_generated_test_system(return_gate: Node3D) -> bool:
+	var system_root := get_active_system_root()
+	if (
+		not system_root.has_method("get_generation_seed")
+		or int(system_root.call("get_generation_seed")) != 4172026
+	):
+		_fail_jump_smoke_test("Generated system seed was missing or unstable.")
+		return false
+
+	var planets: Array = system_root.call("get_generated_planets")
+	var stations: Array = system_root.call("get_generated_stations")
+	var asteroid_count := 0
+	for asteroid in get_tree().get_nodes_in_group("asteroid"):
+		if system_root.is_ancestor_of(asteroid):
+			asteroid_count += 1
+	if planets.size() != 3 or stations.size() != 3 or asteroid_count != 64:
+		_fail_jump_smoke_test(
+			"Generated system contents were incomplete. planets=%d stations=%d asteroids=%d" % [
+				planets.size(),
+				stations.size(),
+				asteroid_count,
+			]
+		)
+		return false
+
+	var identity_validation := _validate_persistent_entities(system_root)
+	if not identity_validation.is_valid():
+		_fail_jump_smoke_test(
+			"Generated system identities were invalid: %s" %
+			JSON.stringify(identity_validation.to_dict())
+		)
+		return false
+
+	for planet in planets:
+		var body := planet as Node3D
+		var physical_radius: float = player.call("_get_obstacle_radius", body)
+		var navigation_radius := float(
+			body.get_meta("navigation_clearance_radius", 0.0)
+		)
+		if navigation_radius <= physical_radius:
+			_fail_jump_smoke_test(
+				"Generated planet '%s' lacks a valid navigation envelope." %
+				body.name
+			)
+			return false
+
+	player.global_position = return_gate.call("get_arrival_transform").origin
+	player.call("_clear_avoidance_state")
+	for station in stations:
+		var destination := station as Node3D
+		var arrived := false
+		for step in range(5000):
+			var navigation: Dictionary = player.call(
+				"_get_autopilot_avoidance",
+				destination.global_position,
+				destination
+			)
+			var steer_target: Vector3 = navigation.get(
+				"steer_target",
+				destination.global_position
+			)
+			var direction := steer_target - player.global_position
+			if direction.length() > 0.01:
+				player.global_position += direction.normalized() * minf(
+					8.0,
+					direction.length()
+				)
+			if player.global_position.distance_to(
+				destination.global_position
+			) < 100.0:
+				arrived = true
+				break
+		if not arrived:
+			_fail_jump_smoke_test(
+				"Autopilot could not reach generated station '%s'; remaining=%.1f blocker=%d." % [
+					destination.name,
+					player.global_position.distance_to(destination.global_position),
+					int(player.get("avoidance_obstacle_id")),
+				]
+			)
+			return false
+		player.call("_clear_avoidance_state")
+
+	var ring_target := system_root.get_node_or_null(
+		"Halcyon_Ring_20"
+	) as Node3D
+	if ring_target == null:
+		_fail_jump_smoke_test("Generated Halcyon ring target was unavailable.")
+		return false
+	var parent_planet = ring_target.get("navigation_parent")
+	if not parent_planet is Node3D:
+		_fail_jump_smoke_test(
+			"Generated ring target lacks its parent celestial relationship."
+		)
+		return false
+	var ring_planet := parent_planet as Node3D
+	var planet_navigation_radius := float(
+		ring_planet.get_meta("navigation_clearance_radius", 0.0)
+	)
+	var alternate_ring_target := system_root.get_node_or_null(
+		"Halcyon_Ring_21"
+	) as Node3D
+	if alternate_ring_target == null:
+		_fail_jump_smoke_test(
+			"Generated alternate Halcyon ring target was unavailable."
+		)
+		return false
+
+	GlobalState.active_target = return_gate
+	player.nav_mode = "JUMP_APPROACH"
+	player.staged_jump_gate_id = return_gate.get_instance_id()
+	player.set("avoidance_obstacle_id", ring_planet.get_instance_id())
+	player.set("avoidance_waypoint", return_gate.global_position)
+	GlobalState.active_target = ring_target
+	if (
+		player.staged_jump_gate_id != 0
+		or int(player.get("avoidance_obstacle_id")) != 0
+		or player.get("avoidance_waypoint") != Vector3.ZERO
+		or player.target_position != null
+		or player.nav_mode != "APPROACH"
+	):
+		_fail_jump_smoke_test(
+			"Switching from the gate to a ring asteroid retained stale navigation state."
+		)
+		return false
+	player.target_position = ring_target.global_position
+	player.call(
+		"_get_autopilot_avoidance",
+		ring_target.global_position,
+		ring_target
+	)
+	GlobalState.active_target = alternate_ring_target
+	if (
+		int(player.get("avoidance_obstacle_id")) != 0
+		or player.get("avoidance_waypoint") != Vector3.ZERO
+		or player.target_position != null
+	):
+		_fail_jump_smoke_test(
+			"Rapid asteroid switching retained the previous target's route."
+		)
+		return false
+	var switched_navigation: Dictionary = player.call(
+		"_get_autopilot_avoidance",
+		alternate_ring_target.global_position,
+		alternate_ring_target
+	)
+	var switched_steer_target: Vector3 = switched_navigation.get(
+		"steer_target",
+		alternate_ring_target.global_position
+	)
+	if (
+		switched_steer_target.distance_to(return_gate.global_position)
+		< switched_steer_target.distance_to(alternate_ring_target.global_position)
+		and not bool(switched_navigation.get("is_avoiding", false))
+	):
+		_fail_jump_smoke_test(
+			"Rapid asteroid switching steered back toward the return gate."
+		)
+		return false
+
+	var switch_origin := ring_planet.global_position + Vector3(
+		0.0,
+		0.0,
+		planet_navigation_radius + 300.0
+	)
+	var front_target: Node3D = null
+	var rear_target: Node3D = null
+	var best_front_dot := -INF
+	var best_rear_dot := INF
+	var forward := Vector3.RIGHT
+	for asteroid in get_tree().get_nodes_in_group("asteroid"):
+		if (
+			not asteroid is Node3D
+			or not system_root.is_ancestor_of(asteroid)
+			or asteroid.get("navigation_parent") != ring_planet
+		):
+			continue
+		var asteroid_body := asteroid as Node3D
+		var direction := (
+			asteroid_body.global_position - switch_origin
+		).normalized()
+		var facing_dot := direction.dot(forward)
+		if facing_dot > best_front_dot:
+			best_front_dot = facing_dot
+			front_target = asteroid_body
+		if facing_dot < best_rear_dot:
+			best_rear_dot = facing_dot
+			rear_target = asteroid_body
+	if (
+		front_target == null
+		or rear_target == null
+		or best_front_dot < 0.35
+		or best_rear_dot > -0.35
+	):
+		_fail_jump_smoke_test(
+			"Could not find front and rear asteroids for target-switch testing."
+		)
+		return false
+
+	player.global_position = switch_origin
+	player.call("_clear_avoidance_state")
+	GlobalState.active_target = front_target
+	player.nav_mode = "APPROACH"
+	player.target_position = front_target.global_position
+	var front_navigation: Dictionary = player.call(
+		"_get_autopilot_avoidance",
+		front_target.global_position,
+		front_target
+	)
+	var old_waypoint: Vector3 = front_navigation.get(
+		"steer_target",
+		front_target.global_position
+	)
+	if old_waypoint.distance_to(player.global_position) < 20.0:
+		_fail_jump_smoke_test(
+			"Front target did not create an in-transit waypoint."
+		)
+		return false
+
+	GlobalState.active_target = rear_target
+	if (
+		player.target_position != null
+		or player.get("avoidance_waypoint") != Vector3.ZERO
+		or int(player.get("avoidance_obstacle_id")) != 0
+	):
+		_fail_jump_smoke_test(
+			"Rear target switch did not immediately cancel the forward waypoint."
+		)
+		return false
+	var rear_navigation: Dictionary = player.call(
+		"_get_autopilot_avoidance",
+		rear_target.global_position,
+		rear_target
+	)
+	var rear_steer_target: Vector3 = rear_navigation.get(
+		"steer_target",
+		rear_target.global_position
+	)
+	var rear_direction := (
+		rear_steer_target - player.global_position
+	).normalized()
+	var old_direction := (
+		old_waypoint - player.global_position
+	).normalized()
+	if (
+		rear_direction.dot(
+			(rear_target.global_position - player.global_position).normalized()
+		) <= rear_direction.dot(old_direction)
+	):
+		_fail_jump_smoke_test(
+			"First steering update after rear target switch still favored the old waypoint."
+		)
+		return false
+	player.nav_mode = "MANUAL"
+	GlobalState.active_target = null
+
+	var target_radial := (
+		ring_target.global_position - ring_planet.global_position
+	).normalized()
+	player.global_position = ring_planet.global_position \
+		- target_radial * (planet_navigation_radius + 260.0)
+	player.call("_clear_avoidance_state")
+	var ring_planet_id := ring_planet.get_instance_id()
+	var ring_planet_engagements := 0
+	var previous_ring_obstacle_id := 0
+	var minimum_ring_planet_distance := player.global_position.distance_to(
+		ring_planet.global_position
+	)
+	var reached_ring_target := false
+	for step in range(3000):
+		var navigation: Dictionary = player.call(
+			"_get_autopilot_avoidance",
+			ring_target.global_position,
+			ring_target
+		)
+		var current_obstacle_id: int = player.get("avoidance_obstacle_id")
+		if (
+			current_obstacle_id == ring_planet_id
+			and previous_ring_obstacle_id != ring_planet_id
+		):
+			ring_planet_engagements += 1
+		previous_ring_obstacle_id = current_obstacle_id
+		var steer_target: Vector3 = navigation.get(
+			"steer_target",
+			ring_target.global_position
+		)
+		var direction := steer_target - player.global_position
+		if direction.length() > 0.01:
+			player.global_position += direction.normalized() * minf(
+				6.0,
+				direction.length()
+			)
+		minimum_ring_planet_distance = minf(
+			minimum_ring_planet_distance,
+			player.global_position.distance_to(ring_planet.global_position)
+		)
+		if player.global_position.distance_to(ring_target.global_position) < 60.0:
+			reached_ring_target = true
+			break
+
+	var ring_planet_physical_clearance: float = player.call(
+		"_get_obstacle_radius",
+		ring_planet
+	) + maxf(
+		100.0,
+		float(player.call("_get_obstacle_radius", ring_planet)) * 0.15
+	)
+	if (
+		not reached_ring_target
+		or ring_planet_engagements > 1
+		or minimum_ring_planet_distance < ring_planet_physical_clearance
+	):
+		_fail_jump_smoke_test(
+			"Generated ring-target route failed. reached=%s engagements=%d minimum=%.1f required=%.1f remaining=%.1f" % [
+				str(reached_ring_target),
+				ring_planet_engagements,
+				minimum_ring_planet_distance,
+				ring_planet_physical_clearance,
+				player.global_position.distance_to(ring_target.global_position),
+			]
+		)
+		return false
+
+	var halcyon_watch: Node3D = null
+	for station in stations:
+		if station is Node3D and str(station.get("world_id")) \
+				== "station.test.halcyon_watch":
+			halcyon_watch = station as Node3D
+			break
+	if halcyon_watch == null:
+		_fail_jump_smoke_test("Generated Halcyon Watch was unavailable.")
+		return false
+
+	var station_radial := (
+		halcyon_watch.global_position - ring_planet.global_position
+	).normalized()
+	var occlusion_asteroid: Node3D = null
+	var lowest_radial_dot := INF
+	for asteroid in get_tree().get_nodes_in_group("asteroid"):
+		if (
+			not asteroid is Node3D
+			or not system_root.is_ancestor_of(asteroid)
+			or asteroid.get("navigation_parent") != ring_planet
+		):
+			continue
+		var asteroid_body := asteroid as Node3D
+		var asteroid_radial := (
+			asteroid_body.global_position - ring_planet.global_position
+		).normalized()
+		var radial_dot := asteroid_radial.dot(station_radial)
+		if radial_dot < lowest_radial_dot:
+			lowest_radial_dot = radial_dot
+			occlusion_asteroid = asteroid_body
+	if occlusion_asteroid == null or lowest_radial_dot > -0.85:
+		_fail_jump_smoke_test(
+			"Could not find a ring asteroid opposite Halcyon Watch."
+		)
+		return false
+
+	# Reproduce the player workflow: fly to a ring asteroid, then immediately
+	# select the outpost hidden behind its parent planet.
+	player.global_position = occlusion_asteroid.global_position \
+		+ (
+			occlusion_asteroid.global_position
+			- ring_planet.global_position
+		).normalized() * 55.0
+	player.call("_clear_avoidance_state")
+	if bool(player.call("is_navigation_target_visible", halcyon_watch)):
+		_fail_jump_smoke_test(
+			"Occluded Halcyon Watch was incorrectly visible from '%s'." %
+			occlusion_asteroid.name
+		)
+		return false
+
+	var station_planet_engagements := 0
+	var previous_station_obstacle_id := 0
+	var starting_full_lap_reassessments: int = player.get(
+		"avoidance_full_lap_reassessments"
+	)
+	var minimum_station_planet_distance := player.global_position.distance_to(
+		ring_planet.global_position
+	)
+	var reached_occluded_station := false
+	for step in range(4000):
+		var navigation: Dictionary = player.call(
+			"_get_autopilot_avoidance",
+			halcyon_watch.global_position,
+			halcyon_watch
+		)
+		var current_obstacle_id: int = player.get("avoidance_obstacle_id")
+		if (
+			current_obstacle_id == ring_planet_id
+			and previous_station_obstacle_id != ring_planet_id
+		):
+			station_planet_engagements += 1
+		previous_station_obstacle_id = current_obstacle_id
+		var steer_target: Vector3 = navigation.get(
+			"steer_target",
+			halcyon_watch.global_position
+		)
+		var direction := steer_target - player.global_position
+		if direction.length() > 0.01:
+			player.global_position += direction.normalized() * minf(
+				6.0,
+				direction.length()
+			)
+		minimum_station_planet_distance = minf(
+			minimum_station_planet_distance,
+			player.global_position.distance_to(ring_planet.global_position)
+		)
+		if player.global_position.distance_to(
+			halcyon_watch.global_position
+		) < 100.0:
+			reached_occluded_station = true
+			break
+	if (
+		not reached_occluded_station
+		or station_planet_engagements > 1
+		or minimum_station_planet_distance < ring_planet_physical_clearance
+		or int(player.get("avoidance_full_lap_reassessments")) \
+			> starting_full_lap_reassessments
+	):
+		_fail_jump_smoke_test(
+			"Occluded asteroid-to-outpost route failed. asteroid=%s reached=%s engagements=%d minimum=%.1f required=%.1f remaining=%.1f" % [
+				occlusion_asteroid.name,
+				str(reached_occluded_station),
+				station_planet_engagements,
+				minimum_station_planet_distance,
+				ring_planet_physical_clearance,
+				player.global_position.distance_to(halcyon_watch.global_position),
+			]
+		)
+		return false
+	player.call("_clear_avoidance_state")
+	return true
 
 func _run_core_smoke_test() -> void:
 	await get_tree().process_frame
@@ -930,9 +1370,47 @@ func _run_autopilot_smoke_test() -> void:
 	obstacle.remove_from_group("asteroid")
 	obstacle.add_to_group("celestial")
 	sphere.radius = 300.0
+	obstacle.set_meta("navigation_clearance_radius", 430.0)
 	obstacle.global_position = Vector3(10250.0, 0.0, 10000.0)
+	var visibility_target := StaticBody3D.new()
+	visibility_target.name = "AutopilotVisibilityTarget"
+	var target_collision := CollisionShape3D.new()
+	var target_sphere := SphereShape3D.new()
+	target_sphere.radius = 10.0
+	target_collision.shape = target_sphere
+	visibility_target.add_child(target_collision)
+	get_active_system_root().add_child(visibility_target)
+	visibility_target.global_position = Vector3(10800.0, 0.0, 10000.0)
+	await get_tree().physics_frame
+	player.global_position = Vector3(9700.0, 0.0, 10000.0)
+	if bool(player.call("_has_clear_navigation_line", visibility_target)):
+		visibility_target.queue_free()
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet-blocked target was incorrectly reported as visible."
+		)
+		return
+	player.global_position = Vector3(9700.0, 0.0, 10400.0)
+	visibility_target.global_position = Vector3(10800.0, 0.0, 10400.0)
+	if not bool(player.call("is_target_physically_visible", visibility_target)) \
+			or bool(player.call("is_navigation_target_visible", visibility_target)):
+		visibility_target.queue_free()
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Physical visibility and navigation clearance were not separated."
+		)
+		return
+	visibility_target.global_position = Vector3(10800.0, 0.0, 10000.0)
 	player.global_position = Vector3(10000.0, 0.0, 10350.0)
 	player.call("_clear_avoidance_state")
+	var obstruction_notices_before: int = player.get(
+		"navigation_obstruction_notice_count"
+	)
+	var route_clear_notices_before: int = player.get(
+		"navigation_route_clear_notice_count"
+	)
 	var planet_result: Dictionary = player.call(
 		"_get_autopilot_avoidance",
 		Vector3(10500.0, 0.0, 10350.0),
@@ -942,6 +1420,7 @@ func _run_autopilot_smoke_test() -> void:
 			or planet_result.get("obstacle") != obstacle:
 		var calculated_radius: float = player.call("_get_obstacle_radius", obstacle)
 		var calculated_margin: float = player.call("_get_obstacle_safety_margin", obstacle)
+		visibility_target.queue_free()
 		obstacle.queue_free()
 		player.global_transform = original_transform
 		_fail_autopilot_smoke_test(
@@ -952,11 +1431,298 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+	if (
+		int(player.get("navigation_obstruction_notice_count"))
+			!= obstruction_notices_before + 1
+		or not str(player.get("last_navigation_status_message")).contains(
+			"Direct route obstructed"
+		)
+	):
+		visibility_target.queue_free()
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet avoidance did not emit one official obstruction notice."
+		)
+		return
 
+	var destination := Vector3(10800.0, 0.0, 10000.0)
+	player.global_position = Vector3(9700.0, 0.0, 10000.0)
+	player.call("_clear_avoidance_state")
+	var required_clearance: float = player.call("_get_obstacle_radius", obstacle) \
+		+ player.call("_get_obstacle_safety_margin", obstacle)
+	var minimum_distance := player.global_position.distance_to(obstacle.global_position)
+	for step in range(500):
+		var simulated: Dictionary = player.call(
+			"_get_autopilot_avoidance",
+			destination,
+			null
+		)
+		var steer_target: Vector3 = simulated.get("steer_target", destination)
+		var move_direction := steer_target - player.global_position
+		if move_direction.length() > 0.01:
+			player.global_position += move_direction.normalized() * minf(
+				8.0,
+				move_direction.length()
+			)
+		minimum_distance = minf(
+			minimum_distance,
+			player.global_position.distance_to(obstacle.global_position)
+		)
+		if player.global_position.distance_to(destination) < 10.0:
+			break
+	if minimum_distance < required_clearance \
+			or player.global_position.distance_to(destination) >= 10.0:
+		var final_position := player.global_position
+		var remaining_distance := final_position.distance_to(destination)
+		var final_waypoint: Vector3 = player.get("avoidance_waypoint")
+		var final_sign: float = player.get("avoidance_orbit_sign")
+		visibility_target.queue_free()
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Repeated planet avoidance did not maintain clearance. minimum=%.1f required=%.1f remaining=%.1f position=%s waypoint=%s sign=%.1f" % [
+				minimum_distance,
+				required_clearance,
+				remaining_distance,
+				str(final_position),
+				str(final_waypoint),
+				final_sign,
+			]
+		)
+		return
+	if (
+		int(player.get("navigation_obstruction_notice_count"))
+			!= obstruction_notices_before + 1
+		or int(player.get("navigation_route_clear_notice_count"))
+			!= route_clear_notices_before + 1
+		or str(player.get("last_navigation_status_message")) != (
+			"NAVIGATION: Obstruction cleared. Resuming direct course."
+		)
+	):
+		visibility_target.queue_free()
+		obstacle.queue_free()
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet avoidance notices repeated or failed to report route clearance. obstruction=%d expected=%d clear=%d expected_clear=%d status=%s" % [
+				int(player.get("navigation_obstruction_notice_count")),
+				obstruction_notices_before + 1,
+				int(player.get("navigation_route_clear_notice_count")),
+				route_clear_notices_before + 1,
+				str(player.get("last_navigation_status_message")),
+			]
+		)
+		return
+
+	visibility_target.queue_free()
 	obstacle.queue_free()
+	await get_tree().process_frame
+
+	var rocky_planet := get_active_system_root().get_node_or_null(
+		"RockyPlanet"
+	) as Node3D
+	var gas_giant := get_active_system_root().get_node_or_null(
+		"GasGiant"
+	) as Node3D
+	var kova_station := get_active_system_root().get_node_or_null(
+		"KovaStation"
+	) as Node3D
+	var iron_reach := get_active_system_root().get_node_or_null(
+		"IronReachOutpost"
+	) as Node3D
+	if (
+		rocky_planet == null
+		or gas_giant == null
+		or kova_station == null
+		or iron_reach == null
+	):
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Real planets or outposts were unavailable."
+		)
+		return
+
+	var planet_to_station := (
+		kova_station.global_position - rocky_planet.global_position
+	).normalized()
+	player.global_position = rocky_planet.global_position \
+		- planet_to_station * 900.0
+	player.call("_clear_avoidance_state")
+	if bool(player.call("is_navigation_target_visible", kova_station)):
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Real Kova route was reported visible through Rocky Planet."
+		)
+		return
+
+	var rocky_id := rocky_planet.get_instance_id()
+	var rocky_engagements := 0
+	var previous_avoidance_id := 0
+	var real_minimum_distance := player.global_position.distance_to(
+		rocky_planet.global_position
+	)
+	for step in range(1200):
+		var simulated: Dictionary = player.call(
+			"_get_autopilot_avoidance",
+			kova_station.global_position,
+			kova_station
+		)
+		var current_avoidance_id: int = player.get("avoidance_obstacle_id")
+		if current_avoidance_id == rocky_id \
+				and previous_avoidance_id != rocky_id:
+			rocky_engagements += 1
+		previous_avoidance_id = current_avoidance_id
+		var steer_target: Vector3 = simulated.get(
+			"steer_target",
+			kova_station.global_position
+		)
+		var move_direction := steer_target - player.global_position
+		if move_direction.length() > 0.01:
+			player.global_position += move_direction.normalized() * minf(
+				6.0,
+				move_direction.length()
+			)
+		real_minimum_distance = minf(
+			real_minimum_distance,
+			player.global_position.distance_to(rocky_planet.global_position)
+		)
+		if player.global_position.distance_to(kova_station.global_position) < 12.0:
+			break
+
+	var rocky_clearance: float = player.call(
+		"_get_obstacle_radius",
+		rocky_planet
+	) + player.call("_get_obstacle_safety_margin", rocky_planet)
+	if (
+		rocky_engagements != 1
+		or real_minimum_distance < rocky_clearance
+		or player.global_position.distance_to(kova_station.global_position) >= 12.0
+		or not bool(player.call("is_target_physically_visible", kova_station))
+	):
+		var real_final_position := player.global_position
+		var real_remaining := real_final_position.distance_to(
+			kova_station.global_position
+		)
+		player.global_transform = original_transform
+		player.call("_clear_avoidance_state")
+		_fail_autopilot_smoke_test(
+			"Real Kova route failed. engagements=%d minimum=%.1f required=%.1f remaining=%.1f position=%s" % [
+				rocky_engagements,
+				real_minimum_distance,
+				rocky_clearance,
+				real_remaining,
+				str(real_final_position),
+			]
+		)
+		return
+
+	player.global_position = kova_station.global_position
+	player.call("_clear_avoidance_state")
+	var celestial_engagements := {}
+	var last_celestial_id := 0
+	var kova_route_minimums := {
+		rocky_planet.get_instance_id(): player.global_position.distance_to(
+			rocky_planet.global_position
+		),
+		gas_giant.get_instance_id(): player.global_position.distance_to(
+			gas_giant.global_position
+		),
+	}
+	var kova_route_minimum_positions := {}
+	var kova_route_minimum_states := {}
+	var station_arrival_distance := 100.0
+	for step in range(2400):
+		var simulated: Dictionary = player.call(
+			"_get_autopilot_avoidance",
+			iron_reach.global_position,
+			iron_reach
+		)
+		var current_obstacle := simulated.get("obstacle") as Node3D
+		var current_celestial_id := 0
+		if current_obstacle != null and current_obstacle.is_in_group("celestial"):
+			current_celestial_id = current_obstacle.get_instance_id()
+			if current_celestial_id != last_celestial_id:
+				celestial_engagements[current_celestial_id] = int(
+					celestial_engagements.get(current_celestial_id, 0)
+				) + 1
+		last_celestial_id = current_celestial_id
+
+		var steer_target: Vector3 = simulated.get(
+			"steer_target",
+			iron_reach.global_position
+		)
+		var move_direction := steer_target - player.global_position
+		if move_direction.length() > 0.01:
+			player.global_position += move_direction.normalized() * minf(
+				6.0,
+				move_direction.length()
+			)
+		for celestial in [rocky_planet, gas_giant]:
+			var celestial_id: int = celestial.get_instance_id()
+			var current_distance := player.global_position.distance_to(
+				celestial.global_position
+			)
+			if current_distance < float(kova_route_minimums[celestial_id]):
+				kova_route_minimums[celestial_id] = current_distance
+				kova_route_minimum_positions[celestial_id] = player.global_position
+				kova_route_minimum_states[celestial_id] = {
+					"obstacle_id": player.get("avoidance_obstacle_id"),
+					"exit_index": player.get("avoidance_exit_index"),
+					"exits_visited": player.get("avoidance_exits_visited"),
+					"waypoint": player.get("avoidance_waypoint"),
+				}
+		if (
+			player.global_position.distance_to(iron_reach.global_position)
+			< station_arrival_distance
+		):
+			break
+
+	var kova_route_failed := (
+		player.global_position.distance_to(iron_reach.global_position)
+		>= station_arrival_distance
+	)
+	for celestial in [rocky_planet, gas_giant]:
+		var celestial_id: int = celestial.get_instance_id()
+		var celestial_clearance: float = player.call(
+			"_get_navigation_clearance_for_destination",
+			celestial,
+			iron_reach.global_position,
+			iron_reach
+		)
+		if (
+			int(celestial_engagements.get(celestial_id, 0)) > 1
+			or float(kova_route_minimums[celestial_id]) < celestial_clearance
+		):
+			kova_route_failed = true
+	if kova_route_failed:
+		var route_remaining := player.global_position.distance_to(
+			iron_reach.global_position
+		)
+		var final_avoidance_id: int = player.get("avoidance_obstacle_id")
+		var final_obstacle_name := "none"
+		var final_route_position := player.global_position
+		if final_avoidance_id != 0:
+			var final_obstacle := instance_from_id(final_avoidance_id)
+			if final_obstacle is Node:
+				final_obstacle_name = (final_obstacle as Node).name
+		player.global_transform = original_transform
+		player.call("_clear_avoidance_state")
+		_fail_autopilot_smoke_test(
+			"Kova-to-Iron-Reach route failed. engagements=%s minimums=%s min_positions=%s min_states=%s remaining=%.1f blocker=%s position=%s" % [
+				str(celestial_engagements),
+				str(kova_route_minimums),
+				str(kova_route_minimum_positions),
+				str(kova_route_minimum_states),
+				route_remaining,
+				final_obstacle_name,
+				str(final_route_position),
+			]
+		)
+		return
+
 	player.global_transform = original_transform
 	player.call("_clear_avoidance_state")
-	print("[AutopilotSmokeTest] PASS: asteroid route avoidance and planet safety clearance verified.")
+	print("[AutopilotSmokeTest] PASS: asteroid avoidance, visibility, planet circles, and multi-planet routes verified.")
 	delete_savegame()
 	get_tree().quit(0)
 
@@ -1364,13 +2130,13 @@ func _run_mission_smoke_test() -> void:
 		_fail_mission_smoke_test("Correct pickup cargo did not complete cleanly.")
 		return
 
-	var non_kaelen_line := GlobalState.apply_tone_guard(
+	var non_kaelen_line := SpeechService.prepare_text(
 		"Shiny, your cargo is ready.",
-		"af_aoede"
+		"voice.jenna_kross.v1"
 	)
-	var kaelen_line := GlobalState.apply_tone_guard(
+	var kaelen_line := SpeechService.prepare_text(
 		"Shiny, your cargo is ready.",
-		GlobalState.KAELEN_VOICE_ID
+		"voice.kaelen.v1"
 	)
 	if non_kaelen_line != "Indy, your cargo is ready." \
 			or kaelen_line != "Shiny, your cargo is ready.":
@@ -1382,15 +2148,8 @@ func _run_mission_smoke_test() -> void:
 		_fail_mission_smoke_test("UIManager was unavailable for dialogue resilience test.")
 		return
 	ui.agent_dialogue_label.text = "Readable fallback dialogue."
-	TTSInterface.is_requesting = true
-	TTSInterface.call(
-		"_on_request_completed",
-		HTTPRequest.RESULT_CANT_CONNECT,
-		0,
-		PackedStringArray(),
-		PackedByteArray()
-	)
-	if TTSInterface.is_requesting \
+	SpeechService._simulate_failed_request_for_test()
+	if SpeechService.is_requesting \
 			or ui.agent_dialogue_label.text != "Readable fallback dialogue.":
 		_fail_mission_smoke_test("TTS failure disrupted readable dialogue or left the request stuck.")
 		return
@@ -1510,13 +2269,13 @@ func _run_services_smoke_test() -> void:
 	var flavor: Dictionary = gossip_holder["flavor"]
 	if flavor.is_empty() \
 			or str(flavor.get("line", "")).is_empty() \
-			or str(flavor.get("voice_id", "")).is_empty():
+			or str(flavor.get("voice_profile_id", "")).is_empty():
 		_fail_services_smoke_test("Hear Gossip did not emit display and voice data.")
 		return
 	if not ui.dock_message_slot.visible \
 			or ui.dock_message_line.text != GlobalState.apply_tone_guard(
 				str(flavor["line"]),
-				str(flavor["voice_id"])
+				str(flavor["voice_profile_id"])
 			):
 		_fail_services_smoke_test("Outpost gossip was not displayed in the dock UI.")
 		return

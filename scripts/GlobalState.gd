@@ -344,12 +344,6 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 		data["portrait_id"] = str(definition.portrait_id)
 		data["voice_profile_id"] = str(definition.voice_profile_id)
 		data["flavor_color"] = definition.presentation_color
-		var mapping := GameContentRegistry.shared().provider_voice(
-			definition.voice_profile_id
-		)
-		if not mapping.is_empty():
-			data["voice_id"] = mapping.get("provider_voice", data.get("voice_id", "af_bella"))
-			data["voice_speed"] = mapping.get("speed", data.get("voice_speed", 1.0))
 	return data
 
 # Returns the list of minor NPC names stationed at a given outpost id
@@ -401,8 +395,7 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 		"npc_name": npc_name,
 		"line": line,
 		"color": npc.get("flavor_color", Color.WHITE),
-		"voice_id": npc.get("voice_id", "af_bella"),
-		"voice_speed": float(npc.get("voice_speed", 1.0)),
+		"voice_profile_id": npc.get("voice_profile_id", "voice.neutral.v1"),
 	}
 
 # Returns the full set of (npc_name, line) pairs for every NPC at the
@@ -418,15 +411,16 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 	for npc_name in npcs:
 		var npc: Dictionary = get_minor_npc_data(npc_name)
 		var lines: Array = npc.get("flavor_lines", [])
-		var voice_id: String = npc.get("voice_id", "af_bella")
-		var voice_speed: float = float(npc.get("voice_speed", 1.0))
+		var voice_profile_id: String = npc.get(
+			"voice_profile_id",
+			"voice.neutral.v1"
+		)
 		for line in lines:
 			result.append({
 				"npc_name": npc_name,
 				"line": line,
 				"color": npc.get("flavor_color", Color.WHITE),
-				"voice_id": voice_id,
-				"voice_speed": voice_speed,
+				"voice_profile_id": voice_profile_id,
 				"outpost_id": outpost_id,
 			})
 	return result
@@ -449,8 +443,10 @@ static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String
 			"npc_name": npc_name,
 			"line": line,
 			"color": npc.get("flavor_color", Color.WHITE),
-			"voice_id": npc.get("voice_id", "af_bella"),
-			"voice_speed": float(npc.get("voice_speed", 1.0)),
+			"voice_profile_id": npc.get(
+				"voice_profile_id",
+				"voice.neutral.v1"
+			),
 		})
 	return result
 
@@ -1197,12 +1193,13 @@ func _add_mouse_action(action_name: String, button_index: int):
 # anything else routed through the dialogue pipeline.
 #
 # This is a pure function — no state, no side effects. Safe to call from
-# any thread or signal handler. TTSInterface routes its text through
+# any thread or signal handler. SpeechService routes its text through
 # here, and any UI code that displays dialogue should too, so the
 # on-screen text and the spoken audio stay in sync.
 #
 # Kaelen's voice after faction resolution is "af_bella" — that's how
 # the call path identifies her. Anyone else gets the substitution.
+const KAELEN_VOICE_PROFILE_ID: String = "voice.kaelen.v1"
 const KAELEN_VOICE_ID: String = "af_bella"
 
 # Substitutions for non-Kaelen speakers. Keyed on the source token
@@ -1220,7 +1217,7 @@ const TONE_REPLACEMENTS: Array = [
 # get_voice_for_faction("neutral") — if you add a new broker voice
 # for Kaelen, update both.
 static func is_kaelen_voice(voice_id: String) -> bool:
-	return voice_id == KAELEN_VOICE_ID
+	return voice_id in [KAELEN_VOICE_PROFILE_ID, KAELEN_VOICE_ID]
 
 # Apply all TONE_REPLACEMENTS rules to `text` for a non-Kaelen speaker.
 # Case-insensitive on the source token, but the replacement preserves
