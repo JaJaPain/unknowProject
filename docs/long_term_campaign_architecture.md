@@ -714,6 +714,45 @@ The map unlocks after the first gate jump and represents player knowledge:
 Confirmed permanent routes do not randomly vanish. Access may be temporarily
 blocked. Rumors may be inaccurate or stale.
 
+## Direct World Targeting
+
+Approved quality-of-life feature; it may be implemented after the current
+foundation checkpoint whenever the targeting and UI work can be isolated safely.
+
+- Right-clicking a visible, targetable world object opens a small context menu at
+  the cursor.
+- The primary action reads `Target <object display name>`.
+- Selecting that action must call the same canonical target-selection path used
+  by the overview list. It must not maintain a second target state.
+- The action selects the object only. It does not start autopilot, orbiting,
+  docking, mining, combat, or gate travel.
+- Supported objects initially include asteroids, stations, outposts, jump gates,
+  ships, wreckage, and celestial bodies that can already be selected through the
+  overview.
+- Hidden, undiscovered, disabled, destroyed, or otherwise non-targetable objects
+  do not expose the action.
+- When several objects overlap under the cursor, the menu provides a short list
+  of valid candidates rather than silently choosing an arbitrary object.
+- Context-menu input must not fire weapons or issue flight commands.
+- The menu closes when the player clicks elsewhere, presses Escape, changes
+  system, docks, or the referenced object becomes invalid.
+- Display names come from the object's registered definition or current runtime
+  identity. Node names are not treated as player-facing names.
+- The feature must work for handcrafted and procedurally generated objects
+  without per-system setup.
+
+Acceptance checks:
+
+- A visible asteroid can be targeted directly without finding it in the overview.
+- A visible station, outpost, ship, gate, and celestial body use the same target
+  state and HUD behavior as overview selection.
+- Selecting a different object replaces the previous target immediately.
+- Overlapping selectable objects can each be chosen deliberately.
+- Despawned objects and system transitions cannot leave a stale context menu or
+  invalid target reference.
+- Existing autopilot, obstruction routing, docking, mining, combat, and overview
+  selection regressions still pass.
+
 ## Procedural Ship Integration
 
 The external ship generator already supports:
@@ -873,6 +912,8 @@ Exit gate:
 Purpose: support branching campaigns before procedural branches are activated.
 
 - Build the evolving system map.
+- Add direct right-click world targeting if it has not already been completed as
+  an isolated quality-of-life improvement.
 - Separate physical campaign topology from player knowledge.
 - Support confirmed, hidden, rumored, blocked, and damaged routes.
 - Add two handcrafted branch destinations as a test.

@@ -66,6 +66,8 @@ The real two-way gate smoke test now:
 - verifies every planet has a navigation envelope larger than its body
 - simulates autopilot from the arrival gate to all three stations
 - approaches a named ring asteroid from the opposite side of its parent planet
+- advances that asteroid during the route simulation and verifies the bypass
+  travels in the same direction as the asteroid ring
 - verifies ring entry uses the physical planet corridor without repeated orbits
 - selects the live ring asteroid farthest from Halcyon Watch
 - verifies Halcyon blocks the outpost from that asteroid

@@ -693,7 +693,8 @@ func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -
 				best_obstacle,
 				best_clearance,
 				destination,
-				avoidance_orbit_sign
+				avoidance_orbit_sign,
+				navigation_target
 			)
 			_set_initial_celestial_exit(
 				best_obstacle,
@@ -746,7 +747,8 @@ func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -
 				blocking_celestial,
 				celestial_clearance,
 				destination,
-				avoidance_orbit_sign
+				avoidance_orbit_sign,
+				navigation_target
 			)
 			_set_initial_celestial_exit(
 				blocking_celestial,
@@ -882,8 +884,16 @@ func _choose_celestial_orbit_sign(
 	obstacle: Node3D,
 	required_clearance: float,
 	destination: Vector3,
-	preferred_sign: float
+	preferred_sign: float,
+	navigation_target: Node3D = null
 ) -> float:
+	var target_orbit_sign := _get_target_orbit_sign(
+		navigation_target,
+		obstacle
+	)
+	if not is_zero_approx(target_orbit_sign):
+		return target_orbit_sign
+
 	var original_sign := avoidance_orbit_sign
 	var best_sign := preferred_sign
 	var best_score := INF
@@ -911,6 +921,25 @@ func _choose_celestial_orbit_sign(
 			best_sign = candidate_sign
 	avoidance_orbit_sign = original_sign
 	return best_sign
+
+func _get_target_orbit_sign(
+	navigation_target: Node3D,
+	celestial: Node3D
+) -> float:
+	if (
+		navigation_target == null
+		or celestial == null
+		or not is_instance_valid(navigation_target)
+		or not navigation_target.is_in_group("asteroid")
+		or not _target_orbits_celestial(navigation_target, celestial)
+		or not bool(navigation_target.get("is_orbiting"))
+	):
+		return 0.0
+
+	var orbit_speed := float(navigation_target.get("orbit_speed"))
+	if is_zero_approx(orbit_speed):
+		return 0.0
+	return signf(orbit_speed)
 
 func _set_initial_celestial_exit(
 	obstacle: Node3D,

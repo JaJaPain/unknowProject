@@ -860,12 +860,16 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	player.call("_clear_avoidance_state")
 	var ring_planet_id := ring_planet.get_instance_id()
 	var ring_planet_engagements := 0
+	var ring_bypass_sign := 0.0
 	var previous_ring_obstacle_id := 0
 	var minimum_ring_planet_distance := player.global_position.distance_to(
 		ring_planet.global_position
 	)
 	var reached_ring_target := false
 	for step in range(3000):
+		# The destination is not stationary. Advance it during the route test so
+		# the bypass must follow the ring instead of solving a frozen snapshot.
+		ring_target.call("_physics_process", 1.0 / 60.0)
 		var navigation: Dictionary = player.call(
 			"_get_autopilot_avoidance",
 			ring_target.global_position,
@@ -877,6 +881,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 			and previous_ring_obstacle_id != ring_planet_id
 		):
 			ring_planet_engagements += 1
+			ring_bypass_sign = float(player.get("avoidance_orbit_sign"))
 		previous_ring_obstacle_id = current_obstacle_id
 		var steer_target: Vector3 = navigation.get(
 			"steer_target",
@@ -895,6 +900,19 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		if player.global_position.distance_to(ring_target.global_position) < 60.0:
 			reached_ring_target = true
 			break
+
+	var expected_ring_direction := signf(float(ring_target.get("orbit_speed")))
+	if (
+		ring_planet_engagements > 0
+		and not is_equal_approx(ring_bypass_sign, expected_ring_direction)
+	):
+		_fail_jump_smoke_test(
+			"Ring-target bypass did not travel with the asteroid orbit. expected=%.0f actual=%.0f" % [
+				expected_ring_direction,
+				ring_bypass_sign,
+			]
+		)
+		return false
 
 	var ring_planet_physical_clearance: float = player.call(
 		"_get_obstacle_radius",
