@@ -93,6 +93,11 @@ try {
             "res://tests/domain/run_world_identity_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Faction NPC ship portrait and voice definitions" {
+        & $godot --headless --path $root --script `
+            "res://tests/registry/run_game_content_registry_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline

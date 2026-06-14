@@ -244,7 +244,19 @@ const SAFE_ZONES = [
 const SAFE_ZONE_REP_THRESHOLD = -40.0
 
 static func is_minor_faction(faction_name: String) -> bool:
-	return MINOR_FACTIONS.has(faction_name)
+	var definition := GameContentRegistry.shared().faction(faction_name)
+	return definition != null and definition.classification == "minor"
+
+static func minor_faction_data(faction_name: String) -> Dictionary:
+	var definition := GameContentRegistry.shared().faction(faction_name)
+	if definition == null or definition.classification != "minor":
+		return {}
+	return {
+		"color": definition.ui_color,
+		"projectile": definition.projectile_color,
+		"model": definition.ship_family,
+		"tint": definition.hull_tint,
+	}
 
 static func is_in_safe_zone(world_pos: Vector3) -> bool:
 	for zone in SAFE_ZONES:
@@ -305,38 +317,40 @@ static func reputation_color(rep: float) -> Color:
 # Returns a dict with: name (full display name), descriptor (e.g. "Corporate"),
 # abbrev (3-letter HUD abbreviation).
 static func faction_info(faction_id: String) -> Dictionary:
-	match faction_id.to_lower():
-		"zenith":   return {"name": "Zenith",   "descriptor": "Corporate", "abbrev": "ZEN"}
-		"aurelia":  return {"name": "Aurelia",  "descriptor": "Syndicate", "abbrev": "AUR"}
-		"vanguard": return {"name": "Vanguard", "descriptor": "Military",  "abbrev": "VAN"}
-		_:          return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
+	var definition := GameContentRegistry.shared().faction(faction_id)
+	if definition:
+		return {
+			"name": definition.display_name,
+			"descriptor": definition.descriptor,
+			"abbrev": definition.abbreviation,
+		}
+	return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
 
 # Returns the AtlasTexture for a minor NPC's portrait, sliced from its 2x2
 # source image at the cell position stored in MINOR_NPCS.
 # Returns null if the name isn't recognized or the image fails to load.
 static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture:
+	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
+	if definition == null:
+		return null
+	return GameContentRegistry.shared().portrait_texture(definition.portrait_id)
+
+static func get_minor_npc_data(npc_name: String) -> Dictionary:
 	if not MINOR_NPCS.has(npc_name):
-		return null
-	var npc: Dictionary = MINOR_NPCS[npc_name]
-	var image = load(npc["image"]) as Texture2D
-	if not image:
-		return null
-	var size: Vector2 = image.get_size()
-	var cell_w: float = size.x / 2.0
-	var cell_h: float = size.y / 2.0
-	var x: float = 0.0
-	var y: float = 0.0
-	match npc["position"]:
-		"top_left":     pass  # 0, 0
-		"top_right":    x = cell_w
-		"bottom_left":  y = cell_h
-		"bottom_right":
-			x = cell_w
-			y = cell_h
-	var atlas := AtlasTexture.new()
-	atlas.atlas = image
-	atlas.region = Rect2(x, y, cell_w, cell_h)
-	return atlas
+		return {}
+	var data: Dictionary = MINOR_NPCS[npc_name].duplicate(true)
+	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
+	if definition:
+		data["portrait_id"] = str(definition.portrait_id)
+		data["voice_profile_id"] = str(definition.voice_profile_id)
+		data["flavor_color"] = definition.presentation_color
+		var mapping := GameContentRegistry.shared().provider_voice(
+			definition.voice_profile_id
+		)
+		if not mapping.is_empty():
+			data["voice_id"] = mapping.get("provider_voice", data.get("voice_id", "af_bella"))
+			data["voice_speed"] = mapping.get("speed", data.get("voice_speed", 1.0))
+	return data
 
 # Returns the list of minor NPC names stationed at a given outpost id
 # (e.g. "iron_reach", "kova"). Returns an empty array if no NPCs are
@@ -378,7 +392,7 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 	if npcs.is_empty():
 		return {}
 	var npc_name: String = npcs[randi() % npcs.size()]
-	var npc: Dictionary = MINOR_NPCS[npc_name]
+	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
 	if lines.is_empty():
 		return {}
@@ -402,7 +416,7 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 	var result: Array = []
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)
 	for npc_name in npcs:
-		var npc: Dictionary = MINOR_NPCS[npc_name]
+		var npc: Dictionary = get_minor_npc_data(npc_name)
 		var lines: Array = npc.get("flavor_lines", [])
 		var voice_id: String = npc.get("voice_id", "af_bella")
 		var voice_speed: float = float(npc.get("voice_speed", 1.0))
@@ -425,7 +439,7 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array:
 	if not MINOR_NPCS.has(npc_name):
 		return []
-	var npc: Dictionary = MINOR_NPCS[npc_name]
+	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
 	var result: Array = []
 	for line in lines:

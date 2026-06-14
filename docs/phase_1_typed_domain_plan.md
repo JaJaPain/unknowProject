@@ -357,6 +357,8 @@ Implementation record:
 
 ### Checkpoint 5: Faction, NPC, Ship, And Portrait Definitions
 
+Status: Complete
+
 Deliverables:
 
 - faction, NPC, ship design, and asset definition contracts
@@ -371,6 +373,17 @@ Exit test:
 - existing NPC and faction content resolves by stable ID
 - every assigned portrait exists in the portrait registry
 - invalid faction, portrait, or ship references fail clearly
+
+Implementation record:
+
+- `scripts/registry/GameContentRegistry.gd`
+- typed faction, NPC, ship-design, portrait, and voice-profile definitions
+- provider-neutral voice profiles with separate Kokoro mappings
+- adapters preserving current faction, NPC, portrait, and ship behavior
+- mixed portrait-sheet support for the curated 5x5 sheets and existing 2x2 sheets
+- explicit protected status for Kaelen
+- cross-reference, duplicate, asset-path, and provider-mapping validation
+- `tests/registry/run_game_content_registry_tests.gd`
 
 ### Checkpoint 6: Unified Speech Compatibility Adapter
 

@@ -2523,7 +2523,7 @@ func _on_test_pickup_part_pressed() -> void:
 		var npc_color: Color = Color(0.85, 0.85, 0.85)
 		var npc_portrait: Texture2D = null
 		if GlobalState.MINOR_NPCS.has(picked_npc):
-			npc_color = GlobalState.MINOR_NPCS[picked_npc].get("flavor_color", npc_color)
+			npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
 			npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		show_dock_message("Picked up '%s' from %s. Deliver to Grease Monkeys." % [picked_part, picked_npc], picked_npc, npc_color, npc_portrait)
 	else:
@@ -3167,7 +3167,7 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# guard runs) if unknown.
 	var display_voice: String = "neutral"
 	if npc_name != "" and GlobalState.MINOR_NPCS.has(npc_name):
-		display_voice = str(GlobalState.MINOR_NPCS[npc_name].get("voice_id", "neutral"))
+		display_voice = str(GlobalState.get_minor_npc_data(npc_name).get("voice_id", "neutral"))
 	text = GlobalState.apply_tone_guard(text, display_voice)
 
 	# Configure content.
@@ -3774,23 +3774,14 @@ func _update_quest_tracker_logo(faction: String):
 			quest_tracker_logo.visible = false
 
 func _update_agent_portrait(faction: String):
-	if agent_portrait and quest_givers_sheet:
-		var atlas = AtlasTexture.new()
-		atlas.atlas = quest_givers_sheet
-		
-		# Choose portrait index based on faction:
-		# Zenith (0), Aurelia (1), Vanguard (2), Neutral (3)
-		var index = 3
-		match faction.to_lower():
-			"zenith": index = 0
-			"aurelia": index = 1
-			"vanguard": index = 2
-			"neutral": index = 3
-			
-		var col = index % 2
-		var row = index / 2
-		atlas.region = Rect2(col * 627, row * 627, 627, 627)
-		agent_portrait.texture = atlas
+	if agent_portrait:
+		var portrait_id := "portrait.quest_givers.kaelen"
+		var faction_definition := GameContentRegistry.shared().faction(faction)
+		if faction_definition and not faction_definition.agent_portrait_id.is_empty():
+			portrait_id = str(faction_definition.agent_portrait_id)
+		agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
+			portrait_id
+		)
 		agent_portrait.visible = true
 		
 	if agent_client_logo and faction_branding_sheet:
@@ -3951,7 +3942,7 @@ func _complete_pickup_with_handoff() -> void:
 	var npc_color: Color = Color(0.85, 0.85, 0.85)
 	var npc_portrait: Texture2D = null
 	if GlobalState.MINOR_NPCS.has(picked_npc):
-		npc_color = GlobalState.MINOR_NPCS[picked_npc].get("flavor_color", npc_color)
+		npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
 		npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		
 	if line != "":
@@ -3971,8 +3962,9 @@ func _complete_pickup_with_handoff() -> void:
 			"voice_speed": 1.0,
 		}
 		if GlobalState.MINOR_NPCS.has(picked_npc):
-			flavor_dict["voice_id"] = GlobalState.MINOR_NPCS[picked_npc].get("voice_id", flavor_dict["voice_id"])
-			flavor_dict["voice_speed"] = GlobalState.MINOR_NPCS[picked_npc].get("voice_speed", flavor_dict["voice_speed"])
+			var npc_data := GlobalState.get_minor_npc_data(picked_npc)
+			flavor_dict["voice_id"] = npc_data.get("voice_id", flavor_dict["voice_id"])
+			flavor_dict["voice_speed"] = npc_data.get("voice_speed", flavor_dict["voice_speed"])
 		GlobalState.emit_npc_flavor(flavor_dict)
 	else:
 		push_warning("[UIManager] _complete_pickup_with_handoff: mark_pickup_complete returned false")
@@ -4044,8 +4036,9 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 						var voice_id: String = "neutral"
 						var voice_speed: float = 1.0
 						if GlobalState.MINOR_NPCS.has(npc_name):
-							voice_id = GlobalState.MINOR_NPCS[npc_name].get("voice_id", voice_id)
-							voice_speed = GlobalState.MINOR_NPCS[npc_name].get("voice_speed", voice_speed)
+							var npc_data := GlobalState.get_minor_npc_data(npc_name)
+							voice_id = npc_data.get("voice_id", voice_id)
+							voice_speed = npc_data.get("voice_speed", voice_speed)
 						QuestManager.set_pickup_handoff(line, voice_id, voice_speed, false, npc_name)
 						TTSInterface.cache_dialogue_audio(line, voice_id, voice_speed)
 						return
@@ -4084,8 +4077,9 @@ func _apply_pickup_handoff_fallback(npc_name: String, part_name: String, client_
 	var voice_id: String = "neutral"
 	var voice_speed: float = 1.0
 	if GlobalState.MINOR_NPCS.has(npc_name):
-		voice_id = GlobalState.MINOR_NPCS[npc_name].get("voice_id", voice_id)
-		voice_speed = GlobalState.MINOR_NPCS[npc_name].get("voice_speed", voice_speed)
+		var npc_data := GlobalState.get_minor_npc_data(npc_name)
+		voice_id = npc_data.get("voice_id", voice_id)
+		voice_speed = npc_data.get("voice_speed", voice_speed)
 	QuestManager.set_pickup_handoff(line, voice_id, voice_speed, true, npc_name)
 
 func _create_loading_screen():
@@ -4295,13 +4289,9 @@ func show_kaelen_intro():
 	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	# Load Kaelen's portrait slice (neutral = index 3, row 1 col 1)
-	var atlas = AtlasTexture.new()
-	atlas.atlas = quest_givers_sheet
-	var sheet_size = quest_givers_sheet.get_size()
-	var cell_w = sheet_size.x / 2.0
-	var cell_h = sheet_size.y / 2.0
-	atlas.region = Rect2(cell_w, cell_h, cell_w, cell_h)  # col 1, row 1 = neutral/Kaelen
-	portrait_rect.texture = atlas
+	portrait_rect.texture = GameContentRegistry.shared().portrait_texture(
+		"portrait.quest_givers.kaelen"
+	)
 	portrait_vbox.add_child(portrait_rect)
 	
 	# Spacer

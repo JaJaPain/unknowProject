@@ -1,0 +1,19 @@
+{
+	"schema_version": 1,
+	"provider_id": "tts.kokoro.local",
+	"mappings": {
+		"voice.kaelen.v1":{"provider_voice":"af_bella","speed":1.0},
+		"voice.neutral.v1":{"provider_voice":"af_bella","speed":1.0},
+		"voice.agent.zenith.v1":{"provider_voice":"am_adam","speed":1.0},
+		"voice.agent.aurelia.v1":{"provider_voice":"af_sarah","speed":1.0},
+		"voice.agent.vanguard.v1":{"provider_voice":"am_michael","speed":1.0},
+		"voice.cassen_vane.v1":{"provider_voice":"am_onyx","speed":0.92},
+		"voice.mariska_vonn.v1":{"provider_voice":"af_nicole","speed":1.05},
+		"voice.korvin_shaw.v1":{"provider_voice":"am_michael","speed":0.95},
+		"voice.hana_quill.v1":{"provider_voice":"af_kore","speed":1.0},
+		"voice.oleg_stroud.v1":{"provider_voice":"am_fenrir","speed":0.88},
+		"voice.dasha_invar.v1":{"provider_voice":"af_nova","speed":1.08},
+		"voice.alaric_venn.v1":{"provider_voice":"am_liam","speed":0.98},
+		"voice.jenna_kross.v1":{"provider_voice":"af_aoede","speed":1.0}
+	}
+}

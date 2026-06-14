@@ -163,7 +163,7 @@ func _setup_hull():
 	
 	# Check if this is a minor faction (data-driven lookup)
 	if GlobalState.is_minor_faction(faction):
-		var fdata = GlobalState.MINOR_FACTIONS[faction]
+		var fdata = GlobalState.minor_faction_data(faction)
 		match fdata["model"]:
 			"faction1": hull_scene = mesh_faction1
 			"faction2": hull_scene = mesh_zenith  # faction2.glb
@@ -182,7 +182,9 @@ func _setup_hull():
 	
 	# Major factions use role-specific local models. Dynamic loading keeps the
 	# project runnable when the ignored art folders are absent on another machine.
-	var model_path := str(MAJOR_FACTION_MODELS.get(faction, {}).get(ship_role, ""))
+	var model_path := GameContentRegistry.shared().ship_path(faction, ship_role)
+	if model_path.is_empty():
+		model_path = str(MAJOR_FACTION_MODELS.get(faction, {}).get(ship_role, ""))
 	if model_path != "" and ResourceLoader.exists(model_path):
 		hull_scene = load(model_path) as PackedScene
 	else:
@@ -534,7 +536,10 @@ func fire():
 		
 		# Projectile color
 		if GlobalState.is_minor_faction(faction):
-			p.color = GlobalState.MINOR_FACTIONS[faction]["projectile"]
+			p.color = GlobalState.minor_faction_data(faction).get(
+				"projectile",
+				Color.RED
+			)
 		elif faction == "zenith":
 			p.color = Color.BLUE
 		elif faction == "aurelia":
@@ -680,7 +685,7 @@ func _apply_reputation_changes():
 
 func _get_faction_color() -> Color:
 	if GlobalState.is_minor_faction(faction):
-		return GlobalState.MINOR_FACTIONS[faction]["color"]
+		return GlobalState.minor_faction_data(faction).get("color", Color.WHITE)
 	match faction:
 		"zenith": return Color(1.0, 0.6, 0.1)
 		"aurelia": return Color(0.85, 0.2, 0.2)

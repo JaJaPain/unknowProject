@@ -1,0 +1,35 @@
+{
+	"schema_version": 1,
+	"imports": [
+		"res://assets/Portraits/portrait_spritesheet_layout_with_gender.json"
+	],
+	"sheets": [
+		{
+			"id":"portrait_sheet.minor_npc_01","source_path":"res://assets/MinorNPC01.png","width":1254,"height":1254,"columns":2,"rows":2,
+			"portraits":[
+				{"id":"portrait.minor_npc_01.cassen_vane","bounds":{"x":0,"y":0,"width":627,"height":627},"tags":["male","adult","mercenary"]},
+				{"id":"portrait.minor_npc_01.mariska_vonn","bounds":{"x":627,"y":0,"width":627,"height":627},"tags":["female","adult","corporate"]},
+				{"id":"portrait.minor_npc_01.korvin_shaw","bounds":{"x":0,"y":627,"width":627,"height":627},"tags":["male","adult","veteran"]},
+				{"id":"portrait.minor_npc_01.hana_quill","bounds":{"x":627,"y":627,"width":627,"height":627},"tags":["female","adult","technical"]}
+			]
+		},
+		{
+			"id":"portrait_sheet.minor_npc_02","source_path":"res://assets/MinorNPC02.png","width":1254,"height":1254,"columns":2,"rows":2,
+			"portraits":[
+				{"id":"portrait.minor_npc_02.oleg_stroud","bounds":{"x":0,"y":0,"width":627,"height":627},"tags":["male","adult","accountant"]},
+				{"id":"portrait.minor_npc_02.dasha_invar","bounds":{"x":627,"y":0,"width":627,"height":627},"tags":["female","adult","mercenary"]},
+				{"id":"portrait.minor_npc_02.alaric_venn","bounds":{"x":0,"y":627,"width":627,"height":627},"tags":["male","adult","corporate"]},
+				{"id":"portrait.minor_npc_02.jenna_kross","bounds":{"x":627,"y":627,"width":627,"height":627},"tags":["female","adult","mechanic"]}
+			]
+		},
+		{
+			"id":"portrait_sheet.quest_givers","source_path":"res://assets/QuestGivers.png","width":1254,"height":1254,"columns":2,"rows":2,
+			"portraits":[
+				{"id":"portrait.quest_givers.zenith","bounds":{"x":0,"y":0,"width":627,"height":627},"tags":["agent","zenith"]},
+				{"id":"portrait.quest_givers.aurelia","bounds":{"x":627,"y":0,"width":627,"height":627},"tags":["agent","aurelia"]},
+				{"id":"portrait.quest_givers.vanguard","bounds":{"x":0,"y":627,"width":627,"height":627},"tags":["agent","vanguard"]},
+				{"id":"portrait.quest_givers.kaelen","bounds":{"x":627,"y":627,"width":627,"height":627},"tags":["broker","kaelen"]}
+			]
+		}
+	]
+}
