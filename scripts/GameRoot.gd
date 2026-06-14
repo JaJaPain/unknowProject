@@ -88,6 +88,15 @@ func get_jump_block_reason(gate: Node3D) -> String:
 func request_gate_jump(gate: Node3D) -> bool:
 	if get_jump_block_reason(gate) != "":
 		return false
+	var identity_validation := _validate_persistent_entities(
+		get_active_system_root()
+	)
+	if not identity_validation.is_valid():
+		push_error(
+			"[GameRoot] Cannot leave system with invalid persistent identities: %s"
+			% JSON.stringify(identity_validation.to_dict())
+		)
+		return false
 	var destination_system: String = gate.get("destination_system_id")
 	var destination_gate: String = gate.get("destination_gate_id")
 	if destination_system == "" or destination_gate == "":
@@ -142,7 +151,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		create_tween().tween_property(camera, "fov", min(original_fov + 24.0, 120.0), effect_duration)
 	await transition_fx.play_entry(effect_duration)
 	AudioManager.play_jump_transit()
-	_capture_current_system_state()
+	if not _capture_current_system_state():
+		push_error("[GameRoot] System state capture failed during gate travel.")
 	GlobalState.active_target = null
 	GlobalState.active_system_entities.clear()
 
@@ -211,31 +221,85 @@ func _prepare_player_after_system_change() -> void:
 	player.set_process_unhandled_input(true)
 
 func record_persistent_entity_state(entity: Node) -> void:
-	if not entity or not entity.has_method("get_persistent_id") or not entity.has_method("capture_state"):
+	if not entity:
 		return
-	var entity_id: String = entity.get_persistent_id()
-	if entity_id == "":
+	var validation := _validate_persistent_entities(get_active_system_root())
+	if not validation.is_valid():
+		push_error(
+			"[GameRoot] Refusing state update with invalid identities: %s" %
+			JSON.stringify(validation.to_dict())
+		)
 		return
+	var entity_result := WorldIdentity.validate_node(entity, true)
+	if not entity_result.is_valid():
+		push_error(
+			"[GameRoot] Refusing invalid persistent entity state: %s" %
+			JSON.stringify(entity_result.to_dict())
+		)
+		return
+	var entity_id := str(entity.call("get_world_id"))
 	var state: Dictionary = system_states.get(GlobalState.current_system_id, {})
 	var entities: Dictionary = state.get("entities", {})
-	entities[entity_id] = entity.capture_state()
+	entities[entity_id] = WorldIdentity.state_envelope(entity)
 	state["entities"] = entities
 	system_states[GlobalState.current_system_id] = state
 
-func _capture_current_system_state() -> void:
+func _capture_current_system_state() -> bool:
 	var system_root := get_active_system_root()
 	if not system_root:
-		return
+		return false
+	var persistent_entities := _get_persistent_entities(system_root)
+	var validation := WorldIdentity.validate_collection(
+		persistent_entities,
+		true
+	)
+	if not validation.is_valid():
+		push_error(
+			"[GameRoot] Persistent entity validation failed: %s" %
+			JSON.stringify(validation.to_dict())
+		)
+		return false
 	var state: Dictionary = system_states.get(GlobalState.current_system_id, {})
 	var entities: Dictionary = state.get("entities", {})
-	for entity in get_tree().get_nodes_in_group("persistent_entity"):
-		if is_instance_valid(entity) and system_root.is_ancestor_of(entity):
-			if entity.has_method("get_persistent_id") and entity.has_method("capture_state"):
-				var entity_id: String = entity.get_persistent_id()
-				if entity_id != "":
-					entities[entity_id] = entity.capture_state()
+	for entity: Node in persistent_entities:
+		var entity_id := str(entity.call("get_world_id"))
+		entities[entity_id] = WorldIdentity.state_envelope(entity)
 	state["entities"] = entities
 	system_states[GlobalState.current_system_id] = state
+	return true
+
+func _get_persistent_entities(system_root: Node3D) -> Array:
+	var entities: Array = []
+	if system_root == null:
+		return entities
+	for entity in get_tree().get_nodes_in_group(
+		WorldIdentity.STATEFUL_GROUP
+	):
+		if is_instance_valid(entity) and system_root.is_ancestor_of(entity):
+			entities.append(entity)
+	return entities
+
+func _validate_persistent_entities(system_root: Node3D) -> ValidationResult:
+	var result := WorldIdentity.validate_collection(
+		_get_world_identity_entities(system_root),
+		false
+	)
+	result.merge(WorldIdentity.validate_collection(
+		_get_persistent_entities(system_root),
+		true
+	), "stateful")
+	return result
+
+func _get_world_identity_entities(system_root: Node3D) -> Array:
+	var entities: Array = []
+	if system_root == null:
+		return entities
+	for entity in get_tree().get_nodes_in_group(
+		WorldIdentity.IDENTITY_GROUP
+	):
+		if is_instance_valid(entity) and system_root.is_ancestor_of(entity):
+			entities.append(entity)
+	return entities
 
 func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 	var state: Dictionary = system_states.get(system_id, {})
@@ -243,9 +307,11 @@ func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 	if entities.is_empty():
 		return
 	var restored_ids: Dictionary = {}
-	for entity in get_tree().get_nodes_in_group("persistent_entity"):
-		if is_instance_valid(entity) and system_root.is_ancestor_of(entity) and entity.has_method("get_persistent_id"):
-			var entity_id: String = entity.get_persistent_id()
+	for entity in get_tree().get_nodes_in_group(
+		WorldIdentity.STATEFUL_GROUP
+	):
+		if is_instance_valid(entity) and system_root.is_ancestor_of(entity) and entity.has_method("get_world_id"):
+			var entity_id: String = entity.get_world_id()
 			if entities.has(entity_id) and entity.has_method("restore_state"):
 				entity.restore_state(entities[entity_id])
 				restored_ids[entity_id] = true
@@ -265,7 +331,9 @@ func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 			npc.restore_state(entity_state)
 
 func save_game() -> bool:
-	_capture_current_system_state()
+	if not _capture_current_system_state():
+		push_warning("[GameRoot] Save cancelled because entity identity validation failed.")
+		return false
 	var save_data := {
 		"version": SAVE_VERSION,
 		"current_system_id": GlobalState.current_system_id,
@@ -530,6 +598,13 @@ func _run_core_smoke_test() -> void:
 	var system_root := get_active_system_root()
 	if not ui or not system_root or not player or player.destroyed:
 		_fail_core_smoke_test("Playable scene references were unavailable.")
+		return
+	var identity_validation := _validate_persistent_entities(system_root)
+	if not identity_validation.is_valid():
+		_fail_core_smoke_test(
+			"World identity validation failed: %s" %
+			JSON.stringify(identity_validation.to_dict())
+		)
 		return
 
 	GlobalState.paused = false
@@ -1015,6 +1090,7 @@ func _run_combat_smoke_test() -> void:
 		return
 
 	var test_npc := npc_scene.instantiate()
+	test_npc.persistent_id = "entity.test.combat.primary"
 	test_npc.name = "CombatSmokeTarget"
 	test_npc.faction = "aurelia"
 	test_npc.ship_role = "Gunner"

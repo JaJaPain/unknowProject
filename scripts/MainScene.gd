@@ -7,6 +7,7 @@ var ui_manager: Control
 
 var asteroid_scene = preload("res://scenes/asteroid.tscn")
 var npc_ship_scene = preload("res://scenes/npc_ship.tscn")
+var runtime_ship_sequence: int = 0
 
 func _ready():
 	GlobalState.active_system_root = self
@@ -22,22 +23,22 @@ func _ready():
 	_spawn_asteroid_ring(rocky_planet.global_position, 370.0, 80.0, 45, "RockyBelt")
 	
 	# Spawn NPC Ships
-	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0, "Logistics")
-	_spawn_npc("zenith", Vector3(-120, 0, 190), 12.0, "MiningHauler")
+	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0, "Logistics", "entity.start.patrol.zenith.logistics")
+	_spawn_npc("zenith", Vector3(-120, 0, 190), 12.0, "MiningHauler", "entity.start.patrol.zenith.mining_hauler")
 	
 	# Close hostiles for easy testing near start area
-	_spawn_npc("aurelia", Vector3(90, 0, 80), 14.0, "Interceptor")
-	_spawn_npc("vanguard", Vector3(-90, 0, 80), 15.0, "Gunner")
+	_spawn_npc("aurelia", Vector3(90, 0, 80), 14.0, "Interceptor", "entity.start.patrol.aurelia.inner")
+	_spawn_npc("vanguard", Vector3(-90, 0, 80), 15.0, "Gunner", "entity.start.patrol.vanguard.inner")
 	
 	# Hostiles around Rocky Planet
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(40, 0, 40), 14.0, "Gunner")
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(-50, 0, -40), 14.0, "Interceptor")
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(0, 0, -80), 14.0, "MiningHauler")
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(40, 0, 40), 14.0, "Gunner", "entity.start.patrol.aurelia.rocky_01")
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(-50, 0, -40), 14.0, "Interceptor", "entity.start.patrol.aurelia.rocky_02")
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(0, 0, -80), 14.0, "MiningHauler", "entity.start.patrol.aurelia.rocky_03")
 	
 	# Hostiles around Gas Giant
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(50, 0, 50), 15.0, "Gunner")
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(-60, 0, -60), 15.0, "Interceptor")
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler")
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(50, 0, 50), 15.0, "Gunner", "entity.start.patrol.vanguard.gas_01")
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(-60, 0, -60), 15.0, "Interceptor", "entity.start.patrol.vanguard.gas_02")
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
 
 	
 	# The persistent UI enters the tree after this system scene. Defer the first
@@ -69,6 +70,8 @@ func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: i
 		
 		var ast = asteroid_scene.instantiate()
 		ast.name = prefix + "_Asteroid_" + str(i)
+		# Keep the current key for save compatibility, but assign it explicitly.
+		ast.persistent_id = ast.name
 		
 		# Setup orbiting variables on the asteroid
 		ast.orbit_center = center
@@ -81,11 +84,18 @@ func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: i
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)
 
-func _spawn_npc(faction_name: String, pos: Vector3, npc_speed: float, role: String = ""):
+func _spawn_npc(
+	faction_name: String,
+	pos: Vector3,
+	npc_speed: float,
+	role: String = "",
+	world_id: String = ""
+):
 	var npc = npc_ship_scene.instantiate()
 	npc.faction = faction_name
 	npc.speed = npc_speed
 	npc.ship_role = role
+	npc.persistent_id = world_id if not world_id.is_empty() else _next_runtime_ship_id("patrol")
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	add_child(npc)
 	npc.global_position = pos
@@ -178,6 +188,7 @@ func _spawn_minor_faction_ship():
 	npc.faction = faction_name
 	npc.speed = randf_range(10.0, 14.0)
 	npc.name = faction_name.to_upper() + "_Roaming_" + str(randi() % 1000)
+	npc.persistent_id = _next_runtime_ship_id("roaming")
 	add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = patrol_dest
@@ -206,8 +217,13 @@ func _spawn_npc_flying_in():
 	npc.speed = 13.0 # Slightly faster speed for flying in
 	npc.ship_role = ["Gunner", "Interceptor", "Logistics", "MiningHauler"].pick_random()
 	npc.name = faction_name.to_upper() + "_Incoming_" + str(randi() % 1000)
+	npc.persistent_id = _next_runtime_ship_id("incoming")
 	add_child(npc)
 	npc.global_position = spawn_pos
 	
 	# Set its patrol center to the destination so it flies in
 	npc.patrol_center = patrol_dest
+
+func _next_runtime_ship_id(category: String) -> String:
+	runtime_ship_sequence += 1
+	return "entity.start.%s.%06d" % [category, runtime_ship_sequence]

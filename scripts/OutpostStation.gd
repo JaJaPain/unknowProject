@@ -8,6 +8,7 @@ extends StaticBody3D
 ## can import them. Until then, a procedural placeholder mesh is shown.
 
 @export var display_name: String = "Outpost"
+@export var world_id: String = ""
 @export var station_type: String = "outpost"   # UIManager reads this to show repair-only UI
 @export var model_path: String = ""            # e.g. "res://assets/space_station1.glb"
 @export var model_scale: float = 5.0           # Adjust per model to match main station size
@@ -19,6 +20,9 @@ func _ready() -> void:
 	push_error("[OutpostStation] >>>>>>>>>> _ready() FIRED for: " + str(name) + " display_name=" + display_name + " <<<<<<<<<<")
 	# Group membership (also declared in .tscn but explicit call is belt-and-suspenders)
 	add_to_group("station")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	if world_id.is_empty():
+		push_error("[OutpostStation] Missing explicit world ID for '%s'." % name)
 	
 	# Register in the global entity list so distance checks / NPC targeting work
 	if not GlobalState.active_system_entities.has(self):
@@ -108,6 +112,12 @@ func get_docking_position(approach_position: Vector3) -> Vector3:
 	if away_from_station.length_squared() < 0.001:
 		away_from_station = global_transform.basis.z
 	return global_position + away_from_station.normalized() * get_docking_distance()
+
+func get_world_id() -> String:
+	return world_id
+
+func get_world_type_id() -> String:
+	return "entity_type.station"
 
 func get_docking_distance() -> float:
 	var collision := find_child("CollisionShape3D", true, false) as CollisionShape3D

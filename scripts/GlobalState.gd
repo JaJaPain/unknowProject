@@ -717,6 +717,7 @@ var has_max_deep_mining: bool = false
 var damage: float = weapon_damage # Legacy support until swapped
 var laser_range: float = 80.0
 var destroyed_ships_pool: int = 0
+var runtime_entity_sequence: int = 0
 
 # Game references
 var player: Node3D = null
@@ -781,6 +782,11 @@ func spawn_reinforcement(faction_name: String):
 		npc.ship_role = "Gunner"
 		npc.speed = 11.0
 		npc.name = faction_name.to_upper() + "_EliteReinforcement_" + str(randi() % 1000)
+		runtime_entity_sequence += 1
+		npc.persistent_id = "entity.%s.reinforcement.%06d" % [
+			current_system_id,
+			runtime_entity_sequence,
+		]
 		
 		var system_root = get_system_root()
 		if system_root:
@@ -821,6 +827,11 @@ func spawn_mission_targets(faction_name: String, count: int):
 	
 	# Spread ships evenly in a ring 550-900m from the station — far enough
 	# that the player has to fly out to engage, close enough to feel immediate
+	var mission_key := _active_mission_identity_key()
+	var start_index := int(
+		QuestManager.active_quest.get("target_spawn_sequence", 0)
+	)
+	QuestManager.active_quest["target_spawn_sequence"] = start_index + count
 	for i in range(count):
 		var angle = (TAU / count) * i + randf_range(-0.4, 0.4)
 		var dist = randf_range(550.0, 900.0)
@@ -835,7 +846,10 @@ func spawn_mission_targets(faction_name: String, count: int):
 		# Mark as a quest target so QuestManager can count survivors and
 		# decide when to spawn replacements after NPC kills.
 		npc.set_meta("is_quest_target", true)
-		npc.persistent_id = "quest_target_%s_%d" % [faction_name, i]
+		npc.persistent_id = "entity.mission.%s.%06d" % [
+			mission_key,
+			start_index + i,
+		]
 		npc.add_to_group("persistent_entity")
 		system_root.add_child(npc)
 		npc.global_position = spawn_pos
@@ -845,6 +859,17 @@ func spawn_mission_targets(faction_name: String, count: int):
 	if ui and ui.has_method("show_hud_warning"):
 		ui.show_hud_warning("CONTRACT ACTIVE: " + str(count) + " " + faction_name.to_upper() + " targets have entered the sector.")
 	emit_chatter("SYSTEM", "Sensor sweep: " + str(count) + " " + faction_name.to_upper() + " signatures detected in open space.", Color(0.0, 0.9, 0.9))
+
+func _active_mission_identity_key() -> String:
+	var runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
+	if not runtime_id.is_empty():
+		return runtime_id.sha256_text().substr(0, 12)
+	var legacy_source := "%s|%s|%s" % [
+		QuestManager.active_quest.get("title", "legacy"),
+		QuestManager.active_quest.get("system_id", current_system_id),
+		QuestManager.active_quest.get("faction", "neutral"),
+	]
+	return legacy_source.sha256_text().substr(0, 12)
 
 
 
@@ -949,6 +974,7 @@ func reset_for_restart():
 	damage = weapon_damage
 	laser_range = 80.0
 	destroyed_ships_pool = 0
+	runtime_entity_sequence = 0
 	# Reset reputations
 	reputations = { "zenith": 50.0, "aurelia": -20.0, "vanguard": -20.0 }
 	# Reset kill tracking

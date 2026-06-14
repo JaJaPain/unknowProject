@@ -15,9 +15,10 @@ var is_orbiting: bool = false
 
 func _ready():
 	add_to_group("asteroid")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
 	add_to_group("persistent_entity")
 	if persistent_id == "":
-		persistent_id = name
+		push_error("[Asteroid] Missing explicit persistent ID for '%s'." % name)
 	resources = max_resources
 	# Add slight random scale variation to asteroid
 	var r_scale = randf_range(0.85, 1.4)
@@ -70,7 +71,16 @@ func deplete():
 	queue_free()
 
 func get_persistent_id() -> String:
+	return get_world_id()
+
+func get_world_id() -> String:
 	return persistent_id
+
+func get_world_type_id() -> String:
+	return "entity_type.asteroid"
+
+func get_state_schema_version() -> int:
+	return 1
 
 func capture_state() -> Dictionary:
 	return {

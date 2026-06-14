@@ -147,6 +147,8 @@ func _configure_role(role: String) -> void:
 func _ready():
 	_generate_archetype()
 	patrol_center = global_position
+	if persistent_id != "":
+		add_to_group(WorldIdentity.IDENTITY_GROUP)
 	
 	# Add to entities list
 	GlobalState.active_system_entities.append(self)
@@ -609,9 +611,16 @@ func die():
 	queue_free()
 
 func get_persistent_id() -> String:
-	if persistent_id != "":
-		return persistent_id
-	return name
+	return get_world_id()
+
+func get_world_id() -> String:
+	return persistent_id
+
+func get_world_type_id() -> String:
+	return "entity_type.ship"
+
+func get_state_schema_version() -> int:
+	return 1
 
 func capture_state() -> Dictionary:
 	return {

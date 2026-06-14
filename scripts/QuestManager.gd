@@ -139,6 +139,7 @@ func accept_quest(quest_data: Dictionary, selected_choice: Dictionary):
 	var rep_change = consequence.get("reputation_change", {})
 	var combat_mult = max(0.5, consequence.get("combat_multiplier", 1.0))  # clamp: never 0
 	var reward_mult = max(0.5, consequence.get("reward_credits_multiplier", 1.0))
+	var runtime_mission_id := _create_runtime_mission_id(quest_data)
 	
 	# Apply immediate credit rewards/penalties
 	GlobalState.player_credits += credits_immediate
@@ -149,6 +150,7 @@ func accept_quest(quest_data: Dictionary, selected_choice: Dictionary):
 		
 	# Populate active quest dictionary
 	active_quest = {
+		"runtime_id": runtime_mission_id,
 		"title": quest_data.get("title", "Unnamed Contract"),
 		"faction": quest_data.get("faction", "zenith"),
 		"agent_name": quest_data.get("agent_name", "Broker Kaelen"),
@@ -160,6 +162,7 @@ func accept_quest(quest_data: Dictionary, selected_choice: Dictionary):
 		"choice_text_selected": selected_choice.get("text", ""),
 		"agent_response": consequence.get("dialogue_response", ""),
 		"system_id": GlobalState.current_system_id,
+		"target_spawn_sequence": 0,
 	}
 	
 	if type == "KILL_SHIPS":
@@ -188,6 +191,16 @@ func accept_quest(quest_data: Dictionary, selected_choice: Dictionary):
 
 	print("[QuestManager] Quest accepted: ", active_quest["title"], " type:", type, " (Difficulty multiplier: ", combat_mult, ")")
 	quest_accepted.emit()
+
+
+func _create_runtime_mission_id(quest_data: Dictionary) -> String:
+	var identity_source := "%s|%s|%s|%s" % [
+		Time.get_unix_time_from_system(),
+		Time.get_ticks_usec(),
+		quest_data.get("title", "mission"),
+		quest_data.get("faction", "neutral"),
+	]
+	return "mission.runtime.%s" % identity_source.sha256_text().substr(0, 16)
 
 
 # Set the LLM-generated (or fallback) handoff line for an active

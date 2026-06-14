@@ -88,6 +88,11 @@ try {
             "res://tests/registry/run_system_registry_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Persistent world identity" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_world_identity_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline

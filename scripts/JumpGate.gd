@@ -1,6 +1,7 @@
 extends StaticBody3D
 
 @export var gate_id: String = ""
+@export var world_id: String = ""
 @export var display_name: String = "HYPERGATE"
 @export var destination_system_id: String = ""
 @export var destination_gate_id: String = ""
@@ -19,6 +20,9 @@ var charge_tween: Tween
 
 func _ready() -> void:
 	add_to_group("jumpgate")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	if world_id.is_empty():
+		push_error("[JumpGate] Missing explicit world ID for gate '%s'." % gate_id)
 	if not GlobalState.active_system_entities.has(self):
 		GlobalState.active_system_entities.append(self)
 	_center_and_scale_model()
@@ -43,6 +47,12 @@ func get_arrival_transform() -> Transform3D:
 
 func get_approach_position() -> Vector3:
 	return approach_marker.global_position
+
+func get_world_id() -> String:
+	return world_id
+
+func get_world_type_id() -> String:
+	return "entity_type.gate"
 
 func is_player_in_activation_range() -> bool:
 	var player := GlobalState.player

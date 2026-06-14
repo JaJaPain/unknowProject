@@ -332,6 +332,8 @@ Implementation record:
 
 ### Checkpoint 4: Persistent Entity Identity
 
+Status: Complete
+
 Deliverables:
 
 - common persistent identity contract
@@ -343,6 +345,15 @@ Exit test:
 
 - leaving and returning to a system resolves the same entities
 - duplicate IDs are caught before they can corrupt a save
+
+Implementation record:
+
+- `scripts/domain/WorldIdentity.gd`
+- stable world IDs for stations, gates, NPC ships, mission ships, and asteroids
+- state schema metadata added to persistent entity records
+- duplicate and incomplete identity validation before travel and saving
+- `tests/domain/run_world_identity_tests.gd`
+- live identity validation added to the core startup smoke test
 
 ### Checkpoint 5: Faction, NPC, Ship, And Portrait Definitions
 

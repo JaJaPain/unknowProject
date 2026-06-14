@@ -79,10 +79,12 @@ shape = SubResource("SphereShape3D_rocky")
 
 [node name="Station" parent="." groups=["primary_station"] instance=ExtResource("4_station")]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 180)
+world_id = "station.start.main"
 
 [node name="IronReachOutpost" parent="." instance=ExtResource("4_station")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2350, 0, 1150)
 display_name = "IRON REACH OUTPOST"
+world_id = "station.start.iron_reach"
 station_type = "outpost"
 model_path = "res://assets/space_station1.glb"
 model_instance_scale = 2.0
@@ -90,6 +92,7 @@ model_instance_scale = 2.0
 [node name="KovaStation" parent="." instance=ExtResource("4_station")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1650, 0, 2200)
 display_name = "KOVA STATION"
+world_id = "station.start.kova"
 station_type = "outpost"
 model_path = "res://assets/space_station2.glb"
 model_instance_scale = 20.0
@@ -98,6 +101,7 @@ model_instance_scale = 20.0
 position = Vector3(750, 0, -550)
 rotation_degrees = Vector3(0, -35, 0)
 gate_id = "start_to_test"
+world_id = "gate.start.to_test"
 display_name = "FRINGE HYPERGATE"
 destination_system_id = "test_system"
 destination_gate_id = "test_to_start"

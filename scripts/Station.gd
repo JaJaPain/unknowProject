@@ -1,6 +1,7 @@
 extends StaticBody3D
 
 @export var display_name: String = ""
+@export var world_id: String = ""
 @export var station_type: String = "full_service"  # "full_service" or "outpost"
 @export var model_path: String = ""                # GLB path, e.g. "res://assets/space_station1.glb"
 @export var model_instance_scale: float = 1.0      # Extra scale applied to the GLB model itself
@@ -10,6 +11,9 @@ extends StaticBody3D
 
 func _ready():
 	add_to_group("station")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	if world_id.is_empty():
+		push_error("[Station] Missing explicit world ID for '%s'." % name)
 	
 	# Register in the global entity list so NPCs / overview can find us
 	if not GlobalState.active_system_entities.has(self):
@@ -107,6 +111,12 @@ func get_docking_position(approach_position: Vector3) -> Vector3:
 	if away_from_station.length_squared() < 0.001:
 		away_from_station = global_transform.basis.z
 	return global_position + away_from_station.normalized() * get_docking_distance()
+
+func get_world_id() -> String:
+	return world_id
+
+func get_world_type_id() -> String:
+	return "entity_type.station"
 
 func get_docking_distance() -> float:
 	var collision := find_child("CollisionShape3D", true, false) as CollisionShape3D
