@@ -103,6 +103,15 @@ try {
             "res://tests/speech/run_speech_service_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Mission definitions and state adapter" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_mission_contract_tests.gd" -- `
+            --baseline-offline
+    }
+    Invoke-BaselineStep "Mission gameplay lifecycle" {
+        & $godot --headless --path $root -- `
+            --mission-smoke-test --no-save-load --baseline-offline
+    }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `
             --core-smoke-test --no-save-load --baseline-offline

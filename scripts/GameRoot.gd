@@ -334,13 +334,20 @@ func save_game() -> bool:
 	if not _capture_current_system_state():
 		push_warning("[GameRoot] Save cancelled because entity identity validation failed.")
 		return false
+	var quest_state := QuestManager.capture_active_quest()
+	if QuestManager.is_quest_active() and quest_state.is_empty():
+		push_warning(
+			"[GameRoot] Save cancelled because mission validation failed: %s" %
+			QuestManager.last_validation_error
+		)
+		return false
 	var save_data := {
 		"version": SAVE_VERSION,
 		"current_system_id": GlobalState.current_system_id,
 		"arrival_gate_id": last_arrival_gate_id,
 		"player": _capture_player_state(),
 		"global": _capture_global_state(),
-		"quest": QuestManager.active_quest.duplicate(true),
+		"quest": quest_state,
 		"systems": system_states.duplicate(true),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -383,16 +390,21 @@ func _is_valid_save_data(data: Variant) -> bool:
 		return false
 	if not system_registry.has_system(str(data.get("current_system_id", ""))):
 		return false
+	if not data.get("quest", null) is Dictionary:
+		return false
+	if not QuestManager.can_restore_active_quest(data.get("quest", {})):
+		return false
 	return data.get("player", null) is Dictionary \
 		and data.get("global", null) is Dictionary \
-		and data.get("quest", null) is Dictionary \
 		and data.get("systems", null) is Dictionary
 
 func _apply_save_data(data: Dictionary) -> void:
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))
-	QuestManager.active_quest = data.get("quest", {}).duplicate(true)
+	if not QuestManager.restore_active_quest(data.get("quest", {})):
+		push_warning("[GameRoot] Save mission state failed validation during restore.")
+		return
 	var target_system_id := str(data.get("current_system_id", "start_system"))
 	if target_system_id != GlobalState.current_system_id:
 		await _load_system_without_transition(target_system_id)
@@ -2051,6 +2063,26 @@ func _run_mission_smoke_test() -> void:
 			"reward_credits_multiplier": 1.0,
 		},
 	}
+	var credits_before_rejection := GlobalState.player_credits
+	var zenith_before_rejection := float(GlobalState.reputations["zenith"])
+	var invalid_offer := mismatched_quest.duplicate(true)
+	invalid_offer["objective"] = {
+		"type": "PICKUP_SPECIAL",
+		"target_outpost": "kova",
+		"reward_credits": 500,
+	}
+	if QuestManager.accept_quest(invalid_offer, accept_choice) \
+			or QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_rejection \
+			or not is_equal_approx(
+				float(GlobalState.reputations["zenith"]),
+				zenith_before_rejection
+			):
+		_fail_mission_smoke_test(
+			"Malformed mission acceptance changed player or mission state."
+		)
+		return
+
 	QuestManager.accept_quest(mismatched_quest, accept_choice)
 	if not QuestManager.is_quest_active() \
 			or QuestManager.active_quest.get("objective_type", "") != "DELIVER_ORE" \
@@ -2078,17 +2110,22 @@ func _run_mission_smoke_test() -> void:
 		_fail_mission_smoke_test("Final ore delivery did not pay and clear the mission.")
 		return
 
-	QuestManager.active_quest = {
+	var kill_offer := {
 		"title": "Kill Progress",
 		"faction": "vanguard",
-		"objective_type": "KILL_SHIPS",
-		"target_faction": "reavers",
-		"current_count": 0,
-		"count_required": 2,
-		"reward_credits": 50,
-		"reward_credits_multiplier": 1.0,
-		"choice_text_selected": "Accepted.",
+		"agent_name": "Captain Dask",
+		"dialogue": "Destroy two Reavers ships.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 2,
+			"reward_credits": 50,
+		},
+		"choices": [],
 	}
+	if not QuestManager.accept_quest(kill_offer, accept_choice):
+		_fail_mission_smoke_test("Valid kill mission was rejected.")
+		return
 	GlobalState.ship_destroyed.emit("reavers")
 	GlobalState.ship_destroyed.emit("reavers")
 	if not QuestManager.is_quest_completed() \
@@ -2097,11 +2134,24 @@ func _run_mission_smoke_test() -> void:
 		return
 	QuestManager.complete_quest()
 
-	QuestManager.active_quest = {
+	var abandon_offer := {
 		"title": "Abandonment Test",
 		"faction": "aurelia",
-		"objective_type": "DELIVER_ORE",
+		"agent_name": "Liaison Ryn",
+		"dialogue": "Deliver ten cubic meters of ore.",
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 10.0,
+			"reward_credits": 25,
+		},
+		"choices": [],
 	}
+	if not QuestManager.accept_quest(abandon_offer, {
+		"text": "Accepted.",
+		"consequence": {},
+	}):
+		_fail_mission_smoke_test("Valid abandonment mission was rejected.")
+		return
 	var aurelia_before_abandon := float(GlobalState.reputations["aurelia"])
 	QuestManager.abandon_quest()
 	if QuestManager.is_quest_active() \
@@ -2112,21 +2162,29 @@ func _run_mission_smoke_test() -> void:
 		_fail_mission_smoke_test("Mission abandonment did not apply the approved small penalty.")
 		return
 
-	QuestManager.active_quest = {
+	var pickup_offer := {
 		"title": "Pickup Validation",
 		"faction": "zenith",
 		"agent_name": "Jenna Kross",
-		"objective_type": "PICKUP_SPECIAL",
-		"part_name": "Plasma Coupler",
-		"target_outpost": "kova",
-		"target_outpost_display": "Kova Station",
-		"target_npc": "Cassen Vane",
-		"destination": "Grease Monkeys",
-		"picked_up": true,
-		"reward_credits": 75,
-		"reward_credits_multiplier": 1.0,
-		"choice_text_selected": "Accepted.",
+		"dialogue": "Retrieve the Plasma Coupler from Kova Station.",
+		"objective": {
+			"type": "PICKUP_SPECIAL",
+			"part_name": "Plasma Coupler",
+			"target_outpost": "kova",
+			"target_outpost_display": "Kova Station",
+			"target_npc": "Cassen Vane",
+			"destination": "Grease Monkeys",
+			"reward_credits": 75,
+		},
+		"choices": [],
 	}
+	if not QuestManager.accept_quest(pickup_offer, {
+		"text": "Accepted.",
+		"consequence": {},
+	}):
+		_fail_mission_smoke_test("Valid pickup mission was rejected.")
+		return
+	QuestManager.active_quest["picked_up"] = true
 	GlobalState.accept_special("Wrong Part", "Test", "Kova", "Grease Monkeys")
 	var credits_before_wrong_part := GlobalState.player_credits
 	var zenith_before_wrong_part := float(GlobalState.reputations["zenith"])

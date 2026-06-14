@@ -3558,7 +3558,19 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 		child.queue_free()
 		
 	# Accept quest
-	QuestManager.accept_quest(quest_data, choice)
+	if not QuestManager.accept_quest(quest_data, choice):
+		agent_dialogue_label.text = (
+			"Contract data failed verification. Kaelen has rejected the offer."
+		)
+		SpeechService.play(
+			"That contract is broken, Shiny. I'm not putting your name on it.",
+			"voice.kaelen.v1"
+		)
+		var return_btn := Button.new()
+		return_btn.text = "Back to Services"
+		return_btn.pressed.connect(_on_agent_back_pressed)
+		agent_choices_container.add_child(return_btn)
+		return
 	
 	if quest_data.get("objective", {}).get("type", "") == "PICKUP_SPECIAL":
 		var npc_name = quest_data["objective"].get("target_npc", "unknown")

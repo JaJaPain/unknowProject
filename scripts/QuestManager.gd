@@ -1,6 +1,9 @@
 extends Node
 
 const HISTORY_FILE_PATH = "user://quest_history.md"
+const MissionAdapterType := preload(
+	"res://scripts/domain/MissionAdapter.gd"
+)
 
 signal quest_accepted()
 signal quest_progress_updated()
@@ -13,6 +16,7 @@ signal quest_abandoned()
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 
 var active_quest: Dictionary = {}
+var last_validation_error: String = ""
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -128,69 +132,61 @@ func request_new_quest(agent_faction: String, callback: Callable):
 	var history_text = _load_quest_history()
 	LLMInterface.request_quest_generation(agent_faction, history_text, GlobalState.player_credits, GlobalState.reputations, callback)
 
-func accept_quest(quest_data: Dictionary, selected_choice: Dictionary):
-	# Defensive access — LLM data may be missing keys on malformed output
-	var obj_data = quest_data.get("objective", {})
-	var type = obj_data.get("type", "DELIVER_ORE")
-	var reward_credits = obj_data.get("reward_credits", 100)
-	
-	var consequence = selected_choice.get("consequence", {})
-	var credits_immediate = consequence.get("credits_immediate", 0)
-	var rep_change = consequence.get("reputation_change", {})
-	var combat_mult = max(0.5, consequence.get("combat_multiplier", 1.0))  # clamp: never 0
-	var reward_mult = max(0.5, consequence.get("reward_credits_multiplier", 1.0))
+func accept_quest(
+	quest_data: Dictionary,
+	selected_choice: Dictionary
+) -> bool:
 	var runtime_mission_id := _create_runtime_mission_id(quest_data)
-	
-	# Apply immediate credit rewards/penalties
-	GlobalState.player_credits += credits_immediate
-	
-	# Apply reputation changes
-	for faction in rep_change.keys():
-		GlobalState.adjust_reputation(faction, rep_change[faction])
-		
-	# Populate active quest dictionary
-	active_quest = {
-		"runtime_id": runtime_mission_id,
-		"title": quest_data.get("title", "Unnamed Contract"),
-		"faction": quest_data.get("faction", "zenith"),
-		"agent_name": quest_data.get("agent_name", "Broker Kaelen"),
-		"dialogue": quest_data.get("dialogue", ""),
-		"objective_type": type,
-		"combat_multiplier": combat_mult,
-		"reward_credits_multiplier": reward_mult,
-		"reward_credits": reward_credits,
-		"choice_text_selected": selected_choice.get("text", ""),
-		"agent_response": consequence.get("dialogue_response", ""),
-		"system_id": GlobalState.current_system_id,
-		"target_spawn_sequence": 0,
-	}
-	
-	if type == "KILL_SHIPS":
-		active_quest["target_faction"] = obj_data.get("target_faction", "zenith")
-		active_quest["count_required"] = max(1, int(obj_data.get("count_required", 3) * combat_mult))
-		active_quest["current_count"] = 0
-		# Schedule mission target spawn for shortly after undock (3 seconds gives time to clear the station)
+	var adapted := MissionAdapterType.build_active_state(
+		quest_data,
+		selected_choice,
+		runtime_mission_id,
+		GlobalState.current_system_id
+	)
+	var validation: ValidationResult = adapted["validation"]
+	if not validation.is_valid():
+		last_validation_error = _validation_message(validation)
+		push_warning(
+			"[QuestManager] Rejected malformed mission offer: %s" %
+			last_validation_error
+		)
+		return false
+
+	var consequence = adapted["consequence"]
+	GlobalState.player_credits += consequence.credits_immediate
+	for faction in consequence.reputation_change.keys():
+		GlobalState.adjust_reputation(
+			faction,
+			consequence.reputation_change[faction]
+		)
+
+	active_quest = (adapted["state"] as Dictionary).duplicate(true)
+	last_validation_error = ""
+	if active_quest["objective_type"] == "KILL_SHIPS":
 		var spawn_faction = active_quest["target_faction"]
 		var spawn_count = active_quest["count_required"]
+		var accepted_runtime_id := str(active_quest["runtime_id"])
 		get_tree().create_timer(3.0).timeout.connect(func():
+			if not is_quest_active():
+				return
+			if str(active_quest.get("runtime_id", "")) != accepted_runtime_id:
+				return
+			if active_quest.get("objective_type", "") != "KILL_SHIPS":
+				return
 			GlobalState.spawn_mission_targets(spawn_faction, spawn_count)
 		)
-	elif type == "DELIVER_ORE":
-		active_quest["amount_required"] = max(1.0, snapped(obj_data.get("amount_required", 20.0), 1.0))
-		active_quest["partial_delivered"] = 0.0  # Tracks ore already handed in via partial shipments
-	elif type == "PICKUP_SPECIAL":
-		# Special-cargo pickup: go to a named outpost, talk to a named NPC,
-		# collect a part, bring it back. The cargo is loaded when the player
-		# actually picks it up at the outpost (mark_pickup_complete).
-		active_quest["target_outpost"] = obj_data.get("target_outpost", "")
-		active_quest["target_outpost_display"] = obj_data.get("target_outpost_display", active_quest["target_outpost"])
-		active_quest["target_npc"] = obj_data.get("target_npc", "")
-		active_quest["part_name"] = obj_data.get("part_name", "Unknown Part")
-		active_quest["destination"] = obj_data.get("destination", "Grease Monkeys")
-		active_quest["picked_up"] = false
 
-	print("[QuestManager] Quest accepted: ", active_quest["title"], " type:", type, " (Difficulty multiplier: ", combat_mult, ")")
+	print(
+		"[QuestManager] Quest accepted: ",
+		active_quest["title"],
+		" type:",
+		active_quest["objective_type"],
+		" (Difficulty multiplier: ",
+		active_quest["combat_multiplier"],
+		")"
+	)
 	quest_accepted.emit()
+	return true
 
 
 func _create_runtime_mission_id(quest_data: Dictionary) -> String:
@@ -201,6 +197,58 @@ func _create_runtime_mission_id(quest_data: Dictionary) -> String:
 		quest_data.get("faction", "neutral"),
 	]
 	return "mission.runtime.%s" % identity_source.sha256_text().substr(0, 16)
+
+
+func capture_active_quest() -> Dictionary:
+	if active_quest.is_empty():
+		last_validation_error = ""
+		return {}
+	var normalized := MissionAdapterType.normalize_legacy_state(active_quest)
+	var validation := MissionAdapterType.validate_active_state(normalized)
+	if not validation.is_valid():
+		last_validation_error = _validation_message(validation)
+		return {}
+	last_validation_error = ""
+	return normalized
+
+
+func can_restore_active_quest(source: Dictionary) -> bool:
+	var normalized := MissionAdapterType.normalize_legacy_state(source)
+	var validation := MissionAdapterType.validate_active_state(normalized)
+	last_validation_error = (
+		""
+		if validation.is_valid()
+		else _validation_message(validation)
+	)
+	return validation.is_valid()
+
+
+func restore_active_quest(source: Dictionary) -> bool:
+	var normalized := MissionAdapterType.normalize_legacy_state(source)
+	var validation := MissionAdapterType.validate_active_state(normalized)
+	if not validation.is_valid():
+		last_validation_error = _validation_message(validation)
+		push_warning(
+			"[QuestManager] Refused invalid saved mission: %s" %
+			last_validation_error
+		)
+		return false
+	active_quest = normalized
+	last_validation_error = ""
+	return true
+
+
+func _validation_message(validation: ValidationResult) -> String:
+	if validation == null or validation.errors.is_empty():
+		return "unknown validation error"
+	var messages: Array[String] = []
+	for issue in validation.errors:
+		var path := str(issue.get("path", ""))
+		var message := str(issue.get("message", "Invalid mission data."))
+		messages.append(
+			message if path.is_empty() else "%s: %s" % [path, message]
+		)
+	return "; ".join(messages)
 
 
 # Set the LLM-generated (or fallback) handoff line for an active

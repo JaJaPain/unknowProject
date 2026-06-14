@@ -425,6 +425,8 @@ Implementation record:
 
 ### Checkpoint 7: Mission Contract Adapter
 
+Status: Complete
+
 Deliverables:
 
 - typed mission definition and state boundary
@@ -436,6 +438,26 @@ Exit test:
 
 - existing missions accept, update, abandon, complete, and reload normally
 - malformed mission data cannot silently enter the save
+
+Implementation record:
+
+- `MissionDefinition` with stable definition identity and giver/faction IDs
+- typed objective, reward, consequence, and timing descriptors
+- `MissionState` validation for active runtime missions
+- `MissionAdapter` conversion from current generated and handcrafted
+  dictionaries into the existing single-mission runtime shape
+- legacy mission-state normalization for current version-1 saves
+- validated mission capture and restoration through `QuestManager`
+- save writes fail closed if active mission state is malformed
+- malformed mission offers are rejected before credits, reputation, or active
+  state can change
+- the station mission board reports rejected contract data instead of showing a
+  false acceptance
+- deterministic contract tests for kill, ore delivery, and special pickup
+- deterministic gameplay lifecycle coverage for acceptance, partial delivery,
+  kill progress, pickup validation, completion, abandonment, fallback
+  generation, and TTS failure
+- complete automated baseline passing 13 of 13 steps
 
 ### Checkpoint 8: Transitional Save Migration
 
