@@ -933,6 +933,15 @@ Detailed implementation contract:
 - `docs/phase_2_campaign_store_plan.md`
 - `docs/phase_2_storage_contract.md`
 
+Implementation progress:
+
+- Checkpoints 1-5 are complete as of 2026-06-15.
+- Safe dock, pre-undock, and gate-arrival bundles now use stable world IDs,
+  strip tactical state, recover the last-known-good bundle after corruption,
+  and retain legacy `savegame.json` compatibility during migration.
+- Focused persistence checks and the expanded 23-step gameplay baseline pass.
+- Checkpoint 6 manual checkpoint copies remain the next Phase 2 task.
+
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.
 - Add atomic writes, backups, schema versions, and migrations.
@@ -940,9 +949,13 @@ Detailed implementation contract:
 - Add cache integrity checks and missing-asset recovery.
 - Add three campaign slots. Each campaign has one rolling safe autosave and up
   to three named manual checkpoint copies.
-- Create safe checkpoints only after successful docking or successful jump-gate
-  arrival. Additional safe checkpoint triggers may be added later only when
-  they cannot preserve an immediate tactical advantage.
+- Create safe checkpoints after successful docking, immediately before
+  undocking restores flight control, or after successful jump-gate arrival.
+  The arrival save protects dock-and-quit play, while the departure save
+  captures missions, cargo, storage, purchases, repairs, and upgrades changed
+  during the station visit. Both use the safe dock location rather than a live
+  flight position. Additional triggers may be added later only when they cannot
+  preserve an immediate tactical advantage.
 - Create an initial living safe checkpoint once a new campaign reaches playable
   startup, so quitting before the first dock remains recoverable.
 - A manual save requested while flying copies the latest safe checkpoint. It

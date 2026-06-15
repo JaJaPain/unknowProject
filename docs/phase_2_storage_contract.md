@@ -30,7 +30,15 @@ A safe checkpoint is a validated, living, non-transitional gameplay state
 captured after:
 
 - docking is complete and station UI/state is established, or
+- an undock request is accepted but before station UI/state is cleared, the
+  ship is moved, or flight control resumes, or
 - gate arrival is complete and player control has been restored
+
+The first dock checkpoint protects players who dock and immediately exit the
+game. The pre-undock checkpoint replaces it after station activity so accepted
+or completed missions, cargo transfers, purchases, repairs, storage changes,
+and upgrades are retained. Both checkpoints restore to the safe dock location;
+the pre-undock trigger never stores the first live-flight frame.
 
 It may not contain:
 

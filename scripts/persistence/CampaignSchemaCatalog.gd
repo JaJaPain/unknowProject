@@ -74,6 +74,13 @@ const _FORBIDDEN_CHECKPOINT_KEYS: Array[String] = [
 	"attack_targets",
 	"autopilot_waypoint",
 	"autopilot_waypoints",
+	"position",
+	"rotation",
+	"velocity",
+	"current_speed",
+	"target_position",
+	"nav_mode",
+	"is_docked",
 	"jump_transition",
 	"death_screen",
 	"speech_request",
@@ -382,7 +389,14 @@ static func _validate_checkpoint(data: Dictionary, result: ValidationResult) -> 
 	_require_id(data, "timeline_id", "timeline", result)
 	_require_optional_id(data, "chronicle_head_event_id", "event", result)
 	var source := str(data.get("source_reason", ""))
-	if source not in ["initial", "dock", "gate_arrival", "manual_copy", "legacy_import"]:
+	if source not in [
+		"initial",
+		"dock",
+		"undock",
+		"gate_arrival",
+		"manual_copy",
+		"legacy_import",
+	]:
 		result.add_error(
 			"invalid_source_reason",
 			"Checkpoint source_reason is unsupported.",

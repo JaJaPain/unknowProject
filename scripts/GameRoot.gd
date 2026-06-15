@@ -9,6 +9,12 @@ const JUMP_EXIT_DURATION := 0.9
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
+const CampaignSlotRegistryType := preload(
+	"res://scripts/persistence/CampaignSlotRegistry.gd"
+)
+const CampaignCheckpointStoreType := preload(
+	"res://scripts/persistence/CampaignCheckpointStore.gd"
+)
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -23,6 +29,10 @@ var startup_save_loaded: bool = false
 var startup_load_finished: bool = false
 var scene_ready_msec: int = 0
 var system_registry: SystemRegistry
+var campaign_slot_registry: CampaignSlotRegistry
+var campaign_checkpoint_store: CampaignCheckpointStore
+var active_campaign_slot_id: String = ""
+var restoring_safe_checkpoint: bool = false
 
 func _ready() -> void:
 	scene_ready_msec = Time.get_ticks_msec()
@@ -195,8 +205,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	_prepare_player_after_system_change()
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)
 	transition_in_progress = false
+	request_safe_checkpoint("gate_arrival", arrival_gate)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
-	save_game()
 
 	var ui := GlobalState.get_ui_manager()
 	if ui and ui.has_method("refresh_overview"):
@@ -344,29 +354,7 @@ func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 			npc.restore_state(entity_state)
 
 func save_game() -> bool:
-	if not _capture_current_system_state():
-		push_warning("[GameRoot] Save cancelled because entity identity validation failed.")
-		return false
-	var quest_state := QuestManager.capture_active_quest()
-	if QuestManager.is_quest_active() and quest_state.is_empty():
-		push_warning(
-			"[GameRoot] Save cancelled because mission validation failed: %s" %
-			QuestManager.last_validation_error
-		)
-		return false
-	var runtime_save_data := {
-		"version": SAVE_VERSION,
-		"current_system_id": GlobalState.current_system_id,
-		"arrival_gate_id": last_arrival_gate_id,
-		"player": _capture_player_state(),
-		"global": _capture_global_state(),
-		"quest": quest_state,
-		"systems": system_states.duplicate(true),
-	}
-	var prepared := SaveMigrator.prepare_for_save(
-		runtime_save_data,
-		system_registry
-	)
+	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)):
 		push_warning(
 			"[GameRoot] Save preparation failed: %s" %
@@ -380,6 +368,250 @@ func save_game() -> bool:
 
 func request_autosave() -> bool:
 	return save_game()
+
+
+func request_safe_checkpoint(
+	source_reason: String,
+	safe_entity: Node = null
+) -> bool:
+	if restoring_safe_checkpoint:
+		return true
+	if transition_in_progress or jump_request_pending:
+		return false
+	if player == null or not is_instance_valid(player) \
+			or bool(player.get("destroyed")):
+		return false
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)):
+		return false
+	if not _ensure_campaign_checkpoint_store(prepared["data"]):
+		push_warning("[GameRoot] Campaign checkpoint store is unavailable.")
+		return false
+	var safe_location := _safe_location_for(source_reason, safe_entity)
+	if safe_location.is_empty():
+		push_warning("[GameRoot] Safe checkpoint location is unavailable.")
+		return false
+	var captured := campaign_checkpoint_store.capture_autosave(
+		prepared["data"],
+		safe_location,
+		source_reason
+	)
+	if not bool(captured.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign checkpoint failed: %s" %
+			captured.get("error", "unknown error")
+		)
+		return false
+	if not SaveMigrator.write_current(SAVE_PATH, prepared["data"]):
+		push_warning(
+			"[GameRoot] Campaign checkpoint saved, but the compatibility save could not be updated."
+		)
+	if campaign_slot_registry != null:
+		campaign_slot_registry.update_checkpoint_summary(
+			active_campaign_slot_id,
+			str(captured.get("checkpoint_id", "")),
+			source_reason,
+			str(safe_location.get("system_id", "")),
+			true
+		)
+	return true
+
+
+func _capture_prepared_runtime_state() -> Dictionary:
+	if not _capture_current_system_state():
+		return {
+			"ok": false,
+			"error": "Persistent entity identity validation failed.",
+		}
+	var quest_state := QuestManager.capture_active_quest()
+	if QuestManager.is_quest_active() and quest_state.is_empty():
+		return {
+			"ok": false,
+			"error": "Mission validation failed: %s" %
+				QuestManager.last_validation_error,
+		}
+	return SaveMigrator.prepare_for_save({
+		"version": SAVE_VERSION,
+		"current_system_id": GlobalState.current_system_id,
+		"arrival_gate_id": last_arrival_gate_id,
+		"player": _capture_player_state(),
+		"global": _capture_global_state(),
+		"quest": quest_state,
+		"systems": system_states.duplicate(true),
+	}, system_registry)
+
+
+func _initialize_campaign_registry() -> void:
+	campaign_slot_registry = CampaignSlotRegistryType.open()
+	if campaign_slot_registry == null \
+			or not campaign_slot_registry.is_valid():
+		campaign_slot_registry = null
+		return
+	active_campaign_slot_id = campaign_slot_registry.selected_slot_id
+	if active_campaign_slot_id.is_empty():
+		return
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		active_campaign_slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	if not campaign_checkpoint_store.is_valid():
+		push_warning(
+			"[GameRoot] Selected campaign checkpoint is unavailable: %s" %
+			campaign_checkpoint_store.validation.summary()
+		)
+		campaign_checkpoint_store = null
+
+
+func _ensure_campaign_checkpoint_store(
+	prepared_runtime_state: Dictionary
+) -> bool:
+	if campaign_checkpoint_store != null \
+			and campaign_checkpoint_store.is_valid():
+		return true
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return false
+	if not campaign_slot_registry.selected_slot_id.is_empty():
+		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
+	else:
+		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
+		if active_campaign_slot_id.is_empty():
+			return false
+		var created := campaign_slot_registry.create_campaign(
+			active_campaign_slot_id,
+			"Shiny's Campaign",
+			"prototype-phase-2",
+			prepared_runtime_state,
+			system_registry
+		)
+		if not bool(created.get("ok", false)):
+			push_warning(
+				"[GameRoot] Campaign creation failed: %s" %
+				created.get("error", "unknown error")
+			)
+			active_campaign_slot_id = ""
+			return false
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		active_campaign_slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	return campaign_checkpoint_store.is_valid()
+
+
+func _safe_location_for(
+	source_reason: String,
+	safe_entity: Node
+) -> Dictionary:
+	var system_id := str(
+		system_registry.resolve_system_id(GlobalState.current_system_id)
+	)
+	if source_reason in ["dock", "undock"]:
+		if safe_entity == null or not is_instance_valid(safe_entity) \
+				or not safe_entity.has_method("get_world_id"):
+			return {}
+		return {
+			"type": "docked",
+			"system_id": system_id,
+			"station_id": str(safe_entity.call("get_world_id")),
+		}
+	if source_reason == "gate_arrival":
+		if safe_entity == null or not is_instance_valid(safe_entity) \
+				or not safe_entity.has_method("get_world_id"):
+			return {}
+		return {
+			"type": "gate_arrival",
+			"system_id": system_id,
+			"gate_id": str(safe_entity.call("get_world_id")),
+		}
+	return {}
+
+
+func _load_campaign_checkpoint() -> bool:
+	var restored := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(restored.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign checkpoint could not be loaded: %s" %
+			restored.get("error", "unknown error")
+		)
+		return false
+	var safe_location: Dictionary = restored.get(
+		"safe_location",
+		{}
+	).duplicate(true)
+	var encoded: Dictionary = restored.get("state", {}).duplicate(true)
+	encoded["version"] = SAVE_VERSION
+	encoded["current_system_id"] = safe_location.get(
+		"system_id",
+		"system.start"
+	)
+	encoded["arrival_gate_id"] = (
+		safe_location.get("gate_id", "")
+		if safe_location.get("type", "") == "gate_arrival"
+		else ""
+	)
+	var decoded := SaveMigrator.decode_for_runtime(encoded, system_registry)
+	if not bool(decoded.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign checkpoint decode failed: %s" %
+			decoded.get("error", "unknown error")
+		)
+		return false
+	restoring_safe_checkpoint = true
+	await _apply_save_data(decoded["data"])
+	await _restore_safe_location(safe_location)
+	restoring_safe_checkpoint = false
+	return true
+
+
+func _restore_safe_location(safe_location: Dictionary) -> void:
+	var location_type := str(safe_location.get("type", "initial"))
+	if location_type == "initial":
+		player.is_docked = false
+		return
+	var entity_id := str(
+		safe_location.get(
+			"station_id" if location_type == "docked" else "gate_id",
+			""
+		)
+	)
+	var entity := _find_world_entity(entity_id)
+	if entity == null:
+		push_warning(
+			"[GameRoot] Safe location entity '%s' was not found." % entity_id
+		)
+		return
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	player.nav_mode = "MANUAL"
+	if location_type == "gate_arrival":
+		player.global_transform = entity.call("get_arrival_transform")
+		last_arrival_gate_id = str(entity.get("gate_id"))
+		player.is_docked = false
+		return
+	var docking_position: Vector3 = entity.global_position
+	if entity.has_method("get_docking_position"):
+		docking_position = entity.call(
+			"get_docking_position",
+			player.global_position
+		)
+	player.global_position = docking_position
+	player.is_docked = true
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("toggle_dock_menu") \
+			and not bool(ui.get("dock_panel").visible):
+		ui.call("toggle_dock_menu", entity, false)
+
+
+func _find_world_entity(entity_id: String) -> Node3D:
+	for entity in GlobalState.active_system_entities:
+		if entity is Node3D and is_instance_valid(entity) \
+				and entity.has_method("get_world_id") \
+				and str(entity.call("get_world_id")) == entity_id:
+			return entity
+	return null
 
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -410,7 +642,15 @@ func delete_savegame() -> void:
 
 func _load_startup_save() -> void:
 	await get_tree().process_frame
-	startup_save_loaded = await load_game()
+	_initialize_campaign_registry()
+	if campaign_checkpoint_store != null \
+			and campaign_checkpoint_store.is_valid():
+		startup_save_loaded = await _load_campaign_checkpoint()
+	else:
+		startup_save_loaded = await load_game()
+		var prepared := _capture_prepared_runtime_state()
+		if bool(prepared.get("ok", false)):
+			_ensure_campaign_checkpoint_store(prepared["data"])
 	startup_load_finished = true
 	startup_load_completed.emit(startup_save_loaded)
 
@@ -588,6 +828,8 @@ func _run_jump_smoke_test() -> void:
 	if not return_gate:
 		_fail_jump_smoke_test("Return gate was not found.")
 		return
+	if not _verify_gate_arrival_checkpoint(return_gate):
+		return
 	var expected_arrival: Vector3 = return_gate.call("get_arrival_transform").origin
 	if player.global_position.distance_to(expected_arrival) > 0.1:
 		_fail_jump_smoke_test("Player did not arrive at the paired gate marker.")
@@ -613,6 +855,13 @@ func _run_jump_smoke_test() -> void:
 	if GlobalState.current_system_id != "start_system":
 		_fail_jump_smoke_test("Return jump loaded the wrong system.")
 		return
+	var start_arrival_gate := _find_gate(
+		get_active_system_root(),
+		"start_to_test"
+	)
+	if start_arrival_gate == null \
+			or not _verify_gate_arrival_checkpoint(start_arrival_gate):
+		return
 	if not is_equal_approx(player.get("health"), starting_health) or not is_equal_approx(player.get("current_shield"), starting_shield):
 		_fail_jump_smoke_test("Player state changed on the return jump.")
 		return
@@ -629,6 +878,25 @@ func _run_jump_smoke_test() -> void:
 	print("[JumpSmokeTest] PASS: two-way travel and player runtime state verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
+	if campaign_checkpoint_store == null:
+		_fail_jump_smoke_test(
+			"Gate arrival did not open a campaign checkpoint store."
+		)
+		return false
+	var checkpoint := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(checkpoint.get("ok", false)) \
+			or checkpoint.get("source_reason", "") != "gate_arrival" \
+			or checkpoint.get("safe_location", {}).get("gate_id", "") \
+				!= arrival_gate.get_world_id():
+		_fail_jump_smoke_test(
+			"Gate arrival did not create the expected safe checkpoint."
+		)
+		return false
+	return true
+
 
 func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	var system_root := get_active_system_root()
@@ -1348,6 +1616,51 @@ func _run_dock_smoke_test() -> void:
 		if not FileAccess.file_exists(SAVE_PATH):
 			_fail_dock_smoke_test("Docking at '%s' did not create an autosave." % station.name)
 			return
+		if campaign_checkpoint_store == null:
+			_fail_dock_smoke_test(
+				"Docking at '%s' did not open a campaign checkpoint store." %
+				station.name
+			)
+			return
+		var dock_checkpoint := campaign_checkpoint_store.runtime_state_from_active()
+		if not bool(dock_checkpoint.get("ok", false)) \
+				or dock_checkpoint.get("source_reason", "") != "dock" \
+				or dock_checkpoint.get("safe_location", {}).get(
+					"station_id",
+					""
+				) != station.get_world_id():
+			_fail_dock_smoke_test(
+				"Docking at '%s' did not create the expected safe checkpoint." %
+					station.name
+			)
+			return
+		var dock_checkpoint_id := str(
+			dock_checkpoint.get("checkpoint_id", "")
+		)
+		var docked_credits := GlobalState.player_credits
+		GlobalState.player_credits += 777
+		player.is_docked = false
+		ui.dock_panel.visible = false
+		if not await _load_campaign_checkpoint():
+			_fail_dock_smoke_test(
+				"Dock checkpoint for '%s' could not be restored." %
+					station.name
+			)
+			return
+		await get_tree().process_frame
+		var restored_checkpoint := (
+			campaign_checkpoint_store.runtime_state_from_active()
+		)
+		if GlobalState.player_credits != docked_credits \
+				or not player.is_docked \
+				or not ui.dock_panel.visible \
+				or restored_checkpoint.get("checkpoint_id", "") \
+					!= dock_checkpoint_id:
+			_fail_dock_smoke_test(
+				"Dock checkpoint restoration failed or replaced its source for '%s'." %
+					station.name
+			)
+			return
 		if ui.has_method("undock_player"):
 			ui.undock_player()
 		await get_tree().process_frame
@@ -1356,8 +1669,42 @@ func _run_dock_smoke_test() -> void:
 				or ui.dock_panel.visible:
 			_fail_dock_smoke_test("Undocking did not restore flight state for '%s'." % station.name)
 			return
+		var undock_checkpoint := (
+			campaign_checkpoint_store.runtime_state_from_active()
+		)
+		if not bool(undock_checkpoint.get("ok", false)) \
+				or undock_checkpoint.get("source_reason", "") != "undock" \
+				or undock_checkpoint.get("safe_location", {}).get(
+					"station_id",
+					""
+				) != station.get_world_id():
+			_fail_dock_smoke_test(
+				"Undocking from '%s' did not create the expected safe checkpoint." %
+					station.name
+			)
+			return
 
-	print("[DockSmokeTest] PASS: docking, dock autosave, UI, and undocking verified for all active-system dockables.")
+	var checkpoint_before_death := (
+		campaign_checkpoint_store.runtime_state_from_active()
+	)
+	player.destroyed = true
+	var death_checkpoint_created := request_safe_checkpoint(
+		"dock",
+		stations[0]
+	)
+	player.destroyed = false
+	var checkpoint_after_death := (
+		campaign_checkpoint_store.runtime_state_from_active()
+	)
+	if death_checkpoint_created \
+			or checkpoint_after_death.get("checkpoint_id", "") \
+				!= checkpoint_before_death.get("checkpoint_id", ""):
+		_fail_dock_smoke_test(
+			"Destroyed player state replaced the last safe checkpoint."
+		)
+		return
+
+	print("[DockSmokeTest] PASS: dock and undock safe checkpoints, UI, and flight restoration verified for all active-system dockables.")
 	delete_savegame()
 	get_tree().quit(0)
 

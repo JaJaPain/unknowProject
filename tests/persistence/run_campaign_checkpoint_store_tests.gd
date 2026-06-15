@@ -1,0 +1,267 @@
+extends SceneTree
+
+const CheckpointStoreType := preload(
+	"res://scripts/persistence/CampaignCheckpointStore.gd"
+)
+const SlotRegistryType := preload(
+	"res://scripts/persistence/CampaignSlotRegistry.gd"
+)
+const SystemRegistryType := preload(
+	"res://scripts/registry/SystemRegistry.gd"
+)
+
+const TEST_ROOT := "user://campaign_checkpoint_fixture"
+const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_cleanup()
+	_test_safe_capture_restore_and_recovery()
+	_cleanup()
+
+	if _failures.is_empty():
+		print("[PASS] Campaign safe checkpoint bundle tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _test_safe_capture_restore_and_recovery() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"Checkpoint Fixture",
+		"phase-2-test",
+		_runtime_state(50, 100.0, "initial"),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var initial_checkpoint: Dictionary = created["checkpoint"]
+	_expect(
+		not _contains_tactical_key(initial_checkpoint.get("state", {})),
+		"Initial campaign checkpoint retained tactical state."
+	)
+
+	var store := CheckpointStoreType.open(CAMPAIGN_PATH)
+	_expect(
+		store.is_valid(),
+		"Checkpoint store is invalid: %s" % store.validation.summary()
+	)
+	if not store.is_valid():
+		return
+
+	var docked := store.capture_autosave(
+		_runtime_state(125, 84.0, "dock"),
+		{
+			"type": "docked",
+			"system_id": "system.start",
+			"station_id": "station.start.main",
+		},
+		"dock"
+	)
+	_expect(bool(docked.get("ok", false)), docked.get("error", ""))
+	var dock_bundle := store.load_active_bundle()
+	_expect(bool(dock_bundle.get("ok", false)), dock_bundle.get("error", ""))
+	if not bool(dock_bundle.get("ok", false)):
+		return
+	var dock_checkpoint: Dictionary = dock_bundle["checkpoint"]
+	_expect(
+		dock_checkpoint.get("source_reason") == "dock"
+			and dock_checkpoint.get("safe_location", {}).get("station_id")
+				== "station.start.main",
+		"Dock checkpoint lost its safe station identity."
+	)
+	_expect(
+		not _contains_tactical_key(dock_checkpoint.get("state", {})),
+		"Dock checkpoint retained tactical session data."
+	)
+
+	var undocked := store.capture_autosave(
+		_runtime_state(875, 100.0, "undock"),
+		{
+			"type": "docked",
+			"system_id": "system.start",
+			"station_id": "station.start.main",
+		},
+		"undock"
+	)
+	_expect(bool(undocked.get("ok", false)), undocked.get("error", ""))
+	var undock_state := store.runtime_state_from_active()
+	_expect(
+		bool(undock_state.get("ok", false))
+			and undock_state.get("source_reason") == "undock"
+			and int(
+				undock_state.get("state", {}).get("global", {}).get(
+					"credits",
+					0
+				)
+			) == 875,
+		"Pre-undock checkpoint did not retain station-visit changes."
+	)
+
+	var gate := store.capture_autosave(
+		_runtime_state(990, 63.0, "gate"),
+		{
+			"type": "gate_arrival",
+			"system_id": "system.test",
+			"gate_id": "gate.test.to_start",
+		},
+		"gate_arrival"
+	)
+	_expect(bool(gate.get("ok", false)), gate.get("error", ""))
+	var gate_bundle := store.load_active_bundle()
+	_expect(
+		bool(gate_bundle.get("ok", false))
+			and gate_bundle.get("checkpoint", {}).get(
+				"safe_location",
+				{}
+			).get("gate_id") == "gate.test.to_start",
+		"Gate checkpoint did not become the rolling autosave."
+	)
+
+	var gate_path := str(store.index.get("autosave", {}).get("path", ""))
+	_write_text(
+		"%s/%s/checkpoint.json" % [CAMPAIGN_PATH, gate_path],
+		"{ damaged"
+	)
+	var recovered := store.load_active_bundle()
+	_expect(
+		bool(recovered.get("ok", false))
+			and bool(recovered.get("recovered", false))
+			and recovered.get("checkpoint", {}).get("source_reason")
+				== "undock",
+		"Damaged latest checkpoint did not restore the prior safe bundle."
+	)
+	_expect(
+		int(
+			recovered.get("checkpoint", {}).get("state", {}).get(
+				"global",
+				{}
+			).get("credits", 0)
+		) == 875,
+		"Recovered checkpoint did not preserve the prior station state."
+	)
+
+	var dead_state := _runtime_state(1, 0.0, "dead")
+	dead_state["dead"] = true
+	_expect(
+		not bool(store.capture_autosave(
+			dead_state,
+			{
+				"type": "docked",
+				"system_id": "system.start",
+				"station_id": "station.start.main",
+			},
+			"dock"
+		).get("ok", false)),
+		"Dead gameplay state created a safe checkpoint."
+	)
+
+
+func _runtime_state(
+	credits: int,
+	health: float,
+	label: String
+) -> Dictionary:
+	return {
+		"version": 2,
+		"current_system_id": "system.start",
+		"arrival_gate_id": "gate.start.to_test",
+		"player": {
+			"health": health,
+			"shield": 15.0,
+			"position": [10.0, 20.0, 30.0],
+			"rotation": [0.0, 1.0, 0.0],
+			"velocity": [200.0, 0.0, 0.0],
+			"nav_mode": "APPROACH",
+			"target_position": [999.0, 0.0, 0.0],
+			"is_docked": label in ["dock", "undock"],
+		},
+		"global": {
+			"credits": credits,
+			"cargo": 12.0,
+			"cargo_type": 1,
+			"cargo_special": {},
+			"storage_ore": 44.0,
+			"upgrades": {"power": {"tier": 2, "path": "standard"}},
+			"reputations": {"zenith": 55.0},
+			"faction_kills": {},
+		},
+		"quest": {
+			"title": "Checkpoint Test",
+			"objective_type": "DELIVER_ORE",
+			"amount_required": 25.0,
+			"partial_delivered": 5.0,
+			"faction": "zenith",
+		},
+		"systems": {
+			"system.start": {
+				"entities": {
+					"asteroid.start.001": {
+						"entity_id": "asteroid.start.001",
+						"resources": 21.0,
+					},
+				},
+				"aggro": {"enemy": true},
+				"projectiles": [{"damage": 10}],
+			},
+		},
+		"attack_target": "entity.enemy.001",
+		"autopilot_waypoint": [500.0, 0.0, 0.0],
+		"jump_transition": label == "gate",
+	}
+
+
+func _contains_tactical_key(value: Variant) -> bool:
+	if value is Dictionary:
+		for key in (value as Dictionary).keys():
+			if str(key) in CheckpointStoreType.TACTICAL_KEYS:
+				return true
+			if _contains_tactical_key((value as Dictionary)[key]):
+				return true
+	elif value is Array:
+		for item in value:
+			if _contains_tactical_key(item):
+				return true
+	return false
+
+
+func _write_text(path: String, text: String) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(text)
+
+
+func _cleanup() -> void:
+	var absolute := ProjectSettings.globalize_path(TEST_ROOT)
+	if DirAccess.dir_exists_absolute(absolute):
+		_remove_directory(absolute)
+
+
+func _remove_directory(path: String) -> void:
+	var directory := DirAccess.open(path)
+	if directory == null:
+		return
+	directory.list_dir_begin()
+	var entry := directory.get_next()
+	while not entry.is_empty():
+		if entry != "." and entry != "..":
+			var child := "%s/%s" % [path, entry]
+			if directory.current_is_dir():
+				_remove_directory(child)
+			else:
+				DirAccess.remove_absolute(child)
+		entry = directory.get_next()
+	directory.list_dir_end()
+	DirAccess.remove_absolute(path)
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)

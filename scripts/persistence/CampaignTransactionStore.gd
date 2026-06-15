@@ -193,6 +193,31 @@ static func recover_index(
 	return {"ok": true, "recovered": true, "data": backup["data"]}
 
 
+static func restore_last_known_good_index(
+	store_root: String,
+	visibility_index_path: String,
+	validator: Callable = Callable()
+) -> Dictionary:
+	var root := store_root.trim_suffix("/")
+	var live_path := "%s/%s" % [root, visibility_index_path]
+	var recovery_path := "%s/recovery/last_known_good_%s" % [
+		root,
+		visibility_index_path.get_file(),
+	]
+	var backup := _read_and_validate(recovery_path, validator)
+	if not bool(backup.get("ok", false)):
+		return {
+			"ok": false,
+			"error": "No valid last-known-good index is available.",
+		}
+	if not _install_staged_file(recovery_path, live_path):
+		return {
+			"ok": false,
+			"error": "Last-known-good index could not be restored.",
+		}
+	return {"ok": true, "recovered": true, "data": backup["data"]}
+
+
 static func is_locked(store_root: String) -> bool:
 	return _active_locks.has(
 		ProjectSettings.globalize_path(store_root.trim_suffix("/"))

@@ -133,8 +133,5 @@ func dock_player() -> void:
 	var ui: Node = GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu"):
 		ui.toggle_dock_menu(self)
-		var game_root := get_tree().current_scene
-		if game_root and game_root.has_method("save_game"):
-			game_root.call_deferred("save_game")
 	else:
 		push_warning("[OutpostStation] dock_player(): Could not find UIManager node.")

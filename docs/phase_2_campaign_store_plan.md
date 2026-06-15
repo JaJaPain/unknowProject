@@ -17,8 +17,12 @@ the storage boundaries those later phases require.
 - The game supports three campaign slots.
 - Each campaign has one rolling safe autosave and up to three named manual
   checkpoint copies.
-- A fresh safe checkpoint is captured only after docking or successful
+- A fresh safe checkpoint is captured after docking completes, immediately
+  before undocking releases the player back to flight, or after successful
   jump-gate arrival.
+- The docking checkpoint protects a player who docks specifically to log out.
+  The pre-undock checkpoint captures all mission, cargo, storage, purchase,
+  repair, and upgrade changes made during that station visit.
 - A new campaign creates an initial living safe checkpoint after startup is
   fully playable, so quitting before the first dock still leaves a loadable
   campaign.
@@ -239,20 +243,32 @@ Exit test:
 
 ### Checkpoint 5: Safe Timeline Checkpoint Bundles
 
+Status: Complete on 2026-06-15.
+
 Deliverables:
 
 - capture and restore of current version-2 gameplay state
 - canonical checkpoint ID, source reason, and safe-location metadata
-- docking and gate-arrival autosave triggers
+- dock-arrival, pre-undock, and gate-arrival autosave triggers
 - rolling autosave replacement
 - living-state requirement
 - no tactical session data in checkpoint schemas
 
 Exit test:
 
-- dock and gate arrival restore correctly
+- dock arrival, station-visit departure, and gate arrival restore correctly
 - hull, inventory, mission, reputation, upgrades, and system entities rewind
 - projectiles, aggro, current enemies, and in-flight position are never saved
+
+Verified:
+
+- dock and pre-undock checkpoints restore by stable station ID
+- gate-arrival checkpoints restore by stable gate ID in both directions
+- restoring a dock checkpoint rewinds mutable state without creating a new
+  checkpoint or toggling the player back into flight
+- destroyed player state cannot replace the latest living checkpoint
+- damaged latest bundles recover the prior checkpoint index and payload
+- focused checkpoint tests and the 23-step baseline suite pass
 
 ### Checkpoint 6: Manual Checkpoint Copies
 

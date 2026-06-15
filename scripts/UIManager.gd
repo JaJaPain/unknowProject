@@ -1795,7 +1795,10 @@ func _on_pause_changed(is_paused: bool):
 				move_child(pause_panel, -1)
 
 # Station services methods
-func toggle_dock_menu(station: Node3D):
+func toggle_dock_menu(
+	station: Node3D,
+	create_checkpoint: bool = true
+):
 	current_station = station
 	if dock_panel.visible or agent_panel.visible:
 		SpeechService.stop()
@@ -1828,8 +1831,14 @@ func toggle_dock_menu(station: Node3D):
 			GlobalState.player.is_docked = true
 			GlobalState.player.velocity = Vector3.ZERO
 		var game_root := get_tree().current_scene
-		if game_root and game_root.has_method("request_autosave"):
-			game_root.call_deferred("request_autosave")
+		if create_checkpoint \
+				and game_root \
+				and game_root.has_method("request_safe_checkpoint"):
+			game_root.call_deferred(
+				"request_safe_checkpoint",
+				"dock",
+				station
+			)
 
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
@@ -2602,6 +2611,16 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 
 
 func undock_player():
+	var station_before_undock := current_station
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("request_safe_checkpoint"):
+		if not game_root.request_safe_checkpoint(
+			"undock",
+			station_before_undock
+		):
+			push_warning(
+				"[UIManager] Pre-undock safe checkpoint was not created."
+			)
 	dock_panel.visible = false
 	if ship_upgrades_panel and is_instance_valid(ship_upgrades_panel):
 		ship_upgrades_panel.visible = false

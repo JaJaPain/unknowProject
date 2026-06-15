@@ -246,6 +246,33 @@ func select_campaign(slot_id: String) -> Dictionary:
 	}
 
 
+func update_checkpoint_summary(
+	slot_id: String,
+	checkpoint_id: String,
+	source_reason: String,
+	system_id: String,
+	living: bool
+) -> bool:
+	if slot_id not in SLOT_IDS:
+		return false
+	var slot: Dictionary = slots.get(slot_id, {})
+	if not bool(slot.get("occupied", false)):
+		return false
+	if not DomainIdType.is_valid(checkpoint_id, "checkpoint") \
+			or not DomainIdType.is_valid(system_id, "system") \
+			or not living:
+		return false
+	slot["last_played_at_unix"] = int(Time.get_unix_time_from_system())
+	slot["checkpoint_summary"] = {
+		"checkpoint_id": checkpoint_id,
+		"source_reason": source_reason,
+		"system_id": system_id,
+		"living": true,
+	}
+	slots[slot_id] = slot
+	return _write_slot_registry()
+
+
 func delete_campaign(slot_id: String) -> Dictionary:
 	if slot_id not in SLOT_IDS:
 		return _failure("Unknown campaign slot '%s'." % slot_id)
@@ -524,6 +551,7 @@ func _build_initial_documents(
 	var assets: Dictionary = canon_result["assets"]
 	var checkpoint_state: Dictionary = initial_state.duplicate(true)
 	checkpoint_state.erase("current_system_id")
+	_strip_tactical_state(checkpoint_state)
 	var checkpoint := {
 		"document_type": SchemaType.CHECKPOINT,
 		"schema_version": SchemaType.SCHEMA_VERSION,
@@ -599,6 +627,37 @@ func _build_initial_documents(
 		chronicle,
 		kaelen_meta,
 	]
+
+
+func _strip_tactical_state(value: Variant) -> void:
+	if value is Dictionary:
+		for key in (value as Dictionary).keys():
+			if str(key) in [
+				"position",
+				"rotation",
+				"velocity",
+				"current_speed",
+				"target_position",
+				"nav_mode",
+				"is_docked",
+				"projectiles",
+				"aggro",
+				"attack_target",
+				"attack_targets",
+				"autopilot_waypoint",
+				"autopilot_waypoints",
+				"jump_transition",
+				"death_screen",
+				"speech_request",
+				"model_request",
+				"transient_spawn_timer",
+			]:
+				(value as Dictionary).erase(key)
+			else:
+				_strip_tactical_state((value as Dictionary)[key])
+	elif value is Array:
+		for item in value:
+			_strip_tactical_state(item)
 
 
 func _write_slot_registry() -> bool:
