@@ -935,12 +935,16 @@ Detailed implementation contract:
 
 Implementation progress:
 
-- Checkpoints 1-5 are complete as of 2026-06-15.
+- Checkpoints 1-6 are complete as of 2026-06-15.
 - Safe dock, pre-undock, and gate-arrival bundles now use stable world IDs,
   strip tactical state, recover the last-known-good bundle after corruption,
   and retain legacy `savegame.json` compatibility during migration.
+- Three named manual entries copy immutable safe bundles. In-flight requests
+  never capture live tactical state, while docked requests refresh the safe
+  station checkpoint before copying.
 - Focused persistence checks and the expanded 23-step gameplay baseline pass.
-- Checkpoint 6 manual checkpoint copies remain the next Phase 2 task.
+- Checkpoint 7 save notifications and minimal campaign-slot UI remain the next
+  Phase 2 task.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.

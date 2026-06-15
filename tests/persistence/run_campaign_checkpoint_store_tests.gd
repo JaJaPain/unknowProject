@@ -81,6 +81,50 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		not _contains_tactical_key(dock_checkpoint.get("state", {})),
 		"Dock checkpoint retained tactical session data."
 	)
+	var manual_copy := store.copy_active_to_manual(
+		0,
+		"  Before / Dangerous: Flight?  "
+	)
+	_expect(
+		bool(manual_copy.get("ok", false)),
+		manual_copy.get("error", "")
+	)
+	_expect(
+		manual_copy.get("display_name", "") == "Before Dangerous Flight",
+		"Manual checkpoint name was not sanitized predictably."
+	)
+	_expect(
+		manual_copy.get("checkpoint_id", "") == dock_checkpoint.get("id", ""),
+		"Manual checkpoint did not copy the active safe checkpoint."
+	)
+	var manual_bundle := store.load_manual_bundle(0)
+	_expect(
+		bool(manual_bundle.get("ok", false))
+			and JSON.stringify(
+				manual_bundle.get("checkpoint", {}),
+				"",
+				true
+			) == JSON.stringify(dock_bundle.get("checkpoint", {}), "", true)
+			and JSON.stringify(
+				manual_bundle.get("map_knowledge", {}),
+				"",
+				true
+			) == JSON.stringify(
+				dock_bundle.get("map_knowledge", {}),
+				"",
+				true
+			),
+		"Manual checkpoint payload was not an exact safe-bundle copy."
+	)
+	var overwrite_required := store.copy_active_to_manual(
+		0,
+		"Replacement"
+	)
+	_expect(
+		not bool(overwrite_required.get("ok", false))
+			and bool(overwrite_required.get("requires_overwrite", false)),
+		"Occupied manual checkpoint did not require overwrite confirmation."
+	)
 
 	var undocked := store.capture_autosave(
 		_runtime_state(875, 100.0, "undock"),
@@ -103,6 +147,57 @@ func _test_safe_capture_restore_and_recovery() -> void:
 				)
 			) == 875,
 		"Pre-undock checkpoint did not retain station-visit changes."
+	)
+	var preserved_manual := store.runtime_state_from_manual(0)
+	_expect(
+		bool(preserved_manual.get("ok", false))
+			and int(
+				preserved_manual.get("state", {}).get("global", {}).get(
+					"credits",
+					0
+				)
+			) == 125,
+		"Later autosave changed the earlier manual checkpoint copy."
+	)
+	var overwritten := store.copy_active_to_manual(
+		0,
+		"After Station Visit",
+		true
+	)
+	_expect(bool(overwritten.get("ok", false)), overwritten.get("error", ""))
+	_expect(
+		int(
+			store.runtime_state_from_manual(0).get("state", {}).get(
+				"global",
+				{}
+			).get("credits", 0)
+		) == 875,
+		"Confirmed overwrite did not replace the manual checkpoint."
+	)
+	_expect(
+		bool(store.copy_active_to_manual(1, "Second Copy").get("ok", false))
+			and bool(store.copy_active_to_manual(
+				2,
+				"Third Copy"
+			).get("ok", false)),
+		"All three manual checkpoint slots were not independently writable."
+	)
+	var manual_entries := store.list_manual_checkpoints()
+	var all_manual_slots_occupied := manual_entries.size() == 3
+	for entry in manual_entries:
+		all_manual_slots_occupied = all_manual_slots_occupied \
+			and bool(entry.get("occupied", false))
+	_expect(
+		all_manual_slots_occupied,
+		"Manual checkpoint listing did not report three occupied slots."
+	)
+	_expect(
+		not bool(store.copy_active_to_manual(3, "Invalid").get("ok", false))
+			and not bool(store.copy_active_to_manual(
+				0,
+				" /// "
+			).get("ok", false)),
+		"Invalid manual slot or empty sanitized name was accepted."
 	)
 
 	var gate := store.capture_autosave(

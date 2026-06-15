@@ -417,6 +417,111 @@ func request_safe_checkpoint(
 	return true
 
 
+func get_manual_checkpoint_status() -> Dictionary:
+	if player == null or not is_instance_valid(player):
+		return _manual_checkpoint_blocked(
+			"player_unavailable",
+			"The player ship is unavailable."
+		)
+	if bool(player.get("destroyed")):
+		return _manual_checkpoint_blocked(
+			"player_dead",
+			"Manual saving is unavailable while the ship is destroyed."
+		)
+	if transition_in_progress or jump_request_pending:
+		return _manual_checkpoint_blocked(
+			"jump_in_progress",
+			"Manual saving is unavailable during jump travel."
+		)
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null \
+			or not campaign_checkpoint_store.is_valid():
+		return _manual_checkpoint_blocked(
+			"no_campaign",
+			"No campaign checkpoint store is available."
+		)
+	if campaign_checkpoint_store.is_transaction_active():
+		return _manual_checkpoint_blocked(
+			"transaction_active",
+			"Another campaign save is already in progress."
+		)
+	if not campaign_checkpoint_store.has_active_safe_checkpoint():
+		return _manual_checkpoint_blocked(
+			"no_safe_checkpoint",
+			"Reach a station or jumpgate before creating a manual checkpoint."
+		)
+	return {
+		"available": true,
+		"block_code": "",
+		"block_reason": "",
+		"manual": campaign_checkpoint_store.list_manual_checkpoints(),
+	}
+
+
+func request_manual_checkpoint(
+	slot_index: int,
+	display_name: String,
+	overwrite: bool = false,
+	refresh_if_docked: bool = true
+) -> Dictionary:
+	var status := get_manual_checkpoint_status()
+	if not bool(status.get("available", false)):
+		return {
+			"ok": false,
+			"block_code": status.get("block_code", ""),
+			"error": status.get("block_reason", "Manual save is unavailable."),
+		}
+	if refresh_if_docked and bool(player.get("is_docked")):
+		var ui := GlobalState.get_ui_manager()
+		var station: Node = ui.get("current_station") if ui else null
+		if station == null or not is_instance_valid(station):
+			return {
+				"ok": false,
+				"block_code": "dock_unavailable",
+				"error": "The current dock could not be identified.",
+			}
+		if not request_safe_checkpoint("dock", station):
+			return {
+				"ok": false,
+				"block_code": "dock_refresh_failed",
+				"error": "The docked safe checkpoint could not be refreshed.",
+			}
+	return campaign_checkpoint_store.copy_active_to_manual(
+		slot_index,
+		display_name,
+		overwrite
+	)
+
+
+func load_manual_checkpoint(slot_index: int) -> bool:
+	if transition_in_progress or jump_request_pending:
+		return false
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null:
+		return false
+	var restored := campaign_checkpoint_store.runtime_state_from_manual(
+		slot_index
+	)
+	return await _apply_campaign_checkpoint_state(restored)
+
+
+func _manual_checkpoint_blocked(
+	code: String,
+	reason: String
+) -> Dictionary:
+	return {
+		"available": false,
+		"block_code": code,
+		"block_reason": reason,
+		"manual":
+			campaign_checkpoint_store.list_manual_checkpoints()
+			if campaign_checkpoint_store != null
+			else [],
+	}
+
+
 func _capture_prepared_runtime_state() -> Dictionary:
 	if not _capture_current_system_state():
 		return {
@@ -531,6 +636,10 @@ func _safe_location_for(
 
 func _load_campaign_checkpoint() -> bool:
 	var restored := campaign_checkpoint_store.runtime_state_from_active()
+	return await _apply_campaign_checkpoint_state(restored)
+
+
+func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 	if not bool(restored.get("ok", false)):
 		push_warning(
 			"[GameRoot] Campaign checkpoint could not be loaded: %s" %
@@ -1659,6 +1768,36 @@ func _run_dock_smoke_test() -> void:
 			_fail_dock_smoke_test(
 				"Dock checkpoint restoration failed or replaced its source for '%s'." %
 					station.name
+			)
+			return
+		GlobalState.player_credits = docked_credits + 222
+		var docked_manual := request_manual_checkpoint(
+			1,
+			"Docked Station Visit",
+			true
+		)
+		var docked_manual_state := (
+			campaign_checkpoint_store.runtime_state_from_manual(1)
+		)
+		if not bool(docked_manual.get("ok", false)) \
+				or int(
+					docked_manual_state.get("state", {}).get(
+						"global",
+						{}
+					).get("credits", 0)
+				) != docked_credits + 222:
+			_fail_dock_smoke_test(
+				"Docked manual checkpoint did not refresh station changes for '%s': result=%s credits=%d expected=%d." % [
+					station.name,
+					JSON.stringify(docked_manual),
+					int(
+						docked_manual_state.get("state", {}).get(
+							"global",
+							{}
+						).get("credits", -1)
+					),
+					docked_credits + 222,
+				]
 			)
 			return
 		if ui.has_method("undock_player"):
@@ -2837,6 +2976,17 @@ func _fail_jump_smoke_test(message: String) -> void:
 	get_tree().quit(1)
 
 func _run_save_smoke_assertions() -> bool:
+	var safe_source := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(safe_source.get("ok", false)):
+		_fail_jump_smoke_test("Manual save test has no active safe checkpoint.")
+		return false
+	var safe_source_credits := int(
+		safe_source.get("state", {}).get("global", {}).get("credits", 0)
+	)
+	var safe_source_location: Dictionary = safe_source.get(
+		"safe_location",
+		{}
+	)
 	var asteroid: Node = null
 	for candidate in get_tree().get_nodes_in_group("asteroid"):
 		if get_active_system_root().is_ancestor_of(candidate):
@@ -2894,5 +3044,66 @@ func _run_save_smoke_assertions() -> bool:
 	}):
 		_fail_jump_smoke_test("Malformed or unsupported save data was accepted.")
 		return false
-	print("[SaveSmokeTest] PASS: player, quest, system state, and validation verified.")
+
+	var live_flight_position := player.global_position + Vector3(
+		325.0,
+		40.0,
+		-210.0
+	)
+	player.global_position = live_flight_position
+	GlobalState.player_credits = 9876
+	var manual_status := get_manual_checkpoint_status()
+	if not bool(manual_status.get("available", false)):
+		_fail_jump_smoke_test(
+			"Manual checkpoint was unexpectedly blocked: %s" %
+				manual_status.get("block_reason", "")
+		)
+		return false
+	var manual_saved := request_manual_checkpoint(
+		0,
+		"Flight Safety Copy",
+		true
+	)
+	if not bool(manual_saved.get("ok", false)):
+		_fail_jump_smoke_test(
+			"Manual checkpoint could not be created: %s" %
+				manual_saved.get("error", "")
+		)
+		return false
+	var manual_state := campaign_checkpoint_store.runtime_state_from_manual(0)
+	if int(
+		manual_state.get("state", {}).get("global", {}).get("credits", -1)
+	) != safe_source_credits:
+		_fail_jump_smoke_test(
+			"In-flight manual save captured live credits instead of safe state."
+		)
+		return false
+	GlobalState.player_credits = 2
+	player.global_position += Vector3(500.0, 0.0, 500.0)
+	if not await load_manual_checkpoint(0):
+		_fail_jump_smoke_test("Manual checkpoint could not be loaded.")
+		return false
+	var safe_gate := _find_world_entity(
+		str(safe_source_location.get("gate_id", ""))
+	)
+	if safe_gate == null \
+			or GlobalState.player_credits != safe_source_credits \
+			or player.global_position.distance_to(
+				safe_gate.call("get_arrival_transform").origin
+			) > 0.1 \
+			or player.global_position.distance_to(live_flight_position) < 1.0:
+		_fail_jump_smoke_test(
+			"Manual checkpoint restored live flight state instead of the safe gate."
+		)
+		return false
+	player.destroyed = true
+	var dead_status := get_manual_checkpoint_status()
+	player.destroyed = false
+	if bool(dead_status.get("available", true)) \
+			or dead_status.get("block_code", "") != "player_dead":
+		_fail_jump_smoke_test(
+			"Destroyed player did not receive the manual-save block reason."
+		)
+		return false
+	print("[SaveSmokeTest] PASS: legacy save, manual safe-copy restore, and validation verified.")
 	return true

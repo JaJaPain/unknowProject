@@ -14,6 +14,8 @@ const ValidationResultType := preload(
 )
 
 const CHECKPOINT_INDEX_VERSION := 1
+const MANUAL_SLOT_COUNT := 3
+const MAX_MANUAL_NAME_LENGTH := 48
 const TACTICAL_KEYS: Array[String] = [
 	"position",
 	"rotation",
@@ -143,7 +145,11 @@ func capture_autosave(
 func load_active_bundle() -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
-	var loaded := _read_bundle_for_index(index)
+	var loaded := _read_bundle(
+		index.get("autosave", null),
+		str(index.get("active_checkpoint_id", "")),
+		"Safe checkpoint"
+	)
 	if bool(loaded.get("ok", false)):
 		return loaded
 	var restored := TransactionStoreType.restore_last_known_good_index(
@@ -154,7 +160,11 @@ func load_active_bundle() -> Dictionary:
 	if not bool(restored.get("ok", false)):
 		return loaded
 	var prior_index: Dictionary = restored["data"]
-	var prior_bundle := _read_bundle_for_index(prior_index)
+	var prior_bundle := _read_bundle(
+		prior_index.get("autosave", null),
+		str(prior_index.get("active_checkpoint_id", "")),
+		"Safe checkpoint"
+	)
 	if not bool(prior_bundle.get("ok", false)):
 		return loaded
 	index = prior_index
@@ -162,13 +172,158 @@ func load_active_bundle() -> Dictionary:
 	return prior_bundle
 
 
-func _read_bundle_for_index(candidate_index: Dictionary) -> Dictionary:
-	var autosave: Variant = candidate_index.get("autosave", null)
-	if not autosave is Dictionary:
-		return _failure("Campaign has no active safe autosave.")
-	var bundle_path := str(autosave.get("path", ""))
+func copy_active_to_manual(
+	slot_index: int,
+	display_name: String,
+	overwrite: bool = false
+) -> Dictionary:
+	if not is_valid():
+		return _failure("Campaign checkpoint store is invalid.")
+	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
+		return _failure("Manual checkpoint slot must be between 1 and 3.")
+	if TransactionStoreType.is_locked(campaign_path):
+		return _failure("A campaign save transaction is already active.")
+	var clean_name := sanitize_manual_name(display_name)
+	if clean_name.is_empty():
+		return _failure("Manual checkpoint name cannot be empty.")
+	var manual: Array = index.get(
+		"manual",
+		[null, null, null]
+	).duplicate(true)
+	if manual[slot_index] != null and not overwrite:
+		return {
+			"ok": false,
+			"requires_overwrite": true,
+			"error": "Manual checkpoint slot %d is already occupied." %
+				(slot_index + 1),
+		}
+	var source := load_active_bundle()
+	if not bool(source.get("ok", false)):
+		return _failure(
+			"No valid safe checkpoint is available to copy."
+		)
+	var checkpoint: Dictionary = source["checkpoint"]
+	var map_knowledge: Dictionary = source["map_knowledge"]
+	var copy_token := _new_copy_token(slot_index)
+	var bundle_path := "checkpoints/manual_%02d/%s" % [
+		slot_index + 1,
+		copy_token,
+	]
+	var entry := {
+		"checkpoint_id": checkpoint["id"],
+		"path": bundle_path,
+		"display_name": clean_name,
+		"created_at_unix": int(Time.get_unix_time_from_system()),
+		"source_reason": checkpoint.get("source_reason", ""),
+		"checkpoint_hash": _stable_hash(checkpoint),
+		"map_knowledge_hash": _stable_hash(map_knowledge),
+	}
+	manual[slot_index] = entry
+	var next_index: Dictionary = index.duplicate(true)
+	next_index["manual"] = manual
+	var committed := TransactionStoreType.commit_json_set(
+		campaign_path,
+		"manual_copy",
+		{
+			"%s/checkpoint.json" % bundle_path:
+				checkpoint.duplicate(true),
+			"%s/map_knowledge.json" % bundle_path:
+				map_knowledge.duplicate(true),
+			"checkpoint_index.json": next_index,
+		},
+		"checkpoint_index.json",
+		_validate_transaction_file
+	)
+	if not bool(committed.get("ok", false)):
+		return committed
+	index = next_index
+	return {
+		"ok": true,
+		"slot_index": slot_index,
+		"display_name": clean_name,
+		"checkpoint_id": checkpoint["id"],
+		"safe_location":
+			(checkpoint.get("safe_location", {}) as Dictionary).duplicate(true),
+	}
+
+
+func list_manual_checkpoints() -> Array:
+	var output: Array = []
+	var manual: Array = index.get(
+		"manual",
+		[null, null, null]
+	)
+	for slot_index in range(MANUAL_SLOT_COUNT):
+		var entry: Variant = manual[slot_index]
+		output.append({
+			"slot_index": slot_index,
+			"occupied": entry is Dictionary,
+			"display_name":
+				str(entry.get("display_name", ""))
+				if entry is Dictionary
+				else "",
+			"created_at_unix":
+				int(entry.get("created_at_unix", 0))
+				if entry is Dictionary
+				else 0,
+			"checkpoint_id":
+				str(entry.get("checkpoint_id", ""))
+				if entry is Dictionary
+				else "",
+			"source_reason":
+				str(entry.get("source_reason", ""))
+				if entry is Dictionary
+				else "",
+		})
+	return output
+
+
+func load_manual_bundle(slot_index: int) -> Dictionary:
+	if not is_valid():
+		return _failure("Campaign checkpoint store is invalid.")
+	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
+		return _failure("Manual checkpoint slot must be between 1 and 3.")
+	var manual: Array = index.get(
+		"manual",
+		[null, null, null]
+	)
+	var entry: Variant = manual[slot_index]
+	if not entry is Dictionary:
+		return _failure(
+			"Manual checkpoint slot %d is empty." % (slot_index + 1)
+		)
+	return _read_bundle(
+		entry,
+		str(entry.get("checkpoint_id", "")),
+		"Manual checkpoint"
+	)
+
+
+func runtime_state_from_manual(slot_index: int) -> Dictionary:
+	var bundle := load_manual_bundle(slot_index)
+	if not bool(bundle.get("ok", false)):
+		return bundle
+	return _runtime_state_from_bundle(bundle)
+
+
+func has_active_safe_checkpoint() -> bool:
+	return bool(load_active_bundle().get("ok", false))
+
+
+func is_transaction_active() -> bool:
+	return TransactionStoreType.is_locked(campaign_path)
+
+
+func _read_bundle(
+	entry: Variant,
+	expected_checkpoint_id: String,
+	label: String
+) -> Dictionary:
+	if not entry is Dictionary:
+		return _failure("%s metadata is missing." % label)
+	var bundle_path := str(entry.get("path", ""))
 	if bundle_path.is_empty():
-		return _failure("Active autosave path is missing.")
+		return _failure("%s path is missing." % label)
 	var checkpoint_result := DomainJsonType.read_object(
 		"%s/%s/checkpoint.json" % [campaign_path, bundle_path]
 	)
@@ -179,21 +334,20 @@ func _read_bundle_for_index(candidate_index: Dictionary) -> Dictionary:
 	result.merge(checkpoint_result["validation"], "checkpoint")
 	result.merge(map_result["validation"], "map_knowledge")
 	if not result.is_valid():
-		return _failure("Safe checkpoint files could not be read.", result)
+		return _failure("%s files could not be read." % label, result)
 	var checkpoint: Dictionary = checkpoint_result["data"]
 	var map_knowledge: Dictionary = map_result["data"]
 	result.merge(_validate_checkpoint_pair(checkpoint, map_knowledge))
-	if str(checkpoint.get("id", "")) \
-			!= str(candidate_index.get("active_checkpoint_id", "")):
+	if str(checkpoint.get("id", "")) != expected_checkpoint_id:
 		result.add_error(
 			"checkpoint_index_mismatch",
-			"Checkpoint index references a different active checkpoint.",
-			"active_checkpoint_id"
+			"%s metadata references a different checkpoint." % label,
+			"checkpoint_id"
 		)
 	var expected_checkpoint_hash := str(
-		autosave.get("checkpoint_hash", "")
+		entry.get("checkpoint_hash", "")
 	)
-	var expected_map_hash := str(autosave.get("map_knowledge_hash", ""))
+	var expected_map_hash := str(entry.get("map_knowledge_hash", ""))
 	if not expected_checkpoint_hash.is_empty() \
 			and _stable_hash(checkpoint) != expected_checkpoint_hash:
 		result.add_error(
@@ -209,7 +363,7 @@ func _read_bundle_for_index(candidate_index: Dictionary) -> Dictionary:
 			"autosave.map_knowledge_hash"
 		)
 	if not result.is_valid():
-		return _failure("Safe checkpoint bundle failed validation.", result)
+		return _failure("%s bundle failed validation." % label, result)
 	return {
 		"ok": true,
 		"checkpoint": checkpoint,
@@ -221,6 +375,10 @@ func runtime_state_from_active() -> Dictionary:
 	var bundle := load_active_bundle()
 	if not bool(bundle.get("ok", false)):
 		return bundle
+	return _runtime_state_from_bundle(bundle)
+
+
+func _runtime_state_from_bundle(bundle: Dictionary) -> Dictionary:
 	var checkpoint: Dictionary = bundle["checkpoint"]
 	return {
 		"ok": true,
@@ -230,6 +388,26 @@ func runtime_state_from_active() -> Dictionary:
 		"source_reason": checkpoint.get("source_reason", ""),
 		"checkpoint_id": checkpoint.get("id", ""),
 	}
+
+
+static func sanitize_manual_name(display_name: String) -> String:
+	var output := ""
+	var last_was_space := false
+	for character in display_name.strip_edges():
+		var code := character.unicode_at(0)
+		if code < 32 or character in ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]:
+			continue
+		if character in [" ", "\t", "\n", "\r"]:
+			if output.is_empty() or last_was_space:
+				continue
+			output += " "
+			last_was_space = true
+		else:
+			output += character
+			last_was_space = false
+		if output.length() >= MAX_MANUAL_NAME_LENGTH:
+			break
+	return output.strip_edges()
 
 
 static func sanitize_runtime_state(runtime_state: Dictionary) -> Dictionary:
@@ -376,12 +554,63 @@ static func _validate_checkpoint_index(
 				"autosave.path"
 			)
 	var manual: Variant = data.get("manual", null)
-	if not manual is Array or manual.size() != 3:
+	if not manual is Array or manual.size() != MANUAL_SLOT_COUNT:
 		result.add_error(
 			"invalid_checkpoint_index",
 			"Checkpoint index requires exactly three manual entries.",
 			"manual"
 		)
+	else:
+		for slot_index in range(MANUAL_SLOT_COUNT):
+			var entry: Variant = manual[slot_index]
+			if entry == null:
+				continue
+			if not entry is Dictionary:
+				result.add_error(
+					"invalid_manual_checkpoint",
+					"Manual checkpoint metadata must be an object or null.",
+					"manual.%d" % slot_index
+				)
+				continue
+			if not DomainIdType.is_valid(
+				entry.get("checkpoint_id", ""),
+				"checkpoint"
+			):
+				result.add_error(
+					"invalid_manual_checkpoint",
+					"Manual checkpoint requires a checkpoint ID.",
+					"manual.%d.checkpoint_id" % slot_index
+				)
+			if str(entry.get("path", "")).is_empty():
+				result.add_error(
+					"invalid_manual_checkpoint",
+					"Manual checkpoint path is required.",
+					"manual.%d.path" % slot_index
+				)
+			var display_name := str(entry.get("display_name", ""))
+			if sanitize_manual_name(display_name).is_empty() \
+					or sanitize_manual_name(display_name) != display_name:
+				result.add_error(
+					"invalid_manual_checkpoint",
+					"Manual checkpoint display name must be sanitized.",
+					"manual.%d.display_name" % slot_index
+				)
+			if int(entry.get("created_at_unix", 0)) <= 0:
+				result.add_error(
+					"invalid_manual_checkpoint",
+					"Manual checkpoint creation time is required.",
+					"manual.%d.created_at_unix" % slot_index
+				)
+			for hash_field in [
+				"checkpoint_hash",
+				"map_knowledge_hash",
+			]:
+				if str(entry.get(hash_field, "")).length() != 64:
+					result.add_error(
+						"invalid_manual_checkpoint",
+						"Manual checkpoint hashes must be SHA-256 values.",
+						"manual.%d.%s" % [slot_index, hash_field]
+					)
 	return result
 
 
@@ -437,6 +666,15 @@ static func _new_id(id_namespace: String, label: String) -> String:
 		id_namespace,
 		entropy.sha256_text().substr(0, 24),
 	]
+
+
+static func _new_copy_token(slot_index: int) -> String:
+	var entropy := "%s|%s|%s" % [
+		Time.get_ticks_usec(),
+		Crypto.new().generate_random_bytes(8).hex_encode(),
+		slot_index,
+	]
+	return "copy_%s" % entropy.sha256_text().substr(0, 20)
 
 
 static func _stable_hash(value: Variant) -> String:

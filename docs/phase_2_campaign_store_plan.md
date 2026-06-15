@@ -272,6 +272,8 @@ Verified:
 
 ### Checkpoint 6: Manual Checkpoint Copies
 
+Status: Complete on 2026-06-15.
+
 Deliverables:
 
 - three named manual checkpoint entries
@@ -284,6 +286,21 @@ Exit test:
 
 - changing tactical state after an autosave, saving manually in flight, and
   loading that manual checkpoint restores the earlier safe state
+
+Verified:
+
+- each campaign exposes exactly three independently named manual entries
+- in-flight manual saves copy the active safe bundle exactly and ignore live
+  position, credits, damage, targets, and other tactical state
+- docked manual saves refresh the dock checkpoint before copying station
+  changes
+- occupied entries require explicit overwrite confirmation
+- display names are trimmed, sanitized, and length-limited
+- save availability reports stable block codes for death, jump travel,
+  transaction activity, missing campaign storage, and missing safe checkpoints
+- manual loading restores through the same stable station or gate path as the
+  rolling autosave
+- focused persistence checks and the 23-step baseline suite pass
 
 ### Checkpoint 7: Save Notifications And Minimal Slot UI
 

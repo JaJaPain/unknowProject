@@ -64,6 +64,10 @@ Manual save is a checkpoint-copy operation.
 The manual checkpoint's name and creation metadata may differ, but its gameplay
 payload must hash identically to the source safe bundle.
 
+Manual checkpoint index entries contain the sanitized display name, creation
+time, source checkpoint ID, immutable bundle path, source reason, and payload
+hashes. Loading a manual entry never changes or rewrites the rolling autosave.
+
 ## Commit Protocol
 
 1. Acquire the campaign transaction lock.

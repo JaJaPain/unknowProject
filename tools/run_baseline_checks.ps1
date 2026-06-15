@@ -128,7 +128,7 @@ try {
             "res://tests/persistence/run_campaign_transaction_tests.gd" -- `
             --baseline-offline
     }
-    Invoke-BaselineStep "Campaign safe checkpoint bundles" {
+    Invoke-BaselineStep "Campaign safe and manual checkpoint bundles" {
         & $godot --headless --path $root --script `
             "res://tests/persistence/run_campaign_checkpoint_store_tests.gd" -- `
             --baseline-offline
