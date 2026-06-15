@@ -935,7 +935,7 @@ Detailed implementation contract:
 
 Implementation progress:
 
-- Checkpoints 1-8 are implementation-complete as of 2026-06-15.
+- Checkpoints 1-9 are implementation-complete as of 2026-06-15.
 - Safe dock, pre-undock, and gate-arrival bundles now use stable world IDs,
   strip tactical state, recover the last-known-good bundle after corruption,
   and retain legacy `savegame.json` compatibility during migration.
@@ -950,10 +950,14 @@ Implementation progress:
   the discarded future without deleting it.
 - Existing Markdown quest history imports once as legacy structured events,
   while new quest completion and abandonment events append directly.
+- Rewindable map knowledge now assigns each handcrafted gate one known,
+  rumored, hidden, blocked, or damaged visibility state. Successful travel
+  reveals both route endpoints, while loading an older checkpoint restores its
+  earlier visibility without changing permanent manifest or asset records.
 - Focused persistence checks and the expanded 24-step gameplay baseline pass.
 - Hands-on visual approval of the pause and campaign screens is deferred until
   local host-display access is available.
-- Checkpoint 9 map-knowledge partitioning is the next Phase 2 task.
+- Checkpoint 10 Kaelen meta-memory and death reload is the next Phase 2 task.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.

@@ -39,6 +39,7 @@ var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
 var last_autosave_notification_msec: int = 0
+var pending_gate_discoveries: Array[String] = []
 
 func _ready() -> void:
 	scene_ready_msec = Time.get_ticks_msec()
@@ -171,6 +172,13 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	transition_in_progress = true
 	_prepare_player_for_system_change()
 	var source_gate := GlobalState.active_target
+	var source_gate_id := (
+		str(source_gate.call("get_world_id"))
+		if source_gate != null
+			and is_instance_valid(source_gate)
+			and source_gate.has_method("get_world_id")
+		else ""
+	)
 	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
 	var original_fov := camera.fov if camera else 70.0
 	var effect_duration := 0.05 if DisplayServer.get_name() == "headless" else JUMP_ENTRY_DURATION
@@ -213,6 +221,10 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	_prepare_player_after_system_change()
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)
 	transition_in_progress = false
+	_queue_gate_discovery(
+		source_gate_id,
+		str(arrival_gate.call("get_world_id"))
+	)
 	request_safe_checkpoint("gate_arrival", arrival_gate)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
@@ -396,6 +408,13 @@ func request_safe_checkpoint(
 		push_warning("[GameRoot] Campaign checkpoint store is unavailable.")
 		_notify_checkpoint_failure()
 		return false
+	if not pending_gate_discoveries.is_empty() \
+			and not campaign_checkpoint_store.mark_gates_known(
+				pending_gate_discoveries
+			):
+		push_warning("[GameRoot] Gate discovery could not be recorded.")
+		_notify_checkpoint_failure()
+		return false
 	_sync_checkpoint_chronicle_context()
 	var safe_location := _safe_location_for(source_reason, safe_entity)
 	if safe_location.is_empty():
@@ -427,8 +446,29 @@ func request_safe_checkpoint(
 			str(safe_location.get("system_id", "")),
 			true
 		)
+	pending_gate_discoveries.clear()
 	_notify_autosave_success(source_reason, safe_location)
 	return true
+
+
+func _queue_gate_discovery(
+	source_gate_id: String,
+	arrival_gate_id: String
+) -> void:
+	for gate_id in [source_gate_id, arrival_gate_id]:
+		if gate_id.is_empty() or gate_id in pending_gate_discoveries:
+			continue
+		pending_gate_discoveries.append(gate_id)
+
+
+func get_gate_knowledge_state(gate_id: String) -> String:
+	if campaign_checkpoint_store == null:
+		return "hidden"
+	var knowledge := campaign_checkpoint_store.current_map_knowledge()
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		if gate_id in knowledge.get("%s_gate_ids" % state, []):
+			return state
+	return "hidden"
 
 
 func get_manual_checkpoint_status() -> Dictionary:
@@ -987,6 +1027,15 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 			restored.get("error", "unknown error")
 		)
 		return false
+	if campaign_checkpoint_store == null \
+			or not campaign_checkpoint_store.restore_map_knowledge(
+				restored.get("map_knowledge", {})
+			):
+		push_warning(
+			"[GameRoot] Campaign checkpoint map knowledge could not be restored."
+		)
+		return false
+	pending_gate_discoveries.clear()
 	var safe_location: Dictionary = restored.get(
 		"safe_location",
 		{}
@@ -1343,6 +1392,22 @@ func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
 				!= arrival_gate.get_world_id():
 		_fail_jump_smoke_test(
 			"Gate arrival did not create the expected safe checkpoint."
+		)
+		return false
+	var arrival_gate_id := str(arrival_gate.get_world_id())
+	var paired_gate_id := str(
+		system_registry.resolve_gate_id(
+			arrival_gate.get("destination_gate_id")
+		)
+	)
+	var known_gate_ids: Array = checkpoint.get(
+		"map_knowledge",
+		{}
+	).get("known_gate_ids", [])
+	if arrival_gate_id not in known_gate_ids \
+			or paired_gate_id not in known_gate_ids:
+		_fail_jump_smoke_test(
+			"Gate arrival checkpoint did not reveal both route endpoints."
 		)
 		return false
 	return true

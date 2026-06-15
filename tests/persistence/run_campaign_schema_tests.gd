@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_wrong_ownership()
 	_test_unsupported_version()
 	_test_disposable_checkpoint_state()
+	_test_exclusive_map_knowledge()
 	_test_malformed_references()
 	_test_kaelen_restrictions()
 
@@ -118,6 +119,25 @@ func _test_disposable_checkpoint_state() -> void:
 			"state.player.autopilot_waypoints"
 		),
 		"Disposable field failure did not retain its nested path."
+	)
+
+
+func _test_exclusive_map_knowledge() -> void:
+	var document := _map_knowledge()
+	document["known_gate_ids"] = ["gate.start.to_test"]
+	document["hidden_gate_ids"] = ["gate.start.to_test"]
+	var validation = SchemaType.validate_document(document)
+	_expect(
+		not validation.is_valid(),
+		"Map knowledge accepted one gate in multiple visibility states."
+	)
+	_expect(
+		_has_issue(
+			validation.errors,
+			"duplicate_gate_knowledge_state",
+			"hidden_gate_ids"
+		),
+		"Duplicate map visibility did not report its state list."
 	)
 
 

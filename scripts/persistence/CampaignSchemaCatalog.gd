@@ -446,9 +446,20 @@ static func _validate_map_knowledge(
 	_require_id(data, "id", "map_knowledge", result)
 	_require_id(data, "campaign_id", "campaign", result)
 	_require_id(data, "checkpoint_id", "checkpoint", result)
+	var classified_gate_ids: Dictionary = {}
 	for key in ["known_gate_ids", "rumored_gate_ids", "hidden_gate_ids",
 			"blocked_gate_ids", "damaged_gate_ids"]:
 		_validate_id_array(data, key, "gate", result)
+		for gate_id in data.get(key, []):
+			var canonical_gate_id := str(gate_id)
+			if classified_gate_ids.has(canonical_gate_id):
+				result.add_error(
+					"duplicate_gate_knowledge_state",
+					"Map gate '%s' appears in more than one knowledge state." %
+						canonical_gate_id,
+					key
+				)
+			classified_gate_ids[canonical_gate_id] = key
 
 
 static func _validate_chronicle(data: Dictionary, result: ValidationResult) -> void:

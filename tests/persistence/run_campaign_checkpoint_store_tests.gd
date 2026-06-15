@@ -55,6 +55,18 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 	if not store.is_valid():
 		return
+	var manifest_before := FileAccess.get_file_as_string(
+		"%s/manifest.json" % CAMPAIGN_PATH
+	)
+	var initial_map := store.current_map_knowledge()
+	_expect(
+		"gate.start.to_test" in initial_map.get("hidden_gate_ids", [])
+			and "gate.test.to_start" in initial_map.get(
+				"hidden_gate_ids",
+				[]
+			),
+		"Initial map knowledge did not classify the handcrafted gate graph."
+	)
 
 	var docked := store.capture_autosave(
 		_runtime_state(125, 84.0, "dock"),
@@ -214,6 +226,13 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"Invalid manual slot or empty sanitized name was accepted."
 	)
 
+	_expect(
+		store.mark_gates_known([
+			"gate.start.to_test",
+			"gate.test.to_start",
+		]),
+		"Handcrafted route discovery could not mark gates known."
+	)
 	var gate := store.capture_autosave(
 		_runtime_state(990, 63.0, "gate"),
 		{
@@ -232,6 +251,37 @@ func _test_safe_capture_restore_and_recovery() -> void:
 				{}
 			).get("gate_id") == "gate.test.to_start",
 		"Gate checkpoint did not become the rolling autosave."
+	)
+	_expect(
+		"gate.start.to_test" in gate_bundle.get(
+			"map_knowledge",
+			{}
+		).get("known_gate_ids", [])
+			and "gate.test.to_start" in gate_bundle.get(
+				"map_knowledge",
+				{}
+			).get("known_gate_ids", []),
+		"Gate arrival checkpoint did not retain route discovery."
+	)
+	var older_manual_state := store.runtime_state_from_manual(0)
+	_expect(
+		store.restore_map_knowledge(
+			older_manual_state.get("map_knowledge", {})
+		)
+			and "gate.test.to_start" in store.current_map_knowledge().get(
+				"hidden_gate_ids",
+				[]
+			)
+			and "gate.test.to_start" not in store.current_map_knowledge().get(
+				"known_gate_ids",
+				[]
+			),
+		"Restoring an older checkpoint did not rewind map visibility."
+	)
+	_expect(
+		FileAccess.get_file_as_string("%s/manifest.json" % CAMPAIGN_PATH)
+			== manifest_before,
+		"Map discovery or rewind changed the permanent manifest."
 	)
 
 	var gate_path := str(store.index.get("autosave", {}).get("path", ""))

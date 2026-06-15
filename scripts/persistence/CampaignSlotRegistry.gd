@@ -544,8 +544,10 @@ func _build_initial_documents(
 		current_system_id = "system.start"
 		system_definition = system_registry.get_system(current_system_id)
 	var hidden_gates: Array[String] = []
-	for gate in system_definition.gates:
-		hidden_gates.append(str(gate.id))
+	for registered_system: SystemDefinition in system_registry.systems.values():
+		for gate in registered_system.gates:
+			hidden_gates.append(str(gate.id))
+	hidden_gates.sort()
 
 	var campaign := {
 		"document_type": SchemaType.CAMPAIGN,

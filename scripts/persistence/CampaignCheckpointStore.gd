@@ -43,6 +43,7 @@ var index: Dictionary = {}
 var validation := ValidationResultType.new()
 var chronicle_timeline_id: String = ""
 var chronicle_head_event_id: String = ""
+var map_knowledge: Dictionary = {}
 
 
 static func open(path: String) -> CampaignCheckpointStore:
@@ -68,6 +69,56 @@ func set_chronicle_context(
 	return true
 
 
+func current_map_knowledge() -> Dictionary:
+	return map_knowledge.duplicate(true)
+
+
+func restore_map_knowledge(restored: Dictionary) -> bool:
+	var result := SchemaType.validate_document(restored)
+	if not result.is_valid() \
+			or str(restored.get("campaign_id", "")) \
+				!= str(campaign.get("id", "")):
+		return false
+	map_knowledge = restored.duplicate(true)
+	return true
+
+
+func set_gate_knowledge(gate_id: String, state: String) -> bool:
+	if not DomainIdType.is_valid(gate_id, "gate") \
+			or state not in [
+				"known",
+				"rumored",
+				"hidden",
+				"blocked",
+				"damaged",
+			]:
+		return false
+	if map_knowledge.is_empty():
+		return false
+	var target_key := "%s_gate_ids" % state
+	for key in [
+		"known_gate_ids",
+		"rumored_gate_ids",
+		"hidden_gate_ids",
+		"blocked_gate_ids",
+		"damaged_gate_ids",
+	]:
+		var gate_ids: Array = map_knowledge.get(key, []).duplicate(true)
+		gate_ids.erase(gate_id)
+		if key == target_key:
+			gate_ids.append(gate_id)
+			gate_ids.sort()
+		map_knowledge[key] = gate_ids
+	return true
+
+
+func mark_gates_known(gate_ids: Array) -> bool:
+	for gate_id in gate_ids:
+		if not set_gate_knowledge(str(gate_id), "known"):
+			return false
+	return true
+
+
 func capture_autosave(
 	runtime_state: Dictionary,
 	safe_location: Dictionary,
@@ -89,7 +140,11 @@ func capture_autosave(
 	var map_id := _new_id("map_knowledge", source_reason)
 	var previous := load_active_bundle()
 	var previous_checkpoint: Dictionary = previous.get("checkpoint", {})
-	var previous_map: Dictionary = previous.get("map_knowledge", {})
+	var previous_map: Dictionary = (
+		map_knowledge
+		if not map_knowledge.is_empty()
+		else previous.get("map_knowledge", {})
+	)
 	var checkpoint := {
 		"document_type": SchemaType.CHECKPOINT,
 		"schema_version": SchemaType.SCHEMA_VERSION,
@@ -111,14 +166,14 @@ func capture_autosave(
 		"safe_location": safe_location.duplicate(true),
 		"state": safe_state,
 	}
-	var map_knowledge := _next_map_knowledge(
+	var next_map_knowledge := _next_map_knowledge(
 		previous_map,
 		map_id,
 		checkpoint_id
 	)
 	var bundle_validation := _validate_checkpoint_pair(
 		checkpoint,
-		map_knowledge
+		next_map_knowledge
 	)
 	if not bundle_validation.is_valid():
 		return _failure(
@@ -136,7 +191,7 @@ func capture_autosave(
 		"path": bundle_path,
 		"source_reason": source_reason,
 		"checkpoint_hash": _stable_hash(checkpoint),
-		"map_knowledge_hash": _stable_hash(map_knowledge),
+		"map_knowledge_hash": _stable_hash(next_map_knowledge),
 	}
 	if not next_index.has("manual"):
 		next_index["manual"] = [null, null, null]
@@ -145,7 +200,7 @@ func capture_autosave(
 		"autosave",
 		{
 			"%s/checkpoint.json" % bundle_path: checkpoint,
-			"%s/map_knowledge.json" % bundle_path: map_knowledge,
+			"%s/map_knowledge.json" % bundle_path: next_map_knowledge,
 			"checkpoint_index.json": next_index,
 		},
 		"checkpoint_index.json",
@@ -154,6 +209,7 @@ func capture_autosave(
 	if not bool(committed.get("ok", false)):
 		return committed
 	index = next_index
+	map_knowledge = next_map_knowledge.duplicate(true)
 	return {
 		"ok": true,
 		"checkpoint_id": checkpoint_id,
@@ -454,6 +510,8 @@ func _runtime_state_from_bundle(bundle: Dictionary) -> Dictionary:
 		"timeline_id": checkpoint.get("timeline_id", ""),
 		"chronicle_head_event_id":
 			checkpoint.get("chronicle_head_event_id", ""),
+		"map_knowledge":
+			(bundle.get("map_knowledge", {}) as Dictionary).duplicate(true),
 	}
 
 
@@ -527,6 +585,9 @@ func _load() -> void:
 					""
 				)
 			)
+			map_knowledge = (
+				active.get("map_knowledge", {}) as Dictionary
+			).duplicate(true)
 
 
 func _next_map_knowledge(

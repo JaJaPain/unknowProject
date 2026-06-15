@@ -377,6 +377,8 @@ Result: passed.
 
 ### Checkpoint 9: Map Knowledge Partition
 
+Status: implementation-complete as of 2026-06-15.
+
 Deliverables:
 
 - permanent physical gate graph stays in the manifest
@@ -384,10 +386,28 @@ Deliverables:
   in checkpoint map knowledge
 - current handcrafted gate discovery adapter
 
+Implemented:
+
+- the initial rewindable map classifies every registered handcrafted gate
+  without moving physical route records out of the permanent manifest
+- each gate occupies exactly one validated known, rumored, hidden, blocked, or
+  damaged state
+- the checkpoint store maintains a working map copy and freezes it into each
+  safe or manual checkpoint bundle
+- successful handcrafted gate travel reveals both route endpoints before the
+  arrival checkpoint commits
+- campaign checkpoint loading restores the selected bundle's map visibility
+  and clears uncommitted discovery changes
+- focused tests prove later discovery can rewind to hidden while `manifest.json`
+  remains byte-for-byte unchanged
+- the two-way gate/save smoke and full 24-step baseline suite pass
+
 Exit test:
 
 - loading an older checkpoint can hide a later discovery without deleting the
   destination, route, or generated assets
+
+Result: passed.
 
 ### Checkpoint 10: Kaelen Meta-Memory And Death Reload
 
