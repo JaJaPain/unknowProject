@@ -461,6 +461,24 @@ Exit test:
 - the current prototype save resumes from the campaign store
 - failed import leaves both the legacy save and existing slots untouched
 
+Result: passed.
+
+Implementation notes:
+
+- Startup detects a valid version-2 `savegame.json` when no campaign is
+  selected, creates a byte-identical safety backup, and imports the state into
+  the first empty campaign slot.
+- The imported campaign is written without activation, its complete initial
+  bundle is reopened and validated, and only then is the slot selected.
+- Occupied slots are never overwritten. Full slots, damaged files, unsupported
+  versions, backup failures, and verification failures return readable recovery
+  messages while preserving the source save and existing campaigns.
+- A durable import marker prevents the retained compatibility file from being
+  imported repeatedly. The campaign manager exposes import availability and
+  blocked status without displaying local paths.
+- Focused importer and startup-resume checks pass with the expanded 29-step
+  baseline suite.
+
 ### Checkpoint 12: Phase Regression And Approval
 
 Deliverables:

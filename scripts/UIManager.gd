@@ -140,6 +140,7 @@ var campaign_panel: Panel
 var campaign_slots_vbox: VBoxContainer
 var campaign_manual_vbox: VBoxContainer
 var campaign_status_label: Label
+var campaign_import_button: Button
 var campaign_confirm_dialog: ConfirmationDialog
 var pending_delete_slot_id: String = ""
 var pending_manual_slot_index: int = -1
@@ -1466,6 +1467,13 @@ func _create_campaign_manager() -> void:
 		Color(0.75, 0.82, 0.9)
 	)
 	layout.add_child(campaign_status_label)
+	campaign_import_button = Button.new()
+	campaign_import_button.name = "LegacySaveImportButton"
+	campaign_import_button.text = "IMPORT VERSION-2 SAVE"
+	campaign_import_button.custom_minimum_size = Vector2(250, 40)
+	campaign_import_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	campaign_import_button.pressed.connect(_on_legacy_save_import)
+	layout.add_child(campaign_import_button)
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1510,6 +1518,17 @@ func _refresh_campaign_manager() -> void:
 		campaign_status_label.text = str(state.get("error", "Campaign storage is unavailable."))
 		return
 	var selected_slot_id := str(state.get("selected_slot_id", ""))
+	var legacy_import: Dictionary = state.get("legacy_import", {})
+	campaign_import_button.visible = (
+		bool(legacy_import.get("available", false))
+		or legacy_import.get("block_code", "") == "slots_full"
+	)
+	campaign_import_button.disabled = not bool(
+		legacy_import.get("available", false)
+	)
+	campaign_import_button.tooltip_text = str(
+		legacy_import.get("message", "")
+	)
 	campaign_status_label.text = (
 		"Selected: %s" % selected_slot_id.replace("_", " ").to_upper()
 		if not selected_slot_id.is_empty()
@@ -1534,6 +1553,22 @@ func _refresh_campaign_manager() -> void:
 				}
 			)
 			_add_manual_checkpoint_row(entry)
+
+
+func _on_legacy_save_import() -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.import_legacy_save()
+	campaign_status_label.text = (
+		str(result.get("message", "Prototype save imported."))
+		if bool(result.get("ok", false))
+		else str(
+			result.get(
+				"error",
+				"Import failed. The original save and campaigns were preserved."
+			)
+		)
+	)
+	_refresh_campaign_manager()
 
 
 func _clear_container(

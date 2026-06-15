@@ -148,10 +148,19 @@ try {
             "res://tests/persistence/run_campaign_kaelen_memory_store_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Campaign version-2 legacy save import" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_campaign_legacy_import_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Campaign manifest and asset registry" {
         & $godot --headless --path $root --script `
             "res://tests/persistence/run_campaign_manifest_store_tests.gd" -- `
             --baseline-offline
+    }
+    Invoke-BaselineStep "Version-2 save startup import" {
+        & $godot --headless --path $root -- `
+            --legacy-import-smoke-test --no-save-load --baseline-offline
     }
     Invoke-BaselineStep "Mission gameplay lifecycle" {
         & $godot --headless --path $root -- `

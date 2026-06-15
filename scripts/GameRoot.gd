@@ -21,6 +21,9 @@ const CampaignChronicleStoreType := preload(
 const CampaignKaelenMemoryStoreType := preload(
 	"res://scripts/persistence/CampaignKaelenMemoryStore.gd"
 )
+const CampaignLegacySaveImporterType := preload(
+	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
+)
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -39,6 +42,7 @@ var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
 var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
+var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
@@ -89,6 +93,8 @@ func _ready() -> void:
 		call_deferred("_run_restart_smoke_test")
 	elif "--death-reload-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_death_reload_smoke_test")
+	elif "--legacy-import-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_legacy_import_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
@@ -632,11 +638,54 @@ func get_campaign_ui_state() -> Dictionary:
 		"ok": true,
 		"slots": campaign_slot_registry.enumerate_slots(),
 		"selected_slot_id": campaign_slot_registry.selected_slot_id,
+		"legacy_import": CampaignLegacySaveImporterType.status(
+			campaign_slot_registry,
+			system_registry,
+			SAVE_PATH
+		),
 		"manual":
 			campaign_checkpoint_store.list_manual_checkpoints()
 			if campaign_checkpoint_store != null
 			else [],
 	}
+
+
+func import_legacy_save(slot_id: String = "") -> Dictionary:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var imported := (
+		CampaignLegacySaveImporterType.import_first_available(
+			campaign_slot_registry,
+			system_registry,
+			SAVE_PATH
+		)
+		if slot_id.is_empty()
+		else CampaignLegacySaveImporterType.import_to_slot(
+			campaign_slot_registry,
+			system_registry,
+			slot_id,
+			SAVE_PATH
+		)
+	)
+	last_legacy_import_result = imported.duplicate(true)
+	if not bool(imported.get("ok", false)):
+		_notify_system_warning(str(imported.get("error", "")))
+		return imported
+	active_campaign_slot_id = str(imported.get("slot_id", ""))
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		active_campaign_slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	_initialize_campaign_chronicle()
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Prototype save imported into the campaign store.",
+		Color(0.0, 0.9, 0.9)
+	)
+	return imported
 
 
 func create_campaign_in_slot(
@@ -1296,6 +1345,20 @@ func _load_startup_save() -> void:
 	if campaign_checkpoint_store != null \
 			and campaign_checkpoint_store.is_valid():
 		startup_save_loaded = await _load_campaign_checkpoint()
+	elif FileAccess.file_exists(SAVE_PATH):
+		var imported := import_legacy_save()
+		if bool(imported.get("ok", false)) \
+				and campaign_checkpoint_store != null:
+			startup_save_loaded = await _load_campaign_checkpoint()
+		else:
+			push_warning(
+				"[GameRoot] Campaign import was not completed: %s" %
+					imported.get(
+						"error",
+						"Use Campaigns & Saves to review import recovery."
+					)
+			)
+			startup_save_loaded = await load_game()
 	else:
 		startup_save_loaded = await load_game()
 		var prepared := _capture_prepared_runtime_state()
@@ -2653,6 +2716,76 @@ func _run_death_reload_smoke_test() -> void:
 	ui.call("_load_last_save_after_death")
 
 
+func _run_legacy_import_smoke_test() -> void:
+	await get_tree().process_frame
+	_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		_fail_legacy_import_smoke_test(
+			"Campaign registry was unavailable."
+		)
+		return
+	for slot in campaign_slot_registry.enumerate_slots():
+		if bool(slot.get("occupied", false)):
+			campaign_slot_registry.delete_campaign(
+				str(slot.get("slot_id", ""))
+			)
+	var marker_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		CampaignLegacySaveImporterType.MARKER_FILE,
+	]
+	if FileAccess.file_exists(marker_path):
+		DirAccess.remove_absolute(
+			ProjectSettings.globalize_path(marker_path)
+		)
+	active_campaign_slot_id = ""
+	campaign_checkpoint_store = null
+	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
+	GlobalState.player_credits = 7654
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) \
+			or not SaveMigrator.write_current(SAVE_PATH, prepared["data"]):
+		_fail_legacy_import_smoke_test(
+			"Could not create the version-2 startup fixture."
+		)
+		return
+	var original_text := FileAccess.get_file_as_string(SAVE_PATH)
+	await _load_startup_save()
+	var backup_path := str(
+		last_legacy_import_result.get("backup_path", "")
+	)
+	var imported_slot := str(
+		last_legacy_import_result.get("slot_id", "")
+	)
+	if not startup_save_loaded \
+			or GlobalState.player_credits != 7654 \
+			or imported_slot != "slot_01" \
+			or active_campaign_slot_id != imported_slot \
+			or campaign_checkpoint_store == null \
+			or not campaign_checkpoint_store.is_valid() \
+			or not FileAccess.file_exists(backup_path) \
+			or FileAccess.get_file_as_string(backup_path) != original_text \
+			or FileAccess.get_file_as_string(SAVE_PATH) != original_text:
+		_fail_legacy_import_smoke_test(
+			"Startup did not resume the version-2 save from a verified campaign."
+		)
+		return
+	campaign_slot_registry.delete_campaign(imported_slot)
+	if FileAccess.file_exists(marker_path):
+		DirAccess.remove_absolute(
+			ProjectSettings.globalize_path(marker_path)
+		)
+	if FileAccess.file_exists(backup_path):
+		DirAccess.remove_absolute(
+			ProjectSettings.globalize_path(backup_path)
+		)
+	delete_savegame()
+	print(
+		"[LegacyImportSmokeTest] PASS: startup imported and resumed the version-2 save without changing its source."
+	)
+	get_tree().quit(0)
+
+
 func _run_autopilot_smoke_test() -> void:
 	await get_tree().process_frame
 	if not _verify_autopilot_control_contract():
@@ -3875,6 +4008,11 @@ func _fail_death_reload_smoke_test(message: String) -> void:
 	if Engine.has_meta("death_reload_memory_sequence"):
 		Engine.remove_meta("death_reload_memory_sequence")
 	push_error("[DeathReloadSmokeTest] FAIL: " + message)
+	get_tree().quit(1)
+
+
+func _fail_legacy_import_smoke_test(message: String) -> void:
+	push_error("[LegacyImportSmokeTest] FAIL: " + message)
 	get_tree().quit(1)
 
 

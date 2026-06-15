@@ -67,7 +67,8 @@ func create_campaign(
 	display_name: String,
 	game_version: String,
 	initial_state: Dictionary,
-	system_registry: SystemRegistry
+	system_registry: SystemRegistry,
+	activate: bool = true
 ) -> Dictionary:
 	if not is_valid():
 		return _failure("Slot registry is invalid.")
@@ -193,10 +194,12 @@ func create_campaign(
 		},
 	}
 	slots[slot_id] = slot_data
-	selected_slot_id = slot_id
+	var previous_selected_slot_id := selected_slot_id
+	if activate:
+		selected_slot_id = slot_id
 	if not _write_slot_registry():
 		slots[slot_id] = _empty_slot(slot_id)
-		selected_slot_id = ""
+		selected_slot_id = previous_selected_slot_id
 		_remove_tree(campaign_path)
 		return _failure("Campaign slot registry could not be updated.")
 	return {
