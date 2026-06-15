@@ -8,6 +8,9 @@ const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 0.9
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
+const GATE_TRAVEL_MINUTES := 45
+const DOCK_SERVICE_MINUTES := 10
+const UNDOCK_SERVICE_MINUTES := 5
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 const CampaignSlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
@@ -240,6 +243,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	AudioManager.play_jump_arrival()
 	await transition_fx.play_exit(0.05 if DisplayServer.get_name() == "headless" else JUMP_EXIT_DURATION)
 	_prepare_player_after_system_change()
+	CampaignClock.advance_minutes(GATE_TRAVEL_MINUTES)
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)
 	transition_in_progress = false
 	_queue_gate_discovery(
@@ -442,12 +446,16 @@ func request_safe_checkpoint(
 		push_warning("[GameRoot] Safe checkpoint location is unavailable.")
 		_notify_checkpoint_failure()
 		return false
+	var prior_campaign_time := CampaignClock.capture_state()
+	_advance_campaign_time_for_safe_checkpoint(source_reason)
+	prepared["data"]["global"]["campaign_time"] = CampaignClock.capture_state()
 	var captured := campaign_checkpoint_store.capture_autosave(
 		prepared["data"],
 		safe_location,
 		source_reason
 	)
 	if not bool(captured.get("ok", false)):
+		CampaignClock.restore_state(prior_campaign_time)
 		push_warning(
 			"[GameRoot] Campaign checkpoint failed: %s" %
 			captured.get("error", "unknown error")
@@ -470,6 +478,13 @@ func request_safe_checkpoint(
 	pending_gate_discoveries.clear()
 	_notify_autosave_success(source_reason, safe_location)
 	return true
+
+
+func _advance_campaign_time_for_safe_checkpoint(source_reason: String) -> void:
+	if source_reason == "dock":
+		CampaignClock.advance_minutes(DOCK_SERVICE_MINUTES)
+	elif source_reason == "undock":
+		CampaignClock.advance_minutes(UNDOCK_SERVICE_MINUTES)
 
 
 func _queue_gate_discovery(
@@ -1229,6 +1244,7 @@ func _death_category_for_source(death_source: String) -> String:
 
 
 func _reset_and_reload_scene() -> void:
+	CampaignClock.reset_for_restart()
 	LLMInterface.reset_for_restart()
 	QuestManager.reset_for_restart()
 	GlobalState.reset_for_restart()
@@ -1606,6 +1622,7 @@ func _apply_player_state(state: Dictionary) -> void:
 
 func _capture_global_state() -> Dictionary:
 	return {
+		"campaign_time": CampaignClock.capture_state(),
 		"credits": GlobalState.player_credits,
 		"cargo": GlobalState.cargo,
 		"cargo_type": GlobalState.cargo_type,
@@ -1617,6 +1634,7 @@ func _capture_global_state() -> Dictionary:
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
+	CampaignClock.restore_state(state.get("campaign_time", {}))
 	GlobalState.player_credits = int(state.get("credits", 50))
 	var loaded_upgrades: Dictionary = state.get(
 		"upgrades",
@@ -1656,6 +1674,7 @@ func _run_jump_smoke_test() -> void:
 	GlobalState.current_upgrades["engine"] = {"tier": 2, "path": "speed"}
 	GlobalState.player_storage_ore = 77.0
 	GlobalState.apply_upgrade_stats()
+	var start_time_minutes := CampaignClock.total_minutes
 
 	var outbound_gate := _find_gate(get_active_system_root(), "start_to_test")
 	if not outbound_gate:
@@ -1705,6 +1724,9 @@ func _run_jump_smoke_test() -> void:
 	if GlobalState.current_system_id != "test_system":
 		_fail_jump_smoke_test("Outbound jump loaded the wrong system.")
 		return
+	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
+		_fail_jump_smoke_test("Outbound jump did not advance campaign time.")
+		return
 	if not player.is_physics_processing() or not player.is_processing_unhandled_input():
 		_fail_jump_smoke_test("Player controls were not restored after arrival.")
 		return
@@ -1747,6 +1769,10 @@ func _run_jump_smoke_test() -> void:
 	await system_changed
 	if GlobalState.current_system_id != "start_system":
 		_fail_jump_smoke_test("Return jump loaded the wrong system.")
+		return
+	if CampaignClock.total_minutes \
+			!= start_time_minutes + GATE_TRAVEL_MINUTES * 2:
+		_fail_jump_smoke_test("Return jump did not advance campaign time.")
 		return
 	var start_arrival_gate := _find_gate(
 		get_active_system_root(),
@@ -4375,6 +4401,12 @@ func _run_save_smoke_assertions() -> bool:
 	var safe_source_credits := int(
 		safe_source.get("state", {}).get("global", {}).get("credits", 0)
 	)
+	var safe_source_time := int(
+		safe_source.get("state", {})
+			.get("global", {})
+			.get("campaign_time", {})
+			.get("total_minutes", -1)
+	)
 	var safe_source_location: Dictionary = safe_source.get(
 		"safe_location",
 		{}
@@ -4389,6 +4421,7 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 
 	GlobalState.player_credits = 4321
+	CampaignClock.advance_minutes(123)
 	GlobalState.cargo_type = GlobalState.CargoType.ORE
 	GlobalState.cargo = 27.0
 	QuestManager.active_quest = {
@@ -4405,6 +4438,7 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 
 	GlobalState.player_credits = 1
+	CampaignClock.reset_for_restart()
 	GlobalState.cargo = 0.0
 	GlobalState.cargo_type = GlobalState.CargoType.EMPTY
 	QuestManager.active_quest = {}
@@ -4414,6 +4448,9 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	if GlobalState.player_credits != 4321 or not is_equal_approx(GlobalState.cargo, 27.0):
 		_fail_jump_smoke_test("Global player state did not restore.")
+		return false
+	if CampaignClock.total_minutes != safe_source_time + 123:
+		_fail_jump_smoke_test("Campaign time did not restore from save.")
 		return false
 	if int(GlobalState.current_upgrades["engine"]["tier"]) != 2 \
 			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2) \
@@ -4481,6 +4518,16 @@ func _run_save_smoke_assertions() -> bool:
 	) != safe_source_credits:
 		_fail_jump_smoke_test(
 			"In-flight manual save captured live credits instead of safe state."
+		)
+		return false
+	if int(
+		manual_state.get("state", {})
+			.get("global", {})
+			.get("campaign_time", {})
+			.get("total_minutes", -1)
+	) != safe_source_time:
+		_fail_jump_smoke_test(
+			"In-flight manual save captured live campaign time instead of safe state."
 		)
 		return false
 	GlobalState.player_credits = 2

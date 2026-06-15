@@ -1023,10 +1023,15 @@ Exit gate:
 
 Purpose: provide one clock for missions, economy, travel, and simulation.
 
+- Campaign time is deterministic action time, not real time. It advances when
+  code commits controlled gameplay actions such as travel, docking, and
+  undocking.
 - Add the universal calendar and HUD/map display.
 - Define time costs for existing actions.
 - Add pause-safe timers based on campaign time.
 - Add timed mission primitives without requiring generated stories yet.
+- Present timed mission urgency as countdowns, while storing deadlines against
+  the universal campaign clock.
 
 Exit gate:
 

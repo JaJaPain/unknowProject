@@ -2,6 +2,7 @@ extends Control
 
 # UI Nodes created dynamically
 var hud_panel: Panel
+var time_label: Label
 var credits_label: Label
 var cargo_label: Label
 var cargo_bar: ProgressBar
@@ -230,6 +231,7 @@ func _ready():
 	GlobalState.target_changed.connect(_on_target_changed)
 	GlobalState.game_paused.connect(_on_pause_changed)
 	GlobalState.entities_changed.connect(refresh_overview)
+	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 	
 	# Connect QuestManager signals
 	QuestManager.quest_accepted.connect(_on_quest_accepted)
@@ -264,6 +266,7 @@ func _ready():
 	# Initial UI state
 	_on_credits_changed(GlobalState.player_credits)
 	_on_cargo_changed(GlobalState.cargo)
+	_on_campaign_time_changed(CampaignClock.total_minutes)
 	_on_target_changed(GlobalState.active_target)
 	
 	# Initialize startup loading screen to pre-cache the first quest & TTS
@@ -344,6 +347,10 @@ func _create_hud():
 	vbox.position = Vector2(10, 10)
 	vbox.custom_minimum_size = Vector2(330, 140)
 	hud_panel.add_child(vbox)
+
+	time_label = Label.new()
+	time_label.text = "Time: Day 001 08:00"
+	vbox.add_child(time_label)
 	
 	credits_label = Label.new()
 	credits_label.text = "Credits: 50 SC"
@@ -2461,6 +2468,11 @@ func _on_target_icon_gui_input(event: InputEvent):
 func _on_credits_changed(new_credits: int):
 	if credits_label:
 		credits_label.text = "Credits: " + str(new_credits) + " SC"
+
+
+func _on_campaign_time_changed(_total_minutes: int) -> void:
+	if time_label:
+		time_label.text = "Time: %s" % CampaignClock.formatted_datetime()
 
 func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:

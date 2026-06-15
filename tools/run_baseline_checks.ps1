@@ -98,6 +98,11 @@ try {
             "res://tests/navigation/run_navigation_route_planner_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Universal campaign clock" {
+        & $godot --headless --path $root --script `
+            "res://tests/time/run_campaign_clock_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Faction NPC ship portrait and voice definitions" {
         & $godot --headless --path $root --script `
             "res://tests/registry/run_game_content_registry_tests.gd" -- `
