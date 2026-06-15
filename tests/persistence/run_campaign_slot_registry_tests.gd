@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_three_stable_slots()
 	_test_create_reopen_and_initial_checkpoint()
 	_test_slot_isolation_and_selection()
+	_test_campaign_rename()
 	_test_registry_corruption_recovery()
 	_test_no_fourth_campaign()
 	_test_delete_is_isolated()
@@ -144,6 +145,33 @@ func _test_no_fourth_campaign() -> void:
 	_expect(
 		not bool(fourth.get("ok", false)),
 		"Registry created a fourth campaign."
+	)
+
+
+func _test_campaign_rename() -> void:
+	var registry := RegistryType.open(TEST_ROOT)
+	var renamed := registry.rename_campaign(
+		"slot_02",
+		"  Second Wind Renamed  "
+	)
+	_expect(bool(renamed.get("ok", false)), renamed.get("error", ""))
+	_expect(
+		registry.get_slot("slot_02").get("display_name", "")
+			== "Second Wind Renamed",
+		"Campaign rename did not sanitize and update the slot name."
+	)
+	var reopened := RegistryType.open(TEST_ROOT)
+	_expect(
+		reopened.get_slot("slot_02").get("display_name", "")
+			== "Second Wind Renamed",
+		"Campaign rename did not persist after reopening."
+	)
+	_expect(
+		not bool(reopened.rename_campaign(
+			"slot_02",
+			"   "
+		).get("ok", false)),
+		"Campaign rename accepted an empty display name."
 	)
 
 

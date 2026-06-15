@@ -136,6 +136,14 @@ var agent_portrait: TextureRect
 var agent_client_logo: TextureRect
 
 var pause_panel: Panel
+var campaign_panel: Panel
+var campaign_slots_vbox: VBoxContainer
+var campaign_manual_vbox: VBoxContainer
+var campaign_status_label: Label
+var campaign_confirm_dialog: ConfirmationDialog
+var pending_delete_slot_id: String = ""
+var pending_manual_slot_index: int = -1
+var pending_manual_name: String = ""
 var death_panel: Panel
 var context_panel: Panel
 var context_action_btn: Button
@@ -1236,167 +1244,554 @@ func _create_pause_menu():
 	pause_panel = Panel.new()
 	add_child(pause_panel)
 	pause_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pause_panel.offset_left = 0
-	pause_panel.offset_right = 0
-	pause_panel.offset_top = 0
-	pause_panel.offset_bottom = 0
-	
-	var vbox = VBoxContainer.new()
-	pause_panel.add_child(vbox)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 0
-	vbox.offset_right = 0
-	vbox.offset_top = 0
-	vbox.offset_bottom = 0
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	
-	var title = Label.new()
-	title.text = "GAME PAUSED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	
-	var bindings = Label.new()
-	bindings.text = "KEY BINDINGS / COMMANDS:\n" + \
-		"  - Left Click: Select target in space or overview\n" + \
-		"  - Double Left Click: Fly to position in space\n" + \
-		"  - Hold RMB + Drag: Rotate camera pivot\n" + \
-		"  - Scroll Wheel: Zoom camera in / out\n" + \
-		"  - Q: Engage APPROACH autopilot\n" + \
-		"  - W: Engage ORBIT autopilot\n" + \
-		"  - E: Activate Action (MINE asteroid or ATTACK hostile)\n" + \
-		"  - ESC: Pause / Resume game"
-	bindings.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(bindings)
-	
-	var resume_btn = Button.new()
-	resume_btn.text = "Resume Game"
-	resume_btn.pressed.connect(func(): GlobalState.paused = false)
-	vbox.add_child(resume_btn)
-	
-	var restart_btn = Button.new()
-	restart_btn.text = "Restart Game"
-	restart_btn.pressed.connect(_restart_game)
+	pause_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.015, 0.025, 0.045, 0.96), Color(0.0, 0.65, 0.8, 0.3), 0)
+	)
 
-	vbox.add_child(restart_btn)
-	
-	var quit_btn = Button.new()
-	quit_btn.text = "Quit Game"
-	quit_btn.pressed.connect(func(): get_tree().quit())
-	vbox.add_child(quit_btn)
-	
-	# Spacing before volume controls
-	var vol_spacer = Control.new()
-	vol_spacer.custom_minimum_size = Vector2(0, 25)
-	vbox.add_child(vol_spacer)
-	
-	# Volume Control panel container
-	var vol_panel = PanelContainer.new()
-	vol_panel.custom_minimum_size = Vector2(450, 0)
-	vol_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child(vol_panel)
-	
-	# Premium dark theme styling for the panel
-	var vol_style = StyleBoxFlat.new()
-	vol_style.bg_color = Color(0.08, 0.08, 0.12, 0.75) # Translucent dark deep blue-gray
-	vol_style.border_width_left = 1
-	vol_style.border_width_top = 1
-	vol_style.border_width_right = 1
-	vol_style.border_width_bottom = 1
-	vol_style.border_color = Color(0.0, 0.85, 1.0, 0.35) # Soft glowing cyan border outline
-	vol_style.corner_radius_top_left = 8
-	vol_style.corner_radius_top_right = 8
-	vol_style.corner_radius_bottom_right = 8
-	vol_style.corner_radius_bottom_left = 8
-	vol_style.content_margin_left = 24
-	vol_style.content_margin_right = 24
-	vol_style.content_margin_top = 16
-	vol_style.content_margin_bottom = 16
-	vol_panel.add_theme_stylebox_override("panel", vol_style)
-	
-	var vol_vbox = VBoxContainer.new()
-	vol_panel.add_child(vol_vbox)
-	
-	# Volume Header
-	var vol_title = Label.new()
-	vol_title.text = "VOLUME SETTINGS"
-	vol_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vol_title.add_theme_font_size_override("font_size", 14)
-	vol_title.add_theme_color_override("font_color", Color(0.0, 0.85, 1.0, 1.0)) # Bright cyan accent
-	vol_vbox.add_child(vol_title)
-	
-	# Header spacer
-	var vol_header_spacer = Control.new()
-	vol_header_spacer.custom_minimum_size = Vector2(0, 12)
-	vol_vbox.add_child(vol_header_spacer)
-	
-	# 1. Music Volume Row
-	var music_hbox = HBoxContainer.new()
-	vol_vbox.add_child(music_hbox)
-	
-	var music_lbl = Label.new()
-	music_lbl.text = "Music"
-	music_lbl.custom_minimum_size = Vector2(100, 0)
-	music_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	music_hbox.add_child(music_lbl)
-	
-	var music_slider = HSlider.new()
-	music_slider.min_value = 0.0
-	music_slider.max_value = 1.0
-	music_slider.step = 0.01
-	music_slider.value = AudioManager.get_music_volume()
-	music_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	music_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	music_hbox.add_child(music_slider)
-	
-	var music_val = Label.new()
-	music_val.text = str(int(music_slider.value * 100)) + "%"
-	music_val.custom_minimum_size = Vector2(50, 0)
-	music_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	music_val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	music_hbox.add_child(music_val)
-	
-	music_slider.value_changed.connect(func(val):
-		AudioManager.set_music_volume(val)
-		music_val.text = str(int(val * 100)) + "%"
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	pause_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(920, 590)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.045, 0.055, 0.085, 0.98), Color(0.0, 0.85, 1.0, 0.55), 26)
 	)
-	
-	# Row spacer
-	var row_spacer = Control.new()
-	row_spacer.custom_minimum_size = Vector2(0, 8)
-	vol_vbox.add_child(row_spacer)
-	
-	# 2. SFX Volume Row
-	var sfx_hbox = HBoxContainer.new()
-	vol_vbox.add_child(sfx_hbox)
-	
-	var sfx_lbl = Label.new()
-	sfx_lbl.text = "Game Sound"
-	sfx_lbl.custom_minimum_size = Vector2(100, 0)
-	sfx_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sfx_hbox.add_child(sfx_lbl)
-	
-	var sfx_slider = HSlider.new()
-	sfx_slider.min_value = 0.0
-	sfx_slider.max_value = 1.0
-	sfx_slider.step = 0.01
-	sfx_slider.value = AudioManager.get_sfx_volume()
-	sfx_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sfx_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	sfx_hbox.add_child(sfx_slider)
-	
-	var sfx_val = Label.new()
-	sfx_val.text = str(int(sfx_slider.value * 100)) + "%"
-	sfx_val.custom_minimum_size = Vector2(50, 0)
-	sfx_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	sfx_val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sfx_hbox.add_child(sfx_val)
-	
-	sfx_slider.value_changed.connect(func(val):
-		AudioManager.set_sfx_volume(val)
-		sfx_val.text = str(int(val * 100)) + "%"
+	center.add_child(shell)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 18)
+	shell.add_child(layout)
+	var title := Label.new()
+	title.text = "FLIGHT OPERATIONS"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	layout.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = "Game paused"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_color_override("font_color", Color(0.65, 0.72, 0.82))
+	layout.add_child(subtitle)
+
+	var columns := HBoxContainer.new()
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	columns.add_theme_constant_override("separation", 18)
+	layout.add_child(columns)
+	var actions_card := _make_pause_card("COMMAND")
+	actions_card.custom_minimum_size = Vector2(330, 0)
+	columns.add_child(actions_card)
+	var actions := actions_card.get_child(0) as VBoxContainer
+	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
+	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
+	_add_pause_action(actions, "RESTART SESSION", _restart_game)
+	_add_pause_action(actions, "QUIT TO DESKTOP", func(): get_tree().quit())
+
+	var controls_card := _make_pause_card("FLIGHT CONTROLS")
+	controls_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(controls_card)
+	var controls := controls_card.get_child(0) as VBoxContainer
+	var control_grid := GridContainer.new()
+	control_grid.columns = 2
+	control_grid.add_theme_constant_override("h_separation", 22)
+	control_grid.add_theme_constant_override("v_separation", 10)
+	controls.add_child(control_grid)
+	for binding in [
+		["SELECT", "Left click"],
+		["MOVE", "Double left click"],
+		["CAMERA", "Hold right click"],
+		["ZOOM", "Mouse wheel"],
+		["APPROACH", "Q"],
+		["ORBIT", "W"],
+		["ACTION", "E"],
+		["PAUSE", "Esc"],
+	]:
+		var command := Label.new()
+		command.text = binding[0]
+		command.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0))
+		control_grid.add_child(command)
+		var key := Label.new()
+		key.text = binding[1]
+		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		key.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92))
+		control_grid.add_child(key)
+
+	var audio_title := Label.new()
+	audio_title.text = "AUDIO"
+	audio_title.add_theme_font_size_override("font_size", 15)
+	audio_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	controls.add_child(audio_title)
+	_add_volume_row(
+		controls,
+		"Music",
+		AudioManager.get_music_volume(),
+		AudioManager.set_music_volume
 	)
-	
+	_add_volume_row(
+		controls,
+		"Game Sound",
+		AudioManager.get_sfx_volume(),
+		AudioManager.set_sfx_volume
+	)
+
 	pause_panel.visible = false
+	_create_campaign_manager()
+
+
+func _make_menu_style(
+	background: Color,
+	border: Color,
+	margin: int
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = margin
+	style.content_margin_right = margin
+	style.content_margin_top = margin
+	style.content_margin_bottom = margin
+	return style
+
+
+func _make_pause_card(title_text: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.95), Color(0.0, 0.65, 0.8, 0.3), 20)
+	)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 12)
+	card.add_child(content)
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	content.add_child(title)
+	return card
+
+
+func _add_pause_action(
+	parent: VBoxContainer,
+	label: String,
+	action: Callable,
+	primary: bool = false
+) -> void:
+	var button := Button.new()
+	button.text = label
+	button.custom_minimum_size = Vector2(0, 48)
+	if primary:
+		button.add_theme_color_override("font_color", Color(0.7, 1.0, 1.0))
+	button.pressed.connect(action)
+	parent.add_child(button)
+
+
+func _add_volume_row(
+	parent: VBoxContainer,
+	label_text: String,
+	initial_value: float,
+	setter: Callable
+) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.value = initial_value
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(slider)
+	var value := Label.new()
+	value.text = "%d%%" % int(initial_value * 100.0)
+	value.custom_minimum_size = Vector2(50, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value)
+	slider.value_changed.connect(func(next_value: float) -> void:
+		setter.call(next_value)
+		value.text = "%d%%" % int(next_value * 100.0)
+	)
+
+
+func _create_campaign_manager() -> void:
+	campaign_panel = Panel.new()
+	campaign_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.015, 0.025, 0.045, 0.98), Color(0.0, 0.65, 0.8, 0.3), 0)
+	)
+	add_child(campaign_panel)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(1120, 680)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.045, 0.055, 0.085, 0.99), Color(0.0, 0.85, 1.0, 0.55), 24)
+	)
+	center.add_child(shell)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 14)
+	shell.add_child(layout)
+	var header := HBoxContainer.new()
+	layout.add_child(header)
+	var title := Label.new()
+	title.text = "CAMPAIGNS & CHECKPOINTS"
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var back := Button.new()
+	back.text = "BACK"
+	back.custom_minimum_size = Vector2(120, 40)
+	back.pressed.connect(_close_campaign_manager)
+	header.add_child(back)
+	campaign_status_label = Label.new()
+	campaign_status_label.text = ""
+	campaign_status_label.add_theme_color_override(
+		"font_color",
+		Color(0.75, 0.82, 0.9)
+	)
+	layout.add_child(campaign_status_label)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 16)
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(columns)
+	var slots_card := _make_pause_card("CAMPAIGN SLOTS")
+	slots_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(slots_card)
+	campaign_slots_vbox = slots_card.get_child(0) as VBoxContainer
+	var manual_card := _make_pause_card("MANUAL CHECKPOINTS")
+	manual_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(manual_card)
+	campaign_manual_vbox = manual_card.get_child(0) as VBoxContainer
+
+	campaign_confirm_dialog = ConfirmationDialog.new()
+	campaign_confirm_dialog.title = "Confirm Campaign Action"
+	campaign_confirm_dialog.confirmed.connect(_on_campaign_action_confirmed)
+	add_child(campaign_confirm_dialog)
+	campaign_panel.visible = false
+
+
+func _open_campaign_manager() -> void:
+	pause_panel.visible = false
+	campaign_panel.visible = true
+	_refresh_campaign_manager()
+
+
+func _close_campaign_manager() -> void:
+	campaign_panel.visible = false
+	pause_panel.visible = true
+
+
+func _refresh_campaign_manager() -> void:
+	_clear_container(campaign_slots_vbox, 1)
+	_clear_container(campaign_manual_vbox, 1)
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("get_campaign_ui_state"):
+		campaign_status_label.text = "Campaign controls are unavailable."
+		return
+	var state: Dictionary = game_root.get_campaign_ui_state()
+	if not bool(state.get("ok", false)):
+		campaign_status_label.text = str(state.get("error", "Campaign storage is unavailable."))
+		return
+	var selected_slot_id := str(state.get("selected_slot_id", ""))
+	campaign_status_label.text = (
+		"Selected: %s" % selected_slot_id.replace("_", " ").to_upper()
+		if not selected_slot_id.is_empty()
+		else "No campaign selected"
+	)
+	for slot in state.get("slots", []):
+		_add_campaign_slot_row(slot, selected_slot_id)
+	var manual: Array = state.get("manual", [])
+	if selected_slot_id.is_empty():
+		var empty_message := Label.new()
+		empty_message.text = "Select or create a campaign to manage checkpoints."
+		empty_message.autowrap_mode = TextServer.AUTOWRAP_WORD
+		campaign_manual_vbox.add_child(empty_message)
+	else:
+		for slot_index in range(3):
+			var entry: Dictionary = (
+				manual[slot_index]
+				if slot_index < manual.size()
+				else {
+					"slot_index": slot_index,
+					"occupied": false,
+				}
+			)
+			_add_manual_checkpoint_row(entry)
+
+
+func _clear_container(
+	container: VBoxContainer,
+	keep_children: int
+) -> void:
+	if container == null:
+		return
+	while container.get_child_count() > keep_children:
+		var child := container.get_child(keep_children)
+		container.remove_child(child)
+		child.queue_free()
+
+
+func _add_campaign_slot_row(
+	slot: Dictionary,
+	selected_slot_id: String
+) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.9), Color(0.0, 0.55, 0.7, 0.25), 12)
+	)
+	campaign_slots_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	var slot_id := str(slot.get("slot_id", ""))
+	var occupied := bool(slot.get("occupied", false))
+	var heading := Label.new()
+	heading.text = "%s%s" % [
+		slot_id.replace("slot_0", "SLOT "),
+		"  • ACTIVE" if slot_id == selected_slot_id else "",
+	]
+	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(heading)
+	var name_edit := LineEdit.new()
+	name_edit.placeholder_text = "Campaign name"
+	name_edit.max_length = 48
+	name_edit.text = str(slot.get("display_name", "")) if occupied else ""
+	column.add_child(name_edit)
+	var detail := Label.new()
+	if occupied:
+		var summary: Dictionary = slot.get("checkpoint_summary", {})
+		detail.text = "%s  |  %s" % [
+			str(summary.get("system_id", "Unknown system")),
+			str(summary.get("source_reason", "checkpoint")).replace("_", " "),
+		]
+	else:
+		detail.text = "Empty campaign slot"
+	detail.add_theme_color_override("font_color", Color(0.65, 0.72, 0.82))
+	column.add_child(detail)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	if occupied:
+		var continue_button := Button.new()
+		continue_button.text = "CONTINUE"
+		continue_button.pressed.connect(
+			_on_campaign_continue.bind(slot_id)
+		)
+		actions.add_child(continue_button)
+		var rename_button := Button.new()
+		rename_button.text = "RENAME"
+		rename_button.pressed.connect(
+			_on_campaign_rename.bind(slot_id, name_edit)
+		)
+		actions.add_child(rename_button)
+		var delete_button := Button.new()
+		delete_button.text = "DELETE"
+		delete_button.pressed.connect(
+			_request_campaign_delete.bind(slot_id)
+		)
+		actions.add_child(delete_button)
+	else:
+		var create_button := Button.new()
+		create_button.text = "NEW CAMPAIGN"
+		create_button.pressed.connect(
+			_on_campaign_create.bind(slot_id, name_edit)
+		)
+		actions.add_child(create_button)
+
+
+func _add_manual_checkpoint_row(entry: Dictionary) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.9), Color(0.0, 0.55, 0.7, 0.25), 12)
+	)
+	campaign_manual_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	var slot_index := int(entry.get("slot_index", 0))
+	var occupied := bool(entry.get("occupied", false))
+	var title := Label.new()
+	title.text = "MANUAL %d" % (slot_index + 1)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(title)
+	var name_edit := LineEdit.new()
+	name_edit.max_length = 48
+	name_edit.placeholder_text = "Checkpoint name"
+	name_edit.text = str(entry.get("display_name", "")) if occupied else ""
+	column.add_child(name_edit)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	var save_button := Button.new()
+	save_button.text = "OVERWRITE" if occupied else "SAVE"
+	save_button.pressed.connect(
+		_on_manual_save.bind(slot_index, name_edit, occupied)
+	)
+	actions.add_child(save_button)
+	var rename_button := Button.new()
+	rename_button.text = "RENAME"
+	rename_button.disabled = not occupied
+	rename_button.pressed.connect(
+		_on_manual_rename.bind(slot_index, name_edit)
+	)
+	actions.add_child(rename_button)
+	var load_button := Button.new()
+	load_button.text = "LOAD"
+	load_button.disabled = not occupied
+	load_button.pressed.connect(_on_manual_load.bind(slot_index))
+	actions.add_child(load_button)
+
+
+func _on_campaign_create(
+	slot_id: String,
+	name_edit: LineEdit
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.create_campaign_in_slot(
+		slot_id,
+		name_edit.text
+	)
+	campaign_status_label.text = (
+		"Campaign created."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Campaign creation failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_campaign_continue(slot_id: String) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = await game_root.select_and_load_campaign(slot_id)
+	campaign_status_label.text = (
+		"Campaign loaded."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Campaign loading failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_campaign_rename(
+	slot_id: String,
+	name_edit: LineEdit
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.rename_campaign_slot(
+		slot_id,
+		name_edit.text
+	)
+	campaign_status_label.text = (
+		"Campaign renamed."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Campaign rename failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _request_campaign_delete(slot_id: String) -> void:
+	pending_delete_slot_id = slot_id
+	pending_manual_slot_index = -1
+	campaign_confirm_dialog.dialog_text = (
+		"Delete this campaign and all of its checkpoints? This cannot be undone."
+	)
+	campaign_confirm_dialog.popup_centered()
+
+
+func _on_manual_save(
+	slot_index: int,
+	name_edit: LineEdit,
+	occupied: bool
+) -> void:
+	if occupied:
+		pending_delete_slot_id = ""
+		pending_manual_slot_index = slot_index
+		pending_manual_name = name_edit.text
+		campaign_confirm_dialog.dialog_text = (
+			"Overwrite manual checkpoint %d?" % (slot_index + 1)
+		)
+		campaign_confirm_dialog.popup_centered()
+		return
+	_commit_manual_save(slot_index, name_edit.text, false)
+
+
+func _commit_manual_save(
+	slot_index: int,
+	display_name: String,
+	overwrite: bool
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.request_manual_checkpoint(
+		slot_index,
+		display_name,
+		overwrite
+	)
+	campaign_status_label.text = (
+		"Manual checkpoint saved."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Manual checkpoint failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_manual_rename(
+	slot_index: int,
+	name_edit: LineEdit
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.rename_manual_checkpoint(
+		slot_index,
+		name_edit.text
+	)
+	campaign_status_label.text = (
+		"Manual checkpoint renamed."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Manual checkpoint rename failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_manual_load(slot_index: int) -> void:
+	var game_root := get_tree().current_scene
+	var loaded: bool = await game_root.load_manual_checkpoint(slot_index)
+	campaign_status_label.text = (
+		"Manual checkpoint loaded."
+		if loaded
+		else "Manual checkpoint could not be loaded."
+	)
+	_refresh_campaign_manager()
+
+
+func _on_campaign_action_confirmed() -> void:
+	var game_root := get_tree().current_scene
+	if not pending_delete_slot_id.is_empty():
+		var result: Dictionary = game_root.delete_campaign_slot(
+			pending_delete_slot_id
+		)
+		campaign_status_label.text = (
+			"Campaign deleted."
+			if bool(result.get("ok", false))
+			else str(result.get("error", "Campaign deletion failed."))
+		)
+	elif pending_manual_slot_index >= 0:
+		_commit_manual_save(
+			pending_manual_slot_index,
+			pending_manual_name,
+			true
+		)
+	pending_delete_slot_id = ""
+	pending_manual_slot_index = -1
+	pending_manual_name = ""
+	_refresh_campaign_manager()
 
 func _create_death_screen():
 	death_panel = Panel.new()
@@ -1469,6 +1864,9 @@ func _restart_game():
 func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
+			return
+		if campaign_panel and campaign_panel.visible:
+			_close_campaign_manager()
 			return
 		GlobalState.paused = not GlobalState.paused
 
@@ -1793,6 +2191,8 @@ func _on_pause_changed(is_paused: bool):
 			pause_panel.visible = is_paused
 			if is_paused:
 				move_child(pause_panel, -1)
+	if not is_paused and campaign_panel:
+		campaign_panel.visible = false
 
 # Station services methods
 func toggle_dock_menu(

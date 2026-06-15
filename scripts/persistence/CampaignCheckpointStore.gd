@@ -299,6 +299,50 @@ func load_manual_bundle(slot_index: int) -> Dictionary:
 	)
 
 
+func rename_manual_checkpoint(
+	slot_index: int,
+	display_name: String
+) -> Dictionary:
+	if not is_valid():
+		return _failure("Campaign checkpoint store is invalid.")
+	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
+		return _failure("Manual checkpoint slot must be between 1 and 3.")
+	if TransactionStoreType.is_locked(campaign_path):
+		return _failure("A campaign save transaction is already active.")
+	var clean_name := sanitize_manual_name(display_name)
+	if clean_name.is_empty():
+		return _failure("Manual checkpoint name cannot be empty.")
+	var manual: Array = index.get(
+		"manual",
+		[null, null, null]
+	).duplicate(true)
+	if not manual[slot_index] is Dictionary:
+		return _failure(
+			"Manual checkpoint slot %d is empty." % (slot_index + 1)
+		)
+	var entry: Dictionary = manual[slot_index].duplicate(true)
+	entry["display_name"] = clean_name
+	manual[slot_index] = entry
+	var next_index: Dictionary = index.duplicate(true)
+	next_index["manual"] = manual
+	var committed := TransactionStoreType.commit_json_set(
+		campaign_path,
+		"manual_rename",
+		{"checkpoint_index.json": next_index},
+		"checkpoint_index.json",
+		_validate_transaction_file
+	)
+	if not bool(committed.get("ok", false)):
+		return committed
+	index = next_index
+	return {
+		"ok": true,
+		"slot_index": slot_index,
+		"display_name": clean_name,
+		"checkpoint_id": entry["checkpoint_id"],
+	}
+
+
 func runtime_state_from_manual(slot_index: int) -> Dictionary:
 	var bundle := load_manual_bundle(slot_index)
 	if not bool(bundle.get("ok", false)):

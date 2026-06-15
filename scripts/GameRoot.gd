@@ -33,6 +33,8 @@ var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
+var last_autosave_notification_key: String = ""
+var last_autosave_notification_msec: int = 0
 
 func _ready() -> void:
 	scene_ready_msec = Time.get_ticks_msec()
@@ -386,10 +388,12 @@ func request_safe_checkpoint(
 		return false
 	if not _ensure_campaign_checkpoint_store(prepared["data"]):
 		push_warning("[GameRoot] Campaign checkpoint store is unavailable.")
+		_notify_checkpoint_failure()
 		return false
 	var safe_location := _safe_location_for(source_reason, safe_entity)
 	if safe_location.is_empty():
 		push_warning("[GameRoot] Safe checkpoint location is unavailable.")
+		_notify_checkpoint_failure()
 		return false
 	var captured := campaign_checkpoint_store.capture_autosave(
 		prepared["data"],
@@ -401,6 +405,8 @@ func request_safe_checkpoint(
 			"[GameRoot] Campaign checkpoint failed: %s" %
 			captured.get("error", "unknown error")
 		)
+		if not bool(captured.get("coalesced", false)):
+			_notify_checkpoint_failure()
 		return false
 	if not SaveMigrator.write_current(SAVE_PATH, prepared["data"]):
 		push_warning(
@@ -414,6 +420,7 @@ func request_safe_checkpoint(
 			str(safe_location.get("system_id", "")),
 			true
 		)
+	_notify_autosave_success(source_reason, safe_location)
 	return true
 
 
@@ -467,11 +474,13 @@ func request_manual_checkpoint(
 ) -> Dictionary:
 	var status := get_manual_checkpoint_status()
 	if not bool(status.get("available", false)):
-		return {
+		var blocked := {
 			"ok": false,
 			"block_code": status.get("block_code", ""),
 			"error": status.get("block_reason", "Manual save is unavailable."),
 		}
+		_notify_system_warning(str(blocked["error"]))
+		return blocked
 	if refresh_if_docked and bool(player.get("is_docked")):
 		var ui := GlobalState.get_ui_manager()
 		var station: Node = ui.get("current_station") if ui else null
@@ -487,11 +496,21 @@ func request_manual_checkpoint(
 				"block_code": "dock_refresh_failed",
 				"error": "The docked safe checkpoint could not be refreshed.",
 			}
-	return campaign_checkpoint_store.copy_active_to_manual(
+	var copied := campaign_checkpoint_store.copy_active_to_manual(
 		slot_index,
 		display_name,
 		overwrite
 	)
+	if bool(copied.get("ok", false)):
+		GlobalState.emit_chatter(
+			"SYSTEM",
+			"Manual checkpoint \"%s\" saved." %
+				copied.get("display_name", "Manual Checkpoint"),
+			Color(0.0, 0.9, 0.9)
+		)
+	elif not bool(copied.get("requires_overwrite", false)):
+		_notify_checkpoint_failure()
+	return copied
 
 
 func load_manual_checkpoint(slot_index: int) -> bool:
@@ -505,6 +524,191 @@ func load_manual_checkpoint(slot_index: int) -> bool:
 		slot_index
 	)
 	return await _apply_campaign_checkpoint_state(restored)
+
+
+func rename_manual_checkpoint(
+	slot_index: int,
+	display_name: String
+) -> Dictionary:
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var renamed := campaign_checkpoint_store.rename_manual_checkpoint(
+		slot_index,
+		display_name
+	)
+	if not bool(renamed.get("ok", false)):
+		_notify_system_warning(str(renamed.get("error", "")))
+	return renamed
+
+
+func get_campaign_ui_state() -> Dictionary:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {
+			"ok": false,
+			"error": "Campaign storage is unavailable.",
+			"slots": [],
+			"selected_slot_id": "",
+			"manual": [],
+		}
+	return {
+		"ok": true,
+		"slots": campaign_slot_registry.enumerate_slots(),
+		"selected_slot_id": campaign_slot_registry.selected_slot_id,
+		"manual":
+			campaign_checkpoint_store.list_manual_checkpoints()
+			if campaign_checkpoint_store != null
+			else [],
+	}
+
+
+func create_campaign_in_slot(
+	slot_id: String,
+	display_name: String
+) -> Dictionary:
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)):
+		return {
+			"ok": false,
+			"error": prepared.get(
+				"error",
+				"Current gameplay state could not start a campaign."
+			),
+		}
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var created := campaign_slot_registry.create_campaign(
+		slot_id,
+		display_name,
+		"prototype-phase-2",
+		prepared["data"],
+		system_registry
+	)
+	if not bool(created.get("ok", false)):
+		_notify_system_warning(str(created.get("error", "")))
+		return created
+	active_campaign_slot_id = slot_id
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Campaign \"%s\" created." %
+			created.get("slot", {}).get("display_name", "Campaign"),
+		Color(0.0, 0.9, 0.9)
+	)
+	return created
+
+
+func select_and_load_campaign(slot_id: String) -> Dictionary:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var selected := campaign_slot_registry.select_campaign(slot_id)
+	if not bool(selected.get("ok", false)):
+		_notify_system_warning(str(selected.get("error", "")))
+		return selected
+	active_campaign_slot_id = slot_id
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	if not campaign_checkpoint_store.is_valid() \
+			or not await _load_campaign_checkpoint():
+		var failure := {
+			"ok": false,
+			"error": "The selected campaign could not be loaded.",
+		}
+		_notify_system_warning(failure["error"])
+		return failure
+	return selected
+
+
+func rename_campaign_slot(
+	slot_id: String,
+	display_name: String
+) -> Dictionary:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var renamed := campaign_slot_registry.rename_campaign(
+		slot_id,
+		display_name
+	)
+	if not bool(renamed.get("ok", false)):
+		_notify_system_warning(str(renamed.get("error", "")))
+	return renamed
+
+
+func delete_campaign_slot(slot_id: String) -> Dictionary:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var deleted := campaign_slot_registry.delete_campaign(slot_id)
+	if not bool(deleted.get("ok", false)):
+		_notify_system_warning(str(deleted.get("error", "")))
+		return deleted
+	if active_campaign_slot_id == slot_id:
+		active_campaign_slot_id = ""
+		campaign_checkpoint_store = null
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Campaign slot deleted.",
+		Color(0.0, 0.9, 0.9)
+	)
+	return deleted
+
+
+func _notify_autosave_success(
+	source_reason: String,
+	safe_location: Dictionary
+) -> void:
+	var key := "%s|%s|%s" % [
+		source_reason,
+		safe_location.get("station_id", ""),
+		safe_location.get("gate_id", ""),
+	]
+	var now := Time.get_ticks_msec()
+	if key == last_autosave_notification_key \
+			and now - last_autosave_notification_msec < 1000:
+		return
+	last_autosave_notification_key = key
+	last_autosave_notification_msec = now
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Campaign checkpoint saved.",
+		Color(0.0, 0.9, 0.9)
+	)
+
+
+func _notify_checkpoint_failure() -> void:
+	_notify_system_warning(
+		"Checkpoint could not be saved. Your previous save is still safe."
+	)
+
+
+func _notify_system_warning(message: String) -> void:
+	var clean_message := message
+	if clean_message.contains("user://") \
+			or clean_message.contains(":\\") \
+			or clean_message.contains(":/"):
+		clean_message = "The requested campaign action could not be completed."
+	GlobalState.emit_chatter(
+		"SYSTEM WARNING",
+		clean_message,
+		Color(1.0, 0.45, 0.3)
+	)
 
 
 func _manual_checkpoint_blocked(
@@ -1476,6 +1680,54 @@ func _run_core_smoke_test() -> void:
 		)
 		return
 
+	if ui.get("campaign_panel") == null \
+			or ui.get("campaign_slots_vbox") == null \
+			or ui.get("campaign_manual_vbox") == null:
+		_fail_core_smoke_test(
+			"Campaign manager UI was not constructed."
+		)
+		return
+	GlobalState.paused = true
+	ui.call("_open_campaign_manager")
+	if not bool(ui.get("campaign_panel").visible) \
+			or ui.get("campaign_slots_vbox").get_child_count() != 4:
+		_fail_core_smoke_test(
+			"Campaign manager did not render exactly three campaign slots."
+		)
+		return
+	ui.call("_close_campaign_manager")
+	var checkpoint_messages: Array[String] = []
+	var capture_checkpoint_message := func(
+		sender: String,
+		message: String,
+		_color: Color
+	) -> void:
+		if sender == "SYSTEM" and message == "Campaign checkpoint saved.":
+			checkpoint_messages.append(message)
+	GlobalState.system_chatter_received.connect(capture_checkpoint_message)
+	_notify_autosave_success(
+		"dock",
+		{
+			"station_id": "station.test.notification",
+			"gate_id": "",
+		}
+	)
+	_notify_autosave_success(
+		"dock",
+		{
+			"station_id": "station.test.notification",
+			"gate_id": "",
+		}
+	)
+	GlobalState.system_chatter_received.disconnect(
+		capture_checkpoint_message
+	)
+	if checkpoint_messages.size() != 1:
+		_fail_core_smoke_test(
+			"Duplicate autosave notifications were not suppressed."
+		)
+		return
+
 	GlobalState.paused = false
 	player.is_docked = false
 	player.nav_mode = "MANUAL"
@@ -1544,7 +1796,7 @@ func _run_core_smoke_test() -> void:
 		_fail_core_smoke_test("Orbit override did not replace approach mode.")
 		return
 
-	print("[CoreSmokeTest] PASS: startup, pause, movement, camera, targeting, and navigation overrides verified.")
+	print("[CoreSmokeTest] PASS: startup, campaign UI, save notifications, pause, movement, camera, targeting, and navigation overrides verified.")
 	delete_savegame()
 	get_tree().quit(0)
 

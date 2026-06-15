@@ -246,6 +246,29 @@ func select_campaign(slot_id: String) -> Dictionary:
 	}
 
 
+func rename_campaign(
+	slot_id: String,
+	display_name: String
+) -> Dictionary:
+	if slot_id not in SLOT_IDS:
+		return _failure("Unknown campaign slot '%s'." % slot_id)
+	var slot: Dictionary = slots.get(slot_id, {})
+	if not bool(slot.get("occupied", false)):
+		return _failure("Campaign slot '%s' is empty." % slot_id)
+	var clean_name := display_name.strip_edges()
+	if clean_name.is_empty():
+		return _failure("Campaign name cannot be empty.")
+	clean_name = clean_name.substr(0, 48)
+	slot["display_name"] = clean_name
+	slots[slot_id] = slot
+	if not _write_slot_registry():
+		return _failure("Campaign name could not be updated.")
+	return {
+		"ok": true,
+		"slot": slot.duplicate(true),
+	}
+
+
 func update_checkpoint_summary(
 	slot_id: String,
 	checkpoint_id: String,

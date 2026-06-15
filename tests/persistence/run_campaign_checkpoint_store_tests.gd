@@ -191,6 +191,20 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		all_manual_slots_occupied,
 		"Manual checkpoint listing did not report three occupied slots."
 	)
+	var renamed_manual := store.rename_manual_checkpoint(
+		2,
+		"  Third / Renamed  "
+	)
+	_expect(
+		bool(renamed_manual.get("ok", false))
+			and renamed_manual.get("display_name", "")
+				== "Third Renamed"
+			and store.list_manual_checkpoints()[2].get(
+				"display_name",
+				""
+			) == "Third Renamed",
+		"Manual checkpoint rename did not update sanitized metadata."
+	)
 	_expect(
 		not bool(store.copy_active_to_manual(3, "Invalid").get("ok", false))
 			and not bool(store.copy_active_to_manual(

@@ -304,6 +304,9 @@ Verified:
 
 ### Checkpoint 7: Save Notifications And Minimal Slot UI
 
+Status: Implementation complete on 2026-06-15. Hands-on visual approval is
+deferred until the host display is available locally.
+
 Deliverables:
 
 - system-chat success and failure notifications
@@ -318,6 +321,23 @@ Exit test:
 - successful commits notify once
 - failed commits warn and leave the prior checkpoint loadable
 - blocked save actions explain why
+
+Verified:
+
+- autosave and manual-save results use text-only system comms
+- duplicate autosave success messages from the same action are suppressed
+- player-facing failures preserve the prior checkpoint and redact local paths
+- the pause screen is organized into command, controls, and audio cards instead
+  of one long key-binding text block
+- a dedicated campaign manager renders exactly three campaign slots
+- new campaign, continue, campaign rename, confirmed campaign deletion, manual
+  save, confirmed overwrite, manual rename, and manual load actions are wired
+- focused persistence checks and the full 23-step baseline suite pass
+
+Pending hands-on approval:
+
+- inspect spacing, typography, button hierarchy, and campaign-manager usability
+  in the graphical game when local access to the host display is available
 
 ### Checkpoint 8: Chronicle Branch Foundation
 
