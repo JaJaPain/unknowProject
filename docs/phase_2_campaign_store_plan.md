@@ -341,6 +341,8 @@ Pending hands-on approval:
 
 ### Checkpoint 8: Chronicle Branch Foundation
 
+Status: implementation-complete as of 2026-06-15.
+
 Deliverables:
 
 - structured append-only event segments
@@ -350,11 +352,28 @@ Deliverables:
 - current-branch filtering
 - compatibility import of existing quest-history entries as legacy events
 
+Implemented:
+
+- immutable one-event chronicle segments and a recoverable chronicle index
+- schema-versioned structured events with timeline, parent-event, checkpoint,
+  subject, payload, and monotonic sequence fields
+- chronicle timeline/head references captured into new safe checkpoints
+- atomic campaign and chronicle-index updates when an older checkpoint branches
+- current-history queries that include valid ancestors only through each branch
+  head, leaving discarded future events stored but hidden
+- quest completion and abandonment adapters plus idempotent legacy Markdown
+  quest-history import
+- campaign create, select, delete, and manual-load lifecycle integration
+- focused chronicle tests, a gameplay manual-load branch assertion, and the
+  full 24-step baseline suite
+
 Exit test:
 
 - loading an older checkpoint and taking a new action creates a branch
 - discarded events remain stored but are absent from ordinary current-history
   queries
+
+Result: passed.
 
 ### Checkpoint 9: Map Knowledge Partition
 

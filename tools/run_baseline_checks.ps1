@@ -133,6 +133,11 @@ try {
             "res://tests/persistence/run_campaign_checkpoint_store_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Campaign chronicle branches" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_campaign_chronicle_store_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Campaign manifest and asset registry" {
         & $godot --headless --path $root --script `
             "res://tests/persistence/run_campaign_manifest_store_tests.gd" -- `

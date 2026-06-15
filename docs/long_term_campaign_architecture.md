@@ -935,7 +935,7 @@ Detailed implementation contract:
 
 Implementation progress:
 
-- Checkpoints 1-7 are implementation-complete as of 2026-06-15.
+- Checkpoints 1-8 are implementation-complete as of 2026-06-15.
 - Safe dock, pre-undock, and gate-arrival bundles now use stable world IDs,
   strip tactical state, recover the last-known-good bundle after corruption,
   and retain legacy `savegame.json` compatibility during migration.
@@ -944,10 +944,16 @@ Implementation progress:
   station checkpoint before copying.
 - Text-only save notifications, duplicate autosave suppression, a redesigned
   pause screen, and a three-slot campaign/checkpoint manager are implemented.
-- Focused persistence checks and the expanded 23-step gameplay baseline pass.
+- Chronicle events now append to immutable schema-versioned segments. Safe
+  checkpoints retain their chronicle head, loading an older manual checkpoint
+  creates a persisted timeline branch, and ordinary history queries exclude
+  the discarded future without deleting it.
+- Existing Markdown quest history imports once as legacy structured events,
+  while new quest completion and abandonment events append directly.
+- Focused persistence checks and the expanded 24-step gameplay baseline pass.
 - Hands-on visual approval of the pause and campaign screens is deferred until
   local host-display access is available.
-- Checkpoint 8 chronicle branch foundations remain the next Phase 2 task.
+- Checkpoint 9 map-knowledge partitioning is the next Phase 2 task.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.

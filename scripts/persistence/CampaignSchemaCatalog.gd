@@ -464,6 +464,18 @@ static func _validate_chronicle(data: Dictionary, result: ValidationResult) -> v
 			continue
 		var event := raw as Dictionary
 		var prefix := "events.%d." % index
+		var event_schema_version: Variant = event.get(
+			"schema_version",
+			null
+		)
+		if not _is_whole_number(event_schema_version) \
+				or int(event_schema_version) != SCHEMA_VERSION:
+			result.add_error(
+				"invalid_event_schema_version",
+				"Chronicle event schema version must be %d." %
+					SCHEMA_VERSION,
+				"%sschema_version" % prefix
+			)
 		_require_id(event, "event_id", "event", result, prefix)
 		_require_id(event, "timeline_id", "timeline", result, prefix)
 		_require_optional_id(event, "parent_event_id", "event", result, prefix)

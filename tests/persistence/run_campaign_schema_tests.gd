@@ -293,6 +293,7 @@ func _chronicle() -> Dictionary:
 		"campaign_id": "campaign.local.alpha",
 		"timeline_id": "timeline.local.alpha",
 		"events": [{
+			"schema_version": SchemaType.SCHEMA_VERSION,
 			"event_id": "event.local.alpha.start",
 			"timeline_id": "timeline.local.alpha",
 			"parent_event_id": "",

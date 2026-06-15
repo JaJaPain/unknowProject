@@ -41,6 +41,8 @@ var campaign_path: String
 var campaign: Dictionary = {}
 var index: Dictionary = {}
 var validation := ValidationResultType.new()
+var chronicle_timeline_id: String = ""
+var chronicle_head_event_id: String = ""
 
 
 static func open(path: String) -> CampaignCheckpointStore:
@@ -52,6 +54,18 @@ static func open(path: String) -> CampaignCheckpointStore:
 
 func is_valid() -> bool:
 	return validation.is_valid()
+
+
+func set_chronicle_context(
+	timeline_id: String,
+	head_event_id: String
+) -> bool:
+	if not DomainIdType.is_valid(timeline_id, "timeline") \
+			or not DomainIdType.is_valid(head_event_id, "event"):
+		return false
+	chronicle_timeline_id = timeline_id
+	chronicle_head_event_id = head_event_id
+	return true
 
 
 func capture_autosave(
@@ -82,9 +96,15 @@ func capture_autosave(
 		"ownership": SchemaType.REWINDABLE,
 		"id": checkpoint_id,
 		"campaign_id": campaign["id"],
-		"timeline_id": campaign["current_timeline_id"],
+		"timeline_id": (
+			chronicle_timeline_id
+			if not chronicle_timeline_id.is_empty()
+			else campaign["current_timeline_id"]
+		),
 		"chronicle_head_event_id":
-			previous_checkpoint.get("chronicle_head_event_id", ""),
+			chronicle_head_event_id
+			if not chronicle_head_event_id.is_empty()
+			else previous_checkpoint.get("chronicle_head_event_id", ""),
 		"source_reason": source_reason,
 		"living": true,
 		"transitional": false,
@@ -431,6 +451,9 @@ func _runtime_state_from_bundle(bundle: Dictionary) -> Dictionary:
 			(checkpoint.get("safe_location", {}) as Dictionary).duplicate(true),
 		"source_reason": checkpoint.get("source_reason", ""),
 		"checkpoint_id": checkpoint.get("id", ""),
+		"timeline_id": checkpoint.get("timeline_id", ""),
+		"chronicle_head_event_id":
+			checkpoint.get("chronicle_head_event_id", ""),
 	}
 
 
@@ -494,6 +517,16 @@ func _load() -> void:
 			"Checkpoint index belongs to a different campaign.",
 			"campaign_id"
 		)
+	if validation.is_valid():
+		chronicle_timeline_id = str(campaign.get("current_timeline_id", ""))
+		var active := load_active_bundle()
+		if bool(active.get("ok", false)):
+			chronicle_head_event_id = str(
+				active.get("checkpoint", {}).get(
+					"chronicle_head_event_id",
+					""
+				)
+			)
 
 
 func _next_map_knowledge(

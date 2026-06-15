@@ -613,6 +613,7 @@ func _build_initial_documents(
 		"campaign_id": campaign_id,
 		"timeline_id": ids["timeline"],
 		"events": [{
+			"schema_version": SchemaType.SCHEMA_VERSION,
 			"event_id": ids["event"],
 			"timeline_id": ids["timeline"],
 			"parent_event_id": "",

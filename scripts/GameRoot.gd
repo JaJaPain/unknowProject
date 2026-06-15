@@ -15,6 +15,9 @@ const CampaignSlotRegistryType := preload(
 const CampaignCheckpointStoreType := preload(
 	"res://scripts/persistence/CampaignCheckpointStore.gd"
 )
+const CampaignChronicleStoreType := preload(
+	"res://scripts/persistence/CampaignChronicleStore.gd"
+)
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -31,6 +34,7 @@ var scene_ready_msec: int = 0
 var system_registry: SystemRegistry
 var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
+var campaign_chronicle_store: CampaignChronicleStore
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
@@ -60,6 +64,8 @@ func _ready() -> void:
 	system_container.add_child(system_root)
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = start_definition.legacy_id
+	QuestManager.quest_completed.connect(_on_quest_completed_chronicle)
+	QuestManager.quest_abandoned.connect(_on_quest_abandoned_chronicle)
 	if "--performance-baseline" in OS.get_cmdline_user_args():
 		call_deferred("_run_performance_baseline")
 	elif "--core-smoke-test" in OS.get_cmdline_user_args():
@@ -390,6 +396,7 @@ func request_safe_checkpoint(
 		push_warning("[GameRoot] Campaign checkpoint store is unavailable.")
 		_notify_checkpoint_failure()
 		return false
+	_sync_checkpoint_chronicle_context()
 	var safe_location := _safe_location_for(source_reason, safe_entity)
 	if safe_location.is_empty():
 		push_warning("[GameRoot] Safe checkpoint location is unavailable.")
@@ -523,6 +530,25 @@ func load_manual_checkpoint(slot_index: int) -> bool:
 	var restored := campaign_checkpoint_store.runtime_state_from_manual(
 		slot_index
 	)
+	if not bool(restored.get("ok", false)):
+		return false
+	if campaign_chronicle_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_chronicle_store == null:
+		return false
+	var branched := campaign_chronicle_store.branch_from_checkpoint({
+		"id": restored.get("checkpoint_id", ""),
+		"timeline_id": restored.get("timeline_id", ""),
+		"chronicle_head_event_id":
+			restored.get("chronicle_head_event_id", ""),
+	})
+	if not bool(branched.get("ok", false)):
+		_notify_system_warning(
+			"The selected checkpoint could not start a new timeline."
+		)
+		return false
+	_reopen_campaign_checkpoint_store()
+	_sync_checkpoint_chronicle_context()
 	return await _apply_campaign_checkpoint_state(restored)
 
 
@@ -598,6 +624,7 @@ func create_campaign_in_slot(
 		slot_id,
 	]
 	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+	_initialize_campaign_chronicle()
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign \"%s\" created." %
@@ -622,7 +649,15 @@ func select_and_load_campaign(slot_id: String) -> Dictionary:
 		slot_id,
 	]
 	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
-	if not campaign_checkpoint_store.is_valid() \
+	if not campaign_checkpoint_store.is_valid():
+		var invalid_store_failure := {
+			"ok": false,
+			"error": "The selected campaign could not be loaded.",
+		}
+		_notify_system_warning(invalid_store_failure["error"])
+		return invalid_store_failure
+	_initialize_campaign_chronicle()
+	if campaign_chronicle_store == null \
 			or not await _load_campaign_checkpoint():
 		var failure := {
 			"ok": false,
@@ -662,6 +697,7 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 	if active_campaign_slot_id == slot_id:
 		active_campaign_slot_id = ""
 		campaign_checkpoint_store = null
+		campaign_chronicle_store = null
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign slot deleted.",
@@ -770,6 +806,9 @@ func _initialize_campaign_registry() -> void:
 			campaign_checkpoint_store.validation.summary()
 		)
 		campaign_checkpoint_store = null
+		campaign_chronicle_store = null
+		return
+	_initialize_campaign_chronicle()
 
 
 func _ensure_campaign_checkpoint_store(
@@ -807,7 +846,105 @@ func _ensure_campaign_checkpoint_store(
 		active_campaign_slot_id,
 	]
 	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
-	return campaign_checkpoint_store.is_valid()
+	if not campaign_checkpoint_store.is_valid():
+		return false
+	_initialize_campaign_chronicle()
+	return campaign_chronicle_store != null
+
+
+func _initialize_campaign_chronicle() -> void:
+	campaign_chronicle_store = null
+	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
+		return
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		active_campaign_slot_id,
+	]
+	var opened := CampaignChronicleStoreType.open(slot_path)
+	if not opened.is_valid():
+		push_warning(
+			"[GameRoot] Campaign chronicle is unavailable: %s" %
+				opened.validation.summary()
+		)
+		return
+	campaign_chronicle_store = opened
+	_sync_checkpoint_chronicle_context()
+	_import_legacy_quest_history()
+
+
+func _reopen_campaign_checkpoint_store() -> void:
+	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
+		return
+	var slot_path := "%s/%s" % [
+		campaign_slot_registry.root_path,
+		active_campaign_slot_id,
+	]
+	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
+
+
+func _sync_checkpoint_chronicle_context() -> void:
+	if campaign_checkpoint_store == null \
+			or campaign_chronicle_store == null:
+		return
+	campaign_checkpoint_store.set_chronicle_context(
+		campaign_chronicle_store.current_timeline_id(),
+		campaign_chronicle_store.current_head_event_id()
+	)
+
+
+func _import_legacy_quest_history() -> void:
+	if campaign_chronicle_store == null \
+			or campaign_checkpoint_store == null:
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var history_text := ""
+	if FileAccess.file_exists(QuestManager.HISTORY_FILE_PATH):
+		history_text = FileAccess.get_file_as_string(
+			QuestManager.HISTORY_FILE_PATH
+		)
+	var imported := campaign_chronicle_store.import_legacy_quest_history(
+		history_text,
+		str(active.get("checkpoint_id", ""))
+	)
+	if bool(imported.get("ok", false)):
+		_sync_checkpoint_chronicle_context()
+
+
+func _append_quest_chronicle_event(
+	event_type: String,
+	outcome: String
+) -> void:
+	if campaign_chronicle_store == null \
+			or campaign_checkpoint_store == null \
+			or QuestManager.active_quest.is_empty():
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var quest := QuestManager.active_quest
+	var appended := campaign_chronicle_store.append_event(
+		event_type,
+		[campaign_chronicle_store.campaign["id"]],
+		{
+			"title": quest.get("title", ""),
+			"objective_type": quest.get("objective_type", ""),
+			"faction": quest.get("faction", ""),
+			"outcome": outcome,
+		},
+		str(active.get("checkpoint_id", ""))
+	)
+	if bool(appended.get("ok", false)):
+		_sync_checkpoint_chronicle_context()
+
+
+func _on_quest_completed_chronicle() -> void:
+	_append_quest_chronicle_event("mission_completed", "completed")
+
+
+func _on_quest_abandoned_chronicle() -> void:
+	_append_quest_chronicle_event("mission_abandoned", "abandoned")
 
 
 func _safe_location_for(
@@ -3322,6 +3459,19 @@ func _run_save_smoke_assertions() -> bool:
 				manual_saved.get("error", "")
 		)
 		return false
+	var original_timeline_id := campaign_chronicle_store.current_timeline_id()
+	var discarded_event := campaign_chronicle_store.append_event(
+		"save_smoke_discarded_future",
+		[campaign_chronicle_store.campaign.get("id", "")],
+		{"purpose": "verify checkpoint branch filtering"},
+		str(safe_source.get("checkpoint_id", ""))
+	)
+	if not bool(discarded_event.get("ok", false)):
+		_fail_jump_smoke_test(
+			"Save test could not append its discarded-future event."
+		)
+		return false
+	_sync_checkpoint_chronicle_context()
 	var manual_state := campaign_checkpoint_store.runtime_state_from_manual(0)
 	if int(
 		manual_state.get("state", {}).get("global", {}).get("credits", -1)
@@ -3335,6 +3485,21 @@ func _run_save_smoke_assertions() -> bool:
 	if not await load_manual_checkpoint(0):
 		_fail_jump_smoke_test("Manual checkpoint could not be loaded.")
 		return false
+	if campaign_chronicle_store.current_timeline_id() == original_timeline_id:
+		_fail_jump_smoke_test(
+			"Loading an older manual checkpoint did not create a timeline branch."
+		)
+		return false
+	var current_branch := campaign_chronicle_store.current_branch_events()
+	if not bool(current_branch.get("ok", false)):
+		_fail_jump_smoke_test("The branched chronicle could not be queried.")
+		return false
+	for event in current_branch.get("events", []):
+		if event.get("event_type", "") == "save_smoke_discarded_future":
+			_fail_jump_smoke_test(
+				"The discarded future remained visible on the new branch."
+			)
+			return false
 	var safe_gate := _find_world_entity(
 		str(safe_source_location.get("gate_id", ""))
 	)
@@ -3357,5 +3522,5 @@ func _run_save_smoke_assertions() -> bool:
 			"Destroyed player did not receive the manual-save block reason."
 		)
 		return false
-	print("[SaveSmokeTest] PASS: legacy save, manual safe-copy restore, and validation verified.")
+	print("[SaveSmokeTest] PASS: legacy save, manual safe-copy restore, chronicle branching, and validation verified.")
 	return true
