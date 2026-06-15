@@ -147,6 +147,7 @@ var pending_manual_name: String = ""
 var death_panel: Panel
 var context_panel: Panel
 var context_action_btn: Button
+var context_highlight_target: Node3D = null
 
 var current_station: Node3D = null
 
@@ -588,22 +589,19 @@ func _create_target_panel():
 	var app_btn = Button.new()
 	app_btn.text = "Fly to"
 	app_btn.pressed.connect(func():
-		if GlobalState.player:
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				GlobalState.player.set("nav_mode", "JUMP_APPROACH" if t.is_in_group("jumpgate") else "APPROACH")
-				show_target_marker(t.global_position)
+		_command_selected_target(
+			"JUMP_APPROACH"
+				if GlobalState.active_target
+					and GlobalState.active_target.is_in_group("jumpgate")
+				else "APPROACH"
+		)
 	)
 	target_action_box.add_child(app_btn)
 	
 	var orb_btn = Button.new()
 	orb_btn.text = "Orbit"
 	orb_btn.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "ORBIT")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
+		_command_selected_target("ORBIT")
 	)
 	target_action_box.add_child(orb_btn)
 	
@@ -613,14 +611,13 @@ func _create_target_panel():
 		var t = GlobalState.active_target
 		if t and is_instance_valid(t) and GlobalState.player:
 			if t.is_in_group("asteroid"):
-				GlobalState.player.set("nav_mode", "MINE")
+				_command_selected_target("MINE")
 			elif t.is_in_group("station") or t.has_method("dock_player"):
-				GlobalState.player.set("nav_mode", "DOCK")
+				_command_selected_target("DOCK")
 			elif t.is_in_group("jumpgate"):
 				activate_selected_jumpgate()
 			else:
-				GlobalState.player.set("nav_mode", "ATTACK")
-			show_target_marker(t.global_position)
+				_command_selected_target("ATTACK")
 	)
 	target_action_box.add_child(target_action_btn)
 	
@@ -1166,7 +1163,7 @@ func _create_dock_menu():
 func _create_context_menu():
 	context_panel = Panel.new()
 	add_child(context_panel)
-	context_panel.custom_minimum_size = Vector2(150, 160)
+	context_panel.custom_minimum_size = Vector2(170, 205)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.1, 0.13, 1.0) # Solid, non-translucent dark background
@@ -1188,28 +1185,35 @@ func _create_context_menu():
 	vbox.offset_right = 0
 	vbox.offset_top = 0
 	vbox.offset_bottom = 0
+
+	var action_select = Button.new()
+	action_select.text = "Select Target"
+	action_select.pressed.connect(func():
+		if context_highlight_target \
+				and is_instance_valid(context_highlight_target):
+			GlobalState.active_target = context_highlight_target
+		_close_context_menu()
+	)
+	vbox.add_child(action_select)
 	
 	var action_app = Button.new()
 	action_app.text = "Fly to"
 	action_app.pressed.connect(func():
-		if GlobalState.player:
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				GlobalState.player.set("nav_mode", "JUMP_APPROACH" if t.is_in_group("jumpgate") else "APPROACH")
-				show_target_marker(t.global_position)
-		context_panel.visible = false
+		_command_context_target(
+			"JUMP_APPROACH"
+				if context_highlight_target
+					and context_highlight_target.is_in_group("jumpgate")
+				else "APPROACH"
+		)
+		_close_context_menu()
 	)
 	vbox.add_child(action_app)
 	
 	var action_orb = Button.new()
 	action_orb.text = "Orbit"
 	action_orb.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "ORBIT")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
-		context_panel.visible = false
+		_command_context_target("ORBIT")
+		_close_context_menu()
 	)
 	vbox.add_child(action_orb)
 	
@@ -1218,24 +1222,24 @@ func _create_context_menu():
 	context_action_btn = action_act
 	action_act.text = "Mine / Attack"
 	action_act.pressed.connect(func():
-		var t = GlobalState.active_target
+		var t = context_highlight_target
 		if t and is_instance_valid(t) and GlobalState.player:
 			if t.is_in_group("asteroid"):
-				GlobalState.player.set("nav_mode", "MINE")
+				_command_context_target("MINE")
 			elif t.is_in_group("station") or t.has_method("dock_player"):
-				GlobalState.player.set("nav_mode", "DOCK")
+				_command_context_target("DOCK")
 			elif t.is_in_group("jumpgate"):
+				GlobalState.active_target = t
 				activate_selected_jumpgate()
 			else:
-				GlobalState.player.set("nav_mode", "ATTACK")
-			show_target_marker(t.global_position)
-		context_panel.visible = false
+				_command_context_target("ATTACK")
+		_close_context_menu()
 	)
 	vbox.add_child(action_act)
 	
 	var action_close = Button.new()
 	action_close.text = "Cancel"
-	action_close.pressed.connect(func(): context_panel.visible = false)
+	action_close.pressed.connect(_close_context_menu)
 	vbox.add_child(action_close)
 	
 	context_panel.visible = false
@@ -1893,7 +1897,6 @@ func update_overview_list(entities: Array):
 			btn.gui_input.connect(func(event: InputEvent):
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 					btn.accept_event()
-					GlobalState.active_target = entity
 					show_context_menu(entity)
 			)
 			overview_list.add_child(btn)
@@ -3077,11 +3080,20 @@ func _sell_ore():
 
 
 
-func show_context_menu(entity: Node3D):
+func show_context_menu(
+	entity: Node3D,
+	screen_position: Variant = null
+):
 	if not entity or not is_instance_valid(entity): return
+	context_highlight_target = entity
 	context_panel.visible = true
+	selection_marker.queue_redraw()
 	
-	var mouse_pos = get_global_mouse_position()
+	var mouse_pos := (
+		screen_position as Vector2
+		if screen_position is Vector2
+		else get_global_mouse_position()
+	)
 	var viewport_size = get_viewport().get_visible_rect().size
 	var menu_size = context_panel.size
 	if menu_size == Vector2.ZERO:
@@ -3110,6 +3122,38 @@ func show_context_menu(entity: Node3D):
 			context_action_btn.visible = true
 		else:
 			context_action_btn.visible = false
+
+
+func _close_context_menu() -> void:
+	if context_panel:
+		context_panel.visible = false
+	context_highlight_target = null
+	if selection_marker:
+		selection_marker.queue_redraw()
+
+
+func _command_selected_target(mode: String) -> bool:
+	var target := GlobalState.active_target
+	if target == null or not is_instance_valid(target) \
+			or GlobalState.player == null \
+			or not is_instance_valid(GlobalState.player):
+		return false
+	if not GlobalState.player.has_method("begin_target_navigation") \
+			or not bool(
+				GlobalState.player.call("begin_target_navigation", mode)
+			):
+		show_hud_warning("Navigation command was not accepted.")
+		return false
+	show_target_marker(target.global_position)
+	return true
+
+
+func _command_context_target(mode: String) -> bool:
+	if context_highlight_target == null \
+			or not is_instance_valid(context_highlight_target):
+		return false
+	GlobalState.active_target = context_highlight_target
+	return _command_selected_target(mode)
 
 func activate_selected_jumpgate() -> void:
 	var gate := GlobalState.active_target
@@ -3232,7 +3276,14 @@ func _update_selection_marker_position():
 	if GlobalState.player and GlobalState.player.get("is_docked"):
 		selection_marker.visible = false
 		return
-	var target = GlobalState.active_target
+	var target = (
+		context_highlight_target
+		if context_panel != null
+			and context_panel.visible
+			and context_highlight_target != null
+			and is_instance_valid(context_highlight_target)
+		else GlobalState.active_target
+	)
 	if not target or not is_instance_valid(target) or target.get("destroyed"):
 		selection_marker.visible = false
 		return
@@ -3257,7 +3308,14 @@ func _update_selection_marker_position():
 	selection_marker.queue_redraw()
 
 func _on_selection_marker_draw():
-	var target = GlobalState.active_target
+	var target = (
+		context_highlight_target
+		if context_panel != null
+			and context_panel.visible
+			and context_highlight_target != null
+			and is_instance_valid(context_highlight_target)
+		else GlobalState.active_target
+	)
 	if not target or not is_instance_valid(target) or target.get("destroyed"):
 		return
 		
@@ -3305,10 +3363,31 @@ func _on_selection_marker_draw():
 			GlobalState.player.call("is_target_physically_visible", target)
 		)
 			
-	var marker_color = Color(0.55, 0.55, 0.55, 0.75) if blocked else Color(0.0, 1.0, 0.0, 0.75)
+	var context_highlight := context_panel != null \
+		and context_panel.visible \
+		and context_highlight_target == target
+	var marker_color := (
+		Color(0.15, 0.85, 1.0, 1.0)
+		if context_highlight
+		else (
+			Color(0.55, 0.55, 0.55, 0.75)
+			if blocked
+			else Color(0.0, 1.0, 0.0, 0.75)
+		)
+	)
+	var marker_width := 3.5 if context_highlight else 1.5
 	
 	# Draw target brackets around the object
-	selection_marker.draw_arc(screen_center, screen_radius, 0.0, TAU, 64, marker_color, 1.5, true)
+	selection_marker.draw_arc(
+		screen_center,
+		screen_radius,
+		0.0,
+		TAU,
+		64,
+		marker_color,
+		marker_width,
+		true
+	)
 	
 	# Add ticks/notches
 	var tick_len = 6.0

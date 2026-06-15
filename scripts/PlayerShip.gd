@@ -1,5 +1,10 @@
 extends CharacterBody3D
 
+const NavigationRoutePlannerType := preload(
+	"res://scripts/navigation/NavigationRoutePlanner.gd"
+)
+const WORLD_PICK_DISTANCE := 100000.0
+
 @export var max_speed: float = 25.0
 @export var max_health: float = 100.0
 var health: float = 100.0
@@ -19,6 +24,14 @@ var mining_continuous_timer: float = 0.0
 
 # Navigation variables
 var target_position: Variant = null # null or Vector3
+var navigation_target: Node3D = null
+var planned_route: Array[Vector3] = []
+var planned_route_index: int = 0
+var planned_destination: Vector3 = Vector3.ZERO
+var route_plan_count: int = 0
+var route_progress_distance: float = INF
+var route_stall_timer: float = 0.0
+var route_stall_replans: int = 0
 var is_aligning: bool = false:
 	set(val):
 		if val != is_aligning:
@@ -36,7 +49,12 @@ var nav_mode: String = "MANUAL":
 				last_dock_target = null
 			if val != "JUMP_APPROACH":
 				staged_jump_gate_id = 0
-			if val in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
+			if val in ["MOVE_TO_POINT", "APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
+				if val != "MOVE_TO_POINT" \
+						and GlobalState.active_target != null \
+						and is_instance_valid(GlobalState.active_target):
+					navigation_target = GlobalState.active_target
+					_clear_planned_route()
 				is_aligning = false
 				is_aligning = true
 
@@ -61,6 +79,8 @@ var last_navigation_status_message: String = ""
 var navigation_obstruction_notice_count: int = 0
 var navigation_route_clear_notice_count: int = 0
 var rmb_down_time: float = 0.0
+var rmb_press_position: Vector2 = Vector2.ZERO
+var rmb_dragging: bool = false
 var last_target: Node3D = null
 var drones: Array[Node3D] = []
 var drone_rotations: Array[Vector3] = []
@@ -90,21 +110,32 @@ func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
 
 func _on_target_changed(new_target: Node3D):
-	staged_jump_gate_id = 0
-	_clear_avoidance_state()
-	navigation_notice_obstacle_id = 0
+	last_target = new_target
+
+
+func begin_target_navigation(mode: String) -> bool:
+	var selected := GlobalState.active_target
+	if selected == null or not is_instance_valid(selected):
+		return false
+	navigation_target = selected
+	_clear_planned_route()
+	route_stall_replans = 0
+	nav_mode = mode
+	return true
+
+
+func cancel_autopilot(clear_motion: bool = false) -> void:
+	nav_mode = "MANUAL"
+	navigation_target = null
 	target_position = null
-	last_dock_target = null
-	last_dock_distance = INF
-	dock_stuck_timer = 0.0
+	staged_jump_gate_id = 0
+	_clear_planned_route()
+	route_stall_replans = 0
+	_clear_avoidance_state()
 	mining_laser.visible = false
-	if new_target == null:
-		if nav_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
-			nav_mode = "MANUAL"
-	elif nav_mode == "JUMP_APPROACH" and not new_target.is_in_group("jumpgate"):
-		# Gate staging is meaningful only for its original gate. Continue a
-		# normal approach when the player selects a different object.
-		nav_mode = "APPROACH"
+	if clear_motion:
+		current_speed = 0.0
+		velocity = Vector3.ZERO
 
 func _unhandled_input(event: InputEvent):
 	# While docked the dock UI owns the screen — block any world-bound
@@ -117,14 +148,16 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("override_approach"):
 		var t = GlobalState.active_target
 		if t and is_instance_valid(t):
-			nav_mode = "JUMP_APPROACH" if t.is_in_group("jumpgate") else "APPROACH"
+			begin_target_navigation(
+				"JUMP_APPROACH" if t.is_in_group("jumpgate") else "APPROACH"
+			)
 			var ui = GlobalState.get_ui_manager()
 			if ui and ui.has_method("show_target_marker"):
 				ui.show_target_marker(t.global_position)
 	elif event.is_action_pressed("override_orbit"):
 		var t = GlobalState.active_target
 		if t and is_instance_valid(t):
-			nav_mode = "ORBIT"
+			begin_target_navigation("ORBIT")
 			var ui = GlobalState.get_ui_manager()
 			if ui and ui.has_method("show_target_marker"):
 				ui.show_target_marker(t.global_position)
@@ -132,16 +165,16 @@ func _unhandled_input(event: InputEvent):
 		var t = GlobalState.active_target
 		if t and is_instance_valid(t):
 			if t.is_in_group("asteroid"):
-				nav_mode = "MINE"
+				begin_target_navigation("MINE")
 			elif t.is_in_group("station"):
-				nav_mode = "DOCK"
+				begin_target_navigation("DOCK")
 			elif t.is_in_group("jumpgate"):
 				var ui = GlobalState.get_ui_manager()
 				if ui and ui.has_method("activate_selected_jumpgate"):
 					ui.activate_selected_jumpgate()
 				return
 			else:
-				nav_mode = "ATTACK"
+				begin_target_navigation("ATTACK")
 			var ui = GlobalState.get_ui_manager()
 			if ui and ui.has_method("show_target_marker"):
 				ui.show_target_marker(t.global_position)
@@ -156,30 +189,45 @@ func _unhandled_input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.pressed:
 			rmb_down_time = Time.get_unix_time_from_system()
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			rmb_press_position = event.position
+			rmb_dragging = false
 		else:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 			var hold_duration = Time.get_unix_time_from_system() - rmb_down_time
-			if hold_duration < 0.25:
+			if rmb_dragging:
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			elif hold_duration < 0.35:
 				# Short RMB click: Try targeting / open context menu
-				var hit = get_mouse_raycast_hit()
+				var hit = get_mouse_raycast_hit(rmb_press_position)
 				if hit.has("collider"):
 					var entity: Node = hit.collider
 					var system_root := GlobalState.get_system_root()
 					while entity and system_root and entity.get_parent() != system_root:
 						entity = entity.get_parent()
 					if entity and entity != self:
-						GlobalState.active_target = entity
 						var ui = GlobalState.get_ui_manager()
 						if ui and ui.has_method("show_context_menu"):
-							ui.show_context_menu(entity)
+							ui.show_context_menu(
+								entity,
+								rmb_press_position
+							)
+			rmb_dragging = false
 							
 	# Drag Camera Orbit
-	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		camera_pivot.rotation.y -= event.relative.x * 0.003
-		camera_pivot.rotation.x -= event.relative.y * 0.003
-		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, -deg_to_rad(80), deg_to_rad(80))
-		camera_aligned = true # Release camera alignment control
+	if event is InputEventMouseMotion \
+			and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		if not rmb_dragging \
+				and event.position.distance_to(rmb_press_position) >= 6.0:
+			rmb_dragging = true
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		if rmb_dragging:
+			camera_pivot.rotation.y -= event.relative.x * 0.003
+			camera_pivot.rotation.x -= event.relative.y * 0.003
+			camera_pivot.rotation.x = clamp(
+				camera_pivot.rotation.x,
+				-deg_to_rad(80),
+				deg_to_rad(80)
+			)
+			camera_aligned = true # Release camera alignment control
 		
 	# Left Click & Double-click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -203,13 +251,22 @@ func _unhandled_input(event: InputEvent):
 				if entity and entity != self:
 					GlobalState.active_target = entity
 
-func get_mouse_raycast_hit() -> Dictionary:
-	var mouse_pos = get_viewport().get_mouse_position()
+func get_mouse_raycast_hit(
+	screen_position: Variant = null
+) -> Dictionary:
+	var mouse_pos := (
+		screen_position as Vector2
+		if screen_position is Vector2
+		else get_viewport().get_mouse_position()
+	)
 	var ray_origin = camera.project_ray_origin(mouse_pos)
 	var ray_normal = camera.project_ray_normal(mouse_pos)
 	
 	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_normal * 1000.0)
+	var query = PhysicsRayQueryParameters3D.create(
+		ray_origin,
+		ray_origin + ray_normal * WORLD_PICK_DISTANCE
+	)
 	query.collide_with_areas = true
 	var result = space_state.intersect_ray(query)
 	return result
@@ -319,7 +376,9 @@ func _physics_process(delta: float):
 		fire_cooldown -= delta
 		
 	# Autopilot updates
-	var active_target = GlobalState.active_target
+	var active_target := navigation_target
+	if active_target == null or not is_instance_valid(active_target):
+		active_target = null
 	if active_target and is_instance_valid(active_target) and not active_target.get("destroyed"):
 		var dist = global_position.distance_to(active_target.global_position)
 		
@@ -419,15 +478,22 @@ func _physics_process(delta: float):
 	else:
 		mining_laser.visible = false
 		if nav_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
-			nav_mode = "MANUAL"
-			target_position = null
+			cancel_autopilot()
 
 	# Move and steer
 	if target_position != null:
-		var dest = target_position as Vector3
-		var avoidance := _get_autopilot_avoidance(dest, active_target)
-		var final_steer_target: Vector3 = avoidance.get("steer_target", dest)
-		steer_towards(final_steer_target, delta)
+		var dest := target_position as Vector3
+		var steer_target := dest
+		if nav_mode != "ORBIT":
+			var route_result := _route_steer_target(dest, active_target)
+			if not bool(route_result.get("ok", false)):
+				_emit_route_failure(str(route_result.get("error", "")))
+				cancel_autopilot()
+				return
+			steer_target = route_result.get("steer_target", dest)
+			if not _update_route_progress(steer_target, delta):
+				return
+		steer_towards(steer_target, delta)
 		
 		var speed_limit: float = max_speed * GlobalState.engine_speed_mult
 		var target_speed: float = speed_limit
@@ -470,17 +536,12 @@ func _physics_process(delta: float):
 			elif nav_mode == "DOCK":
 				var remaining_dock_distance := global_position.distance_to(target_position as Vector3)
 				target_speed = clamp(remaining_dock_distance * 2.0, 0.0, speed_limit)
-
-		# Give the ship time to turn around nearby obstacles instead of charging
-		# toward a detour point at full cruise speed.
-		if bool(avoidance.get("is_avoiding", false)):
-			var obstacle_distance := float(avoidance.get("obstacle_distance", 9999.0))
-			var avoidance_speed_limit: float = speed_limit * clampf(
-				obstacle_distance / 180.0,
-				0.3,
-				0.75
-			)
-			target_speed = min(target_speed, avoidance_speed_limit)
+			elif nav_mode == "MOVE_TO_POINT":
+				target_speed = clamp(
+					global_position.distance_to(dest) * 2.0,
+					0.0,
+					speed_limit
+				)
 			
 		# Calculate acceleration taking cargo mass into account
 		var accel = 15.0 * GlobalState.acceleration_mult
@@ -499,9 +560,9 @@ func _physics_process(delta: float):
 		velocity = forward_dir * current_speed
 		move_and_slide()
 		
-		if global_position.distance_to(dest) < 2.0:
-			if nav_mode == "MANUAL":
-				target_position = null
+		if global_position.distance_to(dest) < 2.0 \
+				and nav_mode == "MOVE_TO_POINT":
+			cancel_autopilot()
 	else:
 		# Decelerate to stop
 		var accel = 15.0 * GlobalState.acceleration_mult
@@ -537,6 +598,143 @@ func _physics_process(delta: float):
 				is_aligning = false
 		else:
 			is_aligning = false
+
+func _route_steer_target(
+	destination: Vector3,
+	route_target: Node3D
+) -> Dictionary:
+	var needs_plan := planned_route.is_empty() \
+		or planned_route_index >= planned_route.size() \
+		or planned_destination.distance_to(destination) > 35.0
+	if needs_plan:
+		var hazards := _navigation_hazards(route_target)
+		var planned := NavigationRoutePlannerType.plan_route(
+			global_position,
+			destination,
+			hazards
+		)
+		if not bool(planned.get("ok", false)):
+			return planned
+		planned_route.clear()
+		for waypoint in planned.get("waypoints", []):
+			planned_route.append(waypoint as Vector3)
+		planned_route_index = 0
+		planned_destination = destination
+		route_plan_count += 1
+		if planned_route.size() > 1:
+			_emit_planned_route_notice(planned_route.size())
+	while planned_route_index < planned_route.size() - 1 \
+			and global_position.distance_to(
+				planned_route[planned_route_index]
+			) < 18.0:
+		planned_route_index += 1
+		route_progress_distance = INF
+		route_stall_timer = 0.0
+	if planned_route_index >= planned_route.size():
+		return {"ok": true, "steer_target": destination}
+	return {
+		"ok": true,
+		"steer_target": planned_route[planned_route_index],
+	}
+
+
+func _navigation_hazards(route_target: Node3D) -> Array:
+	var hazards: Array = []
+	var seen: Dictionary = {}
+	for group_name in ["celestial", "station", "jumpgate", "asteroid"]:
+		for candidate in get_tree().get_nodes_in_group(group_name):
+			if not candidate is Node3D \
+					or candidate == self \
+					or candidate == route_target:
+				continue
+			var obstacle := candidate as Node3D
+			if obstacle.get("destroyed"):
+				continue
+			if obstacle.is_in_group("asteroid") \
+					and obstacle.get("navigation_parent") is Node3D:
+				continue
+			var obstacle_id := obstacle.get_instance_id()
+			if seen.has(obstacle_id):
+				continue
+			seen[obstacle_id] = true
+			hazards.append({
+				"id": obstacle_id,
+				"center": obstacle.global_position,
+				"radius": _get_obstacle_radius(obstacle)
+					+ _get_obstacle_safety_margin(obstacle),
+			})
+	return hazards
+
+
+func _clear_planned_route() -> void:
+	planned_route.clear()
+	planned_route_index = 0
+	planned_destination = Vector3.ZERO
+	route_progress_distance = INF
+	route_stall_timer = 0.0
+
+
+func _update_route_progress(steer_target: Vector3, delta: float) -> bool:
+	var remaining := global_position.distance_to(steer_target)
+	if remaining < route_progress_distance - 0.5:
+		route_progress_distance = remaining
+		route_stall_timer = 0.0
+		return true
+	route_stall_timer += delta
+	if route_stall_timer < 2.5:
+		return true
+	if route_stall_replans >= 2:
+		_emit_route_failure(
+			"Autopilot cancelled after the route remained obstructed."
+		)
+		cancel_autopilot()
+		return false
+	route_stall_replans += 1
+	_clear_planned_route()
+	current_speed = 0.0
+	velocity = Vector3.ZERO
+	return false
+
+
+func _emit_planned_route_notice(waypoint_count: int) -> void:
+	last_navigation_status_message = (
+		"NAVIGATION: Safe route confirmed through %d waypoints."
+		% waypoint_count
+	)
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		last_navigation_status_message,
+		Color(0.0, 0.9, 0.9)
+	)
+
+
+func _emit_route_failure(message: String) -> void:
+	last_navigation_status_message = (
+		message
+		if not message.is_empty()
+		else "No safe route is available."
+	)
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("show_hud_warning"):
+		ui.call("show_hud_warning", last_navigation_status_message)
+
+
+func get_planned_route() -> Array[Vector3]:
+	return planned_route.duplicate()
+
+
+func planned_route_is_clear() -> bool:
+	if planned_route.is_empty():
+		return false
+	var remaining: Array[Vector3] = []
+	for index in range(planned_route_index, planned_route.size()):
+		remaining.append(planned_route[index])
+	return NavigationRoutePlannerType.route_is_clear(
+		global_position,
+		remaining,
+		_navigation_hazards(navigation_target)
+	)
+
 
 func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -> Dictionary:
 	var route := destination - global_position
@@ -1342,10 +1540,9 @@ func spawn_projectile(target_node: Node3D):
 		p.global_position = global_position + (-global_transform.basis.z * 2.2)
 
 func double_click_move(click_pos: Vector3):
-	is_aligning = false
+	cancel_autopilot()
 	target_position = click_pos
-	nav_mode = "MANUAL"
-	is_aligning = true
+	nav_mode = "MOVE_TO_POINT"
 	var ui = GlobalState.get_ui_manager()
 	if ui and ui.has_method("show_target_marker"):
 		ui.show_target_marker(click_pos)

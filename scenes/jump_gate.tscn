@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/JumpGate.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/hypergate.glb" id="2_model"]
@@ -19,6 +19,10 @@ size = Vector3(42, 12, 50)
 [sub_resource type="CylinderShape3D" id="CylinderShape_activation"]
 radius = 22.0
 height = 100.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_pick"]
+radius = 34.0
+height = 18.0
 
 [sub_resource type="ShaderMaterial" id="PortalMaterial"]
 render_priority = 1
@@ -63,6 +67,14 @@ collision_mask = 2
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ActivationArea"]
 rotation = Vector3(1.5708, 0, 0)
 shape = SubResource("CylinderShape_activation")
+
+[node name="SelectionArea" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SelectionArea"]
+rotation = Vector3(1.5708, 0, 0)
+shape = SubResource("CylinderShape_pick")
 
 [node name="ArrivalMarker" type="Marker3D" parent="."]
 position = Vector3(0, 0, 140)

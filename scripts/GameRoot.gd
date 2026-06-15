@@ -1528,14 +1528,23 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	player.set("avoidance_waypoint", return_gate.global_position)
 	GlobalState.active_target = ring_target
 	if (
-		player.staged_jump_gate_id != 0
-		or int(player.get("avoidance_obstacle_id")) != 0
-		or player.get("avoidance_waypoint") != Vector3.ZERO
-		or player.target_position != null
-		or player.nav_mode != "APPROACH"
+		player.staged_jump_gate_id != return_gate.get_instance_id()
+		or int(player.get("avoidance_obstacle_id"))
+			!= ring_planet.get_instance_id()
+		or player.get("avoidance_waypoint") != return_gate.global_position
+		or player.nav_mode != "JUMP_APPROACH"
+		or player.get("navigation_target") != return_gate
 	):
 		_fail_jump_smoke_test(
-			"Switching from the gate to a ring asteroid retained stale navigation state."
+			"Selecting a ring asteroid changed the active gate route."
+		)
+		return false
+	if not bool(player.call("begin_target_navigation", "APPROACH")) \
+			or player.get("navigation_target") != ring_target \
+			or player.nav_mode != "APPROACH" \
+			or player.staged_jump_gate_id != 0:
+		_fail_jump_smoke_test(
+			"Explicit ring-target approach did not replace the gate route."
 		)
 		return false
 	player.target_position = ring_target.global_position
@@ -1546,12 +1555,16 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	)
 	GlobalState.active_target = alternate_ring_target
 	if (
-		int(player.get("avoidance_obstacle_id")) != 0
-		or player.get("avoidance_waypoint") != Vector3.ZERO
-		or player.target_position != null
+		player.get("navigation_target") != ring_target
+		or player.nav_mode != "APPROACH"
 	):
 		_fail_jump_smoke_test(
-			"Rapid asteroid switching retained the previous target's route."
+			"Selecting an alternate ring target changed the commanded route."
+		)
+		return false
+	if not bool(player.call("begin_target_navigation", "APPROACH")):
+		_fail_jump_smoke_test(
+			"Explicit alternate ring-target command was rejected."
 		)
 		return false
 	var switched_navigation: Dictionary = player.call(
@@ -1615,7 +1628,11 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	player.global_position = switch_origin
 	player.call("_clear_avoidance_state")
 	GlobalState.active_target = front_target
-	player.nav_mode = "APPROACH"
+	if not bool(player.call("begin_target_navigation", "APPROACH")):
+		_fail_jump_smoke_test(
+			"Explicit front-target approach was rejected."
+		)
+		return false
 	player.target_position = front_target.global_position
 	var front_navigation: Dictionary = player.call(
 		"_get_autopilot_avoidance",
@@ -1634,12 +1651,17 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 
 	GlobalState.active_target = rear_target
 	if (
-		player.target_position != null
-		or player.get("avoidance_waypoint") != Vector3.ZERO
-		or int(player.get("avoidance_obstacle_id")) != 0
+		player.get("navigation_target") != front_target
+		or player.nav_mode != "APPROACH"
 	):
 		_fail_jump_smoke_test(
-			"Rear target switch did not immediately cancel the forward waypoint."
+			"Selecting the rear target changed the forward route."
+		)
+		return false
+	if not bool(player.call("begin_target_navigation", "APPROACH")) \
+			or player.get("navigation_target") != rear_target:
+		_fail_jump_smoke_test(
+			"Explicit rear-target approach did not replace the forward route."
 		)
 		return false
 	var rear_navigation: Dictionary = player.call(
@@ -2333,6 +2355,8 @@ func _run_restart_smoke_test() -> void:
 
 func _run_autopilot_smoke_test() -> void:
 	await get_tree().process_frame
+	if not _verify_autopilot_control_contract():
+		return
 	var original_transform := player.global_transform
 	var obstacle := StaticBody3D.new()
 	obstacle.name = "AutopilotSmokeObstacle"
@@ -2731,9 +2755,143 @@ func _run_autopilot_smoke_test() -> void:
 
 	player.global_transform = original_transform
 	player.call("_clear_avoidance_state")
-	print("[AutopilotSmokeTest] PASS: asteroid avoidance, visibility, planet circles, and multi-planet routes verified.")
+	print("[AutopilotSmokeTest] PASS: preflight routes, passive selection, immediate override, placement, and legacy avoidance verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+func _verify_autopilot_control_contract() -> bool:
+	var original_transform := player.global_transform
+	var right_press := InputEventMouseButton.new()
+	right_press.button_index = MOUSE_BUTTON_RIGHT
+	right_press.pressed = true
+	right_press.position = Vector2(321.0, 246.0)
+	player.call("_unhandled_input", right_press)
+	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED \
+			or player.get("rmb_press_position") != right_press.position:
+		_fail_autopilot_smoke_test(
+			"Right-click captured or lost the pointer before drag intent."
+		)
+		return false
+	var right_release := InputEventMouseButton.new()
+	right_release.button_index = MOUSE_BUTTON_RIGHT
+	right_release.pressed = false
+	right_release.position = right_press.position
+	player.call("_unhandled_input", right_release)
+	var stations := get_tree().get_nodes_in_group("station").filter(
+		func(node: Node) -> bool:
+			return node is Node3D \
+				and get_active_system_root().is_ancestor_of(node)
+	)
+	var celestials := get_tree().get_nodes_in_group("celestial").filter(
+		func(node: Node) -> bool:
+			return node is Node3D \
+				and get_active_system_root().is_ancestor_of(node)
+	)
+	if stations.size() < 2 or celestials.is_empty():
+		_fail_autopilot_smoke_test(
+			"Autopilot control test could not find navigation fixtures."
+		)
+		return false
+	for station in stations:
+		if player.global_position.distance_to(
+			(station as Node3D).global_position
+		) >= player.WORLD_PICK_DISTANCE:
+			_fail_autopilot_smoke_test(
+				"Station right-click range is shorter than the authored layout."
+			)
+			return false
+	var jumpgates := get_tree().get_nodes_in_group("jumpgate").filter(
+		func(node: Node) -> bool:
+			return node is Node3D \
+				and get_active_system_root().is_ancestor_of(node)
+	)
+	for jumpgate in jumpgates:
+		var selection_area := (jumpgate as Node3D).get_node_or_null(
+			"SelectionArea"
+		) as Area3D
+		if selection_area == null or selection_area.collision_layer == 0:
+			_fail_autopilot_smoke_test(
+				"Jumpgate center has no non-physical selection volume."
+			)
+			return false
+	player.call("cancel_autopilot", true)
+	GlobalState.active_target = stations[0]
+	if not bool(player.call("begin_target_navigation", "APPROACH")):
+		_fail_autopilot_smoke_test(
+			"Explicit target navigation command was rejected."
+		)
+		return false
+	var commanded_target: Node3D = player.get("navigation_target")
+	GlobalState.active_target = stations[1]
+	if player.get("navigation_target") != commanded_target \
+			or player.get("nav_mode") != "APPROACH":
+		_fail_autopilot_smoke_test(
+			"Selecting another object changed the active navigation command."
+		)
+		return false
+	var move_point := player.global_position + Vector3(240.0, 30.0, -160.0)
+	player.call("double_click_move", move_point)
+	if player.get("nav_mode") != "MOVE_TO_POINT" \
+			or player.get("navigation_target") != null \
+			or (player.get("target_position") as Vector3).distance_to(
+				move_point
+			) > 0.1:
+		_fail_autopilot_smoke_test(
+			"Point-to-move did not immediately replace the prior autopilot route."
+		)
+		return false
+	var ui := GlobalState.get_ui_manager()
+	if ui != null and ui.has_method("show_context_menu"):
+		GlobalState.active_target = stations[0]
+		ui.call("show_context_menu", stations[0])
+		if ui.get("context_highlight_target") != stations[0]:
+			_fail_autopilot_smoke_test(
+				"Context-menu target did not receive a temporary highlight."
+			)
+			return false
+		ui.call("_close_context_menu")
+	for station in stations:
+		for celestial in celestials:
+			var clearance := float(
+				celestial.get_meta("navigation_clearance_radius", 0.0)
+			)
+			if clearance > 0.0 \
+					and (station as Node3D).global_position.distance_to(
+						(celestial as Node3D).global_position
+					) <= clearance:
+				_fail_autopilot_smoke_test(
+					"Station '%s' remains inside '%s' navigation envelope."
+					% [station.name, celestial.name]
+				)
+				return false
+	var route_planet := celestials[0] as Node3D
+	var route_clearance := float(
+		route_planet.get_meta("navigation_clearance_radius", 0.0)
+	)
+	if route_clearance <= 0.0:
+		_fail_autopilot_smoke_test(
+			"Planet navigation envelope is missing."
+		)
+		return false
+	player.global_position = route_planet.global_position \
+		+ Vector3(route_clearance + 260.0, 0.0, 0.0)
+	var opposite_point := route_planet.global_position \
+		- Vector3(route_clearance + 260.0, 0.0, 0.0)
+	player.call("double_click_move", opposite_point)
+	player.call("_physics_process", 0.016)
+	if (player.call("get_planned_route") as Array).size() <= 1 \
+			or not bool(player.call("planned_route_is_clear")):
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet-blocked point move did not receive a validated preflight route."
+		)
+		return false
+	player.global_transform = original_transform
+	player.call("cancel_autopilot", true)
+	GlobalState.active_target = null
+	return true
+
 
 func _run_economy_smoke_test() -> void:
 	await get_tree().process_frame

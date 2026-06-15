@@ -957,6 +957,11 @@ Implementation progress:
 - Focused persistence checks and the expanded 24-step gameplay baseline pass.
 - Hands-on visual approval of the pause and campaign screens is deferred until
   local host-display access is available.
+- The pre-Checkpoint-10 autopilot stabilization checkpoint is implementation-
+  complete. Navigation now preflights 3D A* routes around strategic exclusion
+  spheres, target selection is passive, point-to-move replaces the active route
+  immediately, and right-click commands use a temporary highlighted preview.
+- Graphical approval of route shape and steering feel remains pending.
 - Checkpoint 10 Kaelen meta-memory and death reload is the next Phase 2 task.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
