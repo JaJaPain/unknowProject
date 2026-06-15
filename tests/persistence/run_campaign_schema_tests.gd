@@ -190,6 +190,28 @@ func _test_kaelen_restrictions() -> void:
 		),
 		"Kaelen restriction did not report the memory field path."
 	)
+	document = _kaelen_meta()
+	document["memories"][0]["category"] = "death"
+	validation = SchemaType.validate_document(document)
+	_expect(
+		_has_issue(
+			validation.errors,
+			"invalid_death_category",
+			"memories.0.death_category"
+		),
+		"Death memory was accepted without a verified category."
+	)
+	document = _kaelen_meta()
+	document["memories"][0]["death_category"] = "combat"
+	validation = SchemaType.validate_document(document)
+	_expect(
+		_has_issue(
+			validation.errors,
+			"unexpected_death_category",
+			"memories.0.death_category"
+		),
+		"Non-death memory accepted a death category."
+	)
 
 
 func _valid_bundle() -> Array:
@@ -334,11 +356,13 @@ func _kaelen_meta() -> Dictionary:
 		"id": "kaelen_meta.local.alpha",
 		"campaign_id": "campaign.local.alpha",
 		"timeline_reversal_count": 0,
+		"next_memory_sequence": 1,
 		"memories": [{
 			"memory_id": "memory.local.alpha.opening",
 			"source_timeline_id": "timeline.local.alpha",
 			"source_checkpoint_id": "checkpoint.local.alpha.initial",
 			"event_sequence": 0,
+			"local_sequence": 0,
 			"category": "observation",
 			"fact_refs": ["fact.opening.kaelen_present"],
 			"summary": "Shiny arrived in the opening system.",

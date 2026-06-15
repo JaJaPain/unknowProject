@@ -143,6 +143,11 @@ try {
             "res://tests/persistence/run_campaign_chronicle_store_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Campaign Kaelen memory and reversal classification" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_campaign_kaelen_memory_store_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Campaign manifest and asset registry" {
         & $godot --headless --path $root --script `
             "res://tests/persistence/run_campaign_manifest_store_tests.gd" -- `
@@ -167,6 +172,10 @@ try {
     Invoke-BaselineStep "Warm-service game restart" {
         & $godot --headless --path $root -- `
             --restart-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Death reload and discarded timeline memory" {
+        & $godot --headless --path $root -- `
+            --death-reload-smoke-test --no-save-load --baseline-offline
     }
     Invoke-BaselineStep "Core startup and controls" {
         & $godot --headless --path $root -- `

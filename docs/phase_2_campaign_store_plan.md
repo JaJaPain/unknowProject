@@ -430,6 +430,21 @@ Exit test:
 - only approved Kaelen fragments survive
 - ordinary NPC and mission queries cannot access discarded timeline events
 
+Result: passed.
+
+Implementation notes:
+
+- Player death appends a structured chronicle event and a verified, bounded
+  Kaelen death fragment without replacing the latest living checkpoint.
+- The death screen offers `Load Last Save`, `Start New Campaign`, and quit.
+  Loading rewinds to the active living checkpoint and starts a new timeline;
+  starting over restores a fresh ship and opens the campaign-slot manager.
+- Kaelen memories are ordered by chronicle sequence, tagged with their source
+  timeline and checkpoint, and split into current versus discarded views.
+  Ordinary gameplay receives only the current view.
+- Focused schema, memory-store, reversal, UI construction, and end-to-end death
+  reload checks pass with the expanded 27-step baseline suite.
+
 ### Checkpoint 11: Version-2 Save Import
 
 Deliverables:

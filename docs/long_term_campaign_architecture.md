@@ -954,7 +954,7 @@ Implementation progress:
   rumored, hidden, blocked, or damaged visibility state. Successful travel
   reveals both route endpoints, while loading an older checkpoint restores its
   earlier visibility without changing permanent manifest or asset records.
-- Focused persistence checks and the expanded 24-step gameplay baseline pass.
+- Focused persistence checks and the expanded 27-step gameplay baseline pass.
 - Hands-on visual approval of the pause and campaign screens is deferred until
   local host-display access is available.
 - The pre-Checkpoint-10 autopilot stabilization checkpoint is implementation-
@@ -962,7 +962,11 @@ Implementation progress:
   spheres, target selection is passive, point-to-move replaces the active route
   immediately, and right-click commands use a temporary highlighted preview.
 - Graphical approval of route shape and steering feel remains pending.
-- Checkpoint 10 Kaelen meta-memory and death reload is the next Phase 2 task.
+- Checkpoint 10 Kaelen meta-memory and death reload is complete. Verified death
+  events retain only approved bounded meta-memory outside the rewound timeline,
+  and the death screen can load the latest living checkpoint or open a fresh
+  campaign flow.
+- Checkpoint 11 version-2 save import is the next Phase 2 task.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.

@@ -40,6 +40,29 @@ func current_head_event_id() -> String:
 	return str(index.get("current_head_event_id", ""))
 
 
+func event_sequence(event_id: String) -> int:
+	if not is_valid() or not DomainIdType.is_valid(event_id, "event"):
+		return -1
+	for metadata in index.get("segments", []):
+		if not metadata is Dictionary:
+			continue
+		var parsed := DomainJsonType.read_object(
+			"%s/%s" % [campaign_path, metadata.get("path", "")]
+		)
+		var parsed_validation := parsed["validation"] as ValidationResult
+		if not parsed_validation.is_valid():
+			return -1
+		for event in parsed["data"].get("events", []):
+			if event is Dictionary \
+					and event.get("event_id", "") == event_id:
+				return int(event.get("sequence", -1))
+	return -1
+
+
+func current_head_sequence() -> int:
+	return event_sequence(current_head_event_id())
+
+
 func append_event(
 	event_type: String,
 	subject_ids: Array,

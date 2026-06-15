@@ -534,6 +534,13 @@ static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) ->
 			"timeline_reversal_count must be a non-negative integer.",
 			"timeline_reversal_count"
 		)
+	var next_sequence: Variant = data.get("next_memory_sequence", 0)
+	if not _is_whole_number(next_sequence) or int(next_sequence) < 0:
+		result.add_error(
+			"invalid_memory_sequence",
+			"next_memory_sequence must be a non-negative integer.",
+			"next_memory_sequence"
+		)
 	_validate_object_array(data, "memories", result)
 	_reject_nested_keys(data, _FORBIDDEN_KAELEN_KEYS, "", result)
 	var seen: Dictionary = {}
@@ -553,6 +560,13 @@ static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) ->
 				"event_sequence must be a non-negative integer.",
 				"%sevent_sequence" % prefix
 			)
+		var local_sequence: Variant = memory.get("local_sequence", 0)
+		if not _is_whole_number(local_sequence) or int(local_sequence) < 0:
+			result.add_error(
+				"invalid_local_memory_sequence",
+				"local_sequence must be a non-negative integer.",
+				"%slocal_sequence" % prefix
+			)
 		_require_nonempty_string(memory, "category", result, prefix)
 		_validate_id_array(memory, "fact_refs", "fact", result, prefix)
 		_require_nonempty_string(memory, "summary", result, prefix)
@@ -562,6 +576,25 @@ static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) ->
 				"invalid_timeline_status",
 				"timeline_status must be 'current' or 'discarded'.",
 				"%stimeline_status" % prefix
+			)
+		var death_category := str(memory.get("death_category", ""))
+		if str(memory.get("category", "")) == "death":
+			if death_category not in [
+				"combat",
+				"collision",
+				"environment",
+				"unknown",
+			]:
+				result.add_error(
+					"invalid_death_category",
+					"Death memory requires a verified death category.",
+					"%sdeath_category" % prefix
+				)
+		elif not death_category.is_empty():
+			result.add_error(
+				"unexpected_death_category",
+				"Only death memories may contain death_category.",
+				"%sdeath_category" % prefix
 			)
 		var memory_id := str(memory.get("memory_id", ""))
 		if not memory_id.is_empty() and seen.has(memory_id):

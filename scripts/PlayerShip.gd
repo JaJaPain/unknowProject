@@ -1547,9 +1547,12 @@ func double_click_move(click_pos: Vector3):
 	if ui and ui.has_method("show_target_marker"):
 		ui.show_target_marker(click_pos)
 
-func die():
+func die(death_source: String = ""):
 	destroyed = true
 	AudioManager.play_explosion(global_position)
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("record_player_death"):
+		game_root.call("record_player_death", death_source)
 	var ui = GlobalState.get_ui_manager()
 	if ui and ui.has_method("show_death_screen"):
 		ui.show_death_screen()
@@ -1640,7 +1643,7 @@ func take_damage(amount: float, attacker_faction: String = ""):
 		health -= amount
 		
 	if health <= 0.0:
-		die()
+		die(attacker_faction)
 
 func _update_drone_colors():
 	var health_pct = health / max_health

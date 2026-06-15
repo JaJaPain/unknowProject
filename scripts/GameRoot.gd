@@ -18,6 +18,9 @@ const CampaignCheckpointStoreType := preload(
 const CampaignChronicleStoreType := preload(
 	"res://scripts/persistence/CampaignChronicleStore.gd"
 )
+const CampaignKaelenMemoryStoreType := preload(
+	"res://scripts/persistence/CampaignKaelenMemoryStore.gd"
+)
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -35,6 +38,7 @@ var system_registry: SystemRegistry
 var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
 var campaign_chronicle_store: CampaignChronicleStore
+var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
@@ -83,6 +87,8 @@ func _ready() -> void:
 		call_deferred("_run_autopilot_smoke_test")
 	elif "--restart-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_restart_smoke_test")
+	elif "--death-reload-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_death_reload_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
@@ -576,6 +582,8 @@ func load_manual_checkpoint(slot_index: int) -> bool:
 		_initialize_campaign_chronicle()
 	if campaign_chronicle_store == null:
 		return false
+	if not _classify_kaelen_rollback(restored):
+		return false
 	var branched := campaign_chronicle_store.branch_from_checkpoint({
 		"id": restored.get("checkpoint_id", ""),
 		"timeline_id": restored.get("timeline_id", ""),
@@ -738,6 +746,7 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		active_campaign_slot_id = ""
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign slot deleted.",
@@ -894,6 +903,7 @@ func _ensure_campaign_checkpoint_store(
 
 func _initialize_campaign_chronicle() -> void:
 	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -908,8 +918,143 @@ func _initialize_campaign_chronicle() -> void:
 		)
 		return
 	campaign_chronicle_store = opened
+	var opened_memory := CampaignKaelenMemoryStoreType.open(slot_path)
+	if not opened_memory.is_valid():
+		push_warning(
+			"[GameRoot] Kaelen memory store is unavailable: %s" %
+				opened_memory.validation.summary()
+		)
+		campaign_chronicle_store = null
+		return
+	campaign_kaelen_memory_store = opened_memory
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
+
+
+func _classify_kaelen_rollback(restored: Dictionary) -> bool:
+	if campaign_chronicle_store == null \
+			or campaign_kaelen_memory_store == null:
+		return false
+	var head_event_id := str(
+		restored.get("chronicle_head_event_id", "")
+	)
+	var boundary_sequence := campaign_chronicle_store.event_sequence(
+		head_event_id
+	)
+	if boundary_sequence < 0:
+		_notify_system_warning(
+			"The selected checkpoint has no valid memory boundary."
+		)
+		return false
+	var classified := campaign_kaelen_memory_store.classify_rollback(
+		str(restored.get("timeline_id", "")),
+		str(restored.get("checkpoint_id", "")),
+		boundary_sequence
+	)
+	if not bool(classified.get("ok", false)):
+		_notify_system_warning(
+			"Timeline memory could not be reconciled with the checkpoint."
+		)
+		return false
+	return true
+
+
+func record_player_death(death_source: String = "") -> void:
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null \
+			or campaign_chronicle_store == null \
+			or campaign_kaelen_memory_store == null:
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var death_category := _death_category_for_source(death_source)
+	var payload := {"death_category": death_category}
+	if not death_source.is_empty():
+		payload["source"] = death_source
+	var appended := campaign_chronicle_store.append_event(
+		"player_death",
+		[campaign_chronicle_store.campaign["id"]],
+		payload,
+		str(active.get("checkpoint_id", ""))
+	)
+	if not bool(appended.get("ok", false)):
+		push_warning("[GameRoot] Player death could not be recorded.")
+		return
+	var event: Dictionary = appended["event"]
+	var summary := "Shiny's ship was destroyed."
+	if death_category == "combat":
+		summary = "Shiny's ship was destroyed in combat."
+	elif death_category == "collision":
+		summary = "Shiny's ship was destroyed in a collision."
+	elif death_category == "environment":
+		summary = "Shiny's ship was destroyed by an environmental hazard."
+	var remembered := campaign_kaelen_memory_store.append_memory(
+		"death",
+		summary,
+		[],
+		str(event.get("timeline_id", "")),
+		str(active.get("checkpoint_id", "")),
+		int(event.get("sequence", -1)),
+		death_category
+	)
+	if not bool(remembered.get("ok", false)):
+		push_warning("[GameRoot] Kaelen could not retain the death memory.")
+	_sync_checkpoint_chronicle_context()
+
+
+func restore_latest_campaign_checkpoint_after_death() -> bool:
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null \
+			or campaign_chronicle_store == null:
+		return false
+	var restored := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(restored.get("ok", false)) \
+			or not _classify_kaelen_rollback(restored):
+		return false
+	var branched := campaign_chronicle_store.branch_from_checkpoint({
+		"id": restored.get("checkpoint_id", ""),
+		"timeline_id": restored.get("timeline_id", ""),
+		"chronicle_head_event_id":
+			restored.get("chronicle_head_event_id", ""),
+	})
+	if not bool(branched.get("ok", false)):
+		return false
+	_reopen_campaign_checkpoint_store()
+	_sync_checkpoint_chronicle_context()
+	_reset_and_reload_scene()
+	return true
+
+
+func start_new_campaign_after_death() -> void:
+	Engine.set_meta("open_campaign_manager_after_death", true)
+	Engine.set_meta("skip_campaign_load_once", true)
+	_reset_and_reload_scene()
+
+
+func get_kaelen_current_memories() -> Array:
+	if campaign_kaelen_memory_store == null:
+		return []
+	return campaign_kaelen_memory_store.current_memories()
+
+
+func _death_category_for_source(death_source: String) -> String:
+	if death_source == "collision":
+		return "collision"
+	if death_source in ["environment", "self"]:
+		return "environment"
+	if not death_source.is_empty():
+		return "combat"
+	return "unknown"
+
+
+func _reset_and_reload_scene() -> void:
+	LLMInterface.reset_for_restart()
+	QuestManager.reset_for_restart()
+	GlobalState.reset_for_restart()
+	get_tree().reload_current_scene()
 
 
 func _reopen_campaign_checkpoint_store() -> void:
@@ -1141,6 +1286,12 @@ func delete_savegame() -> void:
 
 func _load_startup_save() -> void:
 	await get_tree().process_frame
+	if Engine.has_meta("skip_campaign_load_once"):
+		Engine.remove_meta("skip_campaign_load_once")
+		startup_save_loaded = false
+		startup_load_finished = true
+		startup_load_completed.emit(false)
+		return
 	_initialize_campaign_registry()
 	if campaign_checkpoint_store != null \
 			and campaign_checkpoint_store.is_valid():
@@ -1911,6 +2062,24 @@ func _run_core_smoke_test() -> void:
 			"Campaign manager UI was not constructed."
 		)
 		return
+	var load_after_death := ui.find_child(
+		"LoadLastSaveButton",
+		true,
+		false
+	)
+	var new_after_death := ui.find_child(
+		"StartNewCampaignButton",
+		true,
+		false
+	)
+	if load_after_death == null \
+			or load_after_death.get("text") != "Load Last Save" \
+			or new_after_death == null \
+			or new_after_death.get("text") != "Start New Campaign":
+		_fail_core_smoke_test(
+			"Death screen recovery choices were not constructed."
+		)
+		return
 	GlobalState.paused = true
 	ui.call("_open_campaign_manager")
 	if not bool(ui.get("campaign_panel").visible) \
@@ -2352,6 +2521,137 @@ func _run_restart_smoke_test() -> void:
 	print("[RestartSmokeTest] PASS: restarted scene adopted warm service state and completed loading.")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+func _run_death_reload_smoke_test() -> void:
+	await get_tree().process_frame
+	var phase := int(Engine.get_meta("death_reload_smoke_phase", 0))
+	if phase == 2:
+		await _load_startup_save()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		Engine.remove_meta("death_reload_smoke_phase")
+		var ui := GlobalState.get_ui_manager()
+		var campaign_panel_node = ui.get("campaign_panel") if ui else null
+		if startup_save_loaded \
+				or player == null \
+				or not is_instance_valid(player) \
+				or bool(player.get("destroyed")) \
+				or GlobalState.player_credits != 50 \
+				or campaign_panel_node == null \
+				or not campaign_panel_node.visible:
+			_fail_death_reload_smoke_test(
+				"New campaign recovery did not open on a fresh ship."
+			)
+			return
+		print(
+			"[DeathReloadSmokeTest] PASS: both death recovery choices restored a living ship and preserved timeline boundaries."
+		)
+		get_tree().quit(0)
+		return
+	if phase == 1:
+		await _load_startup_save()
+		await get_tree().process_frame
+		var expected_reversals := int(
+			Engine.get_meta("death_reload_expected_reversals", -1)
+		)
+		var expected_death_sequence := int(
+			Engine.get_meta("death_reload_memory_sequence", -1)
+		)
+		Engine.remove_meta("death_reload_smoke_phase")
+		Engine.remove_meta("death_reload_expected_reversals")
+		Engine.remove_meta("death_reload_memory_sequence")
+		var ui := GlobalState.get_ui_manager()
+		var death_panel_node = ui.get("death_panel") if ui else null
+		if not startup_save_loaded \
+				or player == null \
+				or not is_instance_valid(player) \
+				or bool(player.get("destroyed")) \
+				or GlobalState.player_credits != 321 \
+				or death_panel_node == null \
+				or death_panel_node.visible \
+				or campaign_kaelen_memory_store == null \
+				or campaign_kaelen_memory_store.reversal_count() \
+					!= expected_reversals:
+			_fail_death_reload_smoke_test(
+				"Living checkpoint state was not restored after death."
+			)
+			return
+		for memory in campaign_kaelen_memory_store.current_memories():
+			if int(memory.get("local_sequence", -1)) \
+					== expected_death_sequence:
+				_fail_death_reload_smoke_test(
+					"Discarded death leaked into current memory."
+				)
+				return
+		var discarded_death_found := false
+		for memory in (
+			campaign_kaelen_memory_store
+			.diagnostic_discarded_memories()
+		):
+			if int(memory.get("local_sequence", -1)) \
+					== expected_death_sequence \
+					and memory.get("category", "") == "death" \
+					and memory.get("death_category", "") == "combat":
+				discarded_death_found = true
+				break
+		if not discarded_death_found:
+			_fail_death_reload_smoke_test(
+				"Verified death was not retained as discarded memory."
+			)
+			return
+		player.call("take_damage", 100000.0, "aurelia")
+		await get_tree().process_frame
+		Engine.set_meta("death_reload_smoke_phase", 2)
+		ui.call("_start_new_campaign_after_death")
+		return
+
+	GlobalState.paused = false
+	GlobalState.player_credits = 321
+	var arrival_gate: Node3D = null
+	var system_root := get_active_system_root()
+	for candidate in get_tree().get_nodes_in_group("jumpgate"):
+		if candidate is Node3D and system_root.is_ancestor_of(candidate):
+			arrival_gate = candidate as Node3D
+			break
+	if arrival_gate == null \
+			or not request_safe_checkpoint("gate_arrival", arrival_gate):
+		_fail_death_reload_smoke_test(
+			"Could not create the living checkpoint fixture."
+		)
+		return
+	var prior_reversals := campaign_kaelen_memory_store.reversal_count()
+	GlobalState.player_credits = 999
+	player.call("take_damage", 100000.0, "aurelia")
+	await get_tree().process_frame
+	var death_memory_sequence := -1
+	for memory in campaign_kaelen_memory_store.current_memories():
+		if memory.get("category", "") == "death":
+			death_memory_sequence = maxi(
+				death_memory_sequence,
+				int(memory.get("local_sequence", -1))
+			)
+	var ui := GlobalState.get_ui_manager()
+	var death_panel_node = ui.get("death_panel") if ui else null
+	if ui == null \
+			or death_panel_node == null \
+			or not death_panel_node.visible \
+			or death_memory_sequence < 0:
+		_fail_death_reload_smoke_test(
+			"Fatal damage did not present the death recovery screen."
+		)
+		return
+	Engine.set_meta("death_reload_smoke_phase", 1)
+	Engine.set_meta(
+		"death_reload_expected_reversals",
+		prior_reversals + 1
+	)
+	Engine.set_meta(
+		"death_reload_memory_sequence",
+		death_memory_sequence
+	)
+	ui.call("_load_last_save_after_death")
+
 
 func _run_autopilot_smoke_test() -> void:
 	await get_tree().process_frame
@@ -3565,6 +3865,18 @@ func _fail_restart_smoke_test(message: String) -> void:
 	push_error("[RestartSmokeTest] FAIL: " + message)
 	delete_savegame()
 	get_tree().quit(1)
+
+
+func _fail_death_reload_smoke_test(message: String) -> void:
+	if Engine.has_meta("death_reload_smoke_phase"):
+		Engine.remove_meta("death_reload_smoke_phase")
+	if Engine.has_meta("death_reload_expected_reversals"):
+		Engine.remove_meta("death_reload_expected_reversals")
+	if Engine.has_meta("death_reload_memory_sequence"):
+		Engine.remove_meta("death_reload_memory_sequence")
+	push_error("[DeathReloadSmokeTest] FAIL: " + message)
+	get_tree().quit(1)
+
 
 func _fail_dock_smoke_test(message: String) -> void:
 	push_error("[DockSmokeTest] FAIL: " + message)

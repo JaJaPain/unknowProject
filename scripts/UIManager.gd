@@ -297,6 +297,9 @@ func _on_startup_load_completed(save_loaded: bool) -> void:
 	startup_save_loaded = save_loaded
 	if save_loaded:
 		refresh_restored_state()
+	if Engine.has_meta("open_campaign_manager_after_death"):
+		Engine.remove_meta("open_campaign_manager_after_death")
+		call_deferred("_open_campaign_manager")
 
 func refresh_restored_state() -> void:
 	_on_credits_changed(GlobalState.player_credits)
@@ -1484,6 +1487,7 @@ func _create_campaign_manager() -> void:
 
 
 func _open_campaign_manager() -> void:
+	GlobalState.paused = true
 	pause_panel.visible = false
 	campaign_panel.visible = true
 	_refresh_campaign_manager()
@@ -1806,14 +1810,33 @@ func _create_death_screen():
 	death_panel.offset_top = 0
 	death_panel.offset_bottom = 0
 	
-	var vbox = VBoxContainer.new()
-	death_panel.add_child(vbox)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 0
-	vbox.offset_right = 0
-	vbox.offset_top = 0
-	vbox.offset_bottom = 0
+	death_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.01, 0.015, 0.03, 0.96),
+			Color(0.8, 0.12, 0.18, 0.35),
+			0
+		)
+	)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	death_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(480, 390)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.045, 0.035, 0.055, 0.99),
+			Color(0.9, 0.18, 0.22, 0.65),
+			34
+		)
+	)
+	center.add_child(shell)
+	var vbox := VBoxContainer.new()
+	shell.add_child(vbox)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 10)
 	
 	var msg = Label.new()
 	msg.text = "SHIP DESTROYED"
@@ -1834,18 +1857,32 @@ func _create_death_screen():
 	vbox.add_child(btn_spacer)
 	
 	var restart_btn = Button.new()
-	restart_btn.text = "Restart Game"
-	restart_btn.custom_minimum_size = Vector2(220, 0)
+	restart_btn.name = "LoadLastSaveButton"
+	restart_btn.text = "Load Last Save"
+	restart_btn.custom_minimum_size = Vector2(220, 42)
 	restart_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	restart_btn.pressed.connect(_restart_game)
+	restart_btn.pressed.connect(_load_last_save_after_death)
 
 	vbox.add_child(restart_btn)
 	
 	var gap = Control.new()
 	gap.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(gap)
+
+	var new_campaign_btn = Button.new()
+	new_campaign_btn.name = "StartNewCampaignButton"
+	new_campaign_btn.text = "Start New Campaign"
+	new_campaign_btn.custom_minimum_size = Vector2(220, 42)
+	new_campaign_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	new_campaign_btn.pressed.connect(_start_new_campaign_after_death)
+	vbox.add_child(new_campaign_btn)
+
+	var quit_gap = Control.new()
+	quit_gap.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(quit_gap)
 	
 	var quit_btn = Button.new()
+	quit_btn.name = "QuitAfterDeathButton"
 	quit_btn.text = "Quit Game"
 	quit_btn.custom_minimum_size = Vector2(220, 0)
 	quit_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -1853,6 +1890,28 @@ func _create_death_screen():
 	vbox.add_child(quit_btn)
 	
 	death_panel.visible = false
+
+
+func _load_last_save_after_death() -> void:
+	var game_root := get_tree().current_scene
+	if game_root \
+			and game_root.has_method(
+				"restore_latest_campaign_checkpoint_after_death"
+			) \
+			and bool(
+				game_root.call(
+					"restore_latest_campaign_checkpoint_after_death"
+				)
+			):
+		return
+	show_hud_warning("No living campaign checkpoint is available.")
+
+
+func _start_new_campaign_after_death() -> void:
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("start_new_campaign_after_death"):
+		game_root.call("start_new_campaign_after_death")
+
 
 func _restart_game():
 	var game_root := get_tree().current_scene

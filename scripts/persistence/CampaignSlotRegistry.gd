@@ -633,11 +633,13 @@ func _build_initial_documents(
 		"id": ids["kaelen"],
 		"campaign_id": campaign_id,
 		"timeline_reversal_count": 0,
+		"next_memory_sequence": 1,
 		"memories": [{
 			"memory_id": ids["memory"],
 			"source_timeline_id": ids["timeline"],
 			"source_checkpoint_id": ids["checkpoint"],
 			"event_sequence": 0,
+			"local_sequence": 0,
 			"category": "observation",
 			"fact_refs": [ids["fact"]],
 			"summary": "Shiny arrived in the opening system.",
