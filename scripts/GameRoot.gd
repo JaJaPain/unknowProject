@@ -24,6 +24,9 @@ const CampaignKaelenMemoryStoreType := preload(
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
+const RuntimeTraceType := preload(
+	"res://scripts/diagnostics/RuntimeTrace.gd"
+)
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -50,6 +53,10 @@ var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
 
 func _ready() -> void:
+	RuntimeTraceType.begin_session()
+	RuntimeTraceType.event("game", "root_ready", {
+		"arguments": OS.get_cmdline_user_args(),
+	})
 	scene_ready_msec = Time.get_ticks_msec()
 	system_registry = SystemRegistry.load_default()
 	if not system_registry.is_valid():
@@ -85,6 +92,8 @@ func _ready() -> void:
 		call_deferred("_run_mission_smoke_test")
 	elif "--combat-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_combat_smoke_test")
+	elif "--station-combat-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_station_combat_smoke_test")
 	elif "--economy-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_economy_smoke_test")
 	elif "--autopilot-smoke-test" in OS.get_cmdline_user_args():
@@ -634,6 +643,21 @@ func get_campaign_ui_state() -> Dictionary:
 			"selected_slot_id": "",
 			"manual": [],
 		}
+	var autosave := {}
+	if campaign_checkpoint_store != null:
+		var active := campaign_checkpoint_store.runtime_state_from_active()
+		if bool(active.get("ok", false)):
+			autosave = {
+				"available": true,
+				"source_reason": active.get("source_reason", ""),
+				"safe_location": active.get("safe_location", {}),
+				"created_at_unix": int(
+					campaign_checkpoint_store.index.get(
+						"autosave",
+						{}
+					).get("created_at_unix", 0)
+				),
+			}
 	return {
 		"ok": true,
 		"slots": campaign_slot_registry.enumerate_slots(),
@@ -647,6 +671,7 @@ func get_campaign_ui_state() -> Dictionary:
 			campaign_checkpoint_store.list_manual_checkpoints()
 			if campaign_checkpoint_store != null
 			else [],
+		"autosave": autosave,
 	}
 
 
@@ -692,6 +717,11 @@ func create_campaign_in_slot(
 	slot_id: String,
 	display_name: String
 ) -> Dictionary:
+	var creating_fresh_campaign := Engine.has_meta(
+		"creating_new_campaign"
+	)
+	if creating_fresh_campaign:
+		QuestManager.reset_for_restart()
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)):
 		return {
@@ -701,6 +731,13 @@ func create_campaign_in_slot(
 				"Current gameplay state could not start a campaign."
 			),
 		}
+	if creating_fresh_campaign:
+		prepared["data"]["quest"] = {}
+		var opening_name := str(
+			Engine.get_meta("pending_opening_campaign_name", "")
+		).strip_edges()
+		if not opening_name.is_empty():
+			display_name = opening_name
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
@@ -715,6 +752,10 @@ func create_campaign_in_slot(
 	if not bool(created.get("ok", false)):
 		_notify_system_warning(str(created.get("error", "")))
 		return created
+	if creating_fresh_campaign:
+		Engine.remove_meta("creating_new_campaign")
+		if Engine.has_meta("pending_opening_campaign_name"):
+			Engine.remove_meta("pending_opening_campaign_name")
 	active_campaign_slot_id = slot_id
 	var slot_path := "%s/%s" % [
 		campaign_slot_registry.root_path,
@@ -732,6 +773,10 @@ func create_campaign_in_slot(
 
 
 func select_and_load_campaign(slot_id: String) -> Dictionary:
+	if Engine.has_meta("creating_new_campaign"):
+		Engine.remove_meta("creating_new_campaign")
+	if Engine.has_meta("pending_opening_campaign_name"):
+		Engine.remove_meta("pending_opening_campaign_name")
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
@@ -782,11 +827,42 @@ func rename_campaign_slot(
 	return renamed
 
 
+func apply_opening_campaign_name(display_name: String) -> bool:
+	if Engine.has_meta("creating_new_campaign"):
+		Engine.set_meta(
+			"pending_opening_campaign_name",
+			display_name
+		)
+		return true
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
+		return false
+	var active_slot: Dictionary = campaign_slot_registry.get_slot(
+		active_campaign_slot_id
+	)
+	var current_name := str(active_slot.get("display_name", ""))
+	if current_name not in [
+		"Shiny's Campaign",
+		"Pending Campaign",
+		"Campaign 1",
+		"Campaign 2",
+		"Campaign 3",
+	]:
+		return true
+	var renamed := campaign_slot_registry.rename_campaign(
+		active_campaign_slot_id,
+		display_name
+	)
+	return bool(renamed.get("ok", false))
+
+
 func delete_campaign_slot(slot_id: String) -> Dictionary:
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return {"ok": false, "error": "Campaign storage is unavailable."}
+	var deleted_active_campaign := active_campaign_slot_id == slot_id
 	var deleted := campaign_slot_registry.delete_campaign(slot_id)
 	if not bool(deleted.get("ok", false)):
 		_notify_system_warning(str(deleted.get("error", "")))
@@ -796,12 +872,30 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
 		campaign_kaelen_memory_store = null
+	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign slot deleted.",
 		Color(0.0, 0.9, 0.9)
 	)
 	return deleted
+
+
+func reset_after_active_campaign_deleted(replacement_slot_id: String = "") -> void:
+	Engine.set_meta("open_campaign_manager_after_death", true)
+	Engine.set_meta("skip_campaign_load_once", true)
+	Engine.set_meta("creating_new_campaign", true)
+	var target_slot_id := replacement_slot_id.strip_edges()
+	if target_slot_id.is_empty():
+		if campaign_slot_registry == null:
+			_initialize_campaign_registry()
+		if campaign_slot_registry != null:
+			target_slot_id = campaign_slot_registry.first_empty_slot_id()
+	if not target_slot_id.is_empty():
+		Engine.set_meta("pending_new_campaign_slot", target_slot_id)
+	if Engine.has_meta("pending_opening_campaign_name"):
+		Engine.remove_meta("pending_opening_campaign_name")
+	_reset_and_reload_scene()
 
 
 func _notify_autosave_success(
@@ -925,9 +1019,18 @@ func _ensure_campaign_checkpoint_store(
 		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
 		if active_campaign_slot_id.is_empty():
 			return false
+		var automatic_name := str(
+			Engine.get_meta(
+				"pending_opening_campaign_name",
+				"Shiny's Campaign"
+			)
+		)
+		if Engine.has_meta("creating_new_campaign"):
+			QuestManager.reset_for_restart()
+			prepared_runtime_state["quest"] = {}
 		var created := campaign_slot_registry.create_campaign(
 			active_campaign_slot_id,
-			"Shiny's Campaign",
+			automatic_name,
 			"prototype-phase-2",
 			prepared_runtime_state,
 			system_registry
@@ -939,6 +1042,10 @@ func _ensure_campaign_checkpoint_store(
 			)
 			active_campaign_slot_id = ""
 			return false
+		if Engine.has_meta("creating_new_campaign"):
+			Engine.remove_meta("creating_new_campaign")
+		if Engine.has_meta("pending_opening_campaign_name"):
+			Engine.remove_meta("pending_opening_campaign_name")
 	var slot_path := "%s/%s" % [
 		campaign_slot_registry.root_path,
 		active_campaign_slot_id,
@@ -1077,10 +1184,32 @@ func restore_latest_campaign_checkpoint_after_death() -> bool:
 	return true
 
 
-func start_new_campaign_after_death() -> void:
+func can_start_new_campaign() -> bool:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	return campaign_slot_registry != null \
+		and not campaign_slot_registry.first_empty_slot_id().is_empty()
+
+
+func start_new_campaign_after_death() -> bool:
+	if campaign_slot_registry == null:
+		_initialize_campaign_registry()
+	if campaign_slot_registry == null:
+		return false
+	var target_slot_id := campaign_slot_registry.first_empty_slot_id()
+	if target_slot_id.is_empty():
+		_notify_system_warning(
+			"All three campaigns are occupied. Delete one to start another."
+		)
+		return false
 	Engine.set_meta("open_campaign_manager_after_death", true)
 	Engine.set_meta("skip_campaign_load_once", true)
+	Engine.set_meta("creating_new_campaign", true)
+	Engine.set_meta("pending_new_campaign_slot", target_slot_id)
+	if Engine.has_meta("pending_opening_campaign_name"):
+		Engine.remove_meta("pending_opening_campaign_name")
 	_reset_and_reload_scene()
+	return true
 
 
 func get_kaelen_current_memories() -> Array:
@@ -1234,6 +1363,12 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 		"safe_location",
 		{}
 	).duplicate(true)
+	RuntimeTraceType.event("checkpoint", "restore_started", {
+		"checkpoint_id": str(restored.get("checkpoint_id", "")),
+		"source_system_id": GlobalState.current_system_id,
+		"target_system_id": str(safe_location.get("system_id", "")),
+		"safe_location": safe_location,
+	})
 	var encoded: Dictionary = restored.get("state", {}).duplicate(true)
 	encoded["version"] = SAVE_VERSION
 	encoded["current_system_id"] = safe_location.get(
@@ -1256,6 +1391,15 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 	await _apply_save_data(decoded["data"])
 	await _restore_safe_location(safe_location)
 	restoring_safe_checkpoint = false
+	RuntimeTraceType.event("checkpoint", "restore_completed", {
+		"checkpoint_id": str(restored.get("checkpoint_id", "")),
+		"system_id": GlobalState.current_system_id,
+		"player_position": [
+			player.global_position.x,
+			player.global_position.y,
+			player.global_position.z,
+		],
+	})
 	return true
 
 
@@ -1337,6 +1481,23 @@ func _load_startup_save() -> void:
 	await get_tree().process_frame
 	if Engine.has_meta("skip_campaign_load_once"):
 		Engine.remove_meta("skip_campaign_load_once")
+		var target_slot_id := str(
+			Engine.get_meta("pending_new_campaign_slot", "")
+		)
+		if Engine.has_meta("pending_new_campaign_slot"):
+			Engine.remove_meta("pending_new_campaign_slot")
+		if not target_slot_id.is_empty():
+			var created := create_campaign_in_slot(
+				target_slot_id,
+				"Pending Campaign"
+			)
+			if not bool(created.get("ok", false)):
+				push_warning(
+					"[GameRoot] Fresh campaign could not claim %s: %s" % [
+						target_slot_id,
+						created.get("error", "unknown error"),
+					]
+				)
 		startup_save_loaded = false
 		startup_load_finished = true
 		startup_load_completed.emit(false)
@@ -1396,7 +1557,16 @@ func _load_system_without_transition(system_id: String) -> void:
 	var runtime_system_id := system_registry.runtime_system_id(system_id)
 	var packed_system := system_registry.load_scene(system_id)
 	if not packed_system:
+		RuntimeTraceType.event("transition", "load_failed", {
+			"requested_system_id": system_id,
+			"source_system_id": GlobalState.current_system_id,
+		})
 		return
+	RuntimeTraceType.event("transition", "load_started", {
+		"requested_system_id": system_id,
+		"runtime_system_id": runtime_system_id,
+		"source_system_id": GlobalState.current_system_id,
+	})
 	GlobalState.active_target = null
 	GlobalState.active_system_entities.clear()
 	var old_system := get_active_system_root()
@@ -1410,6 +1580,10 @@ func _load_system_without_transition(system_id: String) -> void:
 	GlobalState.current_system_id = runtime_system_id
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
+	RuntimeTraceType.event("transition", "load_completed", {
+		"runtime_system_id": GlobalState.current_system_id,
+		"active_system_root": str(new_system.name),
+	})
 
 func _capture_player_state() -> Dictionary:
 	return {
@@ -1462,7 +1636,13 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.cargo_special = state.get("cargo_special", {}).duplicate(true)
 	GlobalState.cargo = float(state.get("cargo", 0.0))
 	GlobalState.reputations = state.get("reputations", GlobalState.reputations).duplicate(true)
-	GlobalState.faction_kills = state.get("faction_kills", GlobalState.faction_kills).duplicate(true)
+	var loaded_kills: Dictionary = state.get(
+		"faction_kills",
+		GlobalState.faction_kills
+	).duplicate(true)
+	for faction_name: Variant in loaded_kills.keys():
+		loaded_kills[faction_name] = int(loaded_kills[faction_name])
+	GlobalState.faction_kills = loaded_kills
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:
@@ -2120,7 +2300,8 @@ func _run_core_smoke_test() -> void:
 
 	if ui.get("campaign_panel") == null \
 			or ui.get("campaign_slots_vbox") == null \
-			or ui.get("campaign_manual_vbox") == null:
+			or ui.get("campaign_manual_vbox") == null \
+			or ui.get("campaign_load_fade") == null:
 		_fail_core_smoke_test(
 			"Campaign manager UI was not constructed."
 		)
@@ -2589,11 +2770,24 @@ func _run_restart_smoke_test() -> void:
 func _run_death_reload_smoke_test() -> void:
 	await get_tree().process_frame
 	var phase := int(Engine.get_meta("death_reload_smoke_phase", 0))
-	if phase == 2:
+	if phase == 3:
 		await _load_startup_save()
 		await get_tree().process_frame
 		await get_tree().process_frame
 		Engine.remove_meta("death_reload_smoke_phase")
+		var expected_campaign_count := int(
+			Engine.get_meta("death_reload_expected_campaign_count", -1)
+		)
+		var expected_replacement_slot := str(
+			Engine.get_meta("death_reload_expected_replacement_slot", "")
+		)
+		Engine.remove_meta("death_reload_expected_campaign_count")
+		Engine.remove_meta("death_reload_expected_replacement_slot")
+		var occupied_campaigns := 0
+		if campaign_slot_registry != null:
+			for slot in campaign_slot_registry.enumerate_slots():
+				if bool(slot.get("occupied", false)):
+					occupied_campaigns += 1
 		var ui := GlobalState.get_ui_manager()
 		var campaign_panel_node = ui.get("campaign_panel") if ui else null
 		if startup_save_loaded \
@@ -2601,16 +2795,70 @@ func _run_death_reload_smoke_test() -> void:
 				or not is_instance_valid(player) \
 				or bool(player.get("destroyed")) \
 				or GlobalState.player_credits != 50 \
+				or QuestManager.is_quest_active() \
+				or occupied_campaigns != expected_campaign_count \
+				or active_campaign_slot_id != expected_replacement_slot \
+				or campaign_checkpoint_store == null \
+				or not campaign_checkpoint_store.is_valid() \
 				or campaign_panel_node == null \
 				or not campaign_panel_node.visible:
 			_fail_death_reload_smoke_test(
-				"New campaign recovery did not open on a fresh ship."
+				"Active campaign deletion did not create a fresh replacement campaign."
 			)
 			return
 		print(
-			"[DeathReloadSmokeTest] PASS: both death recovery choices restored a living ship and preserved timeline boundaries."
+			"[DeathReloadSmokeTest] PASS: death recovery and active campaign deletion both restart into clean campaign state."
 		)
 		get_tree().quit(0)
+		return
+	if phase == 2:
+		await _load_startup_save()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var expected_campaign_count := int(
+			Engine.get_meta("death_reload_expected_campaign_count", -1)
+		)
+		var occupied_campaigns := 0
+		if campaign_slot_registry != null:
+			for slot in campaign_slot_registry.enumerate_slots():
+				if bool(slot.get("occupied", false)):
+					occupied_campaigns += 1
+		var ui := GlobalState.get_ui_manager()
+		var campaign_panel_node = ui.get("campaign_panel") if ui else null
+		if startup_save_loaded \
+				or player == null \
+				or not is_instance_valid(player) \
+				or bool(player.get("destroyed")) \
+				or GlobalState.player_credits != 50 \
+				or QuestManager.is_quest_active() \
+				or occupied_campaigns != expected_campaign_count \
+				or active_campaign_slot_id.is_empty() \
+				or campaign_checkpoint_store == null \
+				or not campaign_checkpoint_store.is_valid() \
+				or campaign_panel_node == null \
+				or not campaign_panel_node.visible:
+			_fail_death_reload_smoke_test(
+				"New campaign recovery did not open with fresh quest state."
+			)
+			return
+		var replacement_slot_id := active_campaign_slot_id
+		var deleted := delete_campaign_slot(replacement_slot_id)
+		if not bool(deleted.get("ok", false)) \
+				or not bool(deleted.get("deleted_active_campaign", false)):
+			_fail_death_reload_smoke_test(
+				"Active campaign fixture could not be deleted."
+			)
+			return
+		Engine.set_meta("death_reload_smoke_phase", 3)
+		Engine.set_meta(
+			"death_reload_expected_campaign_count",
+			expected_campaign_count
+		)
+		Engine.set_meta(
+			"death_reload_expected_replacement_slot",
+			replacement_slot_id
+		)
+		reset_after_active_campaign_deleted(replacement_slot_id)
 		return
 	if phase == 1:
 		await _load_startup_save()
@@ -2665,7 +2913,15 @@ func _run_death_reload_smoke_test() -> void:
 			return
 		player.call("take_damage", 100000.0, "aurelia")
 		await get_tree().process_frame
+		var occupied_before_new_campaign := 0
+		for slot in campaign_slot_registry.enumerate_slots():
+			if bool(slot.get("occupied", false)):
+				occupied_before_new_campaign += 1
 		Engine.set_meta("death_reload_smoke_phase", 2)
+		Engine.set_meta(
+			"death_reload_expected_campaign_count",
+			occupied_before_new_campaign + 1
+		)
 		ui.call("_start_new_campaign_after_death")
 		return
 
@@ -3424,6 +3680,69 @@ func _run_economy_smoke_test() -> void:
 	delete_savegame()
 	get_tree().quit(0)
 
+func _run_station_combat_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+
+	var station := GlobalState.get_primary_station()
+	var npc_scene := load("res://scenes/npc_ship.tscn") as PackedScene
+	if station == null or npc_scene == null:
+		_fail_station_combat_smoke_test(
+			"The main station or combat ship scene could not be loaded."
+		)
+		return
+
+	# JSON restores whole numbers as floats. Starting at 2.0 reproduces the
+	# loaded-campaign third-kill path that previously failed in record_kill().
+	GlobalState.faction_kills["aurelia"] = 2.0
+	GlobalState.reputations["aurelia"] = -50.0
+	player.global_position = station.global_position + Vector3(
+		135.0,
+		0.0,
+		0.0
+	)
+	player.velocity = Vector3.ZERO
+
+	var target := npc_scene.instantiate()
+	target.persistent_id = "entity.test.station_combat"
+	target.faction = "aurelia"
+	target.ship_role = "Gunner"
+	target.name = "StationCombatTarget"
+	get_active_system_root().add_child(target)
+	target.global_position = station.global_position + Vector3(
+		170.0,
+		0.0,
+		0.0
+	)
+	target.health = minf(float(target.health), 24.0)
+	await get_tree().physics_frame
+
+	var shots_fired := 0
+	var frames_waited := 0
+	while is_instance_valid(target) and frames_waited < 360:
+		if frames_waited % 12 == 0:
+			player.look_at(target.global_position, Vector3.UP)
+			player.spawn_projectile(target)
+			shots_fired += 1
+		await get_tree().physics_frame
+		frames_waited += 1
+
+	if is_instance_valid(target) \
+			or int(GlobalState.faction_kills.get("aurelia", 0)) != 3:
+		_fail_station_combat_smoke_test(
+			"Station-adjacent projectile combat did not finish cleanly."
+		)
+		return
+	print(
+		"[StationCombatSmokeTest] PASS: real projectiles destroyed a loaded-state ship beside the main station (%d shots)." %
+		shots_fired
+	)
+	get_tree().quit(0)
+
+
 func _run_combat_smoke_test() -> void:
 	await get_tree().process_frame
 	var phase := int(Engine.get_meta("combat_smoke_phase", 0))
@@ -3591,9 +3910,12 @@ func _run_mission_smoke_test() -> void:
 	var fallback_result: Dictionary = fallback_holder["quest"]
 	if not bool(fallback_holder["called"]) \
 			or fallback_result.is_empty() \
+			or str(fallback_result.get("campaign_name", "")).is_empty() \
 			or not fallback_result.has("objective") \
 			or not fallback_result.has("choices"):
-		_fail_mission_smoke_test("Local fallback did not produce a playable contract.")
+		_fail_mission_smoke_test(
+			"Local fallback did not produce a named playable campaign."
+		)
 		return
 	var fallback_objective: Dictionary = fallback_result["objective"]
 	var fallback_type := str(fallback_objective.get("type", ""))
@@ -3982,6 +4304,10 @@ func _fail_combat_smoke_test(message: String) -> void:
 	delete_savegame()
 	get_tree().quit(1)
 
+func _fail_station_combat_smoke_test(message: String) -> void:
+	push_error("[StationCombatSmokeTest] FAIL: " + message)
+	get_tree().quit(1)
+
 func _fail_economy_smoke_test(message: String) -> void:
 	push_error("[EconomySmokeTest] FAIL: " + message)
 	delete_savegame()
@@ -4007,6 +4333,10 @@ func _fail_death_reload_smoke_test(message: String) -> void:
 		Engine.remove_meta("death_reload_expected_reversals")
 	if Engine.has_meta("death_reload_memory_sequence"):
 		Engine.remove_meta("death_reload_memory_sequence")
+	if Engine.has_meta("death_reload_expected_campaign_count"):
+		Engine.remove_meta("death_reload_expected_campaign_count")
+	if Engine.has_meta("death_reload_expected_replacement_slot"):
+		Engine.remove_meta("death_reload_expected_replacement_slot")
 	push_error("[DeathReloadSmokeTest] FAIL: " + message)
 	get_tree().quit(1)
 
@@ -4155,8 +4485,19 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	GlobalState.player_credits = 2
 	player.global_position += Vector3(500.0, 0.0, 500.0)
+	await _load_system_without_transition("test_system")
+	if GlobalState.current_system_id != "test_system":
+		_fail_jump_smoke_test(
+			"Save test could not move away from the checkpoint system."
+		)
+		return false
 	if not await load_manual_checkpoint(0):
 		_fail_jump_smoke_test("Manual checkpoint could not be loaded.")
+		return false
+	if GlobalState.current_system_id != "start_system":
+		_fail_jump_smoke_test(
+			"Manual checkpoint did not restore its saved system."
+		)
 		return false
 	if campaign_chronicle_store.current_timeline_id() == original_timeline_id:
 		_fail_jump_smoke_test(

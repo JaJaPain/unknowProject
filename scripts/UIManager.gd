@@ -136,12 +136,15 @@ var agent_portrait: TextureRect
 var agent_client_logo: TextureRect
 
 var pause_panel: Panel
+var pause_new_campaign_button: Button
 var campaign_panel: Panel
 var campaign_slots_vbox: VBoxContainer
 var campaign_manual_vbox: VBoxContainer
 var campaign_status_label: Label
 var campaign_import_button: Button
 var campaign_confirm_dialog: ConfirmationDialog
+var campaign_load_fade: ColorRect
+var campaign_load_in_progress: bool = false
 var pending_delete_slot_id: String = ""
 var pending_manual_slot_index: int = -1
 var pending_manual_name: String = ""
@@ -242,6 +245,7 @@ func _ready():
 	_create_context_menu()
 	_create_death_screen()
 	_create_pause_menu()
+	_create_campaign_load_fade()
 	
 	# Create target indicator marker
 	target_marker = Control.new()
@@ -1293,7 +1297,12 @@ func _create_pause_menu():
 	var actions := actions_card.get_child(0) as VBoxContainer
 	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
-	_add_pause_action(actions, "RESTART SESSION", _restart_game)
+	pause_new_campaign_button = _add_pause_action(
+		actions,
+		"START NEW CAMPAIGN",
+		_start_new_campaign
+	)
+	_refresh_new_campaign_availability()
 	_add_pause_action(actions, "QUIT TO DESKTOP", func(): get_tree().quit())
 
 	var controls_card := _make_pause_card("FLIGHT CONTROLS")
@@ -1386,7 +1395,7 @@ func _add_pause_action(
 	label: String,
 	action: Callable,
 	primary: bool = false
-) -> void:
+) -> Button:
 	var button := Button.new()
 	button.text = label
 	button.custom_minimum_size = Vector2(0, 48)
@@ -1394,6 +1403,7 @@ func _add_pause_action(
 		button.add_theme_color_override("font_color", Color(0.7, 1.0, 1.0))
 	button.pressed.connect(action)
 	parent.add_child(button)
+	return button
 
 
 func _add_volume_row(
@@ -1478,11 +1488,11 @@ func _create_campaign_manager() -> void:
 	columns.add_theme_constant_override("separation", 16)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(columns)
-	var slots_card := _make_pause_card("CAMPAIGN SLOTS")
+	var slots_card := _make_pause_card("CAMPAIGNS - SEPARATE PLAYTHROUGHS")
 	slots_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(slots_card)
 	campaign_slots_vbox = slots_card.get_child(0) as VBoxContainer
-	var manual_card := _make_pause_card("MANUAL CHECKPOINTS")
+	var manual_card := _make_pause_card("SAVES FOR SELECTED CAMPAIGN")
 	manual_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(manual_card)
 	campaign_manual_vbox = manual_card.get_child(0) as VBoxContainer
@@ -1492,6 +1502,18 @@ func _create_campaign_manager() -> void:
 	campaign_confirm_dialog.confirmed.connect(_on_campaign_action_confirmed)
 	add_child(campaign_confirm_dialog)
 	campaign_panel.visible = false
+
+
+func _create_campaign_load_fade() -> void:
+	campaign_load_fade = ColorRect.new()
+	campaign_load_fade.name = "CampaignLoadFade"
+	campaign_load_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_load_fade.color = Color.BLACK
+	campaign_load_fade.modulate.a = 0.0
+	campaign_load_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	campaign_load_fade.visible = false
+	add_child(campaign_load_fade)
+	move_child(campaign_load_fade, get_child_count() - 1)
 
 
 func _open_campaign_manager() -> void:
@@ -1507,6 +1529,7 @@ func _close_campaign_manager() -> void:
 
 
 func _refresh_campaign_manager() -> void:
+	_refresh_new_campaign_availability()
 	_clear_container(campaign_slots_vbox, 1)
 	_clear_container(campaign_manual_vbox, 1)
 	var game_root := get_tree().current_scene
@@ -1518,6 +1541,7 @@ func _refresh_campaign_manager() -> void:
 		campaign_status_label.text = str(state.get("error", "Campaign storage is unavailable."))
 		return
 	var selected_slot_id := str(state.get("selected_slot_id", ""))
+	var selected_campaign_name := ""
 	var legacy_import: Dictionary = state.get("legacy_import", {})
 	campaign_import_button.visible = (
 		bool(legacy_import.get("available", false))
@@ -1536,6 +1560,10 @@ func _refresh_campaign_manager() -> void:
 	)
 	for slot in state.get("slots", []):
 		_add_campaign_slot_row(slot, selected_slot_id)
+		if str(slot.get("slot_id", "")) == selected_slot_id:
+			selected_campaign_name = str(
+				slot.get("display_name", "Campaign")
+			)
 	var manual: Array = state.get("manual", [])
 	if selected_slot_id.is_empty():
 		var empty_message := Label.new()
@@ -1543,7 +1571,23 @@ func _refresh_campaign_manager() -> void:
 		empty_message.autowrap_mode = TextServer.AUTOWRAP_WORD
 		campaign_manual_vbox.add_child(empty_message)
 	else:
-		for slot_index in range(3):
+		var help := Label.new()
+		help.text = (
+			"Continue Point updates automatically at safe places. "
+			+ "Backup Copies only change when you replace them."
+		)
+		help.autowrap_mode = TextServer.AUTOWRAP_WORD
+		help.add_theme_color_override(
+			"font_color",
+			Color(0.72, 0.8, 0.9)
+		)
+		campaign_manual_vbox.add_child(help)
+		_add_autosave_checkpoint_row(
+			state.get("autosave", {}),
+			selected_slot_id,
+			selected_campaign_name
+		)
+		for slot_index in range(2):
 			var entry: Dictionary = (
 				manual[slot_index]
 				if slot_index < manual.size()
@@ -1552,7 +1596,57 @@ func _refresh_campaign_manager() -> void:
 					"occupied": false,
 				}
 			)
-			_add_manual_checkpoint_row(entry)
+			_add_manual_checkpoint_row(entry, selected_campaign_name)
+
+
+func _add_autosave_checkpoint_row(
+	entry: Dictionary,
+	selected_slot_id: String,
+	campaign_name: String
+) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.025, 0.035, 0.06, 0.9),
+			Color(0.0, 0.75, 0.85, 0.35),
+			12
+		)
+	)
+	campaign_manual_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = (
+		"\"%s\"  %s" % [
+			campaign_name,
+			_format_save_timestamp(
+				int(entry.get("created_at_unix", 0))
+			),
+		]
+		if bool(entry.get("available", false))
+		else "CONTINUE POINT"
+	)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(title)
+	var details := Label.new()
+	if bool(entry.get("available", false)):
+		var location: Dictionary = entry.get("safe_location", {})
+		details.text = "Latest safe arrival: %s" % str(
+			location.get("type", "safe point")
+		).replace("_", " ").capitalize()
+	else:
+		details.text = "Updates automatically at a station or jumpgate."
+	details.add_theme_color_override("font_color", Color(0.7, 0.78, 0.86))
+	column.add_child(details)
+	var load_button := Button.new()
+	load_button.text = "LOAD CONTINUE POINT"
+	load_button.disabled = not bool(entry.get("available", false))
+	load_button.pressed.connect(
+		_on_campaign_continue.bind(selected_slot_id)
+	)
+	column.add_child(load_button)
 
 
 func _on_legacy_save_import() -> void:
@@ -1605,11 +1699,11 @@ func _add_campaign_slot_row(
 	]
 	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
 	column.add_child(heading)
-	var name_edit := LineEdit.new()
-	name_edit.placeholder_text = "Campaign name"
-	name_edit.max_length = 48
-	name_edit.text = str(slot.get("display_name", "")) if occupied else ""
-	column.add_child(name_edit)
+	if occupied:
+		var campaign_name := Label.new()
+		campaign_name.text = str(slot.get("display_name", "Campaign"))
+		campaign_name.add_theme_font_size_override("font_size", 20)
+		column.add_child(campaign_name)
 	var detail := Label.new()
 	if occupied:
 		var summary: Dictionary = slot.get("checkpoint_summary", {})
@@ -1631,12 +1725,6 @@ func _add_campaign_slot_row(
 			_on_campaign_continue.bind(slot_id)
 		)
 		actions.add_child(continue_button)
-		var rename_button := Button.new()
-		rename_button.text = "RENAME"
-		rename_button.pressed.connect(
-			_on_campaign_rename.bind(slot_id, name_edit)
-		)
-		actions.add_child(rename_button)
 		var delete_button := Button.new()
 		delete_button.text = "DELETE"
 		delete_button.pressed.connect(
@@ -1644,15 +1732,19 @@ func _add_campaign_slot_row(
 		)
 		actions.add_child(delete_button)
 	else:
-		var create_button := Button.new()
-		create_button.text = "NEW CAMPAIGN"
-		create_button.pressed.connect(
-			_on_campaign_create.bind(slot_id, name_edit)
+		var available := Label.new()
+		available.text = "Available for the next new campaign"
+		available.add_theme_color_override(
+			"font_color",
+			Color(0.65, 0.72, 0.82)
 		)
-		actions.add_child(create_button)
+		actions.add_child(available)
 
 
-func _add_manual_checkpoint_row(entry: Dictionary) -> void:
+func _add_manual_checkpoint_row(
+	entry: Dictionary,
+	campaign_name: String
+) -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override(
 		"panel",
@@ -1665,48 +1757,61 @@ func _add_manual_checkpoint_row(entry: Dictionary) -> void:
 	var slot_index := int(entry.get("slot_index", 0))
 	var occupied := bool(entry.get("occupied", false))
 	var title := Label.new()
-	title.text = "MANUAL %d" % (slot_index + 1)
+	title.text = (
+		"\"%s\"  %s" % [
+			campaign_name,
+			_format_save_timestamp(
+				int(entry.get("created_at_unix", 0))
+			),
+		]
+		if occupied
+		else "BACKUP COPY %d - EMPTY" % (slot_index + 1)
+	)
 	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
 	column.add_child(title)
-	var name_edit := LineEdit.new()
-	name_edit.max_length = 48
-	name_edit.placeholder_text = "Checkpoint name"
-	name_edit.text = str(entry.get("display_name", "")) if occupied else ""
-	column.add_child(name_edit)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	column.add_child(actions)
 	var save_button := Button.new()
-	save_button.text = "OVERWRITE" if occupied else "SAVE"
+	save_button.text = (
+		"REPLACE WITH CONTINUE POINT"
+		if occupied
+		else "COPY CONTINUE POINT HERE"
+	)
 	save_button.pressed.connect(
-		_on_manual_save.bind(slot_index, name_edit, occupied)
+		_on_manual_save.bind(slot_index, campaign_name, occupied)
 	)
 	actions.add_child(save_button)
-	var rename_button := Button.new()
-	rename_button.text = "RENAME"
-	rename_button.disabled = not occupied
-	rename_button.pressed.connect(
-		_on_manual_rename.bind(slot_index, name_edit)
-	)
-	actions.add_child(rename_button)
 	var load_button := Button.new()
-	load_button.text = "LOAD"
+	load_button.text = "LOAD COPY"
 	load_button.disabled = not occupied
 	load_button.pressed.connect(_on_manual_load.bind(slot_index))
 	actions.add_child(load_button)
 
 
+func _format_save_timestamp(unix_time: int) -> String:
+	if unix_time <= 0:
+		return ""
+	var date_time := Time.get_datetime_dict_from_unix_time(unix_time)
+	return "%04d-%02d-%02d %02d:%02d" % [
+		int(date_time.get("year", 0)),
+		int(date_time.get("month", 0)),
+		int(date_time.get("day", 0)),
+		int(date_time.get("hour", 0)),
+		int(date_time.get("minute", 0)),
+	]
+
+
 func _on_campaign_create(
-	slot_id: String,
-	name_edit: LineEdit
+	slot_id: String
 ) -> void:
 	var game_root := get_tree().current_scene
 	var result: Dictionary = game_root.create_campaign_in_slot(
 		slot_id,
-		name_edit.text
+		"Pending Campaign"
 	)
 	campaign_status_label.text = (
-		"Campaign created."
+		"Campaign created. Its opening story will name it."
 		if bool(result.get("ok", false))
 		else str(result.get("error", "Campaign creation failed."))
 	)
@@ -1714,14 +1819,52 @@ func _on_campaign_create(
 
 
 func _on_campaign_continue(slot_id: String) -> void:
+	if campaign_load_in_progress:
+		return
+	campaign_load_in_progress = true
+	campaign_status_label.text = "Loading campaign..."
+	await _fade_campaign_load(1.0)
 	var game_root := get_tree().current_scene
 	var result: Dictionary = await game_root.select_and_load_campaign(slot_id)
+	if bool(result.get("ok", false)):
+		campaign_panel.visible = false
+		pause_panel.visible = false
+		GlobalState.paused = false
+		await get_tree().process_frame
+		await _fade_campaign_load(0.0)
+		campaign_load_in_progress = false
+		return
 	campaign_status_label.text = (
-		"Campaign loaded."
-		if bool(result.get("ok", false))
-		else str(result.get("error", "Campaign loading failed."))
+		str(result.get("error", "Campaign loading failed."))
 	)
+	await _fade_campaign_load(0.0)
+	campaign_load_in_progress = false
 	_refresh_campaign_manager()
+
+
+func _fade_campaign_load(target_alpha: float) -> void:
+	if campaign_load_fade == null:
+		return
+	campaign_load_fade.visible = true
+	move_child(campaign_load_fade, get_child_count() - 1)
+	var duration := (
+		0.01
+		if DisplayServer.get_name() == "headless"
+		else 0.35
+	)
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(
+		campaign_load_fade,
+		"modulate:a",
+		target_alpha,
+		duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(
+		Tween.EASE_IN if target_alpha > 0.0 else Tween.EASE_OUT
+	)
+	await tween.finished
+	if target_alpha <= 0.0:
+		campaign_load_fade.visible = false
 
 
 func _on_campaign_rename(
@@ -1744,27 +1887,40 @@ func _on_campaign_rename(
 func _request_campaign_delete(slot_id: String) -> void:
 	pending_delete_slot_id = slot_id
 	pending_manual_slot_index = -1
+	var game_root := get_tree().current_scene
+	var deleting_active := game_root != null \
+		and str(game_root.get("active_campaign_slot_id")) == slot_id
 	campaign_confirm_dialog.dialog_text = (
-		"Delete this campaign and all of its checkpoints? This cannot be undone."
+		(
+			"Delete the campaign you are currently playing? "
+			+ "This ends the current session and deletes all of its saves. "
+			+ "This cannot be undone."
+		)
+		if deleting_active
+		else (
+			"Delete this campaign and all of its checkpoints? "
+			+ "This cannot be undone."
+		)
 	)
 	campaign_confirm_dialog.popup_centered()
 
 
 func _on_manual_save(
 	slot_index: int,
-	name_edit: LineEdit,
+	campaign_name: String,
 	occupied: bool
 ) -> void:
 	if occupied:
 		pending_delete_slot_id = ""
 		pending_manual_slot_index = slot_index
-		pending_manual_name = name_edit.text
+		pending_manual_name = campaign_name
 		campaign_confirm_dialog.dialog_text = (
-			"Overwrite manual checkpoint %d?" % (slot_index + 1)
+			"Replace Backup Copy %d with the current Continue Point?" %
+				(slot_index + 1)
 		)
 		campaign_confirm_dialog.popup_centered()
 		return
-	_commit_manual_save(slot_index, name_edit.text, false)
+	_commit_manual_save(slot_index, campaign_name, false)
 
 
 func _commit_manual_save(
@@ -1779,9 +1935,9 @@ func _commit_manual_save(
 		overwrite
 	)
 	campaign_status_label.text = (
-		"Manual checkpoint saved."
+		"Continue Point copied to the backup."
 		if bool(result.get("ok", false))
-		else str(result.get("error", "Manual checkpoint failed."))
+		else str(result.get("error", "Backup copy failed."))
 	)
 	_refresh_campaign_manager()
 
@@ -1796,9 +1952,9 @@ func _on_manual_rename(
 		name_edit.text
 	)
 	campaign_status_label.text = (
-		"Manual checkpoint renamed."
+		"Backup copy renamed."
 		if bool(result.get("ok", false))
-		else str(result.get("error", "Manual checkpoint rename failed."))
+		else str(result.get("error", "Backup rename failed."))
 	)
 	_refresh_campaign_manager()
 
@@ -1807,9 +1963,9 @@ func _on_manual_load(slot_index: int) -> void:
 	var game_root := get_tree().current_scene
 	var loaded: bool = await game_root.load_manual_checkpoint(slot_index)
 	campaign_status_label.text = (
-		"Manual checkpoint loaded."
+		"Backup copy loaded."
 		if loaded
-		else "Manual checkpoint could not be loaded."
+		else "Backup copy could not be loaded."
 	)
 	_refresh_campaign_manager()
 
@@ -1817,14 +1973,32 @@ func _on_manual_load(slot_index: int) -> void:
 func _on_campaign_action_confirmed() -> void:
 	var game_root := get_tree().current_scene
 	if not pending_delete_slot_id.is_empty():
+		var deleted_slot_id := pending_delete_slot_id
+		var deleting_active := game_root != null \
+			and str(game_root.get("active_campaign_slot_id")) \
+				== deleted_slot_id
+		if deleting_active:
+			await _fade_campaign_load(1.0)
 		var result: Dictionary = game_root.delete_campaign_slot(
-			pending_delete_slot_id
+			deleted_slot_id
 		)
+		if bool(result.get("ok", false)) \
+				and bool(result.get("deleted_active_campaign", false)):
+			pending_delete_slot_id = ""
+			pending_manual_slot_index = -1
+			pending_manual_name = ""
+			game_root.call(
+				"reset_after_active_campaign_deleted",
+				deleted_slot_id
+			)
+			return
 		campaign_status_label.text = (
 			"Campaign deleted."
 			if bool(result.get("ok", false))
 			else str(result.get("error", "Campaign deletion failed."))
 		)
+		if deleting_active:
+			await _fade_campaign_load(0.0)
 	elif pending_manual_slot_index >= 0:
 		_commit_manual_save(
 			pending_manual_slot_index,
@@ -1910,6 +2084,15 @@ func _create_death_screen():
 	new_campaign_btn.custom_minimum_size = Vector2(220, 42)
 	new_campaign_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	new_campaign_btn.pressed.connect(_start_new_campaign_after_death)
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("can_start_new_campaign"):
+		new_campaign_btn.disabled = not bool(
+			game_root.call("can_start_new_campaign")
+		)
+		if new_campaign_btn.disabled:
+			new_campaign_btn.tooltip_text = (
+				"Delete a campaign before starting another."
+			)
 	vbox.add_child(new_campaign_btn)
 
 	var quit_gap = Control.new()
@@ -1943,9 +2126,28 @@ func _load_last_save_after_death() -> void:
 
 
 func _start_new_campaign_after_death() -> void:
+	_start_new_campaign()
+
+
+func _start_new_campaign() -> void:
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("start_new_campaign_after_death"):
 		game_root.call("start_new_campaign_after_death")
+
+
+func _refresh_new_campaign_availability() -> void:
+	if pause_new_campaign_button == null:
+		return
+	var game_root := get_tree().current_scene
+	var available := game_root != null \
+		and game_root.has_method("can_start_new_campaign") \
+		and bool(game_root.call("can_start_new_campaign"))
+	pause_new_campaign_button.disabled = not available
+	pause_new_campaign_button.tooltip_text = (
+		""
+		if available
+		else "Delete a campaign before starting another."
+	)
 
 
 func _restart_game():
@@ -3994,6 +4196,13 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	print("[TRACE] [UIManager] Background quest generated. Faction: ", quest_data.get("faction", "neutral"), " is_fallback: ", is_fallback)
 	
 	if not quest_data.is_empty():
+		var game_root := get_tree().current_scene
+		if game_root and game_root.has_method(
+			"apply_opening_campaign_name"
+		):
+			game_root.apply_opening_campaign_name(
+				str(quest_data.get("campaign_name", "Far Horizon"))
+			)
 		# Pre-cache main briefing TTS
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":

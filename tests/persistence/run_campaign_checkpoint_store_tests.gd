@@ -187,38 +187,34 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"Confirmed overwrite did not replace the manual checkpoint."
 	)
 	_expect(
-		bool(store.copy_active_to_manual(1, "Second Copy").get("ok", false))
-			and bool(store.copy_active_to_manual(
-				2,
-				"Third Copy"
-			).get("ok", false)),
-		"All three manual checkpoint slots were not independently writable."
+		bool(store.copy_active_to_manual(1, "Second Copy").get("ok", false)),
+		"Both manual checkpoint slots were not independently writable."
 	)
 	var manual_entries := store.list_manual_checkpoints()
-	var all_manual_slots_occupied := manual_entries.size() == 3
+	var all_manual_slots_occupied := manual_entries.size() == 2
 	for entry in manual_entries:
 		all_manual_slots_occupied = all_manual_slots_occupied \
 			and bool(entry.get("occupied", false))
 	_expect(
 		all_manual_slots_occupied,
-		"Manual checkpoint listing did not report three occupied slots."
+		"Manual checkpoint listing did not report two occupied slots."
 	)
 	var renamed_manual := store.rename_manual_checkpoint(
-		2,
-		"  Third / Renamed  "
+		1,
+		"  Second / Renamed  "
 	)
 	_expect(
 		bool(renamed_manual.get("ok", false))
 			and renamed_manual.get("display_name", "")
-				== "Third Renamed"
-			and store.list_manual_checkpoints()[2].get(
+				== "Second Renamed"
+			and store.list_manual_checkpoints()[1].get(
 				"display_name",
 				""
-			) == "Third Renamed",
+			) == "Second Renamed",
 		"Manual checkpoint rename did not update sanitized metadata."
 	)
 	_expect(
-		not bool(store.copy_active_to_manual(3, "Invalid").get("ok", false))
+		not bool(store.copy_active_to_manual(2, "Invalid").get("ok", false))
 			and not bool(store.copy_active_to_manual(
 				0,
 				" /// "
@@ -305,6 +301,10 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			).get("credits", 0)
 		) == 875,
 		"Recovered checkpoint did not preserve the prior station state."
+	)
+	_expect(
+		_count_autosave_bundle_directories() <= 2,
+		"Rolling autosave retained more than the active and recovery bundles."
 	)
 
 	var dead_state := _runtime_state(1, 0.0, "dead")
@@ -401,6 +401,23 @@ func _cleanup() -> void:
 	var absolute := ProjectSettings.globalize_path(TEST_ROOT)
 	if DirAccess.dir_exists_absolute(absolute):
 		_remove_directory(absolute)
+
+
+func _count_autosave_bundle_directories() -> int:
+	var directory := DirAccess.open(
+		"%s/checkpoints/autosave" % CAMPAIGN_PATH
+	)
+	if directory == null:
+		return 0
+	var count := 0
+	directory.list_dir_begin()
+	var entry := directory.get_next()
+	while not entry.is_empty():
+		if directory.current_is_dir() and entry != "." and entry != "..":
+			count += 1
+		entry = directory.get_next()
+	directory.list_dir_end()
+	return count
 
 
 func _remove_directory(path: String) -> void:

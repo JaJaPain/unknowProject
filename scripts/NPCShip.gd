@@ -23,6 +23,10 @@ var hull_instance: Node3D = null
 var engine_glow: MultiMeshInstance3D = null
 var role_patrol_refresh_timer: float = 0.0
 
+const RuntimeTraceType := preload(
+	"res://scripts/diagnostics/RuntimeTrace.gd"
+)
+
 # Archetype attributes
 var archetype: String = "Balanced"
 var fire_cooldown_min: float = 1.3
@@ -456,6 +460,9 @@ func _physics_process(delta: float):
 			if best_target:
 				target = best_target
 							
+	if target != null and not is_instance_valid(target):
+		target = null
+
 	# Movement & Combat Logic
 	if target:
 		steer_towards(target.global_position, delta)
@@ -552,6 +559,13 @@ func fire():
 
 func take_damage(amount: float, attacker_faction: String = ""):
 	if destroyed: return
+	RuntimeTraceType.event("combat", "npc_damage", {
+		"ship": name,
+		"faction": faction,
+		"health_before": health,
+		"damage": amount,
+		"attacker_faction": attacker_faction,
+	})
 	health -= amount
 	if attacker_faction == "player" and not GlobalState.is_minor_faction(faction):
 		GlobalState.adjust_reputation(faction, -2.0) # Aggro drop rep on hit
@@ -568,7 +582,20 @@ func take_damage(amount: float, attacker_faction: String = ""):
 		die()
 
 func die():
+	if destroyed:
+		return
 	destroyed = true
+	RuntimeTraceType.event("combat", "npc_death_started", {
+		"ship": name,
+		"faction": faction,
+		"last_attacker_faction": last_attacker_faction,
+		"system_id": GlobalState.current_system_id,
+		"position": [
+			global_position.x,
+			global_position.y,
+			global_position.z,
+		],
+	})
 	if get_meta("is_quest_target", false):
 		_record_persistent_state()
 	AudioManager.play_explosion(global_position)
@@ -611,6 +638,11 @@ func die():
 	# Remove from entities list
 	GlobalState.active_system_entities.erase(self)
 	GlobalState.entities_changed.emit()
+	RuntimeTraceType.event("combat", "npc_death_completed", {
+		"ship": name,
+		"faction": faction,
+		"faction_kills": int(GlobalState.faction_kills.get(faction, 0)),
+	})
 	
 	# Play explosion FX here if desired
 	queue_free()

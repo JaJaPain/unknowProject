@@ -763,13 +763,12 @@ var faction_kills: Dictionary = {
 
 func record_kill(faction_name: String):
 	# Track kills for ANY faction — including LLM-generated custom ones
-	if not faction_kills.has(faction_name):
-		faction_kills[faction_name] = 0
-	faction_kills[faction_name] += 1
+	var kill_count := int(faction_kills.get(faction_name, 0)) + 1
+	faction_kills[faction_name] = kill_count
 	# NOTE: ship_destroyed signal is now emitted by NPCShip.die() itself,
 	# not here, so NPC-on-NPC kills also count toward quest progress.
 	# Only call in reinforcements for the three main factions (they have matching ship scenes)
-	if faction_name in ["zenith", "aurelia", "vanguard"] and faction_kills[faction_name] % 3 == 0:
+	if faction_name in ["zenith", "aurelia", "vanguard"] and kill_count % 3 == 0:
 		spawn_reinforcement(faction_name)
 
 func spawn_reinforcement(faction_name: String):

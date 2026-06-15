@@ -158,6 +158,11 @@ try {
             "res://tests/persistence/run_campaign_manifest_store_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Phase 2 storage ownership acceptance" {
+        & $godot --headless --path $root --script `
+            "res://tests/persistence/run_phase_2_acceptance_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "Version-2 save startup import" {
         & $godot --headless --path $root -- `
             --legacy-import-smoke-test --no-save-load --baseline-offline
@@ -177,6 +182,10 @@ try {
     Invoke-BaselineStep "Combat damage death and restart" {
         & $godot --headless --path $root -- `
             --combat-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Station-adjacent loaded-state combat" {
+        & $godot --headless --path $root -- `
+            --station-combat-smoke-test --no-save-load --baseline-offline
     }
     Invoke-BaselineStep "Warm-service game restart" {
         & $godot --headless --path $root -- `

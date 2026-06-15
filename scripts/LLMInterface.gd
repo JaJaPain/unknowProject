@@ -349,6 +349,40 @@ var fallback_templates = [
 	}
 ]
 
+const CAMPAIGN_NAME_FALLBACKS: Array[String] = [
+	"Cold Meridian",
+	"Ember Passage",
+	"Far Horizon",
+	"Last Light",
+	"Silent Dividend",
+	"Wayward Star",
+	"Iron Pilgrim",
+	"Broken Compass",
+]
+
+
+func _sanitize_campaign_name(raw_name: String) -> String:
+	var words := PackedStringArray()
+	for raw_word in raw_name.strip_edges().split(" ", false):
+		var clean_word := ""
+		for character in raw_word:
+			if character.to_lower() != character.to_upper() \
+					or character in ["'", "-"]:
+				clean_word += character
+		if not clean_word.is_empty():
+			words.append(clean_word.capitalize())
+		if words.size() == 4:
+			break
+	if words.size() < 2:
+		return ""
+	return " ".join(words).substr(0, 48)
+
+
+func _fallback_campaign_name() -> String:
+	return CAMPAIGN_NAME_FALLBACKS[
+		randi() % CAMPAIGN_NAME_FALLBACKS.size()
+	]
+
 # Random complications to vary prompts
 var complications = [
 	"A rival broker wants this cargo intercepted to sabotage my client's logistics.",
@@ -813,6 +847,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		rand_comp + "\n\n" + \
 		"Generate a unique space quest. You MUST respond strictly in valid JSON format. Do not output notes, markdown, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
+		"  \"campaign_name\": \"Cold Meridian\",\n" + \
 		"  \"title\": \"" + example_title + "\",\n" + \
 		"  \"faction\": \"" + chosen_faction + "\",\n" + \
 		"  \"agent_name\": \"" + agent_name + "\",\n" + \
@@ -852,6 +887,8 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"  ]\n" + \
 		"}\n\n" + \
 		"Now generate a COMPLETELY DIFFERENT quest with a unique title and all-new dialogue written in your character's voice. " + \
+		"The campaign_name must be an evocative two-to-four-word name for the pilot's larger story, not merely this contract. " + \
+		"Do not use the words campaign, save, slot, adventure, or journey in campaign_name. " + \
 		"The faction must be \"" + chosen_faction + "\". The agent_name must be \"" + agent_name + "\". " + \
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
 		("For KILL_SHIPS you MUST include 'target_faction' (must NOT equal '" + chosen_faction + "') and 'count_required' (integer 2–4). " if chosen_type == "KILL_SHIPS" else ("For PICKUP_SPECIAL you MUST include 'target_outpost' (must equal '" + pickup_outpost + "'), 'target_outpost_display' (must equal '" + pickup_outpost_display + "'), 'target_npc' (must equal '" + pickup_npc + "'), 'part_name' (must equal '" + pickup_item + "'), and 'destination' (must equal '" + agent_name + "'). " if chosen_type == "PICKUP_SPECIAL" else "For DELIVER_ORE you MUST include 'amount_required' (float 20–300). ")) + \
@@ -929,6 +966,14 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		return
 		
 	print("[LLMInterface] LLM Quest successfully generated: ", quest_data["title"])
+	var campaign_name := _sanitize_campaign_name(
+		str(quest_data.get("campaign_name", ""))
+	)
+	quest_data["campaign_name"] = (
+		campaign_name
+		if not campaign_name.is_empty()
+		else _fallback_campaign_name()
+	)
 	_validate_quest_data(quest_data)
 	if active_callback.is_valid():
 		active_callback.call(quest_data, false)
@@ -1280,6 +1325,7 @@ func _trigger_fallback():
 		idx = randi() % fallback_templates.size()
 		
 	var selected_quest = fallback_templates[idx].duplicate(true)
+	selected_quest["campaign_name"] = _fallback_campaign_name()
 	
 	# Randomize values slightly to make it feel procedural
 	var type = selected_quest["objective"]["type"]

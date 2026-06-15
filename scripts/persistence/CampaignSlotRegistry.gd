@@ -150,8 +150,9 @@ func create_campaign(
 			"checkpoint_id": ids["checkpoint"],
 			"path": "checkpoints/autosave",
 			"source_reason": "initial",
+			"created_at_unix": int(Time.get_unix_time_from_system()),
 		},
-		"manual": [null, null, null],
+		"manual": [null, null],
 	}
 	var canon_index := ManifestStoreType.build_initial_canon_index(
 		documents[1],

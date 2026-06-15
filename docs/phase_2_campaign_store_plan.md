@@ -151,7 +151,6 @@ user://campaigns/
         timeline.json
         map_knowledge.json
       manual_02/
-      manual_03/
     chronicle/
       index.json
       segments/
@@ -498,6 +497,26 @@ Phase 2 exit criteria:
 - interrupted writes recover safely
 - three campaigns remain isolated
 - Phase 3 can add universal time without changing storage ownership
+
+Automated result:
+
+- the expanded 31-step baseline passes
+- the consolidated ownership acceptance fixture passes
+- representative storage remains bounded at 538.2 KiB after 25 autosaves,
+  two backup copies, and 100 chronicle events
+- rolling autosaves retain only the active and last-known-good recovery bundles
+- rendered performance remains effectively unchanged from Phase 1
+
+The player-facing save model is one protected Continue Point and two Backup
+Copies inside each of three independent campaigns. A Backup Copy duplicates
+the current safe Continue Point. Campaign names come from the first generated
+story, with a curated local fallback when the model is unavailable. Save labels
+use `<campaign name> - <timestamp>` until Phase 3 replaces operating-system
+timestamps with universal campaign time.
+
+Hands-on result: pending the final slot, save/load, death recovery, deletion,
+and visual review in
+`docs/phase_2_checkpoint_12_regression_2026-06-15.md`.
 
 ## Compatibility Strategy
 

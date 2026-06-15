@@ -954,7 +954,7 @@ Implementation progress:
   rumored, hidden, blocked, or damaged visibility state. Successful travel
   reveals both route endpoints, while loading an older checkpoint restores its
   earlier visibility without changing permanent manifest or asset records.
-- Focused persistence checks and the expanded 29-step gameplay baseline pass.
+- Focused persistence checks and the expanded 30-step gameplay baseline pass.
 - Hands-on visual approval of the pause and campaign screens is deferred until
   local host-display access is available.
 - The pre-Checkpoint-10 autopilot stabilization checkpoint is implementation-
@@ -969,7 +969,9 @@ Implementation progress:
 - Checkpoint 11 version-2 save import is complete. A validated prototype save
   receives a byte-identical backup, imports into an empty slot without
   overwriting campaigns, and activates only after bundle verification.
-- Checkpoint 12 phase regression and approval is the next Phase 2 task.
+- Checkpoint 12 automated regression, storage measurement, and rendered
+  performance capture are complete. Final hands-on slot, save/load, death,
+  deletion, and visual approval remains before Phase 2 closes.
 
 - Create separate campaign manifest, timeline checkpoint, chronicle, map
   knowledge, asset registry, and Kaelen meta-memory stores.

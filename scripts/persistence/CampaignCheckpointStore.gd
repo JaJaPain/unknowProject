@@ -14,7 +14,8 @@ const ValidationResultType := preload(
 )
 
 const CHECKPOINT_INDEX_VERSION := 1
-const MANUAL_SLOT_COUNT := 3
+const MANUAL_SLOT_COUNT := 2
+const LEGACY_MANUAL_SLOT_COUNT := 3
 const MAX_MANUAL_NAME_LENGTH := 48
 const TACTICAL_KEYS: Array[String] = [
 	"position",
@@ -190,11 +191,12 @@ func capture_autosave(
 		"checkpoint_id": checkpoint_id,
 		"path": bundle_path,
 		"source_reason": source_reason,
+		"created_at_unix": int(Time.get_unix_time_from_system()),
 		"checkpoint_hash": _stable_hash(checkpoint),
 		"map_knowledge_hash": _stable_hash(next_map_knowledge),
 	}
 	if not next_index.has("manual"):
-		next_index["manual"] = [null, null, null]
+		next_index["manual"] = [null, null]
 	var committed := TransactionStoreType.commit_json_set(
 		campaign_path,
 		"autosave",
@@ -210,12 +212,53 @@ func capture_autosave(
 		return committed
 	index = next_index
 	map_knowledge = next_map_knowledge.duplicate(true)
+	_prune_superseded_autosave_bundles()
 	return {
 		"ok": true,
 		"checkpoint_id": checkpoint_id,
 		"source_reason": source_reason,
 		"safe_location": safe_location.duplicate(true),
 	}
+
+
+func _prune_superseded_autosave_bundles() -> void:
+	var retained_paths: Dictionary = {}
+	var active_path := str(index.get("autosave", {}).get("path", ""))
+	if not active_path.is_empty():
+		retained_paths[active_path] = true
+	var recovery_result := DomainJsonType.read_object(
+		"%s/recovery/last_known_good_checkpoint_index.json" %
+			campaign_path
+	)
+	var recovery_validation := (
+		recovery_result["validation"] as ValidationResult
+	)
+	if recovery_validation.is_valid():
+		var recovery_path := str(
+			recovery_result["data"].get("autosave", {}).get("path", "")
+		)
+		if not recovery_path.is_empty():
+			retained_paths[recovery_path] = true
+	var autosave_root := "%s/checkpoints/autosave" % campaign_path
+	var directory := DirAccess.open(autosave_root)
+	if directory == null:
+		return
+	var removals: Array[String] = []
+	directory.list_dir_begin()
+	var entry := directory.get_next()
+	while not entry.is_empty():
+		if directory.current_is_dir() \
+				and entry != "." \
+				and entry != "..":
+			var relative_path := "checkpoints/autosave/%s" % entry
+			if not retained_paths.has(relative_path):
+				removals.append(
+					"%s/%s" % [campaign_path, relative_path]
+				)
+		entry = directory.get_next()
+	directory.list_dir_end()
+	for path in removals:
+		_remove_tree(path)
 
 
 func load_active_bundle() -> Dictionary:
@@ -256,7 +299,7 @@ func copy_active_to_manual(
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
 	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
-		return _failure("Manual checkpoint slot must be between 1 and 3.")
+		return _failure("Manual checkpoint slot must be between 1 and 2.")
 	if TransactionStoreType.is_locked(campaign_path):
 		return _failure("A campaign save transaction is already active.")
 	var clean_name := sanitize_manual_name(display_name)
@@ -358,7 +401,7 @@ func load_manual_bundle(slot_index: int) -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
 	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
-		return _failure("Manual checkpoint slot must be between 1 and 3.")
+		return _failure("Manual checkpoint slot must be between 1 and 2.")
 	var manual: Array = index.get(
 		"manual",
 		[null, null, null]
@@ -382,7 +425,7 @@ func rename_manual_checkpoint(
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
 	if slot_index < 0 or slot_index >= MANUAL_SLOT_COUNT:
-		return _failure("Manual checkpoint slot must be between 1 and 3.")
+		return _failure("Manual checkpoint slot must be between 1 and 2.")
 	if TransactionStoreType.is_locked(campaign_path):
 		return _failure("A campaign save transaction is already active.")
 	var clean_name := sanitize_manual_name(display_name)
@@ -569,6 +612,10 @@ func _load() -> void:
 		)
 		return
 	index = recovered["data"]
+	var recovered_manual: Variant = index.get("manual", [])
+	if recovered_manual is Array \
+			and recovered_manual.size() == LEGACY_MANUAL_SLOT_COUNT:
+		index["manual"] = recovered_manual.slice(0, MANUAL_SLOT_COUNT)
 	if str(index.get("campaign_id", "")) != str(campaign.get("id", "")):
 		validation.add_error(
 			"checkpoint_campaign_mismatch",
@@ -692,10 +739,13 @@ static func _validate_checkpoint_index(
 				"autosave.path"
 			)
 	var manual: Variant = data.get("manual", null)
-	if not manual is Array or manual.size() != MANUAL_SLOT_COUNT:
+	if not manual is Array or manual.size() not in [
+		MANUAL_SLOT_COUNT,
+		LEGACY_MANUAL_SLOT_COUNT,
+	]:
 		result.add_error(
 			"invalid_checkpoint_index",
-			"Checkpoint index requires exactly three manual entries.",
+			"Checkpoint index requires exactly two manual entries.",
 			"manual"
 		)
 	else:
@@ -820,6 +870,30 @@ static func _stable_hash(value: Variant) -> String:
 		JSON.stringify(value, "", true)
 	)
 	return JSON.stringify(normalized, "", true).sha256_text()
+
+
+static func _remove_tree(path: String) -> bool:
+	var absolute := ProjectSettings.globalize_path(path)
+	if not DirAccess.dir_exists_absolute(absolute):
+		return true
+	var directory := DirAccess.open(absolute)
+	if directory == null:
+		return false
+	directory.list_dir_begin()
+	var entry := directory.get_next()
+	while not entry.is_empty():
+		if entry != "." and entry != "..":
+			var child := "%s/%s" % [absolute, entry]
+			if directory.current_is_dir():
+				if not _remove_tree(child):
+					directory.list_dir_end()
+					return false
+			elif DirAccess.remove_absolute(child) != OK:
+				directory.list_dir_end()
+				return false
+		entry = directory.get_next()
+	directory.list_dir_end()
+	return DirAccess.remove_absolute(absolute) == OK
 
 
 static func _failure(

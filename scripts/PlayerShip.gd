@@ -1526,6 +1526,8 @@ func perform_action(target_node: Node3D, delta: float):
 		mining_laser.visible = false
 
 func spawn_projectile(target_node: Node3D):
+	if target_node == null or not is_instance_valid(target_node):
+		return
 	if GlobalState.has_max_heavy_weapon:
 		engine_stall_timer = max(engine_stall_timer, 0.1)
 		
