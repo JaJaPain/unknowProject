@@ -133,6 +133,11 @@ try {
             "res://tests/domain/run_mission_instance_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Mission capability registry" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_mission_capability_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline

@@ -2,7 +2,7 @@
 
 Date: 2026-06-16
 
-Status: Checkpoint 1 implemented, awaiting baseline verification
+Status: Checkpoint 2 complete, baseline 38/38
 
 Branch: `codex/jumpgate-system`
 
