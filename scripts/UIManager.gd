@@ -4998,40 +4998,11 @@ func _update_quest_tracker():
 	# Update tracker client faction logo
 	_update_quest_tracker_logo(q.get("faction", "neutral"))
 	
-	if q["objective_type"] == "KILL_SHIPS":
-		quest_tracker_progress.text = "Kills: " + str(q["current_count"]) + " / " + str(q["count_required"]) + " (" + q["target_faction"].to_upper() + ")"
-	elif q["objective_type"] == "RECOVER_COMBAT_DROP":
-		if bool(q.get("ship_log_recovered", false)):
-			quest_tracker_progress.text = "Recovered: %s | Turn in: %s" % [
-				str(q.get("item_name", "data pack")),
-				str(q.get("turn_in_location", "station")),
-			]
-		else:
-			quest_tracker_progress.text = "Wrecks searched: %d | Hunt %s until the data turns up" % [
-				int(q.get("current_count", 0)),
-				str(q.get("target_faction", "hostile")).to_upper(),
-			]
-	elif q["objective_type"] == "DELIVER_ORE":
-		var banked = q.get("partial_delivered", 0.0)
-		# Only count in-hold cargo if we're actually carrying ore (not a
-		# special item — that doesn't count toward ore delivery progress).
-		var in_hold = GlobalState.cargo if GlobalState.cargo_type == GlobalState.CargoType.ORE else 0.0
-		var required = q["amount_required"]
-		var total_so_far = banked + in_hold
-		quest_tracker_progress.text = "Ore: %.0f / %.0f m³" % [total_so_far, required]
-		if banked > 0:
-			quest_tracker_progress.text += " (%.0f banked)" % banked
-		if total_so_far >= required:
-			quest_tracker_progress.text += " (Ready)"
-	elif q["objective_type"] == "PICKUP_SPECIAL":
-		if q.get("picked_up", false):
-			# After pickup, show what's in hold and where to deliver
-			quest_tracker_progress.text = "Deliver: %s to %s" % [q["part_name"], q["destination"]]
-		else:
-			# Before pickup, show the destination outpost + NPC
-			quest_tracker_progress.text = "Pickup: %s from %s @ %s" % [
-				q["part_name"], q["target_npc"], q["target_outpost_display"]
-			]
+	var _cap = MissionCapabilityRegistry.get_for_type(q["objective_type"])
+	if _cap:
+		quest_tracker_progress.text = _cap.format_tracker_text(q)
+	else:
+		quest_tracker_progress.text = q.get("objective_type", "Unknown")
 	if QuestManager.is_active_quest_timed():
 		var remaining := QuestManager.get_active_quest_remaining_minutes()
 		var urgency := "URGENT" if q.get("is_urgent", false) else "TIMED"
