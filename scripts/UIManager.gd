@@ -135,6 +135,10 @@ var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
 var quest_tracker_turn_in_btn: Button
 var quest_tracker_secondary_container: VBoxContainer
+var quest_tracker_nav_container: HBoxContainer
+var quest_tracker_prev_btn: Button
+var quest_tracker_next_btn: Button
+var quest_tracker_nav_label: Label
 
 # Systems Comms Chat Window
 var chat_window_panel: Panel
@@ -491,11 +495,36 @@ func _create_hud():
 	tracker_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	tracker_hbox.add_child(tracker_vbox)
 
-	var tracker_header = Label.new()
-	tracker_header.text = "ACTIVE CONTRACT"
-	tracker_header.add_theme_font_size_override("font_size", 10)
-	tracker_header.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
-	tracker_vbox.add_child(tracker_header)
+	quest_tracker_nav_container = HBoxContainer.new()
+	quest_tracker_nav_container.add_theme_constant_override("separation", 4)
+	tracker_vbox.add_child(quest_tracker_nav_container)
+
+	quest_tracker_prev_btn = Button.new()
+	quest_tracker_prev_btn.text = "<"
+	quest_tracker_prev_btn.flat = true
+	quest_tracker_prev_btn.custom_minimum_size = Vector2(20, 0)
+	quest_tracker_prev_btn.add_theme_font_size_override("font_size", 12)
+	quest_tracker_prev_btn.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_prev_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	quest_tracker_prev_btn.pressed.connect(_on_quest_tracker_prev)
+	quest_tracker_nav_container.add_child(quest_tracker_prev_btn)
+
+	quest_tracker_nav_label = Label.new()
+	quest_tracker_nav_label.text = "ACTIVE CONTRACT"
+	quest_tracker_nav_label.add_theme_font_size_override("font_size", 10)
+	quest_tracker_nav_label.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_nav_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_tracker_nav_container.add_child(quest_tracker_nav_label)
+
+	quest_tracker_next_btn = Button.new()
+	quest_tracker_next_btn.text = ">"
+	quest_tracker_next_btn.flat = true
+	quest_tracker_next_btn.custom_minimum_size = Vector2(20, 0)
+	quest_tracker_next_btn.add_theme_font_size_override("font_size", 12)
+	quest_tracker_next_btn.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_next_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	quest_tracker_next_btn.pressed.connect(_on_quest_tracker_next)
+	quest_tracker_nav_container.add_child(quest_tracker_next_btn)
 
 	quest_tracker_title = Label.new()
 	quest_tracker_title.text = "Contract Title"
@@ -4993,6 +5022,7 @@ func _update_quest_tracker():
 	var q = QuestManager.active_quest
 	quest_tracker_title.text = q.get("title", "Contract")
 
+	_update_quest_tracker_nav(q)
 	_update_quest_tracker_logo(q.get("faction", "neutral"))
 
 	var _cap = MissionCapabilityRegistry.get_for_type(q.get("objective_type", ""))
@@ -5011,6 +5041,70 @@ func _update_quest_tracker():
 		]
 	_update_quest_tracker_turn_in_button(q)
 	_update_quest_tracker_secondary_missions()
+
+
+func _update_quest_tracker_nav(q: Dictionary) -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	var count := all_active.size()
+	var show_arrows := count > 1
+	if quest_tracker_prev_btn:
+		quest_tracker_prev_btn.visible = show_arrows
+	if quest_tracker_next_btn:
+		quest_tracker_next_btn.visible = show_arrows
+	if quest_tracker_nav_label:
+		if count <= 1:
+			var lane_label := "ACTIVE CONTRACT"
+			if bool(q.get("public_board", false)):
+				lane_label = "BOARD JOB"
+			elif bool(q.get("station_errand", false)):
+				lane_label = "STATION ERRAND"
+			quest_tracker_nav_label.text = lane_label
+		else:
+			var focused = collection.get_focused()
+			var idx := 0
+			for i in range(all_active.size()):
+				if focused and all_active[i].runtime_id == focused.runtime_id:
+					idx = i
+					break
+			var lane_tag := "CONTRACT"
+			if bool(q.get("public_board", false)):
+				lane_tag = "BOARD"
+			elif bool(q.get("station_errand", false)):
+				lane_tag = "ERRAND"
+			quest_tracker_nav_label.text = "%s  (%d/%d)" % [lane_tag, idx + 1, count]
+
+
+func _on_quest_tracker_prev() -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var idx := 0
+	for i in range(all_active.size()):
+		if focused and all_active[i].runtime_id == focused.runtime_id:
+			idx = i
+			break
+	var prev_idx := (idx - 1) % all_active.size()
+	collection.focus(all_active[prev_idx].runtime_id)
+	_update_quest_tracker()
+
+
+func _on_quest_tracker_next() -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var idx := 0
+	for i in range(all_active.size()):
+		if focused and all_active[i].runtime_id == focused.runtime_id:
+			idx = i
+			break
+	var next_idx := (idx + 1) % all_active.size()
+	collection.focus(all_active[next_idx].runtime_id)
+	_update_quest_tracker()
 
 
 func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
