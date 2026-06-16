@@ -134,6 +134,7 @@ var quest_tracker_title: Label
 var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
 var quest_tracker_turn_in_btn: Button
+var quest_tracker_secondary_container: VBoxContainer
 
 # Systems Comms Chat Window
 var chat_window_panel: Panel
@@ -522,6 +523,10 @@ func _create_hud():
 	quest_tracker_turn_in_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	quest_tracker_turn_in_btn.pressed.connect(_on_quest_tracker_turn_in_pressed)
 	tracker_vbox.add_child(quest_tracker_turn_in_btn)
+
+	quest_tracker_secondary_container = VBoxContainer.new()
+	quest_tracker_secondary_container.add_theme_constant_override("separation", 2)
+	tracker_vbox.add_child(quest_tracker_secondary_container)
 
 	quest_tracker_panel.visible = false
 
@@ -1442,8 +1447,8 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		accept.text = "Turn In Active Board Job To Local Agent"
 		accept.disabled = false
 		accept.pressed.connect(_on_public_board_turn_in_pressed)
-	elif QuestManager.is_quest_active():
-		accept.text = "Finish Active Contract First"
+	elif QuestManager.is_lane_occupied("BOARD"):
+		accept.text = "Board Job Already Active"
 		accept.disabled = true
 	elif not bool(posting.get("enabled", false)):
 		accept.text = "Template Coming Soon"
@@ -2997,7 +3002,7 @@ func _on_public_board_back_pressed() -> void:
 func _on_public_board_offer_accept(index: int) -> void:
 	if index < 0 or index >= public_board_current_offers.size():
 		return
-	if QuestManager.is_quest_active():
+	if QuestManager.is_lane_occupied("BOARD"):
 		_render_public_board_offers()
 		return
 	var offer := public_board_current_offers[index]
@@ -4958,26 +4963,19 @@ func _on_partial_delivery_pressed(deliverable: float):
 
 
 func _on_quest_accepted():
-	quest_tracker_panel.visible = true
 	_update_quest_tracker()
 
 func _on_quest_progress_updated():
 	_update_quest_tracker()
 
 func _on_quest_completed():
-	quest_tracker_panel.visible = false
-	if quest_tracker_turn_in_btn:
-		quest_tracker_turn_in_btn.visible = false
+	_update_quest_tracker()
 
 func _on_quest_abandoned():
-	quest_tracker_panel.visible = false
-	if quest_tracker_turn_in_btn:
-		quest_tracker_turn_in_btn.visible = false
+	_update_quest_tracker()
 
 func _on_quest_expired(title: String) -> void:
-	quest_tracker_panel.visible = false
-	if quest_tracker_turn_in_btn:
-		quest_tracker_turn_in_btn.visible = false
+	_update_quest_tracker()
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Contract expired: %s." % title,
@@ -4990,15 +4988,14 @@ func _update_quest_tracker():
 		if quest_tracker_turn_in_btn:
 			quest_tracker_turn_in_btn.visible = false
 		return
-		
+
 	quest_tracker_panel.visible = true
 	var q = QuestManager.active_quest
-	quest_tracker_title.text = q["title"]
-	
-	# Update tracker client faction logo
+	quest_tracker_title.text = q.get("title", "Contract")
+
 	_update_quest_tracker_logo(q.get("faction", "neutral"))
-	
-	var _cap = MissionCapabilityRegistry.get_for_type(q["objective_type"])
+
+	var _cap = MissionCapabilityRegistry.get_for_type(q.get("objective_type", ""))
 	if _cap:
 		quest_tracker_progress.text = _cap.format_tracker_text(q)
 	else:
@@ -5013,6 +5010,7 @@ func _update_quest_tracker():
 			payout,
 		]
 	_update_quest_tracker_turn_in_button(q)
+	_update_quest_tracker_secondary_missions()
 
 
 func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
@@ -5029,6 +5027,48 @@ func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
 	else:
 		quest_tracker_turn_in_btn.text = "Dock To Turn In"
 		quest_tracker_turn_in_btn.disabled = true
+
+
+func _update_quest_tracker_secondary_missions() -> void:
+	if not quest_tracker_secondary_container:
+		return
+	for child in quest_tracker_secondary_container.get_children():
+		child.queue_free()
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var focused_id: String = focused.runtime_id if focused else ""
+	for m in all_active:
+		if m.runtime_id == focused_id:
+			continue
+		var btn := Button.new()
+		btn.flat = true
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.add_theme_font_size_override("font_size", 11)
+		btn.add_theme_color_override("font_color", Color(0.6, 0.8, 0.8, 0.8))
+		btn.add_theme_color_override("font_hover_color", Color(0.0, 1.0, 1.0))
+		var lane_tag := ""
+		match m.source_lane:
+			MissionInstance.SourceLane.BOARD:
+				lane_tag = "[BOARD] "
+			MissionInstance.SourceLane.STATION:
+				lane_tag = "[ERRAND] "
+			_:
+				lane_tag = "[CONTRACT] "
+		var cap = MissionCapabilityRegistry.get_for_type(m.data.get("objective_type", ""))
+		var status := ""
+		if cap and cap.is_completed(m.data):
+			status = " ✓"
+		btn.text = "%s%s%s" % [lane_tag, str(m.data.get("title", "Mission")), status]
+		btn.tooltip_text = "Click to focus this mission"
+		var rid: String = m.runtime_id
+		btn.pressed.connect(func():
+			QuestManager.get_mission_collection().focus(rid)
+			_update_quest_tracker()
+		)
+		quest_tracker_secondary_container.add_child(btn)
 
 
 func _on_quest_tracker_turn_in_pressed() -> void:
