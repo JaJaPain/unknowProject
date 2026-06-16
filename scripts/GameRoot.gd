@@ -109,6 +109,8 @@ func _ready() -> void:
 		call_deferred("_run_death_reload_smoke_test")
 	elif "--legacy-import-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_legacy_import_smoke_test")
+	elif "--public-board-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_public_board_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
@@ -4490,7 +4492,7 @@ func _run_services_smoke_test() -> void:
 		"choice_text_selected": "I'll take it.",
 	}
 	GlobalState.cargo = 0.0
-	GlobalState.cargo_type = GlobalState.CargoType.ORE
+	GlobalState.cargo_type = GlobalState.CargoType.EMPTY
 	GlobalState.cargo_special = {}
 	ui.current_station = iron_reach
 	ui.call("_render_dock_submenu")
@@ -4499,7 +4501,7 @@ func _run_services_smoke_test() -> void:
 		return
 	ui.call("_on_ask_for_part_pressed")
 	if bool(QuestManager.active_quest["picked_up"]) \
-			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+			or GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
 		_fail_services_smoke_test("Pickup succeeded at the wrong outpost.")
 		return
 	ui.current_station = kova
@@ -4812,3 +4814,142 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	print("[SaveSmokeTest] PASS: legacy save, manual safe-copy restore, chronicle branching, and validation verified.")
 	return true
+
+
+func _run_public_board_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+
+	var ui := GlobalState.get_ui_manager()
+	var main_station := GlobalState.get_primary_station()
+	if not ui or not main_station:
+		_fail_public_board_smoke_test("UIManager or main station was unavailable.")
+		return
+
+	ui.current_station = main_station
+	ui.current_submenu = ui.DockSubmenu.SERVICES
+	ui.call("_render_dock_submenu")
+	if not ui.public_board_btn.visible:
+		_fail_public_board_smoke_test("Public board button was not visible.")
+		return
+	ui.call("_on_public_board_pressed")
+	if ui.public_board_current_offers.size() < 3:
+		_fail_public_board_smoke_test("Public board did not produce at least 3 offers.")
+		return
+
+	var urgent_index := -1
+	for i in range(ui.public_board_current_offers.size()):
+		var quest_data: Dictionary = ui.public_board_current_offers[i].get("quest_data", {})
+		var timing: Dictionary = quest_data.get("timing", {})
+		if bool(timing.get("urgent", false)):
+			urgent_index = i
+			break
+	if urgent_index < 0:
+		_fail_public_board_smoke_test("No urgent posting was found on the public board.")
+		return
+
+	var urgent_offer: Dictionary = ui.public_board_current_offers[urgent_index]
+	var urgent_quest_data: Dictionary = urgent_offer.get("quest_data", {})
+	var urgent_timing: Dictionary = urgent_quest_data.get("timing", {})
+	var duration := int(urgent_timing.get("duration_minutes", 0))
+	if duration <= 0:
+		_fail_public_board_smoke_test("Urgent posting had no positive duration.")
+		return
+
+	var time_before_accept := CampaignClock.total_minutes
+	ui.call("_on_public_board_offer_accept", urgent_index)
+	if not QuestManager.is_quest_active():
+		_fail_public_board_smoke_test("Accepting urgent posting did not create an active mission.")
+		return
+	if not bool(QuestManager.active_quest.get("is_timed", false)) \
+			or not bool(QuestManager.active_quest.get("is_urgent", false)):
+		_fail_public_board_smoke_test("Accepted mission is not timed or not urgent.")
+		return
+
+	var deadline := int(QuestManager.active_quest.get("deadline_time_minutes", 0))
+	var remaining := QuestManager.get_active_quest_remaining_minutes()
+	if remaining <= 0 or remaining > duration:
+		_fail_public_board_smoke_test(
+			"Remaining time was out of expected range (got %d, duration %d)." % [
+				remaining, duration
+			]
+		)
+		return
+
+	var base_reward := int(QuestManager.active_quest.get("base_reward_credits", 0))
+	var urgent_payout := QuestManager.active_quest_payout()
+	if urgent_payout <= base_reward:
+		_fail_public_board_smoke_test(
+			"Urgent payout %d was not higher than base %d." % [
+				urgent_payout, base_reward
+			]
+		)
+		return
+
+	CampaignClock.advance_minutes(1)
+	var remaining_after := QuestManager.get_active_quest_remaining_minutes()
+	if remaining_after >= remaining:
+		_fail_public_board_smoke_test("Campaign time advance did not reduce remaining time.")
+		return
+
+	if QuestManager.active_quest.get("objective_type", "") == "DELIVER_ORE":
+		var required := float(QuestManager.active_quest.get("amount_required", 0.0))
+		GlobalState.add_ore(required)
+		if not QuestManager.is_quest_completed():
+			_fail_public_board_smoke_test("Ore delivery did not complete the urgent mission.")
+			return
+	elif QuestManager.active_quest.get("objective_type", "") == "KILL_SHIPS":
+		var count := int(QuestManager.active_quest.get("count_required", 0))
+		for _i in range(count):
+			GlobalState.ship_destroyed.emit(
+				str(QuestManager.active_quest.get("target_faction", "reavers"))
+			)
+		if not QuestManager.is_quest_completed():
+			_fail_public_board_smoke_test("Kill progress did not complete the urgent mission.")
+			return
+
+	var credits_before := GlobalState.player_credits
+	QuestManager.complete_quest()
+	if QuestManager.is_quest_active():
+		_fail_public_board_smoke_test("Urgent mission was not cleared after completion.")
+		return
+	if GlobalState.player_credits != credits_before + urgent_payout:
+		_fail_public_board_smoke_test(
+			"Urgent completion paid %d instead of expected %d." % [
+				GlobalState.player_credits - credits_before, urgent_payout
+			]
+		)
+		return
+
+	QuestManager.active_quest = {}
+	ui.call("_on_public_board_pressed")
+	ui.call("_on_public_board_offer_accept", urgent_index)
+	if not QuestManager.is_quest_active() \
+			or not bool(QuestManager.active_quest.get("is_timed", false)):
+		_fail_public_board_smoke_test("Second urgent accept did not create a timed mission.")
+		return
+
+	var expiration_deadline := int(
+		QuestManager.active_quest.get("deadline_time_minutes", 0)
+	)
+	var time_to_expire := expiration_deadline - CampaignClock.total_minutes
+	if time_to_expire <= 0:
+		_fail_public_board_smoke_test("Already past deadline before expiration test.")
+		return
+	CampaignClock.advance_minutes(time_to_expire)
+	if QuestManager.is_quest_active():
+		_fail_public_board_smoke_test("Timed mission did not expire when deadline was reached.")
+		return
+
+	print("[PublicBoardSmokeTest] PASS: urgent accept, countdown, urgent payout, and deterministic expiration verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+func _fail_public_board_smoke_test(message: String) -> void:
+	push_error("[PublicBoardSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)

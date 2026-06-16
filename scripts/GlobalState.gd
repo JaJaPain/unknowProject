@@ -465,10 +465,12 @@ var player_credits: int = 50:
 		player_credits = val
 		credits_changed.emit(player_credits)
 
+var _cargo_normalizing: bool = false
 var cargo: float = 0.0:
 	set(val):
 		cargo = clamp(val, 0.0, cargo_max)
-		cargo_changed.emit(cargo)
+		if not _cargo_normalizing:
+			cargo_changed.emit(cargo)
 
 # ── Cargo type system ──────────────────────────────────────────────────────
 # The cargo hold is mutually exclusive: it holds EITHER ore (tracked by
@@ -503,6 +505,7 @@ var cargo_special: Dictionary = {}
 var test_quest: Dictionary = {}
 
 func normalize_cargo_state() -> void:
+	_cargo_normalizing = true
 	if cargo_type == CargoType.ORE and cargo <= 0.0:
 		cargo = 0.0
 		cargo_type = CargoType.EMPTY
@@ -512,6 +515,7 @@ func normalize_cargo_state() -> void:
 		cargo_type = CargoType.EMPTY
 	elif cargo_type != CargoType.SPECIAL and not cargo_special.is_empty():
 		cargo_special = {}
+	_cargo_normalizing = false
 
 # Returns true if the hold can accept more ore (empty, or already ore with
 # room left). Returns false if a special item is loaded.

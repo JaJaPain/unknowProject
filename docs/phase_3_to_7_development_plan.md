@@ -41,6 +41,11 @@ Branch: `codex/jumpgate-system`
       recovery missions.
 - [x] Segment 1 Checkpoint 6.5 UI slice: completed public-board jobs show a
       tracker turn-in button that pulls in the local agent handler.
+- [x] Segment 1 Checkpoint 7 regression: timed mission tests, public-board
+      validation tests, urgent posting smoke, and full 36-step baseline pass.
+- [x] Segment 2 build order planned with 7 checkpoints. Design decisions:
+      2-mission limit (one agent + one board), monolithic capabilities first,
+      encounter triggers deferred, comms reversal triggers at 1-kill-remaining.
 
 ## Purpose
 
@@ -197,24 +202,24 @@ first version.
 - [x] Inspect current code seams for Segment 1:
       `CampaignClock`, `GameRoot`, `QuestManager`, `MissionAdapter`,
       `MissionState`, `LLMInterface`, and `UIManager`.
-- [ ] Add or verify player-facing campaign time display where it is useful:
+- [x] Add or verify player-facing campaign time display where it is useful:
       HUD, mission panel, map, or campaign/save screen.
-- [ ] Define timed mission fields: accepted time, deadline time, remaining
+- [x] Define timed mission fields: accepted time, deadline time, remaining
       time, urgency flag, expiration behavior, and urgent payout multiplier.
-- [ ] Add deterministic countdown formatting using campaign time, not wall
+- [x] Add deterministic countdown formatting using campaign time, not wall
       clock time.
-- [ ] Add rare urgent variants for public-board postings.
-- [ ] Add higher payout for urgent postings.
-- [ ] Add expiration checks whenever campaign time advances.
-- [ ] Add clear system messaging when a timed contract expires.
-- [ ] Create the first public contract board UI using generated or fallback
+- [x] Add rare urgent variants for public-board postings.
+- [x] Add higher payout for urgent postings.
+- [x] Add expiration checks whenever campaign time advances.
+- [x] Add clear system messaging when a timed contract expires.
+- [x] Create the first public contract board UI using generated or fallback
       posting text while preserving the one-active-mission rule.
-- [ ] Add slot-first LLM request and validation for public-board posting text.
-- [ ] Add procedural slot-filler fallback that uses the same placeholders as
+- [x] Add slot-first LLM request and validation for public-board posting text.
+- [x] Add procedural slot-filler fallback that uses the same placeholders as
       the LLM request.
 - [x] Keep ordinary public-board payouts lower than brokered agent work, with
       exceptions reserved for dangerous or socially embarrassing jobs.
-- [ ] Add `RECOVER_COMBAT_DROP` as the first public-board combat variant:
+- [x] Add `RECOVER_COMBAT_DROP` as the first public-board combat variant:
       eligible kills roll a hidden item-drop chance, then set a ship-log
       mission flag when the item is found.
 - [ ] Record timed accept, completion, expiration, failure, and abandonment as
@@ -372,14 +377,14 @@ Verified:
 
 #### Checkpoint 7: Segment 1 Regression
 
-- [ ] Add focused tests for timed mission metadata and expiration.
-- [ ] Add public-board fallback/placeholder validation tests.
-- [ ] Add gameplay smoke coverage for accepting and completing an urgent public
+- [x] Add focused tests for timed mission metadata and expiration.
+- [x] Add public-board fallback/placeholder validation tests.
+- [x] Add gameplay smoke coverage for accepting and completing an urgent public
       posting.
 - [x] Add combat-drop smoke coverage.
 - [x] Verify the public-board tracker turn-in button appears only when a board
       job is ready and routes completion through the local agent handler.
-- [ ] Run the full baseline suite.
+- [x] Run the full baseline suite.
 
 ### Risks And Unknowns
 
