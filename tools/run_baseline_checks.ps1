@@ -118,6 +118,10 @@ try {
             "res://tests/domain/run_mission_contract_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "LLM quest objective validator" {
+        & $godot --headless --path $root -- `
+            --llm-validator-smoke-test --no-save-load --baseline-offline
+    }
     Invoke-BaselineStep "Transitional save migration" {
         & $godot --headless --path $root --script `
             "res://tests/persistence/run_save_migration_tests.gd" -- `

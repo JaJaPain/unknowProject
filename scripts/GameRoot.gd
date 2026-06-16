@@ -93,6 +93,8 @@ func _ready() -> void:
 		call_deferred("_run_services_smoke_test")
 	elif "--mission-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_smoke_test")
+	elif "--llm-validator-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_llm_validator_smoke_test")
 	elif "--combat-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_combat_smoke_test")
 	elif "--station-combat-smoke-test" in OS.get_cmdline_user_args():
@@ -3706,6 +3708,68 @@ func _run_economy_smoke_test() -> void:
 	delete_savegame()
 	get_tree().quit(0)
 
+
+func _run_llm_validator_smoke_test() -> void:
+	await get_tree().process_frame
+	var ore_quest := {
+		"title": "Contradictory Ore Briefing",
+		"faction": "vanguard",
+		"agent_name": "Captain Dask",
+		"player_nickname": "Indy",
+		"dialogue": (
+			"Destroy an Aurelia raiding party and get those raiders "
+			+ "off the shipping lanes."
+		),
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 20.0,
+			"reward_credits": 165,
+		},
+		"choices": [],
+	}
+	LLMInterface.call("_validate_quest_data", ore_quest)
+	var ore_objective: Dictionary = ore_quest["objective"]
+	if ore_objective.get("type", "") != "DELIVER_ORE" \
+			or int(ore_objective.get("amount_required", 0)) != 20 \
+			or not bool(ore_quest.get("objective_dialogue_rewritten", false)) \
+			or str(ore_quest.get("dialogue", "")).to_lower().find("ore") == -1 \
+			or str(ore_quest.get("objective_summary", "")).find("20") == -1:
+		_fail_llm_validator_smoke_test(
+			"Contradictory kill prose was not repaired for an ore mission."
+		)
+		return
+
+	var kill_quest := {
+		"title": "Contradictory Kill Briefing",
+		"faction": "zenith",
+		"agent_name": "Broker Kaelen",
+		"player_nickname": "Shiny",
+		"dialogue": "Deliver 80 m3 of silicate cargo to my dock.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "aurelia",
+			"count_required": 3,
+			"reward_credits": 240,
+		},
+		"choices": [],
+	}
+	LLMInterface.call("_validate_quest_data", kill_quest)
+	var kill_objective: Dictionary = kill_quest["objective"]
+	if kill_objective.get("type", "") != "KILL_SHIPS" \
+			or int(kill_objective.get("count_required", 0)) != 3 \
+			or not bool(kill_quest.get("objective_dialogue_rewritten", false)) \
+			or str(kill_quest.get("dialogue", "")).to_lower().find("destroy") == -1 \
+			or str(kill_quest.get("objective_summary", "")).find("AURELIA") == -1:
+		_fail_llm_validator_smoke_test(
+			"Contradictory ore prose was not repaired for a kill mission."
+		)
+		return
+
+	print("[LLMValidatorSmokeTest] PASS: requested mission type stays authoritative.")
+	delete_savegame()
+	get_tree().quit(0)
+
+
 func _run_station_combat_smoke_test() -> void:
 	await get_tree().process_frame
 	GlobalState.paused = false
@@ -4332,6 +4396,11 @@ func _fail_combat_smoke_test(message: String) -> void:
 
 func _fail_station_combat_smoke_test(message: String) -> void:
 	push_error("[StationCombatSmokeTest] FAIL: " + message)
+	get_tree().quit(1)
+
+func _fail_llm_validator_smoke_test(message: String) -> void:
+	push_error("[LLMValidatorSmokeTest] FAIL: " + message)
+	delete_savegame()
 	get_tree().quit(1)
 
 func _fail_economy_smoke_test(message: String) -> void:

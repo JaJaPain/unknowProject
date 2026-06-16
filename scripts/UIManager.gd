@@ -4350,6 +4350,11 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	elif obj_type == "KILL_SHIPS":
 		var target_fac = obj.get("target_faction", "zenith").to_upper()
 		amt_info = "Destroy " + str(obj.get("count_required", 3)) + " " + target_fac + " ships"
+	elif obj_type == "PICKUP_SPECIAL":
+		amt_info = "Pick up " + str(obj.get("part_name", "the package"))
+	var validated_summary := str(quest_data.get("objective_summary", ""))
+	if not validated_summary.is_empty():
+		amt_info = validated_summary
 		
 	agent_dialogue_label.text += "\n\n--- Contract Details ---\n" + \
 		"Client: " + f_client + "\n" + \

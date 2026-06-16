@@ -1015,7 +1015,7 @@ func _validate_quest_data(quest_data: Dictionary):
 			break
 	
 	# If dialogue clearly describes kills but JSON says ore (or vice versa), fix the type
-	if dialogue_sounds_like_kill and not dialogue_sounds_like_ore and not dialogue_sounds_like_pickup and obj_type == "DELIVER_ORE":
+	if false and dialogue_sounds_like_kill and not dialogue_sounds_like_ore and not dialogue_sounds_like_pickup and obj_type == "DELIVER_ORE":
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue describes KILL mission but JSON says DELIVER_ORE. Patching type.")
 		obj["type"] = "KILL_SHIPS"
 		obj_type = "KILL_SHIPS"
@@ -1027,7 +1027,7 @@ func _validate_quest_data(quest_data: Dictionary):
 			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
 			obj["target_faction"] = minor_keys[randi() % minor_keys.size()]
 		obj.erase("amount_required")
-	elif dialogue_sounds_like_ore and not dialogue_sounds_like_kill and not dialogue_sounds_like_pickup and obj_type == "KILL_SHIPS":
+	elif false and dialogue_sounds_like_ore and not dialogue_sounds_like_kill and not dialogue_sounds_like_pickup and obj_type == "KILL_SHIPS":
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue describes ORE mission but JSON says KILL_SHIPS. Patching type.")
 		obj["type"] = "DELIVER_ORE"
 		obj_type = "DELIVER_ORE"
@@ -1084,6 +1084,123 @@ func _validate_quest_data(quest_data: Dictionary):
 	# number from the dialogue, then clamping can make the two disagree again.
 	# Patch only the objective number so display text and TTS use the final value.
 	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	_finalize_validated_quest_display(quest_data, obj_type, obj)
+
+
+func _finalize_validated_quest_display(
+	quest_data: Dictionary,
+	obj_type: String,
+	obj: Dictionary
+) -> void:
+	quest_data["objective_summary"] = _objective_summary(obj_type, obj)
+	if _dialogue_conflicts_with_objective(
+		str(quest_data.get("dialogue", "")),
+		obj_type
+	):
+		quest_data["dialogue"] = _safe_objective_dialogue(
+			quest_data,
+			obj_type,
+			obj
+		)
+		quest_data["objective_dialogue_rewritten"] = true
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Replaced contradictory briefing with verified objective text."
+		)
+
+
+func _objective_summary(obj_type: String, obj: Dictionary) -> String:
+	if obj_type == "DELIVER_ORE":
+		return "%d m³ Ore" % int(round(float(
+			obj.get("amount_required", 20.0)
+		)))
+	if obj_type == "KILL_SHIPS":
+		return "Destroy %d %s ships" % [
+			int(obj.get("count_required", 3)),
+			str(obj.get("target_faction", "zenith")).to_upper(),
+		]
+	if obj_type == "PICKUP_SPECIAL":
+		return "Pick up %s from %s at %s" % [
+			str(obj.get("part_name", "the package")),
+			str(obj.get("target_npc", "the contact")),
+			str(obj.get("target_outpost_display", "the outpost")),
+		]
+	return "Review contract details"
+
+
+func _safe_objective_dialogue(
+	quest_data: Dictionary,
+	obj_type: String,
+	obj: Dictionary
+) -> String:
+	var nickname := str(
+		quest_data.get("player_nickname", "Shiny")
+	)
+	if obj_type == "DELIVER_ORE":
+		return (
+			"I need a clean ore run, %s. Bring back %d m³ of ore and "
+			+ "keep the paperwork boring."
+		) % [
+			nickname,
+			int(round(float(obj.get("amount_required", 20.0)))),
+		]
+	if obj_type == "KILL_SHIPS":
+		return (
+			"I need the lane cleared, %s. Destroy %d %s ships and "
+			+ "come back in one piece."
+		) % [
+			nickname,
+			int(obj.get("count_required", 3)),
+			str(obj.get("target_faction", "zenith")).to_upper(),
+		]
+	if obj_type == "PICKUP_SPECIAL":
+		return (
+			"Quiet retrieval, %s. Pick up %s from %s at %s, then bring it "
+			+ "straight back."
+		) % [
+			nickname,
+			str(obj.get("part_name", "the package")),
+			str(obj.get("target_npc", "the contact")),
+			str(obj.get("target_outpost_display", "the outpost")),
+		]
+	return str(quest_data.get("dialogue", "Contract details are attached."))
+
+
+func _dialogue_conflicts_with_objective(
+	raw_dialogue: String,
+	obj_type: String
+) -> bool:
+	var dialogue := raw_dialogue.to_lower()
+	if dialogue.strip_edges().is_empty():
+		return false
+	var kill_score := _keyword_score(dialogue, [
+		"destroy", "eliminate", "kill", "take out", "take down",
+		"clear", "neutralize", "intercept", "wipe out", "blow up",
+		"shoot down", "hostile", "raider", "raiders", "patrol",
+		"contacts", "bounty"
+	])
+	var ore_score := _keyword_score(dialogue, [
+		"ore", "silicate", "mine", "mining", "deliver", "cargo",
+		"shipment", "haul", "tonnage", "cubic", "m³", "m3"
+	])
+	var pickup_score := _keyword_score(dialogue, [
+		"retrieve", "fetch", "pick up", "pickup", "unopened",
+		"crate", "pod", "lockbox", "container", "drive", "package"
+	])
+	if obj_type == "DELIVER_ORE":
+		return kill_score >= 2 and ore_score == 0 and pickup_score == 0
+	if obj_type == "KILL_SHIPS":
+		return ore_score >= 2 and kill_score == 0 and pickup_score == 0
+	if obj_type == "PICKUP_SPECIAL":
+		return (kill_score >= 2 or ore_score >= 2) and pickup_score == 0
+	return false
+
+
+func _keyword_score(text: String, keywords: Array) -> int:
+	var score := 0
+	for keyword in keywords:
+		if text.find(str(keyword)) != -1:
+			score += 1
+	return score
 
 func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: String, obj: Dictionary):
 	var original_dialogue = str(quest_data.get("dialogue", ""))
