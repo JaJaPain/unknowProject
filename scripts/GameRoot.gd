@@ -4489,7 +4489,9 @@ func _run_services_smoke_test() -> void:
 		"reward_credits_multiplier": 1.0,
 		"choice_text_selected": "I'll take it.",
 	}
-	GlobalState.clear_cargo()
+	GlobalState.cargo = 0.0
+	GlobalState.cargo_type = GlobalState.CargoType.ORE
+	GlobalState.cargo_special = {}
 	ui.current_station = iron_reach
 	ui.call("_render_dock_submenu")
 	if ui.ask_for_part_btn.visible:

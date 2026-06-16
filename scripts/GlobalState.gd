@@ -502,14 +502,27 @@ var cargo_special: Dictionary = {}
 #                     then true (and the part is loaded into cargo_special)
 var test_quest: Dictionary = {}
 
+func normalize_cargo_state() -> void:
+	if cargo_type == CargoType.ORE and cargo <= 0.0:
+		cargo = 0.0
+		cargo_type = CargoType.EMPTY
+		cargo_special = {}
+	elif cargo_type == CargoType.SPECIAL and cargo_special.is_empty():
+		cargo = 0.0
+		cargo_type = CargoType.EMPTY
+	elif cargo_type != CargoType.SPECIAL and not cargo_special.is_empty():
+		cargo_special = {}
+
 # Returns true if the hold can accept more ore (empty, or already ore with
 # room left). Returns false if a special item is loaded.
 func can_accept_ore() -> bool:
+	normalize_cargo_state()
 	return cargo_type == CargoType.EMPTY or cargo_type == CargoType.ORE
 
 # Returns true if the hold can accept a special cargo item. Only valid
 # when the hold is empty — can't swap out ore for a part.
 func can_accept_special() -> bool:
+	normalize_cargo_state()
 	return cargo_type == CargoType.EMPTY
 
 # Add ore to the hold. Returns the amount actually added (capped at
@@ -676,6 +689,7 @@ func buyback_ore_at_outpost() -> int:
 # Returns a short display string for the HUD: "EMPTY", "ORE: 15 / 30 m³",
 # or "SPECIAL: Replacement Plasma Coupler".
 func cargo_display_text() -> String:
+	normalize_cargo_state()
 	match cargo_type:
 		CargoType.EMPTY:
 			return "EMPTY"
@@ -953,6 +967,8 @@ func reset_for_restart():
 	# Reset gameplay stats
 	player_credits = 50
 	cargo = 0.0
+	cargo_special = {}
+	cargo_type = CargoType.EMPTY
 	cargo_max = SHIP_BASE_STATS["cargo_max_m3"]
 	player_storage_ore = 0.0
 	current_upgrades = {
@@ -1119,6 +1135,7 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 		else:
 			remaining_ore_cost -= cargo
 			cargo = 0.0
+		normalize_cargo_state()
 	
 	player_storage_ore -= remaining_ore_cost
 	
