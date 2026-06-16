@@ -2843,7 +2843,7 @@ func toggle_dock_menu(
 
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
-		if not is_outpost and not QuestManager.is_quest_active() and cached_quest_data.is_empty():
+		if not is_outpost and not QuestManager.is_lane_occupied("AGENT") and cached_quest_data.is_empty():
 			print("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
 			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
@@ -4646,7 +4646,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 				
 	# Only push to agent board UI if the player is actually waiting for it
 	# AND no quest is currently active (avoid replacing UI mid-mission)
-	if is_waiting_for_agent_board and not QuestManager.is_quest_active():
+	if is_waiting_for_agent_board and not QuestManager.is_lane_occupied("AGENT"):
 		is_waiting_for_agent_board = false
 		_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)
 		
