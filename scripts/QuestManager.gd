@@ -36,6 +36,8 @@ var active_quest: Dictionary:
 			var inst = MissionInstanceType.from_dict(value)
 			_collection.add(inst)
 var last_validation_error: String = ""
+var _board_cooldowns: Dictionary = {}
+const BOARD_COOLDOWN_MINUTES: int = 120
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -47,6 +49,7 @@ func _ready():
 
 func reset_for_restart():
 	_collection.clear()
+	_board_cooldowns.clear()
 	print("[QuestManager] State reset for new game.")
 
 
@@ -301,6 +304,7 @@ func check_active_quest_expiration() -> bool:
 			continue
 		var expired_title := str(m.data.get("title", "Contract"))
 		var expired_type := str(m.data.get("objective_type", "TIMED"))
+		_record_board_cooldown(m.data)
 		_cleanup_mission(m)
 		_log_quest_to_file(expired_title, expired_type, "Expired.")
 		m.transition_to(MissionInstanceType.State.EXPIRED)
@@ -472,6 +476,7 @@ func complete_quest():
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
 
+	_record_board_cooldown(active_quest)
 	var completed_id := str(active_quest.get("runtime_id", ""))
 	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
 	var focused = _collection.get_focused()
@@ -487,6 +492,7 @@ func abandon_quest():
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
 
+	_record_board_cooldown(active_quest)
 	var abandoned_id := str(active_quest.get("runtime_id", ""))
 	print("[QuestManager] Quest abandoned: ", active_quest["title"])
 	var focused = _collection.get_focused()
@@ -578,3 +584,39 @@ func _schedule_respawn(faction: String) -> void:
 			GlobalState.spawn_mission_targets(faction, 1)
 			print("[QuestManager] Respawned quest target after NPC kill.")
 	)
+
+
+func _record_board_cooldown(quest_data: Dictionary) -> void:
+	if not bool(quest_data.get("public_board", false)):
+		return
+	var tid: String = str(quest_data.get("public_board_template_id", ""))
+	if tid.is_empty():
+		return
+	_board_cooldowns[tid] = CampaignClock.total_minutes
+	print("[QuestManager] Board cooldown set for '%s' until +%d min." % [
+		tid, BOARD_COOLDOWN_MINUTES])
+
+
+func is_board_template_on_cooldown(template_id: String) -> bool:
+	if not _board_cooldowns.has(template_id):
+		return false
+	var ended_at: int = int(_board_cooldowns[template_id])
+	return CampaignClock.total_minutes < ended_at + BOARD_COOLDOWN_MINUTES
+
+
+func get_board_cooldown_remaining(template_id: String) -> int:
+	if not _board_cooldowns.has(template_id):
+		return 0
+	var ended_at: int = int(_board_cooldowns[template_id])
+	var remaining := (ended_at + BOARD_COOLDOWN_MINUTES) - CampaignClock.total_minutes
+	return maxi(0, remaining)
+
+
+func capture_board_cooldowns() -> Dictionary:
+	return _board_cooldowns.duplicate()
+
+
+func restore_board_cooldowns(source: Dictionary) -> void:
+	_board_cooldowns.clear()
+	for key in source.keys():
+		_board_cooldowns[str(key)] = int(source[key])

@@ -33,6 +33,11 @@ static func build_generation_request(
 ) -> Dictionary:
 	var facts := _facts_for_prompt(offer)
 	var prompt := template.tone_card
+	if template.source_lane == "BOARD":
+		var spice: String = MissionTemplateRegistry.BOARD_SPICE[
+			randi() % MissionTemplateRegistry.BOARD_SPICE.size()
+		]
+		prompt += "Creative seed for this particular posting: " + spice + "\n"
 	if not template.required_placeholders.is_empty():
 		prompt += "Required placeholders: " + ", ".join(template.required_placeholders) + "\n"
 	prompt += "Facts you must obey:\n" + facts + "\n"

@@ -993,6 +993,7 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"player": _capture_player_state(),
 		"global": _capture_global_state(),
 		"quest": quest_array,
+		"board_cooldowns": QuestManager.capture_board_cooldowns(),
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -1567,6 +1568,9 @@ func _apply_save_data(data: Dictionary) -> void:
 	if not quest_ok:
 		push_warning("[GameRoot] Save mission state failed validation during restore.")
 		return
+	var saved_cooldowns = data.get("board_cooldowns", {})
+	if saved_cooldowns is Dictionary and not saved_cooldowns.is_empty():
+		QuestManager.restore_board_cooldowns(saved_cooldowns)
 	var target_system_id := str(data.get("current_system_id", "start_system"))
 	if target_system_id != GlobalState.current_system_id:
 		await _load_system_without_transition(target_system_id)

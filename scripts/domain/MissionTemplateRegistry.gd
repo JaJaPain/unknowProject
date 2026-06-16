@@ -40,12 +40,33 @@ const FORBIDDEN_MECHANIC_WORDS: Array[String] = [
 
 const BOARD_TONE: String = (
 	"You write public contract-board flavor for SpaceGame.\n"
-	+ "Tone: dark interstellar Craigslist. The job is real; the story can be strange.\n"
+	+ "Tone: dark interstellar Craigslist. Deadpan absurdity. The job is real and the stakes matter, but the story around it should be weird, specific, and funny. "
+	+ "Think: mundane workplace disasters in space, shady cover stories told badly, bureaucratic spite, passive-aggressive anonymous posting, things that went wrong in oddly specific ways.\n"
+	+ "Good example titles: 'Need 40m3 Ore Before The Coolant Learns New Physics', 'Sealed Pickup, No Sniffing', 'Courier Exploded, Data Survived, Probably'.\n"
+	+ "Bad: generic sci-fi ('Critical Supply Run', 'Urgent Delivery Needed'). Bad: purple prose. Bad: action-movie one-liners.\n"
+	+ "The poster is always an anonymous account with a funny handle — never a named NPC, never 'Anonymous'. They are a specific person hiding badly.\n"
+	+ "Kaelen (the broker) processes the payout but hates public-board work. She thinks it is beneath the pilot. She is sarcastic, disgusted, and specific about what grosses her out.\n"
 	+ "The game code owns all mechanics. Do not invent destinations, rewards, "
 	+ "factions, cargo, enemies, deadlines, or objectives.\n"
 	+ "Return only valid JSON with these string keys: title, poster, body, briefing, kaelen_turn_in.\n"
 	+ "Use the exact placeholders listed below. Do not replace them with real values.\n"
 )
+
+const BOARD_SPICE: Array[String] = [
+	"The poster is clearly lying about why they need this done.",
+	"The posting has been edited three times. The revision history is worse than the current version.",
+	"There is a passive-aggressive reply chain in the comments that the poster deleted but everyone saw.",
+	"The poster is obviously posting from a work terminal and hoping nobody notices.",
+	"This job was previously posted at double the reward. The poster lowered it and hoped nobody would notice.",
+	"The poster signs off with an oddly personal detail that raises more questions than it answers.",
+	"The posting mentions an incident that is clearly under investigation.",
+	"The poster uses corporate jargon so thick you can tell they were recently fired.",
+	"The urgency in this posting suggests the poster has already been caught once.",
+	"The posting contains a very specific instruction about what NOT to look at.",
+	"The poster is trying to sound professional but the typos tell a different story.",
+	"This job exists because someone lost a bet.",
+	"The posting reads like it was written by someone who has been awake for 40 hours.",
+]
 
 const KAELEN_DISGUST_RULE := "kaelen_disgust"
 const NO_DROP_PERCENT_RULE := "no_drop_percent"

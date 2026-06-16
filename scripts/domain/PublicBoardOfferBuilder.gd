@@ -19,7 +19,26 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	offers.append(_build_ore_offer(current_time_minutes))
 	offers.append(_build_pickup_offer(current_time_minutes))
 	offers.append(_build_recovery_preview())
+	_apply_cooldowns(offers)
 	return offers
+
+
+static func _apply_cooldowns(offers: Array[Dictionary]) -> void:
+	var qm = Engine.get_singleton("QuestManager") if Engine.has_singleton("QuestManager") else null
+	if qm == null:
+		var tree := Engine.get_main_loop()
+		if tree and tree.has_method("get_root") and tree.get_root():
+			qm = tree.get_root().get_node_or_null("QuestManager")
+	if qm == null:
+		return
+	for i in range(offers.size()):
+		var tid: String = str(offers[i].get("template_id", ""))
+		if tid.is_empty():
+			continue
+		if qm.is_board_template_on_cooldown(tid):
+			offers[i]["enabled"] = false
+			var remaining: int = qm.get_board_cooldown_remaining(tid)
+			offers[i]["cooldown_remaining"] = remaining
 
 
 static func _build_ore_offer(current_time_minutes: int) -> Dictionary:

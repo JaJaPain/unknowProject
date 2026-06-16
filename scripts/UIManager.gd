@@ -1480,7 +1480,11 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		accept.text = "Board Job Already Active"
 		accept.disabled = true
 	elif not bool(posting.get("enabled", false)):
-		accept.text = "Template Coming Soon"
+		var cooldown_remaining: int = int(posting.get("cooldown_remaining", 0))
+		if cooldown_remaining > 0:
+			accept.text = "On Cooldown — %s" % CampaignClock.format_duration(cooldown_remaining)
+		else:
+			accept.text = "Template Coming Soon"
 		accept.disabled = true
 	else:
 		accept.text = "Accept Posting"
