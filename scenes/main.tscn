@@ -1,17 +1,17 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://r3f0iyjvnpg"]
 
-[ext_resource type="Script" path="res://scripts/GameRoot.gd" id="1_root"]
+[ext_resource type="Script" uid="uid://bwfd5qju2guaf" path="res://scripts/GameRoot.gd" id="1_root"]
 [ext_resource type="PackedScene" path="res://scenes/player_ship.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui_manager.tscn" id="4_ui"]
 [ext_resource type="PackedScene" path="res://scenes/jump_transition_fx.tscn" id="5_fx"]
 
-[node name="GameRoot" type="Node3D"]
+[node name="GameRoot" type="Node3D" unique_id=1740174468]
 script = ExtResource("1_root")
 
-[node name="SystemContainer" type="Node3D" parent="."]
+[node name="SystemContainer" type="Node3D" parent="." unique_id=1482438840]
 
-[node name="PlayerShip" parent="." instance=ExtResource("3_player")]
+[node name="PlayerShip" parent="." unique_id=1763950602 instance=ExtResource("3_player")]
 
-[node name="CanvasLayer" parent="." instance=ExtResource("4_ui")]
+[node name="CanvasLayer" parent="." unique_id=375550208 instance=ExtResource("4_ui")]
 
-[node name="JumpTransitionFX" parent="." instance=ExtResource("5_fx")]
+[node name="JumpTransitionFX" parent="." unique_id=1035459483 instance=ExtResource("5_fx")]

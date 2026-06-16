@@ -899,10 +899,16 @@ func emit_npc_flavor(flavor: Dictionary) -> void:
 	if flavor.is_empty():
 		return
 	var sender: String = flavor.get("npc_name", "Local")
-	var line: String = flavor.get("line", "")
+	var voice_profile_id: String = str(
+		flavor.get("voice_profile_id", "voice.neutral.v1")
+	)
+	var line: String = apply_tone_guard(str(flavor.get("line", "")), voice_profile_id)
 	var color: Color = flavor.get("color", Color.WHITE)
 	system_chatter_received.emit(sender, line, color)
-	npc_flavor_spoken.emit(flavor)
+	var spoken_flavor := flavor.duplicate(true)
+	spoken_flavor["line"] = line
+	spoken_flavor["voice_profile_id"] = voice_profile_id
+	npc_flavor_spoken.emit(spoken_flavor)
 
 func adjust_reputation(faction_name: String, amount: float):
 	if reputations.has(faction_name):

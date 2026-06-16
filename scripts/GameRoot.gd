@@ -4116,6 +4116,42 @@ func _run_mission_smoke_test() -> void:
 		return
 	QuestManager.complete_quest()
 
+	var recovery_offer := {
+		"title": "Recovery Progress",
+		"faction": "neutral",
+		"agent_name": "Public Board",
+		"dialogue": "Recover the missing data pack from Reaver wreckage.",
+		"objective": {
+			"type": "RECOVER_COMBAT_DROP",
+			"target_faction": "reavers",
+			"count_required": 2,
+			"drop_chance": 1.0,
+			"item_name": "data pack",
+			"turn_in_location": "main station",
+			"reward_credits": 80,
+		},
+		"choices": [],
+		"public_board": true,
+		"public_board_turn_in_line": "I processed the payout. Public board work, really?",
+	}
+	if not QuestManager.accept_quest(recovery_offer, accept_choice):
+		_fail_mission_smoke_test("Valid recovery mission was rejected.")
+		return
+	GlobalState.ship_destroyed.emit("reavers")
+	if not QuestManager.is_quest_completed() \
+			or not bool(QuestManager.active_quest.get("ship_log_recovered", false)) \
+			or str(QuestManager.active_quest.get("ship_log_entry", "")).is_empty() \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Recovery mission did not roll a ship-log drop without cargo.")
+		return
+	var credits_before_recovery := GlobalState.player_credits
+	QuestManager.complete_quest()
+	if QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_recovery + 80 \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Recovery mission did not pay and close without cargo.")
+		return
+
 	var abandon_offer := {
 		"title": "Abandonment Test",
 		"faction": "aurelia",
@@ -4345,10 +4381,57 @@ func _run_services_smoke_test() -> void:
 			or not bool(QuestManager.active_quest.get("is_urgent", false)) \
 			or QuestManager.active_quest_payout() <= int(
 				QuestManager.active_quest.get("base_reward_credits", 0)
-			):
+	):
 		_fail_services_smoke_test("Public board urgent posting did not create a timed active mission.")
 		return
+	if ui.agent_portrait_column.visible:
+		_fail_services_smoke_test("Public board acceptance showed Kaelen's portrait.")
+		return
 	QuestManager.active_quest = {}
+	if not bool(ui.public_board_current_offers[2].get("enabled", false)):
+		_fail_services_smoke_test("Recovery public-board posting was still disabled.")
+		return
+	ui.call("_on_public_board_offer_accept", 2)
+	if not QuestManager.is_quest_active() \
+			or QuestManager.active_quest.get("objective_type", "") \
+				!= "RECOVER_COMBAT_DROP" \
+			or bool(QuestManager.active_quest.get("ship_log_recovered", false)):
+		_fail_services_smoke_test("Recovery public-board posting did not create a valid active mission.")
+		return
+	QuestManager.active_quest["drop_chance"] = 1.0
+	ui.call("_update_quest_tracker")
+	if ui.quest_tracker_turn_in_btn.visible:
+		_fail_services_smoke_test("Recovery board turn-in button appeared before recovery was complete.")
+		return
+	var recovery_payout := QuestManager.active_quest_payout()
+	var recovery_required := int(
+		QuestManager.active_quest.get("count_required", 0)
+	)
+	for _i in range(recovery_required):
+		GlobalState.ship_destroyed.emit(
+			str(QuestManager.active_quest.get("target_faction", "reavers"))
+		)
+	if not QuestManager.is_quest_completed() \
+			or not bool(QuestManager.active_quest.get("ship_log_recovered", false)):
+		_fail_services_smoke_test("Recovery public-board posting did not reach random-drop ship-log turn-in state.")
+		return
+	ui.current_station = main_station
+	ui.call("_update_quest_tracker")
+	if not ui.quest_tracker_turn_in_btn.visible \
+			or ui.quest_tracker_turn_in_btn.disabled \
+			or ui.quest_tracker_turn_in_btn.text != "Turn In To Local Agent":
+		_fail_services_smoke_test("Ready board job did not expose a local-agent turn-in button.")
+		return
+	var credits_before_board_turn_in := GlobalState.player_credits
+	ui.call("_on_quest_tracker_turn_in_pressed")
+	if QuestManager.is_quest_active() \
+			or GlobalState.player_credits != credits_before_board_turn_in + recovery_payout \
+			or not ui.agent_panel.visible \
+			or not _services_smoke_has_board_turn_in_disgust(
+				str(ui.agent_dialogue_label.text)
+			):
+		_fail_services_smoke_test("Tracker turn-in button did not route board completion through Kaelen.")
+		return
 	ui.public_board_panel.visible = false
 	ui.agent_panel.visible = false
 
@@ -4377,6 +4460,12 @@ func _run_services_smoke_test() -> void:
 			or str(flavor.get("voice_profile_id", "")).is_empty():
 		_fail_services_smoke_test("Hear Gossip did not emit display and voice data.")
 		return
+	if str(flavor.get("line", "")).contains("Shiny") \
+			and not GlobalState.is_kaelen_voice(
+				str(flavor.get("voice_profile_id", ""))
+			):
+		_fail_services_smoke_test("Non-Kaelen gossip used Kaelen's Shiny nickname.")
+		return
 	if not ui.dock_message_slot.visible \
 			or ui.dock_message_line.text != GlobalState.apply_tone_guard(
 				str(flavor["line"]),
@@ -4402,13 +4491,22 @@ func _run_services_smoke_test() -> void:
 	}
 	GlobalState.clear_cargo()
 	ui.current_station = iron_reach
-	ui.call("_on_test_pickup_part_pressed")
+	ui.call("_render_dock_submenu")
+	if ui.ask_for_part_btn.visible:
+		_fail_services_smoke_test("Wrong outpost exposed the pickup handoff button.")
+		return
+	ui.call("_on_ask_for_part_pressed")
 	if bool(QuestManager.active_quest["picked_up"]) \
 			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
 		_fail_services_smoke_test("Pickup succeeded at the wrong outpost.")
 		return
 	ui.current_station = kova
-	ui.call("_on_test_pickup_part_pressed")
+	ui.call("_render_dock_submenu")
+	if not ui.ask_for_part_btn.visible \
+			or not ui.ask_for_part_btn.text.contains("Ask Cassen Vane for Sensor Calibration Kit"):
+		_fail_services_smoke_test("Assigned outpost did not expose the pickup handoff button.")
+		return
+	ui.call("_on_ask_for_part_pressed")
 	if not bool(QuestManager.active_quest["picked_up"]) \
 			or GlobalState.cargo_type != GlobalState.CargoType.SPECIAL \
 			or GlobalState.cargo_special.get("name", "") != "Sensor Calibration Kit":
@@ -4428,6 +4526,17 @@ func _run_services_smoke_test() -> void:
 	print("[ServicesSmokeTest] PASS: repairs, upgrade UI, stored ore, persistence, outpost restrictions, gossip, and pickup routing verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+func _services_smoke_has_board_turn_in_disgust(line: String) -> bool:
+	var lower_line := line.to_lower()
+	return lower_line.contains("public") \
+			and (
+				lower_line.contains("slumming")
+				or lower_line.contains("grime")
+				or lower_line.contains("stain")
+			)
+
 
 func _fail_services_smoke_test(message: String) -> void:
 	push_error("[ServicesSmokeTest] FAIL: " + message)

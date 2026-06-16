@@ -3,6 +3,9 @@ extends Control
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
 )
+const PublicBoardTextGeneratorType := preload(
+	"res://scripts/domain/PublicBoardTextGenerator.gd"
+)
 
 # UI Nodes created dynamically
 var hud_panel: Panel
@@ -130,6 +133,7 @@ var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
 var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
+var quest_tracker_turn_in_btn: Button
 
 # Systems Comms Chat Window
 var chat_window_panel: Panel
@@ -143,6 +147,7 @@ var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
 
 # Sliced elements inside Agent Panel
+var agent_portrait_column: VBoxContainer
 var agent_portrait: TextureRect
 var agent_client_logo: TextureRect
 
@@ -510,6 +515,13 @@ func _create_hud():
 	quest_tracker_progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_tracker_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tracker_vbox.add_child(quest_tracker_progress)
+
+	quest_tracker_turn_in_btn = Button.new()
+	quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
+	quest_tracker_turn_in_btn.visible = false
+	quest_tracker_turn_in_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	quest_tracker_turn_in_btn.pressed.connect(_on_quest_tracker_turn_in_pressed)
+	tracker_vbox.add_child(quest_tracker_turn_in_btn)
 
 	quest_tracker_panel.visible = false
 
@@ -1116,6 +1128,7 @@ func _create_dock_menu():
 	
 	# Left Side: Agent Portrait
 	var portrait_vbox = VBoxContainer.new()
+	agent_portrait_column = portrait_vbox
 	portrait_vbox.custom_minimum_size = Vector2(180, 0)
 	portrait_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	agent_hbox.add_child(portrait_vbox)
@@ -1260,13 +1273,104 @@ func _create_public_board_panel() -> void:
 
 
 func _render_public_board_offers() -> void:
-	for child in public_board_list.get_children():
-		child.queue_free()
 	public_board_current_offers = PublicBoardOfferBuilderType.build_offers(
 		CampaignClock.total_minutes
 	)
 	for index in range(public_board_current_offers.size()):
+		public_board_current_offers[index] = (
+			PublicBoardTextGeneratorType.fallback_offer(
+				public_board_current_offers[index],
+				CampaignClock.total_minutes + index
+			)
+		)
+	_redraw_public_board_offers()
+	for index in range(public_board_current_offers.size()):
+		if bool(public_board_current_offers[index].get("enabled", false)):
+			_request_public_board_text_attempt(
+				index,
+				public_board_current_offers[index],
+				"",
+				0
+			)
+
+
+func _redraw_public_board_offers() -> void:
+	for child in public_board_list.get_children():
+		child.queue_free()
+	for index in range(public_board_current_offers.size()):
 		_add_public_board_posting(public_board_current_offers[index], index)
+
+
+func _request_public_board_text_attempt(
+	index: int,
+	offer: Dictionary,
+	critique: String,
+	attempt: int
+) -> void:
+	if attempt >= 2 or not LLMInterface.llm_connected:
+		return
+	var request := PublicBoardTextGeneratorType.build_generation_request(
+		offer,
+		critique
+	)
+	var url: String = LLMInterface.OLLAMA_URL
+	var model: String = (
+		LLMInterface.active_model_name
+		if LLMInterface.active_model_name != "" else "qwen2.5:1.5b"
+	)
+	var body: Dictionary = {
+		"model": model,
+		"prompt": str(request.get("prompt", "")),
+		"stream": false,
+		"format": "json",
+		"options": { "temperature": 0.8, "num_predict": 220 },
+	}
+	var headers: PackedStringArray = ["Content-Type: application/json"]
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.timeout = 8.0
+	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
+		http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+			return
+		var raw := body_bytes.get_string_from_utf8()
+		var outer = JSON.parse_string(raw)
+		if not outer is Dictionary or not outer.has("response"):
+			return
+		var payload = JSON.parse_string(str(outer["response"]))
+		if not payload is Dictionary:
+			return
+		var applied := PublicBoardTextGeneratorType.apply_payload_to_offer(
+			offer,
+			payload,
+			false
+		)
+		if bool(applied.get("ok", false)):
+			if index < 0 or index >= public_board_current_offers.size():
+				return
+			if str(public_board_current_offers[index].get("template_id", "")) \
+					!= str(offer.get("template_id", "")):
+				return
+			public_board_current_offers[index] = applied["offer"]
+			if public_board_panel and public_board_panel.visible:
+				_redraw_public_board_offers()
+			return
+		if attempt == 0:
+			_request_public_board_text_attempt(
+				index,
+				offer,
+				str(applied.get("reason", "invalid generated text")),
+				attempt + 1
+			)
+	)
+	var err := http.request(
+		url,
+		headers,
+		HTTPClient.METHOD_POST,
+		JSON.stringify(body)
+	)
+	if err != OK:
+		http.queue_free()
 
 
 func _add_public_board_posting(posting: Dictionary, index: int) -> void:
@@ -1334,7 +1438,11 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	vbox.add_child(payout)
 
 	var accept := Button.new()
-	if QuestManager.is_quest_active():
+	if _should_show_public_board_turn_in():
+		accept.text = "Turn In Active Board Job To Local Agent"
+		accept.disabled = false
+		accept.pressed.connect(_on_public_board_turn_in_pressed)
+	elif QuestManager.is_quest_active():
 		accept.text = "Finish Active Contract First"
 		accept.disabled = true
 	elif not bool(posting.get("enabled", false)):
@@ -2838,6 +2946,7 @@ func _render_dock_submenu() -> void:
 		if show_ask_btn:
 			var part_name: String = str(QuestManager.active_quest.get("part_name", "the part"))
 			var npc_name: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
+			ask_for_part_btn.disabled = false
 			if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 				var rate: float = GlobalState.buyback_price_per_m3()
 				var payout: int = int(round(GlobalState.cargo * rate))
@@ -2917,10 +3026,15 @@ func _on_public_board_offer_accept(index: int) -> void:
 	public_board_panel.visible = false
 	agent_panel.visible = true
 	agent_name_label.text = "PUBLIC BOARD"
-	_update_agent_portrait("neutral")
+	_show_agent_portrait(false)
 	agent_dialogue_label.text = (
 		"Posting accepted.\n\n"
-		+ str(quest_data.get("objective_summary", "Objective verified."))
+		+ str(
+			quest_data.get(
+				"dialogue",
+				quest_data.get("objective_summary", "Objective verified.")
+			)
+		)
 	)
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -2929,6 +3043,25 @@ func _on_public_board_offer_accept(index: int) -> void:
 	launch_btn.pressed.connect(undock_player)
 	agent_choices_container.add_child(launch_btn)
 	agent_back_btn.visible = true
+
+
+func _should_show_public_board_turn_in() -> bool:
+	return (
+		QuestManager.is_quest_active()
+		and bool(QuestManager.active_quest.get("public_board", false))
+		and QuestManager.is_quest_completed()
+		and current_station
+		and is_instance_valid(current_station)
+	)
+
+
+func _on_public_board_turn_in_pressed() -> void:
+	if not _should_show_public_board_turn_in():
+		return
+	public_board_panel.visible = false
+	dock_panel.visible = false
+	agent_panel.visible = true
+	_on_agent_complete_pressed()
 
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
@@ -4381,25 +4514,43 @@ func _on_talk_to_agent_pressed():
 		
 	if QuestManager.is_quest_active():
 		var q = QuestManager.active_quest
-		agent_name_label.text = q["agent_name"].to_upper()
+		var shown_agent_name := str(q.get("agent_name", "Broker Kaelen"))
+		if bool(q.get("public_board", false)):
+			shown_agent_name = "Broker Kaelen"
+		agent_name_label.text = shown_agent_name.to_upper()
 		
 		# Update portrait and client logo
 		_update_agent_portrait(
 			q.get("faction", "neutral"),
-			q.get("agent_name", "")
+			shown_agent_name
 		)
 		
-		var type_str = "Clear Hostiles" if q["objective_type"] == "KILL_SHIPS" else "Deliver Resources"
-		agent_dialogue_label.text = "Active Contract: " + q["title"] + " (" + type_str + ")\n\n" + \
+		var type_str := "Deliver Resources"
+		if q["objective_type"] == "KILL_SHIPS":
+			type_str = "Clear Hostiles"
+		elif q["objective_type"] == "RECOVER_COMBAT_DROP":
+			type_str = "Recover Data"
+		var active_header := "Active Contract: "
+		if bool(q.get("public_board", false)):
+			active_header = "Public Board Job: "
+		agent_dialogue_label.text = active_header + q["title"] + " (" + type_str + ")\n\n" + \
 			"Briefing: " + q["dialogue"] + "\n\n" + \
-			"Response choice accepted: '" + q["choice_text_selected"] + "'\n" + \
-			"Agent feedback: '" + q["agent_response"] + "'"
+			"Response choice accepted: '" + q["choice_text_selected"] + "'\n"
+		if bool(q.get("public_board", false)):
+			agent_dialogue_label.text += (
+				"Local handler note: Kaelen can close the payout, but she did not post this mess."
+			)
+		else:
+			agent_dialogue_label.text += "Agent feedback: '" + q["agent_response"] + "'"
 			
 		agent_back_btn.visible = true
 		
 		# Create Complete button (enabled if objectives met)
 		var comp_btn = Button.new()
-		comp_btn.text = "Hand In Contract"
+		if bool(q.get("public_board", false)):
+			comp_btn.text = "Turn In Board Job To Local Agent"
+		else:
+			comp_btn.text = "Hand In Contract"
 		comp_btn.disabled = not QuestManager.is_quest_completed()
 		comp_btn.pressed.connect(_on_agent_complete_pressed)
 		agent_choices_container.add_child(comp_btn)
@@ -4593,6 +4744,11 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		amt_info = "Destroy " + str(obj.get("count_required", 3)) + " " + target_fac + " ships"
 	elif obj_type == "PICKUP_SPECIAL":
 		amt_info = "Pick up " + str(obj.get("part_name", "the package"))
+	elif obj_type == "RECOVER_COMBAT_DROP":
+		amt_info = "Recover %s from %s wreckage" % [
+			str(obj.get("item_name", "the data pack")),
+			str(obj.get("target_faction", "hostile")).to_upper(),
+		]
 	var validated_summary := str(quest_data.get("objective_summary", ""))
 	if not validated_summary.is_empty():
 		amt_info = validated_summary
@@ -4692,6 +4848,7 @@ func _on_agent_complete_pressed():
 	SpeechService.start_interaction("Complete Contract")
 	
 	is_waiting_for_agent_board = false
+	var completed_quest: Dictionary = QuestManager.active_quest.duplicate(true)
 	
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -4704,6 +4861,10 @@ func _on_agent_complete_pressed():
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
 	var completion_text = cached_completion_line
+	if bool(completed_quest.get("public_board", false)):
+		completion_text = str(
+			completed_quest.get("public_board_turn_in_line", "")
+		)
 	if completion_text == "":
 		completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
 		print("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
@@ -4805,12 +4966,18 @@ func _on_quest_progress_updated():
 
 func _on_quest_completed():
 	quest_tracker_panel.visible = false
+	if quest_tracker_turn_in_btn:
+		quest_tracker_turn_in_btn.visible = false
 
 func _on_quest_abandoned():
 	quest_tracker_panel.visible = false
+	if quest_tracker_turn_in_btn:
+		quest_tracker_turn_in_btn.visible = false
 
 func _on_quest_expired(title: String) -> void:
 	quest_tracker_panel.visible = false
+	if quest_tracker_turn_in_btn:
+		quest_tracker_turn_in_btn.visible = false
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Contract expired: %s." % title,
@@ -4820,6 +4987,8 @@ func _on_quest_expired(title: String) -> void:
 func _update_quest_tracker():
 	if not QuestManager.is_quest_active():
 		quest_tracker_panel.visible = false
+		if quest_tracker_turn_in_btn:
+			quest_tracker_turn_in_btn.visible = false
 		return
 		
 	quest_tracker_panel.visible = true
@@ -4831,6 +5000,17 @@ func _update_quest_tracker():
 	
 	if q["objective_type"] == "KILL_SHIPS":
 		quest_tracker_progress.text = "Kills: " + str(q["current_count"]) + " / " + str(q["count_required"]) + " (" + q["target_faction"].to_upper() + ")"
+	elif q["objective_type"] == "RECOVER_COMBAT_DROP":
+		if bool(q.get("ship_log_recovered", false)):
+			quest_tracker_progress.text = "Recovered: %s | Turn in: %s" % [
+				str(q.get("item_name", "data pack")),
+				str(q.get("turn_in_location", "station")),
+			]
+		else:
+			quest_tracker_progress.text = "Wrecks searched: %d | Hunt %s until the data turns up" % [
+				int(q.get("current_count", 0)),
+				str(q.get("target_faction", "hostile")).to_upper(),
+			]
 	elif q["objective_type"] == "DELIVER_ORE":
 		var banked = q.get("partial_delivered", 0.0)
 		# Only count in-hold cargo if we're actually carrying ore (not a
@@ -4861,6 +5041,38 @@ func _update_quest_tracker():
 			CampaignClock.format_duration(remaining),
 			payout,
 		]
+	_update_quest_tracker_turn_in_button(q)
+
+
+func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
+	if not quest_tracker_turn_in_btn:
+		return
+	var is_public_board := bool(q.get("public_board", false))
+	var is_ready := QuestManager.is_quest_completed()
+	quest_tracker_turn_in_btn.visible = is_public_board and is_ready
+	if not quest_tracker_turn_in_btn.visible:
+		return
+	if current_station and is_instance_valid(current_station):
+		quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
+		quest_tracker_turn_in_btn.disabled = false
+	else:
+		quest_tracker_turn_in_btn.text = "Dock To Turn In"
+		quest_tracker_turn_in_btn.disabled = true
+
+
+func _on_quest_tracker_turn_in_pressed() -> void:
+	if not QuestManager.is_quest_active():
+		return
+	if not bool(QuestManager.active_quest.get("public_board", false)):
+		return
+	if not QuestManager.is_quest_completed():
+		return
+	if not current_station or not is_instance_valid(current_station):
+		show_hud_warning("Dock at a local station to turn in this board job.")
+		return
+	dock_panel.visible = false
+	agent_panel.visible = true
+	_on_agent_complete_pressed()
 
 
 func _update_quest_tracker_logo(faction: String):
@@ -4885,6 +5097,7 @@ func _update_quest_tracker_logo(faction: String):
 
 func _update_agent_portrait(faction: String, npc_name: String = ""):
 	if agent_portrait:
+		_show_agent_portrait(true)
 		var portrait_id := "portrait.quest_givers.kaelen"
 		var npc_definition := GameContentRegistry.shared().npc_by_name(npc_name)
 		var faction_definition := GameContentRegistry.shared().faction(faction)
@@ -4895,7 +5108,6 @@ func _update_agent_portrait(faction: String, npc_name: String = ""):
 		agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
 			portrait_id
 		)
-		agent_portrait.visible = true
 		
 	if agent_client_logo and faction_branding_sheet:
 		var atlas = AtlasTexture.new()
@@ -4915,6 +5127,16 @@ func _update_agent_portrait(faction: String, npc_name: String = ""):
 			agent_client_logo.visible = true
 		else:
 			agent_client_logo.visible = false
+
+
+func _show_agent_portrait(should_show: bool) -> void:
+	if agent_portrait_column:
+		agent_portrait_column.visible = should_show
+	if not agent_portrait:
+		return
+	agent_portrait.visible = should_show
+	if not should_show:
+		agent_portrait.texture = null
 
 func add_chat_message(sender: String, message: String, sender_color: Color):
 	if not chat_vbox:
@@ -4994,6 +5216,42 @@ func _on_mechanic_pickup_decline_pressed() -> void:
 
 func _on_ask_for_part_pressed() -> void:
 	if not QuestManager.is_quest_active() or QuestManager.active_quest.get("objective_type", "") != "PICKUP_SPECIAL":
+		show_dock_message(
+			"No active pickup job is waiting here.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
+		return
+	if QuestManager.active_quest.get("picked_up", false):
+		show_dock_message(
+			"You already have the part. Take it back to Grease Monkeys.",
+			"",
+			Color(0.85, 0.85, 0.85)
+		)
+		return
+	if not current_station or not is_instance_valid(current_station):
+		show_dock_message("No station docked.", "", Color(1.0, 0.45, 0.45))
+		return
+	var docked_outpost_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
+	if docked_outpost_id == "":
+		show_dock_message(
+			"That contact is at an outpost, not this dock.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
+		return
+	var quest_outpost_id: String = str(QuestManager.active_quest.get("target_outpost", ""))
+	if docked_outpost_id != quest_outpost_id:
+		show_dock_message(
+			"Wrong outpost. This pickup is waiting at %s." % str(
+				QuestManager.active_quest.get(
+					"target_outpost_display",
+					quest_outpost_id
+				)
+			),
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 		_show_ore_trade_popup()
@@ -5084,6 +5342,11 @@ func _complete_pickup_with_handoff() -> void:
 			)
 		GlobalState.emit_npc_flavor(flavor_dict)
 	else:
+		show_dock_message(
+			"Couldn't load the part. Clear your cargo hold and try again.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
 		push_warning("[UIManager] _complete_pickup_with_handoff: mark_pickup_complete returned false")
 
 const FALLBACK_OUTPOST_HANDOFF: Array = [

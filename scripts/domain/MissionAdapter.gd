@@ -71,6 +71,16 @@ static func build_active_state(
 			float(timing.get("urgent_reward_multiplier", 1.0))
 			if is_timed and bool(timing.get("urgent", false)) else 1.0
 		),
+		"public_board": bool(quest_data.get("public_board", false)),
+		"public_board_template_id": str(
+			quest_data.get("public_board_template_id", "")
+		),
+		"public_board_turn_in_line": str(
+			quest_data.get("public_board_turn_in_line", "")
+		),
+		"public_board_text_is_fallback": bool(
+			quest_data.get("public_board_text_is_fallback", false)
+		),
 	}
 
 	match definition.objective.type:
@@ -108,6 +118,28 @@ static func build_active_state(
 				objective.get("destination", "Grease Monkeys")
 			)
 			state["picked_up"] = false
+		"RECOVER_COMBAT_DROP":
+			state["target_faction"] = str(
+				objective.get("target_faction", "reavers")
+			)
+			state["count_required"] = max(
+				1,
+				int(objective.get("count_required", 3))
+			)
+			state["current_count"] = 0
+			state["drop_chance"] = clampf(
+				float(objective.get("drop_chance", 0.33)),
+				0.01,
+				1.0
+			)
+			state["item_name"] = str(
+				objective.get("item_name", "missing data pack")
+			)
+			state["turn_in_location"] = str(
+				objective.get("turn_in_location", "main station")
+			)
+			state["ship_log_recovered"] = false
+			state["ship_log_entry"] = ""
 
 	var state_validation := StateType.new().load_from_dict(state)
 	validation.merge(state_validation, "state")
@@ -190,6 +222,16 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	normalized["system_id"] = str(
 		normalized.get("system_id", "start_system")
 	)
+	normalized["public_board"] = bool(normalized.get("public_board", false))
+	normalized["public_board_template_id"] = str(
+		normalized.get("public_board_template_id", "")
+	)
+	normalized["public_board_turn_in_line"] = str(
+		normalized.get("public_board_turn_in_line", "")
+	)
+	normalized["public_board_text_is_fallback"] = bool(
+		normalized.get("public_board_text_is_fallback", false)
+	)
 	match str(normalized.get("objective_type", "")):
 		"KILL_SHIPS":
 			normalized["current_count"] = max(
@@ -205,6 +247,22 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["picked_up"] = bool(
 				normalized.get("picked_up", false)
 			)
+		"RECOVER_COMBAT_DROP":
+			normalized["current_count"] = max(
+				0,
+				int(normalized.get("current_count", 0))
+			)
+			normalized["drop_chance"] = clampf(
+				float(normalized.get("drop_chance", 0.33)),
+				0.01,
+				1.0
+			)
+			normalized["ship_log_recovered"] = bool(
+				normalized.get("ship_log_recovered", false)
+			)
+			normalized["ship_log_entry"] = str(
+				normalized.get("ship_log_entry", "")
+			)
 	return normalized
 
 
@@ -213,12 +271,15 @@ static func _legacy_objective(source: Dictionary) -> Dictionary:
 	for field in [
 		"target_faction",
 		"count_required",
+		"drop_chance",
 		"amount_required",
 		"target_outpost",
 		"target_outpost_display",
 		"target_npc",
 		"part_name",
 		"destination",
+		"item_name",
+		"turn_in_location",
 		"reward_credits",
 	]:
 		if source.has(field):

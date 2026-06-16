@@ -24,7 +24,7 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 
 static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 	var amount := 35.0 + float((current_time_minutes / 60) % 3) * 5.0
-	var base_reward := int(amount * 6.0)
+	var base_reward := int(amount * 3.0)
 	var duration_minutes := 180
 	var urgent_multiplier := 1.5
 	var objective := {
@@ -57,7 +57,11 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 		duration_minutes,
 		urgent_multiplier,
 		quest_data,
-		["{ORE_AMOUNT}", "{TURN_IN_LOCATION}"]
+		["{ORE_AMOUNT}", "{TURN_IN_LOCATION}"],
+		{
+			"{ORE_AMOUNT}": "%d m3" % int(amount),
+			"{TURN_IN_LOCATION}": "the main station",
+		}
 	)
 
 
@@ -73,7 +77,7 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	if not npcs.is_empty():
 		npc_name = str(npcs[int(current_time_minutes / 30) % npcs.size()])
 	var part_name := PART_NAMES[int(current_time_minutes / 15) % PART_NAMES.size()]
-	var base_reward := 260
+	var base_reward := 130
 	var objective := {
 		"type": "PICKUP_SPECIAL",
 		"target_outpost": outpost_id,
@@ -110,23 +114,51 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		0,
 		1.0,
 		quest_data,
-		["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"]
+		["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"],
+		{
+			"{ITEM_NAME}": part_name,
+			"{TARGET_NPC}": npc_name,
+			"{PICKUP_LOCATION}": outpost_display,
+		}
 	)
 
 
 static func _build_recovery_preview() -> Dictionary:
+	var base_reward := 840
+	var objective := {
+		"type": TEMPLATE_RECOVER_COMBAT_DROP,
+		"target_faction": "reavers",
+		"count_required": 3,
+		"drop_chance": 0.33,
+		"item_name": "data pack",
+		"turn_in_location": "main station",
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(
+		"Courier Exploded. Data Survived. Probably.",
+		"neutral",
+		"Public Board",
+		"Search Reaver wreckage for the missing data pack. It gets logged automatically if you find it.",
+		objective,
+		{}
+	)
 	return _offer(
 		TEMPLATE_RECOVER_COMBAT_DROP,
-		false,
+		true,
 		"[RECOVERY] Courier Exploded. Data Survived. Probably.",
 		"Dock 3 Claims Adjuster",
 		"Recover a missing data pack from hostile wreckage. Legal says the courier is now a rounding error.",
-		"Destroy eligible hostiles until the data pack is recovered into the ship log.",
-		840,
+		"Search Reaver wreckage until the data pack turns up in the ship log.",
+		base_reward,
 		0,
 		1.0,
-		{},
-		["{TARGET_FACTION}", "{ITEM_NAME}", "{TURN_IN_LOCATION}"]
+		quest_data,
+		["{TARGET_FACTION}", "{ITEM_NAME}", "{TURN_IN_LOCATION}"],
+		{
+			"{TARGET_FACTION}": "Reaver",
+			"{ITEM_NAME}": "data pack",
+			"{TURN_IN_LOCATION}": "the main station",
+		}
 	)
 
 
@@ -175,7 +207,8 @@ static func _offer(
 	duration_minutes: int,
 	urgent_multiplier: float,
 	quest_data: Dictionary,
-	required_placeholders: Array[String]
+	required_placeholders: Array[String],
+	placeholder_values: Dictionary
 ) -> Dictionary:
 	return {
 		"template_id": template_id,
@@ -189,6 +222,7 @@ static func _offer(
 		"urgent_multiplier": urgent_multiplier,
 		"quest_data": quest_data,
 		"required_placeholders": required_placeholders,
+		"placeholder_values": placeholder_values,
 	}
 
 
@@ -203,5 +237,10 @@ static func _objective_summary(objective: Dictionary) -> String:
 				str(objective.get("part_name", "the package")),
 				str(objective.get("target_npc", "the contact")),
 				str(objective.get("target_outpost_display", "the outpost")),
+			]
+		TEMPLATE_RECOVER_COMBAT_DROP:
+			return "Recover %s from %s wreckage" % [
+				str(objective.get("item_name", "the data pack")),
+				str(objective.get("target_faction", "hostile")).to_upper(),
 			]
 	return "Review posting details"

@@ -94,6 +94,32 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 						"Pickup missions require '%s'." % field,
 						field
 					)
+		ObjectiveType.TYPE_RECOVER_COMBAT_DROP:
+			_require_positive(source, "count_required", result)
+			if int(source.get("current_count", -1)) < 0:
+				result.add_error(
+					"invalid_progress",
+					"current_count cannot be negative.",
+					"current_count"
+				)
+			var drop_chance := float(source.get("drop_chance", 0.33))
+			if drop_chance <= 0.0 or drop_chance > 1.0:
+				result.add_error(
+					"invalid_drop_chance",
+					"Recovery missions require drop_chance between 0 and 1.",
+					"drop_chance"
+				)
+			for field in [
+				"target_faction",
+				"item_name",
+				"turn_in_location",
+			]:
+				if str(source.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_recovery_field",
+						"Recovery missions require '%s'." % field,
+						field
+					)
 	return result
 
 

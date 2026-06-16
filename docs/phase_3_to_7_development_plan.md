@@ -16,6 +16,9 @@ Branch: `codex/jumpgate-system`
       footprint.
 - [x] Captured public contract board direction: interstellar Craigslist, dark
       humor, mechanically real jobs, and code-owned mission rules.
+- [x] Captured public-board payout rule: ordinary board jobs should usually pay
+      around half of Kaelen/brokered work; unusually high payouts need danger,
+      shame, or both.
 - [x] Captured slot-first/Mad Libs mission generation rule for tiny local LLMs.
 - [x] Captured first public-board combat variant:
       `RECOVER_COMBAT_DROP`.
@@ -32,8 +35,12 @@ Branch: `codex/jumpgate-system`
 - [x] Segment 1 Checkpoint 3 code slice: public board UI skeleton with
       placeholder postings.
 - [x] Segment 1 Checkpoint 4 code slice: code-owned public offer builder.
-- [ ] Segment 1 Checkpoint 5 code slice: slot-first LLM request/validation and
+- [x] Segment 1 Checkpoint 5 code slice: slot-first LLM request/validation and
       procedural fallback text.
+- [x] Segment 1 Checkpoint 6 code slice: `RECOVER_COMBAT_DROP` public-board
+      recovery missions.
+- [x] Segment 1 Checkpoint 6.5 UI slice: completed public-board jobs show a
+      tracker turn-in button that pulls in the local agent handler.
 
 ## Purpose
 
@@ -176,8 +183,8 @@ Initial board mission templates should stay small:
 - `DELIVER_ORE_PUBLIC`: deliver validated ore amount to a valid station.
 - `PICKUP_SPECIAL_PUBLIC`: pick up a named part or package from an outpost and
   return it to a valid destination.
-- `RECOVER_COMBAT_DROP`: destroy hostile ships from a valid faction until the
-  missing data pack is recovered into the ship log, then turn it in.
+- `RECOVER_COMBAT_DROP`: kill/search eligible hostile wrecks until the target
+  item randomly drops into the ship log, then turn it in.
 
 The combat-drop template should not use physical cargo. The recovered data is a
 ship-log flag so cargo capacity and special-cargo conflicts do not block the
@@ -205,11 +212,17 @@ first version.
 - [ ] Add slot-first LLM request and validation for public-board posting text.
 - [ ] Add procedural slot-filler fallback that uses the same placeholders as
       the LLM request.
+- [x] Keep ordinary public-board payouts lower than brokered agent work, with
+      exceptions reserved for dangerous or socially embarrassing jobs.
 - [ ] Add `RECOVER_COMBAT_DROP` as the first public-board combat variant:
-      hostile kills roll or deterministically resolve data recovery, then set a
-      ship-log mission flag.
+      eligible kills roll a hidden item-drop chance, then set a ship-log
+      mission flag when the item is found.
 - [ ] Record timed accept, completion, expiration, failure, and abandonment as
       structured events where the current chronicle path supports it.
+- [x] Add a clear public-board turn-in affordance so players do not have to
+      know that Kaelen/local agents handle board payouts.
+- [ ] Split the mission UI into separate agent-contract and public-board boxes
+      once the mission manager supports one active mission in each lane.
 - [ ] Add placeholder hooks, without full behavior yet, for store refreshes,
       random events, and off-screen simulation on campaign-time advancement.
 
@@ -293,8 +306,8 @@ Verified:
 - [x] Support initial templates:
       - `DELIVER_ORE_PUBLIC`
       - `PICKUP_SPECIAL_PUBLIC`
-      - `RECOVER_COMBAT_DROP` as a disabled preview until Checkpoint 6 adds the
-        recovery objective.
+      - `RECOVER_COMBAT_DROP` as an enabled combat recovery mission once
+        Checkpoint 6 is complete.
 - [x] Choose target faction, item, location, reward, urgency, and deadline in
       code where the current template supports those fields.
 - [x] Store required placeholders for generated text.
@@ -311,26 +324,51 @@ Verified:
 
 #### Checkpoint 5: Slot-First LLM And Fallback Text
 
-- [ ] Add a public-board posting text request that sends the model only the
+- [x] Add a public-board posting text request that sends the model only the
       selected template, tone card, required placeholders, and fields to fill.
-- [ ] Require valid JSON and exact placeholder preservation.
-- [ ] Add validation that rejects missing placeholders or invented mechanics.
-- [ ] Add retry-with-critique for one failed generation attempt.
-- [ ] Add procedural slot-filler fallback for each initial public template.
-- [ ] Keep fallback text darkly funny but mechanically aligned.
+- [x] Require valid JSON and exact placeholder preservation.
+- [x] Add validation that rejects missing placeholders or invented mechanics.
+- [x] Add retry-with-critique for one failed generation attempt.
+- [x] Add procedural slot-filler fallback for each initial public template.
+- [x] Keep fallback text darkly funny but mechanically aligned.
+- [x] Add public-board turn-in lines for Kaelen when she is the mechanical
+      handler: she accepts the money, but makes it clear these jobs were not
+      her idea and the player is slumming it. Lines must vary through the same
+      slot-first/fallback rules and must not imply she authored the posting.
+
+Verified:
+
+- [x] Godot MCP project run loads the updated scripts without new parser/runtime
+      errors from the public-board text path.
+- [x] Focused public-board placeholder/Kaelen-authorship tests were added to
+      `run_mission_contract_tests.gd`.
+- [ ] Re-run script tests from a console-capable Godot process; current console
+      executable crashes before scripts run while opening `user://logs`.
 
 #### Checkpoint 6: `RECOVER_COMBAT_DROP`
 
-- [ ] Add a new active mission objective type or compatible variant for combat
+- [x] Add a new active mission objective type or compatible variant for combat
       data recovery.
-- [ ] Spawn or mark eligible hostile targets from a valid faction.
-- [ ] On eligible kills, deterministically resolve whether the data pack is
-      recovered.
-- [ ] Store recovered data as a ship-log mission flag, not cargo.
-- [ ] Update tracker text from hunting to ready-to-turn-in when recovered.
-- [ ] Turn in recovered data for payout and chronicle/history records.
-- [ ] Ensure abandon, expiration, save/load, and target cleanup do not strand
+- [x] Spawn or mark eligible hostile targets from a valid faction.
+- [x] On eligible kills, roll a hidden drop chance to determine whether the
+      data pack is recovered.
+- [x] Store recovered data as a ship-log mission flag, not cargo.
+- [x] Update tracker text from wreck-searching to ready-to-turn-in when
+      recovered, without exposing the drop percentage.
+- [x] Turn in recovered data for payout and chronicle/history records.
+- [x] Ensure abandon, expiration, save/load, and target cleanup do not strand
       the mission.
+
+Verified:
+
+- [x] Godot MCP project run loads the recovery mission scripts without new
+      parser/runtime errors.
+- [x] Godot MCP logs show no new recovery errors after launching the project.
+- [x] Focused recovery contract tests and smoke coverage were added to
+      `run_mission_contract_tests.gd` and `GameRoot.gd`.
+- [ ] Re-run script tests from a console-capable Godot process; direct
+      headless/console launches currently trigger a Godot 4.6.3 Windows
+      memory-read crash before the test scripts run.
 
 #### Checkpoint 7: Segment 1 Regression
 
@@ -338,7 +376,9 @@ Verified:
 - [ ] Add public-board fallback/placeholder validation tests.
 - [ ] Add gameplay smoke coverage for accepting and completing an urgent public
       posting.
-- [ ] Add combat-drop smoke coverage.
+- [x] Add combat-drop smoke coverage.
+- [x] Verify the public-board tracker turn-in button appears only when a board
+      job is ready and routes completion through the local agent handler.
 - [ ] Run the full baseline suite.
 
 ### Risks And Unknowns
@@ -367,7 +407,7 @@ Verified:
 - [ ] Completing before deadline pays the urgent reward.
 - [ ] Missing the deadline expires or fails the mission cleanly.
 - [ ] Expired mission cleanup removes or disables all related runtime state.
-- [ ] `RECOVER_COMBAT_DROP` recovers data into the ship log and turns in
+- [x] `RECOVER_COMBAT_DROP` randomly drops data into the ship log and turns in
       without using cargo.
 - [ ] LLM unavailable fallback creates a valid public-board posting whose
       objective, reward, item, faction, and deadline match the mission state.
@@ -380,8 +420,11 @@ Verified:
       or missed for deterministic expiration.
 - [ ] The public-board posting text is generated or procedurally slot-filled
       from code-owned mission data.
-- [ ] The first combat recovery loop works: kill eligible hostiles until a data
-      pack is added to the ship log, then turn it in.
+- [ ] Kaelen can handle public-board payouts without sounding like the job
+      giver; her turn-in reaction is varied, disdainful, and mechanically
+      accurate.
+- [ ] The first combat recovery loop works: kill eligible hostiles until a
+      hidden random drop adds the data pack to the ship log, then turn it in.
 - [ ] Saves, loads, manual backups, and fallback text all obey the same
       campaign clock.
 

@@ -8,10 +8,12 @@ const ValidationResultType := preload(
 const TYPE_KILL_SHIPS := "KILL_SHIPS"
 const TYPE_DELIVER_ORE := "DELIVER_ORE"
 const TYPE_PICKUP_SPECIAL := "PICKUP_SPECIAL"
+const TYPE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
 const SUPPORTED_TYPES := [
 	TYPE_KILL_SHIPS,
 	TYPE_DELIVER_ORE,
 	TYPE_PICKUP_SPECIAL,
+	TYPE_RECOVER_COMBAT_DROP,
 ]
 
 var type: String = ""
@@ -44,6 +46,19 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 				"destination",
 			]:
 				_require_text(source, field, result)
+		TYPE_RECOVER_COMBAT_DROP:
+			_require_text(source, "target_faction", result)
+			_require_text(source, "item_name", result)
+			_require_text(source, "turn_in_location", result)
+			_require_positive_number(source, "count_required", result)
+			if source.has("drop_chance"):
+				var drop_chance := float(source.get("drop_chance", 0.0))
+				if drop_chance <= 0.0 or drop_chance > 1.0:
+					result.add_error(
+						"invalid_objective_number",
+						"Objective field 'drop_chance' must be between 0 and 1.",
+						"drop_chance"
+					)
 	return result
 
 

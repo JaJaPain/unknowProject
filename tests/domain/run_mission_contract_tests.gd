@@ -6,6 +6,12 @@ const DefinitionType := preload(
 const AdapterType := preload(
 	"res://scripts/domain/MissionAdapter.gd"
 )
+const PublicBoardOfferBuilderType := preload(
+	"res://scripts/domain/PublicBoardOfferBuilder.gd"
+)
+const PublicBoardTextGeneratorType := preload(
+	"res://scripts/domain/PublicBoardTextGenerator.gd"
+)
 
 var _failures: Array[String] = []
 
@@ -14,7 +20,9 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_pickup_offer()
+	_test_recovery_offer()
 	_test_timed_offer()
+	_test_public_board_text_generation()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
 	_test_invalid_runtime_state()
@@ -127,6 +135,42 @@ func _test_pickup_offer() -> void:
 	)
 
 
+func _test_recovery_offer() -> void:
+	var adapted := AdapterType.build_active_state(
+		_offer(
+			"Data Pack Recovery",
+			"neutral",
+			"Public Board",
+			{
+				"type": "RECOVER_COMBAT_DROP",
+				"target_faction": "reavers",
+				"count_required": 3,
+				"drop_chance": 0.33,
+				"item_name": "data pack",
+				"turn_in_location": "main station",
+				"reward_credits": 840,
+			}
+		),
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.recovery_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Valid recovery offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		state.get("objective_type") == "RECOVER_COMBAT_DROP"
+			and state.get("target_faction") == "reavers"
+			and int(state.get("count_required")) == 3
+			and is_equal_approx(float(state.get("drop_chance")), 0.33)
+			and state.get("item_name") == "data pack"
+			and not bool(state.get("ship_log_recovered", false)),
+		"Recovery offer did not produce random-drop ship-log mission state."
+	)
+
+
 func _test_timed_offer() -> void:
 	var offer := _offer(
 		"Urgent Parts Run",
@@ -171,6 +215,75 @@ func _test_timed_offer() -> void:
 				1.5
 			),
 		"Timed offer did not produce campaign-time deadline metadata."
+	)
+
+
+func _test_public_board_text_generation() -> void:
+	var offers := PublicBoardOfferBuilderType.build_offers(480)
+	_expect(offers.size() >= 2, "Public board did not build initial offers.")
+	var offer: Dictionary = offers[0]
+	var request := PublicBoardTextGeneratorType.build_generation_request(offer)
+	_expect(
+		str(request.get("prompt", "")).contains("{ORE_AMOUNT}")
+			and str(request.get("prompt", "")).contains("{TURN_IN_LOCATION}"),
+		"Public-board LLM request did not include required placeholders."
+	)
+	var rendered := PublicBoardTextGeneratorType.fallback_offer(offer, 0)
+	_expect(
+		not str(rendered.get("title", "")).contains("{ORE_AMOUNT}")
+			and not str(rendered.get("body", "")).contains("{ORE_AMOUNT}"),
+		"Public-board fallback offer did not render code-owned placeholders."
+	)
+	var quest_data: Dictionary = rendered.get("quest_data", {})
+	_expect(
+		bool(quest_data.get("public_board", false))
+			and str(quest_data.get("public_board_turn_in_line", "")).length() > 0,
+		"Public-board fallback did not attach turn-in metadata."
+	)
+	var adapted := AdapterType.build_active_state(
+		quest_data,
+		quest_data.get("choices", [])[0],
+		"mission.runtime.public_board_text_test",
+		"start_system",
+		480
+	)
+	_expect(
+		adapted["validation"].is_valid()
+			and bool(adapted["state"].get("public_board", false))
+			and str(adapted["state"].get("public_board_turn_in_line", "")).length() > 0,
+		"Public-board metadata did not survive active mission adaptation."
+	)
+	var missing_placeholder := {
+		"title": "Ore job",
+		"poster": "Someone",
+		"body": "Bring ore.",
+		"briefing": "Bring ore.",
+		"kaelen_turn_in": "I processed the payout. Public board work, really?",
+	}
+	_expect(
+		not bool(
+			PublicBoardTextGeneratorType.validate_payload(
+				offer,
+				missing_placeholder
+			).get("ok", false)
+		),
+		"Public-board text accepted output missing required placeholders."
+	)
+	var authorship_payload := PublicBoardTextGeneratorType.fallback_payload(
+		offer,
+		0
+	)
+	authorship_payload["kaelen_turn_in"] = (
+		"I posted my contract for {ORE_AMOUNT} to {TURN_IN_LOCATION}."
+	)
+	_expect(
+		not bool(
+			PublicBoardTextGeneratorType.validate_payload(
+				offer,
+				authorship_payload
+			).get("ok", false)
+		),
+		"Public-board text accepted Kaelen authorship drift."
 	)
 
 

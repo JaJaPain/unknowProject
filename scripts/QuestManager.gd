@@ -115,6 +115,8 @@ func is_quest_completed() -> bool:
 	var type = active_quest["objective_type"]
 	if type == "KILL_SHIPS":
 		return active_quest["current_count"] >= active_quest["count_required"]
+	elif type == "RECOVER_COMBAT_DROP":
+		return bool(active_quest.get("ship_log_recovered", false))
 	elif type == "DELIVER_ORE":
 		# Count already-banked ore plus what's currently in the hold.
 		# Only count in-hold ore if the hold is actually carrying ore
@@ -165,7 +167,10 @@ func accept_quest(
 
 	active_quest = (adapted["state"] as Dictionary).duplicate(true)
 	last_validation_error = ""
-	if active_quest["objective_type"] == "KILL_SHIPS":
+	if active_quest["objective_type"] in [
+		"KILL_SHIPS",
+		"RECOVER_COMBAT_DROP",
+	]:
 		var spawn_faction = active_quest["target_faction"]
 		var spawn_count = active_quest["count_required"]
 		var accepted_runtime_id := str(active_quest["runtime_id"])
@@ -174,7 +179,10 @@ func accept_quest(
 				return
 			if str(active_quest.get("runtime_id", "")) != accepted_runtime_id:
 				return
-			if active_quest.get("objective_type", "") != "KILL_SHIPS":
+			if active_quest.get("objective_type", "") not in [
+				"KILL_SHIPS",
+				"RECOVER_COMBAT_DROP",
+			]:
 				return
 			GlobalState.spawn_mission_targets(spawn_faction, spawn_count)
 		)
@@ -393,6 +401,10 @@ func complete_quest():
 	# or the hold was cleared manually).
 	elif active_quest["objective_type"] == "PICKUP_SPECIAL":
 		GlobalState.clear_cargo()
+	elif active_quest["objective_type"] == "RECOVER_COMBAT_DROP":
+		if not bool(active_quest.get("ship_log_recovered", false)):
+			print("[QuestManager] RECOVER_COMBAT_DROP: cannot complete, data is not recovered")
+			return
 
 	# Append to history file log
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
@@ -469,4 +481,58 @@ func _on_ship_destroyed(faction_name: String):
 				if alive_targets == 0:
 					GlobalState.spawn_mission_targets(active_quest["target_faction"], 1)
 					print("[QuestManager] Respawned quest target after NPC kill.")
+			)
+	elif active_quest["objective_type"] == "RECOVER_COMBAT_DROP" \
+			and active_quest["target_faction"] == faction_name \
+			and not bool(active_quest.get("ship_log_recovered", false)):
+		active_quest["current_count"] += 1
+		var drop_chance := clampf(
+			float(active_quest.get("drop_chance", 0.33)),
+			0.01,
+			1.0
+		)
+		var recovered := randf() <= drop_chance
+		print(
+			"[QuestManager] Recovery wreck searched. Count: ",
+			active_quest["current_count"],
+			" recovered=",
+			recovered
+		)
+		if recovered:
+			active_quest["ship_log_recovered"] = true
+			active_quest["ship_log_entry"] = (
+				"Recovered %s from %s wreckage after %d eligible kills." % [
+					str(active_quest.get("item_name", "data pack")),
+					str(active_quest.get("target_faction", "hostile")),
+					int(active_quest.get("current_count", 0)),
+				]
+			)
+			GlobalState.emit_chatter(
+				"SYSTEM",
+				"Recovered %s into ship log. Return to %s for payout." % [
+					str(active_quest.get("item_name", "data pack")),
+					str(active_quest.get("turn_in_location", "station")),
+				],
+				Color(0.65, 1.0, 0.75)
+			)
+		quest_progress_updated.emit()
+
+		if not bool(active_quest.get("ship_log_recovered", false)):
+			get_tree().create_timer(2.0).timeout.connect(func():
+				if not is_quest_active():
+					return
+				if active_quest["objective_type"] != "RECOVER_COMBAT_DROP":
+					return
+				if active_quest["target_faction"] != faction_name:
+					return
+				if bool(active_quest.get("ship_log_recovered", false)):
+					return
+				var alive_targets := 0
+				for e in GlobalState.active_system_entities:
+					if e and is_instance_valid(e) and not e.get("destroyed"):
+						if e.is_in_group("ship") and e.get_meta("is_quest_target", false):
+							alive_targets += 1
+				if alive_targets == 0:
+					GlobalState.spawn_mission_targets(active_quest["target_faction"], 1)
+					print("[QuestManager] Respawned recovery target after NPC kill.")
 			)
