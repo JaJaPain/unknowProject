@@ -5040,35 +5040,96 @@ func _update_quest_tracker_secondary_missions() -> void:
 		return
 	var focused = collection.get_focused()
 	var focused_id: String = focused.runtime_id if focused else ""
+
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 6)
+	sep.add_theme_stylebox_override("separator", StyleBoxLine.new())
+	quest_tracker_secondary_container.add_child(sep)
+
+	var header := Label.new()
+	header.text = "%d OTHER MISSION%s  (click to switch)" % [
+		all_active.size() - 1,
+		"S" if all_active.size() > 2 else "",
+	]
+	header.add_theme_font_size_override("font_size", 10)
+	header.add_theme_color_override("font_color", Color(0.5, 0.7, 0.7))
+	quest_tracker_secondary_container.add_child(header)
+
 	for m in all_active:
 		if m.runtime_id == focused_id:
 			continue
-		var btn := Button.new()
-		btn.flat = true
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.add_theme_font_size_override("font_size", 11)
-		btn.add_theme_color_override("font_color", Color(0.6, 0.8, 0.8, 0.8))
-		btn.add_theme_color_override("font_hover_color", Color(0.0, 1.0, 1.0))
-		var lane_tag := ""
+		var lane_color := Color(0.0, 0.85, 0.85)
+		var lane_tag := "CONTRACT"
 		match m.source_lane:
 			MissionInstance.SourceLane.BOARD:
-				lane_tag = "[BOARD] "
+				lane_color = Color(0.2, 0.8, 0.4)
+				lane_tag = "BOARD"
 			MissionInstance.SourceLane.STATION:
-				lane_tag = "[ERRAND] "
-			_:
-				lane_tag = "[CONTRACT] "
+				lane_color = Color(0.9, 0.7, 0.2)
+				lane_tag = "ERRAND"
+
+		var row := PanelContainer.new()
+		var row_style := StyleBoxFlat.new()
+		row_style.bg_color = Color(0.08, 0.12, 0.14, 0.9)
+		row_style.border_width_left = 3
+		row_style.border_color = lane_color
+		row_style.content_margin_left = 8
+		row_style.content_margin_right = 6
+		row_style.content_margin_top = 4
+		row_style.content_margin_bottom = 4
+		row_style.corner_radius_top_left = 2
+		row_style.corner_radius_bottom_left = 2
+		row.add_theme_stylebox_override("panel", row_style)
+
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 1)
+		row.add_child(vbox)
+
+		var tag_label := Label.new()
+		tag_label.text = lane_tag
+		tag_label.add_theme_font_size_override("font_size", 9)
+		tag_label.add_theme_color_override("font_color", lane_color)
+		vbox.add_child(tag_label)
+
 		var cap = MissionCapabilityRegistry.get_for_type(m.data.get("objective_type", ""))
-		var status := ""
+		var title_text: String = str(m.data.get("title", "Mission"))
 		if cap and cap.is_completed(m.data):
-			status = " ✓"
-		btn.text = "%s%s%s" % [lane_tag, str(m.data.get("title", "Mission")), status]
-		btn.tooltip_text = "Click to focus this mission"
+			title_text += "  [READY]"
+		var title_label := Label.new()
+		title_label.text = title_text
+		title_label.add_theme_font_size_override("font_size", 12)
+		title_label.add_theme_color_override("font_color", Color(0.85, 0.9, 0.9))
+		title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.add_child(title_label)
+
+		if cap:
+			var progress_label := Label.new()
+			progress_label.text = cap.format_tracker_text(m.data)
+			progress_label.add_theme_font_size_override("font_size", 10)
+			progress_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.7))
+			progress_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			progress_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			vbox.add_child(progress_label)
+
+		var click_btn := Button.new()
+		click_btn.flat = true
+		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		click_btn.anchor_right = 1.0
+		click_btn.anchor_bottom = 1.0
+		click_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		click_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color(lane_color.r, lane_color.g, lane_color.b, 0.1)
+		click_btn.add_theme_stylebox_override("hover", hover_style)
 		var rid: String = m.runtime_id
-		btn.pressed.connect(func():
+		click_btn.pressed.connect(func():
 			QuestManager.get_mission_collection().focus(rid)
 			_update_quest_tracker()
 		)
-		quest_tracker_secondary_container.add_child(btn)
+		row.add_child(click_btn)
+
+		quest_tracker_secondary_container.add_child(row)
 
 
 func _on_quest_tracker_turn_in_pressed() -> void:
