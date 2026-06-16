@@ -9,6 +9,7 @@ signal quest_accepted()
 signal quest_progress_updated()
 signal quest_completed()
 signal quest_abandoned()
+signal quest_expired(title: String)
 # Emitted by set_pickup_handoff when the LLM (or fallback) handoff line
 # for a PICKUP_SPECIAL quest is ready. UIManager listens for this to fire
 # the TTS pre-cache. We use a dedicated signal (vs. quest_progress_updated)
@@ -24,6 +25,7 @@ func _ready():
 	_load_quest_history()
 	# Connect to ship destroyed signals to track combat quests
 	GlobalState.ship_destroyed.connect(_on_ship_destroyed)
+	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
 func reset_for_restart():
 	active_quest = {}
@@ -141,7 +143,8 @@ func accept_quest(
 		quest_data,
 		selected_choice,
 		runtime_mission_id,
-		GlobalState.current_system_id
+		GlobalState.current_system_id,
+		CampaignClock.total_minutes
 	)
 	var validation: ValidationResult = adapted["validation"]
 	if not validation.is_valid():
@@ -210,6 +213,51 @@ func capture_active_quest() -> Dictionary:
 		return {}
 	last_validation_error = ""
 	return normalized
+
+
+func is_active_quest_timed() -> bool:
+	return is_quest_active() and bool(active_quest.get("is_timed", false))
+
+
+func get_active_quest_remaining_minutes() -> int:
+	if not is_active_quest_timed():
+		return 0
+	return maxi(
+		0,
+		int(active_quest.get("deadline_time_minutes", 0))
+			- CampaignClock.total_minutes
+	)
+
+
+func is_active_quest_expired() -> bool:
+	return (
+		is_active_quest_timed()
+		and CampaignClock.total_minutes
+			>= int(active_quest.get("deadline_time_minutes", 0))
+	)
+
+
+func check_active_quest_expiration() -> bool:
+	if not is_active_quest_expired():
+		return false
+	var expired_title := str(active_quest.get("title", "Contract"))
+	var expired_type := str(active_quest.get("objective_type", "TIMED"))
+	_cleanup_expired_quest()
+	_log_quest_to_file(expired_title, expired_type, "Expired.")
+	active_quest = {}
+	print("[QuestManager] Quest expired: ", expired_title)
+	quest_expired.emit(expired_title)
+	return true
+
+
+func active_quest_payout() -> int:
+	if not is_quest_active():
+		return 0
+	var payout := float(active_quest.get("reward_credits", 0))
+	payout *= float(active_quest.get("reward_credits_multiplier", 1.0))
+	if bool(active_quest.get("is_urgent", false)):
+		payout *= float(active_quest.get("urgent_reward_multiplier", 1.0))
+	return int(round(payout))
 
 
 func can_restore_active_quest(source: Dictionary) -> bool:
@@ -327,7 +375,7 @@ func complete_quest():
 				GlobalState.cargo_special.get("name", ""), expected_part])
 			return
 		
-	var final_payout = int(active_quest["reward_credits"] * active_quest["reward_credits_multiplier"])
+	var final_payout = active_quest_payout()
 	GlobalState.player_credits += final_payout
 	
 	# Adjust faction relationship positive gain
@@ -367,6 +415,21 @@ func abandon_quest():
 	print("[QuestManager] Quest abandoned: ", active_quest["title"])
 	quest_abandoned.emit()
 	active_quest = {}
+
+
+func _cleanup_expired_quest() -> void:
+	if not is_quest_active():
+		return
+	if active_quest.get("objective_type", "") == "PICKUP_SPECIAL":
+		var expected_part := str(active_quest.get("part_name", ""))
+		if GlobalState.cargo_type == GlobalState.CargoType.SPECIAL \
+				and str(GlobalState.cargo_special.get("name", "")) \
+					== expected_part:
+			GlobalState.clear_cargo()
+
+
+func _on_campaign_time_changed(_total_minutes: int) -> void:
+	check_active_quest_expiration()
 
 func _on_ship_destroyed(faction_name: String):
 	if not is_quest_active():

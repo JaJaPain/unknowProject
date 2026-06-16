@@ -1,5 +1,9 @@
 extends Control
 
+const PublicBoardOfferBuilderType := preload(
+	"res://scripts/domain/PublicBoardOfferBuilder.gd"
+)
+
 # UI Nodes created dynamically
 var hud_panel: Panel
 var time_label: Label
@@ -100,6 +104,7 @@ var test_pickup_btn: Button
 var test_deliver_btn: Button
 var test_pickup_part_btn: Button
 var hear_gossip_btn: Button
+var public_board_btn: Button
 
 # Dock submenu state. Every dockable station (main station, outposts)
 # shows the same two submenus:
@@ -115,6 +120,11 @@ var agent_name_label: Label
 var agent_dialogue_label: Label
 var agent_choices_container: VBoxContainer
 var agent_back_btn: Button
+
+var public_board_panel: Panel
+var public_board_list: VBoxContainer
+var public_board_back_btn: Button
+var public_board_current_offers: Array[Dictionary] = []
 
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
@@ -238,6 +248,7 @@ func _ready():
 	QuestManager.quest_progress_updated.connect(_on_quest_progress_updated)
 	QuestManager.quest_completed.connect(_on_quest_completed)
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned)
+	QuestManager.quest_expired.connect(_on_quest_expired)
 	
 	_create_hud()
 	_create_target_panel()
@@ -1042,6 +1053,11 @@ func _create_dock_menu():
 	agent_service_btn.pressed.connect(_on_talk_to_agent_pressed)
 	vbox.add_child(agent_service_btn)
 
+	public_board_btn = Button.new()
+	public_board_btn.text = "Public Contract Board"
+	public_board_btn.pressed.connect(_on_public_board_pressed)
+	vbox.add_child(public_board_btn)
+
 	maintenance_bay_btn = Button.new()
 	maintenance_bay_btn.text = "Maintenance Bay (Grease Monkeys)"
 	maintenance_bay_btn.pressed.connect(_on_maintenance_bay_pressed)
@@ -1174,6 +1190,162 @@ func _create_dock_menu():
 	agent_back_btn.text = "Back to Services"
 	agent_back_btn.pressed.connect(_on_agent_back_pressed)
 	avbox.add_child(agent_back_btn)
+
+	_create_public_board_panel()
+
+
+func _create_public_board_panel() -> void:
+	public_board_panel = Panel.new()
+	add_child(public_board_panel)
+	public_board_panel.anchor_left = 0.22
+	public_board_panel.anchor_right = 0.78
+	public_board_panel.anchor_top = 0.16
+	public_board_panel.anchor_bottom = 0.84
+	public_board_panel.offset_left = 0
+	public_board_panel.offset_right = 0
+	public_board_panel.offset_top = 0
+	public_board_panel.offset_bottom = 0
+	public_board_panel.visible = false
+
+	var board_style := StyleBoxFlat.new()
+	board_style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
+	board_style.border_width_left = 2
+	board_style.border_width_top = 2
+	board_style.border_width_right = 2
+	board_style.border_width_bottom = 2
+	board_style.border_color = Color(0.85, 0.52, 0.18, 0.9)
+	board_style.corner_radius_top_left = 4
+	board_style.corner_radius_top_right = 4
+	board_style.corner_radius_bottom_right = 4
+	board_style.corner_radius_bottom_left = 4
+	public_board_panel.add_theme_stylebox_override("panel", board_style)
+
+	var board_vbox := VBoxContainer.new()
+	board_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	board_vbox.offset_left = 16
+	board_vbox.offset_right = -16
+	board_vbox.offset_top = 16
+	board_vbox.offset_bottom = -16
+	board_vbox.add_theme_constant_override("separation", 10)
+	public_board_panel.add_child(board_vbox)
+
+	var title := Label.new()
+	title.text = "PUBLIC CONTRACT BOARD"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(1.0, 0.72, 0.32))
+	board_vbox.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "Local postings. Verified mechanics. Questionable judgment."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 12)
+	subtitle.modulate = Color(0.75, 0.75, 0.78)
+	board_vbox.add_child(subtitle)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	board_vbox.add_child(scroll)
+
+	public_board_list = VBoxContainer.new()
+	public_board_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	public_board_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(public_board_list)
+
+	public_board_back_btn = Button.new()
+	public_board_back_btn.text = "Back to Services"
+	public_board_back_btn.pressed.connect(_on_public_board_back_pressed)
+	board_vbox.add_child(public_board_back_btn)
+
+
+func _render_public_board_offers() -> void:
+	for child in public_board_list.get_children():
+		child.queue_free()
+	public_board_current_offers = PublicBoardOfferBuilderType.build_offers(
+		CampaignClock.total_minutes
+	)
+	for index in range(public_board_current_offers.size()):
+		_add_public_board_posting(public_board_current_offers[index], index)
+
+
+func _add_public_board_posting(posting: Dictionary, index: int) -> void:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.055, 0.92)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.55, 0.42, 0.25, 0.7)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+	public_board_list.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	card.add_child(vbox)
+
+	var title := Label.new()
+	title.text = str(posting.get("title", "Untitled Posting"))
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_color_override("font_color", Color(1.0, 0.78, 0.38))
+	vbox.add_child(title)
+
+	var poster := Label.new()
+	poster.text = "Posted by: %s" % str(posting.get("poster", "Anonymous"))
+	poster.add_theme_font_size_override("font_size", 11)
+	poster.modulate = Color(0.72, 0.72, 0.76)
+	vbox.add_child(poster)
+
+	var body := Label.new()
+	body.text = str(posting.get("body", "The details are suspiciously missing."))
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(body)
+
+	var objective := Label.new()
+	objective.text = "Verified objective: %s" % str(posting.get("objective", "Pending"))
+	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	objective.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
+	vbox.add_child(objective)
+
+	var payout := Label.new()
+	var base_reward := int(posting.get("base_reward", 0))
+	var duration_minutes := int(posting.get("duration_minutes", 0))
+	var urgent_multiplier := float(posting.get("urgent_multiplier", 1.0))
+	var payout_text := "%d SC" % base_reward
+	if duration_minutes > 0:
+		payout_text = "%d SC urgent payout | %s remaining" % [
+			int(round(float(base_reward) * urgent_multiplier)),
+			CampaignClock.format_duration(duration_minutes),
+		]
+	payout.text = "Payout: %s" % payout_text
+	payout.add_theme_color_override("font_color", Color(0.65, 1.0, 0.55))
+	vbox.add_child(payout)
+
+	var accept := Button.new()
+	if QuestManager.is_quest_active():
+		accept.text = "Finish Active Contract First"
+		accept.disabled = true
+	elif not bool(posting.get("enabled", false)):
+		accept.text = "Template Coming Soon"
+		accept.disabled = true
+	else:
+		accept.text = "Accept Posting"
+		accept.disabled = false
+		accept.pressed.connect(func(): _on_public_board_offer_accept(index))
+	vbox.add_child(accept)
+
 
 func _create_context_menu():
 	context_panel = Panel.new()
@@ -2473,6 +2645,8 @@ func _on_credits_changed(new_credits: int):
 func _on_campaign_time_changed(_total_minutes: int) -> void:
 	if time_label:
 		time_label.text = "Time: %s" % CampaignClock.formatted_datetime()
+	if QuestManager.is_active_quest_timed():
+		_update_quest_tracker()
 
 func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:
@@ -2511,10 +2685,13 @@ func toggle_dock_menu(
 	create_checkpoint: bool = true
 ):
 	current_station = station
-	if dock_panel.visible or agent_panel.visible:
+	if dock_panel.visible or agent_panel.visible \
+			or (public_board_panel and public_board_panel.visible):
 		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
+		if public_board_panel:
+			public_board_panel.visible = false
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
@@ -2606,6 +2783,7 @@ func _render_dock_submenu() -> void:
 		# upgrades + back button. The hangar background stays on.
 		sell_btn.visible = false
 		agent_service_btn.visible = false
+		public_board_btn.visible = false
 		maintenance_bay_btn.visible = false
 		ship_upgrades_btn.visible = true
 		repair_btn.visible = true
@@ -2640,6 +2818,7 @@ func _render_dock_submenu() -> void:
 		# and hide the rest.
 		sell_btn.visible = not is_outpost
 		agent_service_btn.visible = not is_outpost
+		public_board_btn.visible = not is_outpost
 		maintenance_bay_btn.visible = not is_outpost
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
@@ -2690,6 +2869,66 @@ func _on_back_to_services_pressed() -> void:
 	SpeechService.stop()
 	current_submenu = DockSubmenu.SERVICES
 	_render_dock_submenu()
+
+
+func _on_public_board_pressed() -> void:
+	SpeechService.stop()
+	_render_public_board_offers()
+	dock_panel.visible = false
+	agent_panel.visible = false
+	public_board_panel.visible = true
+
+
+func _on_public_board_back_pressed() -> void:
+	public_board_panel.visible = false
+	dock_panel.visible = true
+	_render_dock_submenu()
+
+
+func _on_public_board_offer_accept(index: int) -> void:
+	if index < 0 or index >= public_board_current_offers.size():
+		return
+	if QuestManager.is_quest_active():
+		_render_public_board_offers()
+		return
+	var offer := public_board_current_offers[index]
+	var quest_data: Dictionary = offer.get("quest_data", {})
+	var choices: Array = quest_data.get("choices", [])
+	if quest_data.is_empty() or choices.is_empty():
+		return
+	if not QuestManager.accept_quest(quest_data, choices[0]):
+		GlobalState.emit_chatter(
+			"SYSTEM WARNING",
+			"Public posting failed verification. It has been removed from consideration.",
+			Color(1.0, 0.45, 0.35)
+		)
+		_render_public_board_offers()
+		return
+	if quest_data.get("objective", {}).get("type", "") == "PICKUP_SPECIAL":
+		var objective: Dictionary = quest_data["objective"]
+		_request_outpost_pickup_handoff_attempt(
+			str(objective.get("target_npc", "the contact")),
+			str(objective.get("part_name", "the part")),
+			str(objective.get("target_outpost_display", "the outpost")),
+			str(quest_data.get("agent_name", "Public Board")),
+			"",
+			0
+		)
+	public_board_panel.visible = false
+	agent_panel.visible = true
+	agent_name_label.text = "PUBLIC BOARD"
+	_update_agent_portrait("neutral")
+	agent_dialogue_label.text = (
+		"Posting accepted.\n\n"
+		+ str(quest_data.get("objective_summary", "Objective verified."))
+	)
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	var launch_btn := Button.new()
+	launch_btn.text = "Undock & Begin Mission"
+	launch_btn.pressed.connect(undock_player)
+	agent_choices_container.add_child(launch_btn)
+	agent_back_btn.visible = true
 
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
@@ -3336,6 +3575,8 @@ func undock_player():
 	if ship_upgrades_panel and is_instance_valid(ship_upgrades_panel):
 		ship_upgrades_panel.visible = false
 	agent_panel.visible = false
+	if public_board_panel:
+		public_board_panel.visible = false
 	current_station = null
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
@@ -4568,6 +4809,14 @@ func _on_quest_completed():
 func _on_quest_abandoned():
 	quest_tracker_panel.visible = false
 
+func _on_quest_expired(title: String) -> void:
+	quest_tracker_panel.visible = false
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Contract expired: %s." % title,
+		Color(1.0, 0.55, 0.25)
+	)
+
 func _update_quest_tracker():
 	if not QuestManager.is_quest_active():
 		quest_tracker_panel.visible = false
@@ -4603,6 +4852,15 @@ func _update_quest_tracker():
 			quest_tracker_progress.text = "Pickup: %s from %s @ %s" % [
 				q["part_name"], q["target_npc"], q["target_outpost_display"]
 			]
+	if QuestManager.is_active_quest_timed():
+		var remaining := QuestManager.get_active_quest_remaining_minutes()
+		var urgency := "URGENT" if q.get("is_urgent", false) else "TIMED"
+		var payout := QuestManager.active_quest_payout()
+		quest_tracker_progress.text += "\n%s: %s remaining | Payout: %d SC" % [
+			urgency,
+			CampaignClock.format_duration(remaining),
+			payout,
+		]
 
 
 func _update_quest_tracker_logo(faction: String):

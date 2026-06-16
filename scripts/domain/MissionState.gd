@@ -56,6 +56,7 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 			"Active mission reward cannot be negative.",
 			"reward_credits"
 		)
+	_validate_timing(source, result)
 
 	match objective_type:
 		ObjectiveType.TYPE_KILL_SHIPS:
@@ -110,4 +111,52 @@ func _require_positive(
 			"invalid_requirement",
 			"Active mission field '%s' must be greater than zero." % field,
 			field
+		)
+
+
+func _validate_timing(
+	source: Dictionary,
+	result: ValidationResult
+) -> void:
+	var is_timed := bool(source.get("is_timed", false))
+	if not is_timed:
+		return
+	var accepted := int(source.get("accepted_time_minutes", -1))
+	var duration := int(source.get("expires_after_minutes", 0))
+	var deadline := int(source.get("deadline_time_minutes", 0))
+	if accepted < 0:
+		result.add_error(
+			"invalid_timing",
+			"Timed missions require accepted_time_minutes >= 0.",
+			"accepted_time_minutes"
+		)
+	if duration <= 0:
+		result.add_error(
+			"invalid_timing",
+			"Timed missions require expires_after_minutes > 0.",
+			"expires_after_minutes"
+		)
+	if deadline <= accepted:
+		result.add_error(
+			"invalid_timing",
+			"Timed missions require deadline_time_minutes after acceptance.",
+			"deadline_time_minutes"
+		)
+	if str(source.get("expiration_policy", "")).strip_edges().is_empty():
+		result.add_error(
+			"invalid_timing",
+			"Timed missions require an expiration_policy.",
+			"expiration_policy"
+		)
+	if float(source.get("urgent_reward_multiplier", 1.0)) < 1.0:
+		result.add_error(
+			"invalid_timing",
+			"urgent_reward_multiplier cannot be below 1.0.",
+			"urgent_reward_multiplier"
+		)
+	if int(source.get("base_reward_credits", 0)) < 0:
+		result.add_error(
+			"invalid_timing",
+			"base_reward_credits cannot be negative.",
+			"base_reward_credits"
 		)

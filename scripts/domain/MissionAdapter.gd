@@ -17,7 +17,8 @@ static func build_active_state(
 	quest_data: Dictionary,
 	selected_choice: Dictionary,
 	runtime_id: String,
-	system_id: String
+	system_id: String,
+	current_time_minutes: int = 0
 ) -> Dictionary:
 	var definition := DefinitionType.new()
 	var validation := definition.load_from_offer(quest_data)
@@ -33,6 +34,10 @@ static func build_active_state(
 		}
 
 	var objective := definition.objective.to_dict()
+	var timing := definition.timing.to_dict()
+	var is_timed := bool(timing.get("timed", false))
+	var duration_minutes := int(timing.get("duration_minutes", 0))
+	var accepted_time_minutes: int = maxi(0, current_time_minutes)
 	var state := {
 		"mission_schema_version": StateType.SCHEMA_VERSION,
 		"definition_id": str(definition.id),
@@ -51,7 +56,21 @@ static func build_active_state(
 		"agent_response": consequence.dialogue_response,
 		"system_id": system_id,
 		"target_spawn_sequence": 0,
-		"timing": definition.timing.to_dict(),
+		"timing": timing,
+		"is_timed": is_timed,
+		"is_urgent": bool(timing.get("urgent", false)),
+		"accepted_time_minutes": accepted_time_minutes if is_timed else 0,
+		"expires_after_minutes": duration_minutes if is_timed else 0,
+		"deadline_time_minutes": (
+			accepted_time_minutes + duration_minutes
+			if is_timed else 0
+		),
+		"expiration_policy": str(timing.get("expiration_policy", "")),
+		"base_reward_credits": definition.reward.credits,
+		"urgent_reward_multiplier": (
+			float(timing.get("urgent_reward_multiplier", 1.0))
+			if is_timed and bool(timing.get("urgent", false)) else 1.0
+		),
 	}
 
 	match definition.objective.type:
@@ -129,6 +148,42 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 		0.5,
 		float(normalized.get("reward_credits_multiplier", 1.0))
 	)
+	normalized["base_reward_credits"] = int(
+		normalized.get(
+			"base_reward_credits",
+			normalized.get("reward_credits", 0)
+		)
+	)
+	normalized["is_timed"] = bool(normalized.get("is_timed", false))
+	normalized["is_urgent"] = (
+		bool(normalized.get("is_urgent", false))
+		if bool(normalized.get("is_timed", false)) else false
+	)
+	normalized["accepted_time_minutes"] = max(
+		0,
+		int(normalized.get("accepted_time_minutes", 0))
+	)
+	normalized["expires_after_minutes"] = max(
+		0,
+		int(normalized.get("expires_after_minutes", 0))
+	)
+	normalized["deadline_time_minutes"] = max(
+		0,
+		int(normalized.get("deadline_time_minutes", 0))
+	)
+	normalized["expiration_policy"] = str(
+		normalized.get("expiration_policy", "")
+	)
+	normalized["urgent_reward_multiplier"] = maxf(
+		1.0,
+		float(normalized.get("urgent_reward_multiplier", 1.0))
+	)
+	if not bool(normalized.get("is_timed", false)):
+		normalized["accepted_time_minutes"] = 0
+		normalized["expires_after_minutes"] = 0
+		normalized["deadline_time_minutes"] = 0
+		normalized["expiration_policy"] = ""
+		normalized["urgent_reward_multiplier"] = 1.0
 	normalized["choice_text_selected"] = str(
 		normalized.get("choice_text_selected", "")
 	)

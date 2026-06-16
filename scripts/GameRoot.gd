@@ -4188,6 +4188,29 @@ func _run_mission_smoke_test() -> void:
 		_fail_mission_smoke_test("Correct pickup cargo did not complete cleanly.")
 		return
 
+	var timed_pickup_offer := pickup_offer.duplicate(true)
+	timed_pickup_offer["title"] = "Timed Pickup Expiration"
+	timed_pickup_offer["timing"] = {
+		"timed": true,
+		"urgent": true,
+		"duration_minutes": 1,
+		"expiration_policy": "expire",
+		"urgent_reward_multiplier": 1.5,
+	}
+	if not QuestManager.accept_quest(timed_pickup_offer, {
+		"text": "Accepted.",
+		"consequence": {},
+	}):
+		_fail_mission_smoke_test("Valid timed pickup mission was rejected.")
+		return
+	QuestManager.active_quest["picked_up"] = true
+	GlobalState.accept_special("Plasma Coupler", "Test", "Kova", "Grease Monkeys")
+	CampaignClock.advance_minutes(1)
+	if QuestManager.is_quest_active() \
+			or GlobalState.cargo_type != GlobalState.CargoType.EMPTY:
+		_fail_mission_smoke_test("Timed mission expiration did not clear active state and matching special cargo.")
+		return
+
 	var non_kaelen_line := SpeechService.prepare_text(
 		"Shiny, your cargo is ready.",
 		"voice.jenna_kross.v1"
@@ -4304,6 +4327,30 @@ func _run_services_smoke_test() -> void:
 			or not is_equal_approx(GlobalState.engine_speed_mult, 1.2):
 		_fail_services_smoke_test("Storage or upgrades did not survive save and reload.")
 		return
+
+	ui.current_station = main_station
+	ui.current_submenu = ui.DockSubmenu.SERVICES
+	ui.call("_render_dock_submenu")
+	if not ui.public_board_btn.visible:
+		_fail_services_smoke_test("Public contract board button was not visible at the main station.")
+		return
+	ui.call("_on_public_board_pressed")
+	if not ui.public_board_panel.visible \
+			or ui.public_board_current_offers.size() < 3:
+		_fail_services_smoke_test("Public contract board did not render code-owned offers.")
+		return
+	ui.call("_on_public_board_offer_accept", 0)
+	if not QuestManager.is_quest_active() \
+			or not bool(QuestManager.active_quest.get("is_timed", false)) \
+			or not bool(QuestManager.active_quest.get("is_urgent", false)) \
+			or QuestManager.active_quest_payout() <= int(
+				QuestManager.active_quest.get("base_reward_credits", 0)
+			):
+		_fail_services_smoke_test("Public board urgent posting did not create a timed active mission.")
+		return
+	QuestManager.active_quest = {}
+	ui.public_board_panel.visible = false
+	ui.agent_panel.visible = false
 
 	# Outposts expose gossip and pickup routing, but not station commerce,
 	# agents, maintenance, repair, or upgrades.

@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_pickup_offer()
+	_test_timed_offer()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
 	_test_invalid_runtime_state()
@@ -126,6 +127,53 @@ func _test_pickup_offer() -> void:
 	)
 
 
+func _test_timed_offer() -> void:
+	var offer := _offer(
+		"Urgent Parts Run",
+		"neutral",
+		"Jenna Kross",
+		{
+			"type": "PICKUP_SPECIAL",
+			"target_outpost": "iron_reach",
+			"target_outpost_display": "Outpost Iron Reach",
+			"target_npc": "Alaric Venn",
+			"part_name": "Sealed Actuator",
+			"destination": "Grease Monkeys",
+			"reward_credits": 225,
+		}
+	)
+	offer["timing"] = {
+		"timed": true,
+		"urgent": true,
+		"duration_minutes": 180,
+		"expiration_policy": "expire",
+		"urgent_reward_multiplier": 1.5,
+	}
+	var adapted := AdapterType.build_active_state(
+		offer,
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.timed_test",
+		"start_system",
+		480
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Valid timed offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		bool(state.get("is_timed", false))
+			and bool(state.get("is_urgent", false))
+			and int(state.get("accepted_time_minutes", 0)) == 480
+			and int(state.get("deadline_time_minutes", 0)) == 660
+			and is_equal_approx(
+				float(state.get("urgent_reward_multiplier", 0.0)),
+				1.5
+			),
+		"Timed offer did not produce campaign-time deadline metadata."
+	)
+
+
 func _test_malformed_offers() -> void:
 	var bad_type := _offer(
 		"Impossible",
@@ -166,6 +214,25 @@ func _test_malformed_offers() -> void:
 	_expect(
 		not DefinitionType.new().load_from_offer(negative_reward).is_valid(),
 		"Negative mission reward was accepted."
+	)
+
+	var bad_timing := _offer(
+		"Broken Timer",
+		"zenith",
+		"Director Voss",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 10,
+			"reward_credits": 50,
+		}
+	)
+	bad_timing["timing"] = {
+		"timed": true,
+		"duration_minutes": 0,
+	}
+	_expect(
+		not DefinitionType.new().load_from_offer(bad_timing).is_valid(),
+		"Timed mission without positive duration was accepted."
 	)
 
 
