@@ -118,6 +118,21 @@ try {
             "res://tests/domain/run_mission_contract_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Timed mission metadata and expiration" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_timed_mission_tests.gd" -- `
+            --baseline-offline
+    }
+    Invoke-BaselineStep "Public board fallback and placeholder validation" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_public_board_validation_tests.gd" -- `
+            --baseline-offline
+    }
+    Invoke-BaselineStep "Mission instance state machine" {
+        & $godot --headless --path $root --script `
+            "res://tests/domain/run_mission_instance_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline
@@ -187,6 +202,10 @@ try {
     Invoke-BaselineStep "Station services and pickup routing" {
         & $godot --headless --path $root -- `
             --services-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Public board urgent lifecycle" {
+        & $godot --headless --path $root -- `
+            --public-board-smoke-test --no-save-load --baseline-offline
     }
     Invoke-BaselineStep "Combat damage death and restart" {
         & $godot --headless --path $root -- `

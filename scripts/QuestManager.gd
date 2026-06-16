@@ -4,6 +4,9 @@ const HISTORY_FILE_PATH = "user://quest_history.md"
 const MissionAdapterType := preload(
 	"res://scripts/domain/MissionAdapter.gd"
 )
+const MissionInstanceType := preload(
+	"res://scripts/domain/MissionInstance.gd"
+)
 
 signal quest_accepted()
 signal quest_progress_updated()
@@ -16,7 +19,17 @@ signal quest_expired(title: String)
 # because the line arriving is a one-shot event, not a state diff.
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 
-var active_quest: Dictionary = {}
+var _mission = null
+var active_quest: Dictionary:
+	get:
+		if _mission == null:
+			return {}
+		return _mission.data
+	set(value):
+		if value.is_empty():
+			_mission = null
+		else:
+			_mission = MissionInstanceType.from_dict(value)
 var last_validation_error: String = ""
 
 func _ready():
@@ -28,7 +41,7 @@ func _ready():
 	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
 func reset_for_restart():
-	active_quest = {}
+	_mission = null
 	print("[QuestManager] State reset for new game.")
 
 
@@ -106,7 +119,11 @@ func filter_history_for_agent(agent_name: String, faction: String) -> String:
 	return "\n".join(kept)
 
 func is_quest_active() -> bool:
-	return not active_quest.is_empty()
+	return _mission != null and not _mission.is_terminal()
+
+
+func get_mission_instance():
+	return _mission
 
 func is_quest_completed() -> bool:
 	if not is_quest_active():
@@ -165,7 +182,9 @@ func accept_quest(
 			consequence.reputation_change[faction]
 		)
 
-	active_quest = (adapted["state"] as Dictionary).duplicate(true)
+	_mission = MissionInstanceType.create_active(
+		(adapted["state"] as Dictionary).duplicate(true)
+	)
 	last_validation_error = ""
 	if active_quest["objective_type"] in [
 		"KILL_SHIPS",
@@ -211,14 +230,15 @@ func _create_runtime_mission_id(quest_data: Dictionary) -> String:
 
 
 func capture_active_quest() -> Dictionary:
-	if active_quest.is_empty():
+	if _mission == null:
 		last_validation_error = ""
 		return {}
-	var normalized := MissionAdapterType.normalize_legacy_state(active_quest)
+	var normalized := MissionAdapterType.normalize_legacy_state(_mission.data)
 	var validation := MissionAdapterType.validate_active_state(normalized)
 	if not validation.is_valid():
 		last_validation_error = _validation_message(validation)
 		return {}
+	_mission.data = normalized
 	last_validation_error = ""
 	return normalized
 
@@ -252,7 +272,9 @@ func check_active_quest_expiration() -> bool:
 	var expired_type := str(active_quest.get("objective_type", "TIMED"))
 	_cleanup_expired_quest()
 	_log_quest_to_file(expired_title, expired_type, "Expired.")
-	active_quest = {}
+	if _mission:
+		_mission.transition_to(MissionInstanceType.State.EXPIRED)
+	_mission = null
 	print("[QuestManager] Quest expired: ", expired_title)
 	quest_expired.emit(expired_title)
 	return true
@@ -280,6 +302,10 @@ func can_restore_active_quest(source: Dictionary) -> bool:
 
 
 func restore_active_quest(source: Dictionary) -> bool:
+	if source.is_empty():
+		_mission = null
+		last_validation_error = ""
+		return true
 	var normalized := MissionAdapterType.normalize_legacy_state(source)
 	var validation := MissionAdapterType.validate_active_state(normalized)
 	if not validation.is_valid():
@@ -289,7 +315,7 @@ func restore_active_quest(source: Dictionary) -> bool:
 			last_validation_error
 		)
 		return false
-	active_quest = normalized
+	_mission = MissionInstanceType.from_dict(normalized)
 	last_validation_error = ""
 	return true
 
@@ -411,8 +437,10 @@ func complete_quest():
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
 	
 	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
+	if _mission:
+		_mission.transition_to(MissionInstanceType.State.COMPLETED)
 	quest_completed.emit()
-	active_quest = {}
+	_mission = null
 
 func abandon_quest():
 	if not is_quest_active():
@@ -425,8 +453,10 @@ func abandon_quest():
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
 	
 	print("[QuestManager] Quest abandoned: ", active_quest["title"])
+	if _mission:
+		_mission.transition_to(MissionInstanceType.State.ABANDONED)
 	quest_abandoned.emit()
-	active_quest = {}
+	_mission = null
 
 
 func _cleanup_expired_quest() -> void:
