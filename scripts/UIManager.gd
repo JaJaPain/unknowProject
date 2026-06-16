@@ -3463,7 +3463,7 @@ func _render_mechanic_intro() -> void:
 	
 	# Show/hide accept/decline buttons if an offer is active
 	var show_offer_btns = false
-	if _mechanic_pickup_offer.get("offer", false) and not _mechanic_pickup_declined and not QuestManager.is_quest_active():
+	if _mechanic_pickup_offer.get("offer", false) and not _mechanic_pickup_declined and not QuestManager.is_lane_occupied("STATION"):
 		show_offer_btns = true
 	if mechanic_pickup_accept_btn and is_instance_valid(mechanic_pickup_accept_btn):
 		mechanic_pickup_accept_btn.visible = show_offer_btns
@@ -5149,6 +5149,7 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 		"title": "Parts Run: %s" % part_name,
 		"faction": "neutral",
 		"agent_name": "Jenna Kross",
+		"station_errand": true,
 		"dialogue": "Head to %s and pick up the %s from %s. Bring it back here." % [outpost_display, part_name, npc_name],
 		"objective": {
 			"type": "PICKUP_SPECIAL",

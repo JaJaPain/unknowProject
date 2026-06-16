@@ -15,7 +15,7 @@ enum State {
 	RESOLVED_BY_BRANCH,
 }
 
-enum SourceLane { AGENT, BOARD }
+enum SourceLane { AGENT, BOARD, STATION }
 
 const _STATE_NAMES: Dictionary = {
 	State.OFFERED: "OFFERED",
@@ -117,10 +117,27 @@ static func state_from_name(name: String) -> State:
 	return _STATE_BY_NAME.get(name, State.OFFERED)
 
 
+const _LANE_NAMES: Dictionary = {
+	SourceLane.AGENT: "AGENT",
+	SourceLane.BOARD: "BOARD",
+	SourceLane.STATION: "STATION",
+}
+
+const _LANE_BY_NAME: Dictionary = {
+	"AGENT": SourceLane.AGENT,
+	"BOARD": SourceLane.BOARD,
+	"STATION": SourceLane.STATION,
+}
+
+
+func lane_name() -> String:
+	return _LANE_NAMES.get(source_lane, "AGENT")
+
+
 func to_dict() -> Dictionary:
 	var result := data.duplicate(true)
 	result["_instance_state"] = state_name()
-	result["_source_lane"] = "BOARD" if source_lane == SourceLane.BOARD else "AGENT"
+	result["_source_lane"] = lane_name()
 	return result
 
 
@@ -134,11 +151,7 @@ static func from_dict(source: Dictionary) -> MissionInstance:
 		instance.state = State.ACTIVE
 	instance.data.erase("_instance_state")
 	instance.data.erase("_source_lane")
-	var lane_str := str(source.get("_source_lane", ""))
-	if lane_str == "BOARD" or bool(source.get("public_board", false)):
-		instance.source_lane = SourceLane.BOARD
-	else:
-		instance.source_lane = SourceLane.AGENT
+	instance.source_lane = _detect_lane(source)
 	return instance
 
 
@@ -146,12 +159,20 @@ static func create_active(state_dict: Dictionary) -> MissionInstance:
 	var instance := MissionInstance.new()
 	instance.data = state_dict.duplicate(true)
 	instance.state = State.ACTIVE
-	if bool(state_dict.get("public_board", false)):
-		instance.source_lane = SourceLane.BOARD
-	else:
-		instance.source_lane = SourceLane.AGENT
+	instance.source_lane = _detect_lane(state_dict)
 	return instance
 
 
 func get_field(key: String, default: Variant = null) -> Variant:
 	return data.get(key, default)
+
+
+static func _detect_lane(source: Dictionary) -> SourceLane:
+	var lane_str := str(source.get("_source_lane", ""))
+	if lane_str in _LANE_BY_NAME:
+		return _LANE_BY_NAME[lane_str]
+	if bool(source.get("station_errand", false)):
+		return SourceLane.STATION
+	if bool(source.get("public_board", false)):
+		return SourceLane.BOARD
+	return SourceLane.AGENT

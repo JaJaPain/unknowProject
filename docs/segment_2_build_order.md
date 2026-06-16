@@ -135,26 +135,58 @@ mission manager.
 ### Goal
 
 Replace the single-mission constraint with a bounded collection supporting
-two active missions: one agent-brokered, one public-board.
+three active missions across three lanes: one agent-brokered contract, one
+public-board job, and one NPC-initiated station errand (e.g. Jenna's fetch).
+
+### Design: Three-Lane Model
+
+- **AGENT** — faction contract from a dialogue agent (1 max).
+- **BOARD** — public board posting (1 max).
+- **STATION** — NPC-initiated errand like the mechanic pickup (1 max).
+  Game-controlled: the offer is simply not presented if the lane is
+  occupied. No player-facing "lane full" UI needed.
+
+`MissionInstance.SourceLane` enum gains a `STATION` value. Lane detection:
+- `public_board == true` → BOARD
+- `station_errand == true` → STATION
+- otherwise → AGENT
+
+The mechanic pickup in UIManager (line ~5166) currently gates on
+`not QuestManager.is_quest_active()`. This becomes
+`not QuestManager.is_lane_occupied("STATION")` (or equivalent).
+`GlobalState.roll_pickup_offer()` is unchanged — only the gating logic
+in UIManager moves to a lane check.
 
 ### Deliverables
 
 - `scripts/domain/MissionCollection.gd`:
   - Holds an `Array[MissionInstance]`.
-  - `add(instance) -> bool` respects the 2-mission limit and lane rules
-    (one AGENT, one BOARD).
+  - `add(instance) -> bool` respects the 3-mission limit and lane rules
+    (one per lane).
   - `remove(runtime_id)`, `get_by_id(runtime_id)`, `get_all_active()`.
   - `get_focused() -> MissionInstance` — the mission currently shown in
     the expanded tracker.
   - `focus(runtime_id)` — switch focused mission.
+  - `is_lane_occupied(lane: SourceLane) -> bool`.
+  - `get_by_lane(lane: SourceLane) -> MissionInstance` (or null).
   - `to_array() -> Array[Dictionary]` and
     `static from_array(source) -> MissionCollection`.
+- `MissionInstance.SourceLane` enum: `AGENT`, `BOARD`, `STATION`.
+  - `from_dict()` detects STATION via `station_errand` flag.
+  - `create_active()` detects STATION the same way.
 - QuestManager internally uses MissionCollection:
   - `accept_quest()` adds to collection instead of replacing.
   - `complete_quest()` removes the specified mission.
   - `active_quest` compat property returns the focused mission's dict.
   - `is_quest_active()` returns true if any mission is active.
+  - `is_lane_occupied(lane_name: String) -> bool` for UI gating.
   - Time-change handler checks expiration on all timed missions.
+- UIManager mechanic offer gating: `_mechanic_pickup_offer` buttons check
+  `QuestManager.is_lane_occupied("STATION")` instead of
+  `QuestManager.is_quest_active()`.
+- UIManager `_on_mechanic_pickup_accept_pressed`: sets
+  `"station_errand": true` on the quest_data dict so MissionInstance
+  assigns STATION lane.
 - Save format: checkpoint `"quest"` key accepts either a single dict
   (legacy) or an array of dicts (new). `restore_active_quest()` handles
   both.
@@ -163,9 +195,11 @@ two active missions: one agent-brokered, one public-board.
 
 ### Verification
 
-- Focused test: accept two missions (one agent, one board), verify both
-  are active, complete one, verify the other remains.
-- Legacy save import test.
+- Focused test: accept three missions (one per lane), verify all are
+  active, complete one, verify the others remain.
+- Lane rejection test: adding a second AGENT mission fails.
+- Legacy save import test: single dict restores into a one-element
+  collection.
 - Full baseline passes.
 
 ## Checkpoint 4: Multi-Mission UI

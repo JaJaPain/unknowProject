@@ -81,6 +81,7 @@ static func build_active_state(
 		"public_board_text_is_fallback": bool(
 			quest_data.get("public_board_text_is_fallback", false)
 		),
+		"station_errand": bool(quest_data.get("station_errand", false)),
 	}
 
 	match definition.objective.type:
@@ -231,6 +232,9 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	)
 	normalized["public_board_text_is_fallback"] = bool(
 		normalized.get("public_board_text_is_fallback", false)
+	)
+	normalized["station_errand"] = bool(
+		normalized.get("station_errand", false)
 	)
 	match str(normalized.get("objective_type", "")):
 		"KILL_SHIPS":

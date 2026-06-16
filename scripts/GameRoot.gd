@@ -979,8 +979,8 @@ func _capture_prepared_runtime_state() -> Dictionary:
 			"ok": false,
 			"error": "Persistent entity identity validation failed.",
 		}
-	var quest_state := QuestManager.capture_active_quest()
-	if QuestManager.is_quest_active() and quest_state.is_empty():
+	var quest_array: Array = QuestManager.capture_all_quests()
+	if QuestManager.is_quest_active() and quest_array.is_empty():
 		return {
 			"ok": false,
 			"error": "Mission validation failed: %s" %
@@ -992,7 +992,7 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"arrival_gate_id": last_arrival_gate_id,
 		"player": _capture_player_state(),
 		"global": _capture_global_state(),
-		"quest": quest_state,
+		"quest": quest_array,
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -1558,7 +1558,13 @@ func _apply_save_data(data: Dictionary) -> void:
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))
-	if not QuestManager.restore_active_quest(data.get("quest", {})):
+	var quest_source = data.get("quest", {})
+	var quest_ok := false
+	if quest_source is Array:
+		quest_ok = QuestManager.restore_all_quests(quest_source)
+	else:
+		quest_ok = QuestManager.restore_active_quest(quest_source)
+	if not quest_ok:
 		push_warning("[GameRoot] Save mission state failed validation during restore.")
 		return
 	var target_system_id := str(data.get("current_system_id", "start_system"))

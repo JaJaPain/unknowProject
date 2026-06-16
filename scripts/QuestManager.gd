@@ -10,29 +10,31 @@ const MissionInstanceType := preload(
 const MissionCapabilityRegistryType := preload(
 	"res://scripts/domain/MissionCapabilityRegistry.gd"
 )
+const MissionCollectionType := preload(
+	"res://scripts/domain/MissionCollection.gd"
+)
 
 signal quest_accepted()
 signal quest_progress_updated()
 signal quest_completed()
 signal quest_abandoned()
 signal quest_expired(title: String)
-# Emitted by set_pickup_handoff when the LLM (or fallback) handoff line
-# for a PICKUP_SPECIAL quest is ready. UIManager listens for this to fire
-# the TTS pre-cache. We use a dedicated signal (vs. quest_progress_updated)
-# because the line arriving is a one-shot event, not a state diff.
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 
-var _mission = null
+var _collection: MissionCollection = MissionCollection.new()
 var active_quest: Dictionary:
 	get:
-		if _mission == null:
+		var focused = _collection.get_focused()
+		if focused == null:
 			return {}
-		return _mission.data
+		return focused.data
 	set(value):
 		if value.is_empty():
-			_mission = null
+			_collection.clear()
 		else:
-			_mission = MissionInstanceType.from_dict(value)
+			_collection.clear()
+			var inst = MissionInstanceType.from_dict(value)
+			_collection.add(inst)
 var last_validation_error: String = ""
 
 func _ready():
@@ -44,7 +46,7 @@ func _ready():
 	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
 func reset_for_restart():
-	_mission = null
+	_collection.clear()
 	print("[QuestManager] State reset for new game.")
 
 
@@ -122,11 +124,26 @@ func filter_history_for_agent(agent_name: String, faction: String) -> String:
 	return "\n".join(kept)
 
 func is_quest_active() -> bool:
-	return _mission != null and not _mission.is_terminal()
+	return _collection.has_any_active()
 
 
 func get_mission_instance():
-	return _mission
+	return _collection.get_focused()
+
+
+func get_mission_collection() -> MissionCollection:
+	return _collection
+
+
+func is_lane_occupied(lane_name: String) -> bool:
+	var lane_map := {
+		"AGENT": MissionInstanceType.SourceLane.AGENT,
+		"BOARD": MissionInstanceType.SourceLane.BOARD,
+		"STATION": MissionInstanceType.SourceLane.STATION,
+	}
+	if not lane_map.has(lane_name):
+		return false
+	return _collection.is_lane_occupied(lane_map[lane_name])
 
 func is_quest_completed() -> bool:
 	if not is_quest_active():
@@ -172,9 +189,14 @@ func accept_quest(
 			consequence.reputation_change[faction]
 		)
 
-	_mission = MissionInstanceType.create_active(
+	var new_mission = MissionInstanceType.create_active(
 		(adapted["state"] as Dictionary).duplicate(true)
 	)
+	if not _collection.add(new_mission):
+		last_validation_error = "Lane %s is already occupied" % new_mission.lane_name()
+		push_warning("[QuestManager] %s" % last_validation_error)
+		return false
+	_collection.focus(new_mission.runtime_id)
 	last_validation_error = ""
 	if active_quest["objective_type"] in [
 		"KILL_SHIPS",
@@ -220,17 +242,32 @@ func _create_runtime_mission_id(quest_data: Dictionary) -> String:
 
 
 func capture_active_quest() -> Dictionary:
-	if _mission == null:
+	var focused = _collection.get_focused()
+	if focused == null:
 		last_validation_error = ""
 		return {}
-	var normalized := MissionAdapterType.normalize_legacy_state(_mission.data)
+	var normalized := MissionAdapterType.normalize_legacy_state(focused.data)
 	var validation := MissionAdapterType.validate_active_state(normalized)
 	if not validation.is_valid():
 		last_validation_error = _validation_message(validation)
 		return {}
-	_mission.data = normalized
+	focused.data = normalized
 	last_validation_error = ""
 	return normalized
+
+
+func capture_all_quests() -> Array:
+	var result: Array = []
+	for m in _collection.get_all_active():
+		var normalized := MissionAdapterType.normalize_legacy_state(m.data)
+		var validation := MissionAdapterType.validate_active_state(normalized)
+		if validation.is_valid():
+			m.data = normalized
+			var d: Dictionary = m.to_dict()
+			if m.runtime_id == _collection._focused_runtime_id:
+				d["_focused"] = true
+			result.append(d)
+	return result
 
 
 func is_active_quest_timed() -> bool:
@@ -256,18 +293,23 @@ func is_active_quest_expired() -> bool:
 
 
 func check_active_quest_expiration() -> bool:
-	if not is_active_quest_expired():
-		return false
-	var expired_title := str(active_quest.get("title", "Contract"))
-	var expired_type := str(active_quest.get("objective_type", "TIMED"))
-	_cleanup_expired_quest()
-	_log_quest_to_file(expired_title, expired_type, "Expired.")
-	if _mission:
-		_mission.transition_to(MissionInstanceType.State.EXPIRED)
-	_mission = null
-	print("[QuestManager] Quest expired: ", expired_title)
-	quest_expired.emit(expired_title)
-	return true
+	var any_expired := false
+	for m in _collection.get_all_active():
+		if not bool(m.data.get("is_timed", false)):
+			continue
+		if CampaignClock.total_minutes < int(m.data.get("deadline_time_minutes", 0)):
+			continue
+		var expired_title := str(m.data.get("title", "Contract"))
+		var expired_type := str(m.data.get("objective_type", "TIMED"))
+		_cleanup_mission(m)
+		_log_quest_to_file(expired_title, expired_type, "Expired.")
+		m.transition_to(MissionInstanceType.State.EXPIRED)
+		var rid: String = m.runtime_id
+		_collection.remove(rid)
+		print("[QuestManager] Quest expired: ", expired_title)
+		quest_expired.emit(expired_title)
+		any_expired = true
+	return any_expired
 
 
 func active_quest_payout() -> int:
@@ -293,7 +335,7 @@ func can_restore_active_quest(source: Dictionary) -> bool:
 
 func restore_active_quest(source: Dictionary) -> bool:
 	if source.is_empty():
-		_mission = null
+		_collection.clear()
 		last_validation_error = ""
 		return true
 	var normalized := MissionAdapterType.normalize_legacy_state(source)
@@ -305,8 +347,31 @@ func restore_active_quest(source: Dictionary) -> bool:
 			last_validation_error
 		)
 		return false
-	_mission = MissionInstanceType.from_dict(normalized)
+	_collection.clear()
+	var inst = MissionInstanceType.from_dict(normalized)
+	_collection.add(inst)
 	last_validation_error = ""
+	return true
+
+
+func restore_all_quests(source_array: Array) -> bool:
+	_collection.clear()
+	last_validation_error = ""
+	for item in source_array:
+		if not item is Dictionary:
+			continue
+		var normalized := MissionAdapterType.normalize_legacy_state(item)
+		var validation := MissionAdapterType.validate_active_state(normalized)
+		if not validation.is_valid():
+			push_warning(
+				"[QuestManager] Skipping invalid saved mission: %s" %
+				_validation_message(validation)
+			)
+			continue
+		var inst = MissionInstanceType.from_dict(normalized)
+		_collection.add(inst)
+		if bool(item.get("_focused", false)):
+			_collection.focus(inst.runtime_id)
 	return true
 
 
@@ -407,37 +472,43 @@ func complete_quest():
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
 
+	var completed_id := str(active_quest.get("runtime_id", ""))
 	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
-	if _mission:
-		_mission.transition_to(MissionInstanceType.State.COMPLETED)
+	var focused = _collection.get_focused()
+	if focused:
+		focused.transition_to(MissionInstanceType.State.COMPLETED)
+	_collection.remove(completed_id)
 	quest_completed.emit()
-	_mission = null
 
 func abandon_quest():
 	if not is_quest_active():
 		return
-		
-	# Apply standing penalty
+
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
-	
-	# Append to history file log
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
-	
+
+	var abandoned_id := str(active_quest.get("runtime_id", ""))
 	print("[QuestManager] Quest abandoned: ", active_quest["title"])
-	if _mission:
-		_mission.transition_to(MissionInstanceType.State.ABANDONED)
+	var focused = _collection.get_focused()
+	if focused:
+		focused.transition_to(MissionInstanceType.State.ABANDONED)
+	_collection.remove(abandoned_id)
 	quest_abandoned.emit()
-	_mission = null
 
 
 func _cleanup_expired_quest() -> void:
-	if not is_quest_active():
+	var focused = _collection.get_focused()
+	if focused == null:
 		return
+	_cleanup_mission(focused)
+
+
+func _cleanup_mission(mission) -> void:
 	var cap = MissionCapabilityRegistryType.get_for_type(
-		active_quest.get("objective_type", "")
+		mission.data.get("objective_type", "")
 	)
 	if cap:
-		var hints := cap.on_cleanup(active_quest)
+		var hints := cap.on_cleanup(mission.data)
 		_apply_cleanup_hints(hints)
 
 
@@ -445,33 +516,31 @@ func _on_campaign_time_changed(_total_minutes: int) -> void:
 	check_active_quest_expiration()
 
 func _on_ship_destroyed(faction_name: String):
-	if not is_quest_active():
-		return
+	for m in _collection.get_all_active():
+		var cap = MissionCapabilityRegistryType.get_for_type(
+			m.data.get("objective_type", "")
+		)
+		if cap == null:
+			continue
 
-	var cap = MissionCapabilityRegistryType.get_for_type(
-		active_quest["objective_type"]
-	)
-	if cap == null:
-		return
+		var hints := cap.handle_event(
+			m.data, "ship_destroyed", {"faction": faction_name}
+		)
+		if hints.is_empty():
+			continue
 
-	var hints := cap.handle_event(
-		active_quest, "ship_destroyed", {"faction": faction_name}
-	)
-	if hints.is_empty():
-		return
+		if hints.get("progress_changed", false):
+			print("[QuestManager] Quest progress: ", m.data.get("current_count", 0),
+				"/", m.data.get("count_required", 0))
+			quest_progress_updated.emit()
 
-	if hints.get("progress_changed", false):
-		print("[QuestManager] Quest progress: ", active_quest.get("current_count", 0),
-			"/", active_quest.get("count_required", 0))
-		quest_progress_updated.emit()
+		if hints.has("chatter"):
+			var c: Dictionary = hints["chatter"]
+			GlobalState.emit_chatter(c["source"], c["text"], c["color"])
 
-	if hints.has("chatter"):
-		var c: Dictionary = hints["chatter"]
-		GlobalState.emit_chatter(c["source"], c["text"], c["color"])
-
-	if hints.get("needs_respawn", false):
-		var respawn_faction: String = hints.get("respawn_faction", faction_name)
-		_schedule_respawn(respawn_faction)
+		if hints.get("needs_respawn", false):
+			var respawn_faction: String = hints.get("respawn_faction", faction_name)
+			_schedule_respawn(respawn_faction)
 
 
 func _apply_completion_hints(hints: Dictionary) -> void:
@@ -488,14 +557,17 @@ func _apply_cleanup_hints(hints: Dictionary) -> void:
 
 func _schedule_respawn(faction: String) -> void:
 	get_tree().create_timer(2.0).timeout.connect(func():
-		if not is_quest_active():
-			return
-		if active_quest.get("target_faction", "") != faction:
-			return
-		var cap = MissionCapabilityRegistryType.get_for_type(
-			active_quest["objective_type"]
-		)
-		if cap == null or cap.is_completed(active_quest):
+		var needs_targets := false
+		for m in _collection.get_all_active():
+			if m.data.get("target_faction", "") != faction:
+				continue
+			var cap = MissionCapabilityRegistryType.get_for_type(
+				m.data.get("objective_type", "")
+			)
+			if cap != null and not cap.is_completed(m.data):
+				needs_targets = true
+				break
+		if not needs_targets:
 			return
 		var alive_targets := 0
 		for e in GlobalState.active_system_entities:

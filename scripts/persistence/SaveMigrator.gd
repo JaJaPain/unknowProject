@@ -157,12 +157,24 @@ static func decode_for_runtime(
 		runtime_systems[runtime_id] = saved_data["systems"][raw_id]
 	decoded["systems"] = runtime_systems
 
-	var quest: Dictionary = saved_data.get("quest", {}).duplicate(true)
-	if not quest.is_empty():
-		quest["system_id"] = registry.runtime_system_id(
-			quest.get("system_id", "")
-		)
-	decoded["quest"] = quest
+	var raw_quest = saved_data.get("quest", {})
+	if raw_quest is Array:
+		var quest_arr: Array = []
+		for item in raw_quest:
+			var q: Dictionary = (item as Dictionary).duplicate(true)
+			if not q.is_empty():
+				q["system_id"] = registry.runtime_system_id(
+					q.get("system_id", "")
+				)
+			quest_arr.append(q)
+		decoded["quest"] = quest_arr
+	else:
+		var quest: Dictionary = (raw_quest as Dictionary).duplicate(true)
+		if not quest.is_empty():
+			quest["system_id"] = registry.runtime_system_id(
+				quest.get("system_id", "")
+			)
+		decoded["quest"] = quest
 	return _success(decoded)
 
 
@@ -212,14 +224,27 @@ static func validate_current(
 			result
 		)
 
-	var quest: Dictionary = data["quest"]
-	if not quest.is_empty():
+	var quest_data = data["quest"]
+	if quest_data is Array:
+		for i in range(quest_data.size()):
+			var q: Dictionary = quest_data[i]
+			result.merge(
+				MissionAdapterType.validate_active_state(q),
+				"quest[%d]" % i
+			)
+			_validate_canonical_system(
+				q.get("system_id", ""),
+				"quest[%d].system_id" % i,
+				registry,
+				result
+			)
+	elif quest_data is Dictionary and not quest_data.is_empty():
 		result.merge(
-			MissionAdapterType.validate_active_state(quest),
+			MissionAdapterType.validate_active_state(quest_data),
 			"quest"
 		)
 		_validate_canonical_system(
-			quest.get("system_id", ""),
+			quest_data.get("system_id", ""),
 			"quest.system_id",
 			registry,
 			result
@@ -322,8 +347,25 @@ static func _encode_quest(
 	raw_quest: Variant,
 	registry: SystemRegistry
 ) -> Dictionary:
+	if raw_quest is Array:
+		var encoded_array: Array = []
+		for item in raw_quest:
+			if not item is Dictionary:
+				return _failure("Quest array item must be an object.")
+			var result := _encode_single_quest(item, registry)
+			if not bool(result.get("ok", false)):
+				return result
+			encoded_array.append(result["data"])
+		return _success(encoded_array)
 	if not raw_quest is Dictionary:
-		return _failure("Save mission state must be an object.")
+		return _failure("Save mission state must be an object or array.")
+	return _encode_single_quest(raw_quest, registry)
+
+
+static func _encode_single_quest(
+	raw_quest: Dictionary,
+	registry: SystemRegistry
+) -> Dictionary:
 	var quest: Dictionary = raw_quest.duplicate(true)
 	if quest.is_empty():
 		return _success(quest)
@@ -404,9 +446,11 @@ static func _validate_canonical_gate(
 
 
 static func _has_base_shape(data: Dictionary) -> bool:
+	var quest = data.get("quest", null)
+	var quest_ok := quest is Dictionary or quest is Array
 	return data.get("player", null) is Dictionary \
 		and data.get("global", null) is Dictionary \
-		and data.get("quest", null) is Dictionary \
+		and quest_ok \
 		and data.get("systems", null) is Dictionary
 
 
@@ -425,7 +469,7 @@ static func _available_backup_path(path: String) -> String:
 	return candidate
 
 
-static func _success(data: Dictionary) -> Dictionary:
+static func _success(data: Variant) -> Dictionary:
 	return {
 		"ok": true,
 		"data": data,
