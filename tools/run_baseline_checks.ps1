@@ -168,6 +168,11 @@ try {
             "res://tests/economy/run_consumable_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Event scheduler" {
+        & $godot --headless --path $root --script `
+            "res://tests/events/run_event_scheduler_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline
