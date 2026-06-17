@@ -44,13 +44,12 @@ func _ready():
 
 	
 	SystemAmbience.add_sun(self, {
-		"color": Color(1.0, 0.95, 0.85),
-		"energy": 3.5,
+		"direction": Vector3(-0.7, 0.35, -0.7),
+		"color": Color(1.0, 0.88, 0.6),
+		"energy": 4.0,
+		"light_energy": 1.2,
 	})
-	SystemAmbience.add_starfield(self, {
-		"seed": 42.0,
-		"density": 0.52,
-	})
+	SystemAmbience.add_starfield(self, {"seed": 42.0})
 
 	# The persistent UI enters the tree after this system scene. Defer the first
 	# overview refresh so UIManager has finished constructing its dynamic nodes.

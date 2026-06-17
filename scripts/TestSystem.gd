@@ -97,13 +97,13 @@ func _generate_system() -> void:
 	_validate_generated_layout()
 
 	SystemAmbience.add_sun(self, {
+		"direction": Vector3(0.0, 0.4, -0.9),
 		"color": Color(0.75, 0.85, 1.0),
-		"energy": 3.0,
-		"radius": 90.0,
+		"energy": 3.5,
+		"light_energy": 1.45,
 	})
 	SystemAmbience.add_starfield(self, {
 		"seed": 137.0,
-		"density": 0.58,
 		"tint": Color(0.85, 0.88, 1.0),
 	})
 

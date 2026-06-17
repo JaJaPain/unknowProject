@@ -1,10 +1,10 @@
 shader_type spatial;
 render_mode unshaded, cull_front, depth_draw_never;
 
-uniform float star_density : hint_range(0.3, 0.8) = 0.55;
+uniform float star_density : hint_range(0.01, 0.3) = 0.04;
 uniform float twinkle_speed : hint_range(0.0, 2.0) = 0.4;
 uniform float seed_offset : hint_range(0.0, 1000.0) = 0.0;
-uniform float brightness_floor : hint_range(0.0, 1.0) = 0.35;
+uniform float brightness_floor : hint_range(0.0, 1.0) = 0.4;
 uniform vec3 tint : source_color = vec3(0.9, 0.92, 1.0);
 
 float hash21(vec2 p) {
@@ -21,7 +21,7 @@ vec2 hash22(vec2 p) {
 void fragment() {
 	vec2 uv = UV;
 	uv.x *= 2.0;
-	float grid = 90.0;
+	float grid = 260.0;
 	vec2 id = floor(uv * grid);
 	float lum = 0.0;
 
@@ -39,7 +39,7 @@ void fragment() {
 			star_mag = mix(brightness_floor, 1.0, star_mag);
 
 			float twinkle = sin(TIME * twinkle_speed + star_mag * 62.8) * 0.25 + 0.75;
-			float point = smoothstep(0.55, 0.0, dist);
+			float point = smoothstep(0.18, 0.0, dist);
 			lum += point * star_mag * twinkle;
 		}
 	}
