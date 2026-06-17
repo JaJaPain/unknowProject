@@ -173,6 +173,11 @@ try {
             "res://tests/events/run_event_scheduler_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Interceptor event" {
+        & $godot --headless --path $root --script `
+            "res://tests/events/run_interceptor_event_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline
