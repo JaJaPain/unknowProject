@@ -8,6 +8,7 @@ const LAYOUTS_PATH := "res://data/content/store_layouts.json"
 
 var _item_defs: Dictionary = {}
 var _stores: Dictionary = {}
+var _icon_sheet_paths: Dictionary = {}
 
 static var _shared = null
 
@@ -29,6 +30,10 @@ func get_item(item_id: String) -> StoreItemDef:
 
 func get_all_items() -> Dictionary:
 	return _item_defs
+
+
+func get_icon_sheet_path(sheet_name: String) -> String:
+	return str(_icon_sheet_paths.get(sheet_name, ""))
 
 
 func get_store(store_id: String) -> StoreDef:
@@ -77,6 +82,7 @@ func _load_items() -> void:
 		push_warning("[StoreRegistry] Failed to parse %s" % ITEMS_PATH)
 		return
 	var data: Dictionary = json.data
+	_icon_sheet_paths = data.get("icon_sheets", {})
 	for item_data in data.get("items", []):
 		var item_def = StoreItemDef.from_dict(item_data)
 		if not item_def.item_id.is_empty():

@@ -4,6 +4,12 @@ const EFFECTS = {
 	"repair_kit": {"type": "heal", "amount": 25.0},
 	"shield_cell": {"type": "shield_percent", "amount": 0.5},
 	"scanner_probe": {"type": "reveal", "duration_seconds": 60.0},
+	"nanite_paste": {"type": "heal", "amount": 50.0},
+	"capsuleer_booster": {"type": "buff", "stat": "weapon_cooldown", "multiplier": 0.8, "duration_seconds": 60.0},
+	"target_painter": {"type": "buff", "stat": "weapon_damage", "multiplier": 1.25, "duration_seconds": 15.0},
+	"fuel_booster": {"type": "buff", "stat": "engine_speed", "multiplier": 2.0, "duration_seconds": 15.0},
+	"flare_decoy": {"type": "decoy", "duration_seconds": 8.0},
+	"emp_charge": {"type": "emp", "duration_seconds": 10.0},
 }
 
 
@@ -22,7 +28,7 @@ static func is_usable_now(item_id: String, player: Node3D, inv, shield_cap: floa
 			return float(player.get("health")) < float(player.get("max_health"))
 		"shield_percent":
 			return float(player.get("current_shield")) < shield_cap
-		"reveal":
+		"reveal", "buff", "decoy", "emp":
 			return true
 	return false
 
@@ -49,6 +55,6 @@ static func _apply_effect(effect: Dictionary, player: Node3D, shield_cap: float)
 			var restore = shield_cap * float(effect["amount"])
 			player.set("current_shield", minf(shield + restore, shield_cap))
 			return true
-		"reveal":
+		"reveal", "buff", "decoy", "emp":
 			return true
 	return false

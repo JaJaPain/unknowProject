@@ -1,5 +1,5 @@
 {
-	"schema_version": 1,
+	"schema_version": 2,
 	"stores": [
 		{
 			"store_id": "store.haven.general",
@@ -10,7 +10,18 @@
 				"scanner_probe",
 				"flare_decoy",
 				"fuel_booster",
-				"emp_charge"
+				"emp_charge",
+				"nanite_paste",
+				"capsuleer_booster",
+				"kinetic_ammo",
+				"thermal_ammo",
+				"data_chip",
+				"coffee_maker",
+				"fairy_lights",
+				"hull_plating",
+				"power_coils",
+				"sensor_cluster",
+				"memory_bank"
 			]
 		},
 		{
@@ -18,13 +29,27 @@
 			"station_id": "iron_reach",
 			"item_ids": [
 				"repair_kit",
+				"shield_cell",
 				"fuel_booster",
-				"scanner_probe"
+				"emp_charge",
+				"target_painter",
+				"kinetic_ammo",
+				"thermal_ammo",
+				"explosive_ammo",
+				"energy_ammo",
+				"hull_plating",
+				"fusion_cell"
 			],
 			"stock_overrides": {
 				"repair_kit": 2,
+				"shield_cell": 2,
 				"fuel_booster": 2,
-				"scanner_probe": 3
+				"kinetic_ammo": 10,
+				"thermal_ammo": 8,
+				"explosive_ammo": 4,
+				"energy_ammo": 3,
+				"hull_plating": 1,
+				"fusion_cell": 1
 			}
 		},
 		{
@@ -32,13 +57,32 @@
 			"station_id": "kova",
 			"item_ids": [
 				"repair_kit",
-				"shield_cell",
-				"flare_decoy"
+				"scanner_probe",
+				"flare_decoy",
+				"fuel_booster",
+				"canned_goods",
+				"toilet_paper",
+				"mystery_box",
+				"pet_rock",
+				"odd_rock",
+				"neon_sign",
+				"lava_lamp",
+				"data_chip",
+				"memory_bank"
 			],
 			"stock_overrides": {
 				"repair_kit": 2,
-				"shield_cell": 1,
-				"flare_decoy": 1
+				"scanner_probe": 3,
+				"flare_decoy": 1,
+				"canned_goods": 10,
+				"toilet_paper": 2,
+				"mystery_box": 1,
+				"pet_rock": 3,
+				"odd_rock": 5,
+				"neon_sign": 1,
+				"lava_lamp": 1,
+				"data_chip": 2,
+				"memory_bank": 1
 			}
 		}
 	]

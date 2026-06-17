@@ -9,6 +9,8 @@ var stack_max: int = 10
 var restock_interval_minutes: int = 120
 var restock_quantity: int = 2
 var max_stock: int = 5
+var icon_sheet: String = ""
+var icon_cell: Vector2i = Vector2i.ZERO
 
 
 static func from_dict(data: Dictionary):
@@ -22,4 +24,8 @@ static func from_dict(data: Dictionary):
 	def.restock_interval_minutes = int(data.get("restock_interval_minutes", 120))
 	def.restock_quantity = int(data.get("restock_quantity", 2))
 	def.max_stock = int(data.get("max_stock", 5))
+	def.icon_sheet = str(data.get("icon_sheet", ""))
+	var cell = data.get("icon_cell", [0, 0])
+	if cell is Array and cell.size() >= 2:
+		def.icon_cell = Vector2i(int(cell[0]), int(cell[1]))
 	return def
