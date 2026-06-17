@@ -140,6 +140,12 @@ var quest_tracker_prev_btn: Button
 var quest_tracker_next_btn: Button
 var quest_tracker_nav_label: Label
 
+# Incoming Comms (reversal hail)
+var comms_hail_panel: PanelContainer
+var comms_hail_portrait: TextureRect
+var comms_hail_message: Label
+var comms_hail_choices_container: VBoxContainer
+
 # Systems Comms Chat Window
 var chat_window_panel: Panel
 var chat_scroll: ScrollContainer
@@ -259,6 +265,7 @@ func _ready():
 	QuestManager.quest_completed.connect(_on_quest_completed)
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned)
 	QuestManager.quest_expired.connect(_on_quest_expired)
+	QuestManager.comms_reversal_triggered.connect(_on_comms_reversal_triggered)
 	
 	_create_hud()
 	_create_target_panel()
@@ -558,6 +565,8 @@ func _create_hud():
 	tracker_vbox.add_child(quest_tracker_secondary_container)
 
 	quest_tracker_panel.visible = false
+
+	_create_comms_hail_panel()
 
 	# Systems Comms Chat Window (positioned at the bottom-left corner using anchors for responsiveness)
 	chat_window_panel = Panel.new()
@@ -4729,12 +4738,15 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		handoff_line = handoff_lines[randi() % handoff_lines.size()]
 		print("[TRACE] [UIManager] Using canned handoff fallback for: ", agent_name)
 	
+	# Flash incoming call notification in the chat bar
+	add_chat_message("COMMS", "Incoming voice transmission...", Color(0.0, 0.9, 0.9))
+
 	# Show Kaelen with her handoff intro first
 	agent_name_label.text = "BROKER KAELEN"
 	_update_agent_portrait("neutral")
 	agent_dialogue_label.text = handoff_line
 	agent_back_btn.visible = true
-	
+
 	# Play Kaelen's intro line in her voice
 	SpeechService.play(handoff_line, "voice.kaelen.v1")
 	
@@ -5264,6 +5276,152 @@ func _update_quest_tracker_logo(faction: String):
 			quest_tracker_logo.visible = true
 		else:
 			quest_tracker_logo.visible = false
+
+func _create_comms_hail_panel() -> void:
+	comms_hail_panel = PanelContainer.new()
+	comms_hail_panel.anchor_left = 0.2
+	comms_hail_panel.anchor_right = 0.8
+	comms_hail_panel.anchor_top = 0.25
+	comms_hail_panel.anchor_bottom = 0.25
+	comms_hail_panel.grow_vertical = Control.GROW_DIRECTION_END
+	comms_hail_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	add_child(comms_hail_panel)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.02, 0.02, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1.0, 0.35, 0.15, 0.9)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	comms_hail_panel.add_theme_stylebox_override("panel", style)
+
+	var outer_vbox := VBoxContainer.new()
+	outer_vbox.add_theme_constant_override("separation", 8)
+	comms_hail_panel.add_child(outer_vbox)
+
+	var header := Label.new()
+	header.text = "INCOMING TRANSMISSION"
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.add_theme_font_size_override("font_size", 11)
+	header.add_theme_color_override("font_color", Color(1.0, 0.4, 0.2))
+	outer_vbox.add_child(header)
+
+	var content_hbox := HBoxContainer.new()
+	content_hbox.add_theme_constant_override("separation", 12)
+	outer_vbox.add_child(content_hbox)
+
+	comms_hail_portrait = TextureRect.new()
+	comms_hail_portrait.custom_minimum_size = Vector2(64, 64)
+	comms_hail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	comms_hail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	comms_hail_portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	content_hbox.add_child(comms_hail_portrait)
+
+	comms_hail_message = Label.new()
+	comms_hail_message.text = ""
+	comms_hail_message.add_theme_font_size_override("font_size", 13)
+	comms_hail_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	comms_hail_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_hbox.add_child(comms_hail_message)
+
+	comms_hail_choices_container = VBoxContainer.new()
+	comms_hail_choices_container.add_theme_constant_override("separation", 4)
+	outer_vbox.add_child(comms_hail_choices_container)
+
+	comms_hail_panel.visible = false
+
+
+func _on_comms_reversal_triggered(mission_data: Dictionary) -> void:
+	var faction: String = str(mission_data.get("target_faction", ""))
+	add_chat_message(
+		"COMMS",
+		"Incoming voice transmission...",
+		Color(1.0, 0.4, 0.2)
+	)
+	var timer := get_tree().create_timer(1.0)
+	var data_copy := mission_data.duplicate(true)
+	timer.timeout.connect(func(): _show_comms_hail(data_copy))
+
+
+func _show_comms_hail(mission_data: Dictionary) -> void:
+	var faction: String = str(mission_data.get("target_faction", ""))
+	var comms_line: String = str(mission_data.get("comms_reversal_line", ""))
+	if comms_line.is_empty():
+		comms_line = _fallback_comms_line(faction)
+
+	comms_hail_message.text = comms_line
+
+	var portrait_tex: Texture2D = null
+	var faction_def = GameContentRegistry.shared().faction(faction)
+	if faction_def and not faction_def.agent_portrait_id.is_empty():
+		portrait_tex = GameContentRegistry.shared().portrait_texture(faction_def.agent_portrait_id)
+	if portrait_tex:
+		comms_hail_portrait.texture = portrait_tex
+		comms_hail_portrait.visible = true
+	else:
+		comms_hail_portrait.visible = false
+
+	for child in comms_hail_choices_container.get_children():
+		child.queue_free()
+
+	var bribe: int = int(mission_data.get("bribe_amount", 0))
+	var choices := [
+		{"id": "finish_kill", "text": "Finish the job.", "color": Color(1.0, 0.4, 0.3)},
+		{"id": "accept_bribe", "text": "Take the deal. (+%d SC)" % bribe, "color": Color(0.3, 0.9, 0.4)},
+		{"id": "walk_away", "text": "Walk away. No payout.", "color": Color(0.6, 0.6, 0.6)},
+	]
+	for choice in choices:
+		var btn := Button.new()
+		btn.text = str(choice["text"])
+		btn.add_theme_color_override("font_color", choice["color"])
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+		var branch_id: String = str(choice["id"])
+		btn.pressed.connect(func():
+			_resolve_comms_hail(branch_id)
+		)
+		comms_hail_choices_container.add_child(btn)
+
+	comms_hail_panel.visible = true
+
+	SpeechService.play(comms_line, faction)
+
+
+func _resolve_comms_hail(branch_id: String) -> void:
+	comms_hail_panel.visible = false
+	SpeechService.stop()
+	QuestManager.resolve_comms_branch(branch_id)
+
+	var result_msg := ""
+	match branch_id:
+		"finish_kill":
+			result_msg = "Transmission rejected. Target re-engaged."
+		"accept_bribe":
+			result_msg = "Deal accepted. Target departing the area."
+		"walk_away":
+			result_msg = "Contract voided. Target departing the area."
+	add_chat_message("COMMS", result_msg, Color(1.0, 0.55, 0.25))
+
+
+const COMMS_REVERSAL_FALLBACKS: Array[String] = [
+	"Wait! Before you pull that trigger — I'm not what they told you. That posting was a setup. I have information worth more than whatever they're paying you. Let me make you a counter-offer.",
+	"Hold fire! You've been lied to, pilot. The person who posted that contract? They're the criminal here. I was investigating them. I can pay you more than they offered — and you'd be on the right side of this.",
+	"Stop! I surrender! Look, I know how this looks, but that contract is a fraud. The poster used you to do their dirty work. I'll pay you to walk away. Better deal than blood money.",
+	"Cease fire! Listen — I'm carrying evidence that would embarrass the person who hired you. That's why they want me dead. Name your price. Whatever they're paying, I can beat it, and you don't have to live with this.",
+]
+
+
+func _fallback_comms_line(faction: String) -> String:
+	return COMMS_REVERSAL_FALLBACKS[randi() % COMMS_REVERSAL_FALLBACKS.size()]
+
 
 func _update_agent_portrait(faction: String, npc_name: String = ""):
 	if agent_portrait:

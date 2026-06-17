@@ -7,6 +7,7 @@ const TEMPLATE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
 const TEMPLATE_DELIVER_ORE_AGENT := "DELIVER_ORE_AGENT"
 const TEMPLATE_KILL_SHIPS_AGENT := "KILL_SHIPS_AGENT"
 const TEMPLATE_PICKUP_SPECIAL_AGENT := "PICKUP_SPECIAL_AGENT"
+const TEMPLATE_TARGET_WITH_COMMS_REVERSAL := "TARGET_WITH_COMMS_REVERSAL"
 
 const BOARD_WRITE_FIELDS: Array[String] = [
 	"title", "poster", "body", "briefing", "kaelen_turn_in",
@@ -189,6 +190,28 @@ static func _register_board_templates() -> void:
 				"body": "Search {TARGET_FACTION} wreckage until {ITEM_NAME} turns up, then return it to {TURN_IN_LOCATION}. The courier is unavailable for comment due to explosion.",
 				"briefing": "Keep hitting eligible {TARGET_FACTION} ships and checking the wreckage until {ITEM_NAME} turns up in the ship log, then return to {TURN_IN_LOCATION}.",
 				"kaelen_turn_in": "{ITEM_NAME} is logged and the public-board payout cleared. I can smell the grime on this one, Shiny. Try not to make slumming it a lifestyle.",
+			},
+		],
+	})
+
+
+	_cache[TEMPLATE_TARGET_WITH_COMMS_REVERSAL] = MissionTemplate.create({
+		"template_id": TEMPLATE_TARGET_WITH_COMMS_REVERSAL,
+		"objective_type": "TARGET_WITH_COMMS_REVERSAL",
+		"source_lane": "BOARD",
+		"tone_card": BOARD_TONE,
+		"write_fields": BOARD_WRITE_FIELDS,
+		"field_limits": BOARD_FIELD_LIMITS,
+		"required_placeholders": ["{TARGET_FACTION}", "{KILL_COUNT}", "{TURN_IN_LOCATION}"],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [KAELEN_DISGUST_RULE],
+		"fallback_variants": [
+			{
+				"title": "Somebody Needs {KILL_COUNT} {TARGET_FACTION} Ships Gone Yesterday",
+				"poster": "Concerned Investor (Burner #3)",
+				"body": "I need {KILL_COUNT} {TARGET_FACTION} ships removed from my shipping lane. The insurance company is asking questions I don't want to answer. Return to {TURN_IN_LOCATION} when it's done.",
+				"briefing": "Eliminate {KILL_COUNT} {TARGET_FACTION} vessels and report to {TURN_IN_LOCATION}. The poster's reasons are between them and their accountant.",
+				"kaelen_turn_in": "Public board kill job. Lovely. I can smell the desperation on this one from here. Credits processed. Try not to make slumming it a habit, Shiny.",
 			},
 		],
 	})

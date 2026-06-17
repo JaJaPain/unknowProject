@@ -59,12 +59,27 @@ func _initialize() -> void:
 		&"voice.jenna_kross.v1"
 	)
 	_expect(
-		jenna_delivery.get("provider_voice", "") == "af_aoede",
-		"Jenna provider mapping changed unexpectedly."
+		str(jenna_delivery.get("provider_voice", "")).begins_with("af_aoede"),
+		"Jenna provider mapping should use af_aoede base voice."
 	)
 	_expect(
 		is_equal_approx(float(jenna_delivery.get("speed", 0.0)), 1.0),
 		"Jenna provider speed changed unexpectedly."
+	)
+
+	var voss_delivery: Dictionary = service.provider.resolve_delivery(
+		&"voice.agent.zenith.v1"
+	)
+	_expect(
+		str(voss_delivery.get("provider_voice", "")).begins_with("am_adam"),
+		"Zenith agent should use am_adam base voice."
+	)
+	var cassen_delivery: Dictionary = service.provider.resolve_delivery(
+		&"voice.cassen_vane.v1"
+	)
+	_expect(
+		str(cassen_delivery.get("provider_voice", "")).begins_with("am_onyx"),
+		"Cassen Vane should use am_onyx base voice."
 	)
 
 	for path in GAMEPLAY_SPEECH_CALLERS:

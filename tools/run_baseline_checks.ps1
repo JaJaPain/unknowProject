@@ -148,6 +148,11 @@ try {
             "res://tests/run_mission_template_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Comms reversal capability" {
+        & $godot --headless --path $root --script `
+            "res://tests/run_comms_reversal_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline
@@ -209,6 +214,10 @@ try {
     Invoke-BaselineStep "Mission gameplay lifecycle" {
         & $godot --headless --path $root -- `
             --mission-smoke-test --no-save-load --baseline-offline
+    }
+    Invoke-BaselineStep "Multi-mission and comms reversal gameplay" {
+        & $godot --headless --path $root -- `
+            --multi-mission-smoke-test --no-save-load --baseline-offline
     }
     Invoke-BaselineStep "Mining economy and upgrades" {
         & $godot --headless --path $root -- `

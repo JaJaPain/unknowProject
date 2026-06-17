@@ -107,6 +107,8 @@ func _ready() -> void:
 		call_deferred("_run_restart_smoke_test")
 	elif "--death-reload-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_death_reload_smoke_test")
+	elif "--multi-mission-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_multi_mission_smoke_test")
 	elif "--legacy-import-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_legacy_import_smoke_test")
 	elif "--public-board-smoke-test" in OS.get_cmdline_user_args():
@@ -4291,6 +4293,191 @@ func _fail_mission_smoke_test(message: String) -> void:
 	push_error("[MissionSmokeTest] FAIL: " + message)
 	delete_savegame()
 	get_tree().quit(1)
+
+
+func _run_multi_mission_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	GlobalState.reset_for_restart()
+	GlobalState.player = player
+	QuestManager.active_quest = {}
+	GlobalState.player_credits = 200
+	GlobalState.reputations["zenith"] = 50.0
+	GlobalState.reputations["aurelia"] = 50.0
+	GlobalState.reputations["reavers"] = 50.0
+
+	var accept_choice := {
+		"text": "Accepted.",
+		"consequence": {
+			"credits_immediate": 0,
+			"reputation_change": {},
+			"reward_credits_multiplier": 1.0,
+		},
+	}
+
+	var agent_kill_offer := {
+		"title": "Eliminate Hostiles",
+		"faction": "zenith",
+		"agent_name": "Director Voss",
+		"dialogue": "Destroy the raiders.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"count_required": 2,
+			"target_faction": "reavers",
+			"reward_credits": 150,
+		},
+		"choices": [],
+	}
+	if not QuestManager.accept_quest(agent_kill_offer, accept_choice):
+		_fail_multi_mission_smoke_test("Agent kill mission was rejected.")
+		return
+	if not QuestManager.is_lane_occupied("AGENT"):
+		_fail_multi_mission_smoke_test("AGENT lane not occupied after accept.")
+		return
+
+	var board_ore_offer := {
+		"title": "Ore Hauling Job",
+		"faction": "aurelia",
+		"agent_name": "Board Poster",
+		"dialogue": "Deliver 20 ore.",
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 20,
+			"reward_credits": 100,
+		},
+		"choices": [],
+		"public_board": true,
+		"public_board_template_id": "DELIVER_ORE_PUBLIC",
+		"public_board_turn_in_line": "Ore logged. Public board work, huh? I can smell the standards.",
+		"public_board_text_is_fallback": true,
+	}
+	if not QuestManager.accept_quest(board_ore_offer, accept_choice):
+		_fail_multi_mission_smoke_test("Board ore mission was rejected.")
+		return
+	if not QuestManager.is_lane_occupied("BOARD"):
+		_fail_multi_mission_smoke_test("BOARD lane not occupied after accept.")
+		return
+	if QuestManager.get_mission_collection().size() != 2:
+		_fail_multi_mission_smoke_test("Collection should have 2 missions, got %d." % QuestManager.get_mission_collection().size())
+		return
+
+	GlobalState.ship_destroyed.emit("reavers")
+	GlobalState.ship_destroyed.emit("reavers")
+
+	var col := QuestManager.get_mission_collection()
+	var all_missions := col.get_all_active()
+	var agent_m: Object = null
+	for m in all_missions:
+		if m.data.get("objective_type", "") == "KILL_SHIPS":
+			agent_m = m
+			break
+	if agent_m == null or int(agent_m.data.get("current_count", 0)) != 2:
+		_fail_multi_mission_smoke_test("Kill mission did not track 2 kills.")
+		return
+
+	col.focus(agent_m.runtime_id)
+	if not QuestManager.is_quest_completed():
+		_fail_multi_mission_smoke_test("Kill mission should be completed at 2/2.")
+		return
+
+	var credits_before := GlobalState.player_credits
+	QuestManager.complete_quest()
+	if QuestManager.is_lane_occupied("AGENT"):
+		_fail_multi_mission_smoke_test("AGENT lane should be free after completion.")
+		return
+	if GlobalState.player_credits != credits_before + 150:
+		_fail_multi_mission_smoke_test("Kill mission payout was wrong.")
+		return
+
+	if not QuestManager.is_lane_occupied("BOARD"):
+		_fail_multi_mission_smoke_test("BOARD lane should still be occupied.")
+		return
+	if QuestManager.get_mission_collection().size() != 1:
+		_fail_multi_mission_smoke_test("Collection should have 1 mission after agent complete.")
+		return
+
+	var remaining := QuestManager.get_mission_collection().get_all_active()
+	if remaining.size() != 1:
+		_fail_multi_mission_smoke_test("Should have exactly 1 remaining mission.")
+		return
+	QuestManager.get_mission_collection().focus(remaining[0].runtime_id)
+	var aurelia_before := float(GlobalState.reputations["aurelia"])
+	QuestManager.abandon_quest()
+	if QuestManager.is_lane_occupied("BOARD"):
+		_fail_multi_mission_smoke_test("BOARD lane should be free after abandon.")
+		return
+	if not is_equal_approx(float(GlobalState.reputations["aurelia"]), aurelia_before - 3.0):
+		_fail_multi_mission_smoke_test("Abandon rep penalty was not applied.")
+		return
+
+	GlobalState.reputations["reavers"] = 50.0
+	GlobalState.reputations["neutral"] = 50.0
+	var comms_offer := {
+		"title": "Bounty: Reaver Scouts",
+		"faction": "neutral",
+		"agent_name": "Anonymous",
+		"dialogue": "Take out three reaver scouts.",
+		"objective": {
+			"type": "TARGET_WITH_COMMS_REVERSAL",
+			"count_required": 3,
+			"target_faction": "reavers",
+			"reward_credits": 200,
+			"bribe_amount": 80,
+			"comms_reversal_line": "Wait — we have intel you need to hear.",
+		},
+		"choices": [],
+		"public_board": true,
+		"public_board_template_id": "TARGET_WITH_COMMS_REVERSAL",
+		"public_board_turn_in_line": "Bounty confirmed. Public board, really?",
+		"public_board_text_is_fallback": true,
+	}
+	if not QuestManager.accept_quest(comms_offer, accept_choice):
+		_fail_multi_mission_smoke_test("Comms reversal mission was rejected.")
+		return
+
+	var comms_m = QuestManager.get_mission_collection().get_focused()
+	var ui := GlobalState.get_ui_manager()
+	if ui and QuestManager.comms_reversal_triggered.is_connected(ui._on_comms_reversal_triggered):
+		QuestManager.comms_reversal_triggered.disconnect(ui._on_comms_reversal_triggered)
+
+	GlobalState.ship_destroyed.emit("reavers")
+	GlobalState.ship_destroyed.emit("reavers")
+	if not bool(comms_m.data.get("comms_triggered", false)):
+		_fail_multi_mission_smoke_test("Comms should trigger at kill 2 of 3.")
+		return
+
+	GlobalState.ship_destroyed.emit("reavers")
+	if int(comms_m.data.get("current_count", 0)) != 2:
+		_fail_multi_mission_smoke_test("Kills should be blocked during unresolved comms.")
+		return
+
+	var reavers_before := float(GlobalState.reputations.get("reavers", 50.0))
+	var neutral_before := float(GlobalState.reputations.get("neutral", 50.0))
+	var credits_before_bribe := GlobalState.player_credits
+	QuestManager.resolve_comms_branch("accept_bribe")
+	if QuestManager.is_lane_occupied("BOARD"):
+		_fail_multi_mission_smoke_test("Bribe branch should have cleared the BOARD lane.")
+		return
+	if GlobalState.player_credits != credits_before_bribe + 80:
+		_fail_multi_mission_smoke_test("Bribe payout was wrong: expected +80.")
+		return
+	if not is_equal_approx(float(GlobalState.reputations["neutral"]), neutral_before - 3.0):
+		_fail_multi_mission_smoke_test("Issuing faction rep should drop by 3 on bribe.")
+		return
+	if not is_equal_approx(float(GlobalState.reputations["reavers"]), reavers_before + 2.0):
+		_fail_multi_mission_smoke_test("Target faction rep should rise by 2 on bribe.")
+		return
+
+	print("[MultiMissionSmokeTest] PASS: two-lane coexistence, complete/abandon, comms reversal with bribe branch verified.")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+func _fail_multi_mission_smoke_test(message: String) -> void:
+	push_error("[MultiMissionSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
+
 
 func _run_services_smoke_test() -> void:
 	await get_tree().process_frame

@@ -141,6 +141,27 @@ static func build_active_state(
 			)
 			state["ship_log_recovered"] = false
 			state["ship_log_entry"] = ""
+		"TARGET_WITH_COMMS_REVERSAL":
+			state["target_faction"] = str(
+				objective.get("target_faction", "reavers")
+			)
+			state["count_required"] = max(
+				2,
+				int(
+					float(objective.get("count_required", 3))
+					* consequence.combat_multiplier
+				)
+			)
+			state["current_count"] = 0
+			state["comms_triggered"] = false
+			state["branch_chosen"] = false
+			state["branch_id"] = ""
+			state["bribe_amount"] = int(
+				objective.get("bribe_amount", 0)
+			)
+			state["comms_reversal_line"] = str(
+				objective.get("comms_reversal_line", "")
+			)
 
 	var state_validation := StateType.new().load_from_dict(state)
 	validation.merge(state_validation, "state")
@@ -266,6 +287,31 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			)
 			normalized["ship_log_entry"] = str(
 				normalized.get("ship_log_entry", "")
+			)
+		"TARGET_WITH_COMMS_REVERSAL":
+			normalized["current_count"] = max(
+				0,
+				int(normalized.get("current_count", 0))
+			)
+			normalized["count_required"] = max(
+				2,
+				int(normalized.get("count_required", 3))
+			)
+			normalized["comms_triggered"] = bool(
+				normalized.get("comms_triggered", false)
+			)
+			normalized["branch_chosen"] = bool(
+				normalized.get("branch_chosen", false)
+			)
+			normalized["branch_id"] = str(
+				normalized.get("branch_id", "")
+			)
+			normalized["bribe_amount"] = max(
+				0,
+				int(normalized.get("bribe_amount", 0))
+			)
+			normalized["comms_reversal_line"] = str(
+				normalized.get("comms_reversal_line", "")
 			)
 	return normalized
 

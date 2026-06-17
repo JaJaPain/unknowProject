@@ -451,27 +451,27 @@ branching consequences, and generated-but-bounded mission text.
 
 ### Implementation Checkpoints
 
-- [ ] Replace `QuestManager.active_quest` as the gameplay authority with a
+- [x] Replace `QuestManager.active_quest` as the gameplay authority with a
       mission collection while preserving compatibility adapters.
-- [ ] Define mission states: offered, accepted, active, ready-to-turn-in,
+- [x] Define mission states: offered, accepted, active, ready-to-turn-in,
       completed, failed, expired, abandoned, and resolved by alternate branch.
-- [ ] Add a mission capability registry. Each capability owns validation,
+- [x] Add a mission capability registry. Each capability owns validation,
       runtime handling, progress formatting, save schema, event subscriptions,
       cleanup, and completion rules.
-- [ ] Port existing kill, ore delivery, special pickup, and combat-drop
+- [x] Port existing kill, ore delivery, special pickup, and combat-drop
       missions into registered capabilities.
-- [ ] Add support for multiple board offers at once.
-- [ ] Add a clear active-mission limit and UI selection behavior.
-- [ ] Define LLM mission-template requests with required placeholders, tone
+- [x] Add support for multiple board offers at once.
+- [x] Add a clear active-mission limit and UI selection behavior.
+- [x] Define LLM mission-template requests with required placeholders, tone
       cards, branch IDs, and schema validation.
-- [ ] Add retry-with-critique for missing placeholders or contradictions.
-- [ ] Add deterministic slot-filler fallback for each supported template.
-- [ ] Add `TARGET_WITH_COMMS_REVERSAL` as the first branching proof case.
-- [ ] Add branch choices such as finish job, take bribe, walk away, report the
+- [x] Add retry-with-critique for missing placeholders or contradictions.
+- [x] Add deterministic slot-filler fallback for each supported template.
+- [x] Add `TARGET_WITH_COMMS_REVERSAL` as the first branching proof case.
+- [x] Add branch choices such as finish job, take bribe, walk away, report the
       truth, or escort to safety only when their mechanics are implemented.
-- [ ] Add cleanup for branch-resolved targets, spawned ships, temporary map
+- [x] Add cleanup for branch-resolved targets, spawned ships, temporary map
       markers, and mission UI.
-- [ ] Add extension tests proving a new mission capability can be registered
+- [x] Add extension tests proving a new mission capability can be registered
       without editing the mission core.
 
 ### Risks And Unknowns
@@ -486,23 +486,23 @@ branching consequences, and generated-but-bounded mission text.
 
 ### Suggested Tests
 
-- [ ] Legacy saves with one active mission import into the new collection.
-- [ ] Multiple missions can coexist, update, complete, expire, and abandon.
-- [ ] New capability registration works without mission-manager edits.
-- [ ] Invalid generated template output fails closed.
-- [ ] Branching target mission pauses combat at the trigger threshold and
+- [x] Legacy saves with one active mission import into the new collection.
+- [x] Multiple missions can coexist, update, complete, expire, and abandon.
+- [x] New capability registration works without mission-manager edits.
+- [x] Invalid generated template output fails closed.
+- [x] Branching target mission pauses combat at the trigger threshold and
       presents only implemented choices.
-- [ ] Taking a bribe, finishing the kill, walking away, or alternate resolution
+- [x] Taking a bribe, finishing the kill, walking away, or alternate resolution
       each records different deterministic consequences.
 
 ### Done Criteria
 
-- [ ] The game supports multiple active missions and multiple public-board
+- [x] The game supports multiple active missions and multiple public-board
       offers.
-- [ ] Mission mechanics are registry-driven rather than hardcoded through one
+- [x] Mission mechanics are registry-driven rather than hardcoded through one
       central match block.
-- [ ] Generated mission flavor uses bounded templates and required placeholders.
-- [ ] At least one branching public-board mission proves mid-mission reversal
+- [x] Generated mission flavor uses bounded templates and required placeholders.
+- [x] At least one branching public-board mission proves mid-mission reversal
       without breaking saves or cleanup.
 
 ## Segment 3: Economy, Stores, Random Events, And Interceptors

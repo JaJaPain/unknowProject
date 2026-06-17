@@ -2,7 +2,7 @@
 
 Date: 2026-06-16
 
-Status: Checkpoint 2 complete, baseline 38/38
+Status: Segment 2 complete, baseline 42/42
 
 Branch: `codex/jumpgate-system`
 

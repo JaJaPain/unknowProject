@@ -20,6 +20,7 @@ signal quest_completed()
 signal quest_abandoned()
 signal quest_expired(title: String)
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
+signal comms_reversal_triggered(mission_data: Dictionary)
 
 var _collection: MissionCollection = MissionCollection.new()
 var active_quest: Dictionary:
@@ -544,9 +545,65 @@ func _on_ship_destroyed(faction_name: String):
 			var c: Dictionary = hints["chatter"]
 			GlobalState.emit_chatter(c["source"], c["text"], c["color"])
 
+		if hints.get("trigger_comms", false):
+			var comms_faction: String = hints.get("comms_faction", faction_name)
+			_set_ceasefire_for_faction(comms_faction, true)
+			comms_reversal_triggered.emit(m.data)
+
 		if hints.get("needs_respawn", false):
 			var respawn_faction: String = hints.get("respawn_faction", faction_name)
 			_schedule_respawn(respawn_faction)
+
+
+func resolve_comms_branch(branch_id: String) -> void:
+	var focused = _collection.get_focused()
+	if focused == null or focused.data.get("objective_type", "") != "TARGET_WITH_COMMS_REVERSAL":
+		return
+	focused.data["branch_chosen"] = true
+	focused.data["branch_id"] = branch_id
+	var target_faction: String = str(focused.data.get("target_faction", ""))
+
+	match branch_id:
+		"finish_kill":
+			_set_ceasefire_for_faction(target_faction, false)
+			GlobalState.adjust_reputation(target_faction, -2.0)
+		"accept_bribe":
+			var bribe: int = int(focused.data.get("bribe_amount", 0))
+			GlobalState.player_credits += bribe
+			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -3.0)
+			GlobalState.adjust_reputation(target_faction, 2.0)
+			_despawn_ceasefire_targets(target_faction)
+			focused.transition_to(MissionInstanceType.State.COMPLETED)
+			var rid: String = focused.runtime_id
+			_record_board_cooldown(focused.data)
+			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: accepted bribe (%d SC)." % bribe)
+			_collection.remove(rid)
+		"walk_away":
+			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -1.0)
+			_despawn_ceasefire_targets(target_faction)
+			focused.transition_to(MissionInstanceType.State.ABANDONED)
+			var rid: String = focused.runtime_id
+			_record_board_cooldown(focused.data)
+			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: walked away.")
+			_collection.remove(rid)
+
+	quest_progress_updated.emit()
+
+
+func _set_ceasefire_for_faction(faction_name: String, value: bool) -> void:
+	for e in GlobalState.active_system_entities:
+		if e and is_instance_valid(e) and not e.get("destroyed"):
+			if e.is_in_group("ship") and e.get("faction") == faction_name \
+					and e.get_meta("is_quest_target", false):
+				e.ceasefire = value
+
+
+func _despawn_ceasefire_targets(faction_name: String) -> void:
+	for e in GlobalState.active_system_entities.duplicate():
+		if e and is_instance_valid(e) and not e.get("destroyed"):
+			if e.is_in_group("ship") and e.get("faction") == faction_name \
+					and e.get_meta("is_quest_target", false):
+				e.queue_free()
 
 
 func _apply_completion_hints(hints: Dictionary) -> void:
@@ -559,6 +616,9 @@ func _apply_completion_hints(hints: Dictionary) -> void:
 func _apply_cleanup_hints(hints: Dictionary) -> void:
 	if hints.get("clear_cargo", false):
 		GlobalState.clear_cargo()
+	var cf_faction: String = str(hints.get("clear_ceasefire_faction", ""))
+	if cf_faction != "":
+		_set_ceasefire_for_faction(cf_faction, false)
 
 
 func _schedule_respawn(faction: String) -> void:

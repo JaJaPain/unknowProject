@@ -15,6 +15,7 @@ var fire_cooldown: float = 0.0
 var destroyed: bool = false
 var last_attacker_faction: String = ""
 var taunted_player: bool = false
+var ceasefire: bool = false
 
 var hardpoints: Array[Node3D] = []
 var engine_points: Array[Node3D] = []
@@ -407,9 +408,11 @@ func _physics_process(delta: float):
 			target = null
 		
 	# Scanning and targeting
-	if target == null or not is_instance_valid(target) or target.get("destroyed") or (target == GlobalState.player and GlobalState.player.get("is_docked")):
+	if ceasefire:
 		target = null
-		
+	elif target == null or not is_instance_valid(target) or target.get("destroyed") or (target == GlobalState.player and GlobalState.player.get("is_docked")):
+		target = null
+
 		# Elite reinforcements target the player immediately
 		if is_reinforcement:
 			var p = GlobalState.player

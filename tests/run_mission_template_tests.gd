@@ -47,6 +47,7 @@ func _test_registry_has_all_templates() -> void:
 		MissionTemplateRegistryType.TEMPLATE_DELIVER_ORE_AGENT,
 		MissionTemplateRegistryType.TEMPLATE_KILL_SHIPS_AGENT,
 		MissionTemplateRegistryType.TEMPLATE_PICKUP_SPECIAL_AGENT,
+		MissionTemplateRegistryType.TEMPLATE_TARGET_WITH_COMMS_REVERSAL,
 	]
 	for id in ids:
 		_expect(
@@ -168,6 +169,7 @@ func _test_fallback_payload_returns_valid() -> void:
 		MissionTemplateRegistryType.TEMPLATE_DELIVER_ORE_PUBLIC,
 		MissionTemplateRegistryType.TEMPLATE_PICKUP_SPECIAL_PUBLIC,
 		MissionTemplateRegistryType.TEMPLATE_RECOVER_COMBAT_DROP,
+		MissionTemplateRegistryType.TEMPLATE_TARGET_WITH_COMMS_REVERSAL,
 	]
 	for id in ids:
 		var t = MissionTemplateRegistryType.get_template(id)

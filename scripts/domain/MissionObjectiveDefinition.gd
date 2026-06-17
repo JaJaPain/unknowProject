@@ -9,11 +9,13 @@ const TYPE_KILL_SHIPS := "KILL_SHIPS"
 const TYPE_DELIVER_ORE := "DELIVER_ORE"
 const TYPE_PICKUP_SPECIAL := "PICKUP_SPECIAL"
 const TYPE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
+const TYPE_TARGET_WITH_COMMS_REVERSAL := "TARGET_WITH_COMMS_REVERSAL"
 const SUPPORTED_TYPES := [
 	TYPE_KILL_SHIPS,
 	TYPE_DELIVER_ORE,
 	TYPE_PICKUP_SPECIAL,
 	TYPE_RECOVER_COMBAT_DROP,
+	TYPE_TARGET_WITH_COMMS_REVERSAL,
 ]
 
 var type: String = ""
@@ -59,6 +61,9 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 						"Objective field 'drop_chance' must be between 0 and 1.",
 						"drop_chance"
 					)
+		TYPE_TARGET_WITH_COMMS_REVERSAL:
+			_require_text(source, "target_faction", result)
+			_require_positive_number(source, "count_required", result)
 	return result
 
 
