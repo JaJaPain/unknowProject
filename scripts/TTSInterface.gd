@@ -68,6 +68,10 @@ func _ready():
 	add_child(audio_player)
 	audio_player.finished.connect(_on_audio_player_finished)
 	
+	if "--baseline-offline" in OS.get_cmdline_user_args():
+		print("[TTSInterface] Baseline offline mode: service discovery disabled.")
+		return
+
 	_discover_and_verify_tts()
 	
 	# Pre-cache static completion and abandon messages

@@ -1,7 +1,15 @@
 extends Control
 
+const PublicBoardOfferBuilderType := preload(
+	"res://scripts/domain/PublicBoardOfferBuilder.gd"
+)
+const PublicBoardTextGeneratorType := preload(
+	"res://scripts/domain/PublicBoardTextGenerator.gd"
+)
+
 # UI Nodes created dynamically
 var hud_panel: Panel
+var time_label: Label
 var credits_label: Label
 var cargo_label: Label
 var cargo_bar: ProgressBar
@@ -99,6 +107,7 @@ var test_pickup_btn: Button
 var test_deliver_btn: Button
 var test_pickup_part_btn: Button
 var hear_gossip_btn: Button
+var public_board_btn: Button
 
 # Dock submenu state. Every dockable station (main station, outposts)
 # shows the same two submenus:
@@ -115,10 +124,27 @@ var agent_dialogue_label: Label
 var agent_choices_container: VBoxContainer
 var agent_back_btn: Button
 
+var public_board_panel: Panel
+var public_board_list: VBoxContainer
+var public_board_back_btn: Button
+var public_board_current_offers: Array[Dictionary] = []
+
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
 var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
+var quest_tracker_turn_in_btn: Button
+var quest_tracker_secondary_container: VBoxContainer
+var quest_tracker_nav_container: HBoxContainer
+var quest_tracker_prev_btn: Button
+var quest_tracker_next_btn: Button
+var quest_tracker_nav_label: Label
+
+# Incoming Comms (reversal hail)
+var comms_hail_panel: PanelContainer
+var comms_hail_portrait: TextureRect
+var comms_hail_message: Label
+var comms_hail_choices_container: VBoxContainer
 
 # Systems Comms Chat Window
 var chat_window_panel: Panel
@@ -132,13 +158,27 @@ var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
 
 # Sliced elements inside Agent Panel
+var agent_portrait_column: VBoxContainer
 var agent_portrait: TextureRect
 var agent_client_logo: TextureRect
 
 var pause_panel: Panel
+var pause_new_campaign_button: Button
+var campaign_panel: Panel
+var campaign_slots_vbox: VBoxContainer
+var campaign_manual_vbox: VBoxContainer
+var campaign_status_label: Label
+var campaign_import_button: Button
+var campaign_confirm_dialog: ConfirmationDialog
+var campaign_load_fade: ColorRect
+var campaign_load_in_progress: bool = false
+var pending_delete_slot_id: String = ""
+var pending_manual_slot_index: int = -1
+var pending_manual_name: String = ""
 var death_panel: Panel
 var context_panel: Panel
 var context_action_btn: Button
+var context_highlight_target: Node3D = null
 
 var current_station: Node3D = null
 
@@ -168,6 +208,7 @@ var is_llm_ready: bool = false
 var is_tts_ready: bool = false
 var last_llm_attempt: int = 0
 var last_tts_attempt: int = 0
+var startup_save_loaded: bool = false
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -216,12 +257,15 @@ func _ready():
 	GlobalState.target_changed.connect(_on_target_changed)
 	GlobalState.game_paused.connect(_on_pause_changed)
 	GlobalState.entities_changed.connect(refresh_overview)
+	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 	
 	# Connect QuestManager signals
 	QuestManager.quest_accepted.connect(_on_quest_accepted)
 	QuestManager.quest_progress_updated.connect(_on_quest_progress_updated)
 	QuestManager.quest_completed.connect(_on_quest_completed)
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned)
+	QuestManager.quest_expired.connect(_on_quest_expired)
+	QuestManager.comms_reversal_triggered.connect(_on_comms_reversal_triggered)
 	
 	_create_hud()
 	_create_target_panel()
@@ -231,6 +275,7 @@ func _ready():
 	_create_context_menu()
 	_create_death_screen()
 	_create_pause_menu()
+	_create_campaign_load_fade()
 	
 	# Create target indicator marker
 	target_marker = Control.new()
@@ -249,16 +294,54 @@ func _ready():
 	# Initial UI state
 	_on_credits_changed(GlobalState.player_credits)
 	_on_cargo_changed(GlobalState.cargo)
+	_on_campaign_time_changed(CampaignClock.total_minutes)
 	_on_target_changed(GlobalState.active_target)
 	
 	# Initialize startup loading screen to pre-cache the first quest & TTS
 	_create_loading_screen()
 	GlobalState.paused = true
+	if "--baseline-offline" in OS.get_cmdline_user_args():
+		call_deferred("_complete_offline_loading_for_tests")
 	
 	LLMInterface.llm_connection_attempt.connect(_on_llm_connection_attempt)
 	LLMInterface.llm_connection_established.connect(_on_llm_connected)
-	TTSInterface.tts_connection_attempt.connect(_on_tts_connection_attempt)
-	TTSInterface.tts_connection_established.connect(_on_tts_connected)
+	SpeechService.speech_connection_attempt.connect(_on_tts_connection_attempt)
+	SpeechService.speech_connection_established.connect(_on_tts_connected)
+
+	# Autoloads survive reload_current_scene(). On restart the services may
+	# already be connected, so their one-time connection signals will not fire
+	# again for this new UIManager. Adopt the current state immediately instead
+	# of leaving the loading screen stuck at its initial 5%.
+	is_llm_ready = LLMInterface.llm_connected
+	is_tts_ready = SpeechService.speech_connected
+	last_llm_attempt = LLMInterface.connection_attempts
+	last_tts_attempt = SpeechService.connection_attempts
+	_update_connection_status_display()
+	call_deferred("_check_both_services_ready")
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_signal("startup_load_completed"):
+		game_root.startup_load_completed.connect(_on_startup_load_completed)
+		if bool(game_root.get("startup_load_finished")):
+			_on_startup_load_completed(bool(game_root.get("startup_save_loaded")))
+
+func _complete_offline_loading_for_tests() -> void:
+	if loading_panel and is_instance_valid(loading_panel):
+		loading_panel.queue_free()
+	GlobalState.paused = false
+
+func _on_startup_load_completed(save_loaded: bool) -> void:
+	startup_save_loaded = save_loaded
+	if save_loaded:
+		refresh_restored_state()
+	if Engine.has_meta("open_campaign_manager_after_death"):
+		Engine.remove_meta("open_campaign_manager_after_death")
+		call_deferred("_open_campaign_manager")
+
+func refresh_restored_state() -> void:
+	_on_credits_changed(GlobalState.player_credits)
+	_on_cargo_changed(GlobalState.cargo)
+	_update_quest_tracker()
+	refresh_overview()
 
 func _process(delta):
 	if GlobalState.paused: return
@@ -292,6 +375,10 @@ func _create_hud():
 	vbox.position = Vector2(10, 10)
 	vbox.custom_minimum_size = Vector2(330, 140)
 	hud_panel.add_child(vbox)
+
+	time_label = Label.new()
+	time_label.text = "Time: Day 001 08:00"
+	vbox.add_child(time_label)
 	
 	credits_label = Label.new()
 	credits_label.text = "Credits: 50 SC"
@@ -415,11 +502,36 @@ func _create_hud():
 	tracker_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	tracker_hbox.add_child(tracker_vbox)
 
-	var tracker_header = Label.new()
-	tracker_header.text = "ACTIVE CONTRACT"
-	tracker_header.add_theme_font_size_override("font_size", 10)
-	tracker_header.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
-	tracker_vbox.add_child(tracker_header)
+	quest_tracker_nav_container = HBoxContainer.new()
+	quest_tracker_nav_container.add_theme_constant_override("separation", 4)
+	tracker_vbox.add_child(quest_tracker_nav_container)
+
+	quest_tracker_prev_btn = Button.new()
+	quest_tracker_prev_btn.text = "<"
+	quest_tracker_prev_btn.flat = true
+	quest_tracker_prev_btn.custom_minimum_size = Vector2(20, 0)
+	quest_tracker_prev_btn.add_theme_font_size_override("font_size", 12)
+	quest_tracker_prev_btn.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_prev_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	quest_tracker_prev_btn.pressed.connect(_on_quest_tracker_prev)
+	quest_tracker_nav_container.add_child(quest_tracker_prev_btn)
+
+	quest_tracker_nav_label = Label.new()
+	quest_tracker_nav_label.text = "ACTIVE CONTRACT"
+	quest_tracker_nav_label.add_theme_font_size_override("font_size", 10)
+	quest_tracker_nav_label.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_nav_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_tracker_nav_container.add_child(quest_tracker_nav_label)
+
+	quest_tracker_next_btn = Button.new()
+	quest_tracker_next_btn.text = ">"
+	quest_tracker_next_btn.flat = true
+	quest_tracker_next_btn.custom_minimum_size = Vector2(20, 0)
+	quest_tracker_next_btn.add_theme_font_size_override("font_size", 12)
+	quest_tracker_next_btn.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
+	quest_tracker_next_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	quest_tracker_next_btn.pressed.connect(_on_quest_tracker_next)
+	quest_tracker_nav_container.add_child(quest_tracker_next_btn)
 
 	quest_tracker_title = Label.new()
 	quest_tracker_title.text = "Contract Title"
@@ -441,7 +553,20 @@ func _create_hud():
 	quest_tracker_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tracker_vbox.add_child(quest_tracker_progress)
 
+	quest_tracker_turn_in_btn = Button.new()
+	quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
+	quest_tracker_turn_in_btn.visible = false
+	quest_tracker_turn_in_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	quest_tracker_turn_in_btn.pressed.connect(_on_quest_tracker_turn_in_pressed)
+	tracker_vbox.add_child(quest_tracker_turn_in_btn)
+
+	quest_tracker_secondary_container = VBoxContainer.new()
+	quest_tracker_secondary_container.add_theme_constant_override("separation", 2)
+	tracker_vbox.add_child(quest_tracker_secondary_container)
+
 	quest_tracker_panel.visible = false
+
+	_create_comms_hail_panel()
 
 	# Systems Comms Chat Window (positioned at the bottom-left corner using anchors for responsiveness)
 	chat_window_panel = Panel.new()
@@ -545,22 +670,19 @@ func _create_target_panel():
 	var app_btn = Button.new()
 	app_btn.text = "Fly to"
 	app_btn.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "APPROACH")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
+		_command_selected_target(
+			"JUMP_APPROACH"
+				if GlobalState.active_target
+					and GlobalState.active_target.is_in_group("jumpgate")
+				else "APPROACH"
+		)
 	)
 	target_action_box.add_child(app_btn)
 	
 	var orb_btn = Button.new()
 	orb_btn.text = "Orbit"
 	orb_btn.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "ORBIT")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
+		_command_selected_target("ORBIT")
 	)
 	target_action_box.add_child(orb_btn)
 	
@@ -570,12 +692,13 @@ func _create_target_panel():
 		var t = GlobalState.active_target
 		if t and is_instance_valid(t) and GlobalState.player:
 			if t.is_in_group("asteroid"):
-				GlobalState.player.set("nav_mode", "MINE")
-			elif t.is_in_group("station"):
-				GlobalState.player.set("nav_mode", "DOCK")
+				_command_selected_target("MINE")
+			elif t.is_in_group("station") or t.has_method("dock_player"):
+				_command_selected_target("DOCK")
+			elif t.is_in_group("jumpgate"):
+				activate_selected_jumpgate()
 			else:
-				GlobalState.player.set("nav_mode", "ATTACK")
-			show_target_marker(t.global_position)
+				_command_selected_target("ATTACK")
 	)
 	target_action_box.add_child(target_action_btn)
 	
@@ -985,6 +1108,11 @@ func _create_dock_menu():
 	agent_service_btn.pressed.connect(_on_talk_to_agent_pressed)
 	vbox.add_child(agent_service_btn)
 
+	public_board_btn = Button.new()
+	public_board_btn.text = "Public Contract Board"
+	public_board_btn.pressed.connect(_on_public_board_pressed)
+	vbox.add_child(public_board_btn)
+
 	maintenance_bay_btn = Button.new()
 	maintenance_bay_btn.text = "Maintenance Bay (Grease Monkeys)"
 	maintenance_bay_btn.pressed.connect(_on_maintenance_bay_pressed)
@@ -1043,6 +1171,7 @@ func _create_dock_menu():
 	
 	# Left Side: Agent Portrait
 	var portrait_vbox = VBoxContainer.new()
+	agent_portrait_column = portrait_vbox
 	portrait_vbox.custom_minimum_size = Vector2(180, 0)
 	portrait_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	agent_hbox.add_child(portrait_vbox)
@@ -1118,10 +1247,265 @@ func _create_dock_menu():
 	agent_back_btn.pressed.connect(_on_agent_back_pressed)
 	avbox.add_child(agent_back_btn)
 
+	_create_public_board_panel()
+
+
+func _create_public_board_panel() -> void:
+	public_board_panel = Panel.new()
+	add_child(public_board_panel)
+	public_board_panel.anchor_left = 0.22
+	public_board_panel.anchor_right = 0.78
+	public_board_panel.anchor_top = 0.16
+	public_board_panel.anchor_bottom = 0.84
+	public_board_panel.offset_left = 0
+	public_board_panel.offset_right = 0
+	public_board_panel.offset_top = 0
+	public_board_panel.offset_bottom = 0
+	public_board_panel.visible = false
+
+	var board_style := StyleBoxFlat.new()
+	board_style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
+	board_style.border_width_left = 2
+	board_style.border_width_top = 2
+	board_style.border_width_right = 2
+	board_style.border_width_bottom = 2
+	board_style.border_color = Color(0.85, 0.52, 0.18, 0.9)
+	board_style.corner_radius_top_left = 4
+	board_style.corner_radius_top_right = 4
+	board_style.corner_radius_bottom_right = 4
+	board_style.corner_radius_bottom_left = 4
+	public_board_panel.add_theme_stylebox_override("panel", board_style)
+
+	var board_vbox := VBoxContainer.new()
+	board_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	board_vbox.offset_left = 16
+	board_vbox.offset_right = -16
+	board_vbox.offset_top = 16
+	board_vbox.offset_bottom = -16
+	board_vbox.add_theme_constant_override("separation", 10)
+	public_board_panel.add_child(board_vbox)
+
+	var title := Label.new()
+	title.text = "PUBLIC CONTRACT BOARD"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(1.0, 0.72, 0.32))
+	board_vbox.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "Local postings. Verified mechanics. Questionable judgment."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 12)
+	subtitle.modulate = Color(0.75, 0.75, 0.78)
+	board_vbox.add_child(subtitle)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	board_vbox.add_child(scroll)
+
+	public_board_list = VBoxContainer.new()
+	public_board_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	public_board_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(public_board_list)
+
+	public_board_back_btn = Button.new()
+	public_board_back_btn.text = "Back to Services"
+	public_board_back_btn.pressed.connect(_on_public_board_back_pressed)
+	board_vbox.add_child(public_board_back_btn)
+
+
+func _render_public_board_offers() -> void:
+	public_board_current_offers = PublicBoardOfferBuilderType.build_offers(
+		CampaignClock.total_minutes
+	)
+	for index in range(public_board_current_offers.size()):
+		public_board_current_offers[index] = (
+			PublicBoardTextGeneratorType.fallback_offer(
+				public_board_current_offers[index],
+				CampaignClock.total_minutes + index
+			)
+		)
+	_redraw_public_board_offers()
+	for index in range(public_board_current_offers.size()):
+		if bool(public_board_current_offers[index].get("enabled", false)):
+			_request_public_board_text_attempt(
+				index,
+				public_board_current_offers[index],
+				"",
+				0
+			)
+
+
+func _redraw_public_board_offers() -> void:
+	for child in public_board_list.get_children():
+		child.queue_free()
+	for index in range(public_board_current_offers.size()):
+		_add_public_board_posting(public_board_current_offers[index], index)
+
+
+func _request_public_board_text_attempt(
+	index: int,
+	offer: Dictionary,
+	critique: String,
+	attempt: int
+) -> void:
+	if attempt >= 2 or not LLMInterface.llm_connected:
+		return
+	var request := PublicBoardTextGeneratorType.build_generation_request(
+		offer,
+		critique
+	)
+	var url: String = LLMInterface.OLLAMA_URL
+	var model: String = (
+		LLMInterface.active_model_name
+		if LLMInterface.active_model_name != "" else "qwen2.5:1.5b"
+	)
+	var body: Dictionary = {
+		"model": model,
+		"prompt": str(request.get("prompt", "")),
+		"stream": false,
+		"format": "json",
+		"options": { "temperature": 0.8, "num_predict": 220 },
+	}
+	var headers: PackedStringArray = ["Content-Type: application/json"]
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.timeout = 8.0
+	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
+		http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+			return
+		var raw := body_bytes.get_string_from_utf8()
+		var outer = JSON.parse_string(raw)
+		if not outer is Dictionary or not outer.has("response"):
+			return
+		var payload = JSON.parse_string(str(outer["response"]))
+		if not payload is Dictionary:
+			return
+		var applied := PublicBoardTextGeneratorType.apply_payload_to_offer(
+			offer,
+			payload,
+			false
+		)
+		if bool(applied.get("ok", false)):
+			if index < 0 or index >= public_board_current_offers.size():
+				return
+			if str(public_board_current_offers[index].get("template_id", "")) \
+					!= str(offer.get("template_id", "")):
+				return
+			public_board_current_offers[index] = applied["offer"]
+			if public_board_panel and public_board_panel.visible:
+				_redraw_public_board_offers()
+			return
+		if attempt == 0:
+			_request_public_board_text_attempt(
+				index,
+				offer,
+				str(applied.get("reason", "invalid generated text")),
+				attempt + 1
+			)
+	)
+	var err := http.request(
+		url,
+		headers,
+		HTTPClient.METHOD_POST,
+		JSON.stringify(body)
+	)
+	if err != OK:
+		http.queue_free()
+
+
+func _add_public_board_posting(posting: Dictionary, index: int) -> void:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.055, 0.92)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.55, 0.42, 0.25, 0.7)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+	public_board_list.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	card.add_child(vbox)
+
+	var title := Label.new()
+	title.text = str(posting.get("title", "Untitled Posting"))
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_color_override("font_color", Color(1.0, 0.78, 0.38))
+	vbox.add_child(title)
+
+	var poster := Label.new()
+	poster.text = "Posted by: %s" % str(posting.get("poster", "Anonymous"))
+	poster.add_theme_font_size_override("font_size", 11)
+	poster.modulate = Color(0.72, 0.72, 0.76)
+	vbox.add_child(poster)
+
+	var body := Label.new()
+	body.text = str(posting.get("body", "The details are suspiciously missing."))
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(body)
+
+	var objective := Label.new()
+	objective.text = "Verified objective: %s" % str(posting.get("objective", "Pending"))
+	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	objective.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
+	vbox.add_child(objective)
+
+	var payout := Label.new()
+	var base_reward := int(posting.get("base_reward", 0))
+	var duration_minutes := int(posting.get("duration_minutes", 0))
+	var urgent_multiplier := float(posting.get("urgent_multiplier", 1.0))
+	var payout_text := "%d SC" % base_reward
+	if duration_minutes > 0:
+		payout_text = "%d SC urgent payout | %s remaining" % [
+			int(round(float(base_reward) * urgent_multiplier)),
+			CampaignClock.format_duration(duration_minutes),
+		]
+	payout.text = "Payout: %s" % payout_text
+	payout.add_theme_color_override("font_color", Color(0.65, 1.0, 0.55))
+	vbox.add_child(payout)
+
+	var accept := Button.new()
+	if _should_show_public_board_turn_in():
+		accept.text = "Turn In Active Board Job To Local Agent"
+		accept.disabled = false
+		accept.pressed.connect(_on_public_board_turn_in_pressed)
+	elif QuestManager.is_lane_occupied("BOARD"):
+		accept.text = "Board Job Already Active"
+		accept.disabled = true
+	elif not bool(posting.get("enabled", false)):
+		var cooldown_remaining: int = int(posting.get("cooldown_remaining", 0))
+		if cooldown_remaining > 0:
+			accept.text = "On Cooldown — %s" % CampaignClock.format_duration(cooldown_remaining)
+		else:
+			accept.text = "Template Coming Soon"
+		accept.disabled = true
+	else:
+		accept.text = "Accept Posting"
+		accept.disabled = false
+		accept.pressed.connect(func(): _on_public_board_offer_accept(index))
+	vbox.add_child(accept)
+
+
 func _create_context_menu():
 	context_panel = Panel.new()
 	add_child(context_panel)
-	context_panel.custom_minimum_size = Vector2(150, 160)
+	context_panel.custom_minimum_size = Vector2(170, 205)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.1, 0.13, 1.0) # Solid, non-translucent dark background
@@ -1143,28 +1527,35 @@ func _create_context_menu():
 	vbox.offset_right = 0
 	vbox.offset_top = 0
 	vbox.offset_bottom = 0
+
+	var action_select = Button.new()
+	action_select.text = "Select Target"
+	action_select.pressed.connect(func():
+		if context_highlight_target \
+				and is_instance_valid(context_highlight_target):
+			GlobalState.active_target = context_highlight_target
+		_close_context_menu()
+	)
+	vbox.add_child(action_select)
 	
 	var action_app = Button.new()
 	action_app.text = "Fly to"
 	action_app.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "APPROACH")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
-		context_panel.visible = false
+		_command_context_target(
+			"JUMP_APPROACH"
+				if context_highlight_target
+					and context_highlight_target.is_in_group("jumpgate")
+				else "APPROACH"
+		)
+		_close_context_menu()
 	)
 	vbox.add_child(action_app)
 	
 	var action_orb = Button.new()
 	action_orb.text = "Orbit"
 	action_orb.pressed.connect(func():
-		if GlobalState.player:
-			GlobalState.player.set("nav_mode", "ORBIT")
-			var t = GlobalState.active_target
-			if t and is_instance_valid(t):
-				show_target_marker(t.global_position)
-		context_panel.visible = false
+		_command_context_target("ORBIT")
+		_close_context_menu()
 	)
 	vbox.add_child(action_orb)
 	
@@ -1173,22 +1564,24 @@ func _create_context_menu():
 	context_action_btn = action_act
 	action_act.text = "Mine / Attack"
 	action_act.pressed.connect(func():
-		var t = GlobalState.active_target
+		var t = context_highlight_target
 		if t and is_instance_valid(t) and GlobalState.player:
 			if t.is_in_group("asteroid"):
-				GlobalState.player.set("nav_mode", "MINE")
-			elif t.is_in_group("station"):
-				GlobalState.player.set("nav_mode", "DOCK")
+				_command_context_target("MINE")
+			elif t.is_in_group("station") or t.has_method("dock_player"):
+				_command_context_target("DOCK")
+			elif t.is_in_group("jumpgate"):
+				GlobalState.active_target = t
+				activate_selected_jumpgate()
 			else:
-				GlobalState.player.set("nav_mode", "ATTACK")
-			show_target_marker(t.global_position)
-		context_panel.visible = false
+				_command_context_target("ATTACK")
+		_close_context_menu()
 	)
 	vbox.add_child(action_act)
 	
 	var action_close = Button.new()
 	action_close.text = "Cancel"
-	action_close.pressed.connect(func(): context_panel.visible = false)
+	action_close.pressed.connect(_close_context_menu)
 	vbox.add_child(action_close)
 	
 	context_panel.visible = false
@@ -1197,167 +1590,759 @@ func _create_pause_menu():
 	pause_panel = Panel.new()
 	add_child(pause_panel)
 	pause_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pause_panel.offset_left = 0
-	pause_panel.offset_right = 0
-	pause_panel.offset_top = 0
-	pause_panel.offset_bottom = 0
-	
-	var vbox = VBoxContainer.new()
-	pause_panel.add_child(vbox)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 0
-	vbox.offset_right = 0
-	vbox.offset_top = 0
-	vbox.offset_bottom = 0
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	
-	var title = Label.new()
-	title.text = "GAME PAUSED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	
-	var bindings = Label.new()
-	bindings.text = "KEY BINDINGS / COMMANDS:\n" + \
-		"  - Left Click: Select target in space or overview\n" + \
-		"  - Double Left Click: Fly to position in space\n" + \
-		"  - Hold RMB + Drag: Rotate camera pivot\n" + \
-		"  - Scroll Wheel: Zoom camera in / out\n" + \
-		"  - Q: Engage APPROACH autopilot\n" + \
-		"  - W: Engage ORBIT autopilot\n" + \
-		"  - E: Activate Action (MINE asteroid or ATTACK hostile)\n" + \
-		"  - ESC: Pause / Resume game"
-	bindings.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(bindings)
-	
-	var resume_btn = Button.new()
-	resume_btn.text = "Resume Game"
-	resume_btn.pressed.connect(func(): GlobalState.paused = false)
-	vbox.add_child(resume_btn)
-	
-	var restart_btn = Button.new()
-	restart_btn.text = "Restart Game"
-	restart_btn.pressed.connect(_restart_game)
+	pause_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.015, 0.025, 0.045, 0.96), Color(0.0, 0.65, 0.8, 0.3), 0)
+	)
 
-	vbox.add_child(restart_btn)
-	
-	var quit_btn = Button.new()
-	quit_btn.text = "Quit Game"
-	quit_btn.pressed.connect(func(): get_tree().quit())
-	vbox.add_child(quit_btn)
-	
-	# Spacing before volume controls
-	var vol_spacer = Control.new()
-	vol_spacer.custom_minimum_size = Vector2(0, 25)
-	vbox.add_child(vol_spacer)
-	
-	# Volume Control panel container
-	var vol_panel = PanelContainer.new()
-	vol_panel.custom_minimum_size = Vector2(450, 0)
-	vol_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child(vol_panel)
-	
-	# Premium dark theme styling for the panel
-	var vol_style = StyleBoxFlat.new()
-	vol_style.bg_color = Color(0.08, 0.08, 0.12, 0.75) # Translucent dark deep blue-gray
-	vol_style.border_width_left = 1
-	vol_style.border_width_top = 1
-	vol_style.border_width_right = 1
-	vol_style.border_width_bottom = 1
-	vol_style.border_color = Color(0.0, 0.85, 1.0, 0.35) # Soft glowing cyan border outline
-	vol_style.corner_radius_top_left = 8
-	vol_style.corner_radius_top_right = 8
-	vol_style.corner_radius_bottom_right = 8
-	vol_style.corner_radius_bottom_left = 8
-	vol_style.content_margin_left = 24
-	vol_style.content_margin_right = 24
-	vol_style.content_margin_top = 16
-	vol_style.content_margin_bottom = 16
-	vol_panel.add_theme_stylebox_override("panel", vol_style)
-	
-	var vol_vbox = VBoxContainer.new()
-	vol_panel.add_child(vol_vbox)
-	
-	# Volume Header
-	var vol_title = Label.new()
-	vol_title.text = "VOLUME SETTINGS"
-	vol_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vol_title.add_theme_font_size_override("font_size", 14)
-	vol_title.add_theme_color_override("font_color", Color(0.0, 0.85, 1.0, 1.0)) # Bright cyan accent
-	vol_vbox.add_child(vol_title)
-	
-	# Header spacer
-	var vol_header_spacer = Control.new()
-	vol_header_spacer.custom_minimum_size = Vector2(0, 12)
-	vol_vbox.add_child(vol_header_spacer)
-	
-	# 1. Music Volume Row
-	var music_hbox = HBoxContainer.new()
-	vol_vbox.add_child(music_hbox)
-	
-	var music_lbl = Label.new()
-	music_lbl.text = "Music"
-	music_lbl.custom_minimum_size = Vector2(100, 0)
-	music_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	music_hbox.add_child(music_lbl)
-	
-	var music_slider = HSlider.new()
-	music_slider.min_value = 0.0
-	music_slider.max_value = 1.0
-	music_slider.step = 0.01
-	music_slider.value = AudioManager.get_music_volume()
-	music_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	music_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	music_hbox.add_child(music_slider)
-	
-	var music_val = Label.new()
-	music_val.text = str(int(music_slider.value * 100)) + "%"
-	music_val.custom_minimum_size = Vector2(50, 0)
-	music_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	music_val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	music_hbox.add_child(music_val)
-	
-	music_slider.value_changed.connect(func(val):
-		AudioManager.set_music_volume(val)
-		music_val.text = str(int(val * 100)) + "%"
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	pause_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(920, 590)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.045, 0.055, 0.085, 0.98), Color(0.0, 0.85, 1.0, 0.55), 26)
 	)
-	
-	# Row spacer
-	var row_spacer = Control.new()
-	row_spacer.custom_minimum_size = Vector2(0, 8)
-	vol_vbox.add_child(row_spacer)
-	
-	# 2. SFX Volume Row
-	var sfx_hbox = HBoxContainer.new()
-	vol_vbox.add_child(sfx_hbox)
-	
-	var sfx_lbl = Label.new()
-	sfx_lbl.text = "Game Sound"
-	sfx_lbl.custom_minimum_size = Vector2(100, 0)
-	sfx_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sfx_hbox.add_child(sfx_lbl)
-	
-	var sfx_slider = HSlider.new()
-	sfx_slider.min_value = 0.0
-	sfx_slider.max_value = 1.0
-	sfx_slider.step = 0.01
-	sfx_slider.value = AudioManager.get_sfx_volume()
-	sfx_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sfx_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	sfx_hbox.add_child(sfx_slider)
-	
-	var sfx_val = Label.new()
-	sfx_val.text = str(int(sfx_slider.value * 100)) + "%"
-	sfx_val.custom_minimum_size = Vector2(50, 0)
-	sfx_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	sfx_val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sfx_hbox.add_child(sfx_val)
-	
-	sfx_slider.value_changed.connect(func(val):
-		AudioManager.set_sfx_volume(val)
-		sfx_val.text = str(int(val * 100)) + "%"
+	center.add_child(shell)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 18)
+	shell.add_child(layout)
+	var title := Label.new()
+	title.text = "FLIGHT OPERATIONS"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	layout.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = "Game paused"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_color_override("font_color", Color(0.65, 0.72, 0.82))
+	layout.add_child(subtitle)
+
+	var columns := HBoxContainer.new()
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	columns.add_theme_constant_override("separation", 18)
+	layout.add_child(columns)
+	var actions_card := _make_pause_card("COMMAND")
+	actions_card.custom_minimum_size = Vector2(330, 0)
+	columns.add_child(actions_card)
+	var actions := actions_card.get_child(0) as VBoxContainer
+	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
+	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
+	pause_new_campaign_button = _add_pause_action(
+		actions,
+		"START NEW CAMPAIGN",
+		_start_new_campaign
 	)
-	
+	_refresh_new_campaign_availability()
+	_add_pause_action(actions, "QUIT TO DESKTOP", func(): get_tree().quit())
+
+	var controls_card := _make_pause_card("FLIGHT CONTROLS")
+	controls_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(controls_card)
+	var controls := controls_card.get_child(0) as VBoxContainer
+	var control_grid := GridContainer.new()
+	control_grid.columns = 2
+	control_grid.add_theme_constant_override("h_separation", 22)
+	control_grid.add_theme_constant_override("v_separation", 10)
+	controls.add_child(control_grid)
+	for binding in [
+		["SELECT", "Left click"],
+		["MOVE", "Double left click"],
+		["CAMERA", "Hold right click"],
+		["ZOOM", "Mouse wheel"],
+		["APPROACH", "Q"],
+		["ORBIT", "W"],
+		["ACTION", "E"],
+		["PAUSE", "Esc"],
+	]:
+		var command := Label.new()
+		command.text = binding[0]
+		command.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0))
+		control_grid.add_child(command)
+		var key := Label.new()
+		key.text = binding[1]
+		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		key.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92))
+		control_grid.add_child(key)
+
+	var audio_title := Label.new()
+	audio_title.text = "AUDIO"
+	audio_title.add_theme_font_size_override("font_size", 15)
+	audio_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	controls.add_child(audio_title)
+	_add_volume_row(
+		controls,
+		"Music",
+		AudioManager.get_music_volume(),
+		AudioManager.set_music_volume
+	)
+	_add_volume_row(
+		controls,
+		"Game Sound",
+		AudioManager.get_sfx_volume(),
+		AudioManager.set_sfx_volume
+	)
+
 	pause_panel.visible = false
+	_create_campaign_manager()
+
+
+func _make_menu_style(
+	background: Color,
+	border: Color,
+	margin: int
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = margin
+	style.content_margin_right = margin
+	style.content_margin_top = margin
+	style.content_margin_bottom = margin
+	return style
+
+
+func _make_pause_card(title_text: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.95), Color(0.0, 0.65, 0.8, 0.3), 20)
+	)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 12)
+	card.add_child(content)
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 15)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	content.add_child(title)
+	return card
+
+
+func _add_pause_action(
+	parent: VBoxContainer,
+	label: String,
+	action: Callable,
+	primary: bool = false
+) -> Button:
+	var button := Button.new()
+	button.text = label
+	button.custom_minimum_size = Vector2(0, 48)
+	if primary:
+		button.add_theme_color_override("font_color", Color(0.7, 1.0, 1.0))
+	button.pressed.connect(action)
+	parent.add_child(button)
+	return button
+
+
+func _add_volume_row(
+	parent: VBoxContainer,
+	label_text: String,
+	initial_value: float,
+	setter: Callable
+) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.value = initial_value
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(slider)
+	var value := Label.new()
+	value.text = "%d%%" % int(initial_value * 100.0)
+	value.custom_minimum_size = Vector2(50, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value)
+	slider.value_changed.connect(func(next_value: float) -> void:
+		setter.call(next_value)
+		value.text = "%d%%" % int(next_value * 100.0)
+	)
+
+
+func _create_campaign_manager() -> void:
+	campaign_panel = Panel.new()
+	campaign_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.015, 0.025, 0.045, 0.98), Color(0.0, 0.65, 0.8, 0.3), 0)
+	)
+	add_child(campaign_panel)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(1120, 680)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.045, 0.055, 0.085, 0.99), Color(0.0, 0.85, 1.0, 0.55), 24)
+	)
+	center.add_child(shell)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 14)
+	shell.add_child(layout)
+	var header := HBoxContainer.new()
+	layout.add_child(header)
+	var title := Label.new()
+	title.text = "CAMPAIGNS & CHECKPOINTS"
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var back := Button.new()
+	back.text = "BACK"
+	back.custom_minimum_size = Vector2(120, 40)
+	back.pressed.connect(_close_campaign_manager)
+	header.add_child(back)
+	campaign_status_label = Label.new()
+	campaign_status_label.text = ""
+	campaign_status_label.add_theme_color_override(
+		"font_color",
+		Color(0.75, 0.82, 0.9)
+	)
+	layout.add_child(campaign_status_label)
+	campaign_import_button = Button.new()
+	campaign_import_button.name = "LegacySaveImportButton"
+	campaign_import_button.text = "IMPORT VERSION-2 SAVE"
+	campaign_import_button.custom_minimum_size = Vector2(250, 40)
+	campaign_import_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	campaign_import_button.pressed.connect(_on_legacy_save_import)
+	layout.add_child(campaign_import_button)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 16)
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(columns)
+	var slots_card := _make_pause_card("CAMPAIGNS - SEPARATE PLAYTHROUGHS")
+	slots_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(slots_card)
+	campaign_slots_vbox = slots_card.get_child(0) as VBoxContainer
+	var manual_card := _make_pause_card("SAVES FOR SELECTED CAMPAIGN")
+	manual_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(manual_card)
+	campaign_manual_vbox = manual_card.get_child(0) as VBoxContainer
+
+	campaign_confirm_dialog = ConfirmationDialog.new()
+	campaign_confirm_dialog.title = "Confirm Campaign Action"
+	campaign_confirm_dialog.confirmed.connect(_on_campaign_action_confirmed)
+	add_child(campaign_confirm_dialog)
+	campaign_panel.visible = false
+
+
+func _create_campaign_load_fade() -> void:
+	campaign_load_fade = ColorRect.new()
+	campaign_load_fade.name = "CampaignLoadFade"
+	campaign_load_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_load_fade.color = Color.BLACK
+	campaign_load_fade.modulate.a = 0.0
+	campaign_load_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	campaign_load_fade.visible = false
+	add_child(campaign_load_fade)
+	move_child(campaign_load_fade, get_child_count() - 1)
+
+
+func _open_campaign_manager() -> void:
+	GlobalState.paused = true
+	pause_panel.visible = false
+	campaign_panel.visible = true
+	_refresh_campaign_manager()
+
+
+func _close_campaign_manager() -> void:
+	campaign_panel.visible = false
+	pause_panel.visible = true
+
+
+func _refresh_campaign_manager() -> void:
+	_refresh_new_campaign_availability()
+	_clear_container(campaign_slots_vbox, 1)
+	_clear_container(campaign_manual_vbox, 1)
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("get_campaign_ui_state"):
+		campaign_status_label.text = "Campaign controls are unavailable."
+		return
+	var state: Dictionary = game_root.get_campaign_ui_state()
+	if not bool(state.get("ok", false)):
+		campaign_status_label.text = str(state.get("error", "Campaign storage is unavailable."))
+		return
+	var selected_slot_id := str(state.get("selected_slot_id", ""))
+	var selected_campaign_name := ""
+	var legacy_import: Dictionary = state.get("legacy_import", {})
+	campaign_import_button.visible = (
+		bool(legacy_import.get("available", false))
+		or legacy_import.get("block_code", "") == "slots_full"
+	)
+	campaign_import_button.disabled = not bool(
+		legacy_import.get("available", false)
+	)
+	campaign_import_button.tooltip_text = str(
+		legacy_import.get("message", "")
+	)
+	campaign_status_label.text = (
+		"Selected: %s" % selected_slot_id.replace("_", " ").to_upper()
+		if not selected_slot_id.is_empty()
+		else "No campaign selected"
+	)
+	for slot in state.get("slots", []):
+		_add_campaign_slot_row(slot, selected_slot_id)
+		if str(slot.get("slot_id", "")) == selected_slot_id:
+			selected_campaign_name = str(
+				slot.get("display_name", "Campaign")
+			)
+	var manual: Array = state.get("manual", [])
+	if selected_slot_id.is_empty():
+		var empty_message := Label.new()
+		empty_message.text = "Select or create a campaign to manage checkpoints."
+		empty_message.autowrap_mode = TextServer.AUTOWRAP_WORD
+		campaign_manual_vbox.add_child(empty_message)
+	else:
+		var help := Label.new()
+		help.text = (
+			"Continue Point updates automatically at safe places. "
+			+ "Backup Copies only change when you replace them."
+		)
+		help.autowrap_mode = TextServer.AUTOWRAP_WORD
+		help.add_theme_color_override(
+			"font_color",
+			Color(0.72, 0.8, 0.9)
+		)
+		campaign_manual_vbox.add_child(help)
+		_add_autosave_checkpoint_row(
+			state.get("autosave", {}),
+			selected_slot_id,
+			selected_campaign_name
+		)
+		for slot_index in range(2):
+			var entry: Dictionary = (
+				manual[slot_index]
+				if slot_index < manual.size()
+				else {
+					"slot_index": slot_index,
+					"occupied": false,
+				}
+			)
+			_add_manual_checkpoint_row(entry, selected_campaign_name)
+
+
+func _add_autosave_checkpoint_row(
+	entry: Dictionary,
+	selected_slot_id: String,
+	campaign_name: String
+) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.025, 0.035, 0.06, 0.9),
+			Color(0.0, 0.75, 0.85, 0.35),
+			12
+		)
+	)
+	campaign_manual_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = (
+		"\"%s\"  %s" % [
+			campaign_name,
+			_format_save_timestamp(
+				int(entry.get("created_at_unix", 0))
+			),
+		]
+		if bool(entry.get("available", false))
+		else "CONTINUE POINT"
+	)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(title)
+	var details := Label.new()
+	if bool(entry.get("available", false)):
+		var location: Dictionary = entry.get("safe_location", {})
+		details.text = "Latest safe arrival: %s" % str(
+			location.get("type", "safe point")
+		).replace("_", " ").capitalize()
+	else:
+		details.text = "Updates automatically at a station or jumpgate."
+	details.add_theme_color_override("font_color", Color(0.7, 0.78, 0.86))
+	column.add_child(details)
+	var load_button := Button.new()
+	load_button.text = "LOAD CONTINUE POINT"
+	load_button.disabled = not bool(entry.get("available", false))
+	load_button.pressed.connect(
+		_on_campaign_continue.bind(selected_slot_id)
+	)
+	column.add_child(load_button)
+
+
+func _on_legacy_save_import() -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.import_legacy_save()
+	campaign_status_label.text = (
+		str(result.get("message", "Prototype save imported."))
+		if bool(result.get("ok", false))
+		else str(
+			result.get(
+				"error",
+				"Import failed. The original save and campaigns were preserved."
+			)
+		)
+	)
+	_refresh_campaign_manager()
+
+
+func _clear_container(
+	container: VBoxContainer,
+	keep_children: int
+) -> void:
+	if container == null:
+		return
+	while container.get_child_count() > keep_children:
+		var child := container.get_child(keep_children)
+		container.remove_child(child)
+		child.queue_free()
+
+
+func _add_campaign_slot_row(
+	slot: Dictionary,
+	selected_slot_id: String
+) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.9), Color(0.0, 0.55, 0.7, 0.25), 12)
+	)
+	campaign_slots_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	var slot_id := str(slot.get("slot_id", ""))
+	var occupied := bool(slot.get("occupied", false))
+	var heading := Label.new()
+	heading.text = "%s%s" % [
+		slot_id.replace("slot_0", "SLOT "),
+		"  • ACTIVE" if slot_id == selected_slot_id else "",
+	]
+	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(heading)
+	if occupied:
+		var campaign_name := Label.new()
+		campaign_name.text = str(slot.get("display_name", "Campaign"))
+		campaign_name.add_theme_font_size_override("font_size", 20)
+		column.add_child(campaign_name)
+	var detail := Label.new()
+	if occupied:
+		var summary: Dictionary = slot.get("checkpoint_summary", {})
+		detail.text = "%s  |  %s" % [
+			str(summary.get("system_id", "Unknown system")),
+			str(summary.get("source_reason", "checkpoint")).replace("_", " "),
+		]
+	else:
+		detail.text = "Empty campaign slot"
+	detail.add_theme_color_override("font_color", Color(0.65, 0.72, 0.82))
+	column.add_child(detail)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	if occupied:
+		var continue_button := Button.new()
+		continue_button.text = "CONTINUE"
+		continue_button.pressed.connect(
+			_on_campaign_continue.bind(slot_id)
+		)
+		actions.add_child(continue_button)
+		var delete_button := Button.new()
+		delete_button.text = "DELETE"
+		delete_button.pressed.connect(
+			_request_campaign_delete.bind(slot_id)
+		)
+		actions.add_child(delete_button)
+	else:
+		var available := Label.new()
+		available.text = "Available for the next new campaign"
+		available.add_theme_color_override(
+			"font_color",
+			Color(0.65, 0.72, 0.82)
+		)
+		actions.add_child(available)
+
+
+func _add_manual_checkpoint_row(
+	entry: Dictionary,
+	campaign_name: String
+) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.025, 0.035, 0.06, 0.9), Color(0.0, 0.55, 0.7, 0.25), 12)
+	)
+	campaign_manual_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	var slot_index := int(entry.get("slot_index", 0))
+	var occupied := bool(entry.get("occupied", false))
+	var title := Label.new()
+	title.text = (
+		"\"%s\"  %s" % [
+			campaign_name,
+			_format_save_timestamp(
+				int(entry.get("created_at_unix", 0))
+			),
+		]
+		if occupied
+		else "BACKUP COPY %d - EMPTY" % (slot_index + 1)
+	)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	column.add_child(title)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	var save_button := Button.new()
+	save_button.text = (
+		"REPLACE WITH CONTINUE POINT"
+		if occupied
+		else "COPY CONTINUE POINT HERE"
+	)
+	save_button.pressed.connect(
+		_on_manual_save.bind(slot_index, campaign_name, occupied)
+	)
+	actions.add_child(save_button)
+	var load_button := Button.new()
+	load_button.text = "LOAD COPY"
+	load_button.disabled = not occupied
+	load_button.pressed.connect(_on_manual_load.bind(slot_index))
+	actions.add_child(load_button)
+
+
+func _format_save_timestamp(unix_time: int) -> String:
+	if unix_time <= 0:
+		return ""
+	var date_time := Time.get_datetime_dict_from_unix_time(unix_time)
+	return "%04d-%02d-%02d %02d:%02d" % [
+		int(date_time.get("year", 0)),
+		int(date_time.get("month", 0)),
+		int(date_time.get("day", 0)),
+		int(date_time.get("hour", 0)),
+		int(date_time.get("minute", 0)),
+	]
+
+
+func _on_campaign_create(
+	slot_id: String
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.create_campaign_in_slot(
+		slot_id,
+		"Pending Campaign"
+	)
+	campaign_status_label.text = (
+		"Campaign created. Its opening story will name it."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Campaign creation failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_campaign_continue(slot_id: String) -> void:
+	if campaign_load_in_progress:
+		return
+	campaign_load_in_progress = true
+	campaign_status_label.text = "Loading campaign..."
+	await _fade_campaign_load(1.0)
+	var game_root := get_tree().current_scene
+	var result: Dictionary = await game_root.select_and_load_campaign(slot_id)
+	if bool(result.get("ok", false)):
+		campaign_panel.visible = false
+		pause_panel.visible = false
+		GlobalState.paused = false
+		await get_tree().process_frame
+		await _fade_campaign_load(0.0)
+		campaign_load_in_progress = false
+		return
+	campaign_status_label.text = (
+		str(result.get("error", "Campaign loading failed."))
+	)
+	await _fade_campaign_load(0.0)
+	campaign_load_in_progress = false
+	_refresh_campaign_manager()
+
+
+func _fade_campaign_load(target_alpha: float) -> void:
+	if campaign_load_fade == null:
+		return
+	campaign_load_fade.visible = true
+	move_child(campaign_load_fade, get_child_count() - 1)
+	var duration := (
+		0.01
+		if DisplayServer.get_name() == "headless"
+		else 0.35
+	)
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(
+		campaign_load_fade,
+		"modulate:a",
+		target_alpha,
+		duration
+	).set_trans(Tween.TRANS_QUAD).set_ease(
+		Tween.EASE_IN if target_alpha > 0.0 else Tween.EASE_OUT
+	)
+	await tween.finished
+	if target_alpha <= 0.0:
+		campaign_load_fade.visible = false
+
+
+func _on_campaign_rename(
+	slot_id: String,
+	name_edit: LineEdit
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.rename_campaign_slot(
+		slot_id,
+		name_edit.text
+	)
+	campaign_status_label.text = (
+		"Campaign renamed."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Campaign rename failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _request_campaign_delete(slot_id: String) -> void:
+	pending_delete_slot_id = slot_id
+	pending_manual_slot_index = -1
+	var game_root := get_tree().current_scene
+	var deleting_active := game_root != null \
+		and str(game_root.get("active_campaign_slot_id")) == slot_id
+	campaign_confirm_dialog.dialog_text = (
+		(
+			"Delete the campaign you are currently playing? "
+			+ "This ends the current session and deletes all of its saves. "
+			+ "This cannot be undone."
+		)
+		if deleting_active
+		else (
+			"Delete this campaign and all of its checkpoints? "
+			+ "This cannot be undone."
+		)
+	)
+	campaign_confirm_dialog.popup_centered()
+
+
+func _on_manual_save(
+	slot_index: int,
+	campaign_name: String,
+	occupied: bool
+) -> void:
+	if occupied:
+		pending_delete_slot_id = ""
+		pending_manual_slot_index = slot_index
+		pending_manual_name = campaign_name
+		campaign_confirm_dialog.dialog_text = (
+			"Replace Backup Copy %d with the current Continue Point?" %
+				(slot_index + 1)
+		)
+		campaign_confirm_dialog.popup_centered()
+		return
+	_commit_manual_save(slot_index, campaign_name, false)
+
+
+func _commit_manual_save(
+	slot_index: int,
+	display_name: String,
+	overwrite: bool
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.request_manual_checkpoint(
+		slot_index,
+		display_name,
+		overwrite
+	)
+	campaign_status_label.text = (
+		"Continue Point copied to the backup."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Backup copy failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_manual_rename(
+	slot_index: int,
+	name_edit: LineEdit
+) -> void:
+	var game_root := get_tree().current_scene
+	var result: Dictionary = game_root.rename_manual_checkpoint(
+		slot_index,
+		name_edit.text
+	)
+	campaign_status_label.text = (
+		"Backup copy renamed."
+		if bool(result.get("ok", false))
+		else str(result.get("error", "Backup rename failed."))
+	)
+	_refresh_campaign_manager()
+
+
+func _on_manual_load(slot_index: int) -> void:
+	var game_root := get_tree().current_scene
+	var loaded: bool = await game_root.load_manual_checkpoint(slot_index)
+	campaign_status_label.text = (
+		"Backup copy loaded."
+		if loaded
+		else "Backup copy could not be loaded."
+	)
+	_refresh_campaign_manager()
+
+
+func _on_campaign_action_confirmed() -> void:
+	var game_root := get_tree().current_scene
+	if not pending_delete_slot_id.is_empty():
+		var deleted_slot_id := pending_delete_slot_id
+		var deleting_active := game_root != null \
+			and str(game_root.get("active_campaign_slot_id")) \
+				== deleted_slot_id
+		if deleting_active:
+			await _fade_campaign_load(1.0)
+		var result: Dictionary = game_root.delete_campaign_slot(
+			deleted_slot_id
+		)
+		if bool(result.get("ok", false)) \
+				and bool(result.get("deleted_active_campaign", false)):
+			pending_delete_slot_id = ""
+			pending_manual_slot_index = -1
+			pending_manual_name = ""
+			game_root.call(
+				"reset_after_active_campaign_deleted",
+				deleted_slot_id
+			)
+			return
+		campaign_status_label.text = (
+			"Campaign deleted."
+			if bool(result.get("ok", false))
+			else str(result.get("error", "Campaign deletion failed."))
+		)
+		if deleting_active:
+			await _fade_campaign_load(0.0)
+	elif pending_manual_slot_index >= 0:
+		_commit_manual_save(
+			pending_manual_slot_index,
+			pending_manual_name,
+			true
+		)
+	pending_delete_slot_id = ""
+	pending_manual_slot_index = -1
+	pending_manual_name = ""
+	_refresh_campaign_manager()
 
 func _create_death_screen():
 	death_panel = Panel.new()
@@ -1368,14 +2353,33 @@ func _create_death_screen():
 	death_panel.offset_top = 0
 	death_panel.offset_bottom = 0
 	
-	var vbox = VBoxContainer.new()
-	death_panel.add_child(vbox)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 0
-	vbox.offset_right = 0
-	vbox.offset_top = 0
-	vbox.offset_bottom = 0
+	death_panel.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.01, 0.015, 0.03, 0.96),
+			Color(0.8, 0.12, 0.18, 0.35),
+			0
+		)
+	)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	death_panel.add_child(center)
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(480, 390)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(
+			Color(0.045, 0.035, 0.055, 0.99),
+			Color(0.9, 0.18, 0.22, 0.65),
+			34
+		)
+	)
+	center.add_child(shell)
+	var vbox := VBoxContainer.new()
+	shell.add_child(vbox)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 10)
 	
 	var msg = Label.new()
 	msg.text = "SHIP DESTROYED"
@@ -1396,18 +2400,41 @@ func _create_death_screen():
 	vbox.add_child(btn_spacer)
 	
 	var restart_btn = Button.new()
-	restart_btn.text = "Restart Game"
-	restart_btn.custom_minimum_size = Vector2(220, 0)
+	restart_btn.name = "LoadLastSaveButton"
+	restart_btn.text = "Load Last Save"
+	restart_btn.custom_minimum_size = Vector2(220, 42)
 	restart_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	restart_btn.pressed.connect(_restart_game)
+	restart_btn.pressed.connect(_load_last_save_after_death)
 
 	vbox.add_child(restart_btn)
 	
 	var gap = Control.new()
 	gap.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(gap)
+
+	var new_campaign_btn = Button.new()
+	new_campaign_btn.name = "StartNewCampaignButton"
+	new_campaign_btn.text = "Start New Campaign"
+	new_campaign_btn.custom_minimum_size = Vector2(220, 42)
+	new_campaign_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	new_campaign_btn.pressed.connect(_start_new_campaign_after_death)
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("can_start_new_campaign"):
+		new_campaign_btn.disabled = not bool(
+			game_root.call("can_start_new_campaign")
+		)
+		if new_campaign_btn.disabled:
+			new_campaign_btn.tooltip_text = (
+				"Delete a campaign before starting another."
+			)
+	vbox.add_child(new_campaign_btn)
+
+	var quit_gap = Control.new()
+	quit_gap.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(quit_gap)
 	
 	var quit_btn = Button.new()
+	quit_btn.name = "QuitAfterDeathButton"
 	quit_btn.text = "Quit Game"
 	quit_btn.custom_minimum_size = Vector2(220, 0)
 	quit_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -1416,7 +2443,51 @@ func _create_death_screen():
 	
 	death_panel.visible = false
 
+
+func _load_last_save_after_death() -> void:
+	var game_root := get_tree().current_scene
+	if game_root \
+			and game_root.has_method(
+				"restore_latest_campaign_checkpoint_after_death"
+			) \
+			and bool(
+				game_root.call(
+					"restore_latest_campaign_checkpoint_after_death"
+				)
+			):
+		return
+	show_hud_warning("No living campaign checkpoint is available.")
+
+
+func _start_new_campaign_after_death() -> void:
+	_start_new_campaign()
+
+
+func _start_new_campaign() -> void:
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("start_new_campaign_after_death"):
+		game_root.call("start_new_campaign_after_death")
+
+
+func _refresh_new_campaign_availability() -> void:
+	if pause_new_campaign_button == null:
+		return
+	var game_root := get_tree().current_scene
+	var available := game_root != null \
+		and game_root.has_method("can_start_new_campaign") \
+		and bool(game_root.call("can_start_new_campaign"))
+	pause_new_campaign_button.disabled = not available
+	pause_new_campaign_button.tooltip_text = (
+		""
+		if available
+		else "Delete a campaign before starting another."
+	)
+
+
 func _restart_game():
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("delete_savegame"):
+		game_root.delete_savegame()
 	# Reset all autoload state BEFORE reloading — prevents dangling callbacks
 	# (e.g. LLMInterface firing into a freed UIManager) from crashing the new session
 	LLMInterface.reset_for_restart()
@@ -1427,6 +2498,9 @@ func _restart_game():
 func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
+			return
+		if campaign_panel and campaign_panel.visible:
+			_close_campaign_manager()
 			return
 		GlobalState.paused = not GlobalState.paused
 
@@ -1453,7 +2527,6 @@ func update_overview_list(entities: Array):
 			btn.gui_input.connect(func(event: InputEvent):
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 					btn.accept_event()
-					GlobalState.active_target = entity
 					show_context_menu(entity)
 			)
 			overview_list.add_child(btn)
@@ -1488,6 +2561,8 @@ func update_overview_list(entities: Array):
 			var type_str = "Celestial"
 			if entity.is_in_group("asteroid"):
 				type_str = "Asteroid"
+			elif entity.is_in_group("jumpgate"):
+				type_str = "Jumpgate"
 			elif entity.is_in_group("station"):
 				# Outposts show as "Outpost" so the player can tell them apart
 				# from the main system space station. station_type defaults to
@@ -1533,6 +2608,8 @@ func update_overview_list(entities: Array):
 			var row_color: Color
 			if type_str == "Space Station" or type_str == "Outpost":
 				row_color = Color(0.25, 0.95, 0.45)   # Bright docking green
+			elif type_str == "Jumpgate":
+				row_color = Color(0.2, 0.85, 1.0)
 			elif type_str == "Celestial":
 				row_color = Color(0.35, 0.65, 1.0)    # Soft celestial blue
 			else:
@@ -1657,17 +2734,21 @@ func _on_target_changed(new_target: Node3D):
 		elif new_target.is_in_group("station"):
 			type_str = "Station"
 			icon_index = 2
+		elif new_target.is_in_group("jumpgate"):
+			type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
+			icon_index = 3
 		elif new_target.is_in_group("ship"):
 			type_str = "Hostile NPCShip"
 			icon_index = 0
 		elif new_target.is_in_group("wreckage"):
 			type_str = "Wreckage"
 			icon_index = 4
-		elif new_target.name == "GasGiant" or new_target.name == "RockyPlanet":
+		elif new_target.is_in_group("celestial"):
 			type_str = "Planet"
 			icon_index = 3
 			
-		target_label.text = new_target.name + " [" + type_str + "]"
+		var target_name = new_target.get("display_name") if new_target.get("display_name") else new_target.name
+		target_label.text = target_name + " [" + type_str + "]"
 		
 		# Set target icon
 		if target_icon and icons_sheet:
@@ -1686,6 +2767,9 @@ func _on_target_changed(new_target: Node3D):
 				target_action_btn.visible = true
 			elif new_target.is_in_group("station"):
 				target_action_btn.text = "Dock at Station"
+				target_action_btn.visible = true
+			elif new_target.is_in_group("jumpgate"):
+				target_action_btn.text = "Initiate Jump"
 				target_action_btn.visible = true
 			elif new_target.is_in_group("ship"):
 				target_action_btn.text = "Attack Hostile"
@@ -1711,6 +2795,13 @@ func _on_target_icon_gui_input(event: InputEvent):
 func _on_credits_changed(new_credits: int):
 	if credits_label:
 		credits_label.text = "Credits: " + str(new_credits) + " SC"
+
+
+func _on_campaign_time_changed(_total_minutes: int) -> void:
+	if time_label:
+		time_label.text = "Time: %s" % CampaignClock.formatted_datetime()
+	if QuestManager.is_active_quest_timed():
+		_update_quest_tracker()
 
 func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:
@@ -1740,13 +2831,22 @@ func _on_pause_changed(is_paused: bool):
 			pause_panel.visible = is_paused
 			if is_paused:
 				move_child(pause_panel, -1)
+	if not is_paused and campaign_panel:
+		campaign_panel.visible = false
 
 # Station services methods
-func toggle_dock_menu(station: Node3D):
+func toggle_dock_menu(
+	station: Node3D,
+	create_checkpoint: bool = true
+):
 	current_station = station
-	if dock_panel.visible or agent_panel.visible:
+	if dock_panel.visible or agent_panel.visible \
+			or (public_board_panel and public_board_panel.visible):
+		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
+		if public_board_panel:
+			public_board_panel.visible = false
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
@@ -1773,10 +2873,19 @@ func toggle_dock_menu(station: Node3D):
 		if GlobalState.player:
 			GlobalState.player.is_docked = true
 			GlobalState.player.velocity = Vector3.ZERO
+		var game_root := get_tree().current_scene
+		if create_checkpoint \
+				and game_root \
+				and game_root.has_method("request_safe_checkpoint"):
+			game_root.call_deferred(
+				"request_safe_checkpoint",
+				"dock",
+				station
+			)
 
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
-		if not is_outpost and not QuestManager.is_quest_active() and cached_quest_data.is_empty():
+		if not is_outpost and not QuestManager.is_lane_occupied("AGENT") and cached_quest_data.is_empty():
 			print("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
 			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
@@ -1796,7 +2905,7 @@ func toggle_dock_menu(station: Node3D):
 				# will dedupe via the "<voice>|<text>" cache key, so
 				# the dock-time pre-cache and the refresh-on-use
 				# paths both no-op on already-cached lines.
-				TTSInterface.cache_dialogue_audio(entry["line"], entry["voice_id"], entry["voice_speed"])
+				SpeechService.cache(entry["line"], entry["voice_profile_id"])
 			_outpost_flavor_precached[outpost_id] = prev_count + flavor_lines.size()
 
 		# Pre-cache Jenna's (mechanic) personalized greeting when the player
@@ -1829,6 +2938,7 @@ func _render_dock_submenu() -> void:
 		# upgrades + back button. The hangar background stays on.
 		sell_btn.visible = false
 		agent_service_btn.visible = false
+		public_board_btn.visible = false
 		maintenance_bay_btn.visible = false
 		ship_upgrades_btn.visible = true
 		repair_btn.visible = true
@@ -1863,6 +2973,7 @@ func _render_dock_submenu() -> void:
 		# and hide the rest.
 		sell_btn.visible = not is_outpost
 		agent_service_btn.visible = not is_outpost
+		public_board_btn.visible = not is_outpost
 		maintenance_bay_btn.visible = not is_outpost
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
@@ -1882,6 +2993,7 @@ func _render_dock_submenu() -> void:
 		if show_ask_btn:
 			var part_name: String = str(QuestManager.active_quest.get("part_name", "the part"))
 			var npc_name: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
+			ask_for_part_btn.disabled = false
 			if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 				var rate: float = GlobalState.buyback_price_per_m3()
 				var payout: int = int(round(GlobalState.cargo * rate))
@@ -1904,13 +3016,99 @@ func _render_dock_submenu() -> void:
 
 
 func _on_maintenance_bay_pressed() -> void:
+	SpeechService.stop()
 	current_submenu = DockSubmenu.MAINTENANCE
 	_render_dock_submenu()
 
 
 func _on_back_to_services_pressed() -> void:
+	SpeechService.stop()
 	current_submenu = DockSubmenu.SERVICES
 	_render_dock_submenu()
+
+
+func _on_public_board_pressed() -> void:
+	SpeechService.stop()
+	_render_public_board_offers()
+	dock_panel.visible = false
+	agent_panel.visible = false
+	public_board_panel.visible = true
+
+
+func _on_public_board_back_pressed() -> void:
+	public_board_panel.visible = false
+	dock_panel.visible = true
+	_render_dock_submenu()
+
+
+func _on_public_board_offer_accept(index: int) -> void:
+	if index < 0 or index >= public_board_current_offers.size():
+		return
+	if QuestManager.is_lane_occupied("BOARD"):
+		_render_public_board_offers()
+		return
+	var offer := public_board_current_offers[index]
+	var quest_data: Dictionary = offer.get("quest_data", {})
+	var choices: Array = quest_data.get("choices", [])
+	if quest_data.is_empty() or choices.is_empty():
+		return
+	if not QuestManager.accept_quest(quest_data, choices[0]):
+		GlobalState.emit_chatter(
+			"SYSTEM WARNING",
+			"Public posting failed verification. It has been removed from consideration.",
+			Color(1.0, 0.45, 0.35)
+		)
+		_render_public_board_offers()
+		return
+	if quest_data.get("objective", {}).get("type", "") == "PICKUP_SPECIAL":
+		var objective: Dictionary = quest_data["objective"]
+		_request_outpost_pickup_handoff_attempt(
+			str(objective.get("target_npc", "the contact")),
+			str(objective.get("part_name", "the part")),
+			str(objective.get("target_outpost_display", "the outpost")),
+			str(quest_data.get("agent_name", "Public Board")),
+			"",
+			0
+		)
+	public_board_panel.visible = false
+	agent_panel.visible = true
+	agent_name_label.text = "PUBLIC BOARD"
+	_show_agent_portrait(false)
+	agent_dialogue_label.text = (
+		"Posting accepted.\n\n"
+		+ str(
+			quest_data.get(
+				"dialogue",
+				quest_data.get("objective_summary", "Objective verified.")
+			)
+		)
+	)
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	var launch_btn := Button.new()
+	launch_btn.text = "Undock & Begin Mission"
+	launch_btn.pressed.connect(undock_player)
+	agent_choices_container.add_child(launch_btn)
+	agent_back_btn.visible = true
+
+
+func _should_show_public_board_turn_in() -> bool:
+	return (
+		QuestManager.is_quest_active()
+		and bool(QuestManager.active_quest.get("public_board", false))
+		and QuestManager.is_quest_completed()
+		and current_station
+		and is_instance_valid(current_station)
+	)
+
+
+func _on_public_board_turn_in_pressed() -> void:
+	if not _should_show_public_board_turn_in():
+		return
+	public_board_panel.visible = false
+	dock_panel.visible = false
+	agent_panel.visible = true
+	_on_agent_complete_pressed()
 
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
@@ -2028,11 +3226,11 @@ func _cache_mechanic_intro() -> void:
 		_mechanic_precache_in_flight = false
 		print("[TRACE] [UIManager] Mechanic greeting cached. fallback=", is_fallback, " len=", line.length(), " offer=", _mechanic_pickup_offer.get("offer", false))
 		# Pre-cache the TTS so the line is instant when the player enters
-		# maintenance. Uses Jenna's voice (af_aoede) for consistency with
+		# maintenance. Uses Jenna's stable voice profile for consistency with
 		# her other flavor lines. Skipped on fallback (already in cache or
 		# too short to be worth caching).
 		if not is_fallback and line.strip_edges() != "":
-			TTSInterface.cache_dialogue_audio(line, "af_aoede", 1.0)
+			SpeechService.cache(line, "voice.jenna_kross.v1")
 		# If the player is already inside the maintenance submenu, refresh
 		# the chat box immediately (otherwise the cached line waits for
 		# next entry). _render_mechanic_intro will auto-play if the line
@@ -2312,7 +3510,7 @@ func _render_mechanic_intro() -> void:
 	
 	# Show/hide accept/decline buttons if an offer is active
 	var show_offer_btns = false
-	if _mechanic_pickup_offer.get("offer", false) and not _mechanic_pickup_declined and not QuestManager.is_quest_active():
+	if _mechanic_pickup_offer.get("offer", false) and not _mechanic_pickup_declined and not QuestManager.is_lane_occupied("STATION"):
 		show_offer_btns = true
 	if mechanic_pickup_accept_btn and is_instance_valid(mechanic_pickup_accept_btn):
 		mechanic_pickup_accept_btn.visible = show_offer_btns
@@ -2320,10 +3518,13 @@ func _render_mechanic_intro() -> void:
 		mechanic_pickup_decline_btn.visible = show_offer_btns
 		
 	if line_changed:
-		var display_line: String = GlobalState.apply_tone_guard(line, "af_aoede")
+		var display_line: String = SpeechService.prepare_text(
+			line,
+			"voice.jenna_kross.v1"
+		)
 		if display_line != line:
 			mechanic_line_label.text = display_line
-		TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+		SpeechService.play(line, "voice.jenna_kross.v1")
 
 
 # ── Test quest: outpost pickup (DEBUG) ──────────────────────────────────────
@@ -2434,7 +3635,7 @@ func _on_deliver_part_pressed() -> void:
 	var salt: int = randi() % FALLBACK_MECHANIC_THANKS.size()
 	var line: String = FALLBACK_MECHANIC_THANKS[salt].replace("{part}", part_name)
 	
-	TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+	SpeechService.play(line, "voice.jenna_kross.v1")
 	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
 	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
 	_render_dock_submenu()
@@ -2474,7 +3675,7 @@ func _on_test_pickup_part_pressed() -> void:
 		var npc_color: Color = Color(0.85, 0.85, 0.85)
 		var npc_portrait: Texture2D = null
 		if GlobalState.MINOR_NPCS.has(picked_npc):
-			npc_color = GlobalState.MINOR_NPCS[picked_npc].get("flavor_color", npc_color)
+			npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
 			npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		show_dock_message("Picked up '%s' from %s. Deliver to Grease Monkeys." % [picked_part, picked_npc], picked_npc, npc_color, npc_portrait)
 	else:
@@ -2522,7 +3723,7 @@ func _on_hear_gossip_pressed() -> void:
 	# likely cached and plays instantly.
 	var other_lines: Array = GlobalState.get_other_flavor_lines_for_npc(npc_name, line)
 	for entry in other_lines:
-		TTSInterface.cache_dialogue_audio(entry["line"], entry["voice_id"], entry["voice_speed"])
+		SpeechService.cache(entry["line"], entry["voice_profile_id"])
 
 
 # Signal handler for GlobalState.npc_flavor_spoken. Speaks the line in
@@ -2535,16 +3736,27 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 	var line: String = flavor.get("line", "")
 	if line == "":
 		return
-	var voice_id: String = flavor.get("voice_id", "af_bella")
-	var voice_speed: float = float(flavor.get("voice_speed", 1.0))
-	TTSInterface.play_dialogue_audio(line, voice_id, voice_speed)
+	var voice_profile_id: String = flavor.get("voice_profile_id", "voice.neutral.v1")
+	SpeechService.play(line, voice_profile_id)
 
 
 func undock_player():
+	var station_before_undock := current_station
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("request_safe_checkpoint"):
+		if not game_root.request_safe_checkpoint(
+			"undock",
+			station_before_undock
+		):
+			push_warning(
+				"[UIManager] Pre-undock safe checkpoint was not created."
+			)
 	dock_panel.visible = false
 	if ship_upgrades_panel and is_instance_valid(ship_upgrades_panel):
 		ship_upgrades_panel.visible = false
 	agent_panel.visible = false
+	if public_board_panel:
+		public_board_panel.visible = false
 	current_station = null
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
@@ -2578,7 +3790,7 @@ func undock_player():
 		ask_for_part_btn.visible = false
 	
 	# Stop voice dialogue audio if playing
-	TTSInterface.play_dialogue_audio("")
+	SpeechService.stop()
 	
 	
 	# Give player a slight push away from station
@@ -2597,11 +3809,20 @@ func _sell_ore():
 
 
 
-func show_context_menu(entity: Node3D):
+func show_context_menu(
+	entity: Node3D,
+	screen_position: Variant = null
+):
 	if not entity or not is_instance_valid(entity): return
+	context_highlight_target = entity
 	context_panel.visible = true
+	selection_marker.queue_redraw()
 	
-	var mouse_pos = get_global_mouse_position()
+	var mouse_pos := (
+		screen_position as Vector2
+		if screen_position is Vector2
+		else get_global_mouse_position()
+	)
 	var viewport_size = get_viewport().get_visible_rect().size
 	var menu_size = context_panel.size
 	if menu_size == Vector2.ZERO:
@@ -2622,11 +3843,64 @@ func show_context_menu(entity: Node3D):
 		elif entity.is_in_group("station"):
 			context_action_btn.text = "Dock at Station"
 			context_action_btn.visible = true
+		elif entity.is_in_group("jumpgate"):
+			context_action_btn.text = "Initiate Jump"
+			context_action_btn.visible = true
 		elif entity.is_in_group("ship"):
 			context_action_btn.text = "Attack Hostile"
 			context_action_btn.visible = true
 		else:
 			context_action_btn.visible = false
+
+
+func _close_context_menu() -> void:
+	if context_panel:
+		context_panel.visible = false
+	context_highlight_target = null
+	if selection_marker:
+		selection_marker.queue_redraw()
+
+
+func _command_selected_target(mode: String) -> bool:
+	var target := GlobalState.active_target
+	if target == null or not is_instance_valid(target) \
+			or GlobalState.player == null \
+			or not is_instance_valid(GlobalState.player):
+		return false
+	if not GlobalState.player.has_method("begin_target_navigation") \
+			or not bool(
+				GlobalState.player.call("begin_target_navigation", mode)
+			):
+		show_hud_warning("Navigation command was not accepted.")
+		return false
+	show_target_marker(target.global_position)
+	return true
+
+
+func _command_context_target(mode: String) -> bool:
+	if context_highlight_target == null \
+			or not is_instance_valid(context_highlight_target):
+		return false
+	GlobalState.active_target = context_highlight_target
+	return _command_selected_target(mode)
+
+func activate_selected_jumpgate() -> void:
+	var gate := GlobalState.active_target
+	if not gate or not is_instance_valid(gate) or not gate.is_in_group("jumpgate"):
+		show_hud_warning("No jumpgate selected.")
+		return
+	var game_root := get_tree().current_scene
+	if not game_root or not game_root.has_method("get_jump_block_reason"):
+		show_hud_warning("Jump control is unavailable.")
+		return
+	var block_reason: String = game_root.get_jump_block_reason(gate)
+	if block_reason != "":
+		show_hud_warning(block_reason)
+		return
+	var destination := str(gate.get("destination_display_name"))
+	show_hud_info("Jump sequence initiated: " + destination)
+	if not gate.call("request_jump"):
+		show_hud_warning("Jump request was not accepted.")
 
 func show_death_screen():
 	death_panel.visible = true
@@ -2731,7 +4005,14 @@ func _update_selection_marker_position():
 	if GlobalState.player and GlobalState.player.get("is_docked"):
 		selection_marker.visible = false
 		return
-	var target = GlobalState.active_target
+	var target = (
+		context_highlight_target
+		if context_panel != null
+			and context_panel.visible
+			and context_highlight_target != null
+			and is_instance_valid(context_highlight_target)
+		else GlobalState.active_target
+	)
 	if not target or not is_instance_valid(target) or target.get("destroyed"):
 		selection_marker.visible = false
 		return
@@ -2756,7 +4037,14 @@ func _update_selection_marker_position():
 	selection_marker.queue_redraw()
 
 func _on_selection_marker_draw():
-	var target = GlobalState.active_target
+	var target = (
+		context_highlight_target
+		if context_panel != null
+			and context_panel.visible
+			and context_highlight_target != null
+			and is_instance_valid(context_highlight_target)
+		else GlobalState.active_target
+	)
 	if not target or not is_instance_valid(target) or target.get("destroyed"):
 		return
 		
@@ -2774,6 +4062,12 @@ func _on_selection_marker_draw():
 		radius_3d = 600.0
 	elif target.name == "RockyPlanet":
 		radius_3d = 250.0
+	elif target.is_in_group("jumpgate"):
+		radius_3d = 58.0
+	elif target.is_in_group("celestial"):
+		var shape_node := target.find_child("CollisionShape3D", true, false) as CollisionShape3D
+		if shape_node and shape_node.shape is SphereShape3D:
+			radius_3d = shape_node.shape.radius * target.scale.x
 	elif target.is_in_group("station"):
 		radius_3d = 22.0 * target.scale.x
 	elif target.is_in_group("ship"):
@@ -2790,23 +4084,39 @@ func _on_selection_marker_draw():
 	screen_radius = max(screen_radius, 22.0)
 	screen_radius = screen_radius * 1.08 + 4.0
 	
-	# Raycast to check if the target is behind a solar body (GasGiant or RockyPlanet)
-	var blocked = false
-	var space_state = target.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(cam.global_position, target.global_position)
-	query.exclude = [GlobalState.player.get_rid()]
-	query.collide_with_areas = false
-	query.collide_with_bodies = true
-	var ray_res = space_state.intersect_ray(query)
-	if ray_res and is_instance_valid(ray_res.collider):
-		var collider = ray_res.collider
-		if collider != target and (collider.name == "GasGiant" or collider.name == "RockyPlanet"):
-			blocked = true
+	# The marker represents physical line of sight, while autopilot separately
+	# enforces a wider navigation lane outside planets and asteroid rings.
+	var blocked := false
+	if GlobalState.player.has_method("is_target_physically_visible"):
+		blocked = not bool(
+			GlobalState.player.call("is_target_physically_visible", target)
+		)
 			
-	var marker_color = Color(0.55, 0.55, 0.55, 0.75) if blocked else Color(0.0, 1.0, 0.0, 0.75)
+	var context_highlight := context_panel != null \
+		and context_panel.visible \
+		and context_highlight_target == target
+	var marker_color := (
+		Color(0.15, 0.85, 1.0, 1.0)
+		if context_highlight
+		else (
+			Color(0.55, 0.55, 0.55, 0.75)
+			if blocked
+			else Color(0.0, 1.0, 0.0, 0.75)
+		)
+	)
+	var marker_width := 3.5 if context_highlight else 1.5
 	
 	# Draw target brackets around the object
-	selection_marker.draw_arc(screen_center, screen_radius, 0.0, TAU, 64, marker_color, 1.5, true)
+	selection_marker.draw_arc(
+		screen_center,
+		screen_radius,
+		0.0,
+		TAU,
+		64,
+		marker_color,
+		marker_width,
+		true
+	)
 	
 	# Add ticks/notches
 	var tick_len = 6.0
@@ -2868,33 +4178,42 @@ func _update_faction_rep_label(label_name: String, faction_id: String):
 	# Tooltip: full name + descriptor + current feeling + numeric value
 	lbl.tooltip_text = "%s (%s) — %s (%d)" % [info.name, info.descriptor, tier, rep_value]
 
+func _exit_tree() -> void:
+	if GlobalState.entities_changed.is_connected(refresh_overview):
+		GlobalState.entities_changed.disconnect(refresh_overview)
+
 func refresh_overview():
 	var entities: Array = []
-	var main = get_tree().current_scene
-	if not main: return
+	var system_root := GlobalState.get_system_root()
+	var scene_tree := get_tree()
+	if not system_root or not scene_tree:
+		return
 	
 	# Add ALL stations (main + outposts) by group — never hardcode node names
-	for node in get_tree().get_nodes_in_group("station"):
-		if is_instance_valid(node):
+	for node in scene_tree.get_nodes_in_group("station"):
+		if is_instance_valid(node) and system_root.is_ancestor_of(node):
 			entities.append(node)
-	var gas_giant = main.get_node_or_null("GasGiant")
-	if gas_giant: entities.append(gas_giant)
-	var rocky_planet = main.get_node_or_null("RockyPlanet")
-	if rocky_planet: entities.append(rocky_planet)
+	for node in scene_tree.get_nodes_in_group("celestial"):
+		if is_instance_valid(node) and system_root.is_ancestor_of(node):
+			entities.append(node)
 
 	
 	# Add Asteroids
-	for node in get_tree().get_nodes_in_group("asteroid"):
-		entities.append(node)
+	for node in scene_tree.get_nodes_in_group("asteroid"):
+		if system_root.is_ancestor_of(node):
+			entities.append(node)
 		
 	# Add NPC Ships
-	for node in get_tree().get_nodes_in_group("ship"):
-		if node != GlobalState.player and is_instance_valid(node) and not node.get("destroyed"):
+	for node in scene_tree.get_nodes_in_group("ship"):
+		if node != GlobalState.player and is_instance_valid(node) and system_root.is_ancestor_of(node) and not node.get("destroyed"):
 			entities.append(node)
 			
 	# Add Wreckage
-	for node in get_tree().get_nodes_in_group("wreckage"):
-		if is_instance_valid(node):
+	for node in scene_tree.get_nodes_in_group("wreckage"):
+		if is_instance_valid(node) and system_root.is_ancestor_of(node):
+			entities.append(node)
+	for node in scene_tree.get_nodes_in_group("jumpgate"):
+		if is_instance_valid(node) and system_root.is_ancestor_of(node):
 			entities.append(node)
 			
 	update_overview_list(entities)
@@ -3080,9 +4399,14 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# No voice_id is available here, so derive from npc_name via
 	# GlobalState's minor-NPC registry. Falls back to neutral (i.e.
 	# guard runs) if unknown.
-	var display_voice: String = "neutral"
+	var display_voice: String = "voice.neutral.v1"
 	if npc_name != "" and GlobalState.MINOR_NPCS.has(npc_name):
-		display_voice = str(GlobalState.MINOR_NPCS[npc_name].get("voice_id", "neutral"))
+		display_voice = str(
+			GlobalState.get_minor_npc_data(npc_name).get(
+				"voice_profile_id",
+				"voice.neutral.v1"
+			)
+		)
 	text = GlobalState.apply_tone_guard(text, display_voice)
 
 	# Configure content.
@@ -3227,7 +4551,7 @@ func set_overview_collapsed(collapsed: bool):
 
 # Agent dialogue screen & Quest tracker HUD interactions
 func _on_talk_to_agent_pressed():
-	TTSInterface.start_interaction("Talk to Agent")
+	SpeechService.start_interaction("Talk to Agent")
 	dock_panel.visible = false
 	agent_panel.visible = true
 	
@@ -3237,22 +4561,43 @@ func _on_talk_to_agent_pressed():
 		
 	if QuestManager.is_quest_active():
 		var q = QuestManager.active_quest
-		agent_name_label.text = q["agent_name"].to_upper()
+		var shown_agent_name := str(q.get("agent_name", "Broker Kaelen"))
+		if bool(q.get("public_board", false)):
+			shown_agent_name = "Broker Kaelen"
+		agent_name_label.text = shown_agent_name.to_upper()
 		
 		# Update portrait and client logo
-		_update_agent_portrait(q.get("faction", "neutral"))
+		_update_agent_portrait(
+			q.get("faction", "neutral"),
+			shown_agent_name
+		)
 		
-		var type_str = "Clear Hostiles" if q["objective_type"] == "KILL_SHIPS" else "Deliver Resources"
-		agent_dialogue_label.text = "Active Contract: " + q["title"] + " (" + type_str + ")\n\n" + \
+		var type_str := "Deliver Resources"
+		if q["objective_type"] == "KILL_SHIPS":
+			type_str = "Clear Hostiles"
+		elif q["objective_type"] == "RECOVER_COMBAT_DROP":
+			type_str = "Recover Data"
+		var active_header := "Active Contract: "
+		if bool(q.get("public_board", false)):
+			active_header = "Public Board Job: "
+		agent_dialogue_label.text = active_header + q["title"] + " (" + type_str + ")\n\n" + \
 			"Briefing: " + q["dialogue"] + "\n\n" + \
-			"Response choice accepted: '" + q["choice_text_selected"] + "'\n" + \
-			"Agent feedback: '" + q["agent_response"] + "'"
+			"Response choice accepted: '" + q["choice_text_selected"] + "'\n"
+		if bool(q.get("public_board", false)):
+			agent_dialogue_label.text += (
+				"Local handler note: Kaelen can close the payout, but she did not post this mess."
+			)
+		else:
+			agent_dialogue_label.text += "Agent feedback: '" + q["agent_response"] + "'"
 			
 		agent_back_btn.visible = true
 		
 		# Create Complete button (enabled if objectives met)
 		var comp_btn = Button.new()
-		comp_btn.text = "Hand In Contract"
+		if bool(q.get("public_board", false)):
+			comp_btn.text = "Turn In Board Job To Local Agent"
+		else:
+			comp_btn.text = "Hand In Contract"
 		comp_btn.disabled = not QuestManager.is_quest_completed()
 		comp_btn.pressed.connect(_on_agent_complete_pressed)
 		agent_choices_container.add_child(comp_btn)
@@ -3302,17 +4647,24 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	print("[TRACE] [UIManager] Background quest generated. Faction: ", quest_data.get("faction", "neutral"), " is_fallback: ", is_fallback)
 	
 	if not quest_data.is_empty():
+		var game_root := get_tree().current_scene
+		if game_root and game_root.has_method(
+			"apply_opening_campaign_name"
+		):
+			game_root.apply_opening_campaign_name(
+				str(quest_data.get("campaign_name", "Far Horizon"))
+			)
 		# Pre-cache main briefing TTS
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":
-			TTSInterface.cache_dialogue_audio(dialogue, quest_data.get("faction", "neutral"))
+			SpeechService.cache(dialogue, quest_data.get("faction", "neutral"))
 			
 		# Pre-cache choice response TTS
 		var choices = quest_data.get("choices", [])
 		for choice in choices:
 			var response = choice.get("consequence", {}).get("dialogue_response", "")
 			if response != "":
-				TTSInterface.cache_dialogue_audio(response, quest_data.get("faction", "neutral"))
+				SpeechService.cache(response, quest_data.get("faction", "neutral"))
 		
 		# Fire-and-forget LLM call for Kaelen's unique handoff intro. Runs in
 		# the background while the player is still docking / loading. If it
@@ -3331,19 +4683,19 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 				cached_unique_intro = unique_line
 				print("[TRACE] [UIManager] Cached unique Kaelen intro: ", unique_line.left(60), "...")
 				# Pre-cache the TTS so playback is instant when the handoff fires
-				TTSInterface.cache_dialogue_audio(unique_line, "neutral")
+				SpeechService.cache(unique_line, "voice.kaelen.v1")
 			)
 				
 	# Only push to agent board UI if the player is actually waiting for it
 	# AND no quest is currently active (avoid replacing UI mid-mission)
-	if is_waiting_for_agent_board and not QuestManager.is_quest_active():
+	if is_waiting_for_agent_board and not QuestManager.is_lane_occupied("AGENT"):
 		is_waiting_for_agent_board = false
 		_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)
 		
 	# If loading panel is still visible, wait for TTS cache completion
 	if loading_panel and is_instance_valid(loading_panel):
-		TTSInterface.cache_queue_completed.connect(_on_tts_cache_completed)
-		if TTSInterface.active_cache_requests <= 0:
+		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
+		if SpeechService.active_cache_requests <= 0:
 			_on_tts_cache_completed()
 		else:
 			loading_bar.value = 80.0
@@ -3353,8 +4705,8 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	var now = Time.get_ticks_msec()
 	var elapsed_str = ""
-	if TTSInterface.last_interaction_time > 0.0:
-		elapsed_str = " (Elapsed since '%s': %.3fs)" % [TTSInterface.last_interaction_name, (now - TTSInterface.last_interaction_time) / 1000.0]
+	if SpeechService.last_interaction_time > 0.0:
+		elapsed_str = " (Elapsed since '%s': %.3fs)" % [SpeechService.last_interaction_name, (now - SpeechService.last_interaction_time) / 1000.0]
 	print("[TRACE] [UIManager] _on_quest_generated_received called%s is_fallback: %s" % [elapsed_str, str(is_fallback)])
 	
 	agent_back_btn.visible = true
@@ -3386,14 +4738,17 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		handoff_line = handoff_lines[randi() % handoff_lines.size()]
 		print("[TRACE] [UIManager] Using canned handoff fallback for: ", agent_name)
 	
+	# Flash incoming call notification in the chat bar
+	add_chat_message("COMMS", "Incoming voice transmission...", Color(0.0, 0.9, 0.9))
+
 	# Show Kaelen with her handoff intro first
 	agent_name_label.text = "BROKER KAELEN"
 	_update_agent_portrait("neutral")
 	agent_dialogue_label.text = handoff_line
 	agent_back_btn.visible = true
-	
+
 	# Play Kaelen's intro line in her voice
-	TTSInterface.play_dialogue_audio(handoff_line, "neutral")
+	SpeechService.play(handoff_line, "voice.kaelen.v1")
 	
 	# Add a "Bring them in" button that transitions to the actual quest giver
 	var bring_in_btn = Button.new()
@@ -3410,15 +4765,22 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	# ── Step 2: The quest giver delivers their briefing ───────────────────────
 	var raw_dialogue = quest_data.get("dialogue", "")
-	var display_dialogue = TTSInterface.clean_dialogue_text(raw_dialogue)
+	var display_dialogue = SpeechService.clean_dialogue_text(raw_dialogue)
 	var note = " [Offline Backup]" if is_fallback else ""
 	
 	agent_name_label.text = quest_data.get("agent_name", "Broker Kaelen").to_upper()
-	_update_agent_portrait(quest_data.get("faction", "neutral"))
+	var agent_name := str(quest_data.get("agent_name", "Broker Kaelen"))
+	_update_agent_portrait(
+		quest_data.get("faction", "neutral"),
+		agent_name
+	)
 	agent_dialogue_label.text = display_dialogue + note
 	
 	# Play the quest giver's briefing voice
-	TTSInterface.play_dialogue_audio(quest_data.get("dialogue", ""), quest_data.get("faction", "neutral"))
+	SpeechService.play_for_npc(
+		quest_data.get("dialogue", ""),
+		agent_name
+	)
 	
 	# Append contract details block
 	var f_client = quest_data.get("faction", "neutral").to_upper()
@@ -3430,6 +4792,16 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	elif obj_type == "KILL_SHIPS":
 		var target_fac = obj.get("target_faction", "zenith").to_upper()
 		amt_info = "Destroy " + str(obj.get("count_required", 3)) + " " + target_fac + " ships"
+	elif obj_type == "PICKUP_SPECIAL":
+		amt_info = "Pick up " + str(obj.get("part_name", "the package"))
+	elif obj_type == "RECOVER_COMBAT_DROP":
+		amt_info = "Recover %s from %s wreckage" % [
+			str(obj.get("item_name", "the data pack")),
+			str(obj.get("target_faction", "hostile")).to_upper(),
+		]
+	var validated_summary := str(quest_data.get("objective_summary", ""))
+	if not validated_summary.is_empty():
+		amt_info = validated_summary
 		
 	agent_dialogue_label.text += "\n\n--- Contract Details ---\n" + \
 		"Client: " + f_client + "\n" + \
@@ -3447,7 +4819,7 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 
 
 func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
-	TTSInterface.start_interaction("Select Choice: " + choice.get("text", ""))
+	SpeechService.start_interaction("Select Choice: " + choice.get("text", ""))
 	
 	cached_quest_data = {}
 	cached_quest_is_fallback = false
@@ -3458,7 +4830,19 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 		child.queue_free()
 		
 	# Accept quest
-	QuestManager.accept_quest(quest_data, choice)
+	if not QuestManager.accept_quest(quest_data, choice):
+		agent_dialogue_label.text = (
+			"Contract data failed verification. Kaelen has rejected the offer."
+		)
+		SpeechService.play(
+			"That contract is broken, Shiny. I'm not putting your name on it.",
+			"voice.kaelen.v1"
+		)
+		var return_btn := Button.new()
+		return_btn.text = "Back to Services"
+		return_btn.pressed.connect(_on_agent_back_pressed)
+		agent_choices_container.add_child(return_btn)
+		return
 	
 	if quest_data.get("objective", {}).get("type", "") == "PICKUP_SPECIAL":
 		var npc_name = quest_data["objective"].get("target_npc", "unknown")
@@ -3469,7 +4853,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	var consequence = choice.get("consequence", {})
 	var raw_response = consequence.get("dialogue_response", "")
-	var clean_response = TTSInterface.clean_dialogue_text(raw_response)
+	var clean_response = SpeechService.clean_dialogue_text(raw_response)
 	# Safety net: if cleaning stripped everything (entire string was stage direction), use a fallback
 	if clean_response.length() < 5:
 		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
@@ -3477,7 +4861,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	agent_dialogue_label.text = clean_response
 	
 	# Play choice response voice audio (TTS also cleans internally)
-	TTSInterface.play_dialogue_audio(clean_response, quest_data.get("faction", "neutral"))
+	SpeechService.play(clean_response, quest_data.get("faction", "neutral"))
 	
 	agent_back_btn.visible = false
 	
@@ -3500,20 +4884,21 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 		cached_abandon_line = abn_line
 		print("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
 		# Pre-cache both in the background using neutral (Kaelen's) voice
-		TTSInterface.cache_dialogue_audio(comp_line, "neutral")
-		TTSInterface.cache_dialogue_audio(abn_line, "neutral")
+		SpeechService.cache(comp_line, "voice.kaelen.v1")
+		SpeechService.cache(abn_line, "voice.kaelen.v1")
 	)
 
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio
-	TTSInterface.play_dialogue_audio("")
+	SpeechService.stop()
 	agent_panel.visible = false
 	dock_panel.visible = true
 
 func _on_agent_complete_pressed():
-	TTSInterface.start_interaction("Complete Contract")
+	SpeechService.start_interaction("Complete Contract")
 	
 	is_waiting_for_agent_board = false
+	var completed_quest: Dictionary = QuestManager.active_quest.duplicate(true)
 	
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -3526,6 +4911,10 @@ func _on_agent_complete_pressed():
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
 	var completion_text = cached_completion_line
+	if bool(completed_quest.get("public_board", false)):
+		completion_text = str(
+			completed_quest.get("public_board_turn_in_line", "")
+		)
 	if completion_text == "":
 		completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
 		print("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
@@ -3533,7 +4922,7 @@ func _on_agent_complete_pressed():
 	cached_abandon_line = ""
 	
 	agent_dialogue_label.text = completion_text
-	TTSInterface.play_dialogue_audio(completion_text, "neutral")
+	SpeechService.play(completion_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	
 	# If for some reason the cache is empty, request one now
@@ -3542,7 +4931,7 @@ func _on_agent_complete_pressed():
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_agent_abandon_pressed():
-	TTSInterface.start_interaction("Abandon Contract")
+	SpeechService.start_interaction("Abandon Contract")
 	
 	is_waiting_for_agent_board = false
 	
@@ -3564,7 +4953,7 @@ func _on_agent_abandon_pressed():
 	cached_abandon_line = ""
 	
 	agent_dialogue_label.text = abandon_text
-	TTSInterface.play_dialogue_audio(abandon_text, "neutral")
+	SpeechService.play(abandon_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	
 	# If for some reason the cache is empty, request one now
@@ -3573,7 +4962,7 @@ func _on_agent_abandon_pressed():
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_partial_delivery_pressed(deliverable: float):
-	TTSInterface.start_interaction("Partial Delivery")
+	SpeechService.start_interaction("Partial Delivery")
 	
 	# Clear buttons immediately to prevent double-tap
 	for child in agent_choices_container.get_children():
@@ -3600,15 +4989,15 @@ func _on_partial_delivery_pressed(deliverable: float):
 	LLMInterface.request_partial_delivery_line(
 		quest_title, actually_delivered, total_banked, required,
 		func(line: String):
-			var clean = TTSInterface.clean_dialogue_text(line)
+			var clean = SpeechService.clean_dialogue_text(line)
 			agent_dialogue_label.text = clean
-			TTSInterface.play_dialogue_audio(clean, "neutral")
+			SpeechService.play(clean, "voice.kaelen.v1")
 			
 			# Add back button so player can undock or check contract
 			var back_btn = Button.new()
 			back_btn.text = "Back to Services"
 			back_btn.pressed.connect(func():
-				TTSInterface.play_dialogue_audio("", "neutral")
+				SpeechService.stop()
 				agent_panel.visible = false
 				dock_panel.visible = true
 			)
@@ -3619,53 +5008,253 @@ func _on_partial_delivery_pressed(deliverable: float):
 
 
 func _on_quest_accepted():
-	quest_tracker_panel.visible = true
 	_update_quest_tracker()
 
 func _on_quest_progress_updated():
 	_update_quest_tracker()
 
 func _on_quest_completed():
-	quest_tracker_panel.visible = false
+	_update_quest_tracker()
 
 func _on_quest_abandoned():
-	quest_tracker_panel.visible = false
+	_update_quest_tracker()
+
+func _on_quest_expired(title: String) -> void:
+	_update_quest_tracker()
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Contract expired: %s." % title,
+		Color(1.0, 0.55, 0.25)
+	)
 
 func _update_quest_tracker():
 	if not QuestManager.is_quest_active():
 		quest_tracker_panel.visible = false
+		if quest_tracker_turn_in_btn:
+			quest_tracker_turn_in_btn.visible = false
 		return
-		
+
 	quest_tracker_panel.visible = true
 	var q = QuestManager.active_quest
-	quest_tracker_title.text = q["title"]
-	
-	# Update tracker client faction logo
+	quest_tracker_title.text = q.get("title", "Contract")
+
+	_update_quest_tracker_nav(q)
 	_update_quest_tracker_logo(q.get("faction", "neutral"))
-	
-	if q["objective_type"] == "KILL_SHIPS":
-		quest_tracker_progress.text = "Kills: " + str(q["current_count"]) + " / " + str(q["count_required"]) + " (" + q["target_faction"].to_upper() + ")"
-	elif q["objective_type"] == "DELIVER_ORE":
-		var banked = q.get("partial_delivered", 0.0)
-		# Only count in-hold cargo if we're actually carrying ore (not a
-		# special item — that doesn't count toward ore delivery progress).
-		var in_hold = GlobalState.cargo if GlobalState.cargo_type == GlobalState.CargoType.ORE else 0.0
-		var required = q["amount_required"]
-		var total_so_far = banked + in_hold
-		quest_tracker_progress.text = "Ore: %.0f / %.0f m³" % [total_so_far, required]
-		if banked > 0:
-			quest_tracker_progress.text += " (%.0f banked)" % banked
-		if total_so_far >= required:
-			quest_tracker_progress.text += " (Ready)"
-	elif q["objective_type"] == "PICKUP_SPECIAL":
-		if q.get("picked_up", false):
-			# After pickup, show what's in hold and where to deliver
-			quest_tracker_progress.text = "Deliver: %s to %s" % [q["part_name"], q["destination"]]
+
+	var _cap = MissionCapabilityRegistry.get_for_type(q.get("objective_type", ""))
+	if _cap:
+		quest_tracker_progress.text = _cap.format_tracker_text(q)
+	else:
+		quest_tracker_progress.text = q.get("objective_type", "Unknown")
+	if QuestManager.is_active_quest_timed():
+		var remaining := QuestManager.get_active_quest_remaining_minutes()
+		var urgency := "URGENT" if q.get("is_urgent", false) else "TIMED"
+		var payout := QuestManager.active_quest_payout()
+		quest_tracker_progress.text += "\n%s: %s remaining | Payout: %d SC" % [
+			urgency,
+			CampaignClock.format_duration(remaining),
+			payout,
+		]
+	_update_quest_tracker_turn_in_button(q)
+	_update_quest_tracker_secondary_missions()
+
+
+func _update_quest_tracker_nav(q: Dictionary) -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	var count := all_active.size()
+	var show_arrows := count > 1
+	if quest_tracker_prev_btn:
+		quest_tracker_prev_btn.visible = show_arrows
+	if quest_tracker_next_btn:
+		quest_tracker_next_btn.visible = show_arrows
+	if quest_tracker_nav_label:
+		if count <= 1:
+			var lane_label := "ACTIVE CONTRACT"
+			if bool(q.get("public_board", false)):
+				lane_label = "BOARD JOB"
+			elif bool(q.get("station_errand", false)):
+				lane_label = "STATION ERRAND"
+			quest_tracker_nav_label.text = lane_label
 		else:
-			# Before pickup, show the destination outpost + NPC
-			quest_tracker_progress.text = "Pickup: %s from %s @ %s" % [
-				q["part_name"], q["target_npc"], q["target_outpost_display"]
-			]
+			var focused = collection.get_focused()
+			var idx := 0
+			for i in range(all_active.size()):
+				if focused and all_active[i].runtime_id == focused.runtime_id:
+					idx = i
+					break
+			var lane_tag := "CONTRACT"
+			if bool(q.get("public_board", false)):
+				lane_tag = "BOARD"
+			elif bool(q.get("station_errand", false)):
+				lane_tag = "ERRAND"
+			quest_tracker_nav_label.text = "%s  (%d/%d)" % [lane_tag, idx + 1, count]
+
+
+func _on_quest_tracker_prev() -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var idx := 0
+	for i in range(all_active.size()):
+		if focused and all_active[i].runtime_id == focused.runtime_id:
+			idx = i
+			break
+	var prev_idx := (idx - 1) % all_active.size()
+	collection.focus(all_active[prev_idx].runtime_id)
+	_update_quest_tracker()
+
+
+func _on_quest_tracker_next() -> void:
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var idx := 0
+	for i in range(all_active.size()):
+		if focused and all_active[i].runtime_id == focused.runtime_id:
+			idx = i
+			break
+	var next_idx := (idx + 1) % all_active.size()
+	collection.focus(all_active[next_idx].runtime_id)
+	_update_quest_tracker()
+
+
+func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
+	if not quest_tracker_turn_in_btn:
+		return
+	var is_public_board := bool(q.get("public_board", false))
+	var is_ready := QuestManager.is_quest_completed()
+	quest_tracker_turn_in_btn.visible = is_public_board and is_ready
+	if not quest_tracker_turn_in_btn.visible:
+		return
+	if current_station and is_instance_valid(current_station):
+		quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
+		quest_tracker_turn_in_btn.disabled = false
+	else:
+		quest_tracker_turn_in_btn.text = "Dock To Turn In"
+		quest_tracker_turn_in_btn.disabled = true
+
+
+func _update_quest_tracker_secondary_missions() -> void:
+	if not quest_tracker_secondary_container:
+		return
+	for child in quest_tracker_secondary_container.get_children():
+		child.queue_free()
+	var collection = QuestManager.get_mission_collection()
+	var all_active = collection.get_all_active()
+	if all_active.size() <= 1:
+		return
+	var focused = collection.get_focused()
+	var focused_id: String = focused.runtime_id if focused else ""
+
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 6)
+	sep.add_theme_stylebox_override("separator", StyleBoxLine.new())
+	quest_tracker_secondary_container.add_child(sep)
+
+	var header := Label.new()
+	header.text = "%d OTHER MISSION%s  (click to switch)" % [
+		all_active.size() - 1,
+		"S" if all_active.size() > 2 else "",
+	]
+	header.add_theme_font_size_override("font_size", 10)
+	header.add_theme_color_override("font_color", Color(0.5, 0.7, 0.7))
+	quest_tracker_secondary_container.add_child(header)
+
+	for m in all_active:
+		if m.runtime_id == focused_id:
+			continue
+		var lane_color := Color(0.0, 0.85, 0.85)
+		var lane_tag := "CONTRACT"
+		match m.source_lane:
+			MissionInstance.SourceLane.BOARD:
+				lane_color = Color(0.2, 0.8, 0.4)
+				lane_tag = "BOARD"
+			MissionInstance.SourceLane.STATION:
+				lane_color = Color(0.9, 0.7, 0.2)
+				lane_tag = "ERRAND"
+
+		var row := PanelContainer.new()
+		var row_style := StyleBoxFlat.new()
+		row_style.bg_color = Color(0.08, 0.12, 0.14, 0.9)
+		row_style.border_width_left = 3
+		row_style.border_color = lane_color
+		row_style.content_margin_left = 8
+		row_style.content_margin_right = 6
+		row_style.content_margin_top = 4
+		row_style.content_margin_bottom = 4
+		row_style.corner_radius_top_left = 2
+		row_style.corner_radius_bottom_left = 2
+		row.add_theme_stylebox_override("panel", row_style)
+
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 1)
+		row.add_child(vbox)
+
+		var tag_label := Label.new()
+		tag_label.text = lane_tag
+		tag_label.add_theme_font_size_override("font_size", 9)
+		tag_label.add_theme_color_override("font_color", lane_color)
+		vbox.add_child(tag_label)
+
+		var cap = MissionCapabilityRegistry.get_for_type(m.data.get("objective_type", ""))
+		var title_text: String = str(m.data.get("title", "Mission"))
+		if cap and cap.is_completed(m.data):
+			title_text += "  [READY]"
+		var title_label := Label.new()
+		title_label.text = title_text
+		title_label.add_theme_font_size_override("font_size", 12)
+		title_label.add_theme_color_override("font_color", Color(0.85, 0.9, 0.9))
+		title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.add_child(title_label)
+
+		if cap:
+			var progress_label := Label.new()
+			progress_label.text = cap.format_tracker_text(m.data)
+			progress_label.add_theme_font_size_override("font_size", 10)
+			progress_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.7))
+			progress_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			progress_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			vbox.add_child(progress_label)
+
+		var click_btn := Button.new()
+		click_btn.flat = true
+		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		click_btn.anchor_right = 1.0
+		click_btn.anchor_bottom = 1.0
+		click_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		click_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color(lane_color.r, lane_color.g, lane_color.b, 0.1)
+		click_btn.add_theme_stylebox_override("hover", hover_style)
+		var rid: String = m.runtime_id
+		click_btn.pressed.connect(func():
+			QuestManager.get_mission_collection().focus(rid)
+			_update_quest_tracker()
+		)
+		row.add_child(click_btn)
+
+		quest_tracker_secondary_container.add_child(row)
+
+
+func _on_quest_tracker_turn_in_pressed() -> void:
+	if not QuestManager.is_quest_active():
+		return
+	if not bool(QuestManager.active_quest.get("public_board", false)):
+		return
+	if not QuestManager.is_quest_completed():
+		return
+	if not current_station or not is_instance_valid(current_station):
+		show_hud_warning("Dock at a local station to turn in this board job.")
+		return
+	dock_panel.visible = false
+	agent_panel.visible = true
+	_on_agent_complete_pressed()
 
 
 func _update_quest_tracker_logo(faction: String):
@@ -3688,25 +5277,165 @@ func _update_quest_tracker_logo(faction: String):
 		else:
 			quest_tracker_logo.visible = false
 
-func _update_agent_portrait(faction: String):
-	if agent_portrait and quest_givers_sheet:
-		var atlas = AtlasTexture.new()
-		atlas.atlas = quest_givers_sheet
-		
-		# Choose portrait index based on faction:
-		# Zenith (0), Aurelia (1), Vanguard (2), Neutral (3)
-		var index = 3
-		match faction.to_lower():
-			"zenith": index = 0
-			"aurelia": index = 1
-			"vanguard": index = 2
-			"neutral": index = 3
-			
-		var col = index % 2
-		var row = index / 2
-		atlas.region = Rect2(col * 627, row * 627, 627, 627)
-		agent_portrait.texture = atlas
-		agent_portrait.visible = true
+func _create_comms_hail_panel() -> void:
+	comms_hail_panel = PanelContainer.new()
+	comms_hail_panel.anchor_left = 0.2
+	comms_hail_panel.anchor_right = 0.8
+	comms_hail_panel.anchor_top = 0.25
+	comms_hail_panel.anchor_bottom = 0.25
+	comms_hail_panel.grow_vertical = Control.GROW_DIRECTION_END
+	comms_hail_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	add_child(comms_hail_panel)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.02, 0.02, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1.0, 0.35, 0.15, 0.9)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	comms_hail_panel.add_theme_stylebox_override("panel", style)
+
+	var outer_vbox := VBoxContainer.new()
+	outer_vbox.add_theme_constant_override("separation", 8)
+	comms_hail_panel.add_child(outer_vbox)
+
+	var header := Label.new()
+	header.text = "INCOMING TRANSMISSION"
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.add_theme_font_size_override("font_size", 11)
+	header.add_theme_color_override("font_color", Color(1.0, 0.4, 0.2))
+	outer_vbox.add_child(header)
+
+	var content_hbox := HBoxContainer.new()
+	content_hbox.add_theme_constant_override("separation", 12)
+	outer_vbox.add_child(content_hbox)
+
+	comms_hail_portrait = TextureRect.new()
+	comms_hail_portrait.custom_minimum_size = Vector2(64, 64)
+	comms_hail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	comms_hail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	comms_hail_portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	content_hbox.add_child(comms_hail_portrait)
+
+	comms_hail_message = Label.new()
+	comms_hail_message.text = ""
+	comms_hail_message.add_theme_font_size_override("font_size", 13)
+	comms_hail_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	comms_hail_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_hbox.add_child(comms_hail_message)
+
+	comms_hail_choices_container = VBoxContainer.new()
+	comms_hail_choices_container.add_theme_constant_override("separation", 4)
+	outer_vbox.add_child(comms_hail_choices_container)
+
+	comms_hail_panel.visible = false
+
+
+func _on_comms_reversal_triggered(mission_data: Dictionary) -> void:
+	var faction: String = str(mission_data.get("target_faction", ""))
+	add_chat_message(
+		"COMMS",
+		"Incoming voice transmission...",
+		Color(1.0, 0.4, 0.2)
+	)
+	var timer := get_tree().create_timer(1.0)
+	var data_copy := mission_data.duplicate(true)
+	timer.timeout.connect(func(): _show_comms_hail(data_copy))
+
+
+func _show_comms_hail(mission_data: Dictionary) -> void:
+	var faction: String = str(mission_data.get("target_faction", ""))
+	var comms_line: String = str(mission_data.get("comms_reversal_line", ""))
+	if comms_line.is_empty():
+		comms_line = _fallback_comms_line(faction)
+
+	comms_hail_message.text = comms_line
+
+	var portrait_tex: Texture2D = null
+	var faction_def = GameContentRegistry.shared().faction(faction)
+	if faction_def and not faction_def.agent_portrait_id.is_empty():
+		portrait_tex = GameContentRegistry.shared().portrait_texture(faction_def.agent_portrait_id)
+	if portrait_tex:
+		comms_hail_portrait.texture = portrait_tex
+		comms_hail_portrait.visible = true
+	else:
+		comms_hail_portrait.visible = false
+
+	for child in comms_hail_choices_container.get_children():
+		child.queue_free()
+
+	var bribe: int = int(mission_data.get("bribe_amount", 0))
+	var choices := [
+		{"id": "finish_kill", "text": "Finish the job.", "color": Color(1.0, 0.4, 0.3)},
+		{"id": "accept_bribe", "text": "Take the deal. (+%d SC)" % bribe, "color": Color(0.3, 0.9, 0.4)},
+		{"id": "walk_away", "text": "Walk away. No payout.", "color": Color(0.6, 0.6, 0.6)},
+	]
+	for choice in choices:
+		var btn := Button.new()
+		btn.text = str(choice["text"])
+		btn.add_theme_color_override("font_color", choice["color"])
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+		var branch_id: String = str(choice["id"])
+		btn.pressed.connect(func():
+			_resolve_comms_hail(branch_id)
+		)
+		comms_hail_choices_container.add_child(btn)
+
+	comms_hail_panel.visible = true
+
+	SpeechService.play(comms_line, faction)
+
+
+func _resolve_comms_hail(branch_id: String) -> void:
+	comms_hail_panel.visible = false
+	SpeechService.stop()
+	QuestManager.resolve_comms_branch(branch_id)
+
+	var result_msg := ""
+	match branch_id:
+		"finish_kill":
+			result_msg = "Transmission rejected. Target re-engaged."
+		"accept_bribe":
+			result_msg = "Deal accepted. Target departing the area."
+		"walk_away":
+			result_msg = "Contract voided. Target departing the area."
+	add_chat_message("COMMS", result_msg, Color(1.0, 0.55, 0.25))
+
+
+const COMMS_REVERSAL_FALLBACKS: Array[String] = [
+	"Wait! Before you pull that trigger — I'm not what they told you. That posting was a setup. I have information worth more than whatever they're paying you. Let me make you a counter-offer.",
+	"Hold fire! You've been lied to, pilot. The person who posted that contract? They're the criminal here. I was investigating them. I can pay you more than they offered — and you'd be on the right side of this.",
+	"Stop! I surrender! Look, I know how this looks, but that contract is a fraud. The poster used you to do their dirty work. I'll pay you to walk away. Better deal than blood money.",
+	"Cease fire! Listen — I'm carrying evidence that would embarrass the person who hired you. That's why they want me dead. Name your price. Whatever they're paying, I can beat it, and you don't have to live with this.",
+]
+
+
+func _fallback_comms_line(faction: String) -> String:
+	return COMMS_REVERSAL_FALLBACKS[randi() % COMMS_REVERSAL_FALLBACKS.size()]
+
+
+func _update_agent_portrait(faction: String, npc_name: String = ""):
+	if agent_portrait:
+		_show_agent_portrait(true)
+		var portrait_id := "portrait.quest_givers.kaelen"
+		var npc_definition := GameContentRegistry.shared().npc_by_name(npc_name)
+		var faction_definition := GameContentRegistry.shared().faction(faction)
+		if npc_definition != null:
+			portrait_id = str(npc_definition.portrait_id)
+		elif faction_definition and not faction_definition.agent_portrait_id.is_empty():
+			portrait_id = str(faction_definition.agent_portrait_id)
+		agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
+			portrait_id
+		)
 		
 	if agent_client_logo and faction_branding_sheet:
 		var atlas = AtlasTexture.new()
@@ -3726,6 +5455,16 @@ func _update_agent_portrait(faction: String):
 			agent_client_logo.visible = true
 		else:
 			agent_client_logo.visible = false
+
+
+func _show_agent_portrait(should_show: bool) -> void:
+	if agent_portrait_column:
+		agent_portrait_column.visible = should_show
+	if not agent_portrait:
+		return
+	agent_portrait.visible = should_show
+	if not should_show:
+		agent_portrait.texture = null
 
 func add_chat_message(sender: String, message: String, sender_color: Color):
 	if not chat_vbox:
@@ -3767,6 +5506,7 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 		"title": "Parts Run: %s" % part_name,
 		"faction": "neutral",
 		"agent_name": "Jenna Kross",
+		"station_errand": true,
 		"dialogue": "Head to %s and pick up the %s from %s. Bring it back here." % [outpost_display, part_name, npc_name],
 		"objective": {
 			"type": "PICKUP_SPECIAL",
@@ -3805,6 +5545,42 @@ func _on_mechanic_pickup_decline_pressed() -> void:
 
 func _on_ask_for_part_pressed() -> void:
 	if not QuestManager.is_quest_active() or QuestManager.active_quest.get("objective_type", "") != "PICKUP_SPECIAL":
+		show_dock_message(
+			"No active pickup job is waiting here.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
+		return
+	if QuestManager.active_quest.get("picked_up", false):
+		show_dock_message(
+			"You already have the part. Take it back to Grease Monkeys.",
+			"",
+			Color(0.85, 0.85, 0.85)
+		)
+		return
+	if not current_station or not is_instance_valid(current_station):
+		show_dock_message("No station docked.", "", Color(1.0, 0.45, 0.45))
+		return
+	var docked_outpost_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
+	if docked_outpost_id == "":
+		show_dock_message(
+			"That contact is at an outpost, not this dock.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
+		return
+	var quest_outpost_id: String = str(QuestManager.active_quest.get("target_outpost", ""))
+	if docked_outpost_id != quest_outpost_id:
+		show_dock_message(
+			"Wrong outpost. This pickup is waiting at %s." % str(
+				QuestManager.active_quest.get(
+					"target_outpost_display",
+					quest_outpost_id
+				)
+			),
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 		_show_ore_trade_popup()
@@ -3866,7 +5642,7 @@ func _complete_pickup_with_handoff() -> void:
 	var npc_color: Color = Color(0.85, 0.85, 0.85)
 	var npc_portrait: Texture2D = null
 	if GlobalState.MINOR_NPCS.has(picked_npc):
-		npc_color = GlobalState.MINOR_NPCS[picked_npc].get("flavor_color", npc_color)
+		npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
 		npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		
 	if line != "":
@@ -3882,14 +5658,24 @@ func _complete_pickup_with_handoff() -> void:
 			"npc_name": picked_npc,
 			"line": display_line,
 			"color": npc_color,
-			"voice_id": QuestManager.active_quest.get("pickup_handoff_voice_id", "neutral"),
-			"voice_speed": 1.0,
+			"voice_profile_id": QuestManager.active_quest.get(
+				"pickup_handoff_voice_profile_id",
+				"voice.neutral.v1"
+			),
 		}
 		if GlobalState.MINOR_NPCS.has(picked_npc):
-			flavor_dict["voice_id"] = GlobalState.MINOR_NPCS[picked_npc].get("voice_id", flavor_dict["voice_id"])
-			flavor_dict["voice_speed"] = GlobalState.MINOR_NPCS[picked_npc].get("voice_speed", flavor_dict["voice_speed"])
+			var npc_data := GlobalState.get_minor_npc_data(picked_npc)
+			flavor_dict["voice_profile_id"] = npc_data.get(
+				"voice_profile_id",
+				flavor_dict["voice_profile_id"]
+			)
 		GlobalState.emit_npc_flavor(flavor_dict)
 	else:
+		show_dock_message(
+			"Couldn't load the part. Clear your cargo hold and try again.",
+			"",
+			Color(1.0, 0.45, 0.45)
+		)
 		push_warning("[UIManager] _complete_pickup_with_handoff: mark_pickup_complete returned false")
 
 const FALLBACK_OUTPOST_HANDOFF: Array = [
@@ -3956,13 +5742,20 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 				if line != "":
 					var is_valid: bool = _is_valid_outpost_handoff_line(line, part_name, client_name)
 					if is_valid:
-						var voice_id: String = "neutral"
-						var voice_speed: float = 1.0
+						var voice_profile_id := "voice.neutral.v1"
 						if GlobalState.MINOR_NPCS.has(npc_name):
-							voice_id = GlobalState.MINOR_NPCS[npc_name].get("voice_id", voice_id)
-							voice_speed = GlobalState.MINOR_NPCS[npc_name].get("voice_speed", voice_speed)
-						QuestManager.set_pickup_handoff(line, voice_id, voice_speed, false, npc_name)
-						TTSInterface.cache_dialogue_audio(line, voice_id, voice_speed)
+							var npc_data := GlobalState.get_minor_npc_data(npc_name)
+							voice_profile_id = npc_data.get(
+								"voice_profile_id",
+								voice_profile_id
+							)
+						QuestManager.set_pickup_handoff(
+							line,
+							voice_profile_id,
+							false,
+							npc_name
+						)
+						SpeechService.cache(line, voice_profile_id)
 						return
 					else:
 						var reason: String = _explain_outpost_handoff_rejection(line, part_name, client_name)
@@ -3996,12 +5789,16 @@ func _apply_pickup_handoff_fallback(npc_name: String, part_name: String, client_
 	var salt: int = randi() % FALLBACK_OUTPOST_HANDOFF.size()
 	var line: String = FALLBACK_OUTPOST_HANDOFF[salt].replace("{part}", part_name).replace("{client}", client_name)
 	
-	var voice_id: String = "neutral"
-	var voice_speed: float = 1.0
+	var voice_profile_id := "voice.neutral.v1"
 	if GlobalState.MINOR_NPCS.has(npc_name):
-		voice_id = GlobalState.MINOR_NPCS[npc_name].get("voice_id", voice_id)
-		voice_speed = GlobalState.MINOR_NPCS[npc_name].get("voice_speed", voice_speed)
-	QuestManager.set_pickup_handoff(line, voice_id, voice_speed, true, npc_name)
+		var npc_data := GlobalState.get_minor_npc_data(npc_name)
+		voice_profile_id = npc_data.get("voice_profile_id", voice_profile_id)
+	QuestManager.set_pickup_handoff(
+		line,
+		voice_profile_id,
+		true,
+		npc_name
+	)
 
 func _create_loading_screen():
 	loading_panel = Panel.new()
@@ -4111,17 +5908,17 @@ func _check_both_services_ready():
 			LLMInterface.llm_connection_attempt.disconnect(_on_llm_connection_attempt)
 		if LLMInterface.llm_connection_established.is_connected(_on_llm_connected):
 			LLMInterface.llm_connection_established.disconnect(_on_llm_connected)
-		if TTSInterface.tts_connection_attempt.is_connected(_on_tts_connection_attempt):
-			TTSInterface.tts_connection_attempt.disconnect(_on_tts_connection_attempt)
-		if TTSInterface.tts_connection_established.is_connected(_on_tts_connected):
-			TTSInterface.tts_connection_established.disconnect(_on_tts_connected)
+		if SpeechService.speech_connection_attempt.is_connected(_on_tts_connection_attempt):
+			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
+		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
+			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
 			
 		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 
 func _on_tts_cache_completed():
 	# Disconnect to prevent double trigger on future cache events
-	if TTSInterface.cache_queue_completed.is_connected(_on_tts_cache_completed):
-		TTSInterface.cache_queue_completed.disconnect(_on_tts_cache_completed)
+	if SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
 		
 	print("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
 	loading_bar.value = 100.0
@@ -4135,9 +5932,10 @@ func _on_tts_cache_completed():
 		GlobalState.paused = false # Resume gameplay!
 		print("[TRACE] [UIManager] Loading Screen completed. Game started!")
 		# Trigger Kaelen's intro popup 1s after loading — safely AFTER the overlay is gone
-		get_tree().create_timer(1.0).timeout.connect(func():
-			show_kaelen_intro()
-		)
+		if not startup_save_loaded:
+			get_tree().create_timer(1.0).timeout.connect(func():
+				show_kaelen_intro()
+			)
 	)
 
 
@@ -4209,13 +6007,9 @@ func show_kaelen_intro():
 	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	# Load Kaelen's portrait slice (neutral = index 3, row 1 col 1)
-	var atlas = AtlasTexture.new()
-	atlas.atlas = quest_givers_sheet
-	var sheet_size = quest_givers_sheet.get_size()
-	var cell_w = sheet_size.x / 2.0
-	var cell_h = sheet_size.y / 2.0
-	atlas.region = Rect2(cell_w, cell_h, cell_w, cell_h)  # col 1, row 1 = neutral/Kaelen
-	portrait_rect.texture = atlas
+	portrait_rect.texture = GameContentRegistry.shared().portrait_texture(
+		"portrait.quest_givers.kaelen"
+	)
 	portrait_vbox.add_child(portrait_rect)
 	
 	# Spacer
@@ -4280,7 +6074,7 @@ func show_kaelen_intro():
 	dismiss_btn.pressed.connect(_dismiss)
 	
 	# ── Play Kaelen's voice ───────────────────────────────────────────────────
-	TTSInterface.play_dialogue_audio(line, "neutral")
+	SpeechService.play(line, "voice.kaelen.v1")
 	print("[UIManager] Kaelen intro shown: ", line.left(60), "...")
 
 func _style_action_button(btn: Button):
@@ -4563,11 +6357,14 @@ func _attempt_upgrade(slot: String, path: String):
 	var power_diff = next_power - current_power
 	
 	var reason = ""
+	var available_ore := GlobalState.player_storage_ore
+	if GlobalState.cargo_type == GlobalState.CargoType.ORE:
+		available_ore += GlobalState.cargo
 	if slot != "power" and GlobalState.get_current_power_draw() + power_diff > GlobalState.power_capacity:
 		reason = "power"
 	elif GlobalState.player_credits < cost_cr:
 		reason = "credits"
-	elif GlobalState.cargo_type != GlobalState.CargoType.ORE or GlobalState.cargo < cost_ore:
+	elif available_ore < cost_ore:
 		reason = "ore"
 		
 	if reason != "":
@@ -4583,7 +6380,7 @@ func _attempt_upgrade(slot: String, path: String):
 			_ore_idx = (_ore_idx + 1) % _insufficient_ore_lines.size()
 		# Replace generic red text with Jenna's dialogue
 		su_ship_sys_lbl.text += "\n\n[color=#FF7777]\"%s\"[/color]" % line
-		TTSInterface.play_dialogue_audio(line, "af_aoede", 1.0)
+		SpeechService.play(line, "voice.jenna_kross.v1")
 		return
 
 	if GlobalState.purchase_upgrade(slot, path):

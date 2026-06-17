@@ -45,18 +45,14 @@ func _ready():
 	laser_beam.visible = false
 	
 	# Find space station in the scene
-	var main = get_tree().current_scene
-	if main:
-		station = main.get_node_or_null("Station")
+	station = GlobalState.get_primary_station()
 
 func _physics_process(delta: float):
 	if GlobalState.paused: return
 	
 	# Scan for station if not found yet
 	if not station:
-		var main = get_tree().current_scene
-		if main:
-			station = main.get_node_or_null("Station")
+		station = GlobalState.get_primary_station()
 			
 	match state:
 		"IDLE":
@@ -182,7 +178,7 @@ func take_damage(amount: float, attacker_faction: String = ""):
 
 func die():
 	AudioManager.play_explosion(global_position)
-	var main = get_tree().current_scene
-	if main and main.has_method("_on_salvager_destroyed"):
-		main.call("_on_salvager_destroyed")
+	var system_root = GlobalState.get_system_root()
+	if system_root and system_root.has_method("_on_salvager_destroyed"):
+		system_root.call("_on_salvager_destroyed")
 	queue_free()

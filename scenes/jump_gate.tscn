@@ -1,0 +1,90 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/JumpGate.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/hypergate.glb" id="2_model"]
+[ext_resource type="Shader" path="res://scripts/jumpgate_portal.gdshader" id="3_portal_shader"]
+
+[sub_resource type="BoxShape3D" id="BoxShape_left"]
+size = Vector3(12, 70, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape_right"]
+size = Vector3(12, 70, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape_top"]
+size = Vector3(42, 12, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape_bottom"]
+size = Vector3(42, 12, 50)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_activation"]
+radius = 22.0
+height = 100.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_pick"]
+radius = 34.0
+height = 18.0
+
+[sub_resource type="ShaderMaterial" id="PortalMaterial"]
+render_priority = 1
+shader = ExtResource("3_portal_shader")
+
+[sub_resource type="QuadMesh" id="PortalMesh"]
+material = SubResource("PortalMaterial")
+size = Vector2(36, 36)
+
+[node name="JumpGate" type="StaticBody3D" groups=["jumpgate"]]
+collision_layer = 1
+collision_mask = 6
+script = ExtResource("1_script")
+
+[node name="ModelAnchor" type="Node3D" parent="."]
+
+[node name="HypergateModel" parent="ModelAnchor" instance=ExtResource("2_model")]
+
+[node name="PortalSurface" type="MeshInstance3D" parent="."]
+mesh = SubResource("PortalMesh")
+
+[node name="LeftFrameCollision" type="CollisionShape3D" parent="."]
+position = Vector3(-27, 0, 0)
+shape = SubResource("BoxShape_left")
+
+[node name="RightFrameCollision" type="CollisionShape3D" parent="."]
+position = Vector3(27, 0, 0)
+shape = SubResource("BoxShape_right")
+
+[node name="TopFrameCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 36, 0)
+shape = SubResource("BoxShape_top")
+
+[node name="BottomFrameCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, -36, 0)
+shape = SubResource("BoxShape_bottom")
+
+[node name="ActivationArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ActivationArea"]
+rotation = Vector3(1.5708, 0, 0)
+shape = SubResource("CylinderShape_activation")
+
+[node name="SelectionArea" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SelectionArea"]
+rotation = Vector3(1.5708, 0, 0)
+shape = SubResource("CylinderShape_pick")
+
+[node name="ArrivalMarker" type="Marker3D" parent="."]
+position = Vector3(0, 0, 140)
+rotation = Vector3(0, 3.14159, 0)
+
+[node name="ApproachMarker" type="Marker3D" parent="."]
+position = Vector3(0, 0, 260)
+rotation = Vector3(0, 3.14159, 0)
+
+[node name="GateLight" type="OmniLight3D" parent="."]
+light_color = Color(0.25, 0.75, 1, 1)
+light_energy = 5.0
+omni_range = 130.0

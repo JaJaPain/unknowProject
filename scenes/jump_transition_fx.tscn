@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/JumpTransitionFX.gd" id="1_script"]
+
+[sub_resource type="Shader" id="HyperspaceShader"]
+code = "shader_type canvas_item;\n\nuniform float intensity : hint_range(0.0, 1.0) = 0.0;\n\nfloat hash(vec2 p) {\n\treturn fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);\n}\n\nvoid fragment() {\n\tvec2 uv = UV - vec2(0.5);\n\tuv.x *= SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;\n\tfloat radius = length(uv);\n\tfloat angle = atan(uv.y, uv.x);\n\tfloat sectors = 72.0;\n\tfloat lane = floor((angle + 3.14159265) / 6.2831853 * sectors);\n\tfloat seed = hash(vec2(lane, floor(TIME * 1.8)));\n\tfloat streak_phase = fract(radius * (38.0 + seed * 28.0) - TIME * (5.0 + seed * 8.0));\n\tfloat streak = smoothstep(0.14, 0.0, streak_phase) * smoothstep(0.02, 0.18, radius);\n\tfloat core = smoothstep(0.16, 0.0, radius);\n\tvec3 blue = mix(vec3(0.01, 0.04, 0.12), vec3(0.18, 0.7, 1.0), streak);\n\tblue += vec3(0.45, 0.75, 1.0) * core * intensity;\n\tfloat tunnel_alpha = intensity * smoothstep(0.0, 0.18, radius) + core * intensity * 0.8;\n\tfloat full_coverage = smoothstep(0.82, 1.0, intensity);\n\tfloat alpha = max(tunnel_alpha, full_coverage);\n\tCOLOR = vec4(blue * intensity, clamp(alpha, 0.0, 1.0));\n}"
+
+[sub_resource type="ShaderMaterial" id="HyperspaceMaterial"]
+shader = SubResource("HyperspaceShader")
+
+[node name="JumpTransitionFX" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_script")
+
+[node name="Tunnel" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("HyperspaceMaterial")
+color = Color(1, 1, 1, 1)
+
+[node name="Flash" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.86, 0.95, 1, 1)

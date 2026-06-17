@@ -1,6 +1,7 @@
 extends AnimatableBody3D
 
 @export var max_resources: float = 300.0
+@export var persistent_id: String = ""
 var resources: float = 300.0
 var destroyed: bool = false
 
@@ -11,9 +12,14 @@ var orbit_speed: float = 0.0
 var current_angle: float = 0.0
 var orbit_y: float = 0.0
 var is_orbiting: bool = false
+var navigation_parent: Node3D = null
 
 func _ready():
 	add_to_group("asteroid")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	add_to_group("persistent_entity")
+	if persistent_id == "":
+		push_error("[Asteroid] Missing explicit persistent ID for '%s'." % name)
 	resources = max_resources
 	# Add slight random scale variation to asteroid
 	var r_scale = randf_range(0.85, 1.4)
@@ -58,8 +64,39 @@ func mine():
 
 func deplete():
 	destroyed = true
+	_record_persistent_state()
 	AudioManager.play_explosion(global_position)
 	# Remove from entities list if it was targeted
 	if GlobalState.active_target == self:
 		GlobalState.active_target = null
 	queue_free()
+
+func get_persistent_id() -> String:
+	return get_world_id()
+
+func get_world_id() -> String:
+	return persistent_id
+
+func get_world_type_id() -> String:
+	return "entity_type.asteroid"
+
+func get_state_schema_version() -> int:
+	return 1
+
+func capture_state() -> Dictionary:
+	return {
+		"type": "asteroid",
+		"resources": resources,
+		"destroyed": destroyed,
+	}
+
+func restore_state(state: Dictionary) -> void:
+	resources = clampf(float(state.get("resources", max_resources)), 0.0, max_resources)
+	destroyed = bool(state.get("destroyed", false)) or resources <= 0.0
+	if destroyed:
+		queue_free()
+
+func _record_persistent_state() -> void:
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("record_persistent_entity_state"):
+		game_root.record_persistent_entity_state(self)

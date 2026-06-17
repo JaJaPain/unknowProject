@@ -19,6 +19,9 @@ var sfx_cargo_full = preload("res://assets/Cargo Full.mp3")
 var sfx_repair: AudioStream = null
 var sfx_sell_ore: AudioStream = null
 var sfx_align: AudioStream = null
+var sfx_jump_spool: AudioStreamWAV = null
+var sfx_jump_transit: AudioStreamWAV = null
+var sfx_jump_arrival: AudioStreamWAV = null
 
 var tracks: Array = []
 var current_track_idx: int = 0
@@ -178,3 +181,39 @@ func play_sell_ore():
 		sfx_sell_ore = load("res://sound/spaceStationSoundFX/sellOre.mp3")
 	if sfx_sell_ore:
 		play_sfx(sfx_sell_ore, -2.0)
+
+func play_jump_spool() -> void:
+	if not sfx_jump_spool:
+		sfx_jump_spool = _create_jump_tone(1.0, 70.0, 420.0, 0.18)
+	play_sfx(sfx_jump_spool, -3.0)
+
+func play_jump_transit() -> void:
+	if not sfx_jump_transit:
+		sfx_jump_transit = _create_jump_tone(1.4, 180.0, 70.0, 0.42)
+	play_sfx(sfx_jump_transit, -1.0)
+
+func play_jump_arrival() -> void:
+	if not sfx_jump_arrival:
+		sfx_jump_arrival = _create_jump_tone(0.55, 360.0, 85.0, 0.28)
+	play_sfx(sfx_jump_arrival, -2.0)
+
+func _create_jump_tone(duration: float, start_hz: float, end_hz: float, noise_amount: float) -> AudioStreamWAV:
+	var sample_rate := 22050
+	var sample_count := int(duration * sample_rate)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	var phase := 0.0
+	for i in range(sample_count):
+		var progress: float = float(i) / float(maxi(1, sample_count - 1))
+		var frequency: float = lerpf(start_hz, end_hz, progress)
+		phase += TAU * frequency / sample_rate
+		var envelope: float = sin(PI * progress)
+		var noise: float = randf_range(-1.0, 1.0) * noise_amount
+		var sample_value: float = clampf((sin(phase) * (1.0 - noise_amount) + noise) * envelope, -1.0, 1.0)
+		data.encode_s16(i * 2, int(sample_value * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = data
+	return stream

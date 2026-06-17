@@ -28,5 +28,14 @@ Thumbs.db
 *.fbx.import
 *.dae.import
 
+# Textures extracted locally when Godot imports the external hypergate GLB.
+assets/hypergate_*
+
+# Large faction ship model packages and their local texture sets.
+Ships/Aurlelia/
+Ships/Vanguard/
+Ships/Zenith/
+Ships/.deprecated/
+
 # Local bug investigation screenshots (not for the repo)
 docs/bug_screenshots/

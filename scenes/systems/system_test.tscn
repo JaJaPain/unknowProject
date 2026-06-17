@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/TestSystem.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/jump_gate.tscn" id="2_gate"]
+
+[sub_resource type="Environment" id="Environment_test"]
+background_mode = 1
+background_color = Color(0.008, 0.012, 0.03, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.25, 0.32, 0.5, 1)
+ambient_light_energy = 1.1
+
+[node name="TestSystem" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_test")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-38, -32, 0)
+light_color = Color(0.72, 0.82, 1, 1)
+light_energy = 1.45
+shadow_enabled = true
+
+[node name="ReturnGate" parent="." instance=ExtResource("2_gate")]
+position = Vector3(0, 0, 0)
+rotation_degrees = Vector3(0, 180, 0)
+gate_id = "test_to_start"
+world_id = "gate.test.to_start"
+display_name = "UNCHARTED RETURN GATE"
+destination_system_id = "start_system"
+destination_gate_id = "start_to_test"
+destination_display_name = "FRONTIER SYSTEM"

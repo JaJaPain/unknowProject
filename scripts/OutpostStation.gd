@@ -8,9 +8,11 @@ extends StaticBody3D
 ## can import them. Until then, a procedural placeholder mesh is shown.
 
 @export var display_name: String = "Outpost"
+@export var world_id: String = ""
 @export var station_type: String = "outpost"   # UIManager reads this to show repair-only UI
 @export var model_path: String = ""            # e.g. "res://assets/space_station1.glb"
 @export var model_scale: float = 5.0           # Adjust per model to match main station size
+@export var minimum_docking_distance: float = 100.0
 
 var _model_loaded: bool = false
 
@@ -18,6 +20,9 @@ func _ready() -> void:
 	push_error("[OutpostStation] >>>>>>>>>> _ready() FIRED for: " + str(name) + " display_name=" + display_name + " <<<<<<<<<<")
 	# Group membership (also declared in .tscn but explicit call is belt-and-suspenders)
 	add_to_group("station")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	if world_id.is_empty():
+		push_error("[OutpostStation] Missing explicit world ID for '%s'." % name)
 	
 	# Register in the global entity list so distance checks / NPC targeting work
 	if not GlobalState.active_system_entities.has(self):
@@ -102,16 +107,31 @@ func _physics_process(delta: float) -> void:
 	# Gentle slow rotation so the station feels alive in space
 	rotate_y(0.025 * delta)
 
+func get_docking_position(approach_position: Vector3) -> Vector3:
+	var away_from_station := approach_position - global_position
+	if away_from_station.length_squared() < 0.001:
+		away_from_station = global_transform.basis.z
+	return global_position + away_from_station.normalized() * get_docking_distance()
+
+func get_world_id() -> String:
+	return world_id
+
+func get_world_type_id() -> String:
+	return "entity_type.station"
+
+func get_docking_distance() -> float:
+	var collision := find_child("CollisionShape3D", true, false) as CollisionShape3D
+	if collision and collision.shape is BoxShape3D:
+		var box := collision.shape as BoxShape3D
+		var world_scale := collision.global_transform.basis.get_scale().abs()
+		var half_extents := box.size * 0.5 * world_scale
+		var horizontal_radius := Vector2(half_extents.x, half_extents.z).length()
+		return max(minimum_docking_distance, horizontal_radius + 16.0)
+	return minimum_docking_distance
+
 func dock_player() -> void:
-	# Walk up to MainScene, then find UIManager through the CanvasLayer
-	var main = get_tree().current_scene
-	var ui: Node = null
-	if main:
-		var canvas = main.get_node_or_null("CanvasLayer")
-		if canvas:
-			ui = canvas.get_node_or_null("UIManager")
+	var ui: Node = GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu"):
 		ui.toggle_dock_menu(self)
 	else:
 		push_warning("[OutpostStation] dock_player(): Could not find UIManager node.")
-

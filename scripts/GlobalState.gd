@@ -244,7 +244,19 @@ const SAFE_ZONES = [
 const SAFE_ZONE_REP_THRESHOLD = -40.0
 
 static func is_minor_faction(faction_name: String) -> bool:
-	return MINOR_FACTIONS.has(faction_name)
+	var definition := GameContentRegistry.shared().faction(faction_name)
+	return definition != null and definition.classification == "minor"
+
+static func minor_faction_data(faction_name: String) -> Dictionary:
+	var definition := GameContentRegistry.shared().faction(faction_name)
+	if definition == null or definition.classification != "minor":
+		return {}
+	return {
+		"color": definition.ui_color,
+		"projectile": definition.projectile_color,
+		"model": definition.ship_family,
+		"tint": definition.hull_tint,
+	}
 
 static func is_in_safe_zone(world_pos: Vector3) -> bool:
 	for zone in SAFE_ZONES:
@@ -305,38 +317,34 @@ static func reputation_color(rep: float) -> Color:
 # Returns a dict with: name (full display name), descriptor (e.g. "Corporate"),
 # abbrev (3-letter HUD abbreviation).
 static func faction_info(faction_id: String) -> Dictionary:
-	match faction_id.to_lower():
-		"zenith":   return {"name": "Zenith",   "descriptor": "Corporate", "abbrev": "ZEN"}
-		"aurelia":  return {"name": "Aurelia",  "descriptor": "Syndicate", "abbrev": "AUR"}
-		"vanguard": return {"name": "Vanguard", "descriptor": "Military",  "abbrev": "VAN"}
-		_:          return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
+	var definition := GameContentRegistry.shared().faction(faction_id)
+	if definition:
+		return {
+			"name": definition.display_name,
+			"descriptor": definition.descriptor,
+			"abbrev": definition.abbreviation,
+		}
+	return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
 
 # Returns the AtlasTexture for a minor NPC's portrait, sliced from its 2x2
 # source image at the cell position stored in MINOR_NPCS.
 # Returns null if the name isn't recognized or the image fails to load.
 static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture:
+	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
+	if definition == null:
+		return null
+	return GameContentRegistry.shared().portrait_texture(definition.portrait_id)
+
+static func get_minor_npc_data(npc_name: String) -> Dictionary:
 	if not MINOR_NPCS.has(npc_name):
-		return null
-	var npc: Dictionary = MINOR_NPCS[npc_name]
-	var image = load(npc["image"]) as Texture2D
-	if not image:
-		return null
-	var size: Vector2 = image.get_size()
-	var cell_w: float = size.x / 2.0
-	var cell_h: float = size.y / 2.0
-	var x: float = 0.0
-	var y: float = 0.0
-	match npc["position"]:
-		"top_left":     pass  # 0, 0
-		"top_right":    x = cell_w
-		"bottom_left":  y = cell_h
-		"bottom_right":
-			x = cell_w
-			y = cell_h
-	var atlas := AtlasTexture.new()
-	atlas.atlas = image
-	atlas.region = Rect2(x, y, cell_w, cell_h)
-	return atlas
+		return {}
+	var data: Dictionary = MINOR_NPCS[npc_name].duplicate(true)
+	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
+	if definition:
+		data["portrait_id"] = str(definition.portrait_id)
+		data["voice_profile_id"] = str(definition.voice_profile_id)
+		data["flavor_color"] = definition.presentation_color
+	return data
 
 # Returns the list of minor NPC names stationed at a given outpost id
 # (e.g. "iron_reach", "kova"). Returns an empty array if no NPCs are
@@ -378,7 +386,7 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 	if npcs.is_empty():
 		return {}
 	var npc_name: String = npcs[randi() % npcs.size()]
-	var npc: Dictionary = MINOR_NPCS[npc_name]
+	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
 	if lines.is_empty():
 		return {}
@@ -387,8 +395,7 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 		"npc_name": npc_name,
 		"line": line,
 		"color": npc.get("flavor_color", Color.WHITE),
-		"voice_id": npc.get("voice_id", "af_bella"),
-		"voice_speed": float(npc.get("voice_speed", 1.0)),
+		"voice_profile_id": npc.get("voice_profile_id", "voice.neutral.v1"),
 	}
 
 # Returns the full set of (npc_name, line) pairs for every NPC at the
@@ -402,17 +409,18 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 	var result: Array = []
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)
 	for npc_name in npcs:
-		var npc: Dictionary = MINOR_NPCS[npc_name]
+		var npc: Dictionary = get_minor_npc_data(npc_name)
 		var lines: Array = npc.get("flavor_lines", [])
-		var voice_id: String = npc.get("voice_id", "af_bella")
-		var voice_speed: float = float(npc.get("voice_speed", 1.0))
+		var voice_profile_id: String = npc.get(
+			"voice_profile_id",
+			"voice.neutral.v1"
+		)
 		for line in lines:
 			result.append({
 				"npc_name": npc_name,
 				"line": line,
 				"color": npc.get("flavor_color", Color.WHITE),
-				"voice_id": voice_id,
-				"voice_speed": voice_speed,
+				"voice_profile_id": voice_profile_id,
 				"outpost_id": outpost_id,
 			})
 	return result
@@ -425,7 +433,7 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array:
 	if not MINOR_NPCS.has(npc_name):
 		return []
-	var npc: Dictionary = MINOR_NPCS[npc_name]
+	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
 	var result: Array = []
 	for line in lines:
@@ -435,8 +443,10 @@ static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String
 			"npc_name": npc_name,
 			"line": line,
 			"color": npc.get("flavor_color", Color.WHITE),
-			"voice_id": npc.get("voice_id", "af_bella"),
-			"voice_speed": float(npc.get("voice_speed", 1.0)),
+			"voice_profile_id": npc.get(
+				"voice_profile_id",
+				"voice.neutral.v1"
+			),
 		})
 	return result
 
@@ -455,10 +465,12 @@ var player_credits: int = 50:
 		player_credits = val
 		credits_changed.emit(player_credits)
 
+var _cargo_normalizing: bool = false
 var cargo: float = 0.0:
 	set(val):
 		cargo = clamp(val, 0.0, cargo_max)
-		cargo_changed.emit(cargo)
+		if not _cargo_normalizing:
+			cargo_changed.emit(cargo)
 
 # ── Cargo type system ──────────────────────────────────────────────────────
 # The cargo hold is mutually exclusive: it holds EITHER ore (tracked by
@@ -492,14 +504,29 @@ var cargo_special: Dictionary = {}
 #                     then true (and the part is loaded into cargo_special)
 var test_quest: Dictionary = {}
 
+func normalize_cargo_state() -> void:
+	_cargo_normalizing = true
+	if cargo_type == CargoType.ORE and cargo <= 0.0:
+		cargo = 0.0
+		cargo_type = CargoType.EMPTY
+		cargo_special = {}
+	elif cargo_type == CargoType.SPECIAL and cargo_special.is_empty():
+		cargo = 0.0
+		cargo_type = CargoType.EMPTY
+	elif cargo_type != CargoType.SPECIAL and not cargo_special.is_empty():
+		cargo_special = {}
+	_cargo_normalizing = false
+
 # Returns true if the hold can accept more ore (empty, or already ore with
 # room left). Returns false if a special item is loaded.
 func can_accept_ore() -> bool:
+	normalize_cargo_state()
 	return cargo_type == CargoType.EMPTY or cargo_type == CargoType.ORE
 
 # Returns true if the hold can accept a special cargo item. Only valid
 # when the hold is empty — can't swap out ore for a part.
 func can_accept_special() -> bool:
+	normalize_cargo_state()
 	return cargo_type == CargoType.EMPTY
 
 # Add ore to the hold. Returns the amount actually added (capped at
@@ -666,6 +693,7 @@ func buyback_ore_at_outpost() -> int:
 # Returns a short display string for the HUD: "EMPTY", "ORE: 15 / 30 m³",
 # or "SPECIAL: Replacement Plasma Coupler".
 func cargo_display_text() -> String:
+	normalize_cargo_state()
 	match cargo_type:
 		CargoType.EMPTY:
 			return "EMPTY"
@@ -717,9 +745,12 @@ var has_max_deep_mining: bool = false
 var damage: float = weapon_damage # Legacy support until swapped
 var laser_range: float = 80.0
 var destroyed_ships_pool: int = 0
+var runtime_entity_sequence: int = 0
 
 # Game references
 var player: Node3D = null
+var active_system_root: Node3D = null
+var current_system_id: String = "start_system"
 var active_target: Node3D = null:
 	set(val):
 		active_target = val
@@ -750,13 +781,12 @@ var faction_kills: Dictionary = {
 
 func record_kill(faction_name: String):
 	# Track kills for ANY faction — including LLM-generated custom ones
-	if not faction_kills.has(faction_name):
-		faction_kills[faction_name] = 0
-	faction_kills[faction_name] += 1
+	var kill_count := int(faction_kills.get(faction_name, 0)) + 1
+	faction_kills[faction_name] = kill_count
 	# NOTE: ship_destroyed signal is now emitted by NPCShip.die() itself,
 	# not here, so NPC-on-NPC kills also count toward quest progress.
 	# Only call in reinforcements for the three main factions (they have matching ship scenes)
-	if faction_name in ["zenith", "aurelia", "vanguard"] and faction_kills[faction_name] % 3 == 0:
+	if faction_name in ["zenith", "aurelia", "vanguard"] and kill_count % 3 == 0:
 		spawn_reinforcement(faction_name)
 
 func spawn_reinforcement(faction_name: String):
@@ -776,16 +806,22 @@ func spawn_reinforcement(faction_name: String):
 		var npc = npc_scene.instantiate()
 		npc.faction = faction_name
 		npc.is_reinforcement = true
+		npc.ship_role = "Gunner"
 		npc.speed = 11.0
 		npc.name = faction_name.to_upper() + "_EliteReinforcement_" + str(randi() % 1000)
+		runtime_entity_sequence += 1
+		npc.persistent_id = "entity.%s.reinforcement.%06d" % [
+			current_system_id,
+			runtime_entity_sequence,
+		]
 		
-		var current_scene = get_tree().current_scene
-		if current_scene:
-			current_scene.add_child(npc)
+		var system_root = get_system_root()
+		if system_root:
+			system_root.add_child(npc)
 			npc.global_position = spawn_pos
 			
 			# Trigger warning on HUD
-			var ui = current_scene.get_node_or_null("CanvasLayer/UIManager")
+			var ui = get_ui_manager()
 			if ui and ui.has_method("show_hud_warning"):
 				ui.show_hud_warning("WARNING: " + faction_name.to_upper() + " Elite Reinforcement has entered the area!")
 			
@@ -798,8 +834,8 @@ func spawn_mission_targets(faction_name: String, count: int):
 	if not player_node or not is_instance_valid(player_node) or player_node.get("destroyed"):
 		return
 	
-	var current_scene = get_tree().current_scene
-	if not current_scene:
+	var system_root = get_system_root()
+	if not system_root:
 		return
 	
 	var npc_scene = load("res://scenes/npc_ship.tscn")
@@ -810,7 +846,7 @@ func spawn_mission_targets(faction_name: String, count: int):
 	# Use the station as the spawn anchor so targets appear in open space,
 	# not on top of the dock where the player accepted the quest
 	var spawn_anchor: Vector3 = player_node.global_position
-	var station_node = current_scene.get_node_or_null("Station")
+	var station_node = get_primary_station()
 	if station_node and is_instance_valid(station_node):
 		spawn_anchor = station_node.global_position
 	
@@ -818,6 +854,11 @@ func spawn_mission_targets(faction_name: String, count: int):
 	
 	# Spread ships evenly in a ring 550-900m from the station — far enough
 	# that the player has to fly out to engage, close enough to feel immediate
+	var mission_key := _active_mission_identity_key()
+	var start_index := int(
+		QuestManager.active_quest.get("target_spawn_sequence", 0)
+	)
+	QuestManager.active_quest["target_spawn_sequence"] = start_index + count
 	for i in range(count):
 		var angle = (TAU / count) * i + randf_range(-0.4, 0.4)
 		var dist = randf_range(550.0, 900.0)
@@ -827,18 +868,35 @@ func spawn_mission_targets(faction_name: String, count: int):
 		var npc = npc_scene.instantiate()
 		npc.faction = faction_name
 		npc.is_reinforcement = false
+		npc.ship_role = ["Gunner", "Interceptor"].pick_random()
 		npc.name = faction_name.to_upper() + "_MissionTarget_" + str(randi() % 1000)
 		# Mark as a quest target so QuestManager can count survivors and
 		# decide when to spawn replacements after NPC kills.
 		npc.set_meta("is_quest_target", true)
-		current_scene.add_child(npc)
+		npc.persistent_id = "entity.mission.%s.%06d" % [
+			mission_key,
+			start_index + i,
+		]
+		npc.add_to_group("persistent_entity")
+		system_root.add_child(npc)
 		npc.global_position = spawn_pos
 	
 	# HUD warning + chatter so the arrival feels like an event
-	var ui = current_scene.get_node_or_null("CanvasLayer/UIManager")
+	var ui = get_ui_manager()
 	if ui and ui.has_method("show_hud_warning"):
 		ui.show_hud_warning("CONTRACT ACTIVE: " + str(count) + " " + faction_name.to_upper() + " targets have entered the sector.")
 	emit_chatter("SYSTEM", "Sensor sweep: " + str(count) + " " + faction_name.to_upper() + " signatures detected in open space.", Color(0.0, 0.9, 0.9))
+
+func _active_mission_identity_key() -> String:
+	var runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
+	if not runtime_id.is_empty():
+		return runtime_id.sha256_text().substr(0, 12)
+	var legacy_source := "%s|%s|%s" % [
+		QuestManager.active_quest.get("title", "legacy"),
+		QuestManager.active_quest.get("system_id", current_system_id),
+		QuestManager.active_quest.get("faction", "neutral"),
+	]
+	return legacy_source.sha256_text().substr(0, 12)
 
 
 
@@ -859,10 +917,16 @@ func emit_npc_flavor(flavor: Dictionary) -> void:
 	if flavor.is_empty():
 		return
 	var sender: String = flavor.get("npc_name", "Local")
-	var line: String = flavor.get("line", "")
+	var voice_profile_id: String = str(
+		flavor.get("voice_profile_id", "voice.neutral.v1")
+	)
+	var line: String = apply_tone_guard(str(flavor.get("line", "")), voice_profile_id)
 	var color: Color = flavor.get("color", Color.WHITE)
 	system_chatter_received.emit(sender, line, color)
-	npc_flavor_spoken.emit(flavor)
+	var spoken_flavor := flavor.duplicate(true)
+	spoken_flavor["line"] = line
+	spoken_flavor["voice_profile_id"] = voice_profile_id
+	npc_flavor_spoken.emit(spoken_flavor)
 
 func adjust_reputation(faction_name: String, amount: float):
 	if reputations.has(faction_name):
@@ -873,10 +937,32 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_inputs()
 
+func get_system_root() -> Node3D:
+	if active_system_root and is_instance_valid(active_system_root):
+		return active_system_root
+	return get_tree().current_scene
+
+func get_ui_manager() -> Control:
+	var scene_root := get_tree().current_scene
+	if not scene_root:
+		return null
+	return scene_root.get_node_or_null("CanvasLayer/UIManager") as Control
+
+func get_primary_station() -> Node3D:
+	var system_root := get_system_root()
+	if not system_root:
+		return null
+	for node in get_tree().get_nodes_in_group("primary_station"):
+		if node is Node3D and system_root.is_ancestor_of(node):
+			return node as Node3D
+	return system_root.get_node_or_null("Station") as Node3D
+
 # Called before reload_current_scene() to avoid dangling references into the freed scene.
 func reset_for_restart():
 	# Null out all node references first
 	player = null
+	active_system_root = null
+	current_system_id = "start_system"
 	active_system_entities.clear()
 	# Directly set paused to avoid emitting game_paused into freed UIManager
 	paused = false
@@ -885,6 +971,8 @@ func reset_for_restart():
 	# Reset gameplay stats
 	player_credits = 50
 	cargo = 0.0
+	cargo_special = {}
+	cargo_type = CargoType.EMPTY
 	cargo_max = SHIP_BASE_STATS["cargo_max_m3"]
 	player_storage_ore = 0.0
 	current_upgrades = {
@@ -921,6 +1009,7 @@ func reset_for_restart():
 	damage = weapon_damage
 	laser_range = 80.0
 	destroyed_ships_pool = 0
+	runtime_entity_sequence = 0
 	# Reset reputations
 	reputations = { "zenith": 50.0, "aurelia": -20.0, "vanguard": -20.0 }
 	# Reset kill tracking
@@ -1050,6 +1139,7 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 		else:
 			remaining_ore_cost -= cargo
 			cargo = 0.0
+		normalize_cargo_state()
 	
 	player_storage_ore -= remaining_ore_cost
 	
@@ -1129,12 +1219,13 @@ func _add_mouse_action(action_name: String, button_index: int):
 # anything else routed through the dialogue pipeline.
 #
 # This is a pure function — no state, no side effects. Safe to call from
-# any thread or signal handler. TTSInterface routes its text through
+# any thread or signal handler. SpeechService routes its text through
 # here, and any UI code that displays dialogue should too, so the
 # on-screen text and the spoken audio stay in sync.
 #
 # Kaelen's voice after faction resolution is "af_bella" — that's how
 # the call path identifies her. Anyone else gets the substitution.
+const KAELEN_VOICE_PROFILE_ID: String = "voice.kaelen.v1"
 const KAELEN_VOICE_ID: String = "af_bella"
 
 # Substitutions for non-Kaelen speakers. Keyed on the source token
@@ -1152,7 +1243,7 @@ const TONE_REPLACEMENTS: Array = [
 # get_voice_for_faction("neutral") — if you add a new broker voice
 # for Kaelen, update both.
 static func is_kaelen_voice(voice_id: String) -> bool:
-	return voice_id == KAELEN_VOICE_ID
+	return voice_id in [KAELEN_VOICE_PROFILE_ID, KAELEN_VOICE_ID]
 
 # Apply all TONE_REPLACEMENTS rules to `text` for a non-Kaelen speaker.
 # Case-insensitive on the source token, but the replacement preserves

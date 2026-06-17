@@ -14,6 +14,8 @@ quests, and immersion.
 - Keep large binary models out of normal Git history. `assets/hypergate.glb`
   remains local and is covered by the repository's existing `*.glb` ignore
   rule.
+- Keep Godot's locally extracted `assets/hypergate_*` texture sidecars ignored
+  with the external model.
 - Treat `assets/hypergate.glb` as an external project prerequisite and document
   its expected path so a fresh checkout fails clearly rather than silently.
 - Perform implementation on a dedicated `codex/jumpgate-system` branch.
@@ -198,91 +200,93 @@ are absent.
 
 ### Phase 0: Git Safety
 
-- [ ] Confirm clean working tree.
-- [ ] Confirm `assets/hypergate.glb` remains excluded by the repository's
+- [x] Confirm clean working tree.
+- [x] Confirm `assets/hypergate.glb` remains excluded by the repository's
       `*.glb` ignore rule.
-- [ ] Document `assets/hypergate.glb` as a required external asset.
-- [ ] Create and switch to `codex/jumpgate-system`.
-- [ ] Commit this implementation plan.
-- [ ] Review the Phase 0 diff and Git status.
+- [x] Document `assets/hypergate.glb` as a required external asset.
+- [x] Create and switch to `codex/jumpgate-system`.
+- [x] Commit this implementation plan.
+- [x] Review the Phase 0 diff and Git status.
 
 ### Phase 1: Persistent Game Root
 
-- [ ] Add `GameRoot` with the player, UI, system container, and transition layer.
-- [ ] Extract the existing world into `system_start.tscn`.
-- [ ] Preserve current startup behavior.
-- [ ] Redirect system spawning to the active system root.
-- [ ] Update restart to reset and reload the full game.
-- [ ] Run Godot parse/startup checks.
-- [ ] Review the complete Phase 1 Git diff.
+- [x] Add `GameRoot` with the player, UI, system container, and transition layer.
+- [x] Extract the existing world into `system_start.tscn`.
+- [x] Preserve current startup behavior.
+- [x] Redirect system spawning to the active system root.
+- [x] Update restart to reset and reload the full game.
+- [x] Run Godot parse/startup checks.
+- [x] Review the complete Phase 1 Git diff.
 
 ### Phase 2: Reusable Gate And Test System
 
-- [ ] Build the reusable `jump_gate.tscn` wrapper.
-- [ ] Calibrate model center, scale, and orientation.
-- [ ] Add structural collision, activation volume, portal, and arrival marker.
-- [ ] Add gate metadata and stable IDs.
-- [ ] Place an outbound gate in the starting system.
-- [ ] Build `system_test.tscn` with one planet and a paired return gate.
-- [ ] Run scene parse and startup checks.
-- [ ] Review the complete Phase 2 Git diff.
+- [x] Build the reusable `jump_gate.tscn` wrapper.
+- [x] Calibrate model center, scale, and orientation.
+- [x] Add structural collision, activation volume, portal, and arrival marker.
+- [x] Add gate metadata and stable IDs.
+- [x] Place an outbound gate in the starting system.
+- [x] Build `system_test.tscn` with one planet and a paired return gate.
+- [x] Run scene parse and startup checks.
+- [x] Review the complete Phase 2 Git diff.
 
 ### Phase 3: System Loading And Two-Way Travel
 
-- [ ] Add a system manager.
-- [ ] Load and unload systems beneath `SystemContainer`.
-- [ ] Preserve the player and UI between systems.
-- [ ] Clear stale targets and references before unloading.
-- [ ] Resolve the paired destination gate and arrival marker.
-- [ ] Place and orient the player safely on arrival.
-- [ ] Add arrival cooldown protection.
-- [ ] Verify repeated start-to-test and test-to-start travel.
-- [ ] Review the complete Phase 3 Git diff.
+- [x] Add a system manager.
+- [x] Load and unload systems beneath `SystemContainer`.
+- [x] Preserve the player and UI between systems.
+- [x] Clear stale targets and references before unloading.
+- [x] Resolve the paired destination gate and arrival marker.
+- [x] Place and orient the player safely on arrival.
+- [x] Add arrival cooldown protection.
+- [x] Verify repeated start-to-test and test-to-start travel.
+- [x] Review the complete Phase 3 Git diff.
 
 ### Phase 4: Gate UI And Activation
 
-- [ ] Show jumpgates in the overview list.
-- [ ] Add jumpgate target-panel labeling and destination details.
-- [ ] Add `Approach Gate`.
-- [ ] Add `Initiate Jump`.
-- [ ] Enforce distance, alignment, alive, undocked, and transition-state checks.
-- [ ] Lock navigation, targeting, and combat input during travel.
-- [ ] Show clear status and refusal messages.
-- [ ] Review the complete Phase 4 Git diff.
+- [x] Show jumpgates in the overview list.
+- [x] Add jumpgate target-panel labeling and destination details.
+- [x] Add `Approach Gate`.
+- [x] Add `Initiate Jump`.
+- [x] Enforce distance, alignment, alive, undocked, and transition-state checks.
+- [x] Lock navigation, targeting, and combat input during travel.
+- [x] Show clear status and refusal messages.
+- [x] Review the complete Phase 4 Git diff.
 
 ### Phase 5: Hyperspace Effects
 
-- [ ] Animate gate portal energy, lights, and emissive intensity.
-- [ ] Add spool-up and ship acceleration.
-- [ ] Add camera FOV change and entry flash.
-- [ ] Add the full-screen hyperspace tunnel shader.
-- [ ] Load the destination while the tunnel obscures the scene.
-- [ ] Add emergence flash and restore camera/control state.
-- [ ] Add audio hooks with fallback behavior.
-- [ ] Review the complete Phase 5 Git diff.
+- [x] Animate gate portal energy, lights, and emissive intensity.
+- [x] Add spool-up and ship acceleration.
+- [x] Add camera FOV change and entry flash.
+- [x] Add the full-screen hyperspace tunnel shader.
+- [x] Load the destination while the tunnel obscures the scene.
+- [x] Add emergence flash and restore camera/control state.
+- [x] Add audio hooks with fallback behavior.
+- [x] Review the complete Phase 5 Git diff.
 
 ### Phase 6: Session And Disk State
 
-- [ ] Capture and restore hull, shields, transform, and player runtime state.
-- [ ] Add stable IDs to meaningful system entities.
-- [ ] Capture mined and destroyed persistent entity state.
-- [ ] Preserve quest target state across systems.
-- [ ] Add versioned JSON save and load support.
-- [ ] Autosave after arrival and docking.
-- [ ] Verify missing, old, and malformed save handling.
-- [ ] Review the complete Phase 6 Git diff.
+- [x] Capture and restore hull, shields, transform, and player runtime state.
+- [x] Add stable IDs to meaningful system entities.
+- [x] Capture mined and destroyed persistent entity state.
+- [x] Preserve quest target state across systems.
+- [x] Add versioned JSON save and load support.
+- [x] Autosave after arrival and docking.
+- [x] Verify missing, old, and malformed save handling.
+- [x] Review the complete Phase 6 Git diff.
 
 ### Phase 7: Final Verification
 
-- [ ] Run `git diff --check`.
-- [ ] Review the final aggregate diff for accidental overwrites.
-- [ ] Run Godot headless import.
-- [ ] Run script and scene parse verification.
-- [ ] Start the project long enough to catch startup runtime errors.
-- [ ] Verify two-way jumping repeatedly.
-- [ ] Verify restart, pause, targeting, combat, cargo, upgrades, quests, docking,
-      autosave, and restored state.
-- [ ] Confirm final Git status and report anything not committed or pushed.
+- [x] Run `git diff --check`.
+- [x] Review the final aggregate diff for accidental overwrites.
+- [x] Run Godot headless import.
+- [x] Run script and scene parse verification.
+- [x] Start the project long enough to catch startup runtime errors.
+- [x] Verify two-way jumping repeatedly with the automated smoke test.
+- [x] Verify save validation and player, quest, and system-state restoration with
+      the automated smoke test.
+- [ ] Complete the hands-on gameplay pass for restart, pause, targeting, combat,
+      cargo, upgrades, quests, docking, autosave, and restored state.
+- [x] Confirm final Git status and report anything not committed or pushed.
 
 ## Completion Criteria
 

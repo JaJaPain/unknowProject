@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"factions": [
+		{"id":"faction.zenith","schema_version":1,"legacy_id":"zenith","display_name":"Zenith","classification":"major","descriptor":"Corporate","abbreviation":"ZEN","agent_npc_id":"npc.agent.zenith","agent_portrait_id":"portrait.quest_givers.zenith","voice_profile_id":"voice.agent.zenith.v1","ui_color":[1.0,0.6,0.1,1.0],"projectile_color":[1.0,0.6,0.1,1.0]},
+		{"id":"faction.aurelia","schema_version":1,"legacy_id":"aurelia","display_name":"Aurelia","classification":"major","descriptor":"Syndicate","abbreviation":"AUR","agent_npc_id":"npc.agent.aurelia","agent_portrait_id":"portrait.quest_givers.aurelia","voice_profile_id":"voice.agent.aurelia.v1","ui_color":[0.85,0.2,0.2,1.0],"projectile_color":[0.85,0.2,0.2,1.0]},
+		{"id":"faction.vanguard","schema_version":1,"legacy_id":"vanguard","display_name":"Vanguard","classification":"major","descriptor":"Military","abbreviation":"VAN","agent_npc_id":"npc.agent.vanguard","agent_portrait_id":"portrait.quest_givers.vanguard","voice_profile_id":"voice.agent.vanguard.v1","ui_color":[0.2,0.7,1.0,1.0],"projectile_color":[0.2,0.7,1.0,1.0]},
+		{"id":"faction.reavers","schema_version":1,"legacy_id":"reavers","display_name":"Reavers","classification":"minor","descriptor":"Raiders","abbreviation":"REA","ship_family":"faction1","ui_color":[0.9,0.1,0.15,1.0],"projectile_color":[0.9,0.15,0.15,1.0],"hull_tint":[0.85,0.1,0.1,1.0]},
+		{"id":"faction.obsidian","schema_version":1,"legacy_id":"obsidian","display_name":"Obsidian","classification":"minor","descriptor":"Outlaws","abbreviation":"OBS","ship_family":"faction1","ui_color":[0.5,0.15,0.8,1.0],"projectile_color":[0.6,0.2,0.9,1.0],"hull_tint":[0.45,0.1,0.7,1.0]},
+		{"id":"faction.dustborn","schema_version":1,"legacy_id":"dustborn","display_name":"Dustborn","classification":"minor","descriptor":"Nomads","abbreviation":"DUS","ship_family":"faction2","ui_color":[0.85,0.65,0.2,1.0],"projectile_color":[0.9,0.6,0.1,1.0],"hull_tint":[0.8,0.6,0.15,1.0]},
+		{"id":"faction.wraiths","schema_version":1,"legacy_id":"wraiths","display_name":"Wraiths","classification":"minor","descriptor":"Marauders","abbreviation":"WRA","ship_family":"faction2","ui_color":[0.3,0.9,0.3,1.0],"projectile_color":[0.3,0.85,0.3,1.0],"hull_tint":[0.2,0.75,0.2,1.0]},
+		{"id":"faction.ironclad","schema_version":1,"legacy_id":"ironclad","display_name":"Ironclad","classification":"minor","descriptor":"Mercenaries","abbreviation":"IRO","ship_family":"aurelia","ui_color":[0.6,0.6,0.65,1.0],"projectile_color":[0.8,0.8,0.85,1.0],"hull_tint":[0.5,0.5,0.55,1.0]}
+	]
+}

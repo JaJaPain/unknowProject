@@ -349,6 +349,40 @@ var fallback_templates = [
 	}
 ]
 
+const CAMPAIGN_NAME_FALLBACKS: Array[String] = [
+	"Cold Meridian",
+	"Ember Passage",
+	"Far Horizon",
+	"Last Light",
+	"Silent Dividend",
+	"Wayward Star",
+	"Iron Pilgrim",
+	"Broken Compass",
+]
+
+
+func _sanitize_campaign_name(raw_name: String) -> String:
+	var words := PackedStringArray()
+	for raw_word in raw_name.strip_edges().split(" ", false):
+		var clean_word := ""
+		for character in raw_word:
+			if character.to_lower() != character.to_upper() \
+					or character in ["'", "-"]:
+				clean_word += character
+		if not clean_word.is_empty():
+			words.append(clean_word.capitalize())
+		if words.size() == 4:
+			break
+	if words.size() < 2:
+		return ""
+	return " ".join(words).substr(0, 48)
+
+
+func _fallback_campaign_name() -> String:
+	return CAMPAIGN_NAME_FALLBACKS[
+		randi() % CAMPAIGN_NAME_FALLBACKS.size()
+	]
+
 # Random complications to vary prompts
 var complications = [
 	"A rival broker wants this cargo intercepted to sabotage my client's logistics.",
@@ -463,6 +497,9 @@ func _ready():
 
 	_load_kaelen_intro_stats()
 	_load_world_lore()
+	if "--baseline-offline" in OS.get_cmdline_user_args():
+		print("[LLMInterface] Baseline offline mode: model discovery disabled.")
+		return
 	_discover_ollama_model()
 
 func _load_world_lore():
@@ -810,6 +847,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		rand_comp + "\n\n" + \
 		"Generate a unique space quest. You MUST respond strictly in valid JSON format. Do not output notes, markdown, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
+		"  \"campaign_name\": \"Cold Meridian\",\n" + \
 		"  \"title\": \"" + example_title + "\",\n" + \
 		"  \"faction\": \"" + chosen_faction + "\",\n" + \
 		"  \"agent_name\": \"" + agent_name + "\",\n" + \
@@ -849,6 +887,8 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"  ]\n" + \
 		"}\n\n" + \
 		"Now generate a COMPLETELY DIFFERENT quest with a unique title and all-new dialogue written in your character's voice. " + \
+		"The campaign_name must be an evocative two-to-four-word name for the pilot's larger story, not merely this contract. " + \
+		"Do not use the words campaign, save, slot, adventure, or journey in campaign_name. " + \
 		"The faction must be \"" + chosen_faction + "\". The agent_name must be \"" + agent_name + "\". " + \
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
 		("For KILL_SHIPS you MUST include 'target_faction' (must NOT equal '" + chosen_faction + "') and 'count_required' (integer 2–4). " if chosen_type == "KILL_SHIPS" else ("For PICKUP_SPECIAL you MUST include 'target_outpost' (must equal '" + pickup_outpost + "'), 'target_outpost_display' (must equal '" + pickup_outpost_display + "'), 'target_npc' (must equal '" + pickup_npc + "'), 'part_name' (must equal '" + pickup_item + "'), and 'destination' (must equal '" + agent_name + "'). " if chosen_type == "PICKUP_SPECIAL" else "For DELIVER_ORE you MUST include 'amount_required' (float 20–300). ")) + \
@@ -926,6 +966,14 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		return
 		
 	print("[LLMInterface] LLM Quest successfully generated: ", quest_data["title"])
+	var campaign_name := _sanitize_campaign_name(
+		str(quest_data.get("campaign_name", ""))
+	)
+	quest_data["campaign_name"] = (
+		campaign_name
+		if not campaign_name.is_empty()
+		else _fallback_campaign_name()
+	)
 	_validate_quest_data(quest_data)
 	if active_callback.is_valid():
 		active_callback.call(quest_data, false)
@@ -967,7 +1015,7 @@ func _validate_quest_data(quest_data: Dictionary):
 			break
 	
 	# If dialogue clearly describes kills but JSON says ore (or vice versa), fix the type
-	if dialogue_sounds_like_kill and not dialogue_sounds_like_ore and not dialogue_sounds_like_pickup and obj_type == "DELIVER_ORE":
+	if false and dialogue_sounds_like_kill and not dialogue_sounds_like_ore and not dialogue_sounds_like_pickup and obj_type == "DELIVER_ORE":
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue describes KILL mission but JSON says DELIVER_ORE. Patching type.")
 		obj["type"] = "KILL_SHIPS"
 		obj_type = "KILL_SHIPS"
@@ -979,7 +1027,7 @@ func _validate_quest_data(quest_data: Dictionary):
 			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
 			obj["target_faction"] = minor_keys[randi() % minor_keys.size()]
 		obj.erase("amount_required")
-	elif dialogue_sounds_like_ore and not dialogue_sounds_like_kill and not dialogue_sounds_like_pickup and obj_type == "KILL_SHIPS":
+	elif false and dialogue_sounds_like_ore and not dialogue_sounds_like_kill and not dialogue_sounds_like_pickup and obj_type == "KILL_SHIPS":
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue describes ORE mission but JSON says KILL_SHIPS. Patching type.")
 		obj["type"] = "DELIVER_ORE"
 		obj_type = "DELIVER_ORE"
@@ -1031,6 +1079,245 @@ func _validate_quest_data(quest_data: Dictionary):
 			obj["part_name"] = "Suspicious Crate"
 		if not obj.has("destination"):
 			obj["destination"] = "Main Station"
+
+	# Last line of defense: reconciliation above may pull an out-of-range
+	# number from the dialogue, then clamping can make the two disagree again.
+	# Patch only the objective number so display text and TTS use the final value.
+	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	_finalize_validated_quest_display(quest_data, obj_type, obj)
+
+
+func _finalize_validated_quest_display(
+	quest_data: Dictionary,
+	obj_type: String,
+	obj: Dictionary
+) -> void:
+	quest_data["objective_summary"] = _objective_summary(obj_type, obj)
+	if _dialogue_conflicts_with_objective(
+		str(quest_data.get("dialogue", "")),
+		obj_type
+	):
+		quest_data["dialogue"] = _safe_objective_dialogue(
+			quest_data,
+			obj_type,
+			obj
+		)
+		quest_data["objective_dialogue_rewritten"] = true
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Replaced contradictory briefing with verified objective text."
+		)
+
+
+func _objective_summary(obj_type: String, obj: Dictionary) -> String:
+	if obj_type == "DELIVER_ORE":
+		return "%d m³ Ore" % int(round(float(
+			obj.get("amount_required", 20.0)
+		)))
+	if obj_type == "KILL_SHIPS":
+		return "Destroy %d %s ships" % [
+			int(obj.get("count_required", 3)),
+			str(obj.get("target_faction", "zenith")).to_upper(),
+		]
+	if obj_type == "PICKUP_SPECIAL":
+		return "Pick up %s from %s at %s" % [
+			str(obj.get("part_name", "the package")),
+			str(obj.get("target_npc", "the contact")),
+			str(obj.get("target_outpost_display", "the outpost")),
+		]
+	return "Review contract details"
+
+
+func _safe_objective_dialogue(
+	quest_data: Dictionary,
+	obj_type: String,
+	obj: Dictionary
+) -> String:
+	var nickname := str(
+		quest_data.get("player_nickname", "Shiny")
+	)
+	if obj_type == "DELIVER_ORE":
+		return (
+			"I need a clean ore run, %s. Bring back %d m³ of ore and "
+			+ "keep the paperwork boring."
+		) % [
+			nickname,
+			int(round(float(obj.get("amount_required", 20.0)))),
+		]
+	if obj_type == "KILL_SHIPS":
+		return (
+			"I need the lane cleared, %s. Destroy %d %s ships and "
+			+ "come back in one piece."
+		) % [
+			nickname,
+			int(obj.get("count_required", 3)),
+			str(obj.get("target_faction", "zenith")).to_upper(),
+		]
+	if obj_type == "PICKUP_SPECIAL":
+		return (
+			"Quiet retrieval, %s. Pick up %s from %s at %s, then bring it "
+			+ "straight back."
+		) % [
+			nickname,
+			str(obj.get("part_name", "the package")),
+			str(obj.get("target_npc", "the contact")),
+			str(obj.get("target_outpost_display", "the outpost")),
+		]
+	return str(quest_data.get("dialogue", "Contract details are attached."))
+
+
+func _dialogue_conflicts_with_objective(
+	raw_dialogue: String,
+	obj_type: String
+) -> bool:
+	var dialogue := raw_dialogue.to_lower()
+	if dialogue.strip_edges().is_empty():
+		return false
+	var kill_score := _keyword_score(dialogue, [
+		"destroy", "eliminate", "kill", "take out", "take down",
+		"clear", "neutralize", "intercept", "wipe out", "blow up",
+		"shoot down", "hostile", "raider", "raiders", "patrol",
+		"contacts", "bounty"
+	])
+	var ore_score := _keyword_score(dialogue, [
+		"ore", "silicate", "mine", "mining", "deliver", "cargo",
+		"shipment", "haul", "tonnage", "cubic", "m³", "m3"
+	])
+	var pickup_score := _keyword_score(dialogue, [
+		"retrieve", "fetch", "pick up", "pickup", "unopened",
+		"crate", "pod", "lockbox", "container", "drive", "package"
+	])
+	if obj_type == "DELIVER_ORE":
+		return kill_score >= 2 and ore_score == 0 and pickup_score == 0
+	if obj_type == "KILL_SHIPS":
+		return ore_score >= 2 and kill_score == 0 and pickup_score == 0
+	if obj_type == "PICKUP_SPECIAL":
+		return (kill_score >= 2 or ore_score >= 2) and pickup_score == 0
+	return false
+
+
+func _keyword_score(text: String, keywords: Array) -> int:
+	var score := 0
+	for keyword in keywords:
+		if text.find(str(keyword)) != -1:
+			score += 1
+	return score
+
+func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: String, obj: Dictionary):
+	var original_dialogue = str(quest_data.get("dialogue", ""))
+	if original_dialogue.is_empty():
+		return
+
+	var dialogue = original_dialogue.to_lower()
+	var number_start = -1
+	var number_end = -1
+	var replacement = ""
+
+	if obj_type == "DELIVER_ORE":
+		var ore_context_words = ["m³", "m3", "cubic", "ore", "silicate", "tonne",
+			"metric", "cargo", "shipment", "deliver", "haul"]
+		var i = 0
+		while i < dialogue.length():
+			if dialogue[i] >= "0" and dialogue[i] <= "9":
+				var j = i
+				var num_str = ""
+				while j < dialogue.length() and ((dialogue[j] >= "0" and dialogue[j] <= "9") or dialogue[j] == "."):
+					num_str += dialogue[j]
+					j += 1
+				var num_val = float(num_str)
+				if num_val >= 10.0 and num_val <= 500.0:
+					var after = dialogue.substr(j, 25)
+					for context_word in ore_context_words:
+						if after.find(context_word) != -1:
+							number_start = i
+							number_end = j
+							break
+				if number_start != -1:
+					break
+				i = j
+			else:
+				i += 1
+		replacement = str(int(round(float(obj.get("amount_required", 25.0)))))
+	elif obj_type == "KILL_SHIPS":
+		var ship_words = ["ship", "contact", "target", "vessel", "hostile", "raider",
+			"patrol", "interceptor", "sentinel", "fighter", "bogey", "hull",
+			"of them", "scraped", "off the lane"]
+		var kill_verbs = ["destroy", "eliminate", "kill", "clear", "remove", "engage",
+			"take", "wants", "bounty"]
+		for i in range(dialogue.length()):
+			if dialogue[i] < "1" or dialogue[i] > "9":
+				continue
+			var digit_end = i + 1
+			while digit_end < dialogue.length() \
+					and dialogue[digit_end] >= "0" \
+					and dialogue[digit_end] <= "9":
+				digit_end += 1
+			var after = dialogue.substr(digit_end, 35)
+			var before_start = max(0, i - 25)
+			var before = dialogue.substr(before_start, i - before_start)
+			var is_objective_number = false
+			for ship_word in ship_words:
+				if after.find(ship_word) != -1:
+					is_objective_number = true
+					break
+			if not is_objective_number:
+				for kill_verb in kill_verbs:
+					if before.find(kill_verb) != -1:
+						is_objective_number = true
+						break
+			if is_objective_number:
+				number_start = i
+				number_end = digit_end
+				break
+		if number_start == -1:
+			var number_phrases = {
+				"a couple": 2,
+				"a few": 3,
+				"handful": 3,
+				"several": 4,
+				"two": 2,
+				"three": 3,
+				"four": 4,
+				"five": 5,
+				"six": 6,
+			}
+			for phrase: String in number_phrases:
+				var phrase_start = dialogue.find(phrase)
+				while phrase_start != -1:
+					var phrase_end = phrase_start + phrase.length()
+					var after = dialogue.substr(phrase_end, 35)
+					var before_start = max(0, phrase_start - 25)
+					var before = dialogue.substr(
+						before_start,
+						phrase_start - before_start
+					)
+					var is_objective_phrase = false
+					for ship_word in ship_words:
+						if after.find(ship_word) != -1:
+							is_objective_phrase = true
+							break
+					if not is_objective_phrase:
+						for kill_verb in kill_verbs:
+							if before.find(kill_verb) != -1:
+								is_objective_phrase = true
+								break
+					if is_objective_phrase:
+						number_start = phrase_start
+						number_end = phrase_end
+						break
+					phrase_start = dialogue.find(phrase, phrase_end)
+				if number_start != -1:
+					break
+		replacement = str(int(obj.get("count_required", 3)))
+
+	if number_start == -1:
+		return
+
+	var current_number = original_dialogue.substr(number_start, number_end - number_start)
+	if current_number == replacement:
+		return
+
+	quest_data["dialogue"] = original_dialogue.substr(0, number_start) + replacement + original_dialogue.substr(number_end)
+	print("[LLMInterface] ⚠ VALIDATE: Final objective changed after validation. Rewrote dialogue number from %s to %s for display and TTS." % [current_number, replacement])
 
 func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictionary):
 	# Look for patterns like "3 ships", "kill 4", "destroy 2", "four contacts", etc.
@@ -1155,6 +1442,7 @@ func _trigger_fallback():
 		idx = randi() % fallback_templates.size()
 		
 	var selected_quest = fallback_templates[idx].duplicate(true)
+	selected_quest["campaign_name"] = _fallback_campaign_name()
 	
 	# Randomize values slightly to make it feel procedural
 	var type = selected_quest["objective"]["type"]
@@ -1167,6 +1455,10 @@ func _trigger_fallback():
 	
 	var orig_reward = selected_quest["objective"]["reward_credits"]
 	selected_quest["objective"]["reward_credits"] = int(orig_reward * randf_range(0.9, 1.2))
+
+	# Fallback objectives are randomized after their canned dialogue is chosen.
+	# Keep that dialogue aligned before the UI displays it or TTS speaks it.
+	_sync_dialogue_to_validated_objective(selected_quest, type, selected_quest["objective"])
 	
 	if active_callback.is_valid():
 		active_callback.call(selected_quest, true)

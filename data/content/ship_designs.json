@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"ship_designs": [
+		{"id":"ship_design.indy_miner","schema_version":1,"display_name":"INDY Miner","faction_id":"","role":"player","asset_path":"res://assets/INDYMiner.glb","fallback_asset_path":""},
+		{"id":"ship_design.zenith.gunner","schema_version":1,"display_name":"Zenith Gunner","faction_id":"faction.zenith","role":"Gunner","asset_path":"res://Ships/Zenith/Zenith_Gunner.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.zenith.interceptor","schema_version":1,"display_name":"Zenith Interceptor","faction_id":"faction.zenith","role":"Interceptor","asset_path":"res://Ships/Zenith/Zenith_Interceptor.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.zenith.logistics","schema_version":1,"display_name":"Zenith Logistics","faction_id":"faction.zenith","role":"Logistics","asset_path":"res://Ships/Zenith/Zenith_Logistics.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.zenith.mining_hauler","schema_version":1,"display_name":"Zenith Mining Hauler","faction_id":"faction.zenith","role":"MiningHauler","asset_path":"res://Ships/Zenith/Zenith_MiningHauler.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.aurelia.gunner","schema_version":1,"display_name":"Aurelia Gunner","faction_id":"faction.aurelia","role":"Gunner","asset_path":"res://Ships/Aurlelia/Aurelia_Gunner.glb","fallback_asset_path":"res://assets/F1HP.glb"},
+		{"id":"ship_design.aurelia.interceptor","schema_version":1,"display_name":"Aurelia Interceptor","faction_id":"faction.aurelia","role":"Interceptor","asset_path":"res://Ships/Aurlelia/Aurelia_interceptor.glb","fallback_asset_path":"res://assets/F1HP.glb"},
+		{"id":"ship_design.aurelia.logistics","schema_version":1,"display_name":"Aurelia Logistics","faction_id":"faction.aurelia","role":"Logistics","asset_path":"res://Ships/Aurlelia/Aurelia_Logistics.glb","fallback_asset_path":"res://assets/F1HP.glb"},
+		{"id":"ship_design.aurelia.mining_hauler","schema_version":1,"display_name":"Aurelia Mining Hauler","faction_id":"faction.aurelia","role":"MiningHauler","asset_path":"res://Ships/Aurlelia/Aurelia_MiningHauler.glb","fallback_asset_path":"res://assets/F1HP.glb"},
+		{"id":"ship_design.vanguard.gunner","schema_version":1,"display_name":"Vanguard Gunner","faction_id":"faction.vanguard","role":"Gunner","asset_path":"res://Ships/Vanguard/Vanguard_Gunner.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.vanguard.interceptor","schema_version":1,"display_name":"Vanguard Interceptor","faction_id":"faction.vanguard","role":"Interceptor","asset_path":"res://Ships/Vanguard/Vanguard_interceptor.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.vanguard.logistics","schema_version":1,"display_name":"Vanguard Logistics","faction_id":"faction.vanguard","role":"Logistics","asset_path":"res://Ships/Vanguard/Vanguard_Logistics.glb","fallback_asset_path":"res://assets/faction2.glb"},
+		{"id":"ship_design.vanguard.mining_hauler","schema_version":1,"display_name":"Vanguard Mining Hauler","faction_id":"faction.vanguard","role":"MiningHauler","asset_path":"res://Ships/Vanguard/Vanguard_HaulerMiner.glb","fallback_asset_path":"res://assets/faction2.glb"}
+	]
+}

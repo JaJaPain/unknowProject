@@ -1,0 +1,3515 @@
+{
+  "format": "portrait_sprite_sheets_with_metadata",
+  "version": 1,
+  "grid": {
+    "columns": 5,
+    "rows": 5
+  },
+  "notes": [
+    "Each sheet is a 5x5 grid in row-major order.",
+    "Coordinates are pixel rectangles for cropping each portrait.",
+    "Gender is a best-effort visual game tag only. Review/edit if a story requires strict matching."
+  ],
+  "sheets": [
+    {
+      "sheet": "P001",
+      "source_file": "P001.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P001_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P001_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "P002",
+      "source_file": "P002.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P002_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "unknown",
+          "gender_confidence": "low",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male",
+            "female",
+            "nonbinary"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P002_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "P003",
+      "source_file": "P003.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P003_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P003_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "P004",
+      "source_file": "P004.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P004_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P004_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "P005",
+      "source_file": "P005.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P005_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P005_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "P006",
+      "source_file": "P006.png",
+      "width": 1254,
+      "height": 1254,
+      "portraits": [
+        {
+          "id": "P006_01",
+          "index": 1,
+          "row": 0,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_02",
+          "index": 2,
+          "row": 0,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_03",
+          "index": 3,
+          "row": 0,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_04",
+          "index": 4,
+          "row": 0,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_05",
+          "index": 5,
+          "row": 0,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 0,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_06",
+          "index": 6,
+          "row": 1,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_07",
+          "index": 7,
+          "row": 1,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_08",
+          "index": 8,
+          "row": 1,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_09",
+          "index": 9,
+          "row": 1,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_10",
+          "index": 10,
+          "row": 1,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 250,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_11",
+          "index": 11,
+          "row": 2,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_12",
+          "index": 12,
+          "row": 2,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_13",
+          "index": 13,
+          "row": 2,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_14",
+          "index": 14,
+          "row": 2,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_15",
+          "index": 15,
+          "row": 2,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 500,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_16",
+          "index": 16,
+          "row": 3,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_17",
+          "index": 17,
+          "row": 3,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_18",
+          "index": 18,
+          "row": 3,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_19",
+          "index": 19,
+          "row": 3,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_20",
+          "index": 20,
+          "row": 3,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 750,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_21",
+          "index": 21,
+          "row": 4,
+          "col": 0,
+          "bounds": {
+            "x": 0,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_22",
+          "index": 22,
+          "row": 4,
+          "col": 1,
+          "bounds": {
+            "x": 250,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_23",
+          "index": 23,
+          "row": 4,
+          "col": 2,
+          "bounds": {
+            "x": 500,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_24",
+          "index": 24,
+          "row": 4,
+          "col": 3,
+          "bounds": {
+            "x": 750,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "male",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "male"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        },
+        {
+          "id": "P006_25",
+          "index": 25,
+          "row": 4,
+          "col": 4,
+          "bounds": {
+            "x": 1000,
+            "y": 1000,
+            "width": 250,
+            "height": 250
+          },
+          "gender": "female",
+          "gender_confidence": "medium",
+          "age_group": "adult",
+          "usable_for_story_gender": [
+            "female"
+          ],
+          "tags": [
+            "space_future",
+            "portrait",
+            "civilian_or_crew"
+          ]
+        }
+      ]
+    }
+  ]
+}

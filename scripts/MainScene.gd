@@ -1,44 +1,49 @@
 extends Node3D
 
-@onready var ui_manager: Control = $CanvasLayer/UIManager
+var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
 @onready var rocky_planet: Node3D = $RockyPlanet
 @onready var station: StaticBody3D = $Station
 
 var asteroid_scene = preload("res://scenes/asteroid.tscn")
 var npc_ship_scene = preload("res://scenes/npc_ship.tscn")
+var runtime_ship_sequence: int = 0
 
 func _ready():
+	GlobalState.active_system_root = self
+	GlobalState.current_system_id = "start_system"
+	ui_manager = GlobalState.get_ui_manager()
 	# Seed random number generator
 	randomize()
 	
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
-	_spawn_asteroid_ring(gas_giant.global_position, 850.0, 150.0, 75, "GasGiantBelt")
+	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")
 	
 	# Spawn Asteroid rings around Rocky Planet (radius 250, ring at 370, width 80)
-	_spawn_asteroid_ring(rocky_planet.global_position, 370.0, 80.0, 45, "RockyBelt")
+	_spawn_asteroid_ring(rocky_planet, 370.0, 80.0, 45, "RockyBelt")
 	
 	# Spawn NPC Ships
-	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0)
-	_spawn_npc("zenith", Vector3(-120, 0, 190), 12.0)
+	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0, "Logistics", "entity.start.patrol.zenith.logistics")
+	_spawn_npc("zenith", Vector3(-120, 0, 190), 12.0, "MiningHauler", "entity.start.patrol.zenith.mining_hauler")
 	
 	# Close hostiles for easy testing near start area
-	_spawn_npc("aurelia", Vector3(90, 0, 80), 14.0)
-	_spawn_npc("vanguard", Vector3(-90, 0, 80), 15.0)
+	_spawn_npc("aurelia", Vector3(90, 0, 80), 14.0, "Interceptor", "entity.start.patrol.aurelia.inner")
+	_spawn_npc("vanguard", Vector3(-90, 0, 80), 15.0, "Gunner", "entity.start.patrol.vanguard.inner")
 	
 	# Hostiles around Rocky Planet
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(40, 0, 40), 14.0)
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(-50, 0, -40), 14.0)
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(0, 0, -80), 14.0)
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(40, 0, 40), 14.0, "Gunner", "entity.start.patrol.aurelia.rocky_01")
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(-50, 0, -40), 14.0, "Interceptor", "entity.start.patrol.aurelia.rocky_02")
+	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(0, 0, -80), 14.0, "MiningHauler", "entity.start.patrol.aurelia.rocky_03")
 	
 	# Hostiles around Gas Giant
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(50, 0, 50), 15.0)
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(-60, 0, -60), 15.0)
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0)
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(50, 0, 50), 15.0, "Gunner", "entity.start.patrol.vanguard.gas_01")
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(-60, 0, -60), 15.0, "Interceptor", "entity.start.patrol.vanguard.gas_02")
+	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
 
 	
-	# Populating Overview list
-	_populate_overview()
+	# The persistent UI enters the tree after this system scene. Defer the first
+	# overview refresh so UIManager has finished constructing its dynamic nodes.
+	call_deferred("_populate_overview")
 	
 	# Spawn the salvager ship near space station
 	_spawn_salvager()
@@ -52,7 +57,14 @@ func _ready():
 	add_child(spawn_timer)
 
 
-func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: int, prefix: String):
+func _spawn_asteroid_ring(
+	planet: Node3D,
+	radius: float,
+	width: float,
+	count: int,
+	prefix: String
+):
+	var center := planet.global_position
 	for i in range(count):
 		var angle = randf() * TAU
 		var offset_r = randf_range(-width / 2.0, width / 2.0)
@@ -65,6 +77,8 @@ func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: i
 		
 		var ast = asteroid_scene.instantiate()
 		ast.name = prefix + "_Asteroid_" + str(i)
+		# Keep the current key for save compatibility, but assign it explicitly.
+		ast.persistent_id = ast.name
 		
 		# Setup orbiting variables on the asteroid
 		ast.orbit_center = center
@@ -73,19 +87,30 @@ func _spawn_asteroid_ring(center: Vector3, radius: float, width: float, count: i
 		ast.current_angle = angle
 		ast.orbit_y = y
 		ast.is_orbiting = true
+		ast.navigation_parent = planet
 		
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)
 
-func _spawn_npc(faction_name: String, pos: Vector3, npc_speed: float):
+func _spawn_npc(
+	faction_name: String,
+	pos: Vector3,
+	npc_speed: float,
+	role: String = "",
+	world_id: String = ""
+):
 	var npc = npc_ship_scene.instantiate()
 	npc.faction = faction_name
 	npc.speed = npc_speed
+	npc.ship_role = role
+	npc.persistent_id = world_id if not world_id.is_empty() else _next_runtime_ship_id("patrol")
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	add_child(npc)
 	npc.global_position = pos
 
 func _populate_overview():
+	if not ui_manager:
+		ui_manager = GlobalState.get_ui_manager()
 	if ui_manager and ui_manager.has_method("refresh_overview"):
 		ui_manager.refresh_overview()
 
@@ -171,6 +196,7 @@ func _spawn_minor_faction_ship():
 	npc.faction = faction_name
 	npc.speed = randf_range(10.0, 14.0)
 	npc.name = faction_name.to_upper() + "_Roaming_" + str(randi() % 1000)
+	npc.persistent_id = _next_runtime_ship_id("roaming")
 	add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = patrol_dest
@@ -197,10 +223,15 @@ func _spawn_npc_flying_in():
 	var npc = npc_ship_scene.instantiate()
 	npc.faction = faction_name
 	npc.speed = 13.0 # Slightly faster speed for flying in
+	npc.ship_role = ["Gunner", "Interceptor", "Logistics", "MiningHauler"].pick_random()
 	npc.name = faction_name.to_upper() + "_Incoming_" + str(randi() % 1000)
+	npc.persistent_id = _next_runtime_ship_id("incoming")
 	add_child(npc)
 	npc.global_position = spawn_pos
 	
 	# Set its patrol center to the destination so it flies in
 	npc.patrol_center = patrol_dest
 
+func _next_runtime_ship_id(category: String) -> String:
+	runtime_ship_sequence += 1
+	return "entity.start.%s.%06d" % [category, runtime_ship_sequence]

@@ -1,0 +1,18 @@
+{
+	"schema_version": 1,
+	"voices": [
+		{"id":"voice.kaelen.v1","schema_version":1,"display_name":"Kaelen","language":"en","style_tags":["confident","wry","broker"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.neutral.v1","schema_version":1,"display_name":"Neutral","language":"en","style_tags":["neutral"],"fallback_voice_profile_id":""},
+		{"id":"voice.agent.zenith.v1","schema_version":1,"display_name":"Zenith Agent","language":"en","style_tags":["corporate","controlled"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.agent.aurelia.v1","schema_version":1,"display_name":"Aurelia Agent","language":"en","style_tags":["sharp","professional"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.agent.vanguard.v1","schema_version":1,"display_name":"Vanguard Agent","language":"en","style_tags":["military","direct"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.cassen_vane.v1","schema_version":1,"display_name":"Cassen Vane","language":"en","style_tags":["grizzled","mercenary"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.mariska_vonn.v1","schema_version":1,"display_name":"Mariska Vonn","language":"en","style_tags":["corporate","quick"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.korvin_shaw.v1","schema_version":1,"display_name":"Korvin Shaw","language":"en","style_tags":["veteran","steady"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.hana_quill.v1","schema_version":1,"display_name":"Hana Quill","language":"en","style_tags":["analytical","precise"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.oleg_stroud.v1","schema_version":1,"display_name":"Oleg Stroud","language":"en","style_tags":["measured","accountant"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.dasha_invar.v1","schema_version":1,"display_name":"Dasha Invar","language":"en","style_tags":["fast","edgy"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.alaric_venn.v1","schema_version":1,"display_name":"Alaric Venn","language":"en","style_tags":["strategic","polished"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.jenna_kross.v1","schema_version":1,"display_name":"Jenna Kross","language":"en","style_tags":["mechanic","warm","blunt"],"fallback_voice_profile_id":"voice.neutral.v1"}
+	]
+}
