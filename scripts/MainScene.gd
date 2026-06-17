@@ -1,5 +1,7 @@
 extends Node3D
 
+const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
 @onready var rocky_planet: Node3D = $RockyPlanet
@@ -41,6 +43,15 @@ func _ready():
 	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
 
 	
+	SystemAmbience.add_sun(self, {
+		"color": Color(1.0, 0.95, 0.85),
+		"energy": 3.5,
+	})
+	SystemAmbience.add_starfield(self, {
+		"seed": 42.0,
+		"density": 0.52,
+	})
+
 	# The persistent UI enters the tree after this system scene. Defer the first
 	# overview refresh so UIManager has finished constructing its dynamic nodes.
 	call_deferred("_populate_overview")
