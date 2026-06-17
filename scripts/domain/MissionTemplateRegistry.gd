@@ -40,12 +40,27 @@ const FORBIDDEN_MECHANIC_WORDS: Array[String] = [
 
 const BOARD_TONE: String = (
 	"You write public contract-board flavor for SpaceGame.\n"
-	+ "Tone: dark interstellar Craigslist. Deadpan absurdity. The job is real and the stakes matter, but the story around it should be weird, specific, and funny. "
-	+ "Think: mundane workplace disasters in space, shady cover stories told badly, bureaucratic spite, passive-aggressive anonymous posting, things that went wrong in oddly specific ways.\n"
-	+ "Good example titles: 'Need 40m3 Ore Before The Coolant Learns New Physics', 'Sealed Pickup, No Sniffing', 'Courier Exploded, Data Survived, Probably'.\n"
-	+ "Bad: generic sci-fi ('Critical Supply Run', 'Urgent Delivery Needed'). Bad: purple prose. Bad: action-movie one-liners.\n"
-	+ "The poster is always an anonymous account with a funny handle — never a named NPC, never 'Anonymous'. They are a specific person hiding badly.\n"
-	+ "Kaelen (the broker) processes the payout but hates public-board work. She thinks it is beneath the pilot. She is sarcastic, disgusted, and specific about what grosses her out.\n"
+	+ "This board IS the space Craigslist. Same energy: sleazy landlords, "
+	+ "suspiciously vague gig postings, people clearly mid-divorce selling things that belong to someone else, "
+	+ "'no lowballers I know what I have', guys who sign every post with a Bible verse, "
+	+ "scams so obvious they loop back to charming, and the occasional post that makes you genuinely concerned for the poster's safety. "
+	+ "PG-13 — innuendo is fine, nothing explicit. The humor comes from specificity and deadpan delivery.\n\n"
+	+ "POSTER HANDLE: Never 'Anonymous'. Never a real NPC name. Always a burner account name that tells a story. "
+	+ "Examples: 'Definitely Not Maintenance', 'Dock 7 Liability Account', 'Former Employee (Unrelated)', "
+	+ "'Husband Of The Year Burner', 'NOT The Guy From The Incident', 'Concerned Taxpayer With Access', "
+	+ "'Third Shift Survivor'. The handle alone should make someone want to read the posting.\n\n"
+	+ "TITLE: Specific and weird. Should read like an actual Craigslist post that makes you click. "
+	+ "GOOD: 'Need 40m3 Ore Before The Coolant Learns New Physics', 'Sealed Package, Do Not Shake Or Ask Questions', "
+	+ "'My Ex-Business Partner Left Something At Your Outpost'. "
+	+ "BAD: 'Urgent Delivery Needed', 'Critical Supply Run', 'Resource Transport'. No generic sci-fi. No action-movie one-liners.\n\n"
+	+ "BODY: 1-3 sentences. The poster is a real person who is bad at hiding something. "
+	+ "They overshare one specific detail while being suspiciously vague about another. "
+	+ "The job itself is legitimate — the context around it is where the humor lives.\n\n"
+	+ "BRIEFING: Deadpan summary. Acknowledge something weird the poster said, then move on professionally.\n\n"
+	+ "KAELEN TURN-IN: Kaelen (the broker) processes the payout but she did NOT post this job. "
+	+ "She is disgusted the pilot took public-board work. She is specific about what grosses her out — "
+	+ "the smell, the clientele, the poster's grammar, the stain on the contract, the fact that it was posted at 3am. "
+	+ "She takes the money because profit is profit, but she wants the pilot to know she noticed.\n\n"
 	+ "The game code owns all mechanics. Do not invent destinations, rewards, "
 	+ "factions, cargo, enemies, deadlines, or objectives.\n"
 	+ "Return only valid JSON with these string keys: title, poster, body, briefing, kaelen_turn_in.\n"
@@ -53,19 +68,26 @@ const BOARD_TONE: String = (
 )
 
 const BOARD_SPICE: Array[String] = [
-	"The poster is clearly lying about why they need this done.",
-	"The posting has been edited three times. The revision history is worse than the current version.",
-	"There is a passive-aggressive reply chain in the comments that the poster deleted but everyone saw.",
-	"The poster is obviously posting from a work terminal and hoping nobody notices.",
-	"This job was previously posted at double the reward. The poster lowered it and hoped nobody would notice.",
-	"The poster signs off with an oddly personal detail that raises more questions than it answers.",
-	"The posting mentions an incident that is clearly under investigation.",
-	"The poster uses corporate jargon so thick you can tell they were recently fired.",
-	"The urgency in this posting suggests the poster has already been caught once.",
-	"The posting contains a very specific instruction about what NOT to look at.",
-	"The poster is trying to sound professional but the typos tell a different story.",
-	"This job exists because someone lost a bet.",
-	"The posting reads like it was written by someone who has been awake for 40 hours.",
+	"The poster is clearly lying about why they need this done. They gave two different reasons in the title and body.",
+	"The posting was edited three times in ten minutes. Each version was worse.",
+	"The poster's handle is a burner account created today. Their first post is this job. Their second post is asking where to buy a fake ID.",
+	"This posting is written in the tone of someone who is actively being yelled at by a supervisor while typing.",
+	"The poster is obviously going through a divorce and this job is somehow related.",
+	"The previous courier for this job is 'unavailable for comment' and the poster will not elaborate.",
+	"The posting has a suspiciously specific disclaimer about what is NOT illegal about this job.",
+	"The poster accidentally left a personal detail in the posting that makes the whole thing 10x funnier.",
+	"This job exists because someone lost a bet. The poster is the someone.",
+	"The posting reads like it was written at 3am by someone who just got fired and is making a point.",
+	"The poster signed off with something weirdly personal, like a horoscope reference or an apology to someone named Gary.",
+	"The posting mentions an incident that 'has been resolved' but the job proves it has not been resolved.",
+	"The poster uses very careful language around one specific detail, like a lawyer wrote that sentence and only that sentence.",
+	"This is clearly a favor for someone the poster owes money to.",
+	"The posting's tone shifts halfway through, like the poster started angry and gave up.",
+	"The poster included a review of the last courier. It is scathing and detailed and explains why the pay is low.",
+	"The urgency suggests the poster has already tried to do this themselves and it went badly.",
+	"The poster is pretending this is a normal routine job. The listing duration and reward say otherwise.",
+	"There is an energy to this posting that suggests the poster is hiding in a supply closet right now.",
+	"The poster helpfully included what NOT to tell customs.",
 ]
 
 const KAELEN_DISGUST_RULE := "kaelen_disgust"
