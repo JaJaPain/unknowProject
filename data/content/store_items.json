@@ -1,0 +1,71 @@
+{
+	"schema_version": 1,
+	"items": [
+		{
+			"item_id": "repair_kit",
+			"display_name": "Repair Kit",
+			"description": "Field-grade hull patch. Restores 25 HP.",
+			"category": "consumable",
+			"base_price": 30,
+			"stack_max": 5,
+			"restock_interval_minutes": 90,
+			"restock_quantity": 2,
+			"max_stock": 4
+		},
+		{
+			"item_id": "shield_cell",
+			"display_name": "Shield Cell",
+			"description": "Emergency capacitor dump. Restores 50% shield.",
+			"category": "consumable",
+			"base_price": 45,
+			"stack_max": 3,
+			"restock_interval_minutes": 120,
+			"restock_quantity": 1,
+			"max_stock": 3
+		},
+		{
+			"item_id": "scanner_probe",
+			"display_name": "Scanner Probe",
+			"description": "Deploys a 60-second sweep. Reveals all contacts in system.",
+			"category": "consumable",
+			"base_price": 20,
+			"stack_max": 5,
+			"restock_interval_minutes": 60,
+			"restock_quantity": 2,
+			"max_stock": 5
+		},
+		{
+			"item_id": "flare_decoy",
+			"display_name": "Flare Decoy",
+			"description": "Draws hostile fire for 8 seconds. Single use.",
+			"category": "consumable",
+			"base_price": 35,
+			"stack_max": 3,
+			"restock_interval_minutes": 120,
+			"restock_quantity": 1,
+			"max_stock": 2
+		},
+		{
+			"item_id": "fuel_booster",
+			"display_name": "Fuel Booster",
+			"description": "Temporary afterburner charge. 15 seconds of 2x speed.",
+			"category": "consumable",
+			"base_price": 25,
+			"stack_max": 5,
+			"restock_interval_minutes": 90,
+			"restock_quantity": 2,
+			"max_stock": 4
+		},
+		{
+			"item_id": "emp_charge",
+			"display_name": "EMP Charge",
+			"description": "Disables nearby hostile shields for 10 seconds.",
+			"category": "consumable",
+			"base_price": 60,
+			"stack_max": 2,
+			"restock_interval_minutes": 180,
+			"restock_quantity": 1,
+			"max_stock": 2
+		}
+	]
+}

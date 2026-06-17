@@ -153,6 +153,11 @@ try {
             "res://tests/run_comms_reversal_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Store economy data model" {
+        & $godot --headless --path $root --script `
+            "res://tests/economy/run_store_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline

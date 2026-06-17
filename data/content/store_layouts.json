@@ -1,0 +1,45 @@
+{
+	"schema_version": 1,
+	"stores": [
+		{
+			"store_id": "store.haven.general",
+			"station_id": "haven",
+			"item_ids": [
+				"repair_kit",
+				"shield_cell",
+				"scanner_probe",
+				"flare_decoy",
+				"fuel_booster",
+				"emp_charge"
+			]
+		},
+		{
+			"store_id": "store.iron_reach.supply",
+			"station_id": "iron_reach",
+			"item_ids": [
+				"repair_kit",
+				"fuel_booster",
+				"scanner_probe"
+			],
+			"stock_overrides": {
+				"repair_kit": 2,
+				"fuel_booster": 2,
+				"scanner_probe": 3
+			}
+		},
+		{
+			"store_id": "store.kova.supply",
+			"station_id": "kova",
+			"item_ids": [
+				"repair_kit",
+				"shield_cell",
+				"flare_decoy"
+			],
+			"stock_overrides": {
+				"repair_kit": 2,
+				"shield_cell": 1,
+				"flare_decoy": 1
+			}
+		}
+	]
+}
