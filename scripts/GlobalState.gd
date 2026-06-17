@@ -465,6 +465,9 @@ var player_credits: int = 50:
 		player_credits = val
 		credits_changed.emit(player_credits)
 
+const PlayerInventoryScript = preload("res://scripts/economy/PlayerInventory.gd")
+var inventory = PlayerInventoryScript.new()
+
 var _cargo_normalizing: bool = false
 var cargo: float = 0.0:
 	set(val):
@@ -970,6 +973,7 @@ func reset_for_restart():
 	active_target = null
 	# Reset gameplay stats
 	player_credits = 50
+	inventory = PlayerInventoryScript.new()
 	cargo = 0.0
 	cargo_special = {}
 	cargo_type = CargoType.EMPTY

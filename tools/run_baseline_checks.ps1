@@ -158,6 +158,16 @@ try {
             "res://tests/economy/run_store_tests.gd" -- `
             --baseline-offline
     }
+    Invoke-BaselineStep "Player inventory" {
+        & $godot --headless --path $root --script `
+            "res://tests/economy/run_inventory_tests.gd" -- `
+            --baseline-offline
+    }
+    Invoke-BaselineStep "Consumable effects" {
+        & $godot --headless --path $root --script `
+            "res://tests/economy/run_consumable_tests.gd" -- `
+            --baseline-offline
+    }
     Invoke-BaselineStep "LLM quest objective validator" {
         & $godot --headless --path $root -- `
             --llm-validator-smoke-test --no-save-load --baseline-offline

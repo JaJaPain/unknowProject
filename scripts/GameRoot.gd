@@ -1647,6 +1647,7 @@ func _capture_global_state() -> Dictionary:
 		"upgrades": GlobalState.current_upgrades.duplicate(true),
 		"reputations": GlobalState.reputations.duplicate(true),
 		"faction_kills": GlobalState.faction_kills.duplicate(true),
+		"inventory": GlobalState.inventory.to_dict(),
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -1677,6 +1678,8 @@ func _apply_global_state(state: Dictionary) -> void:
 	for faction_name: Variant in loaded_kills.keys():
 		loaded_kills[faction_name] = int(loaded_kills[faction_name])
 	GlobalState.faction_kills = loaded_kills
+	var inv_data: Dictionary = state.get("inventory", {})
+	GlobalState.inventory = GlobalState.PlayerInventoryScript.from_dict(inv_data)
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:
