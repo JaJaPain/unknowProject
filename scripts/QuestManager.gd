@@ -149,6 +149,20 @@ func is_lane_occupied(lane_name: String) -> bool:
 		return false
 	return _collection.is_lane_occupied(lane_map[lane_name])
 
+func get_lane_data(lane_name: String) -> Dictionary:
+	var lane_map := {
+		"AGENT": MissionInstanceType.SourceLane.AGENT,
+		"BOARD": MissionInstanceType.SourceLane.BOARD,
+		"STATION": MissionInstanceType.SourceLane.STATION,
+	}
+	if not lane_map.has(lane_name):
+		return {}
+	var mission = _collection.get_by_lane(lane_map[lane_name])
+	if mission == null:
+		return {}
+	return mission.data
+
+
 func is_quest_completed() -> bool:
 	if not is_quest_active():
 		return false

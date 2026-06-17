@@ -132,14 +132,16 @@ func _configure_role(role: String) -> void:
 		archetype = "Elite " + archetype
 		
 	# Apply Quest Combat Multiplier if target of active combat quest
-	if QuestManager.is_quest_active() and QuestManager.active_quest["objective_type"] == "KILL_SHIPS" and QuestManager.active_quest["target_faction"] == faction:
-		var q_mult = QuestManager.active_quest["combat_multiplier"]
-		if q_mult > 1.0:
-			max_health *= q_mult
-			damage_min *= q_mult
-			damage_max *= q_mult
-			visual_scale_mult *= (1.0 + (q_mult - 1.0) * 0.4)
-			archetype = "Target " + archetype
+	for _m in QuestManager.get_mission_collection().get_all_active():
+		if _m.data.get("objective_type", "") == "KILL_SHIPS" and _m.data.get("target_faction", "") == faction:
+			var q_mult = float(_m.data.get("combat_multiplier", 1.0))
+			if q_mult > 1.0:
+				max_health *= q_mult
+				damage_min *= q_mult
+				damage_max *= q_mult
+				visual_scale_mult *= (1.0 + (q_mult - 1.0) * 0.4)
+				archetype = "Target " + archetype
+			break
 			
 	health = max_health
 	

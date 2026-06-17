@@ -3304,18 +3304,29 @@ func _on_public_board_offer_accept(index: int) -> void:
 
 
 func _should_show_public_board_turn_in() -> bool:
-	return (
-		QuestManager.is_quest_active()
-		and bool(QuestManager.active_quest.get("public_board", false))
-		and QuestManager.is_quest_completed()
-		and current_station
-		and is_instance_valid(current_station)
+	if not QuestManager.is_lane_occupied("BOARD"):
+		return false
+	if not current_station or not is_instance_valid(current_station):
+		return false
+	var board_mission = QuestManager.get_mission_collection().get_by_lane(
+		MissionInstance.SourceLane.BOARD
 	)
+	if board_mission == null:
+		return false
+	var cap = MissionCapabilityRegistry.get_for_type(
+		str(board_mission.data.get("objective_type", ""))
+	)
+	return cap != null and cap.is_completed(board_mission.data)
 
 
 func _on_public_board_turn_in_pressed() -> void:
 	if not _should_show_public_board_turn_in():
 		return
+	var board_mission = QuestManager.get_mission_collection().get_by_lane(
+		MissionInstance.SourceLane.BOARD
+	)
+	if board_mission:
+		QuestManager.get_mission_collection().focus(board_mission.runtime_id)
 	public_board_panel.visible = false
 	dock_panel.visible = false
 	agent_panel.visible = true
@@ -4770,8 +4781,12 @@ func _on_talk_to_agent_pressed():
 	for child in agent_choices_container.get_children():
 		child.queue_free()
 		
-	if QuestManager.is_quest_active():
-		var q = QuestManager.active_quest
+	if QuestManager.is_lane_occupied("AGENT"):
+		var agent_mission = QuestManager.get_mission_collection().get_by_lane(
+			MissionInstance.SourceLane.AGENT
+		)
+		QuestManager.get_mission_collection().focus(agent_mission.runtime_id)
+		var q: Dictionary = agent_mission.data if agent_mission else {}
 		var shown_agent_name := str(q.get("agent_name", "Broker Kaelen"))
 		if bool(q.get("public_board", false)):
 			shown_agent_name = "Broker Kaelen"
@@ -5454,15 +5469,16 @@ func _update_quest_tracker_secondary_missions() -> void:
 
 
 func _on_quest_tracker_turn_in_pressed() -> void:
-	if not QuestManager.is_quest_active():
-		return
-	if not bool(QuestManager.active_quest.get("public_board", false)):
-		return
-	if not QuestManager.is_quest_completed():
+	if not _should_show_public_board_turn_in():
 		return
 	if not current_station or not is_instance_valid(current_station):
 		show_hud_warning("Dock at a local station to turn in this board job.")
 		return
+	var board_mission = QuestManager.get_mission_collection().get_by_lane(
+		MissionInstance.SourceLane.BOARD
+	)
+	if board_mission:
+		QuestManager.get_mission_collection().focus(board_mission.runtime_id)
 	dock_panel.visible = false
 	agent_panel.visible = true
 	_on_agent_complete_pressed()
