@@ -523,18 +523,18 @@ explainable ways without direct LLM control.
 
 ### Implementation Checkpoints
 
-- [ ] Define store inventory refresh intervals using campaign time.
-- [ ] Add bounded stock recovery and depletion for station stores.
-- [ ] Add regional supply and demand hooks for first resource types.
-- [ ] Add random event scheduler driven by campaign time, seed, cooldowns,
+- [x] Define store inventory refresh intervals using campaign time.
+- [x] Add bounded stock recovery and depletion for station stores.
+- [x] Add regional supply and demand hooks for first resource types.
+- [x] Add random event scheduler driven by campaign time, seed, cooldowns,
       location, recent events, and pacing budget.
-- [ ] Add interceptor templates for outbound departure and return-trip arrival.
-- [ ] Make interceptors eligible from mission risk data rather than LLM direct
+- [x] Add interceptor templates for outbound departure and return-trip arrival.
+- [x] Make interceptors eligible from mission risk data rather than LLM direct
       spawn requests.
-- [ ] Add urgent-job risk modifiers for specific public-board templates.
-- [ ] Add early mixed-resource and material planning hooks if needed for later
+- [x] Add urgent-job risk modifiers for specific public-board templates.
+- [x] Add early mixed-resource and material planning hooks if needed for later
       upgrade tiers.
-- [ ] Add event records for store refresh, shortage, encounter, and interceptor
+- [x] Add event records for store refresh, shortage, encounter, and interceptor
       outcomes where chronicle support exists.
 
 ### Risks And Unknowns
@@ -547,19 +547,19 @@ explainable ways without direct LLM control.
 
 ### Suggested Tests
 
-- [ ] Store stock changes only after enough campaign time passes.
-- [ ] Loading a checkpoint restores store state to that checkpoint.
-- [ ] Repeating one trade loop cannot produce unlimited risk-free profit.
-- [ ] Interceptor eligibility is deterministic from mission state and time.
-- [ ] Reloading before an eligible event cannot reroll rare outcomes.
-- [ ] Ignored, defeated, escaped, and return-trip interceptors clean up safely.
+- [x] Store stock changes only after enough campaign time passes.
+- [x] Loading a checkpoint restores store state to that checkpoint.
+- [x] Repeating one trade loop cannot produce unlimited risk-free profit.
+- [x] Interceptor eligibility is deterministic from mission state and time.
+- [x] Reloading before an eligible event cannot reroll rare outcomes.
+- [x] Ignored, defeated, escaped, and return-trip interceptors clean up safely.
 
 ### Done Criteria
 
-- [ ] Stores refresh through campaign time.
-- [ ] Random events and interceptors are scheduled by deterministic code.
-- [ ] Urgent or suspicious work can create outbound or return-trip danger.
-- [ ] Leaving and returning after controlled time creates bounded, explainable
+- [x] Stores refresh through campaign time.
+- [x] Random events and interceptors are scheduled by deterministic code.
+- [x] Urgent or suspicious work can create outbound or return-trip danger.
+- [x] Leaving and returning after controlled time creates bounded, explainable
       changes.
 
 ## Segment 4: Gate Discovery, Repair, Branches, Suns, And Starfields

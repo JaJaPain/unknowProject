@@ -2,7 +2,7 @@
 
 Date: 2026-06-17
 
-Status: Checkpoint 6 complete, baseline 47/47
+Status: Segment 3 complete, baseline 47/47
 
 Branch: `segment-3/economy-stores-events`
 
