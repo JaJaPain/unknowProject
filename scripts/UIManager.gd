@@ -129,6 +129,13 @@ var public_board_list: VBoxContainer
 var public_board_back_btn: Button
 var public_board_current_offers: Array[Dictionary] = []
 
+var store_panel: Panel
+var store_list: VBoxContainer
+var store_credits_label: Label
+var store_back_btn: Button
+var store_btn: Button
+var _store_current_id: String = ""
+
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
 var quest_tracker_progress: Label
@@ -156,6 +163,8 @@ var agent_click_time: float = 0.0
 # Preloaded assets
 var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
+const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
+const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 
 # Sliced elements inside Agent Panel
 var agent_portrait_column: VBoxContainer
@@ -1118,6 +1127,11 @@ func _create_dock_menu():
 	maintenance_bay_btn.pressed.connect(_on_maintenance_bay_pressed)
 	vbox.add_child(maintenance_bay_btn)
 
+	store_btn = Button.new()
+	store_btn.text = "Station Store"
+	store_btn.pressed.connect(_on_store_pressed)
+	vbox.add_child(store_btn)
+
 	ship_upgrades_btn = Button.new()
 	ship_upgrades_btn.text = "Ship Upgrades (Rusthawk UI)"
 	ship_upgrades_btn.pressed.connect(_on_ship_upgrades_pressed)
@@ -1248,6 +1262,67 @@ func _create_dock_menu():
 	avbox.add_child(agent_back_btn)
 
 	_create_public_board_panel()
+	_create_store_panel()
+
+
+func _create_store_panel() -> void:
+	store_panel = Panel.new()
+	add_child(store_panel)
+	store_panel.anchor_left = 0.22
+	store_panel.anchor_right = 0.78
+	store_panel.anchor_top = 0.16
+	store_panel.anchor_bottom = 0.84
+	store_panel.visible = false
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.2, 0.75, 0.4, 0.9)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	store_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 16
+	vbox.offset_right = -16
+	vbox.offset_top = 16
+	vbox.offset_bottom = -16
+	vbox.add_theme_constant_override("separation", 8)
+	store_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "STATION STORE"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(0.3, 0.9, 0.5))
+	vbox.add_child(title)
+
+	store_credits_label = Label.new()
+	store_credits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	store_credits_label.add_theme_font_size_override("font_size", 14)
+	store_credits_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	vbox.add_child(store_credits_label)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+
+	store_list = VBoxContainer.new()
+	store_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	store_list.add_theme_constant_override("separation", 6)
+	scroll.add_child(store_list)
+
+	store_back_btn = Button.new()
+	store_back_btn.text = "Back to Services"
+	store_back_btn.pressed.connect(_on_store_back_pressed)
+	vbox.add_child(store_back_btn)
 
 
 func _create_public_board_panel() -> void:
@@ -2841,12 +2916,15 @@ func toggle_dock_menu(
 ):
 	current_station = station
 	if dock_panel.visible or agent_panel.visible \
-			or (public_board_panel and public_board_panel.visible):
+			or (public_board_panel and public_board_panel.visible) \
+			or (store_panel and store_panel.visible):
 		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
 		if public_board_panel:
 			public_board_panel.visible = false
+		if store_panel:
+			store_panel.visible = false
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
@@ -3032,6 +3110,8 @@ func _on_public_board_pressed() -> void:
 	_render_public_board_offers()
 	dock_panel.visible = false
 	agent_panel.visible = false
+	if store_panel:
+		store_panel.visible = false
 	public_board_panel.visible = true
 
 
@@ -3039,6 +3119,137 @@ func _on_public_board_back_pressed() -> void:
 	public_board_panel.visible = false
 	dock_panel.visible = true
 	_render_dock_submenu()
+
+
+func _on_store_pressed() -> void:
+	SpeechService.stop()
+	agent_panel.visible = false
+	if public_board_panel:
+		public_board_panel.visible = false
+	var station_id := GlobalState.current_system_id
+	var reg = StoreRegistryScript.shared()
+	var stores = reg.get_stores_for_station(station_id)
+	if stores.is_empty():
+		stores = reg.get_stores_for_station("haven")
+	if stores.is_empty():
+		return
+	_store_current_id = stores[0].store_id
+	_render_store_items()
+	dock_panel.visible = false
+	store_panel.visible = true
+
+
+func _on_store_back_pressed() -> void:
+	store_panel.visible = false
+	dock_panel.visible = true
+	_render_dock_submenu()
+
+
+func _render_store_items() -> void:
+	for child in store_list.get_children():
+		child.queue_free()
+	store_credits_label.text = "Credits: %d SC" % GlobalState.player_credits
+	var reg = StoreRegistryScript.shared()
+	var store = reg.get_store(_store_current_id)
+	if store == null:
+		return
+	var rep_tier := _get_reputation_tier()
+	for item_id in store.get_catalog_ids():
+		var item_def = store.get_item_def(item_id)
+		if item_def == null:
+			continue
+		var price: int = store.get_price(item_id, rep_tier)
+		var stock: int = store.get_stock(item_id)
+		var owned: int = GlobalState.inventory.get_quantity(item_id)
+		var row := _build_store_row(item_id, item_def, price, stock, owned)
+		store_list.add_child(row)
+
+
+func _get_reputation_tier() -> String:
+	var rep: float = GlobalState.reputations.get(
+		GlobalState.current_system_id,
+		GlobalState.reputations.get("zenith", 50.0)
+	)
+	if rep >= 80.0:
+		return "allied"
+	elif rep >= 65.0:
+		return "trusted"
+	elif rep >= 50.0:
+		return "friendly"
+	elif rep >= 35.0:
+		return "cordial"
+	elif rep >= 20.0:
+		return "neutral"
+	elif rep >= 5.0:
+		return "wary"
+	elif rep >= -10.0:
+		return "unfriendly"
+	elif rep >= -30.0:
+		return "hostile"
+	return "sworn enemy"
+
+
+func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: int) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var name_label := Label.new()
+	name_label.text = item_def.display_name
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.add_theme_font_size_override("font_size", 14)
+	row.add_child(name_label)
+
+	var stock_label := Label.new()
+	stock_label.text = "x%d" % stock
+	stock_label.add_theme_font_size_override("font_size", 13)
+	stock_label.custom_minimum_size.x = 40
+	if stock == 0:
+		stock_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	row.add_child(stock_label)
+
+	var price_label := Label.new()
+	price_label.text = "%d SC" % price
+	price_label.add_theme_font_size_override("font_size", 13)
+	price_label.custom_minimum_size.x = 60
+	if stock == 0:
+		price_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	elif price > GlobalState.player_credits:
+		price_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	else:
+		price_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+	row.add_child(price_label)
+
+	var owned_label := Label.new()
+	owned_label.text = "(%d)" % owned if owned > 0 else ""
+	owned_label.add_theme_font_size_override("font_size", 12)
+	owned_label.custom_minimum_size.x = 30
+	owned_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
+	row.add_child(owned_label)
+
+	var buy_btn := Button.new()
+	buy_btn.text = "Buy"
+	buy_btn.custom_minimum_size.x = 50
+	buy_btn.disabled = stock == 0 or price > GlobalState.player_credits
+	buy_btn.pressed.connect(_on_store_buy.bind(item_id))
+	row.add_child(buy_btn)
+
+	return row
+
+
+func _on_store_buy(item_id: String) -> void:
+	var reg = StoreRegistryScript.shared()
+	var store = reg.get_store(_store_current_id)
+	if store == null:
+		return
+	var rep_tier := _get_reputation_tier()
+	var price: int = store.get_price(item_id, rep_tier)
+	if price > GlobalState.player_credits:
+		return
+	if not store.purchase(item_id):
+		return
+	GlobalState.player_credits -= price
+	GlobalState.inventory.add(item_id)
+	_render_store_items()
 
 
 func _on_public_board_offer_accept(index: int) -> void:
