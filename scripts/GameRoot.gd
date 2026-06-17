@@ -1648,6 +1648,7 @@ func _capture_global_state() -> Dictionary:
 		"reputations": GlobalState.reputations.duplicate(true),
 		"faction_kills": GlobalState.faction_kills.duplicate(true),
 		"inventory": GlobalState.inventory.to_dict(),
+		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -1680,6 +1681,9 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.faction_kills = loaded_kills
 	var inv_data: Dictionary = state.get("inventory", {})
 	GlobalState.inventory = GlobalState.PlayerInventoryScript.from_dict(inv_data)
+	var stock_data: Dictionary = state.get("store_stock", {})
+	if not stock_data.is_empty():
+		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:

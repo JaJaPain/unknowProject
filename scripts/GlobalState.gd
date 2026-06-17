@@ -939,6 +939,13 @@ func adjust_reputation(faction_name: String, amount: float):
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_inputs()
+	CampaignClock.time_changed.connect(_on_campaign_time_for_stores)
+
+
+const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
+
+func _on_campaign_time_for_stores(total_minutes: int) -> void:
+	StoreRegistryScript.shared().restock_all(total_minutes)
 
 func get_system_root() -> Node3D:
 	if active_system_root and is_instance_valid(active_system_root):
