@@ -104,6 +104,7 @@ func register_generated_system(
 	var result := ValidationResult.new()
 	var definition := SystemDefinition.new()
 	definition.id = DomainId.canonicalize(sys_data.get("id", ""))
+	definition.schema_version = SystemDefinition.SUPPORTED_SCHEMA_VERSION
 	definition.legacy_id = str(sys_data.get("legacy_id", ""))
 	definition.display_name = str(sys_data.get("display_name", ""))
 	definition.scene_path = "generated"
@@ -117,6 +118,7 @@ func register_generated_system(
 	for gate_data: Dictionary in gate_defs:
 		var gate := GateDefinition.new()
 		gate.id = DomainId.canonicalize(gate_data.get("id", ""))
+		gate.schema_version = GateDefinition.SUPPORTED_SCHEMA_VERSION
 		gate.legacy_id = str(gate_data.get("legacy_id", ""))
 		gate.system_id = definition.id
 		gate.display_name = str(gate_data.get("display_name", ""))
@@ -143,6 +145,64 @@ func register_generated_system(
 	systems[definition.id] = definition
 	system_aliases[definition.legacy_id] = definition.id
 	system_aliases[str(definition.id)] = definition.id
+	return result
+
+
+func export_generated_systems() -> Array[Dictionary]:
+	var output: Array[Dictionary] = []
+	for definition: SystemDefinition in systems.values():
+		if definition.origin == "generated":
+			output.append(definition.to_dict())
+	return output
+
+
+func import_generated_systems(records: Variant) -> ValidationResult:
+	var result := ValidationResult.new()
+	if records == null:
+		return result
+	if not records is Array:
+		result.add_error(
+			"invalid_generated_systems",
+			"Generated systems must be an array.",
+			"generated_systems"
+		)
+		return result
+	for index in range((records as Array).size()):
+		var record: Variant = (records as Array)[index]
+		if not record is Dictionary:
+			result.add_error(
+				"invalid_generated_system",
+				"Generated system entry must be an object.",
+				"generated_systems.%d" % index
+			)
+			continue
+		var system_id := DomainId.canonicalize(record.get("id", ""))
+		if systems.has(system_id):
+			continue
+		var gate_defs: Variant = record.get("gates", [])
+		if not gate_defs is Array:
+			result.add_error(
+				"invalid_generated_gates",
+				"Generated system gates must be an array.",
+				"generated_systems.%d.gates" % index
+			)
+			continue
+		var typed_gate_defs: Array[Dictionary] = []
+		var gates_valid := true
+		for gate_def in gate_defs:
+			if gate_def is Dictionary:
+				typed_gate_defs.append(gate_def)
+			else:
+				gates_valid = false
+				result.add_error(
+					"invalid_generated_gate",
+					"Generated gate entry must be an object.",
+					"generated_systems.%d.gates" % index
+				)
+		if not gates_valid:
+			continue
+		var registered := register_generated_system(record, typed_gate_defs)
+		result.merge(registered, "generated_systems.%d" % index)
 	return result
 
 

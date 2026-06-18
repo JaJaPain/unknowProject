@@ -306,11 +306,16 @@ Verification notes:
 - [x] Branch map refreshes when gate states or current system change, and smoke verification checks that the first generated route and next rumored outbound route appear in map data.
 
 ### Phase 4: Edge Cases to Handle
-- **Name pool exhaustion**: After 15 systems, names fall back to "Uncharted System N" — consider expanding the pool
-- **Ship generation failure**: If Blender fails after 10 attempts, ship uses default faction model (already handled)
-- **Gate ID collisions**: Use system_id + hash to ensure unique gate IDs
-- **Save/load with generated systems**: Generated systems are persisted in the registry after creation. SystemConfigs are recreated from seed via `_init_generated_system_configs()` on load.
-- **Map UI**: `BranchMapUI` needs to handle dynamically added systems - verified it reads from the live registry and refreshes on gate/system changes
+- [x] **Name pool exhaustion**: After 15 systems, names fall back to advancing "Uncharted System N" values and persist the fallback counter.
+- [x] **Ship generation failure**: If Blender fails after 10 attempts, ship uses default faction model (already handled)
+- [x] **Gate ID collisions**: Use system_id + hash to ensure unique gate IDs
+- [x] **Save/load with generated systems**: Generated systems are exported into save/checkpoint runtime state and imported before save validation, so a fresh restart can load a generated current system. SystemConfigs are recreated from seed via `_init_generated_system_configs()` after import.
+- [x] **Map UI**: `BranchMapUI` needs to handle dynamically added systems - verified it reads from the live registry and refreshes on gate/system changes
+
+Verification notes:
+- [x] System factory tests cover advancing fallback system names and generated registry export/import.
+- [x] Save migration tests cover loading a generated current system into a fresh registry before validation.
+- [x] Campaign checkpoint, campaign slot, registry, and jump smoke tests pass with the generated save/checkpoint state.
 
 ## Existing Wiring (Already Done)
 

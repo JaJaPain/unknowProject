@@ -19,6 +19,7 @@ static func prepare_for_save(
 ) -> Dictionary:
 	var encoded := runtime_data.duplicate(true)
 	encoded["version"] = CURRENT_VERSION
+	encoded["generated_systems"] = registry.export_generated_systems()
 
 	var current_system := _canonical_system_id(
 		encoded.get("current_system_id", ""),
@@ -96,6 +97,10 @@ static func load_for_runtime(
 			]
 		)
 
+	var imported := _import_generated_systems(saved_data, registry)
+	if not bool(imported.get("ok", false)):
+		return imported
+
 	var validation := validate_current(saved_data, registry)
 	if not validation.is_valid():
 		return _failure(
@@ -130,6 +135,10 @@ static func decode_for_runtime(
 	saved_data: Dictionary,
 	registry: SystemRegistry
 ) -> Dictionary:
+	var imported := _import_generated_systems(saved_data, registry)
+	if not bool(imported.get("ok", false)):
+		return imported
+
 	var validation := validate_current(saved_data, registry)
 	if not validation.is_valid():
 		return _failure(
@@ -360,6 +369,20 @@ static func _encode_quest(
 	if not raw_quest is Dictionary:
 		return _failure("Save mission state must be an object or array.")
 	return _encode_single_quest(raw_quest, registry)
+
+
+static func _import_generated_systems(
+	data: Dictionary,
+	registry: SystemRegistry
+) -> Dictionary:
+	var imported := registry.import_generated_systems(
+		data.get("generated_systems", [])
+	)
+	if not imported.is_valid():
+		return _failure(
+			"Generated systems failed validation: %s" % imported.summary()
+		)
+	return _success({})
 
 
 static func _encode_single_quest(

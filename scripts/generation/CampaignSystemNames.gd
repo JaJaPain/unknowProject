@@ -45,7 +45,9 @@ static func load_or_create() -> CampaignSystemNames:
 
 func next_name() -> String:
 	if _used_count >= _names.size():
-		return "Uncharted System %d" % (_used_count + 1)
+		_used_count += 1
+		_save()
+		return "Uncharted System %d" % _used_count
 	var name_str: String = _names[_used_count]
 	_used_count += 1
 	_save()

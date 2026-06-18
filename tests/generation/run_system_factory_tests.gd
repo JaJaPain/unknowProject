@@ -97,7 +97,9 @@ func _test_campaign_system_names() -> void:
 	var third := names.next_name()
 	_expect(third == "Crest", "next_name() didn't return third name.")
 	var overflow := names.next_name()
-	_expect(overflow.begins_with("Uncharted"), "Overflow name didn't use fallback pattern: '%s'" % overflow)
+	_expect(overflow == "Uncharted System 4", "Overflow name didn't use fallback pattern: '%s'" % overflow)
+	var second_overflow := names.next_name()
+	_expect(second_overflow == "Uncharted System 5", "Overflow name did not advance: '%s'" % second_overflow)
 
 
 func _test_registry_generated_system() -> void:
@@ -137,6 +139,15 @@ func _test_registry_generated_system() -> void:
 		_expect(sys_def.display_name == "Gamma Station", "Generated system display_name wrong.")
 		_expect(sys_def.scene_path == "generated", "Generated system scene_path wrong.")
 		_expect(sys_def.gates.size() == 1, "Generated system gate count wrong.")
+
+	var exported := registry.export_generated_systems()
+	_expect(exported.size() == 1, "Generated system export count wrong.")
+	var imported_registry := SystemRegistry.load_default()
+	var import_result := imported_registry.import_generated_systems(exported)
+	_expect(import_result.is_valid(), "Generated system import failed: %s" % import_result.summary())
+	_expect(imported_registry.has_system("system.gen.gamma"), "Imported generated system not found.")
+	var imported_gate := imported_registry.get_gate("gate.gen.gamma.to_start")
+	_expect(imported_gate != null, "Imported generated gate not found.")
 
 	var duplicate_result := registry.register_generated_system(
 		{
