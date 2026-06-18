@@ -7,6 +7,7 @@ extends CharacterBody3D
 @export var is_reinforcement: bool = false
 @export var difficulty_multiplier: float = 1.0
 @export var persistent_id: String = ""
+@export var custom_model_path: String = ""
 @export_enum("Gunner", "Interceptor", "Logistics", "MiningHauler") var ship_role: String = ""
 
 var health: float = 50.0
@@ -173,7 +174,18 @@ func _ready():
 
 func _setup_hull():
 	var hull_scene: PackedScene = null
-	
+
+	if custom_model_path != "" and ResourceLoader.exists(custom_model_path):
+		hull_scene = load(custom_model_path) as PackedScene
+		if hull_scene:
+			hull_instance = hull_scene.instantiate()
+			visual.add_child(hull_instance)
+			hull_instance.rotation.y = PI
+			_fit_major_hull(hull_instance)
+			hull_instance.scale *= 1.5
+			_setup_model_points(hull_instance)
+			return
+
 	# Check if this is a minor faction (data-driven lookup)
 	if GlobalState.is_minor_faction(faction):
 		var fdata = GlobalState.minor_faction_data(faction)

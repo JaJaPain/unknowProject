@@ -153,6 +153,10 @@ func set_generated_config(system_id: String, config: SystemConfig) -> void:
 	_generated_configs[system_id] = config
 
 
+func get_generated_config(system_id: String) -> SystemConfig:
+	return _generated_configs.get(system_id) as SystemConfig
+
+
 func _build_generated_root(definition: SystemDefinition) -> Node3D:
 	var config: SystemConfig = _generated_configs.get(str(definition.id))
 	if config == null:

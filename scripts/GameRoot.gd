@@ -55,6 +55,7 @@ var last_autosave_notification_key: String = ""
 var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
 var event_scheduler = null
+var ship_pre_generator: ShipPreGenerator = null
 
 func _ready() -> void:
 	_init_event_scheduler()
@@ -71,6 +72,7 @@ func _ready() -> void:
 		)
 		get_tree().quit(1)
 		return
+	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
 	if start_definition == null:
 		push_error("[GameRoot] Registered starting system could not be loaded.")
@@ -84,6 +86,12 @@ func _ready() -> void:
 	system_container.add_child(system_root)
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = start_definition.legacy_id
+	ship_pre_generator = ShipPreGenerator.new()
+	ship_pre_generator.name = "ShipPreGenerator"
+	ship_pre_generator.initialize(system_registry)
+	add_child(ship_pre_generator)
+	system_changed.connect(ship_pre_generator.on_system_entered)
+	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_completed.connect(_on_quest_completed_chronicle)
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned_chronicle)
 	if "--performance-baseline" in OS.get_cmdline_user_args():
@@ -511,7 +519,31 @@ func _queue_gate_discovery(
 func get_gate_knowledge_state(gate_id: String) -> String:
 	if campaign_checkpoint_store == null:
 		return "unknown"
+	if campaign_checkpoint_store._initial_known_gates.is_empty() and system_registry:
+		campaign_checkpoint_store.set_registry_defaults(system_registry)
 	return campaign_checkpoint_store.get_gate_state(gate_id)
+
+
+func _refresh_gate_states() -> void:
+	var system_root := get_active_system_root()
+	if system_root == null:
+		return
+	for node in system_root.get_children():
+		if node.is_in_group("jumpgate") and node.has_method("_apply_knowledge_state"):
+			node._apply_knowledge_state()
+
+
+func _init_generated_system_configs() -> void:
+	for sys_def: SystemDefinition in system_registry.get_all_systems():
+		if sys_def.scene_path != "generated":
+			continue
+		var sys_id := str(sys_def.id)
+		if system_registry.get_generated_config(sys_id) != null:
+			continue
+		var seed_val: int = sys_id.hash()
+		var config := SystemConfig.from_seed(sys_def.display_name, sys_id, seed_val)
+		system_registry.set_generated_config(sys_id, config)
+		system_registry.set_generated_config(config.legacy_id, config)
 
 
 func _init_event_scheduler() -> void:
@@ -1551,6 +1583,7 @@ func _load_startup_save() -> void:
 				)
 		startup_save_loaded = false
 		startup_load_finished = true
+		_refresh_gate_states()
 		startup_load_completed.emit(false)
 		return
 	_initialize_campaign_registry()
@@ -1577,6 +1610,7 @@ func _load_startup_save() -> void:
 		if bool(prepared.get("ok", false)):
 			_ensure_campaign_checkpoint_store(prepared["data"])
 	startup_load_finished = true
+	_refresh_gate_states()
 	startup_load_completed.emit(startup_save_loaded)
 
 func _is_valid_save_data(data: Variant) -> bool:

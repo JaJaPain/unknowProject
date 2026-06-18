@@ -129,6 +129,10 @@ func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: Str
 	npc.difficulty_multiplier = config.difficulty_multiplier
 	npc.persistent_id = _next_id(category)
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
+	var model_seed: String = "ship_%d_%d" % [config.seed_value, runtime_ship_sequence]
+	var cached_path: String = "res://assets/ships/generated/%s.glb" % model_seed
+	if ResourceLoader.exists(cached_path):
+		npc.custom_model_path = cached_path
 	system_root.add_child(npc)
 	npc.global_position = pos
 

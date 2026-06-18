@@ -547,10 +547,15 @@ func _build_initial_documents(
 	if system_definition == null:
 		current_system_id = "system.start"
 		system_definition = system_registry.get_system(current_system_id)
+	var known_gates: Array[String] = []
 	var hidden_gates: Array[String] = []
 	for registered_system: SystemDefinition in system_registry.systems.values():
 		for gate in registered_system.gates:
-			hidden_gates.append(str(gate.id))
+			if gate.initial_state == "known":
+				known_gates.append(str(gate.id))
+			else:
+				hidden_gates.append(str(gate.id))
+	known_gates.sort()
 	hidden_gates.sort()
 
 	var campaign := {
@@ -605,7 +610,7 @@ func _build_initial_documents(
 		"id": ids["map"],
 		"campaign_id": campaign_id,
 		"checkpoint_id": ids["checkpoint"],
-		"known_gate_ids": [],
+		"known_gate_ids": known_gates,
 		"rumored_gate_ids": [],
 		"hidden_gate_ids": hidden_gates,
 		"blocked_gate_ids": [],

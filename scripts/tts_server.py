@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 import io
+import re
 import soundfile as sf
+import torch
 from kokoro import KPipeline
 
 app = FastAPI()
@@ -14,6 +16,35 @@ try:
 except Exception as e:
     print("[TTS Server] Error initializing pipeline: ", e)
     pipeline = None
+
+_blend_cache: dict = {}
+
+def resolve_voice(voice_str: str):
+    if voice_str in _blend_cache:
+        return _blend_cache[voice_str]
+    if '+' not in voice_str:
+        pack = pipeline.load_single_voice(voice_str)
+        _blend_cache[voice_str] = pack
+        return pack
+    parts = voice_str.split('+')
+    voices = []
+    weights = []
+    for part in parts:
+        part = part.strip()
+        m = re.match(r'^(.+?)\[([0-9.]+)\]$', part)
+        if m:
+            voices.append(m.group(1))
+            weights.append(float(m.group(2)))
+        else:
+            voices.append(part)
+            weights.append(1.0)
+    total = sum(weights)
+    weights = [w / total for w in weights]
+    packs = [pipeline.load_single_voice(v) for v in voices]
+    blended = sum(p * w for p, w in zip(packs, weights))
+    _blend_cache[voice_str] = blended
+    print(f"[TTS Server] Blended voice: {list(zip(voices, weights))}")
+    return blended
 
 @app.get("/health")
 async def health_check():
@@ -33,7 +64,8 @@ async def text_to_speech(data: dict):
         
     print(f"[TTS Server] Generating speech for text: '{text}' using voice: '{voice}'")
     try:
-        generator = pipeline(text, voice=voice, speed=speed, split_pattern=r'\n+')
+        voice_pack = resolve_voice(voice)
+        generator = pipeline(text, voice=voice_pack, speed=speed, split_pattern=r'\n+')
         for _, _, audio in generator:
             wav_io = io.BytesIO()
             # Kokoro sample rate is 24000Hz

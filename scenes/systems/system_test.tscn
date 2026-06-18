@@ -31,3 +31,13 @@ display_name = "UNCHARTED RETURN GATE"
 destination_system_id = "start_system"
 destination_gate_id = "start_to_test"
 destination_display_name = "FRONTIER SYSTEM"
+
+[node name="CrimsonGate" parent="." instance=ExtResource("2_gate")]
+position = Vector3(800, 0, -400)
+rotation_degrees = Vector3(0, 0, 0)
+gate_id = "test_to_crimson"
+world_id = "gate.test.to_crimson"
+display_name = "CRIMSON PASSAGE"
+destination_system_id = "crimson_system"
+destination_gate_id = "crimson_to_test"
+destination_display_name = "CRIMSON NEBULA"
