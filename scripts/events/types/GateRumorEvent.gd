@@ -54,11 +54,14 @@ func _find_unknown_gates() -> Array[String]:
 	var registry = _get_system_registry()
 	if registry == null:
 		return output
-	for system_def in registry.get_all_systems():
-		for gate_def in system_def.gates:
-			var gate_id: String = str(gate_def.id)
-			if GateDiscovery.get_gate_state(gate_id) == "unknown":
-				output.append(gate_id)
+	var current_system_id := _get_current_system_id()
+	var current_system := registry.get_system(current_system_id)
+	if current_system == null:
+		return output
+	for gate_def in current_system.gates:
+		var gate_id: String = str(gate_def.id)
+		if GateDiscovery.get_gate_state(gate_id) == "unknown":
+			output.append(gate_id)
 	return output
 
 
@@ -67,3 +70,10 @@ func _get_system_registry():
 	if game_root and "system_registry" in game_root:
 		return game_root.system_registry
 	return null
+
+
+func _get_current_system_id() -> String:
+	var game_root = Engine.get_main_loop().root.get_child(0) if Engine.get_main_loop() else null
+	if game_root and "system_registry" in game_root:
+		return str(game_root.system_registry.resolve_system_id(GlobalState.current_system_id))
+	return GlobalState.current_system_id

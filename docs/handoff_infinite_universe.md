@@ -273,13 +273,20 @@ Called when a gate becomes "rumored". This is where new systems are born:
 
 ### Phase 2: Add Outbound Gate Generation
 Modify `GateDiscoveryManager._ensure_destination_generated()` to:
-1. After creating the return gate, also create `config.outbound_gate_count` (1-2) outbound gates
-2. Each outbound gate should:
+1. [x] After creating the return gate, also create `config.outbound_gate_count` (1-2) outbound gates
+2. [x] Each outbound gate should:
    - Have a unique ID like `gate.{new_system_id}.out_{index}`
    - Point to a destination system ID that doesn't exist yet (e.g., `system.gen_{hash}`)
    - Have a matching destination gate ID (e.g., `gate.gen_{hash}.return`)
    - Have `initial_state: "unknown"`
-3. Use the system's seed + index to generate deterministic gate IDs
+3. [x] Use the system's seed + index to generate deterministic gate IDs
+
+Clarified implementation:
+- [x] `system.test` remains a test scene/fixture, but is no longer part of the default campaign registry.
+- [x] The Frontier gate points at a deterministic first generated route (`system.gen.frontier.first`) and starts locked/unknown.
+- [x] Entering or restoring a system prepares generated destinations for that system's outbound gates before the scene is used.
+- [x] Live gate nodes refresh their target metadata from the registry after the generated destination is registered, so a fallback/locked gate can safely swap to the prepared route before Kaelen opens it.
+- [x] Gate rumor events only choose unknown gates in the current system, preventing future-system gates from being revealed early.
 
 ### Phase 3: Verify the Full Loop
 Test the complete cycle:

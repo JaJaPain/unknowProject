@@ -7,6 +7,9 @@ signal gate_rumor_received(gate_id: String, narrative: String)
 const GateDiscoveryActionType := preload(
 	"res://scripts/navigation/GateDiscoveryAction.gd"
 )
+const GeneratedGateBuilderType := preload(
+	"res://scripts/navigation/GeneratedGateBuilder.gd"
+)
 
 var _last_kaelen_offer_time: int = -1
 const KAELEN_COOLDOWN_MINUTES := 60
@@ -140,6 +143,19 @@ func get_gate_state(gate_id: String) -> String:
 	return store.get_gate_state(gate_id)
 
 
+func ensure_destinations_for_system(system_id: String) -> void:
+	var game_root := get_tree().current_scene if get_tree() else null
+	if not game_root or not "system_registry" in game_root:
+		return
+	var registry: SystemRegistry = game_root.system_registry
+	var system_def := registry.get_system(system_id)
+	if system_def == null:
+		return
+	for gate_def: GateDefinition in system_def.gates:
+		_ensure_destination_generated(str(gate_def.id))
+		_sync_active_gate_target(gate_def)
+
+
 func _has_revealable_gates() -> bool:
 	return not get_revealable_gates().is_empty()
 
@@ -176,6 +192,13 @@ func _ensure_destination_generated(gate_id: String) -> void:
 		"discovery_cost": {},
 		"discovery_prerequisites": [],
 	}]
+	gate_defs.append_array(
+		GeneratedGateBuilderType.build_outbound_gate_defs(
+			dest_sys_id,
+			sys_name,
+			config
+		)
+	)
 
 	var sys_data := {
 		"id": dest_sys_id,
@@ -190,6 +213,41 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	var result := registry.register_generated_system(sys_data, gate_defs)
 	if not result.is_valid():
 		push_warning("[GateDiscovery] Failed to register generated system: %s" % result.summary())
+
+
+func _sync_active_gate_target(gate_def: GateDefinition) -> void:
+	var game_root := get_tree().current_scene if get_tree() else null
+	if not game_root or not "system_registry" in game_root:
+		return
+	if not game_root.has_method("get_active_system_root"):
+		return
+	var active_root: Node = game_root.get_active_system_root()
+	if active_root == null:
+		return
+	var active_gate := _find_active_gate(active_root, gate_def)
+	if active_gate == null:
+		return
+	var registry: SystemRegistry = game_root.system_registry
+	var destination := registry.get_system(gate_def.destination_system_id)
+	active_gate.set("destination_system_id", str(gate_def.destination_system_id))
+	active_gate.set("destination_gate_id", str(gate_def.destination_gate_id))
+	active_gate.set(
+		"destination_display_name",
+		destination.display_name if destination else "ROUTE PREPARING"
+	)
+
+
+func _find_active_gate(
+	active_root: Node,
+	gate_def: GateDefinition
+) -> Node:
+	for node in active_root.get_tree().get_nodes_in_group("jumpgate"):
+		if not active_root.is_ancestor_of(node):
+			continue
+		if node.get("world_id") == str(gate_def.id) \
+				or node.get("gate_id") == gate_def.legacy_id:
+			return node
+	return null
 
 
 func _get_store() -> CampaignCheckpointStore:

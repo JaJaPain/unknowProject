@@ -60,11 +60,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 	var initial_map := store.current_map_knowledge()
 	_expect(
-		"gate.start.to_test" in initial_map.get("hidden_gate_ids", [])
-			and "gate.test.to_start" in initial_map.get(
-				"hidden_gate_ids",
-				[]
-			),
+		"gate.start.to_test" in initial_map.get("hidden_gate_ids", []),
 		"Initial map knowledge did not classify the handcrafted gate graph."
 	)
 
@@ -225,7 +221,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	_expect(
 		store.mark_gates_known([
 			"gate.start.to_test",
-			"gate.test.to_start",
+			"gate.gen.frontier.first.return",
 		]),
 		"Handcrafted route discovery could not mark gates known."
 	)
@@ -233,8 +229,8 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		_runtime_state(990, 63.0, "gate"),
 		{
 			"type": "gate_arrival",
-			"system_id": "system.test",
-			"gate_id": "gate.test.to_start",
+			"system_id": "system.gen.frontier.first",
+			"gate_id": "gate.gen.frontier.first.return",
 		},
 		"gate_arrival"
 	)
@@ -245,7 +241,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			and gate_bundle.get("checkpoint", {}).get(
 				"safe_location",
 				{}
-			).get("gate_id") == "gate.test.to_start",
+			).get("gate_id") == "gate.gen.frontier.first.return",
 		"Gate checkpoint did not become the rolling autosave."
 	)
 	_expect(
@@ -253,7 +249,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			"map_knowledge",
 			{}
 		).get("known_gate_ids", [])
-			and "gate.test.to_start" in gate_bundle.get(
+			and "gate.gen.frontier.first.return" in gate_bundle.get(
 				"map_knowledge",
 				{}
 			).get("known_gate_ids", []),
@@ -264,11 +260,11 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		store.restore_map_knowledge(
 			older_manual_state.get("map_knowledge", {})
 		)
-			and "gate.test.to_start" in store.current_map_knowledge().get(
+			and "gate.start.to_test" in store.current_map_knowledge().get(
 				"hidden_gate_ids",
 				[]
 			)
-			and "gate.test.to_start" not in store.current_map_knowledge().get(
+			and "gate.gen.frontier.first.return" not in store.current_map_knowledge().get(
 				"known_gate_ids",
 				[]
 			),

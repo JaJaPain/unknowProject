@@ -283,23 +283,25 @@ func _register_system(definition: SystemDefinition, index: int) -> void:
 func _validate_gate_destinations() -> void:
 	for gate: GateDefinition in gates.values():
 		if not systems.has(gate.destination_system_id):
-			validation.add_error(
-				"unknown_destination_system",
-				"Gate '%s' references unknown system '%s'." % [
-					gate.id,
-					gate.destination_system_id,
-				],
-				str(gate.id)
-			)
+			if not DomainId.is_generated(gate.destination_system_id):
+				validation.add_error(
+					"unknown_destination_system",
+					"Gate '%s' references unknown system '%s'." % [
+						gate.id,
+						gate.destination_system_id,
+					],
+					str(gate.id)
+				)
 		if not gates.has(gate.destination_gate_id):
-			validation.add_error(
-				"unknown_destination_gate",
-				"Gate '%s' references unknown gate '%s'." % [
-					gate.id,
-					gate.destination_gate_id,
-				],
-				str(gate.id)
-			)
+			if not DomainId.is_generated(gate.destination_gate_id):
+				validation.add_error(
+					"unknown_destination_gate",
+					"Gate '%s' references unknown gate '%s'." % [
+						gate.id,
+						gate.destination_gate_id,
+					],
+					str(gate.id)
+				)
 
 
 func _validate_gate_pairs() -> void:

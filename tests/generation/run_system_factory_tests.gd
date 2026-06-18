@@ -1,5 +1,9 @@
 extends SceneTree
 
+const GeneratedGateBuilderType := preload(
+	"res://scripts/navigation/GeneratedGateBuilder.gd"
+)
+
 var _failures: Array[String] = []
 
 
@@ -11,6 +15,7 @@ func _initialize() -> void:
 	_test_config_npc_count()
 	_test_campaign_system_names()
 	_test_registry_generated_system()
+	_test_generated_outbound_gate_defs()
 
 	if _failures.is_empty():
 		print("[PASS] System factory tests")
@@ -144,6 +149,25 @@ func _test_registry_generated_system() -> void:
 		[]
 	)
 	_expect(not duplicate_result.is_valid(), "Duplicate registration should fail.")
+
+
+func _test_generated_outbound_gate_defs() -> void:
+	var config := SystemConfig.from_seed("Delta", "system.gen.delta", 9901)
+	config.outbound_gate_count = 2
+	var gates: Array[Dictionary] = GeneratedGateBuilderType.build_outbound_gate_defs(
+		"system.gen.delta",
+		"Delta",
+		config
+	)
+	_expect(gates.size() == 2, "Outbound gate count did not match config.")
+	if gates.size() != 2:
+		return
+	_expect(gates[0].get("id", "") == "gate.gen.delta.out_1", "First outbound gate id was not deterministic.")
+	_expect(gates[1].get("id", "") == "gate.gen.delta.out_2", "Second outbound gate id was not deterministic.")
+	_expect(gates[0].get("initial_state", "") == "unknown", "Outbound gate did not start unknown.")
+	_expect(str(gates[0].get("destination_system_id", "")).begins_with("system.gen."), "Outbound gate destination was not a generated system id.")
+	_expect(str(gates[0].get("destination_gate_id", "")).begins_with("gate.gen."), "Outbound gate return id was not generated.")
+	_expect(gates[0].get("destination_system_id", "") != gates[1].get("destination_system_id", ""), "Outbound gates should point to different future systems.")
 
 
 func _expect(condition: bool, message: String) -> void:

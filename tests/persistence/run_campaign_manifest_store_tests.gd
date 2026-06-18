@@ -59,7 +59,6 @@ func _test_handcrafted_canon_and_append_only_identity() -> void:
 	)
 	_expect(
 		"system.start" in store.manifest.get("entity_ids", [])
-			and "system.test" in store.manifest.get("entity_ids", [])
 			and "npc.kaelen" in store.manifest.get("entity_ids", []),
 		"Required handcrafted identities are absent from campaign canon."
 	)

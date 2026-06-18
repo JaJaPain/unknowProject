@@ -48,7 +48,7 @@ func _test_in_memory_migration() -> void:
 	)
 	_expect(
 		data.get("current_system_id") == "system.start"
-			and data.get("arrival_gate_id") == "gate.test.to_start",
+			and data.get("arrival_gate_id") == "gate.start.to_test",
 		"Migration did not canonicalize top-level IDs."
 	)
 	_expect(
@@ -74,7 +74,7 @@ func _test_in_memory_migration() -> void:
 		var runtime: Dictionary = decoded["data"]
 		_expect(
 			runtime.get("current_system_id") == "start_system"
-				and runtime.get("arrival_gate_id") == "test_to_start"
+				and runtime.get("arrival_gate_id") == "start_to_test"
 				and (runtime.get("systems", {}) as Dictionary).has(
 					"start_system"
 				),
@@ -149,7 +149,7 @@ func _legacy_save() -> Dictionary:
 	return {
 		"version": MigratorType.LEGACY_VERSION,
 		"current_system_id": "start_system",
-		"arrival_gate_id": "test_to_start",
+		"arrival_gate_id": "start_to_test",
 		"player": {
 			"health": 73.0,
 			"shield": 17.0,

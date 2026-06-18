@@ -86,10 +86,13 @@ func _ready() -> void:
 	system_container.add_child(system_root)
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = start_definition.legacy_id
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(start_definition.id)
 	ship_pre_generator = ShipPreGenerator.new()
 	ship_pre_generator.name = "ShipPreGenerator"
 	ship_pre_generator.initialize(system_registry)
 	add_child(ship_pre_generator)
+	system_changed.connect(_on_system_changed_prepare_destinations)
 	system_changed.connect(ship_pre_generator.on_system_entered)
 	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_completed.connect(_on_quest_completed_chronicle)
@@ -192,6 +195,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		)
 		return
 
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(destination_system_id)
 	var new_system := system_registry.instantiate_system(destination_system_id)
 	if not new_system:
 		jump_request_pending = false
@@ -544,6 +549,14 @@ func _init_generated_system_configs() -> void:
 		var config := SystemConfig.from_seed(sys_def.display_name, sys_id, seed_val)
 		system_registry.set_generated_config(sys_id, config)
 		system_registry.set_generated_config(config.legacy_id, config)
+
+
+func _on_system_changed_prepare_destinations(
+	system_id: String,
+	_arrival_gate_id: String
+) -> void:
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(system_id)
 
 
 func _init_event_scheduler() -> void:
@@ -1649,6 +1662,8 @@ func _apply_save_data(data: Dictionary) -> void:
 
 func _load_system_without_transition(system_id: String) -> void:
 	var runtime_system_id := system_registry.runtime_system_id(system_id)
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(system_id)
 	var new_system := system_registry.instantiate_system(system_id)
 	if not new_system:
 		RuntimeTraceType.event("transition", "load_failed", {
