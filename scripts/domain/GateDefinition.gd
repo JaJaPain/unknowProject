@@ -8,6 +8,10 @@ var system_id: StringName
 var display_name: String = ""
 var destination_system_id: StringName
 var destination_gate_id: StringName
+var initial_state: String = "known"
+var discovery_action: String = ""
+var discovery_cost: Dictionary = {}
+var discovery_prerequisites: Array = []
 
 
 func load_from_dict(
@@ -24,6 +28,10 @@ func load_from_dict(
 	destination_gate_id = DomainId.canonicalize(
 		data.get("destination_gate_id", "")
 	)
+	initial_state = str(data.get("initial_state", "known"))
+	discovery_action = str(data.get("discovery_action", ""))
+	discovery_cost = data.get("discovery_cost", {}) as Dictionary
+	discovery_prerequisites = data.get("discovery_prerequisites", []) as Array
 
 	if legacy_id.is_empty():
 		result.add_error(
@@ -60,6 +68,10 @@ func to_dict() -> Dictionary:
 		"display_name": display_name,
 		"destination_system_id": str(destination_system_id),
 		"destination_gate_id": str(destination_gate_id),
+		"initial_state": initial_state,
+		"discovery_action": discovery_action,
+		"discovery_cost": discovery_cost.duplicate(true),
+		"discovery_prerequisites": discovery_prerequisites.duplicate(true),
 	})
 	return data
 

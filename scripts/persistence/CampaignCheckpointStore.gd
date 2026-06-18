@@ -113,6 +113,25 @@ func set_gate_knowledge(gate_id: String, state: String) -> bool:
 	return true
 
 
+func get_gate_state(gate_id: String) -> String:
+	if map_knowledge.is_empty():
+		return "unknown"
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		if gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			return state
+	return "unknown"
+
+
+func get_all_gate_states() -> Dictionary:
+	var output := {}
+	if map_knowledge.is_empty():
+		return output
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		for gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			output[str(gate_id)] = state
+	return output
+
+
 func mark_gates_known(gate_ids: Array) -> bool:
 	for gate_id in gate_ids:
 		if not set_gate_knowledge(str(gate_id), "known"):

@@ -2279,3 +2279,56 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 	if err != OK:
 		temp_http.queue_free()
 		callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+
+
+func generate_campaign_system_names(count: int, callback: Callable):
+	if OLLAMA_URL.is_empty() or active_model_name.is_empty():
+		callback.call([])
+		return
+	var prompt := (
+		"Generate %d unique star system names for a space exploration game. "
+		+ "Each name should feel like a real place — evocative, varied, 1-3 words. "
+		+ "Mix styles: some mythological, some geographic, some industrial. "
+		+ "Return a JSON object with a single key \"names\" containing an array of strings. "
+		+ "No numbering, no duplicates."
+	) % count
+	var payload := {
+		"model": active_model_name,
+		"prompt": prompt,
+		"stream": false,
+		"format": "json",
+		"options": {
+			"temperature": 1.0,
+			"seed": randi()
+		}
+	}
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = 30.0
+	temp_http.request_completed.connect(
+		func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray):
+			temp_http.queue_free()
+			if code != 200:
+				callback.call([])
+				return
+			var parsed = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary:
+				var response_text: String = str(parsed.get("response", ""))
+				var inner = JSON.parse_string(response_text)
+				if inner is Dictionary and inner.has("names") and inner["names"] is Array:
+					var names: Array[String] = []
+					for n in inner["names"]:
+						var s := str(n).strip_edges()
+						if not s.is_empty() and s.length() <= 30:
+							names.append(s)
+					if names.size() >= count / 2:
+						callback.call(names)
+						return
+			callback.call([])
+	)
+	var json_str = JSON.stringify(payload)
+	var headers = ["Content-Type: application/json"]
+	var name_err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
+	if name_err != OK:
+		temp_http.queue_free()
+		callback.call([])

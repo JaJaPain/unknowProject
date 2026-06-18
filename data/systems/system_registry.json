@@ -29,7 +29,11 @@
 					"legacy_id": "start_to_test",
 					"display_name": "Fringe Hypergate",
 					"destination_system_id": "system.test",
-					"destination_gate_id": "gate.test.to_start"
+					"destination_gate_id": "gate.test.to_start",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
 				}
 			]
 		},
@@ -58,7 +62,11 @@
 					"legacy_id": "test_to_start",
 					"display_name": "Test System Return Gate",
 					"destination_system_id": "system.start",
-					"destination_gate_id": "gate.start.to_test"
+					"destination_gate_id": "gate.start.to_test",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
 				}
 			]
 		}

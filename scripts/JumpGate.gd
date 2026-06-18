@@ -17,6 +17,7 @@ extends StaticBody3D
 
 var portal_material: ShaderMaterial
 var charge_tween: Tween
+var knowledge_state: String = "known"
 
 func _ready() -> void:
 	add_to_group("jumpgate")
@@ -29,6 +30,9 @@ func _ready() -> void:
 	portal_material = portal_surface.get_active_material(0).duplicate() as ShaderMaterial
 	portal_surface.material_override = portal_material
 	_set_portal_charge(0.0)
+	_apply_knowledge_state()
+	if GateDiscovery:
+		GateDiscovery.gate_state_changed.connect(_on_gate_state_changed)
 	GlobalState.entities_changed.emit()
 
 func _process(delta: float) -> void:
@@ -58,7 +62,12 @@ func is_player_in_activation_range() -> bool:
 	var player := GlobalState.player
 	return player != null and is_instance_valid(player) and global_position.distance_to(player.global_position) <= activation_range
 
+func is_jump_allowed() -> bool:
+	return knowledge_state == "known"
+
 func request_jump() -> bool:
+	if not is_jump_allowed():
+		return false
 	var game_root := get_tree().current_scene
 	if not game_root or not game_root.has_method("request_gate_jump"):
 		return false
@@ -108,3 +117,61 @@ func _find_meshes(node: Node, meshes: Array[MeshInstance3D]) -> void:
 		meshes.append(node)
 	for child in node.get_children():
 		_find_meshes(child, meshes)
+
+
+func _apply_knowledge_state() -> void:
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("get_gate_knowledge_state"):
+		knowledge_state = game_root.get_gate_knowledge_state(world_id)
+	else:
+		knowledge_state = "known"
+
+	match knowledge_state:
+		"unknown":
+			visible = false
+		"rumored":
+			visible = false
+		"hidden":
+			visible = true
+			_apply_dim_visual()
+		"blocked":
+			visible = true
+			_apply_blocked_visual()
+		"damaged":
+			visible = true
+			_apply_damaged_visual()
+		"known":
+			visible = true
+
+
+func _apply_dim_visual() -> void:
+	if portal_material:
+		portal_material.set_shader_parameter("charge", 0.0)
+	if gate_light:
+		gate_light.light_energy = 1.5
+
+
+func _apply_blocked_visual() -> void:
+	if portal_material:
+		portal_material.set_shader_parameter("charge", 0.0)
+	if gate_light:
+		gate_light.light_color = Color(0.9, 0.2, 0.2)
+		gate_light.light_energy = 3.0
+
+
+func _apply_damaged_visual() -> void:
+	if portal_material:
+		portal_material.set_shader_parameter("charge", 0.15)
+	if gate_light:
+		gate_light.light_color = Color(1.0, 0.6, 0.1)
+		gate_light.light_energy = 2.5
+
+
+func _on_gate_state_changed(
+	changed_gate_id: String,
+	_old_state: String,
+	_new_state: String
+) -> void:
+	if changed_gate_id == world_id:
+		_apply_knowledge_state()
+		GlobalState.entities_changed.emit()

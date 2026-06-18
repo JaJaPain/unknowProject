@@ -25,6 +25,9 @@ var overview_panel: Panel
 var overview_list: VBoxContainer
 var overview_collapsed: bool = false
 var collapse_btn: Button
+var overview_title_label: Label
+var map_btn: Button
+var branch_map: BranchMapUI
 
 var dock_panel: Panel
 var dock_label: Label
@@ -456,11 +459,10 @@ func _create_hud():
 	van_lbl.mouse_filter = Control.MOUSE_FILTER_STOP
 	rep_hbox.add_child(van_lbl)
 	
-	# Quest Tracker HUD Panel. A PanelContainer (not Panel) so it
-	# auto-sizes to its content — when the progress label wraps to
-	# 2-3 lines, the panel grows vertically to fit. Width is pinned
-	# at 380px min via custom_minimum_size so the labels wrap
-	# consistently; height follows content.
+	branch_map = BranchMapUI.new()
+	branch_map.visible = false
+	add_child(branch_map)
+
 	quest_tracker_panel = PanelContainer.new()
 	quest_tracker_panel.custom_minimum_size = Vector2(380, 0)
 	quest_tracker_panel.position = Vector2(20, 220)
@@ -714,6 +716,20 @@ func _create_target_panel():
 	target_panel.visible = false
 
 func _create_overview():
+	map_btn = Button.new()
+	map_btn.text = "SYSTEM MAP"
+	map_btn.visible = false
+	map_btn.anchor_left = 0.78
+	map_btn.anchor_right = 0.98
+	map_btn.anchor_top = 0.01
+	map_btn.anchor_bottom = 0.045
+	map_btn.offset_left = 0
+	map_btn.offset_right = 0
+	map_btn.offset_top = 0
+	map_btn.offset_bottom = 0
+	map_btn.pressed.connect(_toggle_branch_map)
+	add_child(map_btn)
+
 	overview_panel = Panel.new()
 	add_child(overview_panel)
 	overview_panel.anchor_left = 0.78
@@ -759,6 +775,7 @@ func _create_overview():
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_hbox.add_child(title)
+	overview_title_label = title
 	
 	collapse_btn = Button.new()
 	collapse_btn.text = " ▲ "
@@ -2574,6 +2591,9 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
 			return
+		if branch_map and branch_map.visible:
+			branch_map._close()
+			return
 		if campaign_panel and campaign_panel.visible:
 			_close_campaign_manager()
 			return
@@ -2594,7 +2614,8 @@ func update_overview_list(entities: Array):
 			filtered_entities.append(active)
 		
 	for entity in filtered_entities:
-		if entity and is_instance_valid(entity) and entity != GlobalState.player:
+		if entity and is_instance_valid(entity) and entity != GlobalState.player \
+				and not _is_hidden_gate(entity):
 			var btn = Button.new()
 			btn.custom_minimum_size = Vector2(0, 30)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2637,7 +2658,12 @@ func update_overview_list(entities: Array):
 			if entity.is_in_group("asteroid"):
 				type_str = "Asteroid"
 			elif entity.is_in_group("jumpgate"):
-				type_str = "Jumpgate"
+				var gate_state: String = entity.get("knowledge_state") if entity.get("knowledge_state") else "known"
+				match gate_state:
+					"hidden": type_str = "Unknown Gate"
+					"blocked": type_str = "Locked Gate"
+					"damaged": type_str = "Damaged Gate"
+					_: type_str = "Jumpgate"
 			elif entity.is_in_group("station"):
 				# Outposts show as "Outpost" so the player can tell them apart
 				# from the main system space station. station_type defaults to
@@ -2810,7 +2836,12 @@ func _on_target_changed(new_target: Node3D):
 			type_str = "Station"
 			icon_index = 2
 		elif new_target.is_in_group("jumpgate"):
-			type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
+			var gate_state: String = new_target.get("knowledge_state") if new_target.get("knowledge_state") else "known"
+			match gate_state:
+				"hidden": type_str = "Unknown Gate — Scan Required"
+				"blocked": type_str = "Locked Gate — Access Denied"
+				"damaged": type_str = "Damaged Gate — Repair Required"
+				_: type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
 			icon_index = 3
 		elif new_target.is_in_group("ship"):
 			type_str = "Hostile NPCShip"
@@ -2844,7 +2875,7 @@ func _on_target_changed(new_target: Node3D):
 				target_action_btn.text = "Dock at Station"
 				target_action_btn.visible = true
 			elif new_target.is_in_group("jumpgate"):
-				target_action_btn.text = "Initiate Jump"
+				target_action_btn.text = _gate_action_label(new_target)
 				target_action_btn.visible = true
 			elif new_target.is_in_group("ship"):
 				target_action_btn.text = "Attack Hostile"
@@ -2973,6 +3004,8 @@ func toggle_dock_menu(
 		# Refresh-on-use (when a line is played from cache-miss
 		# path) re-warms the remaining lines for that NPC.
 		var docked_outpost_id_for_precache: String = OUTPOST_NODE_TO_ID.get(station.name, "") if station else ""
+		if docked_outpost_id_for_precache == "" and station:
+			docked_outpost_id_for_precache = GlobalState.resolve_outpost_id(station)
 		if is_outpost and docked_outpost_id_for_precache != "":
 			var outpost_id: String = docked_outpost_id_for_precache
 			var prev_count: int = int(_outpost_flavor_precached.get(outpost_id, 0))
@@ -3064,6 +3097,8 @@ func _render_dock_submenu() -> void:
 				and QuestManager.active_quest.get("objective_type", "") == "PICKUP_SPECIAL" \
 				and not QuestManager.active_quest.get("picked_up", false):
 			var docked_outpost_id_for_btn: String = OUTPOST_NODE_TO_ID.get(current_station.name, "") if current_station else ""
+			if docked_outpost_id_for_btn == "" and current_station:
+				docked_outpost_id_for_btn = GlobalState.resolve_outpost_id(current_station)
 			if docked_outpost_id_for_btn != "" and docked_outpost_id_for_btn == QuestManager.active_quest.get("target_outpost", ""):
 				show_ask_btn = true
 		ask_for_part_btn.visible = show_ask_btn
@@ -3917,6 +3952,8 @@ func _on_hear_gossip_pressed() -> void:
 		return
 	var outpost_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
 	if outpost_id == "":
+		outpost_id = GlobalState.resolve_outpost_id(current_station)
+	if outpost_id == "":
 		show_hud_warning("No one to chat with at this dock.")
 		return
 
@@ -4066,7 +4103,7 @@ func show_context_menu(
 			context_action_btn.text = "Dock at Station"
 			context_action_btn.visible = true
 		elif entity.is_in_group("jumpgate"):
-			context_action_btn.text = "Initiate Jump"
+			context_action_btn.text = _gate_action_label(entity)
 			context_action_btn.visible = true
 		elif entity.is_in_group("ship"):
 			context_action_btn.text = "Attack Hostile"
@@ -4111,6 +4148,19 @@ func activate_selected_jumpgate() -> void:
 	if not gate or not is_instance_valid(gate) or not gate.is_in_group("jumpgate"):
 		show_hud_warning("No jumpgate selected.")
 		return
+
+	var gate_state: String = gate.get("knowledge_state") if gate.get("knowledge_state") else "known"
+
+	if gate_state == "hidden":
+		_attempt_gate_scan(gate)
+		return
+	if gate_state == "damaged":
+		_attempt_gate_repair(gate)
+		return
+	if gate_state == "blocked":
+		_attempt_gate_unlock(gate)
+		return
+
 	var game_root := get_tree().current_scene
 	if not game_root or not game_root.has_method("get_jump_block_reason"):
 		show_hud_warning("Jump control is unavailable.")
@@ -4404,12 +4454,35 @@ func _exit_tree() -> void:
 	if GlobalState.entities_changed.is_connected(refresh_overview):
 		GlobalState.entities_changed.disconnect(refresh_overview)
 
+
+func _get_current_system_display_name() -> String:
+	var game_root := get_tree().current_scene
+	if game_root and "system_registry" in game_root and game_root.system_registry:
+		var sys_id = GlobalState.current_system_id
+		var registry = game_root.system_registry
+		for sys_def in registry.get_all_systems():
+			if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
+				return sys_def.display_name
+	return ""
+
+
 func refresh_overview():
 	var entities: Array = []
 	var system_root := GlobalState.get_system_root()
 	var scene_tree := get_tree()
 	if not system_root or not scene_tree:
 		return
+
+	if overview_title_label:
+		var sys_name := _get_current_system_display_name()
+		overview_title_label.text = sys_name + "  OVERVIEW" if sys_name != "" else "OVERVIEW"
+
+	if map_btn:
+		var game_root_ref := get_tree().current_scene
+		if game_root_ref and "system_registry" in game_root_ref and game_root_ref.system_registry:
+			map_btn.visible = game_root_ref.system_registry.get_all_systems().size() > 1
+		else:
+			map_btn.visible = false
 	
 	# Add ALL stations (main + outposts) by group — never hardcode node names
 	for node in scene_tree.get_nodes_in_group("station"):
@@ -4439,6 +4512,86 @@ func refresh_overview():
 			entities.append(node)
 			
 	update_overview_list(entities)
+
+func _toggle_branch_map() -> void:
+	if branch_map:
+		branch_map.visible = not branch_map.visible
+		if branch_map.visible:
+			move_child(branch_map, get_child_count() - 1)
+			branch_map.refresh()
+			get_tree().paused = true
+		else:
+			get_tree().paused = false
+
+
+func _is_hidden_gate(entity: Node) -> bool:
+	if not entity.is_in_group("jumpgate"):
+		return false
+	var gate_state: String = entity.get("knowledge_state") if entity.get("knowledge_state") else "known"
+	return gate_state in ["unknown", "rumored"]
+
+
+func _gate_action_label(gate: Node) -> String:
+	var gate_state: String = gate.get("knowledge_state") if gate.get("knowledge_state") else "known"
+	match gate_state:
+		"hidden": return "Scan Gate"
+		"blocked": return "Locked"
+		"damaged": return "Repair Gate"
+	return "Initiate Jump"
+
+
+func _attempt_gate_scan(gate: Node) -> void:
+	var gate_id: String = gate.get("world_id") if gate.get("world_id") else ""
+	if gate_id.is_empty():
+		show_hud_warning("Cannot identify gate.")
+		return
+	var action := GateDiscoveryAction.new()
+	action.action_type = GateDiscoveryAction.ActionType.SCAN
+	action.gate_id = gate_id
+	var result := GateDiscovery.advance_gate_state(gate_id, action)
+	if result.get("ok", false):
+		show_hud_info("Gate scanned — status revealed.", Color(0.2, 0.9, 0.6))
+	else:
+		show_hud_warning(str(result.get("error", "Scan failed.")))
+
+
+func _attempt_gate_repair(gate: Node) -> void:
+	var gate_id: String = gate.get("world_id") if gate.get("world_id") else ""
+	if gate_id.is_empty():
+		show_hud_warning("Cannot identify gate.")
+		return
+	var action := GateDiscoveryAction.new()
+	action.action_type = GateDiscoveryAction.ActionType.REPAIR
+	action.gate_id = gate_id
+	action.credit_cost = 50
+	action.ore_cost = 30
+	if not action.can_player_afford():
+		show_hud_warning("Repair requires 50 SC + 30 ore.")
+		return
+	var result := GateDiscovery.advance_gate_state(gate_id, action)
+	if result.get("ok", false):
+		show_hud_info("Gate repaired — route is now active!", Color(0.2, 0.9, 0.6))
+	else:
+		show_hud_warning(str(result.get("error", "Repair failed.")))
+
+
+func _attempt_gate_unlock(gate: Node) -> void:
+	var gate_id: String = gate.get("world_id") if gate.get("world_id") else ""
+	if gate_id.is_empty():
+		show_hud_warning("Cannot identify gate.")
+		return
+	var action := GateDiscoveryAction.new()
+	action.action_type = GateDiscoveryAction.ActionType.UNLOCK
+	action.gate_id = gate_id
+	if not action.meets_prerequisites():
+		show_hud_warning("Prerequisites not met: " + action.get_prerequisite_text())
+		return
+	var result := GateDiscovery.advance_gate_state(gate_id, action)
+	if result.get("ok", false):
+		show_hud_info("Gate unlocked — route is now active!", Color(0.2, 0.9, 0.6))
+	else:
+		show_hud_warning(str(result.get("error", "Unlock failed.")))
+
 
 func show_hud_warning(text: String):
 	var warning_label = Label.new()
@@ -4987,6 +5140,41 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		_show_quest_briefing(quest_data, is_fallback)
 	)
 	agent_choices_container.add_child(bring_in_btn)
+
+	if GateDiscovery and GateDiscovery.is_kaelen_gate_eligible():
+		var revealable := GateDiscovery.get_revealable_gates()
+		if not revealable.is_empty():
+			var gate_id: String = revealable[0]
+			var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
+			var intel_btn := Button.new()
+			intel_btn.text = "[ Ask about new routes — %d SC ]" % cost
+			intel_btn.pressed.connect(func():
+				_kaelen_gate_reveal(gate_id, cost)
+			)
+			agent_choices_container.add_child(intel_btn)
+
+
+func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
+	var result := GateDiscovery.kaelen_reveal(gate_id, cost)
+	if result.get("ok", false):
+		agent_dialogue_label.text = (
+			"\"I've got a contact who owes me — they mapped a route "
+			+ "nobody else has charted. It's yours now. Gate coordinates uploaded to your nav system.\""
+		)
+		SpeechService.play(agent_dialogue_label.text, "voice.kaelen.v1")
+		show_hud_info("New route unlocked — check your map.", Color(0.2, 0.9, 0.6))
+		for child in agent_choices_container.get_children():
+			child.queue_free()
+		var back_btn := Button.new()
+		back_btn.text = "[ Thanks, Kaelen ]"
+		back_btn.pressed.connect(func():
+			agent_panel.visible = false
+			dock_panel.visible = true
+		)
+		agent_choices_container.add_child(back_btn)
+	else:
+		show_hud_warning(str(result.get("error", "Kaelen can't help with that right now.")))
+
 
 func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	# ── Step 2: The quest giver delivers their briefing ───────────────────────

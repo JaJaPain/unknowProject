@@ -5,6 +5,7 @@ extends CharacterBody3D
 @export var speed: float = 10.0
 @export var rotation_speed: float = 2.2
 @export var is_reinforcement: bool = false
+@export var difficulty_multiplier: float = 1.0
 @export var persistent_id: String = ""
 @export_enum("Gunner", "Interceptor", "Logistics", "MiningHauler") var ship_role: String = ""
 
@@ -130,7 +131,12 @@ func _configure_role(role: String) -> void:
 		damage_max = damage_max * 1.5
 		visual_scale_mult = visual_scale_mult * 1.5
 		archetype = "Elite " + archetype
-		
+
+	if difficulty_multiplier > 1.0:
+		max_health *= difficulty_multiplier
+		damage_min *= difficulty_multiplier
+		damage_max *= difficulty_multiplier
+
 	# Apply Quest Combat Multiplier if target of active combat quest
 	for _m in QuestManager.get_mission_collection().get_all_active():
 		if _m.data.get("objective_type", "") == "KILL_SHIPS" and _m.data.get("target_faction", "") == faction:

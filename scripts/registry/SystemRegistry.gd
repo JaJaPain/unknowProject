@@ -43,6 +43,10 @@ func get_system(system_id: Variant) -> SystemDefinition:
 	return systems.get(canonical) as SystemDefinition
 
 
+func get_all_systems() -> Array:
+	return systems.values()
+
+
 func get_gate(gate_id: Variant) -> GateDefinition:
 	var canonical := resolve_gate_id(gate_id)
 	return gates.get(canonical) as GateDefinition
@@ -76,7 +80,109 @@ func load_scene(system_id: Variant) -> PackedScene:
 	var definition := get_system(system_id)
 	if definition == null:
 		return null
+	if definition.scene_path == "generated":
+		return null
 	return load(definition.scene_path) as PackedScene
+
+
+func instantiate_system(system_id: Variant) -> Node3D:
+	var definition := get_system(system_id)
+	if definition == null:
+		return null
+	if definition.scene_path == "generated":
+		return _build_generated_root(definition)
+	var packed := load(definition.scene_path) as PackedScene
+	if packed == null:
+		return null
+	return packed.instantiate() as Node3D
+
+
+func register_generated_system(
+	sys_data: Dictionary,
+	gate_defs: Array[Dictionary]
+) -> ValidationResult:
+	var result := ValidationResult.new()
+	var definition := SystemDefinition.new()
+	definition.id = DomainId.canonicalize(sys_data.get("id", ""))
+	definition.legacy_id = str(sys_data.get("legacy_id", ""))
+	definition.display_name = str(sys_data.get("display_name", ""))
+	definition.scene_path = "generated"
+	definition.origin = "generated"
+	definition.tags = ["procedural"]
+	for sid in sys_data.get("station_ids", []):
+		definition.station_ids.append(DomainId.canonicalize(sid))
+	for fid in sys_data.get("faction_ids", []):
+		definition.faction_ids.append(DomainId.canonicalize(fid))
+
+	for gate_data: Dictionary in gate_defs:
+		var gate := GateDefinition.new()
+		gate.id = DomainId.canonicalize(gate_data.get("id", ""))
+		gate.legacy_id = str(gate_data.get("legacy_id", ""))
+		gate.system_id = definition.id
+		gate.display_name = str(gate_data.get("display_name", ""))
+		gate.destination_system_id = DomainId.canonicalize(
+			gate_data.get("destination_system_id", "")
+		)
+		gate.destination_gate_id = DomainId.canonicalize(
+			gate_data.get("destination_gate_id", "")
+		)
+		gate.initial_state = str(gate_data.get("initial_state", "unknown"))
+		gate.discovery_action = str(gate_data.get("discovery_action", "scan"))
+		gate.discovery_cost = gate_data.get("discovery_cost", {})
+		gate.discovery_prerequisites = gate_data.get("discovery_prerequisites", [])
+		definition.gates.append(gate)
+		if not gates.has(gate.id):
+			gates[gate.id] = gate
+			gate_aliases[gate.legacy_id] = gate.id
+			gate_aliases[str(gate.id)] = gate.id
+
+	if systems.has(definition.id):
+		result.add_error("duplicate_system_id", "System '%s' already registered." % definition.id, "id")
+		return result
+
+	systems[definition.id] = definition
+	system_aliases[definition.legacy_id] = definition.id
+	system_aliases[str(definition.id)] = definition.id
+	return result
+
+
+var _generated_configs: Dictionary = {}
+
+
+func set_generated_config(system_id: String, config: SystemConfig) -> void:
+	_generated_configs[system_id] = config
+
+
+func _build_generated_root(definition: SystemDefinition) -> Node3D:
+	var config: SystemConfig = _generated_configs.get(str(definition.id))
+	if config == null:
+		config = _generated_configs.get(definition.legacy_id)
+	if config == null:
+		push_error("[SystemRegistry] No config for generated system '%s'." % definition.id)
+		return null
+	var result := SystemFactory.generate(config)
+	if not bool(result.get("ok", false)):
+		return null
+	var root: Node3D = result["root"]
+	for gate in definition.gates:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = config.seed_value + gate.id.hash()
+		var angle := rng.randf_range(0.0, TAU)
+		var dist := rng.randf_range(500.0, 1200.0)
+		var gate_pos := Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var dest_sys := get_system(gate.destination_system_id)
+		SystemFactory.add_gate_to_system(
+			root,
+			gate.legacy_id,
+			str(gate.id),
+			gate.display_name,
+			runtime_system_id(gate.destination_system_id),
+			runtime_gate_id(gate.destination_gate_id),
+			dest_sys.display_name if dest_sys else "UNKNOWN",
+			gate_pos,
+			angle + PI
+		)
+	return root
 
 
 func _load_from_dict(data: Dictionary) -> void:

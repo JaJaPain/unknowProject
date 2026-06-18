@@ -1,0 +1,107 @@
+class_name SystemConfig
+extends RefCounted
+
+var system_name: String = "Uncharted System"
+var system_id: String = ""
+var legacy_id: String = ""
+var seed_value: int = 0
+
+var star_type: String = "yellow"
+var star_color: Color = Color(1.0, 0.95, 0.85)
+var star_energy: float = 3.0
+var star_light_energy: float = 1.2
+
+var ambient_color: Color = Color(0.15, 0.18, 0.25)
+var ambient_energy: float = 0.4
+
+var planet_count_min: int = 1
+var planet_count_max: int = 4
+var station_count: int = 2
+var difficulty_tier: int = 1
+var difficulty_multiplier: float = 1.0
+
+var faction_weights: Dictionary = {}
+var npc_patrol_count: int = 6
+var npc_minor_chance: float = 0.15
+var npc_minor_max: int = 2
+
+var outbound_gate_count: int = 1
+
+var starfield_seed: float = 0.0
+var starfield_tint: Color = Color(0.9, 0.92, 1.0)
+
+
+static func from_seed(name: String, id: String, seed_val: int) -> SystemConfig:
+	var config := SystemConfig.new()
+	config.system_name = name
+	config.system_id = id
+	config.legacy_id = id.replace(".", "_")
+	config.seed_value = seed_val
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val
+
+	var star_types := ["yellow", "blue", "orange", "red", "white"]
+	var star_idx := rng.randi() % star_types.size()
+	config.star_type = star_types[star_idx]
+
+	match config.star_type:
+		"yellow":
+			config.star_color = Color(1.0, 0.92, 0.7)
+			config.star_energy = 3.0
+			config.star_light_energy = 1.2
+			config.ambient_color = Color(0.15, 0.17, 0.22)
+		"blue":
+			config.star_color = Color(0.75, 0.85, 1.0)
+			config.star_energy = 3.5
+			config.star_light_energy = 1.45
+			config.ambient_color = Color(0.12, 0.16, 0.3)
+		"orange":
+			config.star_color = Color(1.0, 0.7, 0.4)
+			config.star_energy = 2.8
+			config.star_light_energy = 1.1
+			config.ambient_color = Color(0.18, 0.14, 0.1)
+		"red":
+			config.star_color = Color(1.0, 0.4, 0.3)
+			config.star_energy = 2.2
+			config.star_light_energy = 0.9
+			config.ambient_color = Color(0.2, 0.1, 0.1)
+		"white":
+			config.star_color = Color(0.95, 0.97, 1.0)
+			config.star_energy = 4.0
+			config.star_light_energy = 1.6
+			config.ambient_color = Color(0.18, 0.2, 0.25)
+
+	config.ambient_energy = 0.35 + rng.randf_range(0.0, 0.15)
+	config.planet_count_min = 1
+	config.planet_count_max = 2 + rng.randi_range(0, 2)
+	config.station_count = 1 + rng.randi_range(0, 2)
+	config.difficulty_tier = 1 + rng.randi_range(0, 2)
+
+	match config.difficulty_tier:
+		1: config.difficulty_multiplier = 1.0
+		2: config.difficulty_multiplier = 1.15
+		3: config.difficulty_multiplier = 1.30
+	config.npc_patrol_count = 5 + config.difficulty_tier
+
+	var major_factions: Array[String] = ["zenith", "aurelia", "vanguard"]
+	var primary_idx: int = rng.randi() % major_factions.size()
+	var primary_faction: String = major_factions[primary_idx]
+	var has_second: bool = rng.randf() < 0.6
+	if has_second:
+		var second_idx: int = (primary_idx + 1 + rng.randi() % (major_factions.size() - 1)) % major_factions.size()
+		var split: float = rng.randf_range(0.55, 0.75)
+		config.faction_weights[primary_faction] = split
+		config.faction_weights[major_factions[second_idx]] = 1.0 - split
+	else:
+		config.faction_weights[primary_faction] = 1.0
+
+	config.outbound_gate_count = 1 + (1 if rng.randf() < 0.4 else 0)
+
+	config.starfield_seed = float(seed_val % 10000)
+	config.starfield_tint = config.star_color.lerp(Color(0.9, 0.92, 1.0), 0.7)
+
+	var sun_angle := rng.randf_range(0.0, TAU)
+	var _sun_dir := Vector3(cos(sun_angle), rng.randf_range(0.25, 0.5), sin(sun_angle)).normalized()
+
+	return config

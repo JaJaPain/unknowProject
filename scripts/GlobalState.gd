@@ -349,12 +349,47 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 # Returns the list of minor NPC names stationed at a given outpost id
 # (e.g. "iron_reach", "kova"). Returns an empty array if no NPCs are
 # assigned. The mechanic (Jenna Kross) is excluded — she's at Grease Monkeys.
+static var generated_outpost_npcs: Dictionary = {}
+
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
+	if generated_outpost_npcs.has(outpost_id):
+		return generated_outpost_npcs[outpost_id].duplicate()
 	var result: Array = []
 	for npc_name in MINOR_NPCS:
 		if MINOR_NPCS[npc_name].get("outpost", "") == outpost_id:
 			result.append(npc_name)
 	return result
+
+static func assign_generated_outpost_npcs(world_id: String, seed_value: int) -> Array:
+	if generated_outpost_npcs.has(world_id):
+		return generated_outpost_npcs[world_id].duplicate()
+	var eligible: Array[String] = []
+	for npc_name: String in MINOR_NPCS:
+		if MINOR_NPCS[npc_name].has("outpost"):
+			eligible.append(npc_name)
+	if eligible.is_empty():
+		return []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var shuffled: Array = eligible.duplicate()
+	for i in range(shuffled.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = shuffled[i]
+		shuffled[i] = shuffled[j]
+		shuffled[j] = tmp
+	var count := 2 + (1 if rng.randf() < 0.4 else 0)
+	count = mini(count, shuffled.size())
+	var picked: Array = shuffled.slice(0, count)
+	generated_outpost_npcs[world_id] = picked
+	return picked.duplicate()
+
+static func resolve_outpost_id(station: Node3D) -> String:
+	if station == null:
+		return ""
+	var world_id = station.get("world_id") if station.get("world_id") else ""
+	if typeof(world_id) == TYPE_STRING and generated_outpost_npcs.has(world_id):
+		return world_id
+	return ""
 
 # Returns the outpost id for a minor NPC, or "" if they aren't outpost-based
 # (e.g. the mechanic, who lives at Grease Monkeys).

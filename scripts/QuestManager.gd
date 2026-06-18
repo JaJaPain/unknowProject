@@ -163,6 +163,17 @@ func get_lane_data(lane_name: String) -> Dictionary:
 	return mission.data
 
 
+func get_completed_count() -> int:
+	var history := _load_quest_history()
+	if history.strip_edges().is_empty():
+		return 0
+	var count := 0
+	for line in history.split("\n"):
+		if line.strip_edges().begins_with("- **"):
+			count += 1
+	return count
+
+
 func is_quest_completed() -> bool:
 	if not is_quest_active():
 		return false

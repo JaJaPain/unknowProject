@@ -54,8 +54,10 @@ var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
 var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
+var event_scheduler = null
 
 func _ready() -> void:
+	_init_event_scheduler()
 	RuntimeTraceType.begin_session()
 	RuntimeTraceType.event("game", "root_ready", {
 		"arguments": OS.get_cmdline_user_args(),
@@ -70,12 +72,11 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	var start_definition := system_registry.get_system("system.start")
-	var start_scene := system_registry.load_scene("system.start")
-	if start_definition == null or start_scene == null:
+	if start_definition == null:
 		push_error("[GameRoot] Registered starting system could not be loaded.")
 		get_tree().quit(1)
 		return
-	var system_root := start_scene.instantiate() as Node3D
+	var system_root := system_registry.instantiate_system("system.start")
 	if system_root == null:
 		push_error("[GameRoot] Registered starting system has an invalid root.")
 		get_tree().quit(1)
@@ -176,11 +177,6 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		destination_system_id
 	)
 	var runtime_gate_id := system_registry.runtime_gate_id(arrival_gate_id)
-	var packed_system := system_registry.load_scene(destination_system_id)
-	if not packed_system:
-		jump_request_pending = false
-		push_warning("[GameRoot] Unknown destination system '%s'." % destination_system_id)
-		return
 	if runtime_system_id.is_empty() or runtime_gate_id.is_empty():
 		jump_request_pending = false
 		push_warning(
@@ -188,7 +184,11 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		)
 		return
 
-	var new_system := packed_system.instantiate() as Node3D
+	var new_system := system_registry.instantiate_system(destination_system_id)
+	if not new_system:
+		jump_request_pending = false
+		push_warning("[GameRoot] Unknown destination system '%s'." % destination_system_id)
+		return
 	var arrival_gate := _find_gate_in_tree(new_system, runtime_gate_id)
 	if not arrival_gate:
 		new_system.free()
@@ -256,6 +256,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		source_gate_id,
 		str(arrival_gate.call("get_world_id"))
 	)
+	if event_scheduler:
+		event_scheduler.set_just_arrived(true)
+	_tick_events()
 	request_safe_checkpoint("gate_arrival", arrival_gate)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
@@ -489,8 +492,10 @@ func request_safe_checkpoint(
 func _advance_campaign_time_for_safe_checkpoint(source_reason: String) -> void:
 	if source_reason == "dock":
 		CampaignClock.advance_minutes(DOCK_SERVICE_MINUTES)
+		_tick_events()
 	elif source_reason == "undock":
 		CampaignClock.advance_minutes(UNDOCK_SERVICE_MINUTES)
+		_tick_events()
 
 
 func _queue_gate_discovery(
@@ -505,12 +510,35 @@ func _queue_gate_discovery(
 
 func get_gate_knowledge_state(gate_id: String) -> String:
 	if campaign_checkpoint_store == null:
-		return "hidden"
-	var knowledge := campaign_checkpoint_store.current_map_knowledge()
-	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
-		if gate_id in knowledge.get("%s_gate_ids" % state, []):
-			return state
-	return "hidden"
+		return "unknown"
+	return campaign_checkpoint_store.get_gate_state(gate_id)
+
+
+func _init_event_scheduler() -> void:
+	var EventSchedulerScript = preload("res://scripts/events/EventScheduler.gd")
+	var InterceptorEventScript = preload("res://scripts/events/types/InterceptorEvent.gd")
+	var GateRumorEventScript = preload("res://scripts/events/types/GateRumorEvent.gd")
+	event_scheduler = EventSchedulerScript.shared()
+	event_scheduler.register_event_type(InterceptorEventScript.new(), 90)
+	event_scheduler.register_event_type(GateRumorEventScript.new(), 120)
+
+
+func _tick_events() -> void:
+	if event_scheduler == null:
+		return
+	var EventContextScript = preload("res://scripts/events/EventContext.gd")
+	var ctx = EventContextScript.new()
+	ctx.campaign_time = CampaignClock.total_minutes
+	ctx.current_system_id = GlobalState.current_system_id
+	ctx.player_credits = GlobalState.player_credits
+	ctx.reputations = GlobalState.reputations.duplicate()
+	var risk_tags: Array[String] = []
+	for m in QuestManager.get_mission_collection().get_all_active():
+		for tag in m.data.get("risk_tags", []):
+			if tag is String and tag not in risk_tags:
+				risk_tags.append(tag)
+	ctx.active_mission_risk_tags = risk_tags
+	event_scheduler.tick(CampaignClock.total_minutes, ctx)
 
 
 func get_manual_checkpoint_status() -> Dictionary:
@@ -1587,8 +1615,8 @@ func _apply_save_data(data: Dictionary) -> void:
 
 func _load_system_without_transition(system_id: String) -> void:
 	var runtime_system_id := system_registry.runtime_system_id(system_id)
-	var packed_system := system_registry.load_scene(system_id)
-	if not packed_system:
+	var new_system := system_registry.instantiate_system(system_id)
+	if not new_system:
 		RuntimeTraceType.event("transition", "load_failed", {
 			"requested_system_id": system_id,
 			"source_system_id": GlobalState.current_system_id,
@@ -1606,7 +1634,6 @@ func _load_system_without_transition(system_id: String) -> void:
 	if old_system:
 		old_system.queue_free()
 		await get_tree().process_frame
-	var new_system := packed_system.instantiate() as Node3D
 	system_container.add_child(new_system)
 	GlobalState.active_system_root = new_system
 	GlobalState.current_system_id = runtime_system_id
