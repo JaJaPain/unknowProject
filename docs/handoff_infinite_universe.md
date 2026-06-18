@@ -290,23 +290,27 @@ Clarified implementation:
 
 ### Phase 3: Verify the Full Loop
 Test the complete cycle:
-1. Start new campaign → only Frontier System exists
-2. Wait 30+ minutes → gate rumor fires for `gate.start.to_test`
-3. Scan the rumored gate → becomes hidden
-4. Complete 3+ quests, wait 120+ minutes → Kaelen offers gate unlock
-5. Pay Kaelen → gate becomes known
-6. Jump to new system → system generates with planets, stations, NPCs, sun, starfield
-7. Background thread generates ship models
-8. New system has 1-2 unknown outbound gates
-9. Wait in new system → rumor fires for one of the outbound gates
-10. Repeat
+1. [x] Start new campaign - only Frontier System exists
+2. [x] Wait 30+ minutes - gate rumor fires for `gate.start.to_test`
+3. [x] Scan the rumored gate - becomes hidden
+4. [x] Complete 3+ quests, wait 120+ minutes - Kaelen offers gate unlock
+5. [x] Pay Kaelen - gate becomes known
+6. [x] Jump to new system - system generates with planets, stations, NPCs, sun, starfield
+7. [x] Background thread generates ship models
+8. [x] New system has 1-2 unknown outbound gates
+9. [x] Wait in new system - rumor fires for one of the outbound gates
+10. [x] Repeat
+
+Verification notes:
+- [x] `--jump-smoke-test --no-save-load --baseline-offline` now creates a fresh campaign, verifies unknown -> rumored -> hidden -> known, jumps to `system.gen.frontier.first`, verifies generated content, verifies prepared outbound destinations, rumors the next outbound gate, and returns through the known return gate.
+- [x] Branch map refreshes when gate states or current system change, and smoke verification checks that the first generated route and next rumored outbound route appear in map data.
 
 ### Phase 4: Edge Cases to Handle
 - **Name pool exhaustion**: After 15 systems, names fall back to "Uncharted System N" — consider expanding the pool
 - **Ship generation failure**: If Blender fails after 10 attempts, ship uses default faction model (already handled)
 - **Gate ID collisions**: Use system_id + hash to ensure unique gate IDs
 - **Save/load with generated systems**: Generated systems are persisted in the registry after creation. SystemConfigs are recreated from seed via `_init_generated_system_configs()` on load.
-- **Map UI**: `BranchMapUI` needs to handle dynamically added systems — verify it reads from the live registry
+- **Map UI**: `BranchMapUI` needs to handle dynamically added systems - verified it reads from the live registry and refreshes on gate/system changes
 
 ## Existing Wiring (Already Done)
 

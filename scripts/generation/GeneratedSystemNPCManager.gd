@@ -16,7 +16,10 @@ func _ready() -> void:
 	if _npc_ship_scene == null:
 		push_error("[NPCManager] Failed to load npc_ship.tscn")
 		return
+	call_deferred("_finish_ready")
 
+
+func _finish_ready() -> void:
 	_assign_outpost_npcs()
 	_spawn_initial_patrol()
 

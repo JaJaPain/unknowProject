@@ -45,7 +45,7 @@ func advance_gate_state(
 
 	if action.credit_cost > 0:
 		GlobalState.player_credits -= action.credit_cost
-		GlobalState.credits_changed.emit()
+		GlobalState.credits_changed.emit(GlobalState.player_credits)
 	if action.ore_cost > 0:
 		GlobalState.cargo = max(0, int(GlobalState.cargo) - action.ore_cost)
 		GlobalState.cargo_changed.emit()
@@ -89,7 +89,7 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 		return {"ok": false, "error": "Not enough credits."}
 
 	GlobalState.player_credits -= cost
-	GlobalState.credits_changed.emit()
+	GlobalState.credits_changed.emit(GlobalState.player_credits)
 
 	if not store.set_gate_knowledge(gate_id, "known"):
 		return {"ok": false, "error": "Failed to update gate knowledge."}
@@ -213,6 +213,10 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	var result := registry.register_generated_system(sys_data, gate_defs)
 	if not result.is_valid():
 		push_warning("[GateDiscovery] Failed to register generated system: %s" % result.summary())
+		return
+	var store := _get_store()
+	if store != null:
+		store.set_gate_knowledge(return_gate_id, "known")
 
 
 func _sync_active_gate_target(gate_def: GateDefinition) -> void:

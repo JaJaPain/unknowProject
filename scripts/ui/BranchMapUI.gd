@@ -58,6 +58,12 @@ func _ready() -> void:
 	_build_recenter_button()
 	_build_detail_panel()
 	_build_tooltip()
+	if GateDiscovery:
+		GateDiscovery.gate_state_changed.connect(_on_map_data_changed)
+		GateDiscovery.gate_rumor_received.connect(_on_gate_rumor_received)
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_signal("system_changed"):
+		game_root.system_changed.connect(_on_system_changed)
 	_rebuild_map()
 
 
@@ -536,6 +542,25 @@ func _close() -> void:
 func refresh() -> void:
 	_pan_offset = Vector2.ZERO
 	_rebuild_map()
+
+
+func _on_map_data_changed(
+	_gate_id: String,
+	_old_state: String,
+	_new_state: String
+) -> void:
+	if visible:
+		_rebuild_map()
+
+
+func _on_gate_rumor_received(_gate_id: String, _narrative: String) -> void:
+	if visible:
+		_rebuild_map()
+
+
+func _on_system_changed(_system_id: String, _arrival_gate_id: String) -> void:
+	if visible:
+		_rebuild_map()
 
 
 func get_next_hop_legacy_id() -> String:

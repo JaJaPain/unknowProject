@@ -35,8 +35,8 @@ static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstanc
 	sun.name = "Sun"
 	sun.mesh = mesh
 	sun.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sun.position = sun_pos
 	system_root.add_child(sun)
-	sun.global_position = sun_pos
 
 	var light := system_root.get_node_or_null("DirectionalLight3D") as DirectionalLight3D
 	if light == null:
@@ -46,7 +46,8 @@ static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstanc
 	light.light_color = color
 	light.light_energy = light_energy
 	light.shadow_enabled = true
-	light.look_at_from_position(sun_pos, Vector3.ZERO)
+	light.position = sun_pos
+	light.basis = Basis.looking_at((Vector3.ZERO - sun_pos).normalized(), Vector3.UP)
 
 	return sun
 
@@ -75,6 +76,6 @@ static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshI
 	field.name = "Starfield"
 	field.mesh = mesh
 	field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	field.position = Vector3.ZERO
 	system_root.add_child(field)
-	field.global_position = Vector3.ZERO
 	return field

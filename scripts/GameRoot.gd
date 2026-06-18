@@ -157,6 +157,8 @@ func get_jump_block_reason(gate: Node3D) -> String:
 	var ship_forward := -player.global_transform.basis.z.normalized()
 	if ship_forward.dot(to_gate) < cos(deg_to_rad(12.0)):
 		return "Align the ship with the jumpgate."
+	if gate.has_method("is_jump_allowed") and not gate.call("is_jump_allowed"):
+		return "Gate route is not unlocked."
 	return ""
 
 func request_gate_jump(gate: Node3D) -> bool:
@@ -1774,10 +1776,35 @@ func _run_jump_smoke_test() -> void:
 	GlobalState.player_storage_ore = 77.0
 	GlobalState.apply_upgrade_stats()
 	var start_time_minutes := CampaignClock.total_minutes
+	_initialize_campaign_registry()
+	if campaign_slot_registry != null:
+		for slot in campaign_slot_registry.enumerate_slots():
+			if bool(slot.get("occupied", false)):
+				campaign_slot_registry.delete_campaign(
+					str(slot.get("slot_id", ""))
+				)
+	active_campaign_slot_id = ""
+	campaign_checkpoint_store = null
+	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) \
+			or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		_fail_jump_smoke_test("Jump smoke test could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
 
 	var outbound_gate := _find_gate(get_active_system_root(), "start_to_test")
 	if not outbound_gate:
 		_fail_jump_smoke_test("Outbound gate was not found.")
+		return
+	if not _verify_gate_discovery_sequence(outbound_gate):
+		return
+	if not _verify_branch_map_route(
+		"system.start",
+		"system.gen.frontier.first",
+		"known"
+	):
 		return
 	var approach_position: Vector3 = outbound_gate.call("get_approach_position")
 	if approach_position.distance_to(outbound_gate.global_position) < 200.0:
@@ -1820,7 +1847,10 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Player controls were not locked during the jump transition.")
 		return
 	await system_changed
-	if GlobalState.current_system_id != "test_system":
+	var generated_system_id := str(
+		system_registry.runtime_system_id("system.gen.frontier.first")
+	)
+	if GlobalState.current_system_id != generated_system_id:
 		_fail_jump_smoke_test("Outbound jump loaded the wrong system.")
 		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
@@ -1838,7 +1868,10 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Upgrade or station-storage state changed during outbound travel.")
 		return
 
-	var return_gate := _find_gate(get_active_system_root(), "test_to_start")
+	var return_gate := _find_gate(
+		get_active_system_root(),
+		"gate_gen_frontier_first_return"
+	)
 	if not return_gate:
 		_fail_jump_smoke_test("Return gate was not found.")
 		return
@@ -1852,7 +1885,11 @@ func _run_jump_smoke_test() -> void:
 	if not camera_pivot or camera_pivot.global_position.distance_to(player.global_position) > 0.1:
 		_fail_jump_smoke_test("Camera pivot did not follow the player across the system change.")
 		return
-	if not _verify_generated_test_system(return_gate):
+	if not _verify_infinite_generated_system(return_gate):
+		return
+	if not _verify_branch_map_has_current_generated_neighbors():
+		return
+	if not _verify_next_outbound_rumor_and_map():
 		return
 	player.global_position = expected_arrival
 	player.call("_clear_avoidance_state")
@@ -1898,6 +1935,37 @@ func _run_jump_smoke_test() -> void:
 	get_tree().quit(0)
 
 
+func _verify_gate_discovery_sequence(outbound_gate: Node3D) -> bool:
+	var gate_world_id := str(outbound_gate.call("get_world_id"))
+	_position_player_for_gate_test(outbound_gate)
+	if get_jump_block_reason(outbound_gate) != "Gate route is not unlocked.":
+		_fail_jump_smoke_test("Unknown gate was jumpable before discovery.")
+		return false
+	var rumor := GateDiscovery.apply_rumor(
+		gate_world_id,
+		"Smoke test generated a gate rumor."
+	)
+	if not bool(rumor.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "rumored":
+		_fail_jump_smoke_test("Gate rumor did not move the route to rumored.")
+		return false
+	var scan_action := GateDiscoveryAction.new()
+	scan_action.action_type = GateDiscoveryAction.ActionType.SCAN
+	var scan := GateDiscovery.advance_gate_state(gate_world_id, scan_action)
+	if not bool(scan.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "hidden":
+		_fail_jump_smoke_test("Gate scan did not move the route to hidden.")
+		return false
+	GlobalState.player_credits = max(GlobalState.player_credits, 100)
+	var reveal := GateDiscovery.kaelen_reveal(gate_world_id, 0)
+	if not bool(reveal.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "known":
+		_fail_jump_smoke_test("Kaelen reveal did not unlock the route.")
+		return false
+	outbound_gate.call("_apply_knowledge_state")
+	return true
+
+
 func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
 	if campaign_checkpoint_store == null:
 		_fail_jump_smoke_test(
@@ -1928,6 +1996,135 @@ func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
 		_fail_jump_smoke_test(
 			"Gate arrival checkpoint did not reveal both route endpoints."
 		)
+		return false
+	return true
+
+
+func _get_branch_map_for_smoke() -> BranchMapUI:
+	var ui := GlobalState.get_ui_manager()
+	if ui == null:
+		_fail_jump_smoke_test("UI manager was unavailable for map verification.")
+		return null
+	var branch_map := ui.get("branch_map") as BranchMapUI
+	if branch_map == null:
+		_fail_jump_smoke_test("Branch map UI was unavailable.")
+		return null
+	branch_map.refresh()
+	return branch_map
+
+
+func _verify_branch_map_route(
+	from_system_id: String,
+	to_system_id: String,
+	expected_state: String
+) -> bool:
+	var branch_map := _get_branch_map_for_smoke()
+	if branch_map == null:
+		return false
+	if not branch_map.system_nodes.has(from_system_id) \
+			or not branch_map.system_nodes.has(to_system_id):
+		_fail_jump_smoke_test("Branch map did not include generated route systems.")
+		return false
+	for route: Dictionary in branch_map.route_data:
+		var matches_forward: bool = route.get("from", "") == from_system_id \
+			and route.get("to", "") == to_system_id
+		var matches_reverse: bool = route.get("from", "") == to_system_id \
+			and route.get("to", "") == from_system_id
+		if (matches_forward or matches_reverse) \
+				and route.get("state", "") == expected_state:
+			return true
+	_fail_jump_smoke_test("Branch map did not show the expected route state.")
+	return false
+
+
+func _verify_branch_map_has_current_generated_neighbors() -> bool:
+	var branch_map := _get_branch_map_for_smoke()
+	if branch_map == null:
+		return false
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Current generated system was not in the registry.")
+		return false
+	for gate: GateDefinition in current_def.gates:
+		if gate.initial_state == "known":
+			continue
+		if not branch_map.system_nodes.has(str(gate.destination_system_id)):
+			_fail_jump_smoke_test("Branch map did not include prepared outbound destination.")
+			return false
+	return true
+
+
+func _verify_next_outbound_rumor_and_map() -> bool:
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Current generated system was not in the registry.")
+		return false
+	for gate: GateDefinition in current_def.gates:
+		if gate.initial_state == "known":
+			continue
+		var gate_id := str(gate.id)
+		if GateDiscovery.get_gate_state(gate_id) != "unknown":
+			continue
+		var rumor := GateDiscovery.apply_rumor(
+			gate_id,
+			"Smoke test generated a next-system rumor."
+		)
+		if not bool(rumor.get("ok", false)) \
+				or GateDiscovery.get_gate_state(gate_id) != "rumored":
+			_fail_jump_smoke_test("Generated outbound gate did not become rumored.")
+			return false
+		return _verify_branch_map_route(
+			str(current_def.id),
+			str(gate.destination_system_id),
+			"rumored"
+		)
+	_fail_jump_smoke_test("No unknown generated outbound gate was available to rumor.")
+	return false
+
+
+func _verify_infinite_generated_system(return_gate: Node3D) -> bool:
+	var system_root := get_active_system_root()
+	var planets: Array[Node3D] = []
+	var stations: Array[Node3D] = []
+	for node in system_root.get_children():
+		if not node is Node3D:
+			continue
+		if node.is_in_group("celestial"):
+			planets.append(node as Node3D)
+		if node.is_in_group("station"):
+			stations.append(node as Node3D)
+	if planets.is_empty() or stations.is_empty():
+		_fail_jump_smoke_test(
+			"Generated system contents were incomplete. planets=%d stations=%d" % [
+				planets.size(),
+				stations.size(),
+			]
+		)
+		return false
+	var identity_validation := _validate_persistent_entities(system_root)
+	if not identity_validation.is_valid():
+		_fail_jump_smoke_test(
+			"Generated system identities were invalid: %s" %
+			JSON.stringify(identity_validation.to_dict())
+		)
+		return false
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Generated system definition was not registered.")
+		return false
+	var outbound_gate_count := 0
+	for gate: GateDefinition in current_def.gates:
+		if str(gate.id) == str(return_gate.call("get_world_id")):
+			continue
+		outbound_gate_count += 1
+		if GateDiscovery.get_gate_state(str(gate.id)) != "unknown":
+			_fail_jump_smoke_test("Generated outbound gate did not start unknown.")
+			return false
+		if not system_registry.has_system(gate.destination_system_id):
+			_fail_jump_smoke_test("Generated outbound gate destination was not prepared.")
+			return false
+	if outbound_gate_count < 1:
+		_fail_jump_smoke_test("Generated system did not receive outbound gates.")
 		return false
 	return true
 

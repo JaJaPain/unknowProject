@@ -60,8 +60,10 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 	var initial_map := store.current_map_knowledge()
 	_expect(
-		"gate.start.to_test" in initial_map.get("hidden_gate_ids", []),
-		"Initial map knowledge did not classify the handcrafted gate graph."
+		"gate.start.to_test" not in initial_map.get("known_gate_ids", [])
+			and "gate.start.to_test" not in initial_map.get("rumored_gate_ids", [])
+			and "gate.start.to_test" not in initial_map.get("hidden_gate_ids", []),
+		"Initial unknown gate should not be pre-seeded into map knowledge."
 	)
 
 	var docked := store.capture_autosave(
@@ -260,8 +262,8 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		store.restore_map_knowledge(
 			older_manual_state.get("map_knowledge", {})
 		)
-			and "gate.start.to_test" in store.current_map_knowledge().get(
-				"hidden_gate_ids",
+			and "gate.start.to_test" not in store.current_map_knowledge().get(
+				"known_gate_ids",
 				[]
 			)
 			and "gate.gen.frontier.first.return" not in store.current_map_knowledge().get(

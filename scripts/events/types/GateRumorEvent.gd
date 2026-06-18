@@ -55,7 +55,7 @@ func _find_unknown_gates() -> Array[String]:
 	if registry == null:
 		return output
 	var current_system_id := _get_current_system_id()
-	var current_system := registry.get_system(current_system_id)
+	var current_system: SystemDefinition = registry.get_system(current_system_id)
 	if current_system == null:
 		return output
 	for gate_def in current_system.gates:
