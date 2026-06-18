@@ -266,10 +266,10 @@ Called when a gate becomes "rumored". This is where new systems are born:
 ## Implementation Checklist
 
 ### Phase 1: Clean Up Prototypes
-1. Remove Crimson Nebula, Obsidian Reach, Aether's Edge from `data/systems/system_registry.json`
-2. Remove `gate.test.to_crimson` from the test system's gates array
-3. Remove the CrimsonGate node from `scenes/systems/system_test.tscn`
-4. Change `gate.start.to_test` initial_state from `"known"` to `"unknown"`
+1. [x] Remove Crimson Nebula, Obsidian Reach, Aether's Edge from `data/systems/system_registry.json`
+2. [x] Remove `gate.test.to_crimson` from the test system's gates array
+3. [x] Remove the CrimsonGate node from `scenes/systems/system_test.tscn`
+4. [x] Change `gate.start.to_test` initial_state from `"known"` to `"unknown"`
 
 ### Phase 2: Add Outbound Gate Generation
 Modify `GateDiscoveryManager._ensure_destination_generated()` to:
