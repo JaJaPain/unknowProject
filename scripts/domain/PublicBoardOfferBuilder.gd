@@ -86,12 +86,17 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 
 static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	var gs = Engine.get_main_loop().root.get_node("GlobalState")
-	var outpost_ids: Array = gs.PICKUP_OUTPOST_IDS
-	var outpost_index := int(current_time_minutes / 45) % maxi(1, outpost_ids.size())
-	var outpost_id := str(outpost_ids[outpost_index])
-	var outpost_display := str(
-		gs.PICKUP_OUTPOST_DISPLAY.get(outpost_id, outpost_id)
-	)
+	var outposts: Array = gs.get_current_system_outposts()
+	if outposts.is_empty():
+		for starter_id in gs.PICKUP_OUTPOST_IDS:
+			outposts.append({
+				"id": str(starter_id),
+				"display": str(gs.PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+			})
+	var outpost_index := int(current_time_minutes / 45) % maxi(1, outposts.size())
+	var outpost: Dictionary = outposts[outpost_index]
+	var outpost_id := str(outpost.get("id", ""))
+	var outpost_display := str(outpost.get("display", outpost_id))
 	var npcs: Array = gs.get_minor_npcs_at_outpost(outpost_id)
 	var npc_name := "Local Contact"
 	if not npcs.is_empty():

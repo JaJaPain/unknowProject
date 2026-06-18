@@ -210,11 +210,14 @@ func _rebuild_map() -> void:
 	var all_systems: Array = registry.get_all_systems()
 	if all_systems.is_empty():
 		return
+	var visible_systems := _visible_systems(all_systems)
+	if visible_systems.is_empty():
+		return
 
 	var content_center := Vector2(WINDOW_SIZE.x / 2.0, TITLE_BAR_HEIGHT + (WINDOW_SIZE.y - TITLE_BAR_HEIGHT) / 2.0) + _pan_offset
-	var positions := _layout_systems(all_systems, content_center)
+	var positions := _layout_systems(visible_systems, content_center)
 
-	for sys_def in all_systems:
+	for sys_def in visible_systems:
 		var sys_id: String = str(sys_def.id)
 		var pos: Vector2 = positions.get(sys_id, content_center)
 		var faction_names: Array[String] = []
@@ -235,7 +238,7 @@ func _rebuild_map() -> void:
 		}
 		_create_system_label(sys_def, pos)
 
-	for sys_def in all_systems:
+	for sys_def in visible_systems:
 		for gate_def in sys_def.gates:
 			var dest_sys_id: String = str(gate_def.destination_system_id)
 			var src_sys_id: String = str(sys_def.id)
@@ -266,6 +269,44 @@ func _rebuild_map() -> void:
 				"state": state,
 			})
 	queue_redraw()
+
+
+func _visible_systems(all_systems: Array) -> Array:
+	var by_id: Dictionary = {}
+	var visible_ids: Dictionary = {}
+	var current_id := ""
+	for sys_def in all_systems:
+		var sys_id := str(sys_def.id)
+		by_id[sys_id] = sys_def
+		if sys_def.legacy_id == GlobalState.current_system_id:
+			current_id = sys_id
+	if current_id.is_empty() and not all_systems.is_empty():
+		current_id = str(all_systems[0].id)
+	visible_ids[current_id] = true
+
+	var changed := true
+	while changed:
+		changed = false
+		for sys_id in visible_ids.keys():
+			var sys_def = by_id.get(sys_id)
+			if sys_def == null:
+				continue
+			for gate_def in sys_def.gates:
+				var state := "unknown"
+				if GateDiscovery:
+					state = GateDiscovery.get_gate_state(str(gate_def.id))
+				if state == "unknown":
+					continue
+				var dest_id := str(gate_def.destination_system_id)
+				if by_id.has(dest_id) and not visible_ids.has(dest_id):
+					visible_ids[dest_id] = true
+					changed = true
+
+	var output: Array = []
+	for sys_def in all_systems:
+		if visible_ids.has(str(sys_def.id)):
+			output.append(sys_def)
+	return output
 
 
 func _layout_systems(systems: Array, center: Vector2) -> Dictionary:

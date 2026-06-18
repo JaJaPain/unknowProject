@@ -1887,7 +1887,7 @@ func _run_jump_smoke_test() -> void:
 		return
 	if not _verify_infinite_generated_system(return_gate):
 		return
-	if not _verify_branch_map_has_current_generated_neighbors():
+	if not _verify_branch_map_hides_unrevealed_generated_neighbors():
 		return
 	if not _verify_next_outbound_rumor_and_map():
 		return
@@ -2037,7 +2037,7 @@ func _verify_branch_map_route(
 	return false
 
 
-func _verify_branch_map_has_current_generated_neighbors() -> bool:
+func _verify_branch_map_hides_unrevealed_generated_neighbors() -> bool:
 	var branch_map := _get_branch_map_for_smoke()
 	if branch_map == null:
 		return false
@@ -2048,8 +2048,8 @@ func _verify_branch_map_has_current_generated_neighbors() -> bool:
 	for gate: GateDefinition in current_def.gates:
 		if gate.initial_state == "known":
 			continue
-		if not branch_map.system_nodes.has(str(gate.destination_system_id)):
-			_fail_jump_smoke_test("Branch map did not include prepared outbound destination.")
+		if branch_map.system_nodes.has(str(gate.destination_system_id)):
+			_fail_jump_smoke_test("Branch map revealed an unknown prepared outbound destination.")
 			return false
 	return true
 

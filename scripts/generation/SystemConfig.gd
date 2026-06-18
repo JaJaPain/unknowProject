@@ -84,15 +84,26 @@ static func from_seed(name: String, id: String, seed_val: int) -> SystemConfig:
 		3: config.difficulty_multiplier = 1.30
 	config.npc_patrol_count = 5 + config.difficulty_tier
 
+	var local_factions: Array[String] = [
+		"reavers",
+		"obsidian",
+		"dustborn",
+		"wraiths",
+		"ironclad",
+	]
 	var major_factions: Array[String] = ["zenith", "aurelia", "vanguard"]
-	var primary_idx: int = rng.randi() % major_factions.size()
-	var primary_faction: String = major_factions[primary_idx]
+	var primary_idx: int = rng.randi() % local_factions.size()
+	var primary_faction: String = local_factions[primary_idx]
 	var has_second: bool = rng.randf() < 0.6
 	if has_second:
-		var second_idx: int = (primary_idx + 1 + rng.randi() % (major_factions.size() - 1)) % major_factions.size()
+		var second_pool := local_factions.duplicate()
+		if rng.randf() < 0.35:
+			second_pool.append(major_factions[rng.randi() % major_factions.size()])
+		second_pool.erase(primary_faction)
+		var second_faction: String = second_pool[rng.randi() % second_pool.size()]
 		var split: float = rng.randf_range(0.55, 0.75)
 		config.faction_weights[primary_faction] = split
-		config.faction_weights[major_factions[second_idx]] = 1.0 - split
+		config.faction_weights[second_faction] = 1.0 - split
 	else:
 		config.faction_weights[primary_faction] = 1.0
 

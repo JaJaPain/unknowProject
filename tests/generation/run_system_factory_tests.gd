@@ -49,15 +49,28 @@ func _test_config_deterministic() -> void:
 
 
 func _test_config_faction_weights() -> void:
-	var valid_factions := ["zenith", "aurelia", "vanguard"]
+	var valid_factions := [
+		"zenith",
+		"aurelia",
+		"vanguard",
+		"reavers",
+		"obsidian",
+		"dustborn",
+		"wraiths",
+		"ironclad",
+	]
+	var found_local := false
 	for seed_val in [100, 200, 300, 400, 500]:
 		var config := SystemConfig.from_seed("FW_%d" % seed_val, "system.gen.fw%d" % seed_val, seed_val)
 		_expect(not config.faction_weights.is_empty(), "Seed %d: faction_weights is empty." % seed_val)
 		var weight_sum := 0.0
 		for faction_name: String in config.faction_weights:
 			_expect(faction_name in valid_factions, "Seed %d: invalid faction '%s'." % [seed_val, faction_name])
+			if faction_name not in ["zenith", "aurelia", "vanguard"]:
+				found_local = true
 			weight_sum += float(config.faction_weights[faction_name])
 		_expect(absf(weight_sum - 1.0) < 0.01, "Seed %d: faction weights sum to %.3f, not 1.0." % [seed_val, weight_sum])
+	_expect(found_local, "Generated faction weights did not include local factions.")
 
 
 func _test_config_difficulty_multiplier() -> void:

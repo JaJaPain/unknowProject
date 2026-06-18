@@ -330,12 +330,19 @@ static func faction_info(faction_id: String) -> Dictionary:
 # source image at the cell position stored in MINOR_NPCS.
 # Returns null if the name isn't recognized or the image fails to load.
 static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture:
+	if generated_outpost_npc_data.has(npc_name):
+		var generated_data: Dictionary = generated_outpost_npc_data[npc_name]
+		return GameContentRegistry.shared().portrait_texture(
+			generated_data.get("portrait_id", "")
+		)
 	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
 	if definition == null:
 		return null
 	return GameContentRegistry.shared().portrait_texture(definition.portrait_id)
 
 static func get_minor_npc_data(npc_name: String) -> Dictionary:
+	if generated_outpost_npc_data.has(npc_name):
+		return generated_outpost_npc_data[npc_name].duplicate(true)
 	if not MINOR_NPCS.has(npc_name):
 		return {}
 	var data: Dictionary = MINOR_NPCS[npc_name].duplicate(true)
@@ -350,6 +357,61 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 # (e.g. "iron_reach", "kova"). Returns an empty array if no NPCs are
 # assigned. The mechanic (Jenna Kross) is excluded — she's at Grease Monkeys.
 static var generated_outpost_npcs: Dictionary = {}
+static var generated_outpost_npc_data: Dictionary = {}
+
+const GENERATED_CONTACT_FIRST_NAMES: Array[String] = [
+	"Rook",
+	"Vale",
+	"Mara",
+	"Sable",
+	"Juno",
+	"Nyx",
+	"Orin",
+	"Vexa",
+	"Tamsin",
+	"Corin",
+	"Ivara",
+	"Ren",
+]
+const GENERATED_CONTACT_LAST_NAMES: Array[String] = [
+	"Kade",
+	"Sol",
+	"Venn",
+	"Dray",
+	"Quill",
+	"Marl",
+	"Rusk",
+	"Thane",
+	"Voss",
+	"Keir",
+	"Rook",
+	"Calder",
+]
+const GENERATED_CONTACT_PORTRAITS: Array[String] = [
+	"portrait.minor_npc_01.cassen_vane",
+	"portrait.minor_npc_01.mariska_vonn",
+	"portrait.minor_npc_01.korvin_shaw",
+	"portrait.minor_npc_01.hana_quill",
+	"portrait.minor_npc_02.oleg_stroud",
+	"portrait.minor_npc_02.dasha_invar",
+	"portrait.minor_npc_02.alaric_venn",
+]
+const GENERATED_CONTACT_VOICES: Array[String] = [
+	"voice.cassen_vane.v1",
+	"voice.mariska_vonn.v1",
+	"voice.korvin_shaw.v1",
+	"voice.hana_quill.v1",
+	"voice.oleg_stroud.v1",
+	"voice.dasha_invar.v1",
+	"voice.alaric_venn.v1",
+]
+const GENERATED_CONTACT_LINES: Array[String] = [
+	"Local board's thin today, but the trouble is fresh.",
+	"New system, old math: fuel, favors, and someone else's mess.",
+	"You need a contact out here, you talk to whoever is still breathing.",
+	"The gate crews keep secrets. The station crews sell them by the cup.",
+	"Don't trust clean paperwork past the frontier gate.",
+]
 
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 	if generated_outpost_npcs.has(outpost_id):
@@ -363,25 +425,64 @@ static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 static func assign_generated_outpost_npcs(world_id: String, seed_value: int) -> Array:
 	if generated_outpost_npcs.has(world_id):
 		return generated_outpost_npcs[world_id].duplicate()
-	var eligible: Array[String] = []
-	for npc_name: String in MINOR_NPCS:
-		if MINOR_NPCS[npc_name].has("outpost"):
-			eligible.append(npc_name)
-	if eligible.is_empty():
-		return []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var shuffled: Array = eligible.duplicate()
-	for i in range(shuffled.size() - 1, 0, -1):
-		var j := rng.randi_range(0, i)
-		var tmp = shuffled[i]
-		shuffled[i] = shuffled[j]
-		shuffled[j] = tmp
 	var count := 2 + (1 if rng.randf() < 0.4 else 0)
-	count = mini(count, shuffled.size())
-	var picked: Array = shuffled.slice(0, count)
+	var picked: Array = []
+	for index in range(count):
+		var npc_name := _generated_contact_name(world_id, rng, index)
+		picked.append(npc_name)
+		generated_outpost_npc_data[npc_name] = _generated_contact_data(
+			world_id,
+			npc_name,
+			rng,
+			index
+		)
 	generated_outpost_npcs[world_id] = picked
 	return picked.duplicate()
+
+static func _generated_contact_name(
+	world_id: String,
+	rng: RandomNumberGenerator,
+	index: int
+) -> String:
+	var first := GENERATED_CONTACT_FIRST_NAMES[
+		rng.randi() % GENERATED_CONTACT_FIRST_NAMES.size()
+	]
+	var last := GENERATED_CONTACT_LAST_NAMES[
+		rng.randi() % GENERATED_CONTACT_LAST_NAMES.size()
+	]
+	var name := "%s %s" % [first, last]
+	if generated_outpost_npc_data.has(name):
+		name = "%s %s" % [name, world_id.sha256_text().substr(index * 2, 2).to_upper()]
+	return name
+
+static func _generated_contact_data(
+	world_id: String,
+	npc_name: String,
+	rng: RandomNumberGenerator,
+	index: int
+) -> Dictionary:
+	var portrait_id := GENERATED_CONTACT_PORTRAITS[
+		(index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()
+	]
+	var voice_id := GENERATED_CONTACT_VOICES[
+		(index + rng.randi()) % GENERATED_CONTACT_VOICES.size()
+	]
+	var hue := rng.randf()
+	return {
+		"outpost": world_id,
+		"portrait_id": portrait_id,
+		"voice_profile_id": voice_id,
+		"flavor_color": Color.from_hsv(hue, 0.45, 1.0),
+		"flavor_lines": GENERATED_CONTACT_LINES.duplicate(),
+		"pickup_handoff_fallback_lines": [
+			"Part's in your bay. Around here, that counts as a clean handoff.",
+			"You got what you came for. Don't make the route back interesting.",
+			"Loaded and logged. Tell the mechanic this one was local trouble, not mine.",
+			"There. Frontier parts, frontier warranty: none.",
+		],
+	}
 
 static func resolve_outpost_id(station: Node3D) -> String:
 	if station == null:
@@ -394,9 +495,55 @@ static func resolve_outpost_id(station: Node3D) -> String:
 # Returns the outpost id for a minor NPC, or "" if they aren't outpost-based
 # (e.g. the mechanic, who lives at Grease Monkeys).
 static func get_minor_npc_outpost(npc_name: String) -> String:
+	if generated_outpost_npc_data.has(npc_name):
+		return str(generated_outpost_npc_data[npc_name].get("outpost", ""))
 	if not MINOR_NPCS.has(npc_name):
 		return ""
 	return MINOR_NPCS[npc_name].get("outpost", "")
+
+static func get_current_system_outposts() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var tree := Engine.get_main_loop()
+	var state = (
+		tree.root.get_node_or_null("GlobalState")
+		if tree and tree.root
+		else null
+	)
+	var entities: Array = (
+		state.get("active_system_entities")
+		if state != null
+		else []
+	)
+	for entity in entities:
+		if not is_instance_valid(entity):
+			continue
+		if not entity is Node3D:
+			continue
+		if not entity.is_in_group("station"):
+			continue
+		var raw_station_type: Variant = entity.get("station_type")
+		var station_type := str(raw_station_type) if raw_station_type != null else ""
+		if station_type.is_empty() or station_type == "<null>":
+			station_type = str(entity.get_meta("station_type", ""))
+		if station_type != "outpost":
+			continue
+		var outpost_id := resolve_outpost_id(entity)
+		if outpost_id.is_empty():
+			var raw_world_id: Variant = entity.get("world_id")
+			outpost_id = str(raw_world_id) if raw_world_id != null else ""
+		if outpost_id.is_empty() or outpost_id == "<null>":
+			outpost_id = str(entity.get_meta("world_id", ""))
+		if outpost_id.is_empty():
+			continue
+		var raw_display_name: Variant = entity.get("display_name")
+		var display := str(raw_display_name) if raw_display_name != null else ""
+		if display.is_empty() or display == "<null>":
+			display = str(entity.get_meta("display_name", ""))
+		result.append({
+			"id": outpost_id,
+			"display": display if not display.is_empty() else outpost_id,
+		})
+	return result
 
 # Returns a random minor NPC name. Used for picking a quest-board contact
 # at an outpost when the player asks "who's hiring?"
@@ -466,7 +613,7 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 # hit cache, so we re-warm the NPC's other lines in the background.
 # If `just_played` is empty or not in the list, returns every line.
 static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array:
-	if not MINOR_NPCS.has(npc_name):
+	if not MINOR_NPCS.has(npc_name) and not generated_outpost_npc_data.has(npc_name):
 		return []
 	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
@@ -666,7 +813,15 @@ const PICKUP_REWARD_CREDITS: int = 200
 static func roll_pickup_offer() -> Dictionary:
 	if randf() > MECHANIC_PICKUP_OFFER_CHANCE:
 		return { "offer": false }
-	var outpost_id: String = PICKUP_OUTPOST_IDS[randi() % PICKUP_OUTPOST_IDS.size()]
+	var outposts := get_current_system_outposts()
+	if outposts.is_empty():
+		for starter_id in PICKUP_OUTPOST_IDS:
+			outposts.append({
+				"id": str(starter_id),
+				"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+			})
+	var selected: Dictionary = outposts[randi() % outposts.size()]
+	var outpost_id: String = str(selected.get("id", ""))
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)
 	if npcs.is_empty():
 		# Defensive: the outposts always have NPCs today, but if that
@@ -678,7 +833,7 @@ static func roll_pickup_offer() -> Dictionary:
 	return {
 		"offer": true,
 		"outpost_id": outpost_id,
-		"outpost_display": PICKUP_OUTPOST_DISPLAY.get(outpost_id, outpost_id),
+		"outpost_display": str(selected.get("display", outpost_id)),
 		"npc_name": npc_name,
 		"part_name": part_name,
 		"reward_credits": PICKUP_REWARD_CREDITS,
@@ -804,7 +959,12 @@ var paused: bool = false:
 var reputations: Dictionary = {
 	"zenith": 50.0,
 	"aurelia": -20.0,
-	"vanguard": -20.0
+	"vanguard": -20.0,
+	"reavers": 0.0,
+	"obsidian": 0.0,
+	"dustborn": 0.0,
+	"wraiths": 0.0,
+	"ironclad": 0.0,
 }
 signal reputation_changed(faction_name: String, new_rep: float)
 signal ship_destroyed(faction_name: String)
@@ -967,9 +1127,10 @@ func emit_npc_flavor(flavor: Dictionary) -> void:
 	npc_flavor_spoken.emit(spoken_flavor)
 
 func adjust_reputation(faction_name: String, amount: float):
-	if reputations.has(faction_name):
-		reputations[faction_name] = clamp(reputations[faction_name] + amount, -100.0, 100.0)
-		reputation_changed.emit(faction_name, reputations[faction_name])
+	if not reputations.has(faction_name):
+		reputations[faction_name] = 0.0
+	reputations[faction_name] = clamp(reputations[faction_name] + amount, -100.0, 100.0)
+	reputation_changed.emit(faction_name, reputations[faction_name])
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1057,7 +1218,16 @@ func reset_for_restart():
 	destroyed_ships_pool = 0
 	runtime_entity_sequence = 0
 	# Reset reputations
-	reputations = { "zenith": 50.0, "aurelia": -20.0, "vanguard": -20.0 }
+	reputations = {
+		"zenith": 50.0,
+		"aurelia": -20.0,
+		"vanguard": -20.0,
+		"reavers": 0.0,
+		"obsidian": 0.0,
+		"dustborn": 0.0,
+		"wraiths": 0.0,
+		"ironclad": 0.0,
+	}
 	# Reset kill tracking
 	faction_kills = { "zenith": 0, "aurelia": 0, "vanguard": 0 }
 	print("[GlobalState] State reset for new game.")

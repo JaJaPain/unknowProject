@@ -14,6 +14,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_builder_produces_all_templates()
 	_test_builder_offers_have_required_fields()
+	_test_pickup_offer_uses_current_system_outpost()
 	_test_ore_offer_is_urgent()
 	_test_fallback_renders_all_placeholders()
 	_test_fallback_preserves_board_metadata()
@@ -68,6 +69,43 @@ func _test_builder_offers_have_required_fields() -> void:
 			"required_fields: offer '%s' is missing required fields." %
 			str(offer.get("template_id", "unknown"))
 		)
+
+
+func _test_pickup_offer_uses_current_system_outpost() -> void:
+	var gs = root.get_node("GlobalState")
+	var station := StaticBody3D.new()
+	station.add_to_group("station")
+	station.set_meta("station_type", "outpost")
+	station.set_meta("world_id", "station.system_gen_test.s1")
+	station.set_meta("display_name", "TEST RELAY")
+	var generated_npcs: Array = gs.assign_generated_outpost_npcs(
+		"station.system_gen_test.s1",
+		1234
+	)
+	gs.active_system_entities.append(station)
+	var offers := OfferBuilderType.build_offers(480)
+	gs.active_system_entities.erase(station)
+	gs.generated_outpost_npcs.erase("station.system_gen_test.s1")
+	for npc_name in generated_npcs:
+		gs.generated_outpost_npc_data.erase(npc_name)
+	station.free()
+
+	var pickup_offer: Dictionary = {}
+	for offer in offers:
+		if str(offer.get("template_id", "")) == OfferBuilderType.TEMPLATE_PICKUP_SPECIAL:
+			pickup_offer = offer
+			break
+	_expect(not pickup_offer.is_empty(), "local_pickup: pickup offer was not found.")
+	var quest_data: Dictionary = pickup_offer.get("quest_data", {})
+	var objective: Dictionary = quest_data.get("objective", {})
+	_expect(
+		objective.get("target_outpost", "") == "station.system_gen_test.s1",
+		"local_pickup: pickup offer did not use the current-system outpost."
+	)
+	_expect(
+		str(objective.get("target_npc", "")) not in gs.MINOR_NPCS,
+		"local_pickup: generated outpost reused an authored minor NPC."
+	)
 
 
 func _test_ore_offer_is_urgent() -> void:

@@ -205,7 +205,7 @@ func _ensure_destination_generated(gate_id: String) -> void:
 		"legacy_id": config.legacy_id,
 		"display_name": sys_name,
 		"station_ids": [],
-		"faction_ids": [],
+		"faction_ids": _config_faction_ids(config),
 	}
 
 	registry.set_generated_config(dest_sys_id, config)
@@ -217,6 +217,13 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	var store := _get_store()
 	if store != null:
 		store.set_gate_knowledge(return_gate_id, "known")
+
+
+func _config_faction_ids(config: SystemConfig) -> Array[String]:
+	var ids: Array[String] = []
+	for faction_name: String in config.faction_weights.keys():
+		ids.append("faction.%s" % faction_name)
+	return ids
 
 
 func _sync_active_gate_target(gate_def: GateDefinition) -> void:

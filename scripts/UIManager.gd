@@ -3944,8 +3944,9 @@ func _on_test_pickup_part_pressed() -> void:
 		# portrait so the slot gets the NPC's face too.
 		var npc_color: Color = Color(0.85, 0.85, 0.85)
 		var npc_portrait: Texture2D = null
-		if GlobalState.MINOR_NPCS.has(picked_npc):
-			npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
+		var npc_data := GlobalState.get_minor_npc_data(picked_npc)
+		if not npc_data.is_empty():
+			npc_color = npc_data.get("flavor_color", npc_color)
 			npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		show_dock_message("Picked up '%s' from %s. Deliver to Grease Monkeys." % [picked_part, picked_npc], picked_npc, npc_color, npc_portrait)
 	else:
@@ -4869,13 +4870,15 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# GlobalState's minor-NPC registry. Falls back to neutral (i.e.
 	# guard runs) if unknown.
 	var display_voice: String = "voice.neutral.v1"
-	if npc_name != "" and GlobalState.MINOR_NPCS.has(npc_name):
-		display_voice = str(
-			GlobalState.get_minor_npc_data(npc_name).get(
-				"voice_profile_id",
-				"voice.neutral.v1"
+	if npc_name != "":
+		var npc_data := GlobalState.get_minor_npc_data(npc_name)
+		if not npc_data.is_empty():
+			display_voice = str(
+				npc_data.get(
+					"voice_profile_id",
+					"voice.neutral.v1"
+				)
 			)
-		)
 	text = GlobalState.apply_tone_guard(text, display_voice)
 
 	# Configure content.
@@ -6073,6 +6076,8 @@ func _on_ask_for_part_pressed() -> void:
 		return
 	var docked_outpost_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
 	if docked_outpost_id == "":
+		docked_outpost_id = GlobalState.resolve_outpost_id(current_station)
+	if docked_outpost_id == "":
 		show_dock_message(
 			"That contact is at an outpost, not this dock.",
 			"",
@@ -6151,8 +6156,9 @@ func _complete_pickup_with_handoff() -> void:
 		
 	var npc_color: Color = Color(0.85, 0.85, 0.85)
 	var npc_portrait: Texture2D = null
-	if GlobalState.MINOR_NPCS.has(picked_npc):
-		npc_color = GlobalState.get_minor_npc_data(picked_npc).get("flavor_color", npc_color)
+	var picked_npc_data := GlobalState.get_minor_npc_data(picked_npc)
+	if not picked_npc_data.is_empty():
+		npc_color = picked_npc_data.get("flavor_color", npc_color)
 		npc_portrait = GlobalState.get_minor_npc_portrait(picked_npc)
 		
 	if line != "":
@@ -6173,9 +6179,8 @@ func _complete_pickup_with_handoff() -> void:
 				"voice.neutral.v1"
 			),
 		}
-		if GlobalState.MINOR_NPCS.has(picked_npc):
-			var npc_data := GlobalState.get_minor_npc_data(picked_npc)
-			flavor_dict["voice_profile_id"] = npc_data.get(
+		if not picked_npc_data.is_empty():
+			flavor_dict["voice_profile_id"] = picked_npc_data.get(
 				"voice_profile_id",
 				flavor_dict["voice_profile_id"]
 			)
@@ -6253,8 +6258,8 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 					var is_valid: bool = _is_valid_outpost_handoff_line(line, part_name, client_name)
 					if is_valid:
 						var voice_profile_id := "voice.neutral.v1"
-						if GlobalState.MINOR_NPCS.has(npc_name):
-							var npc_data := GlobalState.get_minor_npc_data(npc_name)
+						var npc_data := GlobalState.get_minor_npc_data(npc_name)
+						if not npc_data.is_empty():
 							voice_profile_id = npc_data.get(
 								"voice_profile_id",
 								voice_profile_id
@@ -6300,8 +6305,8 @@ func _apply_pickup_handoff_fallback(npc_name: String, part_name: String, client_
 	var line: String = FALLBACK_OUTPOST_HANDOFF[salt].replace("{part}", part_name).replace("{client}", client_name)
 	
 	var voice_profile_id := "voice.neutral.v1"
-	if GlobalState.MINOR_NPCS.has(npc_name):
-		var npc_data := GlobalState.get_minor_npc_data(npc_name)
+	var npc_data := GlobalState.get_minor_npc_data(npc_name)
+	if not npc_data.is_empty():
 		voice_profile_id = npc_data.get("voice_profile_id", voice_profile_id)
 	QuestManager.set_pickup_handoff(
 		line,
