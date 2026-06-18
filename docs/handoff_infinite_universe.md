@@ -15,30 +15,30 @@ Replace the 3 hardcoded prototype systems (Crimson Nebula, Obsidian Reach, Aethe
 7. The new system has 1-2 outbound gates (state: "unknown") leading to not-yet-created systems
 8. Repeat from step 2
 
-## What to Remove
+## Removed
 
 ### From `data/systems/system_registry.json`
-Delete these 3 system entries and all their gates:
+Deleted these 3 system entries and all their gates:
 - `system.crimson` (Crimson Nebula) — lines ~86-126
 - `system.obsidian` (Obsidian Reach) — lines ~128-168  
 - `system.aether` (Aether's Edge) — lines ~169-198
 
 ### From `system.test` gates array
-Delete the gate `gate.test.to_crimson` (the gate TO Crimson from test system)
+Deleted the gate `gate.test.to_crimson` (the gate TO Crimson from test system)
 
 ### From `scenes/systems/system_test.tscn`
-Delete the CrimsonGate node that was added at position (800, 0, -400)
+Deleted the CrimsonGate node that was added at position (800, 0, -400)
 
 ### From `system.start` gates
-The gate `gate.start.to_test` currently has `"initial_state": "known"`. For the infinite universe, this first outbound gate should start as `"unknown"` so the player discovers it through gameplay. Change it to:
+The gate `gate.start.to_test` now starts as `"unknown"` so the player discovers it through gameplay:
 ```json
 "initial_state": "unknown"
 ```
 
-## What to Add
+## Added
 
 ### Outbound gates on generated systems
-When `GateDiscoveryManager._ensure_destination_generated()` creates a new system, it currently only creates the **return gate** (back to the system you came from). It needs to ALSO create 1-2 **outbound gates** leading to new, not-yet-existing systems. These outbound gates should have `initial_state: "unknown"`.
+When `GateDiscoveryManager._ensure_destination_generated()` creates a new system, it now creates the **return gate** (back to the system you came from) plus 1-2 **outbound gates** leading to not-yet-existing systems. These outbound gates have `initial_state: "unknown"`.
 
 The number of outbound gates is already in `SystemConfig.outbound_gate_count` (1, or 2 with 40% chance).
 
@@ -224,8 +224,8 @@ unknown → rumored → hidden → known
 
 ### GateRumorEvent (line: `scripts/events/types/GateRumorEvent.gd`)
 - Registered with EventScheduler at 120 game-minute intervals
-- `is_eligible()`: requires 30+ campaign minutes AND at least one unknown gate exists anywhere in the registry
-- `execute()`: picks a random unknown gate, calls `GateDiscovery.apply_rumor(gate_id, narrative)`
+- `is_eligible()`: requires 30+ campaign minutes AND at least one unknown gate exists in the current system
+- `execute()`: picks a random unknown gate from the current system, calls `GateDiscovery.apply_rumor(gate_id, narrative)`
 - Shows a chatter message like "Docking crew mentioned a faint hypergate signature..."
 
 ### GateDiscoveryManager._ensure_destination_generated() (line 147)
@@ -235,10 +235,9 @@ Called when a gate becomes "rumored". This is where new systems are born:
 3. If not: calls `CampaignSystemNames.next_name()` for a name
 4. Creates `SystemConfig.from_seed(name, id, id.hash())`
 5. Creates a return gate definition (initial_state: "known" — so player can get back)
-6. Registers the system via `registry.register_generated_system()`
-7. Stores the SystemConfig via `registry.set_generated_config()`
-
-**CURRENT GAP**: This function only creates the return gate. It does NOT create outbound gates for the new system. This is the main thing that needs to be added for infinite expansion.
+6. Creates 1-2 outbound gate definitions (initial_state: "unknown") for future generated systems
+7. Registers the system via `registry.register_generated_system()`
+8. Stores the SystemConfig via `registry.set_generated_config()`
 
 ### Kaelen Gate Unlock (line 76-96)
 - `kaelen_reveal(gate_id, cost)` — pays credits, sets gate to "known"
@@ -248,7 +247,7 @@ Called when a gate becomes "rumored". This is where new systems are born:
 
 ### Gate State Persistence
 - `CampaignSlotRegistry` seeds gates from registry definitions — respects `initial_state` field
-- `CampaignCheckpointStore` stores runtime state in `map_knowledge.known_gate_ids` / `hidden_gate_ids` / `unknown_gate_ids`
+- `CampaignCheckpointStore` stores runtime state in `map_knowledge.known_gate_ids`, `rumored_gate_ids`, `hidden_gate_ids`, `blocked_gate_ids`, and `damaged_gate_ids`. Gates absent from map knowledge remain unknown.
 - `_initial_known_gates` dict handles migration for gates that should be known but got stuck as hidden in old saves
 
 ### JumpGate Visibility
