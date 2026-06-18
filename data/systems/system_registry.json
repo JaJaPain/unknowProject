@@ -67,6 +67,132 @@
 					"discovery_action": "",
 					"discovery_cost": {},
 					"discovery_prerequisites": []
+				},
+				{
+					"id": "gate.test.to_crimson",
+					"schema_version": 1,
+					"legacy_id": "test_to_crimson",
+					"display_name": "Crimson Passage",
+					"destination_system_id": "system.crimson",
+					"destination_gate_id": "gate.crimson.to_test",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
+				}
+			]
+		},
+		{
+			"id": "system.crimson",
+			"schema_version": 1,
+			"legacy_id": "crimson_system",
+			"display_name": "Crimson Nebula",
+			"scene_path": "generated",
+			"origin": "generated",
+			"tags": ["procedural_prototype"],
+			"station_ids": [
+				"station.crimson.driftworks",
+				"station.crimson.red_anchor"
+			],
+			"faction_ids": [
+				"faction.vanguard",
+				"faction.aurelia"
+			],
+			"gates": [
+				{
+					"id": "gate.crimson.to_test",
+					"schema_version": 1,
+					"legacy_id": "crimson_to_test",
+					"display_name": "Nebula Return Gate",
+					"destination_system_id": "system.test",
+					"destination_gate_id": "gate.test.to_crimson",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
+				},
+				{
+					"id": "gate.crimson.to_obsidian",
+					"schema_version": 1,
+					"legacy_id": "crimson_to_obsidian",
+					"display_name": "Obsidian Rift Gate",
+					"destination_system_id": "system.obsidian",
+					"destination_gate_id": "gate.obsidian.to_crimson",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
+				}
+			]
+		},
+		{
+			"id": "system.obsidian",
+			"schema_version": 1,
+			"legacy_id": "obsidian_system",
+			"display_name": "Obsidian Reach",
+			"scene_path": "generated",
+			"origin": "generated",
+			"tags": ["procedural_prototype"],
+			"station_ids": [
+				"station.obsidian.blackforge"
+			],
+			"faction_ids": [
+				"faction.zenith"
+			],
+			"gates": [
+				{
+					"id": "gate.obsidian.to_crimson",
+					"schema_version": 1,
+					"legacy_id": "obsidian_to_crimson",
+					"display_name": "Crimson Return Gate",
+					"destination_system_id": "system.crimson",
+					"destination_gate_id": "gate.crimson.to_obsidian",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
+				},
+				{
+					"id": "gate.obsidian.to_aether",
+					"schema_version": 1,
+					"legacy_id": "obsidian_to_aether",
+					"display_name": "Aether Drift Gate",
+					"destination_system_id": "system.aether",
+					"destination_gate_id": "gate.aether.to_obsidian",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
+				}
+			]
+		},
+		{
+			"id": "system.aether",
+			"schema_version": 1,
+			"legacy_id": "aether_system",
+			"display_name": "Aether's Edge",
+			"scene_path": "generated",
+			"origin": "generated",
+			"tags": ["procedural_prototype", "frontier"],
+			"station_ids": [
+				"station.aether.voidharbor",
+				"station.aether.shimmer_dock"
+			],
+			"faction_ids": [
+				"faction.vanguard"
+			],
+			"gates": [
+				{
+					"id": "gate.aether.to_obsidian",
+					"schema_version": 1,
+					"legacy_id": "aether_to_obsidian",
+					"display_name": "Obsidian Return Gate",
+					"destination_system_id": "system.obsidian",
+					"destination_gate_id": "gate.obsidian.to_aether",
+					"initial_state": "known",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
 				}
 			]
 		}

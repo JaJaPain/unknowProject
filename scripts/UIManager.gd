@@ -438,10 +438,11 @@ func _create_hud():
 
 	var zen_lbl = Label.new()
 	zen_lbl.name = "ZenRepLabel"
-	zen_lbl.mouse_filter = Control.MOUSE_FILTER_STOP  # enable tooltip
+	zen_lbl.mouse_filter = Control.MOUSE_FILTER_STOP
 	rep_hbox.add_child(zen_lbl)
 
 	var sep1 = Label.new()
+	sep1.name = "RepSep1"
 	sep1.text = " | "
 	rep_hbox.add_child(sep1)
 
@@ -451,6 +452,7 @@ func _create_hud():
 	rep_hbox.add_child(aur_lbl)
 
 	var sep2 = Label.new()
+	sep2.name = "RepSep2"
 	sep2.text = " | "
 	rep_hbox.add_child(sep2)
 
@@ -2593,6 +2595,7 @@ func _unhandled_input(event: InputEvent):
 			return
 		if branch_map and branch_map.visible:
 			branch_map._close()
+			_auto_select_route_gate()
 			return
 		if campaign_panel and campaign_panel.visible:
 			_close_campaign_manager()
@@ -2710,7 +2713,12 @@ func update_overview_list(entities: Array):
 			if type_str == "Space Station" or type_str == "Outpost":
 				row_color = Color(0.25, 0.95, 0.45)   # Bright docking green
 			elif type_str == "Jumpgate":
-				row_color = Color(0.2, 0.85, 1.0)
+				var next_hop: String = branch_map.get_next_hop_legacy_id() if branch_map else ""
+				var gate_dest: String = entity.get("destination_system_id") if entity.get("destination_system_id") else ""
+				if next_hop != "" and gate_dest == next_hop:
+					row_color = Color(0.2, 1.0, 0.4)
+				else:
+					row_color = Color(0.2, 0.85, 1.0)
 			elif type_str == "Celestial":
 				row_color = Color(0.35, 0.65, 1.0)    # Soft celestial blue
 			else:
@@ -4428,9 +4436,27 @@ func _update_hud_health():
 
 func _update_hud_reputations():
 	if not hud_panel: return
+	var sys_factions: Array[String] = _get_current_system_faction_ids()
+	var show_all: bool = sys_factions.is_empty()
+
+	var zen_vis: bool = show_all or "zenith" in sys_factions
+	var aur_vis: bool = show_all or "aurelia" in sys_factions
+	var van_vis: bool = show_all or "vanguard" in sys_factions
+
 	_update_faction_rep_label("ZenRepLabel", "zenith")
 	_update_faction_rep_label("AurRepLabel", "aurelia")
 	_update_faction_rep_label("VanRepLabel", "vanguard")
+
+	_set_rep_label_visible("ZenRepLabel", zen_vis)
+	_set_rep_label_visible("AurRepLabel", aur_vis)
+	_set_rep_label_visible("VanRepLabel", van_vis)
+
+	var sep1 := hud_panel.find_child("RepSep1", true, false) as Label
+	var sep2 := hud_panel.find_child("RepSep2", true, false) as Label
+	if sep1:
+		sep1.visible = zen_vis and (aur_vis or van_vis)
+	if sep2:
+		sep2.visible = aur_vis and van_vis
 
 # Updates one faction's HUD rep label: text (abbrev + value), color (tier
 # gradient), and tooltip (full name + descriptor + current tier + value).
@@ -4450,9 +4476,39 @@ func _update_faction_rep_label(label_name: String, faction_id: String):
 	# Tooltip: full name + descriptor + current feeling + numeric value
 	lbl.tooltip_text = "%s (%s) — %s (%d)" % [info.name, info.descriptor, tier, rep_value]
 
+
+func _set_rep_label_visible(label_name: String, vis: bool) -> void:
+	var lbl := hud_panel.find_child(label_name, true, false) as Label
+	if lbl:
+		lbl.visible = vis
+
+
+func _get_current_system_faction_ids() -> Array[String]:
+	var result: Array[String] = []
+	var game_root := get_tree().current_scene
+	if not game_root or not "system_registry" in game_root or not game_root.system_registry:
+		return result
+	var sys_id: String = GlobalState.current_system_id
+	for sys_def in game_root.system_registry.get_all_systems():
+		if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
+			for fid in sys_def.faction_ids:
+				result.append(str(fid).get_slice(".", 1))
+			break
+	return result
+
+
 func _exit_tree() -> void:
 	if GlobalState.entities_changed.is_connected(refresh_overview):
 		GlobalState.entities_changed.disconnect(refresh_overview)
+
+
+func _domain_id_for_current_system() -> String:
+	var game_root := get_tree().current_scene
+	if game_root and "system_registry" in game_root and game_root.system_registry:
+		for sys_def in game_root.system_registry.get_all_systems():
+			if sys_def.legacy_id == GlobalState.current_system_id:
+				return str(sys_def.id)
+	return ""
 
 
 func _get_current_system_display_name() -> String:
@@ -4476,6 +4532,22 @@ func refresh_overview():
 	if overview_title_label:
 		var sys_name := _get_current_system_display_name()
 		overview_title_label.text = sys_name + "  OVERVIEW" if sys_name != "" else "OVERVIEW"
+
+	if branch_map and not branch_map.planned_route.is_empty():
+		var dest_id: String = branch_map.planned_route[-1]
+		var dest_data: Dictionary = branch_map.system_nodes.get(dest_id, {})
+		if dest_data.get("legacy_id", "") == GlobalState.current_system_id:
+			branch_map.clear_route()
+			show_hud_info("Destination reached.", Color(0.2, 1.0, 0.6))
+		else:
+			branch_map.planned_route = branch_map._bfs_path(
+				_domain_id_for_current_system(), branch_map.planned_route[-1]
+			)
+			var jumps_left: int = branch_map.planned_route.size() - 1
+			if jumps_left > 0:
+				var dest_name: String = branch_map.system_nodes.get(dest_id, {}).get("display_name", "destination")
+				show_hud_info("%d jump%s remaining to %s." % [jumps_left, "" if jumps_left == 1 else "s", dest_name], Color(0.2, 0.9, 1.0))
+			call_deferred("_auto_select_route_gate")
 
 	if map_btn:
 		var game_root_ref := get_tree().current_scene
@@ -4513,6 +4585,22 @@ func refresh_overview():
 			
 	update_overview_list(entities)
 
+func _auto_select_route_gate() -> void:
+	if not branch_map or branch_map.planned_route.size() < 2:
+		return
+	var next_legacy: String = branch_map.get_next_hop_legacy_id()
+	if next_legacy.is_empty():
+		return
+	var scene_tree := get_tree()
+	if not scene_tree:
+		return
+	for gate in scene_tree.get_nodes_in_group("jumpgate"):
+		var gate_dest: String = gate.get("destination_system_id") if gate.get("destination_system_id") else ""
+		if gate_dest == next_legacy:
+			GlobalState.active_target = gate
+			return
+
+
 func _toggle_branch_map() -> void:
 	if branch_map:
 		branch_map.visible = not branch_map.visible
@@ -4522,6 +4610,7 @@ func _toggle_branch_map() -> void:
 			get_tree().paused = true
 		else:
 			get_tree().paused = false
+			_auto_select_route_gate()
 
 
 func _is_hidden_gate(entity: Node) -> bool:

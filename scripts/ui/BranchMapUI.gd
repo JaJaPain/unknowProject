@@ -29,9 +29,13 @@ var system_nodes: Dictionary = {}
 var route_data: Array[Dictionary] = []
 var _detail_panel: PanelContainer
 var _detail_label: Label
+var _tooltip_panel: PanelContainer
+var _tooltip_label: RichTextLabel
 var _close_btn: Button
 var _recenter_btn: Button
 var _title_label: Label
+
+var planned_route: Array[String] = []
 
 var _pan_offset := Vector2.ZERO
 var _dragging_title := false
@@ -53,6 +57,7 @@ func _ready() -> void:
 	_build_close_button()
 	_build_recenter_button()
 	_build_detail_panel()
+	_build_tooltip()
 	_rebuild_map()
 
 
@@ -92,6 +97,55 @@ func _recenter() -> void:
 	_rebuild_map()
 
 
+func plan_route_to(dest_sys_id: String) -> void:
+	var current_id := ""
+	for sid in system_nodes:
+		if system_nodes[sid].get("is_current", false):
+			current_id = sid
+			break
+	if current_id.is_empty() or current_id == dest_sys_id:
+		planned_route.clear()
+		queue_redraw()
+		return
+	var path: Array[String] = _bfs_path(current_id, dest_sys_id)
+	planned_route = path
+	queue_redraw()
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("_auto_select_route_gate"):
+		ui.call("_auto_select_route_gate")
+
+
+func _bfs_path(from_id: String, to_id: String) -> Array[String]:
+	var adjacency: Dictionary = {}
+	for sid in system_nodes:
+		adjacency[sid] = []
+	for route in route_data:
+		if route["state"] != "known":
+			continue
+		var a: String = route["from"]
+		var b: String = route["to"]
+		if adjacency.has(a):
+			adjacency[a].append(b)
+		if adjacency.has(b):
+			adjacency[b].append(a)
+	var visited: Dictionary = {from_id: ""}
+	var queue: Array[String] = [from_id]
+	while not queue.is_empty():
+		var current: String = queue.pop_front()
+		if current == to_id:
+			var path: Array[String] = []
+			var step: String = to_id
+			while step != "":
+				path.push_front(step)
+				step = visited[step]
+			return path
+		for neighbor in adjacency.get(current, []):
+			if not visited.has(neighbor):
+				visited[neighbor] = current
+				queue.append(neighbor)
+	return []
+
+
 func _build_detail_panel() -> void:
 	_detail_panel = PanelContainer.new()
 	_detail_panel.visible = false
@@ -110,8 +164,30 @@ func _build_detail_panel() -> void:
 	add_child(_detail_panel)
 
 
+func _build_tooltip() -> void:
+	_tooltip_panel = PanelContainer.new()
+	_tooltip_panel.visible = false
+	_tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tooltip_panel.custom_minimum_size = Vector2(180, 0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.06, 0.12, 0.94)
+	style.border_color = Color(0.0, 0.6, 0.8, 0.5)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(8)
+	_tooltip_panel.add_theme_stylebox_override("panel", style)
+	_tooltip_label = RichTextLabel.new()
+	_tooltip_label.bbcode_enabled = true
+	_tooltip_label.fit_content = true
+	_tooltip_label.scroll_active = false
+	_tooltip_label.add_theme_font_size_override("normal_font_size", 12)
+	_tooltip_label.add_theme_color_override("default_color", Color(0.7, 0.8, 0.9))
+	_tooltip_panel.add_child(_tooltip_label)
+	add_child(_tooltip_panel)
+
+
 func _rebuild_map() -> void:
-	var keep := [_detail_panel, _close_btn, _recenter_btn, _title_label]
+	var keep := [_detail_panel, _tooltip_panel, _close_btn, _recenter_btn, _title_label]
 	for child in get_children():
 		if child not in keep:
 			child.queue_free()
@@ -135,10 +211,21 @@ func _rebuild_map() -> void:
 	for sys_def in all_systems:
 		var sys_id: String = str(sys_def.id)
 		var pos: Vector2 = positions.get(sys_id, content_center)
+		var faction_names: Array[String] = []
+		var faction_ids: Array[String] = []
+		for fid in sys_def.faction_ids:
+			var raw: String = str(fid).get_slice(".", 1)
+			faction_ids.append(raw)
+			faction_names.append(raw.capitalize())
 		system_nodes[sys_id] = {
 			"position": pos,
 			"display_name": sys_def.display_name,
 			"is_current": sys_def.legacy_id == GlobalState.current_system_id,
+			"legacy_id": sys_def.legacy_id,
+			"station_count": sys_def.station_ids.size(),
+			"faction_names": faction_names,
+			"faction_ids": faction_ids,
+			"origin": sys_def.origin,
 		}
 		_create_system_label(sys_def, pos)
 
@@ -251,6 +338,23 @@ func _draw() -> void:
 		if is_current:
 			draw_circle(pos, 6, Color(0.0, 1.0, 0.8))
 
+		if planned_route.size() >= 2:
+			var is_dest: bool = sys_id == planned_route[-1]
+			var on_route: bool = sys_id in planned_route and not is_current
+			if is_dest:
+				draw_arc(pos, NODE_RADIUS + 6, 0, TAU, 24, Color(0.2, 1.0, 0.4, 0.8), 2.5)
+			elif on_route:
+				draw_arc(pos, NODE_RADIUS + 4, 0, TAU, 24, Color(0.2, 1.0, 0.4, 0.3), 1.5)
+
+	if planned_route.size() >= 2:
+		for i in range(planned_route.size() - 1):
+			var a: String = planned_route[i]
+			var b: String = planned_route[i + 1]
+			if system_nodes.has(a) and system_nodes.has(b):
+				var pa: Vector2 = system_nodes[a]["position"]
+				var pb: Vector2 = system_nodes[b]["position"]
+				draw_line(pa, pb, Color(0.2, 1.0, 0.4, 0.5), 4.0)
+
 
 func _draw_dashed_line(
 	from: Vector2,
@@ -319,6 +423,43 @@ func _gui_input(event: InputEvent) -> void:
 		elif _dragging_canvas:
 			_pan_offset += event.relative
 			_rebuild_map()
+		else:
+			_update_hover_tooltip(event.position)
+
+
+func _update_hover_tooltip(hover_pos: Vector2) -> void:
+	for sys_id in system_nodes:
+		var data: Dictionary = system_nodes[sys_id]
+		var pos: Vector2 = data["position"]
+		if hover_pos.distance_to(pos) <= NODE_RADIUS + 6:
+			var text: String = data["display_name"]
+			if data.get("is_current", false):
+				text += "  (current)"
+			var sc: int = data.get("station_count", 0)
+			if sc > 0:
+				text += "\nStations: %d" % sc
+			var f_names: Array = data.get("faction_names", [])
+			var f_ids: Array = data.get("faction_ids", [])
+			if not f_names.is_empty():
+				text += "\nFactions: "
+				for i in range(f_names.size()):
+					var rep: float = GlobalState.reputations.get(f_ids[i], 0.0)
+					var c: Color = GlobalState.reputation_color(rep)
+					var hex: String = "#" + c.to_html(false)
+					if i > 0:
+						text += ", "
+					text += "[color=%s]%s[/color]" % [hex, f_names[i]]
+			var origin: String = data.get("origin", "")
+			if origin == "generated":
+				text += "\nGenerated system"
+			_tooltip_label.text = text
+			var offset := Vector2(15, -_tooltip_panel.size.y - 5)
+			if pos.x + 15 + _tooltip_panel.size.x > WINDOW_SIZE.x:
+				offset.x = -_tooltip_panel.size.x - 15
+			_tooltip_panel.position = pos + offset
+			_tooltip_panel.visible = true
+			return
+	_tooltip_panel.visible = false
 
 
 func _handle_click(click_pos: Vector2) -> void:
@@ -341,20 +482,30 @@ func _handle_click(click_pos: Vector2) -> void:
 
 
 func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void:
+	if not data.get("is_current", false):
+		if not planned_route.is_empty() and planned_route[-1] == sys_id:
+			clear_route()
+		else:
+			plan_route_to(sys_id)
+		_detail_panel.visible = false
+		return
+
 	var text := "[%s]\n" % data["display_name"]
-	if data.get("is_current", false):
-		text += "Current location\n"
+	text += "Current location\n"
+	if not planned_route.is_empty():
+		text += "Route: %d jumps to %s\n" % [planned_route.size() - 1, system_nodes.get(planned_route[-1], {}).get("display_name", "?")]
+		text += "(click destination to change)"
 	var game_root := get_tree().current_scene
 	if game_root and "system_registry" in game_root:
 		var sys_def = game_root.system_registry.get_system(sys_id)
 		if sys_def:
 			if not sys_def.station_ids.is_empty():
-				text += "Stations: %d\n" % sys_def.station_ids.size()
+				text += "\nStations: %d" % sys_def.station_ids.size()
 			if not sys_def.faction_ids.is_empty():
 				var factions: Array[String] = []
 				for fid in sys_def.faction_ids:
 					factions.append(str(fid).get_slice(".", 1).capitalize())
-				text += "Factions: %s\n" % ", ".join(factions)
+				text += "\nFactions: %s" % ", ".join(factions)
 	_detail_label.text = text
 	_detail_panel.position = pos + Vector2(15, -10)
 	_detail_panel.visible = true
@@ -385,3 +536,16 @@ func _close() -> void:
 func refresh() -> void:
 	_pan_offset = Vector2.ZERO
 	_rebuild_map()
+
+
+func get_next_hop_legacy_id() -> String:
+	if planned_route.size() < 2:
+		return ""
+	var next_sys_id: String = planned_route[1]
+	var data: Dictionary = system_nodes.get(next_sys_id, {})
+	return data.get("legacy_id", "")
+
+
+func clear_route() -> void:
+	planned_route.clear()
+	queue_redraw()
