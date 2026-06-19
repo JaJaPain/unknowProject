@@ -96,6 +96,9 @@ must be used.
   should be generated in the background: factions, planets, ships, stations,
   asteroids, gates, and scene placement. The next system should be ready before
   the player meets the requirements to open its gate.
+- Generated systems should also vary visually. Some systems can have clear star
+  fields, while others can include seeded nebula clouds, dust haze, ion fog, or
+  storm-like shader backdrops.
 - At new campaign launch, system 2 should begin generation while the player is
   still in the handcrafted home system.
 - Background generation should be invisible to the player during normal play.
@@ -290,6 +293,31 @@ Small UI improvements requested:
 - Later tuning can adjust boost duration, speed increase, cooldown, energy
   cost, or upgrade scaling.
 
+### 9. Seeded Nebula Backgrounds
+
+Generated systems should have optional shader-based nebula clouds layered with
+the existing starfield. This supports the uniqueness goal by making some systems
+feel visually different before the player even docks.
+
+First version:
+
+- Keep the current star shader/background as the base.
+- Add a separate nebula layer using shader noise, color ramps, alpha falloff,
+  and slow drift.
+- Add `SystemConfig` fields such as `nebula_enabled`, `nebula_seed`,
+  `nebula_color_a`, `nebula_color_b`, `nebula_density`, and `nebula_motion`.
+- Seed values from the system seed so the same system always looks the same.
+- Use sparse probability: many systems stay clear, some get faint haze, rare
+  systems get dramatic clouds.
+- Tie nebula palette loosely to system story/faction identity later.
+
+Estimated scope:
+
+- Simple pretty version: one implementation session.
+- Seeded per-system version: one to two sessions.
+- Advanced version with parallax layers, storms, animated wisps, or visual
+  events: later polish.
+
 ## Recommended Build Order
 
 ### Phase 0: Make Fallbacks Visible
@@ -422,6 +450,20 @@ Goal: make unexplored systems ready before the player opens their gates.
 Why here: it connects the identity systems to the existing generated-scene and
 ship pre-generation pipeline.
 
+### Phase 5.6: Seeded Nebula Visual Identity
+
+Goal: make generated systems visually distinct, not just mechanically distinct.
+
+- Add optional nebula parameters to `SystemConfig`.
+- Add a shader-driven nebula layer beside the existing starfield.
+- Seed nebula color, density, motion, and probability from the system seed.
+- Keep clear-space systems possible so nebulae remain special.
+- Later, allow the Campaign Bible or system story pack to influence visual
+  palette.
+
+Why here: it fits naturally after system identity and pre-generation, but can be
+pulled earlier as a visual win if desired.
+
 ### Phase 6: Relationship And Memory Use
 
 Goal: make the world remember the player.
@@ -472,6 +514,8 @@ Answered:
   PG-13 humor as the baseline and occasional lighter weirdos allowed.
 - Neighbor systems should pre-generate in the background when entering a system,
   and system 2 should start generating at campaign launch.
+- Seeded nebula shader backgrounds should be added to the TODO list as a visual
+  identity feature for generated systems.
 - Boost can start with small heat damage or heat buildup, with larger risky
   boosters left for later upgrades.
 - New regions can reveal one or several brand-new larger factions depending on
