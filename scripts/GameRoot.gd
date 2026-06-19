@@ -27,6 +27,9 @@ const CampaignKaelenMemoryStoreType := preload(
 const CampaignIdeaMemoryStoreType := preload(
 	"res://scripts/persistence/CampaignIdeaMemoryStore.gd"
 )
+const CampaignBibleStoreType := preload(
+	"res://scripts/persistence/CampaignBibleStore.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -52,6 +55,7 @@ var campaign_checkpoint_store: CampaignCheckpointStore
 var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var campaign_idea_memory_store: CampaignIdeaMemoryStore
+var campaign_bible_store: CampaignBibleStore
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -976,6 +980,8 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
+		campaign_bible_store = null
+		LLMInterface.campaign_bible_context_text = ""
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
 		"SYSTEM",
@@ -1106,6 +1112,8 @@ func _initialize_campaign_registry() -> void:
 		campaign_chronicle_store = null
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
+		campaign_bible_store = null
+		LLMInterface.campaign_bible_context_text = ""
 		return
 	_initialize_campaign_chronicle()
 
@@ -1168,7 +1176,9 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
+	campaign_bible_store = null
 	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -1191,7 +1201,9 @@ func _initialize_campaign_chronicle() -> void:
 		)
 		campaign_chronicle_store = null
 		campaign_idea_memory_store = null
+		campaign_bible_store = null
 		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_kaelen_memory_store = opened_memory
 	var opened_idea_memory := CampaignIdeaMemoryStoreType.open(slot_path)
@@ -1203,10 +1215,27 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chronicle_store = null
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
+		campaign_bible_store = null
 		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_idea_memory_store = opened_idea_memory
+	var opened_bible := CampaignBibleStoreType.open(slot_path)
+	if not opened_bible.is_valid():
+		push_warning(
+			"[GameRoot] Campaign bible store is unavailable: %s" %
+				opened_bible.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_bible_store = opened_bible
 	_refresh_llm_idea_memory_context()
+	_refresh_llm_campaign_bible_context()
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
 
@@ -1396,6 +1425,13 @@ func _refresh_llm_idea_memory_context() -> void:
 		[],
 		24
 	)
+
+
+func _refresh_llm_campaign_bible_context() -> void:
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	LLMInterface.campaign_bible_context_text = campaign_bible_store.prompt_context()
 
 
 func _death_category_for_source(death_source: String) -> String:
@@ -1955,7 +1991,9 @@ func _run_jump_smoke_test() -> void:
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
+	campaign_bible_store = null
 	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \
 			or not _ensure_campaign_checkpoint_store(prepared["data"]):
@@ -3489,7 +3527,9 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
+	campaign_bible_store = null
 	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
 	GlobalState.player_credits = 7654
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \

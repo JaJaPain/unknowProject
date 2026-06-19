@@ -144,6 +144,8 @@ The bible should include:
 - recurring motifs, slang, jokes, rumors, and taboo topics
 - rare rumor trails, including what they hint at, how many clues they need, and
   what discovery or easter egg they can eventually reveal
+- story horizon regeneration rules for extending the campaign when the player
+  nears the edge of prepared story
 
 The smaller model then uses the bible for local dialogue, quests, and station
 texture. It should not invent a totally unrelated story every time.
@@ -152,6 +154,13 @@ The initial bible should not spoil the whole frontier. It should define the
 campaign's pressure, Kaelen constraints, home-system context, and generation
 rules. New faction and system details can be created later as gates reveal new
 regions.
+
+The bible should also be expandable. If the player keeps going long enough to
+reach the end of prepared story, the larger model should generate the next story
+horizon by appending arcs, rumor trails, faction pressures, and frontier rules to
+the existing bible. It must preserve known facts, alliances, enemies, deaths,
+discovered systems, and Kaelen's unresolved mystery instead of replacing or
+retconning them.
 
 ### 2. Generated Faction Identity
 
@@ -401,6 +410,8 @@ Goal: create the shared story spine.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.
+- Define story horizon regeneration triggers so the campaign can extend itself
+  before the player runs out of prepared arcs, systems, or rumor payoffs.
 
 Why second: faction, NPC, and quest generation need a shared source of truth.
 
@@ -599,6 +610,8 @@ Answered:
   concepts, names, jokes, and story beats.
 - Rumors should sometimes become breadcrumbs in campaign-level rumor trails,
   including rare paths to hidden discoveries or an endgame easter egg.
+- Add story horizon regeneration so the larger model can append the next
+  campaign arc when the prepared frontier is running low.
 
 Still open:
 
