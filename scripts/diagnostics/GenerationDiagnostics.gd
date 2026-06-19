@@ -1,4 +1,4 @@
-class_name GenerationDiagnostics
+class_name GenerationDiagnosticsService
 extends Node
 
 signal fallback_recorded(event: Dictionary)
@@ -121,10 +121,10 @@ func summary_text(recent_limit: int = 8) -> String:
 	lines.append("- fallback_types: %s" % _format_counts(fallback_counts_by_type))
 	lines.append("- fallback_reasons: %s" % _format_counts(fallback_counts_by_reason))
 	lines.append("- event_reasons: %s" % _format_counts(event_counts_by_reason))
-	var recent_count := min(max(recent_limit, 0), generation_events.size())
+	var recent_count: int = mini(maxi(recent_limit, 0), generation_events.size())
 	if recent_count > 0:
 		lines.append("- recent_events:")
-		var start := generation_events.size() - recent_count
+		var start: int = generation_events.size() - recent_count
 		for index in range(start, generation_events.size()):
 			var event := generation_events[index]
 			lines.append(
