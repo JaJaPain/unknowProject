@@ -121,6 +121,23 @@ Collected during Segments 4–5 development (2026-06-18). All items below are un
 
 ---
 
+## 7. Planet Shadow Occlusion on Nearby Objects
+
+**Priority:** Low (visual polish)
+
+**What:** Large planets (especially gas giants) don't cast shadows onto nearby asteroids or stations. Objects on the dark side of a planet are still fully lit by the directional light, breaking the visual realism.
+
+**Why:** Godot's directional light shadow cascades are designed for camera-scale scenes. At game scale (planet radius 600, asteroid rings at 850+), the shadow map doesn't cover enough area to project a planet-sized shadow onto surrounding objects.
+
+**Options:**
+- Increase `directional_shadow_max_distance` — simple but reduces shadow quality globally
+- Custom shader on asteroids/stations that checks whether the fragment is occluded by a nearby planet relative to the light direction — precise but more work
+- Hybrid: a large invisible shadow-only mesh that approximates the planet's shadow cone
+
+**Scope:** Small-medium. The shader approach is the cleanest long-term solution.
+
+---
+
 ## Key Files Reference
 
 | File | Role |

@@ -2,6 +2,7 @@ class_name SystemFactory
 extends RefCounted
 
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 
 var _station_scene: PackedScene
 var _asteroid_scene: PackedScene
@@ -196,6 +197,7 @@ func _create_planet(config: SystemConfig, index: int) -> Dictionary:
 	planet.add_child(collision)
 
 	planet.position = pos
+	PlanetRotation.apply(planet, is_gas, rng)
 
 	var out := {"planet": planet}
 	if ring_radius > 0.0:

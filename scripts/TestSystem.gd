@@ -1,6 +1,7 @@
 extends Node3D
 
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 
 const SYSTEM_SEED := 4172026
 const SYSTEM_ID := "test_system"
@@ -157,6 +158,8 @@ func _create_planet(spec: Dictionary) -> Node3D:
 
 	add_child(planet)
 	planet.global_position = spec["position"] as Vector3
+	var is_gas := (spec["texture"] as Texture2D) == GAS_TEXTURE
+	PlanetRotation.apply(planet, is_gas, rng)
 	return planet
 
 

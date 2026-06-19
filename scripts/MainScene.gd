@@ -1,6 +1,7 @@
 extends Node3D
 
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
@@ -18,6 +19,11 @@ func _ready():
 	# Seed random number generator
 	randomize()
 	
+	var rotation_rng := RandomNumberGenerator.new()
+	rotation_rng.seed = 4172026
+	PlanetRotation.apply(gas_giant, true, rotation_rng)
+	PlanetRotation.apply(rocky_planet, false, rotation_rng)
+
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
 	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")
 	
