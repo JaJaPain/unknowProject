@@ -559,12 +559,30 @@ func _init_generated_system_configs() -> void:
 		if sys_def.scene_path != "generated":
 			continue
 		var sys_id := str(sys_def.id)
-		if system_registry.get_generated_config(sys_id) != null:
+		var frontier_factions := _frontier_factions_for_system_definition(sys_def)
+		if system_registry.get_generated_config(sys_id) != null \
+				and frontier_factions.is_empty():
 			continue
 		var seed_val: int = sys_id.hash()
-		var config := SystemConfig.from_seed(sys_def.display_name, sys_id, seed_val)
+		var config := SystemConfig.from_seed(
+			sys_def.display_name,
+			sys_id,
+			seed_val,
+			frontier_factions
+		)
 		system_registry.set_generated_config(sys_id, config)
 		system_registry.set_generated_config(config.legacy_id, config)
+
+
+func _frontier_factions_for_system_definition(sys_def: SystemDefinition) -> Array:
+	if campaign_generated_faction_store == null:
+		return []
+	var ids: Array[String] = []
+	for faction_id in sys_def.faction_ids:
+		var id_text := str(faction_id)
+		if id_text.begins_with("faction.generated."):
+			ids.append(id_text)
+	return campaign_generated_faction_store.factions_by_ids(ids)
 
 
 func _on_system_changed_prepare_destinations(
@@ -1267,6 +1285,7 @@ func _initialize_campaign_chronicle() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_generated_faction_store = opened_generated_factions
+	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
 	_sync_checkpoint_chronicle_context()
@@ -1490,6 +1509,22 @@ func reveal_generated_factions_for_system(
 	if not bool(ensured.get("ok", false)):
 		return ensured
 	return campaign_generated_faction_store.reveal_next_for_system(system_id, count)
+
+
+func generated_factions_for_ids(ids: Array) -> Array:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return []
+	return campaign_generated_faction_store.factions_by_ids(ids)
+
+
+func revealed_generated_factions() -> Array:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return []
+	return campaign_generated_faction_store.revealed_factions()
 
 
 func generated_faction_prompt_context(revealed_only: bool = false) -> String:

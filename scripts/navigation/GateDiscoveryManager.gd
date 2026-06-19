@@ -215,7 +215,22 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	var names := CampaignSystemNames.load_or_create()
 	var sys_name := names.next_name()
 	var seed_val := dest_sys_id.hash()
-	var config := SystemConfig.from_seed(sys_name, dest_sys_id, seed_val)
+	var frontier_factions: Array = []
+	if game_root.has_method("reveal_generated_factions_for_system"):
+		var revealed := game_root.reveal_generated_factions_for_system(dest_sys_id, 2)
+		if bool(revealed.get("ok", false)) \
+				and game_root.has_method("generated_factions_for_ids"):
+			frontier_factions = game_root.generated_factions_for_ids(
+				revealed.get("revealed", [])
+			)
+	if frontier_factions.is_empty() and game_root.has_method("revealed_generated_factions"):
+		frontier_factions = game_root.revealed_generated_factions()
+	var config := SystemConfig.from_seed(
+		sys_name,
+		dest_sys_id,
+		seed_val,
+		frontier_factions
+	)
 
 	var return_gate_id := str(gate_def.destination_gate_id)
 	var return_gate_legacy := return_gate_id.replace(".", "_")
@@ -262,7 +277,7 @@ func _ensure_destination_generated(gate_id: String) -> void:
 func _config_faction_ids(config: SystemConfig) -> Array[String]:
 	var ids: Array[String] = []
 	for faction_name: String in config.faction_weights.keys():
-		ids.append("faction.%s" % faction_name)
+		ids.append(config.canonical_faction_id(faction_name))
 	return ids
 
 

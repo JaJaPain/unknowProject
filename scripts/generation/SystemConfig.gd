@@ -21,6 +21,7 @@ var difficulty_tier: int = 1
 var difficulty_multiplier: float = 1.0
 
 var faction_weights: Dictionary = {}
+var faction_id_lookup: Dictionary = {}
 var npc_patrol_count: int = 6
 var npc_minor_chance: float = 0.15
 var npc_minor_max: int = 2
@@ -31,7 +32,12 @@ var starfield_seed: float = 0.0
 var starfield_tint: Color = Color(0.9, 0.92, 1.0)
 
 
-static func from_seed(name: String, id: String, seed_val: int) -> SystemConfig:
+static func from_seed(
+	name: String,
+	id: String,
+	seed_val: int,
+	frontier_factions: Array = []
+) -> SystemConfig:
 	var config := SystemConfig.new()
 	config.system_name = name
 	config.system_id = id
@@ -84,14 +90,31 @@ static func from_seed(name: String, id: String, seed_val: int) -> SystemConfig:
 		3: config.difficulty_multiplier = 1.30
 	config.npc_patrol_count = 5 + config.difficulty_tier
 
-	var local_factions: Array[String] = [
+	var local_factions: Array[String] = []
+	for faction in frontier_factions:
+		if not faction is Dictionary:
+			continue
+		var legacy_id := str(faction.get("legacy_id", "")).strip_edges()
+		var faction_id := str(faction.get("id", "")).strip_edges()
+		if legacy_id.is_empty() or faction_id.is_empty():
+			continue
+		local_factions.append(legacy_id)
+		config.faction_id_lookup[legacy_id] = faction_id
+	if local_factions.size() < 2:
+		local_factions = [
 		"reavers",
 		"obsidian",
 		"dustborn",
 		"wraiths",
 		"ironclad",
-	]
+		]
+		config.faction_id_lookup.clear()
+	for faction_name in local_factions:
+		if not config.faction_id_lookup.has(faction_name):
+			config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
 	var major_factions: Array[String] = ["zenith", "aurelia", "vanguard"]
+	for faction_name in major_factions:
+		config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
 	var primary_idx: int = rng.randi() % local_factions.size()
 	var primary_faction: String = local_factions[primary_idx]
 	var has_second: bool = rng.randf() < 0.6
@@ -116,3 +139,7 @@ static func from_seed(name: String, id: String, seed_val: int) -> SystemConfig:
 	var _sun_dir := Vector3(cos(sun_angle), rng.randf_range(0.25, 0.5), sin(sun_angle)).normalized()
 
 	return config
+
+
+func canonical_faction_id(faction_name: String) -> String:
+	return str(faction_id_lookup.get(faction_name, "faction.%s" % faction_name))

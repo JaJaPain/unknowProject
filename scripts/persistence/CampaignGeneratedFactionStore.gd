@@ -61,6 +61,28 @@ func unrevealed_factions() -> Array:
 	return output
 
 
+func revealed_factions() -> Array:
+	var revealed := {}
+	for id in revealed_faction_ids():
+		revealed[id] = true
+	var output: Array = []
+	for faction in all_factions():
+		if faction is Dictionary and revealed.has(str(faction.get("id", ""))):
+			output.append((faction as Dictionary).duplicate(true))
+	return output
+
+
+func factions_by_ids(ids: Array) -> Array:
+	var wanted := {}
+	for id in ids:
+		wanted[str(id)] = true
+	var output: Array = []
+	for faction in all_factions():
+		if faction is Dictionary and wanted.has(str(faction.get("id", ""))):
+			output.append((faction as Dictionary).duplicate(true))
+	return output
+
+
 func ensure_frontier_batch(seed_text: String, count: int = 6) -> Dictionary:
 	if not is_valid():
 		return _failure("Generated faction store is invalid.")

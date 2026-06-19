@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_config_from_seed()
 	_test_config_deterministic()
 	_test_config_faction_weights()
+	_test_config_generated_faction_pool()
 	_test_config_difficulty_multiplier()
 	_test_config_npc_count()
 	_test_campaign_system_names()
@@ -71,6 +72,36 @@ func _test_config_faction_weights() -> void:
 			weight_sum += float(config.faction_weights[faction_name])
 		_expect(absf(weight_sum - 1.0) < 0.01, "Seed %d: faction weights sum to %.3f, not 1.0." % [seed_val, weight_sum])
 	_expect(found_local, "Generated faction weights did not include local factions.")
+
+
+func _test_config_generated_faction_pool() -> void:
+	var generated_factions := [
+		{
+			"id": "faction.generated.glass_choir_00",
+			"legacy_id": "gen_glass_choir_00",
+		},
+		{
+			"id": "faction.generated.rust_index_01",
+			"legacy_id": "gen_rust_index_01",
+		},
+	]
+	var config := SystemConfig.from_seed(
+		"Frontier",
+		"system.gen.frontier",
+		6060,
+		generated_factions
+	)
+	var found_generated := false
+	for faction_name: String in config.faction_weights:
+		if faction_name.begins_with("gen_"):
+			found_generated = true
+			_expect(
+				config.canonical_faction_id(faction_name).begins_with(
+					"faction.generated."
+				),
+				"Generated faction key did not map back to canonical ID."
+			)
+	_expect(found_generated, "Generated faction pool was not used in weights.")
 
 
 func _test_config_difficulty_multiplier() -> void:

@@ -244,10 +244,21 @@ const SAFE_ZONES = [
 const SAFE_ZONE_REP_THRESHOLD = -40.0
 
 static func is_minor_faction(faction_name: String) -> bool:
+	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
+		return true
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	return definition != null and definition.classification == "minor"
 
 static func minor_faction_data(faction_name: String) -> Dictionary:
+	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
+		var hue := float(abs(faction_name.hash()) % 360) / 360.0
+		var color := Color.from_hsv(hue, 0.62, 0.9)
+		return {
+			"color": color,
+			"projectile": color.lightened(0.15),
+			"model": "faction1",
+			"tint": color.darkened(0.18),
+		}
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	if definition == null or definition.classification != "minor":
 		return {}

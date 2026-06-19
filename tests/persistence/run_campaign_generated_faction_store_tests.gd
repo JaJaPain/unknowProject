@@ -64,6 +64,14 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 		"Reveal did not persist two faction IDs."
 	)
 	_expect(
+		store.revealed_factions().size() == 2,
+		"Reveal did not return two faction records."
+	)
+	_expect(
+		store.factions_by_ids(revealed.get("revealed", [])).size() == 2,
+		"Faction lookup by revealed IDs failed."
+	)
+	_expect(
 		store.prompt_context(true).contains(str(store.all_factions()[0].get("display_name", ""))),
 		"Revealed-only prompt context did not include the first revealed faction."
 	)
