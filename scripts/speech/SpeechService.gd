@@ -73,6 +73,8 @@ func cache(
 
 
 func stop() -> void:
+	_sequential_queue.clear()
+	_sequential_active = false
 	provider.stop()
 
 
@@ -112,6 +114,36 @@ func resolve_voice_profile(value: Variant) -> StringName:
 		if str(mapping.get("provider_voice", "")) == raw:
 			return DomainId.canonicalize(profile_id)
 	return DEFAULT_PROFILE
+
+
+var _sequential_queue: Array[String] = []
+var _sequential_voice: StringName = KAELEN_PROFILE
+var _sequential_active: bool = false
+
+
+func play_sequential(
+	lines: Array[String],
+	voice_profile: Variant = KAELEN_PROFILE
+) -> void:
+	_sequential_queue = lines.duplicate()
+	_sequential_voice = resolve_voice_profile(voice_profile)
+	_sequential_active = true
+	if not TTSInterface.audio_player.finished.is_connected(_on_sequential_finished):
+		TTSInterface.audio_player.finished.connect(_on_sequential_finished)
+	_play_next_sequential()
+
+
+func _play_next_sequential() -> void:
+	if _sequential_queue.is_empty():
+		_sequential_active = false
+		return
+	var next_line := _sequential_queue.pop_front() as String
+	provider.play(prepare_text(next_line, _sequential_voice), _sequential_voice)
+
+
+func _on_sequential_finished() -> void:
+	if _sequential_active:
+		_play_next_sequential()
 
 
 func play_for_npc(text: String, npc_reference: Variant) -> void:

@@ -2032,6 +2032,8 @@ func _capture_global_state() -> Dictionary:
 		"faction_kills": GlobalState.faction_kills.duplicate(true),
 		"inventory": GlobalState.inventory.to_dict(),
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
+		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
+		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -2067,6 +2069,8 @@ func _apply_global_state(state: Dictionary) -> void:
 	var stock_data: Dictionary = state.get("store_stock", {})
 	if not stock_data.is_empty():
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
+	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
+	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:

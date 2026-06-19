@@ -5376,11 +5376,19 @@ func _on_talk_to_agent_pressed():
 	if public_board_panel:
 		public_board_panel.visible = false
 	agent_panel.visible = true
-	
+
 	# Clear previous choice buttons
 	for child in agent_choices_container.get_children():
 		child.queue_free()
-		
+
+	if not GlobalState.kaelen_briefing_seen:
+		_show_kaelen_first_briefing()
+		return
+
+	if GlobalState.kaelen_briefing_seen and not GlobalState.kaelen_briefing_accepted:
+		_show_kaelen_return_briefing()
+		return
+
 	if QuestManager.is_lane_occupied("AGENT"):
 		var agent_mission = QuestManager.get_mission_collection().get_by_lane(
 			MissionInstance.SourceLane.AGENT
@@ -5446,6 +5454,81 @@ func _on_talk_to_agent_pressed():
 
 	else:
 		_refresh_agent_quest_board()
+
+func _show_kaelen_first_briefing() -> void:
+	agent_name_label.text = "BROKER KAELEN"
+	_update_agent_portrait("neutral")
+	agent_back_btn.visible = true
+
+	var briefing_lines: Array[String] = [
+		"Well, well. Fresh hull, no record, and that desperate look pilots get when they realize fuel costs money. Sit down, Shiny.",
+		"Name's Kaelen. I'm a broker. I connect people who need things done with people dumb enough to do them. That's you, by the way. I take a modest cut. Don't look at me like that. Modest by my standards.",
+		"Here's how this works. Factions out here, Zenith, Aurelia, Vanguard, they all need grunt work handled. Deliveries, salvage, the occasional aggressive negotiation. They post contracts through me, I find a pilot, everybody gets paid. Simple.",
+		"Now, that mining laser bolted to your ship. Technically, pulling ore without a faction permit is, let's call it frowned upon. Heavily. With fines. And guns.",
+		"But permits cost more than your ship is worth, and I happen to know a few buyers who don't ask where the rocks came from. You mine it, I move it, we split the difference. Just don't get caught lingering in someone's claim. Faction patrols out here shoot first, file paperwork never.",
+		"So, I've actually got someone who needs something handled right now. Interested?",
+	]
+	agent_dialogue_label.text = "\n\n".join(briefing_lines)
+	SpeechService.play_sequential(briefing_lines, "voice.kaelen.v1")
+
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+
+	var accept_btn := Button.new()
+	accept_btn.text = "Let's hear it."
+	accept_btn.pressed.connect(func():
+		SpeechService.stop()
+		GlobalState.kaelen_briefing_seen = true
+		GlobalState.kaelen_briefing_accepted = true
+		for child in agent_choices_container.get_children():
+			child.queue_free()
+		_refresh_agent_quest_board()
+	)
+	agent_choices_container.add_child(accept_btn)
+
+	var decline_btn := Button.new()
+	decline_btn.text = "Not right now. I need to get my bearings first."
+	decline_btn.pressed.connect(func():
+		SpeechService.stop()
+		GlobalState.kaelen_briefing_seen = true
+		_on_agent_back_pressed()
+	)
+	agent_choices_container.add_child(decline_btn)
+
+
+func _show_kaelen_return_briefing() -> void:
+	agent_name_label.text = "BROKER KAELEN"
+	_update_agent_portrait("neutral")
+	agent_back_btn.visible = true
+
+	var line := (
+		"Oh good, you're back. Got the sightseeing out of your system? " +
+		"Good. Because credits don't earn themselves, — well, mine do, " +
+		"but that's because, well I have you. Are you ready to make us some money?"
+	)
+	agent_dialogue_label.text = line
+	SpeechService.play(line, "voice.kaelen.v1")
+
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+
+	var accept_btn := Button.new()
+	accept_btn.text = "Yeah, let's do this."
+	accept_btn.pressed.connect(func():
+		GlobalState.kaelen_briefing_accepted = true
+		for child in agent_choices_container.get_children():
+			child.queue_free()
+		_refresh_agent_quest_board()
+	)
+	agent_choices_container.add_child(accept_btn)
+
+	var decline_btn := Button.new()
+	decline_btn.text = "Still not ready."
+	decline_btn.pressed.connect(func():
+		_on_agent_back_pressed()
+	)
+	agent_choices_container.add_child(decline_btn)
+
 
 func _refresh_agent_quest_board():
 	agent_name_label.text = "BROKER KAELEN"

@@ -1049,6 +1049,9 @@ var has_max_deflector_shield: bool = false
 var has_max_rapid_mining: bool = false
 var has_max_deep_mining: bool = false
 
+var kaelen_briefing_seen: bool = false
+var kaelen_briefing_accepted: bool = false
+
 # Non-upgradeable baseline
 var damage: float = weapon_damage # Legacy support until swapped
 var laser_range: float = 80.0
