@@ -1610,6 +1610,27 @@ static func apply_tone_guard(text: String, voice_id: String) -> String:
 			out = out.substr(0, m.get_start()) + replacement + out.substr(m.get_end())
 	return out
 
+
+static func remove_repeated_player_address(text: String) -> String:
+	var out := text.strip_edges()
+	var leading := RegEx.new()
+	leading.compile("(?i)^\\s*indy\\s*[,!?:;\\-]+\\s*")
+	out = leading.sub(out, "", true).strip_edges()
+
+	var paired := RegEx.new()
+	paired.compile("(?i)\\s*,\\s*indy\\s*,\\s*")
+	out = paired.sub(out, ", ", true)
+
+	var terminal := RegEx.new()
+	terminal.compile("(?i)\\s*,\\s*indy\\s*([.!?])")
+	out = terminal.sub(out, "$1", true)
+
+	out = out.strip_edges()
+	if out.length() > 0 and out[0] >= "a" and out[0] <= "z":
+		out = out[0].to_upper() + out.substr(1)
+	return out
+
+
 # Internal: rebuild `replacement` in the casing style of `original`.
 # "SHINY" → "INDY", "Shiny" → "Indy", "shiny" → "indy". Falls back to
 # the canonical lowercase if the original's style doesn't match any

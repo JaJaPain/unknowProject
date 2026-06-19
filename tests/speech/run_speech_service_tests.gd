@@ -47,6 +47,14 @@ func _initialize() -> void:
 		) == "Indy, proceed.",
 		"Text cleanup and tone guard did not produce one stable line."
 	)
+	var follow_up: String = service.prepare_followup_text(
+		"Indy, make it quick; the dock crew is already betting against you.",
+		"voice.agent.vanguard.v1"
+	)
+	_expect(
+		follow_up == "Make it quick; the dock crew is already betting against you.",
+		"Follow-up address cleanup did not remove repeated Indy vocative."
+	)
 
 	var kaelen_delivery: Dictionary = service.provider.resolve_delivery(
 		&"voice.kaelen.v1"

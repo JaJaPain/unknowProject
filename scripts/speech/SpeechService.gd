@@ -82,6 +82,14 @@ func prepare_text(text: String, voice_profile: Variant) -> String:
 	return GlobalState.apply_tone_guard(clean_text, str(profile_id))
 
 
+func prepare_followup_text(text: String, voice_profile: Variant) -> String:
+	var profile_id := resolve_voice_profile(voice_profile)
+	var prepared := prepare_text(text, profile_id)
+	if not GlobalState.is_kaelen_voice(str(profile_id)):
+		prepared = GlobalState.remove_repeated_player_address(prepared)
+	return prepared
+
+
 func resolve_voice_profile(value: Variant) -> StringName:
 	var raw := str(value)
 	if raw.is_empty() or raw == "neutral":

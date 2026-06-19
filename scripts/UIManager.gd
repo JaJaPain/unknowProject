@@ -5657,7 +5657,15 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	var consequence = choice.get("consequence", {})
 	var raw_response = consequence.get("dialogue_response", "")
-	var clean_response = SpeechService.clean_dialogue_text(raw_response)
+	var response_voice_ref = quest_data.get(
+		"agent_name",
+		quest_data.get("faction", "neutral")
+	)
+	var response_profile := SpeechService.resolve_voice_profile(response_voice_ref)
+	var clean_response = SpeechService.prepare_followup_text(
+		raw_response,
+		response_profile
+	)
 	# Safety net: if cleaning stripped everything (entire string was stage direction), use a fallback
 	if clean_response.length() < 5:
 		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
@@ -5665,7 +5673,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	agent_dialogue_label.text = clean_response
 	
 	# Play choice response voice audio (TTS also cleans internally)
-	SpeechService.play(clean_response, quest_data.get("faction", "neutral"))
+	SpeechService.play(clean_response, response_profile)
 	
 	agent_back_btn.visible = false
 	
