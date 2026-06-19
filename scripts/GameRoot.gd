@@ -1448,7 +1448,7 @@ func remember_generated_quest_idea(
 		"faction": faction,
 		"objective": objective,
 	})
-	var appended := campaign_idea_memory_store.append_idea(
+	var appended = campaign_idea_memory_store.append_idea(
 		"mission",
 		summary,
 		tags,

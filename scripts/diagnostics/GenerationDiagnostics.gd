@@ -1,3 +1,4 @@
+class_name GenerationDiagnostics
 extends Node
 
 signal fallback_recorded(event: Dictionary)
