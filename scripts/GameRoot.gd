@@ -5556,8 +5556,10 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	GlobalState.player_credits = 2
 	player.global_position += Vector3(500.0, 0.0, 500.0)
-	await _load_system_without_transition("test_system")
-	if GlobalState.current_system_id != "test_system":
+	var away_system_id := "system.gen.frontier.first"
+	var away_runtime_id := system_registry.runtime_system_id(away_system_id)
+	await _load_system_without_transition(away_system_id)
+	if GlobalState.current_system_id != away_runtime_id:
 		_fail_jump_smoke_test(
 			"Save test could not move away from the checkpoint system."
 		)
