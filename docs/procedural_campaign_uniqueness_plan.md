@@ -76,6 +76,14 @@ must be used.
 - Move away from fallbacks as quickly as practical. If a fallback is necessary,
   use engineering judgment, but make the fallback visible to development
   diagnostics and report it during review.
+- The LLM should have access to a compact persistent idea-memory file so it can
+  see prior generated ideas and avoid repeating factions, NPC concepts, jokes,
+  mission premises, names, rumors, and story twists.
+- Rumors should sometimes lead somewhere. Most can remain local color, but some
+  should be seeded as multi-step rumor trails that point to hidden discoveries,
+  faction secrets, unusual systems, rare upgrades, or a late/end-game easter egg.
+  These trails should be planned by the campaign-level LLM so they fit the larger
+  story instead of being random one-off gossip.
 - Main stations need at least one persistent NPC for each faction active in the
   system, plus at least one mechanic. Outposts can have two or more generated
   contacts at random, weighted by local factions and story needs.
@@ -134,6 +142,8 @@ The bible should include:
 - Kaelen-specific constraints and mystery hints
 - faction generation rules for this campaign
 - recurring motifs, slang, jokes, rumors, and taboo topics
+- rare rumor trails, including what they hint at, how many clues they need, and
+  what discovery or easter egg they can eventually reveal
 
 The smaller model then uses the bible for local dialogue, quests, and station
 texture. It should not invent a totally unrelated story every time.
@@ -213,6 +223,7 @@ bible and local faction mix:
 - station economy and problem
 - faction presence and active tension
 - local rumor pool
+- rumor trail clue candidates
 - local mission seeds
 - gate mystery hints
 - local repeated-language ban list
@@ -230,6 +241,17 @@ The story pack should include humor guidance. Humor can come from NPC
 personality, faction culture, system circumstances, and campaign tone. Dry,
 slightly dark humor is preferred, but one-off lighter personalities are welcome
 when they make the world breathe.
+
+Rumors should have tiers:
+
+- local color: atmosphere, jokes, prejudice, small lies
+- actionable hint: points toward a faction, station, resource, gate, or mission
+- trail clue: one piece of a larger campaign rumor chain
+- rare reveal: unlocks or strongly points toward a hidden discovery, secret
+  route, unusual upgrade, faction truth, or endgame easter egg
+
+The player should not know which tier a rumor belongs to immediately. The fun is
+realizing later that a throwaway line was part of something larger.
 
 ### 5. LLM Pipeline: Big Model Then Small Model
 
@@ -287,6 +309,22 @@ Track recent generated text and obvious content fingerprints:
 
 Before showing generated dialogue, reject or retry if it is too close to recent
 campaign text or known fallback examples.
+
+Add a persistent idea-memory file for generation prompts. This should not be a
+full transcript. It should be a compact, structured list of previously used
+creative ideas:
+
+- faction names and concepts
+- NPC names, jobs, voices, personality hooks, and joke styles
+- system names and defining visuals
+- mission premises and objective twists
+- recurring rumors, slang, and catchphrases
+- rejected or banned repeats
+- major story beats already used
+
+The big model and small model can receive the relevant slice of this file before
+generating new content. New output should add compact fingerprints/summaries back
+to the file after validation.
 
 ### 8. UI Action Feedback And Boost
 
@@ -360,6 +398,9 @@ Goal: create the shared story spine.
   or very low-spec mode, and label it clearly.
 - Add save/load validation.
 - Add prompt snippets that let small models consume the bible.
+- Define the campaign idea-memory file and include relevant prior ideas in
+  generation prompts.
+- Define rare campaign rumor trails and endgame/easter-egg hint rules.
 
 Why second: faction, NPC, and quest generation need a shared source of truth.
 
@@ -410,6 +451,8 @@ Goal: make each system feel like a place.
 - Tie the pack to local factions, stations, gates, resources, and danger.
 - Use it for public board postings, gossip, station chatter, interceptors, and
   Kaelen hints.
+- Include rumor clue slots that can attach local gossip to campaign-level rumor
+  trails.
 - Persist the pack with generated system state.
 - Advance unresolved local arcs over time, even when the player ignores them.
 - Allow remote consequences for faction control, economy, patrols, rumors, and
@@ -433,6 +476,10 @@ Goal: separate strategic story generation from local text generation.
 - Add anti-example rules so prompt examples do not leak into output.
 - Add address repetition rules so NPCs do not repeat "Indy" in every line of the
   same exchange.
+- Add idea-memory retrieval and writeback so models can see prior ideas and
+  avoid reusing them.
+- Have the campaign-level LLM plan rare rumor trails so repeated gossip can lead
+  to discoveries rather than staying as throwaway flavor.
 
 Why sixth: once the schemas exist, the models have well-defined jobs.
 
@@ -548,6 +595,10 @@ Answered:
   story role can be revealed enough to support a strong arc.
 - Fallback diagnostics matter, but the project should move away from fallbacks
   as quickly as practical.
+- Add a persistent idea-memory file so LLM generation can avoid repeating prior
+  concepts, names, jokes, and story beats.
+- Rumors should sometimes become breadcrumbs in campaign-level rumor trails,
+  including rare paths to hidden discoveries or an endgame easter egg.
 
 Still open:
 

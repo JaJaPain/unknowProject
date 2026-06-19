@@ -24,6 +24,9 @@ const CampaignChronicleStoreType := preload(
 const CampaignKaelenMemoryStoreType := preload(
 	"res://scripts/persistence/CampaignKaelenMemoryStore.gd"
 )
+const CampaignIdeaMemoryStoreType := preload(
+	"res://scripts/persistence/CampaignIdeaMemoryStore.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -48,6 +51,7 @@ var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
 var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
+var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -970,6 +974,8 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
 		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
 		"SYSTEM",
@@ -1098,6 +1104,8 @@ func _initialize_campaign_registry() -> void:
 		)
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
 		return
 	_initialize_campaign_chronicle()
 
@@ -1159,6 +1167,8 @@ func _ensure_campaign_checkpoint_store(
 func _initialize_campaign_chronicle() -> void:
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -1180,8 +1190,23 @@ func _initialize_campaign_chronicle() -> void:
 				opened_memory.validation.summary()
 		)
 		campaign_chronicle_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
 		return
 	campaign_kaelen_memory_store = opened_memory
+	var opened_idea_memory := CampaignIdeaMemoryStoreType.open(slot_path)
+	if not opened_idea_memory.is_valid():
+		push_warning(
+			"[GameRoot] Campaign idea memory store is unavailable: %s" %
+				opened_idea_memory.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		return
+	campaign_idea_memory_store = opened_idea_memory
+	_refresh_llm_idea_memory_context()
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
 
@@ -1315,6 +1340,62 @@ func get_kaelen_current_memories() -> Array:
 	if campaign_kaelen_memory_store == null:
 		return []
 	return campaign_kaelen_memory_store.current_memories()
+
+
+func remember_generated_quest_idea(
+	quest_data: Dictionary,
+	is_fallback: bool
+) -> void:
+	if is_fallback or campaign_idea_memory_store == null or quest_data.is_empty():
+		return
+	var objective: Dictionary = quest_data.get("objective", {})
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	var title := str(quest_data.get("title", "Untitled contract"))
+	var faction := str(quest_data.get("faction", "neutral"))
+	var summary := "%s contract from %s: %s" % [
+		objective_type,
+		faction,
+		title,
+	]
+	var tags: Array = ["quest", faction, objective_type.to_lower()]
+	if objective.has("target_faction"):
+		tags.append(str(objective.get("target_faction", "")))
+	if objective.has("target_outpost"):
+		tags.append(str(objective.get("target_outpost", "")))
+	var fingerprint_source := JSON.stringify({
+		"title": title,
+		"faction": faction,
+		"objective": objective,
+	})
+	var appended := campaign_idea_memory_store.append_idea(
+		"mission",
+		summary,
+		tags,
+		fingerprint_source,
+		{
+			"title": title,
+			"faction": faction,
+			"objective_type": objective_type,
+		}
+	)
+	if not bool(appended.get("ok", false)):
+		push_warning(
+			"[GameRoot] Generated quest idea was not remembered: %s" %
+			appended.get("error", "unknown error")
+		)
+		return
+	_refresh_llm_idea_memory_context()
+
+
+func _refresh_llm_idea_memory_context() -> void:
+	if campaign_idea_memory_store == null or not campaign_idea_memory_store.is_valid():
+		LLMInterface.idea_memory_context_text = ""
+		return
+	LLMInterface.idea_memory_context_text = campaign_idea_memory_store.prompt_context(
+		[],
+		[],
+		24
+	)
 
 
 func _death_category_for_source(death_source: String) -> String:
@@ -1873,6 +1954,8 @@ func _run_jump_smoke_test() -> void:
 	campaign_checkpoint_store = null
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \
 			or not _ensure_campaign_checkpoint_store(prepared["data"]):
@@ -3405,6 +3488,8 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_checkpoint_store = null
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
 	GlobalState.player_credits = 7654
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \

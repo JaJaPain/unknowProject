@@ -14,6 +14,7 @@ var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
 var world_lore_text: String = ""
+var idea_memory_context_text: String = ""
 var _pending_fallback_reason: String = ""
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
@@ -832,9 +833,17 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var lore_block = ""
 	if world_lore_text != "":
 		lore_block = "### WORLD LORE:\n" + world_lore_text + "\n\n"
+	var idea_memory_block = ""
+	if idea_memory_context_text.strip_edges() != "":
+		idea_memory_block = (
+			"### PRIOR GENERATED IDEAS TO AVOID REPEATING:\n"
+			+ idea_memory_context_text
+			+ "\n\n"
+		)
 	
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
+		idea_memory_block + \
 		"Minor hostile factions in the sector: " + minor_fac_str + ". These are outlaws with no diplomatic ties — primary targets for elimination contracts.\n\n" + \
 		"Current pilot stats:\n" + \
 		"- Credits: " + str(player_credits) + " SC\n" + \
