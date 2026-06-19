@@ -92,6 +92,9 @@ must be used.
   power, and money themes. The preferred baseline is dry, slightly dark PG-13
   humor, with room for occasional oddballs such as a dad-joke NPC. The world can
   be dangerous without every conversation being grim.
+- Agents can call the player "Indy" in the first quest request, but should avoid
+  repeating the name in immediate follow-up lines after the player agrees. Using
+  the name too often sounds unnatural.
 - When the player enters a system for the first time, neighboring/next systems
   should be generated in the background: factions, planets, ships, stations,
   asteroids, gates, and scene placement. The next system should be ready before
@@ -249,6 +252,10 @@ The small model prompt should receive:
 
 The small model should not receive loose example jokes that can leak into the
 game verbatim unless those examples are explicitly marked as banned text.
+
+Dialogue style rules should also control address repetition. For example, an
+agent may call the player "Indy" when opening a quest, but should usually avoid
+using the name again in the acceptance response.
 
 ### 6. Fallback Policy
 
@@ -424,6 +431,8 @@ Goal: separate strategic story generation from local text generation.
 - Add schema validation and retry paths.
 - Add small-model prompt builders that consume the generated facts.
 - Add anti-example rules so prompt examples do not leak into output.
+- Add address repetition rules so NPCs do not repeat "Indy" in every line of the
+  same exchange.
 
 Why sixth: once the schemas exist, the models have well-defined jobs.
 
