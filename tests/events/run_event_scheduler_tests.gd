@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_history_save_load()
 	_test_scheduler_fires_eligible()
 	_test_scheduler_global_cooldown()
+	_test_scheduler_ignores_unapplied_events()
 	_test_scheduler_type_cooldown()
 	_test_scheduler_seed_determinism()
 	_test_scheduler_save_restore()
@@ -93,6 +94,26 @@ func execute(_ctx) -> Dictionary:
 	return obj
 
 
+func _make_unapplied_test_event(type_id: String):
+	var s = GDScript.new()
+	s.source_code = """extends RefCounted
+
+func event_type_id() -> String:
+	return "%s"
+
+func is_eligible(_ctx) -> bool:
+	return true
+
+func priority(_ctx) -> float:
+	return 1.0
+
+func execute(_ctx) -> Dictionary:
+	return {"type": "%s", "applied": false}
+""" % [type_id, type_id]
+	s.reload()
+	return s.new()
+
+
 func _test_scheduler_fires_eligible() -> void:
 	var sched = EventSchedulerScript.new()
 	sched.register_event_type(_make_test_event("test_a", true), 30)
@@ -120,6 +141,21 @@ func _test_scheduler_global_cooldown() -> void:
 	_expect(fired_count[0] == 1, "Should fire only 1 due to 30-min global cooldown, got %d" % fired_count[0])
 	sched.tick(131, _make_context(131))
 	_expect(fired_count[0] == 2, "Should fire again after 30-min global cooldown, got %d" % fired_count[0])
+
+
+func _test_scheduler_ignores_unapplied_events() -> void:
+	var sched = EventSchedulerScript.new()
+	sched.register_event_type(_make_unapplied_test_event("failed_event"), 90)
+	var fired_count := [0]
+	sched.event_triggered.connect(func(_tid: String, _d: Dictionary):
+		fired_count[0] += 1
+	)
+	sched.tick(100, _make_context(100))
+	_expect(fired_count[0] == 0, "Unapplied events should not emit.")
+	_expect(
+		sched.history.last_time_for_type("failed_event") == -1,
+		"Unapplied events should not be recorded in history."
+	)
 
 
 func _test_scheduler_type_cooldown() -> void:

@@ -47,6 +47,8 @@ func tick(campaign_time: int, context) -> void:
 	if selected == null:
 		return
 	var details = selected.execute(context)
+	if not bool(details.get("applied", true)):
+		return
 	history.record(selected.event_type_id(), campaign_time, details)
 	event_triggered.emit(selected.event_type_id(), details)
 	_just_arrived = false

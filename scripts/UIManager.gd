@@ -5230,6 +5230,8 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	)
 	agent_choices_container.add_child(bring_in_btn)
 
+	if GateDiscovery:
+		GateDiscovery.seed_kaelen_gate_rumor_if_ready()
 	if GateDiscovery and GateDiscovery.is_kaelen_gate_eligible():
 		var revealable := GateDiscovery.get_revealable_gates()
 		if not revealable.is_empty():
@@ -5241,6 +5243,24 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 				_kaelen_gate_reveal(gate_id, cost)
 			)
 			agent_choices_container.add_child(intel_btn)
+
+
+func _add_kaelen_gate_intel_button() -> void:
+	if GateDiscovery:
+		GateDiscovery.seed_kaelen_gate_rumor_if_ready()
+	if not GateDiscovery or not GateDiscovery.is_kaelen_gate_eligible():
+		return
+	var revealable := GateDiscovery.get_revealable_gates()
+	if revealable.is_empty():
+		return
+	var gate_id: String = revealable[0]
+	var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
+	var intel_btn := Button.new()
+	intel_btn.text = "[ Ask about new routes - %d SC ]" % cost
+	intel_btn.pressed.connect(func():
+		_kaelen_gate_reveal(gate_id, cost)
+	)
+	agent_choices_container.add_child(intel_btn)
 
 
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
@@ -5427,6 +5447,7 @@ func _on_agent_complete_pressed():
 	agent_dialogue_label.text = completion_text
 	SpeechService.play(completion_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
+	_add_kaelen_gate_intel_button()
 	
 	# If for some reason the cache is empty, request one now
 	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:

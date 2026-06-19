@@ -1,6 +1,6 @@
 extends RefCounted
 
-const MIN_SYSTEM_TIME_MINUTES := 30
+const MIN_SYSTEM_TIME_MINUTES := 15
 const RUMOR_NARRATIVES := [
 	"Docking crew mentioned a faint hypergate signature beyond the outer belt.",
 	"Station intel picked up an old nav beacon — could be a dormant gate.",
@@ -16,7 +16,8 @@ func event_type_id() -> String:
 
 
 func is_eligible(context) -> bool:
-	if context.campaign_time < MIN_SYSTEM_TIME_MINUTES:
+	var campaign_start_minutes := CampaignClock.START_HOUR * CampaignClock.MINUTES_PER_HOUR
+	if context.campaign_time < campaign_start_minutes + MIN_SYSTEM_TIME_MINUTES:
 		return false
 	var unknown_gates := _find_unknown_gates()
 	return not unknown_gates.is_empty()
@@ -66,14 +67,26 @@ func _find_unknown_gates() -> Array[String]:
 
 
 func _get_system_registry():
-	var game_root = Engine.get_main_loop().root.get_child(0) if Engine.get_main_loop() else null
+	var game_root = _get_game_root()
 	if game_root and "system_registry" in game_root:
 		return game_root.system_registry
 	return null
 
 
 func _get_current_system_id() -> String:
-	var game_root = Engine.get_main_loop().root.get_child(0) if Engine.get_main_loop() else null
+	var game_root = _get_game_root()
 	if game_root and "system_registry" in game_root:
 		return str(game_root.system_registry.resolve_system_id(GlobalState.current_system_id))
 	return GlobalState.current_system_id
+
+
+func _get_game_root():
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	if tree.current_scene and "system_registry" in tree.current_scene:
+		return tree.current_scene
+	for child in tree.root.get_children():
+		if child and "system_registry" in child:
+			return child
+	return null

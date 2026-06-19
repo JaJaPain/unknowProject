@@ -13,6 +13,7 @@ const GeneratedGateBuilderType := preload(
 
 var _last_kaelen_offer_time: int = -1
 const KAELEN_COOLDOWN_MINUTES := 60
+const KAELEN_FIRST_OFFER_DELAY_MINUTES := 15
 
 
 func advance_gate_state(
@@ -100,14 +101,24 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 
 
 func is_kaelen_gate_eligible() -> bool:
-	if CampaignClock.total_minutes < 15: # TODO: restore to 120 for release
-		return false
-	if QuestManager.get_completed_count() < 3:
-		return false
-	if _last_kaelen_offer_time >= 0 \
-			and (CampaignClock.total_minutes - _last_kaelen_offer_time) < KAELEN_COOLDOWN_MINUTES:
+	if not _is_kaelen_offer_ready():
 		return false
 	return _has_revealable_gates()
+
+
+func seed_kaelen_gate_rumor_if_ready() -> Dictionary:
+	if not _is_kaelen_offer_ready():
+		return {"ok": false, "error": "Kaelen gate offer is not ready."}
+	if _has_revealable_gates():
+		return {"ok": true, "already_revealable": true}
+	var gate_ids := _unknown_gates_in_current_system()
+	if gate_ids.is_empty():
+		return {"ok": false, "error": "No unknown gates in the current system."}
+	var gate_id: String = gate_ids[0]
+	return apply_rumor(
+		gate_id,
+		"Kaelen's contacts flagged an uncharted hypergate route."
+	)
 
 
 func get_revealable_gates() -> Array[String]:
@@ -158,6 +169,35 @@ func ensure_destinations_for_system(system_id: String) -> void:
 
 func _has_revealable_gates() -> bool:
 	return not get_revealable_gates().is_empty()
+
+
+func _is_kaelen_offer_ready() -> bool:
+	var start_minutes := CampaignClock.START_HOUR * CampaignClock.MINUTES_PER_HOUR
+	if CampaignClock.total_minutes < start_minutes + KAELEN_FIRST_OFFER_DELAY_MINUTES:
+		return false
+	if QuestManager.get_completed_count() < 3:
+		return false
+	if _last_kaelen_offer_time >= 0 \
+			and (CampaignClock.total_minutes - _last_kaelen_offer_time) < KAELEN_COOLDOWN_MINUTES:
+		return false
+	return true
+
+
+func _unknown_gates_in_current_system() -> Array[String]:
+	var game_root := _get_game_root()
+	if game_root == null or not "system_registry" in game_root:
+		return []
+	var registry: SystemRegistry = game_root.system_registry
+	var system_id := str(registry.resolve_system_id(GlobalState.current_system_id))
+	var system_def := registry.get_system(system_id)
+	if system_def == null:
+		return []
+	var output: Array[String] = []
+	for gate_def: GateDefinition in system_def.gates:
+		var gate_id := str(gate_def.id)
+		if get_gate_state(gate_id) == "unknown":
+			output.append(gate_id)
+	return output
 
 
 func _ensure_destination_generated(gate_id: String) -> void:
@@ -262,9 +302,21 @@ func _find_active_gate(
 
 
 func _get_store() -> CampaignCheckpointStore:
-	var game_root := get_tree().current_scene if get_tree() else null
+	var game_root := _get_game_root()
 	if game_root and game_root.has_method("get_checkpoint_store"):
 		return game_root.get_checkpoint_store()
 	if game_root and "campaign_checkpoint_store" in game_root:
 		return game_root.campaign_checkpoint_store
+	return null
+
+
+func _get_game_root() -> Node:
+	var tree := get_tree()
+	if tree == null:
+		return null
+	if tree.current_scene and "system_registry" in tree.current_scene:
+		return tree.current_scene
+	for child in tree.root.get_children():
+		if child and "system_registry" in child:
+			return child
 	return null
