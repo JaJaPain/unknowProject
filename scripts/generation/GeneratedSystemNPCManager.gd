@@ -40,7 +40,11 @@ func _assign_outpost_npcs() -> void:
 			var stype = child.get("station_type")
 			var wid = child.get("world_id")
 			if stype == "outpost" and typeof(wid) == TYPE_STRING and wid != "":
-				GlobalState.assign_generated_outpost_npcs(wid, config.seed_value + wid.hash())
+				GlobalState.assign_generated_outpost_npcs(
+					wid,
+					config.seed_value + wid.hash(),
+					config.faction_weights
+				)
 
 
 func _spawn_initial_patrol() -> void:
@@ -103,8 +107,7 @@ func _spawn_minor_roamer() -> void:
 	if anchors.is_empty():
 		return
 
-	var minor_keys: Array = GlobalState.MINOR_FACTIONS.keys()
-	var faction_name: String = minor_keys[randi() % minor_keys.size()]
+	var faction_name: String = _pick_minor_faction_runtime()
 	var target_pos: Vector3 = anchors[randi() % anchors.size()]
 
 	var angle := randf() * TAU
@@ -176,6 +179,29 @@ func _pick_faction_runtime() -> String:
 		if roll <= cumulative:
 			return faction_name
 	return config.faction_weights.keys()[0] as String
+
+
+func _pick_minor_faction_runtime() -> String:
+	var minor_factions: Array[String] = []
+	for faction_name: String in config.faction_weights:
+		if GlobalState.is_minor_faction(faction_name):
+			minor_factions.append(faction_name)
+	if minor_factions.is_empty():
+		minor_factions.assign(GlobalState.MINOR_FACTIONS.keys())
+
+	var total := 0.0
+	for faction_name: String in minor_factions:
+		total += maxf(0.0, float(config.faction_weights.get(faction_name, 0.0)))
+	if total <= 0.0:
+		return minor_factions[randi() % minor_factions.size()]
+
+	var roll := randf() * total
+	var cumulative := 0.0
+	for faction_name: String in minor_factions:
+		cumulative += maxf(0.0, float(config.faction_weights.get(faction_name, 0.0)))
+		if roll <= cumulative:
+			return faction_name
+	return minor_factions.back()
 
 
 func _count_minor_faction_ships() -> int:

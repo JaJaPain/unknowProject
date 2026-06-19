@@ -412,6 +412,55 @@ const GENERATED_CONTACT_LINES: Array[String] = [
 	"The gate crews keep secrets. The station crews sell them by the cup.",
 	"Don't trust clean paperwork past the frontier gate.",
 ]
+const GENERATED_CONTACT_FACTION_LINES := {
+	"reavers": [
+		"Reaver work is simple: take the job, take the risk, take payment first.",
+		"Keep your beacon cold out there. Reaver crews respect quiet engines.",
+		"If you heard screaming on comms, that was negotiation.",
+	],
+	"obsidian": [
+		"Obsidian ledgers remember every debt, even the ones written in vacuum.",
+		"The station looks neutral. The accounts under it aren't.",
+		"If an Obsidian broker smiles, count your credits twice.",
+	],
+	"dustborn": [
+		"Dustborn routes aren't pretty, but they still pay when the clean lanes fail.",
+		"Out here, every filter, seal, and water tank has a story.",
+		"Corporate charts call this empty space. Dustborn crews call it home.",
+	],
+	"wraiths": [
+		"Wraiths don't vanish. They just make sure you're looking the wrong way.",
+		"If the scope shows nothing, assume the Wraiths got there first.",
+		"Some jobs need a signature. Wraith jobs need a rumor.",
+	],
+	"ironclad": [
+		"Ironclad convoys move slow because they know they can survive the argument.",
+		"Steel, discipline, and a paid invoice. That's the Ironclad way.",
+		"People mock the armor until the first volley hits.",
+	],
+}
+const GENERATED_CONTACT_FACTION_HANDOFF_LINES := {
+	"reavers": [
+		"Cargo's yours. Reaver rule: lose it and the debt follows you.",
+		"Loaded hot and clean. Don't fly it like a tourist.",
+	],
+	"obsidian": [
+		"Transfer logged. Obsidian receipts have long memories.",
+		"The part is aboard. The fee cleared before you docked.",
+	],
+	"dustborn": [
+		"Packed it myself. Dustborn seals hold better than station promises.",
+		"Part's in your bay. Keep it out of grit and corporate hands.",
+	],
+	"wraiths": [
+		"Package is aboard. If anyone asks, it never existed.",
+		"Clean handoff. Wraith clean, meaning nobody saw enough to matter.",
+	],
+	"ironclad": [
+		"Manifest signed, crate secured. Ironclad doesn't do loose ends.",
+		"Part's locked down. Bring it back in one piece or bring the reason.",
+	],
+}
 
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 	if generated_outpost_npcs.has(outpost_id):
@@ -422,7 +471,11 @@ static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 			result.append(npc_name)
 	return result
 
-static func assign_generated_outpost_npcs(world_id: String, seed_value: int) -> Array:
+static func assign_generated_outpost_npcs(
+	world_id: String,
+	seed_value: int,
+	faction_weights: Dictionary = {}
+) -> Array:
 	if generated_outpost_npcs.has(world_id):
 		return generated_outpost_npcs[world_id].duplicate()
 	var rng := RandomNumberGenerator.new()
@@ -430,13 +483,15 @@ static func assign_generated_outpost_npcs(world_id: String, seed_value: int) -> 
 	var count := 2 + (1 if rng.randf() < 0.4 else 0)
 	var picked: Array = []
 	for index in range(count):
-		var npc_name := _generated_contact_name(world_id, rng, index)
+		var faction_name := _pick_generated_contact_faction(faction_weights, rng)
+		var npc_name := _generated_contact_name(world_id, rng, index, faction_name)
 		picked.append(npc_name)
 		generated_outpost_npc_data[npc_name] = _generated_contact_data(
 			world_id,
 			npc_name,
 			rng,
-			index
+			index,
+			faction_name
 		)
 	generated_outpost_npcs[world_id] = picked
 	return picked.duplicate()
@@ -444,7 +499,8 @@ static func assign_generated_outpost_npcs(world_id: String, seed_value: int) -> 
 static func _generated_contact_name(
 	world_id: String,
 	rng: RandomNumberGenerator,
-	index: int
+	index: int,
+	faction_name: String = ""
 ) -> String:
 	var first := GENERATED_CONTACT_FIRST_NAMES[
 		rng.randi() % GENERATED_CONTACT_FIRST_NAMES.size()
@@ -452,7 +508,12 @@ static func _generated_contact_name(
 	var last := GENERATED_CONTACT_LAST_NAMES[
 		rng.randi() % GENERATED_CONTACT_LAST_NAMES.size()
 	]
+	var faction_display := ""
+	if not faction_name.is_empty():
+		faction_display = str(faction_info(faction_name).get("name", faction_name.capitalize()))
 	var name := "%s %s" % [first, last]
+	if not faction_display.is_empty():
+		name = "%s %s" % [faction_display, name]
 	if generated_outpost_npc_data.has(name):
 		name = "%s %s" % [name, world_id.sha256_text().substr(index * 2, 2).to_upper()]
 	return name
@@ -461,7 +522,8 @@ static func _generated_contact_data(
 	world_id: String,
 	npc_name: String,
 	rng: RandomNumberGenerator,
-	index: int
+	index: int,
+	faction_name: String = ""
 ) -> Dictionary:
 	var portrait_id := GENERATED_CONTACT_PORTRAITS[
 		(index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()
@@ -469,20 +531,62 @@ static func _generated_contact_data(
 	var voice_id := GENERATED_CONTACT_VOICES[
 		(index + rng.randi()) % GENERATED_CONTACT_VOICES.size()
 	]
+	var contact_lines := GENERATED_CONTACT_LINES.duplicate()
+	if GENERATED_CONTACT_FACTION_LINES.has(faction_name):
+		contact_lines.append_array(GENERATED_CONTACT_FACTION_LINES[faction_name])
+	var handoff_lines: Array = [
+		"Part's in your bay. Around here, that counts as a clean handoff.",
+		"You got what you came for. Don't make the route back interesting.",
+		"Loaded and logged. Tell the mechanic this one was local trouble, not mine.",
+		"There. Frontier parts, frontier warranty: none.",
+	]
+	if GENERATED_CONTACT_FACTION_HANDOFF_LINES.has(faction_name):
+		handoff_lines.append_array(GENERATED_CONTACT_FACTION_HANDOFF_LINES[faction_name])
+	var faction_color := Color.WHITE
+	if not faction_name.is_empty():
+		var fdata := minor_faction_data(faction_name)
+		faction_color = fdata.get("color", faction_color)
 	var hue := rng.randf()
 	return {
 		"outpost": world_id,
+		"faction": faction_name,
+		"faction_id": "faction.%s" % faction_name if not faction_name.is_empty() else "",
 		"portrait_id": portrait_id,
 		"voice_profile_id": voice_id,
-		"flavor_color": Color.from_hsv(hue, 0.45, 1.0),
-		"flavor_lines": GENERATED_CONTACT_LINES.duplicate(),
-		"pickup_handoff_fallback_lines": [
-			"Part's in your bay. Around here, that counts as a clean handoff.",
-			"You got what you came for. Don't make the route back interesting.",
-			"Loaded and logged. Tell the mechanic this one was local trouble, not mine.",
-			"There. Frontier parts, frontier warranty: none.",
-		],
+		"flavor_color": faction_color if not faction_name.is_empty() else Color.from_hsv(hue, 0.45, 1.0),
+		"flavor_lines": contact_lines,
+		"pickup_handoff_fallback_lines": handoff_lines,
 	}
+
+static func _pick_generated_contact_faction(
+	faction_weights: Dictionary,
+	rng: RandomNumberGenerator
+) -> String:
+	var weighted_factions := _generated_contact_faction_keys(faction_weights)
+	if weighted_factions.is_empty():
+		return ""
+	var total := 0.0
+	for faction_name in weighted_factions:
+		total += maxf(0.0, float(faction_weights.get(faction_name, 0.0)))
+	if total <= 0.0:
+		return str(weighted_factions[rng.randi() % weighted_factions.size()])
+	var roll := rng.randf() * total
+	var cumulative := 0.0
+	for faction_name in weighted_factions:
+		cumulative += maxf(0.0, float(faction_weights.get(faction_name, 0.0)))
+		if roll <= cumulative:
+			return str(faction_name)
+	return str(weighted_factions.back())
+
+static func _generated_contact_faction_keys(faction_weights: Dictionary) -> Array:
+	var result: Array = []
+	for faction_name in faction_weights.keys():
+		if is_minor_faction(str(faction_name)):
+			result.append(str(faction_name))
+	if result.is_empty():
+		for faction_name in MINOR_FACTIONS.keys():
+			result.append(str(faction_name))
+	return result
 
 static func resolve_outpost_id(station: Node3D) -> String:
 	if station == null:

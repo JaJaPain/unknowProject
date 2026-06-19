@@ -189,6 +189,17 @@ func _setup_hull():
 	# Check if this is a minor faction (data-driven lookup)
 	if GlobalState.is_minor_faction(faction):
 		var fdata = GlobalState.minor_faction_data(faction)
+		var minor_model_path := GameContentRegistry.shared().ship_path(faction, ship_role)
+		if minor_model_path != "" and ResourceLoader.exists(minor_model_path):
+			hull_scene = load(minor_model_path) as PackedScene
+			if hull_scene:
+				hull_instance = hull_scene.instantiate()
+				visual.add_child(hull_instance)
+				hull_instance.rotation.y = PI
+				_fit_major_hull(hull_instance)
+				_apply_tint(hull_instance, fdata["tint"])
+				_setup_model_points(hull_instance)
+				return
 		match fdata["model"]:
 			"faction1": hull_scene = mesh_faction1
 			"faction2": hull_scene = mesh_zenith  # faction2.glb
