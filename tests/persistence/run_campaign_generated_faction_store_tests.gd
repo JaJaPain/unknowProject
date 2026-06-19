@@ -57,7 +57,10 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 		store.prompt_context().contains("Generated frontier factions"),
 		"Generated faction prompt context was empty."
 	)
-	var revealed := store.reveal_next_for_system("system.generated.alpha", 2)
+	var revealed: Dictionary = store.reveal_next_for_system(
+		"system.generated.alpha",
+		2
+	)
 	_expect(bool(revealed.get("ok", false)), revealed.get("error", ""))
 	_expect(
 		store.revealed_faction_ids().size() == 2,

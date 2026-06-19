@@ -217,7 +217,10 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	var seed_val := dest_sys_id.hash()
 	var frontier_factions: Array = []
 	if game_root.has_method("reveal_generated_factions_for_system"):
-		var revealed := game_root.reveal_generated_factions_for_system(dest_sys_id, 2)
+		var revealed: Dictionary = game_root.reveal_generated_factions_for_system(
+			dest_sys_id,
+			2
+		)
 		if bool(revealed.get("ok", false)) \
 				and game_root.has_method("generated_factions_for_ids"):
 			frontier_factions = game_root.generated_factions_for_ids(
