@@ -1858,48 +1858,12 @@ func fetch_salvager_profile(callback: Callable):
 	add_child(temp_http)
 	temp_http.timeout = 10.0
 	
-	temp_http.request_completed.connect(func(result, response_code, headers, body):
-		temp_http.queue_free()
-		
-		# If request fails or times out, trigger fallback
-		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var response_text = body.get_string_from_utf8()
-		var json = JSON.new()
-		var err = json.parse(response_text)
-		if err != OK:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var outer_data = json.get_data()
-		if not outer_data is Dictionary or not outer_data.has("response"):
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var inner_json_str = outer_data["response"].strip_edges()
-		
-		# Strip markdown codeblocks
-		if inner_json_str.begins_with("```"):
-			var end_idx = inner_json_str.find("\n", 3)
-			if end_idx != -1:
-				inner_json_str = inner_json_str.substr(end_idx + 1)
-			if inner_json_str.ends_with("```"):
-				inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
-			inner_json_str = inner_json_str.strip_edges()
-			
-		var inner_json = JSON.new()
-		var inner_err = inner_json.parse(inner_json_str)
-		if inner_err != OK:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var profile_data = inner_json.get_data()
-		if profile_data is Dictionary and profile_data.has("name") and profile_data.has("backstory"):
-			callback.call(profile_data)
-		else:
-			_trigger_salvager_profile_fallback(callback)
+	temp_http.request_completed.connect(
+		_on_salvager_profile_request_completed.bind(
+			temp_http.get_instance_id(),
+			callback
+		),
+		CONNECT_ONE_SHOT
 	)
 	
 	var prompt = "Generate a unique sci-fi scrapper/miner pilot name and a short (2-3 sentences) backstory. " + \
@@ -1927,6 +1891,63 @@ func fetch_salvager_profile(callback: Callable):
 	if err != OK:
 		temp_http.queue_free()
 		_trigger_salvager_profile_fallback(callback)
+
+
+func _on_salvager_profile_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray,
+	request_instance_id: int,
+	callback: Callable
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http != null:
+		temp_http.queue_free()
+
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		_trigger_salvager_profile_fallback(callback)
+		return
+
+	var response_text = body.get_string_from_utf8()
+	var json = JSON.new()
+	var err = json.parse(response_text)
+	if err != OK:
+		_trigger_salvager_profile_fallback(callback)
+		return
+
+	var outer_data = json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		_trigger_salvager_profile_fallback(callback)
+		return
+
+	var inner_json_str = outer_data["response"].strip_edges()
+
+	if inner_json_str.begins_with("```"):
+		var end_idx = inner_json_str.find("\n", 3)
+		if end_idx != -1:
+			inner_json_str = inner_json_str.substr(end_idx + 1)
+		if inner_json_str.ends_with("```"):
+			inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
+		inner_json_str = inner_json_str.strip_edges()
+
+	var inner_json = JSON.new()
+	var inner_err = inner_json.parse(inner_json_str)
+	if inner_err != OK:
+		_trigger_salvager_profile_fallback(callback)
+		return
+
+	var profile_data = inner_json.get_data()
+	if profile_data is Dictionary and profile_data.has("name") and profile_data.has("backstory"):
+		_call_salvager_profile_callback(callback, profile_data)
+	else:
+		_trigger_salvager_profile_fallback(callback)
+
+
+func _call_salvager_profile_callback(callback: Callable, profile: Dictionary) -> void:
+	if callback.is_valid():
+		callback.call(profile)
+
 
 func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 	# Build a minimal context summary for Kaelen to react to
@@ -2361,7 +2382,7 @@ func _trigger_salvager_profile_fallback(callback: Callable):
 		"name": rand_name,
 		"backstory": rand_backstory
 	}
-	callback.call(profile)
+	_call_salvager_profile_callback(callback, profile)
 
 # Fallback lines for when Kaelen acknowledges a partial ore drop-off
 var fallback_partial_delivery_lines = [

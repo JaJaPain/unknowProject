@@ -146,28 +146,40 @@ func _on_salvager_destroyed():
 func _generate_salvager_identity(salvager: Node3D):
 	if not is_instance_valid(salvager):
 		return
-		
-	LLMInterface.fetch_salvager_profile(func(profile_data: Dictionary):
-		if not is_instance_valid(salvager):
-			return
-		var p_name = profile_data.get("name", "Maeve Sterling")
-		var p_backstory = profile_data.get("backstory", "An independent scrapper looking for high-yield metals in the asteroid belts.")
-		
-		# Rename the salvager node
-		salvager.name = p_name
-		
-		# Save backstory MD
-		var file = FileAccess.open("user://salvager_backstory.md", FileAccess.WRITE)
-		if file:
-			file.store_line("# PILOT PROFILE: " + p_name.to_upper())
-			file.store_line("\n**Role:** Independent Salvager")
-			file.store_line("\n**Backstory:**")
-			file.store_line(p_backstory)
-			file.close()
-			print("[MainScene] Saved pilot backstory to user://salvager_backstory.md")
-			
-		# Broadcast to system comms
-		GlobalState.emit_chatter("SYSTEM", "Comms link established with independent scrapper: " + p_name, Color(0.0, 0.9, 0.9))
+
+	LLMInterface.fetch_salvager_profile(
+		_on_salvager_profile_generated.bind(salvager.get_instance_id())
+	)
+
+
+func _on_salvager_profile_generated(
+	profile_data: Dictionary,
+	salvager_instance_id: int
+) -> void:
+	var salvager := instance_from_id(salvager_instance_id) as Node3D
+	if not is_instance_valid(salvager):
+		return
+	var p_name = profile_data.get("name", "Maeve Sterling")
+	var p_backstory = profile_data.get(
+		"backstory",
+		"An independent scrapper looking for high-yield metals in the asteroid belts."
+	)
+
+	salvager.name = p_name
+
+	var file = FileAccess.open("user://salvager_backstory.md", FileAccess.WRITE)
+	if file:
+		file.store_line("# PILOT PROFILE: " + p_name.to_upper())
+		file.store_line("\n**Role:** Independent Salvager")
+		file.store_line("\n**Backstory:**")
+		file.store_line(p_backstory)
+		file.close()
+		print("[MainScene] Saved pilot backstory to user://salvager_backstory.md")
+
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Comms link established with independent scrapper: " + p_name,
+		Color(0.0, 0.9, 0.9)
 	)
 
 func _on_npc_spawn_timeout():
