@@ -163,6 +163,16 @@ func get_lane_data(lane_name: String) -> Dictionary:
 	return mission.data
 
 
+func get_pickup_special_data() -> Dictionary:
+	var station = get_lane_data("STATION")
+	if not station.is_empty() and station.get("objective_type", "") == "PICKUP_SPECIAL":
+		return station
+	var agent = get_lane_data("AGENT")
+	if not agent.is_empty() and agent.get("objective_type", "") == "PICKUP_SPECIAL":
+		return agent
+	return {}
+
+
 func get_completed_count() -> int:
 	var history := _load_quest_history()
 	if history.strip_edges().is_empty():

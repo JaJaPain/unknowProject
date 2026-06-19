@@ -100,7 +100,7 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 
 
 func is_kaelen_gate_eligible() -> bool:
-	if CampaignClock.total_minutes < 120:
+	if CampaignClock.total_minutes < 15: # TODO: restore to 120 for release
 		return false
 	if QuestManager.get_completed_count() < 3:
 		return false

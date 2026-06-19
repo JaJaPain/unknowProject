@@ -3067,8 +3067,8 @@ func _render_dock_submenu() -> void:
 		hear_gossip_btn.visible = false
 		ask_for_part_btn.visible = false
 		
-		var station_quest: Dictionary = QuestManager.get_lane_data("STATION")
-		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("objective_type", "") == "PICKUP_SPECIAL" and station_quest.get("picked_up", false)
+		var station_quest: Dictionary = QuestManager.get_pickup_special_data()
+		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("picked_up", false)
 		deliver_part_btn.visible = can_deliver
 		
 		back_to_services_btn.visible = true
@@ -3102,9 +3102,8 @@ func _render_dock_submenu() -> void:
 		deliver_part_btn.visible = false
 		
 		var show_ask_btn: bool = false
-		var station_quest_svc: Dictionary = QuestManager.get_lane_data("STATION")
+		var station_quest_svc: Dictionary = QuestManager.get_pickup_special_data()
 		if is_outpost and not station_quest_svc.is_empty() \
-				and station_quest_svc.get("objective_type", "") == "PICKUP_SPECIAL" \
 				and not station_quest_svc.get("picked_up", false):
 			var docked_outpost_id_for_btn: String = OUTPOST_NODE_TO_ID.get(current_station.name, "") if current_station else ""
 			if docked_outpost_id_for_btn == "" and current_station:
@@ -3473,10 +3472,7 @@ func _cache_mechanic_intro() -> void:
 	var ship: String = PLAYER_SHIP_NAME
 	var credits: int = GlobalState.player_credits
 	
-	var active_quest: Dictionary = {}
-	var station_lane: Dictionary = QuestManager.get_lane_data("STATION")
-	if not station_lane.is_empty() and station_lane.get("objective_type", "") == "PICKUP_SPECIAL":
-		active_quest = station_lane
+	var active_quest: Dictionary = QuestManager.get_pickup_special_data()
 
 	# If LLM is reachable, try the real call. LLMInterface is the same
 	# path used for Kaelen handoffs, so we know it works end-to-end.
@@ -3762,10 +3758,7 @@ func _render_mechanic_intro() -> void:
 	var line: String = _cached_mechanic_line
 	var line_changed: bool = false
 	if line.strip_edges() == "":
-		var active_quest: Dictionary = {}
-		var station_lane_r: Dictionary = QuestManager.get_lane_data("STATION")
-		if not station_lane_r.is_empty() and station_lane_r.get("objective_type", "") == "PICKUP_SPECIAL":
-			active_quest = station_lane_r
+		var active_quest: Dictionary = QuestManager.get_pickup_special_data()
 		line = _pick_fallback_mechanic_greeting(PLAYER_SHIP_NAME, _worst_reputation_tier(), _best_reputation_tier(), _mechanic_pickup_offer, active_quest)
 		_cached_mechanic_line = line
 		_cached_mechanic_line_is_fallback = true
@@ -3913,9 +3906,8 @@ func _on_deliver_part_pressed() -> void:
 # Outpost-side pickup button. Validates the active quest, the current
 # station, and the target outpost before calling QuestManager.mark_pickup_complete.
 func _on_test_pickup_part_pressed() -> void:
-	var station_quest_pickup: Dictionary = QuestManager.get_lane_data("STATION")
+	var station_quest_pickup: Dictionary = QuestManager.get_pickup_special_data()
 	if station_quest_pickup.is_empty() \
-			or station_quest_pickup.get("objective_type", "") != "PICKUP_SPECIAL" \
 			or station_quest_pickup.get("picked_up", false):
 		show_dock_message("No active pickup quest here. Start one at Grease Monkeys first.", "", Color(1.0, 0.45, 0.45))
 		return
@@ -6056,8 +6048,8 @@ func _on_mechanic_pickup_decline_pressed() -> void:
 # ── Outpost Pickup Button Handlers ───────────────────────────────────────────
 
 func _on_ask_for_part_pressed() -> void:
-	var station_quest_ask: Dictionary = QuestManager.get_lane_data("STATION")
-	if station_quest_ask.is_empty() or station_quest_ask.get("objective_type", "") != "PICKUP_SPECIAL":
+	var station_quest_ask: Dictionary = QuestManager.get_pickup_special_data()
+	if station_quest_ask.is_empty():
 		show_dock_message(
 			"No active pickup job is waiting here.",
 			"",
