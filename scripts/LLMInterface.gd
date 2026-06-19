@@ -2294,7 +2294,13 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_network_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (network). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"http_response_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var response_text = body.get_string_from_utf8()
@@ -2303,14 +2309,26 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (outer JSON parse). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"response_envelope_parse_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"response_envelope_missing_response",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -2327,19 +2345,37 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (inner JSON parse). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"inner_json_parse_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var intro_data = inner_json.get_data()
 		if not (intro_data is Dictionary and intro_data.has("intro") and intro_data["intro"] is String):
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"intro_schema_missing_line",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var line: String = intro_data["intro"].strip_edges()
 		if line == "":
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"empty_intro_line",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		# ── Speaker-leakage guard ──────────────────────────────────────────
@@ -2359,7 +2395,13 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 				_kaelen_intro_rejected_after_retry += 1
 				_save_kaelen_intro_stats()
 				print("[LLMInterface] Kaelen intro: giving up after retry. Caller should fall back.")
-				original_callback.call("")
+				_trigger_kaelen_intro_fallback(
+					original_callback,
+					"speaker_guard_rejected_after_retry",
+					agent_name,
+					title,
+					faction
+				)
 				return
 			_kaelen_intro_rejected_first_try += 1
 			# Build a correction suffix from the rejection reason and retry.
@@ -2393,7 +2435,34 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 		_kaelen_intro_network_failures += 1
 		_save_kaelen_intro_stats()
 		print("[LLMInterface] Kaelen intro fetch failed (request init). Caller should fall back.")
-		original_callback.call("")
+		_trigger_kaelen_intro_fallback(
+			original_callback,
+			"http_request_start_failed_%d" % err,
+			agent_name,
+			title,
+			faction
+		)
+
+
+func _trigger_kaelen_intro_fallback(
+	callback: Callable,
+	reason: String,
+	agent_name: String,
+	title: String,
+	faction: String
+) -> void:
+	_record_llm_fallback(
+		"kaelen_handoff_intro",
+		reason,
+		{
+			"agent_name": agent_name,
+			"title": title,
+			"faction": faction,
+		}
+	)
+	if callback.is_valid():
+		callback.call("")
+
 
 func _trigger_salvager_profile_fallback(
 	callback: Callable,
