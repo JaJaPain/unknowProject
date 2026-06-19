@@ -103,6 +103,24 @@ Collected during Segments 4–5 development (2026-06-18). All items below are un
 
 ---
 
+## 6. Pre-Cache Public Board Quests
+
+**Priority:** High (eliminates crash and loading hitch when opening the board)
+
+**What:** Pre-generate and cache the 3 public board quest offers ahead of time instead of generating them on-demand when the player clicks "Public Contract Board." Cache once when the player enters a system (gate arrival or game load) and again immediately after a public board quest completes.
+
+**Why:** The current on-demand generation crashes (`.id` bug in `MissionTextGenerator.fallback_offer`, now fixed) and even without the crash, generating offers at click time causes a visible hitch. Pre-caching makes the board open instantly.
+
+**Where to implement:**
+- `scripts/UIManager.gd` — trigger pre-cache on system entry and on public board quest completion (after `_on_agent_complete_pressed` for board quests)
+- `scripts/domain/PublicBoardTextGenerator.gd` / `MissionTextGenerator.gd` — the generation pipeline already exists; wrap it in a background-callable path that stores results
+- `scripts/UIManager.gd:_render_public_board_offers()` — read from cache instead of generating inline
+- Cache invalidation: clear on system change, refresh after quest completion
+
+**Scope:** Medium. The generation logic exists; this is plumbing to run it earlier and store the results.
+
+---
+
 ## Key Files Reference
 
 | File | Role |

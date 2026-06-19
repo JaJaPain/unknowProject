@@ -146,7 +146,7 @@ static func fallback_offer(
 		"fallback_offer_requested",
 		"MissionTextGenerator",
 		{
-			"template_id": template.id,
+			"template_id": template.template_id,
 			"salt": salt,
 		}
 	)

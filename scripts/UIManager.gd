@@ -18,6 +18,9 @@ var target_panel: PanelContainer
 var target_label: Label
 var target_icon: TextureRect
 var target_action_box: HBoxContainer
+var target_boost_btn: Button
+var target_approach_btn: Button
+var target_orbit_btn: Button
 var target_action_btn: Button
 var icons_sheet = preload("res://assets/icons.png")
 
@@ -383,6 +386,7 @@ func _process(delta):
 			
 	# Update selection marker position
 	_update_selection_marker_position()
+	_update_target_command_feedback()
 
 func _create_hud():
 	hud_panel = Panel.new()
@@ -686,10 +690,16 @@ func _create_target_panel():
 	target_action_box = HBoxContainer.new()
 	target_action_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(target_action_box)
-	
-	var app_btn = Button.new()
-	app_btn.text = "Fly to"
-	app_btn.pressed.connect(func():
+
+	target_boost_btn = Button.new()
+	target_boost_btn.text = "Boost"
+	target_boost_btn.tooltip_text = "25% speed boost for 5 seconds. 60 second cooldown."
+	target_boost_btn.pressed.connect(_on_boost_pressed)
+	target_action_box.add_child(target_boost_btn)
+
+	target_approach_btn = Button.new()
+	target_approach_btn.text = "Fly to"
+	target_approach_btn.pressed.connect(func():
 		_command_selected_target(
 			"JUMP_APPROACH"
 				if GlobalState.active_target
@@ -697,14 +707,14 @@ func _create_target_panel():
 				else "APPROACH"
 		)
 	)
-	target_action_box.add_child(app_btn)
+	target_action_box.add_child(target_approach_btn)
 	
-	var orb_btn = Button.new()
-	orb_btn.text = "Orbit"
-	orb_btn.pressed.connect(func():
+	target_orbit_btn = Button.new()
+	target_orbit_btn.text = "Orbit"
+	target_orbit_btn.pressed.connect(func():
 		_command_selected_target("ORBIT")
 	)
-	target_action_box.add_child(orb_btn)
+	target_action_box.add_child(target_orbit_btn)
 	
 	target_action_btn = Button.new()
 	target_action_btn.name = "TargetActionButton"
@@ -2983,6 +2993,7 @@ func _on_target_changed(new_target: Node3D):
 		if target_icon:
 			target_icon.visible = false
 		
+	_update_target_command_feedback()
 	if overview_collapsed:
 		refresh_overview()
 
@@ -4401,7 +4412,75 @@ func _command_selected_target(mode: String) -> bool:
 		show_hud_warning("Navigation command was not accepted.")
 		return false
 	show_target_marker(target.global_position)
+	_update_target_command_feedback()
 	return true
+
+
+func _on_boost_pressed() -> void:
+	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
+		return
+	if not GlobalState.player.has_method("activate_boost") \
+			or not bool(GlobalState.player.call("activate_boost")):
+		show_hud_warning("Boost drive is cooling down.")
+		return
+	show_hud_info("Boost engaged. Thrusters running hot.")
+	_update_hud_health()
+	_update_target_command_feedback()
+
+
+func _update_target_command_feedback() -> void:
+	_update_boost_button()
+	if target_approach_btn == null or target_orbit_btn == null or target_action_btn == null:
+		return
+	var active_mode := ""
+	if GlobalState.player != null and is_instance_valid(GlobalState.player):
+		active_mode = str(GlobalState.player.get("nav_mode"))
+	_set_command_button_active(
+		target_approach_btn,
+		active_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH"]
+	)
+	_set_command_button_active(target_orbit_btn, active_mode == "ORBIT")
+	_set_command_button_active(
+		target_action_btn,
+		active_mode in ["MINE", "ATTACK", "DOCK"]
+	)
+
+
+func _set_command_button_active(button: Button, active: bool) -> void:
+	if button == null:
+		return
+	if not active:
+		button.self_modulate = Color.WHITE
+		return
+	var pulse := 0.65 + sin(Time.get_ticks_msec() * 0.01) * 0.25
+	button.self_modulate = Color(0.2, 0.9, 1.0, 0.75 + pulse * 0.25)
+
+
+func _update_boost_button() -> void:
+	if target_boost_btn == null:
+		return
+	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
+		target_boost_btn.disabled = true
+		target_boost_btn.text = "Boost"
+		return
+	var active := 0.0
+	var cooldown := 0.0
+	if GlobalState.player.has_method("boost_active_remaining"):
+		active = float(GlobalState.player.call("boost_active_remaining"))
+	if GlobalState.player.has_method("boost_cooldown_remaining"):
+		cooldown = float(GlobalState.player.call("boost_cooldown_remaining"))
+	if active > 0.0:
+		target_boost_btn.disabled = true
+		target_boost_btn.text = "Boost %.0fs" % ceilf(active)
+		target_boost_btn.self_modulate = Color(0.25, 0.85, 1.0, 1.0)
+	elif cooldown > 0.0:
+		target_boost_btn.disabled = true
+		target_boost_btn.text = "Boost %.0fs" % ceilf(cooldown)
+		target_boost_btn.self_modulate = Color(0.7, 0.7, 0.7, 1.0)
+	else:
+		target_boost_btn.disabled = false
+		target_boost_btn.text = "Boost"
+		target_boost_btn.self_modulate = Color.WHITE
 
 
 func _command_context_target(mode: String) -> bool:

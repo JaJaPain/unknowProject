@@ -16,6 +16,15 @@ var is_docked: bool = false
 var current_shield: float = 0.0
 var shield_regen_timer: float = 0.0
 var current_speed: float = 0.0
+const BOOST_SPEED_MULTIPLIER := 1.25
+const BOOST_DURATION_SECONDS := 5.0
+const BOOST_COOLDOWN_SECONDS := 60.0
+const BOOST_HEAT_DAMAGE := 2.0
+var boost_timer: float = 0.0
+var boost_cooldown_timer: float = 0.0
+var boost_effect_meshes: Array[MeshInstance3D] = []
+var boost_effect_lights: Array[OmniLight3D] = []
+var boost_effect_material: StandardMaterial3D
 
 # Drawback tracking variables
 var engine_stall_timer: float = 0.0
@@ -105,6 +114,7 @@ func _ready():
 	
 	# Create two orbiting drones
 	_create_drones()
+	_create_boost_effects()
 
 func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
@@ -136,6 +146,27 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	if clear_motion:
 		current_speed = 0.0
 		velocity = Vector3.ZERO
+
+
+func activate_boost() -> bool:
+	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0:
+		return false
+	boost_timer = BOOST_DURATION_SECONDS
+	boost_cooldown_timer = BOOST_COOLDOWN_SECONDS
+	health = maxf(1.0, health - BOOST_HEAT_DAMAGE)
+	return true
+
+
+func boost_cooldown_remaining() -> float:
+	return boost_cooldown_timer
+
+
+func boost_active_remaining() -> float:
+	return boost_timer
+
+
+func can_activate_boost() -> bool:
+	return not destroyed and not is_docked and boost_timer <= 0.0 and boost_cooldown_timer <= 0.0
 
 func _unhandled_input(event: InputEvent):
 	# While docked the dock UI owns the screen — block any world-bound
@@ -272,6 +303,12 @@ func get_mouse_raycast_hit(
 	return result
 
 func _physics_process(delta: float):
+	if boost_timer > 0.0:
+		boost_timer = maxf(0.0, boost_timer - delta)
+	if boost_cooldown_timer > 0.0:
+		boost_cooldown_timer = maxf(0.0, boost_cooldown_timer - delta)
+	_update_boost_effects(delta)
+
 	if GlobalState.paused:
 		mining_laser.visible = false
 		return
@@ -496,6 +533,8 @@ func _physics_process(delta: float):
 		steer_towards(steer_target, delta)
 		
 		var speed_limit: float = max_speed * GlobalState.engine_speed_mult
+		if boost_timer > 0.0:
+			speed_limit *= BOOST_SPEED_MULTIPLIER
 		var target_speed: float = speed_limit
 		
 		# Proportional speed controller to maintain safe distance from targets
@@ -1559,6 +1598,89 @@ func die(death_source: String = ""):
 	if ui and ui.has_method("show_death_screen"):
 		ui.show_death_screen()
 	queue_free()
+
+
+func _create_boost_effects() -> void:
+	boost_effect_meshes.clear()
+	boost_effect_lights.clear()
+	boost_effect_material = StandardMaterial3D.new()
+	boost_effect_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	boost_effect_material.albedo_color = Color(0.25, 0.85, 1.0, 0.65)
+	boost_effect_material.emission_enabled = true
+	boost_effect_material.emission = Color(0.15, 0.75, 1.0)
+	boost_effect_material.emission_energy_multiplier = 5.0
+
+	var thruster_points: Array[Node3D] = []
+	_find_thruster_points(visual, thruster_points)
+	if thruster_points.is_empty():
+		_create_fallback_boost_effect(Vector3(-1.4, -0.1, 4.7))
+		_create_fallback_boost_effect(Vector3(1.4, -0.1, 4.7))
+	else:
+		for point in thruster_points:
+			_create_boost_effect_at(point)
+	_update_boost_effects(0.0)
+
+
+func _find_thruster_points(node: Node, out: Array[Node3D]) -> void:
+	var lower_name := str(node.name).to_lower()
+	if node is Node3D \
+			and node != visual \
+			and (
+				"thruster" in lower_name
+				or "engine" in lower_name
+				or "exhaust" in lower_name
+				or "nozzle" in lower_name
+			):
+		out.append(node as Node3D)
+	for child in node.get_children():
+		_find_thruster_points(child, out)
+
+
+func _create_fallback_boost_effect(local_position: Vector3) -> void:
+	var anchor := Node3D.new()
+	anchor.name = "FallbackBoostThruster"
+	anchor.position = local_position
+	add_child(anchor)
+	_create_boost_effect_at(anchor)
+
+
+func _create_boost_effect_at(anchor: Node3D) -> void:
+	var flame_mesh := SphereMesh.new()
+	flame_mesh.radius = 0.42
+	flame_mesh.height = 1.4
+	flame_mesh.material = boost_effect_material
+
+	var flame := MeshInstance3D.new()
+	flame.name = "BoostFlame"
+	flame.mesh = flame_mesh
+	flame.visible = false
+	flame.position = Vector3(0.0, 0.0, 0.7)
+	anchor.add_child(flame)
+	boost_effect_meshes.append(flame)
+
+	var light := OmniLight3D.new()
+	light.name = "BoostFlameLight"
+	light.light_color = Color(0.25, 0.75, 1.0)
+	light.light_energy = 0.0
+	light.omni_range = 8.0
+	flame.add_child(light)
+	boost_effect_lights.append(light)
+
+
+func _update_boost_effects(_delta: float) -> void:
+	var active := boost_timer > 0.0
+	var pulse := 1.0 + sin(Time.get_ticks_msec() * 0.02) * 0.2
+	for flame in boost_effect_meshes:
+		if not is_instance_valid(flame):
+			continue
+		flame.visible = active
+		if active:
+			flame.scale = Vector3(0.75, 0.75, 1.6 + pulse * 0.45)
+	for light in boost_effect_lights:
+		if not is_instance_valid(light):
+			continue
+		light.light_energy = 8.0 + pulse * 4.0 if active else 0.0
+
 
 func _create_drones():
 	randomize()
