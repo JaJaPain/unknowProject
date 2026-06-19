@@ -6,6 +6,8 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	GenerationDiagnostics.reset()
 	_test_records_fallback_summary()
+	_test_records_generation_event_summary()
+	_test_records_content_source_summary()
 	_test_reset_clears_summary()
 
 	if _failures.is_empty():
@@ -47,6 +49,56 @@ func _test_records_fallback_summary() -> void:
 		(summary.get("recent", []) as Array).size() == 2,
 		"Recent fallback list was not recorded."
 	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("fallback", 0)) == 2,
+		"Fallbacks were not mirrored into generation events."
+	)
+
+
+func _test_records_generation_event_summary() -> void:
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"validation_repaired",
+		"test",
+		{"field": "amount_required"}
+	)
+	var summary: Dictionary = GenerationDiagnostics.summary()
+	_expect(
+		int(summary.get("total_events", 0)) == 3,
+		"Expected fallback mirrors plus one generation event."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("validation_repaired", 0)) == 1,
+		"Generation event reason count was not recorded."
+	)
+	_expect(
+		(summary.get("recent_events", []) as Array).size() == 3,
+		"Recent generation event list was not recorded."
+	)
+
+
+func _test_records_content_source_summary() -> void:
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"llm",
+		"test",
+		{"model": "local-test"}
+	)
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"procedural_fallback",
+		"test",
+		{}
+	)
+	var summary: Dictionary = GenerationDiagnostics.summary()
+	_expect(
+		int(summary.get("source_counts", {}).get("llm", 0)) == 1,
+		"LLM content source count was not recorded."
+	)
+	_expect(
+		int(summary.get("source_counts", {}).get("procedural_fallback", 0)) == 1,
+		"Procedural fallback content source count was not recorded."
+	)
 
 
 func _test_reset_clears_summary() -> void:
@@ -59,6 +111,14 @@ func _test_reset_clears_summary() -> void:
 	_expect(
 		(summary.get("recent", []) as Array).is_empty(),
 		"Reset did not clear recent fallback events."
+	)
+	_expect(
+		(summary.get("recent_events", []) as Array).is_empty(),
+		"Reset did not clear recent generation events."
+	)
+	_expect(
+		(summary.get("source_counts", {}) as Dictionary).is_empty(),
+		"Reset did not clear source counts."
 	)
 
 

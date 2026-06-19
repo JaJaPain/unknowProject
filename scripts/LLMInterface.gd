@@ -930,9 +930,26 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var headers = ["Content-Type: application/json"]
 	
 	print("[LLMInterface] Sending request to Ollama for faction: ", chosen_faction, " agent: ", agent_name)
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"request_started",
+		"LLMInterface",
+		{
+			"model": active_model_name,
+			"faction": chosen_faction,
+			"agent_name": agent_name,
+			"objective_type": chosen_type,
+		}
+	)
 	var err = http_request.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		print("[LLMInterface] HTTP request failed to initiate. Error code: ", err)
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"request_start_failed",
+			"LLMInterface",
+			{"error_code": err, "model": active_model_name}
+		)
 		_trigger_fallback_with_reason("http_request_start_failed_%d" % err)
 
 
@@ -943,6 +960,17 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	print("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[LLMInterface] HTTP request failed or timed out. Response code: ", response_code)
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"http_or_timeout_failed",
+			"LLMInterface",
+			{
+				"result": result,
+				"response_code": response_code,
+				"elapsed_seconds": elapsed,
+				"model": active_model_name,
+			}
+		)
 		_trigger_fallback_with_reason(
 			"http_failed_result_%d_code_%d" % [result, response_code]
 		)
@@ -953,12 +981,24 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var err = json.parse(response_text)
 	if err != OK:
 		print("[LLMInterface] Failed to parse Ollama response envelope JSON.")
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"response_envelope_parse_failed",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
 		_trigger_fallback_with_reason("response_envelope_parse_failed")
 		return
 		
 	var outer_data = json.get_data()
 	if not outer_data is Dictionary or not outer_data.has("response"):
 		print("[LLMInterface] Response envelope missing 'response' field.")
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"response_envelope_missing_response",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
 		_trigger_fallback_with_reason("response_envelope_missing_response")
 		return
 		
@@ -977,12 +1017,24 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var inner_err = inner_json.parse(inner_json_str)
 	if inner_err != OK:
 		print("[LLMInterface] Failed to parse inner generated JSON dialogue: ", inner_json_str)
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"inner_json_parse_failed",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
 		_trigger_fallback_with_reason("inner_json_parse_failed")
 		return
 		
 	var quest_data = inner_json.get_data()
 	if not quest_data is Dictionary or not quest_data.has("objective") or not quest_data.has("choices"):
 		print("[LLMInterface] Parsed quest data is invalid or missing fields.")
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"quest_schema_missing_fields",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
 		_trigger_fallback_with_reason("quest_schema_missing_fields")
 		return
 		
@@ -996,6 +1048,16 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		else _fallback_campaign_name()
 	)
 	_validate_quest_data(quest_data)
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"llm",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"title": str(quest_data.get("title", "")),
+		}
+	)
 	if active_callback.is_valid():
 		active_callback.call(quest_data, false)
 
@@ -1066,7 +1128,15 @@ func _validate_quest_data(quest_data: Dictionary):
 	# ── Step 3: Clamp to valid ranges ────────────────────────────────────
 	if obj_type == "KILL_SHIPS":
 		var count = int(obj.get("count_required", 3))
-		obj["count_required"] = clampi(count, 2, 4)
+		var clamped_count := clampi(count, 2, 4)
+		if count != clamped_count:
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_clamped_kill_count",
+				"LLMInterface",
+				{"from": count, "to": clamped_count}
+			)
+		obj["count_required"] = clamped_count
 
 		# Validate target_faction is a known faction (minor or major).
 		# If the LLM hallucinated an unknown name (e.g. "synths", "outlaws"),
@@ -1079,15 +1149,35 @@ func _validate_quest_data(quest_data: Dictionary):
 			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
 			var original = tf if tf != "" else "(empty)"
 			obj["target_faction"] = minor_keys[randi() % minor_keys.size()]
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_remapped_target_faction",
+				"LLMInterface",
+				{"from": original, "to": obj["target_faction"]}
+			)
 			print("[LLMInterface] ⚠ VALIDATE: Unknown target_faction '%s' remapped to '%s'." % [original, obj["target_faction"]])
 	elif obj_type == "DELIVER_ORE":
 		var amount = float(obj.get("amount_required", 25.0))
-		obj["amount_required"] = clampf(amount, 20.0, 300.0)
+		var clamped_amount := clampf(amount, 20.0, 300.0)
+		if not is_equal_approx(amount, clamped_amount):
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_clamped_ore_amount",
+				"LLMInterface",
+				{"from": amount, "to": clamped_amount}
+			)
+		obj["amount_required"] = clamped_amount
 	elif obj_type == "PICKUP_SPECIAL":
 		var outpost = obj.get("target_outpost", "")
 		var npc = obj.get("target_npc", "")
 		var valid_outposts = GlobalState.PICKUP_OUTPOST_IDS
 		if outpost not in valid_outposts:
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_remapped_pickup_outpost",
+				"LLMInterface",
+				{"from": outpost, "to": valid_outposts[0]}
+			)
 			obj["target_outpost"] = valid_outposts[0]
 			obj["target_outpost_display"] = GlobalState.PICKUP_OUTPOST_DISPLAY.get(valid_outposts[0], valid_outposts[0])
 			npc = GlobalState.get_minor_npcs_at_outpost(valid_outposts[0])[0]
@@ -1095,6 +1185,12 @@ func _validate_quest_data(quest_data: Dictionary):
 		else:
 			var valid_npcs = GlobalState.get_minor_npcs_at_outpost(outpost)
 			if npc not in valid_npcs:
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_remapped_pickup_npc",
+					"LLMInterface",
+					{"from": npc, "outpost": outpost}
+				)
 				obj["target_npc"] = valid_npcs[0] if valid_npcs.size() > 0 else "Mariska Vonn"
 		if not obj.has("part_name"):
 			obj["part_name"] = "Suspicious Crate"
@@ -1118,6 +1214,12 @@ func _finalize_validated_quest_display(
 		str(quest_data.get("dialogue", "")),
 		obj_type
 	):
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_rewrote_contradictory_dialogue",
+			"LLMInterface",
+			{"objective_type": obj_type}
+		)
 		quest_data["dialogue"] = _safe_objective_dialogue(
 			quest_data,
 			obj_type,
@@ -1338,6 +1440,12 @@ func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: Str
 		return
 
 	quest_data["dialogue"] = original_dialogue.substr(0, number_start) + replacement + original_dialogue.substr(number_end)
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"validation_rewrote_objective_number",
+		"LLMInterface",
+		{"objective_type": obj_type, "from": current_number, "to": replacement}
+	)
 	print("[LLMInterface] ⚠ VALIDATE: Final objective changed after validation. Rewrote dialogue number from %s to %s for display and TTS." % [current_number, replacement])
 
 func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictionary):
@@ -1397,6 +1505,12 @@ func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictio
 	
 	if found_count != -1 and found_count != json_count:
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue says %d targets but JSON says count_required=%d. Patching JSON to match dialogue." % [found_count, json_count])
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_kill_count_mismatch",
+			"LLMInterface",
+			{"from": json_count, "to": found_count}
+		)
 		obj["count_required"] = found_count
 	elif found_count != -1:
 		print("[LLMInterface] ✓ VALIDATE: Kill count matches — dialogue and JSON both say %d." % json_count)
@@ -1439,6 +1553,12 @@ func _reconcile_ore_amount(quest_data: Dictionary, dialogue: String, obj: Dictio
 	
 	if found_amount > 0 and absf(found_amount - json_amount) > 1.0:
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue says %.0f m³ but JSON says amount_required=%.0f. Patching JSON to match dialogue." % [found_amount, json_amount])
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_ore_amount_mismatch",
+			"LLMInterface",
+			{"from": json_amount, "to": found_amount}
+		)
 		obj["amount_required"] = found_amount
 	elif found_amount > 0:
 		print("[LLMInterface] ✓ VALIDATE: Ore amount matches — dialogue and JSON both say %.0f m³." % json_amount)
@@ -1457,6 +1577,16 @@ func _trigger_fallback():
 	_pending_fallback_reason = ""
 	if reason.is_empty():
 		reason = "manual_or_unspecified"
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"procedural_fallback",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"fallback_reason": reason,
+		}
+	)
 	GenerationDiagnostics.record_fallback(
 		"quest_generation",
 		reason,
