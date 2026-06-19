@@ -154,6 +154,7 @@ func activate_boost() -> bool:
 	boost_timer = BOOST_DURATION_SECONDS
 	boost_cooldown_timer = BOOST_COOLDOWN_SECONDS
 	health = maxf(1.0, health - BOOST_HEAT_DAMAGE)
+	AudioManager.play_align()
 	return true
 
 

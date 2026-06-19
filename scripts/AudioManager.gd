@@ -57,9 +57,8 @@ func _ready():
 		add_child(p)
 		sfx_players.append(p)
 		
-	# Set default music volume to 50%
-	set_music_volume(0.5)
-	
+	_load_preferences()
+
 	# Start playing music
 	play_next_bgm()
 
@@ -124,6 +123,7 @@ func play_cargo_full():
 func set_music_volume(value: float):
 	music_volume_percent = value
 	_update_bus_volumes()
+	_save_preferences()
 
 func get_music_volume() -> float:
 	return music_volume_percent
@@ -131,6 +131,7 @@ func get_music_volume() -> float:
 func set_sfx_volume(value: float):
 	sfx_volume_percent = value
 	_update_bus_volumes()
+	_save_preferences()
 
 func get_sfx_volume() -> float:
 	return sfx_volume_percent
@@ -217,3 +218,35 @@ func _create_jump_tone(duration: float, start_hz: float, end_hz: float, noise_am
 	stream.stereo = false
 	stream.data = data
 	return stream
+
+
+const PREFS_PATH := "user://player_preferences.json"
+
+func _load_preferences() -> void:
+	if not FileAccess.file_exists(PREFS_PATH):
+		set_music_volume(0.5)
+		return
+	var file := FileAccess.open(PREFS_PATH, FileAccess.READ)
+	if file == null:
+		set_music_volume(0.5)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary:
+		var prefs: Dictionary = parsed
+		set_music_volume(clampf(float(prefs.get("music_volume", 0.5)), 0.0, 1.0))
+		set_sfx_volume(clampf(float(prefs.get("sfx_volume", 1.0)), 0.0, 1.0))
+	else:
+		set_music_volume(0.5)
+
+
+func _save_preferences() -> void:
+	var prefs := {
+		"music_volume": music_volume_percent,
+		"sfx_volume": sfx_volume_percent,
+	}
+	var file := FileAccess.open(PREFS_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(prefs, "\t"))
+	file.close()
