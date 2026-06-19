@@ -3607,6 +3607,12 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, callback: Callable, critique_suffix: String, attempt: int) -> void:
 	if attempt >= 2:
 		print("[TRACE] [UIManager] Mechanic LLM failed all attempts. Falling back.")
+		GenerationDiagnostics.record_fallback(
+			"mechanic_intro",
+			"max_attempts_reached",
+			"UIManager",
+			{"attempt": attempt}
+		)
 		callback.call(_pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest), true)
 		return
 		
@@ -3630,6 +3636,12 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
 		http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+			GenerationDiagnostics.record_fallback(
+				"mechanic_intro",
+				"http_failed_result_%d_code_%d" % [result, code],
+				"UIManager",
+				{"attempt": attempt}
+			)
 			var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest)
 			callback.call(fb, true)
 			return
@@ -3655,6 +3667,12 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 						return
 		
 		# Fallback on parse error
+		GenerationDiagnostics.record_fallback(
+			"mechanic_intro",
+			"parse_or_schema_failed",
+			"UIManager",
+			{"attempt": attempt}
+		)
 		var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest)
 		callback.call(fb, true)
 	)
@@ -6218,7 +6236,12 @@ const FALLBACK_OUTPOST_HANDOFF: Array = [
 
 func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String, outpost_display: String, client_name: String, critique_suffix: String, attempt: int) -> void:
 	if attempt >= 2:
-		_apply_pickup_handoff_fallback(npc_name, part_name, client_name)
+		_apply_pickup_handoff_fallback(
+			npc_name,
+			part_name,
+			client_name,
+			"max_attempts_reached"
+		)
 		return
 		
 	var examples_block: String = ""
@@ -6257,7 +6280,12 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
 		http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-			_apply_pickup_handoff_fallback(npc_name, part_name, client_name)
+			_apply_pickup_handoff_fallback(
+				npc_name,
+				part_name,
+				client_name,
+				"http_failed_result_%d_code_%d" % [result, code]
+			)
 			return
 			
 		var raw: String = body_bytes.get_string_from_utf8()
@@ -6290,7 +6318,12 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 						var new_suffix: String = "SELF-CRITIQUE — your previous attempt was rejected. Reason: " + reason
 						_request_outpost_pickup_handoff_attempt(npc_name, part_name, outpost_display, client_name, new_suffix, attempt + 1)
 						return
-		_apply_pickup_handoff_fallback(npc_name, part_name, client_name)
+		_apply_pickup_handoff_fallback(
+			npc_name,
+			part_name,
+			client_name,
+			"parse_or_schema_failed"
+		)
 	)
 	http.request(url, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
 
@@ -6313,7 +6346,22 @@ func _explain_outpost_handoff_rejection(line: String, part_name: String, client_
 		return "Failed to mention the required part."
 	return ""
 
-func _apply_pickup_handoff_fallback(npc_name: String, part_name: String, client_name: String) -> void:
+func _apply_pickup_handoff_fallback(
+	npc_name: String,
+	part_name: String,
+	client_name: String,
+	reason: String = "unspecified"
+) -> void:
+	GenerationDiagnostics.record_fallback(
+		"outpost_pickup_handoff",
+		reason,
+		"UIManager",
+		{
+			"npc_name": npc_name,
+			"part_name": part_name,
+			"client_name": client_name,
+		}
+	)
 	var salt: int = randi() % FALLBACK_OUTPOST_HANDOFF.size()
 	var line: String = FALLBACK_OUTPOST_HANDOFF[salt].replace("{part}", part_name).replace("{client}", client_name)
 	

@@ -25,6 +25,7 @@ QuestManager="*res://scripts/QuestManager.gd"
 TTSInterface="*res://scripts/TTSInterface.gd"
 SpeechService="*res://scripts/speech/SpeechService.gd"
 GateDiscovery="*res://scripts/navigation/GateDiscoveryManager.gd"
+GenerationDiagnostics="*res://scripts/diagnostics/GenerationDiagnostics.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]

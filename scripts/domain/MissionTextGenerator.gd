@@ -141,6 +141,15 @@ static func fallback_offer(
 	offer: Dictionary,
 	salt: int = 0
 ) -> Dictionary:
+	GenerationDiagnostics.record_fallback(
+		"public_board_text",
+		"fallback_offer_requested",
+		"MissionTextGenerator",
+		{
+			"template_id": template.id,
+			"salt": salt,
+		}
+	)
 	var payload := fallback_payload(template, offer, salt)
 	var applied := apply_payload_to_offer(template, offer, payload, true)
 	if bool(applied.get("ok", false)):

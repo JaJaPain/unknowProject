@@ -14,6 +14,7 @@ var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
 var world_lore_text: String = ""
+var _pending_fallback_reason: String = ""
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
 # Persistent counters in user://kaelen_intro_stats.json. Tracks how often the
@@ -914,7 +915,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var err = http_request.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		print("[LLMInterface] HTTP request failed to initiate. Error code: ", err)
-		_trigger_fallback()
+		_trigger_fallback_with_reason("http_request_start_failed_%d" % err)
 
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
@@ -924,7 +925,9 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	print("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[LLMInterface] HTTP request failed or timed out. Response code: ", response_code)
-		_trigger_fallback()
+		_trigger_fallback_with_reason(
+			"http_failed_result_%d_code_%d" % [result, response_code]
+		)
 		return
 		
 	var response_text = body.get_string_from_utf8()
@@ -932,13 +935,13 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var err = json.parse(response_text)
 	if err != OK:
 		print("[LLMInterface] Failed to parse Ollama response envelope JSON.")
-		_trigger_fallback()
+		_trigger_fallback_with_reason("response_envelope_parse_failed")
 		return
 		
 	var outer_data = json.get_data()
 	if not outer_data is Dictionary or not outer_data.has("response"):
 		print("[LLMInterface] Response envelope missing 'response' field.")
-		_trigger_fallback()
+		_trigger_fallback_with_reason("response_envelope_missing_response")
 		return
 		
 	var inner_json_str = outer_data["response"].strip_edges()
@@ -956,13 +959,13 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var inner_err = inner_json.parse(inner_json_str)
 	if inner_err != OK:
 		print("[LLMInterface] Failed to parse inner generated JSON dialogue: ", inner_json_str)
-		_trigger_fallback()
+		_trigger_fallback_with_reason("inner_json_parse_failed")
 		return
 		
 	var quest_data = inner_json.get_data()
 	if not quest_data is Dictionary or not quest_data.has("objective") or not quest_data.has("choices"):
 		print("[LLMInterface] Parsed quest data is invalid or missing fields.")
-		_trigger_fallback()
+		_trigger_fallback_with_reason("quest_schema_missing_fields")
 		return
 		
 	print("[LLMInterface] LLM Quest successfully generated: ", quest_data["title"])
@@ -1424,9 +1427,27 @@ func _reconcile_ore_amount(quest_data: Dictionary, dialogue: String, obj: Dictio
 	else:
 		print("[LLMInterface] ✓ VALIDATE: No ore amount found in dialogue text. Using JSON value: %.0f m³." % json_amount)
 
+func _trigger_fallback_with_reason(reason: String) -> void:
+	_pending_fallback_reason = reason
+	_trigger_fallback()
+
+
 func _trigger_fallback():
 	var elapsed = (Time.get_ticks_msec() - request_start_time) / 1000.0
 	print("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
+	var reason := _pending_fallback_reason
+	_pending_fallback_reason = ""
+	if reason.is_empty():
+		reason = "manual_or_unspecified"
+	GenerationDiagnostics.record_fallback(
+		"quest_generation",
+		reason,
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+		}
+	)
 	
 	# Try to pick a fallback template that hasn't been completed/abandoned recently
 	var available_indices = []
