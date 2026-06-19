@@ -16,6 +16,8 @@ func event_type_id() -> String:
 
 
 func is_eligible(context) -> bool:
+	if context.just_arrived:
+		return false
 	var campaign_start_minutes := CampaignClock.START_HOUR * CampaignClock.MINUTES_PER_HOUR
 	if context.campaign_time < campaign_start_minutes + MIN_SYSTEM_TIME_MINUTES:
 		return false

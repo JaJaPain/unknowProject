@@ -39,6 +39,7 @@ func tick(campaign_time: int, context) -> void:
 	if history.count_since(campaign_time - GLOBAL_COOLDOWN_MINUTES) > 0:
 		return
 	context.just_arrived = _just_arrived
+	_just_arrived = false
 	context.event_history = history.get_entries()
 	var candidates = _evaluate_eligible(context, campaign_time)
 	if candidates.is_empty():
@@ -51,7 +52,6 @@ func tick(campaign_time: int, context) -> void:
 		return
 	history.record(selected.event_type_id(), campaign_time, details)
 	event_triggered.emit(selected.event_type_id(), details)
-	_just_arrived = false
 
 
 func _evaluate_eligible(context, campaign_time: int) -> Array:

@@ -295,7 +295,7 @@ func _visible_systems(all_systems: Array) -> Array:
 				var state := "unknown"
 				if GateDiscovery:
 					state = GateDiscovery.get_gate_state(str(gate_def.id))
-				if state == "unknown":
+				if not _gate_state_reveals_destination(state):
 					continue
 				var dest_id := str(gate_def.destination_system_id)
 				if by_id.has(dest_id) and not visible_ids.has(dest_id):
@@ -307,6 +307,10 @@ func _visible_systems(all_systems: Array) -> Array:
 		if visible_ids.has(str(sys_def.id)):
 			output.append(sys_def)
 	return output
+
+
+func _gate_state_reveals_destination(state: String) -> bool:
+	return state == "known"
 
 
 func _layout_systems(systems: Array, center: Vector2) -> Dictionary:

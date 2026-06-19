@@ -2383,11 +2383,14 @@ func _verify_next_outbound_rumor_and_map() -> bool:
 				or GateDiscovery.get_gate_state(gate_id) != "rumored":
 			_fail_jump_smoke_test("Generated outbound gate did not become rumored.")
 			return false
-		return _verify_branch_map_route(
-			str(current_def.id),
-			str(gate.destination_system_id),
-			"rumored"
-		)
+		var branch_map := _get_branch_map_for_smoke()
+		if branch_map == null:
+			return false
+		branch_map.refresh()
+		if branch_map.system_nodes.has(str(gate.destination_system_id)):
+			_fail_jump_smoke_test("Branch map revealed a rumored destination system.")
+			return false
+		return true
 	_fail_jump_smoke_test("No unknown generated outbound gate was available to rumor.")
 	return false
 
