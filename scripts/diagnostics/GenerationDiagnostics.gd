@@ -111,9 +111,35 @@ func summary() -> Dictionary:
 	}
 
 
+func summary_text(recent_limit: int = 8) -> String:
+	var lines: Array[String] = []
+	lines.append("[GenerationDiagnostics] Summary")
+	lines.append("- total_events: %d" % total_events)
+	lines.append("- total_fallbacks: %d" % total_fallbacks)
+	lines.append("- content_sources: %s" % _format_counts(source_counts))
+	lines.append("- fallback_types: %s" % _format_counts(fallback_counts_by_type))
+	lines.append("- fallback_reasons: %s" % _format_counts(fallback_counts_by_reason))
+	lines.append("- event_reasons: %s" % _format_counts(event_counts_by_reason))
+	var recent_count := min(max(recent_limit, 0), generation_events.size())
+	if recent_count > 0:
+		lines.append("- recent_events:")
+		var start := generation_events.size() - recent_count
+		for index in range(start, generation_events.size()):
+			var event := generation_events[index]
+			lines.append(
+				"  %s/%s from %s %s" %
+				[
+					str(event.get("content_type", "unknown")),
+					str(event.get("reason", "unknown")),
+					str(event.get("source", "unknown")),
+					_format_context(event.get("context", {})),
+				]
+			)
+	return "\n".join(lines)
+
+
 func print_summary() -> void:
-	var data := summary()
-	print("[GenerationDiagnostics] summary: ", JSON.stringify(data))
+	print(summary_text())
 
 
 func _record_generation_event(
@@ -149,3 +175,26 @@ func _record_generation_event(
 		)
 	generation_event_recorded.emit(event.duplicate(true))
 	return event
+
+
+func _format_counts(counts: Dictionary) -> String:
+	if counts.is_empty():
+		return "(none)"
+	var keys := counts.keys()
+	keys.sort()
+	var parts: Array[String] = []
+	for key in keys:
+		parts.append("%s=%d" % [str(key), int(counts.get(key, 0))])
+	return ", ".join(parts)
+
+
+func _format_context(context: Variant) -> String:
+	if not context is Dictionary or context.is_empty():
+		return ""
+	var context_dict := context as Dictionary
+	var keys := context_dict.keys()
+	keys.sort()
+	var parts: Array[String] = []
+	for key in keys:
+		parts.append("%s=%s" % [str(key), str(context_dict.get(key, ""))])
+	return "(%s)" % ", ".join(parts)

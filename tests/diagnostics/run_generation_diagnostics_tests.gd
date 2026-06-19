@@ -8,6 +8,7 @@ func _initialize() -> void:
 	_test_records_fallback_summary()
 	_test_records_generation_event_summary()
 	_test_records_content_source_summary()
+	_test_summary_text_is_readable()
 	_test_reset_clears_summary()
 
 	if _failures.is_empty():
@@ -98,6 +99,26 @@ func _test_records_content_source_summary() -> void:
 	_expect(
 		int(summary.get("source_counts", {}).get("procedural_fallback", 0)) == 1,
 		"Procedural fallback content source count was not recorded."
+	)
+
+
+func _test_summary_text_is_readable() -> void:
+	var text := GenerationDiagnostics.summary_text()
+	_expect(
+		text.contains("total_fallbacks: 2"),
+		"Summary text did not include total fallback count."
+	)
+	_expect(
+		text.contains("llm=1"),
+		"Summary text did not include LLM source count."
+	)
+	_expect(
+		text.contains("procedural_fallback=1"),
+		"Summary text did not include procedural fallback source count."
+	)
+	_expect(
+		text.contains("recent_events"),
+		"Summary text did not include recent events."
 	)
 
 

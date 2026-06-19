@@ -781,6 +781,14 @@ func get_campaign_ui_state() -> Dictionary:
 	}
 
 
+func print_generation_diagnostics_summary() -> void:
+	GenerationDiagnostics.print_summary()
+
+
+func generation_diagnostics_summary_text(recent_limit: int = 8) -> String:
+	return GenerationDiagnostics.summary_text(recent_limit)
+
+
 func import_legacy_save(slot_id: String = "") -> Dictionary:
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
