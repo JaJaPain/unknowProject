@@ -4745,11 +4745,11 @@ func _set_rep_label_visible(label_name: String, vis: bool) -> void:
 
 func _get_current_system_faction_ids() -> Array[String]:
 	var result: Array[String] = []
-	var game_root := get_tree().current_scene
-	if not game_root or not "system_registry" in game_root or not game_root.system_registry:
+	var registry: Variant = _get_system_registry()
+	if registry == null:
 		return result
 	var sys_id: String = GlobalState.current_system_id
-	for sys_def in game_root.system_registry.get_all_systems():
+	for sys_def in registry.get_all_systems():
 		if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
 			for fid in sys_def.faction_ids:
 				result.append(str(fid).get_slice(".", 1))
@@ -4763,23 +4763,34 @@ func _exit_tree() -> void:
 
 
 func _domain_id_for_current_system() -> String:
-	var game_root := get_tree().current_scene
-	if game_root and "system_registry" in game_root and game_root.system_registry:
-		for sys_def in game_root.system_registry.get_all_systems():
-			if sys_def.legacy_id == GlobalState.current_system_id:
-				return str(sys_def.id)
+	var registry: Variant = _get_system_registry()
+	if registry == null:
+		return ""
+	for sys_def in registry.get_all_systems():
+		if sys_def.legacy_id == GlobalState.current_system_id:
+			return str(sys_def.id)
 	return ""
 
 
 func _get_current_system_display_name() -> String:
-	var game_root := get_tree().current_scene
-	if game_root and "system_registry" in game_root and game_root.system_registry:
-		var sys_id = GlobalState.current_system_id
-		var registry = game_root.system_registry
-		for sys_def in registry.get_all_systems():
-			if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
-				return sys_def.display_name
+	var registry: Variant = _get_system_registry()
+	if registry == null:
+		return ""
+	var sys_id = GlobalState.current_system_id
+	for sys_def in registry.get_all_systems():
+		if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
+			return sys_def.display_name
 	return ""
+
+
+func _get_system_registry() -> Variant:
+	var game_root := get_tree().current_scene
+	if game_root == null or not "system_registry" in game_root:
+		return null
+	var registry: Variant = game_root.get("system_registry")
+	if registry == null or not registry.has_method("get_all_systems"):
+		return null
+	return registry
 
 
 func refresh_overview():
@@ -4810,9 +4821,9 @@ func refresh_overview():
 			call_deferred("_auto_select_route_gate")
 
 	if map_btn:
-		var game_root_ref := get_tree().current_scene
-		if game_root_ref and "system_registry" in game_root_ref and game_root_ref.system_registry:
-			map_btn.visible = game_root_ref.system_registry.get_all_systems().size() > 1
+		var registry: Variant = _get_system_registry()
+		if registry != null:
+			map_btn.visible = registry.get_all_systems().size() > 1
 		else:
 			map_btn.visible = false
 	
