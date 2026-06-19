@@ -1890,7 +1890,10 @@ func fetch_salvager_profile(callback: Callable):
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(
+			callback,
+			"http_request_start_failed_%d" % err
+		)
 
 
 func _on_salvager_profile_request_completed(
@@ -1906,19 +1909,19 @@ func _on_salvager_profile_request_completed(
 		temp_http.queue_free()
 
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(callback, "http_response_failed")
 		return
 
 	var response_text = body.get_string_from_utf8()
 	var json = JSON.new()
 	var err = json.parse(response_text)
 	if err != OK:
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(callback, "response_envelope_parse_failed")
 		return
 
 	var outer_data = json.get_data()
 	if not outer_data is Dictionary or not outer_data.has("response"):
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(callback, "response_envelope_missing_response")
 		return
 
 	var inner_json_str = outer_data["response"].strip_edges()
@@ -1934,19 +1937,32 @@ func _on_salvager_profile_request_completed(
 	var inner_json = JSON.new()
 	var inner_err = inner_json.parse(inner_json_str)
 	if inner_err != OK:
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(callback, "inner_json_parse_failed")
 		return
 
 	var profile_data = inner_json.get_data()
 	if profile_data is Dictionary and profile_data.has("name") and profile_data.has("backstory"):
 		_call_salvager_profile_callback(callback, profile_data)
 	else:
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(callback, "profile_schema_missing_fields")
 
 
 func _call_salvager_profile_callback(callback: Callable, profile: Dictionary) -> void:
 	if callback.is_valid():
 		callback.call(profile)
+
+
+func _record_llm_fallback(
+	content_type: String,
+	reason: String,
+	context: Dictionary = {}
+) -> void:
+	GenerationDiagnostics.record_fallback(
+		content_type,
+		reason,
+		"LLMInterface",
+		context
+	)
 
 
 func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
@@ -1984,18 +2000,18 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 			print("[LLMInterface] Kaelen reaction fetch failed. Using fallback lines.")
-			_trigger_kaelen_reaction_fallback(callback)
+			_trigger_kaelen_reaction_fallback(callback, "http_response_failed")
 			return
 
 		var response_text = body.get_string_from_utf8()
 		var json = JSON.new()
 		if json.parse(response_text) != OK:
-			_trigger_kaelen_reaction_fallback(callback)
+			_trigger_kaelen_reaction_fallback(callback, "response_envelope_parse_failed")
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
-			_trigger_kaelen_reaction_fallback(callback)
+			_trigger_kaelen_reaction_fallback(callback, "response_envelope_missing_response")
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -2009,7 +2025,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		var inner_json = JSON.new()
 		if inner_json.parse(inner_json_str) != OK:
-			_trigger_kaelen_reaction_fallback(callback)
+			_trigger_kaelen_reaction_fallback(callback, "inner_json_parse_failed")
 			return
 
 		var reaction_data = inner_json.get_data()
@@ -2017,7 +2033,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
 			callback.call(reaction_data["completion"], reaction_data["abandon"])
 		else:
-			_trigger_kaelen_reaction_fallback(callback)
+			_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
 	)
 
 	var payload = {
@@ -2035,11 +2051,15 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		_trigger_kaelen_reaction_fallback(callback)
+		_trigger_kaelen_reaction_fallback(callback, "http_request_start_failed_%d" % err)
 
-func _trigger_kaelen_reaction_fallback(callback: Callable):
-	var comp = fallback_completion_lines[randi() % fallback_completion_lines.size()]
-	var abn = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
+func _trigger_kaelen_reaction_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	_record_llm_fallback("kaelen_reaction", reason)
+	var comp: String = fallback_completion_lines[randi() % fallback_completion_lines.size()]
+	var abn: String = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
 	callback.call(comp, abn)
 
 
@@ -2375,9 +2395,13 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 		print("[LLMInterface] Kaelen intro fetch failed (request init). Caller should fall back.")
 		original_callback.call("")
 
-func _trigger_salvager_profile_fallback(callback: Callable):
-	var rand_name = fallback_salvager_names[randi() % fallback_salvager_names.size()]
-	var rand_backstory = fallback_salvager_backstories[randi() % fallback_salvager_backstories.size()]
+func _trigger_salvager_profile_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	_record_llm_fallback("salvager_profile", reason)
+	var rand_name: String = fallback_salvager_names[randi() % fallback_salvager_names.size()]
+	var rand_backstory: String = fallback_salvager_backstories[randi() % fallback_salvager_backstories.size()]
 	var profile = {
 		"name": rand_name,
 		"backstory": rand_backstory
@@ -2418,18 +2442,18 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 		temp_http.queue_free()
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "http_response_failed")
 			return
 
 		var response_text = body.get_string_from_utf8()
 		var json = JSON.new()
 		if json.parse(response_text) != OK:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "response_envelope_parse_failed")
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "response_envelope_missing_response")
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -2443,14 +2467,14 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 
 		var inner_json = JSON.new()
 		if inner_json.parse(inner_json_str) != OK:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "inner_json_parse_failed")
 			return
 
 		var data = inner_json.get_data()
 		if data is Dictionary and data.has("line") and data["line"] is String and data["line"].length() > 3:
 			callback.call(data["line"])
 		else:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "partial_delivery_schema_missing_line")
 	)
 
 	var payload = {
@@ -2468,7 +2492,23 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+		_trigger_partial_delivery_fallback(
+			callback,
+			"http_request_start_failed_%d" % err
+		)
+
+
+func _trigger_partial_delivery_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	_record_llm_fallback("partial_delivery_line", reason)
+	if callback.is_valid():
+		callback.call(
+			fallback_partial_delivery_lines[
+				randi() % fallback_partial_delivery_lines.size()
+			]
+		)
 
 
 func generate_campaign_system_names(count: int, callback: Callable):

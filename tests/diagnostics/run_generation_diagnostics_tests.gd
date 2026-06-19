@@ -1,10 +1,14 @@
 extends SceneTree
 
+const DiagnosticsType := preload("res://scripts/diagnostics/GenerationDiagnostics.gd")
+
 var _failures: Array[String] = []
+var diagnostics: GenerationDiagnosticsService
 
 
 func _initialize() -> void:
-	GenerationDiagnostics.reset()
+	diagnostics = DiagnosticsType.new()
+	diagnostics.reset()
 	_test_records_fallback_summary()
 	_test_records_generation_event_summary()
 	_test_records_content_source_summary()
@@ -21,19 +25,19 @@ func _initialize() -> void:
 
 
 func _test_records_fallback_summary() -> void:
-	GenerationDiagnostics.record_fallback(
+	diagnostics.record_fallback(
 		"quest_generation",
 		"http_failed",
 		"test",
 		{"model": "local-test"}
 	)
-	GenerationDiagnostics.record_fallback(
+	diagnostics.record_fallback(
 		"quest_generation",
 		"parse_failed",
 		"test",
 		{}
 	)
-	var summary: Dictionary = GenerationDiagnostics.summary()
+	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		int(summary.get("total_fallbacks", 0)) == 2,
 		"Expected two recorded fallbacks."
@@ -57,13 +61,13 @@ func _test_records_fallback_summary() -> void:
 
 
 func _test_records_generation_event_summary() -> void:
-	GenerationDiagnostics.record_event(
+	diagnostics.record_event(
 		"quest_generation",
 		"validation_repaired",
 		"test",
 		{"field": "amount_required"}
 	)
-	var summary: Dictionary = GenerationDiagnostics.summary()
+	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		int(summary.get("total_events", 0)) == 3,
 		"Expected fallback mirrors plus one generation event."
@@ -79,19 +83,19 @@ func _test_records_generation_event_summary() -> void:
 
 
 func _test_records_content_source_summary() -> void:
-	GenerationDiagnostics.record_content_source(
+	diagnostics.record_content_source(
 		"quest_generation",
 		"llm",
 		"test",
 		{"model": "local-test"}
 	)
-	GenerationDiagnostics.record_content_source(
+	diagnostics.record_content_source(
 		"quest_generation",
 		"procedural_fallback",
 		"test",
 		{}
 	)
-	var summary: Dictionary = GenerationDiagnostics.summary()
+	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		int(summary.get("source_counts", {}).get("llm", 0)) == 1,
 		"LLM content source count was not recorded."
@@ -103,7 +107,7 @@ func _test_records_content_source_summary() -> void:
 
 
 func _test_summary_text_is_readable() -> void:
-	var text := GenerationDiagnostics.summary_text()
+	var text := diagnostics.summary_text()
 	_expect(
 		text.contains("total_fallbacks: 2"),
 		"Summary text did not include total fallback count."
@@ -123,8 +127,8 @@ func _test_summary_text_is_readable() -> void:
 
 
 func _test_reset_clears_summary() -> void:
-	GenerationDiagnostics.reset()
-	var summary: Dictionary = GenerationDiagnostics.summary()
+	diagnostics.reset()
+	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		int(summary.get("total_fallbacks", -1)) == 0,
 		"Reset did not clear total fallback count."
