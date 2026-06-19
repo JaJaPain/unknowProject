@@ -30,6 +30,9 @@ const CampaignIdeaMemoryStoreType := preload(
 const CampaignBibleStoreType := preload(
 	"res://scripts/persistence/CampaignBibleStore.gd"
 )
+const CampaignGeneratedFactionStoreType := preload(
+	"res://scripts/persistence/CampaignGeneratedFactionStore.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -56,6 +59,7 @@ var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var campaign_bible_store: CampaignBibleStore
+var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -989,6 +993,7 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
+		campaign_generated_faction_store = null
 		LLMInterface.campaign_bible_context_text = ""
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
@@ -1121,6 +1126,7 @@ func _initialize_campaign_registry() -> void:
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
+		campaign_generated_faction_store = null
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	_initialize_campaign_chronicle()
@@ -1185,6 +1191,7 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_generated_faction_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
@@ -1210,6 +1217,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chronicle_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_generated_faction_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1224,6 +1232,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_generated_faction_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1238,10 +1247,26 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_generated_faction_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_bible_store = opened_bible
+	var opened_generated_factions := CampaignGeneratedFactionStoreType.open(slot_path)
+	if not opened_generated_factions.is_valid():
+		push_warning(
+			"[GameRoot] Generated faction store is unavailable: %s" %
+				opened_generated_factions.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_generated_faction_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_generated_faction_store = opened_generated_factions
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
 	_sync_checkpoint_chronicle_context()
@@ -1440,6 +1465,38 @@ func _refresh_llm_campaign_bible_context() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	LLMInterface.campaign_bible_context_text = campaign_bible_store.prompt_context()
+
+
+func ensure_generated_frontier_factions(count: int = 6) -> Dictionary:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return {"ok": false, "error": "Generated faction store is unavailable."}
+	var seed_text := active_campaign_slot_id
+	if campaign_checkpoint_store != null:
+		seed_text = str(campaign_checkpoint_store.campaign.get("campaign_seed", seed_text))
+	return campaign_generated_faction_store.ensure_frontier_batch(seed_text, count)
+
+
+func reveal_generated_factions_for_system(
+	system_id: String,
+	count: int = 2
+) -> Dictionary:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return {"ok": false, "error": "Generated faction store is unavailable."}
+	var ensured := ensure_generated_frontier_factions()
+	if not bool(ensured.get("ok", false)):
+		return ensured
+	return campaign_generated_faction_store.reveal_next_for_system(system_id, count)
+
+
+func generated_faction_prompt_context(revealed_only: bool = false) -> String:
+	if campaign_generated_faction_store == null \
+			or not campaign_generated_faction_store.is_valid():
+		return ""
+	return campaign_generated_faction_store.prompt_context(revealed_only)
 
 
 func _death_category_for_source(death_source: String) -> String:
@@ -2000,6 +2057,7 @@ func _run_jump_smoke_test() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_generated_faction_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	var prepared := _capture_prepared_runtime_state()
@@ -3536,6 +3594,7 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_generated_faction_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	GlobalState.player_credits = 7654
