@@ -27,6 +27,7 @@ var overview_collapsed: bool = false
 var collapse_btn: Button
 var overview_title_label: Label
 var map_btn: Button
+var inventory_hud_btn: Button
 var branch_map: BranchMapUI
 
 var dock_panel: Panel
@@ -138,6 +139,12 @@ var store_credits_label: Label
 var store_back_btn: Button
 var store_btn: Button
 var _store_current_id: String = ""
+var inventory_panel: Panel
+var inventory_list: VBoxContainer
+var inventory_summary_label: Label
+var inventory_btn: Button
+var inventory_return_to_dock: bool = false
+var inventory_back_btn: Button
 
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
@@ -732,6 +739,20 @@ func _create_overview():
 	map_btn.pressed.connect(_toggle_branch_map)
 	add_child(map_btn)
 
+	inventory_hud_btn = Button.new()
+	inventory_hud_btn.text = "INVENTORY"
+	inventory_hud_btn.visible = true
+	inventory_hud_btn.anchor_left = 0.66
+	inventory_hud_btn.anchor_right = 0.77
+	inventory_hud_btn.anchor_top = 0.01
+	inventory_hud_btn.anchor_bottom = 0.045
+	inventory_hud_btn.offset_left = 0
+	inventory_hud_btn.offset_right = 0
+	inventory_hud_btn.offset_top = 0
+	inventory_hud_btn.offset_bottom = 0
+	inventory_hud_btn.pressed.connect(_on_inventory_pressed)
+	add_child(inventory_hud_btn)
+
 	overview_panel = Panel.new()
 	add_child(overview_panel)
 	overview_panel.anchor_left = 0.78
@@ -1151,6 +1172,11 @@ func _create_dock_menu():
 	store_btn.pressed.connect(_on_store_pressed)
 	vbox.add_child(store_btn)
 
+	inventory_btn = Button.new()
+	inventory_btn.text = "Inventory"
+	inventory_btn.pressed.connect(_on_inventory_pressed)
+	vbox.add_child(inventory_btn)
+
 	ship_upgrades_btn = Button.new()
 	ship_upgrades_btn.text = "Ship Upgrades (Rusthawk UI)"
 	ship_upgrades_btn.pressed.connect(_on_ship_upgrades_pressed)
@@ -1282,6 +1308,7 @@ func _create_dock_menu():
 
 	_create_public_board_panel()
 	_create_store_panel()
+	_create_inventory_panel()
 
 
 func _create_store_panel() -> void:
@@ -1342,6 +1369,66 @@ func _create_store_panel() -> void:
 	store_back_btn.text = "Back to Services"
 	store_back_btn.pressed.connect(_on_store_back_pressed)
 	vbox.add_child(store_back_btn)
+
+
+func _create_inventory_panel() -> void:
+	inventory_panel = Panel.new()
+	add_child(inventory_panel)
+	inventory_panel.anchor_left = 0.22
+	inventory_panel.anchor_right = 0.78
+	inventory_panel.anchor_top = 0.16
+	inventory_panel.anchor_bottom = 0.84
+	inventory_panel.visible = false
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.2, 0.65, 0.95, 0.9)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	inventory_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 16
+	vbox.offset_right = -16
+	vbox.offset_top = 16
+	vbox.offset_bottom = -16
+	vbox.add_theme_constant_override("separation", 8)
+	inventory_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "SHIP INVENTORY"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
+	vbox.add_child(title)
+
+	inventory_summary_label = Label.new()
+	inventory_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inventory_summary_label.add_theme_font_size_override("font_size", 14)
+	inventory_summary_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	vbox.add_child(inventory_summary_label)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+
+	inventory_list = VBoxContainer.new()
+	inventory_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inventory_list.add_theme_constant_override("separation", 6)
+	scroll.add_child(inventory_list)
+
+	inventory_back_btn = Button.new()
+	inventory_back_btn.text = "Back to Services"
+	inventory_back_btn.pressed.connect(_on_inventory_back_pressed)
+	vbox.add_child(inventory_back_btn)
 
 
 func _create_public_board_panel() -> void:
@@ -2956,7 +3043,8 @@ func toggle_dock_menu(
 	current_station = station
 	if dock_panel.visible or agent_panel.visible \
 			or (public_board_panel and public_board_panel.visible) \
-			or (store_panel and store_panel.visible):
+			or (store_panel and store_panel.visible) \
+			or (inventory_panel and inventory_panel.visible):
 		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
@@ -2964,6 +3052,8 @@ func toggle_dock_menu(
 			public_board_panel.visible = false
 		if store_panel:
 			store_panel.visible = false
+		if inventory_panel:
+			inventory_panel.visible = false
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
@@ -3059,6 +3149,7 @@ func _render_dock_submenu() -> void:
 		agent_service_btn.visible = false
 		public_board_btn.visible = false
 		maintenance_bay_btn.visible = false
+		inventory_btn.visible = false
 		ship_upgrades_btn.visible = true
 		repair_btn.visible = true
 		test_pickup_btn.visible = DEBUG_TESTS
@@ -3095,6 +3186,7 @@ func _render_dock_submenu() -> void:
 		agent_service_btn.visible = not is_outpost
 		public_board_btn.visible = not is_outpost
 		maintenance_bay_btn.visible = not is_outpost
+		inventory_btn.visible = true
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
 		test_pickup_btn.visible = false
@@ -3156,6 +3248,8 @@ func _on_public_board_pressed() -> void:
 	agent_panel.visible = false
 	if store_panel:
 		store_panel.visible = false
+	if inventory_panel:
+		inventory_panel.visible = false
 	public_board_panel.visible = true
 
 
@@ -3170,6 +3264,8 @@ func _on_store_pressed() -> void:
 	agent_panel.visible = false
 	if public_board_panel:
 		public_board_panel.visible = false
+	if inventory_panel:
+		inventory_panel.visible = false
 	var station_id := GlobalState.current_system_id
 	var reg = StoreRegistryScript.shared()
 	var stores = reg.get_stores_for_station(station_id)
@@ -3187,6 +3283,150 @@ func _on_store_back_pressed() -> void:
 	store_panel.visible = false
 	dock_panel.visible = true
 	_render_dock_submenu()
+
+
+func _on_inventory_pressed() -> void:
+	SpeechService.stop()
+	if inventory_panel and inventory_panel.visible:
+		inventory_panel.visible = false
+		if inventory_return_to_dock:
+			dock_panel.visible = true
+			_render_dock_submenu()
+		inventory_return_to_dock = false
+		return
+	inventory_return_to_dock = dock_panel != null and dock_panel.visible
+	agent_panel.visible = false
+	if public_board_panel:
+		public_board_panel.visible = false
+	if store_panel:
+		store_panel.visible = false
+	_render_inventory_items()
+	dock_panel.visible = false
+	inventory_panel.visible = true
+
+
+func _on_inventory_back_pressed() -> void:
+	inventory_panel.visible = false
+	if inventory_return_to_dock:
+		dock_panel.visible = true
+		_render_dock_submenu()
+	inventory_return_to_dock = false
+
+
+func _render_inventory_items() -> void:
+	for child in inventory_list.get_children():
+		child.queue_free()
+	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m3" % [
+		GlobalState.player_credits,
+		GlobalState.player_storage_ore,
+		GlobalState.player_storage_max,
+	]
+	inventory_list.add_child(_build_inventory_section_label("Cargo Hold"))
+	inventory_list.add_child(_build_inventory_cargo_row())
+	var items: Dictionary = GlobalState.inventory.get_all()
+	inventory_list.add_child(_build_inventory_section_label("Owned Items"))
+	if items.is_empty():
+		var empty := Label.new()
+		empty.text = "No stored items yet."
+		empty.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
+		inventory_list.add_child(empty)
+		return
+	var keys := items.keys()
+	keys.sort()
+	var reg = StoreRegistryScript.shared()
+	for item_id in keys:
+		var quantity := int(items[item_id])
+		if quantity <= 0:
+			continue
+		var item_def = reg.get_item(str(item_id))
+		inventory_list.add_child(_build_inventory_item_row(str(item_id), quantity, item_def))
+
+
+func _build_inventory_section_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
+	return label
+
+
+func _build_inventory_cargo_row() -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var title := Label.new()
+	title.text = GlobalState.cargo_display_text()
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	box.add_child(title)
+	if GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
+		var detail := Label.new()
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.text = "%s -> %s\n%s" % [
+			str(GlobalState.cargo_special.get("source", "Unknown source")),
+			str(GlobalState.cargo_special.get("destination", "Unknown destination")),
+			str(GlobalState.cargo_special.get("description", "")),
+		]
+		detail.add_theme_font_size_override("font_size", 12)
+		detail.add_theme_color_override("font_color", Color(0.72, 0.78, 0.84))
+		box.add_child(detail)
+	return box
+
+
+func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
+	var title := Label.new()
+	var display_name := item_id.capitalize()
+	var category := "item"
+	var description := ""
+	if item_def != null:
+		display_name = item_def.display_name
+		category = item_def.category
+		description = item_def.description
+	title.text = "%s x%d  [%s]" % [display_name, quantity, category]
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	header.add_child(title)
+	if ConsumableEffectsScript.can_use(item_id):
+		var use_btn := Button.new()
+		use_btn.text = "Use"
+		use_btn.custom_minimum_size.x = 64
+		use_btn.disabled = not ConsumableEffectsScript.is_usable_now(
+			item_id,
+			GlobalState.player,
+			GlobalState.inventory,
+			GlobalState.shield_capacity
+		)
+		use_btn.pressed.connect(_on_inventory_use_pressed.bind(item_id))
+		header.add_child(use_btn)
+	box.add_child(header)
+	if not description.strip_edges().is_empty():
+		var detail := Label.new()
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.text = description
+		detail.add_theme_font_size_override("font_size", 12)
+		detail.add_theme_color_override("font_color", Color(0.72, 0.78, 0.84))
+		box.add_child(detail)
+	return box
+
+
+func _on_inventory_use_pressed(item_id: String) -> void:
+	if GlobalState.player == null:
+		show_hud_warning("No ship available for item use.")
+		return
+	if not ConsumableEffectsScript.use(
+		item_id,
+		GlobalState.player,
+		GlobalState.inventory,
+		GlobalState.shield_capacity
+	):
+		show_hud_warning("Cannot use that item right now.")
+		return
+	_update_hud_health()
+	_render_inventory_items()
 
 
 func _render_store_items() -> void:
@@ -4040,6 +4280,10 @@ func undock_player():
 	agent_panel.visible = false
 	if public_board_panel:
 		public_board_panel.visible = false
+	if store_panel:
+		store_panel.visible = false
+	if inventory_panel:
+		inventory_panel.visible = false
 	current_station = null
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
@@ -5035,6 +5279,12 @@ func set_overview_collapsed(collapsed: bool):
 func _on_talk_to_agent_pressed():
 	SpeechService.start_interaction("Talk to Agent")
 	dock_panel.visible = false
+	if inventory_panel:
+		inventory_panel.visible = false
+	if store_panel:
+		store_panel.visible = false
+	if public_board_panel:
+		public_board_panel.visible = false
 	agent_panel.visible = true
 	
 	# Clear previous choice buttons
