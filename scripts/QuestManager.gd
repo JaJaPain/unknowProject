@@ -15,10 +15,14 @@ const MissionCollectionType := preload(
 )
 
 signal quest_accepted()
+signal quest_accepted_details(quest_data: Dictionary)
 signal quest_progress_updated()
 signal quest_completed()
+signal quest_completed_details(quest_data: Dictionary)
 signal quest_abandoned()
+signal quest_abandoned_details(quest_data: Dictionary)
 signal quest_expired(title: String)
+signal quest_expired_details(quest_data: Dictionary)
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 signal comms_reversal_triggered(mission_data: Dictionary)
 
@@ -267,6 +271,7 @@ func accept_quest(
 		")"
 	)
 	quest_accepted.emit()
+	quest_accepted_details.emit(active_quest.duplicate(true))
 	return true
 
 
@@ -338,6 +343,8 @@ func check_active_quest_expiration() -> bool:
 			continue
 		if CampaignClock.total_minutes < int(m.data.get("deadline_time_minutes", 0)):
 			continue
+		var expired_quest: Dictionary = m.data.duplicate(true)
+		expired_quest["expired_time_minutes"] = CampaignClock.total_minutes
 		var expired_title := str(m.data.get("title", "Contract"))
 		var expired_type := str(m.data.get("objective_type", "TIMED"))
 		_record_board_cooldown(m.data)
@@ -348,6 +355,7 @@ func check_active_quest_expiration() -> bool:
 		_collection.remove(rid)
 		print("[QuestManager] Quest expired: ", expired_title)
 		quest_expired.emit(expired_title)
+		quest_expired_details.emit(expired_quest)
 		any_expired = true
 	return any_expired
 
@@ -508,6 +516,9 @@ func complete_quest():
 	var final_payout = active_quest_payout()
 	GlobalState.player_credits += final_payout
 	GlobalState.adjust_reputation(active_quest["faction"], 5.0)
+	var completed_quest: Dictionary = active_quest.duplicate(true)
+	completed_quest["completed_time_minutes"] = CampaignClock.total_minutes
+	completed_quest["final_payout"] = final_payout
 
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
@@ -520,6 +531,7 @@ func complete_quest():
 		focused.transition_to(MissionInstanceType.State.COMPLETED)
 	_collection.remove(completed_id)
 	quest_completed.emit()
+	quest_completed_details.emit(completed_quest)
 
 func abandon_quest():
 	if not is_quest_active():
@@ -527,6 +539,8 @@ func abandon_quest():
 
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
+	var abandoned_quest: Dictionary = active_quest.duplicate(true)
+	abandoned_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
 
 	_record_board_cooldown(active_quest)
 	var abandoned_id := str(active_quest.get("runtime_id", ""))
@@ -536,6 +550,7 @@ func abandon_quest():
 		focused.transition_to(MissionInstanceType.State.ABANDONED)
 	_collection.remove(abandoned_id)
 	quest_abandoned.emit()
+	quest_abandoned_details.emit(abandoned_quest)
 
 
 func _cleanup_expired_quest() -> void:
@@ -603,6 +618,7 @@ func resolve_comms_branch(branch_id: String) -> void:
 			_set_ceasefire_for_faction(target_faction, false)
 			GlobalState.adjust_reputation(target_faction, -2.0)
 		"accept_bribe":
+			var bribe_quest: Dictionary = focused.data.duplicate(true)
 			var bribe: int = int(focused.data.get("bribe_amount", 0))
 			GlobalState.player_credits += bribe
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -3.0)
@@ -612,15 +628,25 @@ func resolve_comms_branch(branch_id: String) -> void:
 			var rid: String = focused.runtime_id
 			_record_board_cooldown(focused.data)
 			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: accepted bribe (%d SC)." % bribe)
+			bribe_quest["completed_time_minutes"] = CampaignClock.total_minutes
+			bribe_quest["final_payout"] = bribe
+			bribe_quest["outcome_detail"] = "accepted_bribe"
 			_collection.remove(rid)
+			quest_completed.emit()
+			quest_completed_details.emit(bribe_quest)
 		"walk_away":
+			var walkaway_quest: Dictionary = focused.data.duplicate(true)
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -1.0)
 			_despawn_ceasefire_targets(target_faction)
 			focused.transition_to(MissionInstanceType.State.ABANDONED)
 			var rid: String = focused.runtime_id
 			_record_board_cooldown(focused.data)
 			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: walked away.")
+			walkaway_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
+			walkaway_quest["outcome_detail"] = "walked_away"
 			_collection.remove(rid)
+			quest_abandoned.emit()
+			quest_abandoned_details.emit(walkaway_quest)
 
 	quest_progress_updated.emit()
 

@@ -95,8 +95,10 @@ func _ready() -> void:
 	system_changed.connect(_on_system_changed_prepare_destinations)
 	system_changed.connect(ship_pre_generator.on_system_entered)
 	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
-	QuestManager.quest_completed.connect(_on_quest_completed_chronicle)
-	QuestManager.quest_abandoned.connect(_on_quest_abandoned_chronicle)
+	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
+	QuestManager.quest_completed_details.connect(_on_quest_completed_chronicle)
+	QuestManager.quest_abandoned_details.connect(_on_quest_abandoned_chronicle)
+	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
 	if "--performance-baseline" in OS.get_cmdline_user_args():
 		call_deferred("_run_performance_baseline")
 	elif "--core-smoke-test" in OS.get_cmdline_user_args():
@@ -1375,20 +1377,22 @@ func _import_legacy_quest_history() -> void:
 
 func _append_quest_chronicle_event(
 	event_type: String,
+	quest: Dictionary,
 	outcome: String
 ) -> void:
 	if campaign_chronicle_store == null \
 			or campaign_checkpoint_store == null \
-			or QuestManager.active_quest.is_empty():
+			or quest.is_empty():
 		return
 	var active := campaign_checkpoint_store.runtime_state_from_active()
 	if not bool(active.get("ok", false)):
 		return
-	var quest := QuestManager.active_quest
 	var appended := campaign_chronicle_store.append_event(
 		event_type,
 		[campaign_chronicle_store.campaign["id"]],
 		{
+			"runtime_id": str(quest.get("runtime_id", "")),
+			"definition_id": str(quest.get("definition_id", "")),
 			"title": quest.get("title", ""),
 			"objective_type": quest.get("objective_type", ""),
 			"faction": quest.get("faction", ""),
@@ -1400,12 +1404,94 @@ func _append_quest_chronicle_event(
 		_sync_checkpoint_chronicle_context()
 
 
-func _on_quest_completed_chronicle() -> void:
-	_append_quest_chronicle_event("mission_completed", "completed")
+func _append_timed_quest_chronicle_event(
+	event_type: String,
+	quest: Dictionary,
+	outcome: String
+) -> void:
+	if campaign_chronicle_store == null \
+			or campaign_checkpoint_store == null \
+			or quest.is_empty() \
+			or not bool(quest.get("is_timed", false)):
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var payload := {
+		"runtime_id": str(quest.get("runtime_id", "")),
+		"definition_id": str(quest.get("definition_id", "")),
+		"title": str(quest.get("title", "")),
+		"objective_type": str(quest.get("objective_type", "")),
+		"faction": str(quest.get("faction", "")),
+		"source_lane": str(quest.get("_source_lane", "")),
+		"public_board": bool(quest.get("public_board", false)),
+		"system_id": str(quest.get("system_id", "")),
+		"outcome": outcome,
+		"accepted_time_minutes": int(quest.get("accepted_time_minutes", 0)),
+		"deadline_time_minutes": int(quest.get("deadline_time_minutes", 0)),
+		"expires_after_minutes": int(quest.get("expires_after_minutes", 0)),
+		"expiration_policy": str(quest.get("expiration_policy", "")),
+		"is_urgent": bool(quest.get("is_urgent", false)),
+		"base_reward_credits": int(quest.get("base_reward_credits", 0)),
+		"reward_credits": int(quest.get("reward_credits", 0)),
+		"reward_credits_multiplier": float(quest.get("reward_credits_multiplier", 1.0)),
+		"urgent_reward_multiplier": float(quest.get("urgent_reward_multiplier", 1.0)),
+	}
+	for time_key in [
+		"completed_time_minutes",
+		"abandoned_time_minutes",
+		"expired_time_minutes",
+	]:
+		if quest.has(time_key):
+			payload[time_key] = int(quest.get(time_key, 0))
+	if quest.has("final_payout"):
+		payload["final_payout"] = int(quest.get("final_payout", 0))
+	var appended := campaign_chronicle_store.append_event(
+		event_type,
+		[campaign_chronicle_store.campaign["id"]],
+		payload,
+		str(active.get("checkpoint_id", ""))
+	)
+	if bool(appended.get("ok", false)):
+		_sync_checkpoint_chronicle_context()
 
 
-func _on_quest_abandoned_chronicle() -> void:
-	_append_quest_chronicle_event("mission_abandoned", "abandoned")
+func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
+	_append_timed_quest_chronicle_event(
+		"timed_mission_accepted",
+		quest,
+		"accepted"
+	)
+
+
+func _on_quest_completed_chronicle(quest: Dictionary) -> void:
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_completed",
+			quest,
+			"completed"
+		)
+	else:
+		_append_quest_chronicle_event("mission_completed", quest, "completed")
+
+
+func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_abandoned",
+			quest,
+			"abandoned"
+		)
+	else:
+		_append_quest_chronicle_event("mission_abandoned", quest, "abandoned")
+
+
+func _on_quest_expired_chronicle(quest: Dictionary) -> void:
+	_append_timed_quest_chronicle_event(
+		"timed_mission_expired",
+		quest,
+		"expired"
+	)
 
 
 func _safe_location_for(
