@@ -555,6 +555,8 @@ func _refresh_gate_states() -> void:
 
 
 func _init_generated_system_configs() -> void:
+	if system_registry == null:
+		return
 	for sys_def: SystemDefinition in system_registry.get_all_systems():
 		if sys_def.scene_path != "generated":
 			continue
