@@ -6070,6 +6070,14 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		# — fall back to one of the canned 5 lines for this agent.
 		handoff_line = handoff_lines[randi() % handoff_lines.size()]
 		print("[TRACE] [UIManager] Using canned handoff fallback for: ", agent_name)
+		_record_static_text_fallback(
+			"kaelen_handoff_intro",
+			"unique_intro_unavailable",
+			{
+				"agent_name": str(agent_name),
+				"quest_is_fallback": is_fallback,
+			}
+		)
 	
 	# Flash incoming call notification in the chat bar
 	add_chat_message("COMMS", "Incoming voice transmission...", Color(0.0, 0.9, 0.9))
@@ -6127,6 +6135,30 @@ func _add_kaelen_gate_intel_button() -> void:
 		_kaelen_gate_reveal(gate_id, cost)
 	)
 	agent_choices_container.add_child(intel_btn)
+
+
+func _record_static_text_fallback(
+	content_type: String,
+	reason: String,
+	context: Dictionary = {}
+) -> void:
+	var next_context: Dictionary = context.duplicate(true)
+	next_context.merge(
+		LLMInterface.diagnostics_context_for_capability("kaelen_line"),
+		true
+	)
+	GenerationDiagnostics.record_content_source(
+		content_type,
+		"static_fallback",
+		"UIManager",
+		next_context.merged({"fallback_reason": reason}, true)
+	)
+	GenerationDiagnostics.record_fallback(
+		content_type,
+		reason,
+		"UIManager",
+		next_context
+	)
 
 
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
@@ -6230,6 +6262,14 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 			"That contract is broken, Shiny. I'm not putting your name on it.",
 			"voice.kaelen.v1"
 		)
+		_record_static_text_fallback(
+			"quest_rejection",
+			"quest_validation_failed",
+			{
+				"validation_error": QuestManager.last_validation_error,
+				"quest_title": str(quest_data.get("title", "")),
+			}
+		)
 		var return_btn := Button.new()
 		return_btn.text = "Back to Services"
 		return_btn.pressed.connect(_on_agent_back_pressed)
@@ -6258,6 +6298,14 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	if clean_response.length() < 5:
 		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
 		print("[TRACE] [UIManager] dialogue_response was empty after cleaning, using fallback.")
+		_record_static_text_fallback(
+			"choice_response",
+			"cleaned_response_too_short",
+			{
+				"agent_name": str(quest_data.get("agent_name", "")),
+				"quest_title": str(quest_data.get("title", "")),
+			}
+		)
 	agent_dialogue_label.text = clean_response
 	
 	# Play choice response voice audio (TTS also cleans internally)
@@ -6319,6 +6367,14 @@ func _on_agent_complete_pressed():
 	if completion_text == "":
 		completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
 		print("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
+		_record_static_text_fallback(
+			"kaelen_completion",
+			"reaction_line_not_ready",
+			{
+				"quest_title": str(completed_quest.get("title", "")),
+				"public_board": bool(completed_quest.get("public_board", false)),
+			}
+		)
 	cached_completion_line = ""
 	cached_abandon_line = ""
 	
@@ -6336,6 +6392,7 @@ func _on_agent_abandon_pressed():
 	SpeechService.start_interaction("Abandon Contract")
 	
 	is_waiting_for_agent_board = false
+	var abandoned_quest: Dictionary = QuestManager.active_quest.duplicate(true)
 	
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -6352,6 +6409,13 @@ func _on_agent_abandon_pressed():
 	if abandon_text == "":
 		abandon_text = LLMInterface.fallback_abandon_lines[randi() % LLMInterface.fallback_abandon_lines.size()]
 		print("[TRACE] [UIManager] Kaelen abandon line not ready, using random fallback.")
+		_record_static_text_fallback(
+			"kaelen_abandon",
+			"reaction_line_not_ready",
+			{
+				"quest_title": str(abandoned_quest.get("title", "")),
+			}
+		)
 	cached_completion_line = ""
 	cached_abandon_line = ""
 	

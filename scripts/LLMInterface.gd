@@ -2573,7 +2573,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 12.0
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
@@ -2616,16 +2616,15 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 			_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
 	)
 
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
@@ -2637,7 +2636,14 @@ func _trigger_kaelen_reaction_fallback(
 	callback: Callable,
 	reason: String = "unspecified"
 ) -> void:
-	_record_llm_fallback("kaelen_reaction", reason)
+	var context: Dictionary = diagnostics_context_for_capability("kaelen_line")
+	GenerationDiagnostics.record_content_source(
+		"kaelen_reaction",
+		"static_fallback",
+		"LLMInterface",
+		context.merged({"fallback_reason": reason}, true)
+	)
+	_record_llm_fallback("kaelen_reaction", reason, context)
 	var comp: String = fallback_completion_lines[randi() % fallback_completion_lines.size()]
 	var abn: String = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
 	callback.call(comp, abn)

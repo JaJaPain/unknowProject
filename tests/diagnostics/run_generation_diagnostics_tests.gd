@@ -95,6 +95,12 @@ func _test_records_content_source_summary() -> void:
 		"test",
 		{}
 	)
+	diagnostics.record_content_source(
+		"kaelen_reaction",
+		"static_fallback",
+		"test",
+		{}
+	)
 	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		int(summary.get("source_counts", {}).get("llm", 0)) == 1,
@@ -103,6 +109,10 @@ func _test_records_content_source_summary() -> void:
 	_expect(
 		int(summary.get("source_counts", {}).get("procedural_fallback", 0)) == 1,
 		"Procedural fallback content source count was not recorded."
+	)
+	_expect(
+		int(summary.get("source_counts", {}).get("static_fallback", 0)) == 1,
+		"Static fallback content source count was not recorded."
 	)
 
 
@@ -119,6 +129,10 @@ func _test_summary_text_is_readable() -> void:
 	_expect(
 		text.contains("procedural_fallback=1"),
 		"Summary text did not include procedural fallback source count."
+	)
+	_expect(
+		text.contains("static_fallback=1"),
+		"Summary text did not include static fallback source count."
 	)
 	_expect(
 		text.contains("recent_events"),
