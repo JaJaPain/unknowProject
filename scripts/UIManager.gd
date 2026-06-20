@@ -223,6 +223,8 @@ var current_station: Node3D = null
 
 var cached_quest_data: Dictionary = {}
 var cached_quest_is_fallback: bool = false
+var cached_quest_context: Dictionary = {}
+var pending_quest_context: Dictionary = {}
 var is_waiting_for_agent_board: bool = false
 
 # Per-outpost count of TTS flavor lines we have already pre-cached
@@ -3094,6 +3096,7 @@ func toggle_dock_menu(
 			or (public_board_panel and public_board_panel.visible) \
 			or (store_panel and store_panel.visible) \
 			or (inventory_panel and inventory_panel.visible):
+		_clear_cached_agent_quest("undock")
 		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
@@ -3106,6 +3109,7 @@ func toggle_dock_menu(
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
+		_clear_cached_agent_quest_if_stale()
 		dock_panel.visible = true
 		# Collapse overview while docked — station UI takes priority
 		set_overview_collapsed(true)
@@ -3487,6 +3491,7 @@ func _request_station_contact_work(
 		npc_data.get("flavor_color", Color.WHITE),
 		GlobalState.get_minor_npc_portrait(npc_name)
 	)
+	pending_quest_context = _current_agent_quest_context()
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
 		_on_background_quest_generated,
@@ -3494,11 +3499,19 @@ func _request_station_contact_work(
 	)
 
 
-func _request_background_agent_quest() -> void:
+func _request_background_agent_quest() -> bool:
+	pending_quest_context = _current_agent_quest_context()
 	var profile := _current_station_agent_profile()
 	if profile.is_empty():
-		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
-		return
+		if _current_system_allows_major_agent_fallback():
+			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+			return true
+		else:
+			print(
+				"[TRACE] [UIManager] No local faction contact for generated station; skipping old-agent fallback."
+			)
+			pending_quest_context = {}
+		return false
 	var profile_faction := str(profile.get("faction", ""))
 	var profile_faction_id := str(profile.get("faction_id", ""))
 	var faction_arg := (
@@ -3511,6 +3524,7 @@ func _request_background_agent_quest() -> void:
 		_on_background_quest_generated,
 		profile
 	)
+	return true
 
 
 func _current_station_agent_profile() -> Dictionary:
@@ -3546,6 +3560,55 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 		"faction_id": faction_id,
 		"faction_display": faction_display,
 	}
+
+
+func _current_agent_quest_context() -> Dictionary:
+	return {
+		"system_id": str(GlobalState.current_system_id),
+		"station_id": _current_station_contact_id(),
+	}
+
+
+func _is_agent_quest_context_current(context: Dictionary) -> bool:
+	if context.is_empty():
+		return false
+	return str(context.get("system_id", "")) == str(GlobalState.current_system_id) \
+		and str(context.get("station_id", "")) == _current_station_contact_id()
+
+
+func _clear_cached_agent_quest(reason: String = "") -> void:
+	if cached_quest_data.is_empty() \
+			and cached_quest_context.is_empty() \
+			and pending_quest_context.is_empty():
+		return
+	cached_quest_data = {}
+	cached_quest_is_fallback = false
+	cached_quest_context = {}
+	pending_quest_context = {}
+	cached_unique_intro = ""
+	if not reason.is_empty():
+		print("[TRACE] [UIManager] Cleared cached agent quest: ", reason)
+
+
+func _clear_cached_agent_quest_if_stale() -> void:
+	if not cached_quest_data.is_empty() \
+			and not _is_agent_quest_context_current(cached_quest_context):
+		_clear_cached_agent_quest("station_or_system_changed")
+	if not pending_quest_context.is_empty() \
+			and not _is_agent_quest_context_current(pending_quest_context):
+		pending_quest_context = {}
+
+
+func _current_system_allows_major_agent_fallback() -> bool:
+	if GlobalState.current_system_id == "start_system":
+		return true
+	var game_root := get_tree().current_scene
+	if game_root and "system_registry" in game_root:
+		var registry = game_root.system_registry
+		if registry != null:
+			return str(registry.resolve_system_id(GlobalState.current_system_id)) \
+				== "system.start"
+	return false
 
 
 func _current_mechanic_profile() -> Dictionary:
@@ -5969,6 +6032,7 @@ func _refresh_agent_quest_board():
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "neutral")
+	_clear_cached_agent_quest_if_stale()
 
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
@@ -5983,11 +6047,32 @@ func _refresh_agent_quest_board():
 		
 		# If the background generator hasn't started yet, trigger it now.
 		if not LLMInterface.is_waiting:
-			_request_background_agent_quest()
+			if not _request_background_agent_quest():
+				is_waiting_for_agent_board = false
+				agent_back_btn.visible = true
+				agent_dialogue_label.text = (
+					"No local faction contact is available for contract work at this station."
+				)
 
 func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
+	var request_context: Dictionary = pending_quest_context.duplicate(true)
+	pending_quest_context = {}
+	if not _is_agent_quest_context_current(request_context):
+		print(
+			"[TRACE] [UIManager] Discarding stale generated quest for context: ",
+			request_context
+		)
+		if agent_panel.visible and is_waiting_for_agent_board:
+			if not _request_background_agent_quest():
+				is_waiting_for_agent_board = false
+				agent_back_btn.visible = true
+				agent_dialogue_label.text = (
+					"No local faction contact is available for contract work at this station."
+				)
+		return
 	cached_quest_data = quest_data
 	cached_quest_is_fallback = is_fallback
+	cached_quest_context = request_context
 	cached_unique_intro = ""  # Reset for new quest — old intro no longer applies
 	print("[TRACE] [UIManager] Background quest generated. Faction: ", quest_data.get("faction", "neutral"), " is_fallback: ", is_fallback)
 	
@@ -6260,6 +6345,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	cached_quest_data = {}
 	cached_quest_is_fallback = false
+	cached_quest_context = {}
 	is_waiting_for_agent_board = false
 	
 	# Clear choices container
