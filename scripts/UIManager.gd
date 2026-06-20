@@ -51,6 +51,8 @@ var dock_message_portrait: TextureRect
 var dock_message_name: Label
 var dock_message_line: Label
 var dock_message_tween: Tween
+var station_contacts_panel: PanelContainer
+var station_contacts_list: VBoxContainer
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
 # Portrait + personalized greeting that pops in the top area of the dock panel
 # when the player enters the Grease Monkeys maintenance submenu. Layout:
@@ -1060,6 +1062,32 @@ func _create_dock_menu():
 	dock_message_line.add_theme_color_override("font_shadow_color", Color.BLACK)
 	dock_message_line.add_theme_constant_override("shadow_outline_size", 2)
 	msg_text_vbox.add_child(dock_message_line)
+
+	station_contacts_panel = PanelContainer.new()
+	station_contacts_panel.name = "StationContactsPanel"
+	station_contacts_panel.visible = false
+	station_contacts_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var contacts_style := StyleBoxFlat.new()
+	contacts_style.bg_color = Color(0.04, 0.055, 0.08, 0.82)
+	contacts_style.border_width_left = 1
+	contacts_style.border_width_top = 1
+	contacts_style.border_width_right = 1
+	contacts_style.border_width_bottom = 1
+	contacts_style.border_color = Color(0.0, 0.65, 0.75, 0.35)
+	contacts_style.corner_radius_top_left = 4
+	contacts_style.corner_radius_top_right = 4
+	contacts_style.corner_radius_bottom_right = 4
+	contacts_style.corner_radius_bottom_left = 4
+	contacts_style.content_margin_left = 8
+	contacts_style.content_margin_right = 8
+	contacts_style.content_margin_top = 6
+	contacts_style.content_margin_bottom = 6
+	station_contacts_panel.add_theme_stylebox_override("panel", contacts_style)
+	vbox.add_child(station_contacts_panel)
+
+	station_contacts_list = VBoxContainer.new()
+	station_contacts_list.add_theme_constant_override("separation", 4)
+	station_contacts_panel.add_child(station_contacts_list)
 
 	ore_trade_popup = PanelContainer.new()
 	ore_trade_popup.name = "OreTradePopup"
@@ -3169,6 +3197,7 @@ func _render_dock_submenu() -> void:
 		test_pickup_part_btn.visible = false
 		hear_gossip_btn.visible = false
 		ask_for_part_btn.visible = false
+		_render_station_contacts(false)
 		
 		var station_quest: Dictionary = QuestManager.get_pickup_special_data()
 		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("picked_up", false)
@@ -3230,6 +3259,7 @@ func _render_dock_submenu() -> void:
 		test_pickup_part_btn.visible = DEBUG_TESTS and is_outpost
 		hear_gossip_btn.visible = is_outpost
 		back_to_services_btn.visible = false
+		_render_station_contacts(true)
 		if dock_background:
 			dock_background.visible = false
 		# Mechanic intro belongs only on the maintenance submenu. On
@@ -3239,6 +3269,79 @@ func _render_dock_submenu() -> void:
 			mechanic_intro_panel.visible = false
 
 	_update_repair_button()
+
+
+func _render_station_contacts(should_show: bool) -> void:
+	if station_contacts_panel == null or station_contacts_list == null:
+		return
+	for child in station_contacts_list.get_children():
+		child.queue_free()
+	if not should_show:
+		station_contacts_panel.visible = false
+		return
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty():
+		station_contacts_panel.visible = false
+		return
+	var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
+	if contacts.is_empty():
+		station_contacts_panel.visible = false
+		return
+	station_contacts_panel.visible = true
+	var title := Label.new()
+	title.text = "Station Contacts"
+	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	station_contacts_list.add_child(title)
+	for npc_name in contacts:
+		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+		var role := str(npc_data.get("role", "Local contact"))
+		var faction := str(npc_data.get("faction", ""))
+		var faction_label := ""
+		if not faction.is_empty():
+			faction_label = " - %s" % str(
+				GlobalState.faction_info(faction).get("name", faction.capitalize())
+			)
+		var btn := Button.new()
+		btn.text = "%s  [%s%s]" % [str(npc_name), role, faction_label]
+		btn.tooltip_text = "Hear what this station contact has to say."
+		btn.pressed.connect(_on_station_contact_pressed.bind(str(npc_name)))
+		station_contacts_list.add_child(btn)
+
+
+func _current_station_contact_id() -> String:
+	if current_station == null or not is_instance_valid(current_station):
+		return ""
+	var station_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
+	if station_id.is_empty():
+		station_id = GlobalState.resolve_outpost_id(current_station)
+	if station_id.is_empty():
+		var raw_world_id: Variant = current_station.get("world_id")
+		station_id = str(raw_world_id) if raw_world_id != null else ""
+	if station_id.is_empty() or station_id == "<null>":
+		station_id = str(current_station.get_meta("world_id", ""))
+	return station_id
+
+
+func _on_station_contact_pressed(npc_name: String) -> void:
+	var npc_data := GlobalState.get_minor_npc_data(npc_name)
+	if npc_data.is_empty():
+		show_hud_warning("That contact is unavailable.")
+		return
+	var lines: Array = npc_data.get("flavor_lines", [])
+	if lines.is_empty():
+		show_hud_warning("%s has nothing to say right now." % npc_name)
+		return
+	var line := str(lines[randi() % lines.size()])
+	var color: Color = npc_data.get("flavor_color", Color.WHITE)
+	var portrait: Texture2D = GlobalState.get_minor_npc_portrait(npc_name)
+	show_dock_message(line, npc_name, color, portrait)
+	GlobalState.emit_npc_flavor({
+		"npc_name": npc_name,
+		"line": line,
+		"color": color,
+		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
+	})
 
 
 func _on_maintenance_bay_pressed() -> void:
