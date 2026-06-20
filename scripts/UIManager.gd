@@ -72,6 +72,7 @@ var mechanic_line_label: Label
 var _cached_mechanic_line: String = ""
 var _cached_mechanic_line_is_fallback: bool = false
 var _mechanic_precache_in_flight: bool = false
+var _cached_mechanic_profile: Dictionary = {}
 # Monotonic request id. Bumped every time we fire a new LLM call so
 # stale callbacks don't overwrite the latest cache. Stale callbacks
 # bail at the top of the lambda.
@@ -3392,6 +3393,37 @@ func _current_station_agent_profile() -> Dictionary:
 	return {}
 
 
+func _current_mechanic_profile() -> Dictionary:
+	var station_id := _current_station_contact_id()
+	if not station_id.is_empty():
+		var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
+		for npc_name in contacts:
+			var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+			if str(npc_data.get("role", "")) != "Station mechanic":
+				continue
+			return {
+				"name": str(npc_name),
+				"role": str(npc_data.get("role", "Station mechanic")),
+				"voice_profile_id": str(
+					npc_data.get("voice_profile_id", "voice.neutral.v1")
+				),
+				"flavor_color": npc_data.get("flavor_color", Color(1.0, 0.85, 0.4)),
+				"portrait": GlobalState.get_minor_npc_portrait(str(npc_name)),
+				"is_generated": true,
+			}
+	var jenna_data := GlobalState.get_minor_npc_data("Jenna Kross")
+	return {
+		"name": "Jenna Kross",
+		"role": str(jenna_data.get("role", "Grease Monkeys mechanic")),
+		"voice_profile_id": str(
+			jenna_data.get("voice_profile_id", "voice.jenna_kross.v1")
+		),
+		"flavor_color": jenna_data.get("flavor_color", Color(1.0, 0.85, 0.4)),
+		"portrait": GlobalState.get_minor_npc_portrait("Jenna Kross"),
+		"is_generated": false,
+	}
+
+
 func _on_maintenance_bay_pressed() -> void:
 	SpeechService.stop()
 	current_submenu = DockSubmenu.MAINTENANCE
@@ -3863,6 +3895,7 @@ func _cache_mechanic_intro() -> void:
 	var my_request_id: int = _mechanic_request_id
 	_cached_mechanic_line = ""
 	_cached_mechanic_line_is_fallback = false
+	_cached_mechanic_profile = _current_mechanic_profile()
 
 	_mechanic_pickup_offer = GlobalState.roll_pickup_offer()
 	_mechanic_pickup_declined = false
@@ -3882,7 +3915,7 @@ func _cache_mechanic_intro() -> void:
 	# path used for Kaelen handoffs, so we know it works end-to-end.
 	# (request_mechanic_intro is added below as a thin wrapper so the
 	# prompt stays local to this feature rather than spamming LLMInterface.)
-	_request_mechanic_intro(ship, worst_tier, best_tier, credits, _mechanic_pickup_offer, active_quest, func(line: String, is_fallback: bool) -> void:
+	_request_mechanic_intro(ship, worst_tier, best_tier, credits, _mechanic_pickup_offer, active_quest, _cached_mechanic_profile, func(line: String, is_fallback: bool) -> void:
 		# Stale-callback guard: only the latest request wins. If a newer
 		# Speak click already fired (request_id > mine), bail without
 		# touching the cache or playing anything.
@@ -3894,11 +3927,13 @@ func _cache_mechanic_intro() -> void:
 		_mechanic_precache_in_flight = false
 		print("[TRACE] [UIManager] Mechanic greeting cached. fallback=", is_fallback, " len=", line.length(), " offer=", _mechanic_pickup_offer.get("offer", false))
 		# Pre-cache the TTS so the line is instant when the player enters
-		# maintenance. Uses Jenna's stable voice profile for consistency with
-		# her other flavor lines. Skipped on fallback (already in cache or
-		# too short to be worth caching).
+		# maintenance. Skipped on fallback (already in cache or too short to
+		# be worth caching).
 		if not is_fallback and line.strip_edges() != "":
-			SpeechService.cache(line, "voice.jenna_kross.v1")
+			SpeechService.cache(
+				line,
+				str(_cached_mechanic_profile.get("voice_profile_id", "voice.neutral.v1"))
+			)
 		# If the player is already inside the maintenance submenu, refresh
 		# the chat box immediately (otherwise the cached line waits for
 		# next entry). _render_mechanic_intro will auto-play if the line
@@ -3910,23 +3945,60 @@ func _cache_mechanic_intro() -> void:
 # Thin wrapper around the LLM. Falls back to a tier-weighted canned line
 # if the model is offline / slow / returns garbage. The prompt is built
 # locally so this feature stays self-contained.
-func _request_mechanic_intro(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary, callback: Callable) -> void:
+func _request_mechanic_intro(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary, callback: Callable) -> void:
 	if LLMInterface.active_model_name == "":
-		var fb: String = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest)
+		var fb: String = _pick_fallback_mechanic_greeting(
+			ship,
+			worst_tier,
+			best_tier,
+			offer,
+			active_quest,
+			mechanic_profile
+		)
 		callback.call(fb, true)
 		return
 	
-	var prompt: String = _build_mechanic_intro_prompt(ship, worst_tier, best_tier, credits, offer, active_quest)
-	_request_mechanic_intro_attempt(prompt, ship, worst_tier, best_tier, offer, active_quest, callback, "", 0)
+	var prompt: String = _build_mechanic_intro_prompt(
+		ship,
+		worst_tier,
+		best_tier,
+		credits,
+		offer,
+		active_quest,
+		mechanic_profile
+	)
+	_request_mechanic_intro_attempt(
+		prompt,
+		ship,
+		worst_tier,
+		best_tier,
+		offer,
+		active_quest,
+		mechanic_profile,
+		callback,
+		"",
+		0
+	)
 
 # Builds the system prompt for the mechanic intro. Appends the pickup offer
 # instructions if an offer is active.
-func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary) -> String:
+func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary) -> String:
+	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
+	var mechanic_role := str(
+		mechanic_profile.get("role", "Grease Monkeys mechanic")
+	)
+	var is_generated := bool(mechanic_profile.get("is_generated", false))
 	var examples: Array = [
 		FALLBACK_MECHANIC_GREETINGS[0],
 		FALLBACK_MECHANIC_GREETINGS[4],
 		FALLBACK_MECHANIC_GREETINGS[7],
 	]
+	if is_generated:
+		examples = [
+			"Your ship is making a noise that costs money. Lucky for both of us, I like money.",
+			"Indy, that crate limped in like it owes the docking clamps an apology. What broke first?",
+			"I can keep your rig breathing, but I charge extra when the dents have politics.",
+		]
 	# If an offer is rolling, use the offer templates (indices 10-12) instead
 	if offer.get("offer", false):
 		examples = [
@@ -3934,14 +4006,28 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 			FALLBACK_MECHANIC_GREETINGS[11],
 			FALLBACK_MECHANIC_GREETINGS[12],
 		]
+		if is_generated:
+			examples = [
+				"I need {part} from {npc} over at {outpost}. Try not to make the invoice heroic.",
+				"Run to {outpost}, get {part} from {npc}, bring it back. Simple, which is how trouble hides.",
+				"I have a parts problem with your name on it. {npc} at {outpost} has {part}.",
+			]
 	var examples_block: String = ""
 	for ex in examples:
-		examples_block += "- \"" + ex + "\"\n"
+		var example_line := str(ex)
+		if offer.get("offer", false):
+			example_line = example_line.replace("{part}", str(offer.get("part_name", "the part")))
+			example_line = example_line.replace("{npc}", str(offer.get("npc_name", "the contact")))
+			example_line = example_line.replace("{outpost}", str(offer.get("outpost_display", "the outpost")))
+		examples_block += "- \"" + example_line + "\"\n"
 	
 	var prompt: String = (
-		"You ARE Jenna Kross, a grease-monkey mechanic at the main station dock. "
-		+ "You are NOT Broker Kaelen, NOT an agent, NOT a quest-giver. You fix ships for a living.\n\n"
+		"You ARE " + mechanic_name + ", a " + mechanic_role + " at this station dock. "
+		+ "You are NOT Broker Kaelen, NOT an agent, NOT a faction contact. You fix ships for a living.\n"
+		+ "If you are not Jenna Kross, do not claim to be Jenna or Grease Monkeys.\n\n"
 		+ "FACT PACKET (use these exact strings):\n"
+		+ "- Mechanic name: \"" + mechanic_name + "\"\n"
+		+ "- Mechanic role: \"" + mechanic_role + "\"\n"
 		+ "- Ship: \"" + ship + "\"\n"
 		+ "- Worst faction rep tier: \"" + worst_tier + "\"\n"
 		+ "- Best faction rep tier: \"" + best_tier + "\"\n"
@@ -3994,7 +4080,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		)
 		
 	prompt += (
-		"Here are 3 of YOUR OWN (Jenna's) past greetings, in your exact voice:\n"
+		"Here are 3 of YOUR OWN past greetings, in your exact voice:\n"
 		+ examples_block + "\n"
 		+ "Write ONE NEW greeting. HARD REQUIREMENTS:\n"
 		+ reqs
@@ -4008,7 +4094,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 # Recursive attempt handler for the mechanic intro. Evaluates the LLM's
 # response against _is_valid_mechanic_line. If it fails, appends the
 # rejection reason as a self-critique suffix and tries again (up to a limit).
-func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, callback: Callable, critique_suffix: String, attempt: int) -> void:
+func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary, callback: Callable, critique_suffix: String, attempt: int) -> void:
 	if attempt >= 2:
 		print("[TRACE] [UIManager] Mechanic LLM failed all attempts. Falling back.")
 		GenerationDiagnostics.record_fallback(
@@ -4017,7 +4103,7 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 			"UIManager",
 			{"attempt": attempt}
 		)
-		callback.call(_pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest), true)
+		callback.call(_pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest, mechanic_profile), true)
 		return
 		
 	var url: String = LLMInterface.OLLAMA_URL
@@ -4046,7 +4132,7 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 				"UIManager",
 				{"attempt": attempt}
 			)
-			var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest)
+			var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest, mechanic_profile)
 			callback.call(fb, true)
 			return
 			
@@ -4067,7 +4153,7 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 						var reason: String = _explain_mechanic_line_rejection(line, ship, worst_tier, best_tier, offer, active_quest)
 						print("[TRACE] [UIManager] Mechanic LLM line REJECTED on attempt ", attempt, ": ", reason, " (", line, ")")
 						var new_suffix: String = "SELF-CRITIQUE — your previous attempt was rejected. Reason: " + reason
-						_request_mechanic_intro_attempt(base_prompt, ship, worst_tier, best_tier, offer, active_quest, callback, new_suffix, attempt + 1)
+						_request_mechanic_intro_attempt(base_prompt, ship, worst_tier, best_tier, offer, active_quest, mechanic_profile, callback, new_suffix, attempt + 1)
 						return
 		
 		# Fallback on parse error
@@ -4077,7 +4163,7 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 			"UIManager",
 			{"attempt": attempt}
 		)
-		var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest)
+		var fb = _pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest, mechanic_profile)
 		callback.call(fb, true)
 	)
 	http.request(url, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
@@ -4149,7 +4235,9 @@ func _explain_mechanic_line_rejection(line: String, ship: String, worst_tier: St
 	return ""
 
 # Pick a canned line.
-func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary) -> String:
+func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary = {}) -> String:
+	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
+	var is_generated := bool(mechanic_profile.get("is_generated", false))
 	if active_quest.has("part_name"):
 		var part = active_quest.get("part_name", "the part")
 		var has_part = active_quest.get("picked_up", false)
@@ -4157,6 +4245,21 @@ func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tie
 			return "Where's my %s? Don't tell me you got lost, Indy." % part
 		else:
 			return "You actually got the %s. Drop it on the bench before you break it." % part
+	if is_generated:
+		if offer.get("offer", false):
+			return "%s needs %s from %s at %s. Bring it back before the station invents a storage fee." % [
+				mechanic_name,
+				offer.get("part_name", "the part"),
+				offer.get("npc_name", "the contact"),
+				offer.get("outpost_display", "the outpost"),
+			]
+		var generated_lines := [
+			"%s says your %s is making the kind of noise that turns invoices religious.",
+			"%s can keep %s breathing, but miracles cost extra out here.",
+			"%s has seen prettier wrecks than %s. Lucky for you, pretty doesn't fly.",
+		]
+		var template := str(generated_lines[randi() % generated_lines.size()])
+		return template % [mechanic_name, ship]
 
 	var salt: int = randi() % 10
 	var idx: int = (worst_tier.length() + best_tier.length() + salt) % 10
@@ -4173,15 +4276,37 @@ func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tie
 func _render_mechanic_intro() -> void:
 	if not mechanic_intro_panel or not is_instance_valid(mechanic_intro_panel):
 		return
-	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
+	var mechanic_profile: Dictionary = (
+		_cached_mechanic_profile
+		if not _cached_mechanic_profile.is_empty()
+		else _current_mechanic_profile()
+	)
+	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
+	var mechanic_voice := str(
+		mechanic_profile.get("voice_profile_id", "voice.jenna_kross.v1")
+	)
+	var portrait_tex := mechanic_profile.get("portrait", null) as Texture2D
 	if portrait_tex:
 		mechanic_portrait.texture = portrait_tex
+	if mechanic_name_label and is_instance_valid(mechanic_name_label):
+		mechanic_name_label.text = mechanic_name.to_upper()
+		mechanic_name_label.add_theme_color_override(
+			"font_color",
+			mechanic_profile.get("flavor_color", Color(1.0, 0.85, 0.4))
+		)
 		
 	var line: String = _cached_mechanic_line
 	var line_changed: bool = false
 	if line.strip_edges() == "":
 		var active_quest: Dictionary = QuestManager.get_pickup_special_data()
-		line = _pick_fallback_mechanic_greeting(PLAYER_SHIP_NAME, _worst_reputation_tier(), _best_reputation_tier(), _mechanic_pickup_offer, active_quest)
+		line = _pick_fallback_mechanic_greeting(
+			PLAYER_SHIP_NAME,
+			_worst_reputation_tier(),
+			_best_reputation_tier(),
+			_mechanic_pickup_offer,
+			active_quest,
+			mechanic_profile
+		)
 		_cached_mechanic_line = line
 		_cached_mechanic_line_is_fallback = true
 		
@@ -4204,11 +4329,11 @@ func _render_mechanic_intro() -> void:
 	if line_changed:
 		var display_line: String = SpeechService.prepare_text(
 			line,
-			"voice.jenna_kross.v1"
+			mechanic_voice
 		)
 		if display_line != line:
 			mechanic_line_label.text = display_line
-		SpeechService.play(line, "voice.jenna_kross.v1")
+		SpeechService.play(line, mechanic_voice)
 
 
 # ── Test quest: outpost pickup (DEBUG) ──────────────────────────────────────
@@ -6651,11 +6776,17 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 	var outpost_id = _mechanic_pickup_offer["outpost_id"]
 	var outpost_display = _mechanic_pickup_offer["outpost_display"]
 	var reward = _mechanic_pickup_offer["reward_credits"]
+	var mechanic_profile: Dictionary = (
+		_cached_mechanic_profile
+		if not _cached_mechanic_profile.is_empty()
+		else _current_mechanic_profile()
+	)
+	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
 	
 	var quest_data: Dictionary = {
 		"title": "Parts Run: %s" % part_name,
 		"faction": "neutral",
-		"agent_name": "Jenna Kross",
+		"agent_name": mechanic_name,
 		"station_errand": true,
 		"dialogue": "Head to %s and pick up the %s from %s. Bring it back here." % [outpost_display, part_name, npc_name],
 		"objective": {
@@ -6682,7 +6813,7 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 		
 	# Kick off the LLM call to generate the outpost contact's handoff line.
 	# The line is cached on the quest dict via QuestManager.set_pickup_handoff.
-	_request_outpost_pickup_handoff_attempt(npc_name, part_name, outpost_display, "Jenna Kross", "", 0)
+	_request_outpost_pickup_handoff_attempt(npc_name, part_name, outpost_display, mechanic_name, "", 0)
 
 func _on_mechanic_pickup_decline_pressed() -> void:
 	_mechanic_pickup_declined = true

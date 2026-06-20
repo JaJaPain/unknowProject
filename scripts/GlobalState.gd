@@ -432,6 +432,12 @@ const GENERATED_CONTACT_LINES: Array[String] = [
 	"The gate crews keep secrets. The station crews sell them by the cup.",
 	"Don't trust clean paperwork past the frontier gate.",
 ]
+const GENERATED_MECHANIC_LINES: Array[String] = [
+	"Your ship is talking in repair bills. I speak that dialect.",
+	"Frontier maintenance rule: if it is still smoking, it is still negotiable.",
+	"Bring me dents, leaks, and bad decisions. I invoice all three.",
+	"I can fix honest damage. Political damage costs extra.",
+]
 const GENERATED_CONTACT_FACTION_LINES := {
 	"reavers": [
 		"Reaver work is simple: take the job, take the risk, take payment first.",
@@ -604,6 +610,8 @@ static func _generated_contact_data(
 	var contact_lines := GENERATED_CONTACT_LINES.duplicate()
 	if GENERATED_CONTACT_FACTION_LINES.has(faction_name):
 		contact_lines.append_array(GENERATED_CONTACT_FACTION_LINES[faction_name])
+	if role == "Station mechanic":
+		contact_lines = GENERATED_MECHANIC_LINES.duplicate()
 	var handoff_lines: Array = [
 		"Part's in your bay. Around here, that counts as a clean handoff.",
 		"You got what you came for. Don't make the route back interesting.",
@@ -1092,7 +1100,18 @@ static func roll_pickup_offer() -> Dictionary:
 				"id": str(starter_id),
 				"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
 			})
-	var selected: Dictionary = outposts[randi() % outposts.size()]
+	var valid_outposts: Array = []
+	for outpost in outposts:
+		if outpost is Dictionary \
+				and not get_minor_npcs_at_outpost(str(outpost.get("id", ""))).is_empty():
+			valid_outposts.append(outpost)
+	if valid_outposts.is_empty():
+		for starter_id in PICKUP_OUTPOST_IDS:
+			valid_outposts.append({
+				"id": str(starter_id),
+				"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+			})
+	var selected: Dictionary = valid_outposts[randi() % valid_outposts.size()]
 	var outpost_id: String = str(selected.get("id", ""))
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)
 	if npcs.is_empty():
