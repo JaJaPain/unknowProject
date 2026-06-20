@@ -1,6 +1,7 @@
 extends Node
 
 const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
+const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
 
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
@@ -701,6 +702,134 @@ func diagnostics_context_for_capability(capability: String) -> Dictionary:
 		capability,
 		model_for_capability(capability)
 	)
+
+
+func request_campaign_bible_generation(
+	baseline_bible: Dictionary,
+	idea_memory_context: String,
+	callback: Callable
+) -> void:
+	var capability := "campaign_bible"
+	var model_name := model_for_capability(capability)
+	if not llm_connected or OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name, "capability": capability}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "model_unavailable",
+			"model": model_name,
+		})
+		return
+	var prompt := NarrativeDirectorType.build_campaign_bible_prompt(
+		baseline_bible,
+		idea_memory_context
+	)
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"json",
+		{
+			"temperature": 0.85,
+			"num_predict": 1800,
+			"seed": randi(),
+		}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	var request_id := temp_http.get_instance_id()
+	temp_http.request_completed.connect(
+		func(
+			result: int,
+			response_code: int,
+			_headers: PackedStringArray,
+			body: PackedByteArray
+		) -> void:
+			_on_campaign_bible_generation_completed(
+				result,
+				response_code,
+				body,
+				baseline_bible,
+				model_name,
+				callback,
+				request_id
+			)
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"request_start_failed",
+			"llm_interface",
+			{"model": model_name, "error": err}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "request_start_failed",
+			"model": model_name,
+			"error": err,
+		})
+
+
+func _on_campaign_bible_generation_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	baseline_bible: Dictionary,
+	model_name: String,
+	callback: Callable,
+	request_id: int
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			reason,
+			"llm_interface",
+			{"model": model_name}
+		)
+		callback.call({
+			"ok": false,
+			"reason": reason,
+			"model": model_name,
+		})
+		return
+	var parsed := NarrativeDirectorType.parse_campaign_bible_response(
+		body.get_string_from_utf8(),
+		baseline_bible,
+		model_name
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name}
+		)
+		parsed["model"] = model_name
+		callback.call(parsed)
+		return
+	GenerationDiagnostics.record_content_source(
+		"campaign_bible",
+		"llm",
+		"llm_interface",
+		{"model": model_name, "capability": "campaign_bible"}
+	)
+	callback.call(parsed)
+
 
 func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
 	# Returns 5 example dialogues + 3 choice responses matched to the mission type.

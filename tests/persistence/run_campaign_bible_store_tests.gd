@@ -118,6 +118,19 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		unavailable_reopened.generation_status() == BibleStoreType.STATUS_LLM_UNAVAILABLE,
 		"Campaign bible unavailable status did not persist after reopening."
 	)
+	var failed := unavailable_reopened.mark_generation_failed(
+		"campaign_bible_validation_failed",
+		"gemma4:12b"
+	)
+	_expect(bool(failed.get("ok", false)), failed.get("error", ""))
+	_expect(
+		unavailable_reopened.generation_status() == BibleStoreType.STATUS_GENERATION_FAILED,
+		"Campaign bible did not record explicit generation-failed status."
+	)
+	_expect(
+		unavailable_reopened.status_summary().contains("campaign_bible_validation_failed"),
+		"Campaign bible failed status did not keep the failure reason."
+	)
 
 
 func _initial_state() -> Dictionary:

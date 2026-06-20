@@ -719,6 +719,10 @@ Goal: create the shared story spine.
 - [x] Add a `NarrativeDirector` prompt/parser layer for large-model campaign
   bible generation, with validation that rejects incomplete model output instead
   of silently filling missing fields from the bootstrap bible.
+- [x] Add an explicit LLMInterface/GameRoot bridge that can request a large-model
+  campaign bible, write successful results to the campaign bible store, and
+  persist `llm_unavailable` or `generation_failed` status when the call cannot
+  produce valid story output.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.

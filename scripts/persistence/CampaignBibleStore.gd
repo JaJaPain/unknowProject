@@ -153,6 +153,22 @@ func mark_model_unavailable(reason: String, model_name: String = "") -> Dictiona
 	return {"ok": true, "bible": data.duplicate(true)}
 
 
+func mark_generation_failed(reason: String, model_name: String = "") -> Dictionary:
+	if not is_valid():
+		return _failure("Campaign bible store is invalid.")
+	var prepared := data.duplicate(true)
+	prepared["source"] = STATUS_GENERATION_FAILED
+	prepared["generation_status"] = STATUS_GENERATION_FAILED
+	prepared["source_model"] = model_name.strip_edges()
+	prepared["generation_note"] = reason.strip_edges()
+	prepared["last_generation_error"] = reason.strip_edges()
+	var committed := _commit(prepared, "campaign_bible_generation_failed")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = prepared
+	return {"ok": true, "bible": data.duplicate(true)}
+
+
 func _load_or_create() -> void:
 	var campaign_result := DomainJsonType.read_object(
 		"%s/campaign.json" % campaign_path
