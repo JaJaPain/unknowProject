@@ -127,6 +127,7 @@ var current_submenu: DockSubmenu = DockSubmenu.SERVICES
 
 var agent_panel: Panel
 var agent_name_label: Label
+var agent_subtitle_label: Label
 var agent_dialogue_label: Label
 var agent_choices_container: VBoxContainer
 var agent_back_btn: Button
@@ -1277,12 +1278,12 @@ func _create_dock_menu():
 	agent_name_label.add_theme_font_size_override("font_size", 18)
 	name_vbox.add_child(agent_name_label)
 	
-	var agent_subtitle = Label.new()
-	agent_subtitle.text = "Neutral Fixer & Profit Broker"
-	agent_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	agent_subtitle.add_theme_font_size_override("font_size", 11)
-	agent_subtitle.modulate = Color(0.7, 0.7, 0.7)
-	name_vbox.add_child(agent_subtitle)
+	agent_subtitle_label = Label.new()
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
+	agent_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	agent_subtitle_label.add_theme_font_size_override("font_size", 11)
+	agent_subtitle_label.modulate = Color(0.7, 0.7, 0.7)
+	name_vbox.add_child(agent_subtitle_label)
 	
 	agent_client_logo = TextureRect.new()
 	agent_client_logo.custom_minimum_size = Vector2(64, 64)
@@ -3579,6 +3580,7 @@ func _on_public_board_offer_accept(index: int) -> void:
 	public_board_panel.visible = false
 	agent_panel.visible = true
 	agent_name_label.text = "PUBLIC BOARD"
+	agent_subtitle_label.text = "Local Contracts & Bounties"
 	_show_agent_portrait(false)
 	agent_dialogue_label.text = (
 		"Posting accepted.\n\n"
@@ -5399,7 +5401,8 @@ func _on_talk_to_agent_pressed():
 		if bool(q.get("public_board", false)):
 			shown_agent_name = "Broker Kaelen"
 		agent_name_label.text = shown_agent_name.to_upper()
-		
+		agent_subtitle_label.text = str(q.get("agent_role", "Neutral Fixer & Profit Broker"))
+
 		# Update portrait and client logo
 		_update_agent_portrait(
 			q.get("faction", "neutral"),
@@ -5457,6 +5460,7 @@ func _on_talk_to_agent_pressed():
 
 func _show_kaelen_first_briefing() -> void:
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	agent_back_btn.visible = true
 
@@ -5498,6 +5502,7 @@ func _show_kaelen_first_briefing() -> void:
 
 func _show_kaelen_return_briefing() -> void:
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	agent_back_btn.visible = true
 
@@ -5532,8 +5537,9 @@ func _show_kaelen_return_briefing() -> void:
 
 func _refresh_agent_quest_board():
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
-	
+
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
 		print("[TRACE] [UIManager] Pre-cached quest found. Loading board instantly.")
@@ -5654,6 +5660,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 
 	# Show Kaelen with her handoff intro first
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	agent_dialogue_label.text = handoff_line
 	agent_back_btn.visible = true
@@ -5735,6 +5742,7 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	var note = " [Offline Backup]" if is_fallback else ""
 	
 	agent_name_label.text = quest_data.get("agent_name", "Broker Kaelen").to_upper()
+	agent_subtitle_label.text = str(quest_data.get("agent_role", "Neutral Fixer & Profit Broker"))
 	var agent_name := str(quest_data.get("agent_name", "Broker Kaelen"))
 	_update_agent_portrait(
 		quest_data.get("faction", "neutral"),
@@ -5797,6 +5805,8 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 		
 	# Accept quest
 	if not QuestManager.accept_quest(quest_data, choice):
+		print("[UIManager] ⚠ QUEST REJECTED — reason: %s" % QuestManager.last_validation_error)
+		print("[UIManager] ⚠ QUEST DATA: %s" % JSON.stringify(quest_data))
 		agent_dialogue_label.text = (
 			"Contract data failed verification. Kaelen has rejected the offer."
 		)
@@ -5881,6 +5891,7 @@ func _on_agent_complete_pressed():
 	
 	# Switch to Kaelen's portrait — she's the one paying out, not the quest giver
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
@@ -5917,6 +5928,7 @@ func _on_agent_abandon_pressed():
 	
 	# Switch to Kaelen's portrait — she's the one chewing you out, not the quest giver
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
@@ -5956,6 +5968,7 @@ func _on_partial_delivery_pressed(deliverable: float):
 	
 	# Switch to Kaelen portrait while fetching her reaction
 	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral")
 	agent_dialogue_label.text = "Logging your shipment... stand by."
 	agent_back_btn.visible = false

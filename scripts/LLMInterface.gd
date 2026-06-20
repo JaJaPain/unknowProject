@@ -662,6 +662,154 @@ func _discover_ollama_model():
 		print("[LLMInterface] Failed to initiate tags check. Retrying in 1.5s...")
 		get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
 
+func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
+	# Returns 5 example dialogues + 3 choice responses matched to the mission type.
+	# All use dummy names: George (pilot), Slithern (enemy), 3 (kill count),
+	# 25 (ore amount), Sable Mercer / Morrow Station / Sealed Data Drive (pickup).
+	var d: Dictionary = {}
+	match agent_key:
+		"zenith":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Resource allocation in Sector 7 has become critically inefficient, George. 3 Slithern ships are disrupting our supply corridor. Eliminate them.",
+						"Slithern operatives have compromised a logistics node, George. 3 hostiles confirmed. Remove them before throughput drops further.",
+						"Unauthorized Slithern vessels detected in our acquisition zone, George. 3 contacts on scope. Purge the interference.",
+						"A Slithern raiding cell has established a forward position, George. 3 ships. Dismantle them before they disrupt scheduled operations.",
+						"Slithern interdiction is costing Zenith 14% throughput, George. 3 vessels. Resolve this inefficiency permanently.",
+					]
+					d["response_1"] = "Confirmed, George. Your assignment is logged. Do not deviate from the directive."
+					d["response_2"] = "An advance against operational expenses. Noted. Expect elevated patrol resistance on your route, George."
+					d["response_3"] = "Bold negotiation, George. Payout is revised upward. Security escalation protocols are now active in your sector."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Zenith requires 25 m³ of ore routed to this station, George. Extraction quotas are non-negotiable. Deliver promptly.",
+						"Our fabrication queue is stalled pending raw material, George. 25 m³ of ore. Acquire and deliver without delay.",
+						"A resource deficit has been flagged, George. 25 m³ of ore must reach this station before the next cycle closes.",
+						"Mining output in the outer ring has underperformed, George. Compensate with 25 m³ of ore delivered here.",
+						"Production schedules depend on timely inputs, George. 25 m³ of ore. Secure it and return. No excuses.",
+					]
+					d["response_1"] = "Acknowledged, George. Delivery window is logged. Do not fall behind schedule."
+					d["response_2"] = "An advance for fuel costs. Logged, George. Expect contested mining lanes on approach."
+					d["response_3"] = "Revised upward, George. The ore must still arrive on time. Zenith does not pay for delays."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"A Sealed Data Drive is waiting at Morrow Station with Sable Mercer, George. Retrieve it and return here. Discretion is mandatory.",
+						"Zenith has arranged a retrieval from Sable Mercer at Morrow Station, George. One Sealed Data Drive. Handle it with operational security.",
+						"An asset transfer has been staged at Morrow Station, George. Contact Sable Mercer, collect the Sealed Data Drive, deliver it here.",
+						"Sable Mercer at Morrow Station is holding a Sealed Data Drive for Zenith, George. Retrieve it before the transfer window expires.",
+						"A classified pickup requires your involvement, George. Sable Mercer, Morrow Station, Sealed Data Drive. Return it to this station intact.",
+					]
+					d["response_1"] = "Logged, George. Maintain operational security throughout the retrieval."
+					d["response_2"] = "Advance approved for transit expenses, George. The item must arrive undamaged."
+					d["response_3"] = "Payout revised, George. Do not draw attention during the pickup. Zenith values discretion."
+		"aurelia":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Got a little opportunity, George. 3 Slithern ships rattling cages near our trade lane. Remove them quietly and credits flow.",
+						"Slithern crew is making noise near one of my routes, George. 3 ships. Make them disappear — clean, quiet, off the books.",
+						"Some Slithern hotheads are scaring off my couriers, George. 3 of them. Clear the lane and nobody has to know.",
+						"There's a Slithern problem blocking a very lucrative corridor, George. 3 ships. Handle it discreetly and the payout is yours.",
+						"Word is 3 Slithern ships are camping a junction I need open, George. Quiet removal. No witnesses, no paperwork.",
+					]
+					d["response_1"] = "Smooth, George. That's why I like working with you. Stay off their sensors."
+					d["response_2"] = "An advance? Smart move, George. Credits transferred. Riskier corridor to offset the cost."
+					d["response_3"] = "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"I've got a buyer who needs 25 m³ of ore off the books, George. Deliver it here and my cut stays quiet.",
+						"There's a quiet deal on the table, George. 25 m³ of ore, delivered to this station. No manifests, no questions.",
+						"A client of mine is short 25 m³ of ore, George. Bring it in clean and the credits are yours. I take my slice.",
+						"Opportunity knocking, George. 25 m³ of ore delivered here pays very nicely. I'll handle the paperwork — or lack of it.",
+						"Need 25 m³ of ore moved to this dock, George. My buyer is impatient and pays well for discretion.",
+					]
+					d["response_1"] = "Perfect, George. Deliver it clean and we both walk away richer."
+					d["response_2"] = "Advance wired, George. Mining lanes are contested lately — watch your back out there."
+					d["response_3"] = "Fine, George, payout bumped. But the ore had better arrive on time. My buyer doesn't do extensions."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"Got a quiet job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Pick it up and bring it back here — no questions asked.",
+						"There's a package at Morrow Station, George. Sable Mercer is holding a Sealed Data Drive for me. Fetch it discreetly.",
+						"Need a courier I can trust, George. Sable Mercer, Morrow Station, Sealed Data Drive. Bring it here and forget you ever saw it.",
+						"A contact of mine — Sable Mercer, Morrow Station — has a Sealed Data Drive that needs moving, George. Clean pickup, clean delivery.",
+						"Simple retrieval, George. Sable Mercer at Morrow Station. One Sealed Data Drive. Bring it to me and the credits are yours.",
+					]
+					d["response_1"] = "Smooth, George. Quick pickup, no complications. That's how I like it."
+					d["response_2"] = "Advance wired, George. Don't let Sable Mercer give you the runaround."
+					d["response_3"] = "Bumped the payout, George. The drive better be intact when it gets here."
+		"vanguard":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Slithern hostiles spiking in the outer lanes, George. 3 contacts. Clear the zone before they dig in. No theatrics.",
+						"ROE is simple, George. 3 Slithern ships, hostile posture, outer perimeter. Engage and neutralize. Boots on hull if needed.",
+						"We've got 3 Slithern vessels breaching the buffer zone, George. Weapons hot. Clear them out before command notices.",
+						"Slithern incursion confirmed, George. 3 ships. Vanguard needs that lane secured yesterday. Move.",
+						"Intel flagged 3 Slithern raiders staging near our corridor, George. Intercept and destroy. No half-measures.",
+					]
+					d["response_1"] = "Copy that, George. ROE is clear: engage and eliminate. Don't make it complicated."
+					d["response_2"] = "You want an advance, George? Fine. Threat level is escalated. Don't embarrass us."
+					d["response_3"] = "Renegotiating under fire, George. Bold. Payout adjusted. Don't expect us to soften the zone."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Vanguard supply chain is running dry, George. 25 m³ of ore, delivered to this station. No delays.",
+						"Logistics flagged a deficit, George. We need 25 m³ of ore here before the next rotation. Get it done.",
+						"Our forward base needs raw material, George. 25 m³ of ore. Mine it, haul it, deliver it. Standard resupply.",
+						"Supply requisition, George. 25 m³ of ore to this station. The fabricators don't run on goodwill.",
+						"Material shortfall on the books, George. 25 m³ of ore. Secure a source and bring it back. Clock's ticking.",
+					]
+					d["response_1"] = "Acknowledged, George. Delivery is expected on schedule. Don't waste time out there."
+					d["response_2"] = "Advance approved, George. Mining sectors are contested — stay sharp."
+					d["response_3"] = "Payout adjusted, George. The ore still needs to arrive. No excuses."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"We have a retrieval op, George. Sable Mercer at Morrow Station is holding a Sealed Data Drive. Secure it and bring it back.",
+						"Classified pickup, George. Contact Sable Mercer at Morrow Station. One Sealed Data Drive. Return it to this station. No detours.",
+						"Vanguard needs a Sealed Data Drive retrieved from Morrow Station, George. Sable Mercer has it. In and out, no complications.",
+						"Asset recovery tasking, George. Sable Mercer, Morrow Station, Sealed Data Drive. Get it here before the window closes.",
+						"Field retrieval, George. Sable Mercer is the contact at Morrow Station. One Sealed Data Drive. Standard chain-of-custody applies.",
+					]
+					d["response_1"] = "Acknowledged, George. Retrieve the item and return without incident."
+					d["response_2"] = "Advance cleared, George. Don't let the pickup drag. Time is a factor."
+					d["response_3"] = "Payout bumped, George. The drive is priority cargo. Treat it accordingly."
+		_:
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Got a contract that needs muscle, George. 3 Slithern ships making trouble near the station. My cut's already factored in.",
+						"Client wants 3 Slithern ships gone, George. Paying well. I've already skimmed my broker's fee off the top.",
+						"Slithern crew is disrupting a lane my best clients use, George. 3 ships. Handle it and we both profit.",
+						"Three Slithern ships, George. My client wants them scrapped. The payout covers your fuel and my lifestyle.",
+						"Picked up a bounty contract, George. 3 Slithern vessels harassing local traffic. My cut's baked in — yours is what's left.",
+					]
+					d["response_1"] = "Excellent, George. My client is watching the clock, so don't waste my time."
+					d["response_2"] = "Taking a bite out of my margins, George? Fine. Credits wired. Contested lane ahead though."
+					d["response_3"] = "Hustling a hustler? I respect the nerve, George. Payout bumped. But enemies will be expecting you."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Got a buyer lined up for 25 m³ of ore, George. Deliver it here and I'll make sure we both get paid. My cut's already in the price.",
+						"There's a standing order for 25 m³ of ore at this station, George. Easy money — if you can haul it. I take my percentage.",
+						"A client needs 25 m³ of ore and they're paying above market, George. Bring it in and my broker's fee handles itself.",
+						"Ore run, George. 25 m³ delivered to this dock. Simple job, decent payout, and I skim my usual slice.",
+						"I've got a deal that practically prints credits, George. 25 m³ of ore, delivered here. My cut's already factored — yours is the rest.",
+					]
+					d["response_1"] = "Smart move, George. Deliver it clean and we both walk away happy. My margins depend on you."
+					d["response_2"] = "Advance? Fine, George. Credits wired. Mining lanes are rough lately — don't lose my investment out there."
+					d["response_3"] = "Pushing for more, George? Payout bumped. But the ore better show up. My reputation rides on delivery."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"Got a pickup job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Bring it to me and I'll handle the rest. My fee's included.",
+						"Courier work, George. Sable Mercer at Morrow Station is sitting on a Sealed Data Drive my client wants. Fetch it and the credits flow.",
+						"Simple retrieval, George. Morrow Station, contact named Sable Mercer, one Sealed Data Drive. Bring it here — my cut's already baked in.",
+						"A client wants a Sealed Data Drive moved from Morrow Station, George. Sable Mercer has it. Quick grab, quick payout, and I take my slice.",
+						"Need your legs for this one, George. Sable Mercer, Morrow Station, Sealed Data Drive. Deliver it to me and everybody profits.",
+					]
+					d["response_1"] = "Perfect, George. Quick and clean — that's how I like my couriers. Don't keep Sable Mercer waiting."
+					d["response_2"] = "Advance wired, George. Don't let the pickup get complicated — complications eat into my margins."
+					d["response_3"] = "Bumped the payout, George. The drive better arrive in one piece. My client doesn't accept excuses and neither do I."
+	return d
+
 func request_quest_generation(agent_faction: String, history_text: String, player_credits: int, player_reps: Dictionary, callback: Callable):
 	if is_waiting:
 		return
@@ -685,12 +833,8 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var agent_persona = ""
 	var player_nickname = "Indy"
 	var agent_role = ""
-	var example_dialogue = ""
-	var example_response_1 = ""
-	var example_response_2 = ""
-	var example_response_3 = ""
 	var example_faction_key = chosen_faction
-	
+
 	match chosen_faction:
 		"zenith":
 			agent_name = "Director Voss"
@@ -700,10 +844,6 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You speak in clipped, efficient sentences. You have no patience for failure and treat the pilot as an interchangeable asset. " + \
 				"You refer to the pilot exclusively as 'Indy'. You never use slang or humor. " + \
 				"You frame all jobs as 'acquisitions', 'operations', or 'directives'. Zenith's interests are paramount."
-			example_dialogue = "Resource allocation in Sector 7 has become critically inefficient, George. 3 Slithern ships are disrupting our supply corridor. Eliminate them."
-			example_response_1 = "Confirmed, George. Your assignment is logged. Do not deviate from the directive."
-			example_response_2 = "An advance against operational expenses. Noted. Expect elevated patrol resistance on your route, George."
-			example_response_3 = "Bold negotiation, George. Payout is revised upward. Security escalation protocols are now active in your sector."
 		"aurelia":
 			agent_name = "Liaison Ryn"
 			agent_role = "Aurelia Syndicate Trade Liaison"
@@ -712,10 +852,6 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You are charming but never fully trustworthy. You speak like someone always running an angle. " + \
 				"You refer to the pilot exclusively as 'Indy'. You use words like 'clean', 'quiet', 'off the books'. " + \
 				"Everything is framed as an opportunity, never a risk."
-			example_dialogue = "Got a little opportunity, George. 3 Slithern ships rattling cages near our trade lane. Remove them quietly and credits flow."
-			example_response_1 = "Smooth, George. That's why I like working with you. Stay off their sensors."
-			example_response_2 = "An advance? Smart move, George. Credits transferred. Riskier corridor to offset the cost."
-			example_response_3 = "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
 		"vanguard":
 			agent_name = "Captain Dask"
 			agent_role = "Vanguard Military Contract Officer"
@@ -724,10 +860,6 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You are direct and have zero tolerance for excuses or negotiation theatre. " + \
 				"You refer to the pilot exclusively as 'Indy'. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
 				"You respect competence and despise weakness."
-			example_dialogue = "Slithern hostiles spiking in the outer lanes, George. 3 contacts. Clear the zone before they dig in. No theatrics."
-			example_response_1 = "Copy that, George. ROE is clear: engage and eliminate. Don't make it complicated."
-			example_response_2 = "You want an advance, George? Fine. Threat level is escalated. Don't embarrass us."
-			example_response_3 = "Renegotiating under fire, George. Bold. Payout adjusted. Don't expect us to soften the zone."
 		_:
 			agent_name = "Broker Kaelen"
 			agent_role = "Neutral Fixer & Profit Broker"
@@ -736,10 +868,6 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You operate out of a space station and negotiate contracts with all factions for personal profit. " + \
 				"You are cynical, sharp, and opportunistic. You call the pilot 'Shiny' — treating them like an unscarred greenhorn who is also your most profitable tool. " + \
 				"You always mention your broker's cut and how the deal benefits you personally."
-			example_dialogue = "Got a contract that needs muscle, George. 3 Slithern ships making trouble near the station. My cut's already factored in."
-			example_response_1 = "Excellent, George. My client is watching the clock, so don't waste my time."
-			example_response_2 = "Taking a bite out of my margins, George? Fine. Credits wired. Contested lane ahead though."
-			example_response_3 = "Hustling a hustler? I respect the nerve, George. Payout bumped. But enemies will be expecting you."
 	
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
@@ -771,7 +899,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			"  },"
 	elif chosen_type == "KILL_SHIPS":
 		if randf() < 0.9:
-			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
+			var minor_keys = GlobalState.get_current_system_minor_factions()
 			actual_kill_target = minor_keys[randi() % minor_keys.size()]
 		else:
 			var major_targets = ["zenith", "aurelia", "vanguard"]
@@ -786,10 +914,19 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			"    \"reward_credits\": 200\n" + \
 			"  },"
 	elif chosen_type == "PICKUP_SPECIAL":
-		var outpost_ids = GlobalState.PICKUP_OUTPOST_IDS
-		pickup_outpost = outpost_ids[randi() % outpost_ids.size()]
-		pickup_outpost_display = GlobalState.PICKUP_OUTPOST_DISPLAY.get(pickup_outpost, pickup_outpost)
+		var outposts = GlobalState.get_current_system_outposts()
+		if outposts.is_empty():
+			for starter_id in GlobalState.PICKUP_OUTPOST_IDS:
+				outposts.append({
+					"id": str(starter_id),
+					"display": str(GlobalState.PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+				})
+		var selected_outpost = outposts[randi() % outposts.size()]
+		pickup_outpost = selected_outpost.get("id", "")
+		pickup_outpost_display = selected_outpost.get("display", pickup_outpost)
 		var npcs_at_outpost = GlobalState.get_minor_npcs_at_outpost(pickup_outpost)
+		if npcs_at_outpost.is_empty():
+			npcs_at_outpost = [GlobalState.random_minor_npc_name()]
 		pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
 		var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
 		pickup_item = fetch_items[randi() % fetch_items.size()]
@@ -813,6 +950,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"ore_amount": actual_ore_amount,
 		"nickname": player_nickname,
 		"agent_name": agent_name,
+		"agent_role": agent_role,
 		"faction": chosen_faction,
 		"pickup_outpost": pickup_outpost,
 		"pickup_outpost_display": pickup_outpost_display,
@@ -823,7 +961,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 
 
 	# Build minor faction context string for the LLM
-	var minor_fac_names = GlobalState.MINOR_FACTIONS.keys()
+	var minor_fac_names = GlobalState.get_current_system_minor_factions()
 	var minor_fac_str = ", ".join(minor_fac_names)
 	
 	var lore_block = ""
@@ -844,6 +982,32 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			+ "\n\n"
 		)
 	
+	# Fetch 5 type-matched example dialogues + responses for this agent × mission type
+	var agent_key = chosen_faction if chosen_faction in ["zenith", "aurelia", "vanguard"] else "neutral"
+	var type_examples = _get_type_examples(agent_key, chosen_type)
+	var example_dialogues: Array = type_examples.get("dialogues", [])
+	var example_response_1: String = type_examples.get("response_1", "")
+	var example_response_2: String = type_examples.get("response_2", "")
+	var example_response_3: String = type_examples.get("response_3", "")
+
+	# Pick one dialogue for the JSON structure example, list the rest as additional references
+	var primary_idx = randi() % example_dialogues.size()
+	var example_dialogue: String = example_dialogues[primary_idx]
+	var extra_examples_block = "### EXAMPLE DIALOGUES FOR THIS MISSION TYPE:\n" + \
+		"Write NEW dialogue in this style. Do not copy these — use them only as tone and content references.\n"
+	for i in range(example_dialogues.size()):
+		if i != primary_idx:
+			extra_examples_block += "  " + str(i + 1) + ". \"" + example_dialogues[i] + "\"\n"
+	extra_examples_block += "\n"
+
+	var dummy_name_instruction: String
+	if chosen_type == "KILL_SHIPS":
+		dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern' and always call the pilot 'George'. Always say 3 ships. "
+	elif chosen_type == "DELIVER_ORE":
+		dummy_name_instruction = "In your dialogue, always call the pilot 'George'. Always say 25 m³ of ore. "
+	else:
+		dummy_name_instruction = "In your dialogue, always call the pilot 'George'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
+
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
 		campaign_bible_block + \
@@ -859,6 +1023,7 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		history_text + "\n\n" + \
 		"### QUEST COMPLICATION:\n" + \
 		rand_comp + "\n\n" + \
+		extra_examples_block + \
 		"Generate a unique space quest. You MUST respond strictly in valid JSON format. Do not output notes, markdown, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
 		"  \"campaign_name\": \"Cold Meridian\",\n" + \
@@ -906,7 +1071,8 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"The faction must be \"" + chosen_faction + "\". The agent_name must be \"" + agent_name + "\". " + \
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
 		"Keep the same objective fields as the example above. " + \
-		("In your dialogue, always call the enemy 'Slithern' and always call the pilot 'George'. Always say 3 ships. " if chosen_type == "KILL_SHIPS" else ("In your dialogue, always call the pilot 'George'. Always say 25 m³ of ore. " if chosen_type == "DELIVER_ORE" else "In your dialogue, always call the pilot 'George'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. ")) + \
+		"The dialogue is the agent OFFERING the job to the pilot — the pilot has NOT accepted yet. Speak directly to the pilot in second person. Do not narrate, announce, or talk about the pilot in third person. " + \
+		dummy_name_instruction + \
 		"Output only the raw JSON object."
 	
 	var payload = {
@@ -1074,6 +1240,9 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	var obj: Dictionary = quest_data.get("objective", {})
 	var obj_type: String = obj.get("type", "")
 	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
+	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
+	quest_data["faction"] = str(quest_data.get("faction", "neutral")).to_lower().strip_edges()
+	quest_data["agent_name"] = str(subs.get("agent_name", quest_data.get("agent_name", "Broker Kaelen")))
 
 	var replacements := {}
 	# Swap dummy pilot name for the real nickname
@@ -1086,7 +1255,10 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 		replacements["Slithern"] = real_faction.capitalize()
 		replacements["slithern"] = real_faction
 		replacements["SLITHERN"] = real_faction.to_upper()
-		# Swap the dummy count "3" only near ship/combat context
+		# Common LLM misspellings / inflections of the dummy name
+		for variant in ["Slitherns", "slitherns", "Slitheren", "slitheren",
+				"Slitherer", "slitherer", "Slitherers", "slitherers"]:
+			replacements[variant] = real_faction.capitalize() if variant[0] == "S" else real_faction
 		obj["target_faction"] = real_faction
 		obj["count_required"] = real_count
 	elif obj_type == "DELIVER_ORE":
@@ -1125,6 +1297,15 @@ func _apply_replacements(text: String, replacements: Dictionary) -> String:
 	var result := text
 	for placeholder: String in replacements:
 		result = result.replace(placeholder, str(replacements[placeholder]))
+	# Catch any remaining "slither*" variants the explicit list missed
+	if _pending_substitutions.has("kill_target"):
+		var real_faction: String = str(_pending_substitutions["kill_target"])
+		var regex := RegEx.new()
+		regex.compile("(?i)\\bslither\\w*")
+		var cleaned := regex.sub(result, real_faction.capitalize(), true)
+		if cleaned != result:
+			print("[LLMInterface] ⚠ SUBSTITUTE: Regex caught leftover slither-variant in dialogue")
+			result = cleaned
 	return result
 
 
@@ -1231,7 +1412,8 @@ func _on_dialogue_retry_completed(
 	var faction_conflict := _dialogue_has_faction_mismatch(new_dialogue, obj_type, obj)
 
 	if type_conflict or faction_conflict:
-		print("[LLMInterface] Dialogue retry still conflicts — using safe fallback.")
+		print("[LLMInterface] ⚠ RETRY FAILED — type_conflict=%s faction_conflict=%s" % [type_conflict, faction_conflict])
+		print("[LLMInterface] ⚠ RETRY DIALOGUE WAS: %s" % new_dialogue)
 		GenerationDiagnostics.record_event(
 			"quest_generation",
 			"dialogue_retry_still_conflicting",
@@ -1419,32 +1601,25 @@ func _finalize_validated_quest_display(
 	obj: Dictionary
 ) -> void:
 	quest_data["objective_summary"] = _objective_summary(obj_type, obj)
-	var needs_rewrite := _dialogue_conflicts_with_objective(
-		str(quest_data.get("dialogue", "")),
-		obj_type
-	)
-	if not needs_rewrite:
-		needs_rewrite = _dialogue_has_faction_mismatch(
-			str(quest_data.get("dialogue", "")),
-			obj_type,
-			obj
-		)
-	if not needs_rewrite:
-		needs_rewrite = _dialogue_has_placeholder_artifacts(
-			str(quest_data.get("dialogue", "")),
-			str(quest_data.get("agent_name", ""))
-		)
-	if not needs_rewrite:
-		needs_rewrite = _dialogue_is_too_vague(
-			str(quest_data.get("dialogue", "")),
-			obj_type
-		)
-	if needs_rewrite:
+	var rewrite_reason := ""
+	var raw_dialogue := str(quest_data.get("dialogue", ""))
+	var raw_agent := str(quest_data.get("agent_name", ""))
+	if _dialogue_conflicts_with_objective(raw_dialogue, obj_type):
+		rewrite_reason = "dialogue_conflicts_with_objective"
+	elif _dialogue_has_faction_mismatch(raw_dialogue, obj_type, obj):
+		rewrite_reason = "faction_mismatch"
+	elif _dialogue_has_placeholder_artifacts(raw_dialogue, raw_agent):
+		rewrite_reason = "placeholder_artifacts"
+	elif _dialogue_is_too_vague(raw_dialogue, obj_type):
+		rewrite_reason = "too_vague"
+	if not rewrite_reason.is_empty():
+		print("[LLMInterface] ⚠ VALIDATE REWRITE REASON: %s" % rewrite_reason)
+		print("[LLMInterface] ⚠ VALIDATE ORIGINAL DIALOGUE: %s" % raw_dialogue)
 		GenerationDiagnostics.record_event(
 			"quest_generation",
 			"validation_rewrote_contradictory_dialogue",
 			"LLMInterface",
-			{"objective_type": obj_type}
+			{"objective_type": obj_type, "reason": rewrite_reason}
 		)
 		quest_data["dialogue"] = _safe_objective_dialogue(
 			quest_data,
@@ -1599,7 +1774,17 @@ func _dialogue_is_too_vague(raw_dialogue: String, obj_type: String) -> bool:
 		return true
 	elif obj_type == "PICKUP_SPECIAL":
 		var pickup_hints := ["retrieve", "fetch", "pick up", "pickup", "crate",
-			"pod", "lockbox", "container", "package", "collect"]
+			"pod", "lockbox", "container", "package", "collect", "grab", "courier",
+			"delivery", "handoff", "hand-off", "drive", "item", "cargo",
+			"bring back", "waiting for you", "holding", "has a", "get it"]
+		# Also count the actual substituted item/npc/outpost names as valid
+		var subs := _pending_substitutions
+		if not str(subs.get("pickup_item", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_item", "")).to_lower())
+		if not str(subs.get("pickup_npc", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_npc", "")).to_lower())
+		if not str(subs.get("pickup_outpost_display", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_outpost_display", "")).to_lower())
 		for hint in pickup_hints:
 			if dialogue.find(hint) != -1:
 				return false
@@ -1921,6 +2106,7 @@ func _trigger_fallback():
 		
 	var selected_quest = fallback_templates[idx].duplicate(true)
 	selected_quest["campaign_name"] = _fallback_campaign_name()
+	selected_quest["agent_role"] = str(_pending_substitutions.get("agent_role", "Neutral Fixer & Profit Broker"))
 	
 	# Randomize values slightly to make it feel procedural
 	var type = selected_quest["objective"]["type"]

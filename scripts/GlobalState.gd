@@ -660,6 +660,26 @@ static func get_current_system_outposts() -> Array[Dictionary]:
 		})
 	return result
 
+static func get_current_system_minor_factions() -> Array[String]:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.current_scene and "system_registry" in tree.current_scene:
+		var state = tree.root.get_node_or_null("GlobalState")
+		var sys_id: String = state.get("current_system_id") if state else "start_system"
+		var registry = tree.current_scene.system_registry
+		if registry != null:
+			var sys_def = registry.get_system(sys_id)
+			if sys_def != null and not sys_def.faction_ids.is_empty():
+				var factions: Array[String] = []
+				for fid in sys_def.faction_ids:
+					var legacy: String = str(fid).get_slice(".", 1)
+					if is_minor_faction(legacy):
+						factions.append(legacy)
+				if not factions.is_empty():
+					return factions
+	var fallback: Array[String] = []
+	fallback.assign(MINOR_FACTIONS.keys())
+	return fallback
+
 # Returns a random minor NPC name. Used for picking a quest-board contact
 # at an outpost when the player asks "who's hiring?"
 static func random_minor_npc_name() -> String:
