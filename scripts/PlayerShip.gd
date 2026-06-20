@@ -30,6 +30,7 @@ var exhaust_flames: Array[MeshInstance3D] = []
 # Drawback tracking variables
 var engine_stall_timer: float = 0.0
 var mining_cycles: int = 0
+var _mine_particles: GPUParticles3D = null
 var mining_continuous_timer: float = 0.0
 
 # Navigation variables
@@ -103,6 +104,7 @@ var drone_rotations: Array[Vector3] = []
 func _ready():
 	GlobalState.player = self
 	mining_laser.visible = false
+	_mine_particles = _create_mine_particles()
 	current_shield = GlobalState.shield_capacity
 	
 	# Decouple camera pivot transform from player's parent transform
@@ -310,6 +312,9 @@ func _physics_process(delta: float):
 	if boost_cooldown_timer > 0.0:
 		boost_cooldown_timer = maxf(0.0, boost_cooldown_timer - delta)
 	_update_boost_effects(delta)
+
+	if _mine_particles and not mining_laser.visible:
+		_mine_particles.emitting = false
 
 	if GlobalState.paused:
 		mining_laser.visible = false
@@ -1527,20 +1532,24 @@ func perform_action(target_node: Node3D, delta: float):
 			return
 
 		mining_laser.visible = true
-		
+
 		# Position laser beam cylinder
 		var ship_front = global_position + (-global_transform.basis.z * 2.0)
 		var asteroid_pos = target_node.global_position
 		var mid_point = (ship_front + asteroid_pos) / 2.0
 		var laser_len = ship_front.distance_to(asteroid_pos)
-		
+
 		mining_laser.global_position = mid_point
 		mining_laser.look_at(asteroid_pos, Vector3.UP)
 		mining_laser.rotate_object_local(Vector3.RIGHT, PI / 2.0)
-		
+
 		# Laser Pulse FX
 		var pulse = 0.12 + sin(Time.get_ticks_msec() * 0.025) * 0.04
 		mining_laser.scale = Vector3(pulse, laser_len / 2.0, pulse)
+
+		if _mine_particles:
+			_mine_particles.global_position = asteroid_pos
+			_mine_particles.emitting = true
 		
 		if fire_cooldown <= 0.0:
 			fire_cooldown = GlobalState.mining_cooldown
@@ -1601,6 +1610,54 @@ func die(death_source: String = ""):
 	if ui and ui.has_method("show_death_screen"):
 		ui.show_death_screen()
 	queue_free()
+
+
+func _create_mine_particles() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.name = "MineParticles"
+	p.emitting = false
+	p.amount = 18
+	p.lifetime = 0.6
+	p.explosiveness = 0.1
+	p.fixed_fps = 30
+	p.top_level = true
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	var proc := ParticleProcessMaterial.new()
+	proc.direction = Vector3.ZERO
+	proc.spread = 180.0
+	proc.initial_velocity_min = 5.0
+	proc.initial_velocity_max = 15.0
+	proc.gravity = Vector3.ZERO
+	proc.scale_min = 0.3
+	proc.scale_max = 0.8
+	proc.damping_min = 5.0
+	proc.damping_max = 12.0
+
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.8, 0.7, 0.5, 1.0))
+	grad.set_color(1, Color(0.5, 0.4, 0.3, 0.0))
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = grad
+	proc.color_ramp = grad_tex
+
+	p.process_material = proc
+
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.15
+	mesh.height = 0.3
+	mesh.radial_segments = 4
+	mesh.rings = 2
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color(0.8, 0.7, 0.5)
+	mat.emission_energy_multiplier = 3.0
+	mesh.material = mat
+	p.draw_pass_1 = mesh
+
+	add_child(p)
+	return p
 
 
 func _create_boost_effects() -> void:
