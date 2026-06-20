@@ -153,11 +153,16 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 
 
 static func apply_glow(env: Environment, connect_toggle: bool = true) -> void:
-	if connect_toggle:
-		GlobalState.bloom_changed.connect(func(enabled: bool) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var global_state := tree.root.get_node_or_null("/root/GlobalState") if tree else null
+	if global_state == null:
+		env.glow_enabled = true
+		return
+	if connect_toggle and global_state.has_signal("bloom_changed"):
+		global_state.bloom_changed.connect(func(enabled: bool) -> void:
 			env.glow_enabled = enabled
 		)
-	if not GlobalState.bloom_enabled:
+	if not bool(global_state.get("bloom_enabled")):
 		return
 	env.glow_enabled = true
 	env.glow_intensity = 1.2

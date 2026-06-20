@@ -3474,27 +3474,95 @@ func _station_contact_topic_line(
 	topic: String,
 	lines: Array
 ) -> String:
-	var faction := str(npc_data.get("faction", ""))
-	var faction_display := "independent crews"
-	if not faction.is_empty():
-		faction_display = str(
-			GlobalState.faction_info(faction).get("name", faction.capitalize())
-		)
-	var role := str(npc_data.get("role", "local contact")).to_lower()
+	var context := _station_contact_local_context(npc_data)
+	var faction := str(context.get("faction", ""))
+	var faction_display := str(context.get("faction_display", "independent crews"))
+	var role := str(context.get("role", "local contact")).to_lower()
+	var system_name := str(context.get("system_name", "this system"))
+	var station_name := str(context.get("station_name", "this station"))
+	var rep_tier := str(context.get("rep_tier", "unknown"))
+	var outpost_summary := str(context.get("outpost_summary", "the outer docks"))
+	var humor_style := str(context.get("humor_style", "dry station gossip"))
 	match topic:
+		"greeting":
+			if faction.is_empty():
+				return "Indy, welcome to %s. I keep my head down, my channels paid up, and my opinions deniable." % station_name
+			return "Indy, %s keeps a desk at %s. Your name is not flashing red yet, which is our version of hospitality." % [
+				faction_display,
+				station_name,
+			]
 		"faction":
 			if faction.is_empty():
-				return "%s keeps things independent. No banner, no anthem, fewer meetings." % npc_name
-			return "%s work means %s trouble: tidy symbols on messy invoices." % [
+				return "%s keeps things independent in %s. No banner, no anthem, fewer meetings." % [
+					npc_name,
+					system_name,
+				]
+			return "%s work in %s means %s trouble. Your standing reads %s, so I would keep the jokes itemized." % [
 				faction_display,
+				system_name,
 				faction_display,
+				rep_tier,
 			]
 		"trouble":
-			return "Local trouble is simple: %s need work done, nobody wants their name on it, and the station lights still flicker." % faction_display
+			return "Local trouble runs between %s and %s. %s need work done, nobody wants their name on it, and the station lights still flicker." % [
+				station_name,
+				outpost_summary,
+				faction_display,
+			]
 		"rumor":
-			return str(lines[randi() % lines.size()])
+			var rumor := str(lines[randi() % lines.size()])
+			return "%s rumor, %s flavor: %s" % [
+				system_name,
+				humor_style,
+				rumor,
+			]
 		_:
-			return "I am the %s today. Ask cleanly and maybe the answer stays cheap." % role
+			return "I am the %s at %s today. Ask cleanly and maybe the answer stays cheap." % [
+				role,
+				station_name,
+			]
+
+
+func _station_contact_local_context(npc_data: Dictionary) -> Dictionary:
+	var system_name := _get_current_system_display_name()
+	if system_name.is_empty():
+		system_name = GlobalState.current_system_id.capitalize()
+	var station_name := _current_station_display_name()
+	var faction := str(npc_data.get("faction", ""))
+	var faction_display := "independent crews"
+	var faction_descriptor := "Independent"
+	if not faction.is_empty():
+		var faction_info := GlobalState.faction_info(faction)
+		faction_display = str(faction_info.get("name", faction.capitalize()))
+		faction_descriptor = str(faction_info.get("descriptor", "Frontier faction"))
+	var rep_value := float(GlobalState.reputations.get(faction, 0.0))
+	var rep_tier := "neutral" if faction.is_empty() else GlobalState.reputation_tier(rep_value)
+	var outpost_names: Array[String] = []
+	for outpost in GlobalState.get_current_system_outposts():
+		if not outpost is Dictionary:
+			continue
+		var display := str((outpost as Dictionary).get("display", ""))
+		if not display.is_empty():
+			outpost_names.append(display)
+	var outpost_summary := "the outer docks"
+	if outpost_names.size() == 1:
+		outpost_summary = outpost_names[0]
+	elif outpost_names.size() > 1:
+		outpost_summary = "%s and %d other local stops" % [
+			outpost_names[0],
+			outpost_names.size() - 1,
+		]
+	return {
+		"system_name": system_name,
+		"station_name": station_name,
+		"faction": faction,
+		"faction_display": faction_display,
+		"faction_descriptor": faction_descriptor,
+		"rep_tier": rep_tier,
+		"outpost_summary": outpost_summary,
+		"role": str(npc_data.get("role", "Local contact")),
+		"humor_style": str(npc_data.get("humor_style", "dry station gossip")),
+	}
 
 
 func _request_station_contact_work(

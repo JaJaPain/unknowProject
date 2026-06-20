@@ -589,6 +589,11 @@ Verification:
 
 ### 4. Generated Contact Conversation Mode
 
+Status: first pass complete. Station contacts can be selected from the dock
+services panel, show role/faction context, answer faction/trouble/rumor topics
+with current system and station facts, and faction contacts can broker local
+work through the existing quest path.
+
 Goal: station contacts should be more than list decorations and hidden quest
 seeds.
 
@@ -597,13 +602,13 @@ step is letting the player intentionally talk to them.
 
 First version:
 
-- Clicking a faction contact opens a focused contact panel.
-- Show portrait, name, role, faction, and a short generated local greeting.
-- Offer actions:
-  - Ask about the faction.
-  - Ask about local trouble.
-  - Ask about rumors.
-  - Request work from this contact.
+- [x] Clicking a faction contact opens a focused contact panel.
+- [x] Show portrait, name, role, faction, and a short generated local greeting.
+- [x] Offer actions:
+  - [x] Ask about the faction.
+  - [x] Ask about local trouble.
+  - [x] Ask about rumors.
+  - [x] Request work from this contact.
 - The first implementation can use structured local facts and existing LLM
   request paths; it does not need a full relationship system yet.
 
@@ -616,6 +621,11 @@ Guardrails:
 
 ### 5. Persisted NPC Identity Records
 
+Status: foundation complete. Generated contacts are persisted through
+`CampaignNpcIdentityStore` with stable IDs and identity fields. Keep this open
+for relationship updates, recurring-contact behavior, line-memory enforcement,
+and lifecycle changes.
+
 Goal: move from generated contact dictionaries to proper campaign NPC records.
 
 Why fourth: this is the foundation for relationship memory, recurring contacts,
@@ -623,20 +633,20 @@ line repetition prevention, relocation, betrayal, and death rules.
 
 Record fields:
 
-- stable NPC ID
-- display name
-- portrait ID
-- voice profile ID or recipe
-- faction ID
-- job/role
-- home system ID
-- home station ID
-- personality tags
-- humor style
-- relationship state
-- memory summary
-- line memory fingerprints
-- lifecycle flags for available, relocated, captured, dead, or protected
+- [x] stable NPC ID
+- [x] display name
+- [x] portrait ID
+- [x] voice profile ID or recipe
+- [x] faction ID
+- [x] job/role
+- [x] home system ID
+- [x] home station ID
+- [x] personality tags
+- [x] humor style
+- [x] relationship state
+- [x] memory summary
+- [x] line memory fingerprints
+- [x] lifecycle flags for available, relocated, captured, dead, or protected
 
 Do not overbuild the UI yet. The first win is stable records that every later
 system can reference.
