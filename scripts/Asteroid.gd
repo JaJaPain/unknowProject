@@ -16,6 +16,13 @@ var navigation_parent: Node3D = null
 var _tumble_axis: Vector3 = Vector3.UP
 var _tumble_speed: float = 0.0
 var _mesh: MeshInstance3D = null
+var _bob_amp1: float = 0.0
+var _bob_freq1: float = 0.0
+var _bob_phase1: float = 0.0
+var _bob_amp2: float = 0.0
+var _bob_freq2: float = 0.0
+var _bob_phase2: float = 0.0
+var _bob_time: float = 0.0
 
 func _ready():
 	add_to_group("asteroid")
@@ -37,15 +44,24 @@ func _ready():
 		rng.randf_range(-1.0, 1.0),
 	).normalized()
 	_tumble_speed = rng.randf_range(0.05, 0.25)
+	_bob_amp1 = rng.randf_range(3.0, 6.0)
+	_bob_freq1 = rng.randf_range(0.08, 0.2)
+	_bob_phase1 = rng.randf_range(0.0, TAU)
+	_bob_amp2 = rng.randf_range(1.5, 3.5)
+	_bob_freq2 = rng.randf_range(0.15, 0.4)
+	_bob_phase2 = rng.randf_range(0.0, TAU)
 
 func _physics_process(delta: float):
 	if destroyed or GlobalState.paused:
 		return
+	_bob_time += delta
 	if is_orbiting:
 		current_angle += orbit_speed * delta
 		var x = orbit_center.x + cos(current_angle) * orbit_radius
 		var z = orbit_center.z + sin(current_angle) * orbit_radius
-		global_position = Vector3(x, orbit_y, z)
+		var y_offset = sin(_bob_time * _bob_freq1 + _bob_phase1) * _bob_amp1 \
+			+ sin(_bob_time * _bob_freq2 + _bob_phase2) * _bob_amp2
+		global_position = Vector3(x, orbit_y + y_offset, z)
 	if _mesh and _tumble_speed > 0.0:
 		_mesh.rotate(_tumble_axis, _tumble_speed * delta)
 
