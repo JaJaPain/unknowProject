@@ -122,6 +122,12 @@ func _build(config: SystemConfig) -> Dictionary:
 		"seed": config.starfield_seed,
 		"tint": config.starfield_tint,
 	})
+	SystemAmbience.add_nebula(root, {
+		"seed": config.nebula_seed,
+		"colors": config.nebula_colors,
+		"brightness": config.nebula_brightness,
+		"layer_count": config.nebula_layer_count,
+	})
 
 	var npc_mgr_script = load("res://scripts/generation/GeneratedSystemNPCManager.gd")
 	if npc_mgr_script:

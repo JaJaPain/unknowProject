@@ -32,6 +32,11 @@ var outbound_gate_count: int = 1
 var starfield_seed: float = 0.0
 var starfield_tint: Color = Color(0.9, 0.92, 1.0)
 
+var nebula_seed: int = 0
+var nebula_colors: Array[Color] = []
+var nebula_brightness: float = 0.5
+var nebula_layer_count: int = 3
+
 
 static func from_seed(
 	name: String,
@@ -140,6 +145,15 @@ static func from_seed(
 
 	config.starfield_seed = float(seed_val % 10000)
 	config.starfield_tint = config.star_color.lerp(Color(0.9, 0.92, 1.0), 0.7)
+
+	config.nebula_seed = (seed_val * 7 + 3491) % 10000
+	config.nebula_brightness = rng.randf_range(0.3, 0.6)
+	config.nebula_layer_count = rng.randi_range(1, 2)
+
+	var base_hue := rng.randf()
+	var c1 := Color.from_hsv(fmod(base_hue, 1.0), rng.randf_range(0.4, 0.7), rng.randf_range(0.5, 0.8))
+	var c2 := Color.from_hsv(fmod(base_hue + rng.randf_range(0.08, 0.2), 1.0), rng.randf_range(0.3, 0.6), rng.randf_range(0.4, 0.9))
+	config.nebula_colors = [c1, c2] as Array[Color]
 
 	var sun_angle := rng.randf_range(0.0, TAU)
 	var _sun_dir := Vector3(cos(sun_angle), rng.randf_range(0.25, 0.5), sin(sun_angle)).normalized()

@@ -107,6 +107,11 @@ func _generate_system() -> void:
 		"seed": 137.0,
 		"tint": Color(0.85, 0.88, 1.0),
 	})
+	SystemAmbience.add_nebula(self, {
+		"seed": 137,
+		"colors": [Color(0.6, 0.15, 0.55), Color(0.25, 0.4, 0.8)],
+		"brightness": 0.5,
+	})
 
 
 func _create_planet(spec: Dictionary) -> Node3D:

@@ -1,10 +1,22 @@
 extends RefCounted
 
 const STARFIELD_SHADER := preload("res://shaders/starfield.gdshader")
+const NEBULA_SHADER := preload("res://shaders/nebula.gdshader")
 
 const SUN_DISTANCE := 6000.0
 const SUN_RADIUS := 90.0
-const STARFIELD_RADIUS := 8500.0
+const STARFIELD_RADIUS := 18000.0
+const NEBULA_DISTANCE := 17000.0
+const NEBULA_QUAD_WIDTH := 22000.0
+const NEBULA_QUAD_HEIGHT := 11000.0
+
+const NEBULA_TEXTURES := [
+	preload("res://assets/nebula_cloud_1.png"),
+	preload("res://assets/nebula_cloud_2.png"),
+	preload("res://assets/nebula_cloud_3.png"),
+	preload("res://assets/nebula_cloud_4.png"),
+	preload("res://assets/nebula_cloud_5.png"),
+]
 
 
 static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D:
@@ -79,3 +91,65 @@ static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshI
 	field.position = Vector3.ZERO
 	system_root.add_child(field)
 	return field
+
+
+static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
+	var seed_val: int = int(config.get("seed", 0.0))
+	var colors: Array = config.get("colors", [
+		Color(0.45, 0.2, 0.7),
+		Color(0.15, 0.35, 0.85),
+	])
+	var nebula_brightness: float = config.get("brightness", 0.5)
+	var layer_count: int = config.get("layer_count", 2)
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val
+
+	var container := Node3D.new()
+	container.name = "Nebula"
+	system_root.add_child(container)
+
+	# Pick one direction in the sky for the nebula cluster
+	var base_theta := rng.randf_range(0.0, TAU)
+	var base_phi := rng.randf_range(0.4, 2.0)
+	var base_dir := Vector3(
+		sin(base_phi) * cos(base_theta),
+		cos(base_phi),
+		sin(base_phi) * sin(base_theta)
+	).normalized()
+
+	for i in range(layer_count):
+		var tex_idx := rng.randi() % NEBULA_TEXTURES.size()
+		var color: Color = colors[rng.randi() % colors.size()]
+
+		var shader_mat := ShaderMaterial.new()
+		shader_mat.shader = NEBULA_SHADER
+		shader_mat.set_shader_parameter("nebula_texture", NEBULA_TEXTURES[tex_idx])
+		shader_mat.set_shader_parameter("tint_color", Vector3(color.r, color.g, color.b))
+		shader_mat.set_shader_parameter("brightness", nebula_brightness * rng.randf_range(0.7, 1.0))
+		shader_mat.render_priority = -1
+
+		var quad := QuadMesh.new()
+		quad.size = Vector2(NEBULA_QUAD_WIDTH, NEBULA_QUAD_HEIGHT)
+		quad.material = shader_mat
+
+		var billboard := MeshInstance3D.new()
+		billboard.name = "NebulaLayer_%d" % i
+		billboard.mesh = quad
+		billboard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+		# Offset slightly from the base direction so layers overlap but aren't identical
+		var offset_dir := base_dir
+		if i > 0:
+			var right := base_dir.cross(Vector3.UP).normalized()
+			var up := right.cross(base_dir).normalized()
+			offset_dir = (base_dir + right * rng.randf_range(-0.15, 0.15)
+				+ up * rng.randf_range(-0.15, 0.15)).normalized()
+
+		billboard.position = offset_dir * NEBULA_DISTANCE
+		billboard.look_at(Vector3.ZERO, Vector3.UP)
+		billboard.rotate_object_local(Vector3.FORWARD, rng.randf_range(0.0, TAU))
+
+		container.add_child(billboard)
+
+	return container
