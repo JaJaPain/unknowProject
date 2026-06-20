@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_builder_produces_all_templates()
 	_test_builder_offers_have_required_fields()
 	_test_pickup_offer_uses_current_system_outpost()
+	_test_full_service_station_assigns_faction_contacts_and_mechanic()
 	_test_ore_offer_is_urgent()
 	_test_fallback_renders_all_placeholders()
 	_test_fallback_preserves_board_metadata()
@@ -105,6 +106,38 @@ func _test_pickup_offer_uses_current_system_outpost() -> void:
 	_expect(
 		str(objective.get("target_npc", "")) not in gs.MINOR_NPCS,
 		"local_pickup: generated outpost reused an authored minor NPC."
+	)
+
+
+func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:
+	var gs = root.get_node("GlobalState")
+	var station_id := "station.system_gen_test.s0"
+	var contacts: Array = gs.assign_generated_station_npcs(
+		station_id,
+		5678,
+		{
+			"gen_glass_choir_00": 0.6,
+			"gen_rust_index_01": 0.4,
+		}
+	)
+	_expect(
+		contacts.size() >= 3,
+		"station_contacts: full-service station did not get faction contacts plus mechanic."
+	)
+	var mechanic_found := false
+	var faction_contacts := 0
+	for npc_name in contacts:
+		var npc_data: Dictionary = gs.get_minor_npc_data(str(npc_name))
+		if str(npc_data.get("role", "")) == "Station mechanic":
+			mechanic_found = true
+		if str(npc_data.get("role", "")) == "Faction contact":
+			faction_contacts += 1
+		gs.generated_outpost_npc_data.erase(str(npc_name))
+	gs.generated_outpost_npcs.erase(station_id)
+	_expect(mechanic_found, "station_contacts: mechanic contact was not assigned.")
+	_expect(
+		faction_contacts >= 2,
+		"station_contacts: not enough faction contacts were assigned."
 	)
 
 

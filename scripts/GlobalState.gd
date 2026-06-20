@@ -516,11 +516,58 @@ static func assign_generated_outpost_npcs(
 	generated_outpost_npcs[world_id] = picked
 	return picked.duplicate()
 
+static func assign_generated_station_npcs(
+	world_id: String,
+	seed_value: int,
+	faction_weights: Dictionary = {}
+) -> Array:
+	if generated_outpost_npcs.has(world_id):
+		return generated_outpost_npcs[world_id].duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var picked: Array = []
+	var faction_names := _generated_station_contact_faction_keys(faction_weights)
+	for faction_name in faction_names:
+		var npc_name := _generated_contact_name(
+			world_id,
+			rng,
+			picked.size(),
+			faction_name
+		)
+		picked.append(npc_name)
+		generated_outpost_npc_data[npc_name] = _generated_contact_data(
+			world_id,
+			npc_name,
+			rng,
+			picked.size(),
+			faction_name,
+			"Faction contact"
+		)
+	var mechanic_name := _generated_contact_name(
+		world_id,
+		rng,
+		picked.size(),
+		"",
+		"Mechanic"
+	)
+	picked.append(mechanic_name)
+	generated_outpost_npc_data[mechanic_name] = _generated_contact_data(
+		world_id,
+		mechanic_name,
+		rng,
+		picked.size(),
+		"",
+		"Station mechanic"
+	)
+	generated_outpost_npcs[world_id] = picked
+	return picked.duplicate()
+
 static func _generated_contact_name(
 	world_id: String,
 	rng: RandomNumberGenerator,
 	index: int,
-	faction_name: String = ""
+	faction_name: String = "",
+	role_prefix: String = ""
 ) -> String:
 	var first := GENERATED_CONTACT_FIRST_NAMES[
 		rng.randi() % GENERATED_CONTACT_FIRST_NAMES.size()
@@ -534,6 +581,8 @@ static func _generated_contact_name(
 	var name := "%s %s" % [first, last]
 	if not faction_display.is_empty():
 		name = "%s %s" % [faction_display, name]
+	elif not role_prefix.is_empty():
+		name = "%s %s" % [role_prefix, name]
 	if generated_outpost_npc_data.has(name):
 		name = "%s %s" % [name, world_id.sha256_text().substr(index * 2, 2).to_upper()]
 	return name
@@ -543,7 +592,8 @@ static func _generated_contact_data(
 	npc_name: String,
 	rng: RandomNumberGenerator,
 	index: int,
-	faction_name: String = ""
+	faction_name: String = "",
+	role: String = "Local contact"
 ) -> Dictionary:
 	var portrait_id := GENERATED_CONTACT_PORTRAITS[
 		(index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()
@@ -569,6 +619,7 @@ static func _generated_contact_data(
 	var hue := rng.randf()
 	return {
 		"outpost": world_id,
+		"role": role,
 		"faction": faction_name,
 		"faction_id": "faction.%s" % faction_name if not faction_name.is_empty() else "",
 		"portrait_id": portrait_id,
@@ -606,6 +657,16 @@ static func _generated_contact_faction_keys(faction_weights: Dictionary) -> Arra
 	if result.is_empty():
 		for faction_name in MINOR_FACTIONS.keys():
 			result.append(str(faction_name))
+	return result
+
+static func _generated_station_contact_faction_keys(faction_weights: Dictionary) -> Array:
+	var result: Array = []
+	for faction_name in faction_weights.keys():
+		var clean := str(faction_name).strip_edges()
+		if not clean.is_empty():
+			result.append(clean)
+	if result.is_empty():
+		result.append_array(["zenith", "aurelia", "vanguard"])
 	return result
 
 static func resolve_outpost_id(station: Node3D) -> String:

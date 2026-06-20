@@ -39,8 +39,16 @@ func _assign_outpost_npcs() -> void:
 		if child.is_in_group("station"):
 			var stype = child.get("station_type")
 			var wid = child.get("world_id")
-			if stype == "outpost" and typeof(wid) == TYPE_STRING and wid != "":
+			if typeof(wid) != TYPE_STRING or wid == "":
+				continue
+			if stype == "outpost":
 				GlobalState.assign_generated_outpost_npcs(
+					wid,
+					config.seed_value + wid.hash(),
+					config.faction_weights
+				)
+			elif stype == "full_service":
+				GlobalState.assign_generated_station_npcs(
 					wid,
 					config.seed_value + wid.hash(),
 					config.faction_weights
