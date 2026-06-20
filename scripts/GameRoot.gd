@@ -36,6 +36,9 @@ const CampaignGeneratedFactionStoreType := preload(
 const CampaignNpcIdentityStoreType := preload(
 	"res://scripts/persistence/CampaignNpcIdentityStore.gd"
 )
+const CampaignAgentMemorySnippetStoreType := preload(
+	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -64,6 +67,7 @@ var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var campaign_bible_store: CampaignBibleStore
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
+var campaign_agent_memory_store = null
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -1019,7 +1023,9 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
@@ -1154,7 +1160,9 @@ func _initialize_campaign_registry() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	_initialize_campaign_chronicle()
@@ -1221,7 +1229,9 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
@@ -1249,7 +1259,9 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1266,7 +1278,9 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1283,7 +1297,9 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1300,7 +1316,9 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1317,12 +1335,34 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_npc_identity_store = opened_npc_identities
 	GlobalState.campaign_npc_identity_store = campaign_npc_identity_store
+	var opened_agent_memory := CampaignAgentMemorySnippetStoreType.open(slot_path)
+	if not opened_agent_memory.is_valid():
+		push_warning(
+			"[GameRoot] Agent memory snippet store is unavailable: %s" %
+				opened_agent_memory.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_agent_memory_store = opened_agent_memory
+	GlobalState.campaign_agent_memory_store = campaign_agent_memory_store
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
@@ -1526,6 +1566,119 @@ func remember_generated_quest_idea(
 		)
 		return
 	_refresh_llm_idea_memory_context()
+
+
+func remember_agent_memory_snippet(quest_data: Dictionary, outcome: String) -> void:
+	if campaign_agent_memory_store == null or quest_data.is_empty():
+		return
+	if bool(quest_data.get("public_board", false)):
+		return
+	var agent_name := str(quest_data.get("agent_name", "")).strip_edges()
+	if agent_name.is_empty() \
+			or agent_name in ["Public Board", "Board Poster"]:
+		return
+	var faction := str(quest_data.get("faction", "neutral")).strip_edges()
+	if faction.is_empty():
+		faction = "neutral"
+	var agent_id := str(quest_data.get("agent_memory_id", "")).strip_edges()
+	if agent_id.is_empty():
+		agent_id = LLMInterface.agent_memory_id_for_profile(
+			agent_name,
+			faction,
+			{}
+		)
+	var objective := _quest_memory_objective(quest_data)
+	var objective_type := str(
+		objective.get("type", quest_data.get("objective_type", ""))
+	).strip_edges()
+	var title := str(quest_data.get("title", "Untitled contract")).strip_edges()
+	if title.is_empty():
+		title = "Untitled contract"
+	var detail := _quest_objective_memory_detail(objective, objective_type)
+	var clean_outcome := outcome.strip_edges().to_lower()
+	var summary := "Indy %s '%s' for %s" % [
+		clean_outcome,
+		title,
+		agent_name,
+	]
+	if not detail.is_empty():
+		summary += ": %s" % detail
+	if clean_outcome == "completed":
+		var payout := int(quest_data.get("final_payout", 0))
+		if payout > 0:
+			summary += ". Final payout: %d SC" % payout
+	elif clean_outcome == "abandoned":
+		summary += ". The work was abandoned before completion"
+	var response_excerpt := _short_memory_text(
+		str(quest_data.get("agent_response", "")),
+		120
+	)
+	if not response_excerpt.is_empty():
+		summary += ". Agent response: \"%s\"" % response_excerpt
+	var tags: Array = [
+		"quest",
+		clean_outcome,
+		faction,
+		objective_type.to_lower(),
+		str(quest_data.get("system_id", GlobalState.current_system_id)),
+	]
+	for optional_key in [
+		"target_faction",
+		"target_outpost",
+		"target_npc",
+		"part_name",
+		"item_name",
+	]:
+		if objective.has(optional_key):
+			tags.append(
+				str(objective.get(optional_key, "")).to_lower().replace(" ", "_")
+			)
+	var appended: Dictionary = campaign_agent_memory_store.append_snippet(
+		agent_id,
+		agent_name,
+		faction,
+		summary,
+		tags,
+		{
+			"title": title,
+			"outcome": clean_outcome,
+			"faction": faction,
+			"agent_name": agent_name,
+			"objective_type": objective_type,
+			"objective": objective.duplicate(true),
+			"system_id": str(
+				quest_data.get("system_id", GlobalState.current_system_id)
+			),
+		}
+	)
+	if not bool(appended.get("ok", false)):
+		push_warning(
+			"[GameRoot] Agent memory snippet was not saved: %s" %
+				appended.get("error", "unknown error")
+		)
+
+
+func _quest_memory_objective(quest_data: Dictionary) -> Dictionary:
+	var existing: Dictionary = quest_data.get("objective", {})
+	if not existing.is_empty():
+		return existing.duplicate(true)
+	var objective_type := str(quest_data.get("objective_type", ""))
+	var objective: Dictionary = {"type": objective_type}
+	for key in [
+		"target_faction",
+		"count_required",
+		"amount_required",
+		"target_outpost",
+		"target_outpost_display",
+		"target_npc",
+		"part_name",
+		"destination",
+		"item_name",
+		"turn_in_location",
+	]:
+		if quest_data.has(key):
+			objective[key] = quest_data[key]
+	return objective
 
 
 func _quest_idea_memory_summary(
@@ -1808,6 +1961,7 @@ func _on_quest_completed_chronicle(quest: Dictionary) -> void:
 		)
 	else:
 		_append_quest_chronicle_event("mission_completed", quest, "completed")
+	remember_agent_memory_snippet(quest, "completed")
 
 
 func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
@@ -1819,6 +1973,7 @@ func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 		)
 	else:
 		_append_quest_chronicle_event("mission_abandoned", quest, "abandoned")
+	remember_agent_memory_snippet(quest, "abandoned")
 
 
 func _on_quest_expired_chronicle(quest: Dictionary) -> void:
@@ -2216,7 +2371,9 @@ func _run_jump_smoke_test() -> void:
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	var prepared := _capture_prepared_runtime_state()
@@ -3774,7 +3931,9 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	GlobalState.player_credits = 7654

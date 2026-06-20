@@ -3539,6 +3539,7 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 		faction_info.get("name", faction_key.capitalize())
 	)
 	return {
+		"agent_id": str(npc_data.get("npc_id", "")),
 		"agent_name": npc_name,
 		"agent_role": "%s Station Contact" % faction_display,
 		"faction": faction,

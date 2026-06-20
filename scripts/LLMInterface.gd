@@ -850,6 +850,50 @@ func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
 					d["response_3"] = "Bumped the payout, George. The drive better arrive in one piece. My client doesn't accept excuses and neither do I."
 	return d
 
+
+func agent_memory_id_for_profile(
+	agent_name: String,
+	faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var profile_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if not profile_id.is_empty():
+		return profile_id
+	var clean_faction := str(faction).strip_edges().to_lower()
+	if clean_faction.is_empty():
+		clean_faction = "neutral"
+	return "agent.fixed.%s.%s" % [
+		_agent_memory_slug(clean_faction),
+		_agent_memory_slug(agent_name),
+	]
+
+
+func _agent_memory_prompt_block(agent_id: String) -> String:
+	var context := (
+		"No prior contracts with this agent are recorded yet. "
+		+ "Treat the relationship as first-contact or strictly professional."
+	)
+	if GlobalState.campaign_agent_memory_store != null \
+			and GlobalState.campaign_agent_memory_store.has_method("prompt_context"):
+		context = str(GlobalState.campaign_agent_memory_store.prompt_context(agent_id))
+	return "### AGENT MEMORY:\n%s\n\n" % context
+
+
+func _agent_memory_slug(text: String) -> String:
+	var lower := text.strip_edges().to_lower()
+	var output := ""
+	for i in range(lower.length()):
+		var ch := lower.substr(i, 1)
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			output += ch
+		elif not output.ends_with("_"):
+			output += "_"
+	output = output.strip_edges().trim_prefix("_").trim_suffix("_")
+	if output.is_empty():
+		return "unknown"
+	return output
+
+
 func request_quest_generation(
 	agent_faction: String,
 	history_text: String,
@@ -944,6 +988,12 @@ func request_quest_generation(
 			"You speak directly to the pilot, use dry PG-13 frontier humor when it fits, and call the pilot 'Indy' only in the opening request. " + \
 			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
 
+	var agent_memory_id: String = agent_memory_id_for_profile(
+		agent_name,
+		chosen_faction,
+		agent_profile
+	)
+
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
 	var quest_types = ["DELIVER_ORE", "KILL_SHIPS", "PICKUP_SPECIAL"]
@@ -1026,6 +1076,7 @@ func request_quest_generation(
 		"nickname": player_nickname,
 		"agent_name": agent_name,
 		"agent_role": agent_role,
+		"agent_memory_id": agent_memory_id,
 		"faction": chosen_faction,
 		"pickup_outpost": pickup_outpost,
 		"pickup_outpost_display": pickup_outpost_display,
@@ -1049,6 +1100,7 @@ func request_quest_generation(
 			+ campaign_bible_context_text
 			+ "\n\n"
 		)
+	var agent_memory_block := _agent_memory_prompt_block(agent_memory_id)
 	var idea_memory_block = ""
 	if idea_memory_context_text.strip_edges() != "":
 		idea_memory_block = (
@@ -1086,6 +1138,7 @@ func request_quest_generation(
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
 		campaign_bible_block + \
+		agent_memory_block + \
 		idea_memory_block + \
 		"Minor hostile factions in the sector: " + minor_fac_str + ". These are outlaws with no diplomatic ties — primary targets for elimination contracts.\n\n" + \
 		"Current pilot stats:\n" + \
@@ -1609,6 +1662,7 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	var obj_type: String = obj.get("type", "")
 	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
 	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
+	quest_data["agent_memory_id"] = str(subs.get("agent_memory_id", ""))
 	quest_data["faction"] = str(
 		subs.get("faction", quest_data.get("faction", "neutral"))
 	).to_lower().strip_edges()
@@ -2552,6 +2606,7 @@ func _trigger_fallback():
 	selected_quest["campaign_name"] = _fallback_campaign_name()
 	selected_quest["agent_role"] = str(_pending_substitutions.get("agent_role", "Neutral Fixer & Profit Broker"))
 	selected_quest["agent_name"] = str(_pending_substitutions.get("agent_name", selected_quest.get("agent_name", "Broker Kaelen")))
+	selected_quest["agent_memory_id"] = str(_pending_substitutions.get("agent_memory_id", ""))
 	selected_quest["faction"] = str(_pending_substitutions.get("faction", selected_quest.get("faction", "neutral")))
 	
 	# Randomize values slightly to make it feel procedural

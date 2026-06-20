@@ -46,6 +46,7 @@ static func build_active_state(
 		"faction": str(quest_data.get("faction", "neutral")),
 		"faction_id": str(definition.faction_id),
 		"agent_name": str(quest_data.get("agent_name", "Broker Kaelen")),
+		"agent_memory_id": str(quest_data.get("agent_memory_id", "")),
 		"giver_npc_id": str(definition.giver_npc_id),
 		"dialogue": definition.dialogue,
 		"objective_type": definition.objective.type,

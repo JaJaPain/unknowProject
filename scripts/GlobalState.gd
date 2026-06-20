@@ -379,6 +379,7 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 static var generated_outpost_npcs: Dictionary = {}
 static var generated_outpost_npc_data: Dictionary = {}
 static var campaign_npc_identity_store = null
+static var campaign_agent_memory_store = null
 
 const GENERATED_CONTACT_FIRST_NAMES: Array[String] = [
 	"Rook",
