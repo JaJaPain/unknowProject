@@ -716,6 +716,9 @@ Goal: create the shared story spine.
 - [x] Add save/load validation.
 - [x] Add prompt snippets that let small models consume the bible.
 - [x] Record active campaign bible source/status in generation diagnostics.
+- [x] Add a `NarrativeDirector` prompt/parser layer for large-model campaign
+  bible generation, with validation that rejects incomplete model output instead
+  of silently filling missing fields from the bootstrap bible.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.
