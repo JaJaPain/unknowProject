@@ -1,6 +1,8 @@
 extends Node
 
 const TTS_URL = "http://127.0.0.1:5000/tts"
+const PYTHON_SETTING := "application/run/python_executable"
+const PYTHON_ENV_VAR := "SPACEGAME_PYTHON"
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
 var is_requesting: bool = false
@@ -473,14 +475,77 @@ func _discover_and_verify_tts():
 		get_tree().create_timer(1.5).timeout.connect(_discover_and_verify_tts)
 
 func _launch_tts_server_process():
+	if DisplayServer.get_name() == "headless":
+		print("[TTSInterface] Headless mode detected; skipping local TTS server auto-launch.")
+		return
 	var global_script_path = ProjectSettings.globalize_path("res://scripts/tts_server.py")
 	print("[TTSInterface] Sourced TTS server script path: ", global_script_path)
 	
-	var pid = OS.create_process("python", [global_script_path])
+	var launcher := _resolve_python_launcher()
+	if str(launcher.get("executable", "")).is_empty():
+		print(
+			"[TTSInterface] Python executable not found; TTS server was not launched. "
+			+ "Install Python, add it to PATH, set SPACEGAME_PYTHON, or set %s." %
+			PYTHON_SETTING
+		)
+		return
+	var args := PackedStringArray()
+	for arg in launcher.get("args", []):
+		args.append(str(arg))
+	args.append(global_script_path)
+	var pid = OS.create_process(str(launcher["executable"]), args)
 	if pid > 0:
 		print("[TTSInterface] Successfully launched local TTS server background process (PID: ", pid, ")")
 	else:
-		print("[TTSInterface] Failed to launch local TTS server. Please ensure Python is installed and in PATH.")
+		print("[TTSInterface] Failed to launch local TTS server with Python: ", launcher["executable"])
+
+
+func _resolve_python_launcher() -> Dictionary:
+	var configured := str(ProjectSettings.get_setting(PYTHON_SETTING, "")).strip_edges()
+	if not configured.is_empty():
+		var configured_path := _resolve_python_executable(configured)
+		if not configured_path.is_empty():
+			return {"executable": configured_path, "args": _launcher_args(configured_path)}
+	var env_value := OS.get_environment(PYTHON_ENV_VAR).strip_edges()
+	if not env_value.is_empty():
+		var env_path := _resolve_python_executable(env_value)
+		if not env_path.is_empty():
+			return {"executable": env_path, "args": _launcher_args(env_path)}
+	for candidate in ["python", "python3", "py"]:
+		var resolved := _resolve_python_executable(candidate)
+		if not resolved.is_empty():
+			return {"executable": resolved, "args": _launcher_args(resolved)}
+	return {}
+
+
+func _launcher_args(executable_path: String) -> Array[String]:
+	if executable_path.get_file().to_lower() == "py.exe" \
+			or executable_path.get_file().to_lower() == "py":
+		return ["-3"]
+	return []
+
+
+func _resolve_python_executable(candidate: String) -> String:
+	if candidate.is_empty():
+		return ""
+	if candidate.contains("/") or candidate.contains("\\"):
+		return candidate if FileAccess.file_exists(candidate) else ""
+	var path_value := OS.get_environment("PATH")
+	if path_value.is_empty():
+		return ""
+	var separator := ";" if OS.get_name() == "Windows" else ":"
+	var suffixes: Array[String] = [""]
+	if OS.get_name() == "Windows" and candidate.get_extension().is_empty():
+		suffixes = [".exe", ".bat", ".cmd", ""]
+	for dir in path_value.split(separator, false):
+		var clean_dir := str(dir).strip_edges()
+		if clean_dir.is_empty():
+			continue
+		for suffix in suffixes:
+			var path := "%s/%s%s" % [clean_dir.trim_suffix("/").trim_suffix("\\"), candidate, suffix]
+			if FileAccess.file_exists(path):
+				return path
+	return ""
 
 func get_voice_for_faction(faction: String) -> String:
 	match faction.to_lower():
