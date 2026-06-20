@@ -4517,6 +4517,58 @@ func _run_llm_validator_smoke_test() -> void:
 		)
 		return
 
+	var pickup_outpost_id := "iron_reach"
+	var pickup_outpost_display := "IRON REACH OUTPOST"
+	var current_outposts := GlobalState.get_current_system_outposts()
+	if not current_outposts.is_empty() and current_outposts[0] is Dictionary:
+		pickup_outpost_id = str(current_outposts[0].get("id", pickup_outpost_id))
+		pickup_outpost_display = str(
+			current_outposts[0].get("display", pickup_outpost_display)
+		)
+	var pickup_target_npc := "Mariska Vonn"
+	var pickup_npcs := GlobalState.get_minor_npcs_at_outpost(pickup_outpost_id)
+	if not pickup_npcs.is_empty():
+		pickup_target_npc = str(pickup_npcs[0])
+	var wrong_pickup_npc := "Jenna Kross"
+	if wrong_pickup_npc == pickup_target_npc:
+		wrong_pickup_npc = "Mariska Vonn"
+
+	var pickup_quest := {
+		"title": "Mismatched Pickup Briefing",
+		"faction": "zenith",
+		"agent_name": "Director Voss",
+		"player_nickname": "Indy",
+		"dialogue": (
+			"An asset transfer has been staged at %s, Indy. Contact %s, "
+			+ "collect the Hazardous Material Container, deliver it here."
+		) % [
+			pickup_outpost_display,
+			wrong_pickup_npc,
+		],
+		"objective": {
+			"type": "PICKUP_SPECIAL",
+			"target_outpost": pickup_outpost_id,
+			"target_outpost_display": pickup_outpost_display,
+			"target_npc": pickup_target_npc,
+			"part_name": "Hazardous Material Container",
+			"destination": "Main Station",
+			"reward_credits": 250,
+		},
+		"choices": [],
+	}
+	LLMInterface.call("_validate_quest_data", pickup_quest)
+	var pickup_objective: Dictionary = pickup_quest["objective"]
+	var final_pickup_npc := str(pickup_objective.get("target_npc", ""))
+	if not bool(pickup_quest.get("objective_dialogue_rewritten", false)) \
+			or final_pickup_npc.is_empty() \
+			or str(pickup_quest.get("dialogue", "")).find(final_pickup_npc) == -1 \
+			or str(pickup_quest.get("dialogue", "")).find(wrong_pickup_npc) != -1 \
+			or str(pickup_quest.get("objective_summary", "")).find(final_pickup_npc) == -1:
+		_fail_llm_validator_smoke_test(
+			"Mismatched pickup contact prose was not repaired."
+		)
+		return
+
 	print("[LLMValidatorSmokeTest] PASS: requested mission type stays authoritative.")
 	delete_savegame()
 	get_tree().quit(0)

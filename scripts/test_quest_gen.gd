@@ -81,8 +81,17 @@ func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void:
 		if not has_ore_kw:
 			issues.append("NO_ORE_KEYWORDS_IN_DIALOGUE")
 	elif obj_type == "PICKUP_SPECIAL":
-		if str(obj.get("target_npc", "")).is_empty():
+		var target_npc := str(obj.get("target_npc", ""))
+		var target_outpost := str(obj.get("target_outpost_display", ""))
+		var part_name := str(obj.get("part_name", ""))
+		if target_npc.is_empty():
 			issues.append("MISSING_PICKUP_NPC")
+		elif not _text_mentions_phrase(lower_d, target_npc):
+			issues.append("PICKUP_DIALOGUE_WRONG_NPC")
+		if not target_outpost.is_empty() and not _text_mentions_phrase(lower_d, target_outpost):
+			issues.append("PICKUP_DIALOGUE_WRONG_OUTPOST")
+		if not part_name.is_empty() and not _text_mentions_phrase(lower_d, part_name):
+			issues.append("PICKUP_DIALOGUE_WRONG_ITEM")
 	if agent_role == "MISSING":
 		issues.append("NO_AGENT_ROLE")
 	elif agent_name != "Broker Kaelen" and agent_role == "Neutral Fixer & Profit Broker":
@@ -172,6 +181,22 @@ func _print_summary() -> void:
 		print("  Issues:")
 		var sorted_issues := issue_counts.keys()
 		sorted_issues.sort()
-		for issue in sorted_issues:
-			print("    %-30s %d" % [issue, issue_counts[issue]])
+	for issue in sorted_issues:
+		print("    %-30s %d" % [issue, issue_counts[issue]])
 	print("=" .repeat(80))
+
+
+func _text_mentions_phrase(text_lower: String, phrase: String) -> bool:
+	var clean_phrase := phrase.strip_edges().to_lower()
+	if clean_phrase.is_empty():
+		return true
+	if text_lower.find(clean_phrase) != -1:
+		return true
+	var words := clean_phrase.split(" ", false)
+	if words.size() <= 1:
+		return false
+	var hits := 0
+	for word in words:
+		if str(word).length() >= 4 and text_lower.find(str(word)) != -1:
+			hits += 1
+	return hits >= mini(2, words.size())

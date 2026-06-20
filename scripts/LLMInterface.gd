@@ -5,6 +5,7 @@ const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
 const TIMEOUT_SECONDS = LocalModelGatewayType.REQUEST_TIMEOUTS["quest_dialogue"]
+const QUEST_CANDIDATE_TARGET_COUNT := 3
 # Kaelen intro telemetry is written to user://kaelen_intro_stats.json so
 # counters survive game restarts. Read via get_kaelen_intro_stats().
 const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
@@ -21,6 +22,12 @@ var campaign_bible_context_text: String = ""
 var idea_memory_context_text: String = ""
 var _pending_fallback_reason: String = ""
 var _pending_substitutions: Dictionary = {}
+var _quest_candidate_prompt: String = ""
+var _quest_candidate_headers: Array[String] = []
+var _quest_candidate_context: Dictionary = {}
+var _quest_candidate_attempts_started: int = 0
+var _quest_candidate_results: Array[Dictionary] = []
+var _quest_candidate_requests: Array[HTTPRequest] = []
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
 # Persistent counters in user://kaelen_intro_stats.json. Tracks how often the
@@ -575,6 +582,13 @@ func reset_for_restart():
 	# Cancel any in-flight main request so the old response is ignored on arrival
 	if http_request and is_instance_valid(http_request):
 		http_request.cancel_request()
+	for request in _quest_candidate_requests:
+		if request and is_instance_valid(request):
+			request.cancel_request()
+			request.queue_free()
+	_quest_candidate_requests.clear()
+	_quest_candidate_results.clear()
+	_quest_candidate_attempts_started = 0
 	# Clear chatter caches — new session should generate fresh contextual lines
 	for key in chatter_cache:
 		chatter_cache[key].clear()
@@ -1136,21 +1150,13 @@ func request_quest_generation(
 		dummy_name_instruction + \
 		"Output only the raw JSON object."
 	
-	var payload = {
-		"model": active_model_name,
-		"prompt": system_prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
-			"temperature": 0.85,
-			"seed": randi()
-		}
-	}
+	var headers: Array[String] = ["Content-Type: application/json"]
 	
-	var json_str = JSON.stringify(payload)
-	var headers = ["Content-Type: application/json"]
-	
-	print("[LLMInterface] Sending request to Ollama for faction: ", chosen_faction, " agent: ", agent_name)
+	print("[LLMInterface] Sending best-of-%d quest request to Ollama for faction: %s agent: %s" % [
+		QUEST_CANDIDATE_TARGET_COUNT,
+		chosen_faction,
+		agent_name,
+	])
 	GenerationDiagnostics.record_event(
 		"quest_generation",
 		"request_started",
@@ -1162,16 +1168,317 @@ func request_quest_generation(
 			"objective_type": chosen_type,
 		}
 	)
-	var err = http_request.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
+	_start_quest_candidate_batch(
+		system_prompt,
+		headers,
+		{
+			"model": active_model_name,
+			"faction": chosen_faction,
+			"agent_name": agent_name,
+			"objective_type": chosen_type,
+		}
+	)
+
+
+func _start_quest_candidate_batch(
+	prompt: String,
+	headers: Array[String],
+	context: Dictionary
+) -> void:
+	for request in _quest_candidate_requests:
+		if request and is_instance_valid(request):
+			request.cancel_request()
+			request.queue_free()
+	_quest_candidate_prompt = prompt
+	_quest_candidate_headers = headers.duplicate()
+	_quest_candidate_context = context.duplicate(true)
+	_quest_candidate_attempts_started = 0
+	_quest_candidate_results.clear()
+	_quest_candidate_requests.clear()
+	_start_next_quest_candidate()
+
+
+func _start_next_quest_candidate() -> void:
+	if _quest_candidate_attempts_started >= QUEST_CANDIDATE_TARGET_COUNT:
+		_finish_quest_candidate_batch()
+		return
+
+	_quest_candidate_attempts_started += 1
+	var attempt_number := _quest_candidate_attempts_started
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	_quest_candidate_requests.append(temp_http)
+	temp_http.timeout = request_timeout_for_capability("quest_dialogue")
+	var started_msec := Time.get_ticks_msec()
+	temp_http.request_completed.connect(
+		_on_quest_candidate_completed.bind(
+			temp_http.get_instance_id(),
+			attempt_number,
+			started_msec
+		)
+	)
+	var payload: Dictionary = build_generation_body(
+		"quest_dialogue",
+		_quest_candidate_prompt,
+		"json",
+		{
+			"temperature": 0.85,
+			"seed": randi(),
+		}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		_quest_candidate_headers,
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
 	if err != OK:
-		print("[LLMInterface] HTTP request failed to initiate. Error code: ", err)
+		temp_http.queue_free()
+		_quest_candidate_requests.erase(temp_http)
+		_quest_candidate_results.append({
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "http_request_start_failed_%d" % err,
+			"elapsed_seconds": 0.0,
+		})
 		GenerationDiagnostics.record_event(
 			"quest_generation",
-			"request_start_failed",
+			"candidate_request_start_failed",
 			"LLMInterface",
-			{"error_code": err, "model": active_model_name}
+			_quest_candidate_context.merged({
+				"attempt": attempt_number,
+				"error_code": err,
+			}, true)
 		)
-		_trigger_fallback_with_reason("http_request_start_failed_%d" % err)
+		_start_next_quest_candidate()
+
+
+func _on_quest_candidate_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray,
+	request_instance_id: int,
+	attempt_number: int,
+	started_msec: int
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http:
+		_quest_candidate_requests.erase(temp_http)
+		temp_http.queue_free()
+	var elapsed := float(Time.get_ticks_msec() - started_msec) / 1000.0
+	var candidate := _parse_quest_candidate_response(
+		result,
+		response_code,
+		body,
+		attempt_number,
+		elapsed
+	)
+	_quest_candidate_results.append(candidate)
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"candidate_scored" if bool(candidate.get("ok", false)) else "candidate_failed",
+		"LLMInterface",
+		_quest_candidate_context.merged({
+			"attempt": attempt_number,
+			"score": int(candidate.get("score", -1000)),
+			"reason": str(candidate.get("reason", "")),
+			"elapsed_seconds": elapsed,
+		}, true)
+	)
+	_start_next_quest_candidate()
+
+
+func _parse_quest_candidate_response(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	attempt_number: int,
+	elapsed: float
+) -> Dictionary:
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "http_failed_result_%d_code_%d" % [result, response_code],
+			"elapsed_seconds": elapsed,
+		}
+	var response_text := body.get_string_from_utf8()
+	var json := JSON.new()
+	if json.parse(response_text) != OK:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "response_envelope_parse_failed",
+			"elapsed_seconds": elapsed,
+		}
+	var outer_data = json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "response_envelope_missing_response",
+			"elapsed_seconds": elapsed,
+		}
+	var inner_json_str := str(outer_data["response"]).strip_edges()
+	if inner_json_str.begins_with("```"):
+		var end_idx := inner_json_str.find("\n", 3)
+		if end_idx != -1:
+			inner_json_str = inner_json_str.substr(end_idx + 1)
+		if inner_json_str.ends_with("```"):
+			inner_json_str = inner_json_str.substr(
+				0,
+				inner_json_str.length() - 3
+			)
+		inner_json_str = inner_json_str.strip_edges()
+	var inner_json := JSON.new()
+	if inner_json.parse(inner_json_str) != OK:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "inner_json_parse_failed",
+			"elapsed_seconds": elapsed,
+		}
+	var quest_data = inner_json.get_data()
+	if not quest_data is Dictionary \
+			or not quest_data.has("objective") \
+			or not quest_data.has("choices"):
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "quest_schema_missing_fields",
+			"elapsed_seconds": elapsed,
+		}
+	var campaign_name := _sanitize_campaign_name(
+		str(quest_data.get("campaign_name", ""))
+	)
+	quest_data["campaign_name"] = (
+		campaign_name
+		if not campaign_name.is_empty()
+		else _fallback_campaign_name()
+	)
+	_substitute_dialogue_placeholders(quest_data)
+	_validate_quest_data(quest_data)
+	var scored := _score_quest_candidate(quest_data)
+	return {
+		"ok": true,
+		"attempt": attempt_number,
+		"score": int(scored.get("score", 0)),
+		"reason": str(scored.get("reason", "")),
+		"elapsed_seconds": elapsed,
+		"quest_data": quest_data,
+	}
+
+
+func _score_quest_candidate(quest_data: Dictionary) -> Dictionary:
+	var score := 100
+	var reasons: Array[String] = []
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type := str(obj.get("type", ""))
+	var dialogue := str(quest_data.get("dialogue", ""))
+	var dialogue_lower := dialogue.to_lower()
+	if bool(quest_data.get("objective_dialogue_rewritten", false)):
+		score -= 30
+		reasons.append("rewritten")
+	if str(quest_data.get("title", "")).strip_edges().is_empty():
+		score -= 10
+		reasons.append("missing_title")
+	if dialogue.strip_edges().length() < 35:
+		score -= 15
+		reasons.append("short_dialogue")
+	if _dialogue_has_placeholder_artifacts(
+		dialogue,
+		str(quest_data.get("agent_name", ""))
+	):
+		score -= 35
+		reasons.append("placeholder_artifacts")
+	if _dialogue_is_too_vague(dialogue, obj_type):
+		score -= 20
+		reasons.append("too_vague")
+	if obj_type == "PICKUP_SPECIAL":
+		if _dialogue_has_pickup_detail_mismatch(dialogue, obj_type, obj):
+			score -= 35
+			reasons.append("pickup_detail_mismatch")
+		elif dialogue_lower.find(str(obj.get("target_npc", "")).to_lower()) != -1:
+			score += 5
+			reasons.append("exact_pickup_contact")
+	elif obj_type == "KILL_SHIPS":
+		if dialogue_lower.find(str(obj.get("target_faction", "")).to_lower()) != -1:
+			score += 5
+			reasons.append("exact_target_faction")
+	elif obj_type == "DELIVER_ORE":
+		var amount_text := str(int(round(float(obj.get("amount_required", 0.0)))))
+		if dialogue_lower.find(amount_text) != -1:
+			score += 5
+			reasons.append("exact_ore_amount")
+	var choices: Array = quest_data.get("choices", [])
+	if choices.size() < 3:
+		score -= 15
+		reasons.append("missing_choices")
+	for choice in choices:
+		if not choice is Dictionary:
+			score -= 10
+			reasons.append("bad_choice")
+			continue
+		var consequence: Dictionary = choice.get("consequence", {})
+		var response := str(consequence.get("dialogue_response", ""))
+		if response.strip_edges().length() < 8:
+			score -= 8
+			reasons.append("short_choice_response")
+	return {
+		"score": score,
+		"reason": ", ".join(reasons),
+	}
+
+
+func _finish_quest_candidate_batch() -> void:
+	var best_candidate: Dictionary = {}
+	for candidate in _quest_candidate_results:
+		if not bool(candidate.get("ok", false)):
+			continue
+		if best_candidate.is_empty() \
+				or int(candidate.get("score", -1000)) > int(best_candidate.get("score", -1000)):
+			best_candidate = candidate
+	if best_candidate.is_empty():
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"candidate_batch_failed",
+			"LLMInterface",
+			_quest_candidate_context.merged({
+				"candidate_count": _quest_candidate_results.size(),
+			}, true)
+		)
+		_quest_candidate_results.clear()
+		_quest_candidate_requests.clear()
+		_trigger_fallback_with_reason("candidate_batch_failed")
+		return
+	var total_elapsed := float(Time.get_ticks_msec() - request_start_time) / 1000.0
+	var score := int(best_candidate.get("score", 0))
+	var attempt := int(best_candidate.get("attempt", 0))
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"candidate_batch_selected",
+		"LLMInterface",
+		_quest_candidate_context.merged({
+			"selected_attempt": attempt,
+			"selected_score": score,
+			"candidate_count": _quest_candidate_results.size(),
+		}, true)
+	)
+	print(
+		"[LLMInterface] Selected quest candidate %d/%d with score %d." %
+		[attempt, QUEST_CANDIDATE_TARGET_COUNT, score]
+	)
+	var quest_data: Dictionary = best_candidate.get("quest_data", {})
+	_quest_candidate_results.clear()
+	_quest_candidate_requests.clear()
+	_finish_quest_with_current_dialogue(quest_data, total_elapsed)
 
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
@@ -1691,6 +1998,8 @@ func _finalize_validated_quest_display(
 		rewrite_reason = "dialogue_conflicts_with_objective"
 	elif _dialogue_has_faction_mismatch(raw_dialogue, obj_type, obj):
 		rewrite_reason = "faction_mismatch"
+	elif _dialogue_has_pickup_detail_mismatch(raw_dialogue, obj_type, obj):
+		rewrite_reason = "pickup_detail_mismatch"
 	elif _dialogue_has_placeholder_artifacts(raw_dialogue, raw_agent):
 		rewrite_reason = "placeholder_artifacts"
 	elif _dialogue_is_too_vague(raw_dialogue, obj_type):
@@ -1828,6 +2137,58 @@ func _dialogue_has_faction_mismatch(
 			"[LLMInterface] ⚠ VALIDATE: Dialogue mentions a faction other than target '%s'. Rewriting." % target
 		)
 	return mentioned_wrong
+
+
+func _dialogue_has_pickup_detail_mismatch(
+	raw_dialogue: String,
+	obj_type: String,
+	obj: Dictionary
+) -> bool:
+	if obj_type != "PICKUP_SPECIAL":
+		return false
+	var dialogue := raw_dialogue.to_lower()
+	if dialogue.strip_edges().is_empty():
+		return false
+	var target_npc := str(obj.get("target_npc", "")).strip_edges()
+	var target_outpost := str(
+		obj.get("target_outpost_display", obj.get("target_outpost", ""))
+	).strip_edges()
+	var part_name := str(obj.get("part_name", "")).strip_edges()
+	if not target_npc.is_empty() and not _text_mentions_phrase(dialogue, target_npc):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention target NPC '%s'. Rewriting." %
+			target_npc
+		)
+		return true
+	if not target_outpost.is_empty() and not _text_mentions_phrase(dialogue, target_outpost):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention target outpost '%s'. Rewriting." %
+			target_outpost
+		)
+		return true
+	if not part_name.is_empty() and not _text_mentions_phrase(dialogue, part_name):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention item '%s'. Rewriting." %
+			part_name
+		)
+		return true
+	return false
+
+
+func _text_mentions_phrase(text_lower: String, phrase: String) -> bool:
+	var clean_phrase := phrase.strip_edges().to_lower()
+	if clean_phrase.is_empty():
+		return true
+	if text_lower.find(clean_phrase) != -1:
+		return true
+	var words := clean_phrase.split(" ", false)
+	if words.size() <= 1:
+		return false
+	var hits := 0
+	for word in words:
+		if str(word).length() >= 4 and text_lower.find(str(word)) != -1:
+			hits += 1
+	return hits >= mini(2, words.size())
 
 
 func _nickname_for_agent(agent_name: String) -> String:
