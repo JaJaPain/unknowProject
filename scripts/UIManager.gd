@@ -3193,9 +3193,11 @@ func _render_dock_submenu() -> void:
 	var is_outpost: bool = current_station != null \
 		and is_instance_valid(current_station) \
 		and current_station.get("station_type") == "outpost"
+	if maintenance_bay_btn and is_instance_valid(maintenance_bay_btn):
+		maintenance_bay_btn.text = _mechanic_service_button_text()
 
 	if current_submenu == DockSubmenu.MAINTENANCE:
-		dock_label.text = "GREASE MONKEYS — MAINTENANCE BAY"
+		dock_label.text = _mechanic_dock_title()
 		# Maintenance submenu: hide services + entry button, show repair +
 		# upgrades + back button. The hangar background stays on.
 		sell_btn.visible = false
@@ -3614,6 +3616,7 @@ func _current_system_allows_major_agent_fallback() -> bool:
 func _current_mechanic_profile() -> Dictionary:
 	var station_id := _current_station_contact_id()
 	if not station_id.is_empty():
+		var station_display := _current_station_display_name()
 		var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
 		for npc_name in contacts:
 			var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
@@ -3628,6 +3631,8 @@ func _current_mechanic_profile() -> Dictionary:
 				"flavor_color": npc_data.get("flavor_color", Color(1.0, 0.85, 0.4)),
 				"portrait": GlobalState.get_minor_npc_portrait(str(npc_name)),
 				"is_generated": true,
+				"station_id": station_id,
+				"station_display_name": station_display,
 			}
 	var jenna_data := GlobalState.get_minor_npc_data("Jenna Kross")
 	return {
@@ -3639,7 +3644,76 @@ func _current_mechanic_profile() -> Dictionary:
 		"flavor_color": jenna_data.get("flavor_color", Color(1.0, 0.85, 0.4)),
 		"portrait": GlobalState.get_minor_npc_portrait("Jenna Kross"),
 		"is_generated": false,
+		"station_display_name": "Grease Monkeys",
 	}
+
+
+func _current_station_display_name() -> String:
+	if current_station and is_instance_valid(current_station):
+		var display: Variant = current_station.get("display_name")
+		if display != null and str(display).strip_edges() != "":
+			return str(display)
+	return "this station"
+
+
+func _mechanic_destination_name(mechanic_profile: Dictionary = {}) -> String:
+	var profile := mechanic_profile
+	if profile.is_empty():
+		profile = _current_mechanic_profile()
+	if not bool(profile.get("is_generated", false)):
+		return "Grease Monkeys"
+	return _generated_mechanic_shop_name(profile)
+
+
+func _mechanic_service_button_text(mechanic_profile: Dictionary = {}) -> String:
+	var profile := mechanic_profile
+	if profile.is_empty():
+		profile = _current_mechanic_profile()
+	if not bool(profile.get("is_generated", false)):
+		return "Maintenance Bay (Grease Monkeys)"
+	return "Maintenance Bay (%s)" % _generated_mechanic_shop_name(profile)
+
+
+func _mechanic_dock_title(mechanic_profile: Dictionary = {}) -> String:
+	var profile := mechanic_profile
+	if profile.is_empty():
+		profile = _current_mechanic_profile()
+	if not bool(profile.get("is_generated", false)):
+		return "GREASE MONKEYS - MAINTENANCE BAY"
+	return "%s - MAINTENANCE BAY" % _generated_mechanic_shop_name(profile).to_upper()
+
+
+func _generated_mechanic_shop_name(mechanic_profile: Dictionary) -> String:
+	var station_name := str(
+		mechanic_profile.get("station_display_name", _current_station_display_name())
+	).strip_edges()
+	if station_name.is_empty() or station_name == "this station":
+		var mechanic_name := str(mechanic_profile.get("name", "Local")).strip_edges()
+		station_name = mechanic_name if not mechanic_name.is_empty() else "Frontier"
+	var suffixes := [
+		"Works",
+		"Driveworks",
+		"Patchworks",
+		"Engine Yard",
+		"Spanner Bay",
+	]
+	var seed_text := "%s|%s" % [
+		str(mechanic_profile.get("station_id", station_name)),
+		str(mechanic_profile.get("name", "")),
+	]
+	var suffix := str(suffixes[abs(seed_text.hash()) % suffixes.size()])
+	return "%s %s" % [_title_case_words(station_name), suffix]
+
+
+func _title_case_words(value: String) -> String:
+	var words := value.replace("_", " ").split(" ", false)
+	var titled: Array[String] = []
+	for word in words:
+		var lower := str(word).to_lower()
+		if lower.is_empty():
+			continue
+		titled.append(lower.substr(0, 1).to_upper() + lower.substr(1))
+	return " ".join(titled)
 
 
 func _on_maintenance_bay_pressed() -> void:
@@ -7104,20 +7178,21 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 		else _current_mechanic_profile()
 	)
 	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
+	var mechanic_destination := _mechanic_destination_name(mechanic_profile)
 	
 	var quest_data: Dictionary = {
 		"title": "Parts Run: %s" % part_name,
 		"faction": "neutral",
 		"agent_name": mechanic_name,
 		"station_errand": true,
-		"dialogue": "Head to %s and pick up the %s from %s. Bring it back here." % [outpost_display, part_name, npc_name],
+		"dialogue": "Head to %s and pick up the %s from %s. Bring it back to %s." % [outpost_display, part_name, npc_name, mechanic_destination],
 		"objective": {
 			"type": "PICKUP_SPECIAL",
 			"target_outpost": outpost_id,
 			"target_outpost_display": outpost_display,
 			"target_npc": npc_name,
 			"part_name": part_name,
-			"destination": "Grease Monkeys",
+			"destination": mechanic_destination,
 			"reward_credits": reward,
 		},
 	}
@@ -7156,8 +7231,14 @@ func _on_ask_for_part_pressed() -> void:
 		)
 		return
 	if station_quest_ask.get("picked_up", false):
+		var destination := str(
+			QuestManager.active_quest.get(
+				"destination",
+				_mechanic_destination_name()
+			)
+		)
 		show_dock_message(
-			"You already have the part. Take it back to Grease Monkeys.",
+			"You already have the part. Take it back to %s." % destination,
 			"",
 			Color(0.85, 0.85, 0.85)
 		)
@@ -7238,6 +7319,12 @@ func _complete_pickup_with_handoff() -> void:
 	
 	var line = QuestManager.active_quest.get("pickup_handoff_line", "")
 	var client_name: String = str(QuestManager.active_quest.get("agent_name", "Jenna Kross"))
+	var destination_name: String = str(
+		QuestManager.active_quest.get(
+			"destination",
+			_mechanic_destination_name()
+		)
+	)
 	
 	# Patch to override the old legacy fallback if it got cached before the update
 	var old_fallback: String = "Jenna sent you? Alright, here's the %s. Tell her we're even." % picked_part
@@ -7258,7 +7345,7 @@ func _complete_pickup_with_handoff() -> void:
 	var success: bool = QuestManager.mark_pickup_complete()
 	if success:
 		_render_dock_submenu()
-		var display_line = line if line != "" else "Picked up '%s' from %s. Deliver to Grease Monkeys." % [picked_part, picked_npc]
+		var display_line = line if line != "" else "Picked up '%s' from %s. Deliver to %s." % [picked_part, picked_npc, destination_name]
 		show_dock_message(display_line, picked_npc, npc_color, npc_portrait)
 		
 		var flavor_dict: Dictionary = {
