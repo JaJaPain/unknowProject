@@ -689,7 +689,11 @@ func die():
 	if get_meta("is_quest_target", false):
 		_record_persistent_state()
 	AudioManager.play_explosion(global_position)
-	
+
+	if engine_glow and is_instance_valid(engine_glow):
+		engine_glow.queue_free()
+		engine_glow = null
+
 	# Spawn wreckage
 	var wreck_script = load("res://scripts/Wreckage.gd")
 	if wreck_script:
@@ -734,7 +738,7 @@ func die():
 		"faction_kills": int(GlobalState.faction_kills.get(faction, 0)),
 	})
 	
-	# Play explosion FX here if desired
+	ImpactEffect.spawn_explosion(get_parent(), global_position, _get_engine_color())
 	queue_free()
 
 func get_persistent_id() -> String:

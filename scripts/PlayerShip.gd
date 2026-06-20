@@ -1593,6 +1593,7 @@ func double_click_move(click_pos: Vector3):
 func die(death_source: String = ""):
 	destroyed = true
 	AudioManager.play_explosion(global_position)
+	ImpactEffect.spawn_explosion(get_parent(), global_position, Color(0.15, 0.75, 1.0), 1.5)
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("record_player_death"):
 		game_root.call("record_player_death", death_source)

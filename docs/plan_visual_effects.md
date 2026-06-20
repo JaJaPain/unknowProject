@@ -243,14 +243,14 @@ When a projectile hits a ship, spawn a brief flash + particle burst at the impac
 
 ### Implementation Checkpoints
 
-- [ ] **3.1 — Create `ImpactEffect.gd` helper class**
+- [x] **3.1 — Create `ImpactEffect.gd` helper class**
   - File: `scripts/visuals/ImpactEffect.gd` (new file)
   - `class_name ImpactEffect extends RefCounted`
   - Two static functions:
     - `spawn_hit(parent: Node3D, position: Vector3, color: Color) -> void`
     - `spawn_explosion(parent: Node3D, position: Vector3, color: Color, scale: float = 1.0) -> void`
 
-- [ ] **3.2 — Implement `spawn_hit()` — small impact flash**
+- [x] **3.2 — Implement `spawn_hit()` — small impact flash**
   - Creates a temporary Node3D container at the hit position
   - **Flash sprite:** MeshInstance3D with a small QuadMesh (size ~2.0)
     - Billboard mode (always faces camera)
@@ -272,7 +272,7 @@ When a projectile hits a ship, spawn a brief flash + particle burst at the impac
     - Draw pass: tiny SphereMesh with unshaded emissive material
   - Self-cleanup: Timer node (0.5s) -> `queue_free()` the container
 
-- [ ] **3.3 — Implement `spawn_explosion()` — ship death burst**
+- [x] **3.3 — Implement `spawn_explosion()` — ship death burst**
   - Larger version of the hit effect:
   - **Flash:** QuadMesh size ~8.0, emission energy 10.0, fades over 0.3s
   - **Debris particles:** GPUParticles3D
@@ -295,20 +295,20 @@ When a projectile hits a ship, spawn a brief flash + particle burst at the impac
   - Self-cleanup: Timer node (1.5s) -> `queue_free()`
   - `scale` parameter lets us make player death explosions bigger than NPC deaths
 
-- [ ] **3.4 — Hook into Projectile.gd**
+- [x] **3.4 — Hook into Projectile.gd**
   - File: `scripts/Projectile.gd`
   - In `_on_body_entered()`, before the existing `queue_free()` (line 51):
     - `ImpactEffect.spawn_hit(get_parent(), global_position, color)`
   - The `color` variable already holds the faction-appropriate projectile color.
   - Also add hit flash for asteroid impacts (line 56) — smaller, grey/white color.
 
-- [ ] **3.5 — Hook into NPCShip.gd die()**
+- [x] **3.5 — Hook into NPCShip.gd die()**
   - File: `scripts/NPCShip.gd`
   - In `die()`, before `queue_free()` (line 710):
     - `ImpactEffect.spawn_explosion(get_parent(), global_position, _get_engine_color())`
   - Uses the faction engine color so Zenith ships explode blue, Vanguard explode orange-red.
 
-- [ ] **3.6 — Hook into PlayerShip.gd die()**
+- [x] **3.6 — Hook into PlayerShip.gd die()**
   - File: `scripts/PlayerShip.gd`
   - In `die()`, before `queue_free()` (line 1601):
     - `ImpactEffect.spawn_explosion(get_parent(), global_position, Color(0.15, 0.75, 1.0), 1.5)`
