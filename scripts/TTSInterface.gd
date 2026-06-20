@@ -126,6 +126,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	if tone_guarded != clean_text:
 		print("[TRACE] [TTSInterface] Tone guard rewrote line for voice '%s': '%s' -> '%s'" % [voice_id, clean_text, tone_guarded])
 		clean_text = tone_guarded
+	clean_text = normalize_tts_pronunciation(clean_text)
 		
 	var elapsed_str = ""
 	if last_interaction_time > 0.0:
@@ -188,6 +189,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	# pre-verify and played post-verify would sound different than the
 	# on-screen text.
 	clean_text = GlobalState.apply_tone_guard(clean_text, voice_id)
+	clean_text = normalize_tts_pronunciation(clean_text)
 
 	var cache_key: String = voice_id + "|" + clean_text
 	if tts_audio_cache.has(cache_key):
@@ -289,6 +291,50 @@ func clean_dialogue_text(text: String) -> String:
 	text = regex_spaces.sub(text, " ", true)
 	
 	return text.strip_edges()
+
+
+func normalize_tts_pronunciation(text: String) -> String:
+	var words := text.split(" ", false)
+	var output: Array[String] = []
+	for word in words:
+		output.append(_normalize_tts_word(word))
+	return " ".join(output)
+
+
+func _normalize_tts_word(word: String) -> String:
+	var prefix := ""
+	var core := word
+	var suffix := ""
+	while not core.is_empty() and not _is_ascii_alnum(core.substr(0, 1)):
+		prefix += core.substr(0, 1)
+		core = core.substr(1)
+	while not core.is_empty() and not _is_ascii_alnum(core.substr(core.length() - 1, 1)):
+		suffix = core.substr(core.length() - 1, 1) + suffix
+		core = core.substr(0, core.length() - 1)
+	if core.length() < 3 or not _is_all_caps_word(core):
+		return word
+	if core in ["AI", "HP", "LLM", "NPC", "PG", "ROE", "SC", "TTS", "UI"]:
+		return word
+	return prefix + core.substr(0, 1) + core.substr(1).to_lower() + suffix
+
+
+func _is_all_caps_word(text: String) -> bool:
+	var has_letter := false
+	for i in range(text.length()):
+		var ch := text.substr(i, 1)
+		if ch >= "A" and ch <= "Z":
+			has_letter = true
+			continue
+		if ch >= "0" and ch <= "9":
+			continue
+		return false
+	return has_letter
+
+
+func _is_ascii_alnum(ch: String) -> bool:
+	return (ch >= "A" and ch <= "Z") \
+		or (ch >= "a" and ch <= "z") \
+		or (ch >= "0" and ch <= "9")
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
 	is_requesting = false

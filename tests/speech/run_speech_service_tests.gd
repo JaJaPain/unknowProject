@@ -55,6 +55,18 @@ func _initialize() -> void:
 		follow_up == "Make it quick; the dock crew is already betting against you.",
 		"Follow-up address cleanup did not remove repeated Indy vocative."
 	)
+	_expect(
+		service.normalize_tts_pronunciation(
+			"Destroy 3 DUSTBORN ships for ZENITH."
+		) == "Destroy 3 Dustborn ships for Zenith.",
+		"TTS pronunciation cleanup did not title-case all-caps names."
+	)
+	_expect(
+		service.normalize_tts_pronunciation(
+			"Keep ROE, TTS, and SC readable."
+		) == "Keep ROE, TTS, and SC readable.",
+		"TTS pronunciation cleanup should preserve known acronyms."
+	)
 
 	var kaelen_delivery: Dictionary = service.provider.resolve_delivery(
 		&"voice.kaelen.v1"

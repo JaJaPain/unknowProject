@@ -158,6 +158,10 @@ func clean_dialogue_text(text: String) -> String:
 	return TTSInterface.clean_dialogue_text(text)
 
 
+func normalize_tts_pronunciation(text: String) -> String:
+	return TTSInterface.normalize_tts_pronunciation(text)
+
+
 func _simulate_failed_request_for_test() -> void:
 	TTSInterface.is_requesting = true
 	TTSInterface.call(
