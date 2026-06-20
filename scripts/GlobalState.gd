@@ -857,6 +857,31 @@ static func get_current_system_outposts() -> Array[Dictionary]:
 		})
 	return result
 
+static func is_current_system_home() -> bool:
+	var tree := Engine.get_main_loop()
+	var state = (
+		tree.root.get_node_or_null("GlobalState")
+		if tree and tree.root
+		else null
+	)
+	var sys_id: String = state.get("current_system_id") if state else "start_system"
+	return sys_id == "start_system" or sys_id == "system.start"
+
+static func starter_pickup_outposts() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for starter_id in PICKUP_OUTPOST_IDS:
+		result.append({
+			"id": str(starter_id),
+			"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+		})
+	return result
+
+static func get_current_pickup_outposts() -> Array[Dictionary]:
+	var outposts := get_current_system_outposts()
+	if outposts.is_empty() and is_current_system_home():
+		return starter_pickup_outposts()
+	return outposts
+
 static func get_current_system_minor_factions() -> Array[String]:
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree and tree.current_scene and "system_registry" in tree.current_scene:
@@ -1202,24 +1227,14 @@ const PICKUP_REWARD_CREDITS: int = 200
 static func roll_pickup_offer() -> Dictionary:
 	if randf() > MECHANIC_PICKUP_OFFER_CHANCE:
 		return { "offer": false }
-	var outposts := get_current_system_outposts()
-	if outposts.is_empty():
-		for starter_id in PICKUP_OUTPOST_IDS:
-			outposts.append({
-				"id": str(starter_id),
-				"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
-			})
+	var outposts := get_current_pickup_outposts()
 	var valid_outposts: Array = []
 	for outpost in outposts:
 		if outpost is Dictionary \
 				and not get_minor_npcs_at_outpost(str(outpost.get("id", ""))).is_empty():
 			valid_outposts.append(outpost)
 	if valid_outposts.is_empty():
-		for starter_id in PICKUP_OUTPOST_IDS:
-			valid_outposts.append({
-				"id": str(starter_id),
-				"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
-			})
+		return { "offer": false }
 	var selected: Dictionary = valid_outposts[randi() % valid_outposts.size()]
 	var outpost_id: String = str(selected.get("id", ""))
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)

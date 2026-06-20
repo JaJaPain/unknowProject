@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_builder_produces_all_templates()
 	_test_builder_offers_have_required_fields()
 	_test_pickup_offer_uses_current_system_outpost()
+	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
 	_test_ore_offer_is_urgent()
 	_test_fallback_renders_all_placeholders()
@@ -107,6 +108,23 @@ func _test_pickup_offer_uses_current_system_outpost() -> void:
 		str(objective.get("target_npc", "")) not in gs.MINOR_NPCS,
 		"local_pickup: generated outpost reused an authored minor NPC."
 	)
+
+
+func _test_generated_system_without_outpost_does_not_use_starter_pickup() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_system_id: String = gs.current_system_id
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	gs.current_system_id = "system.gen.no_outpost_test"
+	gs.active_system_entities.clear()
+	var offers := OfferBuilderType.build_offers(480)
+	gs.active_system_entities = previous_entities
+	gs.current_system_id = previous_system_id
+
+	for offer in offers:
+		_expect(
+			str(offer.get("template_id", "")) != OfferBuilderType.TEMPLATE_PICKUP_SPECIAL,
+			"generated_no_outpost: pickup offer fell back to starter outposts."
+		)
 
 
 func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:

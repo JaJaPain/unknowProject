@@ -17,7 +17,9 @@ const PART_NAMES: Array[String] = [
 static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []
 	offers.append(_build_ore_offer(current_time_minutes))
-	offers.append(_build_pickup_offer(current_time_minutes))
+	var pickup_offer := _build_pickup_offer(current_time_minutes)
+	if not pickup_offer.is_empty():
+		offers.append(pickup_offer)
 	offers.append(_build_recovery_preview())
 	_apply_cooldowns(offers)
 	return offers
@@ -86,21 +88,17 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 
 static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	var gs = Engine.get_main_loop().root.get_node("GlobalState")
-	var outposts: Array = gs.get_current_system_outposts()
+	var outposts: Array = gs.get_current_pickup_outposts()
 	if outposts.is_empty():
-		for starter_id in gs.PICKUP_OUTPOST_IDS:
-			outposts.append({
-				"id": str(starter_id),
-				"display": str(gs.PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
-			})
+		return {}
 	var outpost_index := int(current_time_minutes / 45) % maxi(1, outposts.size())
 	var outpost: Dictionary = outposts[outpost_index]
 	var outpost_id := str(outpost.get("id", ""))
 	var outpost_display := str(outpost.get("display", outpost_id))
 	var npcs: Array = gs.get_minor_npcs_at_outpost(outpost_id)
-	var npc_name := "Local Contact"
-	if not npcs.is_empty():
-		npc_name = str(npcs[int(current_time_minutes / 30) % npcs.size()])
+	if npcs.is_empty():
+		return {}
+	var npc_name := str(npcs[int(current_time_minutes / 30) % npcs.size()])
 	var part_name := PART_NAMES[int(current_time_minutes / 15) % PART_NAMES.size()]
 	var base_reward := 130
 	var objective := {

@@ -1039,34 +1039,47 @@ func request_quest_generation(
 			"    \"reward_credits\": 200\n" + \
 			"  },"
 	elif chosen_type == "PICKUP_SPECIAL":
-		var outposts = GlobalState.get_current_system_outposts()
+		var outposts = GlobalState.get_current_pickup_outposts()
 		if outposts.is_empty():
-			for starter_id in GlobalState.PICKUP_OUTPOST_IDS:
-				outposts.append({
-					"id": str(starter_id),
-					"display": str(GlobalState.PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
-				})
-		var selected_outpost = outposts[randi() % outposts.size()]
-		pickup_outpost = selected_outpost.get("id", "")
-		pickup_outpost_display = selected_outpost.get("display", pickup_outpost)
-		var npcs_at_outpost = GlobalState.get_minor_npcs_at_outpost(pickup_outpost)
-		if npcs_at_outpost.is_empty():
-			npcs_at_outpost = [GlobalState.random_minor_npc_name()]
-		pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
-		var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
-		pickup_item = fetch_items[randi() % fetch_items.size()]
-
-		example_title = "Discreet Courier"
-		example_obj_block = \
-			"  \"objective\": {\n" + \
-			"    \"type\": \"PICKUP_SPECIAL\",\n" + \
-			"    \"target_outpost\": \"outpost_morrow\",\n" + \
-			"    \"target_outpost_display\": \"Morrow Station\",\n" + \
-			"    \"target_npc\": \"Sable Mercer\",\n" + \
-			"    \"part_name\": \"Sealed Data Drive\",\n" + \
-			"    \"destination\": \"" + agent_name + "\",\n" + \
-			"    \"reward_credits\": 250\n" + \
-			"  },"
+			chosen_type = "DELIVER_ORE"
+			example_title = "Ore Run"
+			actual_ore_amount = float(randi_range(25, 60))
+			example_obj_block = \
+				"  \"objective\": {\n" + \
+				"    \"type\": \"DELIVER_ORE\",\n" + \
+				"    \"amount_required\": 25.0,\n" + \
+				"    \"reward_credits\": 160\n" + \
+				"  },"
+		else:
+			var selected_outpost = outposts[randi() % outposts.size()]
+			pickup_outpost = selected_outpost.get("id", "")
+			pickup_outpost_display = selected_outpost.get("display", pickup_outpost)
+			var npcs_at_outpost = GlobalState.get_minor_npcs_at_outpost(pickup_outpost)
+			if npcs_at_outpost.is_empty():
+				chosen_type = "DELIVER_ORE"
+				example_title = "Ore Run"
+				actual_ore_amount = float(randi_range(25, 60))
+				example_obj_block = \
+					"  \"objective\": {\n" + \
+					"    \"type\": \"DELIVER_ORE\",\n" + \
+					"    \"amount_required\": 25.0,\n" + \
+					"    \"reward_credits\": 160\n" + \
+					"  },"
+			else:
+				pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
+				var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
+				pickup_item = fetch_items[randi() % fetch_items.size()]
+				example_title = "Discreet Courier"
+				example_obj_block = \
+					"  \"objective\": {\n" + \
+					"    \"type\": \"PICKUP_SPECIAL\",\n" + \
+					"    \"target_outpost\": \"outpost_morrow\",\n" + \
+					"    \"target_outpost_display\": \"Morrow Station\",\n" + \
+					"    \"target_npc\": \"Sable Mercer\",\n" + \
+					"    \"part_name\": \"Sealed Data Drive\",\n" + \
+					"    \"destination\": \"" + agent_name + "\",\n" + \
+					"    \"reward_credits\": 250\n" + \
+					"  },"
 
 	# Stash actuals so _substitute_dummy_names can swap them in later
 	_pending_substitutions = {
@@ -1989,15 +2002,29 @@ func _validate_quest_data(quest_data: Dictionary):
 		var outpost = obj.get("target_outpost", "")
 		var npc = obj.get("target_npc", "")
 		var valid_outposts: Array = []
-		for local_outpost in GlobalState.get_current_system_outposts():
+		for local_outpost in GlobalState.get_current_pickup_outposts():
 			if local_outpost is Dictionary:
 				valid_outposts.append(str(local_outpost.get("id", "")))
 		if valid_outposts.is_empty():
-			valid_outposts = GlobalState.PICKUP_OUTPOST_IDS.duplicate()
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_retyped_pickup_without_local_outpost",
+				"LLMInterface",
+				{"from": outpost, "system_id": GlobalState.current_system_id}
+			)
+			obj_type = "DELIVER_ORE"
+			quest_data["type"] = "DELIVER_ORE"
+			obj.clear()
+			obj["type"] = "DELIVER_ORE"
+			obj["amount_required"] = 25.0
+			obj["reward_credits"] = 160
+			_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+			_finalize_validated_quest_display(quest_data, obj_type, obj)
+			return
 		if outpost not in valid_outposts:
 			var fallback_outpost: String = str(valid_outposts[0])
 			var fallback_display := fallback_outpost
-			for local_outpost in GlobalState.get_current_system_outposts():
+			for local_outpost in GlobalState.get_current_pickup_outposts():
 				if local_outpost is Dictionary \
 						and str(local_outpost.get("id", "")) == fallback_outpost:
 					fallback_display = str(local_outpost.get("display", fallback_outpost))
@@ -2015,10 +2042,42 @@ func _validate_quest_data(quest_data: Dictionary):
 			obj["target_outpost"] = fallback_outpost
 			obj["target_outpost_display"] = fallback_display
 			var fallback_npcs := GlobalState.get_minor_npcs_at_outpost(fallback_outpost)
-			npc = fallback_npcs[0] if not fallback_npcs.is_empty() else GlobalState.random_minor_npc_name()
+			if fallback_npcs.is_empty():
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_retyped_pickup_without_local_npc",
+					"LLMInterface",
+					{"outpost": fallback_outpost, "system_id": GlobalState.current_system_id}
+				)
+				obj_type = "DELIVER_ORE"
+				quest_data["type"] = "DELIVER_ORE"
+				obj.clear()
+				obj["type"] = "DELIVER_ORE"
+				obj["amount_required"] = 25.0
+				obj["reward_credits"] = 160
+				_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+				_finalize_validated_quest_display(quest_data, obj_type, obj)
+				return
+			npc = fallback_npcs[0]
 			obj["target_npc"] = npc
 		else:
 			var valid_npcs = GlobalState.get_minor_npcs_at_outpost(outpost)
+			if valid_npcs.is_empty():
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_retyped_pickup_without_local_npc",
+					"LLMInterface",
+					{"outpost": outpost, "system_id": GlobalState.current_system_id}
+				)
+				obj_type = "DELIVER_ORE"
+				quest_data["type"] = "DELIVER_ORE"
+				obj.clear()
+				obj["type"] = "DELIVER_ORE"
+				obj["amount_required"] = 25.0
+				obj["reward_credits"] = 160
+				_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+				_finalize_validated_quest_display(quest_data, obj_type, obj)
+				return
 			if npc not in valid_npcs:
 				GenerationDiagnostics.record_event(
 					"quest_generation",
@@ -2026,7 +2085,7 @@ func _validate_quest_data(quest_data: Dictionary):
 					"LLMInterface",
 					{"from": npc, "outpost": outpost}
 				)
-				obj["target_npc"] = valid_npcs[0] if valid_npcs.size() > 0 else "Mariska Vonn"
+				obj["target_npc"] = valid_npcs[0]
 		if not obj.has("part_name"):
 			obj["part_name"] = "Suspicious Crate"
 		if not obj.has("destination"):
