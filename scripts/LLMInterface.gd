@@ -895,7 +895,9 @@ func request_quest_generation(
 		var faction_label := str(
 			agent_profile.get("faction_display", profile_faction.capitalize())
 		)
-		var role_label := agent_role if not agent_role.is_empty() else "station contact"
+		var role_label: String = (
+			agent_role if not agent_role.is_empty() else "station contact"
+		)
 		agent_persona = "You are %s, a %s for %s. " % [
 			agent_name,
 			role_label,
