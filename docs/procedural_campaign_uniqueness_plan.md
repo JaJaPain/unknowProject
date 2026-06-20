@@ -818,6 +818,35 @@ Goal: small player-facing improvement with low risk.
 Why here: it is valuable and straightforward, but it does not unblock the
 procedural uniqueness architecture.
 
+### Phase 8: Combat, Progression, And Itemization Depth
+
+Goal: turn the generated universe into a richer long-term game loop once
+procedural identity and mission reliability are stable.
+
+- Add weapon profile resources or data records for fire rate, range, energy
+  use, heat, damage type, projectile scene, and upgrade scaling.
+- Add a dedicated damage model that can account for shields, armor, hull,
+  mitigation, and damage categories such as kinetic, thermal, and EM.
+- Split projectile behavior into reusable definitions for standard bolts,
+  beams, missiles, homing shots, area bursts, and future special munitions.
+- Add deeper enemy tactical AI: state machines or utility scoring for approach,
+  orbit, strafe, flee, regroup, escort, and coordinated wing behavior.
+- Add combat collision-avoidance and target-priority logic so generated patrols
+  feel different by faction, role, and ship class.
+- Add active gameplay VFX systems for weapon impacts, shield ripples, engine
+  trails, boost effects, explosion debris, and repair or scanner feedback.
+- Begin breaking the monolithic UI into focused scene/controller pieces as
+  features stabilize: HUD, inventory rows, station contacts, map widgets,
+  contract cards, and comms panels.
+- Add pilot progression that persists beyond the current ship: XP, reputation
+  milestones, pilot perks, active abilities, or campaign traits.
+- Add class-driven active item behavior for consumables and equipment such as
+  scanner probes, shield overchargers, electronic warfare tools, emergency
+  repairs, and deployable beacons.
+
+Why here: these systems add a lot of depth, but they should build on a stable
+campaign identity, inventory, store, mission, and generated-system foundation.
+
 ## Open Questions
 
 Answered:
