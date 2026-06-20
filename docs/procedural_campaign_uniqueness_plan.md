@@ -705,15 +705,17 @@ campaign-driven generation.
 
 Goal: create the shared story spine.
 
-- Define `CampaignBible` schema.
-- Store it in the campaign manifest or a new campaign identity file.
+- [x] Define `CampaignBible` schema.
+- [x] Store it in a new campaign identity file.
 - Generate it at new campaign creation.
-- Add an explicit local-model-unavailable state instead of silently starting a
-  static fallback campaign.
+- [x] Add an explicit local-model-unavailable state instead of silently starting
+  a static fallback campaign.
 - Add deterministic procedural emergency fallback only for development/testing
   or very low-spec mode, and label it clearly.
-- Add save/load validation.
-- Add prompt snippets that let small models consume the bible.
+- [x] Label deterministic procedural bootstrap bibles clearly.
+- [x] Add save/load validation.
+- [x] Add prompt snippets that let small models consume the bible.
+- [x] Record active campaign bible source/status in generation diagnostics.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.

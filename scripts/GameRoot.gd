@@ -1816,6 +1816,15 @@ func _refresh_llm_campaign_bible_context() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	LLMInterface.campaign_bible_context_text = campaign_bible_store.prompt_context()
+	GenerationDiagnostics.record_content_source(
+		"campaign_bible",
+		campaign_bible_store.generation_status(),
+		"campaign_bible_store",
+		{
+			"source": campaign_bible_store.source_name(),
+			"summary": campaign_bible_store.status_summary(),
+		}
+	)
 
 
 func ensure_generated_frontier_factions(count: int = 6) -> Dictionary:

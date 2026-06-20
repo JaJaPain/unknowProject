@@ -12,6 +12,16 @@ const ValidationResultType := preload(
 
 const DOCUMENT_VERSION := 1
 const BIBLE_PATH := "campaign_bible.json"
+const STATUS_PROCEDURAL_BOOTSTRAP := "procedural_bootstrap"
+const STATUS_LLM_GENERATED := "llm_generated"
+const STATUS_LLM_UNAVAILABLE := "llm_unavailable"
+const STATUS_GENERATION_FAILED := "generation_failed"
+const VALID_GENERATION_STATUSES := [
+	STATUS_PROCEDURAL_BOOTSTRAP,
+	STATUS_LLM_GENERATED,
+	STATUS_LLM_UNAVAILABLE,
+	STATUS_GENERATION_FAILED,
+]
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -35,6 +45,8 @@ func prompt_context() -> String:
 		return ""
 	var lines: Array[String] = []
 	lines.append("Campaign Bible:")
+	lines.append("- Generation status: %s" % generation_status())
+	lines.append("- Source: %s" % source_name())
 	lines.append("- Tone: %s" % str(data.get("tone", "")))
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
@@ -77,6 +89,36 @@ func prompt_context() -> String:
 	return "\n".join(lines)
 
 
+func generation_status() -> String:
+	var status := str(data.get("generation_status", "")).strip_edges()
+	if status.is_empty():
+		status = str(data.get("source", "")).strip_edges()
+	if status.is_empty():
+		status = STATUS_PROCEDURAL_BOOTSTRAP
+	return status
+
+
+func source_name() -> String:
+	var source := str(data.get("source", "")).strip_edges()
+	if source.is_empty():
+		source = generation_status()
+	return source
+
+
+func status_summary() -> String:
+	var source_model := str(data.get("source_model", "")).strip_edges()
+	var note := str(data.get("generation_note", "")).strip_edges()
+	var parts: Array[String] = [
+		"status=%s" % generation_status(),
+		"source=%s" % source_name(),
+	]
+	if not source_model.is_empty():
+		parts.append("model=%s" % source_model)
+	if not note.is_empty():
+		parts.append("note=%s" % note)
+	return ", ".join(parts)
+
+
 func replace_bible(next_data: Dictionary) -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign bible store is invalid.")
@@ -84,7 +126,27 @@ func replace_bible(next_data: Dictionary) -> Dictionary:
 	prepared["schema_version"] = DOCUMENT_VERSION
 	prepared["document_type"] = "campaign_bible"
 	prepared["campaign_id"] = str(campaign.get("id", ""))
+	if str(prepared.get("source", "")).strip_edges().is_empty():
+		prepared["source"] = STATUS_LLM_GENERATED
+	if str(prepared.get("generation_status", "")).strip_edges().is_empty():
+		prepared["generation_status"] = str(prepared.get("source", STATUS_LLM_GENERATED))
 	var committed := _commit(prepared, "campaign_bible_replace")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = prepared
+	return {"ok": true, "bible": data.duplicate(true)}
+
+
+func mark_model_unavailable(reason: String, model_name: String = "") -> Dictionary:
+	if not is_valid():
+		return _failure("Campaign bible store is invalid.")
+	var prepared := data.duplicate(true)
+	prepared["source"] = STATUS_LLM_UNAVAILABLE
+	prepared["generation_status"] = STATUS_LLM_UNAVAILABLE
+	prepared["source_model"] = model_name.strip_edges()
+	prepared["generation_note"] = reason.strip_edges()
+	prepared["last_generation_error"] = reason.strip_edges()
+	var committed := _commit(prepared, "campaign_bible_model_unavailable")
 	if not bool(committed.get("ok", false)):
 		return committed
 	data = prepared
@@ -143,7 +205,11 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"document_type": "campaign_bible",
 		"campaign_id": campaign_id,
 		"campaign_seed": campaign_seed,
-		"source": "procedural_bootstrap",
+		"source": STATUS_PROCEDURAL_BOOTSTRAP,
+		"generation_status": STATUS_PROCEDURAL_BOOTSTRAP,
+		"source_model": "",
+		"generation_note": "LLM campaign bible generation has not run yet; this bootstrap is labeled so diagnostics can see it.",
+		"last_generation_error": "",
 		"tone": "PG-13 frontier space opera with dry, slightly dark humor.",
 		"core_pressure": "The old home-system powers are stable enough to feel known, but the frontier beyond the gates is changing faster than anyone admits.",
 		"kaelen_rule": "Kaelen is the only fixed recurring character. Her actions can be revealed, but her true nature and full mystery should never be completely explained.",
@@ -213,6 +279,15 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"campaign_bible_campaign_mismatch",
 			"Campaign bible belongs to a different campaign.",
 			"campaign_id"
+		)
+	var status := str(value.get("generation_status", "")).strip_edges()
+	if status.is_empty():
+		status = str(value.get("source", "")).strip_edges()
+	if status not in VALID_GENERATION_STATUSES:
+		result.add_error(
+			"invalid_campaign_bible_generation_status",
+			"Campaign bible generation status is unsupported.",
+			"generation_status"
 		)
 	for field in [
 		"tone",

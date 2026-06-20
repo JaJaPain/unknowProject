@@ -56,6 +56,14 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		"Default campaign bible prompt context did not mention Kaelen."
 	)
 	_expect(
+		store.generation_status() == BibleStoreType.STATUS_PROCEDURAL_BOOTSTRAP,
+		"Default campaign bible did not expose procedural bootstrap status."
+	)
+	_expect(
+		store.prompt_context().contains("Generation status: procedural_bootstrap"),
+		"Default campaign bible prompt context did not expose generation status."
+	)
+	_expect(
 		store.prompt_context().contains("Story horizon regeneration triggers"),
 		"Default campaign bible prompt context did not include regeneration triggers."
 	)
@@ -74,6 +82,10 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 	var replaced := store.replace_bible(replacement)
 	_expect(bool(replaced.get("ok", false)), replaced.get("error", ""))
 	_expect(
+		store.generation_status() == BibleStoreType.STATUS_PROCEDURAL_BOOTSTRAP,
+		"Replacement campaign bible should preserve an explicit source/status."
+	)
+	_expect(
 		store.prompt_context().contains("Glass Choir"),
 		"Replacement campaign bible did not update prompt context."
 	)
@@ -87,6 +99,24 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 	_expect(
 		reopened.prompt_context().contains("glass_choir_low"),
 		"Campaign bible regeneration trigger did not persist after reopening."
+	)
+	var unavailable := reopened.mark_model_unavailable(
+		"Large story model is not installed.",
+		"gemma4:12b"
+	)
+	_expect(bool(unavailable.get("ok", false)), unavailable.get("error", ""))
+	_expect(
+		reopened.generation_status() == BibleStoreType.STATUS_LLM_UNAVAILABLE,
+		"Campaign bible did not record explicit local-model-unavailable status."
+	)
+	_expect(
+		reopened.status_summary().contains("gemma4:12b"),
+		"Campaign bible unavailable status did not keep the model name."
+	)
+	var unavailable_reopened := BibleStoreType.open(CAMPAIGN_PATH)
+	_expect(
+		unavailable_reopened.generation_status() == BibleStoreType.STATUS_LLM_UNAVAILABLE,
+		"Campaign bible unavailable status did not persist after reopening."
 	)
 
 
