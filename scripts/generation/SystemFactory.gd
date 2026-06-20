@@ -81,7 +81,8 @@ func _build(config: SystemConfig) -> Dictionary:
 	var planets: Array[Node3D] = []
 	var ring_specs: Array[Dictionary] = []
 	for i in range(planet_count):
-		var result_pair := _create_planet(config, i)
+		var force_resource_belt := i == planet_count - 1 and ring_specs.is_empty()
+		var result_pair := _create_planet(config, i, force_resource_belt)
 		if result_pair.has("planet"):
 			var planet: Node3D = result_pair["planet"]
 			root.add_child(planet)
@@ -91,6 +92,11 @@ func _build(config: SystemConfig) -> Dictionary:
 				ring["parent"] = root
 				ring["planet"] = planet
 				ring_specs.append(ring)
+	if ring_specs.is_empty() and not planets.is_empty():
+		var fallback_ring := _build_ring_spec(planets[0], "planet0", 20)
+		fallback_ring["parent"] = root
+		fallback_ring["planet"] = planets[0]
+		ring_specs.append(fallback_ring)
 
 	for ring in ring_specs:
 		_spawn_asteroid_ring(
@@ -140,16 +146,20 @@ func _build(config: SystemConfig) -> Dictionary:
 	var station_ids: Array[String] = []
 	for s in stations:
 		station_ids.append(str(s.get("world_id", "")))
+	var asteroid_count := 0
+	for ring in ring_specs:
+		asteroid_count += int(ring.get("count", 0))
 
 	return {
 		"ok": true,
 		"root": root,
 		"station_ids": station_ids,
 		"planet_count": planets.size(),
+		"asteroid_count": asteroid_count,
 	}
 
 
-func _create_planet(config: SystemConfig, index: int) -> Dictionary:
+func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool = false) -> Dictionary:
 	var is_gas := rng.randf() < 0.35
 	var radius := rng.randf_range(200.0, 550.0) if is_gas else rng.randf_range(150.0, 350.0)
 	var pos := _find_placement(radius + MIN_PLANET_SPACING, 30)
@@ -166,10 +176,12 @@ func _create_planet(config: SystemConfig, index: int) -> Dictionary:
 	var texture: Texture2D = _gas_texture if is_gas else _rocky_texture
 	planet.set_meta("display_name", "%s %s" % [config.system_name.get_slice(" ", 0), _roman_numeral(index + 1)])
 	planet.set_meta("generation_seed", config.seed_value)
+	planet.set_meta("physical_radius", radius)
+	planet.set_meta("planet_kind", "gas_giant" if is_gas else "rocky")
 
 	var ring_radius := 0.0
 	var ring_width := 0.0
-	if not is_gas and rng.randf() < 0.4:
+	if force_resource_belt or (not is_gas and rng.randf() < 0.45):
 		ring_radius = radius + rng.randf_range(120.0, 250.0)
 		ring_width = rng.randf_range(60.0, 140.0)
 
@@ -207,13 +219,42 @@ func _create_planet(config: SystemConfig, index: int) -> Dictionary:
 
 	var out := {"planet": planet}
 	if ring_radius > 0.0:
-		out["ring"] = {
-			"ring_radius": ring_radius,
-			"ring_width": ring_width,
-			"count": rng.randi_range(16, 36),
-			"key": "planet%d" % index,
-		}
+		out["ring"] = _build_ring_spec(
+			planet,
+			"planet%d" % index,
+			rng.randi_range(16, 36),
+			ring_radius,
+			ring_width
+		)
 	return out
+
+
+func _build_ring_spec(
+	planet: Node3D,
+	ring_key: String,
+	count: int,
+	ring_radius: float = 0.0,
+	ring_width: float = 0.0
+) -> Dictionary:
+	var radius := float(planet.get_meta("physical_radius", 250.0))
+	if ring_radius <= 0.0:
+		ring_radius = radius + rng.randf_range(140.0, 260.0)
+	if ring_width <= 0.0:
+		ring_width = rng.randf_range(70.0, 150.0)
+	var ring_clearance := ring_radius + ring_width * 0.5 + 90.0
+	var current_clearance := float(
+		planet.get_meta("navigation_clearance_radius", radius + 100.0)
+	)
+	planet.set_meta(
+		"navigation_clearance_radius",
+		maxf(current_clearance, ring_clearance)
+	)
+	return {
+		"ring_radius": ring_radius,
+		"ring_width": ring_width,
+		"count": count,
+		"key": ring_key,
+	}
 
 
 func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -> Dictionary:
@@ -240,6 +281,7 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 
 	var station := _station_scene.instantiate() as Node3D
 	station.name = "Station_%d" % index
+	station.add_to_group("station")
 	station.set("world_id", world_id)
 	station.set("display_name", display_name)
 	station.set("station_type", station_type)
@@ -287,6 +329,7 @@ func _spawn_asteroid_ring(
 		var radius := ring_radius + rng.randf_range(-ring_width * 0.5, ring_width * 0.5)
 		var asteroid := _asteroid_scene.instantiate()
 		asteroid.name = "%s_Ring_%02d" % [ring_key.capitalize(), index]
+		asteroid.add_to_group("asteroid")
 		asteroid.persistent_id = "entity.gen.asteroid.%s.%03d" % [ring_key, index]
 		asteroid.orbit_center = planet.position
 		asteroid.orbit_radius = radius

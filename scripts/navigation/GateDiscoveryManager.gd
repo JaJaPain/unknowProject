@@ -262,7 +262,7 @@ func _ensure_destination_generated(gate_id: String) -> void:
 		"id": dest_sys_id,
 		"legacy_id": config.legacy_id,
 		"display_name": sys_name,
-		"station_ids": [],
+		"station_ids": _config_station_ids(config),
 		"faction_ids": _config_faction_ids(config),
 	}
 
@@ -281,6 +281,13 @@ func _config_faction_ids(config: SystemConfig) -> Array[String]:
 	var ids: Array[String] = []
 	for faction_name: String in config.faction_weights.keys():
 		ids.append(config.canonical_faction_id(faction_name))
+	return ids
+
+
+func _config_station_ids(config: SystemConfig) -> Array[String]:
+	var ids: Array[String] = []
+	for index in range(config.station_count):
+		ids.append("station.%s.s%d" % [config.legacy_id, index])
 	return ids
 
 

@@ -14,7 +14,7 @@ var star_light_energy: float = 1.2
 var ambient_color: Color = Color(0.15, 0.18, 0.25)
 var ambient_energy: float = 0.4
 
-var planet_count_min: int = 1
+var planet_count_min: int = 2
 var planet_count_max: int = 4
 var station_count: int = 2
 var difficulty_tier: int = 1
@@ -85,9 +85,9 @@ static func from_seed(
 			config.ambient_color = Color(0.18, 0.2, 0.25)
 
 	config.ambient_energy = 0.35 + rng.randf_range(0.0, 0.15)
-	config.planet_count_min = 1
-	config.planet_count_max = 2 + rng.randi_range(0, 2)
-	config.station_count = 1 + rng.randi_range(0, 2)
+	config.planet_count_min = 2
+	config.planet_count_max = 3 + rng.randi_range(0, 2)
+	config.station_count = 2 + rng.randi_range(0, 1)
 	config.difficulty_tier = 1 + rng.randi_range(0, 2)
 
 	match config.difficulty_tier:

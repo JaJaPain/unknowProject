@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_config_generated_faction_pool()
 	_test_config_difficulty_multiplier()
 	_test_config_npc_count()
+	_test_generated_system_minimum_density()
 	_test_campaign_system_names()
 	_test_registry_generated_system()
 	_test_generated_outbound_gate_defs()
@@ -34,9 +35,9 @@ func _test_config_from_seed() -> void:
 	_expect(config.legacy_id == "system_gen_test", "Config legacy_id mismatch: '%s'" % config.legacy_id)
 	_expect(config.seed_value == 12345, "Config seed mismatch.")
 	_expect(config.star_type in ["yellow", "blue", "orange", "red", "white"], "Unknown star type: %s" % config.star_type)
-	_expect(config.planet_count_min >= 1, "Planet min too low.")
+	_expect(config.planet_count_min >= 2, "Planet min too low.")
 	_expect(config.planet_count_max >= config.planet_count_min, "Planet max < min.")
-	_expect(config.station_count >= 1, "Station count too low.")
+	_expect(config.station_count >= 2, "Station count too low.")
 
 
 func _test_config_deterministic() -> void:
@@ -145,6 +146,29 @@ func _test_config_npc_count() -> void:
 		_expect(config.npc_patrol_count == 5 + config.difficulty_tier, "Seed %d: npc_patrol_count doesn't match formula." % seed_val)
 
 
+func _test_generated_system_minimum_density() -> void:
+	for seed_val in [1, 2, 3, 42, 777, 9901]:
+		var config := SystemConfig.from_seed("Density", "system.gen.density%d" % seed_val, seed_val)
+		var result := SystemFactory.generate(config)
+		_expect(bool(result.get("ok", false)), "Seed %d: SystemFactory.generate failed." % seed_val)
+		if not bool(result.get("ok", false)):
+			continue
+		var root := result.get("root", null) as Node3D
+		_expect(root != null, "Seed %d: generated root missing." % seed_val)
+		if root == null:
+			continue
+		var planets := _count_descendants_in_group(root, "celestial")
+		var stations := _count_descendants_in_group(root, "station")
+		var asteroids := _count_descendants_in_group(root, "asteroid")
+		_expect(planets >= 2, "Seed %d: generated too few planets: %d" % [seed_val, planets])
+		_expect(stations >= 2, "Seed %d: generated too few stations: %d" % [seed_val, stations])
+		_expect(asteroids >= 16, "Seed %d: generated no meaningful resource belt: %d" % [seed_val, asteroids])
+		_expect(int(result.get("planet_count", 0)) >= 2, "Seed %d: result planet_count too low." % seed_val)
+		_expect(int(result.get("station_ids", []).size()) >= 2, "Seed %d: station_ids too sparse." % seed_val)
+		_expect(int(result.get("asteroid_count", 0)) >= 16, "Seed %d: result asteroid_count too low." % seed_val)
+		root.free()
+
+
 func _test_campaign_system_names() -> void:
 	var names := CampaignSystemNames.new()
 	names.set_names(["Apex", "Bravo", "Crest"] as Array[String])
@@ -245,3 +269,12 @@ func _test_generated_outbound_gate_defs() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _count_descendants_in_group(root: Node, group_name: String) -> int:
+	var count := 0
+	if root.is_in_group(group_name):
+		count += 1
+	for child in root.get_children():
+		count += _count_descendants_in_group(child, group_name)
+	return count

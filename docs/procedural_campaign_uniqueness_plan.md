@@ -772,6 +772,10 @@ Goal: make unexplored systems ready before the player opens their gates.
   neighbor/outbound systems.
 - Pre-generate system config, faction roster, planets, stations, asteroids,
   gates, story pack, NPC identities, and ship models.
+- Support intentional point-of-interest layouts such as a named asteroid field,
+  derelict belt, or resource pocket. These should be authored as discoveries
+  with resources, danger, rumor hooks, and map identity, not accidental empty
+  systems with too little content.
 - Keep generation deterministic from seeds so save/load and retries land on the
   same result.
 - Surface generation failures in diagnostics instead of silently falling back to
