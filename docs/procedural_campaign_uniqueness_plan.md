@@ -518,6 +518,11 @@ First implementation pass:
 - UI-owned public board, mechanic greeting, and pickup handoff requests now ask
   `LLMInterface` for the gateway URL, model body, and timeout instead of naming
   models directly.
+- Second pass moved LLMInterface's remaining direct payloads for dialogue retry,
+  background chatter, salvager profiles, Kaelen handoff intros, partial delivery
+  lines, and campaign system names through the shared gateway helpers. System
+  names now use the large-story profile; short dialogue/flavor calls stay on the
+  small-dialogue profile.
 
 ### 3. Generated Mechanic Identity
 

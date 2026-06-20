@@ -1759,16 +1759,16 @@ func _request_dialogue_retry(quest_data: Dictionary, first_elapsed: float) -> vo
 		"Respond with ONLY the dialogue text, no JSON, no quotes, no formatting."
 	)
 
-	var payload := {
-		"model": active_model_name,
-		"prompt": retry_prompt,
-		"stream": false,
-		"options": {"temperature": 0.7, "num_predict": 200},
-	}
+	var payload: Dictionary = build_generation_body(
+		"quest_dialogue",
+		retry_prompt,
+		"",
+		{"temperature": 0.7, "num_predict": 200}
+	)
 	var json_str := JSON.stringify(payload)
 
 	var temp_http := HTTPRequest.new()
-	temp_http.timeout = TIMEOUT_SECONDS
+	temp_http.timeout = request_timeout_for_capability("quest_dialogue")
 	add_child(temp_http)
 	var instance_id := temp_http.get_instance_id()
 
@@ -2762,20 +2762,19 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		"  ]\n" + \
 		"}"
 		
-	var payload = {
-		"model": active_model_name,
-		"prompt": system_prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"background_chatter",
+		system_prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 12.0 # Give background request plenty of time
+	temp_http.timeout = request_timeout_for_capability("background_chatter")
 	
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		active_fetches[type] = false
@@ -2852,7 +2851,7 @@ var fallback_salvager_backstories = [
 func fetch_salvager_profile(callback: Callable):
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 10.0
+	temp_http.timeout = request_timeout_for_capability("salvager_profile")
 	
 	temp_http.request_completed.connect(
 		_on_salvager_profile_request_completed.bind(
@@ -2870,16 +2869,15 @@ func fetch_salvager_profile(callback: Callable):
 		"  \"backstory\": \"[Backstory Text]\"\n" + \
 		"}"
 		
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"salvager_profile",
+		prompt,
+		"json",
+		{
 			"temperature": 0.85,
 			"seed": randi()
 		}
-	}
+	)
 	
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
@@ -3287,7 +3285,7 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 8.0  # Tighter than quest gen — intro must be quick
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
@@ -3419,16 +3417,15 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 	)
 
 	_kaelen_intro_attempts += 1
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
@@ -3507,7 +3504,7 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 10.0
+	temp_http.timeout = request_timeout_for_capability("partial_delivery_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
@@ -3548,16 +3545,15 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 			_trigger_partial_delivery_fallback(callback, "partial_delivery_schema_missing_line")
 	)
 
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"partial_delivery_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.92,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
@@ -3583,7 +3579,7 @@ func _trigger_partial_delivery_fallback(
 
 
 func generate_campaign_system_names(count: int, callback: Callable):
-	if OLLAMA_URL.is_empty() or active_model_name.is_empty():
+	if OLLAMA_URL.is_empty() or model_for_capability("system_names").is_empty():
 		callback.call([])
 		return
 	var prompt := (
@@ -3593,19 +3589,18 @@ func generate_campaign_system_names(count: int, callback: Callable):
 		+ "Return a JSON object with a single key \"names\" containing an array of strings. "
 		+ "No numbering, no duplicates."
 	) % count
-	var payload := {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"system_names",
+		prompt,
+		"json",
+		{
 			"temperature": 1.0,
 			"seed": randi()
 		}
-	}
+	)
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 30.0
+	temp_http.timeout = request_timeout_for_capability("system_names")
 	temp_http.request_completed.connect(
 		func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray):
 			temp_http.queue_free()

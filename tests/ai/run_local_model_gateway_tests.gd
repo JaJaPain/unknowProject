@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_prefers_large_story_model_for_bible()
 	_test_builds_generation_body_from_capability()
 	_test_unknown_capability_uses_small_profile()
+	_test_routes_new_capabilities_to_expected_profiles()
 
 	if _failures.is_empty():
 		print("[PASS] Local model gateway tests")
@@ -75,6 +76,25 @@ func _test_unknown_capability_uses_small_profile() -> void:
 	_expect(
 		GatewayType.profile_for_capability("future_small_task") == "small_dialogue",
 		"Unknown capabilities should default to small dialogue profile."
+	)
+
+
+func _test_routes_new_capabilities_to_expected_profiles() -> void:
+	_expect(
+		GatewayType.profile_for_capability("background_chatter") == "small_dialogue",
+		"Background chatter should use the small dialogue profile."
+	)
+	_expect(
+		GatewayType.profile_for_capability("partial_delivery_line") == "small_dialogue",
+		"Partial delivery lines should use the small dialogue profile."
+	)
+	_expect(
+		GatewayType.profile_for_capability("system_names") == "large_story",
+		"System names should use the large story profile."
+	)
+	_expect(
+		is_equal_approx(GatewayType.request_timeout("system_names"), 30.0),
+		"System name generation should keep its longer timeout."
 	)
 
 
