@@ -6370,7 +6370,10 @@ func _on_agent_complete_pressed():
 	# Switch to Kaelen's portrait — she's the one paying out, not the quest giver
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral", "", "calm")
+	var completion_mood := "calm"
+	if bool(completed_quest.get("public_board", false)):
+		completion_mood = "suspicious"
+	_update_agent_portrait("neutral", "", completion_mood)
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
 	var completion_text = cached_completion_line
