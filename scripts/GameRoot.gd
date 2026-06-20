@@ -1435,19 +1435,35 @@ func remember_generated_quest_idea(
 	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
 	var title := str(quest_data.get("title", "Untitled contract"))
 	var faction := str(quest_data.get("faction", "neutral"))
-	var summary := "%s contract from %s: %s" % [
+	var agent_name := str(quest_data.get("agent_name", "Unknown agent"))
+	var summary := _quest_idea_memory_summary(
+		quest_data,
+		objective,
 		objective_type,
-		faction,
 		title,
+		faction,
+		agent_name
+	)
+	var tags: Array = [
+		"quest",
+		faction,
+		objective_type.to_lower(),
+		agent_name.to_lower().replace(" ", "_"),
+		str(GlobalState.current_system_id),
 	]
-	var tags: Array = ["quest", faction, objective_type.to_lower()]
 	if objective.has("target_faction"):
 		tags.append(str(objective.get("target_faction", "")))
 	if objective.has("target_outpost"):
 		tags.append(str(objective.get("target_outpost", "")))
+	if objective.has("target_npc"):
+		tags.append(str(objective.get("target_npc", "")).to_lower().replace(" ", "_"))
+	if objective.has("part_name"):
+		tags.append(str(objective.get("part_name", "")).to_lower().replace(" ", "_"))
 	var fingerprint_source := JSON.stringify({
 		"title": title,
 		"faction": faction,
+		"agent_name": agent_name,
+		"dialogue": str(quest_data.get("dialogue", "")),
 		"objective": objective,
 	})
 	var appended = campaign_idea_memory_store.append_idea(
@@ -1458,7 +1474,13 @@ func remember_generated_quest_idea(
 		{
 			"title": title,
 			"faction": faction,
+			"agent_name": agent_name,
 			"objective_type": objective_type,
+			"objective": objective.duplicate(true),
+			"dialogue_excerpt": _short_memory_text(
+				str(quest_data.get("dialogue", "")),
+				220
+			),
 		}
 	)
 	if not bool(appended.get("ok", false)):
@@ -1468,6 +1490,64 @@ func remember_generated_quest_idea(
 		)
 		return
 	_refresh_llm_idea_memory_context()
+
+
+func _quest_idea_memory_summary(
+	quest_data: Dictionary,
+	objective: Dictionary,
+	objective_type: String,
+	title: String,
+	faction: String,
+	agent_name: String
+) -> String:
+	var detail := _quest_objective_memory_detail(objective, objective_type)
+	var dialogue := _short_memory_text(str(quest_data.get("dialogue", "")), 150)
+	var parts: Array[String] = [
+		"%s offered '%s' for %s" % [agent_name, title, faction],
+	]
+	if not detail.is_empty():
+		parts.append(detail)
+	if not dialogue.is_empty():
+		parts.append("opening: \"%s\"" % dialogue)
+	return ". ".join(parts)
+
+
+func _quest_objective_memory_detail(
+	objective: Dictionary,
+	objective_type: String
+) -> String:
+	match objective_type:
+		"KILL_SHIPS":
+			return "kill %d ships from %s" % [
+				int(objective.get("count_required", 0)),
+				str(objective.get("target_faction", "unknown faction")),
+			]
+		"DELIVER_ORE":
+			return "deliver %.0f m3 of ore" % float(
+				objective.get("amount_required", 0.0)
+			)
+		"PICKUP_SPECIAL":
+			return "pickup %s from %s at %s for %s" % [
+				str(objective.get("part_name", "unknown cargo")),
+				str(objective.get("target_npc", "unknown contact")),
+				str(
+					objective.get(
+						"target_outpost_display",
+						objective.get("target_outpost", "unknown outpost")
+					)
+				),
+				str(objective.get("destination", "unknown destination")),
+			]
+	return objective_type.to_lower().replace("_", " ")
+
+
+func _short_memory_text(text: String, limit: int) -> String:
+	var clean := text.strip_edges().replace("\n", " ").replace("\r", " ")
+	while clean.contains("  "):
+		clean = clean.replace("  ", " ")
+	if clean.length() <= limit:
+		return clean
+	return clean.left(maxi(0, limit - 3)).strip_edges() + "..."
 
 
 func _refresh_llm_idea_memory_context() -> void:
