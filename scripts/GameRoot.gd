@@ -2474,6 +2474,22 @@ func _verify_next_outbound_rumor_and_map() -> bool:
 		if branch_map.system_nodes.has(str(gate.destination_system_id)):
 			_fail_jump_smoke_test("Branch map revealed a rumored destination system.")
 			return false
+		var found_placeholder_route := false
+		for route: Dictionary in branch_map.route_data:
+			if route.get("state", "") != "rumored":
+				continue
+			if route.get("destination_system_id", "") != str(gate.destination_system_id):
+				continue
+			var route_to := str(route.get("to", ""))
+			if route_to.begins_with("unknown_destination:") \
+					and branch_map.system_nodes.has(route_to):
+				found_placeholder_route = true
+				break
+		if not found_placeholder_route:
+			_fail_jump_smoke_test(
+				"Branch map did not show a redacted placeholder for a rumored destination."
+			)
+			return false
 		return true
 	_fail_jump_smoke_test("No unknown generated outbound gate was available to rumor.")
 	return false

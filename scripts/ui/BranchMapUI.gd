@@ -22,6 +22,7 @@ const STATE_LABELS := {
 	"damaged": "Damaged",
 }
 
+const UNKNOWN_DESTINATION_LABEL := "Uncharted Signal"
 const WINDOW_SIZE := Vector2(700, 500)
 const TITLE_BAR_HEIGHT := 36.0
 
@@ -229,6 +230,7 @@ func _rebuild_map() -> void:
 		system_nodes[sys_id] = {
 			"position": pos,
 			"display_name": sys_def.display_name,
+			"is_placeholder": false,
 			"is_current": sys_def.legacy_id == GlobalState.current_system_id,
 			"legacy_id": sys_def.legacy_id,
 			"station_count": sys_def.station_ids.size(),
@@ -236,23 +238,13 @@ func _rebuild_map() -> void:
 			"faction_ids": faction_ids,
 			"origin": sys_def.origin,
 		}
-		_create_system_label(sys_def, pos)
+		_create_system_label(sys_def.display_name, pos, sys_def.legacy_id == GlobalState.current_system_id)
 
 	for sys_def in visible_systems:
 		for gate_def in sys_def.gates:
 			var dest_sys_id: String = str(gate_def.destination_system_id)
 			var src_sys_id: String = str(sys_def.id)
-			if not system_nodes.has(dest_sys_id):
-				continue
-			var pair_key := [src_sys_id, dest_sys_id]
-			pair_key.sort()
-			var key_str: String = "%s|%s" % [pair_key[0], pair_key[1]]
-			var already := false
-			for rd in route_data:
-				if rd.get("key", "") == key_str:
-					already = true
-					break
-			if already:
+			if not system_nodes.has(src_sys_id):
 				continue
 			var gate_id: String = str(gate_def.id)
 			var state: String = "unknown"
@@ -260,10 +252,28 @@ func _rebuild_map() -> void:
 				state = GateDiscovery.get_gate_state(gate_id)
 			if state == "unknown":
 				continue
+			var route_dest_id := dest_sys_id
+			if state != "known":
+				route_dest_id = _ensure_unknown_destination_node(src_sys_id, gate_def, state)
+			elif not system_nodes.has(dest_sys_id):
+				continue
+			var pair_key := [src_sys_id, dest_sys_id]
+			pair_key.sort()
+			var key_str: String = "%s|%s" % [pair_key[0], pair_key[1]]
+			if state != "known":
+				key_str = "%s|%s" % [key_str, gate_id]
+			var already := false
+			for rd in route_data:
+				if rd.get("key", "") == key_str:
+					already = true
+					break
+			if already:
+				continue
 			route_data.append({
 				"key": key_str,
 				"from": src_sys_id,
-				"to": dest_sys_id,
+				"to": route_dest_id,
+				"destination_system_id": dest_sys_id,
 				"gate_id": gate_id,
 				"gate_name": gate_def.display_name,
 				"state": state,
@@ -313,6 +323,40 @@ func _gate_state_reveals_destination(state: String) -> bool:
 	return state == "known"
 
 
+func _ensure_unknown_destination_node(
+	src_sys_id: String,
+	gate_def,
+	state: String
+) -> String:
+	var gate_id := str(gate_def.id)
+	var placeholder_id := "unknown_destination:%s" % gate_id
+	if system_nodes.has(placeholder_id):
+		return placeholder_id
+	var src_pos: Vector2 = system_nodes.get(src_sys_id, {}).get(
+		"position",
+		Vector2.ZERO
+	)
+	var angle := float(abs(gate_id.hash()) % 628) / 100.0
+	var offset := Vector2(cos(angle), sin(angle)) * NODE_RADIUS * 4.2
+	var pos := src_pos + offset
+	system_nodes[placeholder_id] = {
+		"position": pos,
+		"display_name": UNKNOWN_DESTINATION_LABEL,
+		"is_placeholder": true,
+		"is_current": false,
+		"legacy_id": "",
+		"station_count": 0,
+		"faction_names": [],
+		"faction_ids": [],
+		"origin": "unknown",
+		"gate_id": gate_id,
+		"gate_name": str(gate_def.display_name),
+		"state": state,
+	}
+	_create_system_label(UNKNOWN_DESTINATION_LABEL, pos, false)
+	return placeholder_id
+
+
 func _layout_systems(systems: Array, center: Vector2) -> Dictionary:
 	var positions := {}
 	var count := systems.size()
@@ -328,12 +372,16 @@ func _layout_systems(systems: Array, center: Vector2) -> Dictionary:
 	return positions
 
 
-func _create_system_label(sys_def, pos: Vector2) -> void:
+func _create_system_label(
+	display_name: String,
+	pos: Vector2,
+	is_current: bool
+) -> void:
 	var label := Label.new()
-	label.text = sys_def.display_name
+	label.text = display_name
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 14)
-	if sys_def.legacy_id == GlobalState.current_system_id:
+	if is_current:
 		label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.8))
 	else:
 		label.add_theme_color_override("font_color", Color(0.7, 0.78, 0.86))
@@ -484,6 +532,13 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 		var pos: Vector2 = data["position"]
 		if hover_pos.distance_to(pos) <= NODE_RADIUS + 6:
 			var text: String = data["display_name"]
+			if data.get("is_placeholder", false):
+				text += "\nStatus: %s" % str(data.get("state", "unknown")).capitalize()
+				text += "\nDestination details unavailable"
+				_tooltip_label.text = text
+				_tooltip_panel.position = pos + Vector2(15, -_tooltip_panel.size.y - 5)
+				_tooltip_panel.visible = true
+				return
 			if data.get("is_current", false):
 				text += "  (current)"
 			var sc: int = data.get("station_count", 0)
@@ -533,6 +588,16 @@ func _handle_click(click_pos: Vector2) -> void:
 
 
 func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void:
+	if data.get("is_placeholder", false):
+		var text := "[%s]\n" % data["display_name"]
+		text += "Gate: %s\n" % data.get("gate_name", "Unknown gate")
+		text += "Status: %s\n" % str(data.get("state", "unknown")).capitalize()
+		text += "Destination details are not available yet."
+		_detail_label.text = text
+		_detail_panel.position = pos + Vector2(15, -10)
+		_detail_panel.visible = true
+		return
+
 	if not data.get("is_current", false):
 		if not planned_route.is_empty() and planned_route[-1] == sys_id:
 			clear_route()
