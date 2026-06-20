@@ -1,6 +1,69 @@
 # While You Was Sleeping — Session Changelog
 
-**Date:** 2026-06-19
+---
+
+## Session: 2026-06-19 (Late)
+**Branch:** `segment-3/economy-stores-events`
+**Commits:** `e66dab3` → `e2c5a9d`
+
+### Context
+Continued from the prior session's dialogue alignment work. This session focused on the initial placeholder approach, discovered it didn't work with the 1.5B model, and pivoted to a dummy-name approach that works much better.
+
+### What Was Attempted and Why It Failed
+
+**Placeholder approach (reverted):** Tried having the LLM write `{PILOT}`, `{TARGET_FACTION}`, `{KILL_COUNT}` etc. in dialogue, with explicit instructions to use these tags. The 1.5B model could not follow these instructions — it wrote stage directions ("Captain Dask Briefing his crew"), ignored placeholders and used literal names, referred to itself in third person, and produced garbage dialogue.
+
+### What Was Implemented Instead
+
+**Dummy-name substitution system:** Instead of explaining placeholders, we feed the LLM examples that consistently use fixed dummy names. The LLM mimics the pattern naturally without knowing they're placeholders:
+
+- **"George"** → swapped to "Indy" (most agents) or "Shiny" (Kaelen)
+- **"Slithern"** → swapped to actual target faction (e.g., "Obsidian", "Ironclad")
+- **"3"** (ship count) → swapped to actual count (2-4) via `_sync_dialogue_to_validated_objective`
+- **"25"** (ore amount) → swapped to actual amount (20-300) via same sync
+- **"Sable Mercer" / "Morrow Station" / "Sealed Data Drive"** → swapped to actual pickup NPC/outpost/item
+
+### New Functions in LLMInterface.gd
+
+- `_substitute_dialogue_placeholders()` — swaps all dummy names for real pre-rolled values in dialogue + choice responses
+- `_nickname_for_agent(agent_name)` — returns "Shiny" for Kaelen, "Indy" for all others
+- `_dialogue_has_faction_mismatch()` — catches dialogue mentioning factions other than the target
+- `_dialogue_is_too_vague()` — catches dialogue with zero objective-relevant keywords (no combat words for kill missions, no ore words for delivery, etc.)
+- `_dialogue_has_placeholder_artifacts()` — catches leftover "George"/"Slithern" or agent referring to itself by name
+- `_request_dialogue_retry()` / `_on_dialogue_retry_completed()` — gives LLM a second attempt with a simpler prompt before falling back to safe canned dialogue
+- `_finish_quest_with_current_dialogue()` — unified callback path that sets `is_waiting = false`
+- `_apply_replacements()` — generic string replacement helper
+
+### New State Variable
+- `_pending_substitutions: Dictionary` — stashed at quest generation time with real pre-rolled values (kill target, count, ore amount, pickup details, nickname, agent name, faction)
+
+### Other Changes
+- `is_waiting` management refactored — stays `true` during retry, set `false` in `_finish_quest_with_current_dialogue()` and `_trigger_fallback()`
+- Agent persona text reverted to natural language (removed `{PILOT}` references)
+- Example dialogues simplified to short flavor sentences using George/Slithern
+- Prompt instructions simplified — tells LLM to use "George"/"Slithern"/3 instead of explaining placeholder syntax
+- Pre-rolling objective values (kill target, ore amount) moved before prompt construction so they can be stashed
+
+### Test Results
+- **Ore missions:** Working well — dialogue matches contract, amounts correct
+- **Pickup missions:** ~50% work great, ~50% trigger Kaelen fallback ("not putting my name on it")
+- **Kill missions:** Not seen during testing — may need type-specific example dialogues added back
+
+### What Still Needs Work (see handoff_dialogue_alignment.md)
+1. **Per-type example dialogues** — every agent currently has ONE kill-themed example. Need DELIVER_ORE and PICKUP_SPECIAL examples using dummy names so the LLM sees the right pattern per mission type
+2. **Kaelen pickup fallback rate** — vague dialogue check may be too strict, or Kaelen's example doesn't demonstrate pickup format well enough
+3. **Kill mission generation** — need to verify KILL_SHIPS quests generate and test the Slithern→real faction swap
+4. **"Neutral Fixer & Profit Broker" subtitle** — all agents show Kaelen's subtitle instead of their own role
+
+### Files Modified
+- `scripts/LLMInterface.gd` — all changes
+
+### Files Added
+- `docs/handoff_dialogue_alignment.md` — detailed handoff for next session
+
+---
+
+## Session: 2026-06-19 (Early)
 **Branch:** `segment-3/economy-stores-events`
 **Commit:** `02ab6c6`
 
