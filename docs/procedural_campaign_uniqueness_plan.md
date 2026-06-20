@@ -446,7 +446,46 @@ Preferred behavior:
   gate is `known`.
 - `known`: show the destination system node and allow route planning.
 
-### 2. Generated Mechanic Identity
+### 2. Central Model Gateway And Profiles
+
+Goal: route every local model request through one game-facing interface so the
+active model can be upgraded without hunting through UI, quest, mechanic, or
+story scripts.
+
+Why second: the current game already needs to move from `qwen2.5:1.5b` toward a
+stronger small model such as `qwen2.5:3b-instruct`. More upgrades will happen
+over time, so model selection must become a profile/config change instead of
+hard-coded script edits.
+
+Implementation shape:
+
+- Create one model gateway/profile layer that owns Ollama URL, preferred model
+  order, context limits, request options, timeouts, and installed-model
+  discovery.
+- Route direct UIManager Ollama calls through the shared interface.
+- Have callers request capabilities such as `quest_dialogue`, `mechanic_line`,
+  `station_contact_line`, `gossip`, `public_board`, `campaign_bible`, and
+  `story_horizon` instead of naming a model.
+- Prefer `qwen2.5:3b-instruct-q4_K_M` / `qwen2.5:3b-instruct` for small,
+  frequent dialogue work when installed, then fall back to the existing 1.5B
+  model.
+- Keep the larger model role separate for campaign bible, faction batches,
+  system story packs, and story horizon regeneration.
+- Record selected model, capability, elapsed time, retry count, and fallback
+  state in generation diagnostics.
+
+Verification:
+
+- Search confirms no gameplay/UI script sends direct Ollama requests outside
+  the gateway.
+- Quest generation, mechanic greeting, public board, gossip, and contact text
+  all use the shared route.
+- Swapping the preferred small model is a single profile/config edit.
+- A/B test the same prompt set against 1.5B and 3B for valid JSON rate,
+  fallback rate, wrong-faction/wrong-count rate, repeated-name rate, and
+  response time.
+
+### 3. Generated Mechanic Identity
 
 Goal: generated systems should not keep pretending Jenna is every mechanic in
 the frontier.
@@ -480,7 +519,7 @@ Verification:
 - Mechanic greeting does not say Jenna in generated systems.
 - Pickup-offer accept/decline still works.
 
-### 3. Generated Contact Conversation Mode
+### 4. Generated Contact Conversation Mode
 
 Goal: station contacts should be more than list decorations and hidden quest
 seeds.
@@ -507,7 +546,7 @@ Guardrails:
 - Contact should not impersonate Kaelen or use Kaelen's `Shiny` voice.
 - Fallback lines should be logged and visibly marked in diagnostics.
 
-### 4. Persisted NPC Identity Records
+### 5. Persisted NPC Identity Records
 
 Goal: move from generated contact dictionaries to proper campaign NPC records.
 
@@ -534,7 +573,7 @@ Record fields:
 Do not overbuild the UI yet. The first win is stable records that every later
 system can reference.
 
-### 5. Fallback Reduction Pass
+### 6. Fallback Reduction Pass
 
 Goal: use diagnostics to find where we are still silently leaning on generic
 text.

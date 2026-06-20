@@ -1,7 +1,20 @@
 extends Node
 
 const OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-const MODEL_NAME = "qwen2.5:1.5b-instruct-q4_K_M"
+const MODEL_NAME = "qwen2.5:3b-instruct-q4_K_M"
+const PREFERRED_MODEL_NAMES := [
+	"qwen2.5:3b-instruct-q4_K_M",
+	"qwen2.5:3b-instruct",
+	"qwen2.5:3b",
+	"qwen3:3b",
+	"qwen2.5:1.5b-instruct-q4_K_M",
+	"qwen2.5:1.5b-instruct",
+	"qwen2.5:1.5b",
+	"qwen2.5-coder:7b",
+	"qwen3:8b",
+	"gemma4:latest",
+	"gemma4:12b",
+]
 const TIMEOUT_SECONDS = 15.0
 # Kaelen intro telemetry is written to user://kaelen_intro_stats.json so
 # counters survive game restarts. Read via get_kaelen_intro_stats().
@@ -606,21 +619,11 @@ func _discover_ollama_model():
 					print("[TRACE] [LLMInterface] Installed Ollama models: ", installed_names)
 					
 					var chosen_model = ""
-					if MODEL_NAME in installed_names:
-						chosen_model = MODEL_NAME
-					elif "qwen2.5:1.5b-instruct" in installed_names:
-						chosen_model = "qwen2.5:1.5b-instruct"
-					elif "qwen2.5:1.5b" in installed_names:
-						chosen_model = "qwen2.5:1.5b"
-					elif "qwen2.5-coder:7b" in installed_names:
-						chosen_model = "qwen2.5-coder:7b"
-					elif "qwen3:8b" in installed_names:
-						chosen_model = "qwen3:8b"
-					elif "gemma4:latest" in installed_names:
-						chosen_model = "gemma4:latest"
-					elif "gemma4:12b" in installed_names:
-						chosen_model = "gemma4:12b"
-					else:
+					for preferred_model in PREFERRED_MODEL_NAMES:
+						if preferred_model in installed_names:
+							chosen_model = preferred_model
+							break
+					if chosen_model == "":
 						for name in installed_names:
 							if "qwen" in name:
 								chosen_model = name
