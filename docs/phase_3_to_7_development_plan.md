@@ -593,11 +593,11 @@ generated destinations before the player can choose them.
       real choice.
 - [ ] Keep the development test system as a fixture, not the permanent
       production second system.
-- [ ] Add one seeded, non-traversable sun per generated system.
-- [ ] Use the sun as the main directional lighting anchor.
-- [ ] Add a seeded distant starfield or skybox with sparse low-cost animated
+- [x] Add one seeded, non-traversable sun per generated system.
+- [x] Use the sun as the main directional lighting anchor.
+- [x] Add a seeded distant starfield or skybox with sparse low-cost animated
       shimmer.
-- [ ] Ensure sun and starfield visuals never become targetable, dockable,
+- [x] Ensure sun and starfield visuals never become targetable, dockable,
       mineable, or saved as mutable mission objects.
 - [ ] Add branch map UI that shows confirmed, rumored, blocked, damaged, and
       unknown routes clearly.
@@ -618,7 +618,7 @@ generated destinations before the player can choose them.
 - [ ] Damaged, blocked, rumored, hidden, and known routes render correctly.
 - [ ] A branch is not offered until both destination systems validate.
 - [ ] Gate repair consumes only valid resources or prerequisites.
-- [ ] Sun and starfield appear in generated systems and do not enter targeting,
+- [x] Sun and starfield appear in generated systems and do not enter targeting,
       navigation, mission, or save-state ownership.
 - [ ] Travel to either branch preserves active missions, campaign time, store
       state, and chronicle continuity.
@@ -627,7 +627,7 @@ generated destinations before the player can choose them.
 
 - [ ] The player can discover and open gates through clear mechanics.
 - [ ] At least two branch destinations can be compared and chosen.
-- [ ] Generated systems include seeded sun lighting and a subtle animated
+- [x] Generated systems include seeded sun lighting and a subtle animated
       starfield.
 - [ ] Gate knowledge rewinds correctly while permanent system identities remain
       stable.

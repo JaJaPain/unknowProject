@@ -417,6 +417,25 @@ Completed tonight:
   outposts for kill and pickup missions.
 - Quest idea memory writeback now stores richer premise, faction, objective,
   joke, and rumor data so future LLM prompts can avoid repeating the same ideas.
+- Repo maps now exist at `PROJECT_MAP.md` and `PROJECT_MAP.json`, with
+  `AGENTS.md` updated so agents consult them before broad exploration.
+- Campaign-specific seeds now prevent generated system chains from repeating
+  across new campaigns, while old saves remain compatible.
+- Runtime generated ship models now load from the campaign folder without a
+  Godot editor restart, and current-system ships can hot-swap when generation
+  completes.
+- Dialogue alignment now uses dummy-name substitution, per-mission examples,
+  system-aware kill targets and pickup outposts, agent role subtitles, and
+  validation tracing.
+- Generated mechanics now use local station mechanic identity and deterministic
+  local shop names instead of presenting every frontier maintenance bay as
+  Jenna's Grease Monkeys.
+- Generated systems now have seeded suns, improved starfields, and nebula
+  layers, plus stronger density guardrails for planets, stations, and asteroid
+  belts.
+- Combat, asteroid, and mining visuals now include impact flashes, death
+  explosions, unique asteroid models, asteroid tumble/bob, mining dust, and
+  drone collection behavior.
 
 Known follow-ups for tomorrow:
 
@@ -426,9 +445,6 @@ Known follow-ups for tomorrow:
   The current `BranchMapUI` code intends to reveal destination nodes only for
   `known` gates, so this needs a save-state/runtime reproduction before changing
   the map layer.
-- Replace Jenna-specific mechanic prompts in generated systems with the
-  generated station mechanic identity. The generated mechanic record now exists,
-  but the service dialogue still speaks as Jenna.
 - Convert temporary generated contact dictionaries into full campaign-persisted
   NPC identity records with relationship and line-memory fields.
 - Add a real generated-contact conversation path so clicking a station contact
@@ -475,6 +491,10 @@ Preferred behavior:
 - `known`: show the destination system node and allow route planning.
 
 ### 2. Central Model Gateway And Profiles
+
+Status: first implementation pass complete. Keep future work focused on
+coverage audits, model-quality measurement, and adding new capabilities through
+the shared gateway instead of creating direct Ollama calls.
 
 Goal: route every local model request through one game-facing interface so the
 active model can be upgraded without hunting through UI, quest, mechanic, or
@@ -531,6 +551,10 @@ First implementation pass:
 
 ### 3. Generated Mechanic Identity
 
+Status: current pass complete. Generated station mechanics now resolve from
+local contact data, show their own name/portrait/voice where available, and use
+deterministic local shop names for maintenance UI and pickup destinations.
+
 Goal: generated systems should not keep pretending Jenna is every mechanic in
 the frontier.
 
@@ -558,10 +582,10 @@ Likely files:
 
 Verification:
 
-- Dock at home station: Jenna still appears.
-- Dock at generated main station: generated mechanic name/portrait appears.
-- Mechanic greeting does not say Jenna in generated systems.
-- Pickup-offer accept/decline still works.
+- [x] Dock at home station: Jenna still appears.
+- [x] Dock at generated main station: generated mechanic name/portrait appears.
+- [x] Mechanic greeting does not say Jenna in generated systems.
+- [x] Pickup-offer accept/decline still works.
 
 ### 4. Generated Contact Conversation Mode
 
@@ -618,6 +642,11 @@ Do not overbuild the UI yet. The first win is stable records that every later
 system can reference.
 
 ### 6. Fallback Reduction Pass
+
+Status: partially complete. Dialogue substitution, per-type examples,
+system-aware targets/outposts, subtitle fixes, and validation tracing are in.
+Keep this open for measured fallback-rate reductions rather than treating it as
+done.
 
 Goal: use diagnostics to find where we are still silently leaning on generic
 text.
