@@ -67,14 +67,12 @@ static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstanc
 static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D:
 	var seed_val: float = config.get("seed", 0.0)
 	var density: float = config.get("density", 0.04)
-	var twinkle: float = config.get("twinkle_speed", 0.4)
 	var color_tint: Color = config.get("tint", Color(0.9, 0.92, 1.0))
 
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = STARFIELD_SHADER
 	shader_mat.set_shader_parameter("seed_offset", seed_val)
 	shader_mat.set_shader_parameter("star_density", density)
-	shader_mat.set_shader_parameter("twinkle_speed", twinkle)
 	shader_mat.set_shader_parameter("tint", Vector3(color_tint.r, color_tint.g, color_tint.b))
 
 	var mesh := SphereMesh.new()
