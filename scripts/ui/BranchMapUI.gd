@@ -211,7 +211,8 @@ func _rebuild_map() -> void:
 	var all_systems: Array = registry.get_all_systems()
 	if all_systems.is_empty():
 		return
-	var visible_systems := _visible_systems(all_systems)
+	var current_system_id := _current_system_id_for_registry(registry, all_systems)
+	var visible_systems := _visible_systems(all_systems, registry)
 	if visible_systems.is_empty():
 		return
 
@@ -220,6 +221,7 @@ func _rebuild_map() -> void:
 
 	for sys_def in visible_systems:
 		var sys_id: String = str(sys_def.id)
+		var is_current := sys_id == current_system_id
 		var pos: Vector2 = positions.get(sys_id, content_center)
 		var faction_names: Array[String] = []
 		var faction_ids: Array[String] = []
@@ -231,14 +233,14 @@ func _rebuild_map() -> void:
 			"position": pos,
 			"display_name": sys_def.display_name,
 			"is_placeholder": false,
-			"is_current": sys_def.legacy_id == GlobalState.current_system_id,
+			"is_current": is_current,
 			"legacy_id": sys_def.legacy_id,
 			"station_count": sys_def.station_ids.size(),
 			"faction_names": faction_names,
 			"faction_ids": faction_ids,
 			"origin": sys_def.origin,
 		}
-		_create_system_label(sys_def.display_name, pos, sys_def.legacy_id == GlobalState.current_system_id)
+		_create_system_label(sys_def.display_name, pos, is_current)
 
 	for sys_def in visible_systems:
 		for gate_def in sys_def.gates:
@@ -281,15 +283,13 @@ func _rebuild_map() -> void:
 	queue_redraw()
 
 
-func _visible_systems(all_systems: Array) -> Array:
+func _visible_systems(all_systems: Array, registry) -> Array:
 	var by_id: Dictionary = {}
 	var visible_ids: Dictionary = {}
-	var current_id := ""
+	var current_id := _current_system_id_for_registry(registry, all_systems)
 	for sys_def in all_systems:
 		var sys_id := str(sys_def.id)
 		by_id[sys_id] = sys_def
-		if sys_def.legacy_id == GlobalState.current_system_id:
-			current_id = sys_id
 	if current_id.is_empty() and not all_systems.is_empty():
 		current_id = str(all_systems[0].id)
 	visible_ids[current_id] = true
@@ -317,6 +317,18 @@ func _visible_systems(all_systems: Array) -> Array:
 		if visible_ids.has(str(sys_def.id)):
 			output.append(sys_def)
 	return output
+
+
+func _current_system_id_for_registry(registry, all_systems: Array) -> String:
+	var current_runtime := str(GlobalState.current_system_id)
+	var resolved := ""
+	if registry != null and registry.has_method("resolve_system_id"):
+		resolved = str(registry.resolve_system_id(current_runtime))
+	for sys_def in all_systems:
+		var sys_id := str(sys_def.id)
+		if sys_id == resolved or str(sys_def.legacy_id) == current_runtime:
+			return sys_id
+	return ""
 
 
 func _gate_state_reveals_destination(state: String) -> bool:
