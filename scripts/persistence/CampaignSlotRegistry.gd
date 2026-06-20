@@ -406,6 +406,8 @@ func _load_or_create() -> void:
 	if not validation.is_valid():
 		return
 	_load_slot_registry(parsed["data"])
+	if validation.is_valid():
+		_repair_orphaned_slots()
 
 
 func _load_slot_registry(data: Dictionary) -> void:
@@ -530,6 +532,32 @@ func _load_slot_registry(data: Dictionary) -> void:
 				"Selected slot must reference an occupied stable slot.",
 				"selected_slot_id"
 			)
+
+
+func _repair_orphaned_slots() -> void:
+	var repaired := false
+	for slot_id in SLOT_IDS:
+		var slot: Dictionary = slots.get(slot_id, _empty_slot(slot_id))
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_path := "%s/%s" % [root_path, slot_id]
+		if FileAccess.file_exists("%s/campaign.json" % slot_path):
+			continue
+		push_warning(
+			"[CampaignSlotRegistry] Clearing orphaned campaign slot '%s': campaign.json is missing." %
+				slot_id
+		)
+		_remove_tree(slot_path)
+		slots[slot_id] = _empty_slot(slot_id)
+		if selected_slot_id == slot_id:
+			selected_slot_id = ""
+		repaired = true
+	if repaired and not _write_slot_registry():
+		validation.add_error(
+			"slot_registry_repair_failed",
+			"Orphaned campaign slots were detected but the registry could not be repaired.",
+			slots_path
+		)
 
 
 func _build_initial_documents(
