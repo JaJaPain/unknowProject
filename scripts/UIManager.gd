@@ -53,6 +53,7 @@ var dock_message_line: Label
 var dock_message_tween: Tween
 var station_contacts_panel: PanelContainer
 var station_contacts_list: VBoxContainer
+var _selected_station_contact: String = ""
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
 # Portrait + personalized greeting that pops in the top area of the dock panel
 # when the player enters the Grease Monkeys maintenance submenu. Layout:
@@ -3279,15 +3280,21 @@ func _render_station_contacts(should_show: bool) -> void:
 		child.queue_free()
 	if not should_show:
 		station_contacts_panel.visible = false
+		_selected_station_contact = ""
 		return
 	var station_id := _current_station_contact_id()
 	if station_id.is_empty():
 		station_contacts_panel.visible = false
+		_selected_station_contact = ""
 		return
 	var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
 	if contacts.is_empty():
 		station_contacts_panel.visible = false
+		_selected_station_contact = ""
 		return
+	if not _selected_station_contact.is_empty() \
+			and _selected_station_contact not in contacts:
+		_selected_station_contact = ""
 	station_contacts_panel.visible = true
 	var title := Label.new()
 	title.text = "Station Contacts"
@@ -3308,6 +3315,8 @@ func _render_station_contacts(should_show: bool) -> void:
 		btn.tooltip_text = "Hear what this station contact has to say."
 		btn.pressed.connect(_on_station_contact_pressed.bind(str(npc_name)))
 		station_contacts_list.add_child(btn)
+		if str(npc_name) == _selected_station_contact:
+			_render_station_contact_actions(str(npc_name), npc_data)
 
 
 func _current_station_contact_id() -> String:
@@ -3329,11 +3338,83 @@ func _on_station_contact_pressed(npc_name: String) -> void:
 	if npc_data.is_empty():
 		show_hud_warning("That contact is unavailable.")
 		return
+	_selected_station_contact = npc_name
+	_render_station_contacts(true)
+	_show_station_contact_line(npc_name, npc_data, "greeting")
+
+
+func _render_station_contact_actions(npc_name: String, npc_data: Dictionary) -> void:
+	var detail := PanelContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	var contact_color: Color = npc_data.get("flavor_color", Color(0.0, 0.7, 0.9))
+	style.bg_color = Color(0.02, 0.05, 0.08, 0.88)
+	style.border_color = contact_color * 0.8
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(6)
+	detail.add_theme_stylebox_override("panel", style)
+	station_contacts_list.add_child(detail)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	detail.add_child(box)
+
+	var role := str(npc_data.get("role", "Local contact"))
+	var faction := str(npc_data.get("faction", ""))
+	var faction_display := "Independent"
+	if not faction.is_empty():
+		faction_display = str(
+			GlobalState.faction_info(faction).get("name", faction.capitalize())
+		)
+	var summary := Label.new()
+	summary.text = "%s - %s" % [role, faction_display]
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD
+	summary.add_theme_font_size_override("font_size", 12)
+	summary.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	box.add_child(summary)
+
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 4)
+	box.add_child(actions)
+	var action_defs: Array = [
+		["Faction", "faction"],
+		["Trouble", "trouble"],
+		["Rumor", "rumor"],
+		["Work", "work"],
+	]
+	for action_def in action_defs:
+		var btn := Button.new()
+		btn.text = str(action_def[0])
+		btn.tooltip_text = "Ask %s about %s." % [npc_name, str(action_def[0]).to_lower()]
+		btn.pressed.connect(
+			_on_station_contact_action_pressed.bind(npc_name, str(action_def[1]))
+		)
+		actions.add_child(btn)
+
+
+func _on_station_contact_action_pressed(npc_name: String, topic: String) -> void:
+	var npc_data := GlobalState.get_minor_npc_data(npc_name)
+	if npc_data.is_empty():
+		show_hud_warning("That contact is unavailable.")
+		return
+	_selected_station_contact = npc_name
+	if topic == "work":
+		_request_station_contact_work(npc_name, npc_data)
+		return
+	_show_station_contact_line(npc_name, npc_data, topic)
+
+
+func _show_station_contact_line(
+	npc_name: String,
+	npc_data: Dictionary,
+	topic: String
+) -> void:
 	var lines: Array = npc_data.get("flavor_lines", [])
 	if lines.is_empty():
 		show_hud_warning("%s has nothing to say right now." % npc_name)
 		return
-	var line := str(lines[randi() % lines.size()])
+	var line: String = _station_contact_topic_line(npc_name, npc_data, topic, lines)
 	var color: Color = npc_data.get("flavor_color", Color.WHITE)
 	var portrait: Texture2D = GlobalState.get_minor_npc_portrait(npc_name)
 	show_dock_message(line, npc_name, color, portrait)
@@ -3343,6 +3424,67 @@ func _on_station_contact_pressed(npc_name: String) -> void:
 		"color": color,
 		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
 	})
+
+
+func _station_contact_topic_line(
+	npc_name: String,
+	npc_data: Dictionary,
+	topic: String,
+	lines: Array
+) -> String:
+	var faction := str(npc_data.get("faction", ""))
+	var faction_display := "independent crews"
+	if not faction.is_empty():
+		faction_display = str(
+			GlobalState.faction_info(faction).get("name", faction.capitalize())
+		)
+	var role := str(npc_data.get("role", "local contact")).to_lower()
+	match topic:
+		"faction":
+			if faction.is_empty():
+				return "%s keeps things independent. No banner, no anthem, fewer meetings." % npc_name
+			return "%s work means %s trouble: tidy symbols on messy invoices." % [
+				faction_display,
+				faction_display,
+			]
+		"trouble":
+			return "Local trouble is simple: %s need work done, nobody wants their name on it, and the station lights still flicker." % faction_display
+		"rumor":
+			return str(lines[randi() % lines.size()])
+		_:
+			return "I am the %s today. Ask cleanly and maybe the answer stays cheap." % role
+
+
+func _request_station_contact_work(
+	npc_name: String,
+	npc_data: Dictionary
+) -> void:
+	if str(npc_data.get("role", "")) != "Faction contact":
+		_show_station_contact_line(npc_name, npc_data, "trouble")
+		show_hud_info("Only faction contacts can offer contract work right now.", Color(0.9, 0.8, 0.4))
+		return
+	var profile: Dictionary = _station_agent_profile_from_npc(npc_name, npc_data)
+	if profile.is_empty():
+		show_hud_warning("That contact cannot broker work right now.")
+		return
+	var profile_faction := str(profile.get("faction", ""))
+	var profile_faction_id := str(profile.get("faction_id", ""))
+	var faction_arg: String = (
+		profile_faction_id
+		if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
+		else profile_faction
+	)
+	show_dock_message(
+		"%s opens a private board and starts pricing the risk." % npc_name,
+		npc_name,
+		npc_data.get("flavor_color", Color.WHITE),
+		GlobalState.get_minor_npc_portrait(npc_name)
+	)
+	QuestManager.request_new_quest(
+		faction_arg if not faction_arg.is_empty() else "neutral",
+		_on_background_quest_generated,
+		profile
+	)
 
 
 func _request_background_agent_quest() -> void:
@@ -3373,24 +3515,29 @@ func _current_station_agent_profile() -> Dictionary:
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
 		if str(npc_data.get("role", "")) != "Faction contact":
 			continue
-		var faction := str(npc_data.get("faction", ""))
-		var faction_id := str(npc_data.get("faction_id", ""))
-		if faction.is_empty() and faction_id.is_empty():
-			continue
-		var faction_info := GlobalState.faction_info(
-			faction if not faction.is_empty() else faction_id
-		)
-		var faction_display := str(
-			faction_info.get("name", faction.capitalize())
-		)
-		return {
-			"agent_name": str(npc_name),
-			"agent_role": "%s Station Contact" % faction_display,
-			"faction": faction,
-			"faction_id": faction_id,
-			"faction_display": faction_display,
-		}
+		var profile: Dictionary = _station_agent_profile_from_npc(str(npc_name), npc_data)
+		if not profile.is_empty():
+			return profile
 	return {}
+
+
+func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> Dictionary:
+	var faction := str(npc_data.get("faction", ""))
+	var faction_id := str(npc_data.get("faction_id", ""))
+	if faction.is_empty() and faction_id.is_empty():
+		return {}
+	var faction_key: String = faction if not faction.is_empty() else faction_id
+	var faction_info := GlobalState.faction_info(faction_key)
+	var faction_display := str(
+		faction_info.get("name", faction_key.capitalize())
+	)
+	return {
+		"agent_name": npc_name,
+		"agent_role": "%s Station Contact" % faction_display,
+		"faction": faction,
+		"faction_id": faction_id,
+		"faction_display": faction_display,
+	}
 
 
 func _current_mechanic_profile() -> Dictionary:

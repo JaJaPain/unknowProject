@@ -103,6 +103,10 @@ must be used.
 - Agents can call the player "Indy" in the first quest request, but should avoid
   repeating the name in immediate follow-up lines after the player agrees. Using
   the name too often sounds unnatural.
+- The UI should become controller-friendly as the station, inventory, map, and
+  generated-contact screens grow. Menus need predictable focus order, sensible
+  default selections, controller prompts, and quick tab/action navigation instead
+  of assuming mouse-only play.
 - When the player enters a system for the first time, neighboring/next systems
   should be generated in the background: factions, planets, ships, stations,
   asteroids, gates, and scene placement. The next system should be ready before
@@ -346,6 +350,25 @@ Small UI improvements requested:
 - Cooldown: 60 seconds for now.
 - Later tuning can adjust boost duration, speed increase, cooldown, energy
   cost, or upgrade scaling.
+
+### 8A. Controller-Friendly UI Pass
+
+The growing UI should support controller play before menus become too tangled.
+This is especially important for station services, inventory, the branch map,
+dialogue/contact screens, and target actions.
+
+First version:
+
+- Add explicit focus order for dock menus, inventory, map controls, station
+  contacts, quest choices, and target-action buttons.
+- Set a useful default focused control whenever a panel opens.
+- Add controller prompts beside or beneath common actions, with keyboard/mouse
+  prompts still available.
+- Support shoulder-button or trigger navigation between major panels where it
+  feels natural, such as inventory/map/services tabs.
+- Make station-contact conversation actions usable without a mouse.
+- Keep escape/back/cancel behavior consistent across every panel.
+- Add smoke checks for controller input after major UI changes.
 
 ### 9. Seeded Nebula Backgrounds
 
@@ -803,6 +826,9 @@ Answered:
   and system 2 should start generating at campaign launch.
 - Seeded nebula shader backgrounds should be added to the TODO list as a visual
   identity feature for generated systems.
+- Controller-friendly UI should be planned as a real pass, not an afterthought,
+  so the expanding station/inventory/map/contact screens remain playable without
+  a mouse.
 - Boost can start with small heat damage or heat buildup, with larger risky
   boosters left for later upgrades.
 - New regions can reveal one or several brand-new larger factions depending on
