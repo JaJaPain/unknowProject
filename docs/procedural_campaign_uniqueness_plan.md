@@ -372,6 +372,43 @@ Estimated scope:
 - Advanced version with parallax layers, storms, animated wisps, or visual
   events: later polish.
 
+## Implementation Notes: 2026-06-19
+
+Completed tonight:
+
+- Generated faction identity is now wired into generated systems and ship
+  styling. Generated factions carry persistent IDs, display names, colors,
+  badge choices, voice hints, mission preferences, and ship style seeds.
+- Generated station contacts now appear in the dock services UI with portrait
+  and faction context.
+- Main generated stations receive faction contacts derived from the local
+  faction mix, plus a generated mechanic record.
+- Agent quest generation can use the visible station faction contact instead of
+  always routing through the old neutral/major-faction agent setup.
+- Generated-system quest validation now prefers current-system factions and
+  outposts for kill and pickup missions.
+- Quest idea memory writeback now stores richer premise, faction, objective,
+  joke, and rumor data so future LLM prompts can avoid repeating the same ideas.
+
+Known follow-ups for tomorrow:
+
+- Verify the branch map does not reveal the name/details of a prepared
+  destination while its gate is only rumored. A playtest screenshot showed a
+  rumored neighboring system label even though the player had not found it yet.
+  The current `BranchMapUI` code intends to reveal destination nodes only for
+  `known` gates, so this needs a save-state/runtime reproduction before changing
+  the map layer.
+- Replace Jenna-specific mechanic prompts in generated systems with the
+  generated station mechanic identity. The generated mechanic record now exists,
+  but the service dialogue still speaks as Jenna.
+- Convert temporary generated contact dictionaries into full campaign-persisted
+  NPC identity records with relationship and line-memory fields.
+- Add a real generated-contact conversation path so clicking a station contact
+  can show local flavor, faction status, and contact-specific work instead of
+  only feeding the background quest cache.
+- Continue reducing static fallback usage now that diagnostics and idea-memory
+  plumbing exist.
+
 ## Recommended Build Order
 
 ### Phase 0: Make Fallbacks Visible
