@@ -655,6 +655,8 @@ system can reference.
 
 Status: partially complete. Dialogue substitution, per-type examples,
 system-aware targets/outposts, subtitle fixes, and validation tracing are in.
+Direct `record_fallback()` calls now count as fallback content sources, and a
+`--generation-diagnostics-smoke-test` command verifies the summary counters.
 Keep this open for measured fallback-rate reductions rather than treating it as
 done.
 
@@ -671,7 +673,7 @@ Targets:
 
 Output:
 
-- A short diagnostics summary after playtest.
+- [x] A short diagnostics summary after playtest.
 - One targeted prompt/schema fix at a time.
 - No hiding errors behind better-sounding static text.
 
@@ -689,6 +691,8 @@ Goal: stop hiding problems.
 - Mark generated content with source: `llm`, `retry`, `procedural_fallback`,
   or `static_fallback`.
 - Add tests for fallback logging.
+- Add a command-line smoke check that proves fallback source rate is counted
+  correctly.
 
 Why first: if we do not measure fallbacks, we cannot know whether uniqueness
 work is actually being used.

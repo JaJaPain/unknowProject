@@ -147,6 +147,8 @@ func _ready() -> void:
 		call_deferred("_run_legacy_import_smoke_test")
 	elif "--public-board-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_public_board_smoke_test")
+	elif "--generation-diagnostics-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_generation_diagnostics_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
@@ -822,6 +824,55 @@ func print_generation_diagnostics_summary() -> void:
 
 func generation_diagnostics_summary_text(recent_limit: int = 8) -> String:
 	return GenerationDiagnostics.summary_text(recent_limit)
+
+
+func _run_generation_diagnostics_smoke_test() -> void:
+	GenerationDiagnostics.reset()
+	GenerationDiagnostics.record_content_source(
+		"quest_dialogue",
+		"llm",
+		"diagnostics_smoke",
+		{"capability": "quest_dialogue"}
+	)
+	GenerationDiagnostics.record_fallback(
+		"mechanic_intro",
+		"max_attempts_reached",
+		"diagnostics_smoke",
+		{"capability": "mechanic_line"}
+	)
+	var summary := GenerationDiagnostics.summary()
+	if int(summary.get("total_fallbacks", -1)) != 1:
+		_fail_generation_diagnostics_smoke_test(
+			"Expected one recorded fallback."
+		)
+		return
+	if int(summary.get("content_source_total", -1)) != 2:
+		_fail_generation_diagnostics_smoke_test(
+			"Expected two content-source events."
+		)
+		return
+	if absf(float(summary.get("fallback_source_rate", 0.0)) - 0.5) > 0.001:
+		_fail_generation_diagnostics_smoke_test(
+			"Fallback source rate was not 50%."
+		)
+		return
+	var text := GenerationDiagnostics.summary_text()
+	if not text.contains("total_fallbacks: 1") \
+			or not text.contains("fallback_source_rate: 50.0%") \
+			or not text.contains("mechanic_intro"):
+		_fail_generation_diagnostics_smoke_test(
+			"Summary text did not include the fallback counters."
+		)
+		return
+	GenerationDiagnostics.print_summary()
+	print("[GenerationDiagnosticsSmokeTest] PASS")
+	get_tree().quit(0)
+
+
+func _fail_generation_diagnostics_smoke_test(message: String) -> void:
+	push_error("[GenerationDiagnosticsSmokeTest] FAIL: %s" % message)
+	GenerationDiagnostics.print_summary()
+	get_tree().quit(1)
 
 
 func import_legacy_save(slot_id: String = "") -> Dictionary:

@@ -58,6 +58,7 @@ func record_fallback(
 	fallback_counts_by_reason[clean_reason] = int(
 		fallback_counts_by_reason.get(clean_reason, 0)
 	) + 1
+	source_counts["fallback"] = int(source_counts.get("fallback", 0)) + 1
 	fallback_events.append(event)
 	while fallback_events.size() > MAX_RECENT_EVENTS:
 		fallback_events.pop_front()

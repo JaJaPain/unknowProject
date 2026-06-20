@@ -116,11 +116,15 @@ func _test_records_content_source_summary() -> void:
 		"Static fallback content source count was not recorded."
 	)
 	_expect(
-		int(summary.get("content_source_total", 0)) == 3,
+		int(summary.get("source_counts", {}).get("fallback", 0)) == 2,
+		"Direct fallback content source count was not recorded."
+	)
+	_expect(
+		int(summary.get("content_source_total", 0)) == 5,
 		"Content source total was not recorded."
 	)
 	_expect(
-		int(summary.get("fallback_source_count", 0)) == 2,
+		int(summary.get("fallback_source_count", 0)) == 4,
 		"Fallback source count was not recorded."
 	)
 
@@ -144,7 +148,11 @@ func _test_summary_text_is_readable() -> void:
 		"Summary text did not include static fallback source count."
 	)
 	_expect(
-		text.contains("fallback_source_rate: 66.7%"),
+		text.contains("fallback=2"),
+		"Summary text did not include direct fallback source count."
+	)
+	_expect(
+		text.contains("fallback_source_rate: 80.0%"),
 		"Summary text did not include fallback source rate."
 	)
 	_expect(
