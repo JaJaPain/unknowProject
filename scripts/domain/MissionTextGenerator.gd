@@ -1,6 +1,8 @@
 class_name MissionTextGenerator
 extends RefCounted
 
+const DiagnosticsType := preload("res://scripts/diagnostics/GenerationDiagnostics.gd")
+
 const KAELEN_AUTHORSHIP_BLOCKLIST: Array[String] = [
 	"i posted",
 	"my posting",
@@ -141,7 +143,7 @@ static func fallback_offer(
 	offer: Dictionary,
 	salt: int = 0
 ) -> Dictionary:
-	GenerationDiagnostics.record_fallback(
+	_record_diagnostics_fallback(
 		"public_board_text",
 		"fallback_offer_requested",
 		"MissionTextGenerator",
@@ -159,6 +161,28 @@ static func fallback_offer(
 		str(applied.get("reason", "unknown"))
 	)
 	return offer
+
+
+static func _record_diagnostics_fallback(
+	content_type: String,
+	reason: String,
+	source: String,
+	context: Dictionary
+) -> void:
+	var diagnostics = _diagnostics()
+	if diagnostics != null and diagnostics.has_method("record_fallback"):
+		diagnostics.record_fallback(content_type, reason, source, context)
+
+
+static func _diagnostics() -> Node:
+	var tree := Engine.get_main_loop()
+	if tree and tree.has_method("get_root"):
+		var root = tree.get_root()
+		if root:
+			var autoload = root.get_node_or_null("GenerationDiagnostics")
+			if autoload:
+				return autoload
+	return DiagnosticsType.new()
 
 
 static func _apply_board_quest_data(
