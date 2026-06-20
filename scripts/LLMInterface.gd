@@ -810,7 +810,14 @@ func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
 					d["response_3"] = "Bumped the payout, George. The drive better arrive in one piece. My client doesn't accept excuses and neither do I."
 	return d
 
-func request_quest_generation(agent_faction: String, history_text: String, player_credits: int, player_reps: Dictionary, callback: Callable):
+func request_quest_generation(
+	agent_faction: String,
+	history_text: String,
+	player_credits: int,
+	player_reps: Dictionary,
+	callback: Callable,
+	agent_profile: Dictionary = {}
+) -> void:
 	if is_waiting:
 		return
 	
@@ -869,6 +876,32 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You are cynical, sharp, and opportunistic. You call the pilot 'Shiny' — treating them like an unscarred greenhorn who is also your most profitable tool. " + \
 				"You always mention your broker's cut and how the deal benefits you personally."
 	
+	if not agent_profile.is_empty():
+		var profile_faction_id := str(agent_profile.get("faction_id", "")).strip_edges()
+		var profile_faction := str(agent_profile.get("faction", chosen_faction)).strip_edges()
+		chosen_faction = (
+			profile_faction_id
+			if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
+			else profile_faction
+		)
+		agent_name = str(agent_profile.get("agent_name", agent_name)).strip_edges()
+		if agent_name.is_empty():
+			agent_name = "Local Contact"
+		agent_role = str(agent_profile.get("agent_role", "Station faction contact")).strip_edges()
+		player_nickname = "Indy"
+		var faction_label := str(
+			agent_profile.get("faction_display", profile_faction.capitalize())
+		)
+		var role_label := agent_role if not agent_role.is_empty() else "station contact"
+		agent_persona = "You are %s, a %s for %s. " % [
+			agent_name,
+			role_label,
+			faction_label,
+		] + \
+			"You are stationed in the current system and offer practical local contracts. " + \
+			"You speak directly to the pilot, use dry PG-13 frontier humor when it fits, and call the pilot 'Indy' only in the opening request. " + \
+			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
+
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
 	var quest_types = ["DELIVER_ORE", "KILL_SHIPS", "PICKUP_SPECIAL"]
@@ -1241,7 +1274,9 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	var obj_type: String = obj.get("type", "")
 	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
 	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
-	quest_data["faction"] = str(quest_data.get("faction", "neutral")).to_lower().strip_edges()
+	quest_data["faction"] = str(
+		subs.get("faction", quest_data.get("faction", "neutral"))
+	).to_lower().strip_edges()
 	quest_data["agent_name"] = str(subs.get("agent_name", quest_data.get("agent_name", "Broker Kaelen")))
 
 	var replacements := {}
@@ -1535,9 +1570,12 @@ func _validate_quest_data(quest_data: Dictionary):
 		# faction so it always renders.
 		var tf = obj.get("target_faction", "")
 		var known_factions = GlobalState.MINOR_FACTIONS.keys()
+		known_factions.append_array(GlobalState.get_current_system_minor_factions())
 		known_factions.append_array(["zenith", "aurelia", "vanguard"])
 		if tf == "" or not tf in known_factions:
-			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
+			var minor_keys = GlobalState.get_current_system_minor_factions()
+			if minor_keys.is_empty():
+				minor_keys = GlobalState.MINOR_FACTIONS.keys()
 			var original = tf if tf != "" else "(empty)"
 			obj["target_faction"] = minor_keys[randi() % minor_keys.size()]
 			GenerationDiagnostics.record_event(
@@ -1561,17 +1599,34 @@ func _validate_quest_data(quest_data: Dictionary):
 	elif obj_type == "PICKUP_SPECIAL":
 		var outpost = obj.get("target_outpost", "")
 		var npc = obj.get("target_npc", "")
-		var valid_outposts = GlobalState.PICKUP_OUTPOST_IDS
+		var valid_outposts: Array = []
+		for local_outpost in GlobalState.get_current_system_outposts():
+			if local_outpost is Dictionary:
+				valid_outposts.append(str(local_outpost.get("id", "")))
+		if valid_outposts.is_empty():
+			valid_outposts = GlobalState.PICKUP_OUTPOST_IDS.duplicate()
 		if outpost not in valid_outposts:
+			var fallback_outpost: String = str(valid_outposts[0])
+			var fallback_display := fallback_outpost
+			for local_outpost in GlobalState.get_current_system_outposts():
+				if local_outpost is Dictionary \
+						and str(local_outpost.get("id", "")) == fallback_outpost:
+					fallback_display = str(local_outpost.get("display", fallback_outpost))
+					break
+			if GlobalState.PICKUP_OUTPOST_DISPLAY.has(fallback_outpost):
+				fallback_display = str(
+					GlobalState.PICKUP_OUTPOST_DISPLAY.get(fallback_outpost)
+				)
 			GenerationDiagnostics.record_event(
 				"quest_generation",
 				"validation_remapped_pickup_outpost",
 				"LLMInterface",
-				{"from": outpost, "to": valid_outposts[0]}
+				{"from": outpost, "to": fallback_outpost}
 			)
-			obj["target_outpost"] = valid_outposts[0]
-			obj["target_outpost_display"] = GlobalState.PICKUP_OUTPOST_DISPLAY.get(valid_outposts[0], valid_outposts[0])
-			npc = GlobalState.get_minor_npcs_at_outpost(valid_outposts[0])[0]
+			obj["target_outpost"] = fallback_outpost
+			obj["target_outpost_display"] = fallback_display
+			var fallback_npcs := GlobalState.get_minor_npcs_at_outpost(fallback_outpost)
+			npc = fallback_npcs[0] if not fallback_npcs.is_empty() else GlobalState.random_minor_npc_name()
 			obj["target_npc"] = npc
 		else:
 			var valid_npcs = GlobalState.get_minor_npcs_at_outpost(outpost)
@@ -2107,6 +2162,8 @@ func _trigger_fallback():
 	var selected_quest = fallback_templates[idx].duplicate(true)
 	selected_quest["campaign_name"] = _fallback_campaign_name()
 	selected_quest["agent_role"] = str(_pending_substitutions.get("agent_role", "Neutral Fixer & Profit Broker"))
+	selected_quest["agent_name"] = str(_pending_substitutions.get("agent_name", selected_quest.get("agent_name", "Broker Kaelen")))
+	selected_quest["faction"] = str(_pending_substitutions.get("faction", selected_quest.get("faction", "neutral")))
 	
 	# Randomize values slightly to make it feel procedural
 	var type = selected_quest["objective"]["type"]

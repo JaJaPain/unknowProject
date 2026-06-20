@@ -621,7 +621,7 @@ static func _generated_contact_data(
 		"outpost": world_id,
 		"role": role,
 		"faction": faction_name,
-		"faction_id": "faction.%s" % faction_name if not faction_name.is_empty() else "",
+		"faction_id": _contact_faction_id(faction_name),
 		"portrait_id": portrait_id,
 		"voice_profile_id": voice_id,
 		"flavor_color": faction_color if not faction_name.is_empty() else Color.from_hsv(hue, 0.45, 1.0),
@@ -668,6 +668,16 @@ static func _generated_station_contact_faction_keys(faction_weights: Dictionary)
 	if result.is_empty():
 		result.append_array(["zenith", "aurelia", "vanguard"])
 	return result
+
+static func _contact_faction_id(faction_name: String) -> String:
+	if faction_name.is_empty():
+		return ""
+	var generated := _generated_faction_record(faction_name)
+	if not generated.is_empty():
+		return str(generated.get("id", ""))
+	if faction_name.begins_with("faction."):
+		return faction_name
+	return "faction.%s" % faction_name
 
 static func resolve_outpost_id(station: Node3D) -> String:
 	if station == null:

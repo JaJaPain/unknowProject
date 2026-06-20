@@ -3134,7 +3134,7 @@ func toggle_dock_menu(
 		# outposts are still visual-only and don't talk to Kaelen).
 		if not is_outpost and not QuestManager.is_lane_occupied("AGENT") and cached_quest_data.is_empty():
 			print("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
-			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+			_request_background_agent_quest()
 
 		# Pre-cache this outpost's NPC flavor lines for TTS so the
 		# first Hear Gossip click plays instantly in each NPC's
@@ -3342,6 +3342,54 @@ func _on_station_contact_pressed(npc_name: String) -> void:
 		"color": color,
 		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
 	})
+
+
+func _request_background_agent_quest() -> void:
+	var profile := _current_station_agent_profile()
+	if profile.is_empty():
+		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+		return
+	var profile_faction := str(profile.get("faction", ""))
+	var profile_faction_id := str(profile.get("faction_id", ""))
+	var faction_arg := (
+		profile_faction_id
+		if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
+		else profile_faction
+	)
+	QuestManager.request_new_quest(
+		faction_arg if not faction_arg.is_empty() else "neutral",
+		_on_background_quest_generated,
+		profile
+	)
+
+
+func _current_station_agent_profile() -> Dictionary:
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty():
+		return {}
+	var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
+	for npc_name in contacts:
+		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+		if str(npc_data.get("role", "")) != "Faction contact":
+			continue
+		var faction := str(npc_data.get("faction", ""))
+		var faction_id := str(npc_data.get("faction_id", ""))
+		if faction.is_empty() and faction_id.is_empty():
+			continue
+		var faction_info := GlobalState.faction_info(
+			faction if not faction.is_empty() else faction_id
+		)
+		var faction_display := str(
+			faction_info.get("name", faction.capitalize())
+		)
+		return {
+			"agent_name": str(npc_name),
+			"agent_role": "%s Station Contact" % faction_display,
+			"faction": faction,
+			"faction_id": faction_id,
+			"faction_display": faction_display,
+		}
+	return {}
 
 
 func _on_maintenance_bay_pressed() -> void:
@@ -5656,7 +5704,7 @@ func _refresh_agent_quest_board():
 		
 		# If the background generator hasn't started yet, trigger it now.
 		if not LLMInterface.is_waiting:
-			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+			_request_background_agent_quest()
 
 func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	cached_quest_data = quest_data
@@ -5960,7 +6008,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	# Start pre-caching the NEXT quest immediately in the background
 	print("[TRACE] [UIManager] Quest accepted. Starting pre-caching of the next contract.")
-	QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+	_request_background_agent_quest()
 	
 	# Generate unique Kaelen completion/abandon lines for THIS quest in the background
 	cached_completion_line = ""
@@ -6017,7 +6065,7 @@ func _on_agent_complete_pressed():
 	# If for some reason the cache is empty, request one now
 	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
 		print("[TRACE] [UIManager] Cache empty on complete. Pre-caching next quest.")
-		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+		_request_background_agent_quest()
 
 func _on_agent_abandon_pressed():
 	SpeechService.start_interaction("Abandon Contract")
@@ -6049,7 +6097,7 @@ func _on_agent_abandon_pressed():
 	# If for some reason the cache is empty, request one now
 	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
 		print("[TRACE] [UIManager] Cache empty on abandon. Pre-caching next quest.")
-		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+		_request_background_agent_quest()
 
 func _on_partial_delivery_pressed(deliverable: float):
 	SpeechService.start_interaction("Partial Delivery")
@@ -6519,15 +6567,25 @@ func _update_agent_portrait(faction: String, npc_name: String = ""):
 	if agent_portrait:
 		_show_agent_portrait(true)
 		var portrait_id := "portrait.quest_givers.kaelen"
+		var generated_portrait := GlobalState.get_minor_npc_portrait(npc_name)
 		var npc_definition := GameContentRegistry.shared().npc_by_name(npc_name)
 		var faction_definition := GameContentRegistry.shared().faction(faction)
-		if npc_definition != null:
+		if generated_portrait != null:
+			agent_portrait.texture = generated_portrait
+		elif npc_definition != null:
 			portrait_id = str(npc_definition.portrait_id)
+			agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
+				portrait_id
+			)
 		elif faction_definition and not faction_definition.agent_portrait_id.is_empty():
 			portrait_id = str(faction_definition.agent_portrait_id)
-		agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
-			portrait_id
-		)
+			agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
+				portrait_id
+			)
+		else:
+			agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
+				portrait_id
+			)
 		
 	if agent_client_logo and faction_branding_sheet:
 		var atlas = AtlasTexture.new()
@@ -7038,7 +7096,7 @@ func _check_both_services_ready():
 		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
 			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
 			
-		QuestManager.request_new_quest("neutral", _on_background_quest_generated)
+		_request_background_agent_quest()
 
 func _on_tts_cache_completed():
 	# Disconnect to prevent double trigger on future cache events

@@ -199,9 +199,20 @@ func is_quest_completed() -> bool:
 	return cap.is_completed(active_quest)
 
 
-func request_new_quest(agent_faction: String, callback: Callable):
+func request_new_quest(
+	agent_faction: String,
+	callback: Callable,
+	agent_profile: Dictionary = {}
+) -> void:
 	var history_text = _load_quest_history()
-	LLMInterface.request_quest_generation(agent_faction, history_text, GlobalState.player_credits, GlobalState.reputations, callback)
+	LLMInterface.request_quest_generation(
+		agent_faction,
+		history_text,
+		GlobalState.player_credits,
+		GlobalState.reputations,
+		callback,
+		agent_profile
+	)
 
 func accept_quest(
 	quest_data: Dictionary,
