@@ -59,6 +59,11 @@ must be used.
   identities unless a later design explicitly promotes them.
 - Kaelen's uniqueness is part of the long mystery. Her repeated presence should
   feel intentional, not like a reused NPC template.
+- The first time the player encounters Kaelen in a new system, she should have
+  a funny system-arrival line that makes her presence feel deliberate and gives
+  the player a quick read on the local factions. The tone can be possessive,
+  dry, and profit-minded, e.g. "When I said that route was yours, Shiny, I meant
+  ours."
 - Kaelen's personal mystery should never be fully explained. The story can
   reveal what she is doing, what pressure she is under, and how her choices
   affect the player, but it should preserve unanswered questions about what she
@@ -721,6 +726,10 @@ Goal: make each system feel like a place.
 - Tie the pack to local factions, stations, gates, resources, and danger.
 - Use it for public board postings, gossip, station chatter, interceptors, and
   Kaelen hints.
+- Add a first-Kaelen-encounter beat for each new system: generate one brief,
+  funny Kaelen arrival line that welcomes or needles the player, explains that
+  she has followed the money into this system, and names the local factions in
+  natural dialogue.
 - Include rumor clue slots that can attach local gossip to campaign-level rumor
   trails.
 - Persist the pack with generated system state.
