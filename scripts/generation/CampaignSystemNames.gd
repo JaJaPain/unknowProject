@@ -70,6 +70,13 @@ func set_names(names: Array[String]) -> void:
 	_save()
 
 
+static func reset() -> void:
+	if FileAccess.file_exists(NAMES_PATH):
+		DirAccess.remove_absolute(
+			ProjectSettings.globalize_path(NAMES_PATH)
+		)
+
+
 func _save() -> void:
 	var file := FileAccess.open(NAMES_PATH, FileAccess.WRITE)
 	if file:

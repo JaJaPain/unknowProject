@@ -214,7 +214,7 @@ func _ensure_destination_generated(gate_id: String) -> void:
 
 	var names := CampaignSystemNames.load_or_create()
 	var sys_name := names.next_name()
-	var seed_val := dest_sys_id.hash()
+	var seed_val := dest_sys_id.hash() ^ GlobalState.campaign_seed
 	var frontier_factions: Array = []
 	if game_root.has_method("reveal_generated_factions_for_system"):
 		var revealed: Dictionary = game_root.reveal_generated_factions_for_system(

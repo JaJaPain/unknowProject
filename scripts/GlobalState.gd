@@ -1337,6 +1337,10 @@ var has_max_deep_mining: bool = false
 var kaelen_briefing_seen: bool = false
 var kaelen_briefing_accepted: bool = false
 
+# Unique per-campaign seed mixed into procedural system generation so each
+# campaign produces different systems even from the same gate destination IDs.
+var campaign_seed: int = 0
+
 # Non-upgradeable baseline
 var damage: float = weapon_damage # Legacy support until swapped
 var laser_range: float = 80.0
@@ -1620,6 +1624,11 @@ func reset_for_restart():
 	laser_range = 80.0
 	destroyed_ships_pool = 0
 	runtime_entity_sequence = 0
+	# Reset Kaelen briefing flags so new campaigns show the intro
+	kaelen_briefing_seen = false
+	kaelen_briefing_accepted = false
+	# New seed so procedural systems differ across campaigns
+	campaign_seed = randi()
 	# Reset reputations
 	reputations = {
 		"zenith": 50.0,

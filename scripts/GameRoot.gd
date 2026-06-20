@@ -570,10 +570,13 @@ func _init_generated_system_configs() -> void:
 			continue
 		var sys_id := str(sys_def.id)
 		var frontier_factions := _frontier_factions_for_system_definition(sys_def)
-		if system_registry.get_generated_config(sys_id) != null \
+		var existing_config := system_registry.get_generated_config(sys_id)
+		var expected_seed: int = sys_id.hash() ^ GlobalState.campaign_seed
+		if existing_config != null \
+				and existing_config.seed_value == expected_seed \
 				and frontier_factions.is_empty():
 			continue
-		var seed_val: int = sys_id.hash()
+		var seed_val: int = expected_seed
 		var config := SystemConfig.from_seed(
 			sys_def.display_name,
 			sys_id,
@@ -1134,6 +1137,12 @@ func _capture_prepared_runtime_state() -> Dictionary:
 	}, system_registry)
 
 
+func _campaign_slot_path(slot_id: String) -> String:
+	if slot_id.is_empty() or campaign_slot_registry == null:
+		return ""
+	return "%s/%s" % [campaign_slot_registry.root_path, slot_id]
+
+
 func _initialize_campaign_registry() -> void:
 	campaign_slot_registry = CampaignSlotRegistryType.open()
 	if campaign_slot_registry == null \
@@ -1141,6 +1150,7 @@ func _initialize_campaign_registry() -> void:
 		campaign_slot_registry = null
 		return
 	active_campaign_slot_id = campaign_slot_registry.selected_slot_id
+	ShipGenerator.active_campaign_path = _campaign_slot_path(active_campaign_slot_id)
 	if active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -2172,6 +2182,8 @@ func _load_startup_save() -> void:
 						created.get("error", "unknown error"),
 					]
 				)
+		CampaignSystemNames.reset()
+		ShipGenerator.active_campaign_path = _campaign_slot_path(target_slot_id)
 		startup_save_loaded = false
 		startup_load_finished = true
 		_refresh_gate_states()
@@ -2214,6 +2226,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))
+	_init_generated_system_configs()
 	var quest_source = data.get("quest", {})
 	var quest_ok := false
 	if quest_source is Array:
@@ -2305,6 +2318,7 @@ func _capture_global_state() -> Dictionary:
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
 		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
+		"campaign_seed": GlobalState.campaign_seed,
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -2342,6 +2356,7 @@ func _apply_global_state(state: Dictionary) -> void:
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
 	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
 	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
+	GlobalState.campaign_seed = int(state.get("campaign_seed", 0))
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:
