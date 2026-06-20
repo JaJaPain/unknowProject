@@ -31,6 +31,14 @@ var exhaust_flames: Array[MeshInstance3D] = []
 var engine_stall_timer: float = 0.0
 var mining_cycles: int = 0
 var _mine_particles: GPUParticles3D = null
+
+var _drone_active_idx: int = 0
+var _drone_collect_t: Array[float] = [0.0, 0.0]
+var _drone_collect_from: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
+var _drone_collecting: Array[bool] = [false, false]
+var _drone_returning: Array[bool] = [false, false]
+var _mining_target_pos: Vector3 = Vector3.ZERO
+var _was_mining: bool = false
 var mining_continuous_timer: float = 0.0
 
 # Navigation variables
@@ -313,8 +321,9 @@ func _physics_process(delta: float):
 		boost_cooldown_timer = maxf(0.0, boost_cooldown_timer - delta)
 	_update_boost_effects(delta)
 
-	if _mine_particles and not mining_laser.visible:
-		_mine_particles.emitting = false
+	if not mining_laser.visible:
+		if _mine_particles:
+			_mine_particles.emitting = false
 
 	if GlobalState.paused:
 		mining_laser.visible = false
@@ -337,15 +346,9 @@ func _physics_process(delta: float):
 	else:
 		mining_continuous_timer = max(0.0, mining_continuous_timer - delta)
 		
-	# Animate orbiting drones
-	for i in range(drones.size()):
-		var pivot = drones[i]
-		if is_instance_valid(pivot):
-			var rot_speed = drone_rotations[i]
-			pivot.rotate_x(rot_speed.x * delta)
-			pivot.rotate_y(rot_speed.y * delta)
-			pivot.rotate_z(rot_speed.z * delta)
-			
+	# Animate orbiting drones and collection behavior
+	_update_drones(delta)
+
 	# Update drone colors based on health
 	_update_drone_colors()
 			
@@ -1550,6 +1553,8 @@ func perform_action(target_node: Node3D, delta: float):
 		if _mine_particles:
 			_mine_particles.global_position = asteroid_pos
 			_mine_particles.emitting = true
+
+		_mining_target_pos = asteroid_pos
 		
 		if fire_cooldown <= 0.0:
 			fire_cooldown = GlobalState.mining_cooldown
@@ -1838,6 +1843,82 @@ func take_damage(amount: float, attacker_faction: String = ""):
 		
 	if health <= 0.0:
 		die(attacker_faction)
+
+func _update_drones(delta: float) -> void:
+	var is_mining := mining_laser.visible
+
+	# Mining just stopped — destroy old drones and spawn fresh ones from the hull
+	if _was_mining and not is_mining:
+		_respawn_drones()
+	_was_mining = is_mining
+
+	const DRONE_SPEED := 45.0
+
+	for i in range(drones.size()):
+		var pivot = drones[i]
+		if not is_instance_valid(pivot):
+			continue
+
+		if is_mining:
+			# Collecting behavior: one drone at a time flies to asteroid and back
+			var mesh := pivot.get_child(0) as MeshInstance3D
+			if not mesh:
+				continue
+
+			if _drone_collecting[i] or _drone_returning[i]:
+				if not mesh.top_level:
+					mesh.top_level = true
+				var target := _mining_target_pos if _drone_collecting[i] else global_position
+				var dist := _drone_collect_from[i].distance_to(target)
+				var rate := DRONE_SPEED * delta / maxf(dist, 1.0)
+				_drone_collect_t[i] = minf(_drone_collect_t[i] + rate, 1.0)
+				var t := _drone_collect_t[i] * _drone_collect_t[i] * (3.0 - 2.0 * _drone_collect_t[i])
+				mesh.global_position = _drone_collect_from[i].lerp(target, t)
+
+				if _drone_collect_t[i] >= 1.0:
+					if _drone_collecting[i]:
+						_drone_collecting[i] = false
+						_drone_returning[i] = true
+						_drone_collect_from[i] = mesh.global_position
+						_drone_collect_t[i] = 0.0
+					else:
+						_drone_returning[i] = false
+						mesh.top_level = false
+						mesh.position = Vector3(6.8 * (1.0 if i == 0 else -1.0), 0.0, 0.0)
+						_drone_active_idx = 1 - i
+			elif i == _drone_active_idx:
+				var mesh_world_pos := mesh.global_position
+				mesh.top_level = true
+				mesh.global_position = mesh_world_pos
+				_drone_collecting[i] = true
+				_drone_collect_from[i] = mesh_world_pos
+				_drone_collect_t[i] = 0.0
+			else:
+				# Non-active drone keeps orbiting
+				var rot_speed = drone_rotations[i]
+				pivot.rotate_x(rot_speed.x * delta)
+				pivot.rotate_y(rot_speed.y * delta)
+				pivot.rotate_z(rot_speed.z * delta)
+		else:
+			# Normal orbiting
+			var rot_speed = drone_rotations[i]
+			pivot.rotate_x(rot_speed.x * delta)
+			pivot.rotate_y(rot_speed.y * delta)
+			pivot.rotate_z(rot_speed.z * delta)
+
+
+func _respawn_drones() -> void:
+	for pivot in drones:
+		if is_instance_valid(pivot):
+			pivot.queue_free()
+	drones.clear()
+	drone_rotations.clear()
+	_drone_collecting = [false, false]
+	_drone_returning = [false, false]
+	_drone_collect_t = [0.0, 0.0]
+	_drone_active_idx = 0
+	_create_drones()
+
 
 func _update_drone_colors():
 	var health_pct = health / max_health
