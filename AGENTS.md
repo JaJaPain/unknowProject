@@ -13,3 +13,7 @@ python generate_repo_map.py
 ## Session Catch-Up
 
 - Check `docs/whileYouWasSleeping.md` when resuming after another assistant or overnight work. It records recent changes that may not be obvious from the current diff.
+
+## Push Workflow
+
+- When the user says a push is complete, treat that as approval to continue to the next item on the active work list. Do not wait for a separate "go on" message unless the user explicitly asks to pause, stop, review, or plan.
