@@ -251,13 +251,15 @@ static func is_minor_faction(faction_name: String) -> bool:
 
 static func minor_faction_data(faction_name: String) -> Dictionary:
 	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
-		var hue := float(abs(faction_name.hash()) % 360) / 360.0
-		var color := Color.from_hsv(hue, 0.62, 0.9)
+		var generated := _generated_faction_record(faction_name)
+		var color := _generated_faction_color(generated, faction_name)
+		var ship_style: Dictionary = generated.get("ship_style", {})
 		return {
 			"color": color,
 			"projectile": color.lightened(0.15),
-			"model": "faction1",
+			"model": str(ship_style.get("model", "faction1")),
 			"tint": color.darkened(0.18),
+			"ship_style": ship_style.duplicate(true),
 		}
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	if definition == null or definition.classification != "minor":
@@ -334,6 +336,13 @@ static func faction_info(faction_id: String) -> Dictionary:
 			"name": definition.display_name,
 			"descriptor": definition.descriptor,
 			"abbrev": definition.abbreviation,
+		}
+	var generated := _generated_faction_record(faction_id)
+	if not generated.is_empty():
+		return {
+			"name": str(generated.get("display_name", faction_id.capitalize())),
+			"descriptor": str(generated.get("descriptor", "Generated Frontier Faction")),
+			"abbrev": str(generated.get("abbreviation", faction_id.substr(0, 3).to_upper())),
 		}
 	return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
 
@@ -671,7 +680,11 @@ static func get_current_system_minor_factions() -> Array[String]:
 			if sys_def != null and not sys_def.faction_ids.is_empty():
 				var factions: Array[String] = []
 				for fid in sys_def.faction_ids:
-					var legacy: String = str(fid).get_slice(".", 1)
+					var legacy := _legacy_faction_key_for_system_id(
+						str(fid),
+						sys_def.legacy_id,
+						registry
+					)
 					if is_minor_faction(legacy):
 						factions.append(legacy)
 				if not factions.is_empty():
@@ -679,6 +692,59 @@ static func get_current_system_minor_factions() -> Array[String]:
 	var fallback: Array[String] = []
 	fallback.assign(MINOR_FACTIONS.keys())
 	return fallback
+
+static func _legacy_faction_key_for_system_id(
+	faction_id: String,
+	system_legacy_id: String,
+	registry: Variant
+) -> String:
+	var config = registry.get_generated_config(system_legacy_id) if registry != null else null
+	if config != null:
+		for legacy_key in config.faction_id_lookup.keys():
+			if str(config.faction_id_lookup[legacy_key]) == faction_id:
+				return str(legacy_key)
+	if faction_id.begins_with("faction.generated."):
+		var generated := _generated_faction_record(faction_id)
+		if not generated.is_empty():
+			return str(generated.get("legacy_id", faction_id))
+		return faction_id
+	if faction_id.begins_with("faction."):
+		return faction_id.trim_prefix("faction.")
+	return faction_id
+
+static func _generated_faction_record(faction_name: String) -> Dictionary:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.current_scene == null:
+		return {}
+	var game_root := tree.current_scene
+	var factions: Array = []
+	if game_root.has_method("revealed_generated_factions"):
+		factions.append_array(game_root.revealed_generated_factions())
+	if game_root.has_method("generated_factions_for_ids") \
+			and faction_name.begins_with("faction.generated."):
+		factions.append_array(game_root.generated_factions_for_ids([faction_name]))
+	for faction in factions:
+		if not faction is Dictionary:
+			continue
+		if str(faction.get("legacy_id", "")) == faction_name \
+				or str(faction.get("id", "")) == faction_name:
+			return (faction as Dictionary).duplicate(true)
+	return {}
+
+static func _generated_faction_color(
+	faction_record: Dictionary,
+	fallback_key: String
+) -> Color:
+	var raw_color: Array = faction_record.get("ui_color", [])
+	if raw_color.size() == 4:
+		return Color(
+			float(raw_color[0]),
+			float(raw_color[1]),
+			float(raw_color[2]),
+			float(raw_color[3])
+		)
+	var hue := float(abs(fallback_key.hash()) % 360) / 360.0
+	return Color.from_hsv(hue, 0.62, 0.9)
 
 # Returns a random minor NPC name. Used for picking a quest-board contact
 # at an outpost when the player asks "who's hiring?"

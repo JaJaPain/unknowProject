@@ -47,6 +47,7 @@ func on_system_entered(system_id: String, _arrival_gate_id: String) -> void:
 			jobs.append({
 				"seed": seed_str,
 				"faction": faction_name,
+				"ship_style": config.ship_style_for_faction(faction_name),
 			})
 
 	if jobs.is_empty():
@@ -89,7 +90,8 @@ func _worker() -> void:
 
 		var seed_str: String = job["seed"]
 		var faction: String = job["faction"]
-		ShipGenerator.generate(seed_str, "", faction)
+		var ship_style: Dictionary = job.get("ship_style", {})
+		ShipGenerator.generate(seed_str, "", faction, ship_style)
 
 	call_deferred("_on_thread_done")
 

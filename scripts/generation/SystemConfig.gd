@@ -22,6 +22,7 @@ var difficulty_multiplier: float = 1.0
 
 var faction_weights: Dictionary = {}
 var faction_id_lookup: Dictionary = {}
+var faction_ship_styles: Dictionary = {}
 var npc_patrol_count: int = 6
 var npc_minor_chance: float = 0.15
 var npc_minor_max: int = 2
@@ -100,6 +101,10 @@ static func from_seed(
 			continue
 		local_factions.append(legacy_id)
 		config.faction_id_lookup[legacy_id] = faction_id
+		if faction.get("ship_style", {}) is Dictionary:
+			config.faction_ship_styles[legacy_id] = (
+				faction.get("ship_style", {}) as Dictionary
+			).duplicate(true)
 	if local_factions.size() < 2:
 		local_factions = [
 		"reavers",
@@ -109,6 +114,7 @@ static func from_seed(
 		"ironclad",
 		]
 		config.faction_id_lookup.clear()
+		config.faction_ship_styles.clear()
 	for faction_name in local_factions:
 		if not config.faction_id_lookup.has(faction_name):
 			config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
@@ -143,3 +149,9 @@ static func from_seed(
 
 func canonical_faction_id(faction_name: String) -> String:
 	return str(faction_id_lookup.get(faction_name, "faction.%s" % faction_name))
+
+
+func ship_style_for_faction(faction_name: String) -> Dictionary:
+	return (
+		faction_ship_styles.get(faction_name, {}) as Dictionary
+	).duplicate(true)

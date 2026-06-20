@@ -79,10 +79,22 @@ func _test_config_generated_faction_pool() -> void:
 		{
 			"id": "faction.generated.glass_choir_00",
 			"legacy_id": "gen_glass_choir_00",
+			"ship_style": {
+				"texture": "NavyBlueMetal.png",
+				"emblem": "ZenithBadge.png",
+				"metallic_min": 0.5,
+				"metallic_max": 0.8,
+			},
 		},
 		{
 			"id": "faction.generated.rust_index_01",
 			"legacy_id": "gen_rust_index_01",
+			"ship_style": {
+				"texture": "RedMetal.png",
+				"emblem": "VanguardBadge.png",
+				"metallic_min": 0.6,
+				"metallic_max": 0.9,
+			},
 		},
 	]
 	var config := SystemConfig.from_seed(
@@ -100,6 +112,11 @@ func _test_config_generated_faction_pool() -> void:
 					"faction.generated."
 				),
 				"Generated faction key did not map back to canonical ID."
+			)
+			var style := config.ship_style_for_faction(faction_name)
+			_expect(
+				not style.is_empty() and str(style.get("texture", "")).ends_with(".png"),
+				"Generated faction ship style was not carried into SystemConfig."
 			)
 	_expect(found_generated, "Generated faction pool was not used in weights.")
 

@@ -24,16 +24,30 @@ const FACTION_EMBLEMS := {
 const METALLIC_RANGE := Vector2(0.7, 0.95)
 
 
-static func generate(seed_str: String, ship_class: String = "", faction: String = "") -> String:
+static func generate(
+	seed_str: String,
+	ship_class: String = "",
+	faction: String = "",
+	faction_style: Dictionary = {}
+) -> String:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_str.hash()
 
 	if ship_class.is_empty():
 		ship_class = SHIP_CLASSES[rng.randi() % SHIP_CLASSES.size()]
 
-	var texture: String = FACTION_TEXTURES.get(faction, "metal.png")
-	var emblem: String = FACTION_EMBLEMS.get(faction, "none")
-	var metallic: float = rng.randf_range(METALLIC_RANGE.x, METALLIC_RANGE.y)
+	var texture: String = str(
+		faction_style.get("texture", FACTION_TEXTURES.get(faction, "metal.png"))
+	)
+	var emblem: String = str(
+		faction_style.get("emblem", FACTION_EMBLEMS.get(faction, "none"))
+	)
+	var metallic_min := float(faction_style.get("metallic_min", METALLIC_RANGE.x))
+	var metallic_max := float(faction_style.get("metallic_max", METALLIC_RANGE.y))
+	var metallic: float = rng.randf_range(
+		minf(metallic_min, metallic_max),
+		maxf(metallic_min, metallic_max)
+	)
 
 	var output_path: String = ProjectSettings.globalize_path(OUTPUT_DIR) + "/" + seed_str + ".glb"
 	var script_path: String = ProjectSettings.globalize_path(GENERATOR_DIR) + "/generate_single.py"
