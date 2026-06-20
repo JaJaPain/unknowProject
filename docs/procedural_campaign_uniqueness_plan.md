@@ -409,6 +409,150 @@ Known follow-ups for tomorrow:
 - Continue reducing static fallback usage now that diagnostics and idea-memory
   plumbing exist.
 
+## Tomorrow Morning Implementation Queue
+
+### 1. Reproduce And Fix Map Knowledge Leakage
+
+Goal: make sure the player cannot see destination system names, factions, or
+details before the gate state justifies it.
+
+Why first: this is a trust issue. Background generation is allowed to create the
+next system early, but it must not spoil the player's discovery experience.
+
+Checks:
+
+- Start from a fresh campaign and from an existing checkpoint.
+- Trigger Kaelen's first gate rumor.
+- Open the branch map before scanning/revealing the gate.
+- Confirm whether the map shows only the current system plus a vague rumored
+  route, or whether it shows the destination system label/details.
+- Confirm whether old save `map_knowledge` can mark a generated destination as
+  visible even when its outbound gate is only rumored.
+
+Likely files:
+
+- `scripts/ui/BranchMapUI.gd`
+- `scripts/navigation/GateDiscoveryManager.gd`
+- `scripts/persistence/CampaignCheckpointStore.gd`
+- `scripts/GameRoot.gd` smoke checks around branch-map reveal behavior
+
+Preferred behavior:
+
+- `unknown`: no route and no destination node.
+- `rumored`: show a dashed route hint from the current system, but do not show
+  the destination node name, factions, stations, or exact position.
+- `hidden`, `blocked`, `damaged`: show the route state only if the player has
+  enough knowledge to act on it, still avoiding destination spoilers until the
+  gate is `known`.
+- `known`: show the destination system node and allow route planning.
+
+### 2. Generated Mechanic Identity
+
+Goal: generated systems should not keep pretending Jenna is every mechanic in
+the frontier.
+
+Why second: the generated mechanic record already exists, and the UI still has
+Jenna-specific prompts, portraits, and fallback lines. Fixing this gives an
+immediate "new system, new people" payoff.
+
+Implementation shape:
+
+- Add a helper that resolves the current station mechanic NPC from generated
+  station contact data.
+- For the handcrafted home system, keep Jenna.
+- For generated systems, feed the generated mechanic's name, portrait,
+  faction/independent status, voice profile, personality tags, and station ID
+  into mechanic greeting generation.
+- Rewrite mechanic prompts so they describe a generic/generated mechanic when
+  outside the home system.
+- Keep pickup-offer mechanics intact, but make the speaker and flavor local.
+
+Likely files:
+
+- `scripts/GlobalState.gd`
+- `scripts/UIManager.gd`
+- `scripts/LLMInterface.gd` only if mechanic generation moves out of UI later
+
+Verification:
+
+- Dock at home station: Jenna still appears.
+- Dock at generated main station: generated mechanic name/portrait appears.
+- Mechanic greeting does not say Jenna in generated systems.
+- Pickup-offer accept/decline still works.
+
+### 3. Generated Contact Conversation Mode
+
+Goal: station contacts should be more than list decorations and hidden quest
+seeds.
+
+Why third: we now show contacts and can use one as the quest giver. The next
+step is letting the player intentionally talk to them.
+
+First version:
+
+- Clicking a faction contact opens a focused contact panel.
+- Show portrait, name, role, faction, and a short generated local greeting.
+- Offer actions:
+  - Ask about the faction.
+  - Ask about local trouble.
+  - Ask about rumors.
+  - Request work from this contact.
+- The first implementation can use structured local facts and existing LLM
+  request paths; it does not need a full relationship system yet.
+
+Guardrails:
+
+- Contact text should draw from current system facts and idea memory.
+- Contact should call the player `Indy` at most once in the opening line.
+- Contact should not impersonate Kaelen or use Kaelen's `Shiny` voice.
+- Fallback lines should be logged and visibly marked in diagnostics.
+
+### 4. Persisted NPC Identity Records
+
+Goal: move from generated contact dictionaries to proper campaign NPC records.
+
+Why fourth: this is the foundation for relationship memory, recurring contacts,
+line repetition prevention, relocation, betrayal, and death rules.
+
+Record fields:
+
+- stable NPC ID
+- display name
+- portrait ID
+- voice profile ID or recipe
+- faction ID
+- job/role
+- home system ID
+- home station ID
+- personality tags
+- humor style
+- relationship state
+- memory summary
+- line memory fingerprints
+- lifecycle flags for available, relocated, captured, dead, or protected
+
+Do not overbuild the UI yet. The first win is stable records that every later
+system can reference.
+
+### 5. Fallback Reduction Pass
+
+Goal: use diagnostics to find where we are still silently leaning on generic
+text.
+
+Targets:
+
+- Kaelen pickup fallback rate.
+- Mechanic intro fallback rate.
+- Quest validation retries.
+- Static fallback lines that repeat across one campaign.
+- Prompt examples leaking into final dialogue.
+
+Output:
+
+- A short diagnostics summary after playtest.
+- One targeted prompt/schema fix at a time.
+- No hiding errors behind better-sounding static text.
+
 ## Recommended Build Order
 
 ### Phase 0: Make Fallbacks Visible
