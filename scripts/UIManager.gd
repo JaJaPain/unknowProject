@@ -183,6 +183,18 @@ var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
+const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
+const KAELEN_ALLOWED_MOODS := {
+	"calm": true,
+	"neutral": true,
+	"angry": true,
+	"amused": true,
+	"somber": true,
+	"suspicious": true,
+	"worried": true,
+	"intrigued": true,
+	"exhausted": true,
+}
 
 # Sliced elements inside Agent Panel
 var agent_portrait_column: VBoxContainer
@@ -5822,7 +5834,8 @@ func _on_talk_to_agent_pressed():
 		# Update portrait and client logo
 		_update_agent_portrait(
 			q.get("faction", "neutral"),
-			shown_agent_name
+			shown_agent_name,
+			"calm"
 		)
 		
 		var type_str := "Deliver Resources"
@@ -5877,7 +5890,7 @@ func _on_talk_to_agent_pressed():
 func _show_kaelen_first_briefing() -> void:
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "amused")
 	agent_back_btn.visible = true
 
 	var briefing_lines: Array[String] = [
@@ -5919,7 +5932,7 @@ func _show_kaelen_first_briefing() -> void:
 func _show_kaelen_return_briefing() -> void:
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "amused")
 	agent_back_btn.visible = true
 
 	var line := (
@@ -5954,7 +5967,7 @@ func _show_kaelen_return_briefing() -> void:
 func _refresh_agent_quest_board():
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "neutral")
 
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
@@ -6085,7 +6098,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	# Show Kaelen with her handoff intro first
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "suspicious")
 	agent_dialogue_label.text = handoff_line
 	agent_back_btn.visible = true
 
@@ -6164,6 +6177,7 @@ func _record_static_text_fallback(
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 	var result := GateDiscovery.kaelen_reveal(gate_id, cost)
 	if result.get("ok", false):
+		_update_agent_portrait("neutral", "", "intrigued")
 		agent_dialogue_label.text = (
 			"\"I've got a contact who owes me — they mapped a route "
 			+ "nobody else has charted. It's yours now. Gate coordinates uploaded to your nav system.\""
@@ -6356,7 +6370,7 @@ func _on_agent_complete_pressed():
 	# Switch to Kaelen's portrait — she's the one paying out, not the quest giver
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "calm")
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
 	var completion_text = cached_completion_line
@@ -6402,7 +6416,7 @@ func _on_agent_abandon_pressed():
 	# Switch to Kaelen's portrait — she's the one chewing you out, not the quest giver
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "angry")
 	
 	# Use the pre-generated contextual line, fall back to a random one if not ready
 	var abandon_text = cached_abandon_line
@@ -6449,7 +6463,7 @@ func _on_partial_delivery_pressed(deliverable: float):
 	# Switch to Kaelen portrait while fetching her reaction
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral")
+	_update_agent_portrait("neutral", "", "worried")
 	agent_dialogue_label.text = "Logging your shipment... stand by."
 	agent_back_btn.visible = false
 	
@@ -6892,7 +6906,11 @@ func _fallback_comms_line(faction: String) -> String:
 	return COMMS_REVERSAL_FALLBACKS[randi() % COMMS_REVERSAL_FALLBACKS.size()]
 
 
-func _update_agent_portrait(faction: String, npc_name: String = ""):
+func _update_agent_portrait(
+	faction: String,
+	npc_name: String = "",
+	kaelen_mood: String = "neutral"
+):
 	if agent_portrait:
 		_show_agent_portrait(true)
 		var portrait_id := "portrait.quest_givers.kaelen"
@@ -6912,9 +6930,12 @@ func _update_agent_portrait(faction: String, npc_name: String = ""):
 				portrait_id
 			)
 		else:
-			agent_portrait.texture = GameContentRegistry.shared().portrait_texture(
-				portrait_id
-			)
+			portrait_id = _kaelen_mood_portrait_id(kaelen_mood)
+			var mood_texture := GameContentRegistry.shared().portrait_texture(portrait_id)
+			if mood_texture == null:
+				portrait_id = "portrait.quest_givers.kaelen"
+				mood_texture = GameContentRegistry.shared().portrait_texture(portrait_id)
+			agent_portrait.texture = mood_texture
 		
 	if agent_client_logo and faction_branding_sheet:
 		var atlas = AtlasTexture.new()
@@ -6934,6 +6955,13 @@ func _update_agent_portrait(faction: String, npc_name: String = ""):
 			agent_client_logo.visible = true
 		else:
 			agent_client_logo.visible = false
+
+
+func _kaelen_mood_portrait_id(mood: String) -> String:
+	var clean_mood := mood.strip_edges().to_lower()
+	if not KAELEN_ALLOWED_MOODS.has(clean_mood):
+		clean_mood = "neutral"
+	return KAELEN_MOOD_PORTRAIT_PREFIX + clean_mood
 
 
 func _show_agent_portrait(should_show: bool) -> void:
@@ -7522,9 +7550,8 @@ func show_kaelen_intro():
 	portrait_rect.custom_minimum_size = Vector2(160, 160)
 	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	# Load Kaelen's portrait slice (neutral = index 3, row 1 col 1)
 	portrait_rect.texture = GameContentRegistry.shared().portrait_texture(
-		"portrait.quest_givers.kaelen"
+		_kaelen_mood_portrait_id("amused")
 	)
 	portrait_vbox.add_child(portrait_rect)
 	
