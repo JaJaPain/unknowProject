@@ -33,6 +33,9 @@ const CampaignBibleStoreType := preload(
 const CampaignGeneratedFactionStoreType := preload(
 	"res://scripts/persistence/CampaignGeneratedFactionStore.gd"
 )
+const CampaignNpcIdentityStoreType := preload(
+	"res://scripts/persistence/CampaignNpcIdentityStore.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -60,6 +63,7 @@ var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var campaign_bible_store: CampaignBibleStore
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
+var campaign_npc_identity_store = null
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -1014,6 +1018,8 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.campaign_bible_context_text = ""
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
@@ -1147,6 +1153,8 @@ func _initialize_campaign_registry() -> void:
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	_initialize_campaign_chronicle()
@@ -1212,6 +1220,8 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	GlobalState.campaign_npc_identity_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
@@ -1238,6 +1248,8 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1253,6 +1265,8 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1268,6 +1282,8 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
@@ -1283,10 +1299,30 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
 		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_generated_faction_store = opened_generated_factions
+	var opened_npc_identities := CampaignNpcIdentityStoreType.open(slot_path)
+	if not opened_npc_identities.is_valid():
+		push_warning(
+			"[GameRoot] NPC identity store is unavailable: %s" %
+				opened_npc_identities.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		GlobalState.campaign_npc_identity_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_npc_identity_store = opened_npc_identities
+	GlobalState.campaign_npc_identity_store = campaign_npc_identity_store
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
@@ -2179,6 +2215,8 @@ func _run_jump_smoke_test() -> void:
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	GlobalState.campaign_npc_identity_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	var prepared := _capture_prepared_runtime_state()
@@ -3735,6 +3773,8 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
 	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	GlobalState.campaign_npc_identity_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
 	GlobalState.player_credits = 7654

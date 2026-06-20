@@ -378,6 +378,7 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 # assigned. The mechanic (Jenna Kross) is excluded — she's at Grease Monkeys.
 static var generated_outpost_npcs: Dictionary = {}
 static var generated_outpost_npc_data: Dictionary = {}
+static var campaign_npc_identity_store = null
 
 const GENERATED_CONTACT_FIRST_NAMES: Array[String] = [
 	"Rook",
@@ -512,12 +513,16 @@ static func assign_generated_outpost_npcs(
 		var faction_name := _pick_generated_contact_faction(faction_weights, rng)
 		var npc_name := _generated_contact_name(world_id, rng, index, faction_name)
 		picked.append(npc_name)
-		generated_outpost_npc_data[npc_name] = _generated_contact_data(
+		var npc_data := _generated_contact_data(
 			world_id,
 			npc_name,
 			rng,
 			index,
 			faction_name
+		)
+		generated_outpost_npc_data[npc_name] = _persist_generated_contact_identity(
+			npc_name,
+			npc_data
 		)
 	generated_outpost_npcs[world_id] = picked
 	return picked.duplicate()
@@ -541,13 +546,17 @@ static func assign_generated_station_npcs(
 			faction_name
 		)
 		picked.append(npc_name)
-		generated_outpost_npc_data[npc_name] = _generated_contact_data(
+		var npc_data := _generated_contact_data(
 			world_id,
 			npc_name,
 			rng,
 			picked.size(),
 			faction_name,
 			"Faction contact"
+		)
+		generated_outpost_npc_data[npc_name] = _persist_generated_contact_identity(
+			npc_name,
+			npc_data
 		)
 	var mechanic_name := _generated_contact_name(
 		world_id,
@@ -557,13 +566,17 @@ static func assign_generated_station_npcs(
 		"Mechanic"
 	)
 	picked.append(mechanic_name)
-	generated_outpost_npc_data[mechanic_name] = _generated_contact_data(
+	var mechanic_data := _generated_contact_data(
 		world_id,
 		mechanic_name,
 		rng,
 		picked.size(),
 		"",
 		"Station mechanic"
+	)
+	generated_outpost_npc_data[mechanic_name] = _persist_generated_contact_identity(
+		mechanic_name,
+		mechanic_data
 	)
 	generated_outpost_npcs[world_id] = picked
 	return picked.duplicate()
@@ -627,15 +640,110 @@ static func _generated_contact_data(
 	var hue := rng.randf()
 	return {
 		"outpost": world_id,
+		"display_name": npc_name,
 		"role": role,
 		"faction": faction_name,
 		"faction_id": _contact_faction_id(faction_name),
 		"portrait_id": portrait_id,
 		"voice_profile_id": voice_id,
+		"personality_tags": _generated_contact_personality_tags(role, faction_name),
+		"humor_style": _generated_contact_humor_style(role, faction_name),
+		"relationship_state": "neutral",
+		"memory_summary": "%s works from %s as a %s." % [
+			npc_name,
+			world_id,
+			role.to_lower(),
+		],
+		"line_memory_fingerprints": [],
+		"lifecycle": {
+			"available": true,
+			"relocated": false,
+			"captured": false,
+			"dead": false,
+			"protected": false,
+		},
 		"flavor_color": faction_color if not faction_name.is_empty() else Color.from_hsv(hue, 0.45, 1.0),
 		"flavor_lines": contact_lines,
 		"pickup_handoff_fallback_lines": handoff_lines,
 	}
+
+static func _persist_generated_contact_identity(
+	npc_name: String,
+	npc_data: Dictionary
+) -> Dictionary:
+	var enriched := npc_data.duplicate(true)
+	enriched["display_name"] = npc_name
+	if campaign_npc_identity_store == null:
+		return enriched
+	if not campaign_npc_identity_store.has_method("ensure_npc_record"):
+		return enriched
+	var identity_source := {
+		"source_key": "%s|%s|%s|%s" % [
+			str(npc_data.get("outpost", "")),
+			npc_name,
+			str(npc_data.get("role", "")),
+			str(npc_data.get("faction_id", "")),
+		],
+		"display_name": npc_name,
+		"portrait_id": str(npc_data.get("portrait_id", "")),
+		"voice_profile_id": str(npc_data.get("voice_profile_id", "")),
+		"faction_id": str(npc_data.get("faction_id", "")),
+		"faction_key": str(npc_data.get("faction", "")),
+		"job_role": str(npc_data.get("role", "Local contact")),
+		"home_system_id": _system_id_from_station_id(str(npc_data.get("outpost", ""))),
+		"home_station_id": str(npc_data.get("outpost", "")),
+		"personality_tags": npc_data.get("personality_tags", []),
+		"humor_style": str(npc_data.get("humor_style", "")),
+		"relationship_state": str(npc_data.get("relationship_state", "neutral")),
+		"memory_summary": str(npc_data.get("memory_summary", "")),
+		"line_memory_fingerprints": npc_data.get("line_memory_fingerprints", []),
+		"lifecycle": npc_data.get("lifecycle", {}),
+	}
+	var ensured: Dictionary = campaign_npc_identity_store.ensure_npc_record(identity_source)
+	if not bool(ensured.get("ok", false)):
+		push_warning(
+			"[GlobalState] Generated NPC identity was not persisted: %s" %
+				str(ensured.get("error", "unknown error"))
+		)
+		return enriched
+	var record: Dictionary = ensured.get("npc", {})
+	enriched["npc_id"] = str(record.get("id", ""))
+	enriched["identity_record"] = record
+	return enriched
+
+static func _system_id_from_station_id(station_id: String) -> String:
+	var marker := ".station."
+	var station_index := station_id.find(marker)
+	if station_index > 0:
+		return station_id.substr(0, station_index)
+	if station_id.begins_with("station."):
+		var parts := station_id.split(".")
+		if parts.size() >= 3:
+			return "%s.%s" % [parts[0], parts[1]]
+	return ""
+
+static func _generated_contact_personality_tags(
+	role: String,
+	faction_name: String
+) -> Array:
+	var tags: Array = ["frontier", role.to_lower().replace(" ", "_")]
+	if not faction_name.is_empty():
+		tags.append(faction_name)
+	if role == "Station mechanic":
+		tags.append("practical")
+	else:
+		tags.append("deal_minded")
+	return tags
+
+static func _generated_contact_humor_style(role: String, faction_name: String) -> String:
+	if role == "Station mechanic":
+		return "dry repair-bay sarcasm"
+	if faction_name.is_empty():
+		return "deadpan frontier gossip"
+	var generated := _generated_faction_record(faction_name)
+	if not generated.is_empty():
+		return str(generated.get("humor_style", "dry faction wit"))
+	return "dry faction wit"
 
 static func _pick_generated_contact_faction(
 	faction_weights: Dictionary,

@@ -1,0 +1,397 @@
+class_name CampaignNpcIdentityStore
+extends RefCounted
+
+const DomainIdType := preload("res://scripts/domain/DomainId.gd")
+const DomainJsonType := preload("res://scripts/domain/DomainJson.gd")
+const TransactionStoreType := preload(
+	"res://scripts/persistence/CampaignTransactionStore.gd"
+)
+const ValidationResultType := preload(
+	"res://scripts/domain/ValidationResult.gd"
+)
+
+const DOCUMENT_VERSION := 1
+const NPCS_PATH := "npc_identities.json"
+const NPC_PREFIX := "npc.gen."
+
+var campaign_path: String
+var campaign: Dictionary = {}
+var data: Dictionary = {}
+var validation := ValidationResultType.new()
+
+
+static func open(path: String) -> RefCounted:
+	var store = load("res://scripts/persistence/CampaignNpcIdentityStore.gd").new()
+	store.campaign_path = path.trim_suffix("/")
+	store._load_or_create()
+	return store
+
+
+func is_valid() -> bool:
+	return validation.is_valid()
+
+
+func all_npcs() -> Array:
+	return (data.get("npcs", []) as Array).duplicate(true)
+
+
+func npc_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for npc in all_npcs():
+		if npc is Dictionary:
+			ids.append(str(npc.get("id", "")))
+	return ids
+
+
+func npc_by_display_name(display_name: String) -> Dictionary:
+	var clean_name := display_name.strip_edges()
+	for npc in data.get("npcs", []):
+		if npc is Dictionary and str(npc.get("display_name", "")) == clean_name:
+			return (npc as Dictionary).duplicate(true)
+	return {}
+
+
+func npc_by_id(npc_id: String) -> Dictionary:
+	for npc in data.get("npcs", []):
+		if npc is Dictionary and str(npc.get("id", "")) == npc_id:
+			return (npc as Dictionary).duplicate(true)
+	return {}
+
+
+func ensure_npc_record(source: Dictionary) -> Dictionary:
+	if not is_valid():
+		return _failure("NPC identity store is invalid.")
+	var record := _record_from_source(source)
+	if str(record.get("display_name", "")).is_empty():
+		return _failure("NPC display name is required.")
+	if str(record.get("home_station_id", "")).is_empty():
+		return _failure("NPC home station is required.")
+	var existing_index := _find_by_source_key(str(record.get("source_key", "")))
+	if existing_index >= 0:
+		var existing: Dictionary = data["npcs"][existing_index]
+		return {"ok": true, "created": false, "npc": existing.duplicate(true)}
+	var next_data := data.duplicate(true)
+	var npcs: Array = next_data.get("npcs", []).duplicate(true)
+	npcs.append(record)
+	next_data["npcs"] = npcs
+	var committed := _commit(next_data, "npc_identity_upsert")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {"ok": true, "created": true, "npc": record.duplicate(true)}
+
+
+func remember_line(npc_id: String, text: String, topic: String = "") -> Dictionary:
+	if not is_valid():
+		return _failure("NPC identity store is invalid.")
+	var clean_text := text.strip_edges()
+	if clean_text.is_empty():
+		return _failure("NPC line text is required.")
+	var index := _find_by_id(npc_id)
+	if index < 0:
+		return _failure("NPC record was not found.")
+	var next_data := data.duplicate(true)
+	var npcs: Array = next_data.get("npcs", []).duplicate(true)
+	var npc: Dictionary = (npcs[index] as Dictionary).duplicate(true)
+	var fingerprints: Array = npc.get("line_memory_fingerprints", []).duplicate()
+	var fingerprint := _fingerprint(clean_text)
+	if fingerprint not in fingerprints:
+		fingerprints.append(fingerprint)
+		while fingerprints.size() > 32:
+			fingerprints.pop_front()
+	npc["line_memory_fingerprints"] = fingerprints
+	npc["last_topic"] = topic
+	npc["updated_at_unix"] = int(Time.get_unix_time_from_system())
+	npcs[index] = npc
+	next_data["npcs"] = npcs
+	var committed := _commit(next_data, "npc_identity_line_memory")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {"ok": true, "npc": npc.duplicate(true)}
+
+
+func prompt_context(system_id: String = "", limit: int = 16) -> String:
+	var selected: Array = []
+	for npc in data.get("npcs", []):
+		if not npc is Dictionary:
+			continue
+		if not system_id.is_empty() and str(npc.get("home_system_id", "")) != system_id:
+			continue
+		selected.append(npc)
+		if selected.size() >= maxi(1, limit):
+			break
+	if selected.is_empty():
+		return "No persistent generated NPC identities recorded yet."
+	var lines: Array[String] = ["Persistent generated NPCs:"]
+	for npc in selected:
+		lines.append(
+			"- %s (%s, %s): faction=%s, humor=%s, memory=%s" %
+			[
+				str(npc.get("display_name", "")),
+				str(npc.get("job_role", "")),
+				str(npc.get("home_station_id", "")),
+				str(npc.get("faction_id", "")),
+				str(npc.get("humor_style", "")),
+				str(npc.get("memory_summary", "")),
+			]
+		)
+	return "\n".join(lines)
+
+
+func _load_or_create() -> void:
+	var campaign_result := DomainJsonType.read_object(
+		"%s/campaign.json" % campaign_path
+	)
+	validation.merge(campaign_result["validation"], "campaign")
+	if not validation.is_valid():
+		return
+	campaign = campaign_result["data"]
+	var campaign_id := str(campaign.get("id", ""))
+	if not DomainIdType.is_valid(campaign_id, "campaign"):
+		validation.add_error(
+			"invalid_campaign_id",
+			"NPC identities require a valid campaign id.",
+			"campaign.id"
+		)
+		return
+	var npcs_path := "%s/%s" % [campaign_path, NPCS_PATH]
+	if not FileAccess.file_exists(npcs_path):
+		data = _default_document(campaign_id)
+		var committed := _commit(data, "npc_identity_bootstrap")
+		if not bool(committed.get("ok", false)):
+			validation.add_error(
+				"npc_identity_bootstrap_failed",
+				str(committed.get("error", "NPC identities could not be created.")),
+				NPCS_PATH
+			)
+		return
+	var npcs_result := DomainJsonType.read_object(npcs_path)
+	validation.merge(npcs_result["validation"], "npc_identities")
+	if not validation.is_valid():
+		return
+	data = npcs_result["data"]
+	validation.merge(_validate_data(data, campaign_id), "npc_identities")
+
+
+func _commit(next_data: Dictionary, operation: String) -> Dictionary:
+	return TransactionStoreType.commit_json_set(
+		campaign_path,
+		operation,
+		{NPCS_PATH: next_data},
+		NPCS_PATH,
+		func(_path: String, value: Dictionary) -> ValidationResult:
+			return _validate_data(value, str(campaign.get("id", "")))
+	)
+
+
+func _record_from_source(source: Dictionary) -> Dictionary:
+	var display_name := str(source.get("display_name", "")).strip_edges()
+	var home_station_id := str(source.get("home_station_id", "")).strip_edges()
+	var source_key := str(source.get("source_key", "")).strip_edges()
+	if source_key.is_empty():
+		source_key = "%s|%s|%s" % [
+			home_station_id,
+			display_name,
+			str(source.get("job_role", "")),
+		]
+	var npc_id := str(source.get("id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = _generated_npc_id(source_key)
+	return {
+		"id": npc_id,
+		"source_key": source_key,
+		"display_name": display_name,
+		"portrait_id": str(source.get("portrait_id", "")),
+		"voice_profile_id": str(source.get("voice_profile_id", "")),
+		"faction_id": str(source.get("faction_id", "")),
+		"faction_key": str(source.get("faction_key", "")),
+		"job_role": str(source.get("job_role", "Local contact")),
+		"home_system_id": str(source.get("home_system_id", "")),
+		"home_station_id": home_station_id,
+		"personality_tags": _clean_string_array(source.get("personality_tags", [])),
+		"humor_style": str(source.get("humor_style", "")),
+		"relationship_state": str(source.get("relationship_state", "neutral")),
+		"memory_summary": str(source.get("memory_summary", "")),
+		"line_memory_fingerprints": _clean_string_array(
+			source.get("line_memory_fingerprints", [])
+		),
+		"lifecycle": _lifecycle_from_source(source),
+		"created_at_unix": int(Time.get_unix_time_from_system()),
+		"updated_at_unix": int(Time.get_unix_time_from_system()),
+	}
+
+
+func _generated_npc_id(source_key: String) -> String:
+	var campaign_key := str(campaign.get("id", "")).sha256_text().substr(0, 8)
+	var creation_key := _slug(source_key).left(30)
+	if creation_key.is_empty():
+		creation_key = source_key.sha256_text().substr(0, 12)
+	var candidate := "%s%s.%s_%s" % [
+		NPC_PREFIX,
+		campaign_key,
+		creation_key,
+		source_key.sha256_text().substr(0, 8),
+	]
+	if DomainIdType.is_valid(candidate, "npc"):
+		return candidate
+	return "%s%s.%s" % [
+		NPC_PREFIX,
+		campaign_key,
+		source_key.sha256_text().substr(0, 12),
+	]
+
+
+static func _default_document(campaign_id: String) -> Dictionary:
+	return {
+		"schema_version": DOCUMENT_VERSION,
+		"document_type": "campaign_npc_identities",
+		"campaign_id": campaign_id,
+		"npcs": [],
+	}
+
+
+static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult:
+	var result := ValidationResultType.new()
+	if int(value.get("schema_version", 0)) != DOCUMENT_VERSION:
+		result.add_error(
+			"invalid_npc_identity_version",
+			"NPC identity schema version is invalid.",
+			"schema_version"
+		)
+	if str(value.get("document_type", "")) != "campaign_npc_identities":
+		result.add_error(
+			"invalid_npc_identity_type",
+			"NPC identity document type is invalid.",
+			"document_type"
+		)
+	if str(value.get("campaign_id", "")) != campaign_id:
+		result.add_error(
+			"npc_identity_campaign_mismatch",
+			"NPC identities belong to a different campaign.",
+			"campaign_id"
+		)
+	if not value.get("npcs", []) is Array:
+		result.add_error("invalid_npcs", "NPC identities must be an array.", "npcs")
+		return result
+	var seen_ids := {}
+	var seen_sources := {}
+	var npcs: Array = value.get("npcs", [])
+	for index in range(npcs.size()):
+		var npc: Variant = npcs[index]
+		if not npc is Dictionary:
+			result.add_error(
+				"invalid_npc_record",
+				"NPC identity record must be an object.",
+				"npcs.%d" % index
+			)
+			continue
+		_validate_npc_record(npc, result, "npcs.%d" % index, seen_ids, seen_sources)
+	return result
+
+
+static func _validate_npc_record(
+	npc: Dictionary,
+	result: ValidationResult,
+	path: String,
+	seen_ids: Dictionary,
+	seen_sources: Dictionary
+) -> void:
+	var npc_id := str(npc.get("id", ""))
+	if not DomainIdType.is_valid(npc_id, "npc"):
+		result.add_error("invalid_npc_id", "NPC ID is invalid.", "%s.id" % path)
+	elif not npc_id.begins_with(NPC_PREFIX):
+		result.add_error("invalid_npc_prefix", "NPC ID must use generated prefix.", "%s.id" % path)
+	elif seen_ids.has(npc_id):
+		result.add_error("duplicate_npc_id", "NPC ID is duplicated.", "%s.id" % path)
+	else:
+		seen_ids[npc_id] = true
+	var source_key := str(npc.get("source_key", ""))
+	if source_key.is_empty():
+		result.add_error("missing_npc_source_key", "NPC source key is required.", "%s.source_key" % path)
+	elif seen_sources.has(source_key):
+		result.add_error("duplicate_npc_source_key", "NPC source key is duplicated.", "%s.source_key" % path)
+	else:
+		seen_sources[source_key] = true
+	for field in [
+		"display_name",
+		"portrait_id",
+		"voice_profile_id",
+		"job_role",
+		"home_station_id",
+		"relationship_state",
+	]:
+		if str(npc.get(field, "")).strip_edges().is_empty():
+			result.add_error("missing_npc_field", "NPC identity field is required.", "%s.%s" % [path, field])
+	if not npc.get("personality_tags", []) is Array:
+		result.add_error("invalid_personality_tags", "Personality tags must be an array.", "%s.personality_tags" % path)
+	if not npc.get("line_memory_fingerprints", []) is Array:
+		result.add_error("invalid_line_memory", "Line memory must be an array.", "%s.line_memory_fingerprints" % path)
+	if not npc.get("lifecycle", {}) is Dictionary:
+		result.add_error("invalid_lifecycle", "Lifecycle must be an object.", "%s.lifecycle" % path)
+
+
+func _find_by_source_key(source_key: String) -> int:
+	var npcs: Array = data.get("npcs", [])
+	for index in range(npcs.size()):
+		var npc: Variant = npcs[index]
+		if npc is Dictionary and str(npc.get("source_key", "")) == source_key:
+			return index
+	return -1
+
+
+func _find_by_id(npc_id: String) -> int:
+	var npcs: Array = data.get("npcs", [])
+	for index in range(npcs.size()):
+		var npc: Variant = npcs[index]
+		if npc is Dictionary and str(npc.get("id", "")) == npc_id:
+			return index
+	return -1
+
+
+static func _clean_string_array(value: Variant) -> Array:
+	var result: Array = []
+	if not value is Array:
+		return result
+	for item in value:
+		var clean := str(item).strip_edges()
+		if not clean.is_empty() and clean not in result:
+			result.append(clean)
+	return result
+
+
+static func _lifecycle_from_source(source: Dictionary) -> Dictionary:
+	var source_lifecycle: Dictionary = source.get("lifecycle", {})
+	return {
+		"available": bool(source_lifecycle.get("available", true)),
+		"relocated": bool(source_lifecycle.get("relocated", false)),
+		"captured": bool(source_lifecycle.get("captured", false)),
+		"dead": bool(source_lifecycle.get("dead", false)),
+		"protected": bool(source_lifecycle.get("protected", false)),
+	}
+
+
+static func _slug(value: String) -> String:
+	var raw := value.to_lower()
+	var output := ""
+	for index in range(raw.length()):
+		var ch := raw.substr(index, 1)
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			output += ch
+		else:
+			output += "_"
+	while output.contains("__"):
+		output = output.replace("__", "_")
+	while output.begins_with("_"):
+		output = output.trim_prefix("_")
+	while output.ends_with("_"):
+		output = output.trim_suffix("_")
+	return output
+
+
+static func _fingerprint(value: String) -> String:
+	return value.to_lower().strip_edges().sha256_text().substr(0, 16)
+
+
+static func _failure(message: String) -> Dictionary:
+	return {"ok": false, "error": message}
