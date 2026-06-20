@@ -22,6 +22,7 @@ func _ready() -> void:
 func _finish_ready() -> void:
 	_assign_outpost_npcs()
 	_spawn_initial_patrol()
+	_connect_pre_generator()
 
 	var timer := Timer.new()
 	timer.name = "RespawnTimer"
@@ -29,6 +30,34 @@ func _finish_ready() -> void:
 	timer.autostart = true
 	timer.timeout.connect(_on_respawn_timeout)
 	add_child(timer)
+
+
+func _connect_pre_generator() -> void:
+	var game_root := get_tree().current_scene if get_tree() else null
+	if game_root == null:
+		return
+	var pre_gen = game_root.get("ship_pre_generator")
+	if pre_gen and pre_gen.has_signal("ship_generated"):
+		if not pre_gen.ship_generated.is_connected(_on_ship_generated):
+			pre_gen.ship_generated.connect(_on_ship_generated)
+
+
+func _on_ship_generated(model_seed: String) -> void:
+	var system_root := get_parent() as Node3D
+	if system_root == null:
+		return
+	for entity in GlobalState.active_system_entities:
+		if not entity or not is_instance_valid(entity):
+			continue
+		if not entity.has_meta("model_seed"):
+			continue
+		if entity.get_meta("model_seed") != model_seed:
+			continue
+		if not entity.has_method("apply_generated_model"):
+			continue
+		var model := ShipGenerator.load_runtime(model_seed)
+		if model:
+			entity.apply_generated_model(model)
 
 
 func _assign_outpost_npcs() -> void:
@@ -144,9 +173,9 @@ func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: Str
 	npc.persistent_id = _next_id(category)
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	var model_seed: String = "ship_%d_%d" % [config.seed_value, runtime_ship_sequence]
-	var cached_path: String = "res://assets/ships/generated/%s.glb" % model_seed
-	if ResourceLoader.exists(cached_path):
-		npc.custom_model_path = cached_path
+	npc.set_meta("model_seed", model_seed)
+	if ShipGenerator.has_cached(model_seed):
+		npc.custom_model_scene = ShipGenerator.load_runtime(model_seed)
 	system_root.add_child(npc)
 	npc.global_position = pos
 

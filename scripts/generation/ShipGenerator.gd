@@ -3,7 +3,7 @@ extends RefCounted
 
 const BLENDER_PATH := "C:/Program Files/Blender Foundation/Blender 5.1/blender.exe"
 const GENERATOR_DIR := "res://tools/ship_generator"
-const OUTPUT_DIR := "res://assets/ships/generated"
+const SHIPS_SUBDIR := "ships"
 
 const SHIP_CLASSES := ["fighter", "hauler"]
 
@@ -22,6 +22,14 @@ const FACTION_EMBLEMS := {
 }
 
 const METALLIC_RANGE := Vector2(0.7, 0.95)
+
+static var active_campaign_path: String = ""
+
+
+static func output_dir() -> String:
+	if active_campaign_path.is_empty():
+		return "user://ships"
+	return active_campaign_path + "/" + SHIPS_SUBDIR
 
 
 static func generate(
@@ -49,11 +57,13 @@ static func generate(
 		maxf(metallic_min, metallic_max)
 	)
 
-	var output_path: String = ProjectSettings.globalize_path(OUTPUT_DIR) + "/" + seed_str + ".glb"
+	var dir := output_dir()
+	_ensure_dir(dir)
+	var output_path: String = globalized_path(seed_str)
 	var script_path: String = ProjectSettings.globalize_path(GENERATOR_DIR) + "/generate_single.py"
 
-	if FileAccess.file_exists(OUTPUT_DIR + "/" + seed_str + ".glb"):
-		return OUTPUT_DIR + "/" + seed_str + ".glb"
+	if FileAccess.file_exists(dir + "/" + seed_str + ".glb"):
+		return dir + "/" + seed_str + ".glb"
 
 	var args: PackedStringArray = PackedStringArray([
 		"--background",
@@ -77,7 +87,7 @@ static func generate(
 
 		var exit_code: int = OS.execute(BLENDER_PATH, current_args)
 		if exit_code == 0 and FileAccess.file_exists(output_path):
-			return OUTPUT_DIR + "/" + seed_str + ".glb"
+			return dir + "/" + seed_str + ".glb"
 
 		if exit_code == 1:
 			push_warning("[ShipGenerator] Ship '%s' rejected (missing hardpoints/thrusters), attempt %d/%d." % [current_seed, attempt + 1, max_attempts])
@@ -92,3 +102,33 @@ static func generate(
 static func generate_for_system(system_seed: int, ship_index: int, faction: String = "") -> String:
 	var seed_str: String = "ship_%d_%d" % [system_seed, ship_index]
 	return generate(seed_str, "", faction)
+
+
+static func globalized_path(seed_str: String) -> String:
+	return ProjectSettings.globalize_path(output_dir() + "/" + seed_str + ".glb")
+
+
+static func has_cached(seed_str: String) -> bool:
+	return FileAccess.file_exists(output_dir() + "/" + seed_str + ".glb")
+
+
+static func load_runtime(seed_str: String) -> Node3D:
+	var abs_path := globalized_path(seed_str)
+	if not FileAccess.file_exists(abs_path):
+		return null
+	var gltf_doc := GLTFDocument.new()
+	var gltf_state := GLTFState.new()
+	var err := gltf_doc.append_from_file(abs_path, gltf_state)
+	if err != OK:
+		push_warning("[ShipGenerator] GLTF load failed for '%s': %d" % [seed_str, err])
+		return null
+	var scene := gltf_doc.generate_scene(gltf_state)
+	if scene == null:
+		push_warning("[ShipGenerator] GLTF scene generation failed for '%s'." % seed_str)
+	return scene
+
+
+static func _ensure_dir(dir_path: String) -> void:
+	var global := ProjectSettings.globalize_path(dir_path)
+	if not DirAccess.dir_exists_absolute(global):
+		DirAccess.make_dir_recursive_absolute(global)

@@ -8,6 +8,7 @@ extends CharacterBody3D
 @export var difficulty_multiplier: float = 1.0
 @export var persistent_id: String = ""
 @export var custom_model_path: String = ""
+var custom_model_scene: Node3D = null
 @export_enum("Gunner", "Interceptor", "Logistics", "MiningHauler") var ship_role: String = ""
 
 var health: float = 50.0
@@ -175,6 +176,15 @@ func _ready():
 func _setup_hull():
 	var hull_scene: PackedScene = null
 
+	if custom_model_scene != null:
+		hull_instance = custom_model_scene
+		visual.add_child(hull_instance)
+		hull_instance.rotation.y = PI
+		_fit_major_hull(hull_instance)
+		hull_instance.scale *= 1.5
+		_setup_model_points(hull_instance)
+		return
+
 	if custom_model_path != "" and ResourceLoader.exists(custom_model_path):
 		hull_scene = load(custom_model_path) as PackedScene
 		if hull_scene:
@@ -251,6 +261,24 @@ func _setup_hull():
 		visual.add_child(hull_instance)
 		hull_instance.scale = Vector3(6.0, 6.0, 6.0)
 		hull_instance.rotation.y = PI
+
+func apply_generated_model(model: Node3D) -> void:
+	if destroyed or model == null:
+		return
+	if hull_instance and is_instance_valid(hull_instance):
+		hull_instance.queue_free()
+	if engine_glow and is_instance_valid(engine_glow):
+		engine_glow.queue_free()
+		engine_glow = null
+	hardpoints.clear()
+	engine_points.clear()
+	hull_instance = model
+	visual.add_child(hull_instance)
+	hull_instance.rotation.y = PI
+	_fit_major_hull(hull_instance)
+	hull_instance.scale *= 1.5
+	_setup_model_points(hull_instance)
+
 
 func _get_legacy_major_hull() -> PackedScene:
 	match faction:
