@@ -17,6 +17,7 @@ var world_lore_text: String = ""
 var campaign_bible_context_text: String = ""
 var idea_memory_context_text: String = ""
 var _pending_fallback_reason: String = ""
+var _pending_substitutions: Dictionary = {}
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
 # Persistent counters in user://kaelen_intro_stats.json. Tracks how often the
@@ -699,10 +700,10 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You speak in clipped, efficient sentences. You have no patience for failure and treat the pilot as an interchangeable asset. " + \
 				"You refer to the pilot exclusively as 'Indy'. You never use slang or humor. " + \
 				"You frame all jobs as 'acquisitions', 'operations', or 'directives'. Zenith's interests are paramount."
-			example_dialogue = "Zenith has a resource deficit that requires immediate correction, Indy. Deliver the required silicate tonnage to the station docking bay. Efficiency is non-negotiable."
-			example_response_1 = "Confirmed, Indy. Your assignment is logged. Do not deviate from the directive."
-			example_response_2 = "An advance against operational expenses. Noted. Your compensation adjustment is processed. Expect elevated patrol resistance on your route."
-			example_response_3 = "Bold negotiation. Zenith respects leverage, Indy. Payout is revised upward. However, security escalation protocols are now active in your sector."
+			example_dialogue = "Resource allocation in Sector 7 has become critically inefficient, George. 3 Slithern ships are disrupting our supply corridor. Eliminate them."
+			example_response_1 = "Confirmed, George. Your assignment is logged. Do not deviate from the directive."
+			example_response_2 = "An advance against operational expenses. Noted. Expect elevated patrol resistance on your route, George."
+			example_response_3 = "Bold negotiation, George. Payout is revised upward. Security escalation protocols are now active in your sector."
 		"aurelia":
 			agent_name = "Liaison Ryn"
 			agent_role = "Aurelia Syndicate Trade Liaison"
@@ -711,10 +712,10 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You are charming but never fully trustworthy. You speak like someone always running an angle. " + \
 				"You refer to the pilot exclusively as 'Indy'. You use words like 'clean', 'quiet', 'off the books'. " + \
 				"Everything is framed as an opportunity, never a risk."
-			example_dialogue = "Aurelia's got a clean job for someone with your skills, Indy. Quiet, low profile. The syndicate needs those hulls cleared before the next shipment window. Easy credits, no records."
-			example_response_1 = "Smooth. Indy keeps it clean, that's why I like working with you. Stay off their sensors."
-			example_response_2 = "An advance? Smart move, Indy. Credits transferred. The Syndicate routes you through a riskier corridor to offset the cost. Stay quiet out there."
-			example_response_3 = "Playing hardball? I respect the hustle, Indy. Payout bumped. But Aurelia's rivals will be watching the sector. Keep your profile low."
+			example_dialogue = "Got a little opportunity, George. 3 Slithern ships rattling cages near our trade lane. Remove them quietly and credits flow."
+			example_response_1 = "Smooth, George. That's why I like working with you. Stay off their sensors."
+			example_response_2 = "An advance? Smart move, George. Credits transferred. Riskier corridor to offset the cost."
+			example_response_3 = "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
 		"vanguard":
 			agent_name = "Captain Dask"
 			agent_role = "Vanguard Military Contract Officer"
@@ -723,10 +724,10 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You are direct and have zero tolerance for excuses or negotiation theatre. " + \
 				"You refer to the pilot exclusively as 'Indy'. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
 				"You respect competence and despise weakness."
-			example_dialogue = "Vanguard needs those Aurelia raiders cleared from the shipping lane, Indy. Four contacts, high priority. Take them down and get back to the dock. No theatrics."
-			example_response_1 = "Copy that, Indy. ROE is clear: engage and eliminate. Don't make it complicated."
-			example_response_2 = "You want an advance, Indy? Fine. But Vanguard doesn't cover operational cowardice. Threat level is escalated. Don't embarrass us."
-			example_response_3 = "Renegotiating under fire, Indy. Bold. Payout is adjusted. Don't expect the Vanguard to soften the zone for you."
+			example_dialogue = "Slithern hostiles spiking in the outer lanes, George. 3 contacts. Clear the zone before they dig in. No theatrics."
+			example_response_1 = "Copy that, George. ROE is clear: engage and eliminate. Don't make it complicated."
+			example_response_2 = "You want an advance, George? Fine. Threat level is escalated. Don't embarrass us."
+			example_response_3 = "Renegotiating under fire, George. Bold. Payout adjusted. Don't expect us to soften the zone."
 		_:
 			agent_name = "Broker Kaelen"
 			agent_role = "Neutral Fixer & Profit Broker"
@@ -735,10 +736,10 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 				"You operate out of a space station and negotiate contracts with all factions for personal profit. " + \
 				"You are cynical, sharp, and opportunistic. You call the pilot 'Shiny' — treating them like an unscarred greenhorn who is also your most profitable tool. " + \
 				"You always mention your broker's cut and how the deal benefits you personally."
-			example_dialogue = "Zenith needs ore, I need my cut, and you need credits, Shiny. Bring me 25 cubic metres and I'll keep my brokerage fee reasonable. Don't dawdle."
-			example_response_1 = "Excellent, Shiny. My client is watching the clock, so don't waste my time."
-			example_response_2 = "Taking a bite out of my margins, Shiny? Fine. Credits wired. But I'm routing you through a contested lane to cover the difference."
-			example_response_3 = "Hustling a hustler? I respect the nerve, Shiny. Payout is bumped. But enemies will be expecting you."
+			example_dialogue = "Got a contract that needs muscle, George. 3 Slithern ships making trouble near the station. My cut's already factored in."
+			example_response_1 = "Excellent, George. My client is watching the clock, so don't waste my time."
+			example_response_2 = "Taking a bite out of my margins, George? Fine. Credits wired. Contested lane ahead though."
+			example_response_3 = "Hustling a hustler? I respect the nerve, George. Payout bumped. But enemies will be expecting you."
 	
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
@@ -753,6 +754,13 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var pickup_npc = ""
 	var pickup_item = ""
 	
+	# Pre-roll the actual objective values. The LLM never sees these —
+	# it always writes "Slithern" / "George" / 3 / 25 / "Morrow" / etc.
+	# We swap them in after generation via _substitute_dummy_names().
+	var actual_kill_target := ""
+	var actual_kill_count := randi_range(2, 4)
+	var actual_ore_amount: float = snapped(randf_range(20.0, 300.0), 5.0)
+
 	if chosen_type == "DELIVER_ORE":
 		example_title = "Silicate Run"
 		example_obj_block = \
@@ -762,22 +770,18 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			"    \"reward_credits\": 160\n" + \
 			"  },"
 	elif chosen_type == "KILL_SHIPS":
-		# KILL_SHIPS — pick a kill target (90% minor factions, 10% major factions)
-		var kill_target = ""
 		if randf() < 0.9:
-			# 90% chance: target a minor faction
 			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
-			kill_target = minor_keys[randi() % minor_keys.size()]
+			actual_kill_target = minor_keys[randi() % minor_keys.size()]
 		else:
-			# 10% chance: target a major faction (not the client)
 			var major_targets = ["zenith", "aurelia", "vanguard"]
 			major_targets.erase(chosen_faction)
-			kill_target = major_targets[randi() % major_targets.size()]
+			actual_kill_target = major_targets[randi() % major_targets.size()]
 		example_title = "Clear the Lane"
 		example_obj_block = \
 			"  \"objective\": {\n" + \
 			"    \"type\": \"KILL_SHIPS\",\n" + \
-			"    \"target_faction\": \"" + kill_target + "\",\n" + \
+			"    \"target_faction\": \"slithern\",\n" + \
 			"    \"count_required\": 3,\n" + \
 			"    \"reward_credits\": 200\n" + \
 			"  },"
@@ -789,41 +793,32 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
 		var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
 		pickup_item = fetch_items[randi() % fetch_items.size()]
-		
+
 		example_title = "Discreet Courier"
 		example_obj_block = \
 			"  \"objective\": {\n" + \
 			"    \"type\": \"PICKUP_SPECIAL\",\n" + \
-			"    \"target_outpost\": \"" + pickup_outpost + "\",\n" + \
-			"    \"target_outpost_display\": \"" + pickup_outpost_display + "\",\n" + \
-			"    \"target_npc\": \"" + pickup_npc + "\",\n" + \
-			"    \"part_name\": \"" + pickup_item + "\",\n" + \
+			"    \"target_outpost\": \"outpost_morrow\",\n" + \
+			"    \"target_outpost_display\": \"Morrow Station\",\n" + \
+			"    \"target_npc\": \"Sable Mercer\",\n" + \
+			"    \"part_name\": \"Sealed Data Drive\",\n" + \
 			"    \"destination\": \"" + agent_name + "\",\n" + \
 			"    \"reward_credits\": 250\n" + \
 			"  },"
 
-	# Also align the agent example dialogue to the chosen type so the LLM
-	# sees a consistent story/objective pairing in the example block
-	if chosen_type == "KILL_SHIPS":
-		match chosen_faction:
-			"zenith":
-				example_dialogue = "We need the Aurelia raider wing cleared from the transit corridor, " + player_nickname + ". Three contacts, high priority. Don't leave witnesses."
-			"aurelia":
-				example_dialogue = "There's a Vanguard patrol harassing our supply runners, " + player_nickname + ". Four ships. Remove them quietly and I'll make sure the credits flow."
-			"vanguard":
-				example_dialogue = "Zenith is probing our flank again, Indy. Four contacts in the sector. Clear the zone before they can report back."
-			_:
-				example_dialogue = "Got a hostile problem that needs solving, " + player_nickname + ". A handful of ships that need removing. Standard removal contract."
-	elif chosen_type == "PICKUP_SPECIAL":
-		match chosen_faction:
-			"zenith":
-				example_dialogue = "Zenith logistics requires a discreet transport, " + player_nickname + ". Proceed to " + pickup_outpost_display + " and retrieve a " + pickup_item + " from " + pickup_npc + ". Do not ask questions about the cargo."
-			"aurelia":
-				example_dialogue = "I need a quiet runner, " + player_nickname + ". Head over to " + pickup_outpost_display + " and find " + pickup_npc + ". They have a " + pickup_item + " for me. Bring it straight back here, unopened."
-			"vanguard":
-				example_dialogue = "Vanguard command needs a secure retrieval, " + player_nickname + ". A contact named " + pickup_npc + " at " + pickup_outpost_display + " is holding a " + pickup_item + ". Secure it and return immediately."
-			_:
-				example_dialogue = "Got a lucrative fetch job, " + player_nickname + ". I need you to go to " + pickup_outpost_display + " and get a " + pickup_item + " from " + pickup_npc + ". Bring it to me intact and you'll get paid."
+	# Stash actuals so _substitute_dummy_names can swap them in later
+	_pending_substitutions = {
+		"kill_target": actual_kill_target,
+		"kill_count": actual_kill_count,
+		"ore_amount": actual_ore_amount,
+		"nickname": player_nickname,
+		"agent_name": agent_name,
+		"faction": chosen_faction,
+		"pickup_outpost": pickup_outpost,
+		"pickup_outpost_display": pickup_outpost_display,
+		"pickup_npc": pickup_npc,
+		"pickup_item": pickup_item,
+	}
 
 
 
@@ -910,9 +905,8 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"Do not use the words campaign, save, slot, adventure, or journey in campaign_name. " + \
 		"The faction must be \"" + chosen_faction + "\". The agent_name must be \"" + agent_name + "\". " + \
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
-		("For KILL_SHIPS you MUST include 'target_faction' (must NOT equal '" + chosen_faction + "') and 'count_required' (integer 2–4). " if chosen_type == "KILL_SHIPS" else ("For PICKUP_SPECIAL you MUST include 'target_outpost' (must equal '" + pickup_outpost + "'), 'target_outpost_display' (must equal '" + pickup_outpost_display + "'), 'target_npc' (must equal '" + pickup_npc + "'), 'part_name' (must equal '" + pickup_item + "'), and 'destination' (must equal '" + agent_name + "'). " if chosen_type == "PICKUP_SPECIAL" else "For DELIVER_ORE you MUST include 'amount_required' (float 20–300). ")) + \
-		("Your dialogue MUST mention the target NPC (" + pickup_npc + "), the outpost (" + pickup_outpost_display + "), and the exact item name (" + pickup_item + "). " if chosen_type == "PICKUP_SPECIAL" else "Your dialogue MUST state the exact objective number — for kills, mention how many ships; for ore, mention how many m³. ") + \
-		"Always call the pilot '" + player_nickname + "' — never use any other nickname. " + \
+		"Keep the same objective fields as the example above. " + \
+		("In your dialogue, always call the enemy 'Slithern' and always call the pilot 'George'. Always say 3 ships. " if chosen_type == "KILL_SHIPS" else ("In your dialogue, always call the pilot 'George'. Always say 25 m³ of ore. " if chosen_type == "DELIVER_ORE" else "In your dialogue, always call the pilot 'George'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. ")) + \
 		"Output only the raw JSON object."
 	
 	var payload = {
@@ -954,7 +948,6 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-	is_waiting = false
 	var now = Time.get_ticks_msec()
 	var elapsed = (now - request_start_time) / 1000.0
 	print("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
@@ -1047,7 +1040,13 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		if not campaign_name.is_empty()
 		else _fallback_campaign_name()
 	)
+	_substitute_dialogue_placeholders(quest_data)
 	_validate_quest_data(quest_data)
+	if quest_data.get("objective_dialogue_rewritten", false):
+		print("[LLMInterface] Dialogue was rewritten — requesting retry from LLM with locked objective.")
+		_request_dialogue_retry(quest_data, elapsed)
+		return
+	is_waiting = false
 	GenerationDiagnostics.record_content_source(
 		"quest_generation",
 		"llm",
@@ -1058,6 +1057,216 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 			"title": str(quest_data.get("title", "")),
 		}
 	)
+	if active_callback.is_valid():
+		active_callback.call(quest_data, false)
+
+
+# ── Dummy-Name Substitution ─────────────────────────────────────────────────
+# The LLM always writes "George" (pilot), "Slithern" (enemy faction),
+# "3" (kill count), "25" (ore amount), and fixed pickup names.
+# We swap these for the real pre-rolled values so the dialogue always
+# matches the actual contract.
+
+func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
+	var subs := _pending_substitutions
+	if subs.is_empty():
+		return
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
+
+	var replacements := {}
+	# Swap dummy pilot name for the real nickname
+	replacements["George"] = nickname
+	replacements["george"] = nickname.to_lower()
+
+	if obj_type == "KILL_SHIPS":
+		var real_faction: String = str(subs.get("kill_target", ""))
+		var real_count: int = int(subs.get("kill_count", 3))
+		replacements["Slithern"] = real_faction.capitalize()
+		replacements["slithern"] = real_faction
+		replacements["SLITHERN"] = real_faction.to_upper()
+		# Swap the dummy count "3" only near ship/combat context
+		obj["target_faction"] = real_faction
+		obj["count_required"] = real_count
+	elif obj_type == "DELIVER_ORE":
+		var real_amount: float = float(subs.get("ore_amount", 25.0))
+		obj["amount_required"] = real_amount
+	elif obj_type == "PICKUP_SPECIAL":
+		var real_outpost: String = str(subs.get("pickup_outpost", ""))
+		var real_outpost_display: String = str(subs.get("pickup_outpost_display", ""))
+		var real_npc: String = str(subs.get("pickup_npc", ""))
+		var real_item: String = str(subs.get("pickup_item", ""))
+		replacements["Morrow Station"] = real_outpost_display
+		replacements["morrow station"] = real_outpost_display.to_lower()
+		replacements["outpost_morrow"] = real_outpost
+		replacements["Sable Mercer"] = real_npc
+		replacements["sable mercer"] = real_npc.to_lower()
+		replacements["Sealed Data Drive"] = real_item
+		replacements["sealed data drive"] = real_item.to_lower()
+		obj["target_outpost"] = real_outpost
+		obj["target_outpost_display"] = real_outpost_display
+		obj["target_npc"] = real_npc
+		obj["part_name"] = real_item
+
+	quest_data["dialogue"] = _apply_replacements(str(quest_data.get("dialogue", "")), replacements)
+
+	var choices: Array = quest_data.get("choices", [])
+	for choice in choices:
+		if choice is Dictionary:
+			if choice.has("text"):
+				choice["text"] = _apply_replacements(str(choice["text"]), replacements)
+			var cons: Dictionary = choice.get("consequence", {})
+			if cons.has("dialogue_response"):
+				cons["dialogue_response"] = _apply_replacements(str(cons["dialogue_response"]), replacements)
+
+
+func _apply_replacements(text: String, replacements: Dictionary) -> String:
+	var result := text
+	for placeholder: String in replacements:
+		result = result.replace(placeholder, str(replacements[placeholder]))
+	return result
+
+
+# ── Dialogue Retry (critique loop) ──────────────────────────────────────────
+# When the first LLM attempt produces a dialogue that conflicts with the
+# validated objective (wrong faction, wrong count, wrong type), we give the
+# LLM one more shot with explicit constraints. If the retry also fails
+# validation, we keep the safe fallback dialogue from attempt 1.
+
+func _request_dialogue_retry(quest_data: Dictionary, first_elapsed: float) -> void:
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+	var agent_name: String = str(quest_data.get("agent_name", ""))
+
+	var objective_desc := ""
+	if obj_type == "KILL_SHIPS":
+		objective_desc = "Destroy 3 Slithern ships"
+	elif obj_type == "DELIVER_ORE":
+		objective_desc = "Deliver 25 m³ of ore"
+	elif obj_type == "PICKUP_SPECIAL":
+		objective_desc = "Pick up a Sealed Data Drive from Sable Mercer at Morrow Station"
+
+	var retry_prompt := (
+		"You are %s. Write a 2-3 sentence mission briefing for this contract.\n\n" % agent_name +
+		"Objective: %s\n" % objective_desc +
+		"Call the pilot 'George'. Stay in character.\n\n" +
+		"Respond with ONLY the dialogue text, no JSON, no quotes, no formatting."
+	)
+
+	var payload := {
+		"model": active_model_name,
+		"prompt": retry_prompt,
+		"stream": false,
+		"options": {"temperature": 0.7, "num_predict": 200},
+	}
+	var json_str := JSON.stringify(payload)
+
+	var temp_http := HTTPRequest.new()
+	temp_http.timeout = TIMEOUT_SECONDS
+	add_child(temp_http)
+	var instance_id := temp_http.get_instance_id()
+
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+			_on_dialogue_retry_completed(result, response_code, body, quest_data, first_elapsed, instance_id)
+	)
+
+	var err := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, json_str)
+	if err != OK:
+		print("[LLMInterface] Dialogue retry HTTP failed to start — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+
+
+func _on_dialogue_retry_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	quest_data: Dictionary,
+	first_elapsed: float,
+	request_instance_id: int
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http:
+		temp_http.queue_free()
+
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		print("[LLMInterface] Dialogue retry HTTP failed — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var response_text := body.get_string_from_utf8()
+	var json := JSON.new()
+	if json.parse(response_text) != OK:
+		print("[LLMInterface] Dialogue retry parse failed — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var outer = json.get_data()
+	if not outer is Dictionary or not outer.has("response"):
+		print("[LLMInterface] Dialogue retry missing response — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var new_dialogue: String = str(outer["response"]).strip_edges()
+	# Strip markdown/quotes wrapping
+	if new_dialogue.begins_with("\"") and new_dialogue.ends_with("\""):
+		new_dialogue = new_dialogue.substr(1, new_dialogue.length() - 2)
+
+	if new_dialogue.is_empty() or new_dialogue.length() < 20:
+		print("[LLMInterface] Dialogue retry too short — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	# Substitute placeholders in the retry dialogue
+	quest_data["dialogue"] = new_dialogue
+	_substitute_dialogue_placeholders(quest_data)
+	new_dialogue = str(quest_data.get("dialogue", ""))
+
+	# Test the retry dialogue against validation
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+
+	var type_conflict := _dialogue_conflicts_with_objective(new_dialogue, obj_type)
+	var faction_conflict := _dialogue_has_faction_mismatch(new_dialogue, obj_type, obj)
+
+	if type_conflict or faction_conflict:
+		print("[LLMInterface] Dialogue retry still conflicts — using safe fallback.")
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"dialogue_retry_still_conflicting",
+			"LLMInterface",
+			{"type_conflict": type_conflict, "faction_conflict": faction_conflict}
+		)
+		quest_data["dialogue"] = _safe_objective_dialogue(quest_data, obj_type, obj)
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	quest_data.erase("objective_dialogue_rewritten")
+	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	print("[LLMInterface] ✓ Dialogue retry succeeded — using LLM's second attempt.")
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"dialogue_retry_succeeded",
+		"LLMInterface",
+		{}
+	)
+	_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+
+
+func _finish_quest_with_current_dialogue(quest_data: Dictionary, elapsed: float) -> void:
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"llm",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"title": str(quest_data.get("title", "")),
+			"dialogue_retried": quest_data.has("objective_dialogue_rewritten"),
+		}
+	)
+	is_waiting = false
 	if active_callback.is_valid():
 		active_callback.call(quest_data, false)
 
@@ -1210,10 +1419,27 @@ func _finalize_validated_quest_display(
 	obj: Dictionary
 ) -> void:
 	quest_data["objective_summary"] = _objective_summary(obj_type, obj)
-	if _dialogue_conflicts_with_objective(
+	var needs_rewrite := _dialogue_conflicts_with_objective(
 		str(quest_data.get("dialogue", "")),
 		obj_type
-	):
+	)
+	if not needs_rewrite:
+		needs_rewrite = _dialogue_has_faction_mismatch(
+			str(quest_data.get("dialogue", "")),
+			obj_type,
+			obj
+		)
+	if not needs_rewrite:
+		needs_rewrite = _dialogue_has_placeholder_artifacts(
+			str(quest_data.get("dialogue", "")),
+			str(quest_data.get("agent_name", ""))
+		)
+	if not needs_rewrite:
+		needs_rewrite = _dialogue_is_too_vague(
+			str(quest_data.get("dialogue", "")),
+			obj_type
+		)
+	if needs_rewrite:
 		GenerationDiagnostics.record_event(
 			"quest_generation",
 			"validation_rewrote_contradictory_dialogue",
@@ -1255,9 +1481,7 @@ func _safe_objective_dialogue(
 	obj_type: String,
 	obj: Dictionary
 ) -> String:
-	var nickname := str(
-		quest_data.get("player_nickname", "Shiny")
-	)
+	var nickname := _nickname_for_agent(str(quest_data.get("agent_name", "")))
 	if obj_type == "DELIVER_ORE":
 		return (
 			"I need a clean ore run, %s. Bring back %d m³ of ore and "
@@ -1315,6 +1539,90 @@ func _dialogue_conflicts_with_objective(
 		return ore_score >= 2 and kill_score == 0 and pickup_score == 0
 	if obj_type == "PICKUP_SPECIAL":
 		return (kill_score >= 2 or ore_score >= 2) and pickup_score == 0
+	return false
+
+
+func _dialogue_has_faction_mismatch(
+	raw_dialogue: String,
+	obj_type: String,
+	obj: Dictionary
+) -> bool:
+	if obj_type != "KILL_SHIPS":
+		return false
+	var dialogue := raw_dialogue.to_lower()
+	var target := str(obj.get("target_faction", "")).to_lower()
+	if target.is_empty():
+		return false
+	var all_factions: Array[String] = []
+	for f in GlobalState.MINOR_FACTIONS.keys():
+		all_factions.append(str(f).to_lower())
+	for f in ["zenith", "aurelia", "vanguard"]:
+		all_factions.append(f)
+	var mentioned_wrong := false
+	for faction in all_factions:
+		if faction == target:
+			continue
+		if dialogue.find(faction) != -1:
+			mentioned_wrong = true
+			break
+	if mentioned_wrong:
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Dialogue mentions a faction other than target '%s'. Rewriting." % target
+		)
+	return mentioned_wrong
+
+
+func _nickname_for_agent(agent_name: String) -> String:
+	if agent_name.to_lower().find("kaelen") != -1:
+		return "Shiny"
+	return "Indy"
+
+
+func _dialogue_is_too_vague(raw_dialogue: String, obj_type: String) -> bool:
+	var dialogue := raw_dialogue.to_lower()
+	if obj_type == "KILL_SHIPS":
+		var kill_hints := ["destroy", "eliminate", "kill", "clear", "remove",
+			"engage", "intercept", "neutralize", "wipe", "ship", "contact",
+			"target", "hostile", "raider", "patrol", "fighter"]
+		for hint in kill_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: KILL_SHIPS dialogue has no combat keywords. Rewriting.")
+		return true
+	elif obj_type == "DELIVER_ORE":
+		var ore_hints := ["ore", "silicate", "mine", "mining", "deliver",
+			"cargo", "shipment", "haul", "tonnage", "m³", "m3", "cubic"]
+		for hint in ore_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: DELIVER_ORE dialogue has no ore/delivery keywords. Rewriting.")
+		return true
+	elif obj_type == "PICKUP_SPECIAL":
+		var pickup_hints := ["retrieve", "fetch", "pick up", "pickup", "crate",
+			"pod", "lockbox", "container", "package", "collect"]
+		for hint in pickup_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: PICKUP_SPECIAL dialogue has no retrieval keywords. Rewriting.")
+		return true
+	return false
+
+
+func _dialogue_has_placeholder_artifacts(raw_dialogue: String, agent_name: String) -> bool:
+	var dialogue_lower := raw_dialogue.to_lower()
+	if dialogue_lower.find("george") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy name 'George'. Rewriting.")
+		return true
+	if dialogue_lower.find("slithern") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy faction 'Slithern'. Rewriting.")
+		return true
+	if dialogue_lower.find("sable mercer") != -1 or dialogue_lower.find("morrow station") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy pickup names. Rewriting.")
+		return true
+	var agent_lower := agent_name.to_lower().strip_edges()
+	if not agent_lower.is_empty() and dialogue_lower.find(agent_lower) != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue contains agent's own name '%s'. Rewriting." % agent_name)
+		return true
 	return false
 
 
@@ -1571,6 +1879,7 @@ func _trigger_fallback_with_reason(reason: String) -> void:
 
 
 func _trigger_fallback():
+	is_waiting = false
 	var elapsed = (Time.get_ticks_msec() - request_start_time) / 1000.0
 	print("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
 	var reason := _pending_fallback_reason
