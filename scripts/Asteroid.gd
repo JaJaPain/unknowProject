@@ -13,6 +13,9 @@ var current_angle: float = 0.0
 var orbit_y: float = 0.0
 var is_orbiting: bool = false
 var navigation_parent: Node3D = null
+var _tumble_axis: Vector3 = Vector3.UP
+var _tumble_speed: float = 0.0
+var _mesh: MeshInstance3D = null
 
 func _ready():
 	add_to_group("asteroid")
@@ -23,16 +26,28 @@ func _ready():
 	resources = max_resources
 	var r_scale = randf_range(0.85, 1.4)
 	scale = Vector3(r_scale, r_scale, r_scale)
-	var mesh_inst := get_node_or_null("MeshInstance3D") as MeshInstance3D
-	if mesh_inst:
-		AsteroidModels.apply_random_model(mesh_inst, persistent_id.hash())
+	_mesh = get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if _mesh:
+		AsteroidModels.apply_random_model(_mesh, persistent_id.hash())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = persistent_id.hash()
+	_tumble_axis = Vector3(
+		rng.randf_range(-1.0, 1.0),
+		rng.randf_range(-1.0, 1.0),
+		rng.randf_range(-1.0, 1.0),
+	).normalized()
+	_tumble_speed = rng.randf_range(0.05, 0.25)
 
 func _physics_process(delta: float):
-	if is_orbiting and not destroyed and not GlobalState.paused:
+	if destroyed or GlobalState.paused:
+		return
+	if is_orbiting:
 		current_angle += orbit_speed * delta
 		var x = orbit_center.x + cos(current_angle) * orbit_radius
 		var z = orbit_center.z + sin(current_angle) * orbit_radius
 		global_position = Vector3(x, orbit_y, z)
+	if _mesh and _tumble_speed > 0.0:
+		_mesh.rotate(_tumble_axis, _tumble_speed * delta)
 
 func mine():
 	if destroyed: return
