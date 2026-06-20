@@ -1578,22 +1578,17 @@ func _request_public_board_text_attempt(
 		offer,
 		critique
 	)
-	var url: String = LLMInterface.OLLAMA_URL
-	var model: String = (
-		LLMInterface.active_model_name
-		if LLMInterface.active_model_name != "" else "qwen2.5:1.5b"
+	var url: String = LLMInterface.ollama_generate_url()
+	var body: Dictionary = LLMInterface.build_generation_body(
+		"public_board",
+		str(request.get("prompt", "")),
+		"json",
+		{ "temperature": 0.8, "num_predict": 220 }
 	)
-	var body: Dictionary = {
-		"model": model,
-		"prompt": str(request.get("prompt", "")),
-		"stream": false,
-		"format": "json",
-		"options": { "temperature": 0.8, "num_predict": 220 },
-	}
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var http := HTTPRequest.new()
 	add_child(http)
-	http.timeout = 8.0
+	http.timeout = LLMInterface.request_timeout_for_capability("public_board")
 	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
 		http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
@@ -4253,23 +4248,21 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 		callback.call(_pick_fallback_mechanic_greeting(ship, worst_tier, best_tier, offer, active_quest, mechanic_profile), true)
 		return
 		
-	var url: String = LLMInterface.OLLAMA_URL
-	var model: String = LLMInterface.active_model_name if LLMInterface.active_model_name != "" else "qwen2.5:1.5b"
 	var prompt_to_send: String = base_prompt
 	if critique_suffix != "":
 		prompt_to_send += "\n\n" + critique_suffix
 		
-	var body: Dictionary = {
-		"model": model,
-		"prompt": prompt_to_send,
-		"stream": false,
-		"format": "json",
-		"options": { "temperature": 0.85, "num_predict": 250 },
-	}
+	var url: String = LLMInterface.ollama_generate_url()
+	var body: Dictionary = LLMInterface.build_generation_body(
+		"mechanic_line",
+		prompt_to_send,
+		"json",
+		{ "temperature": 0.85, "num_predict": 250 }
+	)
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var http := HTTPRequest.new()
 	add_child(http)
-	http.timeout = 8.0
+	http.timeout = LLMInterface.request_timeout_for_capability("mechanic_line")
 	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
 		http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
@@ -7149,19 +7142,17 @@ func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String
 	if critique_suffix != "":
 		prompt_to_send += "\n\n" + critique_suffix
 		
-	var url: String = LLMInterface.OLLAMA_URL
-	var model: String = LLMInterface.active_model_name if LLMInterface.active_model_name != "" else "qwen2.5:1.5b"
-	var body: Dictionary = {
-		"model": model,
-		"prompt": prompt_to_send,
-		"stream": false,
-		"format": "json",
-		"options": { "temperature": 0.85, "num_predict": 150 },
-	}
+	var url: String = LLMInterface.ollama_generate_url()
+	var body: Dictionary = LLMInterface.build_generation_body(
+		"pickup_handoff",
+		prompt_to_send,
+		"json",
+		{ "temperature": 0.85, "num_predict": 150 }
+	)
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var http := HTTPRequest.new()
 	add_child(http)
-	http.timeout = 8.0
+	http.timeout = LLMInterface.request_timeout_for_capability("pickup_handoff")
 	http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, body_bytes: PackedByteArray) -> void:
 		http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:

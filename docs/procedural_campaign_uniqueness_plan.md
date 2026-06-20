@@ -508,6 +508,17 @@ Verification:
   fallback rate, wrong-faction/wrong-count rate, repeated-name rate, and
   response time.
 
+First implementation pass:
+
+- Added a shared local model gateway/profile file for Ollama URLs, model
+  preference order, capability profiles, request timeouts, and generation body
+  creation.
+- `LLMInterface` now chooses installed small-dialogue and large-story models
+  through the shared gateway.
+- UI-owned public board, mechanic greeting, and pickup handoff requests now ask
+  `LLMInterface` for the gateway URL, model body, and timeout instead of naming
+  models directly.
+
 ### 3. Generated Mechanic Identity
 
 Goal: generated systems should not keep pretending Jenna is every mechanic in

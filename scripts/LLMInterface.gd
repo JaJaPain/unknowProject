@@ -1,21 +1,10 @@
 extends Node
 
-const OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-const MODEL_NAME = "qwen2.5:3b-instruct-q4_K_M"
-const PREFERRED_MODEL_NAMES := [
-	"qwen2.5:3b-instruct-q4_K_M",
-	"qwen2.5:3b-instruct",
-	"qwen2.5:3b",
-	"qwen3:3b",
-	"qwen2.5:1.5b-instruct-q4_K_M",
-	"qwen2.5:1.5b-instruct",
-	"qwen2.5:1.5b",
-	"qwen2.5-coder:7b",
-	"qwen3:8b",
-	"gemma4:latest",
-	"gemma4:12b",
-]
-const TIMEOUT_SECONDS = 15.0
+const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
+
+const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
+const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
+const TIMEOUT_SECONDS = LocalModelGatewayType.REQUEST_TIMEOUTS["quest_dialogue"]
 # Kaelen intro telemetry is written to user://kaelen_intro_stats.json so
 # counters survive game restarts. Read via get_kaelen_intro_stats().
 const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
@@ -26,6 +15,7 @@ var is_waiting: bool = false
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
+var active_large_model_name: String = ""
 var world_lore_text: String = ""
 var campaign_bible_context_text: String = ""
 var idea_memory_context_text: String = ""
@@ -618,29 +608,23 @@ func _discover_ollama_model():
 							
 					print("[TRACE] [LLMInterface] Installed Ollama models: ", installed_names)
 					
-					var chosen_model = ""
-					for preferred_model in PREFERRED_MODEL_NAMES:
-						if preferred_model in installed_names:
-							chosen_model = preferred_model
-							break
-					if chosen_model == "":
-						for name in installed_names:
-							if "qwen" in name:
-								chosen_model = name
-								break
-						if chosen_model == "":
-							for name in installed_names:
-								if "gemma" in name:
-									chosen_model = name
-									break
-						if chosen_model == "" and installed_names.size() > 0:
-							chosen_model = installed_names[0]
+					var chosen_model: String = LocalModelGatewayType.select_installed_model(
+						installed_names,
+						"quest_dialogue"
+					)
+					var chosen_large_model: String = LocalModelGatewayType.select_installed_model(
+						installed_names,
+						"campaign_bible"
+					)
 							
 					if chosen_model != "":
 						active_model_name = chosen_model
 						print("[TRACE] [LLMInterface] Dynamic Ollama model selection: USING '", active_model_name, "'")
 					else:
 						print("[LLMInterface] No models found in Ollama tags. Defaulting to: ", active_model_name)
+					if chosen_large_model != "":
+						active_large_model_name = chosen_large_model
+						print("[TRACE] [LLMInterface] Large-story model profile: USING '", active_large_model_name, "'")
 					
 					success = true
 					
@@ -659,11 +643,50 @@ func _discover_ollama_model():
 			get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
 	)
 	
-	var err = tags_http.request("http://127.0.0.1:11434/api/tags")
+	var err = tags_http.request(LocalModelGatewayType.OLLAMA_TAGS_URL)
 	if err != OK:
 		tags_http.queue_free()
 		print("[LLMInterface] Failed to initiate tags check. Retrying in 1.5s...")
 		get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
+
+
+func model_for_capability(capability: String) -> String:
+	return LocalModelGatewayType.model_for_capability(
+		capability,
+		active_model_name,
+		active_large_model_name
+	)
+
+
+func request_timeout_for_capability(capability: String) -> float:
+	return LocalModelGatewayType.request_timeout(capability)
+
+
+func ollama_generate_url() -> String:
+	return LocalModelGatewayType.OLLAMA_GENERATE_URL
+
+
+func build_generation_body(
+	capability: String,
+	prompt: String,
+	response_format: String = "json",
+	options: Dictionary = {}
+) -> Dictionary:
+	return LocalModelGatewayType.generation_body(
+		capability,
+		prompt,
+		active_model_name,
+		response_format,
+		options,
+		active_large_model_name
+	)
+
+
+func diagnostics_context_for_capability(capability: String) -> Dictionary:
+	return LocalModelGatewayType.diagnostics_context(
+		capability,
+		model_for_capability(capability)
+	)
 
 func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
 	# Returns 5 example dialogues + 3 choice responses matched to the mission type.
