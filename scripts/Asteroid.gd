@@ -21,9 +21,11 @@ func _ready():
 	if persistent_id == "":
 		push_error("[Asteroid] Missing explicit persistent ID for '%s'." % name)
 	resources = max_resources
-	# Add slight random scale variation to asteroid
 	var r_scale = randf_range(0.85, 1.4)
 	scale = Vector3(r_scale, r_scale, r_scale)
+	var mesh_inst := get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if mesh_inst:
+		AsteroidModels.apply_random_model(mesh_inst, persistent_id.hash())
 
 func _physics_process(delta: float):
 	if is_orbiting and not destroyed and not GlobalState.paused:

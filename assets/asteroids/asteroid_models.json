@@ -1,0 +1,144 @@
+{
+  "models": [
+    {
+      "file": "asteroid_00.glb",
+      "texture_cell": [
+        0,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_01.glb",
+      "texture_cell": [
+        2,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_02.glb",
+      "texture_cell": [
+        0,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_03.glb",
+      "texture_cell": [
+        2,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_04.glb",
+      "texture_cell": [
+        0,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_05.glb",
+      "texture_cell": [
+        0,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_06.glb",
+      "texture_cell": [
+        1,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_07.glb",
+      "texture_cell": [
+        1,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_08.glb",
+      "texture_cell": [
+        2,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_09.glb",
+      "texture_cell": [
+        2,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_10.glb",
+      "texture_cell": [
+        1,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_11.glb",
+      "texture_cell": [
+        2,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_12.glb",
+      "texture_cell": [
+        1,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_13.glb",
+      "texture_cell": [
+        1,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_14.glb",
+      "texture_cell": [
+        0,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_15.glb",
+      "texture_cell": [
+        2,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_16.glb",
+      "texture_cell": [
+        2,
+        0
+      ]
+    },
+    {
+      "file": "asteroid_17.glb",
+      "texture_cell": [
+        0,
+        2
+      ]
+    },
+    {
+      "file": "asteroid_18.glb",
+      "texture_cell": [
+        2,
+        1
+      ]
+    },
+    {
+      "file": "asteroid_19.glb",
+      "texture_cell": [
+        0,
+        2
+      ]
+    }
+  ]
+}
