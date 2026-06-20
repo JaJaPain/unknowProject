@@ -144,8 +144,7 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 			offset_dir = (base_dir + right * rng.randf_range(-0.15, 0.15)
 				+ up * rng.randf_range(-0.15, 0.15)).normalized()
 
-		billboard.position = offset_dir * NEBULA_DISTANCE
-		billboard.look_at(Vector3.ZERO, Vector3.UP)
+		billboard.look_at_from_position(offset_dir * NEBULA_DISTANCE, Vector3.ZERO, Vector3.UP)
 		billboard.rotate_object_local(Vector3.FORWARD, rng.randf_range(0.0, TAU))
 
 		container.add_child(billboard)
