@@ -2,6 +2,71 @@
 
 ---
 
+## Session: 2026-06-20 (Late Night — Visual Effects & Asteroid Overhaul)
+**Branch:** `segment-3/economy-stores-events`
+**Commits:** `712e78e` → `46e6989`
+**Date:** 2026-06-20
+
+### Feature 3: Weapon Impact Flashes & Death Explosions
+
+Added visual feedback for projectile hits and ship destruction — previously both events were audio-only with no visual.
+
+- **`ImpactEffect.gd`** (new file) — two static functions:
+  - `spawn_hit()` — radial-gradient billboard flash (additive blend, fades over 0.15s) + 8 spark particles (omnidirectional burst, 0.25s lifetime). Self-cleans after 0.5s.
+  - `spawn_explosion()` — larger flash (fades 0.3s) + 22 debris particles (white → faction color → orange → transparent gradient) + 5 secondary glow particles for a fireball feel. Self-cleans after 1.5s.
+- **Projectile.gd** — cyan/faction-colored hit flash on ship impacts, grey sparks on asteroid hits
+- **NPCShip.gd** — faction-colored explosion on death (Zenith=blue, Vanguard=orange-red)
+- **PlayerShip.gd** — 1.5x scale cyan explosion on player death
+
+### Bug Fix: Engine Glow Persisting on Wreckage
+
+NPC engine glow (MultiMeshInstance3D) was a child of the `visual` node, which got passed to wreckage on death. Dead ships showed glowing thrusters. Fixed by `queue_free()`-ing `engine_glow` in `die()` before wreckage handoff.
+
+### Feature: Blender-Generated Asteroid Rock Models
+
+Replaced the plain SphereMesh asteroids with 20 unique rock models generated headlessly in Blender 5.1.
+
+- **`tools/generate_asteroids.py`** — Blender Python script that creates 20 rocks using icospheres + 3 displacement layers (clouds, voronoi, musgrave noise). Varies scale, deformation, roughness per rock. Normalizes to radius 5.0, UV unwraps via smart project, exports as clean .glb files.
+- **`assets/asteroids/`** — 20 `.glb` model files + `asteroid_models.json` mapping each model to a random cell from the 3×3 texture atlas (`asteroidTextures.png`)
+- **`AsteroidModels.gd`** (new file) — preloads all 20 meshes at startup, creates shared `StandardMaterial3D` per atlas cell with UV scale/offset. `apply_random_model()` swaps an asteroid's MeshInstance3D mesh and material based on `persistent_id.hash()` for deterministic selection.
+- **`Asteroid.gd`** — calls `AsteroidModels.apply_random_model()` in `_ready()`
+
+### Feature: Asteroid Tumble Rotation
+
+Each asteroid's MeshInstance3D slowly rotates around a random axis (0.05–0.25 rad/s, ~25–125 seconds per full rotation). Axis and speed seeded from `persistent_id` for determinism. Only the visual mesh rotates — collision shape stays fixed.
+
+### Feature: Asteroid Vertical Bob (Double Sine Wave)
+
+Each asteroid oscillates vertically with two overlapping sine waves at different frequencies (0.08–0.4 Hz) and random phases. Combined amplitude is roughly ±4.5–9.5 units (about the asteroid's height), breaking up the flat conveyor-belt look of orbital rings.
+
+### Feature: Mining Laser Rock Dust Particles
+
+Spawns 18 fine rock-colored particles (earthy brown/tan, unshaded, emissive) at the asteroid surface while the mining laser is active. Particles scatter omnidirectionally with high damping (dust-like). Stops the frame the laser turns off.
+
+### Feature: Drone Collection Behavior During Mining
+
+The two orbiting player drones now alternate flying to the asteroid and back while the mining laser is active, simulating ore collection:
+
+- Active drone detaches from orbit, flies to asteroid impact point (~1s at 45 units/sec with ease-in-out), pauses briefly, flies back to ship hull, then the other drone takes its turn
+- Non-active drone continues orbiting normally
+- When mining stops, both drones are destroyed and respawned fresh from the hull, guaranteeing clean state with no lost drones
+
+### Files Added
+- `scripts/visuals/ImpactEffect.gd` — hit flash and explosion effects
+- `scripts/visuals/AsteroidModels.gd` — asteroid model/texture loader
+- `tools/generate_asteroids.py` — Blender headless rock generator
+- `assets/asteroidTextures.png` — 3×3 rock texture atlas
+- `assets/asteroids/` — 20 `.glb` rock models + JSON mapping
+
+### Files Modified
+- `scripts/Asteroid.gd` — random model, tumble, vertical bob
+- `scripts/Projectile.gd` — hit flash on impact
+- `scripts/NPCShip.gd` — death explosion, engine glow cleanup
+- `scripts/PlayerShip.gd` — death explosion, mining particles, drone collection behavior
+- `docs/plan_visual_effects.md` — checkpoints marked complete
+
+---
+
 ## Session: 2026-06-20 (Night — Codebase Indexing & Repository Mapping)
 **Branch:** `segment-3/economy-stores-events`
 
