@@ -25,6 +25,7 @@ var boost_cooldown_timer: float = 0.0
 var boost_effect_meshes: Array[MeshInstance3D] = []
 var boost_effect_lights: Array[OmniLight3D] = []
 var boost_effect_material: StandardMaterial3D
+var exhaust_flames: Array[MeshInstance3D] = []
 
 # Drawback tracking variables
 var engine_stall_timer: float = 0.0
@@ -1616,9 +1617,13 @@ func _create_boost_effects() -> void:
 	if thruster_points.is_empty():
 		_create_fallback_boost_effect(Vector3(-1.4, -0.1, 4.7))
 		_create_fallback_boost_effect(Vector3(1.4, -0.1, 4.7))
+		_find_thruster_points(self, thruster_points)
 	else:
 		for point in thruster_points:
 			_create_boost_effect_at(point)
+	exhaust_flames = EngineExhaust.create_exhaust(
+		self, thruster_points, Color(0.15, 0.75, 1.0)
+	)
 	_update_boost_effects(0.0)
 
 
@@ -1681,6 +1686,12 @@ func _update_boost_effects(_delta: float) -> void:
 		if not is_instance_valid(light):
 			continue
 		light.light_energy = 8.0 + pulse * 4.0 if active else 0.0
+	var speed_limit: float = max_speed * GlobalState.engine_speed_mult
+	EngineExhaust.update_intensity(
+		exhaust_flames,
+		current_speed / maxf(speed_limit, 1.0),
+		active
+	)
 
 
 func _create_drones():

@@ -116,7 +116,7 @@ Adds GPU particle trails behind the player ship and NPC ships that intensify wit
 
 ### Implementation Checkpoints
 
-- [ ] **2.1 — Create `EngineExhaust.gd` helper class**
+- [x] **2.1 — Create `EngineExhaust.gd` helper class**
   - File: `scripts/visuals/EngineExhaust.gd` (new file)
   - `class_name EngineExhaust extends RefCounted`
   - Static function `create_exhaust(parent: Node3D, anchor_points: Array[Node3D], color: Color, scale_factor: float = 1.0) -> Array[GPUParticles3D]`
@@ -141,7 +141,7 @@ Adds GPU particle trails behind the player ship and NPC ships that intensify wit
   - Draw pass: small SphereMesh (radius 0.08) with unshaded emissive material matching engine color
   - Returns array of created GPUParticles3D nodes for later speed updates
 
-- [ ] **2.2 — Add static `update_exhaust_intensity()` function**
+- [x] **2.2 — Add static `update_exhaust_intensity()` function**
   - File: `scripts/visuals/EngineExhaust.gd`
   - `static func update_intensity(particles: Array[GPUParticles3D], speed_ratio: float, is_boosting: bool) -> void`
   - `speed_ratio` = `current_speed / max_speed`, clamped 0.0-1.0
@@ -154,7 +154,7 @@ Adds GPU particle trails behind the player ship and NPC ships that intensify wit
     - `amount_ratio` = 1.0
     - Could increase `initial_velocity_max` for longer trails
 
-- [ ] **2.3 — Integrate into PlayerShip**
+- [x] **2.3 — Integrate into PlayerShip**
   - File: `scripts/PlayerShip.gd`
   - In `_create_boost_effects()` (after thruster point detection, ~line 1621):
     - Call `EngineExhaust.create_exhaust()` with the same thruster points, Color(0.15, 0.75, 1.0), store result in new `var exhaust_particles: Array[GPUParticles3D]`
@@ -162,7 +162,7 @@ Adds GPU particle trails behind the player ship and NPC ships that intensify wit
     - Call `EngineExhaust.update_intensity(exhaust_particles, current_speed / (max_speed * GlobalState.engine_speed_mult), boost_timer > 0.0)`
   - This piggybacks on the existing per-frame boost update — no new `_process` overhead.
 
-- [ ] **2.4 — Integrate into NPCShip**
+- [x] **2.4 — Integrate into NPCShip**
   - File: `scripts/NPCShip.gd`
   - Add `var exhaust_particles: Array[GPUParticles3D] = []` instance variable
   - In `_create_engine_glow()` (after MultiMesh creation, ~line 395):
@@ -174,7 +174,7 @@ Adds GPU particle trails behind the player ship and NPC ships that intensify wit
     - Clear old `exhaust_particles` (queue_free each) before rebuilding
     - After `_setup_model_points()` is called, engine_glow and exhaust will be recreated
 
-- [ ] **2.5 — Handle NPC cleanup on death**
+- [x] **2.5 — Handle NPC cleanup on death**
   - File: `scripts/NPCShip.gd`
   - In `die()` function (~line 646):
     - Particles are children of `visual` node, which gets passed to `Wreckage.initialize(visual)` — the wreckage duplicates the hull but won't include GPUParticles3D nodes in the duplicate since they're separate children of `visual`

@@ -25,6 +25,8 @@ var engine_points: Array[Node3D] = []
 var current_hp_index: int = 0
 var hull_instance: Node3D = null
 var engine_glow: MultiMeshInstance3D = null
+var engine_glow_material: StandardMaterial3D = null
+var engine_glow_base_transforms: Array[Transform3D] = []
 var role_patrol_refresh_timer: float = 0.0
 
 const RuntimeTraceType := preload(
@@ -270,6 +272,8 @@ func apply_generated_model(model: Node3D) -> void:
 	if engine_glow and is_instance_valid(engine_glow):
 		engine_glow.queue_free()
 		engine_glow = null
+	engine_glow_material = null
+	engine_glow_base_transforms.clear()
 	hardpoints.clear()
 	engine_points.clear()
 	hull_instance = model
@@ -393,6 +397,10 @@ func _create_engine_glow() -> void:
 		multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY, relative_transform.origin))
 	engine_glow.multimesh = multimesh
 	visual.add_child(engine_glow)
+	engine_glow_material = glow_material
+	engine_glow_base_transforms.clear()
+	for index in range(engine_points.size()):
+		engine_glow_base_transforms.append(multimesh.get_instance_transform(index))
 
 func _get_engine_color() -> Color:
 	match faction:
@@ -403,6 +411,25 @@ func _get_engine_color() -> Color:
 		"vanguard":
 			return Color(1.0, 0.25, 0.08)
 	return Color(0.45, 0.75, 1.0)
+
+func _update_engine_glow() -> void:
+	if engine_glow == null or not is_instance_valid(engine_glow):
+		return
+	if engine_glow_material == null:
+		return
+	var speed_ratio := clampf(velocity.length() / maxf(speed, 1.0), 0.0, 1.0)
+	var pulse := 1.0 + sin(Time.get_ticks_msec() * 0.012) * 0.15
+	var alpha := lerpf(0.3, 0.9, speed_ratio) * pulse
+	var emission_mult := lerpf(2.0, 6.0, speed_ratio) * pulse
+	engine_glow_material.albedo_color.a = alpha
+	engine_glow_material.emission_energy_multiplier = emission_mult
+	var mm := engine_glow.multimesh
+	if mm == null:
+		return
+	var s := lerpf(0.6, 1.4, speed_ratio) * pulse
+	for i in range(mini(engine_glow_base_transforms.size(), mm.instance_count)):
+		var base := engine_glow_base_transforms[i]
+		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3(s, s, s)), base.origin))
 
 func _refresh_role_patrol_center() -> void:
 	var desired_group := ""
@@ -451,6 +478,7 @@ func _setup_amarr_hardpoints(node: Node):
 func _physics_process(delta: float):
 	if GlobalState.paused or destroyed:
 		return
+	_update_engine_glow()
 
 	role_patrol_refresh_timer -= delta
 	if role_patrol_refresh_timer <= 0.0:
