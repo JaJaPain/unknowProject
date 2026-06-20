@@ -12,6 +12,20 @@ background_color = Color(0.0156863, 0.0156863, 0.0352941, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.18, 0.2, 0.28, 1)
 ambient_light_energy = 0.45
+glow_enabled = true
+glow_intensity = 1.2
+glow_strength = 1.2
+glow_bloom = 0.0
+glow_blend_mode = 0
+glow_hdr_threshold = 1.0
+glow_hdr_scale = 2.5
+glow_levels/1 = false
+glow_levels/2 = true
+glow_levels/3 = true
+glow_levels/4 = false
+glow_levels/5 = true
+glow_levels/6 = false
+glow_levels/7 = false
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gas"]
 albedo_texture = ExtResource("2_gas_tex")

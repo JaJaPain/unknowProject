@@ -1917,6 +1917,15 @@ func _create_pause_menu():
 		AudioManager.set_sfx_volume
 	)
 
+	var video_title := Label.new()
+	video_title.text = "VIDEO"
+	video_title.add_theme_font_size_override("font_size", 15)
+	video_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	controls.add_child(video_title)
+	_add_toggle_row(controls, "Bloom", GlobalState.bloom_enabled, func(val: bool) -> void:
+		GlobalState.bloom_enabled = val
+	)
+
 	pause_panel.visible = false
 	_create_campaign_manager()
 
@@ -1998,6 +2007,26 @@ func _add_volume_row(
 	slider.value_changed.connect(func(next_value: float) -> void:
 		setter.call(next_value)
 		value.text = "%d%%" % int(next_value * 100.0)
+	)
+
+
+func _add_toggle_row(
+	parent: Control,
+	label_text: String,
+	initial_value: bool,
+	setter: Callable
+) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(label)
+	var toggle := CheckButton.new()
+	toggle.button_pressed = initial_value
+	row.add_child(toggle)
+	toggle.toggled.connect(func(pressed: bool) -> void:
+		setter.call(pressed)
 	)
 
 

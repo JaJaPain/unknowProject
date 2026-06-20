@@ -38,7 +38,6 @@ void fragment() {
 			bool is_galaxy = galaxy_chance < 0.008;
 
 			if (is_galaxy) {
-				// Distant galaxy: small fuzzy elongated smudge
 				float angle = hash21(neighbor * 11.07 + 950.0) * 3.14159;
 				float cos_a = cos(angle);
 				float sin_a = sin(angle);
@@ -51,22 +50,18 @@ void fragment() {
 				float galaxy_size = 0.2 + hash21(neighbor * 12.43 + 990.0) * 0.12;
 				float galaxy_bright = 0.2 + hash21(neighbor * 13.17 + 1010.0) * 0.15;
 
-				// Soft fuzzy core
 				float core = smoothstep(galaxy_size, 0.0, galaxy_dist);
 				core *= core;
 				star_lum = core * galaxy_bright;
 			} else {
-				// Brightness: cube the random to skew most stars dim, few bright
 				float raw_mag = hash21(neighbor * 2.53 + 200.0);
 				float star_mag = raw_mag * raw_mag * raw_mag;
 				star_mag = mix(0.15, 1.0, star_mag);
 
-				// Size: most stars are tiny pinpoints, brighter ones are slightly larger
 				float size_rand = hash21(neighbor * 3.17 + 350.0);
 				float base_size = 0.08 + size_rand * 0.06;
 				float star_size = base_size + star_mag * 0.08;
 
-				// Core point
 				float point = smoothstep(star_size, 0.0, dist);
 				star_lum = point * star_mag;
 
@@ -78,7 +73,6 @@ void fragment() {
 					star_lum += glow * star_mag * 0.25;
 				}
 
-				// ~10% of stars twinkle
 				float twinkle_chance = hash21(neighbor * 4.37 + 300.0);
 				if (twinkle_chance < 0.1) {
 					float rate1 = 0.15 + hash21(neighbor * 5.91 + 400.0) * 0.35;
@@ -97,6 +91,7 @@ void fragment() {
 		}
 	}
 
+	lum = min(lum, 0.35);
 	ALBEDO = tint * lum;
-	ALPHA = clamp(lum, 0.0, 1.0);
+	ALPHA = clamp(lum * 2.0, 0.0, 1.0);
 }

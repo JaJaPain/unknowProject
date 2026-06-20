@@ -66,6 +66,7 @@ func _build(config: SystemConfig) -> Dictionary:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = config.ambient_color
 	env.ambient_light_energy = config.ambient_energy
+	SystemAmbience.apply_glow(env)
 
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"

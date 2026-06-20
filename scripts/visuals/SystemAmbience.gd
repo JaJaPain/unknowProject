@@ -33,7 +33,7 @@ static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstanc
 	mat.albedo_color = Color.WHITE
 	mat.emission_enabled = true
 	mat.emission = color
-	mat.emission_energy_multiplier = energy * 2.0
+	mat.emission_energy_multiplier = energy * 5.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 
 	var mesh := SphereMesh.new()
@@ -150,3 +150,26 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 		container.add_child(billboard)
 
 	return container
+
+
+static func apply_glow(env: Environment, connect_toggle: bool = true) -> void:
+	if connect_toggle:
+		GlobalState.bloom_changed.connect(func(enabled: bool) -> void:
+			env.glow_enabled = enabled
+		)
+	if not GlobalState.bloom_enabled:
+		return
+	env.glow_enabled = true
+	env.glow_intensity = 1.2
+	env.glow_strength = 1.2
+	env.glow_bloom = 0.0
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	env.glow_hdr_threshold = 1.0
+	env.glow_hdr_scale = 2.5
+	env.set_glow_level(0, false)
+	env.set_glow_level(1, true)
+	env.set_glow_level(2, true)
+	env.set_glow_level(3, false)
+	env.set_glow_level(4, true)
+	env.set_glow_level(5, false)
+	env.set_glow_level(6, false)

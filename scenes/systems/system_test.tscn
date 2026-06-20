@@ -9,6 +9,20 @@ background_color = Color(0.008, 0.012, 0.03, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.12, 0.16, 0.3, 1)
 ambient_light_energy = 0.4
+glow_enabled = true
+glow_intensity = 1.2
+glow_strength = 1.2
+glow_bloom = 0.0
+glow_blend_mode = 0
+glow_hdr_threshold = 1.0
+glow_hdr_scale = 2.5
+glow_levels/1 = false
+glow_levels/2 = true
+glow_levels/3 = true
+glow_levels/4 = false
+glow_levels/5 = true
+glow_levels/6 = false
+glow_levels/7 = false
 
 [node name="TestSystem" type="Node3D"]
 script = ExtResource("1_script")

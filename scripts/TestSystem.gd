@@ -18,6 +18,12 @@ var generated_stations: Array[Node3D] = []
 
 func _ready() -> void:
 	GlobalState.active_system_root = self
+	var world_env := $WorldEnvironment as WorldEnvironment
+	if world_env and world_env.environment:
+		world_env.environment.glow_enabled = GlobalState.bloom_enabled
+		GlobalState.bloom_changed.connect(func(enabled: bool) -> void:
+			world_env.environment.glow_enabled = enabled
+		)
 	GlobalState.current_system_id = SYSTEM_ID
 	rng.seed = SYSTEM_SEED
 	_generate_system()

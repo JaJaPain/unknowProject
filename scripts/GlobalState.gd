@@ -1377,6 +1377,14 @@ var paused: bool = false:
 		paused = val
 		game_paused.emit(paused)
 
+var bloom_enabled: bool = true:
+	set(val):
+		bloom_enabled = val
+		bloom_changed.emit(val)
+		_save_visual_prefs()
+
+signal bloom_changed(enabled: bool)
+
 # Reputation system
 var reputations: Dictionary = {
 	"zenith": 50.0,
@@ -1557,7 +1565,38 @@ func adjust_reputation(faction_name: String, amount: float):
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_inputs()
+	_load_visual_prefs()
 	CampaignClock.time_changed.connect(_on_campaign_time_for_stores)
+
+
+const VISUAL_PREFS_PATH := "user://player_preferences.json"
+
+func _load_visual_prefs() -> void:
+	if not FileAccess.file_exists(VISUAL_PREFS_PATH):
+		return
+	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary:
+		bloom_enabled = bool(parsed.get("bloom_enabled", true))
+
+func _save_visual_prefs() -> void:
+	var prefs := {}
+	if FileAccess.file_exists(VISUAL_PREFS_PATH):
+		var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.READ)
+		if file:
+			var parsed: Variant = JSON.parse_string(file.get_as_text())
+			file.close()
+			if parsed is Dictionary:
+				prefs = parsed
+	prefs["bloom_enabled"] = bloom_enabled
+	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(prefs, "\t"))
+	file.close()
 
 
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")

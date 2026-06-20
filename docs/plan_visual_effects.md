@@ -24,7 +24,7 @@ Enables Godot's built-in glow post-processing on the Environment resource so tha
 
 ### Implementation Checkpoints
 
-- [ ] **1.1 — Create helper function `_apply_glow(env: Environment)`**
+- [x] **1.1 — Create helper function `_apply_glow(env: Environment)`**
   - File: `scripts/visuals/SystemAmbience.gd`
   - Add a static function that takes an Environment and sets glow properties:
     - `env.glow_enabled = true`
@@ -37,18 +37,18 @@ Enables Godot's built-in glow post-processing on the Environment resource so tha
     - Enable 2-3 glow levels for varying blur radii (levels 1, 2, 4)
   - Centralizing in SystemAmbience means all three Environment creation sites call the same function, keeping values consistent.
 
-- [ ] **1.2 — Apply glow in SystemFactory (generated systems)**
+- [x] **1.2 — Apply glow in SystemFactory (generated systems)**
   - File: `scripts/generation/SystemFactory.gd`
   - After line 68 (`env.ambient_light_energy = config.ambient_energy`), add:
     - `SystemAmbience.apply_glow(env)`
   - This covers all procedurally generated systems.
 
-- [ ] **1.3 — Apply glow in system_start.tscn**
+- [x] **1.3 — Apply glow in system_start.tscn**
   - File: `scenes/systems/system_start.tscn`
   - Add glow properties to the existing `[sub_resource type="Environment" id="Environment_1"]` block.
   - Same values as the helper function.
 
-- [ ] **1.4 — Apply glow in system_test.tscn**
+- [x] **1.4 — Apply glow in system_test.tscn**
   - File: `scenes/systems/system_test.tscn`
   - Add glow properties to the existing `[sub_resource type="Environment" id="Environment_test"]` block.
   - Same values as the helper function.

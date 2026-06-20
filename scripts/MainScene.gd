@@ -16,6 +16,12 @@ func _ready():
 	GlobalState.active_system_root = self
 	GlobalState.current_system_id = "start_system"
 	ui_manager = GlobalState.get_ui_manager()
+	var world_env := $WorldEnvironment as WorldEnvironment
+	if world_env and world_env.environment:
+		world_env.environment.glow_enabled = GlobalState.bloom_enabled
+		GlobalState.bloom_changed.connect(func(enabled: bool) -> void:
+			world_env.environment.glow_enabled = enabled
+		)
 	# Seed random number generator
 	randomize()
 	
