@@ -5,6 +5,8 @@ signal fallback_recorded(event: Dictionary)
 signal generation_event_recorded(event: Dictionary)
 
 const MAX_RECENT_EVENTS := 100
+const WARNING_MIN_CONTENT_SOURCES := 3
+const WARNING_FALLBACK_SOURCE_RATE := 0.25
 
 var fallback_counts_by_type: Dictionary = {}
 var fallback_counts_by_reason: Dictionary = {}
@@ -108,6 +110,10 @@ func summary() -> Dictionary:
 		"events_by_type": event_counts_by_type.duplicate(true),
 		"events_by_reason": event_counts_by_reason.duplicate(true),
 		"source_counts": source_counts.duplicate(true),
+		"content_source_total": content_source_total(),
+		"fallback_source_count": fallback_source_count(),
+		"fallback_source_rate": fallback_source_rate(),
+		"developer_warnings": developer_warnings(),
 		"recent_events": generation_events.duplicate(true),
 	}
 
@@ -118,6 +124,19 @@ func summary_text(recent_limit: int = 8) -> String:
 	lines.append("- total_events: %d" % total_events)
 	lines.append("- total_fallbacks: %d" % total_fallbacks)
 	lines.append("- content_sources: %s" % _format_counts(source_counts))
+	lines.append(
+		"- fallback_source_rate: %.1f%% (%d/%d)" %
+		[
+			fallback_source_rate() * 100.0,
+			fallback_source_count(),
+			content_source_total(),
+		]
+	)
+	var warnings: Array[String] = developer_warnings()
+	if not warnings.is_empty():
+		lines.append("- developer_warnings:")
+		for warning in warnings:
+			lines.append("  %s" % warning)
 	lines.append("- fallback_types: %s" % _format_counts(fallback_counts_by_type))
 	lines.append("- fallback_reasons: %s" % _format_counts(fallback_counts_by_reason))
 	lines.append("- event_reasons: %s" % _format_counts(event_counts_by_reason))
@@ -141,6 +160,45 @@ func summary_text(recent_limit: int = 8) -> String:
 
 func print_summary() -> void:
 	print(summary_text())
+
+
+func content_source_total() -> int:
+	var total := 0
+	for count in source_counts.values():
+		total += int(count)
+	return total
+
+
+func fallback_source_count() -> int:
+	var total := 0
+	for source in source_counts.keys():
+		var source_name := str(source)
+		if source_name == "fallback" or source_name.ends_with("_fallback"):
+			total += int(source_counts.get(source, 0))
+	return total
+
+
+func fallback_source_rate() -> float:
+	var total := content_source_total()
+	if total <= 0:
+		return 0.0
+	return float(fallback_source_count()) / float(total)
+
+
+func developer_warnings() -> Array[String]:
+	var warnings: Array[String] = []
+	var total := content_source_total()
+	if total >= WARNING_MIN_CONTENT_SOURCES \
+			and fallback_source_rate() >= WARNING_FALLBACK_SOURCE_RATE:
+		warnings.append(
+			"High fallback source rate: %.1f%% (%d/%d content sources)." %
+			[
+				fallback_source_rate() * 100.0,
+				fallback_source_count(),
+				total,
+			]
+		)
+	return warnings
 
 
 func _record_generation_event(

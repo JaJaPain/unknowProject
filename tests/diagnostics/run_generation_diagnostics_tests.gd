@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_records_generation_event_summary()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
+	_test_developer_warning_marks_high_fallback_rate()
 	_test_reset_clears_summary()
 
 	if _failures.is_empty():
@@ -114,6 +115,14 @@ func _test_records_content_source_summary() -> void:
 		int(summary.get("source_counts", {}).get("static_fallback", 0)) == 1,
 		"Static fallback content source count was not recorded."
 	)
+	_expect(
+		int(summary.get("content_source_total", 0)) == 3,
+		"Content source total was not recorded."
+	)
+	_expect(
+		int(summary.get("fallback_source_count", 0)) == 2,
+		"Fallback source count was not recorded."
+	)
 
 
 func _test_summary_text_is_readable() -> void:
@@ -135,8 +144,29 @@ func _test_summary_text_is_readable() -> void:
 		"Summary text did not include static fallback source count."
 	)
 	_expect(
+		text.contains("fallback_source_rate: 66.7%"),
+		"Summary text did not include fallback source rate."
+	)
+	_expect(
+		text.contains("developer_warnings"),
+		"Summary text did not include developer warnings."
+	)
+	_expect(
 		text.contains("recent_events"),
 		"Summary text did not include recent events."
+	)
+
+
+func _test_developer_warning_marks_high_fallback_rate() -> void:
+	var summary: Dictionary = diagnostics.summary()
+	var warnings: Array = summary.get("developer_warnings", [])
+	_expect(
+		not warnings.is_empty(),
+		"High fallback source rate did not produce a developer warning."
+	)
+	_expect(
+		float(summary.get("fallback_source_rate", 0.0)) > 0.6,
+		"Fallback source rate was not calculated."
 	)
 
 
@@ -158,6 +188,10 @@ func _test_reset_clears_summary() -> void:
 	_expect(
 		(summary.get("source_counts", {}) as Dictionary).is_empty(),
 		"Reset did not clear source counts."
+	)
+	_expect(
+		(summary.get("developer_warnings", []) as Array).is_empty(),
+		"Reset did not clear developer warnings."
 	)
 
 
