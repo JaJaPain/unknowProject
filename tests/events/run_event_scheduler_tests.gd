@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_scheduler_save_restore()
 	_test_system_story_arc_event_advances_pack()
 	_test_interceptor_event_uses_system_story_pack()
+	_test_story_arc_named_npc_irreversible_guard()
 
 	if _failures.is_empty():
 		print("[PASS] Event scheduler tests")
@@ -276,4 +277,47 @@ func _test_interceptor_event_uses_system_story_pack() -> void:
 	_expect(
 		event.priority(ctx) > 1.0,
 		"Interceptor story context did not increase priority."
+	)
+
+
+func _test_story_arc_named_npc_irreversible_guard() -> void:
+	var event = SystemStoryArcEventScript.new()
+	var ctx := _make_context(300, "system.gen.present")
+	var remote_npc := {
+		"id": "npc.gen.remote",
+		"display_name": "Remote Venn",
+		"home_system_id": "system.gen.remote",
+		"lifecycle": {"protected": false},
+	}
+	_expect(
+		not event.can_apply_named_npc_irreversible(ctx, remote_npc, "dead"),
+		"Remote named NPC death should be blocked without direct involvement."
+	)
+	var present_npc := remote_npc.duplicate(true)
+	present_npc["id"] = "npc.gen.present"
+	present_npc["home_system_id"] = "system.gen.present"
+	_expect(
+		event.can_apply_named_npc_irreversible(ctx, present_npc, "captured"),
+		"Same-system named NPC capture should be allowed."
+	)
+	ctx.directly_involved_npc_ids = ["npc.gen.remote"]
+	_expect(
+		event.can_apply_named_npc_irreversible(ctx, remote_npc, "relocated"),
+		"Directly involved named NPC relocation should be allowed."
+	)
+	var protected_npc := present_npc.duplicate(true)
+	protected_npc["lifecycle"] = {"protected": true}
+	_expect(
+		not event.can_apply_named_npc_irreversible(ctx, protected_npc, "dead"),
+		"Protected named NPC death should be blocked."
+	)
+	var kaelen := {
+		"id": "npc.kaelen",
+		"display_name": "Broker Kaelen",
+		"home_system_id": "system.gen.present",
+		"lifecycle": {"protected": true},
+	}
+	_expect(
+		not event.can_apply_named_npc_irreversible(ctx, kaelen, "dead"),
+		"Kaelen death should always be blocked."
 	)

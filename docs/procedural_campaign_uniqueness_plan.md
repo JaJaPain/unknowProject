@@ -848,7 +848,7 @@ Goal: make each system feel like a place.
   them.
 - Allow remote consequences for faction control, economy, patrols, rumors, and
   service availability.
-- Gate named-NPC irreversible consequences behind player presence or direct
+- [x] Gate named-NPC irreversible consequences behind player presence or direct
   involvement.
 - Include humor guidance for the local system, including what kind of jokes or
   gallows humor fit its people and what would feel out of place.

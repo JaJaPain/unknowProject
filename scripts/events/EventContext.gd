@@ -8,6 +8,7 @@ var reputations: Dictionary = {}
 var active_mission_risk_tags: Array[String] = []
 var event_history: Array[Dictionary] = []
 var system_registry = null
+var directly_involved_npc_ids: Array[String] = []
 
 
 func to_dict() -> Dictionary:
@@ -19,6 +20,7 @@ func to_dict() -> Dictionary:
 		"reputations": reputations.duplicate(),
 		"active_mission_risk_tags": active_mission_risk_tags.duplicate(),
 		"event_history": event_history.duplicate(true),
+		"directly_involved_npc_ids": directly_involved_npc_ids.duplicate(),
 	}
 
 
@@ -33,4 +35,6 @@ static func from_dict(data: Dictionary):
 	for tag in data.get("active_mission_risk_tags", []):
 		ctx.active_mission_risk_tags.append(str(tag))
 	ctx.event_history = data.get("event_history", [])
+	for npc_id in data.get("directly_involved_npc_ids", []):
+		ctx.directly_involved_npc_ids.append(str(npc_id))
 	return ctx

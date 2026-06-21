@@ -2,6 +2,11 @@ extends RefCounted
 
 const MIN_SYSTEM_TIME_MINUTES := 60
 const MAX_ARC_EVENTS := 8
+const IRREVERSIBLE_NPC_CONSEQUENCES := [
+	"captured",
+	"dead",
+	"relocated",
+]
 
 
 func event_type_id() -> String:
@@ -48,7 +53,36 @@ func execute(context) -> Dictionary:
 		"system": str(context.current_system_id),
 		"pressure": pressure,
 		"note": note,
+		"named_npc_irreversible_policy": "player_presence_or_direct_involvement_required",
 	}
+
+
+func can_apply_named_npc_irreversible(
+	context,
+	npc_record: Dictionary,
+	consequence: String
+) -> bool:
+	var clean_consequence := consequence.strip_edges().to_lower()
+	if clean_consequence not in IRREVERSIBLE_NPC_CONSEQUENCES:
+		return true
+	if npc_record.is_empty():
+		return false
+	var lifecycle: Dictionary = npc_record.get("lifecycle", {})
+	if bool(lifecycle.get("protected", false)):
+		return false
+	var npc_id := str(npc_record.get("id", "")).strip_edges()
+	if npc_id == "npc.kaelen" or str(npc_record.get("display_name", "")).to_lower() == "broker kaelen":
+		return false
+	if context == null:
+		return false
+	var current_system_id := str(context.current_system_id)
+	var home_system_id := str(npc_record.get("home_system_id", ""))
+	if not current_system_id.is_empty() and current_system_id == home_system_id:
+		return true
+	if "directly_involved_npc_ids" in context \
+			and npc_id in context.directly_involved_npc_ids:
+		return true
+	return false
 
 
 func _current_system_config(context):
