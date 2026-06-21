@@ -616,7 +616,16 @@ First version:
   - [x] Ask about rumors.
   - [x] Request work from this contact.
 - [x] Let Kaelen appear in the lounge with system-aware commentary.
-- [ ] Let lounge rumors point toward real discoveries, secrets, or easter eggs.
+- [x] Let lounge rumors sometimes pull campaign-bible clue templates so they can
+  point toward real discoveries, secrets, or easter eggs.
+- [ ] Persist discovered lounge rumor clues and connect completed trails to
+  actual discoveries, secret routes, rare upgrades, faction truths, or endgame
+  easter eggs.
+- [ ] Later, when the core procedural loop is stable, explore a light social
+  sim layer for lounge NPCs: recurring moods, favors, grudges, friendships,
+  rivalries, small personal requests, and consequences for who the player
+  helps or ignores. This is explicitly a future polish idea, not near-term
+  scope.
 - The first implementation can use structured local facts and existing LLM
   request paths; it does not need a full relationship system yet.
 

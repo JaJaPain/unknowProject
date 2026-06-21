@@ -3626,7 +3626,7 @@ func _station_contact_topic_line(
 				faction_display,
 			]
 		"rumor":
-			var rumor := str(lines[randi() % lines.size()])
+			var rumor := _station_contact_rumor_line(npc_name, npc_data, lines)
 			return "%s rumor, %s flavor: %s" % [
 				system_name,
 				humor_style,
@@ -3637,6 +3637,57 @@ func _station_contact_topic_line(
 				role,
 				station_name,
 			]
+
+
+func _station_contact_rumor_line(
+	npc_name: String,
+	npc_data: Dictionary,
+	lines: Array
+) -> String:
+	var local_rumors: Array[String] = []
+	for raw_line in lines:
+		var clean_line := str(raw_line).strip_edges()
+		if not clean_line.is_empty():
+			local_rumors.append(clean_line)
+	var trail_clue := _campaign_rumor_trail_clue(npc_name, npc_data)
+	if not trail_clue.is_empty():
+		return trail_clue
+	if local_rumors.is_empty():
+		return "Nobody in this lounge agrees on the truth, which is usually how you know it is expensive."
+	return local_rumors[randi() % local_rumors.size()]
+
+
+func _campaign_rumor_trail_clue(npc_name: String, npc_data: Dictionary) -> String:
+	var game_root := get_tree().current_scene
+	if game_root == null:
+		return ""
+	var bible_store = game_root.get("campaign_bible_store")
+	if bible_store == null \
+			or not bible_store.has_method("is_valid") \
+			or not bible_store.is_valid():
+		return ""
+	var bible: Dictionary = bible_store.get("data")
+	var trails: Array = bible.get("rumor_trails", [])
+	if trails.is_empty():
+		return ""
+	var station_id := _current_station_contact_id()
+	var key := "%s|%s|%s|%s" % [
+		GlobalState.current_system_id,
+		station_id,
+		npc_name,
+		str(npc_data.get("faction", "")),
+	]
+	var should_attach: bool = abs(hash(key)) % 4 == 0
+	if not should_attach:
+		return ""
+	var trail: Dictionary = trails[abs(hash(key + "|trail")) % trails.size()]
+	var templates: Array = trail.get("clue_templates", [])
+	if templates.is_empty():
+		return ""
+	var clue := str(templates[abs(hash(key + "|clue")) % templates.size()]).strip_edges()
+	if clue.is_empty():
+		return ""
+	return "%s Keep that one in your pocket; it smells like a breadcrumb with invoices." % clue
 
 
 func _station_contact_local_context(npc_data: Dictionary) -> Dictionary:
