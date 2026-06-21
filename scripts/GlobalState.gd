@@ -1351,6 +1351,7 @@ var has_max_deep_mining: bool = false
 
 var kaelen_briefing_seen: bool = false
 var kaelen_briefing_accepted: bool = false
+var kaelen_arrival_systems_seen: Array[String] = []
 
 # Unique per-campaign seed mixed into procedural system generation so each
 # campaign produces different systems even from the same gate destination IDs.
@@ -1681,6 +1682,7 @@ func reset_for_restart():
 	# Reset Kaelen briefing flags so new campaigns show the intro
 	kaelen_briefing_seen = false
 	kaelen_briefing_accepted = false
+	kaelen_arrival_systems_seen.clear()
 	# New seed so procedural systems differ across campaigns
 	campaign_seed = randi()
 	# Reset reputations

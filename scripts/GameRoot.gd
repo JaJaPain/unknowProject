@@ -299,6 +299,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if event_scheduler:
 		event_scheduler.set_just_arrived(true)
 	_tick_events()
+	_maybe_emit_kaelen_system_arrival(runtime_system_id)
 	request_safe_checkpoint("gate_arrival", arrival_gate)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
@@ -607,6 +608,60 @@ func _on_system_changed_prepare_destinations(
 ) -> void:
 	if GateDiscovery:
 		GateDiscovery.ensure_destinations_for_system(system_id)
+
+
+func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
+	if system_id.is_empty() or GlobalState.is_current_system_home():
+		return
+	if system_id in GlobalState.kaelen_arrival_systems_seen:
+		return
+	var sys_def := system_registry.get_system(system_id) if system_registry else null
+	if sys_def == null or sys_def.origin != "generated":
+		return
+	GlobalState.kaelen_arrival_systems_seen.append(system_id)
+	var faction_names := _arrival_faction_names(sys_def)
+	var faction_clause := "the locals"
+	if not faction_names.is_empty():
+		faction_clause = _human_join(faction_names)
+	var line := _kaelen_arrival_line(sys_def.display_name, faction_clause)
+	GlobalState.emit_chatter("KAELEN", line, Color(0.0, 0.9, 0.9))
+
+
+func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
+	var names: Array[String] = []
+	for faction_id in sys_def.faction_ids:
+		var info := GlobalState.faction_info(str(faction_id))
+		var display := str(info.get("name", "")).strip_edges()
+		if display.is_empty():
+			display = str(faction_id).trim_prefix("faction.").capitalize()
+		if display not in names:
+			names.append(display)
+		if names.size() >= 3:
+			break
+	return names
+
+
+func _kaelen_arrival_line(system_name: String, faction_clause: String) -> String:
+	var lines: Array[String] = [
+		"Fancy seeing you in %s, Shiny. When I said that route was yours, I meant ours. Watch %s and keep my credits breathing.",
+		"Welcome to %s. %s already found three ways to charge you for air, so naturally I followed the money.",
+		"%s. New stars, same invoice. %s run the room here, so smile like you meant to survive.",
+		"Look at you, opening doors. This one's %s, and %s are already making it expensive. Proud of you. Financially.",
+	]
+	var seed_text := "%s|%s|kaelen_arrival" % [system_name, faction_clause]
+	var pick: int = abs(seed_text.hash()) % lines.size()
+	return lines[pick] % [system_name, faction_clause]
+
+
+func _human_join(values: Array[String]) -> String:
+	if values.is_empty():
+		return ""
+	if values.size() == 1:
+		return values[0]
+	if values.size() == 2:
+		return "%s and %s" % [values[0], values[1]]
+	var head := values.slice(0, values.size() - 1)
+	return "%s, and %s" % [", ".join(head), values.back()]
 
 
 func _init_event_scheduler() -> void:
@@ -2474,6 +2529,7 @@ func _capture_global_state() -> Dictionary:
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
 		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
+		"kaelen_arrival_systems_seen": GlobalState.kaelen_arrival_systems_seen.duplicate(),
 		"campaign_seed": GlobalState.campaign_seed,
 	}
 
@@ -2512,6 +2568,9 @@ func _apply_global_state(state: Dictionary) -> void:
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
 	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
 	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
+	GlobalState.kaelen_arrival_systems_seen.clear()
+	for system_id in state.get("kaelen_arrival_systems_seen", []):
+		GlobalState.kaelen_arrival_systems_seen.append(str(system_id))
 	GlobalState.campaign_seed = int(state.get("campaign_seed", 0))
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 

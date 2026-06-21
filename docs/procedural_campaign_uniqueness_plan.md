@@ -794,6 +794,10 @@ Goal: make each system feel like a place.
   funny Kaelen arrival line that welcomes or needles the player, explains that
   she has followed the money into this system, and names the local factions in
   natural dialogue.
+  - [x] Add the saved gate-arrival hook and deterministic Kaelen line so each
+    generated system gets a one-time first-arrival comment naming local factions.
+  - [ ] Replace the deterministic line source with the system story pack once
+    story packs exist.
 - Include rumor clue slots that can attach local gossip to campaign-level rumor
   trails.
 - Persist the pack with generated system state.
