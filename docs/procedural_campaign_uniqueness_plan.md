@@ -817,6 +817,16 @@ Goal: make each system feel like a place.
   - [x] Let Lounge rumors sometimes use current-system story pack rumors.
   - [x] Feed system story pack mission seeds/context into public board postings.
   - [ ] Feed system story pack mission seeds into agent mission generation.
+  - [ ] Add delivery/courier mission types that use the existing cargo and
+    special-item structure: pick up from one contact or station, carry to the
+    destination, validate handoff, and reward on completion.
+  - [ ] Add purchase-from-store mission types: send the player to buy a named
+    item from a local or nearby station store, validate that item in inventory,
+    then deliver or consume it for the contract.
+  - [ ] Let story packs choose delivery and purchase mission intents so public
+    board and agent offers are not stuck on fetch/combat loops.
+  - [ ] Add tests for delivery and purchase mission generation, inventory
+    validation, completion, failure messaging, and save/load persistence.
   - [ ] Feed system story pack danger/faction tension into patrol/interceptor
     behavior.
   - [ ] Feed system story pack humor guidance into local NPC and Kaelen prompts.
