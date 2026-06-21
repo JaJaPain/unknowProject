@@ -30,6 +30,17 @@ const RUMOR_DISCOVERY_TYPES := [
 	"endgame_easter_egg",
 ]
 const RUMOR_RARITIES := ["local", "uncommon", "rare", "legendary"]
+const HORIZON_TRIGGER_METRICS := [
+	"prepared_systems_remaining",
+	"active_story_arcs_remaining",
+	"rumor_trails_remaining",
+	"major_arc_state",
+]
+const HORIZON_TRIGGER_ACTIONS := [
+	"append_story_horizon",
+	"append_rumor_trail",
+	"append_story_arc",
+]
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -91,8 +102,13 @@ func prompt_context() -> String:
 		for trigger in regeneration_triggers:
 			if trigger is Dictionary:
 				lines.append(
-					"- %s: %s" %
-					[str(trigger.get("id", "")), str(trigger.get("description", ""))]
+					"- %s when %s <= %s: %s" %
+					[
+						str(trigger.get("id", "")),
+						str(trigger.get("metric", "")),
+						str(trigger.get("threshold", "")),
+						str(trigger.get("action", "")),
+					]
 				)
 	var expansion_rules: Array = data.get("expansion_rules", [])
 	if not expansion_rules.is_empty():
@@ -137,6 +153,9 @@ func replace_bible(next_data: Dictionary) -> Dictionary:
 		return _failure("Campaign bible store is invalid.")
 	var prepared := next_data.duplicate(true)
 	prepared["rumor_trails"] = normalize_rumor_trails(prepared.get("rumor_trails", []))
+	prepared["regeneration_triggers"] = normalize_regeneration_triggers(
+		prepared.get("regeneration_triggers", [])
+	)
 	prepared["schema_version"] = DOCUMENT_VERSION
 	prepared["document_type"] = "campaign_bible"
 	prepared["campaign_id"] = str(campaign.get("id", ""))
@@ -216,6 +235,9 @@ func _load_or_create() -> void:
 		return
 	data = bible_result["data"]
 	data["rumor_trails"] = normalize_rumor_trails(data.get("rumor_trails", []))
+	data["regeneration_triggers"] = normalize_regeneration_triggers(
+		data.get("regeneration_triggers", [])
+	)
 	validation.merge(_validate_data(data, campaign_id), "campaign_bible")
 
 
@@ -279,14 +301,23 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"regeneration_triggers": [
 			{
 				"id": "frontier_horizon_low",
+				"metric": "prepared_systems_remaining",
+				"threshold": 2,
+				"action": "append_story_horizon",
 				"description": "Fewer than the target number of prepared future systems or story packs remain beyond known gates.",
 			},
 			{
 				"id": "major_arc_resolved",
+				"metric": "active_story_arcs_remaining",
+				"threshold": 0,
+				"action": "append_story_arc",
 				"description": "A major campaign arc resolves and no successor arc has been prepared.",
 			},
 			{
 				"id": "rumor_trail_exhausted",
+				"metric": "rumor_trails_remaining",
+				"threshold": 0,
+				"action": "append_rumor_trail",
 				"description": "A rare rumor trail or payoff has been consumed and no deeper trail exists.",
 			},
 		],
@@ -398,6 +429,42 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"Regeneration triggers must be an array.",
 			"regeneration_triggers"
 		)
+	else:
+		var triggers: Array = value.get("regeneration_triggers", [])
+		for index in range(triggers.size()):
+			if not triggers[index] is Dictionary:
+				result.add_error(
+					"invalid_regeneration_trigger",
+					"Regeneration trigger must be an object.",
+					"regeneration_triggers.%d" % index
+				)
+				continue
+			var trigger: Dictionary = triggers[index]
+			for field in ["id", "metric", "action", "description"]:
+				if str(trigger.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_regeneration_trigger_field",
+						"Regeneration trigger field '%s' cannot be empty." % field,
+						"regeneration_triggers.%d.%s" % [index, field]
+					)
+			if str(trigger.get("metric", "")) not in HORIZON_TRIGGER_METRICS:
+				result.add_error(
+					"invalid_regeneration_trigger_metric",
+					"Regeneration trigger metric is unsupported.",
+					"regeneration_triggers.%d.metric" % index
+				)
+			if str(trigger.get("action", "")) not in HORIZON_TRIGGER_ACTIONS:
+				result.add_error(
+					"invalid_regeneration_trigger_action",
+					"Regeneration trigger action is unsupported.",
+					"regeneration_triggers.%d.action" % index
+				)
+			if int(trigger.get("threshold", -1)) < 0:
+				result.add_error(
+					"invalid_regeneration_trigger_threshold",
+					"Regeneration trigger threshold cannot be negative.",
+					"regeneration_triggers.%d.threshold" % index
+				)
 	if not value.get("expansion_rules", []) is Array:
 		result.add_error(
 			"invalid_expansion_rules",
@@ -444,6 +511,66 @@ static func normalize_rumor_trails(source: Variant) -> Array:
 			trail["clue_templates"] = []
 		normalized.append(trail)
 	return normalized
+
+
+static func normalize_regeneration_triggers(source: Variant) -> Array:
+	var normalized: Array = []
+	if not source is Array:
+		return normalized
+	for index in range((source as Array).size()):
+		var raw = (source as Array)[index]
+		if not raw is Dictionary:
+			continue
+		var trigger := (raw as Dictionary).duplicate(true)
+		var trigger_id := str(trigger.get("id", "")).strip_edges()
+		if trigger_id.is_empty():
+			trigger_id = "story_horizon_trigger_%d" % (index + 1)
+		trigger["id"] = trigger_id
+		var metric := str(trigger.get("metric", "")).strip_edges()
+		if metric not in HORIZON_TRIGGER_METRICS:
+			metric = _default_trigger_metric(trigger_id)
+		trigger["metric"] = metric
+		var action := str(trigger.get("action", "")).strip_edges()
+		if action not in HORIZON_TRIGGER_ACTIONS:
+			action = _default_trigger_action(metric)
+		trigger["action"] = action
+		var threshold := int(trigger.get("threshold", -1))
+		if threshold < 0:
+			threshold = _default_trigger_threshold(metric)
+		trigger["threshold"] = threshold
+		if str(trigger.get("description", "")).strip_edges().is_empty():
+			trigger["description"] = "Extend prepared campaign story when %s reaches %d." % [
+				metric,
+				threshold,
+			]
+		normalized.append(trigger)
+	return normalized
+
+
+static func _default_trigger_metric(trigger_id: String) -> String:
+	if trigger_id.contains("rumor"):
+		return "rumor_trails_remaining"
+	if trigger_id.contains("arc"):
+		return "active_story_arcs_remaining"
+	return "prepared_systems_remaining"
+
+
+static func _default_trigger_action(metric: String) -> String:
+	match metric:
+		"rumor_trails_remaining":
+			return "append_rumor_trail"
+		"active_story_arcs_remaining", "major_arc_state":
+			return "append_story_arc"
+		_:
+			return "append_story_horizon"
+
+
+static func _default_trigger_threshold(metric: String) -> int:
+	match metric:
+		"prepared_systems_remaining":
+			return 2
+		_:
+			return 0
 
 
 static func _slug(value: String) -> String:

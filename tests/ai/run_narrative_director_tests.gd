@@ -68,6 +68,9 @@ func _test_parses_campaign_bible_response() -> void:
 		}],
 		"regeneration_triggers": [{
 			"id": "echo_clues_low",
+			"metric": "rumor_trails_remaining",
+			"threshold": 1,
+			"action": "append_rumor_trail",
 			"description": "The player has consumed most prepared echo clues.",
 		}],
 		"expansion_rules": [
@@ -105,6 +108,12 @@ func _test_parses_campaign_bible_response() -> void:
 		str(trail.get("trail_id", "")) == "rumor_trail.third_echo"
 			and str(trail.get("discovery_type", "")) == "endgame_easter_egg",
 		"Parsed bible did not preserve structured rumor trail fields."
+	)
+	var trigger: Dictionary = bible.get("regeneration_triggers", [])[0]
+	_expect(
+		str(trigger.get("metric", "")) == "rumor_trails_remaining"
+			and str(trigger.get("action", "")) == "append_rumor_trail",
+		"Parsed bible did not preserve structured regeneration trigger fields."
 	)
 
 

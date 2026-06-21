@@ -76,6 +76,12 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		str(default_trail.get("discovery_type", "")) == "endgame_easter_egg",
 		"Default campaign bible rumor trail did not include a discovery type."
 	)
+	var default_trigger: Dictionary = store.data.get("regeneration_triggers", [])[0]
+	_expect(
+		str(default_trigger.get("metric", "")) == "prepared_systems_remaining"
+			and str(default_trigger.get("action", "")) == "append_story_horizon",
+		"Default campaign bible regeneration trigger was not structured."
+	)
 
 	var replacement := store.data.duplicate(true)
 	replacement["tone"] = "Dry frontier comedy with sudden consequences."
@@ -108,6 +114,12 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		str(normalized_trail.get("trail_id", "")) == "rumor_trail.glass_choir_static"
 			and str(normalized_trail.get("discovery_type", "")) == "hidden_discovery",
 		"Simple replacement rumor trail was not normalized for future clue tracking."
+	)
+	var normalized_trigger: Dictionary = store.data.get("regeneration_triggers", [])[0]
+	_expect(
+		str(normalized_trigger.get("metric", "")) == "prepared_systems_remaining"
+			and int(normalized_trigger.get("threshold", -1)) == 2,
+		"Simple replacement regeneration trigger was not normalized for future horizon checks."
 	)
 
 	var reopened := BibleStoreType.open(CAMPAIGN_PATH)

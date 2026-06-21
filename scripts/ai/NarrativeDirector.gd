@@ -31,6 +31,7 @@ static func build_campaign_bible_prompt(
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
 		"- Rumors should include at least one trail that can eventually lead to a hidden discovery or endgame easter egg.",
 		"- Rumor trails need concrete clue templates and a discovery type so later systems can turn them into real breadcrumbs.",
+		"- Story horizon regeneration triggers must name a metric, threshold, and action so future code can decide when to append more story.",
 		"- If story extends later, append a new horizon. Do not retcon known player choices.",
 		"",
 		"Campaign seed: %s" % campaign_seed,
@@ -51,7 +52,7 @@ static func build_campaign_bible_prompt(
 		"  \"story_horizon_rule\": string,",
 		"  \"story_arcs\": [{\"name\": string, \"summary\": string}],",
 		"  \"rumor_trails\": [{\"name\": string, \"trail_id\": string, \"clue_count\": number, \"hint_theme\": string, \"clue_templates\": [string], \"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", \"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string}],",
-		"  \"regeneration_triggers\": [{\"id\": string, \"description\": string}],",
+		"  \"regeneration_triggers\": [{\"id\": string, \"metric\": \"prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state\", \"threshold\": number, \"action\": \"append_story_horizon|append_rumor_trail|append_story_arc\", \"description\": string}],",
 		"  \"expansion_rules\": [string],",
 		"  \"banned_repeats\": [string]",
 		"}",
@@ -104,6 +105,12 @@ static func _normalized_campaign_bible(
 	if generated_copy.has("rumor_trails"):
 		generated_copy["rumor_trails"] = CampaignBibleStoreType.normalize_rumor_trails(
 			generated_copy.get("rumor_trails", [])
+		)
+	if generated_copy.has("regeneration_triggers"):
+		generated_copy["regeneration_triggers"] = (
+			CampaignBibleStoreType.normalize_regeneration_triggers(
+				generated_copy.get("regeneration_triggers", [])
+			)
 		)
 	for field in [
 		"tone",

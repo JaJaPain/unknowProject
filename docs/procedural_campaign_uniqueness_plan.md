@@ -737,8 +737,9 @@ Goal: create the shared story spine.
 - [x] Define rare campaign rumor trails and endgame/easter-egg hint rules with
   stable trail IDs, hint themes, clue templates, discovery types, rarity, and
   payoffs so future local rumors can attach to real breadcrumb chains.
-- Define story horizon regeneration triggers so the campaign can extend itself
-  before the player runs out of prepared arcs, systems, or rumor payoffs.
+- [x] Define story horizon regeneration triggers with explicit metrics,
+  thresholds, and actions so the campaign can extend itself before the player
+  runs out of prepared arcs, systems, or rumor payoffs.
 
 Why second: faction, NPC, and quest generation need a shared source of truth.
 
