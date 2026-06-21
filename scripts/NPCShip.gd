@@ -691,6 +691,7 @@ func die():
 	AudioManager.play_explosion(global_position)
 
 	if engine_glow and is_instance_valid(engine_glow):
+		engine_glow.get_parent().remove_child(engine_glow)
 		engine_glow.queue_free()
 		engine_glow = null
 
