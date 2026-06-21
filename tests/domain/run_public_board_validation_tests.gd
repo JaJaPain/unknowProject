@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_generated_system_offers_use_story_pack()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
+	_test_generated_contact_portrait_voice_gender_matches()
 	_test_generated_contact_flavor_lines_do_not_repeat_immediately()
 	_test_restart_clears_generated_contact_state()
 	_test_ore_offer_is_urgent()
@@ -204,6 +205,63 @@ func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:
 		faction_contacts >= 2,
 		"station_contacts: not enough faction contacts were assigned."
 	)
+
+
+func _test_generated_contact_portrait_voice_gender_matches() -> void:
+	var gs = root.get_node("GlobalState")
+	var station_ids: Array[String] = []
+	for seed_index in range(8):
+		var station_id := "station.system_gen_test.presentation_%d" % seed_index
+		station_ids.append(station_id)
+		var contacts: Array = gs.assign_generated_station_npcs(
+			station_id,
+			7600 + seed_index,
+			{
+				"gen_glass_choir_00": 0.6,
+				"gen_rust_index_01": 0.4,
+			}
+		)
+		for npc_name in contacts:
+			var npc_data: Dictionary = gs.get_minor_npc_data(str(npc_name))
+			var portrait_gender := _presentation_gender(
+				str(npc_data.get("portrait_id", ""))
+			)
+			var voice_gender := _presentation_gender(
+				str(npc_data.get("voice_profile_id", ""))
+			)
+			_expect(
+				portrait_gender.is_empty()
+					or voice_gender.is_empty()
+					or portrait_gender == voice_gender,
+				"station_contacts: generated contact portrait and voice genders do not match."
+			)
+			gs.generated_outpost_npc_data.erase(str(npc_name))
+	for station_id in station_ids:
+		gs.generated_outpost_npcs.erase(station_id)
+
+
+func _presentation_gender(presentation_id: String) -> String:
+	if presentation_id in [
+		"portrait.minor_npc_01.cassen_vane",
+		"portrait.minor_npc_01.korvin_shaw",
+		"portrait.minor_npc_02.oleg_stroud",
+		"portrait.minor_npc_02.alaric_venn",
+		"voice.cassen_vane.v1",
+		"voice.korvin_shaw.v1",
+		"voice.oleg_stroud.v1",
+		"voice.alaric_venn.v1",
+	]:
+		return "male"
+	if presentation_id in [
+		"portrait.minor_npc_01.mariska_vonn",
+		"portrait.minor_npc_01.hana_quill",
+		"portrait.minor_npc_02.dasha_invar",
+		"voice.mariska_vonn.v1",
+		"voice.hana_quill.v1",
+		"voice.dasha_invar.v1",
+	]:
+		return "female"
+	return ""
 
 
 func _test_generated_contact_flavor_lines_do_not_repeat_immediately() -> void:

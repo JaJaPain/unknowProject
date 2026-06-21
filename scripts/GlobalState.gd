@@ -631,12 +631,9 @@ static func _generated_contact_data(
 	faction_name: String = "",
 	role: String = "Local contact"
 ) -> Dictionary:
-	var portrait_id := GENERATED_CONTACT_PORTRAITS[
-		(index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()
-	]
-	var voice_id := GENERATED_CONTACT_VOICES[
-		(index + rng.randi()) % GENERATED_CONTACT_VOICES.size()
-	]
+	var presentation_index := (index + int(rng.randi())) % GENERATED_CONTACT_PORTRAITS.size()
+	var portrait_id := GENERATED_CONTACT_PORTRAITS[presentation_index]
+	var voice_id := GENERATED_CONTACT_VOICES[presentation_index]
 	var contact_lines := GENERATED_CONTACT_LINES.duplicate()
 	if GENERATED_CONTACT_FACTION_LINES.has(faction_name):
 		contact_lines.append_array(GENERATED_CONTACT_FACTION_LINES[faction_name])
