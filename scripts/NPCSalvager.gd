@@ -178,6 +178,7 @@ func take_damage(amount: float, attacker_faction: String = ""):
 
 func die():
 	AudioManager.play_explosion(global_position)
+	ImpactEffect.spawn_explosion(get_parent(), global_position, Color(0.8, 0.5, 0.2), 0.8)
 	var system_root = GlobalState.get_system_root()
 	if system_root and system_root.has_method("_on_salvager_destroyed"):
 		system_root.call("_on_salvager_destroyed")

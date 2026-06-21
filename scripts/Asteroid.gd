@@ -99,6 +99,7 @@ func deplete():
 	destroyed = true
 	_record_persistent_state()
 	AudioManager.play_explosion(global_position)
+	ImpactEffect.spawn_explosion(get_parent(), global_position, Color(0.6, 0.5, 0.4), 0.6)
 	# Remove from entities list if it was targeted
 	if GlobalState.active_target == self:
 		GlobalState.active_target = null

@@ -411,7 +411,8 @@ var chatter_cache = {
 	"hostile_taunt": [],
 	"death_cry": [],
 	"system_alert": [],
-	"industrial_banter": []
+	"industrial_banter": [],
+	"kaelen_ore_sale": []
 }
 
 var generic_banter = {
@@ -438,6 +439,13 @@ var generic_banter = {
 		"Commencing salvage sweep. Keep those lasers focused.",
 		"Another ship's misfortune is our bonus margin.",
 		"Secure the perimeter, let's scrape this hull clean."
+	],
+	"kaelen_ore_sale": [
+		"Yeah, I can move those for ya. Taking my cut, of course.",
+		"I don't want to know where you got those. I don't care either, 'cause I get my cut either way.",
+		"Ore's ore, Shiny. I've got a buyer lined up before you even finished docking. My percentage stands.",
+		"Not bad haul. I'll fence it through my usual channels — minus my modest commission. And before you ask, no, it's not negotiable.",
+		"You dig it up, I sell it off, we both walk away richer. Well, I walk away richer. You walk away less poor.",
 	]
 }
 
@@ -446,7 +454,8 @@ var active_fetches = {
 	"death_cry": false,
 	"system_alert": false,
 	"industrial_banter": false,
-	"pickup_keywords": false
+	"pickup_keywords": false,
+	"kaelen_ore_sale": false
 }
 
 # Fallback Kaelen lines if LLM is offline or too slow
@@ -3006,7 +3015,21 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 			description = "3 unique radio chatter lines (under 15 words each) from a scrapper salvage crew. " + \
 				wreck_hint + \
 				"They are pragmatic, slightly world-weary, always thinking about credits. Avoid clichés."
-		
+		"kaelen_ore_sale":
+			var ore_amount = str(ctx.get("cargo", 0))
+			var credits_earned = str(ctx.get("ore_sale_earnings", 0))
+			description = "3 unique Broker Kaelen lines (under 25 words each) reacting to the player selling ore through her. " + \
+				"The player just sold " + ore_amount + " m³ of ore for " + credits_earned + " SC. " + \
+				"Kaelen is a sharp, sarcastic broker who always takes her cut. She calls the player 'Shiny'. " + \
+				"She's amused, transactional, and never sentimental. " + \
+				"Example tone:\n" + \
+				"  1. \"Yeah, I can move those for ya. Taking my cut, of course.\"\n" + \
+				"  2. \"I don't want to know where you got those. I don't care either, 'cause I get my cut either way.\"\n" + \
+				"  3. \"Ore's ore, Shiny. I've got a buyer lined up before you even finished docking. My percentage stands.\"\n" + \
+				"  4. \"Not bad haul. I'll fence it through my usual channels — minus my modest commission. And before you ask, no, it's not negotiable.\"\n" + \
+				"  5. \"You dig it up, I sell it off, we both walk away richer. Well, I walk away richer. You walk away less poor.\"\n" + \
+				"Write 3 NEW lines in the same voice. Vary the angle — comment on the ore quality, the buyer, her margins, or the pilot's hustle. Do NOT repeat the examples."
+
 	var system_prompt = "You are writing radio chatter dialogue lines for a space simulation game rated PG-13. " + \
 		"Colourful language, mild swearing, dark humour, and sharp insults are encouraged where they fit the character. " + \
 		"Do NOT use explicit sexual content or slurs. Everything else is fair game — be creative and unpredictable. " + \

@@ -5887,8 +5887,7 @@ func _run_services_smoke_test() -> void:
 	ui.current_station = iron_reach
 	ui.current_submenu = ui.DockSubmenu.SERVICES
 	ui.call("_render_dock_submenu")
-	if ui.sell_btn.visible \
-			or ui.agent_service_btn.visible \
+	if ui.agent_service_btn.visible \
 			or ui.maintenance_bay_btn.visible \
 			or ui.repair_btn.visible \
 			or ui.ship_upgrades_btn.visible \

@@ -1015,13 +1015,13 @@ func _create_dock_menu():
 	mech_text_vbox.add_child(offer_btns_hbox)
 
 	mechanic_pickup_accept_btn = Button.new()
-	mechanic_pickup_accept_btn.text = "I'll grab it"
+	mechanic_pickup_accept_btn.text = "I'll Grab It"
 	mechanic_pickup_accept_btn.visible = false
 	mechanic_pickup_accept_btn.pressed.connect(_on_mechanic_pickup_accept_pressed)
 	offer_btns_hbox.add_child(mechanic_pickup_accept_btn)
 
 	mechanic_pickup_decline_btn = Button.new()
-	mechanic_pickup_decline_btn.text = "Not now"
+	mechanic_pickup_decline_btn.text = "Not Now"
 	mechanic_pickup_decline_btn.visible = false
 	mechanic_pickup_decline_btn.pressed.connect(_on_mechanic_pickup_decline_pressed)
 	offer_btns_hbox.add_child(mechanic_pickup_decline_btn)
@@ -1156,12 +1156,6 @@ func _create_dock_menu():
 	ore_trade_decline_btn.pressed.connect(_on_ore_trade_decline_pressed)
 	otp_btn_row.add_child(ore_trade_decline_btn)
 
-	sell_btn = Button.new()
-	sell_btn.text = "Sell Ore (1 SC per m³)"
-	sell_btn.pressed.connect(_sell_ore)
-	vbox.add_child(sell_btn)
-	
-
 	repair_btn = Button.new()
 	repair_btn.text = "Repair Ship"
 	repair_btn.pressed.connect(_repair_ship)
@@ -1205,12 +1199,12 @@ func _create_dock_menu():
 	# Outpost-only: surface a random minor-NPC flavor line. Shown only at
 	# outpost docks (see _render_dock_submenu).
 	hear_gossip_btn = Button.new()
-	hear_gossip_btn.text = "Hear Gossip from the Locals"
+	hear_gossip_btn.text = "Hear Gossip From the Locals"
 	hear_gossip_btn.pressed.connect(_on_hear_gossip_pressed)
 	vbox.add_child(hear_gossip_btn)
 
 	agent_service_btn = Button.new()
-	agent_service_btn.text = "Talk to Agent"
+	agent_service_btn.text = "Talk To Agent"
 	agent_service_btn.pressed.connect(_on_talk_to_agent_pressed)
 	vbox.add_child(agent_service_btn)
 
@@ -1240,7 +1234,7 @@ func _create_dock_menu():
 	vbox.add_child(inventory_btn)
 
 	ship_upgrades_btn = Button.new()
-	ship_upgrades_btn.text = "Ship Upgrades (Rusthawk UI)"
+	ship_upgrades_btn.text = "Ship Upgrades"
 	ship_upgrades_btn.pressed.connect(_on_ship_upgrades_pressed)
 	vbox.add_child(ship_upgrades_btn)
 
@@ -1362,7 +1356,13 @@ func _create_dock_menu():
 	agent_choices_container = VBoxContainer.new()
 	agent_choices_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	avbox.add_child(agent_choices_container)
-	
+
+	sell_btn = Button.new()
+	sell_btn.text = "Sell Ore (Hold Empty)"
+	sell_btn.disabled = true
+	sell_btn.pressed.connect(_sell_ore)
+	avbox.add_child(sell_btn)
+
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
 	agent_back_btn.pressed.connect(_on_agent_back_pressed)
@@ -3236,11 +3236,11 @@ func _render_dock_submenu() -> void:
 		dock_label.text = _mechanic_dock_title()
 		# Maintenance submenu: hide services + entry button, show repair +
 		# upgrades + back button. The hangar background stays on.
-		sell_btn.visible = false
 		agent_service_btn.visible = false
 		public_board_btn.visible = false
 		station_lounge_btn.visible = false
 		maintenance_bay_btn.visible = false
+		store_btn.visible = false
 		inventory_btn.visible = false
 		ship_upgrades_btn.visible = true
 		repair_btn.visible = true
@@ -3272,11 +3272,11 @@ func _render_dock_submenu() -> void:
 				mechanic_intro_panel.visible = false
 	elif current_submenu == DockSubmenu.LOUNGE:
 		dock_label.text = "%s LOUNGE" % _current_station_display_name().to_upper()
-		sell_btn.visible = false
 		agent_service_btn.visible = false
 		public_board_btn.visible = false
 		station_lounge_btn.visible = false
 		maintenance_bay_btn.visible = false
+		store_btn.visible = false
 		inventory_btn.visible = false
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
@@ -3297,11 +3297,11 @@ func _render_dock_submenu() -> void:
 		# sell/agent/maintenance entry. At an outpost, show only the
 		# outpost-specific actions (test pickup, hear gossip when added)
 		# and hide the rest.
-		sell_btn.visible = not is_outpost
 		agent_service_btn.visible = not is_outpost
 		public_board_btn.visible = not is_outpost
 		station_lounge_btn.visible = _current_station_has_contacts()
 		maintenance_bay_btn.visible = not is_outpost
+		store_btn.visible = not is_outpost
 		inventory_btn.visible = true
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
@@ -5262,11 +5262,24 @@ func undock_player():
 
 func _sell_ore():
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
-		var earnings = int(GlobalState.cargo)
+		var ore_amount := int(GlobalState.cargo)
+		var earnings := int(GlobalState.cargo)
 		GlobalState.player_credits += earnings
 		GlobalState.clear_cargo()
+		_update_sell_button()
 		_update_repair_button()
 		AudioManager.play_sell_ore()
+
+		var line: String = LLMInterface.get_chatter_line(
+			"kaelen_ore_sale",
+			{"ore_sale_earnings": earnings, "cargo": ore_amount}
+		)
+		if agent_dialogue_label and is_instance_valid(agent_dialogue_label):
+			agent_dialogue_label.text = line + "\n\n[Sold %d m³ ore for %d SC]" % [ore_amount, earnings]
+		_update_agent_portrait("neutral", "", "amused")
+		agent_name_label.text = "BROKER KAELEN"
+		agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
+		SpeechService.play(line, GlobalState.KAELEN_VOICE_PROFILE_ID)
 
 
 
@@ -6208,6 +6221,18 @@ func clear_dock_message() -> void:
 	dock_message_portrait.texture = null
 	dock_message_portrait.visible = false
 
+func _update_sell_button():
+	if not sell_btn:
+		return
+	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
+		var earnings := int(GlobalState.cargo)
+		sell_btn.text = "Sell Ore (%d m³ → %d SC)" % [int(GlobalState.cargo), earnings]
+		sell_btn.disabled = false
+	else:
+		sell_btn.text = "Sell Ore (Hold Empty)"
+		sell_btn.disabled = true
+
+
 func _update_repair_button():
 	if not repair_btn: return
 	var p = GlobalState.player
@@ -6302,6 +6327,7 @@ func _on_talk_to_agent_pressed():
 	if public_board_panel:
 		public_board_panel.visible = false
 	agent_panel.visible = true
+	_update_sell_button()
 
 	# Clear previous choice buttons
 	for child in agent_choices_container.get_children():
