@@ -756,7 +756,7 @@ Goal: stop relying on the same small fixed faction set.
   the current branch, while allowing original factions to appear for story drama.
 - Make `ShipGenerator` accept faction style records instead of hard-coded
   `FACTION_TEXTURES` and `FACTION_EMBLEMS`.
-- Enforce faction density targets: at least two meaningful factions per
+- [x] Enforce faction density targets: at least two meaningful factions per
   conflict-bearing generated system, usually two to three, with four larger
   factions as the crowded high end.
 - Track hostile minor faction homes so repeated player violence can matter when

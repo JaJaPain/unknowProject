@@ -65,6 +65,8 @@ func _test_config_faction_weights() -> void:
 	for seed_val in [100, 200, 300, 400, 500]:
 		var config := SystemConfig.from_seed("FW_%d" % seed_val, "system.gen.fw%d" % seed_val, seed_val)
 		_expect(not config.faction_weights.is_empty(), "Seed %d: faction_weights is empty." % seed_val)
+		_expect(config.faction_weights.size() >= 2, "Seed %d: fewer than two active factions." % seed_val)
+		_expect(config.faction_weights.size() <= 4, "Seed %d: too many active factions." % seed_val)
 		var weight_sum := 0.0
 		for faction_name: String in config.faction_weights:
 			_expect(faction_name in valid_factions, "Seed %d: invalid faction '%s'." % [seed_val, faction_name])
@@ -73,6 +75,11 @@ func _test_config_faction_weights() -> void:
 			weight_sum += float(config.faction_weights[faction_name])
 		_expect(absf(weight_sum - 1.0) < 0.01, "Seed %d: faction weights sum to %.3f, not 1.0." % [seed_val, weight_sum])
 	_expect(found_local, "Generated faction weights did not include local factions.")
+
+	for seed_val in range(1, 80):
+		var config := SystemConfig.from_seed("FW_SWEEP_%d" % seed_val, "system.gen.fw_sweep%d" % seed_val, seed_val)
+		_expect(config.faction_weights.size() >= 2, "Seed %d: density sweep found a one-faction system." % seed_val)
+		_expect(config.faction_weights.size() <= 4, "Seed %d: density sweep exceeded crowded high end." % seed_val)
 
 
 func _test_config_generated_faction_pool() -> void:

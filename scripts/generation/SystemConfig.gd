@@ -128,18 +128,30 @@ static func from_seed(
 		config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
 	var primary_idx: int = rng.randi() % local_factions.size()
 	var primary_faction: String = local_factions[primary_idx]
-	var has_second: bool = rng.randf() < 0.6
-	if has_second:
-		var second_pool := local_factions.duplicate()
-		if rng.randf() < 0.35:
-			second_pool.append(major_factions[rng.randi() % major_factions.size()])
-		second_pool.erase(primary_faction)
-		var second_faction: String = second_pool[rng.randi() % second_pool.size()]
-		var split: float = rng.randf_range(0.55, 0.75)
-		config.faction_weights[primary_faction] = split
-		config.faction_weights[second_faction] = 1.0 - split
-	else:
-		config.faction_weights[primary_faction] = 1.0
+	var faction_pool := local_factions.duplicate()
+	if rng.randf() < 0.35:
+		faction_pool.append(major_factions[rng.randi() % major_factions.size()])
+	var selected_factions: Array[String] = [primary_faction]
+	faction_pool.erase(primary_faction)
+	var target_faction_count := 2
+	if rng.randf() < 0.45:
+		target_faction_count += 1
+	if rng.randf() < 0.12:
+		target_faction_count += 1
+	target_faction_count = mini(target_faction_count, 4)
+	while selected_factions.size() < target_faction_count and not faction_pool.is_empty():
+		var next_index: int = rng.randi() % faction_pool.size()
+		selected_factions.append(str(faction_pool[next_index]))
+		faction_pool.remove_at(next_index)
+	var raw_weights: Dictionary = {}
+	var total_weight := 0.0
+	for index in range(selected_factions.size()):
+		var faction_name := selected_factions[index]
+		var weight := rng.randf_range(1.2, 1.7) if index == 0 else rng.randf_range(0.5, 1.1)
+		raw_weights[faction_name] = weight
+		total_weight += weight
+	for faction_name in selected_factions:
+		config.faction_weights[faction_name] = float(raw_weights[faction_name]) / total_weight
 
 	config.outbound_gate_count = 1 + (1 if rng.randf() < 0.4 else 0)
 
