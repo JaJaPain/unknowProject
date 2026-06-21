@@ -47,13 +47,13 @@ and they should not block or overlap with current Codex work.
 
 ## Audio And TTS Hygiene
 
-- [ ] Build a small list of words/faction names that TTS mispronounces or spells
+- [x] Build a small list of words/faction names that TTS mispronounces or spells
   out, such as all-caps faction labels.
-- [ ] Propose a display-text versus spoken-text cleanup plan so UI can keep
+- [x] Propose a display-text versus spoken-text cleanup plan so UI can keep
   faction emphasis while TTS receives natural casing.
-- [ ] Audit recent mission dialogue screenshots/logs for repeated "Indy" usage
+- [x] Audit recent mission dialogue screenshots/logs for repeated "Indy" usage
   after acceptance lines and document any remaining bad examples.
-- [ ] Check whether generated faction names need pronunciation hints or simple
+- [x] Check whether generated faction names need pronunciation hints or simple
   spoken-name aliases.
 
 ## Assets And Metadata
