@@ -997,6 +997,10 @@ procedural identity and mission reliability are stable.
     "fighters stop chasing me" fine payment.
   - [ ] Add tests for witness trigger, response cap, cooldown/stand-down, fine
     payment clearing heat, and non-escalating enforcement kills.
+    First-pass enforcement service is covered for two-ship dispatch requests,
+    response-group caps, five-minute heat expiry, fine accumulation/payment,
+    and enforcement ship metadata. Scene witness bubbles, actual fighter
+    spawning, and death-rule integration still need wiring.
 - Add an expensive illegal transponder replacement service:
   - [ ] Let the player pay a very high price to wipe their public identity,
     clearing both good and bad faction reputation.
