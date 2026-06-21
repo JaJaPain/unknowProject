@@ -4310,7 +4310,7 @@ func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBox
 
 func _on_inventory_use_pressed(item_id: String) -> void:
 	if GlobalState.player == null:
-		show_hud_warning("No ship available for item use.")
+		show_hud_warning("Return to your ship before using items.")
 		return
 	if not ConsumableEffectsScript.use(
 		item_id,
@@ -5583,7 +5583,7 @@ func activate_selected_jumpgate() -> void:
 
 	var game_root := get_tree().current_scene
 	if not game_root or not game_root.has_method("get_jump_block_reason"):
-		show_hud_warning("Jump control is unavailable.")
+		show_hud_warning("Jump drive not ready.")
 		return
 	var block_reason: String = game_root.get_jump_block_reason(gate)
 	if block_reason != "":

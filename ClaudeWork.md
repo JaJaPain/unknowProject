@@ -102,11 +102,11 @@ and they should not block or overlap with current Codex work.
 
 ## Parking Lot
 
-- [ ] Sketch possible light social-sim affordances for the Station Lounge, but
+- [x] Sketch possible light social-sim affordances for the Station Lounge, but
   keep it as design notes only.
-- [ ] Sketch possible boss-like discovery visual treatments and encounter
+- [x] Sketch possible boss-like discovery visual treatments and encounter
   staging without touching gate or mission code.
-- [ ] Sketch possible store presentation polish for future purchase-from-store
+- [x] Sketch possible store presentation polish for future purchase-from-store
   missions without adding the mission type yet.
 
 ## Next Cooldown Batch
@@ -150,7 +150,7 @@ generated-system persistence.
   whether each system feels distinct, too bright, too empty, or visually noisy.
 - [ ] Check asteroid fields after the rock-model pass for scale readability,
   mining-laser contact accuracy, and any cases where bobbing looks unnatural.
-- [ ] Add a polish note for faction-owned asteroid belts: possible warning buoy,
+- [x] Add a polish note for faction-owned asteroid belts: possible warning buoy,
   patrol beacon, permit sign, or subtle scanner ring visuals. Notes only.
 - [ ] Review boost visuals from cockpit/player-view distance and list what still
   needs feedback: burst start, active trail, cooldown, heat hint, or failure
@@ -187,8 +187,8 @@ generated-system persistence.
   the player was on.
 - [ ] Re-run the quest-gen test scene manually and save only the summary plus
   the worst 3 examples. Do not edit generation code from this task.
-- [ ] Check whether old generated campaign saves carry stale NPC presentation
+- [x] Check whether old generated campaign saves carry stale NPC presentation
   data after fixes. Document expected behavior for old saves versus new
   campaigns.
-- [ ] Make a small list of error messages that should be more player-friendly if
+- [x] Make a small list of error messages that should be more player-friendly if
   they ever appear during a normal playtest.
