@@ -45,7 +45,13 @@ func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void:
 		"KILL_SHIPS":
 			contract_lines = "Destroy %d %s ships | Reward: %d SC" % [
 				obj.get("count_required", 0),
-				str(obj.get("target_faction", "???")).to_upper(),
+				str(obj.get(
+					"target_faction_display",
+					GlobalState.faction_display_name(
+						str(obj.get("target_faction", "???")),
+						true
+					)
+				)),
 				obj.get("reward_credits", 0)
 			]
 		"DELIVER_ORE":

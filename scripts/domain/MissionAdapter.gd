@@ -90,6 +90,12 @@ static func build_active_state(
 			state["target_faction"] = str(
 				objective.get("target_faction", "zenith")
 			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "zenith")
+				)
+			)
 			state["count_required"] = max(
 				1,
 				int(
@@ -166,6 +172,12 @@ static func build_active_state(
 			state["target_faction"] = str(
 				objective.get("target_faction", "reavers")
 			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "reavers")
+				)
+			)
 			state["count_required"] = max(
 				1,
 				int(objective.get("count_required", 3))
@@ -187,6 +199,12 @@ static func build_active_state(
 		"TARGET_WITH_COMMS_REVERSAL":
 			state["target_faction"] = str(
 				objective.get("target_faction", "reavers")
+			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "reavers")
+				)
 			)
 			state["count_required"] = max(
 				2,
@@ -218,6 +236,52 @@ static func build_active_state(
 
 static func validate_active_state(source: Dictionary) -> ValidationResult:
 	return StateType.new().load_from_dict(source)
+
+
+static func _target_faction_display(
+	objective: Dictionary,
+	fallback_key: String
+) -> String:
+	var explicit := str(objective.get("target_faction_display", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	return _display_faction_key(str(objective.get("target_faction", fallback_key)))
+
+
+static func _display_faction_key(faction_key: String) -> String:
+	var clean := faction_key.strip_edges().to_lower()
+	match clean:
+		"zenith", "faction.zenith":
+			return "Zenith"
+		"aurelia", "faction.aurelia":
+			return "Aurelia"
+		"vanguard", "faction.vanguard":
+			return "Vanguard"
+		"reavers", "faction.reavers":
+			return "Reavers"
+		"obsidian", "faction.obsidian":
+			return "Obsidian"
+		"dustborn", "faction.dustborn":
+			return "Dustborn"
+		"wraiths", "faction.wraiths":
+			return "Wraiths"
+		"ironclad", "faction.ironclad":
+			return "Ironclad"
+	if clean.begins_with("faction.generated."):
+		clean = clean.trim_prefix("faction.generated.")
+	elif clean.begins_with("faction."):
+		clean = clean.trim_prefix("faction.")
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var words := clean.replace(".", "_").replace("-", "_").split("_", false)
+	var titled: Array[String] = []
+	for word in words:
+		if word.is_valid_int() or word.length() <= 1:
+			continue
+		titled.append(word.substr(0, 1).to_upper() + word.substr(1))
+	if titled.is_empty():
+		return "Local"
+	return " ".join(titled)
 
 
 static func normalize_legacy_state(source: Dictionary) -> Dictionary:

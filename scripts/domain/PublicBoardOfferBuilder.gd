@@ -563,9 +563,13 @@ static func _story_faction_display(faction_name: String) -> String:
 		return "Wraith"
 	if clean == "ironclad":
 		return "Ironclad"
+	if clean.begins_with("faction.generated."):
+		clean = clean.trim_prefix("faction.generated.")
+	elif clean.begins_with("faction."):
+		clean = clean.trim_prefix("faction.")
 	if clean.begins_with("gen_"):
 		clean = clean.trim_prefix("gen_")
-	var parts := clean.replace("_", " ").split(" ", false)
+	var parts := clean.replace(".", "_").replace("-", "_").replace("_", " ").split(" ", false)
 	var titled: Array[String] = []
 	for part in parts:
 		var lower := str(part).to_lower()
@@ -665,8 +669,12 @@ static func _objective_summary(objective: Dictionary) -> String:
 				str(objective.get("store_display", "the store")),
 			]
 		TEMPLATE_RECOVER_COMBAT_DROP:
+			var target_display := _story_faction_display(
+				str(objective.get("target_faction", "hostile"))
+			)
+			objective["target_faction_display"] = target_display
 			return "Recover %s from %s wreckage" % [
 				str(objective.get("item_name", "the data pack")),
-				str(objective.get("target_faction", "hostile")).to_upper(),
+				target_display,
 			]
 	return "Review posting details"

@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_delivery_courier_offer()
 	_test_purchase_delivery_offer()
 	_test_recovery_offer()
+	_test_generated_faction_display_name()
 	_test_timed_offer()
 	_test_public_board_text_generation()
 	_test_public_board_story_intents_prioritize_offers()
@@ -97,6 +98,7 @@ func _test_kill_offer() -> void:
 	_expect(
 		state.get("objective_type") == "KILL_SHIPS"
 			and state.get("target_faction") == "reavers"
+			and state.get("target_faction_display") == "Reavers"
 			and int(state.get("count_required")) == 4
 			and int(state.get("current_count")) == 0,
 		"Kill offer did not apply its combat multiplier correctly."
@@ -235,11 +237,42 @@ func _test_recovery_offer() -> void:
 	_expect(
 		state.get("objective_type") == "RECOVER_COMBAT_DROP"
 			and state.get("target_faction") == "reavers"
+			and state.get("target_faction_display") == "Reavers"
 			and int(state.get("count_required")) == 3
 			and is_equal_approx(float(state.get("drop_chance")), 0.33)
 			and state.get("item_name") == "data pack"
 			and not bool(state.get("ship_log_recovered", false)),
 		"Recovery offer did not produce random-drop ship-log mission state."
+	)
+
+
+func _test_generated_faction_display_name() -> void:
+	var adapted := AdapterType.build_active_state(
+		_offer(
+			"Generated Patrol Sweep",
+			"neutral",
+			"Latch Parish Juno Marl",
+			{
+				"type": "KILL_SHIPS",
+				"target_faction": "gen_latch_parish_02",
+				"count_required": 2,
+				"reward_credits": 200,
+			}
+		),
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.generated_faction_test",
+		"system.generated.test"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Generated faction offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		state.get("target_faction") == "gen_latch_parish_02"
+			and state.get("target_faction_display") == "Latch Parish",
+		"Generated faction display leaked raw ID: %s" %
+			str(state.get("target_faction_display", ""))
 	)
 
 

@@ -2349,9 +2349,14 @@ func _objective_summary(obj_type: String, obj: Dictionary) -> String:
 			obj.get("amount_required", 20.0)
 		)))
 	if obj_type == "KILL_SHIPS":
+		var target_display := GlobalState.faction_display_name(
+			str(obj.get("target_faction", "zenith")),
+			true
+		)
+		obj["target_faction_display"] = target_display
 		return "Destroy %d %s ships" % [
 			int(obj.get("count_required", 3)),
-			str(obj.get("target_faction", "zenith")).to_upper(),
+			target_display,
 		]
 	if obj_type == "PICKUP_SPECIAL":
 		return "Pick up %s from %s at %s" % [
@@ -2377,13 +2382,18 @@ func _safe_objective_dialogue(
 			int(round(float(obj.get("amount_required", 20.0)))),
 		]
 	if obj_type == "KILL_SHIPS":
+		var target_display := GlobalState.faction_display_name(
+			str(obj.get("target_faction", "zenith")),
+			true
+		)
+		obj["target_faction_display"] = target_display
 		return (
 			"I need the lane cleared, %s. Destroy %d %s ships and "
 			+ "come back in one piece."
 		) % [
 			nickname,
 			int(obj.get("count_required", 3)),
-			str(obj.get("target_faction", "zenith")).to_upper(),
+			target_display,
 		]
 	if obj_type == "PICKUP_SPECIAL":
 		return (

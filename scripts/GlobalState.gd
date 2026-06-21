@@ -361,6 +361,42 @@ static func faction_info(faction_id: String) -> Dictionary:
 		}
 	return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
 
+static func faction_display_name(faction_id: String, adjective: bool = false) -> String:
+	var clean := faction_id.strip_edges()
+	if clean.is_empty():
+		return "Unknown"
+	var definition := GameContentRegistry.shared().faction(clean)
+	if definition:
+		var display := str(definition.display_name)
+		if adjective and clean in ["reavers", "faction.reavers", "wraiths", "faction.wraiths"]:
+			return display.trim_suffix("s")
+		return display
+	var generated := _generated_faction_record(clean)
+	if not generated.is_empty():
+		return str(generated.get("display_name", _title_faction_key(clean)))
+	return _title_faction_key(clean)
+
+
+static func _title_faction_key(faction_id: String) -> String:
+	var clean := faction_id.strip_edges().to_lower()
+	if clean.begins_with("faction.generated."):
+		clean = clean.trim_prefix("faction.generated.")
+	elif clean.begins_with("faction."):
+		clean = clean.trim_prefix("faction.")
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var parts := clean.replace(".", "_").replace("-", "_").split("_", false)
+	var titled: Array[String] = []
+	for part in parts:
+		if part.is_valid_int():
+			continue
+		if part.length() <= 1:
+			continue
+		titled.append(part.substr(0, 1).to_upper() + part.substr(1))
+	if titled.is_empty():
+		return "Local"
+	return " ".join(titled)
+
 # Returns the AtlasTexture for a minor NPC's portrait, sliced from its 2x2
 # source image at the cell position stored in MINOR_NPCS.
 # Returns null if the name isn't recognized or the image fails to load.

@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_kill_ships_handle_event_wrong_faction()
 	_test_kill_ships_handle_event_no_respawn_when_done()
 	_test_kill_ships_format_tracker()
+	_test_kill_ships_format_tracker_generated_faction()
 	_test_recover_handle_event_increments()
 	_test_recover_handle_event_wrong_faction()
 	_test_recover_handle_event_recovered_sets_flag()
@@ -141,7 +142,21 @@ func _test_kill_ships_format_tracker() -> void:
 	var cap := KillCap.new()
 	var text := cap.format_tracker_text({"current_count": 1, "count_required": 3, "target_faction": "zenith"})
 	_expect("1 / 3" in text, "missing count: %s" % text)
-	_expect("ZENITH" in text, "missing faction: %s" % text)
+	_expect("Zenith" in text, "missing faction: %s" % text)
+
+
+func _test_kill_ships_format_tracker_generated_faction() -> void:
+	var cap := KillCap.new()
+	var text := cap.format_tracker_text({
+		"current_count": 1,
+		"count_required": 2,
+		"target_faction": "gen_latch_parish_02",
+	})
+	_expect(text.contains("Latch Parish"), "generated faction display leaked raw ID: %s" % text)
+	_expect(
+		not text.contains("GEN_LATCH"),
+		"generated faction tracker used raw uppercase ID: %s" % text
+	)
 
 
 # --- RecoverCombatDropCapability ---
@@ -193,7 +208,7 @@ func _test_recover_format_tracker_hunting() -> void:
 	var text := cap.format_tracker_text({"current_count": 2, "ship_log_recovered": false,
 		"target_faction": "vanguard"})
 	_expect("Wrecks searched: 2" in text, "hunting text wrong: %s" % text)
-	_expect("VANGUARD" in text, "missing faction: %s" % text)
+	_expect("Vanguard" in text, "missing faction: %s" % text)
 
 
 func _test_recover_format_tracker_recovered() -> void:

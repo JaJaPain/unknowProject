@@ -6912,21 +6912,29 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	SpeechService.play(quest_data.get("dialogue", ""), agent_voice_profile_id)
 	
 	# Append contract details block
-	var f_client = quest_data.get("faction", "neutral").to_upper()
+	var f_client := GlobalState.faction_display_name(
+		str(quest_data.get("faction", "neutral"))
+	)
 	var obj = quest_data.get("objective", {})
 	var obj_type = obj.get("type", "UNKNOWN")
 	var amt_info = ""
 	if obj_type == "DELIVER_ORE":
 		amt_info = str(int(obj.get("amount_required", 20))) + " m³ Ore"
 	elif obj_type == "KILL_SHIPS":
-		var target_fac = obj.get("target_faction", "zenith").to_upper()
+		var target_fac := GlobalState.faction_display_name(
+			str(obj.get("target_faction", "zenith")),
+			true
+		)
 		amt_info = "Destroy " + str(obj.get("count_required", 3)) + " " + target_fac + " ships"
 	elif obj_type == "PICKUP_SPECIAL":
 		amt_info = "Pick up " + str(obj.get("part_name", "the package"))
 	elif obj_type == "RECOVER_COMBAT_DROP":
 		amt_info = "Recover %s from %s wreckage" % [
 			str(obj.get("item_name", "the data pack")),
-			str(obj.get("target_faction", "hostile")).to_upper(),
+			GlobalState.faction_display_name(
+				str(obj.get("target_faction", "hostile")),
+				true
+			),
 		]
 	var validated_summary := str(quest_data.get("objective_summary", ""))
 	if not validated_summary.is_empty():

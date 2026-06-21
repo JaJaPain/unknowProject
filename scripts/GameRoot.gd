@@ -4949,7 +4949,7 @@ func _run_llm_validator_smoke_test() -> void:
 			or int(kill_objective.get("count_required", 0)) != 3 \
 			or not bool(kill_quest.get("objective_dialogue_rewritten", false)) \
 			or str(kill_quest.get("dialogue", "")).to_lower().find("destroy") == -1 \
-			or str(kill_quest.get("objective_summary", "")).find("AURELIA") == -1:
+			or str(kill_quest.get("objective_summary", "")).find("Aurelia") == -1:
 		_fail_llm_validator_smoke_test(
 			"Contradictory ore prose was not repaired for a kill mission."
 		)
