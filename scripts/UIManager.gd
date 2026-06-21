@@ -3399,11 +3399,6 @@ func _render_station_contacts(should_show: bool) -> void:
 			and _selected_station_contact not in contacts:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
-	var title := Label.new()
-	title.text = "Station Lounge"
-	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
-	station_contacts_list.add_child(title)
 	if show_kaelen:
 		var kaelen_btn := Button.new()
 		kaelen_btn.text = "Broker Kaelen [Broker]"
@@ -3420,7 +3415,7 @@ func _render_station_contacts(should_show: bool) -> void:
 				GlobalState.faction_info(faction).get("name", faction.capitalize())
 			)
 		var btn := Button.new()
-		btn.text = "%s  [%s%s]" % [str(npc_name), role, faction_label]
+		btn.text = "%s [%s%s]" % [str(npc_name), role, faction_label]
 		btn.tooltip_text = "Hear what this station contact has to say."
 		btn.pressed.connect(_on_station_contact_pressed.bind(str(npc_name)))
 		station_contacts_list.add_child(btn)

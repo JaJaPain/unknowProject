@@ -35,7 +35,7 @@ and they should not block or overlap with current Codex work.
 
 - [x] Audit dock/service buttons for consistent labels, capitalization, spacing,
   and disabled-state messages.
-- [ ] Check Station Lounge layout at common resolutions and note any overlap,
+- [x] Check Station Lounge layout at common resolutions and note any overlap,
   clipping, or awkward spacing. Safe fixes are okay; deeper Lounge feature work
   should stay parked.
 - [x] Review inventory UI labels and empty states so the player understands
