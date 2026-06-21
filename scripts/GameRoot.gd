@@ -252,6 +252,16 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
 	var original_fov := camera.fov if camera else 70.0
 	var effect_duration := 0.05 if DisplayServer.get_name() == "headless" else JUMP_ENTRY_DURATION
+	
+	# entry length-contraction warp-stretch effect
+	var orig_scale := Vector3.ONE
+	var visual_node = player.get_node_or_null("Visual")
+	if visual_node and DisplayServer.get_name() != "headless":
+		orig_scale = visual_node.scale
+		var target_scale = orig_scale
+		target_scale.z *= 2.2 # stretch along Z
+		create_tween().tween_property(visual_node, "scale", target_scale, effect_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		
 	if source_gate and is_instance_valid(source_gate) and source_gate.has_method("begin_jump_charge"):
 		source_gate.begin_jump_charge(effect_duration)
 		create_tween().tween_property(player, "global_position", source_gate.global_position, effect_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -259,6 +269,20 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if camera:
 		create_tween().tween_property(camera, "fov", min(original_fov + 24.0, 120.0), effect_duration)
 	await transition_fx.play_entry(effect_duration)
+	
+	# Reset scale back to normal now that we're inside the tunnel
+	if visual_node and DisplayServer.get_name() != "headless":
+		visual_node.scale = orig_scale
+		
+	# Hide player visual mesh and spawn the 3D hyperspace tunnel
+	var jump_tunnel = null
+	if DisplayServer.get_name() != "headless":
+		if visual_node:
+			visual_node.visible = false
+		jump_tunnel = load("res://scenes/jump_tunnel.tscn").instantiate()
+		add_child(jump_tunnel)
+		jump_tunnel.setup_ship_model(visual_node)
+		
 	AudioManager.play_jump_transit()
 	if not _capture_current_system_state():
 		push_error("[GameRoot] System state capture failed during gate travel.")
@@ -281,12 +305,44 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	player.global_transform = arrival_transform
 	last_arrival_gate_id = runtime_gate_id
 
+	# Let the player fly down the 3D tunnel for a satisfying duration
+	if DisplayServer.get_name() != "headless":
+		await get_tree().create_timer(3.5).timeout
+
 	if player.has_method("sync_camera_to_ship"):
 		player.sync_camera_to_ship()
 	if camera:
 		camera.fov = original_fov
+		
 	await transition_fx.hold_covered(1 if DisplayServer.get_name() == "headless" else 2)
+	
+	# Remove the 3D tunnel and restore player visuals
+	if jump_tunnel and is_instance_valid(jump_tunnel):
+		jump_tunnel.queue_free()
+	if visual_node:
+		visual_node.visible = true
+	if camera:
+		camera.make_current()
+	
 	AudioManager.play_jump_arrival()
+	
+	# Spawn exit shockwave bubble and tween player deceleration
+	if DisplayServer.get_name() != "headless" and arrival_gate:
+		var final_transform = arrival_gate.call("get_arrival_transform")
+		var gate_center = arrival_gate.global_position
+		player.global_position = gate_center
+		
+		var bubble_scene = load("res://scenes/warp_exit_bubble.tscn")
+		if bubble_scene:
+			var bubble = bubble_scene.instantiate()
+			new_system.add_child(bubble)
+			bubble.global_position = gate_center
+			
+		var exit_dur := JUMP_EXIT_DURATION
+		var exit_tween := create_tween()
+		exit_tween.tween_property(player, "global_position", final_transform.origin, exit_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		exit_tween.parallel().tween_property(player.get_node("CameraPivot"), "global_position", final_transform.origin, exit_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		
 	await transition_fx.play_exit(0.05 if DisplayServer.get_name() == "headless" else JUMP_EXIT_DURATION)
 	_prepare_player_after_system_change()
 	CampaignClock.advance_minutes(GATE_TRAVEL_MINUTES)

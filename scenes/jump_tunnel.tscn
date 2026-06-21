@@ -1,0 +1,80 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/JumpTunnel.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/hyperspace_tunnel_3d.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="TunnelMaterial"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/speed = 6.0
+shader_parameter/base_color = Color(0.015, 0.05, 0.18, 1.0)
+shader_parameter/neon_color = Color(0.08, 0.55, 0.9, 1.0)
+shader_parameter/accent_color = Color(0.65, 0.05, 0.45, 1.0)
+shader_parameter/ring_frequency = 12.0
+shader_parameter/ring_speed = 10.0
+shader_parameter/noise_scale = 2.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+material = SubResource("TunnelMaterial")
+custom_aabb = AABB(-50, -300, -50, 100, 600, 100)
+top_radius = 22.0
+bottom_radius = 22.0
+height = 500.0
+radial_segments = 32
+rings = 16
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.01, 0.01, 0.02, 1.0)
+glow_enabled = true
+glow_intensity = 1.0
+glow_strength = 1.1
+glow_bloom = 0.25
+glow_blend_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="ParticleMaterial"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(0.75, 0.93, 1.0, 0.65)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("ParticleMaterial")
+size = Vector3(0.08, 0.08, 12.0)
+
+[node name="JumpTunnel" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="TunnelCylinder" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -100)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="ShipAnchor" type="Node3D" parent="."]
+
+[node name="WarpCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.994522, 0.104528, 0, -0.104528, 0.994522, 0, 2.6, 12.5)
+fov = 72.0
+far = 20000.0
+
+[node name="WarpParticles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -180)
+amount = 160
+lifetime = 0.6
+preprocess = 0.6
+mesh = SubResource("BoxMesh_1")
+emission_shape = 3
+emission_box_extents = Vector3(18, 18, 1)
+direction = Vector3(0, 0, 1)
+spread = 0.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 280.0
+initial_velocity_max = 420.0
+
+[node name="EngineGlowLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+light_color = Color(0.18, 0.78, 1.0, 1)
+light_energy = 8.0
+omni_range = 15.0
