@@ -203,16 +203,16 @@ hidden quest variants or gate discoveries, but that's v3+.
 | 7 | NPCs approaching the player (v2) | Timer/event system |
 | 8 | Cross-session memory for all NPCs (v2) | NPC save data |
 
-## Open Questions
+## Decisions (resolved 2026-06-21)
 
-- Should the bartender have a unique portrait per station, or reuse a
-  shared "bartender" archetype with palette swaps?
-- How many portrait slots at minimum? 4 feels right (bartender + 3 seats)
-  but 5 gives more breathing room for generated systems with many NPCs.
-- Should mood be visible before clicking (as a tag under the portrait) or
-  revealed through conversation? Visible mood lets the player pick who to
-  talk to strategically; hidden mood makes it more of a surprise.
-- TTS for bar NPCs: full voice for every line, or only for the bartender
-  and first greeting? Full voice is expensive per-visit.
-- Should the Lounge have ambient audio? Bar chatter, glass clinks, music?
-  Low effort, high atmosphere.
+1. **Bartender portraits**: Unique per station. Each bar gets its own
+   generated bartender with a distinct portrait, name, and personality.
+2. **Portrait slots**: 4 total (bartender + 3 NPC seats).
+3. **Mood visibility**: Hidden until the player clicks. Mood is revealed
+   through the NPC's greeting and conversation tone, not a UI tag. Makes
+   each conversation a small discovery.
+4. **TTS**: Full voice for every NPC line, every message. Long lines can
+   be segmented. The Lounge is a still screen with no GPU pressure from
+   gameplay rendering, so TTS cost is not a concern.
+5. **Ambient audio**: Yes. Bar chatter, glass clinks, background music.
+   Audio assets produced in Suno — not a blocker.
