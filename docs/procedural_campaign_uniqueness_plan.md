@@ -777,7 +777,7 @@ Goal: make station contacts unique and persistent.
 - Give outposts two or more random local contacts, weighted by faction and story
   pressure.
 - Replace temporary generated contact data with registry-backed NPC identities.
-- Add per-NPC line memory to block repeats.
+- [x] Add per-NPC line memory to block repeats.
 - Add player-proximity rules for death, betrayal, relocation, and disappearance.
 
 Why fourth: conversations cannot feel unique until speakers are unique.

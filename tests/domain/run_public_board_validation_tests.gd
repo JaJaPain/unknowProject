@@ -17,6 +17,8 @@ func _initialize() -> void:
 	_test_pickup_offer_uses_current_system_outpost()
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
+	_test_generated_contact_flavor_lines_do_not_repeat_immediately()
+	_test_restart_clears_generated_contact_state()
 	_test_ore_offer_is_urgent()
 	_test_fallback_renders_all_placeholders()
 	_test_fallback_preserves_board_metadata()
@@ -156,6 +158,50 @@ func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:
 	_expect(
 		faction_contacts >= 2,
 		"station_contacts: not enough faction contacts were assigned."
+	)
+
+
+func _test_generated_contact_flavor_lines_do_not_repeat_immediately() -> void:
+	var gs = root.get_node("GlobalState")
+	var station_id := "station.system_gen_test.repeat"
+	var npc_name := "Repeat Test Contact"
+	gs.generated_outpost_npcs[station_id] = [npc_name]
+	gs.generated_outpost_npc_data[npc_name] = {
+		"outpost": station_id,
+		"display_name": npc_name,
+		"flavor_lines": ["First line.", "Second line."],
+		"line_memory_fingerprints": [],
+		"voice_profile_id": "voice.neutral.v1",
+		"flavor_color": Color.WHITE,
+	}
+	gs.npc_line_memory.erase(npc_name)
+	var first: Dictionary = gs.get_random_npc_flavor_line(station_id)
+	var second: Dictionary = gs.get_random_npc_flavor_line(station_id)
+	_expect(
+		not first.is_empty()
+			and not second.is_empty()
+			and str(first.get("line", "")) != str(second.get("line", "")),
+		"contact_line_memory: generated contact repeated a flavor line immediately."
+	)
+	gs.generated_outpost_npc_data.erase(npc_name)
+	gs.generated_outpost_npcs.erase(station_id)
+	gs.npc_line_memory.erase(npc_name)
+
+
+func _test_restart_clears_generated_contact_state() -> void:
+	var gs = root.get_node("GlobalState")
+	gs.generated_outpost_npcs["station.system_gen_test.stale"] = ["Stale Contact"]
+	gs.generated_outpost_npc_data["Stale Contact"] = {
+		"outpost": "station.system_gen_test.stale",
+		"flavor_lines": ["Old news."],
+	}
+	gs.npc_line_memory["Stale Contact"] = ["old"]
+	gs.reset_for_restart()
+	_expect(
+		gs.generated_outpost_npcs.is_empty()
+			and gs.generated_outpost_npc_data.is_empty()
+			and gs.npc_line_memory.is_empty(),
+		"contact_reset: generated contact state survived a new-campaign reset."
 	)
 
 

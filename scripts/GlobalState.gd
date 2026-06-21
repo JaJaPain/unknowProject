@@ -378,6 +378,7 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 # assigned. The mechanic (Jenna Kross) is excluded — she's at Grease Monkeys.
 static var generated_outpost_npcs: Dictionary = {}
 static var generated_outpost_npc_data: Dictionary = {}
+static var npc_line_memory: Dictionary = {}
 static var campaign_npc_identity_store = null
 static var campaign_agent_memory_store = null
 
@@ -986,13 +987,76 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 	var lines: Array = npc.get("flavor_lines", [])
 	if lines.is_empty():
 		return {}
-	var line: String = lines[randi() % lines.size()]
+	var line: String = _pick_remembered_npc_flavor_line(npc_name, lines)
 	return {
 		"npc_name": npc_name,
 		"line": line,
 		"color": npc.get("flavor_color", Color.WHITE),
 		"voice_profile_id": npc.get("voice_profile_id", "voice.neutral.v1"),
 	}
+
+static func _pick_remembered_npc_flavor_line(npc_name: String, lines: Array) -> String:
+	var clean_lines: Array[String] = []
+	for raw_line in lines:
+		var clean_line := str(raw_line).strip_edges()
+		if not clean_line.is_empty():
+			clean_lines.append(clean_line)
+	if clean_lines.is_empty():
+		return ""
+	var memory: Array = npc_line_memory.get(npc_name, []).duplicate()
+	if generated_outpost_npc_data.has(npc_name):
+		var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+		memory = npc_data.get("line_memory_fingerprints", memory).duplicate()
+	var candidates: Array[String] = []
+	for line in clean_lines:
+		if _npc_line_fingerprint(line) not in memory:
+			candidates.append(line)
+	if candidates.is_empty():
+		memory.clear()
+		candidates = clean_lines.duplicate()
+	var picked_line := candidates[randi() % candidates.size()]
+	var picked_fingerprint := _npc_line_fingerprint(picked_line)
+	if picked_fingerprint not in memory:
+		memory.append(picked_fingerprint)
+	while memory.size() > maxi(1, clean_lines.size()):
+		memory.pop_front()
+	npc_line_memory[npc_name] = memory.duplicate()
+	if generated_outpost_npc_data.has(npc_name):
+		generated_outpost_npc_data[npc_name]["line_memory_fingerprints"] = memory.duplicate()
+		_remember_generated_npc_line(npc_name, picked_line)
+	return picked_line
+
+static func _remember_generated_npc_line(npc_name: String, line: String) -> void:
+	if campaign_npc_identity_store == null:
+		return
+	if not campaign_npc_identity_store.has_method("remember_line"):
+		return
+	if not generated_outpost_npc_data.has(npc_name):
+		return
+	var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+	var npc_id := str(npc_data.get("npc_id", ""))
+	if npc_id.is_empty():
+		return
+	var remembered: Dictionary = campaign_npc_identity_store.remember_line(
+		npc_id,
+		line,
+		"outpost_gossip"
+	)
+	if bool(remembered.get("ok", false)):
+		var record: Dictionary = remembered.get("npc", {})
+		generated_outpost_npc_data[npc_name]["identity_record"] = record
+		generated_outpost_npc_data[npc_name]["line_memory_fingerprints"] = (
+			record.get(
+				"line_memory_fingerprints",
+				generated_outpost_npc_data[npc_name].get(
+					"line_memory_fingerprints",
+					[]
+				)
+			)
+		)
+
+static func _npc_line_fingerprint(line: String) -> String:
+	return line.strip_edges().to_lower().sha256_text().substr(0, 16)
 
 # Returns the full set of (npc_name, line) pairs for every NPC at the
 # given outpost, across all NPCs and all flavor lines. Used by the
@@ -1632,6 +1696,9 @@ func reset_for_restart():
 	active_system_root = null
 	current_system_id = "start_system"
 	active_system_entities.clear()
+	generated_outpost_npcs.clear()
+	generated_outpost_npc_data.clear()
+	npc_line_memory.clear()
 	# Directly set paused to avoid emitting game_paused into freed UIManager
 	paused = false
 	# Silently clear active_target without emitting target_changed
