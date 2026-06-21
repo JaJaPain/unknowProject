@@ -92,7 +92,7 @@ and they should not block or overlap with current Codex work.
 
 ## Gate Travel Visual Upgrade
 
-- [ ] Implement the EVE Online–style stargate jump transition from
+- [x] Implement the EVE Online–style stargate jump transition from
   `GateTravelUpgrade.md`. Four-phase sequence: portal charge, warp snap-in,
   warp corridor tunnel shader, and exit shockwave ripple. Upgrade
   `jump_transition_fx.tscn` node structure, add polar-swirl tunnel shader,
