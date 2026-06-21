@@ -5,7 +5,7 @@ signal startup_load_completed(save_loaded: bool)
 
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
-const JUMP_EXIT_DURATION := 0.9
+const JUMP_EXIT_DURATION := 2.0
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
