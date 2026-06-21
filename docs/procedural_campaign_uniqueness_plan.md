@@ -734,7 +734,9 @@ Goal: create the shared story spine.
 - [x] Write accepted Campaign Bible arcs, rumor trails, style rules, and banned
   repeats back into idea memory so future story horizon generation can avoid
   reusing the same campaign ideas.
-- Define rare campaign rumor trails and endgame/easter-egg hint rules.
+- [x] Define rare campaign rumor trails and endgame/easter-egg hint rules with
+  stable trail IDs, hint themes, clue templates, discovery types, rarity, and
+  payoffs so future local rumors can attach to real breadcrumb chains.
 - Define story horizon regeneration triggers so the campaign can extend itself
   before the player runs out of prepared arcs, systems, or rumor payoffs.
 

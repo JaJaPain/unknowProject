@@ -22,6 +22,14 @@ const VALID_GENERATION_STATUSES := [
 	STATUS_LLM_UNAVAILABLE,
 	STATUS_GENERATION_FAILED,
 ]
+const RUMOR_DISCOVERY_TYPES := [
+	"hidden_discovery",
+	"secret_route",
+	"rare_upgrade",
+	"faction_secret",
+	"endgame_easter_egg",
+]
+const RUMOR_RARITIES := ["local", "uncommon", "rare", "legendary"]
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -69,8 +77,13 @@ func prompt_context() -> String:
 		for trail in rumor_trails:
 			if trail is Dictionary:
 				lines.append(
-					"- %s: %s" %
-					[str(trail.get("name", "")), str(trail.get("payoff", ""))]
+					"- %s (%s): %s -> %s" %
+					[
+						str(trail.get("name", "")),
+						str(trail.get("discovery_type", "hidden_discovery")),
+						str(trail.get("hint_theme", "")),
+						str(trail.get("payoff", "")),
+					]
 				)
 	var regeneration_triggers: Array = data.get("regeneration_triggers", [])
 	if not regeneration_triggers.is_empty():
@@ -123,6 +136,7 @@ func replace_bible(next_data: Dictionary) -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign bible store is invalid.")
 	var prepared := next_data.duplicate(true)
+	prepared["rumor_trails"] = normalize_rumor_trails(prepared.get("rumor_trails", []))
 	prepared["schema_version"] = DOCUMENT_VERSION
 	prepared["document_type"] = "campaign_bible"
 	prepared["campaign_id"] = str(campaign.get("id", ""))
@@ -201,6 +215,7 @@ func _load_or_create() -> void:
 	if not validation.is_valid():
 		return
 	data = bible_result["data"]
+	data["rumor_trails"] = normalize_rumor_trails(data.get("rumor_trails", []))
 	validation.merge(_validate_data(data, campaign_id), "campaign_bible")
 
 
@@ -247,7 +262,17 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"rumor_trails": [
 			{
 				"name": "The Thing Everyone Heard Wrong",
+				"trail_id": "rumor_trail.thing_everyone_heard_wrong",
 				"clue_count": 4,
+				"hint_theme": "misquoted gate chatter that gradually points toward a hidden object in deep frontier space",
+				"clue_templates": [
+					"Someone repeats a phrase that sounds wrong in exactly the same way.",
+					"A station contact claims the rumor came from a gate log that no longer exists.",
+					"Kaelen recognizes part of the phrase but refuses to explain why.",
+					"The final clue names a place the map does not yet admit exists.",
+				],
+				"discovery_type": "endgame_easter_egg",
+				"rarity": "legendary",
 				"payoff": "A rare hidden discovery or endgame easter egg chosen by the future campaign-level LLM.",
 			},
 		],
@@ -325,6 +350,48 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 		result.add_error("invalid_story_arcs", "Story arcs must be an array.", "story_arcs")
 	if not value.get("rumor_trails", []) is Array:
 		result.add_error("invalid_rumor_trails", "Rumor trails must be an array.", "rumor_trails")
+	else:
+		var trails: Array = value.get("rumor_trails", [])
+		for index in range(trails.size()):
+			if not trails[index] is Dictionary:
+				result.add_error(
+					"invalid_rumor_trail",
+					"Rumor trail must be an object.",
+					"rumor_trails.%d" % index
+				)
+				continue
+			var trail: Dictionary = trails[index]
+			for field in ["name", "trail_id", "hint_theme", "payoff", "discovery_type", "rarity"]:
+				if str(trail.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_rumor_trail_field",
+						"Rumor trail field '%s' cannot be empty." % field,
+						"rumor_trails.%d.%s" % [index, field]
+					)
+			if int(trail.get("clue_count", 0)) < 2:
+				result.add_error(
+					"invalid_rumor_trail_clue_count",
+					"Rumor trail clue_count must be at least 2.",
+					"rumor_trails.%d.clue_count" % index
+				)
+			if str(trail.get("discovery_type", "")) not in RUMOR_DISCOVERY_TYPES:
+				result.add_error(
+					"invalid_rumor_trail_discovery_type",
+					"Rumor trail discovery_type is unsupported.",
+					"rumor_trails.%d.discovery_type" % index
+				)
+			if str(trail.get("rarity", "")) not in RUMOR_RARITIES:
+				result.add_error(
+					"invalid_rumor_trail_rarity",
+					"Rumor trail rarity is unsupported.",
+					"rumor_trails.%d.rarity" % index
+				)
+			if not trail.get("clue_templates", []) is Array:
+				result.add_error(
+					"invalid_rumor_trail_clue_templates",
+					"Rumor trail clue_templates must be an array.",
+					"rumor_trails.%d.clue_templates" % index
+				)
 	if not value.get("regeneration_triggers", []) is Array:
 		result.add_error(
 			"invalid_regeneration_triggers",
@@ -338,6 +405,60 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"expansion_rules"
 		)
 	return result
+
+
+static func normalize_rumor_trails(source: Variant) -> Array:
+	var normalized: Array = []
+	if not source is Array:
+		return normalized
+	for index in range((source as Array).size()):
+		var raw = (source as Array)[index]
+		if not raw is Dictionary:
+			continue
+		var trail := (raw as Dictionary).duplicate(true)
+		var name := str(trail.get("name", "Rumor Trail %d" % (index + 1))).strip_edges()
+		if name.is_empty():
+			name = "Rumor Trail %d" % (index + 1)
+		trail["name"] = name
+		var trail_id := str(trail.get("trail_id", "")).strip_edges()
+		if trail_id.is_empty():
+			trail_id = "rumor_trail.%s" % _slug(name)
+		trail["trail_id"] = trail_id
+		var hint_theme := str(trail.get("hint_theme", "")).strip_edges()
+		if hint_theme.is_empty():
+			hint_theme = str(trail.get("payoff", "")).strip_edges()
+		if hint_theme.is_empty():
+			hint_theme = "A strange frontier rumor that points toward a hidden discovery."
+		trail["hint_theme"] = hint_theme
+		var clue_count := int(trail.get("clue_count", 0))
+		trail["clue_count"] = maxi(2, clue_count)
+		var discovery_type := str(trail.get("discovery_type", "")).strip_edges()
+		if discovery_type not in RUMOR_DISCOVERY_TYPES:
+			discovery_type = "hidden_discovery"
+		trail["discovery_type"] = discovery_type
+		var rarity := str(trail.get("rarity", "")).strip_edges()
+		if rarity not in RUMOR_RARITIES:
+			rarity = "rare"
+		trail["rarity"] = rarity
+		if not trail.get("clue_templates", []) is Array:
+			trail["clue_templates"] = []
+		normalized.append(trail)
+	return normalized
+
+
+static func _slug(value: String) -> String:
+	var clean := value.strip_edges().to_lower()
+	var output := ""
+	for index in range(clean.length()):
+		var c := clean[index]
+		if (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
+			output += c
+		elif not output.ends_with("_"):
+			output += "_"
+	output = output.strip_edges().trim_prefix("_").trim_suffix("_")
+	if output.is_empty():
+		output = value.sha256_text().substr(0, 12)
+	return output.left(48)
 
 
 static func _failure(message: String) -> Dictionary:

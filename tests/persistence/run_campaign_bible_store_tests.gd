@@ -67,6 +67,15 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		store.prompt_context().contains("Story horizon regeneration triggers"),
 		"Default campaign bible prompt context did not include regeneration triggers."
 	)
+	var default_trail: Dictionary = store.data.get("rumor_trails", [])[0]
+	_expect(
+		str(default_trail.get("trail_id", "")).begins_with("rumor_trail."),
+		"Default campaign bible rumor trail did not include a trail id."
+	)
+	_expect(
+		str(default_trail.get("discovery_type", "")) == "endgame_easter_egg",
+		"Default campaign bible rumor trail did not include a discovery type."
+	)
 
 	var replacement := store.data.duplicate(true)
 	replacement["tone"] = "Dry frontier comedy with sudden consequences."
@@ -79,6 +88,11 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		"id": "glass_choir_low",
 		"description": "The choir has fewer than two prepared clues left.",
 	}]
+	replacement["rumor_trails"] = [{
+		"name": "Glass Choir Static",
+		"clue_count": 3,
+		"payoff": "A hidden transmitter in a silent belt.",
+	}]
 	var replaced := store.replace_bible(replacement)
 	_expect(bool(replaced.get("ok", false)), replaced.get("error", ""))
 	_expect(
@@ -88,6 +102,12 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 	_expect(
 		store.prompt_context().contains("Glass Choir"),
 		"Replacement campaign bible did not update prompt context."
+	)
+	var normalized_trail: Dictionary = store.data.get("rumor_trails", [])[0]
+	_expect(
+		str(normalized_trail.get("trail_id", "")) == "rumor_trail.glass_choir_static"
+			and str(normalized_trail.get("discovery_type", "")) == "hidden_discovery",
+		"Simple replacement rumor trail was not normalized for future clue tracking."
 	)
 
 	var reopened := BibleStoreType.open(CAMPAIGN_PATH)

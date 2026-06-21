@@ -55,7 +55,15 @@ func _test_parses_campaign_bible_response() -> void:
 		}],
 		"rumor_trails": [{
 			"name": "The Third Echo",
+			"trail_id": "rumor_trail.third_echo",
 			"clue_count": 5,
+			"hint_theme": "misheard distress calls that repeat from systems the player has not reached",
+			"clue_templates": [
+				"A dock worker quotes the same wrong call sign.",
+				"A station contact claims the signal came from a dead relay.",
+			],
+			"discovery_type": "endgame_easter_egg",
+			"rarity": "legendary",
 			"payoff": "A hidden relay that changes Kaelen's eulogy options.",
 		}],
 		"regeneration_triggers": [{
@@ -91,6 +99,12 @@ func _test_parses_campaign_bible_response() -> void:
 	_expect(
 		str(bible.get("core_pressure", "")).contains("route war"),
 		"Parsed bible did not keep generated content."
+	)
+	var trail: Dictionary = bible.get("rumor_trails", [])[0]
+	_expect(
+		str(trail.get("trail_id", "")) == "rumor_trail.third_echo"
+			and str(trail.get("discovery_type", "")) == "endgame_easter_egg",
+		"Parsed bible did not preserve structured rumor trail fields."
 	)
 
 

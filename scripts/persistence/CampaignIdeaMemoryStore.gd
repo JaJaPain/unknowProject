@@ -165,12 +165,19 @@ func remember_campaign_bible(bible: Dictionary) -> Dictionary:
 		if not trail is Dictionary:
 			continue
 		var trail_name := str(trail.get("name", "")).strip_edges()
-		var summary := "%s: %s" % [trail_name, str(trail.get("payoff", "")).strip_edges()]
+		var trail_id := str(trail.get("trail_id", trail_name)).strip_edges()
+		var discovery_type := str(trail.get("discovery_type", "hidden_discovery"))
+		var summary := "%s (%s): %s -> %s" % [
+			trail_name,
+			discovery_type,
+			str(trail.get("hint_theme", "")).strip_edges(),
+			str(trail.get("payoff", "")).strip_edges(),
+		]
 		var trail_result := append_idea(
 			"rumor",
 			summary,
-			["campaign_bible", "rumor_trail"],
-			"rumor_trail|%s|%s" % [trail_name, summary],
+			["campaign_bible", "rumor_trail", discovery_type],
+			"rumor_trail|%s" % trail_id,
 			{"source": "campaign_bible", "trail": (trail as Dictionary).duplicate(true)}
 		)
 		_count_append_result(trail_result, failures)

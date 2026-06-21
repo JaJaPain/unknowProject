@@ -30,6 +30,7 @@ static func build_campaign_bible_prompt(
 		"- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
 		"- Rumors should include at least one trail that can eventually lead to a hidden discovery or endgame easter egg.",
+		"- Rumor trails need concrete clue templates and a discovery type so later systems can turn them into real breadcrumbs.",
 		"- If story extends later, append a new horizon. Do not retcon known player choices.",
 		"",
 		"Campaign seed: %s" % campaign_seed,
@@ -49,7 +50,7 @@ static func build_campaign_bible_prompt(
 		"  \"fallback_rule\": string,",
 		"  \"story_horizon_rule\": string,",
 		"  \"story_arcs\": [{\"name\": string, \"summary\": string}],",
-		"  \"rumor_trails\": [{\"name\": string, \"clue_count\": number, \"payoff\": string}],",
+		"  \"rumor_trails\": [{\"name\": string, \"trail_id\": string, \"clue_count\": number, \"hint_theme\": string, \"clue_templates\": [string], \"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", \"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string}],",
 		"  \"regeneration_triggers\": [{\"id\": string, \"description\": string}],",
 		"  \"expansion_rules\": [string],",
 		"  \"banned_repeats\": [string]",
@@ -99,6 +100,11 @@ static func _normalized_campaign_bible(
 	model_name: String
 ) -> Dictionary:
 	var bible := baseline.duplicate(true)
+	var generated_copy := generated.duplicate(true)
+	if generated_copy.has("rumor_trails"):
+		generated_copy["rumor_trails"] = CampaignBibleStoreType.normalize_rumor_trails(
+			generated_copy.get("rumor_trails", [])
+		)
 	for field in [
 		"tone",
 		"core_pressure",
@@ -114,8 +120,8 @@ static func _normalized_campaign_bible(
 		"expansion_rules",
 		"banned_repeats",
 	]:
-		if generated.has(field):
-			bible[field] = generated[field]
+		if generated_copy.has(field):
+			bible[field] = generated_copy[field]
 	bible["source"] = "llm"
 	bible["generation_status"] = CampaignBibleStoreType.STATUS_LLM_GENERATED
 	bible["source_model"] = model_name.strip_edges()
