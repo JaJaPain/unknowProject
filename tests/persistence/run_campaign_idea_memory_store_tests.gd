@@ -96,6 +96,24 @@ func _test_idea_memory_bootstrap_append_query_and_reopen() -> void:
 		reopened.prompt_context(["joke"], [], 5).contains("lifestyle choice"),
 		"Reopened idea memory could not retrieve joke idea."
 	)
+	var remembered := reopened.remember_campaign_bible(_campaign_bible_fixture())
+	_expect(bool(remembered.get("ok", false)), JSON.stringify(remembered.get("errors", [])))
+	_expect(
+		int(remembered.get("added", 0)) >= 5,
+		"Campaign bible ideas were not written into idea memory."
+	)
+	var bible_context := reopened.campaign_bible_prompt_context(12)
+	_expect(
+		bible_context.contains("Low Signal War")
+			and bible_context.contains("The Third Echo")
+			and bible_context.contains("dad joke station tax"),
+		"Campaign bible prompt context did not include remembered story, rumor, and banned repeat ideas."
+	)
+	var repeated := reopened.remember_campaign_bible(_campaign_bible_fixture())
+	_expect(
+		int(repeated.get("duplicates", 0)) >= 5,
+		"Campaign bible idea writeback did not detect duplicate ideas."
+	)
 
 
 func _initial_state() -> Dictionary:
@@ -110,6 +128,24 @@ func _initial_state() -> Dictionary:
 		},
 		"quest": {},
 		"systems": {},
+	}
+
+
+func _campaign_bible_fixture() -> Dictionary:
+	return {
+		"humor_rule": "Use dark, dry humor and never repeat canned jokes.",
+		"faction_reveal_rule": "Reveal new factions only as gates and rumors expose them.",
+		"story_horizon_rule": "Append future horizons without retconning known choices.",
+		"story_arcs": [{
+			"name": "Low Signal War",
+			"summary": "Station outages hide a frontier proxy conflict.",
+		}],
+		"rumor_trails": [{
+			"name": "The Third Echo",
+			"clue_count": 5,
+			"payoff": "A hidden relay that changes Kaelen's eulogy options.",
+		}],
+		"banned_repeats": ["dad joke station tax"],
 	}
 
 

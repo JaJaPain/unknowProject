@@ -25,6 +25,16 @@ const ALLOWED_CATEGORIES := [
 	"style_rule",
 	"banned_repeat",
 ]
+const CAMPAIGN_BIBLE_CATEGORIES := [
+	"faction",
+	"npc",
+	"joke",
+	"rumor",
+	"system",
+	"story_beat",
+	"style_rule",
+	"banned_repeat",
+]
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -107,6 +117,97 @@ func prompt_context(
 			[str(idea.get("category", "idea")), str(idea.get("summary", ""))]
 		)
 	return "\n".join(lines)
+
+
+func campaign_bible_prompt_context(limit: int = MAX_PROMPT_ITEMS) -> String:
+	var selected := query_ideas(CAMPAIGN_BIBLE_CATEGORIES, [], limit)
+	if selected.is_empty():
+		return "No prior generated ideas recorded yet."
+	var lines: Array[String] = [
+		"Campaign-level ideas already used. Avoid repeating or lightly renaming them:",
+	]
+	for idea in selected:
+		var category := str(idea.get("category", "idea"))
+		var tag_strings: Array[String] = []
+		for tag in idea.get("tags", []):
+			tag_strings.append(str(tag))
+		var tags := ", ".join(tag_strings)
+		var suffix := "" if tags.is_empty() else " tags=%s" % tags
+		lines.append(
+			"- [%s]%s %s" %
+			[category, suffix, str(idea.get("summary", ""))]
+		)
+	return "\n".join(lines)
+
+
+func remember_campaign_bible(bible: Dictionary) -> Dictionary:
+	if not is_valid():
+		return _failure("Idea memory store is invalid.")
+	var added := 0
+	var duplicates := 0
+	var failures: Array[String] = []
+	for arc in bible.get("story_arcs", []):
+		if not arc is Dictionary:
+			continue
+		var arc_name := str(arc.get("name", "")).strip_edges()
+		var summary := "%s: %s" % [arc_name, str(arc.get("summary", "")).strip_edges()]
+		var arc_result := append_idea(
+			"story_beat",
+			summary,
+			["campaign_bible", "story_arc"],
+			"story_arc|%s|%s" % [arc_name, summary],
+			{"source": "campaign_bible", "arc": (arc as Dictionary).duplicate(true)}
+		)
+		_count_append_result(arc_result, failures)
+		added += 1 if bool(arc_result.get("ok", false)) and not bool(arc_result.get("duplicate", false)) else 0
+		duplicates += 1 if bool(arc_result.get("duplicate", false)) else 0
+	for trail in bible.get("rumor_trails", []):
+		if not trail is Dictionary:
+			continue
+		var trail_name := str(trail.get("name", "")).strip_edges()
+		var summary := "%s: %s" % [trail_name, str(trail.get("payoff", "")).strip_edges()]
+		var trail_result := append_idea(
+			"rumor",
+			summary,
+			["campaign_bible", "rumor_trail"],
+			"rumor_trail|%s|%s" % [trail_name, summary],
+			{"source": "campaign_bible", "trail": (trail as Dictionary).duplicate(true)}
+		)
+		_count_append_result(trail_result, failures)
+		added += 1 if bool(trail_result.get("ok", false)) and not bool(trail_result.get("duplicate", false)) else 0
+		duplicates += 1 if bool(trail_result.get("duplicate", false)) else 0
+	for repeat in bible.get("banned_repeats", []):
+		var clean_repeat := str(repeat).strip_edges()
+		if clean_repeat.is_empty():
+			continue
+		var repeat_result := append_idea(
+			"banned_repeat",
+			clean_repeat,
+			["campaign_bible"],
+			"banned_repeat|%s" % clean_repeat
+		)
+		_count_append_result(repeat_result, failures)
+		added += 1 if bool(repeat_result.get("ok", false)) and not bool(repeat_result.get("duplicate", false)) else 0
+		duplicates += 1 if bool(repeat_result.get("duplicate", false)) else 0
+	for field in ["humor_rule", "faction_reveal_rule", "story_horizon_rule"]:
+		var rule := str(bible.get(field, "")).strip_edges()
+		if rule.is_empty():
+			continue
+		var rule_result := append_idea(
+			"style_rule",
+			"%s: %s" % [field, rule],
+			["campaign_bible", field],
+			"style_rule|%s|%s" % [field, rule]
+		)
+		_count_append_result(rule_result, failures)
+		added += 1 if bool(rule_result.get("ok", false)) and not bool(rule_result.get("duplicate", false)) else 0
+		duplicates += 1 if bool(rule_result.get("duplicate", false)) else 0
+	return {
+		"ok": failures.is_empty(),
+		"added": added,
+		"duplicates": duplicates,
+		"errors": failures,
+	}
 
 
 func query_ideas(
@@ -283,6 +384,11 @@ static func _idea_has_any_tag(idea: Dictionary, tag_filter: Dictionary) -> bool:
 		if tag_filter.has(str(tag).strip_edges().to_lower()):
 			return true
 	return false
+
+
+static func _count_append_result(result: Dictionary, failures: Array[String]) -> void:
+	if not bool(result.get("ok", false)):
+		failures.append(str(result.get("error", "unknown error")))
 
 
 static func _fingerprint(source: String) -> String:

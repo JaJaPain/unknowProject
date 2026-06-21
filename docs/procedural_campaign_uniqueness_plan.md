@@ -727,6 +727,13 @@ Goal: create the shared story spine.
   after campaign stores are open, without blocking campaign startup.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
+- [x] Add a Campaign Bible-specific idea-memory context so large-story prompts
+  prioritize previously used factions, NPC concepts, jokes, rumors, systems,
+  story beats, style rules, and banned repeats instead of receiving only the
+  quest-facing memory slice.
+- [x] Write accepted Campaign Bible arcs, rumor trails, style rules, and banned
+  repeats back into idea memory so future story horizon generation can avoid
+  reusing the same campaign ideas.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.
 - Define story horizon regeneration triggers so the campaign can extend itself
   before the player runs out of prepared arcs, systems, or rumor payoffs.
