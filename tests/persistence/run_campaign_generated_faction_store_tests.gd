@@ -63,9 +63,22 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 		str(badge_source.get("sheet_file", "")).begins_with("BadgeSheet"),
 		"Generated faction did not keep badge sheet source metadata."
 	)
+	var voice_style: Dictionary = first_faction.get("voice_style", {})
 	_expect(
-		store.prompt_context().contains("Generated frontier factions"),
-		"Generated faction prompt context was empty."
+		not str(voice_style.get("delivery", "")).is_empty()
+			and not str(voice_style.get("profile_hint", "")).is_empty(),
+		"Generated faction did not include voice style metadata."
+	)
+	var mission_preferences: Dictionary = first_faction.get("mission_preferences", {})
+	_expect(
+		(mission_preferences.get("preferred_types", []) as Array).size() > 0,
+		"Generated faction did not include mission preferences."
+	)
+	_expect(
+		store.prompt_context().contains("Generated frontier factions")
+			and store.prompt_context().contains("voice:")
+			and store.prompt_context().contains("missions:"),
+		"Generated faction prompt context did not include voice and mission identity."
 	)
 	var revealed: Dictionary = store.reveal_next_for_system(
 		"system.generated.alpha",

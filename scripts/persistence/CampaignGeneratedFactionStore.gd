@@ -160,8 +160,18 @@ func prompt_context(revealed_only: bool = false) -> String:
 	for faction in source:
 		if not faction is Dictionary:
 			continue
+		var voice_style: Dictionary = (
+			faction.get("voice_style", {}) as Dictionary
+			if faction.get("voice_style", {}) is Dictionary
+			else {}
+		)
+		var mission_preferences: Dictionary = (
+			faction.get("mission_preferences", {}) as Dictionary
+			if faction.get("mission_preferences", {}) is Dictionary
+			else {}
+		)
 		lines.append(
-			"- %s (%s): %s; wants %s; taboo: %s; humor: %s" %
+			"- %s (%s): %s; wants %s; taboo: %s; humor: %s; voice: %s; missions: %s" %
 			[
 				str(faction.get("display_name", "")),
 				str(faction.get("abbreviation", "")),
@@ -169,6 +179,10 @@ func prompt_context(revealed_only: bool = false) -> String:
 				str(faction.get("business_model", "")),
 				str(faction.get("taboo", "")),
 				str(faction.get("humor_style", "")),
+				str(voice_style.get("delivery", "")),
+				", ".join(_string_array(
+					mission_preferences.get("preferred_types", [])
+				)),
 			]
 		)
 	return "\n".join(lines)
@@ -249,6 +263,14 @@ static func _generate_faction(seed_text: String, index: int) -> Dictionary:
 	var businesses := ["salvage rights", "gate tolls", "ore futures", "escort bonds", "black-box auctions"]
 	var taboos := ["wasting air", "free repairs", "unlogged favors", "unmasked command", "joking about maps"]
 	var humor := ["dry gallows wit", "bureaucratic absurdism", "deadpan threats", "cheerful fatalism", "dad jokes under fire"]
+	var voice_deliveries := ["quiet clipped threats", "warm legalese", "raspy dockside sermons", "bright courier patter", "slow ceremonial calm"]
+	var voice_tempos := ["slow", "measured", "brisk", "urgent"]
+	var mission_sets := [
+		["PICKUP_SPECIAL", "DELIVER_ORE"],
+		["KILL_SHIPS", "PICKUP_SPECIAL"],
+		["DELIVER_ORE", "KILL_SHIPS"],
+		["PICKUP_SPECIAL", "KILL_SHIPS", "DELIVER_ORE"],
+	]
 	var textures := ["metal.png", "NavyBlueMetal.png", "ForestGreenMetal.png", "RedMetal.png"]
 	var emblems := ["none", "ZenithBadge.png", "AurelliaBadge.png", "VanguardBadge.png"]
 	var badges := _badge_options()
@@ -275,6 +297,17 @@ static func _generate_faction(seed_text: String, index: int) -> Dictionary:
 		"business_model": businesses[rng.randi() % businesses.size()],
 		"taboo": taboos[rng.randi() % taboos.size()],
 		"humor_style": humor[rng.randi() % humor.size()],
+		"voice_style": {
+			"profile_hint": "voice.generated.%s.v1" % slug,
+			"delivery": voice_deliveries[rng.randi() % voice_deliveries.size()],
+			"tempo": voice_tempos[rng.randi() % voice_tempos.size()],
+			"pitch_bias": snapped(rng.randf_range(-0.08, 0.08), 0.01),
+		},
+		"mission_preferences": {
+			"preferred_types": mission_sets[rng.randi() % mission_sets.size()],
+			"target_bias": ["minor_hostile", "rival_faction"],
+			"risk_tolerance": ["low", "medium", "high"][rng.randi() % 3],
+		},
 		"badge_id": str(badge.get("id", "")),
 		"badge_source": {
 			"metadata_path": BADGE_METADATA_PATH,
@@ -368,6 +401,21 @@ static func _validate_faction(
 			result.add_error("missing_generated_faction_field", "Generated faction field is required.", "%s.%s" % [path, field])
 	if not faction.get("ship_style", {}) is Dictionary:
 		result.add_error("invalid_ship_style", "Generated faction ship_style must be an object.", "%s.ship_style" % path)
+	var voice_style = faction.get("voice_style", {})
+	if not voice_style is Dictionary:
+		result.add_error("invalid_voice_style", "Generated faction voice_style must be an object.", "%s.voice_style" % path)
+	else:
+		for field in ["profile_hint", "delivery", "tempo"]:
+			if str((voice_style as Dictionary).get(field, "")).strip_edges().is_empty():
+				result.add_error("missing_voice_style_field", "Generated faction voice_style field is required.", "%s.voice_style.%s" % [path, field])
+	var mission_preferences = faction.get("mission_preferences", {})
+	if not mission_preferences is Dictionary:
+		result.add_error("invalid_mission_preferences", "Generated faction mission_preferences must be an object.", "%s.mission_preferences" % path)
+	else:
+		if not (mission_preferences as Dictionary).get("preferred_types", []) is Array:
+			result.add_error("invalid_preferred_mission_types", "Generated faction preferred_types must be an array.", "%s.mission_preferences.preferred_types" % path)
+		elif ((mission_preferences as Dictionary).get("preferred_types", []) as Array).is_empty():
+			result.add_error("missing_preferred_mission_types", "Generated faction preferred_types cannot be empty.", "%s.mission_preferences.preferred_types" % path)
 	if not faction.get("badge_source", {}) is Dictionary:
 		result.add_error("invalid_badge_source", "Generated faction badge_source must be an object.", "%s.badge_source" % path)
 	if not faction.get("ui_color", []) is Array or (faction.get("ui_color", []) as Array).size() != 4:
@@ -403,6 +451,15 @@ static func _badge_options() -> Array:
 				"file": sheet_file,
 				"main_color": str(sprite.get("mainColor", "")),
 			})
+	return output
+
+
+static func _string_array(values: Variant) -> Array[String]:
+	var output: Array[String] = []
+	if not values is Array:
+		return output
+	for value in values:
+		output.append(str(value))
 	return output
 
 

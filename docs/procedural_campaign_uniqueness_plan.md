@@ -749,8 +749,8 @@ Goal: stop relying on the same small fixed faction set.
 
 - [x] Define generated faction records.
 - [x] Assign badges from badge metadata.
-- Assign colors, ship generator texture/emblem params, voice style, and mission
-  preferences.
+- [x] Assign colors, ship generator texture/emblem params, voice style, and
+  mission preferences.
 - Persist generated factions in campaign state.
 - Make `SystemConfig` pick from discovered/generated factions appropriate to
   the current branch, while allowing original factions to appear for story drama.
