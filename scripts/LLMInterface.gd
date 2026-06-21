@@ -1055,6 +1055,8 @@ func request_quest_generation(
 	var agent_persona = ""
 	var player_nickname = "Indy"
 	var agent_role = ""
+	var agent_portrait_id := ""
+	var agent_voice_profile_id := ""
 	var example_faction_key = chosen_faction
 
 	match chosen_faction:
@@ -1103,6 +1105,10 @@ func request_quest_generation(
 		if agent_name.is_empty():
 			agent_name = "Local Contact"
 		agent_role = str(agent_profile.get("agent_role", "Station faction contact")).strip_edges()
+		agent_portrait_id = str(agent_profile.get("agent_portrait_id", "")).strip_edges()
+		agent_voice_profile_id = str(
+			agent_profile.get("agent_voice_profile_id", "")
+		).strip_edges()
 		player_nickname = "Indy"
 		var faction_label := str(
 			agent_profile.get("faction_display", profile_faction.capitalize())
@@ -1220,6 +1226,8 @@ func request_quest_generation(
 		"nickname": player_nickname,
 		"agent_name": agent_name,
 		"agent_role": agent_role,
+		"agent_portrait_id": agent_portrait_id,
+		"agent_voice_profile_id": agent_voice_profile_id,
 		"agent_memory_id": agent_memory_id,
 		"faction": chosen_faction,
 		"pickup_outpost": pickup_outpost,
@@ -1806,6 +1814,8 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	var obj_type: String = obj.get("type", "")
 	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
 	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
+	quest_data["agent_portrait_id"] = str(subs.get("agent_portrait_id", ""))
+	quest_data["agent_voice_profile_id"] = str(subs.get("agent_voice_profile_id", ""))
 	quest_data["agent_memory_id"] = str(subs.get("agent_memory_id", ""))
 	quest_data["faction"] = str(
 		subs.get("faction", quest_data.get("faction", "neutral"))
@@ -2796,6 +2806,8 @@ func _trigger_fallback():
 	selected_quest["campaign_name"] = _fallback_campaign_name()
 	selected_quest["agent_role"] = str(_pending_substitutions.get("agent_role", "Neutral Fixer & Profit Broker"))
 	selected_quest["agent_name"] = str(_pending_substitutions.get("agent_name", selected_quest.get("agent_name", "Broker Kaelen")))
+	selected_quest["agent_portrait_id"] = str(_pending_substitutions.get("agent_portrait_id", ""))
+	selected_quest["agent_voice_profile_id"] = str(_pending_substitutions.get("agent_voice_profile_id", ""))
 	selected_quest["agent_memory_id"] = str(_pending_substitutions.get("agent_memory_id", ""))
 	selected_quest["faction"] = str(_pending_substitutions.get("faction", selected_quest.get("faction", "neutral")))
 	

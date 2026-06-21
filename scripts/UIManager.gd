@@ -3655,6 +3655,10 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 		"agent_id": str(npc_data.get("npc_id", "")),
 		"agent_name": npc_name,
 		"agent_role": "%s Station Contact" % faction_display,
+		"agent_portrait_id": str(npc_data.get("portrait_id", "")),
+		"agent_voice_profile_id": str(
+			npc_data.get("voice_profile_id", "voice.neutral.v1")
+		),
 		"faction": faction,
 		"faction_id": faction_id,
 		"faction_display": faction_display,
@@ -6257,17 +6261,22 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 			)
 		if game_root and game_root.has_method("remember_generated_quest_idea"):
 			game_root.remember_generated_quest_idea(quest_data, is_fallback)
+		var agent_voice_profile_id := str(
+			quest_data.get("agent_voice_profile_id", "")
+		)
+		if agent_voice_profile_id.is_empty():
+			agent_voice_profile_id = str(quest_data.get("agent_name", "neutral"))
 		# Pre-cache main briefing TTS
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":
-			SpeechService.cache(dialogue, quest_data.get("faction", "neutral"))
+			SpeechService.cache(dialogue, agent_voice_profile_id)
 			
 		# Pre-cache choice response TTS
 		var choices = quest_data.get("choices", [])
 		for choice in choices:
 			var response = choice.get("consequence", {}).get("dialogue_response", "")
 			if response != "":
-				SpeechService.cache(response, quest_data.get("faction", "neutral"))
+				SpeechService.cache(response, agent_voice_profile_id)
 		
 		# Fire-and-forget LLM call for Kaelen's unique handoff intro. Runs in
 		# the background while the player is still docking / loading. If it
@@ -6463,17 +6472,21 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	agent_name_label.text = quest_data.get("agent_name", "Broker Kaelen").to_upper()
 	agent_subtitle_label.text = str(quest_data.get("agent_role", "Neutral Fixer & Profit Broker"))
 	var agent_name := str(quest_data.get("agent_name", "Broker Kaelen"))
+	var agent_voice_profile_id := str(
+		quest_data.get("agent_voice_profile_id", "")
+	).strip_edges()
+	if agent_voice_profile_id.is_empty():
+		agent_voice_profile_id = agent_name
 	_update_agent_portrait(
 		quest_data.get("faction", "neutral"),
-		agent_name
+		agent_name,
+		"neutral",
+		str(quest_data.get("agent_portrait_id", ""))
 	)
 	agent_dialogue_label.text = display_dialogue + note
 	
 	# Play the quest giver's briefing voice
-	SpeechService.play_for_npc(
-		quest_data.get("dialogue", ""),
-		agent_name
-	)
+	SpeechService.play(quest_data.get("dialogue", ""), agent_voice_profile_id)
 	
 	# Append contract details block
 	var f_client = quest_data.get("faction", "neutral").to_upper()
@@ -6558,8 +6571,11 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	var consequence = choice.get("consequence", {})
 	var raw_response = consequence.get("dialogue_response", "")
 	var response_voice_ref = quest_data.get(
+		"agent_voice_profile_id",
+		quest_data.get(
 		"agent_name",
 		quest_data.get("faction", "neutral")
+		)
 	)
 	var response_profile := SpeechService.resolve_voice_profile(response_voice_ref)
 	var clean_response = SpeechService.prepare_followup_text(
@@ -7170,15 +7186,23 @@ func _fallback_comms_line(faction: String) -> String:
 func _update_agent_portrait(
 	faction: String,
 	npc_name: String = "",
-	kaelen_mood: String = "neutral"
+	kaelen_mood: String = "neutral",
+	explicit_portrait_id: String = ""
 ):
 	if agent_portrait:
 		_show_agent_portrait(true)
 		var portrait_id := "portrait.quest_givers.kaelen"
+		var explicit_portrait: Texture2D = null
+		if not explicit_portrait_id.strip_edges().is_empty():
+			explicit_portrait = GameContentRegistry.shared().portrait_texture(
+				explicit_portrait_id
+			)
 		var generated_portrait := GlobalState.get_minor_npc_portrait(npc_name)
 		var npc_definition := GameContentRegistry.shared().npc_by_name(npc_name)
 		var faction_definition := GameContentRegistry.shared().faction(faction)
-		if generated_portrait != null:
+		if explicit_portrait != null:
+			agent_portrait.texture = explicit_portrait
+		elif generated_portrait != null:
 			agent_portrait.texture = generated_portrait
 		elif npc_definition != null:
 			portrait_id = str(npc_definition.portrait_id)
