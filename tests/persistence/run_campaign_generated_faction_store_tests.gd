@@ -53,6 +53,16 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 	var batch := store.ensure_frontier_batch("generated-faction-test", 4)
 	_expect(bool(batch.get("ok", false)), batch.get("error", ""))
 	_expect(store.all_factions().size() == 4, "Generated faction batch size was wrong.")
+	var first_faction: Dictionary = store.all_factions()[0]
+	_expect(
+		str(first_faction.get("badge_id", "")).begins_with("badge_sheet_"),
+		"Generated faction did not use a badge ID from badge metadata."
+	)
+	var badge_source: Dictionary = first_faction.get("badge_source", {})
+	_expect(
+		str(badge_source.get("sheet_file", "")).begins_with("BadgeSheet"),
+		"Generated faction did not keep badge sheet source metadata."
+	)
 	_expect(
 		store.prompt_context().contains("Generated frontier factions"),
 		"Generated faction prompt context was empty."

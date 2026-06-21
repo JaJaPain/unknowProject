@@ -13,6 +13,7 @@ const ValidationResultType := preload(
 const DOCUMENT_VERSION := 1
 const FACTIONS_PATH := "generated_factions.json"
 const GENERATED_PREFIX := "faction.generated."
+const BADGE_METADATA_PATH := "res://tools/ship_generator/textures/badges/badge_sheets_metadata.json"
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -250,6 +251,12 @@ static func _generate_faction(seed_text: String, index: int) -> Dictionary:
 	var humor := ["dry gallows wit", "bureaucratic absurdism", "deadpan threats", "cheerful fatalism", "dad jokes under fire"]
 	var textures := ["metal.png", "NavyBlueMetal.png", "ForestGreenMetal.png", "RedMetal.png"]
 	var emblems := ["none", "ZenithBadge.png", "AurelliaBadge.png", "VanguardBadge.png"]
+	var badges := _badge_options()
+	var badge: Dictionary = (
+		badges[rng.randi() % badges.size()]
+		if not badges.is_empty()
+		else {"id": "badge.generated.%02d" % (index + 1), "file": "", "main_color": ""}
+	)
 	var name := "%s %s" % [
 		prefixes[rng.randi() % prefixes.size()],
 		nouns[rng.randi() % nouns.size()],
@@ -268,7 +275,12 @@ static func _generate_faction(seed_text: String, index: int) -> Dictionary:
 		"business_model": businesses[rng.randi() % businesses.size()],
 		"taboo": taboos[rng.randi() % taboos.size()],
 		"humor_style": humor[rng.randi() % humor.size()],
-		"badge_id": "badge.generated.%02d" % (index + 1),
+		"badge_id": str(badge.get("id", "")),
+		"badge_source": {
+			"metadata_path": BADGE_METADATA_PATH,
+			"sheet_file": str(badge.get("file", "")),
+			"main_color": str(badge.get("main_color", "")),
+		},
 		"ship_style": {
 			"texture": textures[rng.randi() % textures.size()],
 			"emblem": emblems[rng.randi() % emblems.size()],
@@ -356,6 +368,8 @@ static func _validate_faction(
 			result.add_error("missing_generated_faction_field", "Generated faction field is required.", "%s.%s" % [path, field])
 	if not faction.get("ship_style", {}) is Dictionary:
 		result.add_error("invalid_ship_style", "Generated faction ship_style must be an object.", "%s.ship_style" % path)
+	if not faction.get("badge_source", {}) is Dictionary:
+		result.add_error("invalid_badge_source", "Generated faction badge_source must be an object.", "%s.badge_source" % path)
 	if not faction.get("ui_color", []) is Array or (faction.get("ui_color", []) as Array).size() != 4:
 		result.add_error("invalid_ui_color", "Generated faction ui_color must have four values.", "%s.ui_color" % path)
 
@@ -365,6 +379,31 @@ static func _abbreviation(name: String) -> String:
 	for part in name.split(" ", false):
 		letters += part.substr(0, 1).to_upper()
 	return letters.left(4)
+
+
+static func _badge_options() -> Array:
+	var parsed := DomainJsonType.read_object(BADGE_METADATA_PATH)
+	var validation := parsed["validation"] as ValidationResult
+	if not validation.is_valid():
+		return []
+	var data: Dictionary = parsed["data"]
+	var output: Array = []
+	for sheet in data.get("sheets", []):
+		if not sheet is Dictionary:
+			continue
+		var sheet_file := str(sheet.get("file", ""))
+		for sprite in sheet.get("sprites", []):
+			if not sprite is Dictionary:
+				continue
+			var badge_id := str(sprite.get("id", "")).strip_edges()
+			if badge_id.is_empty():
+				continue
+			output.append({
+				"id": badge_id,
+				"file": sheet_file,
+				"main_color": str(sprite.get("mainColor", "")),
+			})
+	return output
 
 
 static func _failure(message: String) -> Dictionary:

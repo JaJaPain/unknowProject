@@ -747,8 +747,8 @@ Why second: faction, NPC, and quest generation need a shared source of truth.
 
 Goal: stop relying on the same small fixed faction set.
 
-- Define generated faction records.
-- Assign badges from badge metadata.
+- [x] Define generated faction records.
+- [x] Assign badges from badge metadata.
 - Assign colors, ship generator texture/emblem params, voice style, and mission
   preferences.
 - Persist generated factions in campaign state.
