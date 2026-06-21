@@ -283,6 +283,12 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		add_child(jump_tunnel)
 		jump_tunnel.setup_ship_model(visual_node)
 		
+		# Fade the white flash OUT so the player can see the 3D tunnel!
+		var flash_node = transition_fx.get_node_or_null("Flash")
+		if flash_node:
+			var fade_out_tween = create_tween()
+			fade_out_tween.tween_property(flash_node, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		
 	AudioManager.play_jump_transit()
 	if not _capture_current_system_state():
 		push_error("[GameRoot] System state capture failed during gate travel.")
@@ -305,9 +311,15 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	player.global_transform = arrival_transform
 	last_arrival_gate_id = runtime_gate_id
 
-	# Let the player fly down the 3D tunnel for a satisfying duration
+	# Let the player fly down the 3D tunnel for a satisfying duration.
+	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
 	if DisplayServer.get_name() != "headless":
-		await get_tree().create_timer(3.5).timeout
+		await get_tree().create_timer(3.0).timeout
+		var flash_node = transition_fx.get_node_or_null("Flash")
+		if flash_node:
+			var fade_in_tween = create_tween()
+			fade_in_tween.tween_property(flash_node, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			await fade_in_tween.finished
 
 	if player.has_method("sync_camera_to_ship"):
 		player.sync_camera_to_ship()

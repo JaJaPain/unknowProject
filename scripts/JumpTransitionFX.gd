@@ -39,11 +39,11 @@ func play_entry(duration: float = 1.2) -> void:
 	distortion_mat.set_shader_parameter("shockwave_progress", 0.0)
 	distortion_mat.set_shader_parameter("shockwave_amplitude", 0.0)
 
-	tunnel.visible = true
+	tunnel.visible = false
 	distortion_overlay.visible = true
 	flash.visible = true
 	flash.modulate.a = 0.0
-	star_streaks.emitting = true
+	star_streaks.emitting = false
 
 	# Phase 1 (first 55%): tunnel spool — intensity and streaks ramp gently
 	var spool_dur := duration * 0.55
@@ -99,7 +99,7 @@ func hold_covered(frame_count: int = 2) -> void:
 	distortion_mat.set_shader_parameter("chromatic_strength", 0.0)
 	distortion_mat.set_shader_parameter("shockwave_progress", 0.0)
 	distortion_mat.set_shader_parameter("shockwave_amplitude", 0.0)
-	tunnel.visible = true
+	tunnel.visible = false
 	distortion_overlay.visible = true
 	flash.visible = true
 	flash.modulate.a = 1.0
@@ -118,7 +118,7 @@ func play_exit(duration: float = 2.0) -> void:
 		return
 
 	tunnel_mat.set_shader_parameter("driven_speed", TUNNEL_SPEED_WARP)
-	tunnel.visible = true
+	tunnel.visible = false
 	distortion_overlay.visible = true
 	flash.visible = true
 	star_streaks.emitting = false
