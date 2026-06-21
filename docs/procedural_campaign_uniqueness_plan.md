@@ -846,7 +846,7 @@ Goal: make each system feel like a place.
   deterministic config regeneration.
 - [x] Advance unresolved local arcs over time, even when the player ignores
   them.
-- Allow remote consequences for faction control, economy, patrols, rumors, and
+- [x] Allow remote consequences for faction control, economy, patrols, rumors, and
   service availability.
 - [x] Gate named-NPC irreversible consequences behind player presence or direct
   involvement.

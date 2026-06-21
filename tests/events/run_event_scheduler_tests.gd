@@ -245,6 +245,19 @@ func _test_system_story_arc_event_advances_pack() -> void:
 		(config.story_pack.get("arc_events", []) as Array).size() == 1,
 		"Story arc event did not record an arc event."
 	)
+	var consequences: Dictionary = config.story_pack.get("remote_consequences", {})
+	_expect(
+		not consequences.is_empty(),
+		"Story arc event did not record remote consequences."
+	)
+	_expect(
+		str(consequences.get("level", "")) == "low",
+		"First story arc consequence level should be low."
+	)
+	_expect(
+		int(consequences.get("patrol_alert", 0)) > 0,
+		"Story arc consequences should include patrol alert from local danger/tension."
+	)
 
 
 func _test_interceptor_event_uses_system_story_pack() -> void:

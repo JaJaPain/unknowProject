@@ -34,12 +34,15 @@ func execute(context) -> Dictionary:
 	var pressure := int(pack.get("arc_pressure", 0)) + 1
 	pack["arc_pressure"] = pressure
 	pack["last_arc_update_minutes"] = int(context.campaign_time)
+	var consequences := _remote_consequence_summary(pack, pressure)
+	pack["remote_consequences"] = consequences
 	var note := _arc_note(pack, pressure)
 	var events: Array = pack.get("arc_events", [])
 	events.append({
 		"time_minutes": int(context.campaign_time),
 		"pressure": pressure,
 		"note": note,
+		"consequences": consequences.duplicate(true),
 	})
 	while events.size() > MAX_ARC_EVENTS:
 		events.remove_at(0)
@@ -53,6 +56,7 @@ func execute(context) -> Dictionary:
 		"system": str(context.current_system_id),
 		"pressure": pressure,
 		"note": note,
+		"remote_consequences": consequences.duplicate(true),
 		"named_npc_irreversible_policy": "player_presence_or_direct_involvement_required",
 	}
 
@@ -124,6 +128,66 @@ func _global_state():
 	if tree == null:
 		return null
 	return tree.root.get_node_or_null("GlobalState")
+
+
+func _remote_consequence_summary(pack: Dictionary, pressure: int) -> Dictionary:
+	var tension := str(pack.get("active_tension", "")).strip_edges()
+	var problem := str(pack.get("station_economy_problem", "")).strip_edges()
+	var danger := str(pack.get("danger_summary", "")).strip_edges()
+	var level := "low"
+	if pressure >= 4:
+		level = "medium"
+	if pressure >= 7:
+		level = "high"
+	var economy_strain := 0
+	var patrol_alert := 0
+	var service_friction := 0
+	var rumor_activity := 1
+	if not problem.is_empty():
+		economy_strain += 1
+	if not tension.is_empty():
+		patrol_alert += 1
+	if not danger.is_empty():
+		patrol_alert += 1
+	if pressure >= 4:
+		economy_strain += 1
+		service_friction += 1
+		rumor_activity += 1
+	if pressure >= 7:
+		patrol_alert += 1
+		service_friction += 1
+		rumor_activity += 1
+	return {
+		"level": level,
+		"economy_strain": economy_strain,
+		"patrol_alert": patrol_alert,
+		"rumor_activity": rumor_activity,
+		"service_friction": service_friction,
+		"summary": _remote_consequence_text(
+			level,
+			economy_strain,
+			patrol_alert,
+			service_friction
+		),
+	}
+
+
+func _remote_consequence_text(
+	level: String,
+	economy_strain: int,
+	patrol_alert: int,
+	service_friction: int
+) -> String:
+	var effects: Array[String] = []
+	if economy_strain > 0:
+		effects.append("markets are tightening")
+	if patrol_alert > 0:
+		effects.append("patrols are more alert")
+	if service_friction > 0:
+		effects.append("station services are getting prickly")
+	if effects.is_empty():
+		effects.append("rumors are getting louder")
+	return "%s pressure: %s." % [level.capitalize(), ", ".join(effects)]
 
 
 func _arc_note(pack: Dictionary, pressure: int) -> String:
