@@ -157,13 +157,13 @@ func duck_audio():
 	if not is_ducked:
 		is_ducked = true
 		_update_bus_volumes()
-		print("[TRACE] [AudioManager] Audio ducked (Music -18dB, SFX -12dB)")
+		GlobalState.trace("[TRACE] [AudioManager] Audio ducked (Music -18dB, SFX -12dB)")
 
 func unduck_audio():
 	if is_ducked:
 		is_ducked = false
 		_update_bus_volumes()
-		print("[TRACE] [AudioManager] Audio unducked")
+		GlobalState.trace("[TRACE] [AudioManager] Audio unducked")
 
 func play_align():
 	if sfx_align == null:

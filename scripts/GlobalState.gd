@@ -1561,7 +1561,7 @@ func spawn_mission_targets(faction_name: String, count: int):
 	if station_node and is_instance_valid(station_node):
 		spawn_anchor = station_node.global_position
 	
-	print("[GlobalState] Spawning ", count, " mission targets for faction: ", faction_name, " at distance from station")
+	GlobalState.trace("[GlobalState] Spawning %d mission targets for faction: %s at distance from station" % [count, faction_name])
 	
 	# Spread ships evenly in a ring 550-900m from the station — far enough
 	# that the player has to fly out to engage, close enough to feel immediate
@@ -1644,6 +1644,12 @@ func adjust_reputation(faction_name: String, amount: float):
 		reputations[faction_name] = 0.0
 	reputations[faction_name] = clamp(reputations[faction_name] + amount, -100.0, 100.0)
 	reputation_changed.emit(faction_name, reputations[faction_name])
+
+const TRACE_LOG: bool = false
+
+static func trace(msg: String) -> void:
+	if TRACE_LOG:
+		print(msg)
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1784,7 +1790,7 @@ func reset_for_restart():
 	}
 	# Reset kill tracking
 	faction_kills = { "zenith": 0, "aurelia": 0, "vanguard": 0 }
-	print("[GlobalState] State reset for new game.")
+	GlobalState.trace("[GlobalState] State reset for new game.")
 
 
 # ── Ship Upgrade Logic ────────────────────────────────────────────────────────
@@ -1929,7 +1935,7 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	
 	current_upgrades[sys] = {"tier": next_tier, "path": path}
 	apply_upgrade_stats()
-	print("[GlobalState] Upgraded %s to tier %d path %s" % [sys, next_tier, path])
+	GlobalState.trace("[GlobalState] Upgraded %s to tier %d path %s" % [sys, next_tier, path])
 	return true
 
 func refund_upgrade(sys: String):

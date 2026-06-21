@@ -47,7 +47,7 @@ var cache_queue: Array = []
 func start_interaction(interaction_name: String):
 	last_interaction_time = Time.get_ticks_msec()
 	last_interaction_name = interaction_name
-	print("[TRACE] [TTSInterface] start_interaction: '", interaction_name, "' at system time: ", last_interaction_time, " ms")
+	GlobalState.trace("[TRACE] [TTSInterface] start_interaction: '%s' at system time: %d ms" % [interaction_name, last_interaction_time])
 
 
 func _ready():
@@ -117,7 +117,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	# Clean up meta headers, details, options or empty spaces to avoid reading formatting
 	var clean_text = clean_dialogue_text(text)
 	if clean_text == "":
-		print("[TRACE] [TTSInterface] Cleaned text is empty, skipping speech.")
+		GlobalState.trace("[TRACE] [TTSInterface] Cleaned text is empty, skipping speech.")
 		return
 
 	# Tone guard: rewrite speaker-voice leaks for non-Kaelen speakers so
@@ -126,7 +126,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	# substitution happens so the editor console shows the swap.
 	var tone_guarded: String = GlobalState.apply_tone_guard(clean_text, voice_id)
 	if tone_guarded != clean_text:
-		print("[TRACE] [TTSInterface] Tone guard rewrote line for voice '%s': '%s' -> '%s'" % [voice_id, clean_text, tone_guarded])
+		GlobalState.trace("[TRACE] [TTSInterface] Tone guard rewrote line for voice '%s': '%s' -> '%s'" % [voice_id, clean_text, tone_guarded])
 		clean_text = tone_guarded
 	clean_text = normalize_tts_pronunciation(clean_text)
 		
@@ -145,10 +145,10 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 		var total_elapsed_str = ""
 		if last_interaction_time > 0.0:
 			total_elapsed_str = " (Total since '%s': %.3fs)" % [last_interaction_name, (play_now - last_interaction_time) / 1000.0]
-		print("[TRACE] [TTSInterface] play_dialogue_audio CACHE HIT at: %d ms%s. voice=%s. Playing immediately!%s" % [tts_request_time, elapsed_str, voice_id, total_elapsed_str])
+		GlobalState.trace("[TRACE] [TTSInterface] play_dialogue_audio CACHE HIT at: %d ms%s. voice=%s. Playing immediately!%s" % [tts_request_time, elapsed_str, voice_id, total_elapsed_str])
 		return
 		
-	print("[TRACE] [TTSInterface] play_dialogue_audio CACHE MISS at: %d ms%s. voice=%s" % [tts_request_time, elapsed_str, voice_id])
+	GlobalState.trace("[TRACE] [TTSInterface] play_dialogue_audio CACHE MISS at: %d ms%s. voice=%s" % [tts_request_time, elapsed_str, voice_id])
 	
 	is_requesting = true
 	var payload = {
@@ -205,7 +205,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 				break
 		if not already_queued:
 			cache_queue.append({"key": cache_key, "text": clean_text, "voice_id": voice_id, "speed": speed})
-			print("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): ", clean_text.hash(), " voice=", voice_id)
+			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
 		return
 		
 	# Create a dynamic HTTPRequest node for caching
@@ -222,7 +222,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	var headers = ["Content-Type: application/json"]
 	
 	active_cache_requests += 1
-	print("[TRACE] [TTSInterface] Background caching started for text hash: ", clean_text.hash(), " (len: ", clean_text.length(), "), active: ", active_cache_requests, " using voice: ", voice_id, " speed: ", speed)
+	GlobalState.trace("[TRACE] [TTSInterface] Background caching started for text hash: %d (len: %d), active: %d using voice: %s speed: %.1f" % [clean_text.hash(), clean_text.length(), active_cache_requests, voice_id, speed])
 	
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
@@ -230,14 +230,14 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 			var stream = load_wav_from_buffer(body)
 			if stream:
 				tts_audio_cache[cache_key] = stream
-				print("[TRACE] [TTSInterface] Background caching completed for text hash: ", clean_text.hash(), " voice=", voice_id)
+				GlobalState.trace("[TRACE] [TTSInterface] Background caching completed for text hash: %d voice=%s" % [clean_text.hash(), voice_id])
 			else:
 				print("[TTSInterface] Background cache parsing failed for text hash: ", clean_text.hash())
 		else:
 			print("[TTSInterface] Background cache request failed. Code: ", response_code)
 			
 		active_cache_requests -= 1
-		print("[TRACE] [TTSInterface] Active cache requests left: ", active_cache_requests)
+		GlobalState.trace("[TRACE] [TTSInterface] Active cache requests left: %d" % active_cache_requests)
 		if active_cache_requests <= 0:
 			active_cache_requests = 0
 			cache_queue_completed.emit()
@@ -345,7 +345,7 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var elapsed_str = ""
 	if last_interaction_time > 0.0:
 		elapsed_str = " (Total since '%s': %.3fs)" % [last_interaction_name, (now - last_interaction_time) / 1000.0]
-	print("[TRACE] [TTSInterface] HTTP response received. Time elapsed since request: %.3fs%s. Result: %d Response code: %d" % [elapsed, elapsed_str, result, response_code])
+	GlobalState.trace("[TRACE] [TTSInterface] HTTP response received. Time elapsed since request: %.3fs%s. Result: %d Response code: %d" % [elapsed, elapsed_str, result, response_code])
 	
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[TTSInterface] Kokoro TTS request failed. Response code: ", response_code)
@@ -354,7 +354,7 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var start_decode = Time.get_ticks_msec()
 	var stream = load_wav_from_buffer(body)
 	var decode_elapsed = Time.get_ticks_msec() - start_decode
-	print("[TRACE] [TTSInterface] WAV decoding completed in: ", decode_elapsed, "ms.")
+	GlobalState.trace("[TRACE] [TTSInterface] WAV decoding completed in: %dms." % decode_elapsed)
 	
 	if stream:
 		audio_player.stream = stream
@@ -364,7 +364,7 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		var total_elapsed_str = ""
 		if last_interaction_time > 0.0:
 			total_elapsed_str = " (Total since '%s': %.3fs)" % [last_interaction_name, (play_now - last_interaction_time) / 1000.0]
-		print("[TRACE] [TTSInterface] Playing speech audio stream. Total time since play_dialogue_audio called: %.3fs%s" % [(play_now - tts_request_time) / 1000.0, total_elapsed_str])
+		GlobalState.trace("[TRACE] [TTSInterface] Playing speech audio stream. Total time since play_dialogue_audio called: %.3fs%s" % [(play_now - tts_request_time) / 1000.0, total_elapsed_str])
 	else:
 		print("[TTSInterface] Failed to parse WAV buffer from TTS response.")
 
@@ -420,7 +420,7 @@ func load_wav_from_buffer(bytes: PackedByteArray) -> AudioStreamWAV:
 func _discover_and_verify_tts():
 	tts_connection_attempts += 1
 	tts_connection_attempt.emit(tts_connection_attempts)
-	print("[TRACE] [TTSInterface] Verifying TTS server connection (attempt %d)..." % tts_connection_attempts)
+	GlobalState.trace("[TRACE] [TTSInterface] Verifying TTS server connection (attempt %d)..." % tts_connection_attempts)
 	
 	var check_http = HTTPRequest.new()
 	add_child(check_http)
@@ -436,7 +436,7 @@ func _discover_and_verify_tts():
 					success = true
 					
 		if success:
-			print("[TRACE] [TTSInterface] TTS server successfully verified and pipeline is ready.")
+			GlobalState.trace("[TRACE] [TTSInterface] TTS server successfully verified and pipeline is ready.")
 			tts_connected = true
 			tts_connection_established.emit()
 			

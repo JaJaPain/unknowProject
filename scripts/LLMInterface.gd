@@ -604,14 +604,14 @@ func reset_for_restart():
 		chatter_cache[key].clear()
 	for key in active_fetches:
 		active_fetches[key] = false
-	print("[LLMInterface] State reset for new game.")
+	GlobalState.trace("[LLMInterface] State reset for new game.")
 
 
 
 func _discover_ollama_model():
 	connection_attempts += 1
 	llm_connection_attempt.emit(connection_attempts)
-	print("[TRACE] [LLMInterface] Discovering Ollama models (attempt %d)..." % connection_attempts)
+	GlobalState.trace("[TRACE] [LLMInterface] Discovering Ollama models (attempt %d)..." % connection_attempts)
 	
 	var tags_http = HTTPRequest.new()
 	add_child(tags_http)
@@ -630,7 +630,7 @@ func _discover_ollama_model():
 						if m is Dictionary and m.has("name"):
 							installed_names.append(m["name"])
 							
-					print("[TRACE] [LLMInterface] Installed Ollama models: ", installed_names)
+					GlobalState.trace("[TRACE] [LLMInterface] Installed Ollama models: " + str(installed_names))
 					
 					var chosen_model: String = LocalModelGatewayType.select_installed_model(
 						installed_names,
@@ -643,23 +643,23 @@ func _discover_ollama_model():
 							
 					if chosen_model != "":
 						active_model_name = chosen_model
-						print("[TRACE] [LLMInterface] Dynamic Ollama model selection: USING '", active_model_name, "'")
+						GlobalState.trace("[TRACE] [LLMInterface] Dynamic Ollama model selection: USING '" + active_model_name + "'")
 					else:
-						print("[LLMInterface] No models found in Ollama tags. Defaulting to: ", active_model_name)
+						print("[LLMInterface] No models found in Ollama tags. Defaulting to: " + active_model_name)
 					if chosen_large_model != "":
 						active_large_model_name = chosen_large_model
-						print("[TRACE] [LLMInterface] Large-story model profile: USING '", active_large_model_name, "'")
+						GlobalState.trace("[TRACE] [LLMInterface] Large-story model profile: USING '" + active_large_model_name + "'")
 					
 					success = true
 					
 		if success:
-			print("[TRACE] [LLMInterface] Ollama connection successfully verified.")
+			GlobalState.trace("[TRACE] [LLMInterface] Ollama connection successfully verified.")
 			llm_connected = true
 			llm_connection_established.emit(active_model_name)
 			model_discovered.emit(active_model_name)
 			# Pre-warm ALL chatter caches immediately so static fallback lines
 			# are never used during the first combat encounter
-			print("[TRACE] [LLMInterface] Pre-warming chatter caches...")
+			GlobalState.trace("[TRACE] [LLMInterface] Pre-warming chatter caches...")
 			for chatter_type in chatter_cache.keys():
 				fetch_chatter_background(chatter_type)
 		else:
@@ -1100,7 +1100,7 @@ func request_quest_generation(
 	is_waiting = true
 	last_history_text = history_text
 	request_start_time = Time.get_ticks_msec()
-	print("[TRACE] [LLMInterface] request_quest_generation initiated at: %d ms" % request_start_time)
+	GlobalState.trace("[TRACE] [LLMInterface] request_quest_generation initiated at: %d ms" % request_start_time)
 	
 	var rand_comp = complications[randi() % complications.size()]
 	
@@ -1754,7 +1754,7 @@ func _finish_quest_candidate_batch() -> void:
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
 	var now = Time.get_ticks_msec()
 	var elapsed = (now - request_start_time) / 1000.0
-	print("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
+	GlobalState.trace("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[LLMInterface] HTTP request failed or timed out. Response code: ", response_code)
 		GenerationDiagnostics.record_event(
@@ -2829,7 +2829,7 @@ func _trigger_fallback_with_reason(reason: String) -> void:
 func _trigger_fallback():
 	is_waiting = false
 	var elapsed = (Time.get_ticks_msec() - request_start_time) / 1000.0
-	print("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
+	GlobalState.trace("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
 	var reason := _pending_fallback_reason
 	_pending_fallback_reason = ""
 	if reason.is_empty():

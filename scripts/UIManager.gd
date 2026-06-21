@@ -3212,7 +3212,7 @@ func toggle_dock_menu(
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
 		if not is_outpost and not QuestManager.is_lane_occupied("AGENT") and cached_quest_data.is_empty():
-			print("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
+			GlobalState.trace("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
 			_request_background_agent_quest()
 
 		# Pre-cache this outpost's NPC flavor lines for TTS so the
@@ -3226,7 +3226,7 @@ func toggle_dock_menu(
 		if is_outpost and docked_outpost_id_for_precache != "":
 			var outpost_id: String = docked_outpost_id_for_precache
 			var prev_count: int = int(_outpost_flavor_precached.get(outpost_id, 0))
-			print("[TRACE] [UIManager] Pre-caching TTS for outpost '", outpost_id, "' flavor lines (", prev_count, " pre-warmed this session).")
+			GlobalState.trace("[TRACE] [UIManager] Pre-caching TTS for outpost '%s' flavor lines (%d pre-warmed this session)." % [outpost_id, prev_count])
 			var flavor_lines: Array = GlobalState.get_outpost_flavor_tts_lines(outpost_id)
 			for entry in flavor_lines:
 				# Pass clean_text + per-NPC voice + speed. cache_dialogue_audio
@@ -3942,7 +3942,7 @@ func _clear_cached_agent_quest(reason: String = "") -> void:
 	pending_quest_context = {}
 	cached_unique_intro = ""
 	if not reason.is_empty():
-		print("[TRACE] [UIManager] Cleared cached agent quest: ", reason)
+		GlobalState.trace("[TRACE] [UIManager] Cleared cached agent quest: " + reason)
 
 
 func _clear_cached_agent_quest_if_stale() -> void:
@@ -4660,12 +4660,12 @@ func _cache_mechanic_intro() -> void:
 		# Speak click already fired (request_id > mine), bail without
 		# touching the cache or playing anything.
 		if my_request_id != _mechanic_request_id:
-			print("[TRACE] [UIManager] Stale mechanic greeting callback (id=", my_request_id, " vs ", _mechanic_request_id, "). Dropping.")
+			GlobalState.trace("[TRACE] [UIManager] Stale mechanic greeting callback (id=%d vs %d). Dropping." % [my_request_id, _mechanic_request_id])
 			return
 		_cached_mechanic_line = line
 		_cached_mechanic_line_is_fallback = is_fallback
 		_mechanic_precache_in_flight = false
-		print("[TRACE] [UIManager] Mechanic greeting cached. fallback=", is_fallback, " len=", line.length(), " offer=", _mechanic_pickup_offer.get("offer", false))
+		GlobalState.trace("[TRACE] [UIManager] Mechanic greeting cached. fallback=%s len=%d offer=%s" % [str(is_fallback), line.length(), str(_mechanic_pickup_offer.get("offer", false))])
 		# Pre-cache the TTS so the line is instant when the player enters
 		# maintenance. Skipped on fallback (already in cache or too short to
 		# be worth caching).
@@ -4836,7 +4836,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 # rejection reason as a self-critique suffix and tries again (up to a limit).
 func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary, callback: Callable, critique_suffix: String, attempt: int) -> void:
 	if attempt >= 2:
-		print("[TRACE] [UIManager] Mechanic LLM failed all attempts. Falling back.")
+		GlobalState.trace("[TRACE] [UIManager] Mechanic LLM failed all attempts. Falling back.")
 		GenerationDiagnostics.record_fallback(
 			"mechanic_intro",
 			"max_attempts_reached",
@@ -4884,12 +4884,12 @@ func _request_mechanic_intro_attempt(base_prompt: String, ship: String, worst_ti
 				if line != "":
 					var is_valid: bool = _is_valid_mechanic_line(line, ship, worst_tier, best_tier, offer, active_quest)
 					if is_valid:
-						print("[TRACE] [UIManager] Mechanic LLM line accepted on attempt ", attempt, ": \"", line.left(80), "...\"")
+						GlobalState.trace("[TRACE] [UIManager] Mechanic LLM line accepted on attempt %d: \"%s...\"" % [attempt, line.left(80)])
 						callback.call(line, false)
 						return
 					else:
 						var reason: String = _explain_mechanic_line_rejection(line, ship, worst_tier, best_tier, offer, active_quest)
-						print("[TRACE] [UIManager] Mechanic LLM line REJECTED on attempt ", attempt, ": ", reason, " (", line, ")")
+						GlobalState.trace("[TRACE] [UIManager] Mechanic LLM line REJECTED on attempt %d: %s (%s)" % [attempt, reason, line])
 						var new_suffix: String = "SELF-CRITIQUE — your previous attempt was rejected. Reason: " + reason
 						_request_mechanic_intro_attempt(base_prompt, ship, worst_tier, best_tier, offer, active_quest, mechanic_profile, callback, new_suffix, attempt + 1)
 						return
@@ -6632,11 +6632,11 @@ func _refresh_agent_quest_board():
 
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
-		print("[TRACE] [UIManager] Pre-cached quest found. Loading board instantly.")
+		GlobalState.trace("[TRACE] [UIManager] Pre-cached quest found. Loading board instantly.")
 		_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)
 	else:
 		# Still loading or not started yet
-		print("[TRACE] [UIManager] No pre-cached quest ready. Waiting for background generator...")
+		GlobalState.trace("[TRACE] [UIManager] No pre-cached quest ready. Waiting for background generator...")
 		agent_dialogue_label.text = "Broker Kaelen is checking client contract requests..."
 		agent_back_btn.visible = false
 		is_waiting_for_agent_board = true
@@ -6670,7 +6670,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	cached_quest_is_fallback = is_fallback
 	cached_quest_context = request_context
 	cached_unique_intro = ""  # Reset for new quest — old intro no longer applies
-	print("[TRACE] [UIManager] Background quest generated. Faction: ", quest_data.get("faction", "neutral"), " is_fallback: ", is_fallback)
+	GlobalState.trace("[TRACE] [UIManager] Background quest generated. Faction: %s is_fallback: %s" % [quest_data.get("faction", "neutral"), str(is_fallback)])
 	
 	if not quest_data.is_empty():
 		var game_root := get_tree().current_scene
@@ -6712,11 +6712,11 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 			kaelen_intro_data["system_story_pack"] = _current_system_story_pack()
 			LLMInterface.request_kaelen_intro(kaelen_intro_data, agent_history, GlobalState.reputations, func(unique_line: String):
 				if unique_line.strip_edges() == "":
-					print("[TRACE] [UIManager] No unique intro available — will fall back to canned handoff.")
+					GlobalState.trace("[TRACE] [UIManager] No unique intro available — will fall back to canned handoff.")
 					cached_unique_intro = ""
 					return
 				cached_unique_intro = unique_line
-				print("[TRACE] [UIManager] Cached unique Kaelen intro: ", unique_line.left(60), "...")
+				GlobalState.trace("[TRACE] [UIManager] Cached unique Kaelen intro: " + unique_line.left(60) + "...")
 				# Pre-cache the TTS so playback is instant when the handoff fires
 				SpeechService.cache(unique_line, "voice.kaelen.v1")
 			)
@@ -6742,7 +6742,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	var elapsed_str = ""
 	if SpeechService.last_interaction_time > 0.0:
 		elapsed_str = " (Elapsed since '%s': %.3fs)" % [SpeechService.last_interaction_name, (now - SpeechService.last_interaction_time) / 1000.0]
-	print("[TRACE] [UIManager] _on_quest_generated_received called%s is_fallback: %s" % [elapsed_str, str(is_fallback)])
+	GlobalState.trace("[TRACE] [UIManager] _on_quest_generated_received called%s is_fallback: %s" % [elapsed_str, str(is_fallback)])
 	
 	agent_back_btn.visible = true
 	
@@ -6766,12 +6766,12 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	if cached_unique_intro.strip_edges() != "":
 		# LLM successfully generated a unique handoff — use it
 		handoff_line = cached_unique_intro
-		print("[TRACE] [UIManager] Using unique LLM-generated handoff for: ", agent_name)
+		GlobalState.trace("[TRACE] [UIManager] Using unique LLM-generated handoff for: " + agent_name)
 	else:
 		# No unique intro ready (LLM offline, slow, or this is a fallback quest)
 		# — fall back to one of the canned 5 lines for this agent.
 		handoff_line = handoff_lines[randi() % handoff_lines.size()]
-		print("[TRACE] [UIManager] Using canned handoff fallback for: ", agent_name)
+		GlobalState.trace("[TRACE] [UIManager] Using canned handoff fallback for: " + agent_name)
 		_record_static_text_fallback(
 			"kaelen_handoff_intro",
 			"unique_intro_unavailable",
@@ -7008,7 +7008,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	# Safety net: if cleaning stripped everything (entire string was stage direction), use a fallback
 	if clean_response.length() < 5:
 		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
-		print("[TRACE] [UIManager] dialogue_response was empty after cleaning, using fallback.")
+		GlobalState.trace("[TRACE] [UIManager] dialogue_response was empty after cleaning, using fallback.")
 		_record_static_text_fallback(
 			"choice_response",
 			"cleaned_response_too_short",
@@ -7031,17 +7031,17 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	agent_choices_container.add_child(launch_btn)
 	
 	# Start pre-caching the NEXT quest immediately in the background
-	print("[TRACE] [UIManager] Quest accepted. Starting pre-caching of the next contract.")
+	GlobalState.trace("[TRACE] [UIManager] Quest accepted. Starting pre-caching of the next contract.")
 	_request_background_agent_quest()
 	
 	# Generate unique Kaelen completion/abandon lines for THIS quest in the background
 	cached_completion_line = ""
 	cached_abandon_line = ""
-	print("[TRACE] [UIManager] Requesting unique Kaelen reaction lines for: ", quest_data.get("title", "quest"))
+	GlobalState.trace("[TRACE] [UIManager] Requesting unique Kaelen reaction lines for: " + str(quest_data.get("title", "quest")))
 	LLMInterface.request_kaelen_reaction(quest_data, func(comp_line: String, abn_line: String):
 		cached_completion_line = comp_line
 		cached_abandon_line = abn_line
-		print("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
+		GlobalState.trace("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
 		# Pre-cache both in the background using neutral (Kaelen's) voice
 		SpeechService.cache(comp_line, "voice.kaelen.v1")
 		SpeechService.cache(abn_line, "voice.kaelen.v1")
@@ -7080,7 +7080,7 @@ func _on_agent_complete_pressed():
 		)
 	if completion_text == "":
 		completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
-		print("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
+		GlobalState.trace("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
 		_record_static_text_fallback(
 			"kaelen_completion",
 			"reaction_line_not_ready",
@@ -7099,7 +7099,7 @@ func _on_agent_complete_pressed():
 	
 	# If for some reason the cache is empty, request one now
 	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
-		print("[TRACE] [UIManager] Cache empty on complete. Pre-caching next quest.")
+		GlobalState.trace("[TRACE] [UIManager] Cache empty on complete. Pre-caching next quest.")
 		_request_background_agent_quest()
 
 func _on_agent_abandon_pressed():
@@ -7122,7 +7122,7 @@ func _on_agent_abandon_pressed():
 	var abandon_text = cached_abandon_line
 	if abandon_text == "":
 		abandon_text = LLMInterface.fallback_abandon_lines[randi() % LLMInterface.fallback_abandon_lines.size()]
-		print("[TRACE] [UIManager] Kaelen abandon line not ready, using random fallback.")
+		GlobalState.trace("[TRACE] [UIManager] Kaelen abandon line not ready, using random fallback.")
 		_record_static_text_fallback(
 			"kaelen_abandon",
 			"reaction_line_not_ready",
@@ -7139,7 +7139,7 @@ func _on_agent_abandon_pressed():
 	
 	# If for some reason the cache is empty, request one now
 	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
-		print("[TRACE] [UIManager] Cache empty on abandon. Pre-caching next quest.")
+		GlobalState.trace("[TRACE] [UIManager] Cache empty on abandon. Pre-caching next quest.")
 		_request_background_agent_quest()
 
 func _on_partial_delivery_pressed(deliverable: float):
@@ -8164,7 +8164,7 @@ func _update_connection_status_display():
 
 func _check_both_services_ready():
 	if is_llm_ready and is_tts_ready:
-		print("[TRACE] [UIManager] Both services connected! Starting first quest generation.")
+		GlobalState.trace("[TRACE] [UIManager] Both services connected! Starting first quest generation.")
 		loading_bar.value = 35.0
 		loading_status_label.text = "Syncing Neural Broker Uplink: Generating first contract briefing..."
 		
@@ -8185,7 +8185,7 @@ func _on_tts_cache_completed():
 	if SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
 		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
 		
-	print("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
+	GlobalState.trace("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
 	loading_bar.value = 100.0
 	loading_status_label.text = "Uplink fully secured. System Ready."
 	
@@ -8195,7 +8195,7 @@ func _on_tts_cache_completed():
 	tween.tween_callback(func():
 		loading_panel.queue_free()
 		GlobalState.paused = false # Resume gameplay!
-		print("[TRACE] [UIManager] Loading Screen completed. Game started!")
+		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 		# Trigger Kaelen's intro popup 1s after loading — safely AFTER the overlay is gone
 		if not startup_save_loaded:
 			get_tree().create_timer(1.0).timeout.connect(func():
