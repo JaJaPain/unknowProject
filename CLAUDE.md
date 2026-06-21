@@ -20,3 +20,22 @@ Use `PROJECT_MAP.md` as the first-pass navigation index for this codebase. It is
 - **Engine:** Godot 4.6 (Forward Plus renderer), GDScript
 - **Platform:** Windows 11
 - **Genre:** Space trading/combat game with procedural generation
+
+## Godot Headless Tests
+
+- Run headless Godot script tests one at a time. Do not launch multiple test commands in parallel; they can collide on timestamped Godot log files.
+- Always include a unique `--log-file` argument. On this machine, Godot 4.6.3 can crash during startup log rotation with:
+
+```text
+ERROR: Failed to open 'user://logs/godot....log'.
+CrashHandlerException: Program crashed with signal 11
+```
+
+- Use a workspace-local absolute log path, for example:
+
+```powershell
+$logPath = Join-Path (Get-Location) ".tmp_godot_user\test_logs\mission_contract.log"
+.\Godot\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tests/domain/run_mission_contract_tests.gd --log-file $logPath
+```
+
+- If this crash happens before any GDScript test output, assume it is the Godot logging startup issue, not necessarily a test failure.

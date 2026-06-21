@@ -17,3 +17,16 @@ python generate_repo_map.py
 ## Push Workflow
 
 - When the user says a push is complete, treat that as approval to continue to the next item on the active work list. Do not wait for a separate "go on" message unless the user explicitly asks to pause, stop, review, or plan.
+
+## Godot Headless Tests
+
+- Run Godot headless script tests sequentially, not in parallel. Parallel runs can collide on Godot's timestamped log rotation.
+- Always pass a unique `--log-file` path when running headless Godot tests. Without it, Godot 4.6.3 on this machine can fail while rotating `user://logs/godot.log`, print `ERROR: Failed to open 'user://logs/godot....log'`, then crash with signal 11 before test output.
+- Prefer a workspace-local absolute log path, for example:
+
+```powershell
+$logPath = Join-Path (Get-Location) ".tmp_godot_user\test_logs\mission_contract.log"
+.\Godot\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tests/domain/run_mission_contract_tests.gd --log-file $logPath
+```
+
+- If the old crash appears, treat it as a Godot log-rotation startup issue unless test output proves otherwise.
