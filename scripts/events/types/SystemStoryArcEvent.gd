@@ -18,7 +18,7 @@ func is_eligible(context) -> bool:
 		return false
 	if int(context.campaign_time) < MIN_SYSTEM_TIME_MINUTES:
 		return false
-	var config := _current_system_config(context)
+	var config: SystemConfig = _current_system_config(context)
 	return config != null and not config.story_pack.is_empty()
 
 
@@ -27,7 +27,7 @@ func priority(_context) -> float:
 
 
 func execute(context) -> Dictionary:
-	var config := _current_system_config(context)
+	var config: SystemConfig = _current_system_config(context)
 	if config == null or config.story_pack.is_empty():
 		return {"event": event_type_id(), "applied": false}
 	var pack: Dictionary = config.story_pack.duplicate(true)
@@ -48,7 +48,7 @@ func execute(context) -> Dictionary:
 		events.remove_at(0)
 	pack["arc_events"] = events
 	config.story_pack = pack
-	var global_state := _global_state()
+	var global_state: Node = _global_state()
 	if global_state != null and global_state.has_method("emit_chatter"):
 		global_state.emit_chatter("SYSTEM", note, Color(0.7, 0.85, 0.95))
 	return {
@@ -89,7 +89,7 @@ func can_apply_named_npc_irreversible(
 	return false
 
 
-func _current_system_config(context):
+func _current_system_config(context) -> SystemConfig:
 	var registry = null
 	if context != null and "system_registry" in context:
 		registry = context.system_registry
@@ -97,7 +97,7 @@ func _current_system_config(context):
 		registry = _scene_system_registry()
 	if registry == null or not registry.has_method("get_generated_config"):
 		return null
-	var config = registry.get_generated_config(str(context.current_system_id))
+	var config: SystemConfig = registry.get_generated_config(str(context.current_system_id))
 	if config != null:
 		return config
 	if registry.has_method("resolve_system_id"):
@@ -123,7 +123,7 @@ func _scene_system_registry():
 	return null
 
 
-func _global_state():
+func _global_state() -> Node:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return null
