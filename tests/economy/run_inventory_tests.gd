@@ -16,6 +16,9 @@ func _initialize() -> void:
 	_test_clear()
 	_test_save_load_roundtrip()
 	_test_signal_emitted()
+	_test_slot_limit()
+	_test_stack_max()
+	_test_save_load_max_slots()
 
 	if _failures.is_empty():
 		print("[PASS] Player inventory tests")
@@ -119,3 +122,39 @@ func _test_signal_emitted() -> void:
 	_expect(captured[1] == 2, "Signal should fire with new quantity 2")
 	inv.remove("repair_kit", 1)
 	_expect(captured[1] == 1, "Signal should fire with new quantity 1 after remove")
+
+
+func _test_slot_limit() -> void:
+	var inv = PlayerInv.new()
+	inv.max_slots = 3
+	inv.add("item_a")
+	inv.add("item_b")
+	inv.add("item_c")
+	_expect(not inv.add("item_d"), "4th distinct item should fail with 3 slots")
+	_expect(inv.get_quantity("item_d") == 0, "item_d should not exist")
+	_expect(inv.add("item_a", 2), "Stacking existing item should succeed even when full")
+	_expect(inv.get_quantity("item_a") == 3, "item_a should have 3 after stacking")
+	_expect(inv.is_full(), "Should report full at 3/3")
+	inv.remove("item_c", 1)
+	_expect(not inv.is_full(), "Should not be full after removing a slot")
+	_expect(inv.add("item_d"), "Should accept new item after freeing a slot")
+
+
+func _test_stack_max() -> void:
+	var inv = PlayerInv.new()
+	_expect(inv.add("repair_kit", 3, 5), "Add 3 with stack_max 5 should succeed")
+	_expect(inv.add("repair_kit", 2, 5), "Add 2 more (total 5) should succeed")
+	_expect(not inv.add("repair_kit", 1, 5), "Add 1 more (would be 6) should fail")
+	_expect(inv.get_quantity("repair_kit") == 5, "Should stay at 5")
+	_expect(inv.can_add("repair_kit", 1, 5) == false, "can_add should return false at stack_max")
+	_expect(inv.add("shield_cell", 1, -1), "stack_max -1 means unlimited")
+
+
+func _test_save_load_max_slots() -> void:
+	var inv = PlayerInv.new()
+	inv.max_slots = 12
+	inv.add("repair_kit", 2)
+	var data = inv.to_dict()
+	var restored = PlayerInv.from_dict(data)
+	_expect(restored.max_slots == 12, "max_slots should survive save/load roundtrip")
+	_expect(restored.get_quantity("repair_kit") == 2, "items should survive roundtrip")

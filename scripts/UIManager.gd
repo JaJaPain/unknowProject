@@ -110,6 +110,7 @@ var su_cargo_btn: Button
 var su_engine_btn: Button
 var su_power_btn: Button
 var su_shields_btn: Button
+var su_storage_btn: Button
 var su_mining_btn: Button
 var su_ship_sys_vbox: VBoxContainer
 var su_ship_sys_lbl: RichTextLabel
@@ -152,9 +153,10 @@ var _store_current_id: String = ""
 var inventory_panel: Panel
 var inventory_list: VBoxContainer
 var inventory_summary_label: Label
-var inventory_btn: Button
 var inventory_return_to_dock: bool = false
 var inventory_back_btn: Button
+var inventory_filter_btn: Button
+var inventory_consumables_only: bool = false
 
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
@@ -277,6 +279,7 @@ var selection_marker: Control
 var selected_row_style: StyleBoxFlat
 
 func _ready():
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Configure selected row highlight stylebox
 	selected_row_style = StyleBoxFlat.new()
 	selected_row_style.bg_color = Color(0.0, 0.35, 0.55, 0.45) # Glowing semi-transparent cyan background
@@ -1244,11 +1247,6 @@ func _create_dock_menu():
 	store_btn.pressed.connect(_on_store_pressed)
 	vbox.add_child(store_btn)
 
-	inventory_btn = Button.new()
-	inventory_btn.text = "Inventory"
-	inventory_btn.pressed.connect(_on_inventory_pressed)
-	vbox.add_child(inventory_btn)
-
 	ship_upgrades_btn = Button.new()
 	ship_upgrades_btn.text = "Ship Upgrades"
 	ship_upgrades_btn.pressed.connect(_on_ship_upgrades_pressed)
@@ -1492,6 +1490,12 @@ func _create_inventory_panel() -> void:
 	inventory_summary_label.add_theme_font_size_override("font_size", 14)
 	inventory_summary_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	vbox.add_child(inventory_summary_label)
+
+	inventory_filter_btn = Button.new()
+	inventory_filter_btn.text = "Show: All Items"
+	inventory_filter_btn.add_theme_font_size_override("font_size", 13)
+	inventory_filter_btn.pressed.connect(_on_inventory_filter_toggled)
+	vbox.add_child(inventory_filter_btn)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -2779,12 +2783,20 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func _unhandled_input(event: InputEvent):
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_M and map_btn and map_btn.visible:
+			_toggle_branch_map()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_I:
+			_on_inventory_pressed()
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
 			return
 		if branch_map and branch_map.visible:
 			branch_map._close()
-			_auto_select_route_gate()
 			return
 		if campaign_panel and campaign_panel.visible:
 			_close_campaign_manager()
@@ -3144,10 +3156,12 @@ func toggle_dock_menu(
 	create_checkpoint: bool = true
 ):
 	current_station = station
-	if dock_panel.visible or agent_panel.visible \
+	var dock_ui_open := dock_panel.visible or agent_panel.visible \
 			or (public_board_panel and public_board_panel.visible) \
-			or (store_panel and store_panel.visible) \
-			or (inventory_panel and inventory_panel.visible):
+			or (store_panel and store_panel.visible)
+	if inventory_panel and inventory_panel.visible and inventory_return_to_dock:
+		dock_ui_open = true
+	if dock_ui_open:
 		_clear_cached_agent_quest("undock")
 		SpeechService.stop()
 		dock_panel.visible = false
@@ -3257,7 +3271,6 @@ func _render_dock_submenu() -> void:
 		station_lounge_btn.visible = false
 		maintenance_bay_btn.visible = false
 		store_btn.visible = false
-		inventory_btn.visible = false
 		ship_upgrades_btn.visible = true
 		repair_btn.visible = true
 		test_pickup_btn.visible = DEBUG_TESTS
@@ -3293,7 +3306,6 @@ func _render_dock_submenu() -> void:
 		station_lounge_btn.visible = false
 		maintenance_bay_btn.visible = false
 		store_btn.visible = false
-		inventory_btn.visible = false
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
 		test_pickup_btn.visible = false
@@ -3318,7 +3330,6 @@ func _render_dock_submenu() -> void:
 		station_lounge_btn.visible = _current_station_has_contacts()
 		maintenance_bay_btn.visible = not is_outpost
 		store_btn.visible = not is_outpost
-		inventory_btn.visible = true
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
 		test_pickup_btn.visible = false
@@ -4148,33 +4159,48 @@ func _on_inventory_back_pressed() -> void:
 	inventory_return_to_dock = false
 
 
+func _on_inventory_filter_toggled() -> void:
+	inventory_consumables_only = not inventory_consumables_only
+	inventory_filter_btn.text = "Show: Consumables" if inventory_consumables_only else "Show: All Items"
+	_render_inventory_items()
+
+
 func _render_inventory_items() -> void:
 	for child in inventory_list.get_children():
 		child.queue_free()
-	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m3" % [
+	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m3    Slots: %d / %d" % [
 		GlobalState.player_credits,
 		GlobalState.player_storage_ore,
 		GlobalState.player_storage_max,
+		GlobalState.inventory.slot_count(),
+		GlobalState.inventory.max_slots,
 	]
-	inventory_list.add_child(_build_inventory_section_label("Cargo Hold"))
-	inventory_list.add_child(_build_inventory_cargo_row())
+	if not inventory_consumables_only:
+		inventory_list.add_child(_build_inventory_section_label("Cargo Hold"))
+		inventory_list.add_child(_build_inventory_cargo_row())
 	var items: Dictionary = GlobalState.inventory.get_all()
-	inventory_list.add_child(_build_inventory_section_label("Owned Items"))
-	if items.is_empty():
-		var empty := Label.new()
-		empty.text = "No stored items yet."
-		empty.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
-		inventory_list.add_child(empty)
-		return
+	var section_label := "Consumables" if inventory_consumables_only else "Owned Items"
+	inventory_list.add_child(_build_inventory_section_label(section_label))
 	var keys := items.keys()
 	keys.sort()
 	var reg = StoreRegistryScript.shared()
+	var shown := 0
 	for item_id in keys:
 		var quantity := int(items[item_id])
 		if quantity <= 0:
 			continue
 		var item_def = reg.get_item(str(item_id))
+		if inventory_consumables_only:
+			var cat: String = item_def.category if item_def else ""
+			if cat != "consumable":
+				continue
+		shown += 1
 		inventory_list.add_child(_build_inventory_item_row(str(item_id), quantity, item_def))
+	if shown == 0:
+		var empty := Label.new()
+		empty.text = "No consumables." if inventory_consumables_only else "No stored items yet."
+		empty.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
+		inventory_list.add_child(empty)
 
 
 func _build_inventory_section_label(text: String) -> Label:
@@ -4183,6 +4209,34 @@ func _build_inventory_section_label(text: String) -> Label:
 	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
 	return label
+
+
+func _build_item_icon(item_def) -> TextureRect:
+	if item_def == null or item_def.icon_sheet.is_empty():
+		return null
+	var reg = StoreRegistryScript.shared()
+	var sheet_path: String = reg.get_icon_sheet_path(item_def.icon_sheet)
+	if sheet_path.is_empty():
+		return null
+	var sheet_tex: Texture2D = load(sheet_path)
+	if sheet_tex == null:
+		return null
+	var cols := 5
+	var cell_w: float = sheet_tex.get_width() / float(cols)
+	var cell_h: float = sheet_tex.get_height() / float(cols)
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet_tex
+	atlas.region = Rect2(
+		item_def.icon_cell.x * cell_w,
+		item_def.icon_cell.y * cell_h,
+		cell_w, cell_h
+	)
+	var icon := TextureRect.new()
+	icon.texture = atlas
+	icon.custom_minimum_size = Vector2(32, 32)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	return icon
 
 
 func _build_inventory_cargo_row() -> VBoxContainer:
@@ -4212,6 +4266,10 @@ func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBox
 	box.add_theme_constant_override("separation", 2)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	var icon := _build_item_icon(item_def)
+	if icon:
+		header.add_child(icon)
 	var title := Label.new()
 	var display_name := item_id.capitalize()
 	var category := "item"
@@ -4220,7 +4278,10 @@ func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBox
 		display_name = item_def.display_name
 		category = item_def.category
 		description = item_def.description
-	title.text = "%s x%d  [%s]" % [display_name, quantity, category]
+	var stack_text := "x%d" % quantity
+	if item_def != null and item_def.stack_max > 1:
+		stack_text = "x%d/%d" % [quantity, item_def.stack_max]
+	title.text = "%s %s  [%s]" % [display_name, stack_text, category]
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 14)
 	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
@@ -4311,6 +4372,11 @@ func _get_reputation_tier() -> String:
 func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: int) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var icon := _build_item_icon(item_def)
+	if icon:
+		row.add_child(icon)
 
 	var name_label := Label.new()
 	name_label.text = item_def.display_name
@@ -4348,7 +4414,10 @@ func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: 
 	var buy_btn := Button.new()
 	buy_btn.text = "Buy"
 	buy_btn.custom_minimum_size.x = 50
-	buy_btn.disabled = stock == 0 or price > GlobalState.player_credits
+	var can_buy := stock > 0 and price <= GlobalState.player_credits
+	if can_buy:
+		can_buy = GlobalState.inventory.can_add(item_id, 1, int(item_def.stack_max) if item_def else -1)
+	buy_btn.disabled = not can_buy
 	buy_btn.pressed.connect(_on_store_buy.bind(item_id))
 	row.add_child(buy_btn)
 
@@ -4364,10 +4433,18 @@ func _on_store_buy(item_id: String) -> void:
 	var price: int = store.get_price(item_id, rep_tier)
 	if price > GlobalState.player_credits:
 		return
+	var item_def = store.get_item_def(item_id)
+	var stack_max: int = int(item_def.stack_max) if item_def else -1
+	if not GlobalState.inventory.can_add(item_id, 1, stack_max):
+		if GlobalState.inventory.is_full() and not GlobalState.inventory.has_item(item_id):
+			show_hud_warning("Inventory full — no free slots.")
+		else:
+			show_hud_warning("Stack limit reached for %s." % (item_def.display_name if item_def else item_id))
+		return
 	if not store.purchase(item_id):
 		return
 	GlobalState.player_credits -= price
-	GlobalState.inventory.add(item_id)
+	GlobalState.inventory.add(item_id, 1, stack_max)
 	_render_store_items()
 
 
@@ -5385,27 +5462,72 @@ func _update_target_command_feedback() -> void:
 	if target_approach_btn == null or target_orbit_btn == null or target_action_btn == null:
 		return
 	var active_mode := ""
-	if GlobalState.player != null and is_instance_valid(GlobalState.player):
+	var player_valid := GlobalState.player != null and is_instance_valid(GlobalState.player)
+	if player_valid:
 		active_mode = str(GlobalState.player.get("nav_mode"))
-	_set_command_button_active(
+
+	_set_command_button_state(
 		target_approach_btn,
 		active_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH"]
 	)
-	_set_command_button_active(target_orbit_btn, active_mode == "ORBIT")
-	_set_command_button_active(
-		target_action_btn,
-		active_mode in ["MINE", "ATTACK", "DOCK"]
-	)
+	_set_command_button_state(target_orbit_btn, active_mode == "ORBIT")
+
+	var target := GlobalState.active_target
+	if target and is_instance_valid(target) and target.is_in_group("jumpgate"):
+		_update_gate_action_button(target, active_mode)
+	elif active_mode in ["MINE", "ATTACK", "DOCK"]:
+		var in_range := false
+		if player_valid and target and is_instance_valid(target):
+			var dist: float = GlobalState.player.global_position.distance_to(target.global_position)
+			in_range = dist < 75.0
+		_set_command_button_state(target_action_btn, true, not in_range)
+		target_action_btn.disabled = false
+	else:
+		_set_command_button_state(target_action_btn, false)
+		if target_action_btn.visible:
+			target_action_btn.disabled = false
 
 
-func _set_command_button_active(button: Button, active: bool) -> void:
+func _update_gate_action_button(gate: Node, active_mode: String) -> void:
+	var game_root := get_tree().current_scene
+	var gate_state: String = gate.get("knowledge_state") if gate.get("knowledge_state") else "known"
+	if gate_state in ["hidden", "damaged", "blocked"]:
+		target_action_btn.text = _gate_action_label(gate)
+		target_action_btn.disabled = false
+		_set_command_button_state(target_action_btn, false)
+		return
+	if game_root and game_root.has_method("get_jump_block_reason"):
+		var reason: String = game_root.get_jump_block_reason(gate)
+		if reason != "":
+			target_action_btn.disabled = true
+			if "range" in reason.to_lower():
+				target_action_btn.text = "Initiate Jump (Out of Range)"
+			elif "align" in reason.to_lower():
+				target_action_btn.text = "Initiate Jump (Not Aligned)"
+			elif "cooldown" in reason.to_lower() or "recalib" in reason.to_lower():
+				target_action_btn.text = "Initiate Jump (Cooldown)"
+			elif "undock" in reason.to_lower():
+				target_action_btn.text = "Initiate Jump (Docked)"
+			else:
+				target_action_btn.text = "Initiate Jump"
+			_set_command_button_state(target_action_btn, false)
+			return
+	target_action_btn.text = "Initiate Jump"
+	target_action_btn.disabled = false
+	_set_command_button_state(target_action_btn, true)
+
+
+func _set_command_button_state(button: Button, active: bool, queued: bool = false) -> void:
 	if button == null:
 		return
 	if not active:
 		button.self_modulate = Color.WHITE
 		return
 	var pulse := 0.65 + sin(Time.get_ticks_msec() * 0.01) * 0.25
-	button.self_modulate = Color(0.2, 0.9, 1.0, 0.75 + pulse * 0.25)
+	if queued:
+		button.self_modulate = Color(1.0, 0.7, 0.2, 0.75 + pulse * 0.25)
+	else:
+		button.self_modulate = Color(0.2, 0.9, 1.0, 0.75 + pulse * 0.25)
 
 
 func _update_boost_button() -> void:
@@ -8319,9 +8441,10 @@ func _create_ship_upgrades_panel() -> void:
 	su_weapons_btn = _create_slot.call("WEAPONS\nPulse Laser Mk II\n25 Yield", Vector2(-420, 20), Vector2(220, 100), func(): _on_su_slot_pressed("weapons"))
 	su_cargo_btn = _create_slot.call("CARGOHOLD\nStandard Bay\n0 / 100 SCU", Vector2(0, 40), Vector2(250, 100), func(): _on_su_slot_pressed("cargo"))
 	su_engine_btn = _create_slot.call("ENGINE\nNova Thrusters\n120 m/s", Vector2(420, 20), Vector2(220, 100), func(): _on_su_slot_pressed("engine"))
-	su_power_btn = _create_slot.call("POWERPLANT\nFusion Core\n500 MW", Vector2(-250, 240), Vector2(220, 100), func(): _on_su_slot_pressed("power"))
+	su_power_btn = _create_slot.call("POWERPLANT\nFusion Core\n500 MW", Vector2(-350, 240), Vector2(220, 100), func(): _on_su_slot_pressed("power"))
 	su_shields_btn = _create_slot.call("SHIELDS\nAegis Deflector\n1200 HP", Vector2(0, -220), Vector2(220, 100), func(): _on_su_slot_pressed("shields"))
-	su_mining_btn = _create_slot.call("MINING LASER\nIndustrial Beam\n1.0 Yield", Vector2(250, 240), Vector2(220, 100), func(): _on_su_slot_pressed("mining"))
+	su_storage_btn = _create_slot.call("STORAGE\nStandard Racks\n8 Slots", Vector2(0, 240), Vector2(220, 100), func(): _on_su_slot_pressed("storage"))
+	su_mining_btn = _create_slot.call("MINING LASER\nIndustrial Beam\n1.0 Yield", Vector2(350, 240), Vector2(220, 100), func(): _on_su_slot_pressed("mining"))
 
 	# Side panels
 	var left_panel = VBoxContainer.new()
@@ -8398,11 +8521,12 @@ func _on_ship_upgrades_pressed() -> void:
 	_refresh_upgrade_ui()
 
 func _refresh_upgrade_ui():
-	su_cargo_btn.text = "CARGOHOLD\nTier %d\n%d / %d SCU" % [GlobalState.current_upgrades["cargo"]["tier"], GlobalState.cargo, GlobalState.cargo_max]
+	su_cargo_btn.text = "CARGOHOLD\nTier %d\n%d / %d SCU  Bank: %s" % [GlobalState.current_upgrades["cargo"]["tier"], GlobalState.cargo, GlobalState.cargo_max, _format_ore_bank_max()]
 	su_weapons_btn.text = "WEAPONS\nTier %d %s" % [GlobalState.current_upgrades["weapons"]["tier"], GlobalState.current_upgrades["weapons"]["path"].capitalize()]
 	su_engine_btn.text = "ENGINE\nTier %d %s" % [GlobalState.current_upgrades["engine"]["tier"], GlobalState.current_upgrades["engine"]["path"].capitalize()]
 	su_power_btn.text = "POWERPLANT\nTier %d\nCapacity: %d MW" % [GlobalState.current_upgrades["power"]["tier"], GlobalState.power_capacity]
 	su_shields_btn.text = "SHIELDS\nTier %d %s" % [GlobalState.current_upgrades["shields"]["tier"], GlobalState.current_upgrades["shields"]["path"].capitalize()]
+	su_storage_btn.text = "STORAGE\nTier %d\n%d / %d Slots" % [GlobalState.current_upgrades["storage"]["tier"], GlobalState.inventory.slot_count(), GlobalState.inventory.max_slots]
 	su_mining_btn.text = "MINING LASER\nTier %d %s" % [GlobalState.current_upgrades["mining"]["tier"], GlobalState.current_upgrades["mining"]["path"].capitalize()]
 	
 	su_ore_bank_lbl.text = "Banked Ore: %.1f / %.1f\nCredits: %d\nPower Draw: %d / %d MW" % [GlobalState.player_storage_ore, GlobalState.player_storage_max, GlobalState.player_credits, GlobalState.get_current_power_draw(), GlobalState.power_capacity]
@@ -8412,11 +8536,24 @@ func _refresh_upgrade_ui():
 	if status_node and status_node is Label:
 		status_node.text = "POWER: %d / %d MW\nCARGO: %d / %d" % [GlobalState.get_current_power_draw(), GlobalState.power_capacity, GlobalState.cargo, GlobalState.cargo_max]
 
+func _format_ore_bank_max() -> String:
+	var val := GlobalState.player_storage_max
+	if val >= 1000.0:
+		return "%dk" % int(val / 1000.0)
+	return str(int(val))
+
+
 func _on_su_slot_pressed(slot: String) -> void:
 	var info = GlobalState.current_upgrades[slot]
 	var current_tier = info["tier"]
 	var current_path = info["path"]
-	var is_max = current_tier >= 5
+	var max_tier := 5
+	if GlobalState.UPGRADE_TREE.has(slot):
+		for path_name in GlobalState.UPGRADE_TREE[slot]["branches"].values():
+			for t in path_name.keys():
+				if int(t) > max_tier:
+					max_tier = int(t)
+	var is_max = current_tier >= max_tier
 	
 	for child in su_ship_sys_vbox.get_children():
 		if child != su_ship_sys_vbox.get_child(0) and child != su_ship_sys_lbl:

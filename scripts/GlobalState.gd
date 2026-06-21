@@ -10,6 +10,8 @@ extends Node
 # and disable buttons when maxed.
 const SHIP_BASE_STATS = {
 	"cargo_max_m3":       100.0,
+	"inventory_slots":    8,
+	"ore_bank_max":       1000.0,
 	"mining_laser_yield": 1.0,
 	"mining_cooldown":    1.0,
 	"weapon_damage":      20.0,
@@ -96,10 +98,23 @@ const UPGRADE_TREE = {
 		"base_power": 0,
 		"branches": {
 			"standard": {
-				2: { "cost_cr": 100, "cost_ore": 100, "power": 0, "stats": {"cargo_max_m3": 150.0} },
-				3: { "cost_cr": 200, "cost_ore": 200, "power": 0, "stats": {"cargo_max_m3": 250.0} },
-				4: { "cost_cr": 400, "cost_ore": 400, "power": 0, "stats": {"cargo_max_m3": 400.0} },
-				5: { "cost_cr": 800, "cost_ore": 800, "power": 0, "stats": {"cargo_max_m3": 600.0} }
+				2: { "cost_cr": 100, "cost_ore": 100, "power": 0, "stats": {"cargo_max_m3": 150.0, "ore_bank_max": 3000.0} },
+				3: { "cost_cr": 200, "cost_ore": 200, "power": 0, "stats": {"cargo_max_m3": 250.0, "ore_bank_max": 8000.0} },
+				4: { "cost_cr": 400, "cost_ore": 400, "power": 0, "stats": {"cargo_max_m3": 400.0, "ore_bank_max": 20000.0} },
+				5: { "cost_cr": 800, "cost_ore": 800, "power": 0, "stats": {"cargo_max_m3": 600.0, "ore_bank_max": 50000.0} }
+			}
+		}
+	},
+	"storage": {
+		"base_power": 0,
+		"branches": {
+			"standard": {
+				2: { "cost_cr": 200, "cost_ore": 100, "power": 0, "stats": {"inventory_slots": 10} },
+				3: { "cost_cr": 600, "cost_ore": 300, "power": 0, "stats": {"inventory_slots": 12} },
+				4: { "cost_cr": 1800, "cost_ore": 900, "power": 0, "stats": {"inventory_slots": 14} },
+				5: { "cost_cr": 5400, "cost_ore": 2700, "power": 0, "stats": {"inventory_slots": 16} },
+				6: { "cost_cr": 16000, "cost_ore": 8000, "power": 0, "stats": {"inventory_slots": 18} },
+				7: { "cost_cr": 48000, "cost_ore": 24000, "power": 0, "stats": {"inventory_slots": 20} }
 			}
 		}
 	},
@@ -1377,6 +1392,7 @@ func cargo_display_text() -> String:
 
 var player_storage_ore: float = 0.0
 var player_storage_max: float = 1000.0
+var ore_bank_max: float = 1000.0
 var power_capacity: float = 300.0
 
 var current_upgrades: Dictionary = {
@@ -1385,6 +1401,7 @@ var current_upgrades: Dictionary = {
 	"shields": {"tier": 1, "path": "base"},
 	"mining": {"tier": 1, "path": "base"},
 	"cargo": {"tier": 1, "path": "base"},
+	"storage": {"tier": 1, "path": "base"},
 	"power": {"tier": 1, "path": "base"}
 }
 
@@ -1412,6 +1429,7 @@ var has_max_bulwark_shield: bool = false
 var has_max_deflector_shield: bool = false
 var has_max_rapid_mining: bool = false
 var has_max_deep_mining: bool = false
+var inventory_slots: int = 8
 
 var kaelen_briefing_seen: bool = false
 var kaelen_briefing_accepted: bool = false
@@ -1717,6 +1735,7 @@ func reset_for_restart():
 		"shields": {"tier": 1, "path": "base"},
 		"mining": {"tier": 1, "path": "base"},
 		"cargo": {"tier": 1, "path": "base"},
+		"storage": {"tier": 1, "path": "base"},
 		"power": {"tier": 1, "path": "base"}
 	}
 	apply_upgrade_stats()
@@ -1785,6 +1804,8 @@ func apply_upgrade_stats():
 	ignore_cargo_mass = SHIP_BASE_STATS["ignore_cargo_mass"]
 	hull_armor = SHIP_BASE_STATS["hull_armor"]
 	player_max_health = SHIP_BASE_STATS["max_health"]
+	inventory_slots = SHIP_BASE_STATS["inventory_slots"]
+	ore_bank_max = SHIP_BASE_STATS["ore_bank_max"]
 	power_capacity = 300.0
 
 	has_max_rapid_weapon = false
@@ -1809,6 +1830,10 @@ func apply_upgrade_stats():
 				if tier_data.has("stats"):
 					for stat_key in tier_data["stats"].keys():
 						set(stat_key, tier_data["stats"][stat_key])
+
+	# Sync inventory slot capacity and ore bank
+	inventory.max_slots = inventory_slots
+	player_storage_max = ore_bank_max
 
 	# Update player health bounds
 	if player and is_instance_valid(player):
@@ -1839,8 +1864,16 @@ func get_current_power_draw() -> float:
 func purchase_upgrade(sys: String, path: String) -> bool:
 	var info = current_upgrades[sys]
 	var next_tier = info["tier"] + 1
-	if next_tier > 5:
-		return false # Maxed
+	if not UPGRADE_TREE.has(sys):
+		return false
+	var branch_data: Dictionary = UPGRADE_TREE[sys]["branches"]
+	var any_branch_has_tier := false
+	for b in branch_data.values():
+		if b.has(next_tier):
+			any_branch_has_tier = true
+			break
+	if not any_branch_has_tier:
+		return false
 		
 	# If branching at tier 2
 	if info["tier"] == 1:

@@ -659,6 +659,9 @@ func _show_route_detail(route: Dictionary, pos: Vector2) -> void:
 func _close() -> void:
 	visible = false
 	get_tree().paused = false
+	var ui := get_parent()
+	if ui and ui.has_method("_auto_select_route_gate"):
+		ui._auto_select_route_gate()
 
 
 func refresh() -> void:

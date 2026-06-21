@@ -2611,6 +2611,7 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.faction_kills = loaded_kills
 	var inv_data: Dictionary = state.get("inventory", {})
 	GlobalState.inventory = GlobalState.PlayerInventoryScript.from_dict(inv_data)
+	GlobalState.inventory.max_slots = GlobalState.inventory_slots
 	var stock_data: Dictionary = state.get("store_stock", {})
 	if not stock_data.is_empty():
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
