@@ -723,6 +723,8 @@ Goal: create the shared story spine.
   campaign bible, write successful results to the campaign bible store, and
   persist `llm_unavailable` or `generation_failed` status when the call cannot
   produce valid story output.
+- [x] Queue that campaign bible generation once for each newly created campaign,
+  after campaign stores are open, without blocking campaign startup.
 - Define the campaign idea-memory file and include relevant prior ideas in
   generation prompts.
 - Define rare campaign rumor trails and endgame/easter-egg hint rules.

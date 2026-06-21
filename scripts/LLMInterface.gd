@@ -711,7 +711,7 @@ func request_campaign_bible_generation(
 ) -> void:
 	var capability := "campaign_bible"
 	var model_name := model_for_capability(capability)
-	if not llm_connected or OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
 			"model_unavailable",
@@ -795,6 +795,8 @@ func _on_campaign_bible_generation_completed(
 		temp_http.queue_free()
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if response_code == 0 or response_code == 404:
+			reason = "model_unavailable"
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
 			reason,

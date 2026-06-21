@@ -68,6 +68,7 @@ var campaign_bible_store: CampaignBibleStore
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
 var campaign_agent_memory_store = null
+var campaign_bible_generation_requested_slots: Dictionary = {}
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -963,6 +964,8 @@ func create_campaign_in_slot(
 	]
 	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
 	_initialize_campaign_chronicle()
+	if creating_fresh_campaign:
+		_queue_campaign_bible_generation_for_active_slot("new_campaign")
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign \"%s\" created." %
@@ -1239,6 +1242,7 @@ func _ensure_campaign_checkpoint_store(
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return false
+	var created_new_campaign := false
 	if not campaign_slot_registry.selected_slot_id.is_empty():
 		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
 	else:
@@ -1268,6 +1272,7 @@ func _ensure_campaign_checkpoint_store(
 			)
 			active_campaign_slot_id = ""
 			return false
+		created_new_campaign = true
 		if Engine.has_meta("creating_new_campaign"):
 			Engine.remove_meta("creating_new_campaign")
 		if Engine.has_meta("pending_opening_campaign_name"):
@@ -1280,6 +1285,8 @@ func _ensure_campaign_checkpoint_store(
 	if not campaign_checkpoint_store.is_valid():
 		return false
 	_initialize_campaign_chronicle()
+	if created_new_campaign:
+		_queue_campaign_bible_generation_for_active_slot("automatic_new_campaign")
 	return campaign_chronicle_store != null
 
 
@@ -1851,6 +1858,30 @@ func request_campaign_bible_generation() -> Dictionary:
 		_on_campaign_bible_generation_result
 	)
 	return {"ok": true, "status": "requested"}
+
+
+func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void:
+	if active_campaign_slot_id.is_empty():
+		return
+	if campaign_bible_generation_requested_slots.has(active_campaign_slot_id):
+		return
+	campaign_bible_generation_requested_slots[active_campaign_slot_id] = true
+	GenerationDiagnostics.record_event(
+		"campaign_bible",
+		"generation_queued",
+		"game_root",
+		{"slot_id": active_campaign_slot_id, "reason": reason}
+	)
+	call_deferred("_request_campaign_bible_generation_for_active_slot")
+
+
+func _request_campaign_bible_generation_for_active_slot() -> void:
+	var requested := request_campaign_bible_generation()
+	if not bool(requested.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign bible generation could not be requested: %s" %
+				str(requested.get("error", "unknown error"))
+		)
 
 
 func _on_campaign_bible_generation_result(result: Dictionary) -> void:
