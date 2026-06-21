@@ -58,14 +58,14 @@ and they should not block or overlap with current Codex work.
 
 ## Assets And Metadata
 
-- [ ] Verify Kaelen mood sprite metadata still matches the intended grid labels,
+- [x] Verify Kaelen mood sprite metadata still matches the intended grid labels,
   especially the board-turn-in/WTF expression.
-- [ ] Add a short asset naming guide for portraits, badges, generated faction
+- [x] Add a short asset naming guide for portraits, badges, generated faction
   images, ship parts, and mood sheets.
-- [ ] Review newly added NPC portraits for missing metadata, duplicate names, or
+- [x] Review newly added NPC portraits for missing metadata, duplicate names, or
   confusing folder placement.
-- [ ] Review badge assets for obvious duplicates or unreadable tiny icons.
-- [ ] Make a simple "asset ready checklist" for generated factions: portrait
+- [x] Review badge assets for obvious duplicates or unreadable tiny icons.
+- [x] Make a simple "asset ready checklist" for generated factions: portrait
   pool, badge, voice style, ship style, faction color, and name source.
 
 ## Documentation Cleanup
