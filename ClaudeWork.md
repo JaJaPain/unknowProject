@@ -117,31 +117,31 @@ generated-system persistence.
 
 ### Presentation And UI Clarity
 
-- [ ] Add a small visual QA note for generated faction contact screens: portrait
+- [x] Add a small visual QA note for generated faction contact screens: portrait
   fit, badge size, role subtitle, button spacing, and whether the portrait/voice
   pairing feels plausible.
-- [ ] Audit generated faction names in quest UI and map UI for raw IDs such as
+- [x] Audit generated faction names in quest UI and map UI for raw IDs such as
   `GEN_LATCH_PARISH_02` or `FACTION.GENERATED.*`. Document exact screens where
   player-facing display names still need cleanup.
-- [ ] Review contract detail panels for overly technical labels and write a
+- [x] Review contract detail panels for overly technical labels and write a
   short before/after copy pass. Do not change mission schema or objective data.
 - [ ] Check the selected-target UI at 720p, 1080p, and ultrawide for action
   button crowding, active-state readability, and boost-button placement.
-- [ ] Add simple controller-focus notes for any new Station Lounge screens that
+- [x] Add simple controller-focus notes for any new Station Lounge screens that
   were added after the original controller checklist.
 
 ### Audio And Spoken Text
 
-- [ ] Build a spoken-text cleanup sample list from recent playtests: all-caps
+- [x] Build a spoken-text cleanup sample list from recent playtests: all-caps
   faction names, raw generated IDs, weird station names, and repeated player
   name usage.
-- [ ] Document a safe TTS normalization rule set: keep UI text unchanged, but
+- [x] Document a safe TTS normalization rule set: keep UI text unchanged, but
   speak display names in title case, strip raw prefixes, and preserve acronyms
   only when they are meant to be spelled.
-- [ ] Review Kokoro voice mappings and note which existing voices read as male,
+- [x] Review Kokoro voice mappings and note which existing voices read as male,
   female, or ambiguous so generated portrait/voice pairing can expand beyond the
   old fixed NPC pool later.
-- [ ] Create a small pronunciation-notes doc for generated faction names,
+- [x] Create a small pronunciation-notes doc for generated faction names,
   station names, ores, and common mission items.
 
 ### Visual Effects And Atmosphere
@@ -158,31 +158,31 @@ generated-system persistence.
 
 ### Asset And Metadata Hygiene
 
-- [ ] Verify imported portrait metadata can support future generated NPCs:
+- [x] Verify imported portrait metadata can support future generated NPCs:
   gender tag, age group, role vibe, and any portraits that should be excluded
   from story use.
-- [ ] Make a short list of portrait IDs that look like strong faction contacts,
+- [x] Make a short list of portrait IDs that look like strong faction contacts,
   mechanics, smugglers, miners, soldiers, medics, and lounge locals.
-- [ ] Check badge readability at the size used in quest screens and map panels.
+- [x] Check badge readability at the size used in quest screens and map panels.
   Flag badges that blur into a blob at UI scale.
-- [ ] Add a note for generated ship badge placement: minimum readable size,
+- [x] Add a note for generated ship badge placement: minimum readable size,
   contrast, and avoiding mirrored/rotated placement that looks accidental.
 
 ### Documentation And Handoff
 
-- [ ] Summarize the latest visual/polish changes from `docs/whileYouWasSleeping.md`
+- [x] Summarize the latest visual/polish changes from `docs/whileYouWasSleeping.md`
   into durable docs if they are still only in the changelog.
-- [ ] Add a "new campaign smoke test" checklist: Kaelen intro, first gate timer,
+- [x] Add a "new campaign smoke test" checklist: Kaelen intro, first gate timer,
   generated system arrival, local contacts, public board, station map, inventory,
   and one completed mission.
-- [ ] Add a "do not use raw IDs in player text" guideline to the relevant docs,
+- [x] Add a "do not use raw IDs in player text" guideline to the relevant docs,
   with examples of raw generated IDs versus display names.
 - [ ] Keep a running list of screenshots that show broken or awkward generated
   content so Codex can turn them into targeted code fixes later.
 
 ### Diagnostics And Safe Bug Hunts
 
-- [ ] Look for warnings that mention missing portraits, missing voice mappings,
+- [x] Look for warnings that mention missing portraits, missing voice mappings,
   fallback dialogue, or raw generated IDs. Capture exact log lines and the screen
   the player was on.
 - [ ] Re-run the quest-gen test scene manually and save only the summary plus
