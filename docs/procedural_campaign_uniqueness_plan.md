@@ -831,8 +831,10 @@ Goal: make each system feel like a place.
     validation, completion, failure messaging, and save/load persistence.
     Contract validation, public-board generation, cargo/inventory completion,
     cleanup hints, required inventory removal, failure block messages, and
-    active-state normalization are covered. Completion UI, expiration behavior,
-    and full save/load persistence still need dedicated coverage.
+    active-state normalization are covered. Timed courier expiration now clears
+    assigned cargo, and timed purchase-delivery expiration leaves player-owned
+    inventory intact. Completion UI and full save/load persistence still need
+    dedicated coverage.
   - [ ] Add future mission-type variety after courier/purchase is stable:
     escort jobs, scan/survey jobs, sabotage or disable jobs, rescue/extraction
     jobs, bounty-with-choice jobs, smuggling jobs, timed medical/repair runs,
