@@ -30,6 +30,15 @@ These appear in the Errors tab when scripts reload and do not affect gameplay:
   Placeholder in template/example code. Will be cleaned up when the template
   is finalized.
 
+## Git / Version Control
+
+- **`warning: in the working copy of '...', LF will be replaced by CRLF the next time Git touches it`** —
+  Windows Git normalizes line endings on checkout. Completely harmless. Suppress
+  project-wide with `.gitattributes` if it becomes noisy, but no action needed.
+
+- **`warning: CRLF will be replaced by LF in '...'`** — Reverse of the above.
+  Same cause, same verdict: ignore.
+
 ## Runtime (In-Game)
 
 - **`[LLMInterface] Connection to Ollama failed (attempt N)`** — Normal when
@@ -39,3 +48,16 @@ These appear in the Errors tab when scripts reload and do not affect gameplay:
 - **`[TTSInterface] TTS server not connected`** / **`Queueing cache request (TTS not connected)`** —
   Normal when the TTS Python server is not running. Voice lines are skipped
   gracefully.
+
+## Debug Gotchas (Things That Look Like Fixes But Aren't)
+
+- **Deleting `savegame.json` does not reset campaign progress.** The game uses
+  a campaign-slot system (`user://campaigns/slot_01/`, `slot_02/`, etc.).
+  `savegame.json` is a legacy file that is not loaded on startup. To truly reset
+  a campaign, delete the relevant slot folder or use the "New Campaign" button
+  from the pause menu.
+
+- **`--check-only --script` gives false "Identifier not found: GlobalState"`** —
+  Headless check-only mode does not load autoloads, so any autoload (GlobalState,
+  LLMInterface, etc.) appears undefined. Run with `--quit` instead of
+  `--check-only` to validate scripts against the full project context.

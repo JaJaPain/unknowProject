@@ -70,12 +70,12 @@ and they should not block or overlap with current Codex work.
 
 ## Documentation Cleanup
 
-- [ ] Add a short "How to test generated systems visually" checklist to docs.
-- [ ] Add a short "Known harmless warnings" note for LF/CRLF Git warnings and
+- [x] Add a short "How to test generated systems visually" checklist to docs.
+- [x] Add a short "Known harmless warnings" note for LF/CRLF Git warnings and
   other noisy but non-blocking editor output.
-- [ ] Review `docs/whileYouWasSleeping.md` and move any durable lessons into the
+- [x] Review `docs/whileYouWasSleeping.md` and move any durable lessons into the
   main plan or a permanent notes file, then leave the temporary file alone.
-- [ ] Find outdated fallback examples in docs and mark them as old examples so
+- [x] Find outdated fallback examples in docs and mark them as old examples so
   they do not keep being reused as desired tone.
 
 ## Test And Diagnostics Cleanup

@@ -1,5 +1,14 @@
 # Handoff: LLM Quest Dialogue Alignment
 
+> **⚠️ HISTORICAL SNAPSHOT — June 2026**
+> This document describes the state of dialogue alignment at the time of the
+> dummy-name substitution implementation. The "What Still Needs Work" items
+> below may be partially or fully resolved in current code. Do NOT treat the
+> example dummy names (George, Slithern, Sable Mercer, Morrow Station) as
+> the desired NPC tone — they are internal LLM prompt placeholders only,
+> never shown to the player. Verify current behavior against `LLMInterface.gd`
+> before acting on these notes.
+
 ## What Was Done
 
 Implemented a **dummy-name substitution system** in `scripts/LLMInterface.gd` to ensure LLM-generated quest dialogue always matches the actual mission contract.
