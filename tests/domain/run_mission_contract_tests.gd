@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_public_board_story_intents_prioritize_offers()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
+	_test_delivery_purchase_legacy_runtime_state()
 	_test_invalid_runtime_state()
 
 	if _failures.is_empty():
@@ -533,6 +534,40 @@ func _test_legacy_runtime_state() -> void:
 			)
 			and int(normalized.get("mission_schema_version", 0)) == 1,
 		"Legacy runtime state did not receive typed identity metadata."
+	)
+
+
+func _test_delivery_purchase_legacy_runtime_state() -> void:
+	var courier := AdapterType.normalize_legacy_state({
+		"title": "Legacy Courier",
+		"faction": "neutral",
+		"objective_type": "DELIVERY_COURIER",
+		"item_name": "Sealed Evidence Tube",
+		"origin_station_id": "station.start.main",
+		"origin_display": "Main Station",
+		"destination_station_id": "station.start.kova",
+		"destination_display": "Kova Station",
+	})
+	_expect(
+		AdapterType.validate_active_state(courier).is_valid()
+			and bool(courier.get("cargo_loaded", false)),
+		"Legacy courier state did not normalize with loaded cargo."
+	)
+	var purchase := AdapterType.normalize_legacy_state({
+		"title": "Legacy Purchase",
+		"faction": "neutral",
+		"objective_type": "PURCHASE_DELIVERY",
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 0,
+		"store_station_id": "station.start.main",
+		"destination_station_id": "station.start.main",
+		"destination_display": "Main Station",
+	})
+	_expect(
+		AdapterType.validate_active_state(purchase).is_valid()
+			and int(purchase.get("quantity_required", 0)) == 1,
+		"Legacy purchase state did not normalize required quantity."
 	)
 
 

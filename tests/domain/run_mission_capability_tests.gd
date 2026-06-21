@@ -32,8 +32,10 @@ func _initialize() -> void:
 	_test_recover_format_tracker_recovered()
 	_test_delivery_courier_requires_matching_special_cargo()
 	_test_delivery_courier_clears_matching_cargo()
+	_test_delivery_courier_failure_message()
 	_test_purchase_delivery_requires_inventory_item()
 	_test_purchase_delivery_removes_inventory_quantity()
+	_test_purchase_delivery_failure_message()
 
 	if _failures.is_empty():
 		print("[PASS] Mission capability tests")
@@ -278,6 +280,18 @@ func _test_delivery_courier_clears_matching_cargo() -> void:
 	gs.cargo_special = previous_special
 
 
+func _test_delivery_courier_failure_message() -> void:
+	var cap := DeliveryCap.new()
+	var hints := cap.on_complete({
+		"item_name": "Missing Courier Packet",
+		"cargo_loaded": true,
+	})
+	_expect(
+		str(hints.get("block", "")).contains("cargo"),
+		"Courier missing-cargo failure should explain the block."
+	)
+
+
 # --- PurchaseDeliveryCapability ---
 
 func _test_purchase_delivery_requires_inventory_item() -> void:
@@ -322,6 +336,23 @@ func _test_purchase_delivery_removes_inventory_quantity() -> void:
 	_expect(
 		gs.inventory.get_quantity("data_chip") == 1,
 		"Purchase removal should leave remaining stack quantity."
+	)
+	gs.inventory = previous_inventory
+
+
+func _test_purchase_delivery_failure_message() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	var hints := cap.on_complete({
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 1,
+	})
+	_expect(
+		str(hints.get("block", "")).contains("missing"),
+		"Purchase missing-item failure should explain the block."
 	)
 	gs.inventory = previous_inventory
 
