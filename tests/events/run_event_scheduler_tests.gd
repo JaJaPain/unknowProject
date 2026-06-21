@@ -7,6 +7,7 @@ const EventContextScript = preload("res://scripts/events/EventContext.gd")
 const SystemRegistryScript = preload("res://scripts/registry/SystemRegistry.gd")
 const SystemConfigScript = preload("res://scripts/generation/SystemConfig.gd")
 const SystemStoryArcEventScript = preload("res://scripts/events/types/SystemStoryArcEvent.gd")
+const InterceptorEventScript = preload("res://scripts/events/types/InterceptorEvent.gd")
 
 var _failures: Array[String] = []
 var _fired_events: Array[Dictionary] = []
@@ -23,6 +24,7 @@ func _initialize() -> void:
 	_test_scheduler_seed_determinism()
 	_test_scheduler_save_restore()
 	_test_system_story_arc_event_advances_pack()
+	_test_interceptor_event_uses_system_story_pack()
 
 	if _failures.is_empty():
 		print("[PASS] Event scheduler tests")
@@ -241,4 +243,37 @@ func _test_system_story_arc_event_advances_pack() -> void:
 	_expect(
 		(config.story_pack.get("arc_events", []) as Array).size() == 1,
 		"Story arc event did not record an arc event."
+	)
+
+
+func _test_interceptor_event_uses_system_story_pack() -> void:
+	var registry := SystemRegistryScript.load_default()
+	if not registry.is_valid():
+		_expect(false, "Default registry invalid, cannot test interceptor story context.")
+		return
+	var system_id := "system.gen.interceptor_story"
+	var config := SystemConfigScript.from_seed("Interceptor Story", system_id, 7171)
+	config.faction_weights = {
+		"dustborn": 0.7,
+		"wraiths": 0.3,
+	}
+	config.story_pack["active_tension"] = "Dustborn and Wraith crews are fighting over salvage lanes"
+	config.story_pack["arc_pressure"] = 4
+	registry.set_generated_config(system_id, config)
+	var event = InterceptorEventScript.new()
+	var ctx := _make_context(220, system_id)
+	ctx.system_registry = registry
+	ctx.active_mission_risk_tags = ["valuable_cargo"]
+	var details: Dictionary = event.execute(ctx)
+	_expect(
+		str(details.get("faction", "")) == "dustborn",
+		"Interceptor story context did not select local tension faction."
+	)
+	_expect(
+		int(details.get("count", 0)) == 2,
+		"Interceptor story pressure did not increase interceptor count."
+	)
+	_expect(
+		event.priority(ctx) > 1.0,
+		"Interceptor story context did not increase priority."
 	)

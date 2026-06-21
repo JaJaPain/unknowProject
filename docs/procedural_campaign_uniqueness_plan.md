@@ -827,7 +827,7 @@ Goal: make each system feel like a place.
     board and agent offers are not stuck on fetch/combat loops.
   - [ ] Add tests for delivery and purchase mission generation, inventory
     validation, completion, failure messaging, and save/load persistence.
-  - [ ] Feed system story pack danger/faction tension into patrol/interceptor
+  - [x] Feed system story pack danger/faction tension into patrol/interceptor
     behavior.
   - [ ] Feed system story pack humor guidance into local NPC and Kaelen prompts.
 - Add a first-Kaelen-encounter beat for each new system: generate one brief,
