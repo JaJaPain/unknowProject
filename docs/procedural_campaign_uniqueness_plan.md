@@ -816,7 +816,7 @@ Goal: make each system feel like a place.
   Kaelen hints.
   - [x] Let Lounge rumors sometimes use current-system story pack rumors.
   - [x] Feed system story pack mission seeds/context into public board postings.
-  - [ ] Feed system story pack mission seeds into agent mission generation.
+  - [x] Feed system story pack mission seeds into agent mission generation.
   - [ ] Add delivery/courier mission types that use the existing cargo and
     special-item structure: pick up from one contact or station, carry to the
     destination, validate handoff, and reward on completion.

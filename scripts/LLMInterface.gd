@@ -1010,6 +1010,57 @@ func _agent_memory_prompt_block(agent_id: String) -> String:
 	return "### AGENT MEMORY:\n%s\n\n" % context
 
 
+func _agent_system_story_pack(agent_profile: Dictionary) -> Dictionary:
+	var raw_pack: Variant = agent_profile.get("system_story_pack", {})
+	if raw_pack is Dictionary:
+		return (raw_pack as Dictionary).duplicate(true)
+	return {}
+
+
+func _system_story_pack_prompt_block(story_pack: Dictionary) -> String:
+	if story_pack.is_empty():
+		return ""
+	var lines: Array[String] = []
+	var system_name := str(story_pack.get("system_name", "")).strip_edges()
+	var station_problem := str(
+		story_pack.get("station_economy_problem", "")
+	).strip_edges()
+	var active_tension := str(story_pack.get("active_tension", "")).strip_edges()
+	var danger_summary := str(story_pack.get("danger_summary", "")).strip_edges()
+	var resource_hook := str(story_pack.get("resource_hook", "")).strip_edges()
+	var humor_guidance := str(story_pack.get("humor_guidance", "")).strip_edges()
+	if not system_name.is_empty():
+		lines.append("- System identity: " + system_name)
+	if not station_problem.is_empty():
+		lines.append("- Local station problem: " + station_problem)
+	if not active_tension.is_empty():
+		lines.append("- Current faction tension: " + active_tension)
+	if not danger_summary.is_empty():
+		lines.append("- Current danger: " + danger_summary)
+	if not resource_hook.is_empty():
+		lines.append("- Resource hook: " + resource_hook)
+	var mission_seeds: Array = story_pack.get("mission_seeds", [])
+	if not mission_seeds.is_empty():
+		var seed_lines: Array[String] = []
+		for seed in mission_seeds:
+			var seed_text := str(seed).strip_edges()
+			if not seed_text.is_empty():
+				seed_lines.append(seed_text)
+		if not seed_lines.is_empty():
+			lines.append("- Local mission seeds: " + "; ".join(seed_lines))
+	if not humor_guidance.is_empty():
+		lines.append("- Local humor guidance: " + humor_guidance)
+	if lines.is_empty():
+		return ""
+	return (
+		"### CURRENT SYSTEM STORY PACK:\n"
+		+ "Use this local context to make the contract feel native to this system. "
+		+ "Do not invent a different system conflict unless the objective requires it.\n"
+		+ "\n".join(lines)
+		+ "\n\n"
+	)
+
+
 func _agent_memory_slug(text: String) -> String:
 	var lower := text.strip_edges().to_lower()
 	var output := ""
@@ -1252,6 +1303,8 @@ func request_quest_generation(
 			+ campaign_bible_context_text
 			+ "\n\n"
 		)
+	var system_story_pack: Dictionary = _agent_system_story_pack(agent_profile)
+	var system_story_block: String = _system_story_pack_prompt_block(system_story_pack)
 	var agent_memory_block := _agent_memory_prompt_block(agent_memory_id)
 	var idea_memory_block = ""
 	if idea_memory_context_text.strip_edges() != "":
@@ -1290,6 +1343,7 @@ func request_quest_generation(
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
 		campaign_bible_block + \
+		system_story_block + \
 		agent_memory_block + \
 		idea_memory_block + \
 		"Minor hostile factions in the sector: " + minor_fac_str + ". These are outlaws with no diplomatic ties — primary targets for elimination contracts.\n\n" + \
@@ -1371,6 +1425,7 @@ func request_quest_generation(
 			"faction": chosen_faction,
 			"agent_name": agent_name,
 			"objective_type": chosen_type,
+			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
 		}
 	)
 	_start_quest_candidate_batch(
@@ -1381,6 +1436,7 @@ func request_quest_generation(
 			"faction": chosen_faction,
 			"agent_name": agent_name,
 			"objective_type": chosen_type,
+			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
 		}
 	)
 

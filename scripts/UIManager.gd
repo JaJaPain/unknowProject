@@ -3870,6 +3870,7 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 		"faction": faction,
 		"faction_id": faction_id,
 		"faction_display": faction_display,
+		"system_story_pack": _current_system_story_pack(),
 	}
 
 
