@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_builder_offers_have_required_fields()
 	_test_pickup_offer_uses_current_system_outpost()
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
+	_test_generated_system_offers_use_story_pack()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
 	_test_generated_contact_flavor_lines_do_not_repeat_immediately()
 	_test_restart_clears_generated_contact_state()
@@ -127,6 +128,50 @@ func _test_generated_system_without_outpost_does_not_use_starter_pickup() -> voi
 			str(offer.get("template_id", "")) != OfferBuilderType.TEMPLATE_PICKUP_SPECIAL,
 			"generated_no_outpost: pickup offer fell back to starter outposts."
 		)
+
+
+func _test_generated_system_offers_use_story_pack() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_system_id: String = gs.current_system_id
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	var system_id := "system.gen.board_story_test"
+	var config := SystemConfig.from_seed("Board Story", system_id, 9191)
+	config.faction_weights = {"dustborn": 0.65, "wraiths": 0.35}
+	config.story_pack = {
+		"system_id": system_id,
+		"station_economy_problem": "ore claims are being sold with optimistic maps",
+		"active_tension": "Dustborn and Wraith crews are arguing over quiet lanes",
+		"resource_hook": "heat-scored ore seams",
+		"mission_seeds": ["verify a disputed cargo route"],
+	}
+	OfferBuilderType.story_config_override_for_tests = config
+	gs.current_system_id = system_id
+	gs.active_system_entities.clear()
+	var offers := OfferBuilderType.build_offers(480)
+	OfferBuilderType.story_config_override_for_tests = null
+	gs.active_system_entities = previous_entities
+	gs.current_system_id = previous_system_id
+
+	var ore_offer: Dictionary = {}
+	var recovery_offer: Dictionary = {}
+	for offer in offers:
+		if str(offer.get("template_id", "")) == OfferBuilderType.TEMPLATE_DELIVER_ORE:
+			ore_offer = offer
+		if str(offer.get("template_id", "")) == OfferBuilderType.TEMPLATE_RECOVER_COMBAT_DROP:
+			recovery_offer = offer
+	_expect(
+		not ore_offer.is_empty()
+			and str(ore_offer.get("body", "")).contains("Local note:"),
+		"story_pack_board: ore offer did not include local story context."
+	)
+	var quest_data: Dictionary = recovery_offer.get("quest_data", {})
+	var objective: Dictionary = quest_data.get("objective", {})
+	_expect(
+		not recovery_offer.is_empty()
+			and str(recovery_offer.get("body", "")).contains("Local note:")
+			and str(objective.get("target_faction", "")) == "dustborn",
+		"story_pack_board: recovery offer did not use local story/faction context."
+	)
 
 
 func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:

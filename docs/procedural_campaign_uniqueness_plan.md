@@ -815,8 +815,8 @@ Goal: make each system feel like a place.
 - Use it for public board postings, gossip, station chatter, interceptors, and
   Kaelen hints.
   - [x] Let Lounge rumors sometimes use current-system story pack rumors.
-  - [ ] Feed system story pack mission seeds into public board and agent
-    mission generation.
+  - [x] Feed system story pack mission seeds/context into public board postings.
+  - [ ] Feed system story pack mission seeds into agent mission generation.
   - [ ] Feed system story pack danger/faction tension into patrol/interceptor
     behavior.
   - [ ] Feed system story pack humor guidance into local NPC and Kaelen prompts.

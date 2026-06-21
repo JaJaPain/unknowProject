@@ -13,6 +13,8 @@ const PART_NAMES: Array[String] = [
 	"Unlabeled Heat Sink",
 ]
 
+static var story_config_override_for_tests: SystemConfig = null
+
 
 static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []
@@ -48,6 +50,12 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 	var base_reward := int(amount * 3.0)
 	var duration_minutes := 180
 	var urgent_multiplier := 1.5
+	var story_note := _story_board_context("ore")
+	var dialogue := "Bring %d m3 of ore to the main station. The posting says the coolant is not supposed to steam. Nobody asked you to verify that." % int(amount)
+	var board_body := "Bring ore before a supervisor learns thermodynamics."
+	if not story_note.is_empty():
+		dialogue += " Local note: %s" % story_note
+		board_body += " Local note: %s" % story_note
 	var objective := {
 		"type": "DELIVER_ORE",
 		"amount_required": amount,
@@ -57,7 +65,7 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 		"Coolant Needed. Do Not Ask Why It Is Warm.",
 		"neutral",
 		"Public Board",
-		"Bring %d m3 of ore to the main station. The posting says the coolant is not supposed to steam. Nobody asked you to verify that." % int(amount),
+		dialogue,
 		objective,
 		{
 			"timed": true,
@@ -72,7 +80,7 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 		true,
 		"[URGENT] Coolant Needed. Do Not Ask Why It Is Warm.",
 		"Definitely Licensed Dockhand",
-		"Bring ore before a supervisor learns thermodynamics.",
+		board_body,
 		"%d m3 Ore" % int(amount),
 		base_reward,
 		duration_minutes,
@@ -101,6 +109,16 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	var npc_name := str(npcs[int(current_time_minutes / 30) % npcs.size()])
 	var part_name := PART_NAMES[int(current_time_minutes / 15) % PART_NAMES.size()]
 	var base_reward := 130
+	var story_note := _story_board_context("pickup")
+	var dialogue := "Pick up %s from %s at %s. If anyone asks why it has a warranty sticker over a bite mark, you did not see that." % [
+		part_name,
+		npc_name,
+		outpost_display,
+	]
+	var board_body := "Pickup job with a local contact and a suspicious return handoff."
+	if not story_note.is_empty():
+		dialogue += " Local note: %s" % story_note
+		board_body += " Local note: %s" % story_note
 	var objective := {
 		"type": "PICKUP_SPECIAL",
 		"target_outpost": outpost_id,
@@ -114,11 +132,7 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		"Sealed Part Pickup, No Smelling The Package",
 		"neutral",
 		"Public Board",
-		"Pick up %s from %s at %s. If anyone asks why it has a warranty sticker over a bite mark, you did not see that." % [
-			part_name,
-			npc_name,
-			outpost_display,
-		],
+		dialogue,
 		objective,
 		{}
 	)
@@ -127,7 +141,7 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		true,
 		"[LOCAL] Sealed Part Pickup, No Smelling The Package",
 		"Outpost Maintenance Account",
-		"Pickup job with a local contact and a suspicious return handoff.",
+		board_body,
 		"Pick up %s from %s at %s" % [
 			part_name,
 			npc_name,
@@ -148,9 +162,17 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 
 static func _build_recovery_preview() -> Dictionary:
 	var base_reward := 840
+	var target_faction := _story_recovery_target_faction()
+	var target_faction_label := _story_faction_display(target_faction)
+	var story_note := _story_board_context("recovery")
+	var dialogue := "Search %s wreckage for the missing data pack. It gets logged automatically if you find it." % target_faction_label
+	var board_body := "Recover a missing data pack from hostile wreckage. Legal says the courier is now a rounding error."
+	if not story_note.is_empty():
+		dialogue += " Local note: %s" % story_note
+		board_body += " Local note: %s" % story_note
 	var objective := {
 		"type": TEMPLATE_RECOVER_COMBAT_DROP,
-		"target_faction": "reavers",
+		"target_faction": target_faction,
 		"count_required": 3,
 		"drop_chance": 0.33,
 		"item_name": "data pack",
@@ -161,7 +183,7 @@ static func _build_recovery_preview() -> Dictionary:
 		"Courier Exploded. Data Survived. Probably.",
 		"neutral",
 		"Public Board",
-		"Search Reaver wreckage for the missing data pack. It gets logged automatically if you find it.",
+		dialogue,
 		objective,
 		{}
 	)
@@ -170,19 +192,121 @@ static func _build_recovery_preview() -> Dictionary:
 		true,
 		"[RECOVERY] Courier Exploded. Data Survived. Probably.",
 		"Dock 3 Claims Adjuster",
-		"Recover a missing data pack from hostile wreckage. Legal says the courier is now a rounding error.",
-		"Search Reaver wreckage until the data pack turns up in the ship log.",
+		board_body,
+		"Search %s wreckage until the data pack turns up in the ship log." % target_faction_label,
 		base_reward,
 		0,
 		1.0,
 		quest_data,
 		["{TARGET_FACTION}", "{ITEM_NAME}", "{TURN_IN_LOCATION}"],
 		{
-			"{TARGET_FACTION}": "Reaver",
+			"{TARGET_FACTION}": target_faction_label,
 			"{ITEM_NAME}": "data pack",
 			"{TURN_IN_LOCATION}": "the main station",
 		}
 	)
+
+
+static func _story_board_context(_offer_kind: String) -> String:
+	var story_pack := _current_system_story_pack()
+	if story_pack.is_empty():
+		return ""
+	var seeds: Array = story_pack.get("mission_seeds", [])
+	var seed_text := ""
+	if not seeds.is_empty():
+		var seed_index: int = abs(hash(str(story_pack.get("system_id", "")) + _offer_kind)) % seeds.size()
+		seed_text = str(seeds[seed_index])
+	var problem := str(story_pack.get("station_economy_problem", ""))
+	var tension := str(story_pack.get("active_tension", ""))
+	var resource := str(story_pack.get("resource_hook", ""))
+	var parts: Array[String] = []
+	if not seed_text.is_empty():
+		parts.append(seed_text)
+	if not problem.is_empty():
+		parts.append(problem)
+	if _offer_kind == "ore" and not resource.is_empty():
+		parts.append(resource)
+	elif not tension.is_empty():
+		parts.append(tension)
+	if parts.is_empty():
+		return ""
+	return "; ".join(parts).capitalize() + "."
+
+
+static func _story_recovery_target_faction() -> String:
+	var config := _current_system_config()
+	if config == null or config.faction_weights.is_empty():
+		return "reavers"
+	var faction_keys: Array = config.faction_weights.keys()
+	if faction_keys.is_empty():
+		return "reavers"
+	for faction_name in faction_keys:
+		var clean_name := str(faction_name)
+		if clean_name not in ["zenith", "aurelia", "vanguard"]:
+			return clean_name
+	return str(faction_keys[0])
+
+
+static func _current_system_story_pack() -> Dictionary:
+	var config := _current_system_config()
+	if config == null:
+		return {}
+	return config.story_pack.duplicate(true)
+
+
+static func _current_system_config() -> SystemConfig:
+	if story_config_override_for_tests != null:
+		return story_config_override_for_tests
+	var main_loop := Engine.get_main_loop()
+	if main_loop == null or not main_loop is SceneTree:
+		return null
+	var tree := main_loop as SceneTree
+	var game_root = tree.current_scene
+	if game_root == null:
+		return null
+	var registry = game_root.get("system_registry")
+	if registry == null or not registry.has_method("get_generated_config"):
+		return null
+	var gs: Node = _global_state()
+	if gs == null:
+		return null
+	return registry.get_generated_config(str(gs.current_system_id))
+
+
+static func _global_state() -> Node:
+	var main_loop := Engine.get_main_loop()
+	if main_loop == null or not main_loop.has_method("get_root"):
+		return null
+	var root = main_loop.root
+	if root == null:
+		return null
+	return root.get_node_or_null("GlobalState")
+
+
+static func _story_faction_display(faction_name: String) -> String:
+	var clean := faction_name.strip_edges()
+	if clean == "reavers":
+		return "Reaver"
+	if clean == "obsidian":
+		return "Obsidian"
+	if clean == "dustborn":
+		return "Dustborn"
+	if clean == "wraiths":
+		return "Wraith"
+	if clean == "ironclad":
+		return "Ironclad"
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var parts := clean.replace("_", " ").split(" ", false)
+	var titled: Array[String] = []
+	for part in parts:
+		var lower := str(part).to_lower()
+		if lower.length() <= 2 and lower.is_valid_int():
+			continue
+		titled.append(lower.substr(0, 1).to_upper() + lower.substr(1))
+	if titled.is_empty():
+		return "Local"
+	return " ".join(titled)
 
 
 static func _quest_data(
