@@ -20,6 +20,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_bootstrap_generate_reveal_and_reopen()
 	_cleanup()
+	_test_old_faction_records_normalize_on_load()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign generated faction store tests")
@@ -113,6 +115,80 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 	)
 
 
+func _test_old_faction_records_normalize_on_load() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"Old Faction Fixture",
+		"old-generated-faction-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+
+	var store := FactionStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "Generated faction store did not bootstrap before old fixture write.")
+	var old_record := {
+		"schema_version": 1,
+		"document_type": "generated_factions",
+		"campaign_id": str(store.campaign.get("id", "")),
+		"campaign_seed": "old-generated-faction-test",
+		"source": "legacy_fixture",
+		"factions": [
+			{
+				"id": "faction.generated.old_compact_00",
+				"legacy_id": "old_compact_00",
+				"display_name": "Old Compact",
+				"abbreviation": "OC",
+				"classification": "generated",
+				"descriptor": "Salvage Compact",
+				"ideology": "contracts above blood",
+				"business_model": "salvage rights",
+				"taboo": "free repairs",
+				"humor_style": "dry gallows wit",
+				"badge_id": "badge.generated.01",
+				"ship_style": {"texture": "metal.png", "emblem": "none"},
+				"ui_color": [0.2, 0.4, 0.7, 1.0],
+			},
+		],
+		"revealed_faction_ids": ["faction.generated.old_compact_00"],
+		"reveal_history": [],
+	}
+	_write_generated_factions_fixture(old_record)
+
+	var reopened := FactionStoreType.open(CAMPAIGN_PATH)
+	_expect(
+		reopened.is_valid(),
+		"Old generated faction record did not normalize: %s" %
+			JSON.stringify(reopened.validation.to_dict())
+	)
+	if not reopened.is_valid() or reopened.all_factions().is_empty():
+		return
+	var normalized: Dictionary = reopened.all_factions()[0]
+	_expect(
+		str(normalized.get("badge_id", "")).begins_with("badge_sheet_"),
+		"Old generated faction did not upgrade to real badge metadata."
+	)
+	var badge_source: Dictionary = normalized.get("badge_source", {})
+	_expect(
+		str(badge_source.get("sheet_file", "")).begins_with("BadgeSheet"),
+		"Old generated faction did not gain badge source metadata."
+	)
+	var voice_style: Dictionary = normalized.get("voice_style", {})
+	_expect(
+		not str(voice_style.get("profile_hint", "")).is_empty()
+			and not str(voice_style.get("delivery", "")).is_empty(),
+		"Old generated faction did not gain voice style metadata."
+	)
+	var mission_preferences: Dictionary = normalized.get("mission_preferences", {})
+	_expect(
+		(mission_preferences.get("preferred_types", []) as Array).size() > 0,
+		"Old generated faction did not gain mission preferences."
+	)
+
+
 func _initial_state() -> Dictionary:
 	return {
 		"current_system_id": "system.start",
@@ -126,6 +202,15 @@ func _initial_state() -> Dictionary:
 		"quest": {},
 		"systems": {},
 	}
+
+
+func _write_generated_factions_fixture(data: Dictionary) -> void:
+	var file := FileAccess.open("%s/generated_factions.json" % CAMPAIGN_PATH, FileAccess.WRITE)
+	if file == null:
+		_failures.append("Could not write old generated faction fixture.")
+		return
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
 
 
 func _cleanup() -> void:

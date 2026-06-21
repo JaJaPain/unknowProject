@@ -219,8 +219,17 @@ func _load_or_create() -> void:
 	validation.merge(factions_result["validation"], "generated_factions")
 	if not validation.is_valid():
 		return
-	data = factions_result["data"]
+	var loaded_data: Dictionary = factions_result["data"]
+	data = _normalize_document(loaded_data, campaign_id, str(campaign.get("campaign_seed", "")))
 	validation.merge(_validate_data(data, campaign_id), "generated_factions")
+	if validation.is_valid() and JSON.stringify(loaded_data) != JSON.stringify(data):
+		var committed := _commit(data, "generated_factions_normalize")
+		if not bool(committed.get("ok", false)):
+			validation.add_error(
+				"generated_factions_normalize_failed",
+				str(committed.get("error", "Generated factions could not be normalized.")),
+				FACTIONS_PATH
+			)
 
 
 func _commit(next_data: Dictionary, operation: String) -> Dictionary:
@@ -245,6 +254,62 @@ static func _default_document(campaign_id: String, campaign_seed: String) -> Dic
 		"revealed_faction_ids": [],
 		"reveal_history": [],
 	}
+
+
+static func _normalize_document(source: Dictionary, campaign_id: String, campaign_seed: String) -> Dictionary:
+	var normalized := source.duplicate(true)
+	normalized["schema_version"] = DOCUMENT_VERSION
+	normalized["document_type"] = "generated_factions"
+	normalized["campaign_id"] = campaign_id
+	normalized["campaign_seed"] = str(normalized.get("campaign_seed", campaign_seed))
+	normalized["source"] = str(normalized.get("source", "procedural_bootstrap"))
+	if not normalized.get("revealed_faction_ids", []) is Array:
+		normalized["revealed_faction_ids"] = []
+	if not normalized.get("reveal_history", []) is Array:
+		normalized["reveal_history"] = []
+	var normalized_factions: Array = []
+	var source_factions: Variant = normalized.get("factions", [])
+	if source_factions is Array:
+		for index in range((source_factions as Array).size()):
+			var faction: Variant = source_factions[index]
+			if faction is Dictionary:
+				normalized_factions.append(_normalize_faction(faction, campaign_seed, index))
+	normalized["factions"] = normalized_factions
+	return normalized
+
+
+static func _normalize_faction(source: Dictionary, seed_text: String, index: int) -> Dictionary:
+	var faction := source.duplicate(true)
+	var display_name := str(faction.get("display_name", "Generated Faction %02d" % (index + 1))).strip_edges()
+	if display_name.is_empty():
+		display_name = "Generated Faction %02d" % (index + 1)
+	var slug := _slug(display_name)
+	if slug.is_empty():
+		slug = "faction_%02d" % index
+	faction["id"] = str(faction.get("id", "%s%s_%02d" % [GENERATED_PREFIX, slug, index]))
+	faction["legacy_id"] = str(faction.get("legacy_id", "gen_%s_%02d" % [slug, index]))
+	faction["display_name"] = display_name
+	faction["abbreviation"] = str(faction.get("abbreviation", _abbreviation(display_name)))
+	faction["classification"] = str(faction.get("classification", "generated"))
+	for field in ["descriptor", "ideology", "business_model", "taboo", "humor_style"]:
+		if str(faction.get(field, "")).strip_edges().is_empty():
+			faction[field] = _fallback_faction_text(field, seed_text, index)
+	if not faction.get("ship_style", {}) is Dictionary:
+		faction["ship_style"] = {
+			"texture": "metal.png",
+			"emblem": "none",
+			"metallic_min": 0.55,
+			"metallic_max": 0.95,
+		}
+	if not faction.get("ui_color", []) is Array or (faction.get("ui_color", []) as Array).size() != 4:
+		faction["ui_color"] = [0.45, 0.75, 0.9, 1.0]
+	if not faction.get("relationship_hooks", []) is Array:
+		faction["relationship_hooks"] = []
+	faction["revealed"] = bool(faction.get("revealed", false))
+	_normalize_badge_fields(faction, seed_text, index)
+	_normalize_voice_style(faction, slug, seed_text, index)
+	_normalize_mission_preferences(faction, seed_text, index)
+	return faction
 
 
 static func _generate_faction(seed_text: String, index: int) -> Dictionary:
@@ -452,6 +517,109 @@ static func _badge_options() -> Array:
 				"main_color": str(sprite.get("mainColor", "")),
 			})
 	return output
+
+
+static func _normalize_badge_fields(faction: Dictionary, seed_text: String, index: int) -> void:
+	var badges := _badge_options()
+	var badge_id := str(faction.get("badge_id", "")).strip_edges()
+	var selected: Dictionary = {}
+	for badge in badges:
+		if badge is Dictionary and str(badge.get("id", "")) == badge_id:
+			selected = badge
+			break
+	if selected.is_empty() and not badges.is_empty():
+		var pick: int = abs(("%s|%s|badge|%d" % [seed_text, faction.get("id", ""), index]).hash()) % badges.size()
+		selected = badges[pick]
+	if not selected.is_empty():
+		faction["badge_id"] = str(selected.get("id", ""))
+		faction["badge_source"] = {
+			"metadata_path": BADGE_METADATA_PATH,
+			"sheet_file": str(selected.get("file", "")),
+			"main_color": str(selected.get("main_color", "")),
+		}
+		return
+	if badge_id.is_empty():
+		badge_id = "badge.generated.%02d" % (index + 1)
+	faction["badge_id"] = badge_id
+	if not faction.get("badge_source", {}) is Dictionary:
+		faction["badge_source"] = {
+			"metadata_path": BADGE_METADATA_PATH,
+			"sheet_file": "",
+			"main_color": "",
+		}
+
+
+static func _normalize_voice_style(faction: Dictionary, slug: String, seed_text: String, index: int) -> void:
+	var voice_deliveries := [
+		"quiet clipped threats",
+		"warm legalese",
+		"raspy dockside sermons",
+		"bright courier patter",
+		"slow ceremonial calm",
+	]
+	var voice_tempos := ["slow", "measured", "brisk", "urgent"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = ("%s|%s|voice|%d" % [seed_text, faction.get("id", ""), index]).hash()
+	var voice_style: Dictionary = (
+		faction.get("voice_style", {}) as Dictionary
+		if faction.get("voice_style", {}) is Dictionary
+		else {}
+	)
+	if str(voice_style.get("profile_hint", "")).strip_edges().is_empty():
+		voice_style["profile_hint"] = "voice.generated.%s.v1" % slug
+	if str(voice_style.get("delivery", "")).strip_edges().is_empty():
+		var old_humor := str(faction.get("humor_style", "")).strip_edges()
+		voice_style["delivery"] = old_humor if not old_humor.is_empty() else voice_deliveries[rng.randi() % voice_deliveries.size()]
+	if str(voice_style.get("tempo", "")).strip_edges().is_empty():
+		voice_style["tempo"] = voice_tempos[rng.randi() % voice_tempos.size()]
+	if not voice_style.has("pitch_bias"):
+		voice_style["pitch_bias"] = 0.0
+	faction["voice_style"] = voice_style
+
+
+static func _normalize_mission_preferences(faction: Dictionary, seed_text: String, index: int) -> void:
+	var mission_sets := [
+		["PICKUP_SPECIAL", "DELIVER_ORE"],
+		["KILL_SHIPS", "PICKUP_SPECIAL"],
+		["DELIVER_ORE", "KILL_SHIPS"],
+		["PICKUP_SPECIAL", "KILL_SHIPS", "DELIVER_ORE"],
+	]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = ("%s|%s|missions|%d" % [seed_text, faction.get("id", ""), index]).hash()
+	var mission_preferences: Dictionary = (
+		faction.get("mission_preferences", {}) as Dictionary
+		if faction.get("mission_preferences", {}) is Dictionary
+		else {}
+	)
+	if not mission_preferences.get("preferred_types", []) is Array or (mission_preferences.get("preferred_types", []) as Array).is_empty():
+		mission_preferences["preferred_types"] = mission_sets[rng.randi() % mission_sets.size()]
+	if not mission_preferences.get("target_bias", []) is Array:
+		mission_preferences["target_bias"] = ["minor_hostile", "rival_faction"]
+	if str(mission_preferences.get("risk_tolerance", "")).strip_edges().is_empty():
+		mission_preferences["risk_tolerance"] = ["low", "medium", "high"][rng.randi() % 3]
+	faction["mission_preferences"] = mission_preferences
+
+
+static func _fallback_faction_text(field: String, seed_text: String, index: int) -> String:
+	var options := {
+		"descriptor": ["Salvage Compact", "Claims Office", "Pilgrim Fleet", "Security Lease"],
+		"ideology": ["contracts above blood", "survival by silence", "debt as citizenship"],
+		"business_model": ["salvage rights", "gate tolls", "ore futures"],
+		"taboo": ["wasting air", "free repairs", "unlogged favors"],
+		"humor_style": ["dry gallows wit", "deadpan threats", "cheerful fatalism"],
+	}
+	var values: Array = options.get(field, ["frontier pragmatism"])
+	var pick: int = abs(("%s|%s|%d" % [seed_text, field, index]).hash()) % values.size()
+	return str(values[pick])
+
+
+static func _slug(value: String) -> String:
+	var output := value.to_lower()
+	for token in [" ", "-", ".", "'", "\"", "/", "\\", ":", ";", ","]:
+		output = output.replace(token, "_")
+	while output.contains("__"):
+		output = output.replace("__", "_")
+	return output.strip_edges().trim_prefix("_").trim_suffix("_")
 
 
 static func _string_array(values: Variant) -> Array[String]:
