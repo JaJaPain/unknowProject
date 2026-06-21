@@ -1218,12 +1218,12 @@ func _create_dock_menu():
 	# Outpost-only: surface a random minor-NPC flavor line. Shown only at
 	# outpost docks (see _render_dock_submenu).
 	hear_gossip_btn = Button.new()
-	hear_gossip_btn.text = "Hear Gossip From the Locals"
+	hear_gossip_btn.text = "Hear Gossip from the Locals"
 	hear_gossip_btn.pressed.connect(_on_hear_gossip_pressed)
 	vbox.add_child(hear_gossip_btn)
 
 	agent_service_btn = Button.new()
-	agent_service_btn.text = "Talk To Agent"
+	agent_service_btn.text = "Talk to Agent"
 	agent_service_btn.pressed.connect(_on_talk_to_agent_pressed)
 	vbox.add_child(agent_service_btn)
 
@@ -3406,7 +3406,7 @@ func _render_station_contacts(should_show: bool) -> void:
 	station_contacts_list.add_child(title)
 	if show_kaelen:
 		var kaelen_btn := Button.new()
-		kaelen_btn.text = "Broker Kaelen  [Broker]"
+		kaelen_btn.text = "Broker Kaelen [Broker]"
 		kaelen_btn.tooltip_text = "Catch Kaelen between deals."
 		kaelen_btn.pressed.connect(_on_kaelen_lounge_pressed)
 		station_contacts_list.add_child(kaelen_btn)
@@ -6400,7 +6400,7 @@ func _update_repair_button():
 				repair_btn.text = "Repair Ship (Partial Heal: %d HP) - %d SC" % [affordable_hp, GlobalState.player_credits]
 				repair_btn.disabled = false
 			else:
-				repair_btn.text = "Repair Ship (Insufficient Credits) - Need %d SC" % [total_cost]
+				repair_btn.text = "Repair Ship (Insufficient Credits — %d SC needed)" % [total_cost]
 				repair_btn.disabled = true
 
 func _repair_ship():
