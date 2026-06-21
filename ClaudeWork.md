@@ -38,7 +38,7 @@ and they should not block or overlap with current Codex work.
 - [ ] Check Station Lounge layout at common resolutions and note any overlap,
   clipping, or awkward spacing. Safe fixes are okay; deeper Lounge feature work
   should stay parked.
-- [ ] Review inventory UI labels and empty states so the player understands
+- [x] Review inventory UI labels and empty states so the player understands
   consumables, cargo, and special items without being docked.
 - [ ] Add controller-focus notes for station services, inventory, system map,
   and Lounge screens: which control should be selected first, next, and back.

@@ -4168,7 +4168,7 @@ func _on_inventory_filter_toggled() -> void:
 func _render_inventory_items() -> void:
 	for child in inventory_list.get_children():
 		child.queue_free()
-	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m3    Slots: %d / %d" % [
+	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m³    Slots: %d / %d" % [
 		GlobalState.player_credits,
 		GlobalState.player_storage_ore,
 		GlobalState.player_storage_max,
@@ -4243,14 +4243,18 @@ func _build_inventory_cargo_row() -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var title := Label.new()
-	title.text = GlobalState.cargo_display_text()
+	if GlobalState.cargo_type == GlobalState.CargoType.EMPTY:
+		title.text = "Empty — ready to load ore or cargo"
+		title.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
+	else:
+		title.text = GlobalState.cargo_display_text()
+		title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
 	box.add_child(title)
 	if GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
 		var detail := Label.new()
 		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		detail.text = "%s -> %s\n%s" % [
+		detail.text = "%s → %s\n%s" % [
 			str(GlobalState.cargo_special.get("source", "Unknown source")),
 			str(GlobalState.cargo_special.get("destination", "Unknown destination")),
 			str(GlobalState.cargo_special.get("description", "")),
@@ -4281,7 +4285,7 @@ func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBox
 	var stack_text := "x%d" % quantity
 	if item_def != null and item_def.stack_max > 1:
 		stack_text = "x%d/%d" % [quantity, item_def.stack_max]
-	title.text = "%s %s  [%s]" % [display_name, stack_text, category]
+	title.text = "%s %s [%s]" % [display_name, stack_text, category]
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 14)
 	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
