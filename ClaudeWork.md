@@ -80,14 +80,14 @@ and they should not block or overlap with current Codex work.
 
 ## Test And Diagnostics Cleanup
 
-- [ ] Investigate the local headless Godot startup crash separately from gameplay
+- [x] Investigate the local headless Godot startup crash separately from gameplay
   changes. Capture exact command, crash text, and whether it happens with a tiny
   no-op script.
-- [ ] Add a note describing which tests are safest to run after visual-only
+- [x] Add a note describing which tests are safest to run after visual-only
   changes.
-- [ ] Look for tests that rely on old fixed agent names in generated systems and
+- [x] Look for tests that rely on old fixed agent names in generated systems and
   list them for later cleanup instead of changing mission logic.
-- [ ] Review diagnostics output for repeated noisy messages that hide real
+- [x] Review diagnostics output for repeated noisy messages that hide real
   fallback or generation failures.
 
 ## Gate Travel Visual Upgrade
