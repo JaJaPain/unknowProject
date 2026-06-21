@@ -23,12 +23,12 @@ and they should not block or overlap with current Codex work.
   palettes. Avoid changing generation logic unless the fix is purely visual.
 - [ ] Add or tune subtle ambient variation for clear-space systems so systems
   without nebulae still feel intentionally distinct.
-- [ ] Check player boost/thruster visuals and list any missing polish: exhaust
+- [x] Check player boost/thruster visuals and list any missing polish: exhaust
   scale, color, cooldown feedback, heat glow, or camera shake. Implement only
   small effect-only changes.
-- [ ] Add a simple visual pass checklist for combat feedback: projectile hit,
+- [x] Add a simple visual pass checklist for combat feedback: projectile hit,
   shield hit, hull hit, ship death, asteroid hit, cargo pickup, and repair use.
-- [ ] Look for any obvious visual effects that remain after an object dies or
+- [x] Look for any obvious visual effects that remain after an object dies or
   changes scene, similar to the old dead-ship thruster glow issue.
 
 ## UI Polish
@@ -40,7 +40,7 @@ and they should not block or overlap with current Codex work.
   should stay parked.
 - [x] Review inventory UI labels and empty states so the player understands
   consumables, cargo, and special items without being docked.
-- [ ] Add controller-focus notes for station services, inventory, system map,
+- [x] Add controller-focus notes for station services, inventory, system map,
   and Lounge screens: which control should be selected first, next, and back.
 - [x] Check selected-target panel action buttons for obvious active/queued
   feedback gaps. Do not change navigation behavior; visual state only.
