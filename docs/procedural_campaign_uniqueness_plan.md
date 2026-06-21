@@ -977,10 +977,10 @@ procedural identity and mission reliability are stable.
   - [ ] Treat every asteroid belt as faction-owned; mining without a permit is
     illegal by default, matching Kaelen's intro lore that a permit costs more
     than the player's ship.
-  - [ ] Give NPC miners a simple witness bubble that acts as first-pass line of
+  - [x] Give NPC miners a simple witness bubble that acts as first-pass line of
     sight. If the player mines inside that bubble, the miner reports the
     violation in comms.
-  - [ ] Spawn or dispatch two code-enforcement fighters from the belt owner
+  - [x] Spawn or dispatch two code-enforcement fighters from the belt owner
     faction after a witnessed violation.
   - [ ] Give enforcement patrols a larger pursuit/detection bubble; if they
     reacquire the player, they continue pursuit.
@@ -989,7 +989,7 @@ procedural identity and mission reliability are stable.
     forever.
   - [ ] Cap active enforcement response groups so repeated reports create drama
     without unlimited fighter stacking.
-  - [ ] Make enforcement officer kills avoid normal kill escalation rules. They
+  - [x] Make enforcement officer kills avoid normal kill escalation rules. They
     are already part of the active response, not a new faction-war trigger.
   - [ ] Add a main-station fine office or code-enforcement desk where the player
     can pay outstanding illegal-mining fines to clear active enforcement heat.
@@ -999,8 +999,11 @@ procedural identity and mission reliability are stable.
     payment clearing heat, and non-escalating enforcement kills.
     First-pass enforcement service is covered for two-ship dispatch requests,
     response-group caps, five-minute heat expiry, fine accumulation/payment,
-    and enforcement ship metadata. Scene witness bubbles, actual fighter
-    spawning, and death-rule integration still need wiring.
+    and enforcement ship metadata. Mining now reports only when a nearby miner
+    witnesses the player, witnessed reports spawn two marked enforcement ships,
+    and marked enforcement deaths skip normal kill escalation and mission
+    progress signals. Larger pursuit bubbles and the fine-office UI still need
+    wiring.
 - Add an expensive illegal transponder replacement service:
   - [ ] Let the player pay a very high price to wipe their public identity,
     clearing both good and bad faction reputation.

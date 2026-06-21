@@ -1,5 +1,10 @@
 extends Node
 
+const IllegalMiningEnforcementType := preload(
+	"res://scripts/systems/IllegalMiningEnforcement.gd"
+)
+const ILLEGAL_MINING_WITNESS_RADIUS := 220.0
+
 # ── Ship Upgrade Caps ─────────────────────────────────────────────────────────
 # Per-ship-class hard caps for every upgradeable stat. The current values are
 # the starter-ship (INDYMiner) caps. If you add a heavier hauler ship class
@@ -955,6 +960,31 @@ static func get_current_system_minor_factions() -> Array[String]:
 	fallback.assign(MINOR_FACTIONS.keys())
 	return fallback
 
+
+static func get_current_system_factions() -> Array[String]:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.current_scene and "system_registry" in tree.current_scene:
+		var state = tree.root.get_node_or_null("GlobalState")
+		var sys_id: String = state.get("current_system_id") if state else "start_system"
+		var registry = tree.current_scene.system_registry
+		if registry != null:
+			var sys_def = registry.get_system(sys_id)
+			if sys_def != null and not sys_def.faction_ids.is_empty():
+				var factions: Array[String] = []
+				for fid in sys_def.faction_ids:
+					var legacy := _legacy_faction_key_for_system_id(
+						str(fid),
+						sys_def.legacy_id,
+						registry
+					)
+					if not legacy.is_empty():
+						factions.append(legacy)
+				if not factions.is_empty():
+					return factions
+	if is_current_system_home():
+		return ["zenith", "aurelia", "vanguard"]
+	return get_current_system_minor_factions()
+
 static func _legacy_faction_key_for_system_id(
 	faction_id: String,
 	system_legacy_id: String,
@@ -1522,6 +1552,7 @@ var faction_kills: Dictionary = {
 	"aurelia": 0,
 	"vanguard": 0
 }
+var illegal_mining_enforcement = IllegalMiningEnforcementType.new()
 
 func record_kill(faction_name: String):
 	# Track kills for ANY faction — including LLM-generated custom ones
@@ -1631,6 +1662,166 @@ func spawn_mission_targets(faction_name: String, count: int):
 		ui.show_hud_warning("CONTRACT ACTIVE: " + str(count) + " " + faction_name.to_upper() + " targets have entered the sector.")
 	emit_chatter("SYSTEM", "Sensor sweep: " + str(count) + " " + faction_name.to_upper() + " signatures detected in open space.", Color(0.0, 0.9, 0.9))
 
+
+func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary:
+	if asteroid == null or not is_instance_valid(asteroid):
+		return {}
+	var owner_faction := _asteroid_owner_faction(asteroid)
+	var belt_id := _asteroid_belt_id(asteroid)
+	if not _has_illegal_mining_witness(owner_faction):
+		return {
+			"accepted": false,
+			"dispatch": false,
+			"reason": "unwitnessed",
+			"faction": owner_faction,
+			"belt_id": belt_id,
+		}
+	var result: Dictionary = illegal_mining_enforcement.report_violation(
+		current_system_id,
+		belt_id,
+		owner_faction,
+		Time.get_ticks_msec()
+	)
+	var faction_label := faction_display_name(owner_faction)
+	var belt_label := _belt_display_name(belt_id)
+	emit_chatter(
+		"MINER",
+		"Illegal miner in %s. %s code enforcement requested." % [
+			belt_label,
+			faction_label,
+		],
+		Color(1.0, 0.72, 0.25)
+	)
+	if bool(result.get("dispatch", false)):
+		_dispatch_illegal_mining_enforcement(
+			result,
+			_node3d_position(asteroid)
+		)
+	return result
+
+
+func _dispatch_illegal_mining_enforcement(
+	report: Dictionary,
+	violation_pos: Vector3
+) -> void:
+	var player_node: Node3D = player
+	var system_root: Node3D = get_system_root()
+	if player_node == null or not is_instance_valid(player_node) \
+			or player_node.get("destroyed") or system_root == null:
+		return
+	var npc_scene := load("res://scenes/npc_ship.tscn") as PackedScene
+	if npc_scene == null:
+		push_warning("[GlobalState] Could not load npc_ship.tscn for enforcement response.")
+		return
+	var faction_name := str(report.get("faction", "neutral"))
+	var count: int = max(1, int(report.get("ship_count", 2)))
+	for i in range(count):
+		var angle := (TAU / float(count)) * float(i) + randf_range(-0.35, 0.35)
+		var offset := Vector3(cos(angle), 0.0, sin(angle)) * randf_range(160.0, 220.0)
+		var npc := npc_scene.instantiate() as Node3D
+		npc.faction = faction_name
+		npc.is_reinforcement = false
+		npc.ship_role = "Interceptor"
+		npc.speed = 16.0
+		npc.name = "%s_CodeEnforcement_%03d" % [
+			faction_display_name(faction_name).replace(" ", ""),
+			randi() % 1000,
+		]
+		runtime_entity_sequence += 1
+		npc.persistent_id = "entity.%s.enforcement.%06d" % [
+			current_system_id,
+			runtime_entity_sequence,
+		]
+		IllegalMiningEnforcementType.mark_enforcement_ship(
+			npc,
+			faction_name,
+			current_system_id
+		)
+		system_root.add_child(npc)
+		if npc.is_inside_tree():
+			npc.global_position = violation_pos + offset
+		else:
+			npc.position = violation_pos + offset
+	var ui: Control = get_ui_manager()
+	if ui and ui.has_method("show_hud_warning"):
+		ui.show_hud_warning("CODE ENFORCEMENT: Illegal mining response inbound.")
+	emit_chatter(
+		"SYSTEM",
+		"%s enforcement ships are moving to investigate the mining violation." %
+			faction_display_name(faction_name),
+		Color(0.0, 0.9, 0.9)
+	)
+
+
+func _asteroid_owner_faction(asteroid: Node) -> String:
+	for key in ["belt_owner_faction", "owner_faction", "faction"]:
+		var value := str(asteroid.get_meta(key, "")).strip_edges()
+		if not value.is_empty():
+			return value
+	var factions := get_current_system_factions()
+	if factions.is_empty():
+		return "zenith"
+	var source := _asteroid_belt_id(asteroid)
+	var index: int = abs(hash(source)) % factions.size()
+	return factions[index]
+
+
+func _asteroid_belt_id(asteroid: Node) -> String:
+	var explicit := str(asteroid.get_meta("belt_id", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var persistent := str(asteroid.get("persistent_id")).strip_edges()
+	if not persistent.is_empty():
+		var parts := persistent.split(".")
+		if parts.size() >= 4:
+			return str(parts[3])
+		return persistent
+	return str(asteroid.name)
+
+
+func _belt_display_name(belt_id: String) -> String:
+	var clean := belt_id.strip_edges()
+	if clean.is_empty():
+		return "the belt"
+	clean = clean.replace("_", " ").replace("-", " ")
+	return clean.capitalize()
+
+
+func _has_illegal_mining_witness(owner_faction: String) -> bool:
+	var player_node := player
+	if player_node == null or not is_instance_valid(player_node):
+		return false
+	for entity in active_system_entities:
+		if entity == null or not is_instance_valid(entity):
+			continue
+		if entity.get("destroyed"):
+			continue
+		var ship_role := str(entity.get("ship_role"))
+		if ship_role == "<null>":
+			ship_role = ""
+		var is_miner := ship_role == "MiningHauler" \
+			or bool(entity.get_meta("is_mining_witness", false))
+		if not is_miner:
+			continue
+		var witness_faction := str(entity.get("faction"))
+		if witness_faction == "<null>":
+			witness_faction = ""
+		if not witness_faction.is_empty() and witness_faction != owner_faction:
+			continue
+		if _node3d_position(player_node).distance_to(_node3d_position(entity)) \
+				<= ILLEGAL_MINING_WITNESS_RADIUS:
+			return true
+	return false
+
+
+func _node3d_position(node: Node3D) -> Vector3:
+	if node == null:
+		return Vector3.ZERO
+	if node.is_inside_tree():
+		return node.global_position
+	return node.position
+
+
 func _active_mission_identity_key() -> String:
 	var runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
 	if not runtime_id.is_empty():
@@ -1732,7 +1923,12 @@ func get_system_root() -> Node3D:
 	return get_tree().current_scene
 
 func get_ui_manager() -> Control:
-	var scene_root := get_tree().current_scene
+	if not is_inside_tree():
+		return null
+	var tree := get_tree()
+	if tree == null:
+		return null
+	var scene_root := tree.current_scene
 	if not scene_root:
 		return null
 	return scene_root.get_node_or_null("CanvasLayer/UIManager") as Control
@@ -1756,6 +1952,7 @@ func reset_for_restart():
 	generated_outpost_npcs.clear()
 	generated_outpost_npc_data.clear()
 	npc_line_memory.clear()
+	illegal_mining_enforcement = IllegalMiningEnforcementType.new()
 	# Directly set paused to avoid emitting game_paused into freed UIManager
 	paused = false
 	# Silently clear active_target without emitting target_changed

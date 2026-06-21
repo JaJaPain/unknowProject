@@ -89,6 +89,8 @@ func mine():
 	if amount_to_mine > 0.0:
 		var added = GlobalState.add_ore(amount_to_mine)
 		resources -= added
+		if added > 0.0 and GlobalState.has_method("report_player_mined_asteroid"):
+			GlobalState.report_player_mined_asteroid(self)
 		
 		# Visual/text popups could be spawned here
 		

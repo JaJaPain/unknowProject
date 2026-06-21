@@ -13,6 +13,8 @@ func _initialize() -> void:
 	_test_heat_expires()
 	_test_fine_payment_clears_heat()
 	_test_enforcement_ship_marker()
+	_test_unwitnessed_global_report_does_not_dispatch()
+	_test_witnessed_global_report_dispatches_and_spawns()
 
 	if _failures.is_empty():
 		print("[PASS] Illegal mining enforcement tests")
@@ -128,6 +130,82 @@ func _test_enforcement_ship_marker() -> void:
 		"ship_marker: enforcement metadata was not applied."
 	)
 	ship.free()
+
+
+func _test_unwitnessed_global_report_does_not_dispatch() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_player = gs.player
+	var previous_root = gs.active_system_root
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	var player_node := Node3D.new()
+	var asteroid := Node3D.new()
+	gs.reset_for_restart()
+	gs.current_system_id = "system.test"
+	root.add_child(player_node)
+	root.add_child(asteroid)
+	gs.player = player_node
+	asteroid.set_meta("belt_owner_faction", "zenith")
+	asteroid.set_meta("belt_id", "quiet_belt")
+
+	var result: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	_expect(
+		not bool(result.get("dispatch", false))
+			and str(result.get("reason", "")) == "unwitnessed",
+		"global_unwitnessed: mining without a nearby miner should not dispatch enforcement."
+	)
+
+	asteroid.queue_free()
+	player_node.queue_free()
+	gs.player = previous_player
+	gs.active_system_root = previous_root
+	gs.active_system_entities = previous_entities
+
+
+func _test_witnessed_global_report_dispatches_and_spawns() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_player = gs.player
+	var previous_root = gs.active_system_root
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	var system_root := Node3D.new()
+	var player_node := Node3D.new()
+	var asteroid := Node3D.new()
+	var witness := Node3D.new()
+	gs.reset_for_restart()
+	gs.current_system_id = "system.test"
+	root.add_child(system_root)
+	system_root.add_child(player_node)
+	system_root.add_child(asteroid)
+	system_root.add_child(witness)
+	gs.active_system_root = system_root
+	gs.player = player_node
+	player_node.position = Vector3.ZERO
+	asteroid.position = Vector3(20.0, 0.0, 0.0)
+	asteroid.set_meta("belt_owner_faction", "zenith")
+	asteroid.set_meta("belt_id", "watched_belt")
+	witness.position = Vector3(30.0, 0.0, 0.0)
+	witness.set("name", "Witness Miner")
+	witness.set_meta("is_mining_witness", true)
+	witness.set("faction", "zenith")
+	gs.active_system_entities.append(witness)
+
+	var result: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	var enforcement_count := 0
+	for entity in system_root.get_children():
+		if EnforcementType.is_enforcement_ship(entity):
+			enforcement_count += 1
+	_expect(
+		bool(result.get("dispatch", false))
+			and enforcement_count == EnforcementType.RESPONSE_SHIP_COUNT,
+		"global_witnessed: witnessed mining should spawn two enforcement ships. result=%s count=%d" % [
+			str(result),
+			enforcement_count,
+		]
+	)
+
+	system_root.queue_free()
+	gs.player = previous_player
+	gs.active_system_root = previous_root
+	gs.active_system_entities = previous_entities
 
 
 func _expect(condition: bool, message: String) -> void:

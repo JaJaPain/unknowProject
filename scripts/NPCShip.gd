@@ -500,8 +500,10 @@ func _physics_process(delta: float):
 	elif target == null or not is_instance_valid(target) or target.get("destroyed") or (target == GlobalState.player and GlobalState.player.get("is_docked")):
 		target = null
 
-		# Elite reinforcements target the player immediately
-		if is_reinforcement:
+		var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
+
+		# Elite reinforcements and active code-enforcement ships target the player immediately.
+		if is_reinforcement or is_code_enforcement:
 			var p = GlobalState.player
 			if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked"):
 				target = p
@@ -509,6 +511,7 @@ func _physics_process(delta: float):
 		var is_combat_role: bool = ship_role in ["Gunner", "Interceptor"] \
 			or GlobalState.is_minor_faction(faction) \
 			or is_reinforcement \
+			or is_code_enforcement \
 			or bool(get_meta("is_quest_target", false))
 		if target == null and is_combat_role:
 			# Find closest enemy within range (could be player or other NPC)
@@ -649,6 +652,7 @@ func fire():
 
 func take_damage(amount: float, attacker_faction: String = ""):
 	if destroyed: return
+	var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
 	RuntimeTraceType.event("combat", "npc_damage", {
 		"ship": name,
 		"faction": faction,
@@ -657,7 +661,8 @@ func take_damage(amount: float, attacker_faction: String = ""):
 		"attacker_faction": attacker_faction,
 	})
 	health -= amount
-	if attacker_faction == "player" and not GlobalState.is_minor_faction(faction):
+	if attacker_faction == "player" and not GlobalState.is_minor_faction(faction) \
+			and not is_code_enforcement:
 		GlobalState.adjust_reputation(faction, -2.0) # Aggro drop rep on hit
 		last_attacker_faction = "player"
 		
@@ -675,6 +680,7 @@ func die():
 	if destroyed:
 		return
 	destroyed = true
+	var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
 	RuntimeTraceType.event("combat", "npc_death_started", {
 		"ship": name,
 		"faction": faction,
@@ -712,8 +718,9 @@ func die():
 	
 	# Award credits and apply reputation changes if killed by player
 	if last_attacker_faction == "player":
-		GlobalState.player_credits += 15
-		_apply_reputation_changes()
+		if not is_code_enforcement:
+			GlobalState.player_credits += 15
+			_apply_reputation_changes()
 
 		# Trigger death cry chatter
 		var cry = LLMInterface.get_chatter_line("death_cry", {
@@ -722,13 +729,15 @@ func die():
 		var fac_color = _get_faction_color()
 		GlobalState.emit_chatter(name, cry, fac_color)
 
-		GlobalState.record_kill(faction)
+		if not is_code_enforcement:
+			GlobalState.record_kill(faction)
 
 	# Always emit ship_destroyed so quest progress counts NPC kills too.
 	# Previously this only fired inside the player-killed branch (via
 	# record_kill), so an NPC killing a quest target left the quest count
 	# stuck and the contract unfinishable.
-	GlobalState.ship_destroyed.emit(faction)
+	if not is_code_enforcement:
+		GlobalState.ship_destroyed.emit(faction)
 	
 	# Remove from entities list
 	GlobalState.active_system_entities.erase(self)
