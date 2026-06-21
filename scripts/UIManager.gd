@@ -5544,11 +5544,11 @@ func _update_boost_button() -> void:
 		cooldown = float(GlobalState.player.call("boost_cooldown_remaining"))
 	if active > 0.0:
 		target_boost_btn.disabled = true
-		target_boost_btn.text = "Boost %.0fs" % ceilf(active)
+		target_boost_btn.text = "Boosting %.0fs" % ceilf(active)
 		target_boost_btn.self_modulate = Color(0.25, 0.85, 1.0, 1.0)
 	elif cooldown > 0.0:
 		target_boost_btn.disabled = true
-		target_boost_btn.text = "Boost %.0fs" % ceilf(cooldown)
+		target_boost_btn.text = "Boost (%.0fs)" % ceilf(cooldown)
 		target_boost_btn.self_modulate = Color(0.7, 0.7, 0.7, 1.0)
 	else:
 		target_boost_btn.disabled = false

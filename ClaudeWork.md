@@ -42,7 +42,7 @@ and they should not block or overlap with current Codex work.
   consumables, cargo, and special items without being docked.
 - [ ] Add controller-focus notes for station services, inventory, system map,
   and Lounge screens: which control should be selected first, next, and back.
-- [ ] Check selected-target panel action buttons for obvious active/queued
+- [x] Check selected-target panel action buttons for obvious active/queued
   feedback gaps. Do not change navigation behavior; visual state only.
 
 ## Audio And TTS Hygiene
