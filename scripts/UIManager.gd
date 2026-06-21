@@ -937,16 +937,21 @@ func _create_dock_menu():
 	var vbox = VBoxContainer.new()
 	dock_panel.add_child(vbox)
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 0
-	vbox.offset_right = 0
-	vbox.offset_top = 0
-	vbox.offset_bottom = 0
+	vbox.offset_left = 10
+	vbox.offset_right = -10
+	vbox.offset_top = 10
+	vbox.offset_bottom = -10
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	dock_label = Label.new()
 	dock_label.text = "STATION SERVICES"
 	dock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dock_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(dock_label)
+
+	var dock_label_spacer := Control.new()
+	dock_label_spacer.custom_minimum_size = Vector2(0, 6)
+	vbox.add_child(dock_label_spacer)
 
 	# ── Mechanic (Jenna Kross) intro panel ─────────────────────────────────
 	# Lives in the dock panel, shown only while the maintenance submenu is
@@ -1076,15 +1081,19 @@ func _create_dock_menu():
 	dock_message_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	dock_message_line.autowrap_mode = TextServer.AUTOWRAP_WORD
 	dock_message_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dock_message_line.add_theme_font_size_override("font_size", 16)
+	dock_message_line.add_theme_font_size_override("font_size", 14)
 	dock_message_line.add_theme_color_override("font_shadow_color", Color.BLACK)
 	dock_message_line.add_theme_constant_override("shadow_outline_size", 2)
+	dock_message_line.clip_text = true
+	dock_message_line.custom_minimum_size.y = 0
+	dock_message_line.max_lines_visible = 4
 	msg_text_vbox.add_child(dock_message_line)
 
 	station_contacts_panel = PanelContainer.new()
 	station_contacts_panel.name = "StationContactsPanel"
 	station_contacts_panel.visible = false
 	station_contacts_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	station_contacts_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var contacts_style := StyleBoxFlat.new()
 	contacts_style.bg_color = Color(0.04, 0.055, 0.08, 0.82)
 	contacts_style.border_width_left = 1
@@ -1103,9 +1112,16 @@ func _create_dock_menu():
 	station_contacts_panel.add_theme_stylebox_override("panel", contacts_style)
 	vbox.add_child(station_contacts_panel)
 
+	var contacts_scroll := ScrollContainer.new()
+	contacts_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	contacts_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contacts_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	station_contacts_panel.add_child(contacts_scroll)
+
 	station_contacts_list = VBoxContainer.new()
 	station_contacts_list.add_theme_constant_override("separation", 4)
-	station_contacts_panel.add_child(station_contacts_list)
+	station_contacts_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contacts_scroll.add_child(station_contacts_list)
 
 	ore_trade_popup = PanelContainer.new()
 	ore_trade_popup.name = "OreTradePopup"
