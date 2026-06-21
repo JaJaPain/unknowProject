@@ -4,6 +4,8 @@ const Registry := preload("res://scripts/domain/MissionCapabilityRegistry.gd")
 const MissionCap := preload("res://scripts/domain/MissionCapability.gd")
 const KillCap := preload("res://scripts/domain/capabilities/KillShipsCapability.gd")
 const RecoverCap := preload("res://scripts/domain/capabilities/RecoverCombatDropCapability.gd")
+const DeliveryCap := preload("res://scripts/domain/capabilities/DeliveryCourierCapability.gd")
+const PurchaseCap := preload("res://scripts/domain/capabilities/PurchaseDeliveryCapability.gd")
 
 var _failures: Array[String] = []
 
@@ -28,6 +30,10 @@ func _initialize() -> void:
 	_test_recover_on_complete_allows_if_recovered()
 	_test_recover_format_tracker_hunting()
 	_test_recover_format_tracker_recovered()
+	_test_delivery_courier_requires_matching_special_cargo()
+	_test_delivery_courier_clears_matching_cargo()
+	_test_purchase_delivery_requires_inventory_item()
+	_test_purchase_delivery_removes_inventory_quantity()
 
 	if _failures.is_empty():
 		print("[PASS] Mission capability tests")
@@ -217,6 +223,107 @@ func _test_recover_format_tracker_recovered() -> void:
 		"item_name": "black box", "turn_in_location": "Grease Monkeys"})
 	_expect("Recovered: black box" in text, "recovered text wrong: %s" % text)
 	_expect("Grease Monkeys" in text, "missing turn-in: %s" % text)
+
+
+# --- DeliveryCourierCapability ---
+
+func _test_delivery_courier_requires_matching_special_cargo() -> void:
+	var cap := DeliveryCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_type: int = gs.cargo_type
+	var previous_special: Dictionary = gs.cargo_special.duplicate(true)
+	var previous_cargo: float = gs.cargo
+	gs.clear_cargo()
+	var data := {
+		"item_name": "Sealed Evidence Tube",
+		"cargo_loaded": true,
+		"destination_display": "Kova Station",
+	}
+	_expect(not cap.is_completed(data), "Courier should not complete with empty hold.")
+	gs.accept_special("Wrong Package", "test", "Main Station", "Kova Station")
+	_expect(not cap.is_completed(data), "Courier should not complete with wrong cargo.")
+	gs.clear_cargo()
+	gs.accept_special("Sealed Evidence Tube", "test", "Main Station", "Kova Station")
+	_expect(cap.is_completed(data), "Courier should complete with matching special cargo.")
+	gs.clear_cargo()
+	gs.cargo = previous_cargo
+	gs.cargo_type = previous_type
+	gs.cargo_special = previous_special
+
+
+func _test_delivery_courier_clears_matching_cargo() -> void:
+	var cap := DeliveryCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_type: int = gs.cargo_type
+	var previous_special: Dictionary = gs.cargo_special.duplicate(true)
+	var previous_cargo: float = gs.cargo
+	gs.clear_cargo()
+	gs.accept_special("Sealed Evidence Tube", "test", "Main Station", "Kova Station")
+	var complete_hints := cap.on_complete({
+		"item_name": "Sealed Evidence Tube",
+		"cargo_loaded": true,
+	})
+	var cleanup_hints := cap.on_cleanup({"item_name": "Sealed Evidence Tube"})
+	_expect(
+		bool(complete_hints.get("clear_cargo", false)),
+		"Courier completion should request cargo clearing."
+	)
+	_expect(
+		bool(cleanup_hints.get("clear_cargo", false)),
+		"Courier cleanup should request matching cargo clearing."
+	)
+	gs.clear_cargo()
+	gs.cargo = previous_cargo
+	gs.cargo_type = previous_type
+	gs.cargo_special = previous_special
+
+
+# --- PurchaseDeliveryCapability ---
+
+func _test_purchase_delivery_requires_inventory_item() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	var data := {
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 2,
+		"destination_display": "Main Station",
+	}
+	_expect(not cap.is_completed(data), "Purchase should not complete without item.")
+	gs.inventory.add("data_chip", 1)
+	_expect(not cap.is_completed(data), "Purchase should not complete with too few items.")
+	gs.inventory.add("data_chip", 1)
+	_expect(cap.is_completed(data), "Purchase should complete with required quantity.")
+	gs.inventory = previous_inventory
+
+
+func _test_purchase_delivery_removes_inventory_quantity() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	gs.inventory.add("data_chip", 3)
+	var hints := cap.on_complete({
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 2,
+	})
+	_expect(
+		str(hints.get("remove_inventory_item", "")) == "data_chip"
+			and int(hints.get("remove_inventory_quantity", 0)) == 2,
+		"Purchase completion should request inventory removal."
+	)
+	gs.inventory.remove(
+		str(hints.get("remove_inventory_item", "")),
+		int(hints.get("remove_inventory_quantity", 0))
+	)
+	_expect(
+		gs.inventory.get_quantity("data_chip") == 1,
+		"Purchase removal should leave remaining stack quantity."
+	)
+	gs.inventory = previous_inventory
 
 
 # --- Test-only capability (Checkpoint 2: extension test) ---

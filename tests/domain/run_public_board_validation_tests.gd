@@ -14,6 +14,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_builder_produces_all_templates()
 	_test_builder_offers_have_required_fields()
+	_test_courier_and_purchase_offers_adapt_to_active_state()
 	_test_pickup_offer_uses_current_system_outpost()
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_generated_system_offers_use_story_pack()
@@ -53,8 +54,10 @@ func _test_builder_produces_all_templates() -> void:
 	_expect(
 		templates.has(OfferBuilderType.TEMPLATE_DELIVER_ORE)
 			and templates.has(OfferBuilderType.TEMPLATE_PICKUP_SPECIAL)
+			and templates.has(OfferBuilderType.TEMPLATE_DELIVERY_COURIER)
+			and templates.has(OfferBuilderType.TEMPLATE_PURCHASE_DELIVERY)
 			and templates.has(OfferBuilderType.TEMPLATE_RECOVER_COMBAT_DROP),
-		"builder_templates: not all three templates were built."
+		"builder_templates: not all public board templates were built."
 	)
 
 
@@ -75,6 +78,57 @@ func _test_builder_offers_have_required_fields() -> void:
 			"required_fields: offer '%s' is missing required fields." %
 			str(offer.get("template_id", "unknown"))
 		)
+
+
+func _test_courier_and_purchase_offers_adapt_to_active_state() -> void:
+	var offers := OfferBuilderType.build_offers(480)
+	var courier_offer: Dictionary = {}
+	var purchase_offer: Dictionary = {}
+	for offer in offers:
+		if str(offer.get("template_id", "")) == OfferBuilderType.TEMPLATE_DELIVERY_COURIER:
+			courier_offer = offer
+		if str(offer.get("template_id", "")) == OfferBuilderType.TEMPLATE_PURCHASE_DELIVERY:
+			purchase_offer = offer
+	_expect(not courier_offer.is_empty(), "delivery_offer: courier offer was not built.")
+	_expect(not purchase_offer.is_empty(), "purchase_offer: purchase offer was not built.")
+	if not courier_offer.is_empty():
+		_expect(
+			_adapted_offer_has_objective(
+				courier_offer,
+				"mission.runtime.board_delivery_test",
+				"DELIVERY_COURIER"
+			),
+			"delivery_offer: courier offer did not adapt to valid active state."
+		)
+	if not purchase_offer.is_empty():
+		_expect(
+			_adapted_offer_has_objective(
+				purchase_offer,
+				"mission.runtime.board_purchase_test",
+				"PURCHASE_DELIVERY"
+			),
+			"purchase_offer: purchase offer did not adapt to valid active state."
+		)
+
+
+func _adapted_offer_has_objective(
+	offer: Dictionary,
+	runtime_id: String,
+	objective_type: String
+) -> bool:
+	var quest_data: Dictionary = offer.get("quest_data", {})
+	var choices: Array = quest_data.get("choices", [])
+	if choices.is_empty():
+		return false
+	var adapted := AdapterType.build_active_state(
+		quest_data,
+		choices[0],
+		runtime_id,
+		"start_system",
+		480
+	)
+	return adapted["validation"].is_valid() \
+		and str(adapted["state"].get("objective_type", "")) == objective_type
 
 
 func _test_pickup_offer_uses_current_system_outpost() -> void:

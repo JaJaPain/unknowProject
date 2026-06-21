@@ -829,8 +829,9 @@ Goal: make each system feel like a place.
     LLM mission expansion should follow once validation supports the new shapes.
   - [ ] Add tests for delivery and purchase mission generation, inventory
     validation, completion, failure messaging, and save/load persistence.
-    First-pass contract validation and public-board generation coverage exists;
-    completion UI, failure messaging, and save/load persistence still need
+    Contract validation, public-board generation, cargo/inventory completion,
+    cleanup hints, and required inventory removal are covered. Completion UI,
+    failure messaging, expiration behavior, and save/load persistence still need
     dedicated coverage.
   - [ ] Add future mission-type variety after courier/purchase is stable:
     escort jobs, scan/survey jobs, sabotage or disable jobs, rescue/extraction
