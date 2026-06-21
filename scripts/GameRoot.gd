@@ -622,7 +622,8 @@ func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
 	var faction_clause := "the locals"
 	if not faction_names.is_empty():
 		faction_clause = _human_join(faction_names)
-	var line := _kaelen_arrival_line(sys_def.display_name, faction_clause)
+	var story_pack := _system_story_pack_for_definition(sys_def)
+	var line := _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
 	GlobalState.emit_chatter("KAELEN", line, Color(0.0, 0.9, 0.9))
 
 
@@ -640,16 +641,61 @@ func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
 	return names
 
 
-func _kaelen_arrival_line(system_name: String, faction_clause: String) -> String:
+func _system_story_pack_for_definition(sys_def: SystemDefinition) -> Dictionary:
+	if system_registry == null or sys_def == null:
+		return {}
+	var config := system_registry.get_generated_config(str(sys_def.id))
+	if config == null and not sys_def.legacy_id.is_empty():
+		config = system_registry.get_generated_config(sys_def.legacy_id)
+	if config == null:
+		return {}
+	return config.story_pack.duplicate(true)
+
+
+func _kaelen_arrival_line(
+	system_name: String,
+	faction_clause: String,
+	story_pack: Dictionary = {}
+) -> String:
+	var nickname := str(story_pack.get("local_nickname", "")).strip_edges()
+	var tension := str(story_pack.get("active_tension", "")).strip_edges()
+	var humor := str(story_pack.get("humor_guidance", "")).strip_edges()
+	var local_name := nickname if not nickname.is_empty() else system_name
+	if not tension.is_empty():
+		var story_lines: Array[String] = [
+			"Fancy seeing you in %s, Shiny. %s are making noise, and %s means somebody is charging rent on the panic.",
+			"Welcome to %s. Local menu says %s, house special is %s, and yes, I followed the money.",
+			"%s. New stars, same invoice. %s run the room while %s keeps the knives politely labeled.",
+			"Look at you, opening doors. %s has %s, %s, and my favorite smell: billable trouble.",
+		]
+		var story_seed := "%s|%s|%s|kaelen_story_arrival" % [
+			system_name,
+			faction_clause,
+			tension,
+		]
+		var story_pick: int = abs(story_seed.hash()) % story_lines.size()
+		return story_lines[story_pick] % [
+			local_name,
+			faction_clause,
+			tension,
+		]
 	var lines: Array[String] = [
 		"Fancy seeing you in %s, Shiny. When I said that route was yours, I meant ours. Watch %s and keep my credits breathing.",
 		"Welcome to %s. %s already found three ways to charge you for air, so naturally I followed the money.",
 		"%s. New stars, same invoice. %s run the room here, so smile like you meant to survive.",
 		"Look at you, opening doors. This one's %s, and %s are already making it expensive. Proud of you. Financially.",
 	]
-	var seed_text := "%s|%s|kaelen_arrival" % [system_name, faction_clause]
+	if not humor.is_empty():
+		lines.append("%s already has %s and humor like %s. I brought optimism. Kidding, I brought invoices.")
+	var seed_text := "%s|%s|%s|kaelen_arrival" % [
+		system_name,
+		faction_clause,
+		humor,
+	]
 	var pick: int = abs(seed_text.hash()) % lines.size()
-	return lines[pick] % [system_name, faction_clause]
+	if lines[pick].count("%s") == 3:
+		return lines[pick] % [local_name, faction_clause, humor]
+	return lines[pick] % [local_name, faction_clause]
 
 
 func _human_join(values: Array[String]) -> String:

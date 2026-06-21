@@ -836,7 +836,7 @@ Goal: make each system feel like a place.
   natural dialogue.
   - [x] Add the saved gate-arrival hook and deterministic Kaelen line so each
     generated system gets a one-time first-arrival comment naming local factions.
-  - [ ] Replace the deterministic line source with the system story pack once
+  - [x] Replace the deterministic line source with the system story pack once
     story packs exist.
 - Include rumor clue slots that can attach local gossip to campaign-level rumor
   trails.
