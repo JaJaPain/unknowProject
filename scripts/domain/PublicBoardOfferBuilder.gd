@@ -39,6 +39,7 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	if not purchase_offer.is_empty():
 		offers.append(purchase_offer)
 	offers.append(_build_recovery_preview())
+	_apply_story_intent_priority(offers)
 	_apply_cooldowns(offers)
 	return offers
 
@@ -59,6 +60,46 @@ static func _apply_cooldowns(offers: Array[Dictionary]) -> void:
 			offers[i]["enabled"] = false
 			var remaining: int = qm.get_board_cooldown_remaining(tid)
 			offers[i]["cooldown_remaining"] = remaining
+
+
+static func _apply_story_intent_priority(offers: Array[Dictionary]) -> void:
+	var intents: Array[String] = _story_mission_intents()
+	if intents.is_empty() or offers.size() <= 1:
+		return
+	var prioritized: Array[Dictionary] = []
+	var used_indexes: Array[int] = []
+	for intent in intents:
+		for index in range(offers.size()):
+			if index in used_indexes:
+				continue
+			var offer: Dictionary = offers[index]
+			if _offer_matches_intent(offer, intent):
+				prioritized.append(offer)
+				used_indexes.append(index)
+				break
+	for index in range(offers.size()):
+		if index not in used_indexes:
+			prioritized.append(offers[index])
+	offers.clear()
+	for offer in prioritized:
+		offers.append(offer)
+
+
+static func _offer_matches_intent(offer: Dictionary, intent: String) -> bool:
+	var clean_intent := intent.strip_edges().to_lower()
+	var template_id := str(offer.get("template_id", ""))
+	match clean_intent:
+		"ore", "mining", "resource":
+			return template_id == TEMPLATE_DELIVER_ORE
+		"pickup", "fetch", "handoff":
+			return template_id == TEMPLATE_PICKUP_SPECIAL
+		"delivery", "courier", "cargo":
+			return template_id == TEMPLATE_DELIVERY_COURIER
+		"purchase", "procurement", "store":
+			return template_id == TEMPLATE_PURCHASE_DELIVERY
+		"combat", "bounty", "recovery", "salvage":
+			return template_id == TEMPLATE_RECOVER_COMBAT_DROP
+	return false
 
 
 static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
@@ -375,6 +416,35 @@ static func _story_board_context(_offer_kind: String) -> String:
 	if parts.is_empty():
 		return ""
 	return "; ".join(parts).capitalize() + "."
+
+
+static func _story_mission_intents() -> Array[String]:
+	var story_pack: Dictionary = _current_system_story_pack()
+	if story_pack.is_empty():
+		return []
+	var raw_intents: Variant = story_pack.get("mission_intents", [])
+	var result: Array[String] = []
+	if raw_intents is Array:
+		for item in raw_intents:
+			var intent := str(item).strip_edges().to_lower()
+			if not intent.is_empty() and intent not in result:
+				result.append(intent)
+	if not result.is_empty():
+		return result
+	var mission_seeds: Array = story_pack.get("mission_seeds", [])
+	var seed_parts: Array[String] = []
+	for seed in mission_seeds:
+		seed_parts.append(str(seed))
+	var seed_text: String = " ".join(seed_parts).to_lower()
+	if seed_text.contains("supplies") or seed_text.contains("cargo"):
+		result.append("delivery")
+	if seed_text.contains("store") or seed_text.contains("buy"):
+		result.append("purchase")
+	if seed_text.contains("wreck") or seed_text.contains("recover"):
+		result.append("recovery")
+	if seed_text.contains("raider") or seed_text.contains("thin out"):
+		result.append("combat")
+	return result
 
 
 static func _story_recovery_target_faction() -> String:

@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_recovery_offer()
 	_test_timed_offer()
 	_test_public_board_text_generation()
+	_test_public_board_story_intents_prioritize_offers()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
 	_test_invalid_runtime_state()
@@ -390,6 +391,31 @@ func _test_public_board_text_generation() -> void:
 			).get("ok", false)
 		),
 		"Public-board text accepted Kaelen authorship drift."
+	)
+
+
+func _test_public_board_story_intents_prioritize_offers() -> void:
+	var config: SystemConfig = SystemConfig.new()
+	config.system_id = "story_intent_test"
+	config.story_pack = {
+		"system_id": "story_intent_test",
+		"mission_intents": ["purchase", "delivery", "combat"],
+		"mission_seeds": [],
+	}
+	PublicBoardOfferBuilderType.story_config_override_for_tests = config
+	var offers: Array[Dictionary] = PublicBoardOfferBuilderType.build_offers(480)
+	PublicBoardOfferBuilderType.story_config_override_for_tests = null
+	_expect(
+		offers.size() >= 2,
+		"Story-intent board did not build enough offers."
+	)
+	_expect(
+		str(offers[0].get("template_id", "")) == "PURCHASE_DELIVERY_PUBLIC",
+		"Story intent did not promote purchase offer first."
+	)
+	_expect(
+		str(offers[1].get("template_id", "")) == "DELIVERY_COURIER_PUBLIC",
+		"Story intent did not promote delivery offer second."
 	)
 
 

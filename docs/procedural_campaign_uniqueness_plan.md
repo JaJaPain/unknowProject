@@ -823,8 +823,10 @@ Goal: make each system feel like a place.
   - [x] Add purchase-from-store mission types: send the player to buy a named
     item from a local or nearby station store, validate that item in inventory,
     then deliver or consume it for the contract.
-  - [ ] Let story packs choose delivery and purchase mission intents so public
+  - [x] Let story packs choose delivery and purchase mission intents so public
     board and agent offers are not stuck on fetch/combat loops.
+    First pass promotes story-pack mission intents on the public board; agent
+    LLM mission expansion should follow once validation supports the new shapes.
   - [ ] Add tests for delivery and purchase mission generation, inventory
     validation, completion, failure messaging, and save/load persistence.
     First-pass contract validation and public-board generation coverage exists;

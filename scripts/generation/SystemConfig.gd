@@ -345,6 +345,11 @@ static func _build_story_pack(
 	]
 	var humor := humor_templates[rng.randi() % humor_templates.size()]
 	var nickname := _story_nickname(config.system_name, rng)
+	var mission_intents: Array[String] = _story_mission_intents(
+		problem,
+		tension,
+		rng
+	)
 	return {
 		"system_id": config.system_id,
 		"system_name": config.system_name,
@@ -365,6 +370,7 @@ static func _build_story_pack(
 			"move supplies before the station problem gets expensive",
 			"thin out raiders taking advantage of the confusion",
 		],
+		"mission_intents": mission_intents,
 		"gate_mystery_hints": [
 			"gate logs show a timing mismatch nobody can explain",
 			"old nav chatter references a return path that should not exist",
@@ -376,6 +382,41 @@ static func _build_story_pack(
 			"kaelen_arrival",
 		],
 	}
+
+
+static func _story_mission_intents(
+	problem: String,
+	tension: String,
+	rng: RandomNumberGenerator
+) -> Array[String]:
+	var weighted: Array[String] = []
+	var problem_lower: String = problem.to_lower()
+	var tension_lower: String = tension.to_lower()
+	if problem_lower.contains("supplies") or problem_lower.contains("parts"):
+		weighted.append_array(["purchase", "delivery", "ore"])
+	elif problem_lower.contains("dock") or problem_lower.contains("tariff"):
+		weighted.append_array(["delivery", "purchase", "pickup"])
+	elif problem_lower.contains("food") or problem_lower.contains("mining"):
+		weighted.append_array(["ore", "delivery", "purchase"])
+	else:
+		weighted.append_array(["delivery", "pickup", "recovery"])
+	if tension_lower.contains("missing") or tension_lower.contains("haulers"):
+		weighted.append("recovery")
+	if tension_lower.contains("ammunition") or tension_lower.contains("lanes"):
+		weighted.append("combat")
+	var result: Array[String] = []
+	while not weighted.is_empty() and result.size() < 4:
+		var index: int = rng.randi() % weighted.size()
+		var intent: String = weighted[index]
+		weighted.remove_at(index)
+		if intent not in result:
+			result.append(intent)
+	for fallback in ["delivery", "purchase", "pickup", "combat"]:
+		if result.size() >= 4:
+			break
+		if fallback not in result:
+			result.append(fallback)
+	return result
 
 
 static func _story_faction_display(faction_name: String) -> String:
