@@ -33,7 +33,7 @@ and they should not block or overlap with current Codex work.
 
 ## UI Polish
 
-- [x] Audit dock/service buttons for consistent labels, capitalization, spacing,
+- [ ] Audit dock/service buttons for consistent labels, capitalization, spacing,
   and disabled-state messages.
 - [ ] Check Station Lounge layout at common resolutions and note any overlap,
   clipping, or awkward spacing. Safe fixes are okay; deeper Lounge feature work
@@ -89,16 +89,6 @@ and they should not block or overlap with current Codex work.
   list them for later cleanup instead of changing mission logic.
 - [ ] Review diagnostics output for repeated noisy messages that hide real
   fallback or generation failures.
-
-## Gate Travel Visual Upgrade
-
-- [ ] Implement the EVE Online–style stargate jump transition from
-  `GateTravelUpgrade.md`. Four-phase sequence: portal charge, warp snap-in,
-  warp corridor tunnel shader, and exit shockwave ripple. Upgrade
-  `jump_transition_fx.tscn` node structure, add polar-swirl tunnel shader,
-  screen-space distortion shader, star streak particles, and rewrite
-  `JumpTransitionFX.gd` with camera FOV tweening and shake. Must be fully
-  encapsulated — no changes to GameRoot, save/load, or player controls.
 
 ## Parking Lot
 
