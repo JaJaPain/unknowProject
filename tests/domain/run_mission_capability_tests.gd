@@ -10,6 +10,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_registry_extension_register_and_lookup()
+	_test_registry_default_new_mission_types()
 	_test_extension_handle_event()
 	_test_extension_is_completed()
 	_test_extension_format_tracker_text()
@@ -52,6 +53,19 @@ func _test_registry_extension_register_and_lookup() -> void:
 	var found = Registry.get_for_type("TEST_ECHO")
 	_expect(found != null, "TEST_ECHO lookup returned null")
 	_expect(found.capability_id() == "test_echo", "wrong capability_id")
+	Registry.reset()
+
+
+func _test_registry_default_new_mission_types() -> void:
+	Registry.reset()
+	_expect(
+		Registry.has_type("DELIVERY_COURIER"),
+		"DELIVERY_COURIER default capability not registered"
+	)
+	_expect(
+		Registry.has_type("PURCHASE_DELIVERY"),
+		"PURCHASE_DELIVERY default capability not registered"
+	)
 	Registry.reset()
 
 

@@ -3,6 +3,8 @@ extends RefCounted
 
 const TEMPLATE_DELIVER_ORE_PUBLIC := "DELIVER_ORE_PUBLIC"
 const TEMPLATE_PICKUP_SPECIAL_PUBLIC := "PICKUP_SPECIAL_PUBLIC"
+const TEMPLATE_DELIVERY_COURIER_PUBLIC := "DELIVERY_COURIER_PUBLIC"
+const TEMPLATE_PURCHASE_DELIVERY_PUBLIC := "PURCHASE_DELIVERY_PUBLIC"
 const TEMPLATE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
 const TEMPLATE_DELIVER_ORE_AGENT := "DELIVER_ORE_AGENT"
 const TEMPLATE_KILL_SHIPS_AGENT := "KILL_SHIPS_AGENT"
@@ -169,6 +171,62 @@ static func _register_board_templates() -> void:
 				"body": "{TARGET_NPC} has {ITEM_NAME} waiting at {PICKUP_LOCATION}. If it hums, pretend it always did that.",
 				"briefing": "Pick up {ITEM_NAME} from {TARGET_NPC} at {PICKUP_LOCATION}. Bring it to the listed destination.",
 				"kaelen_turn_in": "{ITEM_NAME} received. Credits routed. Next time you feel like slumming it on the public board, at least pick one with fewer stains.",
+			},
+		],
+	})
+
+	_cache[TEMPLATE_DELIVERY_COURIER_PUBLIC] = MissionTemplate.create({
+		"template_id": TEMPLATE_DELIVERY_COURIER_PUBLIC,
+		"objective_type": "DELIVERY_COURIER",
+		"source_lane": "BOARD",
+		"tone_card": BOARD_TONE,
+		"write_fields": BOARD_WRITE_FIELDS,
+		"field_limits": BOARD_FIELD_LIMITS,
+		"required_placeholders": ["{ITEM_NAME}", "{DESTINATION}"],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [KAELEN_DISGUST_RULE],
+		"fallback_variants": [
+			{
+				"title": "Sealed Courier Run: {ITEM_NAME}, No Heroics",
+				"poster": "Logistics Account With A Nervous Tick",
+				"body": "Take {ITEM_NAME} to {DESTINATION}. The seal is intact, the manifest is technically readable, and nobody needs to learn why it is warm.",
+				"briefing": "Courier {ITEM_NAME} to {DESTINATION}. Keep the seal intact and the explanations short.",
+				"kaelen_turn_in": "{ITEM_NAME} delivered, public-board payout processed. I admire your commitment to jobs that smell like wet paperwork.",
+			},
+			{
+				"title": "{ITEM_NAME} Needs A Ride To {DESTINATION}",
+				"poster": "Definitely Not Avoiding Customs",
+				"body": "Courier {ITEM_NAME} to {DESTINATION}. It is legal in every jurisdiction that matters and several that do not.",
+				"briefing": "Carry {ITEM_NAME} to {DESTINATION}. The job is simple, which is usually where the trouble hides.",
+				"kaelen_turn_in": "Done. {ITEM_NAME} is off your ship and the credits cleared. Public-board courier work, Shiny? The romance is dead.",
+			},
+		],
+	})
+
+	_cache[TEMPLATE_PURCHASE_DELIVERY_PUBLIC] = MissionTemplate.create({
+		"template_id": TEMPLATE_PURCHASE_DELIVERY_PUBLIC,
+		"objective_type": "PURCHASE_DELIVERY",
+		"source_lane": "BOARD",
+		"tone_card": BOARD_TONE,
+		"write_fields": BOARD_WRITE_FIELDS,
+		"field_limits": BOARD_FIELD_LIMITS,
+		"required_placeholders": ["{QUANTITY}", "{ITEM_NAME}", "{STORE_LOCATION}", "{DESTINATION}"],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [KAELEN_DISGUST_RULE],
+		"fallback_variants": [
+			{
+				"title": "Buy {QUANTITY} {ITEM_NAME}; Do Not Haggle With The Wrong Person",
+				"poster": "Expense Report Casualty",
+				"body": "Buy {QUANTITY} {ITEM_NAME} from {STORE_LOCATION} and bring it to {DESTINATION}. I would do it myself but the store owner and I have what legal calls 'history'.",
+				"briefing": "Purchase {QUANTITY} {ITEM_NAME} at {STORE_LOCATION}, then deliver it to {DESTINATION}.",
+				"kaelen_turn_in": "{ITEM_NAME} received and public-board payout cleared. You bought retail for someone else's errand. I hope that sentence follows you.",
+			},
+			{
+				"title": "Need {QUANTITY} {ITEM_NAME} From {STORE_LOCATION}, Receipts Optional",
+				"poster": "Procurement Burner, Third Shift",
+				"body": "Buy {QUANTITY} {ITEM_NAME} from {STORE_LOCATION} and deliver to {DESTINATION}. If anyone asks, this was budgeted. If accounting asks, run.",
+				"briefing": "Get {QUANTITY} {ITEM_NAME} from {STORE_LOCATION} and bring it to {DESTINATION}.",
+				"kaelen_turn_in": "The {ITEM_NAME} is handed over. Credits processed. Public procurement jobs are how ambition goes to cough.",
 			},
 		],
 	})

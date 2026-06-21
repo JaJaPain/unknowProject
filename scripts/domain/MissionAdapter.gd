@@ -120,6 +120,48 @@ static func build_active_state(
 				objective.get("destination", "Grease Monkeys")
 			)
 			state["picked_up"] = false
+		"DELIVERY_COURIER":
+			state["item_name"] = str(
+				objective.get("item_name", "Sealed Courier Package")
+			)
+			state["origin_station_id"] = str(
+				objective.get("origin_station_id", "")
+			)
+			state["origin_display"] = str(
+				objective.get("origin_display", state["origin_station_id"])
+			)
+			state["destination_station_id"] = str(
+				objective.get("destination_station_id", "")
+			)
+			state["destination_display"] = str(
+				objective.get(
+					"destination_display",
+					state["destination_station_id"]
+				)
+			)
+			state["cargo_loaded"] = true
+		"PURCHASE_DELIVERY":
+			state["item_id"] = str(objective.get("item_id", ""))
+			state["item_name"] = str(objective.get("item_name", ""))
+			state["quantity_required"] = max(
+				1,
+				int(objective.get("quantity_required", 1))
+			)
+			state["store_station_id"] = str(
+				objective.get("store_station_id", "")
+			)
+			state["store_display"] = str(
+				objective.get("store_display", state["store_station_id"])
+			)
+			state["destination_station_id"] = str(
+				objective.get("destination_station_id", "")
+			)
+			state["destination_display"] = str(
+				objective.get(
+					"destination_display",
+					state["destination_station_id"]
+				)
+			)
 		"RECOVER_COMBAT_DROP":
 			state["target_faction"] = str(
 				objective.get("target_faction", "reavers")
@@ -273,6 +315,15 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["picked_up"] = bool(
 				normalized.get("picked_up", false)
 			)
+		"DELIVERY_COURIER":
+			normalized["cargo_loaded"] = bool(
+				normalized.get("cargo_loaded", true)
+			)
+		"PURCHASE_DELIVERY":
+			normalized["quantity_required"] = max(
+				1,
+				int(normalized.get("quantity_required", 1))
+			)
 		"RECOVER_COMBAT_DROP":
 			normalized["current_count"] = max(
 				0,
@@ -329,7 +380,15 @@ static func _legacy_objective(source: Dictionary) -> Dictionary:
 		"target_npc",
 		"part_name",
 		"destination",
+		"item_id",
 		"item_name",
+		"quantity_required",
+		"origin_station_id",
+		"origin_display",
+		"destination_station_id",
+		"destination_display",
+		"store_station_id",
+		"store_display",
 		"turn_in_location",
 		"reward_credits",
 	]:

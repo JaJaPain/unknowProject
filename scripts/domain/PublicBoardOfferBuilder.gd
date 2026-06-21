@@ -3,7 +3,10 @@ extends RefCounted
 
 const TEMPLATE_DELIVER_ORE := MissionTemplateRegistry.TEMPLATE_DELIVER_ORE_PUBLIC
 const TEMPLATE_PICKUP_SPECIAL := MissionTemplateRegistry.TEMPLATE_PICKUP_SPECIAL_PUBLIC
+const TEMPLATE_DELIVERY_COURIER := MissionTemplateRegistry.TEMPLATE_DELIVERY_COURIER_PUBLIC
+const TEMPLATE_PURCHASE_DELIVERY := MissionTemplateRegistry.TEMPLATE_PURCHASE_DELIVERY_PUBLIC
 const TEMPLATE_RECOVER_COMBAT_DROP := MissionTemplateRegistry.TEMPLATE_RECOVER_COMBAT_DROP
+const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 
 const PART_NAMES: Array[String] = [
 	"Sealed Actuator",
@@ -11,6 +14,13 @@ const PART_NAMES: Array[String] = [
 	"Coolant Bypass Cap",
 	"Audit-Proof Relay",
 	"Unlabeled Heat Sink",
+]
+const COURIER_PACKAGE_NAMES: Array[String] = [
+	"Sealed Evidence Tube",
+	"Red-Tagged Med Case",
+	"Uninsured Firmware Brick",
+	"Quiet Little Black Box",
+	"Customs-Adjacent Envelope",
 ]
 
 static var story_config_override_for_tests: SystemConfig = null
@@ -22,6 +32,12 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var pickup_offer := _build_pickup_offer(current_time_minutes)
 	if not pickup_offer.is_empty():
 		offers.append(pickup_offer)
+	var courier_offer := _build_courier_offer(current_time_minutes)
+	if not courier_offer.is_empty():
+		offers.append(courier_offer)
+	var purchase_offer := _build_purchase_offer(current_time_minutes)
+	if not purchase_offer.is_empty():
+		offers.append(purchase_offer)
 	offers.append(_build_recovery_preview())
 	_apply_cooldowns(offers)
 	return offers
@@ -160,6 +176,134 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	)
 
 
+static func _build_courier_offer(current_time_minutes: int) -> Dictionary:
+	var gs = _global_state()
+	if gs == null:
+		return {}
+	var outposts: Array = gs.get_current_pickup_outposts()
+	if outposts.is_empty():
+		return {}
+	var outpost_index := int(current_time_minutes / 35) % maxi(1, outposts.size())
+	var outpost: Dictionary = outposts[outpost_index]
+	var destination_id := str(outpost.get("id", ""))
+	var destination_display := str(outpost.get("display", destination_id))
+	if destination_id.is_empty():
+		return {}
+	var package_name := COURIER_PACKAGE_NAMES[
+		int(current_time_minutes / 20) % COURIER_PACKAGE_NAMES.size()
+	]
+	var origin_id := _main_station_id()
+	var origin_display := _main_station_display()
+	var base_reward := 160
+	var story_note := _story_board_context("delivery")
+	var dialogue := "Carry %s from %s to %s. The seal is legally more important than your comfort." % [
+		package_name,
+		origin_display,
+		destination_display,
+	]
+	var board_body := "Sealed courier job to %s. The package has opinions." % destination_display
+	if not story_note.is_empty():
+		dialogue += " Local note: %s" % story_note
+		board_body += " Local note: %s" % story_note
+	var objective := {
+		"type": "DELIVERY_COURIER",
+		"item_name": package_name,
+		"origin_station_id": origin_id,
+		"origin_display": origin_display,
+		"destination_station_id": destination_id,
+		"destination_display": destination_display,
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(
+		"Sealed Courier Run, No Heroics",
+		"neutral",
+		"Public Board",
+		dialogue,
+		objective,
+		{}
+	)
+	return _offer(
+		TEMPLATE_DELIVERY_COURIER,
+		true,
+		"[COURIER] Sealed Courier Run, No Heroics",
+		"Logistics Account With A Nervous Tick",
+		board_body,
+		"Deliver %s to %s" % [package_name, destination_display],
+		base_reward,
+		0,
+		1.0,
+		quest_data,
+		["{ITEM_NAME}", "{DESTINATION}"],
+		{
+			"{ITEM_NAME}": package_name,
+			"{DESTINATION}": destination_display,
+		}
+	)
+
+
+static func _build_purchase_offer(current_time_minutes: int) -> Dictionary:
+	var item_info := _store_purchase_item(current_time_minutes)
+	if item_info.is_empty():
+		return {}
+	var item_id := str(item_info.get("item_id", ""))
+	var item_name := str(item_info.get("display_name", item_id))
+	var quantity := int(item_info.get("quantity", 1))
+	var store_station_id := str(item_info.get("station_id", _main_station_id()))
+	var store_display := str(item_info.get("store_display", _main_station_display()))
+	var destination_id := _main_station_id()
+	var destination_display := _main_station_display()
+	var base_reward := int(item_info.get("base_price", 20)) * quantity + 90
+	var story_note := _story_board_context("purchase")
+	var dialogue := "Buy %d %s from %s and bring it to %s. Yes, this is procurement with extra steps. That is most jobs if you squint." % [
+		quantity,
+		item_name,
+		store_display,
+		destination_display,
+	]
+	var board_body := "Purchase request for %s. Someone made enemies in retail." % item_name
+	if not story_note.is_empty():
+		dialogue += " Local note: %s" % story_note
+		board_body += " Local note: %s" % story_note
+	var objective := {
+		"type": "PURCHASE_DELIVERY",
+		"item_id": item_id,
+		"item_name": item_name,
+		"quantity_required": quantity,
+		"store_station_id": store_station_id,
+		"store_display": store_display,
+		"destination_station_id": destination_id,
+		"destination_display": destination_display,
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(
+		"Purchase Request With Suspicious Receipts",
+		"neutral",
+		"Public Board",
+		dialogue,
+		objective,
+		{}
+	)
+	return _offer(
+		TEMPLATE_PURCHASE_DELIVERY,
+		true,
+		"[PROCUREMENT] Purchase Request With Suspicious Receipts",
+		"Expense Report Casualty",
+		board_body,
+		"Buy %d %s from %s" % [quantity, item_name, store_display],
+		base_reward,
+		0,
+		1.0,
+		quest_data,
+		["{QUANTITY}", "{ITEM_NAME}", "{STORE_LOCATION}", "{DESTINATION}"],
+		{
+			"{QUANTITY}": str(quantity),
+			"{ITEM_NAME}": item_name,
+			"{STORE_LOCATION}": store_display,
+			"{DESTINATION}": destination_display,
+		}
+	)
+
+
 static func _build_recovery_preview() -> Dictionary:
 	var base_reward := 840
 	var target_faction := _story_recovery_target_faction()
@@ -252,6 +396,60 @@ static func _current_system_story_pack() -> Dictionary:
 	if config == null:
 		return {}
 	return config.story_pack.duplicate(true)
+
+
+static func _store_purchase_item(current_time_minutes: int) -> Dictionary:
+	var registry = StoreRegistryScript.shared()
+	var station_id := _main_station_id()
+	var stores: Array = registry.get_stores_for_station(station_id)
+	if stores.is_empty() and station_id != "haven":
+		station_id = "haven"
+		stores = registry.get_stores_for_station(station_id)
+	if stores.is_empty():
+		return {}
+	var store = stores[0]
+	var ids: Array = store.get_catalog_ids()
+	var candidates: Array[String] = []
+	for raw_id in ids:
+		var item_id := str(raw_id)
+		var item_def = registry.get_item(item_id)
+		if item_def == null:
+			continue
+		if str(item_def.category) in ["trade_good", "ship_part", "novelty"]:
+			candidates.append(item_id)
+	if candidates.is_empty():
+		return {}
+	var selected_id := candidates[int(current_time_minutes / 25) % candidates.size()]
+	var selected_def = registry.get_item(selected_id)
+	return {
+		"item_id": selected_id,
+		"display_name": str(selected_def.display_name),
+		"base_price": int(selected_def.base_price),
+		"quantity": 1,
+		"station_id": station_id,
+		"store_display": _main_station_display(),
+	}
+
+
+static func _main_station_id() -> String:
+	var gs = _global_state()
+	if gs == null:
+		return "haven"
+	var current_system_id := str(gs.get("current_system_id"))
+	return current_system_id if not current_system_id.is_empty() else "haven"
+
+
+static func _main_station_display() -> String:
+	var story_pack := _current_system_story_pack()
+	var station_name := str(story_pack.get("station_name", ""))
+	if not station_name.is_empty():
+		return station_name
+	var gs: Node = _global_state()
+	if gs != null and str(gs.get("current_system_id")) != "start_system":
+		var local_name := str(story_pack.get("local_nickname", ""))
+		if not local_name.is_empty():
+			return "%s Station" % local_name
+	return "the main station"
 
 
 static func _current_system_config() -> SystemConfig:
@@ -384,6 +582,17 @@ static func _objective_summary(objective: Dictionary) -> String:
 				str(objective.get("part_name", "the package")),
 				str(objective.get("target_npc", "the contact")),
 				str(objective.get("target_outpost_display", "the outpost")),
+			]
+		"DELIVERY_COURIER":
+			return "Deliver %s to %s" % [
+				str(objective.get("item_name", "the package")),
+				str(objective.get("destination_display", "the destination")),
+			]
+		"PURCHASE_DELIVERY":
+			return "Buy %d %s from %s" % [
+				int(objective.get("quantity_required", 1)),
+				str(objective.get("item_name", "the item")),
+				str(objective.get("store_display", "the store")),
 			]
 		TEMPLATE_RECOVER_COMBAT_DROP:
 			return "Recover %s from %s wreckage" % [

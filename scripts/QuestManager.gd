@@ -234,6 +234,12 @@ func accept_quest(
 			last_validation_error
 		)
 		return false
+	var adapted_state: Dictionary = adapted["state"]
+	if str(adapted_state.get("objective_type", "")) == "DELIVERY_COURIER" \
+			and not GlobalState.can_accept_special():
+		last_validation_error = "Cargo hold must be empty before accepting courier cargo"
+		push_warning("[QuestManager] %s" % last_validation_error)
+		return false
 
 	var consequence = adapted["consequence"]
 	GlobalState.player_credits += consequence.credits_immediate
@@ -271,6 +277,26 @@ func accept_quest(
 				return
 			GlobalState.spawn_mission_targets(spawn_faction, spawn_count)
 		)
+	elif active_quest["objective_type"] == "DELIVERY_COURIER":
+		var item_name := str(active_quest.get("item_name", "Courier Package"))
+		var origin_display := str(active_quest.get("origin_display", "the station"))
+		var destination_display := str(
+			active_quest.get("destination_display", "the destination")
+		)
+		var description := "Courier cargo accepted at %s. Deliver to %s." % [
+			origin_display,
+			destination_display,
+		]
+		if not GlobalState.accept_special(
+			item_name,
+			description,
+			origin_display,
+			destination_display
+		):
+			_collection.remove(new_mission.runtime_id)
+			last_validation_error = "Cargo hold rejected courier package"
+			push_warning("[QuestManager] %s" % last_validation_error)
+			return false
 
 	print(
 		"[QuestManager] Quest accepted: ",
@@ -681,6 +707,10 @@ func _despawn_ceasefire_targets(faction_name: String) -> void:
 func _apply_completion_hints(hints: Dictionary) -> void:
 	if hints.get("remove_ore", 0.0) > 0.0:
 		GlobalState.remove_ore(hints["remove_ore"])
+	var item_id := str(hints.get("remove_inventory_item", ""))
+	var item_quantity := int(hints.get("remove_inventory_quantity", 0))
+	if not item_id.is_empty() and item_quantity > 0:
+		GlobalState.inventory.remove(item_id, item_quantity)
 	if hints.get("clear_cargo", false):
 		GlobalState.clear_cargo()
 

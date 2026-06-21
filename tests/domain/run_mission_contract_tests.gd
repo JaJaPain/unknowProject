@@ -20,6 +20,8 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_pickup_offer()
+	_test_delivery_courier_offer()
+	_test_purchase_delivery_offer()
 	_test_recovery_offer()
 	_test_timed_offer()
 	_test_public_board_text_generation()
@@ -135,6 +137,75 @@ func _test_pickup_offer() -> void:
 	)
 
 
+func _test_delivery_courier_offer() -> void:
+	var adapted := AdapterType.build_active_state(
+		_offer(
+			"Sealed Courier Run",
+			"neutral",
+			"Public Board",
+			{
+				"type": "DELIVERY_COURIER",
+				"item_name": "Sealed Evidence Tube",
+				"origin_station_id": "start_system",
+				"origin_display": "Main Station",
+				"destination_station_id": "kova",
+				"destination_display": "Kova Station",
+				"reward_credits": 160,
+			}
+		),
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.delivery_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Valid courier offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		state.get("objective_type") == "DELIVERY_COURIER"
+			and state.get("item_name") == "Sealed Evidence Tube"
+			and state.get("destination_station_id") == "kova"
+			and bool(state.get("cargo_loaded", false)),
+		"Courier offer did not produce delivery runtime fields."
+	)
+
+
+func _test_purchase_delivery_offer() -> void:
+	var adapted := AdapterType.build_active_state(
+		_offer(
+			"Procurement Run",
+			"neutral",
+			"Public Board",
+			{
+				"type": "PURCHASE_DELIVERY",
+				"item_id": "data_chip",
+				"item_name": "Data Chip",
+				"quantity_required": 1,
+				"store_station_id": "haven",
+				"store_display": "Main Station",
+				"destination_station_id": "start_system",
+				"destination_display": "Main Station",
+				"reward_credits": 130,
+			}
+		),
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.purchase_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Valid purchase-delivery offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		state.get("objective_type") == "PURCHASE_DELIVERY"
+			and state.get("item_id") == "data_chip"
+			and int(state.get("quantity_required")) == 1,
+		"Purchase offer did not produce inventory runtime fields."
+	)
+
+
 func _test_recovery_offer() -> void:
 	var adapted := AdapterType.build_active_state(
 		_offer(
@@ -220,7 +291,42 @@ func _test_timed_offer() -> void:
 
 func _test_public_board_text_generation() -> void:
 	var offers := PublicBoardOfferBuilderType.build_offers(480)
-	_expect(offers.size() >= 2, "Public board did not build initial offers.")
+	_expect(offers.size() >= 4, "Public board did not build varied offers.")
+	_expect(
+		_has_offer_template(
+			offers,
+			"DELIVERY_COURIER_PUBLIC"
+		),
+		"Public board did not include a courier offer."
+	)
+	_expect(
+		_has_offer_template(
+			offers,
+			"PURCHASE_DELIVERY_PUBLIC"
+		),
+		"Public board did not include a purchase-delivery offer."
+	)
+	for generated_offer in offers:
+		var rendered_offer := PublicBoardTextGeneratorType.fallback_offer(
+			generated_offer,
+			1
+		)
+		var generated_quest: Dictionary = rendered_offer.get("quest_data", {})
+		var adapted_generated := AdapterType.build_active_state(
+			generated_quest,
+			generated_quest.get("choices", [])[0],
+			"mission.runtime.board_%s" % str(
+				generated_offer.get("template_id", "")
+			).sha256_text().substr(0, 8),
+			"start_system",
+			480
+		)
+		_expect(
+			adapted_generated["validation"].is_valid(),
+			"Public-board offer failed active-state validation: %s" % str(
+				generated_offer.get("template_id", "")
+			)
+		)
 	var offer: Dictionary = offers[0]
 	var request := PublicBoardTextGeneratorType.build_generation_request(offer)
 	_expect(
@@ -416,6 +522,13 @@ func _choice(
 			"dialogue_response": "Proceed.",
 		},
 	}
+
+
+func _has_offer_template(offers: Array, template_id: String) -> bool:
+	for offer in offers:
+		if str(offer.get("template_id", "")) == template_id:
+			return true
+	return false
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -94,6 +94,40 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 						"Pickup missions require '%s'." % field,
 						field
 					)
+		ObjectiveType.TYPE_DELIVERY_COURIER:
+			for field in [
+				"item_name",
+				"origin_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				if str(source.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_delivery_field",
+						"Courier missions require '%s'." % field,
+						field
+					)
+			if not bool(source.get("cargo_loaded", false)):
+				result.add_error(
+					"missing_delivery_cargo",
+					"Courier missions must load cargo on acceptance.",
+					"cargo_loaded"
+				)
+		ObjectiveType.TYPE_PURCHASE_DELIVERY:
+			for field in [
+				"item_id",
+				"item_name",
+				"store_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				if str(source.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_purchase_field",
+						"Purchase missions require '%s'." % field,
+						field
+					)
+			_require_positive(source, "quantity_required", result)
 		ObjectiveType.TYPE_RECOVER_COMBAT_DROP:
 			_require_positive(source, "count_required", result)
 			if int(source.get("current_count", -1)) < 0:

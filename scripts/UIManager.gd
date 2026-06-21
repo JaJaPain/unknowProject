@@ -4420,7 +4420,9 @@ func _should_show_public_board_turn_in() -> bool:
 	var cap = MissionCapabilityRegistry.get_for_type(
 		str(board_mission.data.get("objective_type", ""))
 	)
-	return cap != null and cap.is_completed(board_mission.data)
+	return cap != null \
+		and _mission_can_turn_in_at_current_station(board_mission.data) \
+		and cap.is_completed(board_mission.data)
 
 
 func _on_public_board_turn_in_pressed() -> void:
@@ -4435,6 +4437,27 @@ func _on_public_board_turn_in_pressed() -> void:
 	dock_panel.visible = false
 	agent_panel.visible = true
 	_on_agent_complete_pressed()
+
+
+func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool:
+	var objective_type := str(mission_data.get("objective_type", ""))
+	if objective_type not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		return true
+	var expected := str(mission_data.get("destination_station_id", ""))
+	if expected.is_empty():
+		return true
+	return _current_turn_in_station_id() == expected
+
+
+func _current_turn_in_station_id() -> String:
+	if not current_station or not is_instance_valid(current_station):
+		return ""
+	if str(current_station.get("station_type")) == "outpost":
+		return _current_station_contact_id()
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty() or station_id.begins_with("station."):
+		return str(GlobalState.current_system_id)
+	return station_id
 
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
