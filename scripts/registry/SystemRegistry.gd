@@ -152,7 +152,11 @@ func export_generated_systems() -> Array[Dictionary]:
 	var output: Array[Dictionary] = []
 	for definition: SystemDefinition in systems.values():
 		if definition.origin == "generated":
-			output.append(definition.to_dict())
+			var record := definition.to_dict()
+			var config := _config_for_definition(definition)
+			if config != null:
+				record["config"] = config.to_dict()
+			output.append(record)
 	return output
 
 
@@ -178,6 +182,7 @@ func import_generated_systems(records: Variant) -> ValidationResult:
 			continue
 		var system_id := DomainId.canonicalize(record.get("id", ""))
 		if systems.has(system_id):
+			_import_generated_config(record)
 			continue
 		var gate_defs: Variant = record.get("gates", [])
 		if not gate_defs is Array:
@@ -203,6 +208,8 @@ func import_generated_systems(records: Variant) -> ValidationResult:
 			continue
 		var registered := register_generated_system(record, typed_gate_defs)
 		result.merge(registered, "generated_systems.%d" % index)
+		if registered.is_valid():
+			_import_generated_config(record)
 	return result
 
 
@@ -217,10 +224,31 @@ func get_generated_config(system_id: String) -> SystemConfig:
 	return _generated_configs.get(system_id) as SystemConfig
 
 
-func _build_generated_root(definition: SystemDefinition) -> Node3D:
+func _config_for_definition(definition: SystemDefinition) -> SystemConfig:
 	var config: SystemConfig = _generated_configs.get(str(definition.id))
 	if config == null:
 		config = _generated_configs.get(definition.legacy_id)
+	return config
+
+
+func _import_generated_config(record: Dictionary) -> void:
+	var raw_config: Variant = record.get("config", {})
+	if not raw_config is Dictionary:
+		return
+	var config := SystemConfig.from_dict(raw_config)
+	if config.system_id.is_empty():
+		config.system_id = str(record.get("id", ""))
+	if config.legacy_id.is_empty():
+		config.legacy_id = str(record.get("legacy_id", ""))
+	if config.system_name.is_empty():
+		config.system_name = str(record.get("display_name", ""))
+	set_generated_config(config.system_id, config)
+	if not config.legacy_id.is_empty():
+		set_generated_config(config.legacy_id, config)
+
+
+func _build_generated_root(definition: SystemDefinition) -> Node3D:
+	var config := _config_for_definition(definition)
 	if config == null:
 		push_error("[SystemRegistry] No config for generated system '%s'." % definition.id)
 		return null

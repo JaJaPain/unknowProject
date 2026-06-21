@@ -228,6 +228,7 @@ func _test_registry_generated_system() -> void:
 		_expect(false, "Default registry invalid, cannot test generated registration.")
 		return
 	var config := SystemConfig.from_seed("Gamma Station", "system.gen.gamma", 7777)
+	config.story_pack["persist_marker"] = "registry roundtrip"
 	registry.set_generated_config("system.gen.gamma", config)
 	registry.set_generated_config(config.legacy_id, config)
 
@@ -268,6 +269,13 @@ func _test_registry_generated_system() -> void:
 	_expect(imported_registry.has_system("system.gen.gamma"), "Imported generated system not found.")
 	var imported_gate := imported_registry.get_gate("gate.gen.gamma.to_start")
 	_expect(imported_gate != null, "Imported generated gate not found.")
+	var imported_config := imported_registry.get_generated_config("system.gen.gamma")
+	_expect(imported_config != null, "Imported generated config not restored.")
+	if imported_config != null:
+		_expect(
+			imported_config.story_pack == config.story_pack,
+			"Imported generated config did not preserve story pack."
+		)
 
 	var duplicate_result := registry.register_generated_system(
 		{

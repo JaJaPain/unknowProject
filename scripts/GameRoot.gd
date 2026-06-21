@@ -577,8 +577,7 @@ func _init_generated_system_configs() -> void:
 		var existing_config := system_registry.get_generated_config(sys_id)
 		var expected_seed: int = sys_id.hash() ^ GlobalState.campaign_seed
 		if existing_config != null \
-				and existing_config.seed_value == expected_seed \
-				and frontier_factions.is_empty():
+				and existing_config.seed_value == expected_seed:
 			continue
 		var seed_val: int = expected_seed
 		var config := SystemConfig.from_seed(

@@ -176,6 +176,126 @@ static func from_seed(
 	return config
 
 
+func to_dict() -> Dictionary:
+	var nebula_color_data: Array[Dictionary] = []
+	for color in nebula_colors:
+		if color is Color:
+			nebula_color_data.append(_color_to_dict(color))
+	return {
+		"system_name": system_name,
+		"system_id": system_id,
+		"legacy_id": legacy_id,
+		"seed_value": seed_value,
+		"star_type": star_type,
+		"star_color": _color_to_dict(star_color),
+		"star_energy": star_energy,
+		"star_light_energy": star_light_energy,
+		"ambient_color": _color_to_dict(ambient_color),
+		"ambient_energy": ambient_energy,
+		"planet_count_min": planet_count_min,
+		"planet_count_max": planet_count_max,
+		"station_count": station_count,
+		"difficulty_tier": difficulty_tier,
+		"difficulty_multiplier": difficulty_multiplier,
+		"faction_weights": faction_weights.duplicate(true),
+		"faction_id_lookup": faction_id_lookup.duplicate(true),
+		"faction_ship_styles": faction_ship_styles.duplicate(true),
+		"npc_patrol_count": npc_patrol_count,
+		"npc_minor_chance": npc_minor_chance,
+		"npc_minor_max": npc_minor_max,
+		"outbound_gate_count": outbound_gate_count,
+		"starfield_seed": starfield_seed,
+		"starfield_tint": _color_to_dict(starfield_tint),
+		"nebula_seed": nebula_seed,
+		"nebula_colors": nebula_color_data,
+		"nebula_brightness": nebula_brightness,
+		"nebula_layer_count": nebula_layer_count,
+		"story_pack": story_pack.duplicate(true),
+	}
+
+
+static func from_dict(data: Dictionary) -> SystemConfig:
+	var config := SystemConfig.new()
+	config.system_name = str(data.get("system_name", config.system_name))
+	config.system_id = str(data.get("system_id", config.system_id))
+	config.legacy_id = str(data.get("legacy_id", config.legacy_id))
+	config.seed_value = int(data.get("seed_value", config.seed_value))
+	config.star_type = str(data.get("star_type", config.star_type))
+	config.star_color = _color_from_variant(
+		data.get("star_color", config.star_color),
+		config.star_color
+	)
+	config.star_energy = float(data.get("star_energy", config.star_energy))
+	config.star_light_energy = float(
+		data.get("star_light_energy", config.star_light_energy)
+	)
+	config.ambient_color = _color_from_variant(
+		data.get("ambient_color", config.ambient_color),
+		config.ambient_color
+	)
+	config.ambient_energy = float(data.get("ambient_energy", config.ambient_energy))
+	config.planet_count_min = int(data.get("planet_count_min", config.planet_count_min))
+	config.planet_count_max = int(data.get("planet_count_max", config.planet_count_max))
+	config.station_count = int(data.get("station_count", config.station_count))
+	config.difficulty_tier = int(data.get("difficulty_tier", config.difficulty_tier))
+	config.difficulty_multiplier = float(data.get("difficulty_multiplier", config.difficulty_multiplier))
+	if data.get("faction_weights", {}) is Dictionary:
+		config.faction_weights = (data.get("faction_weights", {}) as Dictionary).duplicate(true)
+	if data.get("faction_id_lookup", {}) is Dictionary:
+		config.faction_id_lookup = (data.get("faction_id_lookup", {}) as Dictionary).duplicate(true)
+	if data.get("faction_ship_styles", {}) is Dictionary:
+		config.faction_ship_styles = (data.get("faction_ship_styles", {}) as Dictionary).duplicate(true)
+	config.npc_patrol_count = int(data.get("npc_patrol_count", config.npc_patrol_count))
+	config.npc_minor_chance = float(data.get("npc_minor_chance", config.npc_minor_chance))
+	config.npc_minor_max = int(data.get("npc_minor_max", config.npc_minor_max))
+	config.outbound_gate_count = int(data.get("outbound_gate_count", config.outbound_gate_count))
+	config.starfield_seed = float(data.get("starfield_seed", config.starfield_seed))
+	config.starfield_tint = _color_from_variant(
+		data.get("starfield_tint", config.starfield_tint),
+		config.starfield_tint
+	)
+	config.nebula_seed = int(data.get("nebula_seed", config.nebula_seed))
+	config.nebula_colors.clear()
+	var raw_nebula_colors: Variant = data.get("nebula_colors", [])
+	if raw_nebula_colors is Array:
+		for raw_color in raw_nebula_colors:
+			config.nebula_colors.append(
+				_color_from_variant(raw_color, Color(0.6, 0.7, 1.0))
+			)
+	config.nebula_brightness = float(
+		data.get("nebula_brightness", config.nebula_brightness)
+	)
+	config.nebula_layer_count = int(
+		data.get("nebula_layer_count", config.nebula_layer_count)
+	)
+	if data.get("story_pack", {}) is Dictionary:
+		config.story_pack = (data.get("story_pack", {}) as Dictionary).duplicate(true)
+	return config
+
+
+static func _color_to_dict(color: Color) -> Dictionary:
+	return {
+		"r": color.r,
+		"g": color.g,
+		"b": color.b,
+		"a": color.a,
+	}
+
+
+static func _color_from_variant(raw_color: Variant, fallback: Color) -> Color:
+	if raw_color is Color:
+		return raw_color
+	if raw_color is Dictionary:
+		var data := raw_color as Dictionary
+		return Color(
+			float(data.get("r", fallback.r)),
+			float(data.get("g", fallback.g)),
+			float(data.get("b", fallback.b)),
+			float(data.get("a", fallback.a))
+		)
+	return fallback
+
+
 func canonical_faction_id(faction_name: String) -> String:
 	return str(faction_id_lookup.get(faction_name, "faction.%s" % faction_name))
 

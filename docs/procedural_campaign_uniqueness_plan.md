@@ -842,7 +842,7 @@ Goal: make each system feel like a place.
   trails.
 - [x] Include first-pass rumor clue slots that can attach local gossip to
   campaign-level rumor trails.
-- [ ] Persist story packs with generated system state instead of relying only on
+- [x] Persist story packs with generated system state instead of relying only on
   deterministic config regeneration.
 - Advance unresolved local arcs over time, even when the player ignores them.
 - Allow remote consequences for faction control, economy, patrols, rumors, and
