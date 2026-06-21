@@ -102,6 +102,7 @@ var sell_btn: Button
 var repair_btn: Button
 var agent_service_btn: Button
 var maintenance_bay_btn: Button
+var station_lounge_btn: Button
 var ship_upgrades_btn: Button
 var ship_upgrades_panel: Panel
 var su_weapons_btn: Button
@@ -121,12 +122,13 @@ var hear_gossip_btn: Button
 var public_board_btn: Button
 
 # Dock submenu state. Every dockable station (main station, outposts)
-# shows the same two submenus:
-#   "services"     — sell ore, talk to agent, maintenance bay entry
-#   "maintenance"  — repair, upgrade cargo, upgrade laser, back to services
+# shows station services plus focused submenus:
+#   "services"     — sell ore, agent work, board, maintenance/lounge entry
+#   "maintenance"  — repair, upgrades, mechanic chatter
+#   "lounge"       — local contacts, rumors, and faction chatter
 # Default is "services" so a fresh dock lands on the station's primary
 # offerings. The Grease Monkeys hangar image is shown only in "maintenance".
-enum DockSubmenu { SERVICES, MAINTENANCE }
+enum DockSubmenu { SERVICES, MAINTENANCE, LOUNGE }
 var current_submenu: DockSubmenu = DockSubmenu.SERVICES
 
 var agent_panel: Panel
@@ -1216,6 +1218,11 @@ func _create_dock_menu():
 	public_board_btn.text = "Public Contract Board"
 	public_board_btn.pressed.connect(_on_public_board_pressed)
 	vbox.add_child(public_board_btn)
+
+	station_lounge_btn = Button.new()
+	station_lounge_btn.text = "Station Lounge"
+	station_lounge_btn.pressed.connect(_on_station_lounge_pressed)
+	vbox.add_child(station_lounge_btn)
 
 	maintenance_bay_btn = Button.new()
 	maintenance_bay_btn.text = "Maintenance Bay (Grease Monkeys)"
@@ -3232,6 +3239,7 @@ func _render_dock_submenu() -> void:
 		sell_btn.visible = false
 		agent_service_btn.visible = false
 		public_board_btn.visible = false
+		station_lounge_btn.visible = false
 		maintenance_bay_btn.visible = false
 		inventory_btn.visible = false
 		ship_upgrades_btn.visible = true
@@ -3262,6 +3270,28 @@ func _render_dock_submenu() -> void:
 		else:
 			if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 				mechanic_intro_panel.visible = false
+	elif current_submenu == DockSubmenu.LOUNGE:
+		dock_label.text = "%s LOUNGE" % _current_station_display_name().to_upper()
+		sell_btn.visible = false
+		agent_service_btn.visible = false
+		public_board_btn.visible = false
+		station_lounge_btn.visible = false
+		maintenance_bay_btn.visible = false
+		inventory_btn.visible = false
+		ship_upgrades_btn.visible = false
+		repair_btn.visible = false
+		test_pickup_btn.visible = false
+		test_deliver_btn.visible = false
+		test_pickup_part_btn.visible = false
+		hear_gossip_btn.visible = false
+		ask_for_part_btn.visible = false
+		deliver_part_btn.visible = false
+		back_to_services_btn.visible = true
+		_render_station_contacts(true)
+		if dock_background:
+			dock_background.visible = false
+		if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
+			mechanic_intro_panel.visible = false
 	else:
 		# Services submenu (default): at a full-service station, show
 		# sell/agent/maintenance entry. At an outpost, show only the
@@ -3270,6 +3300,7 @@ func _render_dock_submenu() -> void:
 		sell_btn.visible = not is_outpost
 		agent_service_btn.visible = not is_outpost
 		public_board_btn.visible = not is_outpost
+		station_lounge_btn.visible = _current_station_has_contacts()
 		maintenance_bay_btn.visible = not is_outpost
 		inventory_btn.visible = true
 		ship_upgrades_btn.visible = false
@@ -3301,9 +3332,9 @@ func _render_dock_submenu() -> void:
 				ask_for_part_btn.text = "Ask %s for %s" % [npc_name, part_name]
 		
 		test_pickup_part_btn.visible = DEBUG_TESTS and is_outpost
-		hear_gossip_btn.visible = is_outpost
+		hear_gossip_btn.visible = false
 		back_to_services_btn.visible = false
-		_render_station_contacts(true)
+		_render_station_contacts(false)
 		if dock_background:
 			dock_background.visible = false
 		# Mechanic intro belongs only on the maintenance submenu. On
@@ -3373,6 +3404,13 @@ func _current_station_contact_id() -> String:
 	if station_id.is_empty() or station_id == "<null>":
 		station_id = str(current_station.get_meta("world_id", ""))
 	return station_id
+
+
+func _current_station_has_contacts() -> bool:
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty():
+		return false
+	return not GlobalState.get_minor_npcs_at_outpost(station_id).is_empty()
 
 
 func _on_station_contact_pressed(npc_name: String) -> void:
@@ -3820,6 +3858,12 @@ func _title_case_words(value: String) -> String:
 func _on_maintenance_bay_pressed() -> void:
 	SpeechService.stop()
 	current_submenu = DockSubmenu.MAINTENANCE
+	_render_dock_submenu()
+
+
+func _on_station_lounge_pressed() -> void:
+	SpeechService.stop()
+	current_submenu = DockSubmenu.LOUNGE
 	_render_dock_submenu()
 
 

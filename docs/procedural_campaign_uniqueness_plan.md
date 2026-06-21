@@ -594,6 +594,11 @@ services panel, show role/faction context, answer faction/trouble/rumor topics
 with current system and station facts, and faction contacts can broker local
 work through the existing quest path.
 
+Next UI direction: move casual station people into a dedicated Station Lounge
+instead of stacking them on top of core station services. The Lounge should
+hold generated locals, faction contacts not currently giving formal work,
+rumors, optional Kaelen appearances, and future social hooks.
+
 Goal: station contacts should be more than list decorations and hidden quest
 seeds.
 
@@ -604,11 +609,14 @@ First version:
 
 - [x] Clicking a faction contact opens a focused contact panel.
 - [x] Show portrait, name, role, faction, and a short generated local greeting.
+- [x] Move station contact browsing into a Station Lounge submenu.
 - [x] Offer actions:
   - [x] Ask about the faction.
   - [x] Ask about local trouble.
   - [x] Ask about rumors.
   - [x] Request work from this contact.
+- [ ] Let Kaelen appear in the lounge occasionally with system-aware commentary.
+- [ ] Let lounge rumors point toward real discoveries, secrets, or easter eggs.
 - The first implementation can use structured local facts and existing LLM
   request paths; it does not need a full relationship system yet.
 

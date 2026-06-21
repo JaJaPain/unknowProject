@@ -5813,7 +5813,7 @@ func _run_services_smoke_test() -> void:
 	ui.public_board_panel.visible = false
 	ui.agent_panel.visible = false
 
-	# Outposts expose gossip and pickup routing, but not station commerce,
+	# Outposts expose the lounge and pickup routing, but not station commerce,
 	# agents, maintenance, repair, or upgrades.
 	ui.current_station = iron_reach
 	ui.current_submenu = ui.DockSubmenu.SERVICES
@@ -5823,20 +5823,31 @@ func _run_services_smoke_test() -> void:
 			or ui.maintenance_bay_btn.visible \
 			or ui.repair_btn.visible \
 			or ui.ship_upgrades_btn.visible \
-			or not ui.hear_gossip_btn.visible:
+			or ui.hear_gossip_btn.visible \
+			or not ui.station_lounge_btn.visible:
 		_fail_services_smoke_test("Outpost service restrictions were not rendered correctly.")
+		return
+	ui.call("_on_station_lounge_pressed")
+	if ui.current_submenu != ui.DockSubmenu.LOUNGE \
+			or not ui.station_contacts_panel.visible \
+			or not ui.back_to_services_btn.visible:
+		_fail_services_smoke_test("Station Lounge did not open outpost contacts.")
 		return
 
 	var gossip_holder := {"flavor": {}}
 	var capture_gossip := func(flavor: Dictionary) -> void:
 		gossip_holder["flavor"] = flavor
 	GlobalState.npc_flavor_spoken.connect(capture_gossip, CONNECT_ONE_SHOT)
-	ui.call("_on_hear_gossip_pressed")
+	var lounge_contacts := GlobalState.get_minor_npcs_at_outpost("iron_reach")
+	if lounge_contacts.is_empty():
+		_fail_services_smoke_test("Station Lounge had no local contacts.")
+		return
+	ui.call("_on_station_contact_action_pressed", str(lounge_contacts[0]), "rumor")
 	var flavor: Dictionary = gossip_holder["flavor"]
 	if flavor.is_empty() \
 			or str(flavor.get("line", "")).is_empty() \
 			or str(flavor.get("voice_profile_id", "")).is_empty():
-		_fail_services_smoke_test("Hear Gossip did not emit display and voice data.")
+		_fail_services_smoke_test("Station Lounge rumor did not emit display and voice data.")
 		return
 	if str(flavor.get("line", "")).contains("Shiny") \
 			and not GlobalState.is_kaelen_voice(
@@ -5849,8 +5860,9 @@ func _run_services_smoke_test() -> void:
 				str(flavor["line"]),
 				str(flavor["voice_profile_id"])
 			):
-		_fail_services_smoke_test("Outpost gossip was not displayed in the dock UI.")
+		_fail_services_smoke_test("Station Lounge rumor was not displayed in the dock UI.")
 		return
+	ui.current_submenu = ui.DockSubmenu.SERVICES
 
 	QuestManager.active_quest = {
 		"title": "Services Pickup",
