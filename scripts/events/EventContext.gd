@@ -7,6 +7,7 @@ var player_credits: int = 0
 var reputations: Dictionary = {}
 var active_mission_risk_tags: Array[String] = []
 var event_history: Array[Dictionary] = []
+var system_registry = null
 
 
 func to_dict() -> Dictionary:

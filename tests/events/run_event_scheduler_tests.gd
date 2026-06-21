@@ -4,6 +4,9 @@ const EventSchedulerScript = preload("res://scripts/events/EventScheduler.gd")
 const EventHistoryScript = preload("res://scripts/events/EventHistory.gd")
 const EventTypeScript = preload("res://scripts/events/EventType.gd")
 const EventContextScript = preload("res://scripts/events/EventContext.gd")
+const SystemRegistryScript = preload("res://scripts/registry/SystemRegistry.gd")
+const SystemConfigScript = preload("res://scripts/generation/SystemConfig.gd")
+const SystemStoryArcEventScript = preload("res://scripts/events/types/SystemStoryArcEvent.gd")
 
 var _failures: Array[String] = []
 var _fired_events: Array[Dictionary] = []
@@ -19,6 +22,7 @@ func _initialize() -> void:
 	_test_scheduler_type_cooldown()
 	_test_scheduler_seed_determinism()
 	_test_scheduler_save_restore()
+	_test_system_story_arc_event_advances_pack()
 
 	if _failures.is_empty():
 		print("[PASS] Event scheduler tests")
@@ -199,3 +203,42 @@ func _test_scheduler_save_restore() -> void:
 	sched2.register_event_type(_make_test_event("test_d", true), 30)
 	sched2.restore_state(state)
 	_expect(sched2.history.last_time_for_type("test_d") == 100, "History should restore")
+
+
+func _test_system_story_arc_event_advances_pack() -> void:
+	var registry := SystemRegistryScript.load_default()
+	if not registry.is_valid():
+		_expect(false, "Default registry invalid, cannot test story arc event.")
+		return
+	var system_id := "system.gen.arc_event"
+	var config := SystemConfigScript.from_seed("Arc Event", system_id, 6161)
+	registry.set_generated_config(system_id, config)
+	registry.register_generated_system(
+		{
+			"id": system_id,
+			"legacy_id": config.legacy_id,
+			"display_name": "Arc Event",
+			"station_ids": [],
+			"faction_ids": [],
+		},
+		[]
+	)
+	var sched = EventSchedulerScript.new()
+	sched.register_event_type(SystemStoryArcEventScript.new(), 30)
+	var ctx := _make_context(180, system_id)
+	ctx.just_arrived = false
+	ctx.system_registry = registry
+	var fired_details: Array[Dictionary] = []
+	sched.event_triggered.connect(func(_tid: String, details: Dictionary):
+		fired_details.append(details)
+	)
+	sched.tick(180, ctx)
+	_expect(fired_details.size() == 1, "Story arc event should fire once.")
+	_expect(
+		int(config.story_pack.get("arc_pressure", 0)) == 1,
+		"Story arc event did not advance arc pressure."
+	)
+	_expect(
+		(config.story_pack.get("arc_events", []) as Array).size() == 1,
+		"Story arc event did not record an arc event."
+	)

@@ -667,9 +667,11 @@ func _init_event_scheduler() -> void:
 	var EventSchedulerScript = preload("res://scripts/events/EventScheduler.gd")
 	var InterceptorEventScript = preload("res://scripts/events/types/InterceptorEvent.gd")
 	var GateRumorEventScript = preload("res://scripts/events/types/GateRumorEvent.gd")
+	var SystemStoryArcEventScript = preload("res://scripts/events/types/SystemStoryArcEvent.gd")
 	event_scheduler = EventSchedulerScript.shared()
 	event_scheduler.register_event_type(InterceptorEventScript.new(), 90)
 	event_scheduler.register_event_type(GateRumorEventScript.new(), 120)
+	event_scheduler.register_event_type(SystemStoryArcEventScript.new(), 180)
 
 
 func _tick_events() -> void:
@@ -681,6 +683,7 @@ func _tick_events() -> void:
 	ctx.current_system_id = GlobalState.current_system_id
 	ctx.player_credits = GlobalState.player_credits
 	ctx.reputations = GlobalState.reputations.duplicate()
+	ctx.system_registry = system_registry
 	var risk_tags: Array[String] = []
 	for m in QuestManager.get_mission_collection().get_all_active():
 		for tag in m.data.get("risk_tags", []):

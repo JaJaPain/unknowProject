@@ -844,7 +844,8 @@ Goal: make each system feel like a place.
   campaign-level rumor trails.
 - [x] Persist story packs with generated system state instead of relying only on
   deterministic config regeneration.
-- Advance unresolved local arcs over time, even when the player ignores them.
+- [x] Advance unresolved local arcs over time, even when the player ignores
+  them.
 - Allow remote consequences for faction control, economy, patrols, rumors, and
   service availability.
 - Gate named-NPC irreversible consequences behind player presence or direct
