@@ -615,7 +615,7 @@ First version:
   - [x] Ask about local trouble.
   - [x] Ask about rumors.
   - [x] Request work from this contact.
-- [ ] Let Kaelen appear in the lounge occasionally with system-aware commentary.
+- [x] Let Kaelen appear in the lounge with system-aware commentary.
 - [ ] Let lounge rumors point toward real discoveries, secrets, or easter eggs.
 - The first implementation can use structured local facts and existing LLM
   request paths; it does not need a full relationship system yet.

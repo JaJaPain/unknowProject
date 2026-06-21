@@ -3355,13 +3355,16 @@ func _render_station_contacts(should_show: bool) -> void:
 		station_contacts_panel.visible = false
 		_selected_station_contact = ""
 		return
+	var show_kaelen := _kaelen_lounge_available()
 	var station_id := _current_station_contact_id()
-	if station_id.is_empty():
+	if station_id.is_empty() and not show_kaelen:
 		station_contacts_panel.visible = false
 		_selected_station_contact = ""
 		return
-	var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
-	if contacts.is_empty():
+	var contacts: Array = []
+	if not station_id.is_empty():
+		contacts = GlobalState.get_minor_npcs_at_outpost(station_id)
+	if contacts.is_empty() and not show_kaelen:
 		station_contacts_panel.visible = false
 		_selected_station_contact = ""
 		return
@@ -3370,10 +3373,16 @@ func _render_station_contacts(should_show: bool) -> void:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
 	var title := Label.new()
-	title.text = "Station Contacts"
+	title.text = "Station Lounge"
 	title.add_theme_font_size_override("font_size", 13)
 	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
 	station_contacts_list.add_child(title)
+	if show_kaelen:
+		var kaelen_btn := Button.new()
+		kaelen_btn.text = "Broker Kaelen  [Broker]"
+		kaelen_btn.tooltip_text = "Catch Kaelen between deals."
+		kaelen_btn.pressed.connect(_on_kaelen_lounge_pressed)
+		station_contacts_list.add_child(kaelen_btn)
 	for npc_name in contacts:
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
 		var role := str(npc_data.get("role", "Local contact"))
@@ -3408,9 +3417,78 @@ func _current_station_contact_id() -> String:
 
 func _current_station_has_contacts() -> bool:
 	var station_id := _current_station_contact_id()
-	if station_id.is_empty():
+	return _kaelen_lounge_available() or (
+		not station_id.is_empty()
+			and not GlobalState.get_minor_npcs_at_outpost(station_id).is_empty()
+	)
+
+
+func _kaelen_lounge_available() -> bool:
+	if current_station == null or not is_instance_valid(current_station):
 		return false
-	return not GlobalState.get_minor_npcs_at_outpost(station_id).is_empty()
+	if str(current_station.get("station_type")) == "outpost":
+		return false
+	if GlobalState.is_current_system_home():
+		return true
+	return GlobalState.current_system_id in GlobalState.kaelen_arrival_systems_seen
+
+
+func _on_kaelen_lounge_pressed() -> void:
+	var line := _kaelen_lounge_line()
+	var color := Color(0.0, 0.95, 1.0)
+	var portrait := GameContentRegistry.shared().portrait_texture(
+		_kaelen_mood_portrait_id("amused")
+	)
+	show_dock_message(line, "Broker Kaelen", color, portrait)
+	GlobalState.emit_npc_flavor({
+		"npc_name": "Broker Kaelen",
+		"line": line,
+		"color": color,
+		"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
+	})
+
+
+func _kaelen_lounge_line() -> String:
+	var system_name := _get_current_system_display_name()
+	if system_name.is_empty():
+		system_name = GlobalState.current_system_id.capitalize()
+	var station_name := _current_station_display_name()
+	if station_name.is_empty() or station_name == "this station":
+		station_name = "the station lounge"
+	var local_factions := _current_station_lounge_faction_names()
+	if local_factions.is_empty():
+		local_factions = "whoever is still solvent"
+	if GlobalState.is_current_system_home():
+		return "Fancy seeing you in the lounge, Shiny. %s is where deals pretend to be conversations. Try not to sign anything with bite marks." % station_name
+	return "Look at you, all the way out in %s and still surprised I found the bar first. Local drama says %s. Which means work, naturally." % [
+		system_name,
+		local_factions,
+	]
+
+
+func _current_station_lounge_faction_names() -> String:
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty():
+		return ""
+	var names: Array[String] = []
+	for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+		var faction := str(npc_data.get("faction", ""))
+		if faction.is_empty():
+			continue
+		var faction_name := str(
+			GlobalState.faction_info(faction).get("name", faction.capitalize())
+		)
+		if faction_name not in names:
+			names.append(faction_name)
+	if names.is_empty():
+		return ""
+	if names.size() == 1:
+		return names[0]
+	return "%s and %s" % [
+		", ".join(names.slice(0, names.size() - 1)),
+		names[names.size() - 1],
+	]
 
 
 func _on_station_contact_pressed(npc_name: String) -> void:
@@ -5928,14 +6006,17 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# guard runs) if unknown.
 	var display_voice: String = "voice.neutral.v1"
 	if npc_name != "":
-		var npc_data := GlobalState.get_minor_npc_data(npc_name)
-		if not npc_data.is_empty():
-			display_voice = str(
-				npc_data.get(
-					"voice_profile_id",
-					"voice.neutral.v1"
+		if npc_name == "Broker Kaelen":
+			display_voice = GlobalState.KAELEN_VOICE_PROFILE_ID
+		else:
+			var npc_data := GlobalState.get_minor_npc_data(npc_name)
+			if not npc_data.is_empty():
+				display_voice = str(
+					npc_data.get(
+						"voice_profile_id",
+						"voice.neutral.v1"
+					)
 				)
-			)
 	text = GlobalState.apply_tone_guard(text, display_voice)
 
 	# Configure content.

@@ -5745,6 +5745,27 @@ func _run_services_smoke_test() -> void:
 	ui.current_station = main_station
 	ui.current_submenu = ui.DockSubmenu.SERVICES
 	ui.call("_render_dock_submenu")
+	if not ui.station_lounge_btn.visible:
+		_fail_services_smoke_test("Station Lounge button was not visible at the main station.")
+		return
+	ui.call("_on_station_lounge_pressed")
+	if ui.current_submenu != ui.DockSubmenu.LOUNGE \
+			or not ui.station_contacts_panel.visible:
+		_fail_services_smoke_test("Station Lounge did not open at the main station.")
+		return
+	var kaelen_lounge_holder := {"flavor": {}}
+	var capture_kaelen_lounge := func(flavor: Dictionary) -> void:
+		kaelen_lounge_holder["flavor"] = flavor
+	GlobalState.npc_flavor_spoken.connect(capture_kaelen_lounge, CONNECT_ONE_SHOT)
+	ui.call("_on_kaelen_lounge_pressed")
+	var kaelen_lounge_flavor: Dictionary = kaelen_lounge_holder["flavor"]
+	if kaelen_lounge_flavor.is_empty() \
+			or str(kaelen_lounge_flavor.get("voice_profile_id", "")) \
+				!= GlobalState.KAELEN_VOICE_PROFILE_ID \
+			or not str(kaelen_lounge_flavor.get("line", "")).contains("Shiny"):
+		_fail_services_smoke_test("Kaelen Lounge line did not use Kaelen voice and phrasing.")
+		return
+	ui.call("_on_back_to_services_pressed")
 	if not ui.public_board_btn.visible:
 		_fail_services_smoke_test("Public contract board button was not visible at the main station.")
 		return
