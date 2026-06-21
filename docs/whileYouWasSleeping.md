@@ -2,6 +2,55 @@
 
 ---
 
+## Session: 2026-06-21 (~4:30 PM — Loading Hang Fix + UI Label Polish) — Claude
+**Branch:** `segment-3/economy-stores-events`
+**Commits:** `4f7da80`, `272422e`, `5a5da5b`
+**Date:** 2026-06-21
+
+### Bug Fix: Loading screen hung at 35% (no error)
+
+Abe hit a hard stall: the loading screen froze at exactly 35% ("Generating
+first contract briefing…") with no error, music still playing. Deleting
+`savegame.json` did **not** help — the game restores from the campaign-slot
+system (`campaigns/slot_01/`), not the legacy save. The selected slot
+("Cold Meridian") was last saved by **undocking at a generated station**
+(`system.gen.frontier.first`).
+
+**Root cause:** At 35%, `UIManager._check_both_services_ready()` calls
+`_request_background_agent_quest()` to make the opening contract. That station
+has **no local faction contact**, and it is not the start system, so the
+function logs `"No local faction contact for generated station; skipping
+old-agent fallback."` and returns `false` **without requesting a quest**. The
+loading bar only advances past 35% inside the `_on_background_quest_generated`
+callback, which never fires → permanent hang.
+
+**Fix (UIManager only — `4f7da80`):** `_check_both_services_ready()` now checks
+the return value. When `false`, it calls a new `_finish_loading_without_contract()`
+that completes the loading screen via the same TTS-cache completion path the
+quest flow uses. Resuming a campaign mid-game at a generated station is
+legitimate and should not require a fresh opening briefing. No generation,
+save/load, or mission logic was touched.
+
+### ⚠️ For Codex — deeper question I left alone (guardrail: generation domain)
+
+The *symptom* (hang) is fixed defensively, but the underlying design question
+is yours: **should a generated frontier station offer any contract source, or
+is "no opening contract on resume" intended?** Right now resuming at such a
+station drops the player in with no agent/board contract path until they
+travel. If that's wrong, the fix belongs in station/NPC generation (faction
+contact assignment), not the loading screen. I did not modify generation code.
+
+### UI Label Polish (low-risk, `272422e` + `5a5da5b`)
+
+- Dock/service buttons: `Talk To Agent`→`Talk to Agent`, `Hear Gossip From the
+  Locals`→`…from the Locals`, removed double space in the Kaelen lounge button,
+  reworded the repair "insufficient credits" disabled message.
+- Inventory panel: `m3`→`m³` in the summary line, special-cargo route arrow
+  `->`→`→`, removed a double space before the item category bracket, and a
+  friendly muted empty-cargo-hold message instead of the raw HUD `EMPTY` string.
+
+---
+
 ## Session: 2026-06-20 (Late Night — Visual Effects & Asteroid Overhaul)
 **Branch:** `segment-3/economy-stores-events`
 **Commits:** `712e78e` → `46e6989`
