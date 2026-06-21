@@ -8185,8 +8185,32 @@ func _check_both_services_ready():
 			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
 		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
 			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
-			
-		_request_background_agent_quest()
+
+		# If no opening contract can be generated for the current station —
+		# e.g. a campaign resumed at a generated frontier station with no local
+		# faction contact — _request_background_agent_quest() returns false and
+		# never fires _on_background_quest_generated. Without this guard the
+		# loading bar strands at 35% forever. Finish loading via the same
+		# TTS-cache completion path the quest flow uses.
+		if not _request_background_agent_quest():
+			_finish_loading_without_contract()
+
+func _finish_loading_without_contract() -> void:
+	# Completion path for the loading screen when there is no opening contract
+	# to generate (no local faction contact and no major-agent fallback). Mirrors
+	# the tail of _on_background_quest_generated: connect to TTS cache completion,
+	# and if nothing is queued, finish immediately so we never stall at 35%.
+	if loading_panel == null or not is_instance_valid(loading_panel):
+		return
+	GlobalState.trace("[TRACE] [UIManager] No opening contract for this station; finishing loading screen without a briefing.")
+	if not SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
+		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
+	if SpeechService.active_cache_requests <= 0:
+		_on_tts_cache_completed()
+	else:
+		loading_bar.value = 80.0
+		loading_status_label.text = "Pre-caching synthesized broker voice lines..."
+
 
 func _on_tts_cache_completed():
 	# Disconnect to prevent double trigger on future cache events
