@@ -36,6 +36,7 @@ var nebula_seed: int = 0
 var nebula_colors: Array[Color] = []
 var nebula_brightness: float = 0.5
 var nebula_layer_count: int = 3
+var story_pack: Dictionary = {}
 
 
 static func from_seed(
@@ -170,6 +171,8 @@ static func from_seed(
 	var sun_angle := rng.randf_range(0.0, TAU)
 	var _sun_dir := Vector3(cos(sun_angle), rng.randf_range(0.25, 0.5), sin(sun_angle)).normalized()
 
+	config.story_pack = _build_story_pack(config, rng)
+
 	return config
 
 
@@ -181,3 +184,132 @@ func ship_style_for_faction(faction_name: String) -> Dictionary:
 	return (
 		faction_ship_styles.get(faction_name, {}) as Dictionary
 	).duplicate(true)
+
+
+static func _build_story_pack(
+	config: SystemConfig,
+	rng: RandomNumberGenerator
+) -> Dictionary:
+	var faction_names: Array[String] = []
+	for faction_name: String in config.faction_weights.keys():
+		faction_names.append(_story_faction_display(faction_name))
+	if faction_names.is_empty():
+		faction_names.append("independent crews")
+	var primary_faction := faction_names[0]
+	var secondary_faction := faction_names[0]
+	if faction_names.size() > 1:
+		secondary_faction = faction_names[1]
+	var problem_templates: Array[String] = [
+		"cargo auctions are being quietly rigged",
+		"patrol routes keep changing without anyone admitting who paid",
+		"ore claims are overlapping badly enough to require funeral math",
+		"station permits are being sold twice and enforced three times",
+		"old gate telemetry is making honest navigators very nervous",
+	]
+	var tension_templates: Array[String] = [
+		"%s and %s are arguing over who owns the quiet lanes",
+		"%s blames %s for missing haulers nobody wants to list publicly",
+		"%s wants order, %s wants leverage, and the docks want hazard pay",
+		"%s crews are buying silence while %s crews are buying ammunition",
+	]
+	var humor_templates: Array[String] = [
+		"dry station gossip with jokes that sound like unpaid invoices",
+		"slightly dark dock humor about broken promises and worse engines",
+		"deadpan frontier jokes where the punchline is usually paperwork",
+		"tired professional sarcasm from people pretending this is normal",
+	]
+	var problem := problem_templates[rng.randi() % problem_templates.size()]
+	var tension := tension_templates[rng.randi() % tension_templates.size()] % [
+		primary_faction,
+		secondary_faction,
+	]
+	var humor := humor_templates[rng.randi() % humor_templates.size()]
+	var nickname := _story_nickname(config.system_name, rng)
+	return {
+		"system_id": config.system_id,
+		"system_name": config.system_name,
+		"local_nickname": nickname,
+		"station_economy_problem": problem,
+		"active_tension": tension,
+		"danger_summary": _story_danger_summary(config.difficulty_tier),
+		"resource_hook": _story_resource_hook(config.star_type, rng),
+		"humor_guidance": humor,
+		"local_rumors": [
+			"People call this place %s when comms are private. Nobody agrees whether that is affectionate." % nickname,
+			"%s, which is why every clean invoice here looks suspicious." % problem.capitalize(),
+			"The lounge version is simple: %s. The real version probably has more knives." % tension,
+		],
+		"mission_seeds": [
+			"verify a disputed cargo route",
+			"recover proof from a wreck tied to the local tension",
+			"move supplies before the station problem gets expensive",
+			"thin out raiders taking advantage of the confusion",
+		],
+		"gate_mystery_hints": [
+			"gate logs show a timing mismatch nobody can explain",
+			"old nav chatter references a return path that should not exist",
+			"someone is paying to keep outbound route scans boring",
+		],
+		"rumor_clue_slots": [
+			"lounge_contact",
+			"public_board",
+			"kaelen_arrival",
+		],
+	}
+
+
+static func _story_faction_display(faction_name: String) -> String:
+	var clean := faction_name.strip_edges()
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var parts := clean.replace("_", " ").split(" ", false)
+	var titled: Array[String] = []
+	for part in parts:
+		var lower := str(part).to_lower()
+		if lower.length() <= 2 and lower.is_valid_int():
+			continue
+		titled.append(lower.substr(0, 1).to_upper() + lower.substr(1))
+	if titled.is_empty():
+		return "independent crews"
+	return " ".join(titled)
+
+
+static func _story_nickname(system_name: String, rng: RandomNumberGenerator) -> String:
+	var roots := [
+		"the Bent Ledger",
+		"the Quiet Burn",
+		"the Long Toll",
+		"the Wrong End",
+		"the Cold Receipt",
+	]
+	if rng.randf() < 0.45:
+		return roots[rng.randi() % roots.size()]
+	var first_word := system_name.get_slice(" ", 0)
+	if first_word.is_empty():
+		first_word = "Frontier"
+	return "%s's Bad Habit" % first_word
+
+
+static func _story_danger_summary(tier: int) -> String:
+	match tier:
+		1:
+			return "manageable trouble with enough warning to make bad choices"
+		2:
+			return "active danger around stations, belts, and disputed routes"
+		_:
+			return "volatile space where travel plans should include apology money"
+
+
+static func _story_resource_hook(
+	star_type: String,
+	rng: RandomNumberGenerator
+) -> String:
+	var hooks := {
+		"yellow": ["stable ore pockets", "cleaner solar charge windows"],
+		"blue": ["high-energy dust traces", "volatile sensor ghosts"],
+		"orange": ["heat-scored ore seams", "old refinery slag fields"],
+		"red": ["cold salvage pockets", "radiation-baked hull fragments"],
+		"white": ["bright ice signatures", "overexposed nav anomalies"],
+	}
+	var options: Array = hooks.get(star_type, ["ordinary ore pockets"])
+	return str(options[rng.randi() % options.size()])

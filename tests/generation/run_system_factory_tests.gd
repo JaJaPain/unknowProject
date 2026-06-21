@@ -10,6 +10,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_config_from_seed()
 	_test_config_deterministic()
+	_test_config_story_pack()
 	_test_config_faction_weights()
 	_test_config_generated_faction_pool()
 	_test_config_difficulty_multiplier()
@@ -48,6 +49,33 @@ func _test_config_deterministic() -> void:
 	_expect(config1.station_count == config2.station_count, "Same seed produced different station counts.")
 	_expect(config1.star_color == config2.star_color, "Same seed produced different star colors.")
 	_expect(config1.ambient_energy == config2.ambient_energy, "Same seed produced different ambient energy.")
+	_expect(config1.story_pack == config2.story_pack, "Same seed produced different story packs.")
+
+
+func _test_config_story_pack() -> void:
+	var config := SystemConfig.from_seed("Story", "system.gen.story", 4242)
+	var pack: Dictionary = config.story_pack
+	_expect(not pack.is_empty(), "Story pack was empty.")
+	_expect(str(pack.get("system_id", "")) == "system.gen.story", "Story pack system id mismatch.")
+	_expect(str(pack.get("system_name", "")) == "Story", "Story pack system name mismatch.")
+	_expect(not str(pack.get("local_nickname", "")).is_empty(), "Story pack nickname missing.")
+	_expect(not str(pack.get("active_tension", "")).is_empty(), "Story pack tension missing.")
+	_expect(not str(pack.get("humor_guidance", "")).is_empty(), "Story pack humor guidance missing.")
+	_expect(
+		pack.get("local_rumors", []) is Array
+			and (pack.get("local_rumors", []) as Array).size() >= 3,
+		"Story pack local rumors missing."
+	)
+	_expect(
+		pack.get("mission_seeds", []) is Array
+			and (pack.get("mission_seeds", []) as Array).size() >= 3,
+		"Story pack mission seeds missing."
+	)
+	_expect(
+		pack.get("rumor_clue_slots", []) is Array
+			and "lounge_contact" in (pack.get("rumor_clue_slots", []) as Array),
+		"Story pack does not expose a lounge rumor clue slot."
+	)
 
 
 func _test_config_faction_weights() -> void:

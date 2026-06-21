@@ -594,6 +594,11 @@ services panel, show role/faction context, answer faction/trouble/rumor topics
 with current system and station facts, and faction contacts can broker local
 work through the existing quest path.
 
+Priority note: the Lounge is usable for now. Keep its remaining polish on the
+backlog, but prioritize the main generated campaign loop: story packs, gates,
+system progression, missions, rewards, and meaningful differences between
+systems.
+
 Next UI direction: move casual station people into a dedicated Station Lounge
 instead of stacking them on top of core station services. The Lounge should
 hold generated locals, faction contacts not currently giving formal work,
@@ -803,10 +808,18 @@ Why fourth: conversations cannot feel unique until speakers are unique.
 
 Goal: make each system feel like a place.
 
-- Generate a story pack when a system is created.
-- Tie the pack to local factions, stations, gates, resources, and danger.
+- [x] Generate a lightweight deterministic story pack when a system config is
+  created.
+- [x] Tie the first pack to local factions, resources, danger, humor guidance,
+  local rumors, mission seeds, and gate mystery hints.
 - Use it for public board postings, gossip, station chatter, interceptors, and
   Kaelen hints.
+  - [x] Let Lounge rumors sometimes use current-system story pack rumors.
+  - [ ] Feed system story pack mission seeds into public board and agent
+    mission generation.
+  - [ ] Feed system story pack danger/faction tension into patrol/interceptor
+    behavior.
+  - [ ] Feed system story pack humor guidance into local NPC and Kaelen prompts.
 - Add a first-Kaelen-encounter beat for each new system: generate one brief,
   funny Kaelen arrival line that welcomes or needles the player, explains that
   she has followed the money into this system, and names the local factions in
@@ -817,7 +830,10 @@ Goal: make each system feel like a place.
     story packs exist.
 - Include rumor clue slots that can attach local gossip to campaign-level rumor
   trails.
-- Persist the pack with generated system state.
+- [x] Include first-pass rumor clue slots that can attach local gossip to
+  campaign-level rumor trails.
+- [ ] Persist story packs with generated system state instead of relying only on
+  deterministic config regeneration.
 - Advance unresolved local arcs over time, even when the player ignores them.
 - Allow remote consequences for faction control, economy, patrols, rumors, and
   service availability.

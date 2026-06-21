@@ -3644,6 +3644,9 @@ func _station_contact_rumor_line(
 	npc_data: Dictionary,
 	lines: Array
 ) -> String:
+	var system_rumor := _system_story_pack_rumor(npc_name, npc_data)
+	if not system_rumor.is_empty():
+		return system_rumor
 	var local_rumors: Array[String] = []
 	for raw_line in lines:
 		var clean_line := str(raw_line).strip_edges()
@@ -3655,6 +3658,44 @@ func _station_contact_rumor_line(
 	if local_rumors.is_empty():
 		return "Nobody in this lounge agrees on the truth, which is usually how you know it is expensive."
 	return local_rumors[randi() % local_rumors.size()]
+
+
+func _system_story_pack_rumor(npc_name: String, npc_data: Dictionary) -> String:
+	var story_pack := _current_system_story_pack()
+	if story_pack.is_empty():
+		return ""
+	var local_rumors: Array = story_pack.get("local_rumors", [])
+	if local_rumors.is_empty():
+		return ""
+	var station_id := _current_station_contact_id()
+	var key := "%s|%s|%s|%s|story_pack" % [
+		GlobalState.current_system_id,
+		station_id,
+		npc_name,
+		str(npc_data.get("faction", "")),
+	]
+	if abs(hash(key)) % 3 != 0:
+		return ""
+	var rumor := str(local_rumors[abs(hash(key + "|rumor")) % local_rumors.size()])
+	var tension := str(story_pack.get("active_tension", ""))
+	if tension.is_empty():
+		return rumor
+	return "%s Around here that usually means %s." % [rumor, tension]
+
+
+func _current_system_story_pack() -> Dictionary:
+	var game_root := get_tree().current_scene
+	if game_root == null:
+		return {}
+	if not "system_registry" in game_root:
+		return {}
+	var registry: SystemRegistry = game_root.system_registry
+	if registry == null:
+		return {}
+	var config := registry.get_generated_config(GlobalState.current_system_id)
+	if config == null:
+		return {}
+	return config.story_pack.duplicate(true)
 
 
 func _campaign_rumor_trail_clue(npc_name: String, npc_data: Dictionary) -> String:
