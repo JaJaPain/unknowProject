@@ -829,7 +829,7 @@ Goal: make each system feel like a place.
     validation, completion, failure messaging, and save/load persistence.
   - [x] Feed system story pack danger/faction tension into patrol/interceptor
     behavior.
-  - [ ] Feed system story pack humor guidance into local NPC and Kaelen prompts.
+  - [x] Feed system story pack humor guidance into local NPC and Kaelen prompts.
 - Add a first-Kaelen-encounter beat for each new system: generate one brief,
   funny Kaelen arrival line that welcomes or needles the player, explains that
   she has followed the money into this system, and names the local factions in
@@ -960,6 +960,37 @@ procedural identity and mission reliability are stable.
   feel different by faction, role, and ship class.
 - Add active gameplay VFX systems for weapon impacts, shield ripples, engine
   trails, boost effects, explosion debris, and repair or scanner feedback.
+- Add faction-owned asteroid belt enforcement:
+  - [ ] Treat every asteroid belt as faction-owned; mining without a permit is
+    illegal by default, matching Kaelen's intro lore that a permit costs more
+    than the player's ship.
+  - [ ] Give NPC miners a simple witness bubble that acts as first-pass line of
+    sight. If the player mines inside that bubble, the miner reports the
+    violation in comms.
+  - [ ] Spawn or dispatch two code-enforcement fighters from the belt owner
+    faction after a witnessed violation.
+  - [ ] Give enforcement patrols a larger pursuit/detection bubble; if they
+    reacquire the player, they continue pursuit.
+  - [ ] Add a real-time heat cooldown, roughly five minutes for the first pass,
+    so enforcement eventually stops searching instead of camping stations
+    forever.
+  - [ ] Cap active enforcement response groups so repeated reports create drama
+    without unlimited fighter stacking.
+  - [ ] Make enforcement officer kills avoid normal kill escalation rules. They
+    are already part of the active response, not a new faction-war trigger.
+  - [ ] Add a main-station fine office or code-enforcement desk where the player
+    can pay outstanding illegal-mining fines to clear active enforcement heat.
+  - [ ] Keep any reputation penalty small and separate from the immediate
+    "fighters stop chasing me" fine payment.
+  - [ ] Add tests for witness trigger, response cap, cooldown/stand-down, fine
+    payment clearing heat, and non-escalating enforcement kills.
+- Add an expensive illegal transponder replacement service:
+  - [ ] Let the player pay a very high price to wipe their public identity,
+    clearing both good and bad faction reputation.
+  - [ ] Frame transponder replacement as illegal, dangerous, and available only
+    through shady stations or contacts.
+  - [ ] Keep campaign/story memory separate from public reputation so Kaelen and
+    deep story systems can still know more than the player's transponder says.
 - Begin breaking the monolithic UI into focused scene/controller pieces as
   features stabilize: HUD, inventory rows, station contacts, map widgets,
   contract cards, and comms panels.

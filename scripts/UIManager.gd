@@ -3452,17 +3452,26 @@ func _kaelen_lounge_line() -> String:
 	var system_name := _get_current_system_display_name()
 	if system_name.is_empty():
 		system_name = GlobalState.current_system_id.capitalize()
+	var story_pack := _current_system_story_pack()
+	var humor_guidance := str(story_pack.get("humor_guidance", "")).strip_edges()
 	var station_name := _current_station_display_name()
 	if station_name.is_empty() or station_name == "this station":
 		station_name = "the station lounge"
 	var local_factions := _current_station_lounge_faction_names()
 	if local_factions.is_empty():
 		local_factions = "whoever is still solvent"
+	var humor_tail := ""
+	if not humor_guidance.is_empty():
+		humor_tail = " Around here the jokes run like %s." % humor_guidance
 	if GlobalState.is_current_system_home():
-		return "Fancy seeing you in the lounge, Shiny. %s is where deals pretend to be conversations. Try not to sign anything with bite marks." % station_name
-	return "Look at you, all the way out in %s and still surprised I found the bar first. Local drama says %s. Which means work, naturally." % [
+		return "Fancy seeing you in the lounge, Shiny. %s is where deals pretend to be conversations. Try not to sign anything with bite marks.%s" % [
+			station_name,
+			humor_tail,
+		]
+	return "Look at you, all the way out in %s and still surprised I found the bar first. Local drama says %s. Which means work, naturally.%s" % [
 		system_name,
 		local_factions,
+		humor_tail,
 	]
 
 
@@ -3599,6 +3608,9 @@ func _station_contact_topic_line(
 	var rep_tier := str(context.get("rep_tier", "unknown"))
 	var outpost_summary := str(context.get("outpost_summary", "the outer docks"))
 	var humor_style := str(context.get("humor_style", "dry station gossip"))
+	var local_humor := str(context.get("local_humor", "")).strip_edges()
+	if local_humor.is_empty():
+		local_humor = humor_style
 	match topic:
 		"greeting":
 			if faction.is_empty():
@@ -3620,10 +3632,11 @@ func _station_contact_topic_line(
 				rep_tier,
 			]
 		"trouble":
-			return "Local trouble runs between %s and %s. %s need work done, nobody wants their name on it, and the station lights still flicker." % [
+			return "Local trouble runs between %s and %s. %s need work done, nobody wants their name on it, and the humor is %s." % [
 				station_name,
 				outpost_summary,
 				faction_display,
+				local_humor,
 			]
 		"rumor":
 			var rumor := _station_contact_rumor_line(npc_name, npc_data, lines)
@@ -3760,6 +3773,8 @@ func _station_contact_local_context(npc_data: Dictionary) -> Dictionary:
 			outpost_names[0],
 			outpost_names.size() - 1,
 		]
+	var story_pack := _current_system_story_pack()
+	var local_humor := str(story_pack.get("humor_guidance", "")).strip_edges()
 	return {
 		"system_name": system_name,
 		"station_name": station_name,
@@ -3770,6 +3785,7 @@ func _station_contact_local_context(npc_data: Dictionary) -> Dictionary:
 		"outpost_summary": outpost_summary,
 		"role": str(npc_data.get("role", "Local contact")),
 		"humor_style": str(npc_data.get("humor_style", "dry station gossip")),
+		"local_humor": local_humor,
 	}
 
 
@@ -6505,7 +6521,9 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 			var agent_name = quest_data.get("agent_name", "Broker Kaelen")
 			var faction = quest_data.get("faction", "neutral")
 			var agent_history = QuestManager.filter_history_for_agent(agent_name, faction)
-			LLMInterface.request_kaelen_intro(quest_data, agent_history, GlobalState.reputations, func(unique_line: String):
+			var kaelen_intro_data := quest_data.duplicate(true)
+			kaelen_intro_data["system_story_pack"] = _current_system_story_pack()
+			LLMInterface.request_kaelen_intro(kaelen_intro_data, agent_history, GlobalState.reputations, func(unique_line: String):
 				if unique_line.strip_edges() == "":
 					print("[TRACE] [UIManager] No unique intro available — will fall back to canned handoff.")
 					cached_unique_intro = ""
