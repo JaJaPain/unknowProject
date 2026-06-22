@@ -2,6 +2,53 @@
 
 ---
 
+## Session: 2026-06-22 (Draggable UI Layout + HUD Icon Buttons) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Full draggable/resizable HUD layout system shipped. Players can now rearrange and resize the 4 HUD panels and lock the layout in place. SYSTEM MAP and INVENTORY text buttons replaced with real icon buttons. Hover effect established as the game-wide standard.
+
+---
+
+### 1. Draggable UI Layout System (`scripts/ui/UILayoutManager.gd`)
+
+Four HUD panels (chat, overview, HUD stats, target) are now fully repositionable and resizable by the player.
+
+**How it works:**
+- Click the **lock icon** (top-right) to enter edit mode — panels get a blue drag bar across the top and a resize grip on the bottom-right corner
+- Drag the bar to move, drag the corner to resize
+- Click the lock icon again to save and exit — icon swaps between open/closed padlock
+- Layout persists to `user://ui_layout.json` and auto-loads on next launch
+
+**Files added:**
+- `scripts/ui/UILayoutManager.gd` — RefCounted singleton, handles drag/resize/save/load
+
+---
+
+### 2. HUD Icon Buttons
+
+Replaced the old `SYSTEM MAP` and `INVENTORY` text blocks with proper icon buttons. Three square icon buttons now sit top-right: **[I] [M] [L]**.
+
+- **I** — Inventory (briefcase icon)
+- **M** — System Map (star constellation circle)
+- **L** — Lock/Unlock UI layout (open/closed padlock, swaps on toggle)
+
+Icons sourced from `assets/UIicons2.png`, split into individual files by Gemini: `lock_open.png`, `lock_closed.png`, `map.png`, `inventory.png`.
+
+---
+
+### 3. Chat Font Scaling
+
+Chat panel text now scales proportionally as you resize the chat window — minimum 12px, maximum 24px. All existing messages update live when you drag the panel larger.
+
+---
+
+### 4. Standard Hover Effect (`_add_icon_hover()` in UIManager)
+
+All icon buttons now have a consistent hover animation: 15% scale-up with a slight overshoot bounce on enter, smooth snap-back on exit (~120ms total). Implemented as `_add_icon_hover(btn: TextureButton)` — call it once after any future icon button to apply the standard effect game-wide.
+
+---
+
 ## Session: 2026-06-22 (Kaelen Bounties + Space Anomalies Phase 1) — Claude
 **Branch:** `segment-3/economy-stores-events`
 

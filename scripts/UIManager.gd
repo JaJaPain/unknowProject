@@ -363,6 +363,7 @@ func _ready():
 		layout_lock_btn.texture_hover = tex
 	)
 	add_child(layout_lock_btn)
+	_add_icon_hover(layout_lock_btn)
 
 	# Create target indicator marker
 	target_marker = Control.new()
@@ -817,6 +818,7 @@ func _create_overview():
 	map_btn.offset_bottom = 72
 	map_btn.pressed.connect(_toggle_branch_map)
 	add_child(map_btn)
+	_add_icon_hover(map_btn)
 
 	inventory_hud_btn = TextureButton.new()
 	inventory_hud_btn.texture_normal = load("res://assets/inventory.png") as Texture2D
@@ -835,6 +837,7 @@ func _create_overview():
 	inventory_hud_btn.offset_bottom = 72
 	inventory_hud_btn.pressed.connect(_on_inventory_pressed)
 	add_child(inventory_hud_btn)
+	_add_icon_hover(inventory_hud_btn)
 
 	overview_panel = Panel.new()
 	add_child(overview_panel)
@@ -7804,6 +7807,20 @@ func _show_agent_portrait(should_show: bool) -> void:
 	agent_portrait.visible = should_show
 	if not should_show:
 		agent_portrait.texture = null
+
+# Standard hover effect for all icon buttons in the game.
+# Call once after creating any TextureButton icon to wire it up.
+func _add_icon_hover(btn: TextureButton) -> void:
+	btn.pivot_offset = btn.custom_minimum_size / 2.0
+	btn.mouse_entered.connect(func():
+		var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2(1.15, 1.15), 0.12)
+	)
+	btn.mouse_exited.connect(func():
+		var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.09)
+	)
+
 
 func _update_chat_font_size() -> void:
 	if not chat_window_panel:
