@@ -29,8 +29,8 @@ var overview_list: VBoxContainer
 var overview_collapsed: bool = false
 var collapse_btn: Button
 var overview_title_label: Label
-var map_btn: Button
-var inventory_hud_btn: Button
+var map_btn: TextureButton
+var inventory_hud_btn: TextureButton
 var branch_map: BranchMapUI
 
 var dock_panel: Panel
@@ -188,6 +188,7 @@ var faction_branding_sheet = preload("res://assets/factionBranding.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
+const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
 const KAELEN_ALLOWED_MOODS := {
 	"calm": true,
@@ -238,6 +239,9 @@ var is_waiting_for_agent_board: bool = false
 # that are already in the cache). Resets implicitly on scene reload.
 var _outpost_flavor_precached: Dictionary = {}
 var _bounty_announced_system: String = ""
+var _ui_layout_manager = null
+var _chat_font_size: int = 12
+const _CHAT_DEFAULT_HEIGHT := 200.0
 
 # LLM-generated Kaelen handoff line for the currently-cached quest.
 # Empty string means "not yet fetched" or "fetch failed — fall back to canned 5".
@@ -324,7 +328,42 @@ func _ready():
 	_create_death_screen()
 	_create_pause_menu()
 	_create_campaign_load_fade()
-	
+
+	# Wire draggable UI layout manager (must be after all 4 panels are created)
+	_ui_layout_manager = UILayoutManagerScript.new()
+	_ui_layout_manager.setup(hud_panel, chat_window_panel, overview_panel, target_panel, self)
+	chat_window_panel.resized.connect(_update_chat_font_size)
+
+	# L button — lock/unlock UI layout, sits right of M and I
+	var _tex_lock_closed := load("res://assets/lock_closed.png") as Texture2D
+	var _tex_lock_open := load("res://assets/lock_open.png") as Texture2D
+
+	var layout_lock_btn := TextureButton.new()
+	layout_lock_btn.texture_normal = _tex_lock_closed
+	layout_lock_btn.texture_pressed = _tex_lock_closed
+	layout_lock_btn.texture_hover = _tex_lock_closed
+	layout_lock_btn.tooltip_text = "Lock / Unlock UI Layout"
+	layout_lock_btn.custom_minimum_size = Vector2(64, 64)
+	layout_lock_btn.ignore_texture_size = true
+	layout_lock_btn.stretch_mode = TextureButton.STRETCH_SCALE
+	layout_lock_btn.anchor_left = 1.0
+	layout_lock_btn.anchor_right = 1.0
+	layout_lock_btn.anchor_top = 0.0
+	layout_lock_btn.anchor_bottom = 0.0
+	layout_lock_btn.offset_left = -72
+	layout_lock_btn.offset_right = -8
+	layout_lock_btn.offset_top = 8
+	layout_lock_btn.offset_bottom = 72
+	layout_lock_btn.pressed.connect(func():
+		_ui_layout_manager.toggle_edit_mode()
+		var is_open: bool = _ui_layout_manager.is_edit_mode()
+		var tex: Texture2D = _tex_lock_open if is_open else _tex_lock_closed
+		layout_lock_btn.texture_normal = tex
+		layout_lock_btn.texture_pressed = tex
+		layout_lock_btn.texture_hover = tex
+	)
+	add_child(layout_lock_btn)
+
 	# Create target indicator marker
 	target_marker = Control.new()
 	target_marker.name = "TargetMarker"
@@ -761,31 +800,39 @@ func _create_target_panel():
 	target_panel.visible = false
 
 func _create_overview():
-	map_btn = Button.new()
-	map_btn.text = "SYSTEM MAP"
+	map_btn = TextureButton.new()
+	map_btn.texture_normal = load("res://assets/map.png") as Texture2D
+	map_btn.tooltip_text = "System Map"
+	map_btn.ignore_texture_size = true
+	map_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 	map_btn.visible = false
-	map_btn.anchor_left = 0.78
-	map_btn.anchor_right = 0.98
-	map_btn.anchor_top = 0.01
-	map_btn.anchor_bottom = 0.045
-	map_btn.offset_left = 0
-	map_btn.offset_right = 0
-	map_btn.offset_top = 0
-	map_btn.offset_bottom = 0
+	map_btn.custom_minimum_size = Vector2(64, 64)
+	map_btn.anchor_left = 1.0
+	map_btn.anchor_right = 1.0
+	map_btn.anchor_top = 0.0
+	map_btn.anchor_bottom = 0.0
+	map_btn.offset_left = -152
+	map_btn.offset_right = -88
+	map_btn.offset_top = 8
+	map_btn.offset_bottom = 72
 	map_btn.pressed.connect(_toggle_branch_map)
 	add_child(map_btn)
 
-	inventory_hud_btn = Button.new()
-	inventory_hud_btn.text = "INVENTORY"
+	inventory_hud_btn = TextureButton.new()
+	inventory_hud_btn.texture_normal = load("res://assets/inventory.png") as Texture2D
+	inventory_hud_btn.tooltip_text = "Inventory"
+	inventory_hud_btn.ignore_texture_size = true
+	inventory_hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 	inventory_hud_btn.visible = true
-	inventory_hud_btn.anchor_left = 0.66
-	inventory_hud_btn.anchor_right = 0.77
-	inventory_hud_btn.anchor_top = 0.01
-	inventory_hud_btn.anchor_bottom = 0.045
-	inventory_hud_btn.offset_left = 0
-	inventory_hud_btn.offset_right = 0
-	inventory_hud_btn.offset_top = 0
-	inventory_hud_btn.offset_bottom = 0
+	inventory_hud_btn.custom_minimum_size = Vector2(64, 64)
+	inventory_hud_btn.anchor_left = 1.0
+	inventory_hud_btn.anchor_right = 1.0
+	inventory_hud_btn.anchor_top = 0.0
+	inventory_hud_btn.anchor_bottom = 0.0
+	inventory_hud_btn.offset_left = -232
+	inventory_hud_btn.offset_right = -168
+	inventory_hud_btn.offset_top = 8
+	inventory_hud_btn.offset_bottom = 72
 	inventory_hud_btn.pressed.connect(_on_inventory_pressed)
 	add_child(inventory_hud_btn)
 
@@ -5665,6 +5712,8 @@ func _input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if not event.pressed:
 			is_resizing = false
+	if _ui_layout_manager:
+		_ui_layout_manager.handle_input(event)
 
 func _on_resize_handle_input(event: InputEvent):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -7756,16 +7805,28 @@ func _show_agent_portrait(should_show: bool) -> void:
 	if not should_show:
 		agent_portrait.texture = null
 
+func _update_chat_font_size() -> void:
+	if not chat_window_panel:
+		return
+	var h: float = chat_window_panel.size.y
+	_chat_font_size = clampi(int(12.0 * (h / _CHAT_DEFAULT_HEIGHT)), 12, 24)
+	if not chat_vbox:
+		return
+	for child in chat_vbox.get_children():
+		if child is RichTextLabel:
+			child.add_theme_font_size_override("normal_font_size", _chat_font_size)
+
+
 func add_chat_message(sender: String, message: String, sender_color: Color):
 	if not chat_vbox:
 		return
-		
+
 	var msg_label = RichTextLabel.new()
 	msg_label.bbcode_enabled = true
 	msg_label.fit_content = true
 	msg_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	msg_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	msg_label.add_theme_font_size_override("normal_font_size", 12)
+	msg_label.add_theme_font_size_override("normal_font_size", _chat_font_size)
 	
 	var color_hex = sender_color.to_html(false)
 	msg_label.text = "[color=#%s][b]%s:[/b][/color] %s" % [color_hex, sender, message]
