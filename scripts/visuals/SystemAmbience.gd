@@ -2,6 +2,7 @@ extends RefCounted
 
 const STARFIELD_SHADER := preload("res://shaders/starfield.gdshader")
 const NEBULA_SHADER := preload("res://shaders/nebula.gdshader")
+const SkyFollowerScript := preload("res://scripts/visuals/SkyFollower.gd")
 
 const SUN_DISTANCE := 6000.0
 const SUN_RADIUS := 90.0
@@ -88,6 +89,9 @@ static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshI
 	field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	field.position = Vector3.ZERO
 	system_root.add_child(field)
+	var sf := Node.new()
+	sf.set_script(SkyFollowerScript)
+	field.add_child(sf)
 	return field
 
 
@@ -106,6 +110,9 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 	var container := Node3D.new()
 	container.name = "Nebula"
 	system_root.add_child(container)
+	var nf := Node.new()
+	nf.set_script(SkyFollowerScript)
+	container.add_child(nf)
 
 	# Pick one direction in the sky for the nebula cluster
 	var base_theta := rng.randf_range(0.0, TAU)
@@ -146,6 +153,7 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 
 		billboard.look_at_from_position(offset_dir * NEBULA_DISTANCE, Vector3.ZERO, Vector3.UP)
 		billboard.rotate_object_local(Vector3.FORWARD, rng.randf_range(0.0, TAU))
+		billboard.visible = true
 
 		container.add_child(billboard)
 

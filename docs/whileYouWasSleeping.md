@@ -2,6 +2,46 @@
 
 ---
 
+## Session: 2026-06-22 (Skybox Fixes + Overview Height Bug) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Three persistent visual/UI bugs squashed: camera far-clip artifact, sky colored-cloud overlay, and overview panel height not saving.
+
+---
+
+### 1. Camera Far Clip (`scenes/player_ship.tscn`)
+
+Hard diagonal edge splitting the sky was the camera clipping the starfield sphere. Increased `Camera3D.far` from `20000` to `50000`. Starfield sphere sits at radius 18000 — now always within clip range no matter which direction you look.
+
+---
+
+### 2. Starfield Sphere + Nebula Follow the Player (`scripts/visuals/SkyFollower.gd`, `scripts/visuals/SystemAmbience.gd`)
+
+Both the starfield sphere and nebula container now track the player's world position each frame via a new `SkyFollower` helper node. Only `global_position` is updated — rotation is never touched — so stars remain direction-fixed even as you fly across the system. Eliminates any future far-clip risk regardless of how far the player travels from origin.
+
+**Files added/modified:**
+- `scripts/visuals/SkyFollower.gd` — new `extends Node`, sets parent's `global_position` to player each `_process`
+- `scripts/visuals/SystemAmbience.gd` — attaches `SkyFollower` child to both the `Starfield` mesh and the `Nebula` container in `add_starfield()` / `add_nebula()`
+
+---
+
+### 3. Removed Galactic Haze Band from Starfield Shader (`shaders/starfield.gdshader`)
+
+The starfield shader had a built-in colored haze band (simulated Milky Way) that was covering large portions of the sky with purple/colored fog every system. Removed entirely — shader now outputs stars only. The separate nebula billboard system handles per-system sky color.
+
+Also removed the unused `seed_hash()` helper and simplified the star color to a clean `tint * lum`.
+
+---
+
+### 4. Overview Panel Height Persistence (`scripts/UIManager.gd`)
+
+Overview panel height was reverting to full-screen tall on every restart or undock. Root cause: `set_overview_collapsed()` was setting `anchor_bottom = 0.65` after `UILayoutManager` had already converted the panel to pixel coordinates (all anchors zeroed). With `anchor_top = 0` and `anchor_bottom = 0.65`, the panel stretched from the top of the screen to 65% height on every expand, ignoring the saved size.
+
+**Fix:** `set_overview_collapsed()` now manipulates `size.y` directly (never anchors). Collapsing stores the current expanded height in `_overview_expanded_h`; expanding restores it. UILayoutManager's saved layout survives intact.
+
+---
+
 ## Session: 2026-06-22 (Draggable UI Layout + HUD Icon Buttons) — Claude
 **Branch:** `segment-3/economy-stores-events`
 

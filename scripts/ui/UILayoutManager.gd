@@ -13,7 +13,7 @@ const EDIT_TINT := Color(0.3, 0.7, 1.0, 0.25)
 const RESIZE_COLOR := Color(0.3, 0.7, 1.0, 0.6)
 
 # Panel ids — order matches JSON keys
-const PANEL_IDS := ["hud", "chat", "overview", "target"]
+const PANEL_IDS := ["hud", "chat", "overview", "target", "quest"]
 
 var _panels: Dictionary = {}         # id -> Control
 var _overlays: Dictionary = {}       # id -> Control (drag bar overlay)
@@ -34,18 +34,21 @@ func setup(
 	chat: Control,
 	overview: Control,
 	target: Control,
-	scene_root: Control
+	scene_root: Control,
+	quest: Control = null
 ) -> Button:
 	_panels = {
 		"hud": hud,
 		"chat": chat,
 		"overview": overview,
 		"target": target,
+		"quest": quest,
 	}
 
-	# Convert all anchor-based panels to pixel positions now
+	# Convert anchor-based panels to pixel positions (quest panel is content-sized, skip it)
 	for id in PANEL_IDS:
-		_to_pixel_pos(_panels[id])
+		if _panels.get(id) != null and id != "quest":
+			_to_pixel_pos(_panels[id])
 
 	_load_layout()
 
@@ -72,7 +75,8 @@ func toggle_edit_mode() -> void:
 		# Unlock — show drag/resize overlays
 		_edit_mode = true
 		for id in PANEL_IDS:
-			_create_overlay(id)
+			if _panels.get(id) != null:
+				_create_overlay(id)
 
 
 func is_edit_mode() -> bool:
@@ -122,23 +126,24 @@ func _create_overlay(id: String) -> void:
 	p.add_child(bar)
 	_overlays[id] = bar
 
-	# Resize handle — bottom-right corner
-	var handle := ColorRect.new()
-	handle.color = RESIZE_COLOR
-	handle.size = Vector2(HANDLE_SIZE, HANDLE_SIZE)
-	handle.position = p.size - Vector2(HANDLE_SIZE, HANDLE_SIZE)
-	handle.mouse_filter = Control.MOUSE_FILTER_STOP
-	handle.gui_input.connect(func(ev: InputEvent):
-		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
-			if ev.pressed:
-				_resize_panel_id = id
-				_resize_start_mouse = ev.global_position
-				_resize_start_size = p.size
-			else:
-				_resize_panel_id = ""
-	)
-	p.add_child(handle)
-	_resize_handles[id] = handle
+	# Resize handle — bottom-right corner (quest panel is drag-only)
+	if id != "quest":
+		var handle := ColorRect.new()
+		handle.color = RESIZE_COLOR
+		handle.size = Vector2(HANDLE_SIZE, HANDLE_SIZE)
+		handle.position = p.size - Vector2(HANDLE_SIZE, HANDLE_SIZE)
+		handle.mouse_filter = Control.MOUSE_FILTER_STOP
+		handle.gui_input.connect(func(ev: InputEvent):
+			if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+				if ev.pressed:
+					_resize_panel_id = id
+					_resize_start_mouse = ev.global_position
+					_resize_start_size = p.size
+				else:
+					_resize_panel_id = ""
+		)
+		p.add_child(handle)
+		_resize_handles[id] = handle
 
 
 func _sync_overlay(id: String) -> void:
@@ -154,13 +159,13 @@ func _sync_overlay(id: String) -> void:
 func _save_layout() -> void:
 	var data: Dictionary = {}
 	for id in PANEL_IDS:
-		var p: Control = _panels[id]
-		data[id] = {
-			"x": p.position.x,
-			"y": p.position.y,
-			"w": p.size.x,
-			"h": p.size.y,
-		}
+		var p: Control = _panels.get(id)
+		if p == null:
+			continue
+		if id == "quest":
+			data[id] = {"x": p.position.x, "y": p.position.y}
+		else:
+			data[id] = {"x": p.position.x, "y": p.position.y, "w": p.size.x, "h": p.size.y}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data, "\t"))
@@ -181,10 +186,13 @@ func _load_layout() -> void:
 	for id in PANEL_IDS:
 		if not parsed.has(id):
 			continue
+		var p: Control = _panels.get(id)
+		if p == null:
+			continue
 		var entry: Dictionary = parsed[id]
-		var p: Control = _panels[id]
 		p.position = Vector2(float(entry.get("x", p.position.x)), float(entry.get("y", p.position.y)))
-		p.size = Vector2(float(entry.get("w", p.size.x)), float(entry.get("h", p.size.y))).max(MIN_PANEL_SIZE)
+		if id != "quest":
+			p.size = Vector2(float(entry.get("w", p.size.x)), float(entry.get("h", p.size.y))).max(MIN_PANEL_SIZE)
 	print("[UILayoutManager] Layout loaded.")
 
 

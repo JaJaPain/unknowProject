@@ -27,6 +27,7 @@ var icons_sheet = preload("res://assets/icons.png")
 var overview_panel: Panel
 var overview_list: VBoxContainer
 var overview_collapsed: bool = false
+var _overview_expanded_h: float = 0.0
 var collapse_btn: Button
 var overview_title_label: Label
 var map_btn: TextureButton
@@ -331,7 +332,7 @@ func _ready():
 
 	# Wire draggable UI layout manager (must be after all 4 panels are created)
 	_ui_layout_manager = UILayoutManagerScript.new()
-	_ui_layout_manager.setup(hud_panel, chat_window_panel, overview_panel, target_panel, self)
+	_ui_layout_manager.setup(hud_panel, chat_window_panel, overview_panel, target_panel, self, quest_tracker_panel)
 	chat_window_panel.resized.connect(_update_chat_font_size)
 
 	# L button — lock/unlock UI layout, sits right of M and I
@@ -361,6 +362,11 @@ func _ready():
 		layout_lock_btn.texture_normal = tex
 		layout_lock_btn.texture_pressed = tex
 		layout_lock_btn.texture_hover = tex
+		# Show quest panel in edit mode so it can be repositioned even when empty
+		if is_open:
+			quest_tracker_panel.visible = true
+		else:
+			_update_quest_tracker()  # restores correct visibility based on quest state
 	)
 	add_child(layout_lock_btn)
 	_add_icon_hover(layout_lock_btn)
@@ -6567,9 +6573,11 @@ func set_overview_collapsed(collapsed: bool):
 		collapse_btn.text = " ▼ " if overview_collapsed else " ▲ "
 		
 	if overview_collapsed:
-		overview_panel.anchor_bottom = 0.18
+		if overview_panel.size.y > 100.0:
+			_overview_expanded_h = overview_panel.size.y
+		overview_panel.size.y = 80.0
 	else:
-		overview_panel.anchor_bottom = 0.65
+		overview_panel.size.y = _overview_expanded_h if _overview_expanded_h > 100.0 else get_viewport_rect().size.y * 0.60
 		
 	refresh_overview()
 

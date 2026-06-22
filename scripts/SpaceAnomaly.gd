@@ -45,6 +45,7 @@ func _build_visuals() -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.albedo_color.a = 0.85
 	_mesh.material_override = mat
+	_mesh.visible = true
 	add_child(_mesh)
 
 	_light = OmniLight3D.new()
