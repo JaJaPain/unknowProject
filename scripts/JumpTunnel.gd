@@ -29,14 +29,17 @@ func setup_ship_model(player_visual: Node3D) -> void:
 	# Clear scripts from duplicated visual tree to prevent any running logic
 	_clear_scripts(dup)
 	
+	# Scale the ship down inside the tunnel to prevent clipping the camera and walls
+	ship_anchor.scale = Vector3(0.42, 0.42, 0.42)
+	
 	# Add to ship anchor
 	ship_anchor.add_child(dup)
 	dup.position = Vector3.ZERO
 	dup.rotation = Vector3.ZERO
 	dup.visible = true
 	
-	# Position the engine light near the back of the ship (ship faces -Z, engines are at +Z)
-	engine_light.position = Vector3(0, 0, 4.2)
+	# Position the engine light near the back of the ship (ship faces -Z, engines are at +Z, original scale 8.0 * 0.42 = 3.36)
+	engine_light.position = Vector3(0, 0, 3.4)
 
 func _clear_scripts(node: Node) -> void:
 	node.set_script(null)
