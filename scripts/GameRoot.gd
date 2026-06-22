@@ -337,11 +337,14 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	# Let the player fly down the 3D tunnel for a satisfying duration.
 	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
 	if DisplayServer.get_name() != "headless":
-		await get_tree().create_timer(3.0).timeout
+		await get_tree().create_timer(5.6).timeout
+		# Final acceleration punch out the end of the bore, then whiteout over it.
+		if jump_tunnel and is_instance_valid(jump_tunnel) and jump_tunnel.has_method("begin_exit_burst"):
+			jump_tunnel.begin_exit_burst(0.6)
 		var flash_node = transition_fx.get_node_or_null("Flash")
 		if flash_node:
 			var fade_in_tween = create_tween()
-			fade_in_tween.tween_property(flash_node, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			fade_in_tween.tween_property(flash_node, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 			await fade_in_tween.finished
 
 	# Teleport player to the arrival gate portal now that the transit screen is fully white

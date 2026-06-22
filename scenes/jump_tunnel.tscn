@@ -54,7 +54,7 @@ mesh = SubResource("CylinderMesh_1")
 
 [node name="WarpParticles" type="CPUParticles3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -180)
-amount = 160
+amount = 192
 lifetime = 0.6
 preprocess = 0.6
 mesh = SubResource("BoxMesh_1")
