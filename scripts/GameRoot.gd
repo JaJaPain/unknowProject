@@ -211,6 +211,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if transition_in_progress:
 		jump_request_pending = false
 		return
+	var ui_mgr := GlobalState.get_ui_manager()
 	var runtime_system_id := system_registry.runtime_system_id(
 		destination_system_id
 	)
@@ -287,9 +288,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		player.set_physics_process(true)
 		
 		# Hide UI during transit to prevent HUD/overview distortion leaks
-		var ui := GlobalState.get_ui_manager()
-		if ui:
-			ui.visible = false
+		if ui_mgr:
+			ui_mgr.visible = false
 		
 		var remote_position := Vector3(50000.0, 50000.0, 50000.0)
 		player.global_transform = Transform3D(Basis.IDENTITY, remote_position)
@@ -368,7 +368,6 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		new_system.visible = true
 		
 	# Restore UI visibility
-	var ui_mgr := GlobalState.get_ui_manager()
 	if ui_mgr:
 		ui_mgr.visible = true
 	if camera:
@@ -409,9 +408,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	request_safe_checkpoint("gate_arrival", arrival_gate)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
-	var ui := GlobalState.get_ui_manager()
-	if ui and ui.has_method("refresh_overview"):
-		ui.call_deferred("refresh_overview")
+	if ui_mgr and ui_mgr.has_method("refresh_overview"):
+		ui_mgr.call_deferred("refresh_overview")
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
 	for gate in get_tree().get_nodes_in_group("jumpgate"):
