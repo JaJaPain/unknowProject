@@ -53,6 +53,10 @@ func setup_real_ship(player: CharacterBody3D) -> void:
 func cleanup() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
+	# Stop _process immediately so it can no longer write the (widened) tunnel
+	# FOV/offsets after this point — otherwise it races GameRoot's FOV reset and
+	# leaves the camera stuck wide (fisheye) after the jump.
+	set_process(false)
 	# Restore the original visual transform
 	if _player_visual and is_instance_valid(_player_visual):
 		_player_visual.transform = _original_visual_transform
