@@ -6,6 +6,7 @@ signal startup_load_completed(save_loaded: bool)
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 2.0
+const PLAYER_CAMERA_FOV := 75.0  # canonical gameplay FOV (player_ship.tscn default)
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
@@ -251,7 +252,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		else ""
 	)
 	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
-	var original_fov := camera.fov if camera else 70.0
+	# Use the canonical FOV (not the live camera.fov) so a previously-polluted
+	# wide value can't get re-captured and re-applied as the "rest" FOV.
+	var original_fov := PLAYER_CAMERA_FOV
 	var effect_duration := 0.05 if DisplayServer.get_name() == "headless" else JUMP_ENTRY_DURATION
 	
 	# entry length-contraction warp-stretch effect
