@@ -20,6 +20,7 @@ const BOOST_SPEED_MULTIPLIER := 1.25
 const BOOST_DURATION_SECONDS := 5.0
 const BOOST_COOLDOWN_SECONDS := 60.0
 const BOOST_HEAT_DAMAGE := 2.0
+const MINING_RANGE := 75.0
 var boost_timer: float = 0.0
 var boost_cooldown_timer: float = 0.0
 var boost_effect_meshes: Array[MeshInstance3D] = []
@@ -40,6 +41,18 @@ var _drone_returning: Array[bool] = [false, false]
 var _mining_target_pos: Vector3 = Vector3.ZERO
 var _was_mining: bool = false
 var mining_continuous_timer: float = 0.0
+
+# Salvage drone state
+var _salvage_active: bool = false
+var _salvage_target: Node3D = null
+var _salvage_ore_remaining: float = 0.0
+var _salvage_rare_dropped: bool = false
+var _salvage_drone_idx: int = 0
+var _salvage_collect_t: float = 0.0
+var _salvage_collect_from: Vector3 = Vector3.ZERO
+var _salvage_going_out: bool = false
+const SALVAGE_ORE_PER_RETURN := 2.0
+const SALVAGE_RARE_CHANCE_PER_RETURN := 0.008
 
 # Navigation variables
 var target_position: Variant = null # null or Vector3
@@ -348,6 +361,7 @@ func _physics_process(delta: float):
 		
 	# Animate orbiting drones and collection behavior
 	_update_drones(delta)
+	_update_salvage(delta)
 
 	# Update drone colors based on health
 	_update_drone_colors()
@@ -468,15 +482,15 @@ func _physics_process(delta: float):
 					mining_laser.visible = false
 				else:
 					target_position = active_target.global_position
-					if dist < 75.0:
+					if dist < MINING_RANGE:
 						steer_towards(active_target.global_position, delta)
 						perform_action(active_target, delta)
 					else:
 						mining_laser.visible = false
-					
+
 			"ATTACK":
 				target_position = active_target.global_position
-				if dist < 75.0:
+				if dist < MINING_RANGE:
 					steer_towards(active_target.global_position, delta)
 					perform_action(active_target, delta)
 					
@@ -1837,10 +1851,14 @@ func take_damage(amount: float, attacker_faction: String = ""):
 			current_shield = 0.0
 			if GlobalState.has_max_deflector_shield:
 				engine_stall_timer = max(engine_stall_timer, 1.0)
-			
+
 	if amount > 0.0:
 		health -= amount
-		
+
+	# Abort salvage run on any hit that actually connects (shields reduced or hull hit).
+	if _salvage_active:
+		_abort_salvage("hit")
+
 	if health <= 0.0:
 		die(attacker_faction)
 
@@ -1918,6 +1936,130 @@ func _respawn_drones() -> void:
 	_drone_collect_t = [0.0, 0.0]
 	_drone_active_idx = 0
 	_create_drones()
+
+
+func begin_salvage(wreck: Node3D, total_ore: float) -> void:
+	if is_docked or _salvage_active or not is_instance_valid(wreck):
+		return
+	_salvage_active = true
+	_salvage_target = wreck
+	_salvage_ore_remaining = total_ore
+	_salvage_rare_dropped = false
+	# Pick whichever drone is currently orbiting (not mid-mining-trip) to be the salvage drone.
+	_salvage_drone_idx = _drone_active_idx
+	_salvage_going_out = false
+	_salvage_collect_t = 1.0  # Force an immediate dispatch on the first _update_salvage tick.
+	GlobalState.emit_chatter("Drone Bay", "Salvage drone deployed.", Color(0.4, 0.9, 0.6))
+
+
+func _update_salvage(delta: float) -> void:
+	if not _salvage_active:
+		return
+
+	if not is_instance_valid(_salvage_target):
+		_abort_salvage("wreck_gone")
+		return
+
+	if global_position.distance_to(_salvage_target.global_position) >= MINING_RANGE:
+		_abort_salvage("out_of_range")
+		return
+
+	if drones.is_empty():
+		return
+
+	var pivot = drones[_salvage_drone_idx]
+	if not is_instance_valid(pivot):
+		return
+	var mesh := pivot.get_child(0) as MeshInstance3D
+	if not mesh:
+		return
+
+	const DRONE_SPEED := 45.0
+
+	if _salvage_going_out or _salvage_collect_t < 1.0:
+		if not mesh.top_level:
+			mesh.top_level = true
+		var target_pos := _salvage_target.global_position if _salvage_going_out else global_position
+		var dist := _salvage_collect_from.distance_to(target_pos)
+		var rate := DRONE_SPEED * delta / maxf(dist, 1.0)
+		_salvage_collect_t = minf(_salvage_collect_t + rate, 1.0)
+		var t := _salvage_collect_t * _salvage_collect_t * (3.0 - 2.0 * _salvage_collect_t)
+		mesh.global_position = _salvage_collect_from.lerp(target_pos, t)
+
+		if _salvage_collect_t >= 1.0:
+			if _salvage_going_out:
+				# Reached wreck — turn around
+				_salvage_going_out = false
+				_salvage_collect_from = mesh.global_position
+				_salvage_collect_t = 0.0
+			else:
+				# Returned to ship — grant ore and check for rare
+				mesh.top_level = false
+				mesh.position = Vector3(6.8 * (1.0 if _salvage_drone_idx == 0 else -1.0), 0.0, 0.0)
+				_salvage_collect_t = 1.0
+				_salvage_collect_from = Vector3.ZERO
+				_salvage_going_out = false
+				_salvage_collect_return()
+	else:
+		# Drone is orbiting — dispatch it
+		var mesh_world_pos := mesh.global_position
+		mesh.top_level = true
+		mesh.global_position = mesh_world_pos
+		_salvage_going_out = true
+		_salvage_collect_from = mesh_world_pos
+		_salvage_collect_t = 0.0
+
+
+func _salvage_collect_return() -> void:
+	var give := minf(SALVAGE_ORE_PER_RETURN, _salvage_ore_remaining)
+	var added := GlobalState.add_ore(give)
+	if added <= 0.0:
+		_abort_salvage("hold_full")
+		return
+
+	_salvage_ore_remaining -= added
+
+	if not _salvage_rare_dropped and randf() < SALVAGE_RARE_CHANCE_PER_RETURN:
+		_salvage_rare_dropped = true
+		var rare_id := "damaged_transponder" if randf() < 0.65 else "encrypted_core"
+		var stack_max := 20 if rare_id == "damaged_transponder" else 5
+		if GlobalState.inventory.add(rare_id, 1, stack_max):
+			var display := "Damaged Transponder" if rare_id == "damaged_transponder" else "Encrypted Data Core"
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: %s." % display, Color(1.0, 0.85, 0.3))
+
+	if _salvage_ore_remaining <= 0.0:
+		_end_salvage()
+
+
+func _abort_salvage(reason: String) -> void:
+	var messages := {
+		"hit":          "Salvage drone lost — you took damage!",
+		"hold_full":    "Cargo hold full — drone recalled.",
+		"out_of_range": "Moved out of range — drone lost.",
+		"wreck_gone":   "Salvage target lost.",
+	}
+	GlobalState.emit_chatter("Drone Bay", messages.get(reason, "Salvage aborted."), Color(1.0, 0.5, 0.2))
+	_salvage_active = false
+	_salvage_target = null
+	_salvage_ore_remaining = 0.0
+	_salvage_rare_dropped = false
+	_salvage_going_out = false
+	_salvage_collect_t = 1.0
+	_respawn_drones()
+
+
+func _end_salvage() -> void:
+	var wreck := _salvage_target
+	_salvage_active = false
+	_salvage_target = null
+	_salvage_ore_remaining = 0.0
+	_salvage_rare_dropped = false
+	_salvage_going_out = false
+	_salvage_collect_t = 1.0
+	_respawn_drones()
+	GlobalState.emit_chatter("Drone Bay", "Wreck stripped.", Color(0.4, 0.9, 0.6))
+	if is_instance_valid(wreck):
+		wreck.queue_free()
 
 
 func _update_drone_colors():

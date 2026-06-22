@@ -1924,7 +1924,8 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 		obj["target_npc"] = real_npc
 		obj["part_name"] = real_item
 
-	quest_data["dialogue"] = _apply_replacements(str(quest_data.get("dialogue", "")), replacements)
+	quest_data["dialogue"] = _thin_pilot_name(
+		_apply_replacements(str(quest_data.get("dialogue", "")), replacements), nickname)
 
 	var choices: Array = quest_data.get("choices", [])
 	for choice in choices:
@@ -1933,7 +1934,10 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 				choice["text"] = _apply_replacements(str(choice["text"]), replacements)
 			var cons: Dictionary = choice.get("consequence", {})
 			if cons.has("dialogue_response"):
-				cons["dialogue_response"] = _apply_replacements(str(cons["dialogue_response"]), replacements)
+				# Opening already addresses the pilot by name; strip it from the
+				# follow-up responses so it isn't repeated in every line.
+				cons["dialogue_response"] = _thin_pilot_name(
+					_apply_replacements(str(cons["dialogue_response"]), replacements), nickname, 0)
 
 
 func _apply_replacements(text: String, replacements: Dictionary) -> String:
@@ -1949,6 +1953,41 @@ func _apply_replacements(text: String, replacements: Dictionary) -> String:
 		if cleaned != result:
 			print("[LLMInterface] ⚠ SUBSTITUTE: Regex caught leftover slither-variant in dialogue")
 			result = cleaned
+	return result
+
+
+# The local model tends to address the pilot by name in every sentence
+# ("Acknowledged, Indy. ... Don't fall behind, Indy."). Keep only the FIRST
+# use of the nickname per text field and drop the rest, cleaning up the
+# punctuation/spacing left behind so it reads naturally.
+func _thin_pilot_name(text: String, nickname: String, keep: int = 1) -> String:
+	var name := nickname.strip_edges()
+	if name.is_empty() or text.is_empty():
+		return text
+	var re := RegEx.new()
+	# The name as a whole word, plus any commas/spaces hugging it on either side.
+	if re.compile("(?i)\\s*,?\\s*\\b" + name + "\\b\\s*,?\\s*") != OK:
+		return text
+	var matches := re.search_all(text)
+	if matches.size() <= keep:
+		return text
+	# Keep the first `keep` occurrences; remove the rest (back-to-front so
+	# offsets stay valid). keep=0 strips the name entirely.
+	var result := text
+	for i in range(matches.size() - 1, keep - 1, -1):
+		var m: RegExMatch = matches[i]
+		result = result.substr(0, m.get_start()) + " " + result.substr(m.get_end())
+	# Tidy: collapse double spaces and drop spaces before sentence punctuation.
+	result = result.replace("  ", " ")
+	var punct := RegEx.new()
+	if punct.compile("\\s+([,.!?])") == OK:
+		result = punct.sub(result, "$1", true)
+	result = result.strip_edges()
+	# Re-capitalize if removing a leading vocative lowercased the sentence.
+	if result.length() > 0:
+		var first := result[0]
+		if first >= "a" and first <= "z":
+			result = first.to_upper() + result.substr(1)
 	return result
 
 

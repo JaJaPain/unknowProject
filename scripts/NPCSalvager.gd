@@ -15,9 +15,32 @@ var model: Node3D
 var laser_beam: MeshInstance3D
 var station: Node3D = null
 
+var _spotted_player: bool = false
+var _lost_wreck_taunted: bool = false
+
+const _SPOT_LINES: Array[String] = [
+	"Hands off. I called that wreck.",
+	"Bold move, rookie. Real bold.",
+	"That's my scrap. Back your drone off.",
+	"You couldn't salvage a sandwich.",
+	"I marked that wreck before your ship was paid off.",
+	"Nice drone. Be a shame if something happened to it.",
+	"Keep poking around and you'll find out why I work alone.",
+	"Walk away. I won't ask twice.",
+]
+
+const _LOST_WRECK_LINES: Array[String] = [
+	"You've got to be kidding me.",
+	"That was mine. Every gram of it.",
+	"Fine. Watch your back out here.",
+	"Enjoy it. You just made an enemy for forty ore.",
+	"I had plans for that wreck. Petty ones. Now.",
+]
+
 func _ready():
 	health = max_health
-	
+	add_to_group("salvager")
+
 	# Load ship model
 	var ship_scene = load("res://assets/INDYMiner.glb")
 	if ship_scene:
@@ -108,7 +131,28 @@ func _physics_process(delta: float):
 			if not is_instance_valid(target_wreck):
 				target_wreck = null
 				state = "RETURNING"
+				# Player's drone finished first — only mouth off if we already spotted them poaching
+				if _spotted_player and not _lost_wreck_taunted:
+					_lost_wreck_taunted = true
+					GlobalState.emit_chatter(
+						name,
+						_LOST_WRECK_LINES[randi() % _LOST_WRECK_LINES.size()],
+						Color(0.9, 0.4, 0.1)
+					)
 				return
+
+			# Taunt the player once if they're actively poaching this wreck within visual range
+			if not _spotted_player and GlobalState.player != null \
+					and bool(GlobalState.player.get("_salvage_active")) \
+					and is_instance_valid(GlobalState.active_target) \
+					and GlobalState.active_target == target_wreck \
+					and global_position.distance_to(GlobalState.player.global_position) <= 150.0:
+				_spotted_player = true
+				GlobalState.emit_chatter(
+					name,
+					_SPOT_LINES[randi() % _SPOT_LINES.size()],
+					Color(0.9, 0.5, 0.1)
+				)
 				
 			steer_towards(target_wreck.global_position, delta)
 			salvage_time += delta
@@ -152,8 +196,12 @@ func _physics_process(delta: float):
 					move_and_slide()
 				else:
 					velocity = Vector3.ZERO
+					_spotted_player = false
+					_lost_wreck_taunted = false
 					state = "IDLE"
 			else:
+				_spotted_player = false
+				_lost_wreck_taunted = false
 				state = "IDLE"
 
 func steer_towards(target_pos: Vector3, delta: float):

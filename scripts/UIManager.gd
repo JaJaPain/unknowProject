@@ -4130,7 +4130,8 @@ func _on_inventory_pressed() -> void:
 	SpeechService.stop()
 	if inventory_panel and inventory_panel.visible:
 		inventory_panel.visible = false
-		if inventory_return_to_dock:
+		var player_is_docked := GlobalState.player != null and bool(GlobalState.player.get("is_docked"))
+		if inventory_return_to_dock or player_is_docked:
 			dock_panel.visible = true
 			_render_dock_submenu()
 		inventory_return_to_dock = false
@@ -4147,8 +4148,13 @@ func _on_inventory_pressed() -> void:
 
 
 func _on_inventory_back_pressed() -> void:
+	_close_inventory_panel()
+
+
+func _close_inventory_panel() -> void:
 	inventory_panel.visible = false
-	if inventory_return_to_dock:
+	var player_is_docked := GlobalState.player != null and bool(GlobalState.player.get("is_docked"))
+	if inventory_return_to_dock or player_is_docked:
 		dock_panel.visible = true
 		_render_dock_submenu()
 	inventory_return_to_dock = false
@@ -4312,6 +4318,18 @@ func _on_inventory_use_pressed(item_id: String) -> void:
 	if GlobalState.player == null:
 		show_hud_warning("Return to your ship before using items.")
 		return
+
+	if item_id == "salvage_drone":
+		var reason := ConsumableEffectsScript.salvage_block_reason(GlobalState.player)
+		if reason != "":
+			GlobalState.emit_chatter("Drone Bay", reason, Color(1.0, 0.6, 0.2))
+			return
+		GlobalState.inventory.remove("salvage_drone")
+		GlobalState.player.begin_salvage(GlobalState.active_target, 40.0)
+		_render_inventory_items()
+		_close_inventory_panel()
+		return
+
 	if not ConsumableEffectsScript.use(
 		item_id,
 		GlobalState.player,
@@ -4322,6 +4340,7 @@ func _on_inventory_use_pressed(item_id: String) -> void:
 		return
 	_update_hud_health()
 	_render_inventory_items()
+	_close_inventory_panel()
 
 
 func _render_store_items() -> void:
@@ -4373,6 +4392,16 @@ func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: 
 	row.add_theme_constant_override("separation", 8)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 
+	var buy_btn := Button.new()
+	buy_btn.text = "Buy"
+	buy_btn.custom_minimum_size.x = 50
+	var can_buy := stock > 0 and price <= GlobalState.player_credits
+	if can_buy:
+		can_buy = GlobalState.inventory.can_add(item_id, 1, int(item_def.stack_max) if item_def else -1)
+	buy_btn.disabled = not can_buy
+	buy_btn.pressed.connect(_on_store_buy.bind(item_id))
+	row.add_child(buy_btn)
+
 	var icon := _build_item_icon(item_def)
 	if icon:
 		row.add_child(icon)
@@ -4409,16 +4438,6 @@ func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: 
 	owned_label.custom_minimum_size.x = 30
 	owned_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
 	row.add_child(owned_label)
-
-	var buy_btn := Button.new()
-	buy_btn.text = "Buy"
-	buy_btn.custom_minimum_size.x = 50
-	var can_buy := stock > 0 and price <= GlobalState.player_credits
-	if can_buy:
-		can_buy = GlobalState.inventory.can_add(item_id, 1, int(item_def.stack_max) if item_def else -1)
-	buy_btn.disabled = not can_buy
-	buy_btn.pressed.connect(_on_store_buy.bind(item_id))
-	row.add_child(buy_btn)
 
 	return row
 

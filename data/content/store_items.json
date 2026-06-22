@@ -1,374 +1,474 @@
 {
-	"schema_version": 2,
-	"icon_sheets": {
-		"novelty": "res://assets/RandomIcon01.png",
-		"tactical": "res://assets/RandomIcon02.png",
-		"cargo": "res://assets/RandomIcon03.png"
-	},
-	"items": [
-		{
-			"item_id": "repair_kit",
-			"display_name": "Repair Kit",
-			"description": "Field-grade hull patch. Restores 25 HP.",
-			"category": "consumable",
-			"base_price": 30,
-			"stack_max": 5,
-			"restock_interval_minutes": 90,
-			"restock_quantity": 2,
-			"max_stock": 4,
-			"icon_sheet": "tactical",
-			"icon_cell": [0, 0]
-		},
-		{
-			"item_id": "shield_cell",
-			"display_name": "Shield Cell",
-			"description": "Emergency capacitor dump. Restores 50% shield.",
-			"category": "consumable",
-			"base_price": 45,
-			"stack_max": 3,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 1,
-			"max_stock": 3,
-			"icon_sheet": "tactical",
-			"icon_cell": [1, 0]
-		},
-		{
-			"item_id": "scanner_probe",
-			"display_name": "Scanner Probe",
-			"description": "Deploys a 60-second sweep. Reveals all contacts in system.",
-			"category": "consumable",
-			"base_price": 20,
-			"stack_max": 5,
-			"restock_interval_minutes": 60,
-			"restock_quantity": 2,
-			"max_stock": 5,
-			"icon_sheet": "tactical",
-			"icon_cell": [2, 0]
-		},
-		{
-			"item_id": "flare_decoy",
-			"display_name": "Flare Decoy",
-			"description": "Draws hostile fire for 8 seconds. Single use.",
-			"category": "consumable",
-			"base_price": 35,
-			"stack_max": 3,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "tactical",
-			"icon_cell": [3, 0]
-		},
-		{
-			"item_id": "fuel_booster",
-			"display_name": "Fuel Block",
-			"description": "Compressed fuel pellet. Reduces next gate jump time by half.",
-			"category": "consumable",
-			"base_price": 25,
-			"stack_max": 5,
-			"restock_interval_minutes": 90,
-			"restock_quantity": 2,
-			"max_stock": 4,
-			"icon_sheet": "tactical",
-			"icon_cell": [4, 1]
-		},
-		{
-			"item_id": "emp_charge",
-			"display_name": "EMP Charge",
-			"description": "Disables nearby hostile shields for 10 seconds.",
-			"category": "consumable",
-			"base_price": 60,
-			"stack_max": 2,
-			"restock_interval_minutes": 180,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "tactical",
-			"icon_cell": [3, 0]
-		},
-		{
-			"item_id": "nanite_paste",
-			"display_name": "Nanite Repair Paste",
-			"description": "Slow-release hull nanites. Restores 50 HP over 30 seconds.",
-			"category": "consumable",
-			"base_price": 55,
-			"stack_max": 3,
-			"restock_interval_minutes": 150,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "tactical",
-			"icon_cell": [0, 2]
-		},
-		{
-			"item_id": "capsuleer_booster",
-			"display_name": "Capsuleer Booster",
-			"description": "Sharpens reflexes. 20% weapon cooldown reduction for 60 seconds.",
-			"category": "consumable",
-			"base_price": 70,
-			"stack_max": 2,
-			"restock_interval_minutes": 180,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "tactical",
-			"icon_cell": [1, 2]
-		},
-		{
-			"item_id": "target_painter",
-			"display_name": "Target Painter",
-			"description": "Marks a target for 15 seconds. Increases all damage dealt by 25%.",
-			"category": "consumable",
-			"base_price": 50,
-			"stack_max": 3,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "tactical",
-			"icon_cell": [2, 2]
-		},
-		{
-			"item_id": "data_chip",
-			"display_name": "Data Chip",
-			"description": "Encrypted navigation data. Required for certain contracts.",
-			"category": "trade_good",
-			"base_price": 40,
-			"stack_max": 10,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 2,
-			"max_stock": 5,
-			"icon_sheet": "tactical",
-			"icon_cell": [4, 2]
-		},
-		{
-			"item_id": "kinetic_ammo",
-			"display_name": "Kinetic Ammo",
-			"description": "Standard ballistic rounds. 500-round box.",
-			"category": "ammo",
-			"base_price": 15,
-			"stack_max": 20,
-			"restock_interval_minutes": 60,
-			"restock_quantity": 5,
-			"max_stock": 15,
-			"icon_sheet": "tactical",
-			"icon_cell": [4, 0]
-		},
-		{
-			"item_id": "thermal_ammo",
-			"display_name": "Thermal Ammo",
-			"description": "Incendiary rounds. Extra damage to shields.",
-			"category": "ammo",
-			"base_price": 20,
-			"stack_max": 15,
-			"restock_interval_minutes": 90,
-			"restock_quantity": 3,
-			"max_stock": 10,
-			"icon_sheet": "tactical",
-			"icon_cell": [0, 1]
-		},
-		{
-			"item_id": "explosive_ammo",
-			"display_name": "Explosive Ammo",
-			"description": "High-yield warheads. Extra damage to armor.",
-			"category": "ammo",
-			"base_price": 25,
-			"stack_max": 10,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 2,
-			"max_stock": 6,
-			"icon_sheet": "tactical",
-			"icon_cell": [1, 1]
-		},
-		{
-			"item_id": "energy_ammo",
-			"display_name": "Energy Ammo",
-			"description": "Plasma charges. Ignores 15% of target armor.",
-			"category": "ammo",
-			"base_price": 30,
-			"stack_max": 10,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 2,
-			"max_stock": 5,
-			"icon_sheet": "tactical",
-			"icon_cell": [2, 1]
-		},
-		{
-			"item_id": "canned_goods",
-			"display_name": "Canned Goods",
-			"description": "Long shelf life. Questionable ingredients.",
-			"category": "novelty",
-			"base_price": 5,
-			"stack_max": 20,
-			"restock_interval_minutes": 60,
-			"restock_quantity": 5,
-			"max_stock": 15,
-			"icon_sheet": "novelty",
-			"icon_cell": [1, 4]
-		},
-		{
-			"item_id": "coffee_maker",
-			"display_name": "Coffee Maker",
-			"description": "Works great. Ships without warranty.",
-			"category": "novelty",
-			"base_price": 15,
-			"stack_max": 3,
-			"restock_interval_minutes": 180,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "novelty",
-			"icon_cell": [3, 1]
-		},
-		{
-			"item_id": "toilet_paper",
-			"display_name": "Toilet Paper (24PK)",
-			"description": "Rare find out here. Don't lowball.",
-			"category": "novelty",
-			"base_price": 12,
-			"stack_max": 5,
-			"restock_interval_minutes": 240,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "novelty",
-			"icon_cell": [1, 2]
-		},
-		{
-			"item_id": "mystery_box",
-			"display_name": "Mystery Box",
-			"description": "Could be anything. No refunds.",
-			"category": "novelty",
-			"base_price": 25,
-			"stack_max": 3,
-			"restock_interval_minutes": 300,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "novelty",
-			"icon_cell": [4, 1]
-		},
-		{
-			"item_id": "pet_rock",
-			"display_name": "Pet Rock",
-			"description": "Low maintenance. High attitude.",
-			"category": "novelty",
-			"base_price": 3,
-			"stack_max": 5,
-			"restock_interval_minutes": 60,
-			"restock_quantity": 2,
-			"max_stock": 5,
-			"icon_sheet": "novelty",
-			"icon_cell": [4, 4]
-		},
-		{
-			"item_id": "fairy_lights",
-			"display_name": "Fairy Lights",
-			"description": "Adds warmth to cold metal walls.",
-			"category": "novelty",
-			"base_price": 8,
-			"stack_max": 5,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 2,
-			"max_stock": 4,
-			"icon_sheet": "novelty",
-			"icon_cell": [3, 4]
-		},
-		{
-			"item_id": "lava_lamp",
-			"display_name": "Lava Lamp",
-			"description": "Mesmerizing. Possibly hazardous.",
-			"category": "novelty",
-			"base_price": 18,
-			"stack_max": 2,
-			"restock_interval_minutes": 180,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "novelty",
-			"icon_cell": [1, 3]
-		},
-		{
-			"item_id": "odd_rock",
-			"display_name": "Odd Rock",
-			"description": "Feels important. Probably isn't.",
-			"category": "novelty",
-			"base_price": 2,
-			"stack_max": 10,
-			"restock_interval_minutes": 60,
-			"restock_quantity": 3,
-			"max_stock": 8,
-			"icon_sheet": "novelty",
-			"icon_cell": [0, 4]
-		},
-		{
-			"item_id": "neon_sign",
-			"display_name": "Neon Sign",
-			"description": "\"Slightly used. Great ambience.\"",
-			"category": "novelty",
-			"base_price": 22,
-			"stack_max": 2,
-			"restock_interval_minutes": 240,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "novelty",
-			"icon_cell": [2, 0]
-		},
-		{
-			"item_id": "power_coils",
-			"display_name": "Power Coils",
-			"description": "Replacement power distribution cabling. Universal fit.",
-			"category": "ship_part",
-			"base_price": 80,
-			"stack_max": 3,
-			"restock_interval_minutes": 180,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "cargo",
-			"icon_cell": [0, 2]
-		},
-		{
-			"item_id": "hull_plating",
-			"display_name": "Hull Plating",
-			"description": "Reinforced composite panel. One size fits most.",
-			"category": "ship_part",
-			"base_price": 100,
-			"stack_max": 3,
-			"restock_interval_minutes": 240,
-			"restock_quantity": 1,
-			"max_stock": 2,
-			"icon_sheet": "cargo",
-			"icon_cell": [1, 0]
-		},
-		{
-			"item_id": "fusion_cell",
-			"display_name": "Fusion Cell",
-			"description": "Compact reactor fuel cell. Handle with care.",
-			"category": "ship_part",
-			"base_price": 120,
-			"stack_max": 2,
-			"restock_interval_minutes": 300,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "cargo",
-			"icon_cell": [4, 2]
-		},
-		{
-			"item_id": "sensor_cluster",
-			"display_name": "Sensor Cluster",
-			"description": "Multi-band detection array. Extends scanner range.",
-			"category": "ship_part",
-			"base_price": 90,
-			"stack_max": 2,
-			"restock_interval_minutes": 240,
-			"restock_quantity": 1,
-			"max_stock": 1,
-			"icon_sheet": "cargo",
-			"icon_cell": [4, 0]
-		},
-		{
-			"item_id": "memory_bank",
-			"display_name": "Memory Bank",
-			"description": "High-density storage module. May contain previous owner's data.",
-			"category": "ship_part",
-			"base_price": 65,
-			"stack_max": 5,
-			"restock_interval_minutes": 120,
-			"restock_quantity": 2,
-			"max_stock": 3,
-			"icon_sheet": "cargo",
-			"icon_cell": [1, 2]
-		}
-	]
+    "schema_version": 2,
+    "icon_sheets": {
+        "novelty": "res://assets/RandomIcon01.png",
+        "tactical": "res://assets/RandomIcon02.png",
+        "cargo": "res://assets/RandomIcon03.png"
+    },
+    "items": [
+        {
+            "item_id": "repair_kit",
+            "display_name": "Repair Kit",
+            "description": "Field-grade hull patch. Restores 25 HP.",
+            "category": "consumable",
+            "base_price": 30,
+            "stack_max": 5,
+            "restock_interval_minutes": 90,
+            "restock_quantity": 2,
+            "max_stock": 4,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                0
+            ]
+        },
+        {
+            "item_id": "shield_cell",
+            "display_name": "Shield Cell",
+            "description": "Emergency capacitor dump. Restores 50% shield.",
+            "category": "consumable",
+            "base_price": 45,
+            "stack_max": 3,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 1,
+            "max_stock": 3,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                1,
+                0
+            ]
+        },
+        {
+            "item_id": "scanner_probe",
+            "display_name": "Scanner Probe",
+            "description": "Deploys a 60-second sweep. Reveals all contacts in system.",
+            "category": "consumable",
+            "base_price": 20,
+            "stack_max": 5,
+            "restock_interval_minutes": 60,
+            "restock_quantity": 2,
+            "max_stock": 5,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                2,
+                0
+            ]
+        },
+        {
+            "item_id": "flare_decoy",
+            "display_name": "Flare Decoy",
+            "description": "Draws hostile fire for 8 seconds. Single use.",
+            "category": "consumable",
+            "base_price": 35,
+            "stack_max": 3,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                3,
+                0
+            ]
+        },
+        {
+            "item_id": "fuel_booster",
+            "display_name": "Fuel Block",
+            "description": "Compressed fuel pellet. Reduces next gate jump time by half.",
+            "category": "consumable",
+            "base_price": 25,
+            "stack_max": 5,
+            "restock_interval_minutes": 90,
+            "restock_quantity": 2,
+            "max_stock": 4,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                4,
+                1
+            ]
+        },
+        {
+            "item_id": "emp_charge",
+            "display_name": "EMP Charge",
+            "description": "Disables nearby hostile shields for 10 seconds.",
+            "category": "consumable",
+            "base_price": 60,
+            "stack_max": 2,
+            "restock_interval_minutes": 180,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                3,
+                0
+            ]
+        },
+        {
+            "item_id": "nanite_paste_unused",
+            "display_name": "Nanite Repair Paste (Deprecated)",
+            "description": "Slow-release hull nanites. Restores 50 HP over 30 seconds.",
+            "category": "consumable",
+            "base_price": 55,
+            "stack_max": 3,
+            "restock_interval_minutes": 150,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "capsuleer_booster_unused",
+            "display_name": "Capsuleer Booster (Deprecated)",
+            "description": "Sharpens reflexes. 20% weapon cooldown reduction for 60 seconds.",
+            "category": "consumable",
+            "base_price": 70,
+            "stack_max": 2,
+            "restock_interval_minutes": 180,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                1,
+                2
+            ]
+        },
+        {
+            "item_id": "target_painter",
+            "display_name": "Target Painter",
+            "description": "Marks a target for 15 seconds. Increases all damage dealt by 25%.",
+            "category": "consumable",
+            "base_price": 50,
+            "stack_max": 3,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                2,
+                2
+            ]
+        },
+        {
+            "item_id": "data_chip",
+            "display_name": "Data Chip",
+            "description": "Encrypted navigation data. Required for certain contracts.",
+            "category": "trade_good",
+            "base_price": 40,
+            "stack_max": 10,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 5,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                4,
+                2
+            ]
+        },
+        {
+            "item_id": "kinetic_ammo",
+            "display_name": "Kinetic Ammo",
+            "description": "Standard ballistic rounds. 500-round box.",
+            "category": "ammo",
+            "base_price": 15,
+            "stack_max": 20,
+            "restock_interval_minutes": 60,
+            "restock_quantity": 5,
+            "max_stock": 15,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                4,
+                0
+            ]
+        },
+        {
+            "item_id": "thermal_ammo",
+            "display_name": "Thermal Ammo",
+            "description": "Incendiary rounds. Extra damage to shields.",
+            "category": "ammo",
+            "base_price": 20,
+            "stack_max": 15,
+            "restock_interval_minutes": 90,
+            "restock_quantity": 3,
+            "max_stock": 10,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                1
+            ]
+        },
+        {
+            "item_id": "explosive_ammo",
+            "display_name": "Explosive Ammo",
+            "description": "High-yield warheads. Extra damage to armor.",
+            "category": "ammo",
+            "base_price": 25,
+            "stack_max": 10,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 6,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                1,
+                1
+            ]
+        },
+        {
+            "item_id": "energy_ammo",
+            "display_name": "Energy Ammo",
+            "description": "Plasma charges. Ignores 15% of target armor.",
+            "category": "ammo",
+            "base_price": 30,
+            "stack_max": 10,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 5,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                2,
+                1
+            ]
+        },
+        {
+            "item_id": "damaged_transponder",
+            "display_name": "Damaged Ship Transponder",
+            "description": "Still broadcasting. Badly.",
+            "category": "consumable",
+            "base_price": 5,
+            "stack_max": 20,
+            "restock_interval_minutes": 60,
+            "restock_quantity": 5,
+            "max_stock": 15,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                1,
+                2
+            ]
+        },
+        {
+            "item_id": "coffee_maker",
+            "display_name": "Coffee Maker",
+            "description": "Works great. Ships without warranty.",
+            "category": "novelty",
+            "base_price": 15,
+            "stack_max": 3,
+            "restock_interval_minutes": 180,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                3,
+                1
+            ]
+        },
+        {
+            "item_id": "toilet_paper",
+            "display_name": "Toilet Paper (24PK)",
+            "description": "Rare find out here. Don't lowball.",
+            "category": "novelty",
+            "base_price": 12,
+            "stack_max": 5,
+            "restock_interval_minutes": 240,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                1,
+                2
+            ]
+        },
+        {
+            "item_id": "mystery_box",
+            "display_name": "Mystery Box",
+            "description": "Could be anything. No refunds.",
+            "category": "novelty",
+            "base_price": 25,
+            "stack_max": 3,
+            "restock_interval_minutes": 300,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                4,
+                1
+            ]
+        },
+        {
+            "item_id": "pet_rock",
+            "display_name": "Pet Rock",
+            "description": "Low maintenance. High attitude.",
+            "category": "novelty",
+            "base_price": 3,
+            "stack_max": 5,
+            "restock_interval_minutes": 60,
+            "restock_quantity": 2,
+            "max_stock": 5,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                4,
+                4
+            ]
+        },
+        {
+            "item_id": "antimatter_pod",
+            "display_name": "Anti-Matter Containment Pod",
+            "description": "Handle with extreme prejudice.",
+            "category": "consumable",
+            "base_price": 8,
+            "stack_max": 5,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 4,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                4,
+                4
+            ]
+        },
+        {
+            "item_id": "lava_lamp",
+            "display_name": "Lava Lamp",
+            "description": "Mesmerizing. Possibly hazardous.",
+            "category": "novelty",
+            "base_price": 18,
+            "stack_max": 2,
+            "restock_interval_minutes": 180,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                1,
+                3
+            ]
+        },
+        {
+            "item_id": "salvage_drone",
+            "display_name": "Single-Use Salvage Drone",
+            "description": "Strips a nearby wreck for ore. Stops permanently if you take damage.",
+            "category": "consumable",
+            "base_price": 25,
+            "stack_max": 10,
+            "restock_interval_minutes": 60,
+            "restock_quantity": 3,
+            "max_stock": 8,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "neon_sign",
+            "display_name": "Neon Sign",
+            "description": "\"Slightly used. Great ambience.\"",
+            "category": "novelty",
+            "base_price": 22,
+            "stack_max": 2,
+            "restock_interval_minutes": 240,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "novelty",
+            "icon_cell": [
+                2,
+                0
+            ]
+        },
+        {
+            "item_id": "power_coils",
+            "display_name": "Power Coils",
+            "description": "Replacement power distribution cabling. Universal fit.",
+            "category": "ship_part",
+            "base_price": 80,
+            "stack_max": 3,
+            "restock_interval_minutes": 180,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "cargo",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "hull_plating",
+            "display_name": "Hull Plating",
+            "description": "Reinforced composite panel. One size fits most.",
+            "category": "ship_part",
+            "base_price": 100,
+            "stack_max": 3,
+            "restock_interval_minutes": 240,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "cargo",
+            "icon_cell": [
+                1,
+                0
+            ]
+        },
+        {
+            "item_id": "fusion_cell",
+            "display_name": "Fusion Cell",
+            "description": "Compact reactor fuel cell. Handle with care.",
+            "category": "ship_part",
+            "base_price": 120,
+            "stack_max": 2,
+            "restock_interval_minutes": 300,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "cargo",
+            "icon_cell": [
+                4,
+                2
+            ]
+        },
+        {
+            "item_id": "sensor_cluster",
+            "display_name": "Sensor Cluster",
+            "description": "Multi-band detection array. Extends scanner range.",
+            "category": "ship_part",
+            "base_price": 90,
+            "stack_max": 2,
+            "restock_interval_minutes": 240,
+            "restock_quantity": 1,
+            "max_stock": 1,
+            "icon_sheet": "cargo",
+            "icon_cell": [
+                4,
+                0
+            ]
+        },
+        {
+            "item_id": "memory_bank",
+            "display_name": "Memory Bank",
+            "description": "High-density storage module. May contain previous owner's data.",
+            "category": "ship_part",
+            "base_price": 65,
+            "stack_max": 5,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 3,
+            "icon_sheet": "cargo",
+            "icon_cell": [
+                1,
+                2
+            ]
+        },
+        {
+            "item_id": "encrypted_core",
+            "display_name": "Encrypted Data Core",
+            "description": "Locked tight. Valuable inside.",
+            "category": "trade_good",
+            "base_price": 60,
+            "stack_max": 5,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                3,
+                3
+            ]
+        }
+    ]
 }

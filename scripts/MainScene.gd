@@ -203,7 +203,13 @@ func _on_npc_spawn_timeout():
 	if GlobalState.destroyed_ships_pool > 0:
 		GlobalState.destroyed_ships_pool -= 1
 		_spawn_npc_flying_in()
-	
+
+	# Second salvager when the system has more than 5 wrecks
+	var wreck_count = get_tree().get_nodes_in_group("wreckage").size()
+	var salvager_count = get_tree().get_nodes_in_group("salvager").size()
+	if wreck_count > 5 and salvager_count < 2:
+		_spawn_salvager()
+
 	# Occasional ambient minor faction troublemaker (~15% chance, max 2 alive)
 	var minor_count = _count_minor_faction_ships()
 	if minor_count < 2 and randf() < 0.15:
