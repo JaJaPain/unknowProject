@@ -271,6 +271,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		create_tween().tween_property(player, "global_position", source_gate.global_position, effect_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	AudioManager.play_jump_spool()
 	if camera:
+		# Snap to the canonical FOV before the entry widen so the jump always
+		# begins from a clean value (matches the after-jump reset).
+		camera.fov = PLAYER_CAMERA_FOV
 		create_tween().tween_property(camera, "fov", min(original_fov + 24.0, 120.0), effect_duration)
 	await transition_fx.play_entry(effect_duration)
 	
