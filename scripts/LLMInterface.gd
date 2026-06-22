@@ -3289,7 +3289,7 @@ func _record_llm_fallback(
 	)
 
 
-func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
+func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attempts_left: int = 1):
 	# Build a minimal context summary for Kaelen to react to
 	var title = quest_data.get("title", "the contract")
 	var faction = quest_data.get("faction", "neutral").capitalize()
@@ -3324,18 +3324,28 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 			print("[LLMInterface] Kaelen reaction fetch failed. Using fallback lines.")
-			_trigger_kaelen_reaction_fallback(callback, "http_response_failed")
+			if _attempts_left > 0:
+				print("[LLMInterface] Retrying Kaelen reaction (%d attempts left)." % _attempts_left)
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "http_response_failed")
 			return
 
 		var response_text = body.get_string_from_utf8()
 		var json = JSON.new()
 		if json.parse(response_text) != OK:
-			_trigger_kaelen_reaction_fallback(callback, "response_envelope_parse_failed")
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "response_envelope_parse_failed")
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
-			_trigger_kaelen_reaction_fallback(callback, "response_envelope_missing_response")
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "response_envelope_missing_response")
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -3349,21 +3359,30 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		var inner_json = JSON.new()
 		if inner_json.parse(inner_json_str) != OK:
-			_trigger_kaelen_reaction_fallback(callback, "inner_json_parse_failed")
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "inner_json_parse_failed")
 			return
 
 		var reaction_data = inner_json.get_data()
 		if reaction_data is Dictionary and reaction_data.has("completion") and reaction_data.has("abandon"):
 			var comp_line: String = str(reaction_data["completion"])
 			var abn_line: String = str(reaction_data["abandon"])
-			# Guard against the LLM echoing the template placeholder back unchanged
 			if comp_line.contains("[") or abn_line.contains("["):
-				_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen template not filled — retrying (%d attempts left)." % _attempts_left)
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+				else:
+					_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
 				return
 			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
 			callback.call(comp_line, abn_line)
 		else:
-			_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
 	)
 
 	var payload: Dictionary = build_generation_body(
