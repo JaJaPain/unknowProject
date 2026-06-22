@@ -274,11 +274,10 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if visual_node and DisplayServer.get_name() != "headless":
 		visual_node.scale = orig_scale
 		
-	# Hide player visual mesh, hide old system, and spawn the 3D hyperspace tunnel
+	# Hide player, hide old system, and spawn the 3D hyperspace tunnel
 	var jump_tunnel = null
 	if DisplayServer.get_name() != "headless":
-		if visual_node:
-			visual_node.visible = false
+		player.visible = false
 		var old_system := get_active_system_root()
 		if old_system and is_instance_valid(old_system):
 			old_system.visible = false
@@ -339,8 +338,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		jump_tunnel.queue_free()
 	if new_system and is_instance_valid(new_system):
 		new_system.visible = true
-	if visual_node:
-		visual_node.visible = true
+	player.visible = true
 	if camera:
 		camera.make_current()
 	
