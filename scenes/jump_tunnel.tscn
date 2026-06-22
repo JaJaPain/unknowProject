@@ -52,13 +52,6 @@ environment = SubResource("Environment_1")
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -100)
 mesh = SubResource("CylinderMesh_1")
 
-[node name="ShipAnchor" type="Node3D" parent="."]
-
-[node name="WarpCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, 0, 3.8, 17.5)
-fov = 72.0
-far = 20000.0
-
 [node name="WarpParticles" type="CPUParticles3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -180)
 amount = 160
@@ -74,7 +67,7 @@ initial_velocity_min = 280.0
 initial_velocity_max = 420.0
 
 [node name="EngineGlowLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.7)
 light_color = Color(0.18, 0.78, 1.0, 1)
 light_energy = 8.0
 omni_range = 15.0

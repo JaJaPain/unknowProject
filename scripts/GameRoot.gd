@@ -274,17 +274,29 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if visual_node and DisplayServer.get_name() != "headless":
 		visual_node.scale = orig_scale
 		
-	# Hide player, hide old system, and spawn the 3D hyperspace tunnel
+	var orig_collision_layer := player.collision_layer
+	var orig_collision_mask := player.collision_mask
+	
+	# Teleport player to remote coordinate and spawn the 3D hyperspace tunnel
 	var jump_tunnel = null
 	if DisplayServer.get_name() != "headless":
-		player.visible = false
+		player.collision_layer = 0
+		player.collision_mask = 0
+		player.set_physics_process(true)
+		
+		var remote_position := Vector3(50000.0, 50000.0, 50000.0)
+		player.global_position = remote_position
+		if player.has_method("sync_camera_to_ship"):
+			player.sync_camera_to_ship()
+			
 		var old_system := get_active_system_root()
 		if old_system and is_instance_valid(old_system):
 			old_system.visible = false
 			
 		jump_tunnel = load("res://scenes/jump_tunnel.tscn").instantiate()
 		add_child(jump_tunnel)
-		jump_tunnel.setup_ship_model(visual_node)
+		jump_tunnel.global_position = remote_position
+		jump_tunnel.setup_real_ship(player)
 		
 		# Fade the white flash OUT so the player can see the 3D tunnel!
 		var flash_node = transition_fx.get_node_or_null("Flash")
@@ -312,10 +324,6 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
 
-	var arrival_transform: Transform3D = arrival_gate.call("get_arrival_transform")
-	player.global_transform = arrival_transform
-	last_arrival_gate_id = runtime_gate_id
-
 	# Let the player fly down the 3D tunnel for a satisfying duration.
 	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
 	if DisplayServer.get_name() != "headless":
@@ -326,6 +334,11 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 			fade_in_tween.tween_property(flash_node, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 			await fade_in_tween.finished
 
+	# Teleport player to the arrival gate portal now that the transit screen is fully white
+	var arrival_transform: Transform3D = arrival_gate.call("get_arrival_transform")
+	player.global_transform = arrival_transform
+	last_arrival_gate_id = runtime_gate_id
+
 	if player.has_method("sync_camera_to_ship"):
 		player.sync_camera_to_ship()
 	if camera:
@@ -333,12 +346,16 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		
 	await transition_fx.hold_covered(1 if DisplayServer.get_name() == "headless" else 2)
 	
-	# Remove the 3D tunnel and restore player visuals
+	# Remove the 3D tunnel and restore player visuals/collision
 	if jump_tunnel and is_instance_valid(jump_tunnel):
+		jump_tunnel.cleanup()
 		jump_tunnel.queue_free()
+		
+	player.collision_layer = orig_collision_layer
+	player.collision_mask = orig_collision_mask
+	
 	if new_system and is_instance_valid(new_system):
 		new_system.visible = true
-	player.visible = true
 	if camera:
 		camera.make_current()
 	
