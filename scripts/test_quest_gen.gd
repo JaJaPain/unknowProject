@@ -187,8 +187,8 @@ func _print_summary() -> void:
 		print("  Issues:")
 		var sorted_issues := issue_counts.keys()
 		sorted_issues.sort()
-	for issue in sorted_issues:
-		print("    %-30s %d" % [issue, issue_counts[issue]])
+		for issue in sorted_issues:
+			print("    %-30s %d" % [issue, issue_counts[issue]])
 	print("=" .repeat(80))
 
 

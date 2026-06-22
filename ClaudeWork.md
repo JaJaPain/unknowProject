@@ -185,8 +185,10 @@ generated-system persistence.
 - [x] Look for warnings that mention missing portraits, missing voice mappings,
   fallback dialogue, or raw generated IDs. Capture exact log lines and the screen
   the player was on.
-- [ ] Re-run the quest-gen test scene manually and save only the summary plus
+- [x] Re-run the quest-gen test scene manually and save only the summary plus
   the worst 3 examples. Do not edit generation code from this task.
+  (Results in `docs/quest_gen_test_results.md`. 20/20 pass, 0 fallback. Fixed a
+  blocking parse error in the test harness that had stopped it running at all.)
 - [x] Check whether old generated campaign saves carry stale NPC presentation
   data after fixes. Document expected behavior for old saves versus new
   campaigns.
