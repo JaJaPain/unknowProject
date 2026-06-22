@@ -187,6 +187,7 @@ var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
+const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
 const KAELEN_ALLOWED_MOODS := {
 	"calm": true,
@@ -236,6 +237,7 @@ var is_waiting_for_agent_board: bool = false
 # [TRACE] logs and to gate refresh-on-use (no point re-warming lines
 # that are already in the cache). Resets implicitly on scene reload.
 var _outpost_flavor_precached: Dictionary = {}
+var _bounty_announced_system: String = ""
 
 # LLM-generated Kaelen handoff line for the currently-cached quest.
 # Empty string means "not yet fetched" or "fetch failed — fall back to canned 5".
@@ -2899,6 +2901,8 @@ func update_overview_list(entities: Array):
 					type_str = faction_upper.capitalize() + " Combat Vessel"
 			elif entity.is_in_group("wreckage"):
 				type_str = "Wreckage"
+			elif entity.is_in_group("anomaly"):
+				type_str = "Anomaly"
 			
 			type_lbl.text = "  " + type_str
 			type_lbl.custom_minimum_size = Vector2(160, 0)
@@ -2922,6 +2926,8 @@ func update_overview_list(entities: Array):
 					row_color = Color(0.2, 0.85, 1.0)
 			elif type_str == "Celestial":
 				row_color = Color(0.35, 0.65, 1.0)    # Soft celestial blue
+			elif type_str == "Anomaly":
+				row_color = Color(1.0, 0.78, 0.1)     # Amber — unknown contact
 			else:
 				row_color = Color(1.0, 1.0, 1.0)      # Default white for ships, wreckage etc.
 			if row_color != Color(1.0, 1.0, 1.0):
@@ -3057,6 +3063,10 @@ func _on_target_changed(new_target: Node3D):
 			icon_index = 0
 		elif new_target.is_in_group("wreckage"):
 			type_str = "Wreckage"
+			icon_index = 4
+		elif new_target.is_in_group("anomaly"):
+			var aname: String = str(new_target.anomaly_data.get("name", "Unknown Signal")) if new_target.get("anomaly_data") else "Unknown Signal"
+			type_str = "Anomaly — " + aname
 			icon_index = 4
 		elif new_target.is_in_group("celestial"):
 			type_str = "Planet"
@@ -3242,6 +3252,7 @@ func toggle_dock_menu(
 		# text. Falls back to a canned line if the LLM is slow / offline.
 		if not is_outpost:
 			_cache_mechanic_intro()
+			_announce_bounties_on_dock()
 
 
 # Render the current submenu's button set. Called on dock AND when the
@@ -3461,7 +3472,17 @@ func _on_kaelen_lounge_pressed() -> void:
 	var portrait := GameContentRegistry.shared().portrait_texture(
 		_kaelen_mood_portrait_id("amused")
 	)
-	show_dock_message(line, "Broker Kaelen", color, portrait)
+	var display_line := line
+	var active_bounties: Array = BountyRegistryScript.shared().get_active_bounties()
+	if not active_bounties.is_empty():
+		var paper_parts: Array[String] = []
+		for b in active_bounties:
+			paper_parts.append("%s — %d SC/kill" % [
+				str(b.get("faction", "?")).capitalize(),
+				int(b.get("payout_per_kill", 8)),
+			])
+		display_line += "\n[Active Paper: %s]" % ", ".join(paper_parts)
+	show_dock_message(display_line, "Broker Kaelen", color, portrait)
 	GlobalState.emit_npc_flavor({
 		"npc_name": "Broker Kaelen",
 		"line": line,
@@ -4644,6 +4665,30 @@ func _best_reputation_tier() -> String:
 # returns in time, we use it, otherwise the canned array covers us.
 # Idempotent: only triggers once per dock. Clears the prior cached line
 # so the next render shows the new one.
+func _announce_bounties_on_dock() -> void:
+	var sys := GlobalState.current_system_id
+	if _bounty_announced_system == sys:
+		return
+	_bounty_announced_system = sys
+	var registry := BountyRegistryScript.shared()
+	# If bounties already loaded for this system, just announce them.
+	if not registry.get_active_bounties().is_empty():
+		for line in registry.announcement_lines():
+			GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
+		return
+	# Otherwise fetch fresh bounties then announce.
+	var minor_keys: Array = GlobalState.MINOR_FACTIONS.keys()
+	if minor_keys.is_empty():
+		return
+	LLMInterface.fetch_bounty_brief(sys, minor_keys, func(bounties: Array):
+		if bounties.is_empty():
+			return
+		registry.set_bounties(bounties)
+		for line in registry.announcement_lines():
+			GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
+	)
+
+
 func _cache_mechanic_intro() -> void:
 	# Don't bail if a request is in flight — the Speak button legitimately
 	# wants to interrupt and fire a new one. The request id guards
@@ -6019,6 +6064,10 @@ func refresh_overview():
 			
 	# Add Wreckage
 	for node in scene_tree.get_nodes_in_group("wreckage"):
+		if is_instance_valid(node) and system_root.is_ancestor_of(node):
+			entities.append(node)
+	# Add Anomalies
+	for node in scene_tree.get_nodes_in_group("anomaly"):
 		if is_instance_valid(node) and system_root.is_ancestor_of(node):
 			entities.append(node)
 	for node in scene_tree.get_nodes_in_group("jumpgate"):

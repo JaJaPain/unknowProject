@@ -2,6 +2,7 @@ extends Node3D
 
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
 const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
+const AnomalyRegistryScript = preload("res://scripts/AnomalyRegistry.gd")
 
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
@@ -74,6 +75,9 @@ func _ready():
 	
 	# Spawn the salvager ship near space station
 	_spawn_salvager()
+
+	# Spawn anomaly nodes
+	AnomalyRegistryScript.shared().generate_for_system(GlobalState.current_system_id, self)
 	
 	# Setup spawn check Timer for replacing destroyed ships
 	var spawn_timer = Timer.new()

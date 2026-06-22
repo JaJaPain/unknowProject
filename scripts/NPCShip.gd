@@ -32,6 +32,7 @@ var role_patrol_refresh_timer: float = 0.0
 const RuntimeTraceType := preload(
 	"res://scripts/diagnostics/RuntimeTrace.gd"
 )
+const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
 
 # Archetype attributes
 var archetype: String = "Balanced"
@@ -731,6 +732,12 @@ func die():
 
 		if not is_code_enforcement:
 			GlobalState.record_kill(faction)
+			var _bounty_reg = BountyRegistryScript.shared()
+			var _bounty_payout: int = _bounty_reg.check_kill(faction, GlobalState.current_system_id)
+			if _bounty_payout > 0:
+				GlobalState.player_credits += _bounty_payout
+				AudioManager.play_sell_ore()
+				GlobalState.emit_chatter("Kaelen", _bounty_reg.confirm_line(faction, _bounty_payout), Color(0.85, 0.5, 1.0))
 
 	# Always emit ship_destroyed so quest progress counts NPC kills too.
 	# Previously this only fired inside the player-killed branch (via

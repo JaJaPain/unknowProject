@@ -2,6 +2,78 @@
 
 ---
 
+## Session: 2026-06-22 (Kaelen Bounties + Space Anomalies Phase 1) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Two new self-contained gameplay systems shipped and playtested this session.
+
+---
+
+### 1. Kaelen's Standing Bounties (`scripts/economy/BountyRegistry.gd`)
+
+Kaelen now has "paper" out on minor factions operating in the current system. Kill their ships, she pays you a small bounty (minus her cut) via a chat confirmation. No new menus — discovery happens through chat and her dock panel.
+
+**How it works:**
+- On first dock of a session, LLM generates 1–2 factions to put bounties on, with a one-sentence Kaelen-voice reason (e.g. "The Reavers hit a shipment I had a stake in. I want receipts.")
+- Fallback picks a random minor faction with a static reason if LLM is unavailable
+- On eligible kill: credits paid, money sound effect plays, Kaelen sends a confirm chat line in her new **violet** color
+- Cap enforcement: bounties expire after N kills; final kill says "That closes the contract."
+- Kaelen's dock panel shows `[Active Paper: Faction — X SC/kill]` when you click her in the contacts list
+- Announcement fires only once per system per session
+
+**Files added/modified:**
+- `scripts/economy/BountyRegistry.gd` — new singleton, pure logic (no GlobalState dependency, fully unit-tested)
+- `scripts/LLMInterface.gd` — `fetch_bounty_brief()` + `_trigger_bounty_brief_fallback()`
+- `scripts/NPCShip.gd` — one guarded call in `die()`, pays credits + plays sound + emits Kaelen chat
+- `scripts/UIManager.gd` — `_announce_bounties_on_dock()`, Active Paper in Kaelen lounge panel
+- `tests/domain/run_bounty_registry_tests.gd` — 8 unit tests, all passing
+
+**Kaelen color:** Changed from cyan (same as SYSTEM) to `Color(0.85, 0.5, 1.0)` (violet) across all emit_chatter calls in UIManager, NPCShip, GameRoot, BountyRegistry.
+
+---
+
+### 2. Space Anomalies Phase 1 (`scripts/SpaceAnomaly.gd`, `scripts/AnomalyRegistry.gd`)
+
+1–3 anomaly nodes spawn per system (0–2 at normal rarity). Each is a self-contained mini-event — fly within 50 units to trigger. Events execute an `actions` array in sequence with optional delays.
+
+**Action types implemented:**
+- `emit_chat` — timed chat lines from a named sender (distress logs, AI voices, ghost signals)
+- `grant_ore` — adds ore to hold (capped at 30)
+- `grant_credits` — pays credits directly (capped at 150), plays money sound
+- `grant_item` — adds item to inventory (whitelist enforced)
+- `spawn_hostiles` — spawns 1–3 faction ships at a distance with optional pre-spawn chat line
+- `damage_player` — small hull hit for dangerous scavenge scenarios
+- `grant_temp_buff` — stub, logs warning (Phase 3)
+
+**10 preset events in fallback table:**
+1. Abandoned Cargo Cache — ore + repair kit
+2. Distress Beacon (No Survivors) — old log lines + 65 SC + data chip
+3. Reaver Ambush Point — story beat then 2 hostiles spawn
+4. Cracked Reactor Core — 12 hull damage + 90 SC + antimatter pod (dangerous scavenge)
+5. Drifting Weapon Cache — 3 ammo items
+6. Encrypted Black Box — mystery log lines + encrypted core + data chip
+7. Faction Skirmish Debris — ore + damaged transponder
+8. Navigation Buoy (Derelict) — scanner probe + 30 SC
+9. Emergency Med Cache — repair kit + shield cell
+10. Hostile Scout Probe — 1 hostile spawns 4s after trigger (already transmitted your position)
+
+**Visual:** Glowing sphere (OmniLight3D + MeshInstance3D), pulsing emission, color-coded by flavor type (blue = military, green = civilian, red = pirate, purple = scientific, amber = unknown).
+
+**Overview:** Anomalies appear in the system overview as amber "Anomaly" entries. Clicking one in the overview shows "Anomaly — [name]" in the target panel.
+
+**Spawn rate:** `randi_range(0, 2)` — 33% chance none, 33% chance 1, 33% chance 2. Keeps them a pleasant surprise, not guaranteed.
+
+**Future (Phase 3):** LLM brain — `LLMInterface.fetch_anomaly_event()` generates fully unique events. Data core delivery loop (see memory note) deferred until campaign progression warrants it.
+
+**Files added/modified:**
+- `scripts/SpaceAnomaly.gd` — new node, proximity trigger, action executor, visual builder
+- `scripts/AnomalyRegistry.gd` — new registry, fallback table, position randomizer
+- `scripts/MainScene.gd` — preloads AnomalyRegistry, calls `generate_for_system()` in `_ready()`
+- `scripts/UIManager.gd` — anomaly group in `refresh_overview()`, type label + amber color, target panel label
+
+---
+
 ## Session: 2026-06-22 (Single-Use Salvage Drone + Store/UI Polish) — Claude
 **Branch:** `segment-3/economy-stores-events`
 **Commits:** `875c95e`, `56eb706`, `000c9f8`

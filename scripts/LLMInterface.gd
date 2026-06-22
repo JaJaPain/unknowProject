@@ -4019,3 +4019,150 @@ func generate_campaign_system_names(count: int, callback: Callable):
 	if name_err != OK:
 		temp_http.queue_free()
 		callback.call([])
+
+
+# ── Kaelen Bounty Brief ───────────────────────────────────────────────────────
+
+func fetch_bounty_brief(
+	system_id: String,
+	factions: Array,
+	callback: Callable,
+	_attempts_left: int = 1
+) -> void:
+	var day_number: int = int(GlobalState.get("day_number")) if GlobalState.get("day_number") != null else 1
+	var rep_lines: Array = []
+	for f in factions:
+		var rep: int = int(GlobalState.reputations.get(f, 0))
+		rep_lines.append("%s (rep %d)" % [f, rep])
+	var factions_str := ", ".join(rep_lines)
+
+	var prompt := (
+		"You are Broker Kaelen, a cynical space broker. Today is day %d. "
+		+ "The player is operating in system '%s'. "
+		+ "Minor factions active in this system: %s. "
+		+ "Pick 1–2 of these factions to place standing bounties on. "
+		+ "For each bounty write one short sentence in Kaelen's voice explaining WHY she wants them hit (personal, mercenary, never moral). "
+		+ "Suggest a payout between 7 and 15 SC per kill (after your cut) and a cap between 3 and 10 kills. "
+		+ "Respond ONLY in valid JSON:\n"
+		+ "{\n"
+		+ "  \"bounties\": [\n"
+		+ "    { \"faction\": \"<faction_id>\", \"payout\": <int>, \"cap\": <int>, \"kaelen_line\": \"<one sentence>\" }\n"
+		+ "  ]\n"
+		+ "}"
+	) % [day_number, system_id, factions_str]
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "http_failed")
+			return
+
+		var outer_json := JSON.new()
+		if outer_json.parse(body.get_string_from_utf8()) != OK:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "envelope_parse_failed")
+			return
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "envelope_missing_response")
+			return
+
+		var inner_str: String = str(outer_data["response"]).strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "inner_parse_failed")
+			return
+		var inner_data = inner_json.get_data()
+		if not inner_data is Dictionary or not inner_data.has("bounties") or not inner_data["bounties"] is Array:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "inner_schema_failed")
+			return
+
+		var bounties: Array = []
+		var known_factions: Array = GlobalState.MINOR_FACTIONS.keys()
+		for entry in inner_data["bounties"]:
+			if not entry is Dictionary:
+				continue
+			var f: String = str(entry.get("faction", "")).strip_edges()
+			if f not in known_factions:
+				continue
+			var payout: int = clampi(int(entry.get("payout", 8)), 5, 20)
+			var cap: int = clampi(int(entry.get("cap", 5)), 1, 15)
+			var line: String = str(entry.get("kaelen_line", "")).strip_edges()
+			if line.contains("[") or line.is_empty():
+				line = "I've got my reasons. %d SC a hull, after my cut." % payout
+			bounties.append({
+				"faction": f,
+				"system_id": system_id,
+				"payout_per_kill": payout,
+				"cap": cap,
+				"kills_credited": 0,
+				"kaelen_line": line,
+			})
+		if bounties.is_empty():
+			_trigger_bounty_brief_fallback(factions, callback, "no_valid_bounties")
+			return
+		callback.call(bounties)
+	)
+
+	var payload := build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{ "temperature": 0.9, "seed": randi() }
+	)
+	var headers := ["Content-Type: application/json"]
+	var err := temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err != OK:
+		temp_http.queue_free()
+		_trigger_bounty_brief_fallback(factions, callback, "request_start_failed_%d" % err)
+
+
+func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason: String) -> void:
+	print("[LLMInterface] Bounty brief fallback: ", reason)
+	if factions.is_empty():
+		callback.call([])
+		return
+	var f: String = factions[randi() % factions.size()]
+	var faction_label: String = f.capitalize()
+	var fallback_lines := [
+		"The %s hit a shipment I had a stake in. I want receipts." % faction_label,
+		"Old business with the %s. Nothing you need to know, just act on it." % faction_label,
+		"Client wants %s hulls. Don't ask who. Eight SC a kill, after my finder's fee." % faction_label,
+		"The %s are running interference on a deal I'm closing. I'd like that to stop." % faction_label,
+	]
+	var line: String = fallback_lines[randi() % fallback_lines.size()]
+	callback.call([{
+		"faction": f,
+		"system_id": GlobalState.current_system_id,
+		"payout_per_kill": 8,
+		"cap": 5,
+		"kills_credited": 0,
+		"kaelen_line": line,
+	}])

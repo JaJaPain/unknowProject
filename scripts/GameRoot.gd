@@ -747,7 +747,7 @@ func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
 		faction_clause = _human_join(faction_names)
 	var story_pack := _system_story_pack_for_definition(sys_def)
 	var line := _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
-	GlobalState.emit_chatter("KAELEN", line, Color(0.0, 0.9, 0.9))
+	GlobalState.emit_chatter("KAELEN", line, Color(0.85, 0.5, 1.0))
 
 
 func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
