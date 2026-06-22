@@ -286,6 +286,11 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		player.velocity = Vector3.ZERO
 		player.set_physics_process(true)
 		
+		# Hide UI during transit to prevent HUD/overview distortion leaks
+		var ui := GlobalState.get_ui_manager()
+		if ui:
+			ui.visible = false
+		
 		var remote_position := Vector3(50000.0, 50000.0, 50000.0)
 		player.global_transform = Transform3D(Basis.IDENTITY, remote_position)
 		var camera_pivot = player.get_node_or_null("CameraPivot")
@@ -361,6 +366,11 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	
 	if new_system and is_instance_valid(new_system):
 		new_system.visible = true
+		
+	# Restore UI visibility
+	var ui_mgr := GlobalState.get_ui_manager()
+	if ui_mgr:
+		ui_mgr.visible = true
 	if camera:
 		camera.make_current()
 	
