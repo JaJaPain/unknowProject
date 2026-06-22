@@ -282,10 +282,15 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if DisplayServer.get_name() != "headless":
 		player.collision_layer = 0
 		player.collision_mask = 0
+		player.set("current_speed", 0.0)
+		player.velocity = Vector3.ZERO
 		player.set_physics_process(true)
 		
 		var remote_position := Vector3(50000.0, 50000.0, 50000.0)
-		player.global_position = remote_position
+		player.global_transform = Transform3D(Basis.IDENTITY, remote_position)
+		var camera_pivot = player.get_node_or_null("CameraPivot")
+		if camera_pivot:
+			camera_pivot.rotation_degrees = Vector3(-15, 0, 0)
 		if player.has_method("sync_camera_to_ship"):
 			player.sync_camera_to_ship()
 			
