@@ -3354,8 +3354,14 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		var reaction_data = inner_json.get_data()
 		if reaction_data is Dictionary and reaction_data.has("completion") and reaction_data.has("abandon"):
+			var comp_line: String = str(reaction_data["completion"])
+			var abn_line: String = str(reaction_data["abandon"])
+			# Guard against the LLM echoing the template placeholder back unchanged
+			if comp_line.contains("[") or abn_line.contains("["):
+				_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
+				return
 			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
-			callback.call(reaction_data["completion"], reaction_data["abandon"])
+			callback.call(comp_line, abn_line)
 		else:
 			_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
 	)
