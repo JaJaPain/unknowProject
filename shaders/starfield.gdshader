@@ -16,6 +16,12 @@ vec2 hash22(vec2 p) {
 	return vec2(n, hash21(p + 7.23));
 }
 
+// Stable per-system random value derived from the seed the generator already
+// passes in. Same seed -> same backdrop character every visit.
+float seed_hash(float n) {
+	return fract(sin((seed_offset + n) * 12.9898) * 43758.5453);
+}
+
 void fragment() {
 	vec2 uv = UV;
 	uv.x *= 2.0;
@@ -92,6 +98,33 @@ void fragment() {
 	}
 
 	lum = min(lum, 0.35);
-	ALBEDO = tint * lum;
-	ALPHA = clamp(lum * 2.0, 0.0, 1.0);
+
+	// --- Per-system backdrop character (subtle, seed-driven) ---
+	// Gentle star color temperature: cool-blue <-> warm-amber, mostly mild.
+	float temp = seed_hash(1.0);
+	vec3 temp_mul = mix(vec3(0.90, 0.97, 1.12), vec3(1.10, 1.0, 0.88), temp);
+	vec3 star_col = tint * temp_mul * lum;
+
+	// Faint galactic haze band — a dim Milky-Way-like stripe so empty systems
+	// still read as distinct. Orientation/hue/strength vary by seed; ~1 in 6
+	// systems gets a bolder "splash", the rest stay whisper-faint.
+	float band_angle = seed_hash(4.0) * 3.14159;
+	float ca = cos(band_angle);
+	float sa = sin(band_angle);
+	vec2 cuv = UV - 0.5;
+	float across = cuv.x * ca + cuv.y * sa;          // perpendicular to the band
+	float band_width = 0.14 + seed_hash(7.0) * 0.10;
+	float band = exp(-(across * across) / (2.0 * band_width * band_width));
+
+	float splash = step(0.83, seed_hash(3.0));        // occasional bolder system
+	float haze_strength = mix(0.015, 0.040, seed_hash(5.0))
+		+ splash * mix(0.05, 0.10, seed_hash(6.0));
+
+	float haze_hue = seed_hash(2.0);
+	vec3 haze_col = 0.5 + 0.5 * cos(6.2831 * (haze_hue + vec3(0.0, 0.33, 0.67)));
+	haze_col = mix(haze_col, tint, 0.35);             // pull toward the system tint, keep tasteful
+	float haze_amt = band * haze_strength;
+
+	ALBEDO = star_col + haze_col * haze_amt;
+	ALPHA = clamp(lum * 2.0 + haze_amt * 2.0, 0.0, 1.0);
 }

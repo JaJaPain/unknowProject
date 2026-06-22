@@ -18,11 +18,17 @@ and they should not block or overlap with current Codex work.
 
 ## Visual Effects And Space Feel
 
-- [ ] Review the current nebula/starfield visuals in generated systems and make
+- [x] Review the current nebula/starfield visuals in generated systems and make
   a short note of any clipping, overpowering brightness, or samey-looking
   palettes. Avoid changing generation logic unless the fix is purely visual.
-- [ ] Add or tune subtle ambient variation for clear-space systems so systems
+  (Found + fixed a hard nebula clipping seam: the billboard quad showed a
+  straight cutoff because the cloud texture reached its rectangular edge.
+  Feathered the edges in `nebula.gdshader` — purely visual, no generation change.)
+- [x] Add or tune subtle ambient variation for clear-space systems so systems
   without nebulae still feel intentionally distinct.
+  (Starfield shader now derives per-system star color temperature + a faint
+  galactic haze band from the seed it already receives, with an occasional
+  bolder splash. `starfield.gdshader`, effect-only.)
 - [x] Check player boost/thruster visuals and list any missing polish: exhaust
   scale, color, cooldown feedback, heat glow, or camera shake. Implement only
   small effect-only changes.

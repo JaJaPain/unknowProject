@@ -9,6 +9,10 @@ void fragment() {
 	float mask = texture(nebula_texture, UV).r;
 	// Power curve to deepen contrast — thin edges fade, dense cores glow
 	mask = pow(mask, 1.8);
+	// Feather the quad's rectangular borders so the billboard dissolves into
+	// empty space instead of showing a hard straight cutoff at its edge.
+	vec2 edge = smoothstep(0.0, 0.15, UV) * smoothstep(1.0, 0.85, UV);
+	mask *= edge.x * edge.y;
 	ALBEDO = tint_color * brightness * mask;
 	ALPHA = 1.0;
 }
