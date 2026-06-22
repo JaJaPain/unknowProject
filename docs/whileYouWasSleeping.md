@@ -2,6 +2,93 @@
 
 ---
 
+## Session: 2026-06-22 (Single-Use Salvage Drone + Store/UI Polish) — Claude
+**Branch:** `segment-3/economy-stores-events`
+**Commits:** `875c95e`, `56eb706`, `000c9f8`
+**Date:** 2026-06-22
+
+### Feature: Single-Use Salvage Drone Consumable
+
+New consumable that strips a targeted wreck for ore using the ship's existing mining drones.
+
+**How it works:**
+- Activate from inventory while undocked, within 75u of a targeted wreck, with space in the ore hold
+- One orbiting drone detaches and makes ~20 round trips to the wreck and back, granting 2 ore per return (~40 ore total over ~40 seconds — same ballpark as mining that much manually)
+- ~0.8% rare drop chance per return (~15% total per wreck): 65% Damaged Transponder / 35% Encrypted Data Core, capped at one rare per run
+- Run aborts permanently if the player takes any damage that actually connects (shield or hull hit). Drone is consumed regardless
+- Wreck is removed on successful completion (model-swap animation deferred until a new model is ready)
+- Priced at **25 SC** at Haven store — guaranteed 40 ore profit at 1 SC/ore, real upside is the rare drop
+
+**Safeguards (checked up-front with a chat reason, drone not consumed on block):**
+- Must be targeting a wreck (`"wreckage"` group)
+- Must be within 75u (same as mining range)
+- Must not be docked
+- Ore hold must not be full / must be able to accept ore
+- Only one active run at a time
+
+**Mid-run stops:**
+- Ore hold fills up during the run → abort, drone consumed
+- Player flies out of range → abort, drone consumed
+- Player takes a hit → abort, drone consumed
+- Wreck becomes invalid → abort, drone consumed
+
+**Files modified:**
+- `scripts/economy/ConsumableEffects.gd` — new `"salvage"` effect type, `salvage_block_reason()` helper, `is_usable_now()` wired to it, `SALVAGE_RANGE = 75.0` const
+- `scripts/PlayerShip.gd` — `begin_salvage()`, `_update_salvage()`, `_salvage_collect_return()`, `_abort_salvage()`, `_end_salvage()` state machine; `MINING_RANGE = 75.0` const replaces hardcoded literals; `take_damage()` abort hook (after shield/health math)
+- `data/content/store_items.json` — price `2→25`, updated description
+
+### Feature: NPCSalvager Taunt Lines + Visual Detection
+
+The station salvager now mouths off when it catches the player poaching one of its wrecks.
+
+- **Spot taunt** (8 lines): fires once when salvager is actively working a wreck and detects `player._salvage_active == true` on the same wreck within **150 units**. Examples: *"Hands off. I called that wreck."*, *"Nice drone. Be a shame if something happened to it."*
+- **Lost-wreck taunt** (5 lines): fires if the player's drone completes and the wreck disappears out from under the salvager. Only triggers if the salvager had already spotted the player — not on normal salvage completions. Examples: *"That was mine. Every gram of it."*, *"Enjoy it. You just made an enemy for forty ore."*
+- Flags reset each IDLE→wreck cycle so every new wreck is a fresh encounter
+
+**Files modified:** `scripts/NPCSalvager.gd`
+
+### Feature: Second Salvager Spawns at 5+ Wrecks
+
+When the system has more than 5 active wrecks simultaneously, a second salvager spawns (within 30 seconds via the existing NPC spawn timer). Gets its own LLM-generated name so chat messages are distinguishable. Falls back to one when destroyed naturally.
+
+- `NPCSalvager` added to group `"salvager"` for counting
+- Wreck + salvager count checked in `MainScene._on_npc_spawn_timeout()`
+
+**Files modified:** `scripts/NPCSalvager.gd`, `scripts/MainScene.gd`
+
+### Store UI: Buy Button Repositioned
+
+Moved the Buy button from the far right of each store row to the **far left, immediately before the icon**. Eliminates the wide gap between button and item that made it hard to tell which Buy belonged to which item.
+
+**Files modified:** `scripts/UIManager.gd`
+
+### Inventory: Closes After Successful Consumable Use
+
+Any successful consumable use now closes the inventory panel. If the inventory was opened from the dock, it returns to the dock panel correctly (via `inventory_return_to_dock` flag). On failure (blocked use, wrong state), the inventory stays open so the player can read the reason / pick something else.
+
+Salvage drone specifically: failure emits a chat reason from "Drone Bay" and keeps the inventory open. Success deploys the drone, removes the item, and closes inventory.
+
+**Files modified:** `scripts/UIManager.gd`
+
+### Bug Fix: Docked Inventory Limbo
+
+**Problem:** Closing the inventory while docked could leave the player with no visible UI and `is_docked = true` — unable to fly or get back to services. Happened when `inventory_return_to_dock` was false because the inventory was opened from within a dock sub-panel (store, agent, etc.) where `dock_panel.visible` was already false at that moment.
+
+**Fix:** Both close paths (`_on_inventory_pressed` toggle and new `_close_inventory_panel()` helper) now check `player.is_docked` as a fallback. If the player is docked, the dock panel is always restored regardless of the flag state.
+
+**Files modified:** `scripts/UIManager.gd`
+
+### Bug Fix: Kaelen Reaction Lines Showing Raw Template Placeholder
+
+**Problem:** Kaelen's post-quest dialogue occasionally displayed the literal string `[Kaelen's unique completion line]` instead of generated text — the LLM was echoing the prompt template back verbatim.
+
+**Fix 1:** Added bracket detection after parsing — if either field contains `[`, treat as a failed generation.
+**Fix 2:** Added one automatic retry with a fresh random seed before falling back to static lines. All failure paths (HTTP error, parse failure, missing fields, echoed template) retry once.
+
+**Files modified:** `scripts/LLMInterface.gd`
+
+---
+
 ## Session: 2026-06-21 (~4:30 PM — Loading Hang Fix + UI Label Polish) — Claude
 **Branch:** `segment-3/economy-stores-events`
 **Commits:** `4f7da80`, `272422e`, `5a5da5b`
