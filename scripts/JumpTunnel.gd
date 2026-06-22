@@ -56,11 +56,12 @@ func cleanup() -> void:
 	# Restore the original visual transform
 	if _player_visual and is_instance_valid(_player_visual):
 		_player_visual.transform = _original_visual_transform
-	# Restore camera offsets
+	# Restore camera offsets. NOTE: we deliberately do NOT restore fov here —
+	# _original_fov was captured after the entry FOV-widen (~94, not the true
+	# gameplay default), so GameRoot owns the authoritative fov reset.
 	if _player_camera and is_instance_valid(_player_camera):
 		_player_camera.h_offset = 0.0
 		_player_camera.v_offset = 0.0
-		_player_camera.fov = _original_fov
 	# Restore the gameplay chase-cam pitch
 	if _camera_pivot and is_instance_valid(_camera_pivot):
 		_camera_pivot.rotation = _original_pivot_rotation

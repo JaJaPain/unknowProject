@@ -337,7 +337,12 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	# Let the player fly down the 3D tunnel for a satisfying duration.
 	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
 	if DisplayServer.get_name() != "headless":
-		await get_tree().create_timer(5.6).timeout
+		await get_tree().create_timer(3.1).timeout
+		# Start fading the tunnel jet early with a stutter gate. Duration is sized
+		# so the fade still ends at the same point (3.1 + 4.5 == prior 4.1 + 3.5),
+		# and the whiteout still fires at 5.6 (3.1 + 2.5).
+		AudioManager.fade_out_jump_transit(4.5)
+		await get_tree().create_timer(2.5).timeout
 		# Final acceleration punch out the end of the bore, then whiteout over it.
 		if jump_tunnel and is_instance_valid(jump_tunnel) and jump_tunnel.has_method("begin_exit_burst"):
 			jump_tunnel.begin_exit_burst(0.6)
@@ -363,7 +368,12 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if jump_tunnel and is_instance_valid(jump_tunnel):
 		jump_tunnel.cleanup()
 		jump_tunnel.queue_free()
-		
+
+	# Authoritative FOV reset — AFTER the tunnel is gone so its _process can no
+	# longer widen the camera. (Fixes the post-jump fisheye view.)
+	if camera:
+		camera.fov = original_fov
+
 	player.collision_layer = orig_collision_layer
 	player.collision_mask = orig_collision_mask
 	

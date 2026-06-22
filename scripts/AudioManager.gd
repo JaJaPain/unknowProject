@@ -1,6 +1,13 @@
 extends Node
 
 var bgm_player: AudioStreamPlayer
+var jump_player: AudioStreamPlayer  # dedicated channel for the tunnel jet (so we can fade it)
+var jump_fade_tween: Tween
+var _jump_fade_dur: float = 1.0
+var _jump_fade_base_gain: float = 1.0
+# Stutter gate applied during the jet fade — ~6 cuts/sec, "on" longer than "off".
+const JUMP_FADE_STUTTER_RATE := 6.0
+const JUMP_FADE_STUTTER_ON := 0.6
 var sfx_players: Array[AudioStreamPlayer] = []
 var max_sfx_channels: int = 8
 
@@ -47,7 +54,12 @@ func _ready():
 	bgm_player.bus = "Music"
 	add_child(bgm_player)
 	bgm_player.finished.connect(_on_bgm_finished)
-	
+
+	# Dedicated player for the jump-tunnel jet so we can fade it on arrival.
+	jump_player = AudioStreamPlayer.new()
+	jump_player.bus = "SFX"
+	add_child(jump_player)
+
 	tracks = [bgm_track1, bgm_track2]
 	
 	# Setup SFX Players pool
@@ -190,8 +202,47 @@ func play_jump_spool() -> void:
 
 func play_jump_transit() -> void:
 	if not sfx_jump_transit:
-		sfx_jump_transit = _create_jump_tone(1.4, 180.0, 70.0, 0.42)
-	play_sfx(sfx_jump_transit, -1.0)
+		# Real synthesized jet-engine spool-up for the tunnel. Regenerate at a
+		# different length via tools/generate_jet_spool.py. Falls back to the
+		# old swept tone if the WAV isn't imported (e.g. headless tests).
+		var loaded = load("res://sound/ShipSounds/jet_spool_up.wav")
+		if loaded is AudioStreamWAV:
+			sfx_jump_transit = loaded
+		else:
+			sfx_jump_transit = _create_jump_tone(1.4, 180.0, 70.0, 0.42)
+	# Play on the dedicated jump channel so fade_out_jump_transit() can ride it
+	# out as the ship emerges, instead of a hard cut when the clip ends.
+	if jump_fade_tween and jump_fade_tween.is_valid():
+		jump_fade_tween.kill()
+	jump_player.stream = sfx_jump_transit
+	jump_player.volume_db = -1.0
+	jump_player.play()
+
+
+# Fade the tunnel jet out over `duration` with a stutter gate (noise-gate
+# chopping on/off) layered on top, so it tails off in pulses rather than a
+# smooth ramp. Ends silent and stops the player.
+func fade_out_jump_transit(duration: float = 1.5) -> void:
+	if not jump_player or not jump_player.playing:
+		return
+	if jump_fade_tween and jump_fade_tween.is_valid():
+		jump_fade_tween.kill()
+	_jump_fade_dur = maxf(0.01, duration)
+	_jump_fade_base_gain = db_to_linear(jump_player.volume_db)
+	jump_fade_tween = create_tween()
+	jump_fade_tween.tween_method(_jump_fade_step, 0.0, 1.0, duration)
+	jump_fade_tween.tween_callback(jump_player.stop)
+
+
+func _jump_fade_step(p: float) -> void:
+	if not jump_player:
+		return
+	# Smooth amplitude fade to silence...
+	var fade_gain: float = _jump_fade_base_gain * (1.0 - p)
+	# ...chopped by the stutter gate (on-phase longer than off-phase).
+	var phase: float = fmod(p * _jump_fade_dur * JUMP_FADE_STUTTER_RATE, 1.0)
+	var gain: float = fade_gain if phase < JUMP_FADE_STUTTER_ON else 0.0
+	jump_player.volume_db = linear_to_db(gain) if gain > 0.0001 else -60.0
 
 func play_jump_arrival() -> void:
 	if not sfx_jump_arrival:
