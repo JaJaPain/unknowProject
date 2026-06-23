@@ -2,37 +2,57 @@
 
 ---
 
-## Session: 2026-06-22 (Small Features Pass) — Claude
+## Session: 2026-06-22 (Small Features Pass + UI Fixes + Story Manager Design) — Claude
 **Branch:** `segment-3/economy-stores-events`
 
 ### Overview
-Four self-contained features added in sequence: anomaly rumors, bounty board display, wreckage loot variation, and Kaelen intel drops.
+Six features implemented, two bugs fixed (one serious), and a full story manager system designed and documented for Codex to implement.
 
 ### 1. Anomaly Rumors (`scripts/AnomalyRegistry.gd`, `scripts/MainScene.gd`)
-After jumping to a new system, if anomalies were spawned there, a passing ship or comms relay has a 60% chance to emit a vague hint in the chatter log 8–18 seconds after arrival. Lines are flavor-matched to the anomaly type (military, pirate, scientific, civilian). Senders rotate through "Independent Hauler", "Passing Vessel", "Comms Relay", "Local Traffic". `AnomalyRegistry` now tracks `_last_spawned_flavors` after generation and exposes `get_arrival_rumor()`. `MainScene._ready()` calls `_schedule_anomaly_rumor()` using an awaited timer.
+After jumping to a new system, if anomalies were spawned there, a passing ship or comms relay has a 60% chance to emit a vague hint in the chatter log 8–18 seconds after arrival. Lines are flavor-matched to the anomaly type (military, pirate, scientific, civilian). `AnomalyRegistry` now tracks `_last_spawned_flavors` and exposes `get_arrival_rumor()`. `MainScene._ready()` calls `_schedule_anomaly_rumor()`.
 
 ### 2. Bounty Board (`scripts/UIManager.gd`)
-A purple-bordered read-only panel appears in both the Services and Lounge submenus when Kaelen has active contracts in the bounty registry. Shows "KAELEN'S ACTIVE CONTRACTS" header with one row per bounty: faction, SC/kill rate, and kills credited vs cap. Hidden at maintenance bay and when no bounties are active. Panel is built procedurally in `_create_dock_menu()` and rendered via `_render_bounty_board(bool)`.
+A purple-bordered read-only panel in Services and Lounge submenus showing Kaelen's active contracts: faction, SC/kill rate, kills credited vs cap. Inserted BEFORE `station_contacts_panel` in the vbox (critical — contacts panel has SIZE_EXPAND_FILL and would push anything after it off-screen).
 
 ### 3. Wreckage Loot Variation (`scripts/PlayerShip.gd`)
-Expanded the salvage rare-drop system from 2 hardcoded items to 7 outcomes spread across a roll table. New `_salvage_grant_wreck_bonus()` function replaces the inline check. Outcomes:
-- 30%: loose credits (40–180 SC)
-- 25%: Damaged Transponder
-- 13%: Encrypted Data Core
-- 10%: Emergency Repair Kit
-- 9%: Shield Cell
-- 8%: Scanner Probe
-- 5%: Data Chip
+Expanded salvage rare-drop from 2 hardcoded items to 7-outcome roll table via new `_salvage_grant_wreck_bonus()`. Outcomes: 30% credits (40–180 SC), 25% Damaged Transponder, 13% Encrypted Core, 10% Repair Kit, 9% Shield Cell, 8% Scanner Probe, 5% Data Chip.
 
-### 4. Kaelen Intel Drops (`scripts/UIManager.gd`)
-After docking at a full-service station, if Kaelen's briefing has been seen, there's a chance Kaelen emits one sentence of system intel 2.5 seconds after the bounty announcement. Chance scales with total kills credited (base 20%, up to 55% at high rep). Low-rep lines are vague rumors; high-rep lines (5+ kills credited) are more direct intel about patrol patterns, caches, and lane control. Uses `emit_chatter("Kaelen", ...)` with the purple color.
+### 4. Kaelen Voice Message Button (`scripts/UIManager.gd`, `scripts/GameRoot.gd`)
+Replaced auto-firing Kaelen intel with a player-triggered voice message button on the SYSTEM COMMS RADIO panel. Button lights up purple ("▶ KAELEN — VOICE MESSAGE") when a message is queued. Clicking opens the comms hail panel with Kaelen's portrait, purple border, her line, and TTS. Dismissed with "Got it." Message triggers on system arrival (60–90s delay) via `GameRoot.notify_system_arrived()` → `UIManager.notify_system_arrived()` → `_maybe_kaelen_intel_drop()`.
+
+### 5. Gate Portal Particles (`scripts/JumpGate.gd`)
+CPUParticles3D emitter on each gate's portal surface — additive blend, ring emission shape, color matched to gate light. Spawned procedurally in `_spawn_portal_particles()`.
+
+### 6. System Arrival Banner (`scripts/JumpTransitionFX.gd`)
+"ENTERING / [SYSTEM NAME]" banner fades in then out after gate exit. Built in `_build_arrival_banner()`, triggered from `GameRoot` after `play_exit()`.
+
+### Bug Fix A — Arrival Banner Blocking All Mouse Input (`scripts/JumpTransitionFX.gd`)
+**Serious.** The `CenterContainer` inside the arrival banner used `PRESET_FULL_RECT` and defaulted to `MOUSE_FILTER_PASS`, creating an invisible full-screen click blocker. Broke dock UI and pause menu entirely. Fix: explicit `mouse_filter = Control.MOUSE_FILTER_IGNORE` on `CenterContainer` and `VBoxContainer` inside the banner.
+
+### Bug Fix B — Kaelen Intel Firing During Quest Acceptance (`scripts/UIManager.gd`)
+The 2.5s intel drop timer fired exactly as agent quest confirmation TTS was playing, causing Kaelen to speak Voss's line. Fixed by checking `agent_panel.visible` before firing. Later made irrelevant by the voice message button redesign.
+
+### Story Manager Design (`docs/story_manager_design.md`, `docs/story_manager_impl.md`)
+Full design and implementation spec for a narrative director system. Designed for Codex to implement. Key concepts:
+- Gemma4 generates a structured story arc on first campaign load
+- StoryManager autoload evaluates beats on game events (system arrival, kills, docking, quests)
+- Nudge system (5 levels) steers the player toward story beats organically via quest injection, world pressure, and hints — never forcing
+- StoryManager owns all story-adjacent messages (Kaelen arrival lines, intel drops, anomaly rumors)
+- Triggers arc refresh generation from Gemma4 when current arc runs low
+- Full GDScript implementation in `story_manager_impl.md` — every function, every hook, every file change with line context
 
 ## Files Modified
+- `scripts/AnomalyRegistry.gd` — flavor tracking + `get_arrival_rumor()`
+- `scripts/MainScene.gd` — anomaly rumor schedule + `notify_system_arrived` hook
+- `scripts/UIManager.gd` — bounty board, voice message button, Kaelen intel, MOUSE_FILTER fixes
+- `scripts/PlayerShip.gd` — `_salvage_grant_wreck_bonus()` loot table
+- `scripts/JumpGate.gd` — `_spawn_portal_particles()`
+- `scripts/JumpTransitionFX.gd` — arrival banner + MOUSE_FILTER_IGNORE fix
+- `scripts/GameRoot.gd` — `notify_system_arrived` + `StoryManager.on_system_arrived` hook
 
-- `scripts/AnomalyRegistry.gd` — `_last_spawned_flavors` tracking + `get_arrival_rumor()`
-- `scripts/MainScene.gd` — `_schedule_anomaly_rumor()` call + function
-- `scripts/UIManager.gd` — bounty board panel + `_render_bounty_board()` + `_maybe_kaelen_intel_drop()`
-- `scripts/PlayerShip.gd` — `_salvage_grant_wreck_bonus()` with 7-outcome loot table
+## Files Added
+- `docs/story_manager_design.md` — narrative director design doc (v2, active director model)
+- `docs/story_manager_impl.md` — full implementation spec for Codex
 
 ---
 
