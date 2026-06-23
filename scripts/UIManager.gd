@@ -6980,7 +6980,7 @@ func _show_kaelen_first_briefing() -> void:
 
 	var briefing_lines: Array[String] = [
 		"Well, well. Fresh hull, no record, and that desperate look pilots get when they realize fuel costs money. Sit down, Shiny.",
-		"Name's Kaelen. I'm a broker. I connect people who need things done with people dumb enough to do them. That's you, by the way. I take a modest cut. Don't look at me like that. Modest by my standards.",
+		"Name's Kaelen. I'm a broker. I connect people who need things done with people dumb enough to do them. That's you, by the way . . I take a modest cut . . Don't look at me like that. Modest by my standards.",
 		"Here's how this works. Factions out here, Zenith, Aurelia, Vanguard, they all need grunt work handled. Deliveries, salvage, the occasional aggressive negotiation. They post contracts through me, I find a pilot, everybody gets paid. Simple.",
 		"Now, that mining laser bolted to your ship. Technically, pulling ore without a faction permit is, let's call it frowned upon. Heavily. With fines. And guns.",
 		"But permits cost more than your ship is worth, and I happen to know a few buyers who don't ask where the rocks came from. You mine it, I move it, we split the difference. Just don't get caught lingering in someone's claim. Faction patrols out here shoot first, file paperwork never.",
