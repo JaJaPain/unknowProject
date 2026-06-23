@@ -1506,6 +1506,7 @@ var story_loot_plant: Dictionary = {}      # {item_id, consumed_on_pickup: bool}
 var story_station_climate: Dictionary = {} # {station_id, text}
 var story_forced_anomaly: Dictionary = {}  # {system_id, flavor_type}
 var story_planted_npc: Dictionary = {}     # {station_id, npc_id, display_name, portrait_id, line, one_shot}
+var story_map_highlight: Dictionary = {}   # {system_id: true, ...} — systems to show Kaelen-intel ring on map
 
 # Unique per-campaign seed mixed into procedural system generation so each
 # campaign produces different systems even from the same gate destination IDs.
@@ -2020,6 +2021,7 @@ func reset_for_restart():
 	story_station_climate = {}
 	story_forced_anomaly = {}
 	story_planted_npc = {}
+	story_map_highlight = {}
 	# New seed so procedural systems differ across campaigns
 	campaign_seed = randi()
 	# Reset reputations

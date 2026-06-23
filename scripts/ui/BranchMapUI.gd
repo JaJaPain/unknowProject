@@ -449,6 +449,12 @@ func _draw() -> void:
 		if is_current:
 			draw_circle(pos, 6, Color(0.0, 1.0, 0.8))
 
+		# story_map_highlight: StoryManager can pulse a Kaelen-intel ring on any system node.
+		var highlights: Dictionary = GlobalState.story_map_highlight
+		if highlights.has(sys_id):
+			draw_arc(pos, NODE_RADIUS + 10, 0, TAU, 32, Color(0.85, 0.5, 1.0, 0.85), 2.5)
+			draw_arc(pos, NODE_RADIUS + 14, 0, TAU, 32, Color(0.85, 0.5, 1.0, 0.35), 1.5)
+
 		if planned_route.size() >= 2:
 			var is_dest: bool = sys_id == planned_route[-1]
 			var on_route: bool = sys_id in planned_route and not is_current
