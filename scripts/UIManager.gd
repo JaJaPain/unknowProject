@@ -199,6 +199,7 @@ var agent_click_time: float = 0.0
 # Preloaded assets
 var quest_givers_sheet = preload("res://assets/QuestGivers.png")
 var faction_branding_sheet = preload("res://assets/factionBranding.png")
+var _wanted_posters_sheet = preload("res://assets/WantedPosters.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
@@ -1202,8 +1203,10 @@ func _create_dock_menu():
 	bb_style.content_margin_bottom = 6
 	_bounty_board_panel.add_theme_stylebox_override("panel", bb_style)
 	vbox.add_child(_bounty_board_panel)
-	_bounty_board_list = VBoxContainer.new()
-	_bounty_board_list.add_theme_constant_override("separation", 3)
+	# HBoxContainer so 2 posters sit side by side
+	_bounty_board_list = HBoxContainer.new()
+	_bounty_board_list.add_theme_constant_override("separation", 12)
+	_bounty_board_list.alignment = BoxContainer.ALIGNMENT_CENTER
 	_bounty_board_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bounty_board_panel.add_child(_bounty_board_list)
 
@@ -3538,24 +3541,66 @@ func _render_bounty_board(should_show: bool) -> void:
 		_bounty_board_panel.visible = false
 		return
 	_bounty_board_panel.visible = true
-	var header := Label.new()
-	header.text = "KAELEN'S ACTIVE CONTRACTS"
-	header.add_theme_color_override("font_color", Color(0.85, 0.5, 1.0))
-	header.add_theme_font_size_override("font_size", 11)
-	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bounty_board_list.add_child(header)
 	for b in active:
-		var faction: String = str(b.get("faction", "?")).capitalize()
-		var payout: int = int(b.get("payout_per_kill", 8))
-		var credited: int = int(b.get("kills_credited", 0))
-		var cap: int = int(b.get("cap", -1))
-		var progress_str := "%d/%d kills" % [credited, cap] if cap > 0 else "%d kills" % credited
-		var row := Label.new()
-		row.text = "  %s — %d SC/kill  (%s)" % [faction, payout, progress_str]
-		row.add_theme_color_override("font_color", Color(0.9, 0.75, 1.0))
-		row.add_theme_font_size_override("font_size", 12)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_bounty_board_list.add_child(row)
+		_bounty_board_list.add_child(_build_wanted_poster(b))
+
+
+func _build_wanted_poster(b: Dictionary) -> Control:
+	var faction_id: String = str(b.get("faction", "")).to_lower()
+	var payout: int     = int(b.get("payout_per_kill", 8))
+	var credited: int   = int(b.get("kills_credited", 0))
+	var cap: int        = int(b.get("cap", -1))
+	var kaelen_line: String = str(b.get("kaelen_line", ""))
+
+	# Outer VBox: poster image on top, Kaelen's line below
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Poster image — atlas slice from WantedPosters.png
+	var poster_regions := {
+		"reavers":  Rect2(0,    0,   512, 512),
+		"obsidian": Rect2(512,  0,   512, 512),
+		"dustborn": Rect2(1024, 0,   512, 512),
+		"wraiths":  Rect2(0,    512, 512, 512),
+		"ironclad": Rect2(512,  512, 512, 512),
+	}
+	var atlas := AtlasTexture.new()
+	atlas.atlas = _wanted_posters_sheet
+	atlas.region = poster_regions.get(faction_id, Rect2(1024, 512, 512, 512))
+
+	var progress_str: String
+	if cap > 0:
+		progress_str = "%d / %d kills" % [credited, cap]
+	else:
+		progress_str = "%d kills" % credited
+
+	var tip: String = (
+		"%s WANTED\n%d SC per kill · %s\nReport kills to Kaelen at any station." \
+		% [faction_id.capitalize(), payout, progress_str]
+	)
+	if not kaelen_line.is_empty():
+		tip += "\n\n\"%s\"" % kaelen_line
+
+	var img := TextureRect.new()
+	img.texture = atlas
+	img.custom_minimum_size = Vector2(200, 200)
+	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	img.tooltip_text = tip
+	img.mouse_filter = Control.MOUSE_FILTER_PASS
+	vbox.add_child(img)
+
+	# Progress label under the poster
+	var prog_lbl := Label.new()
+	prog_lbl.text = progress_str
+	prog_lbl.add_theme_font_size_override("font_size", 11)
+	prog_lbl.add_theme_color_override("font_color", Color(0.85, 0.5, 1.0))
+	prog_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prog_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(prog_lbl)
+
+	return vbox
 
 
 func _render_station_contacts(should_show: bool) -> void:
