@@ -12,6 +12,9 @@ var distortion_mat: ShaderMaterial
 const TUNNEL_SPEED_BASE := 2.5
 const TUNNEL_SPEED_WARP := 14.0
 
+var _arrival_banner: Control = null
+var _arrival_name_label: Label = null
+
 func _ready() -> void:
 	tunnel_mat = tunnel.material as ShaderMaterial
 	distortion_mat = distortion_overlay.material as ShaderMaterial
@@ -23,6 +26,37 @@ func _ready() -> void:
 	var vp := get_viewport()
 	if vp:
 		star_streaks.position = vp.get_visible_rect().size * 0.5
+	_build_arrival_banner()
+
+
+func _build_arrival_banner() -> void:
+	_arrival_banner = Control.new()
+	_arrival_banner.name = "ArrivalBanner"
+	_arrival_banner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_arrival_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_arrival_banner.modulate.a = 0.0
+	add_child(_arrival_banner)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_arrival_banner.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	center.add_child(vbox)
+
+	var entering_label := Label.new()
+	entering_label.text = "ENTERING"
+	entering_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	entering_label.add_theme_color_override("font_color", Color(0.55, 0.82, 1.0, 1.0))
+	entering_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(entering_label)
+
+	_arrival_name_label = Label.new()
+	_arrival_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_arrival_name_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	_arrival_name_label.add_theme_font_size_override("font_size", 38)
+	vbox.add_child(_arrival_name_label)
 
 
 # GameRoot drives camera FOV and player position during entry.
@@ -180,6 +214,16 @@ func play_exit(duration: float = 2.0) -> void:
 	if camera and is_instance_valid(camera):
 		camera.h_offset = 0.0
 		camera.v_offset = 0.0
+
+
+func play_arrival_banner(system_name: String) -> void:
+	if DisplayServer.get_name() == "headless" or not _arrival_banner or not _arrival_name_label:
+		return
+	_arrival_name_label.text = system_name.to_upper()
+	var tween := create_tween()
+	tween.tween_property(_arrival_banner, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
+	tween.tween_interval(2.0)
+	tween.tween_property(_arrival_banner, "modulate:a", 0.0, 0.65).set_trans(Tween.TRANS_SINE)
 
 
 func _find_player_camera() -> Camera3D:

@@ -412,6 +412,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		exit_tween.parallel().tween_property(player.get_node("CameraPivot"), "global_position", final_transform.origin, exit_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		
 	await transition_fx.play_exit(0.05 if DisplayServer.get_name() == "headless" else JUMP_EXIT_DURATION)
+	var arriving_sys := system_registry.get_system(destination_system_id)
+	if arriving_sys and transition_fx.has_method("play_arrival_banner"):
+		transition_fx.play_arrival_banner(arriving_sys.display_name)
 	_prepare_player_after_system_change()
 	CampaignClock.advance_minutes(GATE_TRAVEL_MINUTES)
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)

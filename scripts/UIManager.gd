@@ -55,6 +55,9 @@ var dock_message_tween: Tween
 var station_contacts_panel: PanelContainer
 var station_contacts_list: VBoxContainer
 var _selected_station_contact: String = ""
+var _contacts_with_rumor: Dictionary = {}
+
+const _CONTACT_MOODS := ["Chatty", "Tense", "Distracted", "Focused"]
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
 # Portrait + personalized greeting that pops in the top area of the dock panel
 # when the player enters the Grease Monkeys maintenance submenu. Layout:
@@ -2978,6 +2981,7 @@ func update_overview_list(entities: Array):
 				var gate_dest: String = entity.get("destination_system_id") if entity.get("destination_system_id") else ""
 				if next_hop != "" and gate_dest == next_hop:
 					row_color = Color(0.2, 1.0, 0.4)
+					name_lbl.text = "  → " + (entity.get("display_name") if entity.get("display_name") else entity.name)
 				else:
 					row_color = Color(0.2, 0.85, 1.0)
 			elif type_str == "Celestial":
@@ -3467,8 +3471,11 @@ func _render_station_contacts(should_show: bool) -> void:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
 	if show_kaelen:
+		if not _contacts_with_rumor.has("kaelen"):
+			_contacts_with_rumor["kaelen"] = true
+		var kaelen_badge := " ★" if _contacts_with_rumor.get("kaelen", false) else ""
 		var kaelen_btn := Button.new()
-		kaelen_btn.text = "Broker Kaelen [Broker]"
+		kaelen_btn.text = "Broker Kaelen [Broker]%s" % kaelen_badge
 		kaelen_btn.tooltip_text = "Catch Kaelen between deals."
 		kaelen_btn.pressed.connect(_on_kaelen_lounge_pressed)
 		station_contacts_list.add_child(kaelen_btn)
@@ -3481,8 +3488,12 @@ func _render_station_contacts(should_show: bool) -> void:
 			faction_label = " - %s" % str(
 				GlobalState.faction_info(faction).get("name", faction.capitalize())
 			)
+		var mood := _get_contact_mood(str(npc_name))
+		if not _contacts_with_rumor.has(str(npc_name)):
+			_contacts_with_rumor[str(npc_name)] = true
+		var badge := " ★" if _contacts_with_rumor.get(str(npc_name), false) else ""
 		var btn := Button.new()
-		btn.text = "%s [%s%s]" % [str(npc_name), role, faction_label]
+		btn.text = "%s [%s%s · %s]%s" % [str(npc_name), role, faction_label, mood, badge]
 		btn.tooltip_text = "Hear what this station contact has to say."
 		btn.pressed.connect(_on_station_contact_pressed.bind(str(npc_name)))
 		station_contacts_list.add_child(btn)
@@ -3523,6 +3534,7 @@ func _kaelen_lounge_available() -> bool:
 
 
 func _on_kaelen_lounge_pressed() -> void:
+	_contacts_with_rumor.erase("kaelen")
 	var line := _kaelen_lounge_line()
 	var color := Color(0.0, 0.95, 1.0)
 	var portrait := GameContentRegistry.shared().portrait_texture(
@@ -3604,6 +3616,7 @@ func _on_station_contact_pressed(npc_name: String) -> void:
 	if npc_data.is_empty():
 		show_hud_warning("That contact is unavailable.")
 		return
+	_contacts_with_rumor.erase(npc_name)
 	_selected_station_contact = npc_name
 	_render_station_contacts(true)
 	_show_station_contact_line(npc_name, npc_data, "greeting")
@@ -5409,7 +5422,16 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 	SpeechService.play(line, voice_profile_id)
 
 
+func _get_contact_mood(npc_name: String) -> String:
+	var day_index := int(CampaignClock.total_minutes / 1440.0)
+	var mood_index := (npc_name.hash() ^ day_index) % _CONTACT_MOODS.size()
+	if mood_index < 0:
+		mood_index = -mood_index
+	return _CONTACT_MOODS[mood_index]
+
+
 func undock_player():
+	_contacts_with_rumor.clear()
 	var station_before_undock := current_station
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("request_safe_checkpoint"):
