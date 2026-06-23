@@ -3737,6 +3737,11 @@ func _on_planted_npc_pressed() -> void:
 	if not p_portrait_id.is_empty():
 		portrait = GameContentRegistry.shared().portrait_texture(p_portrait_id)
 	show_dock_message(p_line, p_name, Color(0.9, 0.75, 0.5), portrait)
+	# Notify StoryQuestManager if this contact is a quest step
+	if bool(planted.get("advances_quest", false)):
+		if Engine.has_singleton("StoryQuestManager"):
+			var npc_id: String = str(planted.get("npc_id", p_name))
+			StoryQuestManager.on_planted_npc_talked(npc_id)
 	if bool(planted.get("one_shot", true)):
 		GlobalState.story_planted_npc = {}
 		_render_station_contacts(true)
