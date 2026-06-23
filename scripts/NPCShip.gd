@@ -780,6 +780,7 @@ func die():
 	
 	# Award credits and apply reputation changes if killed by player
 	if last_attacker_faction == "player":
+		GlobalState.player_kill.emit(faction)
 		if not is_code_enforcement:
 			GlobalState.player_credits += 15
 			_apply_reputation_changes()
@@ -799,8 +800,6 @@ func die():
 				GlobalState.player_credits += _bounty_payout
 				AudioManager.play_sell_ore()
 				GlobalState.emit_chatter("Kaelen", _bounty_reg.confirm_line(faction, _bounty_payout), Color(0.85, 0.5, 1.0))
-		if Engine.has_singleton("StoryManager"):
-			StoryManager.on_kill(faction)
 		if Engine.has_singleton("StoryQuestManager"):
 			StoryQuestManager.on_ship_destroyed(str(persistent_id), faction)
 

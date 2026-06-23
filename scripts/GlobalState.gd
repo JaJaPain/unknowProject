@@ -1554,6 +1554,7 @@ var reputations: Dictionary = {
 }
 signal reputation_changed(faction_name: String, new_rep: float)
 signal ship_destroyed(faction_name: String)
+signal player_kill(faction_name: String)   # fires only when player lands the killing blow
 signal entities_changed()
 signal system_chatter_received(sender: String, message: String, color: Color)
 

@@ -13,7 +13,7 @@ extends Node
 # HOW TO DISABLE: flip _SQ_DEBUG back to false and save. No other changes needed.
 # HOW TO FIND:    grep _SQ_DEBUG in scripts/story/StoryManager.gd
 # DO NOT SHIP with _SQ_DEBUG = true.
-const _SQ_DEBUG := false
+const _SQ_DEBUG := true
 var _sq_debug_fired := false   # guard: only fires once per session
 
 # ── Deferred beat schedule ────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ var _dock_count_session: int = 0
 
 
 func _ready() -> void:
-	pass
+	GlobalState.player_kill.connect(_on_ship_destroyed)
 
 
 # ── Public tool: deferred beat scheduling ────────────────────────────────────
@@ -70,6 +70,11 @@ func on_kill(faction: String) -> void:
 	if _SQ_DEBUG and not _sq_debug_fired:
 		_sq_debug_fired = true
 		_fire_debug_story_quest()
+
+
+func _on_ship_destroyed(faction: String) -> void:
+	print("[StoryManager] ship_destroyed signal: %s (session kills: %d)" % [faction, _kill_count_session + 1])
+	on_kill(faction)
 
 
 func on_docked(_station) -> void:
