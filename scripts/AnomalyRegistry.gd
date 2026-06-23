@@ -18,6 +18,16 @@ static func reset() -> void:
 func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 	_last_spawned_flavors.clear()
 	var count: int = randi_range(0, 2)
+
+	# story_forced_anomaly: StoryManager can plant a guaranteed anomaly of a
+	# specific flavor. Only fires when system_id matches (or is left blank).
+	var forced: Dictionary = GlobalState.story_forced_anomaly
+	var forced_system: String = str(forced.get("system_id", ""))
+	var forced_flavor: String = str(forced.get("flavor_type", ""))
+	var has_forced: bool = (not forced.is_empty()
+		and not forced_flavor.is_empty()
+		and (forced_system == "" or forced_system == system_id))
+
 	print("[AnomalyRegistry] Spawning %d anomalies for system '%s'" % [count, system_id])
 	var presets: Array = _fallback_table()
 	presets.shuffle()
@@ -33,6 +43,28 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 		scene_parent.add_child(node)
 		node.global_position = _random_position()
 		_last_spawned_flavors.append(str(data.get("flavor_type", "")))
+
+	if has_forced:
+		var forced_preset: Dictionary = {}
+		for p in presets:
+			if str(p.get("flavor_type", "")) == forced_flavor:
+				forced_preset = p.duplicate(true)
+				break
+		if forced_preset.is_empty() and not presets.is_empty():
+			forced_preset = presets[0].duplicate(true)
+		if not forced_preset.is_empty():
+			forced_preset["anomaly_id"] = "%s_forced" % system_id
+			forced_preset["flavor_type"] = forced_flavor
+			if forced_preset["anomaly_id"] not in _activated_ids:
+				var fnode: StaticBody3D = StaticBody3D.new()
+				fnode.set_script(load("res://scripts/SpaceAnomaly.gd"))
+				fnode.name = "Anomaly_Forced"
+				fnode.anomaly_data = forced_preset
+				scene_parent.add_child(fnode)
+				fnode.global_position = _random_position()
+				_last_spawned_flavors.append(forced_flavor)
+				print("[AnomalyRegistry] Planted story anomaly '%s' for system '%s'" % [forced_flavor, system_id])
+		GlobalState.story_forced_anomaly = {}
 
 
 func mark_activated(anomaly_id: String) -> void:
