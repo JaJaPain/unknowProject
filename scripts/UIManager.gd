@@ -177,6 +177,12 @@ var quest_tracker_prev_btn: Button
 var quest_tracker_next_btn: Button
 var quest_tracker_nav_label: Label
 
+# Story Quest HUD indicator (top-right, parallel to quest tracker)
+var _story_quest_panel: PanelContainer = null
+var _story_quest_title_label: Label = null
+var _story_quest_obj_label: Label = null
+var _story_quest_timer_label: Label = null
+
 # Incoming Comms (reversal hail)
 var comms_hail_panel: PanelContainer
 var comms_hail_portrait: TextureRect
@@ -669,6 +675,7 @@ func _create_hud():
 
 	quest_tracker_panel.visible = false
 
+	_create_story_quest_panel()
 	_create_comms_hail_panel()
 
 	# Systems Comms Chat Window (positioned at the bottom-left corner using anchors for responsiveness)
@@ -7842,6 +7849,105 @@ func _update_quest_tracker_logo(faction: String):
 			quest_tracker_logo.visible = true
 		else:
 			quest_tracker_logo.visible = false
+
+func _create_story_quest_panel() -> void:
+	_story_quest_panel = PanelContainer.new()
+	_story_quest_panel.anchor_left   = 1.0
+	_story_quest_panel.anchor_right  = 1.0
+	_story_quest_panel.anchor_top    = 0.0
+	_story_quest_panel.anchor_bottom = 0.0
+	_story_quest_panel.offset_left   = -400.0
+	_story_quest_panel.offset_right  = -20.0
+	_story_quest_panel.offset_top    = 20.0
+	_story_quest_panel.offset_bottom = 20.0
+	_story_quest_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_story_quest_panel.grow_vertical   = Control.GROW_DIRECTION_END
+	_story_quest_panel.mouse_filter    = Control.MOUSE_FILTER_IGNORE
+
+	var style := StyleBoxFlat.new()
+	style.bg_color           = Color(0.06, 0.04, 0.10, 0.82)
+	style.border_width_left   = 2
+	style.border_width_top    = 2
+	style.border_width_right  = 2
+	style.border_width_bottom = 2
+	style.border_color        = Color(0.85, 0.5, 1.0, 0.75)
+	style.corner_radius_top_left     = 4
+	style.corner_radius_top_right    = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left  = 4
+	style.content_margin_left   = 10
+	style.content_margin_right  = 10
+	style.content_margin_top    = 8
+	style.content_margin_bottom = 8
+	_story_quest_panel.add_theme_stylebox_override("panel", style)
+	add_child(_story_quest_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	_story_quest_panel.add_child(vbox)
+
+	var header_row := HBoxContainer.new()
+	header_row.add_theme_constant_override("separation", 6)
+	vbox.add_child(header_row)
+
+	var icon_lbl := Label.new()
+	icon_lbl.text = "◈"
+	icon_lbl.add_theme_font_size_override("font_size", 11)
+	icon_lbl.add_theme_color_override("font_color", Color(0.85, 0.5, 1.0))
+	header_row.add_child(icon_lbl)
+
+	var header_lbl := Label.new()
+	header_lbl.text = "STORY QUEST"
+	header_lbl.add_theme_font_size_override("font_size", 10)
+	header_lbl.add_theme_color_override("font_color", Color(0.7, 0.45, 0.9))
+	header_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_row.add_child(header_lbl)
+
+	_story_quest_timer_label = Label.new()
+	_story_quest_timer_label.text = ""
+	_story_quest_timer_label.add_theme_font_size_override("font_size", 10)
+	_story_quest_timer_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.3))
+	_story_quest_timer_label.visible = false
+	header_row.add_child(_story_quest_timer_label)
+
+	_story_quest_title_label = Label.new()
+	_story_quest_title_label.text = ""
+	_story_quest_title_label.add_theme_font_size_override("font_size", 13)
+	_story_quest_title_label.add_theme_color_override("font_color", Color(0.95, 0.9, 1.0))
+	_story_quest_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_story_quest_title_label.custom_minimum_size = Vector2(360, 0)
+	vbox.add_child(_story_quest_title_label)
+
+	_story_quest_obj_label = Label.new()
+	_story_quest_obj_label.text = ""
+	_story_quest_obj_label.add_theme_font_size_override("font_size", 11)
+	_story_quest_obj_label.add_theme_color_override("font_color", Color(0.75, 0.85, 0.75))
+	_story_quest_obj_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_story_quest_obj_label.custom_minimum_size = Vector2(360, 0)
+	vbox.add_child(_story_quest_obj_label)
+
+	_story_quest_panel.visible = false
+
+
+func _on_story_quest_ui_updated(title: String, objective_line: String, time_remaining_s: float) -> void:
+	if not _story_quest_panel or not is_instance_valid(_story_quest_panel):
+		return
+	_story_quest_title_label.text = title
+	_story_quest_obj_label.text   = objective_line
+	if time_remaining_s > 0.0:
+		var mins: int = int(time_remaining_s) / 60
+		var secs: int = int(time_remaining_s) % 60
+		_story_quest_timer_label.text    = "%d:%02d" % [mins, secs]
+		_story_quest_timer_label.visible = true
+	else:
+		_story_quest_timer_label.visible = false
+	_story_quest_panel.visible = true
+
+
+func _on_story_quest_ui_hidden() -> void:
+	if _story_quest_panel and is_instance_valid(_story_quest_panel):
+		_story_quest_panel.visible = false
+
 
 func _create_comms_hail_panel() -> void:
 	comms_hail_panel = PanelContainer.new()
