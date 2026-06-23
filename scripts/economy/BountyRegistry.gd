@@ -3,6 +3,7 @@ extends RefCounted
 static var _shared = null
 
 var _bounties: Array = []
+var _injected_bounties: Array = []  # story-injected; survive set_bounties() calls
 
 const KAELEN_COLOR := Color(0.85, 0.5, 1.0)
 
@@ -22,7 +23,21 @@ func set_bounties(bounties: Array) -> void:
 
 
 func get_active_bounties() -> Array:
-	return _bounties.filter(func(b): return b.get("kills_credited", 0) < _cap(b))
+	var all: Array = _bounties + _injected_bounties
+	return all.filter(func(b): return b.get("kills_credited", 0) < _cap(b))
+
+
+# StoryManager: inject a bounty that survives normal set_bounties() refresh.
+# bounty dict shape: {faction, system_id, payout_per_kill, cap, kaelen_line}
+func inject_story_bounty(bounty: Dictionary) -> void:
+	var b: Dictionary = bounty.duplicate(true)
+	b["kills_credited"] = 0
+	b["story_injected"] = true
+	_injected_bounties.append(b)
+
+
+func clear_injected_bounties() -> void:
+	_injected_bounties = []
 
 
 # Returns the credit payout if this kill earns a bounty, otherwise 0.
@@ -30,7 +45,7 @@ func get_active_bounties() -> Array:
 # emitting Kaelen chat — keeping GlobalState access out of this class so
 # it remains unit-testable.
 func check_kill(faction: String, system_id: String) -> int:
-	for b in _bounties:
+	for b in (_bounties + _injected_bounties):
 		if b.get("faction", "") != faction:
 			continue
 		if b.get("system_id", "") != system_id:
