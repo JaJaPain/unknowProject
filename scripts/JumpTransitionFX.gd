@@ -39,10 +39,12 @@ func _build_arrival_banner() -> void:
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_arrival_banner.add_child(center)
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	center.add_child(vbox)
 
 	var entering_label := Label.new()
