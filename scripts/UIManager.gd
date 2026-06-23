@@ -4889,6 +4889,17 @@ func notify_system_arrived(system_id: String) -> void:
 	_maybe_kaelen_intel_drop()
 
 
+# StoryManager tool: inject a comms intercept into the chatter feed.
+# Appears as a teal "[INTERCEPT]" line — environmental, not an NPC message.
+# delay_s: seconds before it fires (0 = immediate). Simulates comms lag.
+func show_intercepted_transmission(text: String, delay_s: float = 0.0) -> void:
+	if delay_s > 0.0:
+		await get_tree().create_timer(delay_s).timeout
+		if not is_instance_valid(self):
+			return
+	GlobalState.emit_chatter("[INTERCEPT]", text, Color(0.3, 0.95, 0.75))
+
+
 func _maybe_kaelen_intel_drop() -> void:
 	if not GlobalState.kaelen_briefing_seen:
 		return
