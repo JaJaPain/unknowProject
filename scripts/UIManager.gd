@@ -3487,6 +3487,26 @@ func _render_dock_submenu() -> void:
 			mechanic_intro_panel.visible = false
 
 	_update_repair_button()
+	_maybe_show_station_climate()
+
+
+func _maybe_show_station_climate() -> void:
+	var climate: Dictionary = GlobalState.story_station_climate
+	if climate.is_empty():
+		return
+	var station_id: String = str(climate.get("station_id", ""))
+	var text: String = str(climate.get("text", ""))
+	if text.is_empty():
+		return
+	# Match by station_id when set; empty station_id means "show everywhere".
+	var current_id: String = ""
+	if current_station and is_instance_valid(current_station):
+		current_id = GlobalState.resolve_outpost_id(current_station)
+		if current_id.is_empty():
+			current_id = current_station.name
+	if station_id != "" and current_id != station_id:
+		return
+	show_dock_message(text, "Station Comms", Color(0.7, 0.85, 1.0))
 
 
 func _render_bounty_board(should_show: bool) -> void:
