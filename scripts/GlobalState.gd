@@ -1498,6 +1498,15 @@ var kaelen_briefing_seen: bool = false
 var kaelen_briefing_accepted: bool = false
 var kaelen_arrival_systems_seen: Array[String] = []
 
+# ── StoryManager tool slots ───────────────────────────────────────────────────
+# Written by StoryManager; read by existing systems. Session-only (not persisted).
+var story_world_pressure: Dictionary = {}  # {faction, intensity, system_id, event_type}
+var story_quest_hint: Dictionary = {}      # {preferred_system, preferred_type, flavor_tag, expires_after_docks}
+var story_loot_plant: Dictionary = {}      # {item_id, consumed_on_pickup: bool}
+var story_station_climate: Dictionary = {} # {station_id, text}
+var story_forced_anomaly: Dictionary = {}  # {system_id, flavor_type}
+var story_planted_npc: Dictionary = {}     # {station_id, npc_id, display_name, portrait_id, line, one_shot}
+
 # Unique per-campaign seed mixed into procedural system generation so each
 # campaign produces different systems even from the same gate destination IDs.
 var campaign_seed: int = 0
@@ -2005,6 +2014,12 @@ func reset_for_restart():
 	kaelen_briefing_seen = false
 	kaelen_briefing_accepted = false
 	kaelen_arrival_systems_seen.clear()
+	story_world_pressure = {}
+	story_quest_hint = {}
+	story_loot_plant = {}
+	story_station_climate = {}
+	story_forced_anomaly = {}
+	story_planted_npc = {}
 	# New seed so procedural systems differ across campaigns
 	campaign_seed = randi()
 	# Reset reputations

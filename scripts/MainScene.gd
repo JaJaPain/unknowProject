@@ -254,9 +254,15 @@ func _spawn_minor_faction_ship():
 	print("[MainScene] Ambient minor faction spawned: ", npc.name)
 
 func _spawn_npc_flying_in():
-	# Choose a random major faction
 	var factions = ["zenith", "aurelia", "vanguard"]
-	var faction_name = factions[randi() % factions.size()]
+	var faction_name: String
+	var pressure: Dictionary = GlobalState.story_world_pressure
+	var p_faction: String = str(pressure.get("faction", ""))
+	var p_intensity: float = float(pressure.get("intensity", 0.0))
+	if p_faction in factions and p_intensity > 0.0 and randf() < p_intensity:
+		faction_name = p_faction
+	else:
+		faction_name = factions[randi() % factions.size()]
 	
 	# Choose a random direction on XZ plane
 	var angle = randf() * TAU
