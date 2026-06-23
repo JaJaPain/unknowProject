@@ -740,6 +740,11 @@ func _create_hud():
 	# in the NPC's unique Kokoro voice. System chatter (alerts, sensor
 	# sweeps) doesn't go through this path so it stays text-only.
 	GlobalState.npc_flavor_spoken.connect(_on_npc_flavor_spoken)
+
+	# Story quest HUD — connect signals so the panel updates without polling
+	if Engine.has_singleton("StoryQuestManager"):
+		StoryQuestManager.quest_ui_updated.connect(_on_story_quest_ui_updated)
+		StoryQuestManager.quest_ui_hidden.connect(_on_story_quest_ui_hidden)
 	
 	# Initial welcome message
 	add_chat_message("SYSTEM", "Radio channels open. Encryption secure.", Color(0.0, 0.9, 0.9))
