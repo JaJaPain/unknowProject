@@ -2021,14 +2021,43 @@ func _salvage_collect_return() -> void:
 
 	if not _salvage_rare_dropped and randf() < SALVAGE_RARE_CHANCE_PER_RETURN:
 		_salvage_rare_dropped = true
-		var rare_id := "damaged_transponder" if randf() < 0.65 else "encrypted_core"
-		var stack_max := 20 if rare_id == "damaged_transponder" else 5
-		if GlobalState.inventory.add(rare_id, 1, stack_max):
-			var display := "Damaged Transponder" if rare_id == "damaged_transponder" else "Encrypted Data Core"
-			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: %s." % display, Color(1.0, 0.85, 0.3))
+		_salvage_grant_wreck_bonus()
 
 	if _salvage_ore_remaining <= 0.0:
 		_end_salvage()
+
+
+func _salvage_grant_wreck_bonus() -> void:
+	var roll := randf()
+	if roll < 0.30:
+		# Credit pouch — 40–180 SC
+		var credits := randi_range(40, 180)
+		GlobalState.credits += credits
+		GlobalState.emit_chatter("Drone Bay", "Loose credits recovered: %d SC." % credits, Color(1.0, 0.85, 0.3))
+	elif roll < 0.55:
+		# Damaged transponder (common)
+		if GlobalState.inventory.add("damaged_transponder", 1, 20):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Damaged Transponder.", Color(1.0, 0.85, 0.3))
+	elif roll < 0.68:
+		# Encrypted core (uncommon)
+		if GlobalState.inventory.add("encrypted_core", 1, 5):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Encrypted Data Core.", Color(1.0, 0.85, 0.3))
+	elif roll < 0.78:
+		# Repair kit
+		if GlobalState.inventory.add("repair_kit", 1, 10):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Emergency Repair Kit.", Color(1.0, 0.85, 0.3))
+	elif roll < 0.87:
+		# Shield cell
+		if GlobalState.inventory.add("shield_cell", 1, 10):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Shield Cell.", Color(1.0, 0.85, 0.3))
+	elif roll < 0.95:
+		# Scanner probe
+		if GlobalState.inventory.add("scanner_probe", 1, 5):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Scanner Probe.", Color(1.0, 0.85, 0.3))
+	else:
+		# Rare: data chip
+		if GlobalState.inventory.add("data_chip", 1, 10):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: Data Chip — intact.", Color(1.0, 0.85, 0.3))
 
 
 func _abort_salvage(reason: String) -> void:

@@ -76,8 +76,9 @@ func _ready():
 	# Spawn the salvager ship near space station
 	_spawn_salvager()
 
-	# Spawn anomaly nodes
+	# Spawn anomaly nodes, then fire a delayed rumor hint if any spawned
 	AnomalyRegistryScript.shared().generate_for_system(GlobalState.current_system_id, self)
+	_schedule_anomaly_rumor()
 	
 	# Setup spawn check Timer for replacing destroyed ships
 	var spawn_timer = Timer.new()
@@ -284,3 +285,14 @@ func _spawn_npc_flying_in():
 func _next_runtime_ship_id(category: String) -> String:
 	runtime_ship_sequence += 1
 	return "entity.start.%s.%06d" % [category, runtime_ship_sequence]
+
+
+func _schedule_anomaly_rumor() -> void:
+	var delay := randf_range(8.0, 18.0)
+	await get_tree().create_timer(delay).timeout
+	if not is_instance_valid(self):
+		return
+	var rumor: Dictionary = AnomalyRegistryScript.shared().get_arrival_rumor()
+	if rumor.is_empty():
+		return
+	GlobalState.emit_chatter(rumor["sender"], rumor["line"], Color(0.75, 0.75, 0.75))

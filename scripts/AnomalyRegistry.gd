@@ -3,6 +3,7 @@ extends RefCounted
 static var _shared = null
 
 var _activated_ids: Array = []
+var _last_spawned_flavors: Array = []  # flavor_type strings from last generate call
 
 static func shared() -> Object:
 	if _shared == null:
@@ -15,6 +16,7 @@ static func reset() -> void:
 
 # Spawn 1–3 anomaly nodes at random positions in the system.
 func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
+	_last_spawned_flavors.clear()
 	var count: int = randi_range(0, 2)
 	print("[AnomalyRegistry] Spawning %d anomalies for system '%s'" % [count, system_id])
 	var presets: Array = _fallback_table()
@@ -30,6 +32,7 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 		node.anomaly_data = data
 		scene_parent.add_child(node)
 		node.global_position = _random_position()
+		_last_spawned_flavors.append(str(data.get("flavor_type", "")))
 
 
 func mark_activated(anomaly_id: String) -> void:
@@ -39,6 +42,57 @@ func mark_activated(anomaly_id: String) -> void:
 
 func clear() -> void:
 	_activated_ids.clear()
+
+
+# Returns a rumor hint line if anomalies were spawned this system, "" otherwise.
+# Call this ~10s after generate_for_system so it fires naturally in-world.
+func get_arrival_rumor() -> Dictionary:
+	if _last_spawned_flavors.is_empty():
+		return {}
+	# Only fire ~60% of the time even when anomalies exist
+	if randf() > 0.60:
+		return {}
+	var flavor: String = _last_spawned_flavors[0]
+	var senders := ["Independent Hauler", "Passing Vessel", "Comms Relay", "Local Traffic"]
+	var sender: String = senders[randi() % senders.size()]
+	var line: String
+	match flavor:
+		"military":
+			var opts := [
+				"Something with mil-spec encryption drifting out past the belt. Couldn't get close.",
+				"Picked up a sealed container with no registry. Military stenciling. Left it alone.",
+				"Classified signature out there. Not transmitting. Could be old, could be trouble.",
+			]
+			line = opts[randi() % opts.size()]
+		"pirate":
+			var opts := [
+				"Watch yourself out past the main lane. Something's sitting there quiet. Too quiet.",
+				"Debris pattern looks deliberate. Like someone wanted ships to stop and check.",
+				"Picked up a contact then lost it. Looked like a setup to me.",
+			]
+			line = opts[randi() % opts.size()]
+		"scientific":
+			var opts := [
+				"Anomalous reading on long-range. Could be worth a scan if you've got the gear.",
+				"Something's broadcasting on a weird band out there. Not standard comms.",
+				"My sensors flagged something unusual about 800 clicks out. Couldn't identify it.",
+			]
+			line = opts[randi() % opts.size()]
+		"civilian":
+			var opts := [
+				"Passive signature out near the rock field. Might be salvage, might be junk.",
+				"Something drifting out past the main lane. Looks like abandoned freight.",
+				"Picked up a beacon but it's old. Could still be worth checking.",
+			]
+			line = opts[randi() % opts.size()]
+		_:
+			var opts := [
+				"Sensor ghost or something real out there — can't tell. Maybe nothing.",
+				"Odd reading on the long-range. Didn't stop to check.",
+				"Something out there that shouldn't be. Could be interesting.",
+			]
+			line = opts[randi() % opts.size()]
+	return {"sender": sender, "line": line}
 
 
 # ── private ───────────────────────────────────────────────────────────────────

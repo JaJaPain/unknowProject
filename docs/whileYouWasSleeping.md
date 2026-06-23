@@ -2,6 +2,40 @@
 
 ---
 
+## Session: 2026-06-22 (Small Features Pass) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Four self-contained features added in sequence: anomaly rumors, bounty board display, wreckage loot variation, and Kaelen intel drops.
+
+### 1. Anomaly Rumors (`scripts/AnomalyRegistry.gd`, `scripts/MainScene.gd`)
+After jumping to a new system, if anomalies were spawned there, a passing ship or comms relay has a 60% chance to emit a vague hint in the chatter log 8–18 seconds after arrival. Lines are flavor-matched to the anomaly type (military, pirate, scientific, civilian). Senders rotate through "Independent Hauler", "Passing Vessel", "Comms Relay", "Local Traffic". `AnomalyRegistry` now tracks `_last_spawned_flavors` after generation and exposes `get_arrival_rumor()`. `MainScene._ready()` calls `_schedule_anomaly_rumor()` using an awaited timer.
+
+### 2. Bounty Board (`scripts/UIManager.gd`)
+A purple-bordered read-only panel appears in both the Services and Lounge submenus when Kaelen has active contracts in the bounty registry. Shows "KAELEN'S ACTIVE CONTRACTS" header with one row per bounty: faction, SC/kill rate, and kills credited vs cap. Hidden at maintenance bay and when no bounties are active. Panel is built procedurally in `_create_dock_menu()` and rendered via `_render_bounty_board(bool)`.
+
+### 3. Wreckage Loot Variation (`scripts/PlayerShip.gd`)
+Expanded the salvage rare-drop system from 2 hardcoded items to 7 outcomes spread across a roll table. New `_salvage_grant_wreck_bonus()` function replaces the inline check. Outcomes:
+- 30%: loose credits (40–180 SC)
+- 25%: Damaged Transponder
+- 13%: Encrypted Data Core
+- 10%: Emergency Repair Kit
+- 9%: Shield Cell
+- 8%: Scanner Probe
+- 5%: Data Chip
+
+### 4. Kaelen Intel Drops (`scripts/UIManager.gd`)
+After docking at a full-service station, if Kaelen's briefing has been seen, there's a chance Kaelen emits one sentence of system intel 2.5 seconds after the bounty announcement. Chance scales with total kills credited (base 20%, up to 55% at high rep). Low-rep lines are vague rumors; high-rep lines (5+ kills credited) are more direct intel about patrol patterns, caches, and lane control. Uses `emit_chatter("Kaelen", ...)` with the purple color.
+
+## Files Modified
+
+- `scripts/AnomalyRegistry.gd` — `_last_spawned_flavors` tracking + `get_arrival_rumor()`
+- `scripts/MainScene.gd` — `_schedule_anomaly_rumor()` call + function
+- `scripts/UIManager.gd` — bounty board panel + `_render_bounty_board()` + `_maybe_kaelen_intel_drop()`
+- `scripts/PlayerShip.gd` — `_salvage_grant_wreck_bonus()` with 7-outcome loot table
+
+---
+
 ## Session: 2026-06-22 (Skybox Fixes + Overview Height Bug) — Claude
 **Branch:** `segment-3/economy-stores-events`
 
