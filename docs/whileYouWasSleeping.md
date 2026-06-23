@@ -41,6 +41,19 @@ Full design and implementation spec for a narrative director system. Designed fo
 - Triggers arc refresh generation from Gemma4 when current arc runs low
 - Full GDScript implementation in `story_manager_impl.md` — every function, every hook, every file change with line context
 
+### Story Manager Conflict Analysis (Section 10 of `story_manager_impl.md`)
+10 concrete conflicts identified and resolved via sweep of GameRoot, GlobalState, LLMInterface, MainScene, UIManager:
+- **Kaelen arrival double-fire**: GameRoot `_maybe_emit_kaelen_system_arrival` and StoryManager beats would both fire. Resolution: empty the GameRoot function body in Phase 2, keep the stub.
+- **No GlobalState save methods**: `get_save_data()`/`apply_save_data()` don't exist; save lives in `CampaignCheckpointStore.capture_autosave()`. Find `kaelen_briefing_seen` to locate the right block.
+- **LLMInterface `is_waiting` gate**: Arc generation calls silently dropped if quest gen is in flight. StoryManager queue must retry after delay.
+- **story_quest_hint injection**: Must be read from GlobalState inside `request_quest_generation()` body — never added as a parameter.
+- **MainScene NPC spawner**: Hardcoded faction uniform random. Need soft weight from `story_world_pressure.intensity` before the pick.
+- **Anomaly rumor ordering**: StoryManager fires `on_system_arrived` AFTER AnomalyRegistry `generate_for_system()` — safe to call `get_arrival_rumor()` from nudge handler.
+- **UIManager voice button already done**: `queue_kaelen_voice_message()` is already implemented. StoryManager just calls it.
+- **Third GameRoot hook missing**: `StoryManager.on_system_arrived()` not yet wired into gate arrival sequence at lines 429–436.
+- **Autoload order**: StoryManager must appear after QuestManager in project.godot.
+- **Double-decrement on rapid re-dock**: Acceptable v1 behavior; fix recipe documented if it surfaces in playtesting.
+
 ## Files Modified
 - `scripts/AnomalyRegistry.gd` — flavor tracking + `get_arrival_rumor()`
 - `scripts/MainScene.gd` — anomaly rumor schedule + `notify_system_arrived` hook

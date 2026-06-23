@@ -1003,37 +1003,243 @@ func request_initial_arc() -> void:
 
 ## SECTION 10 — Conflict Analysis
 
-*(This section will be filled in once the background conflict sweep completes.
-See the agent results when they arrive. Until then, known risks are:)*
+*Concrete findings from a sweep of GameRoot.gd, GlobalState.gd, LLMInterface.gd,
+MainScene.gd, and UIManager.gd. Each finding includes the exact line(s) involved
+and what to do.*
 
-**Known risk 1 — Kaelen arrival line ownership transfer**
-GameRoot currently calls `_maybe_emit_kaelen_system_arrival` at the end of the
-gate arrival sequence. After the migration, StoryManager owns this decision via
-the `kaelen_arrival_requested` signal. If the signal connection fails (timing,
-scene not ready), the line will never fire. Guard with a null check and a
-fallback direct call.
+---
 
-**Known risk 2 — LLMInterface local call convention**
-The `request_story_arc` method needs to use the same local model call path as
-existing LLMInterface calls. If the existing path uses coroutines/await rather
-than callbacks, adjust the pattern to match. Do not introduce a new HTTP client.
+### CONFLICT 1 — Duplicate Kaelen arrival tracking
 
-**Known risk 3 — story_quest_hint expiry on rapid re-dock**
-If the player docks, leaves, and re-docks quickly, `expires_after_docks` could
-decrement twice in one session. The hint uses dock count, not time — acceptable
-for now, but note this if hints seem to expire too fast.
+**File:** `scripts/GameRoot.gd` lines 740–755  
+**What exists:** `_maybe_emit_kaelen_system_arrival()` writes to
+`GlobalState.kaelen_arrival_systems_seen` to deduplicate. It fires a chatter line
+(no TTS, no voice button) on every first visit to a generated system.
 
-**Known risk 4 — StoryManager autoload ordering**
-StoryManager._ready() connects to QuestManager's signal. If QuestManager is
-listed AFTER StoryManager in the autoload order, QuestManager won't exist yet.
-In project.godot, ensure QuestManager appears BEFORE StoryManager in the
-[autoload] section.
+**Conflict with StoryManager:** StoryManager beats track deduplication via
+`story_state["fired_beats"]`. If both systems are live simultaneously, Kaelen
+can fire twice — once from GameRoot chatter, once from StoryManager beat.
 
-**Known risk 5 — _find_ui_manager() reliability**
-The UIManager is a child of GameRoot, not a group member today.
-Section 7b adds `add_to_group("ui_manager")` to fix this. If Codex forgets
-that line, all kaelen voice message triggers will silently fail.
-Add a push_warning in `_find_ui_manager()` if it returns null.
+**Resolution:**
+- Phase 1: Do nothing. Both run independently. No story beats cover Kaelen arrival yet.
+- Phase 2 (message ownership migration): Delete the body of
+  `_maybe_emit_kaelen_system_arrival()` and replace with a single call:
+  `StoryManager.on_system_arrived(system_id)`.  
+  Leave the function stub in GameRoot so the call site at line 429 still compiles.
+- Keep `kaelen_arrival_systems_seen` in GlobalState for backward save compatibility —
+  just stop writing to it. Do NOT delete it; old save files reference it.
+
+---
+
+### CONFLICT 2 — GlobalState has no get_save_data / apply_save_data methods
+
+**File:** `scripts/GlobalState.gd`  
+**What exists:** The GlobalState reset function (around line 2005) clears vars
+directly. Save/load is handled by `scripts/persistence/CampaignCheckpointStore.gd`
+via `capture_autosave()` and `load_active_bundle()` — not by methods on GlobalState
+itself.
+
+**Conflict with StoryManager:** Section 1 of this impl doc says "add to
+`get_save_data()` / `apply_save_data()`". Those functions do not exist.
+
+**Resolution:** `story_arc` and `story_state` must be serialized inside
+`CampaignCheckpointStore.capture_autosave()`. Find the block that serializes
+`kaelen_briefing_seen` and `kaelen_arrival_systems_seen` — add `story_arc` and
+`story_state` in the same block. On load, read them back in the corresponding
+restore block. The exact field names in the bundle JSON follow the existing pattern.
+
+Search for `kaelen_briefing_seen` in `CampaignCheckpointStore.gd` to locate
+the right block.
+
+---
+
+### CONFLICT 3 — LLMInterface `is_waiting` gate blocks story arc calls
+
+**File:** `scripts/LLMInterface.gd` line 1096  
+**What exists:** `request_quest_generation()` returns immediately if `is_waiting`
+is true. All LLMInterface requests share a single `is_waiting` flag.
+
+**Conflict with StoryManager:** If quest generation is in flight when StoryManager
+tries to fire an arc generation, the story call gets silently dropped.
+
+**Resolution:** StoryManager's `_llm_queue` must check `LLMInterface.is_waiting`
+before dequeuing. If `is_waiting`, retry after a short `await` delay (5–10 seconds).
+Do NOT call LLMInterface directly from `_process()` — always go through the queue.
+
+```gdscript
+func _dequeue_next_llm_request() -> void:
+    if _llm_queue.is_empty():
+        return
+    if LLMInterface.is_waiting:
+        await get_tree().create_timer(8.0).timeout
+        _dequeue_next_llm_request()
+        return
+    var req: Dictionary = _llm_queue.pop_front()
+    _dispatch_llm_request(req)
+```
+
+---
+
+### CONFLICT 4 — story_quest_hint must NOT change LLMInterface call signature
+
+**File:** `scripts/LLMInterface.gd` line 1088  
+**What exists:** `request_quest_generation(agent_faction, history_text,
+player_credits, player_reps, callback, agent_profile)` — called from UIManager's
+agent panel with all 5 positional args baked in.
+
+**Conflict with StoryManager:** If story hint injection is added as a parameter,
+every call site breaks.
+
+**Resolution:** Read `GlobalState.story_quest_hint` directly inside the function
+body, not as a parameter. Append the hint to the prompt string only if the dict
+is non-empty. No call sites change.
+
+```gdscript
+# Inside request_quest_generation(), before building the prompt string:
+var story_hint := GlobalState.story_quest_hint
+if not story_hint.is_empty():
+    var hint_system: String = story_hint.get("preferred_system", "")
+    var hint_type: String   = story_hint.get("preferred_type", "")
+    if not hint_system.is_empty():
+        # Append to whichever prompt block controls destination/type
+        prompt += "\nPrefer destination system: %s. Preferred job type: %s." \
+                  % [hint_system, hint_type]
+    # Decrement expiry counter
+    var remaining: int = int(story_hint.get("expires_after_docks", 3)) - 1
+    if remaining <= 0:
+        GlobalState.story_quest_hint = {}
+    else:
+        GlobalState.story_quest_hint["expires_after_docks"] = remaining
+```
+
+---
+
+### CONFLICT 5 — MainScene NPC spawner has no faction weight hook
+
+**File:** `scripts/MainScene.gd` lines 256–265  
+**What exists:** `_spawn_npc_flying_in()` picks faction from
+`["zenith", "aurelia", "vanguard"]` with uniform random. No pressure weighting.
+
+**Conflict with StoryManager:** `story_world_pressure` writes a faction + intensity,
+but nothing reads it at spawn time.
+
+**Resolution:** In `_spawn_npc_flying_in()`, read `GlobalState.story_world_pressure`
+after the faction list is defined. If the pressure faction is one of the three and
+intensity > 0, weight toward it:
+
+```gdscript
+func _spawn_npc_flying_in():
+    var factions = ["zenith", "aurelia", "vanguard"]
+    var faction_name: String
+
+    var pressure: Dictionary = GlobalState.story_world_pressure
+    var p_faction: String = str(pressure.get("faction", ""))
+    var p_intensity: float = float(pressure.get("intensity", 0.0))
+
+    if p_faction in factions and p_intensity > 0.0 and randf() < p_intensity:
+        faction_name = p_faction
+    else:
+        faction_name = factions[randi() % factions.size()]
+    # rest of function unchanged...
+```
+
+This is a soft weight — at intensity 0.6 there is a 60% chance the pressure faction
+spawns. Doesn't guarantee it, preserves variety.
+
+---
+
+### CONFLICT 6 — Anomaly rumor race condition
+
+**File:** `scripts/MainScene.gd`  
+**What exists:** `_schedule_anomaly_rumor()` is called immediately after
+`AnomalyRegistryScript.shared().generate_for_system()` in the gate arrival sequence.
+It fires 8–18 seconds later and calls `get_arrival_rumor()`.
+
+**Conflict with StoryManager:** Design doc Section 6 says anomaly rumors move to
+StoryManager nudge control. If StoryManager fires an anomaly rumor nudge before
+`generate_for_system()` has run, `get_arrival_rumor()` returns an empty dict and
+the nudge silently produces nothing.
+
+**Resolution:** In Phase 2 (message ownership migration), only remove
+`_schedule_anomaly_rumor()` from MainScene AFTER verifying StoryManager fires its
+anomaly nudge in the `on_system_arrived` handler — which runs after
+`generate_for_system()` in the GameRoot gate sequence. The ordering in GameRoot is:
+
+```
+_change_system() called
+  → generate_for_system()        # AnomalyRegistry populated
+  → _maybe_emit_kaelen_arrival() # (GameRoot, to be replaced)
+  → notify_system_arrived()      # UIManager / StoryManager
+```
+
+StoryManager receives `on_system_arrived` AFTER AnomalyRegistry is populated.
+Safe to call `get_arrival_rumor()` from any StoryManager nudge handler.
+
+---
+
+### CONFLICT 7 — UIManager Kaelen intel button already implemented
+
+**File:** `scripts/UIManager.gd`  
+**What exists:** `queue_kaelen_voice_message(line)` is already implemented in the
+current branch. It stores the line in `_pending_kaelen_intel`, shows the button,
+and plays TTS when clicked.
+
+**Conflict with StoryManager:** StoryManager's Section 7b says to add
+`queue_kaelen_voice_message` to UIManager. It is already there.
+
+**Resolution:** No work needed for the delivery method. StoryManager only needs to
+call `ui_mgr.queue_kaelen_voice_message(line)` with the beat's line field.
+The `_find_ui_manager()` method (Section 7b) is still needed — UIManager is a child
+of GameRoot, not autoloaded, so it must be found via group lookup. Confirm that
+`add_to_group("ui_manager")` is added to UIManager's `_ready()`.
+
+---
+
+### CONFLICT 8 — GameRoot gate arrival sequence needs a third hook
+
+**File:** `scripts/GameRoot.gd` lines 429–436  
+**What exists:**
+```gdscript
+_maybe_emit_kaelen_system_arrival(runtime_system_id)   # line 429
+...
+ui_mgr.call_deferred("notify_system_arrived", runtime_system_id)  # line 435
+```
+
+**What's missing:** `StoryManager.on_system_arrived(runtime_system_id)` is not
+yet wired. Section 9 of this doc says to add it.
+
+**Resolution:** Add immediately after the UIManager call:
+```gdscript
+if Engine.has_singleton("StoryManager"):
+    StoryManager.on_system_arrived(runtime_system_id)
+```
+The `Engine.has_singleton` guard lets the game run safely before StoryManager
+is registered as an autoload.
+
+---
+
+### CONFLICT 9 — StoryManager autoload ordering vs QuestManager
+
+**File:** `project.godot` [autoload] section  
+**What exists:** QuestManager is already an autoload. StoryManager must appear
+AFTER it so that `StoryManager._ready()` can connect to
+`QuestManager.quest_completed`.
+
+**Resolution:** When adding StoryManager to [autoload], place it after QuestManager.
+Verify the order in project.godot after registration.
+
+---
+
+### CONFLICT 10 — `story_quest_hint` rapid re-dock double-decrement
+
+**What exists:** `expires_after_docks` counts docks, not time.
+
+**Conflict:** Player docks, dismisses agent panel, immediately re-docks (fast
+travel or menu reopen without a jump). The counter decrements twice.
+
+**Resolution:** Acceptable for v1. If hints expire too fast in playtesting, add a
+`last_decremented_dock_id` field to the hint dict and skip decrement if it matches
+the current station ID. Do not add this preemptively.
 
 ---
 
