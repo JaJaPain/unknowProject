@@ -1195,6 +1195,13 @@ func request_quest_generation(
 	# The LLM cannot choose — it must use the type we picked.
 	var quest_types = ["DELIVER_ORE", "KILL_SHIPS", "PICKUP_SPECIAL"]
 	var chosen_type = quest_types[randi() % quest_types.size()]
+
+	# story_quest_hint: StoryManager can bias the type. Honour it when set and
+	# when the preferred_type is a valid quest type.
+	var _hint: Dictionary = GlobalState.story_quest_hint
+	var _hint_type: String = str(_hint.get("preferred_type", "")).to_upper()
+	if not _hint.is_empty() and _hint_type in quest_types:
+		chosen_type = _hint_type
 	
 	# Build the matching example block
 	var example_obj_block = ""
@@ -1349,12 +1356,28 @@ func request_quest_generation(
 	else:
 		dummy_name_instruction = "In your dialogue, always call the pilot 'George'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
 
+	# story_quest_hint destination/flavor bias injected as a soft prompt instruction.
+	# Decrement expiry counter here so it ticks once per quest generation, not per dock.
+	var story_hint_block: String = ""
+	var _active_hint: Dictionary = GlobalState.story_quest_hint
+	if not _active_hint.is_empty():
+		var _h_system: String = str(_active_hint.get("preferred_system", ""))
+		var _h_flavor: String = str(_active_hint.get("flavor_tag", ""))
+		if not _h_system.is_empty():
+			story_hint_block = "### NARRATIVE CONTEXT:\nThe agent has contacts in the %s region. Lean the mission toward that area if plausible. Flavor: %s.\n\n" % [_h_system, _h_flavor]
+		var _remaining: int = int(_active_hint.get("expires_after_docks", 3)) - 1
+		if _remaining <= 0:
+			GlobalState.story_quest_hint = {}
+		else:
+			GlobalState.story_quest_hint["expires_after_docks"] = _remaining
+
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
 		campaign_bible_block + \
 		system_story_block + \
 		agent_memory_block + \
 		idea_memory_block + \
+		story_hint_block + \
 		"Minor hostile factions in the sector: " + minor_fac_str + ". These are outlaws with no diplomatic ties — primary targets for elimination contracts.\n\n" + \
 		"Current pilot stats:\n" + \
 		"- Credits: " + str(player_credits) + " SC\n" + \
