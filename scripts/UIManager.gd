@@ -3550,8 +3550,6 @@ func _build_wanted_poster(b: Dictionary) -> Control:
 	var payout: int     = int(b.get("payout_per_kill", 8))
 	var credited: int   = int(b.get("kills_credited", 0))
 	var cap: int        = int(b.get("cap", -1))
-	var kaelen_line: String = str(b.get("kaelen_line", ""))
-
 	# Outer VBox: poster image on top, Kaelen's line below
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
@@ -3575,12 +3573,7 @@ func _build_wanted_poster(b: Dictionary) -> Control:
 	else:
 		progress_str = "%d kills" % credited
 
-	var tip: String = (
-		"%s WANTED\n%d SC per kill · %s\nReport kills to Kaelen at any station." \
-		% [faction_id.capitalize(), payout, progress_str]
-	)
-	if not kaelen_line.is_empty():
-		tip += "\n\n\"%s\"" % kaelen_line
+	var tip: String = "%s WANTED\n%d SC per kill · %s" % [faction_id.capitalize(), payout, progress_str]
 
 	var img := TextureRect.new()
 	img.texture = atlas
