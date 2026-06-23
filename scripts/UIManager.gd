@@ -3598,6 +3598,19 @@ func _render_station_contacts(should_show: bool) -> void:
 		if str(npc_name) == _selected_station_contact:
 			_render_station_contact_actions(str(npc_name), npc_data)
 
+	# story_planted_npc: inject a one-visit story NPC into this station's contact list.
+	var planted: Dictionary = GlobalState.story_planted_npc
+	if not planted.is_empty():
+		var p_station: String = str(planted.get("station_id", ""))
+		if p_station == "" or p_station == station_id:
+			var p_name: String = str(planted.get("display_name", "Unknown Contact"))
+			var p_btn := Button.new()
+			p_btn.text = "%s [Story Contact] ★" % p_name
+			p_btn.tooltip_text = "A contact you haven't spoken with before."
+			p_btn.pressed.connect(_on_planted_npc_pressed)
+			station_contacts_list.add_child(p_btn)
+			station_contacts_panel.visible = true
+
 
 func _current_station_contact_id() -> String:
 	if current_station == null or not is_instance_valid(current_station):
@@ -3707,6 +3720,22 @@ func _current_station_lounge_faction_names() -> String:
 		", ".join(names.slice(0, names.size() - 1)),
 		names[names.size() - 1],
 	]
+
+
+func _on_planted_npc_pressed() -> void:
+	var planted: Dictionary = GlobalState.story_planted_npc
+	if planted.is_empty():
+		return
+	var p_name: String = str(planted.get("display_name", "Unknown Contact"))
+	var p_line: String = str(planted.get("line", "..."))
+	var p_portrait_id: String = str(planted.get("portrait_id", ""))
+	var portrait: Texture2D = null
+	if not p_portrait_id.is_empty():
+		portrait = GameContentRegistry.shared().portrait_texture(p_portrait_id)
+	show_dock_message(p_line, p_name, Color(0.9, 0.75, 0.5), portrait)
+	if bool(planted.get("one_shot", true)):
+		GlobalState.story_planted_npc = {}
+		_render_station_contacts(true)
 
 
 func _on_station_contact_pressed(npc_name: String) -> void:
