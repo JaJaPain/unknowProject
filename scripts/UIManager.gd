@@ -3355,7 +3355,6 @@ func toggle_dock_menu(
 		if not is_outpost:
 			_cache_mechanic_intro()
 			_announce_bounties_on_dock()
-			_maybe_kaelen_intel_drop()
 
 
 # Render the current submenu's button set. Called on dock AND when the
@@ -4837,6 +4836,10 @@ func _announce_bounties_on_dock() -> void:
 	)
 
 
+func notify_system_arrived(system_id: String) -> void:
+	_maybe_kaelen_intel_drop()
+
+
 func _maybe_kaelen_intel_drop() -> void:
 	if not GlobalState.kaelen_briefing_seen:
 		return
@@ -4858,9 +4861,17 @@ func _maybe_kaelen_intel_drop() -> void:
 		"You've earned a straight answer. %s is contested. Whoever controls those rocks controls the lane." % sys_name,
 	]
 	var pool: Array = lines_low if total_kills < 5 else lines_high
-	_pending_kaelen_intel = pool[randi() % pool.size()]
+	var line: String = pool[randi() % pool.size()]
+	# Delay 60–90s so the message arrives organically while in flight,
+	# not immediately on jump — feels like comms catching up after the gate.
+	var delay := randf_range(60.0, 90.0)
+	await get_tree().create_timer(delay).timeout
+	if not is_instance_valid(self):
+		return
+	_pending_kaelen_intel = line
 	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
 		_kaelen_intel_btn.visible = true
+	GlobalState.emit_chatter("Kaelen", "Encrypted message queued.", Color(0.85, 0.5, 1.0))
 
 
 func _on_kaelen_intel_btn_pressed() -> void:
