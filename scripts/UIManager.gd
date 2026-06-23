@@ -4844,7 +4844,7 @@ func _maybe_kaelen_intel_drop() -> void:
 		"You've earned a straight answer. %s is contested. Whoever controls those rocks controls the lane." % sys_name,
 	]
 	var pool := lines_low if total_kills < 5 else lines_high
-	var line := pool[randi() % pool.size()]
+	var line: String = pool[randi() % pool.size()]
 	# Slight delay so it doesn't overlap the bounty announcement
 	await get_tree().create_timer(2.5).timeout
 	if not is_instance_valid(self):
