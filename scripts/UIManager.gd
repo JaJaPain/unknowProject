@@ -3313,6 +3313,8 @@ func toggle_dock_menu(
 			GlobalState.player.velocity = Vector3.ZERO
 		if Engine.has_singleton("StoryManager"):
 			StoryManager.on_docked(station)
+		if Engine.has_singleton("StoryQuestManager"):
+			StoryQuestManager.on_docked(station)
 		var game_root := get_tree().current_scene
 		if create_checkpoint \
 				and game_root \
