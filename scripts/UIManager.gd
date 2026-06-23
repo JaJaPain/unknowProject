@@ -56,6 +56,8 @@ var station_contacts_panel: PanelContainer
 var station_contacts_list: VBoxContainer
 var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
+var _bounty_board_panel: PanelContainer = null
+var _bounty_board_list: VBoxContainer = null
 
 const _CONTACT_MOODS := ["Chatty", "Tense", "Distracted", "Focused"]
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
@@ -1152,6 +1154,36 @@ func _create_dock_menu():
 	dock_message_line.custom_minimum_size.y = 0
 	dock_message_line.max_lines_visible = 4
 	msg_text_vbox.add_child(dock_message_line)
+
+	# Bounty board — compact read-only summary of Kaelen's active papers.
+	# Placed BEFORE station_contacts_panel so SIZE_EXPAND_FILL on that panel
+	# doesn't push this one out of view in lounge mode.
+	_bounty_board_panel = PanelContainer.new()
+	_bounty_board_panel.name = "BountyBoardPanel"
+	_bounty_board_panel.visible = false
+	_bounty_board_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_bounty_board_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	var bb_style := StyleBoxFlat.new()
+	bb_style.bg_color = Color(0.06, 0.04, 0.02, 0.88)
+	bb_style.border_width_left = 1
+	bb_style.border_width_top = 1
+	bb_style.border_width_right = 1
+	bb_style.border_width_bottom = 1
+	bb_style.border_color = Color(0.85, 0.5, 1.0, 0.4)
+	bb_style.corner_radius_top_left = 4
+	bb_style.corner_radius_top_right = 4
+	bb_style.corner_radius_bottom_right = 4
+	bb_style.corner_radius_bottom_left = 4
+	bb_style.content_margin_left = 8
+	bb_style.content_margin_right = 8
+	bb_style.content_margin_top = 6
+	bb_style.content_margin_bottom = 6
+	_bounty_board_panel.add_theme_stylebox_override("panel", bb_style)
+	vbox.add_child(_bounty_board_panel)
+	_bounty_board_list = VBoxContainer.new()
+	_bounty_board_list.add_theme_constant_override("separation", 3)
+	_bounty_board_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bounty_board_panel.add_child(_bounty_board_list)
 
 	station_contacts_panel = PanelContainer.new()
 	station_contacts_panel.name = "StationContactsPanel"
@@ -3313,6 +3345,7 @@ func toggle_dock_menu(
 		if not is_outpost:
 			_cache_mechanic_intro()
 			_announce_bounties_on_dock()
+			_maybe_kaelen_intel_drop()
 
 
 # Render the current submenu's button set. Called on dock AND when the
@@ -3350,7 +3383,8 @@ func _render_dock_submenu() -> void:
 		hear_gossip_btn.visible = false
 		ask_for_part_btn.visible = false
 		_render_station_contacts(false)
-		
+		_render_bounty_board(false)
+
 		var station_quest: Dictionary = QuestManager.get_pickup_special_data()
 		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("picked_up", false)
 		deliver_part_btn.visible = can_deliver
@@ -3387,6 +3421,7 @@ func _render_dock_submenu() -> void:
 		deliver_part_btn.visible = false
 		back_to_services_btn.visible = true
 		_render_station_contacts(true)
+		_render_bounty_board(true)
 		if dock_background:
 			dock_background.visible = false
 		if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
@@ -3433,6 +3468,7 @@ func _render_dock_submenu() -> void:
 		hear_gossip_btn.visible = false
 		back_to_services_btn.visible = false
 		_render_station_contacts(false)
+		_render_bounty_board(true)
 		if dock_background:
 			dock_background.visible = false
 		# Mechanic intro belongs only on the maintenance submenu. On
@@ -3442,6 +3478,39 @@ func _render_dock_submenu() -> void:
 			mechanic_intro_panel.visible = false
 
 	_update_repair_button()
+
+
+func _render_bounty_board(should_show: bool) -> void:
+	if _bounty_board_panel == null or not is_instance_valid(_bounty_board_panel):
+		return
+	for child in _bounty_board_list.get_children():
+		child.queue_free()
+	if not should_show:
+		_bounty_board_panel.visible = false
+		return
+	var active: Array = BountyRegistryScript.shared().get_active_bounties()
+	if active.is_empty():
+		_bounty_board_panel.visible = false
+		return
+	_bounty_board_panel.visible = true
+	var header := Label.new()
+	header.text = "KAELEN'S ACTIVE CONTRACTS"
+	header.add_theme_color_override("font_color", Color(0.85, 0.5, 1.0))
+	header.add_theme_font_size_override("font_size", 11)
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bounty_board_list.add_child(header)
+	for b in active:
+		var faction: String = str(b.get("faction", "?")).capitalize()
+		var payout: int = int(b.get("payout_per_kill", 8))
+		var credited: int = int(b.get("kills_credited", 0))
+		var cap: int = int(b.get("cap", -1))
+		var progress_str := "%d/%d kills" % [credited, cap] if cap > 0 else "%d kills" % credited
+		var row := Label.new()
+		row.text = "  %s — %d SC/kill  (%s)" % [faction, payout, progress_str]
+		row.add_theme_color_override("font_color", Color(0.9, 0.75, 1.0))
+		row.add_theme_font_size_override("font_size", 12)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_bounty_board_list.add_child(row)
 
 
 func _render_station_contacts(should_show: bool) -> void:
@@ -4756,6 +4825,34 @@ func _announce_bounties_on_dock() -> void:
 		for line in registry.announcement_lines():
 			GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
 	)
+
+
+func _maybe_kaelen_intel_drop() -> void:
+	if not GlobalState.kaelen_briefing_seen:
+		return
+	var total_kills := 0
+	for b in BountyRegistryScript.shared().get_active_bounties():
+		total_kills += int(b.get("kills_credited", 0))
+	var chance := 0.20 + clampf(total_kills * 0.02, 0.0, 0.35)
+	if randf() > chance:
+		return
+	var sys_name: String = GlobalState.current_system_id.to_upper().replace("_", " ")
+	var lines_low: Array = [
+		"Heard there's movement in %s. Faction activity, nothing confirmed." % sys_name,
+		"Something came through %s last cycle. Might be worth watching." % sys_name,
+		"I've got contacts tracking a route through %s. Keep your eyes open." % sys_name,
+	]
+	var lines_high: Array = [
+		"Between us — %s has a patrol pattern you can use. They run wide on the far end." % sys_name,
+		"One of my sources flagged a cache near %s. Not on any registry. Take that as you will." % sys_name,
+		"You've earned a straight answer. %s is contested. Whoever controls those rocks controls the lane." % sys_name,
+	]
+	var pool: Array = lines_low if total_kills < 5 else lines_high
+	var line: String = pool[randi() % pool.size()]
+	await get_tree().create_timer(2.5).timeout
+	if not is_instance_valid(self):
+		return
+	GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
 
 
 func _cache_mechanic_intro() -> void:
