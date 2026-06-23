@@ -2028,6 +2028,16 @@ func _salvage_collect_return() -> void:
 
 
 func _salvage_grant_wreck_bonus() -> void:
+	# story_loot_plant: StoryManager can guarantee a specific item in the next wreck.
+	var plant: Dictionary = GlobalState.story_loot_plant
+	if not plant.is_empty():
+		var item_id: String = str(plant.get("item_id", ""))
+		if not item_id.is_empty() and GlobalState.inventory.add(item_id, 1, 10):
+			GlobalState.emit_chatter("Drone Bay", "Recovered salvage: %s." % item_id.capitalize().replace("_", " "), Color(1.0, 0.85, 0.3))
+		if bool(plant.get("consumed_on_pickup", true)):
+			GlobalState.story_loot_plant = {}
+		return
+
 	var roll := randf()
 	if roll < 0.30:
 		# Credit pouch — 40–180 SC
