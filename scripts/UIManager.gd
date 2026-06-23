@@ -58,6 +58,8 @@ var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
 var _bounty_board_panel: PanelContainer = null
 var _bounty_board_list: VBoxContainer = null
+var _pending_kaelen_intel: String = ""
+var _kaelen_intel_btn: Button = null
 
 const _CONTACT_MOODS := ["Chatty", "Tense", "Distracted", "Focused"]
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
@@ -715,7 +717,15 @@ func _create_hud():
 	chat_vbox = VBoxContainer.new()
 	chat_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chat_scroll.add_child(chat_vbox)
-	
+
+	_kaelen_intel_btn = Button.new()
+	_kaelen_intel_btn.text = "▶  KAELEN — VOICE MESSAGE"
+	_kaelen_intel_btn.visible = false
+	_kaelen_intel_btn.add_theme_color_override("font_color", Color(0.85, 0.5, 1.0))
+	_kaelen_intel_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.75, 1.0))
+	_kaelen_intel_btn.pressed.connect(_on_kaelen_intel_btn_pressed)
+	chat_layout.add_child(_kaelen_intel_btn)
+
 	# Connect signal to print system chatter
 	GlobalState.system_chatter_received.connect(add_chat_message)
 
@@ -4848,14 +4858,50 @@ func _maybe_kaelen_intel_drop() -> void:
 		"You've earned a straight answer. %s is contested. Whoever controls those rocks controls the lane." % sys_name,
 	]
 	var pool: Array = lines_low if total_kills < 5 else lines_high
-	var line: String = pool[randi() % pool.size()]
-	await get_tree().create_timer(2.5).timeout
-	if not is_instance_valid(self):
+	_pending_kaelen_intel = pool[randi() % pool.size()]
+	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
+		_kaelen_intel_btn.visible = true
+
+
+func _on_kaelen_intel_btn_pressed() -> void:
+	if _pending_kaelen_intel.is_empty():
 		return
-	# Don't fire if the player is mid-quest-acceptance — would collide with agent TTS
-	if agent_panel and is_instance_valid(agent_panel) and agent_panel.visible:
-		return
-	GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
+	var line := _pending_kaelen_intel
+	_pending_kaelen_intel = ""
+	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
+		_kaelen_intel_btn.visible = false
+	# Populate the comms hail panel with Kaelen's portrait and the intel line
+	var portrait_tex: Texture2D = GameContentRegistry.shared().portrait_texture(_kaelen_mood_portrait_id("neutral"))
+	comms_hail_portrait.texture = portrait_tex
+	comms_hail_message.text = line
+	comms_hail_message.add_theme_color_override("font_color", Color(0.9, 0.75, 1.0))
+	var hail_style := StyleBoxFlat.new()
+	hail_style.bg_color = Color(0.05, 0.02, 0.06, 0.95)
+	hail_style.border_width_left = 2
+	hail_style.border_width_top = 2
+	hail_style.border_width_right = 2
+	hail_style.border_width_bottom = 2
+	hail_style.border_color = Color(0.85, 0.5, 1.0, 0.9)
+	hail_style.corner_radius_top_left = 4
+	hail_style.corner_radius_top_right = 4
+	hail_style.corner_radius_bottom_left = 4
+	hail_style.corner_radius_bottom_right = 4
+	hail_style.content_margin_left = 16
+	hail_style.content_margin_right = 16
+	hail_style.content_margin_top = 12
+	hail_style.content_margin_bottom = 12
+	comms_hail_panel.add_theme_stylebox_override("panel", hail_style)
+	for child in comms_hail_choices_container.get_children():
+		child.queue_free()
+	var dismiss_btn := Button.new()
+	dismiss_btn.text = "Got it."
+	dismiss_btn.pressed.connect(func():
+		SpeechService.stop()
+		comms_hail_panel.visible = false
+	)
+	comms_hail_choices_container.add_child(dismiss_btn)
+	comms_hail_panel.visible = true
+	SpeechService.play(line, GlobalState.KAELEN_VOICE_PROFILE_ID)
 
 
 func _cache_mechanic_intro() -> void:
