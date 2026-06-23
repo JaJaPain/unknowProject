@@ -5,6 +5,17 @@ extends Node
 # per story_manager_impl.md. This file owns the deferred beat scheduler (Tool 10)
 # and the event hooks GameRoot calls into.
 
+# ── DEV: StoryQuestManager smoke-test ────────────────────────────────────────
+# Set _SQ_DEBUG = true to fire a hardcoded "kill 3 Reavers" story quest on the
+# player's FIRST kill. Lets you verify the full quest pipeline (HUD, objective
+# tracking, reward delivery) without needing a real beat source.
+#
+# HOW TO DISABLE: flip _SQ_DEBUG back to false and save. No other changes needed.
+# HOW TO FIND:    grep _SQ_DEBUG in scripts/story/StoryManager.gd
+# DO NOT SHIP with _SQ_DEBUG = true.
+const _SQ_DEBUG := false
+var _sq_debug_fired := false   # guard: only fires once per session
+
 # ── Deferred beat schedule ────────────────────────────────────────────────────
 # Each entry: {type, beat_id, threshold, current}
 # type: "kills" | "dock" | "delay_min"
@@ -56,6 +67,9 @@ func on_system_arrived(system_id: String) -> void:
 func on_kill(faction: String) -> void:
 	_kill_count_session += 1
 	_check_kill_beats()
+	if _SQ_DEBUG and not _sq_debug_fired:
+		_sq_debug_fired = true
+		_fire_debug_story_quest()
 
 
 func on_docked(_station) -> void:
@@ -112,3 +126,45 @@ func _fire_beat(beat_id: String) -> void:
 	if beat_id.is_empty():
 		return
 	print("[StoryManager] Beat fired: %s (stub — no delivery yet)" % beat_id)
+
+
+# ── DEV only — remove guard or flip _SQ_DEBUG when done ──────────────────────
+func _fire_debug_story_quest() -> void:
+	if not Engine.has_singleton("StoryQuestManager"):
+		return
+	var quest_def := {
+		"id":             "debug_sq_reavers_001",
+		"title":          "Clear the Reavers",
+		"time_limit_min": 10.0,
+		"objective": {
+			"type":                 "kill_tagged_ship",
+			"target_persistent_id": "debug.reaver.target",
+			"display":              "Destroy the Reaver leader",
+		},
+		"spawns": [
+			{
+				"type":          "ship",
+				"faction":       "reavers",
+				"ship_role":     "Combat",
+				"persistent_id": "debug.reaver.target",
+				"speed":         14.0,
+				"behavior":      "patrol",
+			}
+		],
+		"hook": {
+			"type":    "kaelen_voice",
+			"text":    "New contract just came in. Reavers have been hitting supply lanes nearby — there's a bounty on their leader. Go take care of it.",
+			"delay_s": 1.5,
+		},
+		"on_complete": {
+			"credits":       500,
+			"chatter_sender": "Kaelen",
+			"chatter_line":   "Good work. Credits are in your account.",
+			"kaelen_voice":   true,
+		},
+		"on_fail": {
+			"chatter_line": "You ran out of time. The Reaver leader slipped away.",
+		},
+	}
+	StoryQuestManager.begin_quest(quest_def)
+	print("[StoryManager] DEBUG: fired story quest debug_sq_reavers_001")
