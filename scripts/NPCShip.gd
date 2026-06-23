@@ -20,6 +20,10 @@ var last_attacker_faction: String = ""
 var taunted_player: bool = false
 var ceasefire: bool = false
 
+var behavior: String = ""
+var _flee_gate: Node3D = null
+var _fleeing: bool = false
+
 var hardpoints: Array[Node3D] = []
 var engine_points: Array[Node3D] = []
 var current_hp_index: int = 0
@@ -481,6 +485,10 @@ func _physics_process(delta: float):
 		return
 	_update_engine_glow()
 
+	if behavior == "flee_on_sight":
+		_process_flee_on_sight(delta)
+		return
+
 	role_patrol_refresh_timer -= delta
 	if role_patrol_refresh_timer <= 0.0:
 		role_patrol_refresh_timer = 8.0
@@ -591,6 +599,56 @@ func _physics_process(delta: float):
 		velocity = -global_transform.basis.z * (speed * speed_factor)
 		move_and_slide()
 
+func _find_nearest_gate() -> Node3D:
+	var best: Node3D = null
+	var best_dist := INF
+	for gate in get_tree().get_nodes_in_group("jumpgate"):
+		if gate is Node3D and is_instance_valid(gate):
+			var d := global_position.distance_squared_to(gate.global_position)
+			if d < best_dist:
+				best_dist = d
+				best = gate
+	return best
+
+func _process_flee_on_sight(delta: float) -> void:
+	# Trigger flight when the player enters detection radius.
+	if not _fleeing:
+		var p = GlobalState.player
+		if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked"):
+			if global_position.distance_to(p.global_position) <= 400.0:
+				_fleeing = true
+
+	if not _fleeing:
+		# Not yet triggered — hover in place.
+		velocity = Vector3.ZERO
+		return
+
+	# Cache the nearest gate once; recheck if it disappears.
+	if _flee_gate == null or not is_instance_valid(_flee_gate):
+		_flee_gate = _find_nearest_gate()
+
+	if _flee_gate == null:
+		# No gate in scene — flee away from the player as a fallback.
+		var p: Node3D = GlobalState.player as Node3D
+		if p and is_instance_valid(p):
+			var away: Vector3 = (global_position - p.global_position).normalized()
+			steer_towards(global_position + away * 200.0, delta)
+		velocity = -global_transform.basis.z * speed
+		move_and_slide()
+		return
+
+	var dist_to_gate := global_position.distance_to(_flee_gate.global_position)
+	if dist_to_gate < 40.0:
+		# Close enough — treat as a successful jump and remove from scene.
+		GlobalState.active_system_entities.erase(self)
+		GlobalState.entities_changed.emit()
+		queue_free()
+		return
+
+	steer_towards(_flee_gate.global_position, delta)
+	velocity = -global_transform.basis.z * speed
+	move_and_slide()
+
 func steer_towards(target_pos: Vector3, delta: float):
 	var to_target = target_pos - global_position
 	if to_target.length() > 1.0:
@@ -666,11 +724,14 @@ func take_damage(amount: float, attacker_faction: String = ""):
 			and not is_code_enforcement:
 		GlobalState.adjust_reputation(faction, -2.0) # Aggro drop rep on hit
 		last_attacker_faction = "player"
-		
-		# Immediately target the player to defend itself!
-		var p = GlobalState.player
-		if p and is_instance_valid(p) and not p.get("destroyed"):
-			target = p
+
+		if behavior == "flee_on_sight":
+			_fleeing = true  # gunfire triggers immediate escape
+		else:
+			# Immediately target the player to defend itself!
+			var p = GlobalState.player
+			if p and is_instance_valid(p) and not p.get("destroyed"):
+				target = p
 	elif attacker_faction != "":
 		last_attacker_faction = attacker_faction
 		
