@@ -4852,6 +4852,9 @@ func _maybe_kaelen_intel_drop() -> void:
 	await get_tree().create_timer(2.5).timeout
 	if not is_instance_valid(self):
 		return
+	# Don't fire if the player is mid-quest-acceptance — would collide with agent TTS
+	if agent_panel and is_instance_valid(agent_panel) and agent_panel.visible:
+		return
 	GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
 
 
