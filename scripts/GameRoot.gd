@@ -436,6 +436,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		ui_mgr.call_deferred("notify_system_arrived", runtime_system_id)
 	if Engine.has_singleton("StoryManager"):
 		StoryManager.on_system_arrived(runtime_system_id)
+	if Engine.has_singleton("StoryQuestManager"):
+		StoryQuestManager.on_system_arrived(runtime_system_id)
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
 	for gate in get_tree().get_nodes_in_group("jumpgate"):
