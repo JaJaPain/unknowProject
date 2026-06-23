@@ -57,7 +57,7 @@ var station_contacts_list: VBoxContainer
 var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
 var _bounty_board_panel: PanelContainer = null
-var _bounty_board_list: VBoxContainer = null
+var _bounty_board_list: HBoxContainer = null
 var _pending_kaelen_intel: String = ""
 var _kaelen_intel_btn: Button = null
 
