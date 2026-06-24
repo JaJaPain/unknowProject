@@ -79,13 +79,15 @@ func _build_intent_bar() -> void:
 	var bg := TextureRect.new()
 	bg.texture = tex
 	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	bg.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	bg.offset_left   =  -(bar_w * 0.5)
-	bg.offset_right  =   (bar_w * 0.5)
-	bg.offset_top    =   20.0
-	bg.offset_bottom =   20.0 + bar_h
+	# Anchor just above the execute row (which sits at offset_bottom = -64)
 	bg.anchor_left   = 0.5
 	bg.anchor_right  = 0.5
+	bg.anchor_top    = 1.0
+	bg.anchor_bottom = 1.0
+	bg.offset_left   = -(bar_w * 0.5)
+	bg.offset_right  =  (bar_w * 0.5)
+	bg.offset_top    = -114.0 - bar_h
+	bg.offset_bottom = -114.0
 	bg.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(bg)
 
@@ -95,13 +97,14 @@ func _build_intent_bar() -> void:
 	_intent_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	_intent_label.add_theme_font_size_override("font_size", 16)
 	_intent_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.75))
-	_intent_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_intent_label.offset_left   =  -(bar_w * 0.5)
-	_intent_label.offset_right  =   (bar_w * 0.5)
-	_intent_label.offset_top    =   20.0
-	_intent_label.offset_bottom =   20.0 + bar_h
 	_intent_label.anchor_left   = 0.5
 	_intent_label.anchor_right  = 0.5
+	_intent_label.anchor_top    = 1.0
+	_intent_label.anchor_bottom = 1.0
+	_intent_label.offset_left   = -(bar_w * 0.5)
+	_intent_label.offset_right  =  (bar_w * 0.5)
+	_intent_label.offset_top    = -114.0 - bar_h
+	_intent_label.offset_bottom = -114.0
 	_intent_label.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_intent_label)
 
