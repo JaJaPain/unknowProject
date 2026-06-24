@@ -24,6 +24,7 @@ var _lock_btn: Button = null
 # Drag state
 var _drag_panel_id: String = ""
 var _drag_offset: Vector2 = Vector2.ZERO
+var _drag_start_pos: Vector2 = Vector2.ZERO
 var _resize_panel_id: String = ""
 var _resize_start_mouse: Vector2 = Vector2.ZERO
 var _resize_start_size: Vector2 = Vector2.ZERO
@@ -90,6 +91,8 @@ func handle_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if not mb.pressed:
+				if not _drag_panel_id.is_empty():
+					_snap_back_if_overlapping(_drag_panel_id)
 				_drag_panel_id = ""
 				_resize_panel_id = ""
 	elif event is InputEventMouseMotion:
@@ -120,7 +123,10 @@ func _create_overlay(id: String) -> void:
 			if ev.pressed:
 				_drag_panel_id = id
 				_drag_offset = ev.global_position - p.global_position
+				_drag_start_pos = p.position
 			else:
+				if not _drag_panel_id.is_empty():
+					_snap_back_if_overlapping(_drag_panel_id)
 				_drag_panel_id = ""
 	)
 	p.add_child(bar)
@@ -152,6 +158,21 @@ func _sync_overlay(id: String) -> void:
 		_overlays[id].size = Vector2(p.size.x, DRAG_BAR_H)
 	if _resize_handles.has(id) and is_instance_valid(_resize_handles[id]):
 		_resize_handles[id].position = p.size - Vector2(HANDLE_SIZE, HANDLE_SIZE)
+
+
+func _snap_back_if_overlapping(id: String) -> void:
+	var p: Control = _panels[id]
+	var p_rect := Rect2(p.position, p.size)
+	for other_id in PANEL_IDS:
+		if other_id == id:
+			continue
+		var other: Control = _panels.get(other_id)
+		if other == null or not is_instance_valid(other) or not other.visible:
+			continue
+		if p_rect.intersects(Rect2(other.position, other.size)):
+			p.position = _drag_start_pos
+			_sync_overlay(id)
+			return
 
 
 # ── persistence ───────────────────────────────────────────────────────────────
