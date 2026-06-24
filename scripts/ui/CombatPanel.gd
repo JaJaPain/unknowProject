@@ -5,6 +5,7 @@ const ASSET_DIR       := "res://assets/CombatWheel/"
 const TEX_WHEEL       := ASSET_DIR + "BlankWheel.png"
 const TEX_NUMBER_FONT := ASSET_DIR + "NumberFont.png"
 const TEX_INTENT_BAR  := ASSET_DIR + "intentBar.png"
+const SFX_BTN_CLICK   := ASSET_DIR + "soundfxs/click.mp3"
 
 # Per-button image pairs [active, disabled] — order matches ACTION_DEFS
 const BUTTON_ASSETS := [
@@ -55,7 +56,8 @@ var _action_btns:     Array[Button] = []
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _warp_cd_label:   Label
-var _font_tex:         Texture2D   # NumberFont loaded once
+var _font_tex:        Texture2D
+var _click_sfx:       AudioStreamPlayer
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _ap_current: int = 0
@@ -79,6 +81,10 @@ func _build_ui() -> void:
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
+	_click_sfx = AudioStreamPlayer.new()
+	_click_sfx.stream = load(SFX_BTN_CLICK) as AudioStream
+	_click_sfx.volume_db = -6.0
+	add_child(_click_sfx)
 	_build_intent_bar()
 	_build_wheel()
 	_build_hp_bars()
@@ -460,6 +466,8 @@ func _on_action_dequeued() -> void:
 
 # ── Button callbacks ───────────────────────────────────────────────────────────
 func _on_action_pressed(action_type: int) -> void:
+	if is_instance_valid(_click_sfx):
+		_click_sfx.play()
 	var params := {}
 	if action_type == 2:  # SHIELD_REROUTE — default front; TODO sub-picker
 		params["face"] = 0
