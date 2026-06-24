@@ -2,6 +2,105 @@
 
 ---
 
+## Session: 2026-06-23 (StoryQuestManager Pipeline + UI Layout Improvements) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Full end-to-end smoke test of the StoryQuestManager pipeline — quest fires on first kill, tagged Reaver spawns, Kaelen hail auto-opens with TTS, kill completes quest, 500 SC lands, comms panel fires again on completion. Multiple bugs squashed along the way. UI layout system improved with no-overlap enforcement and cleaner edit mode for dynamic panels.
+
+---
+
+### 1. Wanted Poster Images (`scripts/UIManager.gd`, `assets/WantedPosters.png`, `assets/wanted_posters.json`)
+
+Replaced the text-based bounty board with a sprite-sheet of wanted poster images. `WantedPosters.png` is 1536×1024 (3 columns × 2 rows, 512×512 per cell): Row 0 = Reavers, Obsidian, Dustborn; Row 1 = Wraiths, Ironclad, Blank. `_render_bounty_board()` slices cells via `AtlasTexture` and renders each poster as an image with a kill-progress label overlay. Tooltip trimmed to faction + payout + progress — no flavor quote.
+
+---
+
+### 2. GlobalState `player_kill` Signal (`scripts/GlobalState.gd`, `scripts/NPCShip.gd`)
+
+`GlobalState.ship_destroyed` fires for ALL NPC deaths including NPC-vs-NPC. Added `signal player_kill(faction_name: String)` that only fires when `last_attacker_faction == "player"` inside `NPCShip.die()`. `StoryManager` connects to `player_kill` in `_ready()` instead of `ship_destroyed`, preventing story beats from triggering on friendly-fire kills.
+
+---
+
+### 3. StoryQuestManager Smoke Test (`scripts/story/StoryManager.gd`, `scripts/story/StoryQuestManager.gd`)
+
+Added `const _SQ_DEBUG := true` (currently true — **must flip to false before shipping**) and `_sq_debug_fired` guard. On first player kill of the session, `_fire_debug_story_quest()` calls `StoryQuestManager.begin_quest()` with a hardcoded "kill the Reaver leader" quest definition (10 min timer, 500 SC reward, kaelen_voice hook, tagged spawn). `StoryQuestManager.reset_for_restart()` added to clear all quest state on new campaign.
+
+---
+
+### 4. Credits Centralization (`scripts/GlobalState.gd` + 6 call sites)
+
+Replaced 14 direct `GlobalState.player_credits +=` / `-=` mutations across 6 files with `GlobalState.add_credits(amount)` and `GlobalState.spend_credits(amount)`. The existing `credits_changed` signal still fires through the property setter — all UI listeners unaffected. Single point for future logging, achievements, or stat tracking.
+
+**Files touched:** `GlobalState.gd`, `GameRoot.gd`, `NPCShip.gd`, `QuestManager.gd`, `SpaceAnomaly.gd`, `UIManager.gd`, `navigation/GateDiscoveryManager.gd`, `story/StoryQuestManager.gd`
+
+---
+
+### 5. Bug Fix — `GlobalState.credits` → `player_credits` (`scripts/story/StoryQuestManager.gd`)
+
+`_complete_quest()` was calling `GlobalState.credits += credits` — that property doesn't exist. Caused a runtime crash on quest completion. Fixed to use `GlobalState.add_credits(credits)` (part of the credits centralization pass).
+
+---
+
+### 6. UIManager Group Registration + Kaelen Voice Pipeline (`scripts/UIManager.gd`)
+
+- `add_to_group("ui_manager")` added to `_ready()` — `StoryQuestManager._find_ui_manager()` uses `get_nodes_in_group()` and was silently returning null on every call, causing all kaelen_voice hooks to no-op.
+- `queue_kaelen_voice_message(text)` public method added — routes to the `▶ KAELEN` intel button. Used for background intel drops.
+- `open_kaelen_hail(line)` extracted from `_on_kaelen_intel_btn_pressed()` — immediately opens the comms hail panel with Kaelen's portrait, purple border, and TTS. StoryQuestManager uses this for story quest hooks (feels like an incoming transmission rather than optional intel).
+- Kaelen intro pacing: added " . . " pauses after "That's you, by the way" and "I take a modest cut".
+
+---
+
+### 7. Story Quest HUD Card (`scripts/UIManager.gd`, `scripts/story/StoryQuestManager.gd`)
+
+- `_story_quest_panel` (PanelContainer) added as a direct child of UIManager.
+- Repositioned every frame via `_process` while visible — tracks `quest_tracker_panel.position + size.y + 6` so it stacks below the mission tracker and follows it when dragged.
+- `_reposition_story_quest_panel()` helper.
+- `UIManager._ready()` connects to `StoryQuestManager.quest_ui_updated` and `quest_ui_hidden` after confirming `is_instance_valid(StoryQuestManager)`.
+
+---
+
+### 8. Comms Hail Panel Positioning (`scripts/UIManager.gd`)
+
+Comms hail panel (incoming transmissions) was clipping under the overview panel. Switched from static 20-80% anchors to center-screen: `anchor_left = 0.25`, `anchor_right = 0.75`, `anchor_top = 0.35`. Panels live on edges; center is reliably clear.
+
+---
+
+### 9. UILayoutManager: No-Overlap Enforcement (`scripts/ui/UILayoutManager.gd`)
+
+Panels can no longer be dropped on top of each other. On mouse release after a drag, `_snap_back_if_overlapping()` checks the dragged panel's `Rect2` against all other visible panel rects. If any intersect, the panel snaps back to its pre-drag position (`_drag_start_pos`) and fires an orange SYSTEM chatter message: "Panel placement blocked — overlaps another panel."
+
+---
+
+### 10. UILayoutManager: Placeholder Overlay for Dynamic Panels (`scripts/ui/UILayoutManager.gd`)
+
+The quest tracker panel is content-sized (not resizable), which caused it to appear oversized or invisible in unexpected positions during edit mode. Fix: when edit mode is unlocked, `_create_placeholder()` nests a dark `ColorRect` child inside the real panel labelled "ACTIVE CONTRACT". The real panel stays visible and fully draggable. On lock, the overlay child is `queue_free()`'d and the real content is restored. No panel swapping, no hidden/shown theatrics — `_panels[id]` always points to the real panel so the overlap check works correctly throughout.
+
+---
+
+### ⚠️ Before Shipping
+- **`_SQ_DEBUG` in `scripts/story/StoryManager.gd` line 16 is currently `true`.** Flip to `false` before any release build.
+
+---
+
+### Files Modified
+- `scripts/story/StoryManager.gd` — `_SQ_DEBUG`, `player_kill` signal connection, `_fire_debug_story_quest()`, `reset_for_restart()`
+- `scripts/story/StoryQuestManager.gd` — `reset_for_restart()`, `open_kaelen_hail` call, `GlobalState.add_credits`
+- `scripts/GlobalState.gd` — `signal player_kill`, `add_credits()`, `spend_credits()`
+- `scripts/NPCShip.gd` — `GlobalState.player_kill.emit()` in `die()`
+- `scripts/GameRoot.gd` — `StoryManager.reset_for_restart()`, `StoryQuestManager.reset_for_restart()`, `add_credits` / `spend_credits`
+- `scripts/QuestManager.gd` — `add_credits` / `spend_credits`
+- `scripts/SpaceAnomaly.gd` — `add_credits`
+- `scripts/navigation/GateDiscoveryManager.gd` — `spend_credits`
+- `scripts/UIManager.gd` — group registration, `open_kaelen_hail()`, `queue_kaelen_voice_message()`, story quest panel, comms hail positioning, `_process` tracker follow, `add_credits` / `spend_credits`
+- `scripts/ui/UILayoutManager.gd` — snap-back overlap check, placeholder overlay system
+
+### Files Added
+- `assets/WantedPosters.png` — 1536×1024 wanted poster sprite sheet (3×2 grid)
+- `assets/wanted_posters.json` — cell coordinate mapping
+
+---
+
 ## Session: 2026-06-22 (Small Features Pass + UI Fixes + Story Manager Design) — Claude
 **Branch:** `segment-3/economy-stores-events`
 
