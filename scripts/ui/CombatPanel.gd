@@ -1,10 +1,12 @@
 extends CanvasLayer
 
 # ── Asset paths ────────────────────────────────────────────────────────────────
-const ASSET_DIR          := "res://assets/CombatWheel/"
-const TEX_WHEEL          := ASSET_DIR + "BlankWheel.png"
-const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
-const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
+const ASSET_DIR            := "res://assets/CombatWheel/"
+const TEX_WHEEL            := ASSET_DIR + "BlankWheel.png"
+const TEX_BUTTONS_ART      := ASSET_DIR + "ButtonsWithNumbers.png"
+const TEX_BUTTONS_DISABLED := ASSET_DIR + "DisabledIsh2.png"
+const TEX_NUMBER_FONT      := ASSET_DIR + "NumberFont.png"
+const TEX_INTENT_BAR       := ASSET_DIR + "intentBar.png"
 
 # ── Layout constants (base values tuned for 1080p; scaled by viewport at build time) ──
 const WHEEL_BASE         := 400.0   # wheel diameter at 1080p
@@ -27,19 +29,23 @@ const ACTION_DEFS := [
 ]
 
 # ── Node refs ─────────────────────────────────────────────────────────────────
-var _wheel_panel:   Control   # exposed for UILayoutManager drag registration
-var _root:          Control
-var _ap_label:      Label
-var _intent_label:  Label
-var _player_bar:    ProgressBar
-var _enemy_bar:     ProgressBar
-var _player_label:  Label
-var _enemy_label:   Label
-var _queue_strip:   HBoxContainer
-var _execute_btn:   Button
-var _respond_btn:   Button
-var _action_btns:   Array[Button] = []
-var _warp_cd_label: Label
+var _wheel_panel:      Control
+var _root:             Control
+var _ap_cur_rect:      TextureRect   # NumberFont digit — current AP
+var _ap_sep_label:     Label         # "/" separator
+var _ap_max_rect:      TextureRect   # NumberFont digit — max AP
+var _intent_label:     Label
+var _player_bar:       ProgressBar
+var _enemy_bar:        ProgressBar
+var _player_label:     Label
+var _enemy_label:      Label
+var _queue_strip:      HBoxContainer
+var _execute_btn:      Button
+var _respond_btn:      Button
+var _action_btns:      Array[Button] = []
+var _disable_overlays: Array[TextureRect] = []
+var _warp_cd_label:    Label
+var _font_tex:         Texture2D   # NumberFont loaded once
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _ap_current: int = 0
@@ -156,42 +162,67 @@ func _build_wheel() -> void:
 	container.add_child(art_rect)
 	art_rect.size = Vector2(wheel_sz, wheel_sz)
 
-	# AP readout centred in wheel hole
-	var ap_w := 60.0 * S
-	var ap_h := 38.0 * S
+	# NumberFont AP readout — parse sprite sheet at runtime
+	_font_tex = load(TEX_NUMBER_FONT) as Texture2D
+	var digit_w := _font_tex.get_width()  / 5.0
+	var digit_h := _font_tex.get_height() / 2.0
+	var disp_h  := 36.0 * S
+	var disp_w  := disp_h * (digit_w / digit_h)   # keep aspect
+	var sep_w   := disp_w * 0.5
+	var row_w   := disp_w * 2.0 + sep_w
+	var row_x   := center.x - row_w * 0.5
+	var row_y   := center.y - disp_h * 0.5
+
 	var ap_bg := ColorRect.new()
-	ap_bg.color       = Color(0.04, 0.06, 0.10, 0.95)
-	ap_bg.size        = Vector2(ap_w, ap_h)
-	ap_bg.position    = center - Vector2(ap_w * 0.5, ap_h * 0.5)
+	ap_bg.color       = Color(0.04, 0.06, 0.10, 0.90)
+	ap_bg.size        = Vector2(row_w + 8.0 * S, disp_h + 6.0 * S)
+	ap_bg.position    = Vector2(row_x - 4.0 * S, row_y - 3.0 * S)
 	ap_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_bg)
 
-	var ap_title := Label.new()
-	ap_title.text = "AP"
-	ap_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ap_title.add_theme_font_size_override("font_size", int(8 * S))
-	ap_title.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
-	ap_title.size     = Vector2(ap_w, ap_h * 0.4)
-	ap_title.position = center - Vector2(ap_w * 0.5, ap_h * 0.5)
-	ap_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(ap_title)
+	_ap_cur_rect = _make_digit_rect(5, digit_w, digit_h)
+	_ap_cur_rect.size     = Vector2(disp_w, disp_h)
+	_ap_cur_rect.position = Vector2(row_x, row_y)
+	_ap_cur_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_ap_cur_rect)
 
-	_ap_label = Label.new()
-	_ap_label.text = "5/5"
-	_ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ap_label.add_theme_font_size_override("font_size", int(18 * S))
-	_ap_label.add_theme_color_override("font_color", Color(0.40, 0.85, 1.0))
-	_ap_label.size     = Vector2(ap_w, ap_h * 0.65)
-	_ap_label.position = center - Vector2(ap_w * 0.5, ap_h * 0.5 - ap_h * 0.35)
-	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(_ap_label)
+	_ap_sep_label = Label.new()
+	_ap_sep_label.text = "/"
+	_ap_sep_label.add_theme_font_size_override("font_size", int(20 * S))
+	_ap_sep_label.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
+	_ap_sep_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ap_sep_label.size     = Vector2(sep_w, disp_h)
+	_ap_sep_label.position = Vector2(row_x + disp_w, row_y)
+	_ap_sep_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_ap_sep_label)
 
-	# Hit-area buttons
+	_ap_max_rect = _make_digit_rect(5, digit_w, digit_h)
+	_ap_max_rect.size     = Vector2(disp_w, disp_h)
+	_ap_max_rect.position = Vector2(row_x + disp_w + sep_w, row_y)
+	_ap_max_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_ap_max_rect)
+
+	# Hit-area buttons + per-button disabled overlay
 	_action_btns.clear()
+	_disable_overlays.clear()
+	var disabled_tex := load(TEX_BUTTONS_DISABLED) as Texture2D
 	for def in ACTION_DEFS:
 		var angle_rad  := deg_to_rad(float(def["angle"]))
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
-		var btn        := _make_hit_button(def, btn_center)
+
+		# Disabled overlay — TextureRect cropped to the button area from DisabledIsh2
+		var ov := TextureRect.new()
+		ov.texture             = disabled_tex
+		ov.stretch_mode        = TextureRect.STRETCH_SCALE
+		ov.ignore_texture_size = true
+		ov.size                = _btn_hit * 1.4
+		ov.position            = btn_center - ov.size * 0.5
+		ov.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+		ov.visible             = false
+		container.add_child(ov)
+		_disable_overlays.append(ov)
+
+		var btn := _make_hit_button(def, btn_center)
 		container.add_child(btn)
 		_action_btns.append(btn)
 
@@ -239,6 +270,27 @@ func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
 	var action_type: int = def["type"]
 	btn.pressed.connect(func(): _on_action_pressed(action_type))
 	return btn
+
+func _make_digit_rect(digit: int, digit_w: float, digit_h: float) -> TextureRect:
+	var atlas := AtlasTexture.new()
+	atlas.atlas  = _font_tex
+	atlas.region = Rect2((digit % 5) * digit_w, (digit / 5) * digit_h, digit_w, digit_h)
+	var r := TextureRect.new()
+	r.texture             = atlas
+	r.stretch_mode        = TextureRect.STRETCH_SCALE
+	r.ignore_texture_size = true
+	r.modulate            = Color(0.40, 0.85, 1.0)
+	return r
+
+func _set_ap_display(current: int, max_ap: int) -> void:
+	if not is_instance_valid(_ap_cur_rect) or _font_tex == null:
+		return
+	var digit_w := _font_tex.get_width()  / 5.0
+	var digit_h := _font_tex.get_height() / 2.0
+	var cur  := clampi(current, 0, 9)
+	var maxa := clampi(max_ap,  0, 9)
+	(_ap_cur_rect.texture as AtlasTexture).region = Rect2((cur  % 5) * digit_w, (cur  / 5) * digit_h, digit_w, digit_h)
+	(_ap_max_rect.texture as AtlasTexture).region = Rect2((maxa % 5) * digit_w, (maxa / 5) * digit_h, digit_w, digit_h)
 
 # ── HP bars ───────────────────────────────────────────────────────────────────
 func _build_hp_bars() -> void:
@@ -360,7 +412,7 @@ func _on_combat_started(_enemy: Node) -> void:
 func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dictionary) -> void:
 	_ap_current = ap
 	_ap_max     = max_ap
-	_ap_label.text = "%d/%d" % [ap, max_ap]
+	_set_ap_display(ap, max_ap)
 	_intent_label.text = "Enemy: %s" % intent.get("label", "—")
 	_clear_queue_chips()
 	_refresh_button_states()
@@ -381,7 +433,7 @@ func _on_combat_ended(_player_won: bool) -> void:
 func _on_ap_changed(current: int, max_ap: int) -> void:
 	_ap_current = current
 	_ap_max     = max_ap
-	_ap_label.text = "%d/%d" % [current, max_ap]
+	_set_ap_display(current, max_ap)
 	_refresh_button_states()
 
 func _on_action_queued(action: Dictionary) -> void:
@@ -425,9 +477,10 @@ func _refresh_button_states() -> void:
 			blocked = true
 		if def["type"] == 5 and CombatManager.repair_used_this_turn:
 			blocked = true
-		_action_btns[i].disabled = not can_afford or blocked
-		# Dim the art layer region by modulating the button's self_modulate
-		_action_btns[i].modulate = Color(1, 1, 1, 1) if (can_afford and not blocked) else Color(0.35, 0.35, 0.35, 0.7)
+		var is_disabled := not can_afford or blocked
+		_action_btns[i].disabled = is_disabled
+		if i < _disable_overlays.size():
+			_disable_overlays[i].visible = is_disabled
 
 func _refresh_hp_bars() -> void:
 	var p := CombatManager.player_node
