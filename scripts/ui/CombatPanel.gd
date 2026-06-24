@@ -130,21 +130,23 @@ func _build_wheel() -> void:
 	# BlankWheel background ring
 	var wheel_tex := load(TEX_WHEEL) as Texture2D
 	var wheel_rect := TextureRect.new()
-	wheel_rect.texture      = wheel_tex
-	wheel_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	wheel_rect.size         = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
-	wheel_rect.position     = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
-	wheel_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wheel_rect.texture             = wheel_tex
+	wheel_rect.stretch_mode        = TextureRect.STRETCH_SCALE
+	wheel_rect.ignore_texture_size = true
+	wheel_rect.position            = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
+	wheel_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	container.add_child(wheel_rect)
+	wheel_rect.size = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
 
-	var art_tex := load(TEX_BUTTONS_ART) as Texture2D
+	var art_tex  := load(TEX_BUTTONS_ART) as Texture2D
 	var art_rect := TextureRect.new()
-	art_rect.texture        = art_tex
-	art_rect.stretch_mode   = TextureRect.STRETCH_SCALE
-	art_rect.size           = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
-	art_rect.position       = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
-	art_rect.mouse_filter   = Control.MOUSE_FILTER_IGNORE
+	art_rect.texture             = art_tex
+	art_rect.stretch_mode        = TextureRect.STRETCH_SCALE
+	art_rect.ignore_texture_size = true
+	art_rect.position            = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
+	art_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	container.add_child(art_rect)
+	art_rect.size = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
 
 	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
 	var ap_bg := ColorRect.new()
