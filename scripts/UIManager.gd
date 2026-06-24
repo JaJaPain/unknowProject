@@ -563,14 +563,10 @@ func _create_hud():
 	branch_map.visible = false
 	add_child(branch_map)
 
-	_quest_stack = VBoxContainer.new()
-	_quest_stack.position = Vector2(20, 220)
-	_quest_stack.add_theme_constant_override("separation", 6)
-	add_child(_quest_stack)
-
 	quest_tracker_panel = PanelContainer.new()
 	quest_tracker_panel.custom_minimum_size = Vector2(380, 0)
-	_quest_stack.add_child(quest_tracker_panel)
+	quest_tracker_panel.position = Vector2(20, 220)
+	add_child(quest_tracker_panel)
 
 	var tracker_style = StyleBoxFlat.new()
 	tracker_style.bg_color = Color(0.1, 0.1, 0.12, 0.6)
@@ -7919,7 +7915,7 @@ func _create_story_quest_panel() -> void:
 	style.content_margin_top    = 8
 	style.content_margin_bottom = 8
 	_story_quest_panel.add_theme_stylebox_override("panel", style)
-	_quest_stack.add_child(_story_quest_panel)
+	add_child(_story_quest_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 3)
@@ -7980,6 +7976,12 @@ func _on_story_quest_ui_updated(title: String, objective_line: String, time_rema
 		_story_quest_timer_label.visible = true
 	else:
 		_story_quest_timer_label.visible = false
+	# Pin below quest_tracker_panel, following it if the user drags it
+	if is_instance_valid(quest_tracker_panel):
+		_story_quest_panel.position = Vector2(
+			quest_tracker_panel.position.x,
+			quest_tracker_panel.position.y + quest_tracker_panel.size.y + 6
+		)
 	_story_quest_panel.visible = true
 
 
