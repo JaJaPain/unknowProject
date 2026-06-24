@@ -7,14 +7,12 @@ const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
 const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
 
 # ── Layout constants ──────────────────────────────────────────────────────────
-const WHEEL_DISPLAY_SIZE := 500.0   # BlankWheel rendered size (px)
-const BTN_ART_SCALE      := WHEEL_DISPLAY_SIZE / 1024.0   # 1024 → 500
-const BTN_ART_OFFSET     := -30.0  # ButtonsWithoutNumbers is 1254px; shift so it centres over wheel
+const WHEEL_DISPLAY_SIZE := 380.0   # BlankWheel rendered size (px)
+const BTN_ART_SCALE      := WHEEL_DISPLAY_SIZE / 1024.0
+const BTN_ART_OFFSET     := 0.0
 
-# Button hit-area sizes and their positions relative to wheel centre (px at display scale).
-# Angles match the art layout; radius is where button centres sit past the ring edge.
-const BTN_RADIUS         := 218.0
-const BTN_HIT_SIZE       := Vector2(110, 80)
+const BTN_RADIUS         := 168.0
+const BTN_HIT_SIZE       := Vector2(95, 70)
 
 const ACTION_DEFS := [
 	{ "type": 0, "label": "FIRE\nWEAPONS",       "ap": 2, "color": Color(0.85,0.15,0.15), "angle": -90.0  },
@@ -107,12 +105,14 @@ func _build_intent_bar() -> void:
 # ── Wheel ─────────────────────────────────────────────────────────────────────
 func _build_wheel() -> void:
 	# Anchor container at screen centre
+	var half_w: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.x * 0.5 + 10
+	var half_h: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.y * 0.5 + 10
 	var container := Control.new()
 	container.set_anchors_preset(Control.PRESET_CENTER)
-	container.offset_left   = -(WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.x * 0.5 + 10)
-	container.offset_right  =  (WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.x * 0.5 + 10)
-	container.offset_top    = -(WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.y * 0.5 + 10)
-	container.offset_bottom =  (WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.y * 0.5 + 10)
+	container.offset_left   = -half_w
+	container.offset_right  =  half_w
+	container.offset_top    = -half_h - 30.0   # shift up 30px to clear execute row
+	container.offset_bottom =  half_h - 30.0
 	container.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(container)
 
@@ -144,30 +144,28 @@ func _build_wheel() -> void:
 	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
 	var ap_bg := ColorRect.new()
 	ap_bg.color    = Color(0.04, 0.06, 0.10, 0.95)
-	ap_bg.size     = Vector2(130, 80)
-	ap_bg.position = center - Vector2(65, 40)
+	ap_bg.size     = Vector2(105, 65)
+	ap_bg.position = center - Vector2(52, 32)
 	ap_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_bg)
 
-	# AP title
 	var ap_title := Label.new()
 	ap_title.text = "ACTION POINTS"
 	ap_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ap_title.add_theme_font_size_override("font_size", 10)
+	ap_title.add_theme_font_size_override("font_size", 9)
 	ap_title.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
-	ap_title.size     = Vector2(130, 24)
-	ap_title.position = center - Vector2(65, 40)
+	ap_title.size     = Vector2(105, 20)
+	ap_title.position = center - Vector2(52, 32)
 	ap_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_title)
 
-	# AP value
 	_ap_label = Label.new()
-	_ap_label.text = "6 / 6"
+	_ap_label.text = "5 / 5"
 	_ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ap_label.add_theme_font_size_override("font_size", 28)
+	_ap_label.add_theme_font_size_override("font_size", 24)
 	_ap_label.add_theme_color_override("font_color", Color(0.40, 0.85, 1.0))
-	_ap_label.size     = Vector2(130, 48)
-	_ap_label.position = center - Vector2(65, 16)
+	_ap_label.size     = Vector2(105, 40)
+	_ap_label.position = center - Vector2(52, 12)
 	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_ap_label)
 
