@@ -7,12 +7,12 @@ const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
 const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
 
 # ── Layout constants ──────────────────────────────────────────────────────────
-const WHEEL_DISPLAY_SIZE := 380.0   # BlankWheel rendered size (px)
+const WHEEL_DISPLAY_SIZE := 155.0   # BlankWheel rendered size (px)
 const BTN_ART_SCALE      := WHEEL_DISPLAY_SIZE / 1024.0
 const BTN_ART_OFFSET     := 0.0
 
-const BTN_RADIUS         := 168.0
-const BTN_HIT_SIZE       := Vector2(95, 70)
+const BTN_RADIUS         := 68.0
+const BTN_HIT_SIZE       := Vector2(44, 34)
 
 const ACTION_DEFS := [
 	{ "type": 0, "label": "FIRE\nWEAPONS",       "ap": 2, "color": Color(0.85,0.15,0.15), "angle": -90.0  },
@@ -144,28 +144,28 @@ func _build_wheel() -> void:
 	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
 	var ap_bg := ColorRect.new()
 	ap_bg.color    = Color(0.04, 0.06, 0.10, 0.95)
-	ap_bg.size     = Vector2(105, 65)
-	ap_bg.position = center - Vector2(52, 32)
+	ap_bg.size     = Vector2(46, 30)
+	ap_bg.position = center - Vector2(23, 15)
 	ap_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_bg)
 
 	var ap_title := Label.new()
-	ap_title.text = "ACTION POINTS"
+	ap_title.text = "AP"
 	ap_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ap_title.add_theme_font_size_override("font_size", 9)
+	ap_title.add_theme_font_size_override("font_size", 7)
 	ap_title.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
-	ap_title.size     = Vector2(105, 20)
-	ap_title.position = center - Vector2(52, 32)
+	ap_title.size     = Vector2(46, 12)
+	ap_title.position = center - Vector2(23, 15)
 	ap_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_title)
 
 	_ap_label = Label.new()
-	_ap_label.text = "5 / 5"
+	_ap_label.text = "5/5"
 	_ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ap_label.add_theme_font_size_override("font_size", 24)
+	_ap_label.add_theme_font_size_override("font_size", 14)
 	_ap_label.add_theme_color_override("font_color", Color(0.40, 0.85, 1.0))
-	_ap_label.size     = Vector2(105, 40)
-	_ap_label.position = center - Vector2(52, 12)
+	_ap_label.size     = Vector2(46, 20)
+	_ap_label.position = center - Vector2(23, 3)
 	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_ap_label)
 
@@ -336,7 +336,7 @@ func _on_combat_started(_enemy: Node) -> void:
 func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dictionary) -> void:
 	_ap_current = ap
 	_ap_max     = max_ap
-	_ap_label.text = "%d / %d" % [ap, max_ap]
+	_ap_label.text = "%d/%d" % [ap, max_ap]
 	_intent_label.text = "Enemy: %s" % intent.get("label", "—")
 	_clear_queue_chips()
 	_refresh_button_states()
@@ -357,7 +357,7 @@ func _on_combat_ended(_player_won: bool) -> void:
 func _on_ap_changed(current: int, max_ap: int) -> void:
 	_ap_current = current
 	_ap_max     = max_ap
-	_ap_label.text = "%d / %d" % [current, max_ap]
+	_ap_label.text = "%d/%d" % [current, max_ap]
 	_refresh_button_states()
 
 func _on_action_queued(action: Dictionary) -> void:
