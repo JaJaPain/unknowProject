@@ -18,8 +18,7 @@ const PANEL_IDS := ["hud", "chat", "overview", "target", "quest"]
 var _panels: Dictionary = {}         # id -> Control
 var _overlays: Dictionary = {}       # id -> Control (drag bar overlay)
 var _resize_handles: Dictionary = {} # id -> Control
-var _placeholders: Dictionary = {}   # id -> Control (blank stand-ins for dynamic panels)
-var _real_panels: Dictionary = {}    # id -> Control (stashed real panels while placeholder is active)
+var _placeholders: Dictionary = {}   # id -> Control (overlay children added to dynamic panels in edit mode)
 var _edit_mode: bool = false
 var _lock_btn: Button = null
 
@@ -68,16 +67,9 @@ func toggle_edit_mode() -> void:
 		_resize_panel_id = ""
 		for id in _placeholders:
 			var ph: Control = _placeholders[id]
-			var real: Control = _real_panels.get(id)
-			if is_instance_valid(real):
-				if is_instance_valid(ph):
-					real.position = ph.position
-				real.visible = true
-				_panels[id] = real
 			if is_instance_valid(ph):
 				ph.queue_free()
 		_placeholders.clear()
-		_real_panels.clear()
 		for id in PANEL_IDS:
 			if _overlays.has(id) and is_instance_valid(_overlays[id]):
 				_overlays[id].queue_free()
@@ -185,21 +177,21 @@ func _is_dynamic(id: String) -> bool:
 
 func _create_placeholder(id: String) -> void:
 	var real: Control = _panels[id]
-	var ph := PanelContainer.new()
-	ph.position = real.position
-	ph.custom_minimum_size = Vector2(380, 60)
+	# Nest an overlay child inside the real panel — covers content during edit mode
+	var ph := ColorRect.new()
+	ph.color = Color(0.05, 0.05, 0.15, 0.92)
+	ph.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ph.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var lbl := Label.new()
 	lbl.text = "ACTIVE CONTRACT"
 	lbl.add_theme_font_size_override("font_size", 11)
 	lbl.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9, 0.7))
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_preset(Control.PRESET_CENTER)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ph.add_child(lbl)
-	real.get_parent().add_child(ph)
-	real.visible = false
+	real.add_child(ph)
 	_placeholders[id] = ph
-	_real_panels[id] = real
-	_panels[id] = ph   # drag moves ph, not real
+	# Real panel stays in _panels — drag acts on it directly
 	_create_overlay(id)
 
 
