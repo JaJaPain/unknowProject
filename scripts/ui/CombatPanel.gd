@@ -210,15 +210,11 @@ func _build_wheel() -> void:
 		var angle_rad  := deg_to_rad(float(def["angle"]))
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
 
-		# Disabled overlay — TextureRect cropped to the button area from DisabledIsh2
-		var ov := TextureRect.new()
-		ov.texture             = disabled_tex
-		ov.stretch_mode        = TextureRect.STRETCH_SCALE
-		ov.ignore_texture_size = true
-		ov.size                = _btn_hit * 1.4
-		ov.position            = btn_center - ov.size * 0.5
-		ov.mouse_filter        = Control.MOUSE_FILTER_IGNORE
-		ov.visible             = false
+		# Disabled overlay — per-button crop from DisabledIsh2.png atlas
+		var ov := _make_disabled_overlay(disabled_tex, def["angle"])
+		ov.size     = _btn_hit * 1.5
+		ov.position = btn_center - ov.size * 0.5
+		ov.visible  = false
 		container.add_child(ov)
 		_disable_overlays.append(ov)
 
@@ -270,6 +266,30 @@ func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
 	var action_type: int = def["type"]
 	btn.pressed.connect(func(): _on_action_pressed(action_type))
 	return btn
+
+func _make_disabled_overlay(dis_tex: Texture2D, angle_deg: float) -> TextureRect:
+	# DisabledIsh2.png is an atlas with the 7 buttons at the same angles as ACTION_DEFS.
+	# We crop each button's region by computing its centre in image space.
+	var iw := float(dis_tex.get_width())
+	var ih := float(dis_tex.get_height())
+	var icx := iw * 0.5
+	var icy := ih * 0.5
+	# Buttons sit at ~38% of half-image-width from centre in the source art.
+	var img_btn_r  := iw * 0.38
+	var crop_w     := iw * 0.28
+	var crop_h     := ih * 0.26
+	var a          := deg_to_rad(angle_deg)
+	var bx         := icx + cos(a) * img_btn_r
+	var by         := icy + sin(a) * img_btn_r
+	var atlas      := AtlasTexture.new()
+	atlas.atlas    = dis_tex
+	atlas.region   = Rect2(bx - crop_w * 0.5, by - crop_h * 0.5, crop_w, crop_h)
+	var r          := TextureRect.new()
+	r.texture             = atlas
+	r.stretch_mode        = TextureRect.STRETCH_SCALE
+	r.ignore_texture_size = true
+	r.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+	return r
 
 func _make_digit_rect(digit: int, digit_w: float, digit_h: float) -> TextureRect:
 	var atlas := AtlasTexture.new()
