@@ -800,7 +800,7 @@ func die():
 				GlobalState.player_credits += _bounty_payout
 				AudioManager.play_sell_ore()
 				GlobalState.emit_chatter("Kaelen", _bounty_reg.confirm_line(faction, _bounty_payout), Color(0.85, 0.5, 1.0))
-		if Engine.has_singleton("StoryQuestManager"):
+		if is_instance_valid(StoryQuestManager):
 			StoryQuestManager.on_ship_destroyed(str(persistent_id), faction)
 
 	# Always emit ship_destroyed so quest progress counts NPC kills too.
