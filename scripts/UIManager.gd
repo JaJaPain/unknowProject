@@ -7895,6 +7895,9 @@ func _update_quest_tracker_logo(faction: String):
 			quest_tracker_logo.visible = false
 
 func _create_story_quest_panel() -> void:
+	# Reposition whenever quest tracker is dragged or resized
+	quest_tracker_panel.item_rect_changed.connect(_reposition_story_quest_panel)
+
 	_story_quest_panel = PanelContainer.new()
 	_story_quest_panel.custom_minimum_size = Vector2(380, 0)
 	_story_quest_panel.mouse_filter        = Control.MOUSE_FILTER_IGNORE
@@ -7976,18 +7979,24 @@ func _on_story_quest_ui_updated(title: String, objective_line: String, time_rema
 		_story_quest_timer_label.visible = true
 	else:
 		_story_quest_timer_label.visible = false
-	# Pin below quest_tracker_panel, following it if the user drags it
-	if is_instance_valid(quest_tracker_panel):
-		_story_quest_panel.position = Vector2(
-			quest_tracker_panel.position.x,
-			quest_tracker_panel.position.y + quest_tracker_panel.size.y + 6
-		)
+	_reposition_story_quest_panel()
 	_story_quest_panel.visible = true
 
 
 func _on_story_quest_ui_hidden() -> void:
 	if _story_quest_panel and is_instance_valid(_story_quest_panel):
 		_story_quest_panel.visible = false
+
+
+func _reposition_story_quest_panel() -> void:
+	if not _story_quest_panel or not is_instance_valid(_story_quest_panel):
+		return
+	if not is_instance_valid(quest_tracker_panel):
+		return
+	_story_quest_panel.position = Vector2(
+		quest_tracker_panel.position.x,
+		quest_tracker_panel.position.y + quest_tracker_panel.size.y + 6
+	)
 
 
 func _create_comms_hail_panel() -> void:
