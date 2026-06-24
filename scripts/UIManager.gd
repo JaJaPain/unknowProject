@@ -348,6 +348,7 @@ func _ready():
 	# Wire draggable UI layout manager (must be after all 4 panels are created)
 	_ui_layout_manager = UILayoutManagerScript.new()
 	_ui_layout_manager.setup(hud_panel, chat_window_panel, overview_panel, target_panel, self, quest_tracker_panel)
+	quest_tracker_panel.reset_size()
 	chat_window_panel.resized.connect(_update_chat_font_size)
 
 	# L button — lock/unlock UI layout, sits right of M and I
@@ -597,6 +598,7 @@ func _create_hud():
 	# tall as the wrapped text needs.
 	var tracker_hbox = HBoxContainer.new()
 	tracker_hbox.add_theme_constant_override("separation", 8)
+	tracker_hbox.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	quest_tracker_panel.add_child(tracker_hbox)
 
 	# Faction branding logo on the left of tracker

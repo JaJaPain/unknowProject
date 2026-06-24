@@ -18,6 +18,7 @@ const PANEL_IDS := ["hud", "chat", "overview", "target", "quest"]
 var _panels: Dictionary = {}         # id -> Control
 var _overlays: Dictionary = {}       # id -> Control (drag bar overlay)
 var _resize_handles: Dictionary = {} # id -> Control
+var _placeholders: Dictionary = {}   # id -> Control (blank stand-ins for dynamic panels)
 var _edit_mode: bool = false
 var _lock_btn: Button = null
 
@@ -60,10 +61,19 @@ func setup(
 
 func toggle_edit_mode() -> void:
 	if _edit_mode:
-		# Lock — save and clear overlays
+		# Lock — restore real panels from placeholder positions, clear overlays
 		_edit_mode = false
 		_drag_panel_id = ""
 		_resize_panel_id = ""
+		for id in _placeholders:
+			var ph: Control = _placeholders[id]
+			var real: Control = _panels.get(id)
+			if is_instance_valid(ph) and is_instance_valid(real):
+				real.position = ph.position
+				real.visible = true
+			if is_instance_valid(ph):
+				ph.queue_free()
+		_placeholders.clear()
 		for id in PANEL_IDS:
 			if _overlays.has(id) and is_instance_valid(_overlays[id]):
 				_overlays[id].queue_free()
@@ -73,10 +83,15 @@ func toggle_edit_mode() -> void:
 		_resize_handles.clear()
 		_save_layout()
 	else:
-		# Unlock — show drag/resize overlays
+		# Unlock — swap dynamic panels for placeholders, show overlays
 		_edit_mode = true
 		for id in PANEL_IDS:
-			if _panels.get(id) != null:
+			var p: Control = _panels.get(id)
+			if p == null:
+				continue
+			if _is_dynamic(id):
+				_create_placeholder(id)
+			else:
 				_create_overlay(id)
 
 
@@ -158,6 +173,31 @@ func _sync_overlay(id: String) -> void:
 		_overlays[id].size = Vector2(p.size.x, DRAG_BAR_H)
 	if _resize_handles.has(id) and is_instance_valid(_resize_handles[id]):
 		_resize_handles[id].position = p.size - Vector2(HANDLE_SIZE, HANDLE_SIZE)
+
+
+func _is_dynamic(id: String) -> bool:
+	return id == "quest"
+
+
+func _create_placeholder(id: String) -> void:
+	var real: Control = _panels[id]
+	var ph := PanelContainer.new()
+	ph.position = real.position
+	ph.custom_minimum_size = Vector2(380, 60)
+	var lbl := Label.new()
+	lbl.text = "ACTIVE CONTRACT"
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9, 0.7))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	ph.add_child(lbl)
+	real.get_parent().add_child(ph)
+	real.visible = false
+	_placeholders[id] = ph
+	# Give it a drag bar so it behaves like other panels in edit mode
+	_panels[id] = ph
+	_create_overlay(id)
+	_panels[id] = real
 
 
 func _snap_back_if_overlapping(id: String) -> void:
