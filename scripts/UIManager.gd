@@ -454,7 +454,10 @@ func refresh_restored_state() -> void:
 
 func _process(delta):
 	if GlobalState.paused: return
-	
+
+	if _story_quest_panel and _story_quest_panel.visible:
+		_reposition_story_quest_panel()
+
 	# Update overview list item distances
 	_update_overview_distances(delta)
 	
@@ -7908,9 +7911,6 @@ func _update_quest_tracker_logo(faction: String):
 			quest_tracker_logo.visible = false
 
 func _create_story_quest_panel() -> void:
-	# Reposition whenever quest tracker is dragged or resized
-	quest_tracker_panel.item_rect_changed.connect(_reposition_story_quest_panel)
-
 	_story_quest_panel = PanelContainer.new()
 	_story_quest_panel.custom_minimum_size = Vector2(380, 0)
 	_story_quest_panel.mouse_filter        = Control.MOUSE_FILTER_IGNORE
