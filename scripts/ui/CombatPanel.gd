@@ -50,7 +50,7 @@ var _enemy_label:      Label
 var _queue_strip:      HBoxContainer
 var _execute_btn:      Button
 var _respond_btn:      Button
-var _action_btns:     Array[Button] = []
+var _action_btns:     Array[Control] = []
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _warp_cd_label:   Label
@@ -217,7 +217,7 @@ func _build_wheel() -> void:
 		# Hover glow — tween active image brightness so player knows it's clickable
 		var active_ref: TextureRect = _btn_active[i]
 		btn.mouse_entered.connect(func():
-			if not btn.disabled:
+			if not btn.get_meta("disabled", false):
 				var tw := active_ref.create_tween()
 				tw.tween_property(active_ref, "modulate", Color(1.35, 1.35, 1.35), 0.08)
 		)
@@ -256,19 +256,18 @@ func _build_wheel() -> void:
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
 
-func _make_hit_button(def: Dictionary, _btn_center: Vector2) -> Button:
-	var btn := Button.new()
-	btn.custom_minimum_size = _btn_hit
-	# Transparent normal state — art image provides the visual
-	var style_clear := StyleBoxEmpty.new()
-	btn.add_theme_stylebox_override("normal",   style_clear)
-	btn.add_theme_stylebox_override("hover",    style_clear)
-	btn.add_theme_stylebox_override("pressed",  style_clear)
-	btn.add_theme_stylebox_override("disabled", style_clear)
-	btn.text = ""
+func _make_hit_button(def: Dictionary, _btn_center: Vector2) -> Control:
+	var area := Control.new()
+	area.mouse_filter = Control.MOUSE_FILTER_STOP
 	var action_type: int = def["type"]
-	btn.pressed.connect(func(): _on_action_pressed(action_type))
-	return btn
+	area.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton \
+				and ev.button_index == MOUSE_BUTTON_LEFT \
+				and ev.pressed \
+				and not area.get_meta("disabled", false):
+			_on_action_pressed(action_type)
+	)
+	return area
 
 func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect:
 	var r := TextureRect.new()
@@ -416,7 +415,7 @@ func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dic
 
 func _on_execution_started() -> void:
 	for btn in _action_btns:
-		btn.disabled = true
+		btn.set_meta("disabled", true)
 	_execute_btn.disabled = true
 
 func _on_combat_ended(_player_won: bool) -> void:
@@ -472,7 +471,7 @@ func _refresh_button_states() -> void:
 		if def["type"] == 5 and CombatManager.repair_used_this_turn:
 			blocked = true
 		var is_disabled := not can_afford or blocked
-		_action_btns[i].disabled = is_disabled
+		_action_btns[i].set_meta("disabled", is_disabled)
 		if i < _btn_active.size():
 			_btn_active[i].visible   = not is_disabled
 			_btn_disabled[i].visible = is_disabled

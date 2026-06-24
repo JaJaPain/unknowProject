@@ -73,6 +73,17 @@ func on_system_arrived(system_id: String) -> void:
 
 func on_kill(faction: String) -> void:
 	_kill_count_session += 1
+	# If combat is still resolving (state != IDLE), defer until combat_ended fires
+	# so the story dialog doesn't pop up while the combat UI is still visible.
+	if CombatManager.state != CombatManager.State.IDLE:
+		CombatManager.combat_ended.connect(_on_deferred_kill.bind(faction), CONNECT_ONE_SHOT)
+		return
+	_resolve_kill(faction)
+
+func _on_deferred_kill(_won: bool, faction: String) -> void:
+	_resolve_kill(faction)
+
+func _resolve_kill(faction: String) -> void:
 	_check_kill_beats()
 	if _SQ_DEBUG and not _sq_debug_fired:
 		_sq_debug_fired = true
