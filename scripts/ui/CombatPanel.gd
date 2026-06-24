@@ -1,12 +1,21 @@
 extends CanvasLayer
 
 # ── Asset paths ────────────────────────────────────────────────────────────────
-const ASSET_DIR            := "res://assets/CombatWheel/"
-const TEX_WHEEL            := ASSET_DIR + "BlankWheel.png"
-const TEX_BUTTONS_ART      := ASSET_DIR + "ButtonsWithNumbers.png"
-const TEX_BUTTONS_DISABLED := ASSET_DIR + "DisabledIsh2.png"
-const TEX_NUMBER_FONT      := ASSET_DIR + "NumberFont.png"
-const TEX_INTENT_BAR       := ASSET_DIR + "intentBar.png"
+const ASSET_DIR       := "res://assets/CombatWheel/"
+const TEX_WHEEL       := ASSET_DIR + "BlankWheel.png"
+const TEX_NUMBER_FONT := ASSET_DIR + "NumberFont.png"
+const TEX_INTENT_BAR  := ASSET_DIR + "intentBar.png"
+
+# Per-button image pairs [active, disabled] — order matches ACTION_DEFS
+const BUTTON_ASSETS := [
+	["Button01/FireWeapons.png",   "Button01/FireWeapons_Dis.png"],
+	["Button02/BoostRepo.png",     "Button02/BoostRepo_Dis.png"],
+	["Button03/SheildReroute.png", "Button03/SheildReroute_Dis.png"],
+	["Button04/AttackDrone.png",   "Button04/AttackDrone_Dis.png"],
+	["Button05/MicroWarp.png",     "Button05/MicroWarp_Dis.png"],
+	["Button06/RepairKit.png",     "Button06/RepairKit_Dis.png"],
+	["Button07/Flee.png",          "Button07/Flee_Dis.png"],
+]
 
 # ── Layout constants (base values tuned for 1080p; scaled by viewport at build time) ──
 const WHEEL_BASE         := 400.0   # wheel diameter at 1080p
@@ -42,9 +51,10 @@ var _enemy_label:      Label
 var _queue_strip:      HBoxContainer
 var _execute_btn:      Button
 var _respond_btn:      Button
-var _action_btns:      Array[Button] = []
-var _disable_overlays: Array[TextureRect] = []
-var _warp_cd_label:    Label
+var _action_btns:     Array[Button] = []
+var _btn_active:      Array[TextureRect] = []   # per-button active image
+var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
+var _warp_cd_label:   Label
 var _font_tex:         Texture2D   # NumberFont loaded once
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
@@ -153,15 +163,21 @@ func _build_wheel() -> void:
 	container.add_child(wheel_rect)
 	wheel_rect.size = Vector2(wheel_sz, wheel_sz)
 
-	var art_tex  := load(TEX_BUTTONS_ART) as Texture2D
-	var art_rect := TextureRect.new()
-	art_rect.texture             = art_tex
-	art_rect.stretch_mode        = TextureRect.STRETCH_SCALE
-	art_rect.ignore_texture_size = true
-	art_rect.position            = center - Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
-	art_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
-	container.add_child(art_rect)
-	art_rect.size = Vector2(wheel_sz, wheel_sz)
+	# Per-button active + disabled images — all same size/position as wheel (pre-composited)
+	var btn_pos := center - Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
+	_btn_active.clear()
+	_btn_disabled.clear()
+	for pair in BUTTON_ASSETS:
+		var act := _make_wheel_layer(ASSET_DIR + pair[0], btn_pos, wheel_sz)
+		container.add_child(act)
+		act.size = Vector2(wheel_sz, wheel_sz)
+		_btn_active.append(act)
+
+		var dis := _make_wheel_layer(ASSET_DIR + pair[1], btn_pos, wheel_sz)
+		dis.visible = false
+		container.add_child(dis)
+		dis.size = Vector2(wheel_sz, wheel_sz)
+		_btn_disabled.append(dis)
 
 	# NumberFont AP readout — parse sprite sheet at runtime
 	_font_tex = load(TEX_NUMBER_FONT) as Texture2D
@@ -203,22 +219,11 @@ func _build_wheel() -> void:
 	_ap_max_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_ap_max_rect)
 
-	# Hit-area buttons + per-button disabled overlay
+	# Invisible hit-area buttons
 	_action_btns.clear()
-	_disable_overlays.clear()
-	var disabled_tex := load(TEX_BUTTONS_DISABLED) as Texture2D
 	for def in ACTION_DEFS:
 		var angle_rad  := deg_to_rad(float(def["angle"]))
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
-
-		# Disabled overlay — per-button crop from DisabledIsh2.png atlas
-		var ov := _make_disabled_overlay(disabled_tex, def["angle"])
-		ov.size     = _btn_hit * 1.5
-		ov.position = btn_center - ov.size * 0.5
-		ov.visible  = false
-		container.add_child(ov)
-		_disable_overlays.append(ov)
-
 		var btn := _make_hit_button(def, btn_center)
 		container.add_child(btn)
 		_action_btns.append(btn)
@@ -268,27 +273,12 @@ func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
 	btn.pressed.connect(func(): _on_action_pressed(action_type))
 	return btn
 
-func _make_disabled_overlay(dis_tex: Texture2D, angle_deg: float) -> TextureRect:
-	# DisabledIsh2.png is an atlas with the 7 buttons at the same angles as ACTION_DEFS.
-	# We crop each button's region by computing its centre in image space.
-	var iw := float(dis_tex.get_width())
-	var ih := float(dis_tex.get_height())
-	var icx := iw * 0.5
-	var icy := ih * 0.5
-	# Buttons sit at ~42% of half-image-width from centre in the source art.
-	var img_btn_r  := iw * 0.42
-	var crop_w     := iw * 0.30
-	var crop_h     := ih * 0.28
-	var a          := deg_to_rad(angle_deg)
-	var bx         := icx + cos(a) * img_btn_r
-	var by         := icy + sin(a) * img_btn_r
-	var atlas      := AtlasTexture.new()
-	atlas.atlas    = dis_tex
-	atlas.region   = Rect2(bx - crop_w * 0.5, by - crop_h * 0.5, crop_w, crop_h)
-	var r          := TextureRect.new()
-	r.texture             = atlas
+func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture             = load(path) as Texture2D
 	r.stretch_mode        = TextureRect.STRETCH_SCALE
 	r.ignore_texture_size = true
+	r.position            = pos
 	r.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	return r
 
@@ -505,8 +495,9 @@ func _refresh_button_states() -> void:
 			blocked = true
 		var is_disabled := not can_afford or blocked
 		_action_btns[i].disabled = is_disabled
-		if i < _disable_overlays.size():
-			_disable_overlays[i].visible = is_disabled
+		if i < _btn_active.size():
+			_btn_active[i].visible   = not is_disabled
+			_btn_disabled[i].visible = is_disabled
 
 func _refresh_hp_bars() -> void:
 	var p := CombatManager.player_node
