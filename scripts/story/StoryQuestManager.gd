@@ -247,7 +247,7 @@ func _complete_quest() -> void:
 	# Credits
 	var credits: int = int(complete_def.get("credits", 0))
 	if credits > 0:
-		GlobalState.credits += credits
+		GlobalState.player_credits += credits
 
 	# Reputation
 	var rep_changes: Dictionary = complete_def.get("reputation", {})
