@@ -41,9 +41,7 @@ const ACTION_DEFS := [
 # ── Node refs ─────────────────────────────────────────────────────────────────
 var _wheel_panel:      Control
 var _root:             Control
-var _ap_cur_rect:      TextureRect   # NumberFont digit — current AP
-var _ap_sep_label:     Label         # "/" separator
-var _ap_max_rect:      TextureRect   # NumberFont digit — max AP
+var _ap_label:         Label         # "X / Y" AP counter in wheel center
 var _intent_label:     Label
 var _player_bar:       ProgressBar
 var _enemy_bar:        ProgressBar
@@ -56,7 +54,6 @@ var _action_btns:     Array[Button] = []
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _warp_cd_label:   Label
-var _font_tex:        Texture2D
 var _click_sfx:       AudioStreamPlayer
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
@@ -185,45 +182,25 @@ func _build_wheel() -> void:
 		dis.size = Vector2(wheel_sz, wheel_sz)
 		_btn_disabled.append(dis)
 
-	# NumberFont AP readout — parse sprite sheet at runtime
-	_font_tex = load(TEX_NUMBER_FONT) as Texture2D
-	var digit_w := _font_tex.get_width()  / 5.0
-	var digit_h := _font_tex.get_height() / 2.0
-	var disp_h  := 36.0 * S
-	var disp_w  := disp_h * (digit_w / digit_h)   # keep aspect
-	var sep_w   := disp_w * 0.5
-	var row_w   := disp_w * 2.0 + sep_w
-	var row_x   := center.x - row_w * 0.5
-	var row_y   := center.y - disp_h * 0.5
-
-	var ap_bg := ColorRect.new()
-	ap_bg.color       = Color(0.04, 0.06, 0.10, 0.90)
-	ap_bg.size        = Vector2(row_w + 8.0 * S, disp_h + 6.0 * S)
-	ap_bg.position    = Vector2(row_x - 4.0 * S, row_y - 3.0 * S)
+	# AP counter — plain label in wheel centre; always visible
+	var lbl_sz   := Vector2(120.0 * S, 44.0 * S)
+	var ap_bg    := ColorRect.new()
+	ap_bg.color       = Color(0.04, 0.06, 0.10, 0.88)
+	ap_bg.size        = lbl_sz + Vector2(8.0 * S, 6.0 * S)
+	ap_bg.position    = center - ap_bg.size * 0.5
 	ap_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_bg)
 
-	_ap_cur_rect = _make_digit_rect(5, digit_w, digit_h)
-	_ap_cur_rect.size     = Vector2(disp_w, disp_h)
-	_ap_cur_rect.position = Vector2(row_x, row_y)
-	_ap_cur_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(_ap_cur_rect)
-
-	_ap_sep_label = Label.new()
-	_ap_sep_label.text = "/"
-	_ap_sep_label.add_theme_font_size_override("font_size", int(20 * S))
-	_ap_sep_label.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
-	_ap_sep_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ap_sep_label.size     = Vector2(sep_w, disp_h)
-	_ap_sep_label.position = Vector2(row_x + disp_w, row_y)
-	_ap_sep_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(_ap_sep_label)
-
-	_ap_max_rect = _make_digit_rect(5, digit_w, digit_h)
-	_ap_max_rect.size     = Vector2(disp_w, disp_h)
-	_ap_max_rect.position = Vector2(row_x + disp_w + sep_w, row_y)
-	_ap_max_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(_ap_max_rect)
+	_ap_label = Label.new()
+	_ap_label.text = "—"
+	_ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ap_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	_ap_label.add_theme_font_size_override("font_size", int(22.0 * S))
+	_ap_label.add_theme_color_override("font_color", Color(0.35, 0.85, 1.0))
+	_ap_label.size        = lbl_sz
+	_ap_label.position    = center - lbl_sz * 0.5
+	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_ap_label)
 
 	# Invisible hit-area buttons
 	_action_btns.clear()
@@ -301,31 +278,10 @@ func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect:
 	r.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	return r
 
-func _make_digit_rect(digit: int, digit_w: float, digit_h: float) -> TextureRect:
-	var atlas := AtlasTexture.new()
-	atlas.atlas  = _font_tex
-	atlas.region = Rect2((digit % 5) * digit_w, (digit / 5) * digit_h, digit_w, digit_h)
-	var r := TextureRect.new()
-	r.texture             = atlas
-	r.stretch_mode        = TextureRect.STRETCH_SCALE
-	r.ignore_texture_size = true
-	# Shader: treat white as transparent, tint dark pixels cyan
-	var sh := Shader.new()
-	sh.code = "shader_type canvas_item;\nvoid fragment(){\nvec4 c=texture(TEXTURE,UV);\nfloat lum=dot(c.rgb,vec3(0.3,0.59,0.11));\nCOLOR=vec4(0.35,0.85,1.0,1.0-lum*lum);\n}"
-	var mat := ShaderMaterial.new()
-	mat.shader = sh
-	r.material = mat
-	return r
 
 func _set_ap_display(current: int, max_ap: int) -> void:
-	if not is_instance_valid(_ap_cur_rect) or _font_tex == null:
-		return
-	var digit_w := _font_tex.get_width()  / 5.0
-	var digit_h := _font_tex.get_height() / 2.0
-	var cur  := clampi(current, 0, 9)
-	var maxa := clampi(max_ap,  0, 9)
-	(_ap_cur_rect.texture as AtlasTexture).region = Rect2((cur  % 5) * digit_w, (cur  / 5) * digit_h, digit_w, digit_h)
-	(_ap_max_rect.texture as AtlasTexture).region = Rect2((maxa % 5) * digit_w, (maxa / 5) * digit_h, digit_w, digit_h)
+	if is_instance_valid(_ap_label):
+		_ap_label.text = "%d / %d AP" % [current, max_ap]
 
 # ── HP bars ───────────────────────────────────────────────────────────────────
 func _build_hp_bars() -> void:
@@ -561,4 +517,3 @@ func _remove_last_queue_chip() -> void:
 func _clear_queue_chips() -> void:
 	for child in _queue_strip.get_children():
 		child.queue_free()
-
