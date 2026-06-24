@@ -69,6 +69,9 @@ func _lerp_timescale(to_scale: float, to_pitch: float, duration_ms: int = 400) -
 func start_combat(player: Node, enemy: Node) -> void:
 	if state != State.IDLE:
 		return
+	# Set state immediately so physics-frame re-entry can't spawn duplicate requests
+	# while the async taunt fetch is in flight.
+	state = State.PLANNING
 	player_node = player
 	enemy_node  = enemy
 	_taunts_ready = false
@@ -76,7 +79,7 @@ func start_combat(player: Node, enemy: Node) -> void:
 	_load_upgrade_stats()
 	_reset_fight_state()
 
-	# Fetch taunts async; planning phase begins when they arrive.
+	# Fetch taunts async; _on_taunts_ready finishes setup when they arrive.
 	var faction:   String = enemy.get("faction") if enemy.get("faction") else "unknown"
 	var archetype: String = enemy.get("ship_role") if enemy.get("ship_role") else "Gunner"
 	LLMInterface.request_combat_taunts(faction, archetype, _on_taunts_ready)
@@ -84,6 +87,9 @@ func start_combat(player: Node, enemy: Node) -> void:
 	emit_signal("combat_started", enemy)
 
 func _on_taunts_ready(data: Dictionary) -> void:
+	# Guard against stale callbacks from duplicate requests (race with early state set)
+	if state == State.IDLE or _taunts_ready:
+		return
 	taunts = data
 	_taunts_ready = true
 	_begin_planning()
