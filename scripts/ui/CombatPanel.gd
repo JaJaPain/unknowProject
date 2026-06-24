@@ -210,6 +210,8 @@ func _build_wheel() -> void:
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
 		var btn        := _make_hit_button(def, btn_center)
 		container.add_child(btn)
+		btn.size     = _btn_hit
+		btn.position = btn_center - _btn_hit * 0.5   # re-centre after size is locked
 		_action_btns.append(btn)
 
 		# Hover glow — tween active image brightness so player knows it's clickable
@@ -254,10 +256,9 @@ func _build_wheel() -> void:
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
 
-func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
+func _make_hit_button(def: Dictionary, _btn_center: Vector2) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = _btn_hit
-	btn.position = btn_center - _btn_hit * 0.5
 	# Transparent normal state — art image provides the visual
 	var style_clear := StyleBoxEmpty.new()
 	btn.add_theme_stylebox_override("normal",   style_clear)
