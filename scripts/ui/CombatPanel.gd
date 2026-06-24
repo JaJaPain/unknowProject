@@ -132,21 +132,18 @@ func _build_wheel() -> void:
 	var wheel_rect := TextureRect.new()
 	wheel_rect.texture      = wheel_tex
 	wheel_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	wheel_rect.custom_minimum_size = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
+	wheel_rect.size         = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
 	wheel_rect.position     = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
 	wheel_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(wheel_rect)
 
-	# Temporary: composite button art overlay (replace with ButtonsWithoutNumbers once bg removed)
 	var art_tex := load(TEX_BUTTONS_ART) as Texture2D
-	var art_size := WHEEL_DISPLAY_SIZE   # same 1024 source
 	var art_rect := TextureRect.new()
 	art_rect.texture        = art_tex
 	art_rect.stretch_mode   = TextureRect.STRETCH_SCALE
-	art_rect.custom_minimum_size = Vector2(art_size, art_size)
-	art_rect.position       = center - Vector2(art_size * 0.5, art_size * 0.5)
+	art_rect.size           = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
+	art_rect.position       = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
 	art_rect.mouse_filter   = Control.MOUSE_FILTER_IGNORE
-	art_rect.modulate       = Color(1, 1, 1, 1.0)
 	container.add_child(art_rect)
 
 	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
