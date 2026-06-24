@@ -907,3 +907,108 @@ func _get_faction_color() -> Color:
 		"aurelia": return Color(0.85, 0.2, 0.2)
 		"vanguard": return Color(0.2, 0.7, 1.0)
 	return Color(1.0, 1.0, 1.0)
+
+# ── Turn-based combat intent ──────────────────────────────────────────────────
+# Called by CombatManager at the start of each planning phase.
+# Returns a Dictionary the UI displays as the enemy's telegraphed action.
+# Keys: type (String), label (String), damage (float), face (int), flanking (bool)
+func generate_intent() -> Dictionary:
+	var hp_ratio: float = health / max(max_health, 1.0)
+	var role: String = ship_role if ship_role != "" else archetype
+
+	match role:
+		"Gunner":
+			return _intent_gunner(hp_ratio)
+		"Interceptor":
+			return _intent_interceptor(hp_ratio)
+		"Logistics":
+			return _intent_logistics(hp_ratio)
+		"MiningHauler":
+			return _intent_mining_hauler(hp_ratio)
+		_:
+			return _intent_gunner(hp_ratio)
+
+func _intent_gunner(hp_ratio: float) -> Dictionary:
+	if hp_ratio < 0.25:
+		# Desperate — heavy shot, go down swinging
+		return {
+			"type": "hull_shot",
+			"label": "Charging hull shot",
+			"damage": randf_range(damage_max * 1.4, damage_max * 1.8),
+			"face": 0,  # CombatAction.Face.FRONT
+			"flanking": false,
+		}
+	if randf() < 0.65:
+		return {
+			"type": "hull_shot",
+			"label": "Hull shot",
+			"damage": randf_range(damage_min, damage_max),
+			"face": 0,
+			"flanking": false,
+		}
+	return {
+		"type": "suppression",
+		"label": "Suppression fire",
+		"damage": randf_range(damage_min * 0.6, damage_min * 0.9),
+		"face": 0,
+		"flanking": false,
+	}
+
+func _intent_interceptor(hp_ratio: float) -> Dictionary:
+	if hp_ratio < 0.30:
+		return {
+			"type": "fire",
+			"label": "Desperation shot",
+			"damage": randf_range(damage_min, damage_max),
+			"face": 0,
+			"flanking": false,
+		}
+	if randf() < 0.70:
+		return {
+			"type": "flank",
+			"label": "Flanking run",
+			"damage": randf_range(damage_min * 0.8, damage_max * 0.9),
+			"face": 3,  # CombatAction.Face.STARBOARD
+			"flanking": true,
+		}
+	return {
+		"type": "disable_engines",
+		"label": "Engine disruption burst",
+		"damage": 0.0,
+		"face": 0,
+		"flanking": false,
+	}
+
+func _intent_logistics(hp_ratio: float) -> Dictionary:
+	if hp_ratio < 0.50:
+		return {
+			"type": "repair",
+			"label": "Emergency self-repair",
+			"damage": 0.0,
+			"face": 1,  # CombatAction.Face.REAR
+			"flanking": false,
+		}
+	return {
+		"type": "broadcast",
+		"label": "Broadcasting for backup",
+		"damage": 0.0,
+		"face": 0,
+		"flanking": false,
+	}
+
+func _intent_mining_hauler(_hp_ratio: float) -> Dictionary:
+	if randf() < 0.60:
+		return {
+			"type": "surrender",
+			"label": "Pleading for mercy",
+			"damage": 0.0,
+			"face": 0,
+			"flanking": false,
+		}
+	return {
+		"type": "panic",
+		"label": "Panic shot",
+		"damage": randf_range(2.0, 6.0),
+		"face": 0,
+		"flanking": false,
+	}
