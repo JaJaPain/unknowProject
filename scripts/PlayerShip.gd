@@ -200,6 +200,9 @@ func _unhandled_input(event: InputEvent):
 	# before this runs, so dock buttons keep working.
 	if is_docked:
 		return
+	# CombatPanel owns input during turn-based planning and execution.
+	if CombatManager.state != CombatManager.State.IDLE:
+		return
 	# Autopilot override keys
 	if event.is_action_pressed("override_approach"):
 		var t = GlobalState.active_target
@@ -1587,10 +1590,12 @@ func perform_action(target_node: Node3D, delta: float):
 	
 	elif target_node.has_method("take_damage") and target_node.get("faction") != "player":
 		mining_laser.visible = false
-		if fire_cooldown <= 0.0:
-			fire_cooldown = GlobalState.weapon_cooldown
-			AudioManager.play_laser(global_position)
-			spawn_projectile(target_node)
+		# CombatManager owns damage during turn-based combat — skip real-time fire.
+		if CombatManager.state == CombatManager.State.IDLE:
+			if fire_cooldown <= 0.0:
+				fire_cooldown = GlobalState.weapon_cooldown
+				AudioManager.play_laser(global_position)
+				spawn_projectile(target_node)
 	else:
 		mining_laser.visible = false
 

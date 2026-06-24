@@ -566,19 +566,28 @@ func _physics_process(delta: float):
 		target = null
 
 	# Movement & Combat Logic
+	var in_turn_combat: bool = CombatManager.state != CombatManager.State.IDLE \
+		and CombatManager.enemy_node == self
 	if target:
 		steer_towards(target.global_position, delta)
 		var dist = global_position.distance_to(target.global_position)
-		
-		# Move towards target if we are beyond our stopping cushion
-		if dist > 30.0:
-			velocity = -global_transform.basis.z * speed
-			move_and_slide()
+
+		# Move towards target if we are beyond our stopping cushion.
+		# During turn-based combat the ship still drifts/circles but doesn't
+		# close aggressively — visual life without real-time damage.
+		if not in_turn_combat:
+			if dist > 30.0:
+				velocity = -global_transform.basis.z * speed
+				move_and_slide()
+			else:
+				velocity = Vector3.ZERO
 		else:
-			velocity = Vector3.ZERO
-			
-		# Fire at the target if within weapon range (60.0m) and aligned (within 30 degrees)
-		if dist <= 60.0:
+			# Slow ambient orbit so the ship looks alive in slow-mo planning.
+			velocity = -global_transform.basis.z * (speed * 0.3)
+			move_and_slide()
+
+		# Fire only when NOT in turn-based combat (CombatManager handles damage).
+		if not in_turn_combat and dist <= 60.0:
 			var to_target = (target.global_position - global_position).normalized()
 			var forward = -global_transform.basis.z.normalized()
 			var angle = forward.angle_to(to_target)
