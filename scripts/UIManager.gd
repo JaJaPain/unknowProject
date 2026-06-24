@@ -4993,6 +4993,14 @@ func _maybe_kaelen_intel_drop() -> void:
 	GlobalState.emit_chatter("Kaelen", "Encrypted message queued.", Color(0.85, 0.5, 1.0))
 
 
+func queue_kaelen_voice_message(text: String) -> void:
+	if text.is_empty():
+		return
+	_pending_kaelen_intel = text
+	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
+		_kaelen_intel_btn.visible = true
+
+
 func _on_kaelen_intel_btn_pressed() -> void:
 	if _pending_kaelen_intel.is_empty():
 		return
