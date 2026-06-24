@@ -19,6 +19,7 @@ var _panels: Dictionary = {}         # id -> Control
 var _overlays: Dictionary = {}       # id -> Control (drag bar overlay)
 var _resize_handles: Dictionary = {} # id -> Control
 var _placeholders: Dictionary = {}   # id -> Control (blank stand-ins for dynamic panels)
+var _real_panels: Dictionary = {}    # id -> Control (stashed real panels while placeholder is active)
 var _edit_mode: bool = false
 var _lock_btn: Button = null
 
@@ -67,13 +68,16 @@ func toggle_edit_mode() -> void:
 		_resize_panel_id = ""
 		for id in _placeholders:
 			var ph: Control = _placeholders[id]
-			var real: Control = _panels.get(id)
-			if is_instance_valid(ph) and is_instance_valid(real):
-				real.position = ph.position
+			var real: Control = _real_panels.get(id)
+			if is_instance_valid(real):
+				if is_instance_valid(ph):
+					real.position = ph.position
 				real.visible = true
+				_panels[id] = real
 			if is_instance_valid(ph):
 				ph.queue_free()
 		_placeholders.clear()
+		_real_panels.clear()
 		for id in PANEL_IDS:
 			if _overlays.has(id) and is_instance_valid(_overlays[id]):
 				_overlays[id].queue_free()
@@ -194,10 +198,9 @@ func _create_placeholder(id: String) -> void:
 	real.get_parent().add_child(ph)
 	real.visible = false
 	_placeholders[id] = ph
-	# Give it a drag bar so it behaves like other panels in edit mode
-	_panels[id] = ph
+	_real_panels[id] = real
+	_panels[id] = ph   # drag moves ph, not real
 	_create_overlay(id)
-	_panels[id] = real
 
 
 func _snap_back_if_overlapping(id: String) -> void:
