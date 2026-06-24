@@ -140,6 +140,14 @@ func set_music_volume(value: float):
 func get_music_volume() -> float:
 	return music_volume_percent
 
+func set_music_pitch(scale: float) -> void:
+	if bgm_player:
+		bgm_player.pitch_scale = scale
+
+func reset_music_pitch() -> void:
+	if bgm_player:
+		bgm_player.pitch_scale = 1.0
+
 func set_sfx_volume(value: float):
 	sfx_volume_percent = value
 	_update_bus_volumes()

@@ -4189,3 +4189,124 @@ func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason:
 		"kills_credited": 0,
 		"kaelen_line": line,
 	}])
+
+
+# ── Combat taunt generation ───────────────────────────────────────────────────
+# Called once at the start of each combat encounter. Returns a Dictionary with
+# 11 pre-generated lines covering every taunt event in the fight. Falls back
+# to hardcoded lines if the LLM is unavailable.
+#
+# callback signature: func(taunts: Dictionary) -> void
+# Keys: npc_open, npc_player_fled_success, npc_player_fled_fail,
+#       npc_low_health, player_low_health, npc_dying,
+#       kaelen_open, kaelen_player_fled, kaelen_player_low_health,
+#       kaelen_winning, kaelen_kill_confirm
+
+const COMBAT_TAUNT_FALLBACKS := {
+	"npc_open":               "You picked the wrong ship to tangle with.",
+	"npc_player_fled_success":"Run, coward. I'll find you again.",
+	"npc_player_fled_fail":   "Nowhere to run now.",
+	"npc_low_health":         "Lucky shot. Won't happen twice.",
+	"player_low_health":      "Your hull won't hold much longer.",
+	"npc_dying":              "...didn't see that coming.",
+	"kaelen_open":            "Shiny, you have company. Try not to die — I'm owed money.",
+	"kaelen_player_fled":     "Smart. Heroics don't pay the docking fees.",
+	"kaelen_player_low_health": "Shiny, you look terrible on my sensors right now.",
+	"kaelen_winning":         "Wrap it up — salvage fees are yours if you're fast.",
+	"kaelen_kill_confirm":    "One less headache. Logging the kill now.",
+}
+
+func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable) -> void:
+	var faction_cap := npc_faction.capitalize()
+	var arch_cap   := npc_archetype.capitalize()
+
+	var prompt := """You are writing combat banter for a PG-13 space trading game. Generate exactly 11 short lines of dialogue — salty, punchy, under 18 words each. No profanity, but attitude is encouraged. Occasional mom jokes are fair game. Do NOT use placeholder brackets.
+
+NPC faction: %s | NPC archetype: %s
+The player pilot goes by "Shiny". Kaelen is the player's cynical broker monitoring via comms.
+
+Tone examples (do not reuse these, write originals with this energy):
+- "Your shields are held together with prayer and bad decisions."
+- "Shiny, your mother flies cargo for the faction you're fighting. Awkward."
+- "You call that a weapon? My recycling drone hits harder."
+- "I've seen asteroids make better evasive maneuvers."
+- "Kaelen here — don't get sentimental, just get paid."
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "npc_open": "...",
+  "npc_player_fled_success": "...",
+  "npc_player_fled_fail": "...",
+  "npc_low_health": "...",
+  "player_low_health": "...",
+  "npc_dying": "...",
+  "kaelen_open": "...",
+  "kaelen_player_fled": "...",
+  "kaelen_player_low_health": "...",
+  "kaelen_winning": "...",
+  "kaelen_kill_confirm": "..."
+}""" % [faction_cap, arch_cap]
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			print("[LLMInterface] combat taunts fetch failed — using fallback")
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var response_text: String = body.get_string_from_utf8()
+		var outer_json := JSON.new()
+		if outer_json.parse(response_text) != OK:
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var inner_str: String = outer_data["response"].strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var data = inner_json.get_data()
+		if not data is Dictionary:
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		# Fill any missing keys from fallback so callers never get nulls.
+		var result_dict := COMBAT_TAUNT_FALLBACKS.duplicate()
+		for key in result_dict.keys():
+			if data.has(key) and str(data[key]).length() > 0 and not str(data[key]).contains("["):
+				result_dict[key] = str(data[key])
+
+		print("[LLMInterface] Combat taunts generated for %s %s" % [faction_cap, arch_cap])
+		callback.call(result_dict)
+	)
+
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{"temperature": 0.95, "seed": randi()}
+	)
+	var err := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err != OK:
+		temp_http.queue_free()
+		callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
