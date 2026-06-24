@@ -107,18 +107,18 @@ func _reset_fight_state() -> void:
 
 # ── AP helpers ────────────────────────────────────────────────────────────────
 func _load_upgrade_stats() -> void:
-	var power_tier: int = GlobalState.installed_upgrades.get("power", {}).get("tier", 1)
-	ap_max = 4 + power_tier  # tier 1=5 ... tier 5=9. Base adjusted from design doc.
+	var power_tier: int = GlobalState.current_upgrades.get("power", {}).get("tier", 1)
+	ap_max = 4 + power_tier  # tier 1=5 … tier 5=9
 	ap_current = ap_max
 
-	_fire_damage    = GlobalState.weapon_damage
-	_fire_ap_cost   = 1 if GlobalState.has_max_rapid_weapon else (3 if GlobalState.has_max_heavy_weapon else 2)
+	_fire_damage     = GlobalState.weapon_damage
+	_fire_ap_cost    = 1 if GlobalState.has_max_rapid_weapon else (3 if GlobalState.has_max_heavy_weapon else 2)
 	_fire_multiplier = 2.0 if GlobalState.has_max_heavy_weapon else 1.0
 
 	_shield_absorption = 0.50 if GlobalState.has_max_bulwark_shield else 0.30
 	_shield_dual_face  = GlobalState.has_max_bulwark_shield
 
-	_engine_tier = GlobalState.installed_upgrades.get("engine", {}).get("tier", 1)
+	_engine_tier      = GlobalState.current_upgrades.get("engine", {}).get("tier", 1)
 	_flee_base_chance = 0.30 + (_engine_tier * 0.10)  # tier 1=40% … tier 5=80%
 
 func _spend_ap(amount: int) -> void:
@@ -287,8 +287,8 @@ func _exec_repair_kit() -> void:
 	if not GlobalState.inventory.has_item("repair_kit"):
 		return
 	GlobalState.inventory.remove("repair_kit", 1)
-	var kit_heal: float = GlobalState.get("repair_kit_heal") if GlobalState.get("repair_kit_heal") != null else 50.0
-	var heal_amount: float = kit_heal * 0.5
+	# repair_kit heals 25hp normally (ConsumableEffects.gd) — combat use is half that.
+	var heal_amount: float = 12.5
 	if player_node.has_method("heal"):
 		player_node.heal(heal_amount)
 	elif player_node.has("health"):

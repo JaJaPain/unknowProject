@@ -586,6 +586,15 @@ func _physics_process(delta: float):
 			velocity = -global_transform.basis.z * (speed * 0.3)
 			move_and_slide()
 
+		# Check if we should trigger turn-based combat with the player.
+		if not in_turn_combat \
+				and target == GlobalState.player \
+				and CombatManager.state == CombatManager.State.IDLE \
+				and not ceasefire \
+				and dist <= 80.0:
+			CombatManager.start_combat(GlobalState.player, self)
+			return
+
 		# Fire only when NOT in turn-based combat (CombatManager handles damage).
 		if not in_turn_combat and dist <= 60.0:
 			var to_target = (target.global_position - global_position).normalized()

@@ -1590,12 +1590,10 @@ func perform_action(target_node: Node3D, delta: float):
 	
 	elif target_node.has_method("take_damage") and target_node.get("faction") != "player":
 		mining_laser.visible = false
-		# CombatManager owns damage during turn-based combat — skip real-time fire.
+		# Player fires first — trigger turn-based combat if not already in one.
 		if CombatManager.state == CombatManager.State.IDLE:
-			if fire_cooldown <= 0.0:
-				fire_cooldown = GlobalState.weapon_cooldown
-				AudioManager.play_laser(global_position)
-				spawn_projectile(target_node)
+			CombatManager.start_combat(self, target_node)
+		# Real-time fire is fully replaced by CombatManager — no direct projectile spawn.
 	else:
 		mining_laser.visible = false
 
