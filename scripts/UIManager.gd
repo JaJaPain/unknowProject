@@ -179,7 +179,6 @@ var quest_tracker_nav_label: Label
 
 # Story Quest HUD indicator (top-right, parallel to quest tracker)
 var _story_quest_panel: PanelContainer = null
-var _quest_stack: VBoxContainer = null
 var _story_quest_title_label: Label = null
 var _story_quest_obj_label: Label = null
 var _story_quest_timer_label: Label = null
