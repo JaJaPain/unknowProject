@@ -743,7 +743,7 @@ func _create_hud():
 	GlobalState.npc_flavor_spoken.connect(_on_npc_flavor_spoken)
 
 	# Story quest HUD — connect signals so the panel updates without polling
-	if Engine.has_singleton("StoryQuestManager"):
+	if is_instance_valid(StoryQuestManager):
 		StoryQuestManager.quest_ui_updated.connect(_on_story_quest_ui_updated)
 		StoryQuestManager.quest_ui_hidden.connect(_on_story_quest_ui_hidden)
 	
@@ -3326,9 +3326,9 @@ func toggle_dock_menu(
 		if GlobalState.player:
 			GlobalState.player.is_docked = true
 			GlobalState.player.velocity = Vector3.ZERO
-		if Engine.has_singleton("StoryManager"):
+		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
-		if Engine.has_singleton("StoryQuestManager"):
+		if is_instance_valid(StoryQuestManager):
 			StoryQuestManager.on_docked(station)
 		var game_root := get_tree().current_scene
 		if create_checkpoint \
@@ -3789,7 +3789,7 @@ func _on_planted_npc_pressed() -> void:
 	show_dock_message(p_line, p_name, Color(0.9, 0.75, 0.5), portrait)
 	# Notify StoryQuestManager if this contact is a quest step
 	if bool(planted.get("advances_quest", false)):
-		if Engine.has_singleton("StoryQuestManager"):
+		if is_instance_valid(StoryQuestManager):
 			var npc_id: String = str(planted.get("npc_id", p_name))
 			StoryQuestManager.on_planted_npc_talked(npc_id)
 	if bool(planted.get("one_shot", true)):

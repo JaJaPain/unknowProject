@@ -434,9 +434,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		ui_mgr.call_deferred("refresh_overview")
 	if ui_mgr and ui_mgr.has_method("notify_system_arrived"):
 		ui_mgr.call_deferred("notify_system_arrived", runtime_system_id)
-	if Engine.has_singleton("StoryManager"):
+	if is_instance_valid(StoryManager):
 		StoryManager.on_system_arrived(runtime_system_id)
-	if Engine.has_singleton("StoryQuestManager"):
+	if is_instance_valid(StoryQuestManager):
 		StoryQuestManager.on_system_arrived(runtime_system_id)
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
