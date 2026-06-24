@@ -50,11 +50,17 @@ var _enemy_label:      Label
 var _queue_strip:      HBoxContainer
 var _execute_btn:      Button
 var _respond_btn:      Button
-var _action_btns:     Array[Control] = []
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
+var _btn_blocked:     Array[bool] = []          # per-button disabled state (polar hit-test)
 var _warp_cd_label:   Label
 var _click_sfx:       AudioStreamPlayer
+
+# ── Wheel click geometry (set in _build_wheel; used by polar hit-test) ───────────
+var _wheel_click_center: Vector2 = Vector2.ZERO
+var _wheel_inner_r:      float   = 0.0
+var _wheel_outer_r:      float   = 0.0
+var _hover_idx:          int     = -1
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _ap_current: int = 0
@@ -202,38 +208,35 @@ func _build_wheel() -> void:
 	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_ap_label)
 
-	# Invisible hit-area buttons
-	_action_btns.clear()
-	for i in ACTION_DEFS.size():
-		var def: Dictionary = ACTION_DEFS[i]
-		var angle_rad  := deg_to_rad(float(def["angle"]))
-		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
-		var btn        := _make_hit_button(def, btn_center)
-		container.add_child(btn)
-		btn.size     = _btn_hit
-		btn.position = btn_center - _btn_hit * 0.5   # re-centre after size is locked
-		_action_btns.append(btn)
+	# Polar click geometry — clicks anywhere on the ring map to the nearest wedge.
+	_btn_blocked.clear()
+	_btn_blocked.resize(ACTION_DEFS.size())
+	_btn_blocked.fill(false)
+	_wheel_click_center = center
+	_wheel_inner_r = wheel_sz * 0.20   # AP hub radius — clicks inside do nothing
+	_wheel_outer_r = wheel_sz * 0.52   # slightly past art edge for forgiving clicks
 
-		# Hover glow — tween active image brightness so player knows it's clickable
-		var active_ref: TextureRect = _btn_active[i]
-		btn.mouse_entered.connect(func():
-			if not btn.get_meta("disabled", false):
-				var tw := active_ref.create_tween()
-				tw.tween_property(active_ref, "modulate", Color(1.35, 1.35, 1.35), 0.08)
-		)
-		btn.mouse_exited.connect(func():
-			var tw := active_ref.create_tween()
-			tw.tween_property(active_ref, "modulate", Color(1.0, 1.0, 1.0), 0.12)
-		)
+	# Single full-wheel click catcher covering the whole wheel bounding box.
+	var click_area := Control.new()
+	click_area.mouse_filter = Control.MOUSE_FILTER_STOP
+	click_area.position = btn_pos
+	click_area.gui_input.connect(_on_wheel_input)
+	click_area.mouse_exited.connect(func(): _update_hover(-1))
+	container.add_child(click_area)
+	click_area.size = Vector2(wheel_sz, wheel_sz)
+	# Local center within click_area is its own midpoint.
+	_wheel_click_center = Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
 
-		if def["type"] == 4:
-			_warp_cd_label = Label.new()
-			_warp_cd_label.add_theme_font_size_override("font_size", int(11 * S))
-			_warp_cd_label.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
-			_warp_cd_label.position    = btn_center + Vector2(-14.0 * S, -_btn_hit.y * 0.5 - 18.0 * S)
-			_warp_cd_label.size        = Vector2(60.0 * S, 18.0 * S)
-			_warp_cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			container.add_child(_warp_cd_label)
+	# Micro-warp cooldown label sits at the MICRO-WARP wedge centre.
+	var warp_angle := deg_to_rad(148.0)
+	var warp_center := center + Vector2(cos(warp_angle), sin(warp_angle)) * _btn_radius
+	_warp_cd_label = Label.new()
+	_warp_cd_label.add_theme_font_size_override("font_size", int(11 * S))
+	_warp_cd_label.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
+	_warp_cd_label.position    = warp_center + Vector2(-14.0 * S, -_btn_hit.y * 0.5 - 18.0 * S)
+	_warp_cd_label.size        = Vector2(60.0 * S, 18.0 * S)
+	_warp_cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_warp_cd_label)
 
 	# Enemy HP bar — centered directly above the wheel, travels with it when dragged
 	var ebar_w  := 220.0 * S
@@ -256,18 +259,52 @@ func _build_wheel() -> void:
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
 
-func _make_hit_button(def: Dictionary, _btn_center: Vector2) -> Control:
-	var area := Control.new()
-	area.mouse_filter = Control.MOUSE_FILTER_STOP
-	var action_type: int = def["type"]
-	area.gui_input.connect(func(ev: InputEvent):
-		if ev is InputEventMouseButton \
-				and ev.button_index == MOUSE_BUTTON_LEFT \
-				and ev.pressed \
-				and not area.get_meta("disabled", false):
-			_on_action_pressed(action_type)
-	)
-	return area
+# ── Polar wheel hit-testing ─────────────────────────────────────────────────────
+# Maps any click on the ring to the wedge whose centre angle is nearest, so the
+# entire surface of each slice is clickable (no tiny dead-zone hot-spots).
+func _wheel_action_at(local_pos: Vector2) -> int:
+	var d := local_pos - _wheel_click_center
+	var r := d.length()
+	if r < _wheel_inner_r or r > _wheel_outer_r:
+		return -1
+	var click_deg := rad_to_deg(atan2(d.y, d.x))
+	var best := -1
+	var best_diff := 999.0
+	for i in ACTION_DEFS.size():
+		var a: float = float(ACTION_DEFS[i]["angle"])
+		var diff: float = abs(wrapf(click_deg - a, -180.0, 180.0))
+		if diff < best_diff:
+			best_diff = diff
+			best = i
+	return best
+
+func _on_wheel_input(ev: InputEvent) -> void:
+	if ev is InputEventMouseMotion:
+		_update_hover(_wheel_action_at(ev.position))
+	elif ev is InputEventMouseButton \
+			and ev.button_index == MOUSE_BUTTON_LEFT \
+			and ev.pressed:
+		var idx := _wheel_action_at(ev.position)
+		if idx < 0:
+			return
+		if idx < _btn_blocked.size() and _btn_blocked[idx]:
+			return
+		_on_action_pressed(ACTION_DEFS[idx]["type"])
+
+func _update_hover(idx: int) -> void:
+	if idx == _hover_idx:
+		return
+	# Clear previous hover
+	if _hover_idx >= 0 and _hover_idx < _btn_active.size():
+		var prev: TextureRect = _btn_active[_hover_idx]
+		var tw_out := prev.create_tween()
+		tw_out.tween_property(prev, "modulate", Color(1.0, 1.0, 1.0), 0.12)
+	_hover_idx = idx
+	# Apply new hover (only if not blocked)
+	if idx >= 0 and idx < _btn_active.size() and not _btn_blocked[idx]:
+		var cur: TextureRect = _btn_active[idx]
+		var tw_in := cur.create_tween()
+		tw_in.tween_property(cur, "modulate", Color(1.35, 1.35, 1.35), 0.08)
 
 func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect:
 	var r := TextureRect.new()
@@ -414,8 +451,8 @@ func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dic
 		_warp_cd_label.text = "(%d turns)" % cd if cd > 0 else ""
 
 func _on_execution_started() -> void:
-	for btn in _action_btns:
-		btn.set_meta("disabled", true)
+	for i in _btn_blocked.size():
+		_btn_blocked[i] = true
 	_execute_btn.disabled = true
 
 func _on_combat_ended(_player_won: bool) -> void:
@@ -457,7 +494,7 @@ func _on_respond_pressed() -> void:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 func _refresh_button_states() -> void:
-	for i in _action_btns.size():
+	for i in ACTION_DEFS.size():
 		var def: Dictionary = ACTION_DEFS[i]
 		var cost: int = def["ap"]
 		if def["type"] == 0:
@@ -471,7 +508,8 @@ func _refresh_button_states() -> void:
 		if def["type"] == 5 and CombatManager.repair_used_this_turn:
 			blocked = true
 		var is_disabled := not can_afford or blocked
-		_action_btns[i].set_meta("disabled", is_disabled)
+		if i < _btn_blocked.size():
+			_btn_blocked[i] = is_disabled
 		if i < _btn_active.size():
 			_btn_active[i].visible   = not is_disabled
 			_btn_disabled[i].visible = is_disabled
