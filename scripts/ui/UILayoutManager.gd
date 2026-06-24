@@ -172,6 +172,7 @@ func _snap_back_if_overlapping(id: String) -> void:
 		if p_rect.intersects(Rect2(other.position, other.size)):
 			p.position = _drag_start_pos
 			_sync_overlay(id)
+			GlobalState.emit_chatter("SYSTEM", "Panel placement blocked — overlaps another panel.", Color(1.0, 0.6, 0.2))
 			return
 
 
