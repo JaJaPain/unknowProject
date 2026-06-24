@@ -1,4 +1,4 @@
-class_name GateDiscoveryManager
+﻿class_name GateDiscoveryManager
 extends Node
 
 signal gate_state_changed(gate_id: String, old_state: String, new_state: String)
@@ -45,7 +45,7 @@ func advance_gate_state(
 		}
 
 	if action.credit_cost > 0:
-		GlobalState.player_credits -= action.credit_cost
+		GlobalState.spend_credits(action.credit_cost)
 		GlobalState.credits_changed.emit(GlobalState.player_credits)
 	if action.ore_cost > 0:
 		GlobalState.cargo = max(0, int(GlobalState.cargo) - action.ore_cost)
@@ -89,7 +89,7 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 	if GlobalState.player_credits < cost:
 		return {"ok": false, "error": "Not enough credits."}
 
-	GlobalState.player_credits -= cost
+	GlobalState.spend_credits(cost)
 	GlobalState.credits_changed.emit(GlobalState.player_credits)
 
 	if not store.set_gate_knowledge(gate_id, "known"):

@@ -1,4 +1,4 @@
-extends CharacterBody3D
+﻿extends CharacterBody3D
 
 @export var faction: String = "zenith" # zenith, aurelia, vanguard
 @export var max_health: float = 50.0
@@ -782,7 +782,7 @@ func die():
 	if last_attacker_faction == "player":
 		GlobalState.player_kill.emit(faction)
 		if not is_code_enforcement:
-			GlobalState.player_credits += 15
+			GlobalState.add_credits(15)
 			_apply_reputation_changes()
 
 		# Trigger death cry chatter
@@ -797,7 +797,7 @@ func die():
 			var _bounty_reg = BountyRegistryScript.shared()
 			var _bounty_payout: int = _bounty_reg.check_kill(faction, GlobalState.current_system_id)
 			if _bounty_payout > 0:
-				GlobalState.player_credits += _bounty_payout
+				GlobalState.add_credits(_bounty_payout)
 				AudioManager.play_sell_ore()
 				GlobalState.emit_chatter("Kaelen", _bounty_reg.confirm_line(faction, _bounty_payout), Color(0.85, 0.5, 1.0))
 		if is_instance_valid(StoryQuestManager):

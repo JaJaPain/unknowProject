@@ -1,4 +1,4 @@
-extends Node3D
+﻿extends Node3D
 
 signal system_changed(system_id: String, arrival_gate_id: String)
 signal startup_load_completed(save_loaded: bool)
@@ -3979,7 +3979,7 @@ func _run_dock_smoke_test() -> void:
 			dock_checkpoint.get("checkpoint_id", "")
 		)
 		var docked_credits := GlobalState.player_credits
-		GlobalState.player_credits += 777
+		GlobalState.add_credits(777)
 		player.is_docked = false
 		ui.dock_panel.visible = false
 		if not await _load_campaign_checkpoint():

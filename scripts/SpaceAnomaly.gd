@@ -1,4 +1,4 @@
-extends StaticBody3D
+﻿extends StaticBody3D
 
 const VALID_ITEMS := [
 	"repair_kit", "shield_cell", "scanner_probe", "salvage_drone", "flare_decoy",
@@ -118,7 +118,7 @@ func _execute_action(action: Dictionary) -> void:
 				AudioManager.play_sell_ore()
 		"grant_credits":
 			var amount: int = clampi(int(action.get("amount", 20)), 0, 150)
-			GlobalState.player_credits += amount
+			GlobalState.add_credits(amount)
 			AudioManager.play_sell_ore()
 			GlobalState.emit_chatter("SYSTEM", "Recovered %d SC." % amount, Color(0.0, 0.9, 0.9))
 		"grant_item":

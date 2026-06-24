@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # StoryQuestManager — parallel story quest runtime.
 # Runs alongside QuestManager without interfering. One story quest active at a time.
@@ -247,7 +247,7 @@ func _complete_quest() -> void:
 	# Credits
 	var credits: int = int(complete_def.get("credits", 0))
 	if credits > 0:
-		GlobalState.player_credits += credits
+		GlobalState.add_credits(credits)
 
 	# Reputation
 	var rep_changes: Dictionary = complete_def.get("reputation", {})

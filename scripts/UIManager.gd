@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
@@ -4738,7 +4738,7 @@ func _on_store_buy(item_id: String) -> void:
 		return
 	if not store.purchase(item_id):
 		return
-	GlobalState.player_credits -= price
+	GlobalState.spend_credits(price)
 	GlobalState.inventory.add(item_id, 1, stack_max)
 	_render_store_items()
 
@@ -5775,7 +5775,7 @@ func _sell_ore():
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 		var ore_amount := int(GlobalState.cargo)
 		var earnings := int(GlobalState.cargo)
-		GlobalState.player_credits += earnings
+		GlobalState.add_credits(earnings)
 		GlobalState.clear_cargo()
 		_update_sell_button()
 		_update_repair_button()
@@ -6845,7 +6845,7 @@ func _repair_ship():
 	var repaired = false
 	if GlobalState.player_credits >= total_cost:
 		# Full repair
-		GlobalState.player_credits -= total_cost
+		GlobalState.spend_credits(total_cost)
 		p.set("health", max_hp)
 		repaired = true
 	else:
@@ -6853,7 +6853,7 @@ func _repair_ship():
 		var affordable_hp = int(GlobalState.player_credits / cost_per_hp)
 		if affordable_hp > 0:
 			var cost_paid = int(affordable_hp * cost_per_hp)
-			GlobalState.player_credits -= cost_paid
+			GlobalState.spend_credits(cost_paid)
 			p.set("health", hp + affordable_hp)
 			repaired = true
 			

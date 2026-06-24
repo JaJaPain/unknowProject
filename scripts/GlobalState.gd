@@ -1203,6 +1203,15 @@ var player_credits: int = 50:
 		player_credits = val
 		credits_changed.emit(player_credits)
 
+
+func add_credits(amount: int) -> void:
+	player_credits += amount
+
+
+func spend_credits(amount: int) -> void:
+	player_credits -= amount
+
+
 const PlayerInventoryScript = preload("res://scripts/economy/PlayerInventory.gd")
 var inventory = PlayerInventoryScript.new()
 

@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 const HISTORY_FILE_PATH = "user://quest_history.md"
 const MissionAdapterType := preload(
@@ -242,7 +242,7 @@ func accept_quest(
 		return false
 
 	var consequence = adapted["consequence"]
-	GlobalState.player_credits += consequence.credits_immediate
+	GlobalState.add_credits(consequence.credits_immediate)
 	for faction in consequence.reputation_change.keys():
 		GlobalState.adjust_reputation(
 			faction,
@@ -551,7 +551,7 @@ func complete_quest():
 		_apply_completion_hints(hints)
 
 	var final_payout = active_quest_payout()
-	GlobalState.player_credits += final_payout
+	GlobalState.add_credits(final_payout)
 	GlobalState.adjust_reputation(active_quest["faction"], 5.0)
 	var completed_quest: Dictionary = active_quest.duplicate(true)
 	completed_quest["completed_time_minutes"] = CampaignClock.total_minutes
@@ -657,7 +657,7 @@ func resolve_comms_branch(branch_id: String) -> void:
 		"accept_bribe":
 			var bribe_quest: Dictionary = focused.data.duplicate(true)
 			var bribe: int = int(focused.data.get("bribe_amount", 0))
-			GlobalState.player_credits += bribe
+			GlobalState.add_credits(bribe)
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -3.0)
 			GlobalState.adjust_reputation(target_faction, 2.0)
 			_despawn_ceasefire_targets(target_faction)
