@@ -6,13 +6,15 @@ const TEX_WHEEL          := ASSET_DIR + "BlankWheel.png"
 const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
 const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
 
-# ── Layout constants ──────────────────────────────────────────────────────────
-const WHEEL_DISPLAY_SIZE := 155.0   # BlankWheel rendered size (px)
-const BTN_ART_SCALE      := WHEEL_DISPLAY_SIZE / 1024.0
-const BTN_ART_OFFSET     := 0.0
+# ── Layout constants (base values tuned for 1080p; scaled by viewport at build time) ──
+const WHEEL_BASE := 200.0        # wheel diameter at 1080p
+const BTN_RADIUS_BASE    := 88.0
+const BTN_HIT_BASE       := Vector2(50, 38)
 
-const BTN_RADIUS         := 68.0
-const BTN_HIT_SIZE       := Vector2(44, 34)
+# Computed at _build_wheel() time — used by _refresh_button_states / warp label
+var _ui_scale: float = 1.0
+var _btn_radius: float = BTN_RADIUS_BASE
+var _btn_hit: Vector2 = BTN_HIT_BASE
 
 const ACTION_DEFS := [
 	{ "type": 0, "label": "FIRE\nWEAPONS",       "ap": 2, "color": Color(0.85,0.15,0.15), "angle": -90.0  },
@@ -108,97 +110,101 @@ func get_wheel_panel() -> Control:
 	return _wheel_panel
 
 func _build_wheel() -> void:
-	var half_w: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.x * 0.5 + 10
-	var half_h: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.y * 0.5 + 10
-	var panel_w := half_w * 2.0
-	var panel_h := half_h * 2.0
+	var vp_size  := get_viewport().get_visible_rect().size
+	_ui_scale    = vp_size.y / 1080.0          # 1.0 at 1080p, 1.68 at 4K 1812p
+	var S        := _ui_scale
 
-	# Default position: roughly screen centre (UILayoutManager overrides from save file)
-	var vp_size := get_viewport().get_visible_rect().size
-	var default_pos := vp_size * 0.5 - Vector2(half_w, half_h + 30.0)
+	var wheel_sz := WHEEL_BASE      * S
+	_btn_radius  = BTN_RADIUS_BASE  * S
+	_btn_hit     = BTN_HIT_BASE     * S
+
+	var half_w := wheel_sz * 0.5 + _btn_radius + _btn_hit.x * 0.5 + 10.0 * S
+	var half_h := wheel_sz * 0.5 + _btn_radius + _btn_hit.y * 0.5 + 10.0 * S
+
+	var default_pos := vp_size * 0.5 - Vector2(half_w, half_h + 30.0 * S)
 
 	var container := Control.new()
 	container.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	container.position    = default_pos
-	container.size        = Vector2(panel_w, panel_h)
+	container.position     = default_pos
+	container.size         = Vector2(half_w * 2.0, half_h * 2.0)
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(container)
 	_wheel_panel = container
 
 	var center := Vector2(half_w, half_h)
 
-	# BlankWheel background ring
-	var wheel_tex := load(TEX_WHEEL) as Texture2D
+	var wheel_tex  := load(TEX_WHEEL) as Texture2D
 	var wheel_rect := TextureRect.new()
 	wheel_rect.texture             = wheel_tex
 	wheel_rect.stretch_mode        = TextureRect.STRETCH_SCALE
 	wheel_rect.ignore_texture_size = true
-	wheel_rect.position            = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
+	wheel_rect.position            = center - Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
 	wheel_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	container.add_child(wheel_rect)
-	wheel_rect.size = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
+	wheel_rect.size = Vector2(wheel_sz, wheel_sz)
 
 	var art_tex  := load(TEX_BUTTONS_ART) as Texture2D
 	var art_rect := TextureRect.new()
 	art_rect.texture             = art_tex
 	art_rect.stretch_mode        = TextureRect.STRETCH_SCALE
 	art_rect.ignore_texture_size = true
-	art_rect.position            = center - Vector2(WHEEL_DISPLAY_SIZE * 0.5, WHEEL_DISPLAY_SIZE * 0.5)
+	art_rect.position            = center - Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
 	art_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 	container.add_child(art_rect)
-	art_rect.size = Vector2(WHEEL_DISPLAY_SIZE, WHEEL_DISPLAY_SIZE)
+	art_rect.size = Vector2(wheel_sz, wheel_sz)
 
-	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
+	# AP readout centred in wheel hole
+	var ap_w := 60.0 * S
+	var ap_h := 38.0 * S
 	var ap_bg := ColorRect.new()
-	ap_bg.color    = Color(0.04, 0.06, 0.10, 0.95)
-	ap_bg.size     = Vector2(46, 30)
-	ap_bg.position = center - Vector2(23, 15)
+	ap_bg.color       = Color(0.04, 0.06, 0.10, 0.95)
+	ap_bg.size        = Vector2(ap_w, ap_h)
+	ap_bg.position    = center - Vector2(ap_w * 0.5, ap_h * 0.5)
 	ap_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_bg)
 
 	var ap_title := Label.new()
 	ap_title.text = "AP"
 	ap_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ap_title.add_theme_font_size_override("font_size", 7)
+	ap_title.add_theme_font_size_override("font_size", int(8 * S))
 	ap_title.add_theme_color_override("font_color", Color(0.40, 0.80, 1.0))
-	ap_title.size     = Vector2(46, 12)
-	ap_title.position = center - Vector2(23, 15)
+	ap_title.size     = Vector2(ap_w, ap_h * 0.4)
+	ap_title.position = center - Vector2(ap_w * 0.5, ap_h * 0.5)
 	ap_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(ap_title)
 
 	_ap_label = Label.new()
 	_ap_label.text = "5/5"
 	_ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ap_label.add_theme_font_size_override("font_size", 14)
+	_ap_label.add_theme_font_size_override("font_size", int(18 * S))
 	_ap_label.add_theme_color_override("font_color", Color(0.40, 0.85, 1.0))
-	_ap_label.size     = Vector2(46, 20)
-	_ap_label.position = center - Vector2(23, 3)
+	_ap_label.size     = Vector2(ap_w, ap_h * 0.65)
+	_ap_label.position = center - Vector2(ap_w * 0.5, ap_h * 0.5 - ap_h * 0.35)
 	_ap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_ap_label)
 
-	# Invisible hit-area buttons placed over each button in the art
+	# Hit-area buttons
 	_action_btns.clear()
 	for def in ACTION_DEFS:
-		var angle_rad := deg_to_rad(float(def["angle"]))
-		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * BTN_RADIUS
-		var btn := _make_hit_button(def, btn_center)
+		var angle_rad  := deg_to_rad(float(def["angle"]))
+		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
+		var btn        := _make_hit_button(def, btn_center)
 		container.add_child(btn)
 		_action_btns.append(btn)
 
-		# Micro-warp cooldown badge
 		if def["type"] == 4:
 			_warp_cd_label = Label.new()
-			_warp_cd_label.add_theme_font_size_override("font_size", 11)
+			_warp_cd_label.add_theme_font_size_override("font_size", int(11 * S))
 			_warp_cd_label.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
-			_warp_cd_label.position = btn_center + Vector2(-14, -BTN_HIT_SIZE.y * 0.5 - 18)
-			_warp_cd_label.size     = Vector2(60, 18)
+			_warp_cd_label.position    = btn_center + Vector2(-14.0 * S, -_btn_hit.y * 0.5 - 18.0 * S)
+			_warp_cd_label.size        = Vector2(60.0 * S, 18.0 * S)
 			_warp_cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			container.add_child(_warp_cd_label)
 
 func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = BTN_HIT_SIZE
-	btn.position = btn_center - BTN_HIT_SIZE * 0.5
+	btn.custom_minimum_size = _btn_hit
+	btn.position = btn_center - _btn_hit * 0.5
 	# Transparent normal state — art image provides the visual
 	var style_clear := StyleBoxEmpty.new()
 	btn.add_theme_stylebox_override("normal",   style_clear)
