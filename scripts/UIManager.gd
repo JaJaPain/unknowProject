@@ -300,6 +300,7 @@ var selection_marker: Control
 var selected_row_style: StyleBoxFlat
 
 func _ready():
+	add_to_group("ui_manager")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Configure selected row highlight stylebox
 	selected_row_style = StyleBoxFlat.new()
