@@ -228,7 +228,7 @@ func _build_wheel() -> void:
 	# Invisible hit-area buttons
 	_action_btns.clear()
 	for i in ACTION_DEFS.size():
-		var def        := ACTION_DEFS[i]
+		var def: Dictionary = ACTION_DEFS[i]
 		var angle_rad  := deg_to_rad(float(def["angle"]))
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
 		var btn        := _make_hit_button(def, btn_center)
