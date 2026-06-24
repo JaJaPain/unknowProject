@@ -240,6 +240,7 @@ func _exec_fire() -> void:
 	AudioManager.play_laser(player_node.global_position)
 	if enemy_node.has_method("take_damage"):
 		enemy_node.take_damage(dmg, "player")
+	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
 
 func _exec_boost(params: Dictionary) -> void:
 	var dir: String = params.get("direction", "closer")
@@ -261,12 +262,12 @@ func _exec_shield_reroute(params: Dictionary) -> void:
 func _exec_attack_drone() -> void:
 	if not is_instance_valid(enemy_node):
 		return
-	# Trigger the visual on the player ship — drones animate toward the enemy.
 	if player_node.has_method("launch_combat_drone"):
 		player_node.launch_combat_drone(enemy_node)
 	var drone_dmg := _resolve_player_hit(GlobalState.weapon_damage * 0.4)
 	if enemy_node.has_method("take_damage"):
 		enemy_node.take_damage(drone_dmg, "player")
+	GlobalState.emit_chatter("COMBAT", "Drone hits for %d damage." % int(drone_dmg), Color(0.3, 0.9, 0.9))
 
 func _exec_micro_warp() -> void:
 	if micro_warp_cooldown > 0 or not is_instance_valid(enemy_node):
@@ -363,12 +364,14 @@ func _execute_npc_intent() -> void:
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 10.0), intent)
 			if player_node.has_method("take_damage"):
 				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
+			GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"flank":
 			range_band = CombatActionType.RangeBand.CLOSE
 			intent["flanking"] = true
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 8.0), intent)
 			if player_node.has_method("take_damage"):
 				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
+			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"disable_engines":
 			# Costs player 1 AP next turn (clamped in _restore_ap).
 			ap_max = max(2, ap_max - 1)

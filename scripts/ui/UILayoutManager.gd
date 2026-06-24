@@ -76,6 +76,11 @@ func register_panel(id: String, panel: Control) -> void:
 	panel.position = Vector2(float(entry.get("x", panel.position.x)), float(entry.get("y", panel.position.y)))
 	if entry.has("w"):
 		panel.size = Vector2(float(entry.get("w", panel.size.x)), float(entry.get("h", panel.size.y))).max(MIN_PANEL_SIZE)
+	# Clamp so a saved position from a different scale/resolution can't land off-screen
+	var vp := panel.get_viewport()
+	if vp:
+		var vp_size := vp.get_visible_rect().size
+		panel.position = panel.position.clamp(Vector2.ZERO, (vp_size - panel.size).max(Vector2.ZERO))
 
 
 func toggle_edit_mode() -> void:

@@ -130,7 +130,8 @@ func _build_wheel() -> void:
 	var half_w := wheel_sz * 0.5 + _btn_radius + _btn_hit.x * 0.5 + 10.0 * S
 	var half_h := wheel_sz * 0.5 + _btn_radius + _btn_hit.y * 0.5 + 10.0 * S
 
-	var default_pos := vp_size * 0.5 - Vector2(half_w, half_h + 30.0 * S)
+	# Right-centre default — clear of chat panel on left, clear of screen edge on right
+	var default_pos := Vector2(vp_size.x * 0.60 - half_w, vp_size.y * 0.45 - half_h)
 
 	var container := Control.new()
 	container.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -299,7 +300,12 @@ func _make_digit_rect(digit: int, digit_w: float, digit_h: float) -> TextureRect
 	r.texture             = atlas
 	r.stretch_mode        = TextureRect.STRETCH_SCALE
 	r.ignore_texture_size = true
-	r.modulate            = Color(0.40, 0.85, 1.0)
+	# Shader: treat white as transparent, tint dark pixels cyan
+	var sh := Shader.new()
+	sh.code = "shader_type canvas_item;\nvoid fragment(){\nvec4 c=texture(TEXTURE,UV);\nfloat lum=dot(c.rgb,vec3(0.3,0.59,0.11));\nCOLOR=vec4(0.35,0.85,1.0,1.0-lum*lum);\n}"
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	r.material = mat
 	return r
 
 func _set_ap_display(current: int, max_ap: int) -> void:
