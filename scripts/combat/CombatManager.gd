@@ -244,6 +244,8 @@ func _exec_fire() -> void:
 		return
 	var dmg := _resolve_player_hit(_fire_damage * _fire_multiplier)
 	AudioManager.play_laser(player_node.global_position)
+	if player_node.has_method("spawn_projectile"):
+		player_node.spawn_projectile(enemy_node)
 	if enemy_node.has_method("take_damage"):
 		enemy_node.take_damage(dmg, "player")
 	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
@@ -368,6 +370,8 @@ func _execute_npc_intent() -> void:
 	match itype:
 		"fire", "hull_shot", "suppression":
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 10.0), intent)
+			if enemy_node.has_method("spawn_projectile"):
+				enemy_node.spawn_projectile(player_node)
 			if player_node.has_method("take_damage"):
 				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
 			GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
@@ -375,6 +379,8 @@ func _execute_npc_intent() -> void:
 			range_band = CombatActionType.RangeBand.CLOSE
 			intent["flanking"] = true
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 8.0), intent)
+			if enemy_node.has_method("spawn_projectile"):
+				enemy_node.spawn_projectile(player_node)
 			if player_node.has_method("take_damage"):
 				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
 			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))

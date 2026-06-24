@@ -95,6 +95,14 @@ var fire_cooldown: float = 0.0
 # Camera controls
 var camera_aligned: bool = true
 var last_nav_mode: String = "MANUAL"
+
+# ── Combat orbit camera ────────────────────────────────────────────────────────
+var _in_combat_orbit:    bool    = false
+var _orbit_angle:        float   = 0.0
+var _orbit_radius:       float   = 40.0
+var _orbit_midpoint:     Vector3 = Vector3.ZERO
+const _ORBIT_SPEED  := 0.10   # rad/s, wall-clock
+const _ORBIT_HEIGHT := 14.0   # units above midpoint
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -133,15 +141,76 @@ func _ready():
 	camera_pivot.global_position = global_position
 	camera_pivot.rotation_degrees = Vector3(-15, 0, 0) # Pitch down, looking at player
 	
-	# Connect to target change signal
 	GlobalState.target_changed.connect(_on_target_changed)
-	
-	# Create two orbiting drones
+	CombatManager.combat_started.connect(_on_combat_started_orbit)
+	CombatManager.combat_ended.connect(_on_combat_ended_orbit)
+
 	_create_drones()
 	_create_boost_effects()
 
 func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
+
+# ── Combat orbit camera ────────────────────────────────────────────────────────
+func _on_combat_started_orbit(enemy: Node) -> void:
+	if not is_instance_valid(enemy):
+		return
+	_orbit_midpoint = (global_position + enemy.global_position) * 0.5
+	var sep := global_position.distance_to(enemy.global_position)
+	_orbit_radius   = _find_safe_orbit_radius(enemy, sep)
+	# Start orbit angle from current camera yaw so the transition is seamless
+	var to_cam := camera_pivot.global_position - _orbit_midpoint
+	_orbit_angle    = atan2(to_cam.x, to_cam.z)
+	_in_combat_orbit = true
+
+func _on_combat_ended_orbit(_won: bool) -> void:
+	_in_combat_orbit = false
+	# Snap pivot back above the ship so the next frame resumes normal follow
+	camera_pivot.global_position = global_position
+
+func _process(delta: float) -> void:
+	if not _in_combat_orbit:
+		return
+	# Use wall-clock delta so orbit speed is constant regardless of time_scale slow-mo
+	var real_delta := delta / maxf(Engine.time_scale, 0.01)
+	_orbit_angle   += _ORBIT_SPEED * real_delta
+	var x := sin(_orbit_angle) * _orbit_radius
+	var z := cos(_orbit_angle) * _orbit_radius
+	var target_pos := _orbit_midpoint + Vector3(x, _ORBIT_HEIGHT, z)
+	# Smooth glide toward orbit position (fast enough to feel snappy on entry)
+	camera_pivot.global_position = camera_pivot.global_position.lerp(target_pos, minf(real_delta * 4.0, 1.0))
+	if camera_pivot.global_position.distance_to(_orbit_midpoint) > 0.5:
+		camera_pivot.look_at(_orbit_midpoint, Vector3.UP)
+
+func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
+	var min_r := maxf(ship_sep * 0.9, 28.0)
+	var max_r := maxf(ship_sep * 2.2, 90.0)
+	var space  := get_world_3d().direct_space_state
+	var excl   := [get_rid()]
+	if is_instance_valid(enemy) and enemy is CollisionObject3D:
+		excl.append(enemy.get_rid())
+	for ri in range(4):
+		var r := lerpf(min_r, max_r, float(ri) / 3.0)
+		for ai in range(8):
+			var angle := TAU * float(ai) / 8.0
+			var pos   := _orbit_midpoint + Vector3(sin(angle) * r, _ORBIT_HEIGHT, cos(angle) * r)
+			if _orbit_pos_clear(space, excl, pos):
+				_orbit_angle = angle
+				return r
+	return min_r  # fallback
+
+func _orbit_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3) -> bool:
+	# Ray toward midpoint
+	var q1 := PhysicsRayQueryParameters3D.create(pos, _orbit_midpoint)
+	q1.exclude = excl
+	if not space.intersect_ray(q1).is_empty():
+		return false
+	# Ray toward player
+	var q2 := PhysicsRayQueryParameters3D.create(pos, global_position)
+	q2.exclude = excl
+	if not space.intersect_ray(q2).is_empty():
+		return false
+	return true
 
 func _on_target_changed(new_target: Node3D):
 	last_target = new_target
@@ -369,9 +438,10 @@ func _physics_process(delta: float):
 	# Update drone colors based on health
 	_update_drone_colors()
 			
-	# Follow player position
-	camera_pivot.global_position = global_position
-	
+	# Follow player position (suppressed during combat orbit)
+	if not _in_combat_orbit:
+		camera_pivot.global_position = global_position
+
 	# Autopilot Camera Auto-facing
 	var current_target = GlobalState.active_target
 	if current_target != last_target:
