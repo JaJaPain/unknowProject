@@ -162,8 +162,8 @@ func _create_overlay(id: String) -> void:
 	p.add_child(bar)
 	_overlays[id] = bar
 
-	# Resize handle — bottom-right corner (quest panel is drag-only)
-	if id != "quest":
+	# Resize handle — bottom-right corner (quest + combat panels are drag-only)
+	if id != "quest" and id != "combat":
 		var handle := ColorRect.new()
 		handle.color = RESIZE_COLOR
 		handle.size = Vector2(HANDLE_SIZE, HANDLE_SIZE)

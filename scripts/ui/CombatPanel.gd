@@ -7,9 +7,9 @@ const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
 const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
 
 # ── Layout constants (base values tuned for 1080p; scaled by viewport at build time) ──
-const WHEEL_BASE := 200.0        # wheel diameter at 1080p
-const BTN_RADIUS_BASE    := 88.0
-const BTN_HIT_BASE       := Vector2(50, 38)
+const WHEEL_BASE         := 400.0   # wheel diameter at 1080p
+const BTN_RADIUS_BASE    := 176.0
+const BTN_HIT_BASE       := Vector2(100, 76)
 
 # Computed at _build_wheel() time — used by _refresh_button_states / warp label
 var _ui_scale: float = 1.0
