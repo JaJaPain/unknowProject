@@ -2221,6 +2221,8 @@ func _reset_and_reload_scene() -> void:
 	LLMInterface.reset_for_restart()
 	QuestManager.reset_for_restart()
 	GlobalState.reset_for_restart()
+	StoryManager.reset_for_restart()
+	StoryQuestManager.reset_for_restart()
 	get_tree().reload_current_scene()
 
 

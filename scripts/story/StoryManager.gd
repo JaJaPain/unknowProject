@@ -30,6 +30,13 @@ func _ready() -> void:
 	GlobalState.player_kill.connect(_on_ship_destroyed)
 
 
+func reset_for_restart() -> void:
+	_scheduled_beats.clear()
+	_kill_count_session = 0
+	_dock_count_session = 0
+	_sq_debug_fired = false
+
+
 # ── Public tool: deferred beat scheduling ────────────────────────────────────
 
 # Fire beat_id after the player gets N more kills in this session.
@@ -135,7 +142,7 @@ func _fire_beat(beat_id: String) -> void:
 
 # ── DEV only — remove guard or flip _SQ_DEBUG when done ──────────────────────
 func _fire_debug_story_quest() -> void:
-	if not Engine.has_singleton("StoryQuestManager"):
+	if not is_instance_valid(StoryQuestManager):
 		return
 	var quest_def := {
 		"id":             "debug_sq_reavers_001",

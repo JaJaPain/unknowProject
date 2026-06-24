@@ -44,6 +44,19 @@ func _process(delta: float) -> void:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+func reset_for_restart() -> void:
+	_quest = {}
+	_obj = {}
+	_pending_spawns = {}
+	_spawned_ship_ids = []
+	_time_limit_s = 0.0
+	_time_elapsed_s = 0.0
+	_survive_elapsed_s = 0.0
+	_active = false
+	_finished = false
+	quest_ui_hidden.emit()
+
+
 func is_active() -> bool:
 	return _active
 
