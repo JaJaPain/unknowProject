@@ -274,10 +274,10 @@ func _make_disabled_overlay(dis_tex: Texture2D, angle_deg: float) -> TextureRect
 	var ih := float(dis_tex.get_height())
 	var icx := iw * 0.5
 	var icy := ih * 0.5
-	# Buttons sit at ~38% of half-image-width from centre in the source art.
-	var img_btn_r  := iw * 0.38
-	var crop_w     := iw * 0.28
-	var crop_h     := ih * 0.26
+	# Buttons sit at ~42% of half-image-width from centre in the source art.
+	var img_btn_r  := iw * 0.42
+	var crop_w     := iw * 0.30
+	var crop_h     := ih * 0.28
 	var a          := deg_to_rad(angle_deg)
 	var bx         := icx + cos(a) * img_btn_r
 	var by         := icy + sin(a) * img_btn_r
