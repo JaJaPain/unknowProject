@@ -227,12 +227,25 @@ func _build_wheel() -> void:
 
 	# Invisible hit-area buttons
 	_action_btns.clear()
-	for def in ACTION_DEFS:
+	for i in ACTION_DEFS.size():
+		var def        := ACTION_DEFS[i]
 		var angle_rad  := deg_to_rad(float(def["angle"]))
 		var btn_center := center + Vector2(cos(angle_rad), sin(angle_rad)) * _btn_radius
-		var btn := _make_hit_button(def, btn_center)
+		var btn        := _make_hit_button(def, btn_center)
 		container.add_child(btn)
 		_action_btns.append(btn)
+
+		# Hover glow — tween active image brightness so player knows it's clickable
+		var active_ref: TextureRect = _btn_active[i]
+		btn.mouse_entered.connect(func():
+			if not btn.disabled:
+				var tw := active_ref.create_tween()
+				tw.tween_property(active_ref, "modulate", Color(1.35, 1.35, 1.35), 0.08)
+		)
+		btn.mouse_exited.connect(func():
+			var tw := active_ref.create_tween()
+			tw.tween_property(active_ref, "modulate", Color(1.0, 1.0, 1.0), 0.12)
+		)
 
 		if def["type"] == 4:
 			_warp_cd_label = Label.new()
