@@ -179,6 +179,7 @@ var quest_tracker_nav_label: Label
 
 # Story Quest HUD indicator (top-right, parallel to quest tracker)
 var _story_quest_panel: PanelContainer = null
+var _quest_stack: VBoxContainer = null
 var _story_quest_title_label: Label = null
 var _story_quest_obj_label: Label = null
 var _story_quest_timer_label: Label = null
@@ -562,10 +563,14 @@ func _create_hud():
 	branch_map.visible = false
 	add_child(branch_map)
 
+	_quest_stack = VBoxContainer.new()
+	_quest_stack.position = Vector2(20, 220)
+	_quest_stack.add_theme_constant_override("separation", 6)
+	add_child(_quest_stack)
+
 	quest_tracker_panel = PanelContainer.new()
 	quest_tracker_panel.custom_minimum_size = Vector2(380, 0)
-	quest_tracker_panel.position = Vector2(20, 220)
-	add_child(quest_tracker_panel)
+	_quest_stack.add_child(quest_tracker_panel)
 
 	var tracker_style = StyleBoxFlat.new()
 	tracker_style.bg_color = Color(0.1, 0.1, 0.12, 0.6)
@@ -7895,17 +7900,8 @@ func _update_quest_tracker_logo(faction: String):
 
 func _create_story_quest_panel() -> void:
 	_story_quest_panel = PanelContainer.new()
-	_story_quest_panel.anchor_left   = 1.0
-	_story_quest_panel.anchor_right  = 1.0
-	_story_quest_panel.anchor_top    = 0.0
-	_story_quest_panel.anchor_bottom = 0.0
-	_story_quest_panel.offset_left   = -400.0
-	_story_quest_panel.offset_right  = -20.0
-	_story_quest_panel.offset_top    = 20.0
-	_story_quest_panel.offset_bottom = 20.0
-	_story_quest_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_story_quest_panel.grow_vertical   = Control.GROW_DIRECTION_END
-	_story_quest_panel.mouse_filter    = Control.MOUSE_FILTER_IGNORE
+	_story_quest_panel.custom_minimum_size = Vector2(380, 0)
+	_story_quest_panel.mouse_filter        = Control.MOUSE_FILTER_IGNORE
 
 	var style := StyleBoxFlat.new()
 	style.bg_color           = Color(0.06, 0.04, 0.10, 0.82)
@@ -7923,7 +7919,7 @@ func _create_story_quest_panel() -> void:
 	style.content_margin_top    = 8
 	style.content_margin_bottom = 8
 	_story_quest_panel.add_theme_stylebox_override("panel", style)
-	add_child(_story_quest_panel)
+	_quest_stack.add_child(_story_quest_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 3)
@@ -7958,7 +7954,7 @@ func _create_story_quest_panel() -> void:
 	_story_quest_title_label.add_theme_font_size_override("font_size", 13)
 	_story_quest_title_label.add_theme_color_override("font_color", Color(0.95, 0.9, 1.0))
 	_story_quest_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_story_quest_title_label.custom_minimum_size = Vector2(360, 0)
+	_story_quest_title_label.custom_minimum_size = Vector2(0, 0)
 	vbox.add_child(_story_quest_title_label)
 
 	_story_quest_obj_label = Label.new()
