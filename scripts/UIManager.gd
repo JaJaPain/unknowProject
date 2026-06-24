@@ -5002,14 +5002,9 @@ func queue_kaelen_voice_message(text: String) -> void:
 		_kaelen_intel_btn.visible = true
 
 
-func _on_kaelen_intel_btn_pressed() -> void:
-	if _pending_kaelen_intel.is_empty():
+func open_kaelen_hail(line: String) -> void:
+	if line.is_empty():
 		return
-	var line := _pending_kaelen_intel
-	_pending_kaelen_intel = ""
-	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
-		_kaelen_intel_btn.visible = false
-	# Populate the comms hail panel with Kaelen's portrait and the intel line
 	var portrait_tex: Texture2D = GameContentRegistry.shared().portrait_texture(_kaelen_mood_portrait_id("neutral"))
 	comms_hail_portrait.texture = portrait_tex
 	comms_hail_message.text = line
@@ -5041,6 +5036,16 @@ func _on_kaelen_intel_btn_pressed() -> void:
 	comms_hail_choices_container.add_child(dismiss_btn)
 	comms_hail_panel.visible = true
 	SpeechService.play(line, GlobalState.KAELEN_VOICE_PROFILE_ID)
+
+
+func _on_kaelen_intel_btn_pressed() -> void:
+	if _pending_kaelen_intel.is_empty():
+		return
+	var line := _pending_kaelen_intel
+	_pending_kaelen_intel = ""
+	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
+		_kaelen_intel_btn.visible = false
+	open_kaelen_hail(line)
 
 
 func _cache_mechanic_intro() -> void:

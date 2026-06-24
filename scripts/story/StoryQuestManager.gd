@@ -173,12 +173,12 @@ func _deliver_hook(hook: Dictionary) -> void:
 				ui.show_intercepted_transmission(text, delay_s)
 		"kaelen_voice":
 			var ui := _find_ui_manager()
-			if ui and ui.has_method("queue_kaelen_voice_message"):
+			if ui and ui.has_method("open_kaelen_hail"):
 				if delay_s > 0.0:
 					await get_tree().create_timer(delay_s).timeout
 					if not is_instance_valid(self) or not _active:
 						return
-				ui.queue_kaelen_voice_message(text)
+				ui.open_kaelen_hail(text)
 		"planted_npc":
 			# Merge the npc sub-dict into story_planted_npc, adding advances_quest flag
 			var npc_def: Dictionary = hook.get("npc", {}).duplicate(true)
@@ -275,11 +275,11 @@ func _complete_quest() -> void:
 		var color := Color(0.85, 0.5, 1.0) if sender == "Kaelen" else Color(0.8, 0.9, 0.8)
 		GlobalState.emit_chatter(sender if not sender.is_empty() else "System", line, color)
 
-	# Kaelen voice button
+	# Kaelen incoming hail on completion
 	if bool(complete_def.get("kaelen_voice", false)) and not line.is_empty():
 		var ui := _find_ui_manager()
-		if ui and ui.has_method("queue_kaelen_voice_message"):
-			ui.queue_kaelen_voice_message(line)
+		if ui and ui.has_method("open_kaelen_hail"):
+			ui.open_kaelen_hail(line)
 
 	quest_completed.emit(str(_quest.get("id", "")))
 	quest_ui_hidden.emit()
