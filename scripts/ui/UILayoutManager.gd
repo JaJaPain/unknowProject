@@ -13,7 +13,7 @@ const EDIT_TINT := Color(0.3, 0.7, 1.0, 0.25)
 const RESIZE_COLOR := Color(0.3, 0.7, 1.0, 0.6)
 
 # Panel ids — order matches JSON keys
-const PANEL_IDS := ["hud", "chat", "overview", "target", "quest"]
+const PANEL_IDS := ["hud", "chat", "overview", "target", "quest", "combat"]
 
 var _panels: Dictionary = {}         # id -> Control
 var _overlays: Dictionary = {}       # id -> Control (drag bar overlay)
@@ -57,6 +57,25 @@ func setup(
 	# L button is created by caller (UIManager) alongside M and I — just store ref
 	# Caller must call toggle_edit_mode() when L is pressed
 	return null
+
+
+func register_panel(id: String, panel: Control) -> void:
+	_panels[id] = panel
+	_to_pixel_pos(panel)
+	# Apply saved position for this panel if it exists in the layout file
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if not f:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	if not parsed is Dictionary or not parsed.has(id):
+		return
+	var entry: Dictionary = parsed[id]
+	panel.position = Vector2(float(entry.get("x", panel.position.x)), float(entry.get("y", panel.position.y)))
+	if entry.has("w"):
+		panel.size = Vector2(float(entry.get("w", panel.size.x)), float(entry.get("h", panel.size.y))).max(MIN_PANEL_SIZE)
 
 
 func toggle_edit_mode() -> void:
@@ -196,6 +215,8 @@ func _create_placeholder(id: String) -> void:
 
 
 func _snap_back_if_overlapping(id: String) -> void:
+	if id == "combat":
+		return  # combat wheel is on its own CanvasLayer; position space differs
 	var p: Control = _panels[id]
 	var p_rect := Rect2(p.position, p.size)
 	for other_id in PANEL_IDS:

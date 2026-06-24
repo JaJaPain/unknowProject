@@ -25,6 +25,7 @@ const ACTION_DEFS := [
 ]
 
 # ── Node refs ─────────────────────────────────────────────────────────────────
+var _wheel_panel:   Control   # exposed for UILayoutManager drag registration
 var _root:          Control
 var _ap_label:      Label
 var _intent_label:  Label
@@ -103,21 +104,28 @@ func _build_intent_bar() -> void:
 	_root.add_child(_intent_label)
 
 # ── Wheel ─────────────────────────────────────────────────────────────────────
+func get_wheel_panel() -> Control:
+	return _wheel_panel
+
 func _build_wheel() -> void:
-	# Anchor container at screen centre
 	var half_w: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.x * 0.5 + 10
 	var half_h: float = WHEEL_DISPLAY_SIZE * 0.5 + BTN_RADIUS + BTN_HIT_SIZE.y * 0.5 + 10
-	var container := Control.new()
-	container.set_anchors_preset(Control.PRESET_CENTER)
-	container.offset_left   = -half_w
-	container.offset_right  =  half_w
-	container.offset_top    = -half_h - 30.0   # shift up 30px to clear execute row
-	container.offset_bottom =  half_h - 30.0
-	container.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(container)
+	var panel_w := half_w * 2.0
+	var panel_h := half_h * 2.0
 
-	var half: float = (container.offset_right - container.offset_left) * 0.5
-	var center := Vector2(half, half)
+	# Default position: roughly screen centre (UILayoutManager overrides from save file)
+	var vp_size := get_viewport().get_visible_rect().size
+	var default_pos := vp_size * 0.5 - Vector2(half_w, half_h + 30.0)
+
+	var container := Control.new()
+	container.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	container.position    = default_pos
+	container.size        = Vector2(panel_w, panel_h)
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(container)
+	_wheel_panel = container
+
+	var center := Vector2(half_w, half_h)
 
 	# BlankWheel background ring
 	var wheel_tex := load(TEX_WHEEL) as Texture2D
