@@ -3,7 +3,7 @@ extends CanvasLayer
 # ── Asset paths ────────────────────────────────────────────────────────────────
 const ASSET_DIR          := "res://assets/CombatWheel/"
 const TEX_WHEEL          := ASSET_DIR + "BlankWheel.png"
-const TEX_BUTTONS_ART    := ASSET_DIR + "ButtonsWithNumbers.png"   # swap to ButtonsWithoutNumbers once bg removed
+const TEX_BUTTONS_ART    := ASSET_DIR + "withoutNumbers2.png"
 const TEX_INTENT_BAR     := ASSET_DIR + "intentBar.png"
 
 # ── Layout constants ──────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ func _build_wheel() -> void:
 	art_rect.custom_minimum_size = Vector2(art_size, art_size)
 	art_rect.position       = center - Vector2(art_size * 0.5, art_size * 0.5)
 	art_rect.mouse_filter   = Control.MOUSE_FILTER_IGNORE
-	art_rect.modulate       = Color(1, 1, 1, 0.0)  # hidden until bg-removed version ready
+	art_rect.modulate       = Color(1, 1, 1, 1.0)
 	container.add_child(art_rect)
 
 	# Dark square behind AP number (covers the bright centre hole in BlankWheel)
