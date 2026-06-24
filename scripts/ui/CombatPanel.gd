@@ -204,6 +204,27 @@ func _build_wheel() -> void:
 			_warp_cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			container.add_child(_warp_cd_label)
 
+	# Enemy HP bar — centered directly above the wheel, travels with it when dragged
+	var ebar_w  := 220.0 * S
+	var ebar_h  := 20.0  * S
+	var elbl_h  := 18.0  * S
+	var emargin := 10.0  * S
+	var wheel_top := center.y - wheel_sz * 0.5
+
+	_enemy_label = _make_hp_label("ENEMY")
+	_enemy_label.size     = Vector2(ebar_w, elbl_h)
+	_enemy_label.position = Vector2(center.x - ebar_w * 0.5, wheel_top - emargin - elbl_h - ebar_h)
+	_enemy_label.add_theme_font_size_override("font_size", int(11 * S))
+	_enemy_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_enemy_label)
+
+	_enemy_bar = _make_hp_bar(Color(0.85, 0.25, 0.25))
+	_enemy_bar.custom_minimum_size = Vector2(ebar_w, ebar_h)
+	_enemy_bar.size     = Vector2(ebar_w, ebar_h)
+	_enemy_bar.position = Vector2(center.x - ebar_w * 0.5, wheel_top - emargin - ebar_h)
+	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_enemy_bar)
+
 func _make_hit_button(def: Dictionary, btn_center: Vector2) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = _btn_hit
@@ -237,21 +258,8 @@ func _build_hp_bars() -> void:
 	_player_bar.offset_bottom = -30
 	_root.add_child(_player_bar)
 
-	_enemy_label = _make_hp_label("ENEMY")
-	_enemy_label.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_enemy_label.offset_left   = -200
-	_enemy_label.offset_right  = -30
-	_enemy_label.offset_top    = -80
-	_enemy_label.offset_bottom = -58
-	_root.add_child(_enemy_label)
-
-	_enemy_bar = _make_hp_bar(Color(0.85, 0.25, 0.25))
-	_enemy_bar.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_enemy_bar.offset_left   = -200
-	_enemy_bar.offset_right  = -30
-	_enemy_bar.offset_top    = -55
-	_enemy_bar.offset_bottom = -30
-	_root.add_child(_enemy_bar)
+	# _enemy_label and _enemy_bar are created inside _build_wheel() so they
+	# travel with the wheel when the player drags it.
 
 func _make_hp_label(text: String) -> Label:
 	var lbl := Label.new()
