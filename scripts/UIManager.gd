@@ -8014,10 +8014,10 @@ func _reposition_story_quest_panel() -> void:
 
 func _create_comms_hail_panel() -> void:
 	comms_hail_panel = PanelContainer.new()
-	comms_hail_panel.anchor_left = 0.2
-	comms_hail_panel.anchor_right = 0.8
-	comms_hail_panel.anchor_top = 0.25
-	comms_hail_panel.anchor_bottom = 0.25
+	comms_hail_panel.anchor_left   = 0.25
+	comms_hail_panel.anchor_right  = 0.75
+	comms_hail_panel.anchor_top    = 0.35
+	comms_hail_panel.anchor_bottom = 0.35
 	comms_hail_panel.grow_vertical = Control.GROW_DIRECTION_END
 	comms_hail_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(comms_hail_panel)
