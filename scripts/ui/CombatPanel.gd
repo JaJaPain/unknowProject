@@ -47,6 +47,8 @@ var _player_bar:       ProgressBar
 var _enemy_bar:        ProgressBar
 var _player_label:     Label
 var _enemy_label:      Label
+var _enemy_brace_chip:  Label
+var _enemy_shield_chip: Label
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
@@ -85,6 +87,7 @@ func _ready() -> void:
 	CombatManager.ap_changed.connect(_on_ap_changed)
 	CombatManager.action_queued.connect(_on_action_queued)
 	CombatManager.action_dequeued.connect(_on_action_dequeued)
+	CombatManager.enemy_status_changed.connect(_on_enemy_status_changed)
 
 func _build_ui() -> void:
 	_root = Control.new()
@@ -284,6 +287,29 @@ func _build_wheel() -> void:
 	_enemy_bar.position = Vector2(center.x - ebar_w * 0.5, wheel_top - emargin - ebar_h)
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
+
+	# Status chips — shown when enemy has an active defensive state.
+	var chip_y := wheel_top - emargin - ebar_h - elbl_h - 20.0 * S
+	var chip_h := 16.0 * S
+	_enemy_brace_chip = Label.new()
+	_enemy_brace_chip.text = "⛨ BRACED"
+	_enemy_brace_chip.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
+	_enemy_brace_chip.add_theme_font_size_override("font_size", int(10 * S))
+	_enemy_brace_chip.size = Vector2(ebar_w * 0.5, chip_h)
+	_enemy_brace_chip.position = Vector2(center.x - ebar_w * 0.5, chip_y)
+	_enemy_brace_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_enemy_brace_chip.visible = false
+	container.add_child(_enemy_brace_chip)
+
+	_enemy_shield_chip = Label.new()
+	_enemy_shield_chip.text = "⚡ SHIELDED"
+	_enemy_shield_chip.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2))
+	_enemy_shield_chip.add_theme_font_size_override("font_size", int(10 * S))
+	_enemy_shield_chip.size = Vector2(ebar_w * 0.5, chip_h)
+	_enemy_shield_chip.position = Vector2(center.x, chip_y)
+	_enemy_shield_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_enemy_shield_chip.visible = false
+	container.add_child(_enemy_shield_chip)
 
 # ── Wheel hit-testing ───────────────────────────────────────────────────────────
 # Pixel-perfect: sample each wedge image's alpha at the cursor and pick the one
@@ -557,6 +583,12 @@ func _on_action_queued(action: Dictionary) -> void:
 
 func _on_action_dequeued() -> void:
 	_remove_last_queue_chip()
+
+func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
+	if is_instance_valid(_enemy_brace_chip):
+		_enemy_brace_chip.visible = brace
+	if is_instance_valid(_enemy_shield_chip):
+		_enemy_shield_chip.visible = shield
 
 # ── Button callbacks ───────────────────────────────────────────────────────────
 func _on_action_pressed(action_type: int) -> void:
