@@ -1029,6 +1029,10 @@ func _plan_gunner(plan: Array, ap: int, hp_ratio: float, intel: float) -> void:
 	if hp_ratio < 0.25 and ap >= 2:
 		plan.append(_action_fire(damage_max * randf_range(1.4, 1.8), "Desperation hull shot"))
 		ap -= 2
+	# Smart Gunners brace on early turns when healthy — costs 2 AP, fires once instead of twice.
+	if intel >= 0.6 and hp_ratio >= 0.50 and ap >= 4 and randf() < 0.30:
+		plan.append(_action_brace())
+		ap -= 2
 	# Fill remaining AP with fire. Dumb Gunners sometimes fire suppression instead.
 	while ap >= 2:
 		if intel < 0.35 and randf() < 0.5:
