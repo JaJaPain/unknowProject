@@ -109,8 +109,9 @@ const _ORBIT_SPEED  := 0.10   # rad/s, wall-clock
 const _ORBIT_HEIGHT := 14.0   # units above midpoint
 const _ACTION_LERP  := 6.5    # snappier glide for punch-in framing
 const _ORBIT_LERP   := 3.0
-var dock_stuck_timer: float = 0.0
-var last_dock_distance: float = INF
+# Camera shake (decaying thud, applied via camera h/v offset)
+var _shake_strength: float = 0.0
+var _shake_decay:    float = 0.0
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -200,12 +201,23 @@ func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -
 	AudioManager.play_sfx(CombatManager.SFX.get("cam_whoosh"), -8.0)
 
 # Quick push toward the impact point (shake added in Phase 3).
-func _on_action_impact_cam(_target: Node, world_pos: Vector3, _dmg: float, _lethal: bool, _blocked: bool, _crit: bool) -> void:
+func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _lethal: bool, blocked: bool, crit: bool) -> void:
 	if _cam_mode != 2:
 		return
 	# Nudge the look + goal a touch toward the impact for a reactive feel.
 	_cam_look_at = _cam_look_at.lerp(world_pos, 0.5)
 	_cam_goal_pos = _cam_goal_pos.lerp(world_pos, 0.12)
+	# Shake scales with damage; blocked hits barely rattle, crits hit hard.
+	var mag := clampf(dmg / 30.0, 0.15, 1.0)
+	if blocked:
+		mag *= 0.4
+	if crit:
+		mag *= 1.4
+	_trigger_shake(mag)
+
+func _trigger_shake(strength: float) -> void:
+	_shake_strength = maxf(_shake_strength, clampf(strength, 0.0, 1.5))
+	_shake_decay = _shake_strength
 
 func _frame_action(source: Node, target: Node) -> void:
 	var src: Vector3 = (source as Node3D).global_position
@@ -258,6 +270,14 @@ func _process(delta: float) -> void:
 		_cam_goal_pos, minf(real_delta * _cam_lerp_speed, 1.0))
 	if camera_pivot.global_position.distance_to(_cam_look_at) > 0.5:
 		camera_pivot.look_at(_cam_look_at, Vector3.UP)
+	# Decaying camera shake on top of the framing.
+	if _shake_strength > 0.0:
+		_shake_strength = maxf(0.0, _shake_strength - _shake_decay * real_delta * 2.5)
+		camera.h_offset = randf_range(-_shake_strength, _shake_strength)
+		camera.v_offset = randf_range(-_shake_strength, _shake_strength)
+	elif camera.h_offset != 0.0 or camera.v_offset != 0.0:
+		camera.h_offset = 0.0
+		camera.v_offset = 0.0
 
 func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
 	var min_r := maxf(ship_sep * 0.9, 28.0)

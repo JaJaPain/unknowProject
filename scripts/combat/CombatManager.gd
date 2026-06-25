@@ -1,6 +1,7 @@
 extends Node
 
 const CombatActionType := preload("res://scripts/combat/CombatAction.gd")
+const CombatDamageNumber := preload("res://scripts/visuals/CombatDamageNumber.gd")
 
 # ── Combat SFX (loaded by key) ──────────────────────────────────────────────────
 const _SFX_DIR := "res://assets/CombatWheel/soundfxs/"
@@ -272,7 +273,51 @@ func _apply_hit(target: Node, attacker_faction: String, dmg: float, crit: bool, 
 		var hp = target.get("health")
 		if hp != null and float(hp) <= 0.0:
 			lethal = true
+	# Impact SFX: shield deflect vs hull hit, plus sub-bass thud and a crit layer.
+	if blocked:
+		_sfx("shield_deflect", hit_pos)
+	else:
+		_sfx("hull_impact", hit_pos)
+		_sfx("impact_thud", hit_pos, -3.0)
+	if crit:
+		_sfx("hit_critical", hit_pos)
+	_spawn_damage_number(target, hit_pos, dmg, blocked, crit)
 	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
+	# Hit-stop freeze-frame (skip on lethal — the kill cinematic handles that).
+	if not lethal:
+		_hit_stop(0.07 + (0.05 if crit else 0.0))
+
+# Floating 3D damage number at the hit point. Crit = big + gold, blocked =
+# small + cyan "BLOCKED", normal = orange.
+func _spawn_damage_number(target: Node, hit_pos: Vector3, dmg: float, blocked: bool, crit: bool) -> void:
+	var parent: Node = null
+	if is_instance_valid(target):
+		parent = target.get_parent()
+	if parent == null and is_instance_valid(player_node):
+		parent = player_node.get_parent()
+	if parent == null:
+		return
+	var text: String
+	var color: Color
+	if blocked:
+		text = "BLOCKED %d" % int(dmg)
+		color = Color(0.45, 0.85, 1.0)
+	elif crit:
+		text = "%d!" % int(dmg)
+		color = Color(1.0, 0.85, 0.2)
+	else:
+		text = "%d" % int(dmg)
+		color = Color(1.0, 0.55, 0.2)
+	CombatDamageNumber.spawn(parent, hit_pos, text, color, crit)
+
+# Brief freeze-frame on impact. Fire-and-forget; wall-clock restore so the
+# sequencer's own beats (also wall-clock) keep running underneath.
+func _hit_stop(freeze_sec: float) -> void:
+	_lerp_active = false
+	Engine.time_scale = 0.02
+	await get_tree().create_timer(freeze_sec, true, false, true).timeout
+	if state == State.EXECUTING:
+		Engine.time_scale = 1.0
 
 # Emit the kill beat then end combat (Phase 5 expands this with the cinematic).
 func _kill_and_end(victim: Node, player_won: bool) -> void:
