@@ -262,7 +262,7 @@ func _await_travel(from: Node, to: Node) -> void:
 	await _beat(clampf(d / PROJECTILE_SPEED, TRAVEL_MIN, TRAVEL_MAX))
 
 # Apply damage at projectile-arrival time and emit the impact beat.
-func _apply_hit(target: Node, attacker_faction: String, dmg: float, crit: bool, blocked: bool) -> void:
+func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool) -> void:
 	if not is_instance_valid(target):
 		return
 	var hit_pos: Vector3 = (target as Node3D).global_position
@@ -393,8 +393,10 @@ func _exec_fire() -> void:
 	_sfx("weapon_fire", player_node.global_position)
 	AudioManager.play_laser(player_node.global_position)
 	if player_node.has_method("spawn_projectile"):
-		player_node.spawn_projectile(enemy_node)
+		player_node.spawn_projectile(enemy_node, true)
 	await _await_travel(player_node, enemy_node)
+	if not is_instance_valid(enemy_node):
+		return
 	_apply_hit(enemy_node, "player", dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
 
@@ -427,6 +429,8 @@ func _exec_attack_drone() -> void:
 	_sfx("drone_launch", player_node.global_position)
 	var drone_dmg := _resolve_player_hit(GlobalState.weapon_damage * 0.4)
 	await _await_travel(player_node, enemy_node)
+	if not is_instance_valid(enemy_node):
+		return
 	_apply_hit(enemy_node, "player", drone_dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "Drone hits for %d damage." % int(drone_dmg), Color(0.3, 0.9, 0.9))
 
@@ -537,8 +541,10 @@ func _execute_npc_intent() -> void:
 			_sfx("weapon_fire", enemy_node.global_position)
 			AudioManager.play_laser(enemy_node.global_position)
 			if enemy_node.has_method("spawn_projectile"):
-				enemy_node.spawn_projectile(player_node)
+				enemy_node.spawn_projectile(player_node, true)
 			await _await_travel(enemy_node, player_node)
+			if not is_instance_valid(player_node):
+				return
 			_apply_hit(player_node, npc_faction, npc_dmg, false, blocked)
 			GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"flank":
@@ -549,8 +555,10 @@ func _execute_npc_intent() -> void:
 			_sfx("weapon_fire", enemy_node.global_position)
 			AudioManager.play_laser(enemy_node.global_position)
 			if enemy_node.has_method("spawn_projectile"):
-				enemy_node.spawn_projectile(player_node)
+				enemy_node.spawn_projectile(player_node, true)
 			await _await_travel(enemy_node, player_node)
+			if not is_instance_valid(player_node):
+				return
 			_apply_hit(player_node, npc_faction, npc_dmg, true, blocked)
 			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"disable_engines":

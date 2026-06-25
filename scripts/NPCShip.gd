@@ -727,6 +727,35 @@ func fire():
 		get_parent().add_child(p)
 		p.global_position = spawn_pos
 
+# Cosmetic projectile aimed at a target, used by CombatManager. When visual_only,
+# damage is 0 (CombatManager resolves the real damage on arrival).
+func spawn_projectile(target_node: Node3D, visual_only: bool = false) -> void:
+	if target_node == null or not is_instance_valid(target_node):
+		return
+	var proj_scene = load("res://scenes/projectile.tscn")
+	if not proj_scene:
+		return
+	var p = proj_scene.instantiate()
+	var spawn_pos = global_position + (-global_transform.basis.z * 1.8)
+	if hardpoints.size() > 0:
+		var hp = hardpoints[current_hp_index]
+		if is_instance_valid(hp):
+			spawn_pos = hp.global_position
+		current_hp_index = (current_hp_index + 1) % hardpoints.size()
+	p.direction = (target_node.global_position - spawn_pos).normalized()
+	p.damage = 0.0 if visual_only else randf_range(damage_min, damage_max)
+	p.faction = faction
+	if GlobalState.is_minor_faction(faction):
+		p.color = GlobalState.minor_faction_data(faction).get("projectile", Color.RED)
+	elif faction == "zenith":
+		p.color = Color.BLUE
+	elif faction == "aurelia":
+		p.color = Color.GOLD
+	else:
+		p.color = Color.RED
+	get_parent().add_child(p)
+	p.global_position = spawn_pos
+
 func take_damage(amount: float, attacker_faction: String = ""):
 	if destroyed: return
 	var is_code_enforcement := bool(get_meta("is_code_enforcement", false))

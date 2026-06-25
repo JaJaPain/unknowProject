@@ -1760,21 +1760,23 @@ func perform_action(target_node: Node3D, delta: float):
 	else:
 		mining_laser.visible = false
 
-func spawn_projectile(target_node: Node3D):
+func spawn_projectile(target_node: Node3D, visual_only: bool = false):
 	if target_node == null or not is_instance_valid(target_node):
 		return
 	if GlobalState.has_max_heavy_weapon:
 		engine_stall_timer = max(engine_stall_timer, 0.1)
-		
+
 	var proj_scene = load("res://scenes/projectile.tscn")
 	if proj_scene:
 		var p = proj_scene.instantiate()
-		p.direction = -global_transform.basis.z
-		p.damage = GlobalState.weapon_damage
+		# Aim at the target so the cosmetic shot actually crosses the gap.
+		p.direction = (target_node.global_position - global_position).normalized()
+		# In combat, damage is resolved by CombatManager — keep the shot cosmetic.
+		p.damage = 0.0 if visual_only else GlobalState.weapon_damage
 		p.faction = "player"
 		p.color = Color.CYAN
 		get_parent().add_child(p)
-		p.global_position = global_position + (-global_transform.basis.z * 2.2)
+		p.global_position = global_position + p.direction * 2.2
 
 func double_click_move(click_pos: Vector3):
 	cancel_autopilot()
