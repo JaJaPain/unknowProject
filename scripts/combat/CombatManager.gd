@@ -112,9 +112,21 @@ const TAUNT_REASON_LINES := [
 	"Should've stayed home, idiot.",
 	"This is what you get for flying through here.",
 ]
+# Comedic insults — occasionally fired instead of a straight taunt, regardless
+# of who started it. Same angry delivery; the contrast is the joke.
+const TAUNT_HUMOR_CHANCE := 0.22
+const TAUNT_HUMOR_LINES := [
+	"Hey, wait a minute! Your mom swore she wasn't married. Not my fault!",
+	"Did your mother teach you to fly, or did she give up too?",
+	"I'd insult your ship, but it already looks embarrassed.",
+	"Was that an attack, or did your cat sit on the controls?",
+	"Your mama's so dense, light bends around her cargo hold.",
+	"I've seen escape pods with more fight in them than you.",
+]
 var _player_initiated: bool = false
 var _cached_rage:   Array = []   # [{text, voice}, ...] pre-cached audio pairs
 var _cached_reason: Array = []
+var _cached_humor:  Array = []
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -125,6 +137,7 @@ func _ready() -> void:
 func _build_and_cache_taunts() -> void:
 	_cached_rage   = _make_taunt_pool(TAUNT_RAGE_LINES)
 	_cached_reason = _make_taunt_pool(TAUNT_REASON_LINES)
+	_cached_humor  = _make_taunt_pool(TAUNT_HUMOR_LINES)
 
 func _make_taunt_pool(lines: Array) -> Array:
 	var pool: Array = []
@@ -143,7 +156,12 @@ func _play_combat_taunt() -> void:
 	# dialog — skip the generic taunt for them.
 	if _is_comms_reversal_target():
 		return
-	var pool: Array = _cached_rage if _player_initiated else _cached_reason
+	# Usually anger (aggressor-based); occasionally a comedic jab instead.
+	var pool: Array
+	if randf() < TAUNT_HUMOR_CHANCE and not _cached_humor.is_empty():
+		pool = _cached_humor
+	else:
+		pool = _cached_rage if _player_initiated else _cached_reason
 	if pool.is_empty():
 		return
 	var pick: Dictionary = pool[randi() % pool.size()]
