@@ -538,7 +538,8 @@ func _player_status_float(text: String, color: Color) -> void:
 		return
 	var parent: Node = player_node.get_parent()
 	if parent != null:
-		CombatDamageNumber.spawn(parent, (player_node as Node3D).global_position, text, color, false)
+		# Half-size — status strings are long and were running off-screen.
+		CombatDamageNumber.spawn(parent, (player_node as Node3D).global_position, text, color, false, 0.5)
 
 func _exec_boost(params: Dictionary) -> void:
 	if is_instance_valid(player_node):

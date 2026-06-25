@@ -4,7 +4,7 @@ extends RefCounted
 # Spawns a billboard Label3D at a world position that floats up and fades.
 # Used for combat hit feedback. Wall-clock tween so slow-mo doesn't stall it.
 
-static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: bool = false) -> void:
+static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: bool = false, scale: float = 1.0) -> void:
 	if not is_instance_valid(parent):
 		return
 	var lbl := Label3D.new()
@@ -16,7 +16,7 @@ static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: b
 	lbl.outline_modulate = Color(0, 0, 0, 0.9)
 	lbl.outline_size = 12
 	lbl.font_size = 64 if big else 44
-	lbl.pixel_size = 0.006 if big else 0.0045
+	lbl.pixel_size = (0.012 if big else 0.009) * scale
 	lbl.render_priority = 20
 	lbl.outline_render_priority = 19
 	parent.add_child(lbl)
