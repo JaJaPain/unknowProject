@@ -1102,6 +1102,12 @@ func _action_repair() -> Dictionary:
 func _action_disable_engines() -> Dictionary:
 	return {"type": "disable_engines", "label": "Engine disruption", "damage": 0.0, "ap": 2}
 
+func _action_brace() -> Dictionary:
+	return {"type": "brace", "label": "⛨ Brace", "damage": 0.0, "ap": 2}
+
+func _action_shield_angle() -> Dictionary:
+	return {"type": "shield_angle", "label": "⚡ Shield angle", "damage": 0.0, "ap": 1}
+
 # Legacy single-intent shim (keep for anything still calling generate_intent).
 func generate_intent() -> Dictionary:
 	var plan := generate_action_plan()
