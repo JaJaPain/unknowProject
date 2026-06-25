@@ -4200,6 +4200,7 @@ func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason:
 # callback signature: func(taunts: Dictionary) -> void
 # Keys: npc_open, npc_player_fled_success, npc_player_fled_fail,
 #       npc_low_health, player_low_health, npc_dying,
+#       npc_brace, npc_shield_angle,
 #       kaelen_open, kaelen_player_fled, kaelen_player_low_health,
 #       kaelen_winning, kaelen_kill_confirm
 
@@ -4213,6 +4214,8 @@ const COMBAT_TAUNT_FALLBACKS := {
 	"npc_low_health":         "Lucky shot. Won't happen twice, idiot.",
 	"player_low_health":      "You're falling apart, you worthless junk-heap.",
 	"npc_dying":              "...didn't see that coming.",
+	"npc_brace":              "You'll break your fists on me.",
+	"npc_shield_angle":       "Angles up. Good luck.",
 	"kaelen_open":            "Shiny, you have company. Try not to die — I'm owed money.",
 	"kaelen_player_fled":     "Smart. Heroics don't pay the docking fees.",
 	"kaelen_player_low_health": "Shiny, you look terrible on my sensors right now.",
@@ -4224,7 +4227,7 @@ func request_combat_taunts(npc_faction: String, npc_archetype: String, callback:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
 
-	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 14 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
+	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 16 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
 
 There are TWO speakers. Write each line for the correct one:
 
@@ -4248,6 +4251,8 @@ Return ONLY valid JSON, no markdown fences:
   "npc_low_health": "...",
   "player_low_health": "...",
   "npc_dying": "...",
+  "npc_brace": "...",
+  "npc_shield_angle": "...",
   "kaelen_open": "...",
   "kaelen_player_fled": "...",
   "kaelen_player_low_health": "...",

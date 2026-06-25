@@ -182,6 +182,18 @@ func _play_combat_taunt() -> void:
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
 
+func _play_npc_action_taunt(key: String) -> void:
+	if not _combat_voice_on() or not is_instance_valid(enemy_node):
+		return
+	var line: String = taunts.get(key, "")
+	if line.is_empty():
+		return
+	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
+	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
+	if not _cached_rage.is_empty():
+		var pick: Dictionary = _cached_rage[randi() % _cached_rage.size()]
+		TTSInterface.play_dialogue_audio(line, pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+
 func _play_npc_flee_taunt() -> void:
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):
 		return
@@ -589,6 +601,14 @@ func _player_status_float(text: String, color: Color) -> void:
 		# Half-size — status strings are long and were running off-screen.
 		CombatDamageNumber.spawn(parent, (player_node as Node3D).global_position, text, color, false, 0.5)
 
+# Floating status text above the enemy ship.
+func _enemy_status_float(text: String, color: Color) -> void:
+	if not is_instance_valid(enemy_node):
+		return
+	var parent: Node = enemy_node.get_parent()
+	if parent != null:
+		CombatDamageNumber.spawn(parent, (enemy_node as Node3D).global_position + Vector3(0, 4, 0), text, color, false, 0.5)
+
 func _exec_boost(params: Dictionary) -> void:
 	if is_instance_valid(player_node):
 		_sfx("engine_boost", player_node.global_position)
@@ -839,6 +859,27 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 			enemy_node.health = min(npc_hp + heal, npc_max)
 			_sfx("repair_kit", enemy_node.global_position)
 			GlobalState.emit_chatter("COMBAT", "Enemy repairs — hull patched.", Color(0.4, 0.9, 0.6))
+		"brace":
+			enemy_brace_active = true
+			_sfx("shield_reroute", enemy_node.global_position)
+			_enemy_status_float("BRACE", Color(0.4, 0.7, 1.0))
+			GlobalState.emit_chatter("COMBAT", "Enemy braces — incoming damage reduced.", Color(0.4, 0.7, 1.0))
+			emit_signal("enemy_status_changed", true, enemy_shield_angle_active)
+			_play_npc_action_taunt("npc_brace")
+			if not _told_brace_hint:
+				_told_brace_hint = true
+				GlobalState.emit_chatter("Kaelen", "They're braced. Drone punches right through it.", Color(0.85, 0.5, 1.0))
+		"shield_angle":
+			enemy_shield_angle_active = true
+			_sfx("shield_reroute", enemy_node.global_position)
+			_enemy_status_float("SHIELDED", Color(1.0, 0.5, 0.2))
+			GlobalState.emit_chatter("COMBAT", "Enemy angles shields toward you.", Color(1.0, 0.5, 0.2))
+			emit_signal("enemy_status_changed", enemy_brace_active, true)
+			_spawn_enemy_shield_dome()
+			_play_npc_action_taunt("npc_shield_angle")
+			if not _told_shield_angle_hint:
+				_told_shield_angle_hint = true
+				GlobalState.emit_chatter("Kaelen", "They've angled shields. Flank or drone — both bypass it.", Color(0.85, 0.5, 1.0))
 		"broadcast":
 			GlobalState.emit_chatter(npc_faction.to_upper(), "Calling for reinforcements...", Color(1.0, 0.3, 0.3))
 		"surrender", "panic":
@@ -902,6 +943,49 @@ func _despawn_enemy_shield_dome() -> void:
 	if is_instance_valid(_enemy_shield_dome):
 		_enemy_shield_dome.queue_free()
 	_enemy_shield_dome = null
+
+func _spawn_enemy_shield_dome() -> void:
+	_despawn_enemy_shield_dome()
+	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+		return
+	var parent := enemy_node.get_parent()
+	if parent == null:
+		return
+	_enemy_shield_dome = MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius          = 8.0
+	mesh.height          = 16.0
+	mesh.rings           = 24
+	mesh.radial_segments = 32
+	mesh.is_hemisphere   = true
+	_enemy_shield_dome.mesh = mesh
+	var shader := Shader.new()
+	shader.code = "shader_type spatial;\n" + \
+		"render_mode blend_add, cull_disabled, unshaded, depth_draw_never;\n" + \
+		"uniform vec4 rim_color : source_color = vec4(1.0, 0.35, 0.1, 1.0);\n" + \
+		"uniform float rim_power : hint_range(1.0, 8.0) = 2.5;\n" + \
+		"void fragment() {\n" + \
+		"  float rim = 1.0 - abs(dot(normalize(NORMAL), normalize(VIEW)));\n" + \
+		"  rim = pow(rim, rim_power);\n" + \
+		"  ALBEDO = rim_color.rgb;\n" + \
+		"  ALPHA  = rim;\n" + \
+		"}\n"
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("rim_color", Color(1.0, 0.35, 0.1, 1.0))
+	mat.set_shader_parameter("rim_power", 2.5)
+	_enemy_shield_dome.material_override = mat
+	_enemy_shield_dome.cast_shadow       = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(_enemy_shield_dome)
+	_enemy_shield_dome.global_position = enemy_node.global_position
+	# Orient dome toward the player — flat face points at them.
+	var to_player: Vector3 = ((player_node as Node3D).global_position - (enemy_node as Node3D).global_position).normalized()
+	var up: Vector3 = Vector3.UP
+	var axis: Vector3 = up.cross(to_player)
+	if axis.length_squared() > 0.001:
+		_enemy_shield_dome.global_transform.basis = Basis(axis.normalized(), up.angle_to(to_player))
+	elif to_player.dot(up) < 0.0:
+		_enemy_shield_dome.rotate_object_local(Vector3.RIGHT, PI)
 
 func _after_npc_turn() -> void:
 	# Check for deaths.
