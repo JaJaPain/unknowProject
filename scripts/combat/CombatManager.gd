@@ -268,7 +268,7 @@ func _apply_hit(target: Node, attacker_faction: String, dmg: float, crit: bool, 
 	var hit_pos: Vector3 = (target as Node3D).global_position
 	if target.has_method("take_damage"):
 		target.take_damage(dmg, attacker_faction)
-	var lethal := (not is_instance_valid(target)) or (target.get("destroyed") == true)
+	var lethal: bool = (not is_instance_valid(target)) or (target.get("destroyed") == true)
 	if not lethal and is_instance_valid(target):
 		var hp = target.get("health")
 		if hp != null and float(hp) <= 0.0:
