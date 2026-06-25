@@ -4203,14 +4203,14 @@ func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason:
 #       kaelen_winning, kaelen_kill_confirm
 
 const COMBAT_TAUNT_FALLBACKS := {
-	"npc_open":               "You picked the wrong ship to tangle with.",
-	"npc_jab_1":              "That all you've got, scrapper?",
-	"npc_jab_2":              "I've fought asteroids with more fight in them.",
-	"npc_jab_3":              "Still breathing? Let's fix that.",
-	"npc_player_fled_success":"Run, coward. I'll find you again.",
-	"npc_player_fled_fail":   "Nowhere to run now.",
-	"npc_low_health":         "Lucky shot. Won't happen twice.",
-	"player_low_health":      "Your hull won't hold much longer.",
+	"npc_open":               "You picked the wrong ship, you scrap-brained idiot.",
+	"npc_jab_1":              "That all you've got, you pathetic scrap-rat?",
+	"npc_jab_2":              "I've fought asteroids with more spine than you.",
+	"npc_jab_3":              "Still breathing, scumbag? Let's fix that.",
+	"npc_player_fled_success":"Run, coward. I'll hunt you down.",
+	"npc_player_fled_fail":   "Nowhere to run now, moron.",
+	"npc_low_health":         "Lucky shot. Won't happen twice, idiot.",
+	"player_low_health":      "You're falling apart, you worthless junk-heap.",
 	"npc_dying":              "...didn't see that coming.",
 	"kaelen_open":            "Shiny, you have company. Try not to die — I'm owed money.",
 	"kaelen_player_fled":     "Smart. Heroics don't pay the docking fees.",
@@ -4223,17 +4223,18 @@ func request_combat_taunts(npc_faction: String, npc_archetype: String, callback:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
 
-	var prompt := """You are writing combat banter for a PG-13 space trading game. Generate exactly 14 short lines of dialogue — salty, punchy, under 18 words each. No profanity, but attitude is encouraged. Occasional mom jokes are fair game. Do NOT use placeholder brackets.
+	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 14 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
 
-NPC faction: %s | NPC archetype: %s
-The player pilot goes by "Shiny". Kaelen is the player's cynical broker monitoring via comms.
+There are TWO speakers. Write each line for the correct one:
 
-Tone examples (do not reuse these, write originals with this energy):
-- "Your shields are held together with prayer and bad decisions."
-- "Shiny, your mother flies cargo for the faction you're fighting. Awkward."
-- "You call that a weapon? My recycling drone hits harder."
-- "I've seen asteroids make better evasive maneuvers."
-- "Kaelen here — don't get sentimental, just get paid."
+1) THE ENEMY PILOT — every key starting with "npc_". A hostile %s %s who has NEVER met the player and does NOT know their name. They are a furious stranger trash-talking whoever just attacked them. Use crude, contemptuous insults aimed at the player ("scrap-rat", "you absolute idiot", "listen here, you piece of garbage", "scumbag", "moron"). Mild profanity is fine. NEVER use any name or nickname — they have no idea who the player is. Pure hostility and threats, zero familiarity.
+
+2) KAELEN — every key starting with "kaelen_". The player's cynical, money-minded broker watching the fight over comms. Kaelen KNOWS the player and calls them "Shiny". Dry, sardonic, keep Kaelen's lines clean (PG-13). Kaelen never insults the player crudely — that's the enemy's job.
+
+Tone examples (do not reuse — match the energy):
+- enemy: "You call that a weapon? My recycling drone hits harder, idiot."
+- enemy: "Hold still and die quiet, scrap-rat."
+- kaelen: "Shiny, don't get sentimental. Just get paid."
 
 Return ONLY valid JSON, no markdown fences:
 {

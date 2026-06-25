@@ -365,8 +365,6 @@ func _kill_and_end(victim, player_won: bool) -> void:
 		player_node.get_parent() if is_instance_valid(player_node) else null)
 	if fx_parent != null:
 		ImpactEffect.spawn_explosion(fx_parent, pos, Color(1.0, 0.6, 0.2), 2.5)
-	if player_won:
-		_play_kaelen_line("kaelen_kill_confirm")
 	# Hold on the moment (wall-clock so slow-mo doesn't stretch it).
 	await _beat(1.1)
 	_sfx("combat_sting", null, -3.0)
