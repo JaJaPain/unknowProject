@@ -532,6 +532,14 @@ func _exec_fire() -> void:
 	_apply_hit(enemy_node, "player", dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
 
+# Floating status text at the player — feedback for non-damage actions.
+func _player_status_float(text: String, color: Color) -> void:
+	if not is_instance_valid(player_node):
+		return
+	var parent: Node = player_node.get_parent()
+	if parent != null:
+		CombatDamageNumber.spawn(parent, (player_node as Node3D).global_position, text, color, false)
+
 func _exec_boost(params: Dictionary) -> void:
 	if is_instance_valid(player_node):
 		_sfx("engine_boost", player_node.global_position)
@@ -546,12 +554,22 @@ func _exec_boost(params: Dictionary) -> void:
 			range_band = CombatActionType.RangeBand.MID
 		elif range_band == CombatActionType.RangeBand.MID:
 			range_band = CombatActionType.RangeBand.LONG
+	var band_names := {
+		CombatActionType.RangeBand.LONG: "LONG",
+		CombatActionType.RangeBand.MID:  "MID",
+		CombatActionType.RangeBand.CLOSE: "CLOSE",
+	}
+	_player_status_float("REPOSITION ▸ %s" % band_names.get(range_band, "MID"), Color(0.95, 0.6, 0.2))
+	GlobalState.emit_chatter("COMBAT", "Reposition — range now %s." % str(band_names.get(range_band, "MID")), Color(0.95, 0.6, 0.2))
 
 func _exec_shield_reroute(params: Dictionary) -> void:
 	if is_instance_valid(player_node):
 		_sfx("shield_reroute", player_node.global_position)
 	var face_idx: int = params.get("face", CombatActionType.Face.FRONT)
 	player_shield_face = face_idx as CombatActionType.Face
+	var face_name: String = str(CombatActionType.FACE_LABEL.get(player_shield_face, "Front"))
+	_player_status_float("SHIELD ▸ %s" % face_name.to_upper(), Color(0.85, 0.78, 0.25))
+	GlobalState.emit_chatter("COMBAT", "Shields rerouted — %s facing." % face_name, Color(0.85, 0.78, 0.25))
 
 func _exec_attack_drone() -> void:
 	if not is_instance_valid(enemy_node):
@@ -579,6 +597,8 @@ func _exec_micro_warp() -> void:
 	player_is_flanking = true
 	micro_warp_cooldown = 3
 	range_band = CombatActionType.RangeBand.CLOSE
+	_player_status_float("MICRO-WARP!", Color(0.6, 0.4, 1.0))
+	GlobalState.emit_chatter("COMBAT", "Micro-warp — flanking the enemy.", Color(0.6, 0.4, 1.0))
 
 func _exec_repair_kit() -> void:
 	if not is_instance_valid(player_node):
