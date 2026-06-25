@@ -139,8 +139,9 @@ func _make_taunt_pool(lines: Array) -> Array:
 func _play_combat_taunt() -> void:
 	if not _combat_voice_on():
 		return
-	# Bribe / board-mission ships keep their own branching dialog — no generic taunt.
-	if is_instance_valid(enemy_node) and bool(enemy_node.get_meta("skip_combat_taunt", false)):
+	# Bribe / board-mission (comms-reversal) targets keep their own branching
+	# dialog — skip the generic taunt for them.
+	if _is_comms_reversal_target():
 		return
 	var pool: Array = _cached_rage if _player_initiated else _cached_reason
 	if pool.is_empty():
@@ -149,6 +150,20 @@ func _play_combat_taunt() -> void:
 	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+
+# True if the enemy belongs to an active comms-reversal (bribe) mission target,
+# whose branching transmission dialog should not be stepped on by a generic taunt.
+func _is_comms_reversal_target() -> bool:
+	if not is_instance_valid(enemy_node):
+		return false
+	var fac = enemy_node.get("faction")
+	if fac == null:
+		return false
+	for m in QuestManager.get_mission_collection().get_all_active():
+		if str(m.data.get("objective_type", "")) == "TARGET_WITH_COMMS_REVERSAL" \
+				and str(m.data.get("target_faction", "")) == str(fac):
+			return true
+	return false
 
 func _process(_delta: float) -> void:
 	if not _lerp_active:
