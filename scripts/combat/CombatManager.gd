@@ -86,9 +86,69 @@ var _shield_dual_face:  bool  = false
 var _engine_tier:    int   = 1
 var _flee_base_chance: float = 0.50
 
+# ── Angry combat taunts (cached at startup, one per attacking ship) ─────────────
+const TAUNT_SPEED := 1.18
+const TAUNT_STYLE := 1.4
+# Lead voices, each blended 70/30 with am_michael for an angry-but-varied read.
+const TAUNT_LEAD_VOICES := [
+	"am_onyx", "am_adam", "am_fenrir", "am_liam", "bm_george", "am_puck", "am_eric", "am_echo",
+]
+# Player struck first — the NPC is enraged at an unprovoked attack.
+const TAUNT_RAGE_LINES := [
+	"You fired on me? You're dead, you absolute idiot.",
+	"Big mistake, scrap-rat. I'll tear you apart.",
+	"Unprovoked? You've got a death wish.",
+	"You'll regret pulling that trigger, moron.",
+	"Wrong move. Now I'm angry.",
+	"You shot first? Then I'll shoot last.",
+]
+# NPC struck first — they came for the player (generic motive for v1; see
+# the REVISIT task for splitting this into reason buckets later).
+const TAUNT_REASON_LINES := [
+	"End of the line, scrap-rat. Nothing personal.",
+	"You're worth more dead. Hold still.",
+	"Wrong sector, wrong day. Eat plasma.",
+	"Orders are orders. You lose.",
+	"Should've stayed home, idiot.",
+	"This is what you get for flying through here.",
+]
+var _player_initiated: bool = false
+var _cached_rage:   Array = []   # [{text, voice}, ...] pre-cached audio pairs
+var _cached_reason: Array = []
+
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
-	pass
+	_build_and_cache_taunts()
+
+# Build the two taunt pools, each line paired with a random angry blend, and
+# pre-cache the audio so combat playback is instant (queues if TTS isn't up yet).
+func _build_and_cache_taunts() -> void:
+	_cached_rage   = _make_taunt_pool(TAUNT_RAGE_LINES)
+	_cached_reason = _make_taunt_pool(TAUNT_REASON_LINES)
+
+func _make_taunt_pool(lines: Array) -> Array:
+	var pool: Array = []
+	for line in lines:
+		var lead: String = TAUNT_LEAD_VOICES[randi() % TAUNT_LEAD_VOICES.size()]
+		var voice := "%s[0.7]+am_michael[0.3]" % lead
+		pool.append({"text": line, "voice": voice})
+		TTSInterface.cache_dialogue_audio(line, voice, TAUNT_SPEED, TAUNT_STYLE)
+	return pool
+
+# Fire exactly one taunt for the attacking ship, voiced from the right pool.
+func _play_combat_taunt() -> void:
+	if not _combat_voice_on():
+		return
+	# Bribe / board-mission ships keep their own branching dialog — no generic taunt.
+	if is_instance_valid(enemy_node) and bool(enemy_node.get_meta("skip_combat_taunt", false)):
+		return
+	var pool: Array = _cached_rage if _player_initiated else _cached_reason
+	if pool.is_empty():
+		return
+	var pick: Dictionary = pool[randi() % pool.size()]
+	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
+	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
+	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
 
 func _process(_delta: float) -> void:
 	if not _lerp_active:
@@ -109,7 +169,7 @@ func _lerp_timescale(to_scale: float, to_pitch: float, duration_ms: int = 400) -
 	_lerp_start  = Time.get_ticks_msec()
 	_lerp_active = true
 
-func start_combat(player: Node, enemy: Node) -> void:
+func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> void:
 	if state != State.IDLE:
 		return
 	# Set state immediately so physics-frame re-entry can't spawn duplicate requests
@@ -117,6 +177,7 @@ func start_combat(player: Node, enemy: Node) -> void:
 	state = State.PLANNING
 	player_node = player
 	enemy_node  = enemy
+	_player_initiated = player_initiated
 	_taunts_ready = false
 	taunts = {}
 	_load_upgrade_stats()
@@ -255,12 +316,10 @@ func _begin_planning() -> void:
 
 	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts)
 
-	# Voiced enemy taunting: opener on turn 1, occasional jab between rounds.
+	# Exactly one voiced enemy taunt per fight, fired on the first planning phase.
 	_turn_number += 1
 	if _turn_number == 1:
-		_play_npc_taunt("npc_open")
-	elif randf() < 0.5:
-		_play_npc_taunt("npc_jab_%d" % (randi() % 3 + 1))
+		_play_combat_taunt()
 
 # Whether an NPC intent will deal damage this turn (used for the charge cue).
 func _intent_is_attack(intent: Dictionary) -> bool:
@@ -515,11 +574,10 @@ func _exec_flee() -> void:
 	penalty += 0.15 if range_band == CombatActionType.RangeBand.CLOSE else 0.0
 	var chance := clampf(_flee_base_chance - penalty, 0.05, 0.95)
 	if randf() <= chance:
-		_play_npc_taunt("npc_player_fled_success")
+		GlobalState.emit_chatter("SYSTEM", "Engines burn hot — you break their lock and escape.", Color(0.5, 1.0, 0.5))
 		_play_kaelen_line("kaelen_player_fled")
 		end_combat(false)
 	else:
-		_play_npc_taunt("npc_player_fled_fail")
 		GlobalState.emit_chatter("SYSTEM", "Escape failed — engines couldn't break their tractor lock.", Color(1.0, 0.4, 0.2))
 
 # ── Hit resolution ────────────────────────────────────────────────────────────
@@ -645,21 +703,23 @@ func _after_npc_turn() -> void:
 		await _kill_and_end(enemy_node, true)
 		return
 
-	# Low-health taunts (fire once).
+	# Low-health cues: Kaelen commentary + alarm (enemy taunt is one-per-fight only).
 	var player_hp:  float = float(player_node.get("health"))     if player_node.get("health")     != null else 100.0
 	var player_max: float = float(player_node.get("max_health")) if player_node.get("max_health") != null else 100.0
 	var enemy_hp:   float = float(enemy_node.get("health"))      if enemy_node.get("health")      != null else 50.0
 	var enemy_max:  float = float(enemy_node.get("max_health"))  if enemy_node.get("max_health")  != null else 50.0
 
 	if player_hp / player_max <= 0.30:
-		_play_npc_taunt("player_low_health")
 		_play_kaelen_line("kaelen_player_low_health")
 		if not _player_low_alarmed:
 			_player_low_alarmed = true
 			_sfx("low_health_alarm", null, -4.0)
+			GlobalState.emit_chatter("SYSTEM", "WARNING: Hull integrity critical.", Color(1.0, 0.4, 0.2))
 	if enemy_hp / enemy_max <= 0.30:
-		_play_npc_taunt("npc_low_health")
 		_play_kaelen_line("kaelen_winning")
+		if not _enemy_low_alarmed:
+			_enemy_low_alarmed = true
+			GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
 		if not _enemy_low_alarmed and is_instance_valid(enemy_node):
 			_enemy_low_alarmed = true
 			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
@@ -670,21 +730,6 @@ func _after_npc_turn() -> void:
 func _combat_voice_on() -> bool:
 	var taunts_on = GlobalState.get("combat_voice_taunts")
 	return taunts_on == null or bool(taunts_on)
-
-func _play_npc_taunt(key: String) -> void:
-	if not _combat_voice_on():
-		return
-	var line: String = taunts.get(key, "")
-	if line.is_empty():
-		return
-	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "enemy"
-	# Spoken in the enemy faction's voice (never af_bella — that's Kaelen's).
-	GlobalState.emit_npc_flavor({
-		"npc_name": faction.to_upper(),
-		"line": line,
-		"color": Color(1.0, 0.4, 0.3),
-		"voice_profile_id": faction,
-	})
 
 func _play_kaelen_line(key: String) -> void:
 	if not _combat_voice_on():
