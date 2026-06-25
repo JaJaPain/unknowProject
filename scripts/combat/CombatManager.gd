@@ -501,9 +501,9 @@ func _exec_repair_kit() -> void:
 	var heal_amount: float = 12.5
 	if player_node.has_method("heal"):
 		player_node.heal(heal_amount)
-	elif player_node.has("health"):
+	elif player_node.get("health") != null:
 		var max_hp: float = player_node.get("max_health") if player_node.get("max_health") != null else 100.0
-		player_node.health = min(player_node.health + heal_amount, max_hp)
+		player_node.health = min(float(player_node.health) + heal_amount, max_hp)
 	GlobalState.emit_chatter("Drone Bay", "Repair kit deployed — hull patched.", Color(0.4, 0.9, 0.6))
 
 func _exec_flee() -> void:
