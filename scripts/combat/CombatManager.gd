@@ -237,6 +237,8 @@ func end_combat(player_won: bool) -> void:
 	player_node = null
 	enemy_node  = null
 	queued_actions.clear()
+	# Notify queue first — it starts the 3-second buffer and releases the slot.
+	PlayerInteractionQueue.notify_combat_ended()
 	emit_signal("combat_ended", player_won)
 
 func _reset_fight_state() -> void:

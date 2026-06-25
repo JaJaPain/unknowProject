@@ -22,6 +22,7 @@ var destroyed: bool = false
 var last_attacker_faction: String = ""
 var taunted_player: bool = false
 var ceasefire: bool = false
+var _combat_intent_id: String = ""   # queue id while waiting to engage
 
 var behavior: String = ""
 var _flee_gate: Node3D = null
@@ -595,10 +596,9 @@ func _physics_process(delta: float):
 		# Check if we should trigger turn-based combat with the player.
 		if not in_turn_combat \
 				and target == GlobalState.player \
-				and CombatManager.state == CombatManager.State.IDLE \
 				and not ceasefire \
 				and dist <= 80.0:
-			CombatManager.start_combat(GlobalState.player, self, false)  # NPC struck first
+			_request_combat_via_queue()
 			return
 
 		# Fire only when NOT in turn-based combat (CombatManager handles damage).
@@ -872,8 +872,45 @@ func die():
 		"faction_kills": int(GlobalState.faction_kills.get(faction, 0)),
 	})
 	
+	_cancel_combat_intent()   # clean up any queued-but-not-started fight intent
 	ImpactEffect.spawn_explosion(get_parent(), global_position, _get_engine_color())
 	queue_free()
+
+# ── PlayerInteractionQueue integration ───────────────────────────────────────
+
+func _request_combat_via_queue() -> void:
+	# Already queued, already in an active fight, or CombatManager busy — skip.
+	if not _combat_intent_id.is_empty() \
+			or CombatManager.state != CombatManager.State.IDLE:
+		return
+	var ship_label := "%s:%s" % [faction, name]
+	_combat_intent_id = PlayerInteractionQueue.enqueue(
+		PlayerInteractionQueue.Priority.COMBAT,
+		_start_queued_combat,
+		ship_label
+	)
+
+func _start_queued_combat(done: Callable) -> void:
+	_combat_intent_id = ""
+	# Validate: ship and player must still be valid and clear to fight.
+	var p := GlobalState.player
+	var already_fighting: bool = CombatManager.state != CombatManager.State.IDLE
+	if not is_instance_valid(self) or destroyed or ceasefire or already_fighting \
+			or not is_instance_valid(p) or p.get("destroyed") or p.get("is_docked"):
+		done.call()   # nothing to fight — release the slot cleanly
+		return
+	CombatManager.start_combat(p, self, false)
+	# Release the queue slot when this fight ends (one-shot connection).
+	CombatManager.combat_ended.connect(
+		func(_won: bool) -> void: done.call(),
+		CONNECT_ONE_SHOT
+	)
+
+func _cancel_combat_intent() -> void:
+	if _combat_intent_id.is_empty():
+		return
+	PlayerInteractionQueue.cancel(_combat_intent_id)
+	_combat_intent_id = ""
 
 func get_persistent_id() -> String:
 	return get_world_id()

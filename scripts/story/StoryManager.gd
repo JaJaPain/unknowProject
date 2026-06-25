@@ -73,18 +73,15 @@ func on_system_arrived(system_id: String) -> void:
 
 func on_kill(faction: String) -> void:
 	_kill_count_session += 1
-	# Deliver only when combat is fully idle so the story dialog never pops up
-	# over a live combat UI — including a reinforcement fight that chains in
-	# immediately after the one that scored the kill.
-	_deliver_kill_when_idle(faction)
-
-func _deliver_kill_when_idle(faction: String) -> void:
-	while CombatManager.state != CombatManager.State.IDLE:
-		await CombatManager.combat_ended
-		# Settle: give any immediate reinforcement a moment to (re)enter combat
-		# before we re-check, so we don't deliver into a fight starting this frame.
-		await get_tree().create_timer(1.0, true, false, true).timeout
-	_resolve_kill(faction)
+	# Register a STORY intent — the queue delivers it only after any active combat
+	# AND the 3-second post-combat buffer have both cleared.
+	PlayerInteractionQueue.enqueue(
+		PlayerInteractionQueue.Priority.STORY,
+		func(done: Callable) -> void:
+			_resolve_kill(faction)
+			done.call(),   # story beats are sync; release the slot immediately
+		"StoryManager:kill:%s" % faction
+	)
 
 func _resolve_kill(faction: String) -> void:
 	_check_kill_beats()
