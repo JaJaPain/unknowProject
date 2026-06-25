@@ -156,6 +156,7 @@ func _ready():
 	CombatManager.planning_started.connect(_on_planning_started_orbit)
 	CombatManager.action_telegraphed.connect(_on_action_telegraphed_cam)
 	CombatManager.action_impact.connect(_on_action_impact_cam)
+	CombatManager.combat_kill.connect(_on_combat_kill_cam)
 
 	_create_drones()
 	_create_boost_effects()
@@ -218,6 +219,21 @@ func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _letha
 func _trigger_shake(strength: float) -> void:
 	_shake_strength = maxf(_shake_strength, clampf(strength, 0.0, 1.5))
 	_shake_decay = _shake_strength
+
+# Punch in tight on the kill and rattle the camera for the death beat.
+func _on_combat_kill_cam(_victim: Node, world_pos: Vector3) -> void:
+	if _cam_mode == 0:
+		return
+	# Pull the camera close to the explosion along its current view direction.
+	var dir := (camera_pivot.global_position - world_pos)
+	if dir.length() < 0.01:
+		dir = Vector3(0, 6, 14)
+	dir = dir.normalized()
+	_cam_goal_pos = world_pos + dir * 16.0 + Vector3(0, 5, 0)
+	_cam_look_at = world_pos
+	_cam_mode = 2
+	_cam_lerp_speed = 5.0
+	_trigger_shake(1.1)
 
 func _frame_action(source: Node, target: Node) -> void:
 	var src: Vector3 = (source as Node3D).global_position

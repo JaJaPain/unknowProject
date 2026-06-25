@@ -72,6 +72,8 @@ var _taunts_ready: bool = false
 # Low-health alarm fires once per side per fight.
 var _player_low_alarmed: bool = false
 var _enemy_low_alarmed: bool = false
+# Position of the last lethal hit — the victim may be freed before the kill beat.
+var _last_kill_pos: Vector3 = Vector3.ZERO
 
 # ── Upgrade-derived combat stats (set at start_combat) ────────────────────────
 var _fire_ap_cost:   int   = 2
@@ -288,6 +290,8 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 		var hp = target.get("health")
 		if hp != null and float(hp) <= 0.0:
 			lethal = true
+	if lethal:
+		_last_kill_pos = hit_pos
 	# Impact SFX: shield deflect vs hull hit, plus sub-bass thud and a crit layer.
 	if blocked:
 		_sfx("shield_deflect", hit_pos)
@@ -334,16 +338,29 @@ func _hit_stop(freeze_sec: float) -> void:
 	if state == State.EXECUTING:
 		Engine.time_scale = 1.0
 
-# Emit the kill beat then end combat (Phase 5 expands this with the cinematic).
-# victim is untyped: it may already be a freed instance when a ship dies mid-turn.
+# Cinematic kill: punch in on the victim, slow-mo, big explosion + sound, hold,
+# sting, then end combat. victim is untyped — it may already be freed when a
+# ship dies mid-turn, so we fall back to the last lethal-hit position.
 func _kill_and_end(victim, player_won: bool) -> void:
 	var v: Node = victim if is_instance_valid(victim) else null
-	var pos := Vector3.ZERO
+	var pos := _last_kill_pos
 	if v != null:
 		pos = (v as Node3D).global_position
+	# Camera punches in on the kill (PlayerShip listens to combat_kill).
 	emit_signal("combat_kill", v, pos)
+	# Death beat: slow-mo + a bigger explosion than the ship's own death puff.
+	_lerp_timescale(0.25, 0.70, 250)
+	_sfx("death_explosion", pos, 0.0)
+	var fx_parent: Node = v.get_parent() if v != null else (
+		player_node.get_parent() if is_instance_valid(player_node) else null)
+	if fx_parent != null:
+		ImpactEffect.spawn_explosion(fx_parent, pos, Color(1.0, 0.6, 0.2), 2.5)
 	if player_won:
 		_play_kaelen_line("kaelen_kill_confirm")
+	# Hold on the moment (wall-clock so slow-mo doesn't stretch it).
+	await _beat(1.1)
+	_sfx("combat_sting", null, -3.0)
+	_lerp_timescale(1.0, 1.0, 300)
 	end_combat(player_won)
 
 # Called by CombatPanel EXECUTE button.
@@ -362,7 +379,7 @@ func _run_turn_sequence() -> void:
 		return   # combat ended mid-player-turn (flee / kill)
 	# Enemy died from player actions before NPC gets to act.
 	if not is_instance_valid(enemy_node) or enemy_node.get("destroyed"):
-		_kill_and_end(enemy_node, true)
+		await _kill_and_end(enemy_node, true)
 		return
 	await _beat(BEAT_TURN_GAP)
 	if state == State.IDLE:
@@ -370,7 +387,7 @@ func _run_turn_sequence() -> void:
 	await _execute_npc_intent()
 	if state == State.IDLE:
 		return
-	_after_npc_turn()
+	await _after_npc_turn()
 
 func _run_player_actions() -> void:
 	for action in queued_actions:
@@ -614,10 +631,10 @@ func _after_npc_turn() -> void:
 	var enemy_dead: bool  = not is_instance_valid(enemy_node)  or enemy_node.get("destroyed")  == true
 
 	if player_dead:
-		_kill_and_end(player_node, false)
+		await _kill_and_end(player_node, false)
 		return
 	if enemy_dead:
-		_kill_and_end(enemy_node, true)
+		await _kill_and_end(enemy_node, true)
 		return
 
 	# Low-health taunts (fire once).
