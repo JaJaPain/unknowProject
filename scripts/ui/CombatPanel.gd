@@ -58,7 +58,12 @@ var _warp_cd_label:   Label
 var _repair_count_label: Label
 var _click_sfx:       AudioStreamPlayer
 
-# ── Wheel click geometry (set in _build_wheel; used by polar hit-test) ───────────
+# ── Wheel hit-test ───────────────────────────────────────────────────────────
+# Per-button alpha masks: each Button0X image has only its own wedge opaque, so
+# sampling alpha at the cursor pixel gives a pixel-perfect wedge match.
+var _btn_images:    Array[Image] = []
+var _wheel_px_size: float        = 0.0   # on-screen wheel square size in px
+# Fallback polar geometry (used only if alpha masks fail to load).
 var _wheel_click_center: Vector2 = Vector2.ZERO
 var _wheel_inner_r:      float   = 0.0
 var _wheel_outer_r:      float   = 0.0
@@ -176,13 +181,20 @@ func _build_wheel() -> void:
 
 	# Per-button active + disabled images — all same size/position as wheel (pre-composited)
 	var btn_pos := center - Vector2(wheel_sz * 0.5, wheel_sz * 0.5)
+	_wheel_px_size = wheel_sz
 	_btn_active.clear()
 	_btn_disabled.clear()
+	_btn_images.clear()
 	for pair in BUTTON_ASSETS:
 		var act := _make_wheel_layer(ASSET_DIR + pair[0], btn_pos, wheel_sz)
 		container.add_child(act)
 		act.size = Vector2(wheel_sz, wheel_sz)
 		_btn_active.append(act)
+		# Cache the CPU-side image for pixel-perfect alpha hit-testing.
+		var img: Image = (act.texture.get_image() if act.texture else null)
+		if img != null and img.is_compressed():
+			img.decompress()
+		_btn_images.append(img)
 
 		var dis := _make_wheel_layer(ASSET_DIR + pair[1], btn_pos, wheel_sz)
 		dis.visible = false
@@ -273,10 +285,34 @@ func _build_wheel() -> void:
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
 
-# ── Polar wheel hit-testing ─────────────────────────────────────────────────────
-# Maps any click on the ring to the wedge whose centre angle is nearest, so the
-# entire surface of each slice is clickable (no tiny dead-zone hot-spots).
+# ── Wheel hit-testing ───────────────────────────────────────────────────────────
+# Pixel-perfect: sample each wedge image's alpha at the cursor and pick the one
+# actually painted there. Falls back to the polar nearest-angle test if the
+# alpha masks failed to load.
 func _wheel_action_at(local_pos: Vector2) -> int:
+	if _btn_images.is_empty() or _wheel_px_size <= 0.0:
+		return _wheel_action_at_polar(local_pos)
+	var u := local_pos.x / _wheel_px_size
+	var v := local_pos.y / _wheel_px_size
+	if u < 0.0 or v < 0.0 or u > 1.0 or v > 1.0:
+		return -1
+	var best := -1
+	var best_a := 0.20   # ignore transparent gaps + anti-aliased fringes
+	for i in _btn_images.size():
+		var img: Image = _btn_images[i]
+		if img == null:
+			continue
+		var px := int(u * img.get_width())
+		var py := int(v * img.get_height())
+		px = clampi(px, 0, img.get_width() - 1)
+		py = clampi(py, 0, img.get_height() - 1)
+		var a := img.get_pixel(px, py).a
+		if a > best_a:
+			best_a = a
+			best = i
+	return best
+
+func _wheel_action_at_polar(local_pos: Vector2) -> int:
 	var d := local_pos - _wheel_click_center
 	var r := d.length()
 	if r < _wheel_inner_r or r > _wheel_outer_r:
