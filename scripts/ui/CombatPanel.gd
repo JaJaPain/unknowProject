@@ -298,27 +298,37 @@ func _on_wheel_input(ev: InputEvent) -> void:
 	elif ev is InputEventMouseButton \
 			and ev.button_index == MOUSE_BUTTON_LEFT \
 			and ev.pressed:
-		var idx := _wheel_action_at(ev.position)
+		# Sync the highlight to the click point, then fire the wedge that's
+		# actually lit — guarantees "what you see is what you click."
+		_update_hover(_wheel_action_at(ev.position))
+		var idx := _hover_idx
 		if idx < 0:
 			return
 		if idx < _btn_blocked.size() and _btn_blocked[idx]:
 			return
 		_on_action_pressed(ACTION_DEFS[idx]["type"])
 
+# Exaggerated hover: the wedge under the cursor pops bright, the rest dim back,
+# so the player can confirm their target before clicking.
+const _HOVER_BRIGHT := Color(1.9, 1.9, 1.9)
+const _HOVER_DIM    := Color(0.5, 0.5, 0.5)
+const _HOVER_NORMAL := Color(1.0, 1.0, 1.0)
+
 func _update_hover(idx: int) -> void:
 	if idx == _hover_idx:
 		return
-	# Clear previous hover
-	if _hover_idx >= 0 and _hover_idx < _btn_active.size():
-		var prev: TextureRect = _btn_active[_hover_idx]
-		var tw_out := prev.create_tween()
-		tw_out.tween_property(prev, "modulate", Color(1.0, 1.0, 1.0), 0.12)
 	_hover_idx = idx
-	# Apply new hover (only if not blocked)
-	if idx >= 0 and idx < _btn_active.size() and not _btn_blocked[idx]:
-		var cur: TextureRect = _btn_active[idx]
-		var tw_in := cur.create_tween()
-		tw_in.tween_property(cur, "modulate", Color(1.35, 1.35, 1.35), 0.08)
+	var active_hover: bool = idx >= 0 and idx < _btn_active.size() and not _btn_blocked[idx]
+	for i in _btn_active.size():
+		var target: Color
+		if not active_hover:
+			target = _HOVER_NORMAL          # nothing valid hovered → all normal
+		elif i == idx:
+			target = _HOVER_BRIGHT          # the wedge you'll click
+		else:
+			target = _HOVER_DIM             # everything else recedes
+		var tw := _btn_active[i].create_tween()
+		tw.tween_property(_btn_active[i], "modulate", target, 0.07)
 
 func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect:
 	var r := TextureRect.new()
@@ -464,13 +474,21 @@ func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dic
 	if _warp_cd_label:
 		var cd: int = CombatManager.micro_warp_cooldown
 		_warp_cd_label.text = "(%d turns)" % cd if cd > 0 else ""
+	_reset_hover()         # clear any stale highlight from last turn
 	_fade_controls(true)   # bring the wheel back for the player's choices
 
 func _on_execution_started() -> void:
 	for i in _btn_blocked.size():
 		_btn_blocked[i] = true
 	_execute_btn.disabled = true
+	_reset_hover()
 	_fade_controls(false)  # hide the wheel during the action sequence
+
+# Snap every wedge back to normal brightness and clear the hovered index.
+func _reset_hover() -> void:
+	_hover_idx = -1
+	for i in _btn_active.size():
+		_btn_active[i].modulate = _HOVER_NORMAL
 
 # Fade the player-control HUD (wheel + execute row + queued chips) in/out.
 # Wall-clock so the fade is smooth even through hit-stop slow-mo.
