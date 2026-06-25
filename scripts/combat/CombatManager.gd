@@ -320,11 +320,13 @@ func _hit_stop(freeze_sec: float) -> void:
 		Engine.time_scale = 1.0
 
 # Emit the kill beat then end combat (Phase 5 expands this with the cinematic).
-func _kill_and_end(victim: Node, player_won: bool) -> void:
+# victim is untyped: it may already be a freed instance when a ship dies mid-turn.
+func _kill_and_end(victim, player_won: bool) -> void:
+	var v: Node = victim if is_instance_valid(victim) else null
 	var pos := Vector3.ZERO
-	if is_instance_valid(victim):
-		pos = (victim as Node3D).global_position
-	emit_signal("combat_kill", victim, pos)
+	if v != null:
+		pos = (v as Node3D).global_position
+	emit_signal("combat_kill", v, pos)
 	if player_won:
 		_play_kaelen_line("kaelen_kill_confirm")
 	end_combat(player_won)
