@@ -44,6 +44,7 @@ signal ap_changed(current: int, max_ap: int)
 signal action_queued(action: Dictionary)
 signal action_dequeued
 signal enemy_status_changed(brace: bool, shield: bool)
+signal combat_loot_dropped(loot: Dictionary)
 # ── Cinematic beat signals (drive camera + impact juice) ────────────────────────
 signal action_telegraphed(action_type: int, source: Node, target: Node)
 signal action_impact(target: Node, world_pos: Vector3, damage: float, lethal: bool, blocked: bool, crit: bool)
@@ -508,6 +509,11 @@ func _kill_and_end(victim, player_won: bool) -> void:
 	var pos := _last_kill_pos
 	if v != null:
 		pos = (v as Node3D).global_position
+	# Roll loot before the node is freed — future systems connect to combat_loot_dropped.
+	if player_won and v != null and v.has_method("roll_loot"):
+		var loot: Dictionary = v.roll_loot()
+		if not loot.is_empty():
+			emit_signal("combat_loot_dropped", loot)
 	# Camera punches in on the kill (PlayerShip listens to combat_kill).
 	emit_signal("combat_kill", v, pos)
 	# Death beat: slow-mo + a bigger explosion than the ship's own death puff.

@@ -998,6 +998,22 @@ func _get_faction_color() -> Color:
 # combat_intelligence: 0.0 (dumb/noob) → 1.0 (optimal). Controls decision quality.
 var combat_ap:           int   = 4
 var combat_intelligence: float = 0.5
+# Loot dropped when this ship is killed in combat. Empty dict = no drop.
+# Future: populate per archetype/faction in MainScene or GeneratedSystemNPCManager.
+# Format: { "credits": 0, "items": [], "ore": 0 }
+var loot_table: Dictionary = {}
+
+func roll_loot() -> Dictionary:
+	if loot_table.is_empty():
+		return {}
+	var result := {}
+	if loot_table.get("credits", 0) > 0:
+		result["credits"] = loot_table["credits"]
+	if not loot_table.get("items", []).is_empty():
+		result["items"] = loot_table["items"].duplicate()
+	if loot_table.get("ore", 0) > 0:
+		result["ore"] = loot_table["ore"]
+	return result
 
 # Returns an ordered list of actions the enemy will execute this turn, built
 # at the same time the player is choosing. The plan is locked in — the enemy
