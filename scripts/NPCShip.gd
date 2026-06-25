@@ -1051,6 +1051,12 @@ func _plan_interceptor(plan: Array, ap: int, hp_ratio: float, intel: float) -> v
 			plan.append(_action_fire(randf_range(damage_min, damage_max), "Desperation shot"))
 			ap -= 2
 		return
+	# Smart Interceptors shield-angle when healthy — 1 AP, blocks first player hit 65%.
+	# Skip if they're going to flank (flanking changes angle, making shield redundant).
+	var will_flank: bool = intel >= 0.65 and randf() < 0.6
+	if intel >= 0.55 and hp_ratio >= 0.40 and not will_flank and ap >= 1 and randf() < 0.25:
+		plan.append(_action_shield_angle())
+		ap -= 1
 	# Smart interceptors reposition FIRST so Shield Reroute is bypassed before fire.
 	# Dumb interceptors forget to reposition or do it in the wrong order.
 	var should_reposition: bool = intel >= 0.55 or (intel >= 0.3 and randf() < 0.5)
