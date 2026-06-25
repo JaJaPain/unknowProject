@@ -587,14 +587,22 @@ func _exec_repair_kit() -> void:
 		return
 	GlobalState.inventory.remove("repair_kit", 1)
 	_sfx("repair_kit", player_node.global_position)
-	# repair_kit heals 25hp normally (ConsumableEffects.gd) — combat use is half that.
-	var heal_amount: float = 12.5
+	# Combat repair restores 30% of max hull — meatier than the 25hp field use.
+	var max_hp: float = float(player_node.get("max_health")) if player_node.get("max_health") != null else 100.0
+	var before:  float = float(player_node.get("health")) if player_node.get("health") != null else max_hp
+	var after:   float = min(before + max_hp * 0.30, max_hp)
+	var healed:  float = after - before
 	if player_node.has_method("heal"):
-		player_node.heal(heal_amount)
-	elif player_node.get("health") != null:
-		var max_hp: float = player_node.get("max_health") if player_node.get("max_health") != null else 100.0
-		player_node.health = min(float(player_node.health) + heal_amount, max_hp)
-	GlobalState.emit_chatter("Drone Bay", "Repair kit deployed — hull patched.", Color(0.4, 0.9, 0.6))
+		player_node.heal(after - before)
+	else:
+		player_node.health = after
+	# Green floating heal number so the repair is visible during the cinematic.
+	if healed > 0.5:
+		var parent: Node = player_node.get_parent()
+		if parent != null:
+			CombatDamageNumber.spawn(parent, (player_node as Node3D).global_position,
+				"+%d" % int(round(healed)), Color(0.45, 1.0, 0.55), false)
+	GlobalState.emit_chatter("Drone Bay", "Repair kit deployed — hull patched (+%d)." % int(round(healed)), Color(0.4, 0.9, 0.6))
 
 func _exec_flee() -> void:
 	if is_instance_valid(player_node):

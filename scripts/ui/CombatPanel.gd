@@ -55,6 +55,7 @@ var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _btn_blocked:     Array[bool] = []          # per-button disabled state (polar hit-test)
 var _warp_cd_label:   Label
+var _repair_count_label: Label
 var _click_sfx:       AudioStreamPlayer
 
 # ── Wheel click geometry (set in _build_wheel; used by polar hit-test) ───────────
@@ -238,6 +239,18 @@ func _build_wheel() -> void:
 	_warp_cd_label.size        = Vector2(60.0 * S, 18.0 * S)
 	_warp_cd_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_warp_cd_label)
+
+	# Repair-kit count badge at the REPAIR KIT wedge centre (it's a consumable).
+	var rep_angle := deg_to_rad(218.0)
+	var rep_center := center + Vector2(cos(rep_angle), sin(rep_angle)) * _btn_radius
+	_repair_count_label = Label.new()
+	_repair_count_label.add_theme_font_size_override("font_size", int(13 * S))
+	_repair_count_label.add_theme_color_override("font_color", Color(0.45, 1.0, 0.55))
+	_repair_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_repair_count_label.position    = rep_center + Vector2(-30.0 * S, -_btn_hit.y * 0.5 - 20.0 * S)
+	_repair_count_label.size        = Vector2(60.0 * S, 18.0 * S)
+	_repair_count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(_repair_count_label)
 
 	# Enemy HP bar — centered directly above the wheel, travels with it when dragged
 	var ebar_w  := 220.0 * S
@@ -529,6 +542,13 @@ func _refresh_button_states() -> void:
 		if i < _btn_active.size():
 			_btn_active[i].visible   = not is_disabled
 			_btn_disabled[i].visible = is_disabled
+	# Repair-kit count badge — shows remaining consumables (greys at 0).
+	if is_instance_valid(_repair_count_label):
+		var kits: int = GlobalState.inventory.get_quantity("repair_kit")
+		_repair_count_label.text = "x%d" % kits
+		_repair_count_label.add_theme_color_override(
+			"font_color",
+			Color(0.45, 1.0, 0.55) if kits > 0 else Color(0.6, 0.6, 0.6))
 
 func _refresh_hp_bars() -> void:
 	var p := CombatManager.player_node
