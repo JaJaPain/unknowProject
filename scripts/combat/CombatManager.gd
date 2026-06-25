@@ -736,26 +736,21 @@ func _after_npc_turn() -> void:
 		await _kill_and_end(enemy_node, true)
 		return
 
-	# Low-health cues: Kaelen commentary + alarm (enemy taunt is one-per-fight only).
+	# Low-health cues are text + alarm only — no Kaelen voice commentary mid-fight.
 	var player_hp:  float = float(player_node.get("health"))     if player_node.get("health")     != null else 100.0
 	var player_max: float = float(player_node.get("max_health")) if player_node.get("max_health") != null else 100.0
 	var enemy_hp:   float = float(enemy_node.get("health"))      if enemy_node.get("health")      != null else 50.0
 	var enemy_max:  float = float(enemy_node.get("max_health"))  if enemy_node.get("max_health")  != null else 50.0
 
-	if player_hp / player_max <= 0.30:
-		_play_kaelen_line("kaelen_player_low_health")
-		if not _player_low_alarmed:
-			_player_low_alarmed = true
-			_sfx("low_health_alarm", null, -4.0)
-			GlobalState.emit_chatter("SYSTEM", "WARNING: Hull integrity critical.", Color(1.0, 0.4, 0.2))
-	if enemy_hp / enemy_max <= 0.30:
-		_play_kaelen_line("kaelen_winning")
-		if not _enemy_low_alarmed:
-			_enemy_low_alarmed = true
-			GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
-		if not _enemy_low_alarmed and is_instance_valid(enemy_node):
-			_enemy_low_alarmed = true
+	if player_hp / player_max <= 0.30 and not _player_low_alarmed:
+		_player_low_alarmed = true
+		_sfx("low_health_alarm", null, -4.0)
+		GlobalState.emit_chatter("SYSTEM", "WARNING: Hull integrity critical.", Color(1.0, 0.4, 0.2))
+	if enemy_hp / enemy_max <= 0.30 and not _enemy_low_alarmed:
+		_enemy_low_alarmed = true
+		if is_instance_valid(enemy_node):
 			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
+		GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
 
 	_begin_planning()
 
