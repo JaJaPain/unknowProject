@@ -1,5 +1,8 @@
 ﻿extends CharacterBody3D
 
+# Global enemy HP scalar so turn-based fights last longer. Tune in one place.
+const COMBAT_HP_MULT := 2.0
+
 @export var faction: String = "zenith" # zenith, aurelia, vanguard
 @export var max_health: float = 50.0
 @export var speed: float = 10.0
@@ -158,8 +161,11 @@ func _configure_role(role: String) -> void:
 				archetype = "Target " + archetype
 			break
 			
+	# Longer turn-based fights — scale final HP after all other multipliers.
+	max_health *= COMBAT_HP_MULT
+
 	health = max_health
-	
+
 	# Apply visual/collision scaling
 	scale = Vector3(visual_scale_mult, visual_scale_mult, visual_scale_mult)
 	
