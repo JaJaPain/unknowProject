@@ -589,6 +589,18 @@ func _exec_fire() -> void:
 	await _await_travel(player_node, enemy_node)
 	if not is_instance_valid(enemy_node):
 		return
+	# Enemy brace: 40% reduction, halved to 20% when flanking. Drone bypasses (not this path).
+	if enemy_brace_active:
+		var reduction := 0.20 if player_is_flanking else 0.40
+		dmg *= (1.0 - reduction)
+		GlobalState.emit_chatter("COMBAT", "Brace absorbed %d%% — %d damage." % [int(reduction * 100), int(dmg)], Color(0.6, 0.8, 1.0))
+	# Enemy shield angle: first hit blocked 65%, bypassed when flanking. Consume on hit.
+	if enemy_shield_angle_active and not player_is_flanking:
+		dmg *= 0.35
+		enemy_shield_angle_active = false
+		_despawn_enemy_shield_dome()
+		emit_signal("enemy_status_changed", enemy_brace_active, false)
+		GlobalState.emit_chatter("COMBAT", "Shield angle deflected — %d damage." % int(dmg), Color(1.0, 0.6, 0.2))
 	_apply_hit(enemy_node, "player", dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
 
@@ -651,6 +663,9 @@ func _exec_attack_drone() -> void:
 	await _await_travel(player_node, enemy_node)
 	if not is_instance_valid(enemy_node):
 		return
+	# Drone bypasses brace and shield angle — precision targeting ignores bulk defenses.
+	if enemy_brace_active or enemy_shield_angle_active:
+		GlobalState.emit_chatter("COMBAT", "Drone bypasses their defense.", Color(0.3, 0.9, 0.9))
 	_apply_hit(enemy_node, "player", drone_dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "Drone hits for %d damage." % int(drone_dmg), Color(0.3, 0.9, 0.9))
 
@@ -667,6 +682,12 @@ func _exec_micro_warp() -> void:
 	player_is_flanking = true
 	micro_warp_cooldown = 3
 	range_band = CombatActionType.RangeBand.CLOSE
+	# Flanking nullifies the enemy's shield angle — angle changed.
+	if enemy_shield_angle_active:
+		enemy_shield_angle_active = false
+		_despawn_enemy_shield_dome()
+		emit_signal("enemy_status_changed", enemy_brace_active, false)
+		GlobalState.emit_chatter("SYSTEM", "Flank maneuver — enemy shield angle lost!", Color(1.0, 0.5, 0.2))
 	_player_status_float("MICRO-WARP!", Color(0.6, 0.4, 1.0))
 	GlobalState.emit_chatter("COMBAT", "Micro-warp — flanking the enemy.", Color(0.6, 0.4, 1.0))
 
