@@ -96,13 +96,21 @@ var fire_cooldown: float = 0.0
 var camera_aligned: bool = true
 var last_nav_mode: String = "MANUAL"
 
-# ── Combat orbit camera ────────────────────────────────────────────────────────
-var _in_combat_orbit:    bool    = false
-var _orbit_angle:        float   = 0.0
-var _orbit_radius:       float   = 40.0
-var _orbit_midpoint:     Vector3 = Vector3.ZERO
+# ── Combat cinematic camera ─────────────────────────────────────────────────────
+# Modes: 0 = off (normal follow), 1 = orbit (planning), 2 = action (punch-in).
+var _cam_mode:        int     = 0
+var _orbit_angle:     float   = 0.0
+var _orbit_radius:    float   = 40.0
+var _orbit_midpoint:  Vector3 = Vector3.ZERO
+var _cam_goal_pos:    Vector3 = Vector3.ZERO   # action-mode pivot goal
+var _cam_look_at:     Vector3 = Vector3.ZERO   # point the pivot looks at
+var _cam_lerp_speed:  float   = 3.0
 const _ORBIT_SPEED  := 0.10   # rad/s, wall-clock
 const _ORBIT_HEIGHT := 14.0   # units above midpoint
+const _ACTION_LERP  := 6.5    # snappier glide for punch-in framing
+const _ORBIT_LERP   := 3.0
+var dock_stuck_timer: float = 0.0
+var last_dock_distance: float = INF
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -144,6 +152,9 @@ func _ready():
 	GlobalState.target_changed.connect(_on_target_changed)
 	CombatManager.combat_started.connect(_on_combat_started_orbit)
 	CombatManager.combat_ended.connect(_on_combat_ended_orbit)
+	CombatManager.planning_started.connect(_on_planning_started_orbit)
+	CombatManager.action_telegraphed.connect(_on_action_telegraphed_cam)
+	CombatManager.action_impact.connect(_on_action_impact_cam)
 
 	_create_drones()
 	_create_boost_effects()
@@ -151,36 +162,102 @@ func _ready():
 func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
 
-# ── Combat orbit camera ────────────────────────────────────────────────────────
+# ── Combat cinematic camera ─────────────────────────────────────────────────────
 func _on_combat_started_orbit(enemy: Node) -> void:
 	if not is_instance_valid(enemy):
 		return
-	_orbit_midpoint = (global_position + enemy.global_position) * 0.5
-	var sep := global_position.distance_to(enemy.global_position)
-	_orbit_radius   = _find_safe_orbit_radius(enemy, sep)
+	_enter_orbit(enemy)
+
+func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary) -> void:
+	# Re-settle into the slow planning orbit each turn (ships may have moved).
+	if _cam_mode == 0:
+		return
+	if is_instance_valid(CombatManager.enemy_node):
+		_enter_orbit(CombatManager.enemy_node)
+	else:
+		_cam_mode = 1
+
+func _enter_orbit(enemy: Node) -> void:
+	_orbit_midpoint = (global_position + (enemy as Node3D).global_position) * 0.5
+	var sep := global_position.distance_to((enemy as Node3D).global_position)
+	_orbit_radius = _find_safe_orbit_radius(enemy, sep)
 	# Start orbit angle from current camera yaw so the transition is seamless
 	var to_cam := camera_pivot.global_position - _orbit_midpoint
-	_orbit_angle    = atan2(to_cam.x, to_cam.z)
-	_in_combat_orbit = true
+	_orbit_angle = atan2(to_cam.x, to_cam.z)
+	_cam_mode = 1
+	_cam_lerp_speed = _ORBIT_LERP
 
 func _on_combat_ended_orbit(_won: bool) -> void:
-	_in_combat_orbit = false
+	_cam_mode = 0
 	# Snap pivot back above the ship so the next frame resumes normal follow
 	camera_pivot.global_position = global_position
 
-func _process(delta: float) -> void:
-	if not _in_combat_orbit:
+# Punch in to frame the acting ship firing toward its target.
+func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -> void:
+	if _cam_mode == 0 or not is_instance_valid(source):
 		return
-	# Use wall-clock delta so orbit speed is constant regardless of time_scale slow-mo
+	_frame_action(source, target)
+	AudioManager.play_sfx(CombatManager.SFX.get("cam_whoosh"), -8.0)
+
+# Quick push toward the impact point (shake added in Phase 3).
+func _on_action_impact_cam(_target: Node, world_pos: Vector3, _dmg: float, _lethal: bool, _blocked: bool, _crit: bool) -> void:
+	if _cam_mode != 2:
+		return
+	# Nudge the look + goal a touch toward the impact for a reactive feel.
+	_cam_look_at = _cam_look_at.lerp(world_pos, 0.5)
+	_cam_goal_pos = _cam_goal_pos.lerp(world_pos, 0.12)
+
+func _frame_action(source: Node, target: Node) -> void:
+	var src: Vector3 = (source as Node3D).global_position
+	var tgt: Vector3 = (target as Node3D).global_position if is_instance_valid(target) else src
+	var axis := tgt - src
+	if axis.length() < 0.01:
+		axis = -global_transform.basis.z
+	axis = axis.normalized()
+	var side := axis.cross(Vector3.UP).normalized()
+	if side.length() < 0.01:
+		side = Vector3.RIGHT
+	var sep := clampf(src.distance_to(tgt), 18.0, 60.0)
+	var back := sep * 0.30
+	var sideways := sep * 0.50
+	var height := sep * 0.28
+	var look := src.lerp(tgt, 0.55)   # bias toward target so the shot is in frame
+	var space := get_world_3d().direct_space_state
+	var excl := [get_rid()]
+	if is_instance_valid(target) and target is CollisionObject3D:
+		excl.append((target as CollisionObject3D).get_rid())
+	# Try both shoulders, then a pulled-back fallback, picking the first clear shot.
+	var candidates: Array[Vector3] = [
+		src - axis * back + side * sideways + Vector3.UP * height,
+		src - axis * back - side * sideways + Vector3.UP * height,
+		src - axis * (back + sep * 0.4) + Vector3.UP * (height + sep * 0.3),
+	]
+	var chosen := candidates[0]
+	for pos in candidates:
+		if _cam_pos_clear(space, excl, pos, [src, tgt]):
+			chosen = pos
+			break
+	_cam_goal_pos = chosen
+	_cam_look_at = look
+	_cam_mode = 2
+	_cam_lerp_speed = _ACTION_LERP
+
+func _process(delta: float) -> void:
+	if _cam_mode == 0:
+		return
+	# Wall-clock delta so camera speed is constant regardless of time_scale slow-mo.
 	var real_delta := delta / maxf(Engine.time_scale, 0.01)
-	_orbit_angle   += _ORBIT_SPEED * real_delta
-	var x := sin(_orbit_angle) * _orbit_radius
-	var z := cos(_orbit_angle) * _orbit_radius
-	var target_pos := _orbit_midpoint + Vector3(x, _ORBIT_HEIGHT, z)
-	# Smooth glide toward orbit position (fast enough to feel snappy on entry)
-	camera_pivot.global_position = camera_pivot.global_position.lerp(target_pos, minf(real_delta * 4.0, 1.0))
-	if camera_pivot.global_position.distance_to(_orbit_midpoint) > 0.5:
-		camera_pivot.look_at(_orbit_midpoint, Vector3.UP)
+	if _cam_mode == 1:
+		_orbit_angle += _ORBIT_SPEED * real_delta
+		var x := sin(_orbit_angle) * _orbit_radius
+		var z := cos(_orbit_angle) * _orbit_radius
+		_cam_goal_pos = _orbit_midpoint + Vector3(x, _ORBIT_HEIGHT, z)
+		_cam_look_at = _orbit_midpoint
+	# Common glide toward goal + look (action mode keeps its fixed goal).
+	camera_pivot.global_position = camera_pivot.global_position.lerp(
+		_cam_goal_pos, minf(real_delta * _cam_lerp_speed, 1.0))
+	if camera_pivot.global_position.distance_to(_cam_look_at) > 0.5:
+		camera_pivot.look_at(_cam_look_at, Vector3.UP)
 
 func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
 	var min_r := maxf(ship_sep * 0.9, 28.0)
@@ -188,28 +265,24 @@ func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
 	var space  := get_world_3d().direct_space_state
 	var excl   := [get_rid()]
 	if is_instance_valid(enemy) and enemy is CollisionObject3D:
-		excl.append(enemy.get_rid())
+		excl.append((enemy as CollisionObject3D).get_rid())
 	for ri in range(4):
 		var r := lerpf(min_r, max_r, float(ri) / 3.0)
 		for ai in range(8):
 			var angle := TAU * float(ai) / 8.0
 			var pos   := _orbit_midpoint + Vector3(sin(angle) * r, _ORBIT_HEIGHT, cos(angle) * r)
-			if _orbit_pos_clear(space, excl, pos):
+			if _cam_pos_clear(space, excl, pos, [_orbit_midpoint, global_position]):
 				_orbit_angle = angle
 				return r
 	return min_r  # fallback
 
-func _orbit_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3) -> bool:
-	# Ray toward midpoint
-	var q1 := PhysicsRayQueryParameters3D.create(pos, _orbit_midpoint)
-	q1.exclude = excl
-	if not space.intersect_ray(q1).is_empty():
-		return false
-	# Ray toward player
-	var q2 := PhysicsRayQueryParameters3D.create(pos, global_position)
-	q2.exclude = excl
-	if not space.intersect_ray(q2).is_empty():
-		return false
+# A camera position is "clear" if it has line of sight to every look target.
+func _cam_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3, targets: Array) -> bool:
+	for t in targets:
+		var q := PhysicsRayQueryParameters3D.create(pos, t)
+		q.exclude = excl
+		if not space.intersect_ray(q).is_empty():
+			return false
 	return true
 
 func _on_target_changed(new_target: Node3D):
@@ -438,8 +511,8 @@ func _physics_process(delta: float):
 	# Update drone colors based on health
 	_update_drone_colors()
 			
-	# Follow player position (suppressed during combat orbit)
-	if not _in_combat_orbit:
+	# Follow player position (suppressed while the combat camera is driving)
+	if _cam_mode == 0:
 		camera_pivot.global_position = global_position
 
 	# Autopilot Camera Auto-facing
