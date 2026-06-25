@@ -69,6 +69,9 @@ var player_is_flanking: bool  = false
 var current_intent: Dictionary = {}
 var taunts: Dictionary = {}
 var _taunts_ready: bool = false
+# Low-health alarm fires once per side per fight.
+var _player_low_alarmed: bool = false
+var _enemy_low_alarmed: bool = false
 
 # ── Upgrade-derived combat stats (set at start_combat) ────────────────────────
 var _fire_ap_cost:   int   = 2
@@ -146,6 +149,8 @@ func _reset_fight_state() -> void:
 	repair_used_this_turn = false
 	player_is_flanking = false
 	current_intent = {}
+	_player_low_alarmed = false
+	_enemy_low_alarmed = false
 
 # ── AP helpers ────────────────────────────────────────────────────────────────
 func _load_upgrade_stats() -> void:
@@ -234,10 +239,20 @@ func _begin_planning() -> void:
 	player_is_flanking = false
 
 	_lerp_timescale(PLANNING_TIME_SCALE, PLANNING_MUSIC_PITCH, 500)
+	# Time-stretch riser pairs with the slow-mo + music pitch drop.
+	_sfx("slowmo_riser", null, -4.0)
 
 	current_intent = enemy_node.generate_intent() if enemy_node.has_method("generate_intent") else {}
 
+	# Menacing charge cue when the enemy telegraphs an attack this turn.
+	if _intent_is_attack(current_intent):
+		_sfx("enemy_charge", (enemy_node as Node3D).global_position, -3.0)
+
 	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts)
+
+# Whether an NPC intent will deal damage this turn (used for the charge cue).
+func _intent_is_attack(intent: Dictionary) -> bool:
+	return intent.get("type", "") in ["fire", "hull_shot", "suppression", "flank", "panic"]
 
 # ── Cinematic sequencer timing (wall-clock seconds) ─────────────────────────────
 const BEAT_TELEGRAPH    := 0.45   # after telegraph, before the action fires
@@ -614,9 +629,15 @@ func _after_npc_turn() -> void:
 	if player_hp / player_max <= 0.30:
 		_play_npc_taunt("player_low_health")
 		_play_kaelen_line("kaelen_player_low_health")
+		if not _player_low_alarmed:
+			_player_low_alarmed = true
+			_sfx("low_health_alarm", null, -4.0)
 	if enemy_hp / enemy_max <= 0.30:
 		_play_npc_taunt("npc_low_health")
 		_play_kaelen_line("kaelen_winning")
+		if not _enemy_low_alarmed and is_instance_valid(enemy_node):
+			_enemy_low_alarmed = true
+			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
 
 	_begin_planning()
 
