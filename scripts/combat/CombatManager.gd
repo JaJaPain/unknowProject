@@ -238,6 +238,52 @@ func _begin_planning() -> void:
 
 	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts)
 
+# ── Cinematic sequencer timing (wall-clock seconds) ─────────────────────────────
+const BEAT_TELEGRAPH    := 0.45   # after telegraph, before the action fires
+const BEAT_POST_ACTION  := 0.35   # after an action resolves, before the next
+const BEAT_TURN_GAP     := 0.55   # between player turn and NPC turn
+const PROJECTILE_SPEED  := 85.0   # matches Projectile.gd
+const TRAVEL_MIN        := 0.12
+const TRAVEL_MAX        := 0.60
+
+# Damage-dealing action types (camera frames the enemy; others frame self).
+const _ATTACK_TYPES := [CombatActionType.Type.FIRE, CombatActionType.Type.ATTACK_DRONE]
+
+# Wall-clock pause that survives Engine.time_scale slow-mo / hit-stop.
+func _beat(sec: float) -> void:
+	await get_tree().create_timer(sec, true, false, true).timeout
+
+# Pause for a projectile to cross the gap between two ships.
+func _await_travel(from: Node, to: Node) -> void:
+	var d := 0.0
+	if is_instance_valid(from) and is_instance_valid(to):
+		d = (from as Node3D).global_position.distance_to((to as Node3D).global_position)
+	await _beat(clampf(d / PROJECTILE_SPEED, TRAVEL_MIN, TRAVEL_MAX))
+
+# Apply damage at projectile-arrival time and emit the impact beat.
+func _apply_hit(target: Node, attacker_faction: String, dmg: float, crit: bool, blocked: bool) -> void:
+	if not is_instance_valid(target):
+		return
+	var hit_pos: Vector3 = (target as Node3D).global_position
+	if target.has_method("take_damage"):
+		target.take_damage(dmg, attacker_faction)
+	var lethal := (not is_instance_valid(target)) or (target.get("destroyed") == true)
+	if not lethal and is_instance_valid(target):
+		var hp = target.get("health")
+		if hp != null and float(hp) <= 0.0:
+			lethal = true
+	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
+
+# Emit the kill beat then end combat (Phase 5 expands this with the cinematic).
+func _kill_and_end(victim: Node, player_won: bool) -> void:
+	var pos := Vector3.ZERO
+	if is_instance_valid(victim):
+		pos = (victim as Node3D).global_position
+	emit_signal("combat_kill", victim, pos)
+	if player_won:
+		_play_kaelen_line("kaelen_kill_confirm")
+	end_combat(player_won)
+
 # Called by CombatPanel EXECUTE button.
 func commit_turn() -> void:
 	if state != State.PLANNING:
@@ -245,47 +291,69 @@ func commit_turn() -> void:
 	state = State.EXECUTING
 	_lerp_timescale(1.0, 1.0, 200)
 	emit_signal("execution_started")
-	_run_player_actions()
+	_run_turn_sequence()   # fire-and-forget coroutine
 
-# ── Execution ─────────────────────────────────────────────────────────────────
+# ── Execution sequence (async) ──────────────────────────────────────────────────
+func _run_turn_sequence() -> void:
+	await _run_player_actions()
+	if state == State.IDLE:
+		return   # combat ended mid-player-turn (flee / kill)
+	# Enemy died from player actions before NPC gets to act.
+	if not is_instance_valid(enemy_node) or enemy_node.get("destroyed"):
+		_kill_and_end(enemy_node, true)
+		return
+	await _beat(BEAT_TURN_GAP)
+	if state == State.IDLE:
+		return
+	await _execute_npc_intent()
+	if state == State.IDLE:
+		return
+	_after_npc_turn()
+
 func _run_player_actions() -> void:
 	for action in queued_actions:
 		if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
 			break
-		_dispatch_action(action)
-
+		await _dispatch_action(action)
+		if state == State.IDLE:
+			break
+		if not is_instance_valid(enemy_node) or enemy_node.get("destroyed"):
+			break
 	queued_actions.clear()
 
-	# Check if enemy died from player actions before NPC gets to act.
-	if not is_instance_valid(enemy_node) or enemy_node.get("destroyed"):
-		end_combat(true)
-		return
-
-	_execute_npc_intent()
-
 func _dispatch_action(action: Dictionary) -> void:
-	match action.get("type"):
-		CombatActionType.Type.FIRE:          _exec_fire()
-		CombatActionType.Type.BOOST:         _exec_boost(action.get("params", {}))
+	var t = action.get("type")
+	var target: Node = enemy_node if t in _ATTACK_TYPES else player_node
+	emit_signal("action_telegraphed", t, player_node, target)
+	await _beat(BEAT_TELEGRAPH)
+	if state == State.IDLE:
+		return
+	match t:
+		CombatActionType.Type.FIRE:           await _exec_fire()
+		CombatActionType.Type.BOOST:          _exec_boost(action.get("params", {}))
 		CombatActionType.Type.SHIELD_REROUTE: _exec_shield_reroute(action.get("params", {}))
-		CombatActionType.Type.ATTACK_DRONE:  _exec_attack_drone()
-		CombatActionType.Type.MICRO_WARP:    _exec_micro_warp()
-		CombatActionType.Type.REPAIR_KIT:    _exec_repair_kit()
-		CombatActionType.Type.FLEE:          _exec_flee()
+		CombatActionType.Type.ATTACK_DRONE:   await _exec_attack_drone()
+		CombatActionType.Type.MICRO_WARP:     _exec_micro_warp()
+		CombatActionType.Type.REPAIR_KIT:     _exec_repair_kit()
+		CombatActionType.Type.FLEE:           _exec_flee()
+	await _beat(BEAT_POST_ACTION)
 
 # ── Action handlers ───────────────────────────────────────────────────────────
 func _exec_fire() -> void:
 	if not is_instance_valid(enemy_node):
 		return
 	var dmg := _resolve_player_hit(_fire_damage * _fire_multiplier)
+	_sfx("weapon_fire", player_node.global_position)
 	AudioManager.play_laser(player_node.global_position)
 	if player_node.has_method("spawn_projectile"):
 		player_node.spawn_projectile(enemy_node)
-	if enemy_node.has_method("take_damage"):
-		enemy_node.take_damage(dmg, "player")
+	await _await_travel(player_node, enemy_node)
+	_apply_hit(enemy_node, "player", dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "You fire — %d damage." % int(dmg), Color(1.0, 0.55, 0.2))
 
 func _exec_boost(params: Dictionary) -> void:
+	if is_instance_valid(player_node):
+		_sfx("engine_boost", player_node.global_position)
 	var dir: String = params.get("direction", "closer")
 	if dir == "closer":
 		if range_band == CombatActionType.RangeBand.LONG:
@@ -299,6 +367,8 @@ func _exec_boost(params: Dictionary) -> void:
 			range_band = CombatActionType.RangeBand.LONG
 
 func _exec_shield_reroute(params: Dictionary) -> void:
+	if is_instance_valid(player_node):
+		_sfx("shield_reroute", player_node.global_position)
 	var face_idx: int = params.get("face", CombatActionType.Face.FRONT)
 	player_shield_face = face_idx as CombatActionType.Face
 
@@ -307,9 +377,10 @@ func _exec_attack_drone() -> void:
 		return
 	if player_node.has_method("launch_combat_drone"):
 		player_node.launch_combat_drone(enemy_node)
+	_sfx("drone_launch", player_node.global_position)
 	var drone_dmg := _resolve_player_hit(GlobalState.weapon_damage * 0.4)
-	if enemy_node.has_method("take_damage"):
-		enemy_node.take_damage(drone_dmg, "player")
+	await _await_travel(player_node, enemy_node)
+	_apply_hit(enemy_node, "player", drone_dmg, player_is_flanking, false)
 	GlobalState.emit_chatter("COMBAT", "Drone hits for %d damage." % int(drone_dmg), Color(0.3, 0.9, 0.9))
 
 func _exec_micro_warp() -> void:
@@ -317,6 +388,7 @@ func _exec_micro_warp() -> void:
 		return
 	# Teleport player to enemy flank — visual snap, no physics.
 	if is_instance_valid(player_node):
+		_sfx("microwarp", player_node.global_position)
 		var enemy3d := enemy_node as Node3D
 		if enemy3d:
 			var flank_offset: Vector3 = enemy3d.global_transform.basis.x * 18.0
@@ -331,6 +403,7 @@ func _exec_repair_kit() -> void:
 	if not GlobalState.inventory.has_item("repair_kit"):
 		return
 	GlobalState.inventory.remove("repair_kit", 1)
+	_sfx("repair_kit", player_node.global_position)
 	# repair_kit heals 25hp normally (ConsumableEffects.gd) — combat use is half that.
 	var heal_amount: float = 12.5
 	if player_node.has_method("heal"):
@@ -341,6 +414,8 @@ func _exec_repair_kit() -> void:
 	GlobalState.emit_chatter("Drone Bay", "Repair kit deployed — hull patched.", Color(0.4, 0.9, 0.6))
 
 func _exec_flee() -> void:
+	if is_instance_valid(player_node):
+		_sfx("engine_boost", player_node.global_position)
 	if not is_instance_valid(enemy_node):
 		end_combat(false)
 		return
@@ -396,44 +471,72 @@ func _adjacent_face(face: int) -> int:
 # ── NPC execution ─────────────────────────────────────────────────────────────
 func _execute_npc_intent() -> void:
 	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
-		_after_npc_turn()
 		return
 
 	var intent := current_intent
 	var itype: String = intent.get("type", "fire")
+	var npc_faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "enemy"
+
+	# Telegraph the NPC action (camera frames the enemy ship).
+	emit_signal("action_telegraphed", -1, enemy_node, player_node)
+	await _beat(BEAT_TELEGRAPH)
+	if state == State.IDLE or not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+		return
 
 	match itype:
 		"fire", "hull_shot", "suppression":
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 10.0), intent)
+			var blocked := _npc_hit_blocked(intent)
+			_sfx("weapon_fire", enemy_node.global_position)
+			AudioManager.play_laser(enemy_node.global_position)
 			if enemy_node.has_method("spawn_projectile"):
 				enemy_node.spawn_projectile(player_node)
-			if player_node.has_method("take_damage"):
-				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
+			await _await_travel(enemy_node, player_node)
+			_apply_hit(player_node, npc_faction, npc_dmg, false, blocked)
 			GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"flank":
 			range_band = CombatActionType.RangeBand.CLOSE
 			intent["flanking"] = true
 			var npc_dmg := _resolve_npc_hit(intent.get("damage", 8.0), intent)
+			var blocked := _npc_hit_blocked(intent)
+			_sfx("weapon_fire", enemy_node.global_position)
+			AudioManager.play_laser(enemy_node.global_position)
 			if enemy_node.has_method("spawn_projectile"):
 				enemy_node.spawn_projectile(player_node)
-			if player_node.has_method("take_damage"):
-				player_node.take_damage(npc_dmg, enemy_node.get("faction") if enemy_node.get("faction") else "enemy")
+			await _await_travel(enemy_node, player_node)
+			_apply_hit(player_node, npc_faction, npc_dmg, true, blocked)
 			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
 		"disable_engines":
 			# Costs player 1 AP next turn (clamped in _restore_ap).
 			ap_max = max(2, ap_max - 1)
+			_sfx("enemy_charge", enemy_node.global_position)
 			GlobalState.emit_chatter("SYSTEM", "Engine disruption — AP reduced by 1 next turn.", Color(1.0, 0.5, 0.2))
 		"repair":
 			var npc_hp: float = enemy_node.get("health") if enemy_node.get("health") else 0.0
 			var npc_max: float = enemy_node.get("max_health") if enemy_node.get("max_health") else 50.0
 			enemy_node.health = min(npc_hp + 8.0, npc_max)
+			_sfx("repair_kit", enemy_node.global_position)
 		"broadcast":
-			GlobalState.emit_chatter(enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY",
+			GlobalState.emit_chatter(npc_faction.to_upper(),
 				"Calling for reinforcements...", Color(1.0, 0.3, 0.3))
 		"surrender", "panic":
 			pass  # MiningHauler — does nothing this turn, handled by low-health flee
 
-	_after_npc_turn()
+# True when the player's current shield facing would absorb this NPC attack.
+func _npc_hit_blocked(intent: Dictionary) -> bool:
+	var attack_face_raw = intent.get("face")
+	var attack_face: int = attack_face_raw if attack_face_raw != null else CombatActionType.Face.FRONT
+	var flanking_raw = intent.get("flanking")
+	var is_flanking: bool = flanking_raw if flanking_raw != null else false
+	if is_flanking and int(player_shield_face) == CombatActionType.Face.FRONT:
+		return false
+	if GlobalState.shield_capacity <= 0.0:
+		return false
+	if attack_face == int(player_shield_face):
+		return true
+	if _shield_dual_face and attack_face == _adjacent_face(int(player_shield_face)):
+		return true
+	return false
 
 func _after_npc_turn() -> void:
 	# Check for deaths.
@@ -441,11 +544,10 @@ func _after_npc_turn() -> void:
 	var enemy_dead: bool  = not is_instance_valid(enemy_node)  or enemy_node.get("destroyed")  == true
 
 	if player_dead:
-		end_combat(false)
+		_kill_and_end(player_node, false)
 		return
 	if enemy_dead:
-		_play_kaelen_line("kaelen_kill_confirm")
-		end_combat(true)
+		_kill_and_end(enemy_node, true)
 		return
 
 	# Low-health taunts (fire once).
