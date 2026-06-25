@@ -16,7 +16,7 @@ static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: b
 	lbl.outline_modulate = Color(0, 0, 0, 0.9)
 	lbl.outline_size = 12
 	lbl.font_size = 64 if big else 44
-	lbl.pixel_size = 0.012 if big else 0.009
+	lbl.pixel_size = 0.006 if big else 0.0045
 	lbl.render_priority = 20
 	lbl.outline_render_priority = 19
 	parent.add_child(lbl)
