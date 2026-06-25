@@ -48,6 +48,7 @@ var _enemy_bar:        ProgressBar
 var _player_label:     Label
 var _enemy_label:      Label
 var _queue_strip:      HBoxContainer
+var _execute_row:      HBoxContainer
 var _execute_btn:      Button
 var _respond_btn:      Button
 var _btn_active:      Array[TextureRect] = []   # per-button active image
@@ -397,6 +398,7 @@ func _build_execute_row() -> void:
 	row.alignment     = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 14)
 	_root.add_child(row)
+	_execute_row = row
 
 	var undo := _make_flat_btn("↩  UNDO",    Color(0.35, 0.35, 0.35), Vector2(120, 38))
 	undo.pressed.connect(_on_undo_pressed)
@@ -449,11 +451,25 @@ func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dic
 	if _warp_cd_label:
 		var cd: int = CombatManager.micro_warp_cooldown
 		_warp_cd_label.text = "(%d turns)" % cd if cd > 0 else ""
+	_fade_controls(true)   # bring the wheel back for the player's choices
 
 func _on_execution_started() -> void:
 	for i in _btn_blocked.size():
 		_btn_blocked[i] = true
 	_execute_btn.disabled = true
+	_fade_controls(false)  # hide the wheel during the action sequence
+
+# Fade the player-control HUD (wheel + execute row + queued chips) in/out.
+# Wall-clock so the fade is smooth even through hit-stop slow-mo.
+func _fade_controls(visible_state: bool) -> void:
+	var target: float = 1.0 if visible_state else 0.0
+	var nodes: Array[Control] = [_wheel_panel, _execute_row, _queue_strip]
+	for node in nodes:
+		if not is_instance_valid(node):
+			continue
+		var tw: Tween = node.create_tween()
+		tw.set_ignore_time_scale(true)
+		tw.tween_property(node, "modulate:a", target, 0.22)
 
 func _on_combat_ended(_player_won: bool) -> void:
 	hide()
