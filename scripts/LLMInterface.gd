@@ -4204,6 +4204,9 @@ func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason:
 
 const COMBAT_TAUNT_FALLBACKS := {
 	"npc_open":               "You picked the wrong ship to tangle with.",
+	"npc_jab_1":              "That all you've got, scrapper?",
+	"npc_jab_2":              "I've fought asteroids with more fight in them.",
+	"npc_jab_3":              "Still breathing? Let's fix that.",
 	"npc_player_fled_success":"Run, coward. I'll find you again.",
 	"npc_player_fled_fail":   "Nowhere to run now.",
 	"npc_low_health":         "Lucky shot. Won't happen twice.",
@@ -4220,7 +4223,7 @@ func request_combat_taunts(npc_faction: String, npc_archetype: String, callback:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
 
-	var prompt := """You are writing combat banter for a PG-13 space trading game. Generate exactly 11 short lines of dialogue — salty, punchy, under 18 words each. No profanity, but attitude is encouraged. Occasional mom jokes are fair game. Do NOT use placeholder brackets.
+	var prompt := """You are writing combat banter for a PG-13 space trading game. Generate exactly 14 short lines of dialogue — salty, punchy, under 18 words each. No profanity, but attitude is encouraged. Occasional mom jokes are fair game. Do NOT use placeholder brackets.
 
 NPC faction: %s | NPC archetype: %s
 The player pilot goes by "Shiny". Kaelen is the player's cynical broker monitoring via comms.
@@ -4235,6 +4238,9 @@ Tone examples (do not reuse these, write originals with this energy):
 Return ONLY valid JSON, no markdown fences:
 {
   "npc_open": "...",
+  "npc_jab_1": "...",
+  "npc_jab_2": "...",
+  "npc_jab_3": "...",
   "npc_player_fled_success": "...",
   "npc_player_fled_fail": "...",
   "npc_low_health": "...",

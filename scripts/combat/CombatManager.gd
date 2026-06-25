@@ -72,6 +72,8 @@ var _taunts_ready: bool = false
 # Low-health alarm fires once per side per fight.
 var _player_low_alarmed: bool = false
 var _enemy_low_alarmed: bool = false
+# Planning-phase counter, drives opening + between-round enemy jabs.
+var _turn_number: int = 0
 # Position of the last lethal hit — the victim may be freed before the kill beat.
 var _last_kill_pos: Vector3 = Vector3.ZERO
 
@@ -153,6 +155,7 @@ func _reset_fight_state() -> void:
 	current_intent = {}
 	_player_low_alarmed = false
 	_enemy_low_alarmed = false
+	_turn_number = 0
 
 # ── AP helpers ────────────────────────────────────────────────────────────────
 func _load_upgrade_stats() -> void:
@@ -251,6 +254,13 @@ func _begin_planning() -> void:
 		_sfx("enemy_charge", (enemy_node as Node3D).global_position, -3.0)
 
 	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts)
+
+	# Voiced enemy taunting: opener on turn 1, occasional jab between rounds.
+	_turn_number += 1
+	if _turn_number == 1:
+		_play_npc_taunt("npc_open")
+	elif randf() < 0.5:
+		_play_npc_taunt("npc_jab_%d" % (randi() % 3 + 1))
 
 # Whether an NPC intent will deal damage this turn (used for the charge cue).
 func _intent_is_attack(intent: Dictionary) -> bool:
@@ -659,24 +669,37 @@ func _after_npc_turn() -> void:
 	_begin_planning()
 
 # ── Taunt / voice helpers ─────────────────────────────────────────────────────
-func _play_npc_taunt(key: String) -> void:
+func _combat_voice_on() -> bool:
 	var taunts_on = GlobalState.get("combat_voice_taunts")
-	if taunts_on != null and not taunts_on:
+	return taunts_on == null or bool(taunts_on)
+
+func _play_npc_taunt(key: String) -> void:
+	if not _combat_voice_on():
 		return
 	var line: String = taunts.get(key, "")
 	if line.is_empty():
 		return
-	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
-	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
+	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "enemy"
+	# Spoken in the enemy faction's voice (never af_bella — that's Kaelen's).
+	GlobalState.emit_npc_flavor({
+		"npc_name": faction.to_upper(),
+		"line": line,
+		"color": Color(1.0, 0.4, 0.3),
+		"voice_profile_id": faction,
+	})
 
 func _play_kaelen_line(key: String) -> void:
-	var taunts_on = GlobalState.get("combat_voice_taunts")
-	if taunts_on != null and not taunts_on:
+	if not _combat_voice_on():
 		return
 	var line: String = taunts.get(key, "")
 	if line.is_empty():
 		return
-	GlobalState.emit_chatter("Kaelen", line, Color(0.6, 0.9, 1.0))
+	GlobalState.emit_npc_flavor({
+		"npc_name": "Kaelen",
+		"line": line,
+		"color": Color(0.6, 0.9, 1.0),
+		"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
+	})
 
 func play_player_reply() -> void:
 	_play_kaelen_line("kaelen_open")
