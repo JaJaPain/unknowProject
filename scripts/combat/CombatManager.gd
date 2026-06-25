@@ -43,6 +43,7 @@ signal combat_ended(player_won: bool)
 signal ap_changed(current: int, max_ap: int)
 signal action_queued(action: Dictionary)
 signal action_dequeued
+signal enemy_status_changed(brace: bool, shield: bool)
 # ── Cinematic beat signals (drive camera + impact juice) ────────────────────────
 signal action_telegraphed(action_type: int, source: Node, target: Node)
 signal action_impact(target: Node, world_pos: Vector3, damage: float, lethal: bool, blocked: bool, crit: bool)
@@ -74,6 +75,13 @@ var _taunts_ready: bool = false
 # Bypassed if enemy repositions before firing.
 var player_shield_reroute_active: bool = false
 var _shield_dome: MeshInstance3D = null
+# Enemy defensive states — per-turn, cleared at start of each planning phase.
+var enemy_brace_active: bool = false
+var enemy_shield_angle_active: bool = false
+var _enemy_shield_dome: MeshInstance3D = null
+# Kaelen hint flags — fire once per fight.
+var _told_brace_hint: bool = false
+var _told_shield_angle_hint: bool = false
 # Low-health alarm fires once per side per fight.
 var _player_low_alarmed: bool = false
 var _enemy_low_alarmed: bool = false
@@ -270,6 +278,11 @@ func _reset_fight_state() -> void:
 	npc_action_plan = []
 	player_shield_reroute_active = false
 	_despawn_shield_dome()
+	enemy_brace_active = false
+	enemy_shield_angle_active = false
+	_despawn_enemy_shield_dome()
+	_told_brace_hint = false
+	_told_shield_angle_hint = false
 	_player_low_alarmed = false
 	_enemy_low_alarmed = false
 	_turn_number = 0
@@ -364,9 +377,13 @@ func _begin_planning() -> void:
 	# Time-stretch riser pairs with the slow-mo + music pitch drop.
 	_sfx("slowmo_riser", null, -4.0)
 
-	# Clear last turn's shield reroute — it's a per-turn commitment.
+	# Clear last turn's shield reroute and enemy defensive states — per-turn commitments.
 	player_shield_reroute_active = false
 	_despawn_shield_dome()
+	enemy_brace_active = false
+	enemy_shield_angle_active = false
+	_despawn_enemy_shield_dome()
+	emit_signal("enemy_status_changed", false, false)
 
 	# Build the enemy's full AP-driven action plan for this turn.
 	npc_action_plan = enemy_node.generate_action_plan() \
@@ -880,6 +897,11 @@ func _despawn_shield_dome() -> void:
 	if is_instance_valid(_shield_dome):
 		_shield_dome.queue_free()
 	_shield_dome = null
+
+func _despawn_enemy_shield_dome() -> void:
+	if is_instance_valid(_enemy_shield_dome):
+		_enemy_shield_dome.queue_free()
+	_enemy_shield_dome = null
 
 func _after_npc_turn() -> void:
 	# Check for deaths.
