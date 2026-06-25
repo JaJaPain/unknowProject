@@ -88,7 +88,7 @@ func _ready():
 # get_voice_for_faction(). Speed defaults to 1.0.
 # Cache key is "<voice>|<cleaned_text>" so different voices never
 # collide on the same line.
-func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0):
+func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0):
 	# Support legacy call: play_dialogue_audio(text, faction_string)
 	# Detect by checking if voice_id_override is a known faction OR if
 	# the caller passed a 2-arg combo. We resolve the voice from
@@ -154,7 +154,8 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	var payload = {
 		"text": clean_text,
 		"voice": voice_id,
-		"speed": speed_override
+		"speed": speed_override,
+		"style_scale": style_scale
 	}
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
@@ -170,7 +171,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 #   cache_dialogue_audio(text, faction)              # legacy, resolves to af_bella
 #   cache_dialogue_audio(text, voice_id, speed)      # per-NPC, speed is the override
 # Empty voice_id means "use faction". Speed <0 means "default 1.0".
-func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0):
+func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0):
 	text = text.strip_edges()
 	var clean_text = clean_dialogue_text(text)
 	if clean_text == "":
@@ -204,7 +205,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 				already_queued = true
 				break
 		if not already_queued:
-			cache_queue.append({"key": cache_key, "text": clean_text, "voice_id": voice_id, "speed": speed})
+			cache_queue.append({"key": cache_key, "text": clean_text, "voice_id": voice_id, "speed": speed, "style_scale": style_scale})
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
 		return
 		
@@ -216,11 +217,12 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	var payload = {
 		"text": clean_text,
 		"voice": voice_id,
-		"speed": speed
+		"speed": speed,
+		"style_scale": style_scale
 	}
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
-	
+
 	active_cache_requests += 1
 	GlobalState.trace("[TRACE] [TTSInterface] Background caching started for text hash: %d (len: %d), active: %d using voice: %s speed: %.1f" % [clean_text.hash(), clean_text.length(), active_cache_requests, voice_id, speed])
 	
@@ -455,7 +457,7 @@ func _discover_and_verify_tts():
 				# call the public method with the voice_id — it will
 				# be treated as a voice id (not a faction) and routed
 				# correctly.
-				cache_dialogue_audio(item.text, item.voice_id, item.speed)
+				cache_dialogue_audio(item.text, item.voice_id, item.speed, item.get("style_scale", 1.0))
 		else:
 			# If first attempt failed, start the server process
 			if tts_connection_attempts == 1:
