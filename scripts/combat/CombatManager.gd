@@ -640,6 +640,15 @@ func _exec_flee() -> void:
 	if randf() <= chance:
 		GlobalState.emit_chatter("SYSTEM", "Engines burn hot — you break their lock and escape.", Color(0.5, 1.0, 0.5))
 		_play_kaelen_line("kaelen_player_fled")
+		# Physically boost the player away so the enemy can't instantly re-acquire.
+		# Direction: away from the enemy; distance puts us outside the NPC's 130-unit
+		# re-target range so the 3-second buffer has time to fully expire first.
+		if is_instance_valid(player_node) and is_instance_valid(enemy_node):
+			var flee_dir: Vector3 = (player_node.global_position - enemy_node.global_position).normalized()
+			player_node.global_position += flee_dir * 160.0
+			# Clear the enemy's target so it must re-acquire fresh after the buffer.
+			if enemy_node.has_method("set") and enemy_node.get("target") != null:
+				enemy_node.set("target", null)
 		end_combat(false)
 	else:
 		GlobalState.emit_chatter("SYSTEM", "Escape failed — engines couldn't break their tractor lock.", Color(1.0, 0.4, 0.2))
