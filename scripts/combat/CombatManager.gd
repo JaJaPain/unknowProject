@@ -2,6 +2,37 @@ extends Node
 
 const CombatActionType := preload("res://scripts/combat/CombatAction.gd")
 
+# ── Combat SFX (loaded by key) ──────────────────────────────────────────────────
+const _SFX_DIR := "res://assets/CombatWheel/soundfxs/"
+const SFX := {
+	"weapon_fire":      preload("res://assets/CombatWheel/soundfxs/weapon_fire.wav"),
+	"drone_launch":     preload("res://assets/CombatWheel/soundfxs/drone_launch.wav"),
+	"microwarp":        preload("res://assets/CombatWheel/soundfxs/microwarp.wav"),
+	"engine_boost":     preload("res://assets/CombatWheel/soundfxs/engine_boost.wav"),
+	"shield_reroute":   preload("res://assets/CombatWheel/soundfxs/shield_reroute.wav"),
+	"repair_kit":       preload("res://assets/CombatWheel/soundfxs/repair_kit.wav"),
+	"hull_impact":      preload("res://assets/CombatWheel/soundfxs/hull_impact.wav"),
+	"shield_deflect":   preload("res://assets/CombatWheel/soundfxs/shield_deflect.wav"),
+	"impact_thud":      preload("res://assets/CombatWheel/soundfxs/sub_bass_thud.wav"),
+	"hit_critical":     preload("res://assets/CombatWheel/soundfxs/hit_critical.wav"),
+	"enemy_charge":     preload("res://assets/CombatWheel/soundfxs/enemy_charge.wav"),
+	"death_explosion":  preload("res://assets/CombatWheel/soundfxs/death_explosion.wav"),
+	"slowmo_riser":     preload("res://assets/CombatWheel/soundfxs/slowmo_riser.wav"),
+	"low_health_alarm": preload("res://assets/CombatWheel/soundfxs/low_health_alarm.wav"),
+	"cam_whoosh":       preload("res://assets/CombatWheel/soundfxs/cam_whoosh.wav"),
+	"combat_sting":     preload("res://assets/CombatWheel/soundfxs/combat_sting.wav"),
+}
+
+# Play a combat SFX by key. If world_pos given, plays positionally; else 2D/global.
+func _sfx(key: String, world_pos: Variant = null, db: float = 0.0) -> void:
+	var stream: AudioStream = SFX.get(key)
+	if stream == null:
+		return
+	if world_pos is Vector3:
+		AudioManager.play_sfx_3d(stream, world_pos, db)
+	else:
+		AudioManager.play_sfx(stream, db)
+
 enum State { IDLE, PLANNING, EXECUTING }
 
 signal combat_started(enemy: Node)
@@ -11,6 +42,10 @@ signal combat_ended(player_won: bool)
 signal ap_changed(current: int, max_ap: int)
 signal action_queued(action: Dictionary)
 signal action_dequeued
+# ── Cinematic beat signals (drive camera + impact juice) ────────────────────────
+signal action_telegraphed(action_type: int, source: Node, target: Node)
+signal action_impact(target: Node, world_pos: Vector3, damage: float, lethal: bool, blocked: bool, crit: bool)
+signal combat_kill(victim: Node, world_pos: Vector3)
 
 # ── State ─────────────────────────────────────────────────────────────────────
 var state: State = State.IDLE
