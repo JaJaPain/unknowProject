@@ -37,7 +37,7 @@ func _sfx(key: String, world_pos: Variant = null, db: float = 0.0) -> void:
 enum State { IDLE, PLANNING, EXECUTING }
 
 signal combat_started(enemy: Node)
-signal planning_started(ap: int, max_ap: int, intent: Dictionary, taunts: Dictionary)
+signal planning_started(ap: int, max_ap: int, intent: Dictionary, taunts: Dictionary, npc_plan: Array)
 signal execution_started
 signal combat_ended(player_won: bool)
 signal ap_changed(current: int, max_ap: int)
@@ -66,9 +66,14 @@ var player_shield_face = CombatActionType.Face.FRONT
 var micro_warp_cooldown: int  = 0   # turns remaining
 var repair_used_this_turn: bool = false
 var player_is_flanking: bool  = false
-var current_intent: Dictionary = {}
+var current_intent: Dictionary = {}       # kept for telegraph UI (first action label)
+var npc_action_plan: Array = [] # full AP-driven action list for the turn
 var taunts: Dictionary = {}
 var _taunts_ready: bool = false
+# Shield Reroute new mechanic: auto-faces enemy, blocks first hit 65%.
+# Bypassed if enemy repositions before firing.
+var player_shield_reroute_active: bool = false
+var _shield_dome: MeshInstance3D = null
 # Low-health alarm fires once per side per fight.
 var _player_low_alarmed: bool = false
 var _enemy_low_alarmed: bool = false
@@ -169,6 +174,19 @@ func _play_combat_taunt() -> void:
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
 
+func _play_npc_flee_taunt() -> void:
+	if not _combat_voice_on() or not is_instance_valid(enemy_node):
+		return
+	var line: String = taunts.get("npc_player_fled_success", "")
+	if line.is_empty():
+		return
+	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
+	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
+	# Pick a voice from the cached rage pool (same angry blend the opening taunt uses).
+	if not _cached_rage.is_empty():
+		var pick: Dictionary = _cached_rage[randi() % _cached_rage.size()]
+		TTSInterface.play_dialogue_audio(line, pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+
 # True if the enemy belongs to an active comms-reversal (bribe) mission target,
 # whose branching transmission dialog should not be stepped on by a generic taunt.
 func _is_comms_reversal_target() -> bool:
@@ -249,6 +267,9 @@ func _reset_fight_state() -> void:
 	repair_used_this_turn = false
 	player_is_flanking = false
 	current_intent = {}
+	npc_action_plan = []
+	player_shield_reroute_active = false
+	_despawn_shield_dome()
 	_player_low_alarmed = false
 	_enemy_low_alarmed = false
 	_turn_number = 0
@@ -343,13 +364,21 @@ func _begin_planning() -> void:
 	# Time-stretch riser pairs with the slow-mo + music pitch drop.
 	_sfx("slowmo_riser", null, -4.0)
 
-	current_intent = enemy_node.generate_intent() if enemy_node.has_method("generate_intent") else {}
+	# Clear last turn's shield reroute — it's a per-turn commitment.
+	player_shield_reroute_active = false
+	_despawn_shield_dome()
+
+	# Build the enemy's full AP-driven action plan for this turn.
+	npc_action_plan = enemy_node.generate_action_plan() \
+		if enemy_node.has_method("generate_action_plan") else []
+	# Keep current_intent pointing at the first action for the telegraph UI.
+	current_intent = npc_action_plan[0] if not npc_action_plan.is_empty() else {}
 
 	# Menacing charge cue when the enemy telegraphs an attack this turn.
 	if _intent_is_attack(current_intent):
 		_sfx("enemy_charge", (enemy_node as Node3D).global_position, -3.0)
 
-	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts)
+	emit_signal("planning_started", ap_current, ap_max, current_intent, taunts, npc_action_plan)
 
 	# Exactly one voiced enemy taunt per fight, fired on the first planning phase.
 	_turn_number += 1
@@ -565,14 +594,15 @@ func _exec_boost(params: Dictionary) -> void:
 	_player_status_float("REPOSITION ▸ %s" % band_names.get(range_band, "MID"), Color(0.95, 0.6, 0.2))
 	GlobalState.emit_chatter("COMBAT", "Reposition — range now %s." % str(band_names.get(range_band, "MID")), Color(0.95, 0.6, 0.2))
 
-func _exec_shield_reroute(params: Dictionary) -> void:
+func _exec_shield_reroute(_params: Dictionary) -> void:
 	if is_instance_valid(player_node):
 		_sfx("shield_reroute", player_node.global_position)
-	var face_idx: int = params.get("face", CombatActionType.Face.FRONT)
-	player_shield_face = face_idx as CombatActionType.Face
-	var face_name: String = str(CombatActionType.FACE_LABEL.get(player_shield_face, "Front"))
-	_player_status_float("SHIELD ▸ %s" % face_name.to_upper(), Color(0.85, 0.78, 0.25))
-	GlobalState.emit_chatter("COMBAT", "Shields rerouted — %s facing." % face_name, Color(0.85, 0.78, 0.25))
+	# New mechanic: auto-faces enemy, blocks first incoming hit by 65%.
+	# Bypassed if the enemy repositions before firing (they change angle).
+	player_shield_reroute_active = true
+	_spawn_shield_dome()
+	_player_status_float("SHIELD UP", Color(1.0, 0.85, 0.1))
+	GlobalState.emit_chatter("COMBAT", "Shields raised — first enemy hit absorbed 65%.", Color(0.85, 0.78, 0.25))
 
 func _exec_attack_drone() -> void:
 	if not is_instance_valid(enemy_node):
@@ -639,6 +669,8 @@ func _exec_flee() -> void:
 	var chance := clampf(_flee_base_chance - penalty, 0.05, 0.95)
 	if randf() <= chance:
 		GlobalState.emit_chatter("SYSTEM", "Engines burn hot — you break their lock and escape.", Color(0.5, 1.0, 0.5))
+		# Enemy taunts the fleeing player in the NPC's voice, not Kaelen's.
+		_play_npc_flee_taunt()
 		_play_kaelen_line("kaelen_player_fled")
 		# Physically boost the player away so the enemy can't instantly re-acquire.
 		# Direction: away from the enemy; distance puts us outside the NPC's 130-unit
@@ -690,79 +722,164 @@ func _adjacent_face(face: int) -> int:
 	if face == CombatActionType.Face.STARBOARD: return CombatActionType.Face.FRONT
 	return CombatActionType.Face.FRONT
 
-# ── NPC execution ─────────────────────────────────────────────────────────────
-func _execute_npc_intent() -> void:
-	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
-		return
-
-	var intent := current_intent
-	var itype: String = intent.get("type", "fire")
-	var npc_faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "enemy"
-
-	# Telegraph the NPC action (camera frames the enemy ship).
-	emit_signal("action_telegraphed", -1, enemy_node, player_node)
-	await _beat(BEAT_TELEGRAPH)
-	if state == State.IDLE or not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
-		return
-
-	match itype:
-		"fire", "hull_shot", "suppression":
-			var npc_dmg := _resolve_npc_hit(intent.get("damage", 10.0), intent)
-			var blocked := _npc_hit_blocked(intent)
-			_sfx("weapon_fire", enemy_node.global_position)
-			AudioManager.play_laser(enemy_node.global_position)
-			if enemy_node.has_method("spawn_projectile"):
-				enemy_node.spawn_projectile(player_node, true)
-			await _await_travel(enemy_node, player_node)
-			if not is_instance_valid(player_node):
-				return
-			_apply_hit(player_node, npc_faction, npc_dmg, false, blocked)
-			GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
-		"flank":
-			range_band = CombatActionType.RangeBand.CLOSE
-			intent["flanking"] = true
-			var npc_dmg := _resolve_npc_hit(intent.get("damage", 8.0), intent)
-			var blocked := _npc_hit_blocked(intent)
-			_sfx("weapon_fire", enemy_node.global_position)
-			AudioManager.play_laser(enemy_node.global_position)
-			if enemy_node.has_method("spawn_projectile"):
-				enemy_node.spawn_projectile(player_node, true)
-			await _await_travel(enemy_node, player_node)
-			if not is_instance_valid(player_node):
-				return
-			_apply_hit(player_node, npc_faction, npc_dmg, true, blocked)
-			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
-		"disable_engines":
-			# Costs player 1 AP next turn (clamped in _restore_ap).
-			ap_max = max(2, ap_max - 1)
-			_sfx("enemy_charge", enemy_node.global_position)
-			GlobalState.emit_chatter("SYSTEM", "Engine disruption — AP reduced by 1 next turn.", Color(1.0, 0.5, 0.2))
-		"repair":
-			var npc_hp: float = enemy_node.get("health") if enemy_node.get("health") else 0.0
-			var npc_max: float = enemy_node.get("max_health") if enemy_node.get("max_health") else 50.0
-			enemy_node.health = min(npc_hp + 8.0, npc_max)
-			_sfx("repair_kit", enemy_node.global_position)
-		"broadcast":
-			GlobalState.emit_chatter(npc_faction.to_upper(),
-				"Calling for reinforcements...", Color(1.0, 0.3, 0.3))
-		"surrender", "panic":
-			pass  # MiningHauler — does nothing this turn, handled by low-health flee
-
-# True when the player's current shield facing would absorb this NPC attack.
-func _npc_hit_blocked(intent: Dictionary) -> bool:
-	var attack_face_raw = intent.get("face")
-	var attack_face: int = attack_face_raw if attack_face_raw != null else CombatActionType.Face.FRONT
-	var flanking_raw = intent.get("flanking")
-	var is_flanking: bool = flanking_raw if flanking_raw != null else false
-	if is_flanking and int(player_shield_face) == CombatActionType.Face.FRONT:
-		return false
+# True when the player's equipped shield face absorbs this NPC attack.
+# Separate from Shield Reroute (which is an active ability this turn).
+func _npc_hit_shield_blocked(action: Dictionary) -> bool:
 	if GlobalState.shield_capacity <= 0.0:
 		return false
+	var attack_face: int = action.get("face", CombatActionType.Face.FRONT)
+	var is_flanking: bool = action.get("flanking", false)
+	if is_flanking and int(player_shield_face) == CombatActionType.Face.FRONT:
+		return false  # flanking bypasses front shield
 	if attack_face == int(player_shield_face):
 		return true
 	if _shield_dual_face and attack_face == _adjacent_face(int(player_shield_face)):
 		return true
 	return false
+
+# ── NPC execution (AP-driven, simultaneous plan) ─────────────────────────────
+# The NPC's plan was locked in at planning-start (same moment the player began
+# choosing). We now execute each action in sequence.
+func _execute_npc_intent() -> void:
+	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+		return
+	var npc_faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "enemy"
+
+	emit_signal("action_telegraphed", -1, enemy_node, player_node)
+	await _beat(BEAT_TELEGRAPH)
+
+	for action in npc_action_plan:
+		if state == State.IDLE or not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+			return
+		await _execute_npc_action(action, npc_faction)
+		if state == State.IDLE:
+			return
+		await _beat(BEAT_POST_ACTION)
+
+func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
+	var itype: String = action.get("type", "fire")
+	match itype:
+		"fire", "hull_shot", "suppression":
+			var npc_dmg := _resolve_npc_hit(action.get("damage", 10.0), action)
+			# Shield Reroute: active this turn and enemy didn't reposition first → 65% block.
+			var shield_blocked := _npc_hit_shield_blocked(action)
+			if player_shield_reroute_active:
+				npc_dmg *= 0.35  # 65% mitigation
+				_consume_shield_reroute()
+				GlobalState.emit_chatter("SYSTEM", "Shield absorbed the attack!", Color(0.85, 0.78, 0.25))
+			_sfx("weapon_fire", enemy_node.global_position)
+			AudioManager.play_laser(enemy_node.global_position)
+			if enemy_node.has_method("spawn_projectile"):
+				enemy_node.spawn_projectile(player_node, true)
+			await _await_travel(enemy_node, player_node)
+			if not is_instance_valid(player_node):
+				return
+			_apply_hit(player_node, npc_faction, npc_dmg, false, shield_blocked)
+			if not shield_blocked:
+				GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
+		"flank":
+			# Reposition to flank — bypasses Shield Reroute (angle changed).
+			if player_shield_reroute_active:
+				_consume_shield_reroute()
+				GlobalState.emit_chatter("SYSTEM", "Enemy flanked — shield bypassed!", Color(1.0, 0.5, 0.2))
+			range_band = CombatActionType.RangeBand.CLOSE
+			action["flanking"] = true
+			var npc_dmg := _resolve_npc_hit(action.get("damage", 8.0), action)
+			_sfx("weapon_fire", enemy_node.global_position)
+			AudioManager.play_laser(enemy_node.global_position)
+			if enemy_node.has_method("spawn_projectile"):
+				enemy_node.spawn_projectile(player_node, true)
+			await _await_travel(enemy_node, player_node)
+			if not is_instance_valid(player_node):
+				return
+			_apply_hit(player_node, npc_faction, npc_dmg, true, false)
+			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
+		"boost":
+			# Enemy repositions — if Shield Reroute is up, angle changed = bypassed.
+			if player_shield_reroute_active:
+				_consume_shield_reroute()
+				GlobalState.emit_chatter("SYSTEM", "Enemy repositioned — shield angle lost!", Color(1.0, 0.5, 0.2))
+			var dir: String = action.get("direction", "closer")
+			if dir == "closer":
+				if range_band == CombatActionType.RangeBand.LONG:
+					range_band = CombatActionType.RangeBand.MID
+				elif range_band == CombatActionType.RangeBand.MID:
+					range_band = CombatActionType.RangeBand.CLOSE
+			else:
+				if range_band == CombatActionType.RangeBand.CLOSE:
+					range_band = CombatActionType.RangeBand.MID
+				elif range_band == CombatActionType.RangeBand.MID:
+					range_band = CombatActionType.RangeBand.LONG
+			_sfx("engine_boost", enemy_node.global_position)
+		"disable_engines":
+			ap_max = max(2, ap_max - 1)
+			_sfx("enemy_charge", enemy_node.global_position)
+			GlobalState.emit_chatter("SYSTEM", "Engine disruption — AP reduced by 1 next turn.", Color(1.0, 0.5, 0.2))
+		"repair":
+			var npc_hp: float = float(enemy_node.get("health")) if enemy_node.get("health") else 0.0
+			var npc_max: float = float(enemy_node.get("max_health")) if enemy_node.get("max_health") else 50.0
+			var heal := npc_max * 0.20
+			enemy_node.health = min(npc_hp + heal, npc_max)
+			_sfx("repair_kit", enemy_node.global_position)
+			GlobalState.emit_chatter("COMBAT", "Enemy repairs — hull patched.", Color(0.4, 0.9, 0.6))
+		"broadcast":
+			GlobalState.emit_chatter(npc_faction.to_upper(), "Calling for reinforcements...", Color(1.0, 0.3, 0.3))
+		"surrender", "panic":
+			pass
+
+# ── Shield Reroute (new mechanic) ────────────────────────────────────────────
+func _consume_shield_reroute() -> void:
+	player_shield_reroute_active = false
+	_despawn_shield_dome()
+
+func _spawn_shield_dome() -> void:
+	_despawn_shield_dome()
+	if not is_instance_valid(player_node) or not is_instance_valid(enemy_node):
+		return
+	var parent := player_node.get_parent()
+	if parent == null:
+		return
+	_shield_dome = MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius          = 8.0
+	mesh.height          = 16.0
+	mesh.rings           = 24
+	mesh.radial_segments = 32
+	mesh.is_hemisphere   = true
+	_shield_dome.mesh = mesh
+	var shader := Shader.new()
+	shader.code = "shader_type spatial;\n" + \
+		"render_mode blend_add, cull_disabled, unshaded, depth_draw_never;\n" + \
+		"uniform vec4 rim_color : source_color = vec4(1.0, 0.88, 0.15, 1.0);\n" + \
+		"uniform float rim_power : hint_range(1.0, 8.0) = 2.5;\n" + \
+		"void fragment() {\n" + \
+		"  float rim = 1.0 - abs(dot(normalize(NORMAL), normalize(VIEW)));\n" + \
+		"  rim = pow(rim, rim_power);\n" + \
+		"  ALBEDO = rim_color.rgb;\n" + \
+		"  ALPHA  = rim;\n" + \
+		"}\n"
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("rim_color", Color(1.0, 0.88, 0.15, 1.0))
+	mat.set_shader_parameter("rim_power", 2.5)
+	_shield_dome.material_override = mat
+	_shield_dome.cast_shadow       = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(_shield_dome)
+	_shield_dome.global_position = player_node.global_position
+	# Orient dome toward the enemy — hemisphere +Y is the dome tip, so rotate
+	# +Y to point at the enemy.
+	var to_enemy: Vector3 = ((enemy_node as Node3D).global_position - (player_node as Node3D).global_position).normalized()
+	var up: Vector3 = Vector3.UP
+	var axis: Vector3 = up.cross(to_enemy)
+	if axis.length_squared() > 0.001:
+		_shield_dome.global_transform.basis = Basis(axis.normalized(), up.angle_to(to_enemy))
+	elif to_enemy.dot(up) < 0.0:
+		_shield_dome.rotate_object_local(Vector3.RIGHT, PI)
+
+func _despawn_shield_dome() -> void:
+	if is_instance_valid(_shield_dome):
+		_shield_dome.queue_free()
+	_shield_dome = null
 
 func _after_npc_turn() -> void:
 	# Check for deaths.

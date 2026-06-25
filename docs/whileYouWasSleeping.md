@@ -2,6 +2,116 @@
 
 ---
 
+## Session: 2026-06-25 (Enemy AP System + Shield Reroute Redesign + UI Fixes) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Three major systems landed this session: a full AP-driven enemy AI that mirrors the player's action economy (with intelligence tuning for difficulty scaling), a redesigned Shield Reroute ability with a Fresnel shader bubble visual, and several UI fixes including a quest dialogue choice cap and a panel size reset bug.
+
+---
+
+### 1. Enemy AP System (`scripts/NPCShip.gd`)
+
+Enemies now plan their entire turn at the **same moment the player begins choosing** — both sides commit simultaneously. The enemy's plan is revealed as a sequence in the telegraph label (e.g. "Enemy: Reposition → Fire → Fire") so the player can counter it.
+
+**Two new properties on every NPCShip:**
+- `combat_ap: int = 4` — AP budget for the turn. Elite ships can be set to 6+, noob ships to 2.
+- `combat_intelligence: float = 0.5` — 0.0 = dumb, 1.0 = optimal. Controls three things:
+  - **Action choice:** dumb enemies pick suppression/weak options; smart ones pick hull shots
+  - **Action order:** dumb enemies fire *before* repositioning (Shield Reroute not bypassed); smart ones reposition *first* to bypass it
+  - **AP waste:** dumb enemies randomly skip their last action, leaving AP on the table
+
+**Archetype planners** (`generate_action_plan()`):
+- `Gunner` (4 AP): fires twice; desperate low-HP goes all-in on hull shot
+- `Interceptor` (5 AP): smart = reposition then fire; dumb = wrong order or forgets
+- `Logistics` (4 AP): repairs if damaged, then fires or disrupts engines
+- `MiningHauler` (2 AP): surrender or panic shot only
+
+`generate_intent()` kept as a shim for backwards compatibility.
+
+---
+
+### 2. Shield Reroute Redesign (`scripts/combat/CombatManager.gd`, `scripts/ui/CombatPanel.gd`)
+
+Old behavior: face-picker sub-menu, reduces damage from chosen direction.
+New behavior: one button, auto-faces enemy, blocks first hit 65%, **bypassed** if enemy repositions first.
+
+**Mechanics:**
+- Player activates Shield Reroute (1 AP) → `player_shield_reroute_active = true`, hemisphere dome spawns
+- First enemy *damaging* action this turn → 65% mitigation, dome consumed
+- If enemy plan contains `boost` or `flank` *before* their fire → dome bypassed and consumed (they changed angle). Player saw it coming in the telegraph and could have used AP differently.
+- Smart enemies (intelligence ≥ 0.55) plan a reposition before firing to exploit this.
+
+**Visual (Fresnel shader hemisphere):**
+- `SphereMesh` with `is_hemisphere = true` oriented toward the enemy
+- Custom `ShaderMaterial` with `blend_add` + `cull_disabled`: `ALPHA = pow(1 - dot(NORMAL, VIEW), rim_power)` — clear in center, glowing yellow at edges
+- Despawned when dome is consumed or combat ends
+
+**UI change:** `planning_started` signal now carries the full `npc_plan: Array` as a 5th parameter. `CombatPanel` builds "Enemy: X → Y → Z" from the labels array.
+
+---
+
+### 3. Traditional Shield Face Blocking Preserved (`scripts/combat/CombatManager.gd`)
+
+`_npc_hit_shield_blocked()` re-added (was removed with old execute block) — still checks player's equipped shield direction for regular NPC fire hits. Shield Reroute and equipped-shield are two separate systems that stack correctly.
+
+---
+
+### 4. Quest Dialogue Choice Cap (`scripts/UIManager.gd`, `scripts/LLMInterface.gd`)
+
+LLM was generating 12+ player response choices. Fixed two ways:
+- **UI hard cap:** `_show_quest_briefing()` now shows at most 3 choices, ignoring extras
+- **Prompt fix:** Added "IMPORTANT: The choices array MUST contain EXACTLY 3 entries — no more, no fewer." to the quest generation instruction
+
+---
+
+### 5. Quest Tracker Panel — "ACTIVE CONTRACT" Header Removed (`scripts/UIManager.gd`)
+
+The `quest_tracker_nav_label` always showed "ACTIVE CONTRACT" / "BOARD JOB" / "STATION ERRAND" during normal play, creating a visual that looked like an edit-mode placeholder. Fixed:
+- With 1 active mission: nav row (`quest_tracker_nav_container`) hidden entirely — no navigation needed
+- With 2+ missions: shows compact count `"2 / 3"` with arrows
+- Initializes hidden instead of with hardcoded "ACTIVE CONTRACT" text
+
+---
+
+### 6. Quest Tracker Panel Size Reset (`scripts/UIManager.gd`, `scripts/ui/UILayoutManager.gd`)
+
+Panel retained its explicit size from edit-mode resize drag even after exiting edit mode, causing a large empty blue box.
+
+- `UILayoutManager.toggle_edit_mode()` — on exit from edit mode, calls `reset_size()` on all dynamic panels (quest panel) to let PanelContainer shrink to content
+- `UILayoutManager.setup()` — calls `reset_size()` at startup after `_load_layout()` to flush any stale size from old sessions
+- `_update_quest_tracker()` — calls `call_deferred("reset_size")` every time the panel becomes visible, ensuring content-fit after quest accept
+
+Also: deleting `user://ui_layout.json` clears any old save that had `w`/`h` for the quest panel.
+
+---
+
+### 7. Flee Taunts — NPC Voice Fixed (`scripts/combat/CombatManager.gd`)
+
+`_exec_flee()` was calling only `_play_kaelen_line("kaelen_player_fled")` on successful flee, meaning Kaelen voiced the enemy reaction. Fixed:
+- New `_play_npc_flee_taunt()` fires first: plays `npc_player_fled_success` ("Run, coward. I'll hunt you down.") in the enemy's angry voice blend
+- Kaelen's comment fires after as normal
+- Silently skips if taunt data not yet loaded
+
+---
+
+### 8. `_SQ_DEBUG` Fixed (`scripts/story/StoryManager.gd`)
+
+Was inadvertently left `true`. Reset to `false`.
+
+---
+
+### Files Modified
+- `scripts/NPCShip.gd` — `combat_ap`, `combat_intelligence`, `generate_action_plan()`, archetype planners, action builders, `generate_intent()` shim
+- `scripts/combat/CombatManager.gd` — `npc_action_plan`, `player_shield_reroute_active`, `_shield_dome`, `_spawn_shield_dome()` (Fresnel shader), `_despawn_shield_dome()`, `_consume_shield_reroute()`, `_exec_shield_reroute()` redesign, `_execute_npc_action()`, `_npc_hit_shield_blocked()`, `_plan_npc_actions()`, `_play_npc_flee_taunt()`, `reset_size()` calls
+- `scripts/ui/CombatPanel.gd` — `planning_started` 5th param, enemy plan sequence label, SHIELD_REROUTE no longer sends face param
+- `scripts/UIManager.gd` — choice cap at 3, nav row hidden when single mission, count label for multi-mission, `call_deferred("reset_size")` on quest panel show
+- `scripts/LLMInterface.gd` — "EXACTLY 3 entries" prompt instruction
+- `scripts/story/StoryManager.gd` — `_SQ_DEBUG = false`
+- `scripts/ui/UILayoutManager.gd` — `reset_size()` on edit mode exit, `reset_size()` at startup for dynamic panels
+
+---
+
 ## Session: 2026-06-23 (StoryQuestManager Pipeline + UI Layout Improvements) — Claude
 **Branch:** `segment-3/economy-stores-events`
 

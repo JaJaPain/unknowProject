@@ -640,7 +640,8 @@ func _create_hud():
 	quest_tracker_nav_container.add_child(quest_tracker_prev_btn)
 
 	quest_tracker_nav_label = Label.new()
-	quest_tracker_nav_label.text = "ACTIVE CONTRACT"
+	quest_tracker_nav_label.text = ""
+	quest_tracker_nav_label.visible = false
 	quest_tracker_nav_label.add_theme_font_size_override("font_size", 10)
 	quest_tracker_nav_label.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
 	quest_tracker_nav_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -7396,13 +7397,17 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		"Objective: " + amt_info + "\n" + \
 		"Base Reward: " + str(obj.get("reward_credits", 150)) + " SC"
 	
-	# Add player choice buttons
+	# Add player choice buttons. Cap at 3 — LLM sometimes generates too many.
 	var choices = quest_data.get("choices", [])
+	var shown := 0
 	for choice in choices:
+		if shown >= 3:
+			break
 		var choice_btn = Button.new()
 		choice_btn.text = choice.get("text", "Accept Option")
 		choice_btn.pressed.connect(func(): _on_choice_selected(quest_data, choice))
 		agent_choices_container.add_child(choice_btn)
+		shown += 1
 
 
 
@@ -7676,6 +7681,8 @@ func _update_quest_tracker():
 		return
 
 	quest_tracker_panel.visible = true
+	# Reset any stale explicit size so PanelContainer shrinks to content.
+	quest_tracker_panel.call_deferred("reset_size")
 	var q = QuestManager.active_quest
 	quest_tracker_title.text = q.get("title", "Contract")
 
@@ -7704,32 +7711,26 @@ func _update_quest_tracker_nav(q: Dictionary) -> void:
 	var collection = QuestManager.get_mission_collection()
 	var all_active = collection.get_all_active()
 	var count := all_active.size()
-	var show_arrows := count > 1
+	var show_nav := count > 1
+	if quest_tracker_nav_container:
+		quest_tracker_nav_container.visible = show_nav
 	if quest_tracker_prev_btn:
-		quest_tracker_prev_btn.visible = show_arrows
+		quest_tracker_prev_btn.visible = show_nav
 	if quest_tracker_next_btn:
-		quest_tracker_next_btn.visible = show_arrows
+		quest_tracker_next_btn.visible = show_nav
 	if quest_tracker_nav_label:
 		if count <= 1:
-			var lane_label := "ACTIVE CONTRACT"
-			if bool(q.get("public_board", false)):
-				lane_label = "BOARD JOB"
-			elif bool(q.get("station_errand", false)):
-				lane_label = "STATION ERRAND"
-			quest_tracker_nav_label.text = lane_label
+			# No nav needed — hide the label so the panel stays clean.
+			quest_tracker_nav_label.visible = false
 		else:
+			quest_tracker_nav_label.visible = true
 			var focused = collection.get_focused()
 			var idx := 0
 			for i in range(all_active.size()):
 				if focused and all_active[i].runtime_id == focused.runtime_id:
 					idx = i
 					break
-			var lane_tag := "CONTRACT"
-			if bool(q.get("public_board", false)):
-				lane_tag = "BOARD"
-			elif bool(q.get("station_errand", false)):
-				lane_tag = "ERRAND"
-			quest_tracker_nav_label.text = "%s  (%d/%d)" % [lane_tag, idx + 1, count]
+			quest_tracker_nav_label.text = "%d / %d" % [idx + 1, count]
 
 
 func _on_quest_tracker_prev() -> void:

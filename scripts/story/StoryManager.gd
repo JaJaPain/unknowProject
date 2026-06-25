@@ -13,7 +13,7 @@ extends Node
 # HOW TO DISABLE: flip _SQ_DEBUG back to false and save. No other changes needed.
 # HOW TO FIND:    grep _SQ_DEBUG in scripts/story/StoryManager.gd
 # DO NOT SHIP with _SQ_DEBUG = true.
-const _SQ_DEBUG := true
+const _SQ_DEBUG := false
 var _sq_debug_fired := false   # guard: only fires once per session
 
 # ── Deferred beat schedule ────────────────────────────────────────────────────

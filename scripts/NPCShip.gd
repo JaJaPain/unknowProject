@@ -993,21 +993,119 @@ func _get_faction_color() -> Color:
 # Called by CombatManager at the start of each planning phase.
 # Returns a Dictionary the UI displays as the enemy's telegraphed action.
 # Keys: type (String), label (String), damage (float), face (int), flanking (bool)
-func generate_intent() -> Dictionary:
+# ── AP-driven action plan (simultaneous with player planning) ─────────────────
+# combat_ap: total AP budget for the turn (set per-ship; elite ships get more)
+# combat_intelligence: 0.0 (dumb/noob) → 1.0 (optimal). Controls decision quality.
+var combat_ap:           int   = 4
+var combat_intelligence: float = 0.5
+
+# Returns an ordered list of actions the enemy will execute this turn, built
+# at the same time the player is choosing. The plan is locked in — the enemy
+# can't change it after seeing what the player queued.
+func generate_action_plan() -> Array:
 	var hp_ratio: float = health / max(max_health, 1.0)
-	var role: String = ship_role if ship_role != "" else archetype
+	var role:     String = ship_role if ship_role != "" else archetype
+	var intel:    float = combat_intelligence
+	var ap:       int   = combat_ap
+	var plan:     Array = []
 
 	match role:
-		"Gunner":
-			return _intent_gunner(hp_ratio)
-		"Interceptor":
-			return _intent_interceptor(hp_ratio)
-		"Logistics":
-			return _intent_logistics(hp_ratio)
-		"MiningHauler":
-			return _intent_mining_hauler(hp_ratio)
-		_:
-			return _intent_gunner(hp_ratio)
+		"Gunner":     _plan_gunner(plan, ap, hp_ratio, intel)
+		"Interceptor": _plan_interceptor(plan, ap, hp_ratio, intel)
+		"Logistics":  _plan_logistics(plan, ap, hp_ratio, intel)
+		"MiningHauler": _plan_hauler(plan, ap, hp_ratio, intel)
+		_:            _plan_gunner(plan, ap, hp_ratio, intel)
+	return plan
+
+# ── Per-archetype planners ────────────────────────────────────────────────────
+# Intelligence shapes 3 things:
+#   Action choice  — dumb enemies pick weaker options; smart ones pick best.
+#   Action order   — dumb enemies fire before repositioning (shield not bypassed);
+#                    smart ones reposition first so shield is already gone.
+#   AP waste       — dumb enemies randomly skip their last action.
+
+func _plan_gunner(plan: Array, ap: int, hp_ratio: float, intel: float) -> void:
+	# Desperate: blow remaining AP on a heavy shot first.
+	if hp_ratio < 0.25 and ap >= 2:
+		plan.append(_action_fire(damage_max * randf_range(1.4, 1.8), "Desperation hull shot"))
+		ap -= 2
+	# Fill remaining AP with fire. Dumb Gunners sometimes fire suppression instead.
+	while ap >= 2:
+		if intel < 0.35 and randf() < 0.5:
+			plan.append(_action_fire(randf_range(damage_min * 0.6, damage_min * 0.9), "Suppression fire"))
+		else:
+			plan.append(_action_fire(randf_range(damage_min, damage_max), "Hull shot"))
+		ap -= 2
+	# Dumb Gunners waste leftover AP (skip actions they could take).
+	if intel < 0.4 and randf() < 0.4 and not plan.is_empty():
+		plan.pop_back()
+
+func _plan_interceptor(plan: Array, ap: int, hp_ratio: float, intel: float) -> void:
+	if hp_ratio < 0.30:
+		# Desperate — just fire.
+		while ap >= 2:
+			plan.append(_action_fire(randf_range(damage_min, damage_max), "Desperation shot"))
+			ap -= 2
+		return
+	# Smart interceptors reposition FIRST so Shield Reroute is bypassed before fire.
+	# Dumb interceptors forget to reposition or do it in the wrong order.
+	var should_reposition: bool = intel >= 0.55 or (intel >= 0.3 and randf() < 0.5)
+	if should_reposition and ap >= 1:
+		# Smart: flank or close in BEFORE firing.
+		if intel >= 0.65 and randf() < 0.6:
+			plan.append(_action_flank())
+			ap -= 3
+		else:
+			plan.append(_action_boost("closer"))
+			ap -= 1
+	while ap >= 2:
+		plan.append(_action_fire(randf_range(damage_min * 0.8, damage_max * 0.9), "Interceptor shot"))
+		ap -= 2
+	# Dumb interceptors sometimes reposition LAST (too late to bypass shield).
+	if not should_reposition and intel < 0.4 and ap >= 1 and randf() < 0.5:
+		plan.append(_action_boost("closer"))
+
+func _plan_logistics(plan: Array, ap: int, hp_ratio: float, intel: float) -> void:
+	# Repair when damaged. Smart ships repair early; dumb ones sometimes miss it.
+	var should_repair: bool = hp_ratio < 0.50 and (intel >= 0.5 or randf() < 0.4)
+	if should_repair and ap >= 2:
+		plan.append(_action_repair())
+		ap -= 2
+	if ap >= 2:
+		if intel >= 0.6 and randf() < 0.5:
+			plan.append(_action_disable_engines())
+		else:
+			plan.append(_action_fire(randf_range(damage_min * 0.5, damage_min), "Support fire"))
+		ap -= 2
+
+func _plan_hauler(plan: Array, _ap: int, _hp_ratio: float, _intel: float) -> void:
+	# Haulers don't fight — surrender or panic shot only.
+	if randf() < 0.60:
+		plan.append({"type": "surrender", "label": "Pleading for mercy", "damage": 0.0})
+	else:
+		plan.append(_action_fire(randf_range(2.0, 6.0), "Panic shot"))
+
+# ── Action builders ───────────────────────────────────────────────────────────
+func _action_fire(dmg: float, lbl: String = "Fire") -> Dictionary:
+	return {"type": "fire", "label": lbl, "damage": dmg, "ap": 2}
+
+func _action_boost(dir: String) -> Dictionary:
+	return {"type": "boost", "label": "Reposition (%s)" % dir, "direction": dir, "ap": 1}
+
+func _action_flank() -> Dictionary:
+	return {"type": "flank", "label": "Flanking run",
+		"damage": randf_range(damage_min * 0.8, damage_max * 0.9), "flanking": true, "ap": 3}
+
+func _action_repair() -> Dictionary:
+	return {"type": "repair", "label": "Emergency repair", "damage": 0.0, "ap": 2}
+
+func _action_disable_engines() -> Dictionary:
+	return {"type": "disable_engines", "label": "Engine disruption", "damage": 0.0, "ap": 2}
+
+# Legacy single-intent shim (keep for anything still calling generate_intent).
+func generate_intent() -> Dictionary:
+	var plan := generate_action_plan()
+	return plan[0] if not plan.is_empty() else {}
 
 func _intent_gunner(hp_ratio: float) -> Dictionary:
 	if hp_ratio < 0.25:

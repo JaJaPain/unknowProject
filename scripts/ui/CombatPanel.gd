@@ -498,11 +498,16 @@ func _make_flat_btn(text: String, color: Color, size: Vector2) -> Button:
 func _on_combat_started(_enemy: Node) -> void:
 	show()
 
-func _on_planning_started(ap: int, max_ap: int, intent: Dictionary, _taunts: Dictionary) -> void:
+func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
 	_ap_current = ap
 	_ap_max     = max_ap
 	_set_ap_display(ap, max_ap)
-	_intent_label.text = "Enemy: %s" % intent.get("label", "—")
+	# Show the enemy's full committed plan so the player can plan a counter.
+	if npc_plan.is_empty():
+		_intent_label.text = "Enemy: —"
+	else:
+		var labels: Array = npc_plan.map(func(a: Dictionary) -> String: return a.get("label", "?"))
+		_intent_label.text = "Enemy: %s" % " → ".join(labels)
 	_clear_queue_chips()
 	_refresh_button_states()
 	_execute_btn.disabled = false
@@ -558,9 +563,7 @@ func _on_action_pressed(action_type: int) -> void:
 	if is_instance_valid(_click_sfx):
 		_click_sfx.play()
 	var params := {}
-	if action_type == 2:  # SHIELD_REROUTE — default front; TODO sub-picker
-		params["face"] = 0
-	if action_type == 1:  # BOOST — default closer; TODO toggle
+	if action_type == 1:  # BOOST — default closer
 		params["direction"] = "closer"
 	CombatManager.queue_action(action_type, params)
 

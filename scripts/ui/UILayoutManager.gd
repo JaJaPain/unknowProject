@@ -54,6 +54,13 @@ func setup(
 
 	_load_layout()
 
+	# Dynamic panels auto-size to content — clear any stale size from previous sessions.
+	for id in PANEL_IDS:
+		if _is_dynamic(id) and _panels.has(id):
+			var p: Control = _panels[id]
+			if is_instance_valid(p):
+				p.reset_size()
+
 	# L button is created by caller (UIManager) alongside M and I — just store ref
 	# Caller must call toggle_edit_mode() when L is pressed
 	return null
@@ -101,6 +108,12 @@ func toggle_edit_mode() -> void:
 				_resize_handles[id].queue_free()
 		_overlays.clear()
 		_resize_handles.clear()
+		# Dynamic panels auto-size to content — reset any explicit size from resize handles.
+		for id in PANEL_IDS:
+			if _is_dynamic(id) and _panels.has(id):
+				var p: Control = _panels[id]
+				if is_instance_valid(p):
+					p.reset_size()
 		_save_layout()
 	else:
 		# Unlock — swap dynamic panels for placeholders, show overlays

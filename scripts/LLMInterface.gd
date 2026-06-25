@@ -1438,6 +1438,7 @@ func request_quest_generation(
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
 		"Keep the same objective fields as the example above. " + \
 		"The dialogue is the agent OFFERING the job to the pilot — the pilot has NOT accepted yet. Speak directly to the pilot in second person. Do not narrate, announce, or talk about the pilot in third person. " + \
+		"IMPORTANT: The choices array MUST contain EXACTLY 3 entries — no more, no fewer. " + \
 		dummy_name_instruction + \
 		"Output only the raw JSON object."
 	
