@@ -46,3 +46,6 @@ __pycache__/
 
 # Local bug investigation screenshots (not for the repo)
 docs/bug_screenshots/
+
+# Local Godot test logs (Claude headless runs)
+.tmp_godot_user/
