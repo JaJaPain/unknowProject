@@ -73,14 +73,17 @@ func on_system_arrived(system_id: String) -> void:
 
 func on_kill(faction: String) -> void:
 	_kill_count_session += 1
-	# If combat is still resolving (state != IDLE), defer until combat_ended fires
-	# so the story dialog doesn't pop up while the combat UI is still visible.
-	if CombatManager.state != CombatManager.State.IDLE:
-		CombatManager.combat_ended.connect(_on_deferred_kill.bind(faction), CONNECT_ONE_SHOT)
-		return
-	_resolve_kill(faction)
+	# Deliver only when combat is fully idle so the story dialog never pops up
+	# over a live combat UI — including a reinforcement fight that chains in
+	# immediately after the one that scored the kill.
+	_deliver_kill_when_idle(faction)
 
-func _on_deferred_kill(_won: bool, faction: String) -> void:
+func _deliver_kill_when_idle(faction: String) -> void:
+	while CombatManager.state != CombatManager.State.IDLE:
+		await CombatManager.combat_ended
+		# Settle: give any immediate reinforcement a moment to (re)enter combat
+		# before we re-check, so we don't deliver into a fight starting this frame.
+		await get_tree().create_timer(1.0, true, false, true).timeout
 	_resolve_kill(faction)
 
 func _resolve_kill(faction: String) -> void:
