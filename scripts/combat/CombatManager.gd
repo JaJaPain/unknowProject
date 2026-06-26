@@ -448,13 +448,18 @@ func _begin_planning() -> void:
 	_despawn_enemy_shield_dome()
 	emit_signal("enemy_status_changed", false, false)
 
-	# Build the enemy's full AP-driven action plan for this turn.
-	npc_action_plan = enemy_node.generate_action_plan() \
-		if enemy_node.has_method("generate_action_plan") else []
+	# Build each enemy's AP-driven action plan for this turn.
+	npc_action_plans = []
+	for i in enemy_nodes.size():
+		var e: Node = enemy_nodes[i]
+		var plan: Array = e.generate_action_plan() if is_instance_valid(e) and e.has_method("generate_action_plan") else []
+		npc_action_plans.append(plan)
+	# npc_action_plan kept pointing at the targeted enemy's plan for UI / compat.
+	npc_action_plan = npc_action_plans[_target_idx] if _target_idx < npc_action_plans.size() else []
 	# Keep current_intent pointing at the first action for the telegraph UI.
 	current_intent = npc_action_plan[0] if not npc_action_plan.is_empty() else {}
 
-	# Menacing charge cue when the enemy telegraphs an attack this turn.
+	# Menacing charge cue when the targeted enemy telegraphs an attack this turn.
 	if _intent_is_attack(current_intent):
 		_sfx("enemy_charge", (enemy_node as Node3D).global_position, -3.0)
 
@@ -858,19 +863,33 @@ func _npc_hit_shield_blocked(action: Dictionary) -> bool:
 # The NPC's plan was locked in at planning-start (same moment the player began
 # choosing). We now execute each action in sequence.
 func _execute_npc_intent() -> void:
-	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+	if not is_instance_valid(player_node):
 		return
-	var npc_faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "enemy"
-
-	emit_signal("action_telegraphed", -1, enemy_node, player_node)
-	await _beat(BEAT_TELEGRAPH)
-
-	for action in npc_action_plan:
-		if state == State.IDLE or not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+	# Execute each enemy's plan in sequence (target first, then wingmen).
+	for i in enemy_nodes.size():
+		if state == State.IDLE or not is_instance_valid(player_node):
 			return
-		await _execute_npc_action(action, npc_faction)
-		if state == State.IDLE:
-			return
+		var exec_enemy: Node = enemy_nodes[i]
+		if not is_instance_valid(exec_enemy) or exec_enemy.get("destroyed"):
+			continue
+		var plan: Array = npc_action_plans[i] if i < npc_action_plans.size() else []
+		if plan.is_empty():
+			continue
+		var npc_faction: String = exec_enemy.get("faction") if exec_enemy.get("faction") else "enemy"
+		emit_signal("action_telegraphed", -1, exec_enemy, player_node)
+		await _beat(BEAT_TELEGRAPH)
+		# Temporarily point _target_idx at this enemy so defensive state
+		# getters (enemy_brace_active etc.) resolve to the right slot.
+		var saved_idx := _target_idx
+		_target_idx = i
+		for action in plan:
+			if state == State.IDLE or not is_instance_valid(exec_enemy) or not is_instance_valid(player_node):
+				break
+			await _execute_npc_action(action, npc_faction)
+			if state == State.IDLE:
+				break
+			await _beat(BEAT_POST_ACTION)
+		_target_idx = saved_idx
 		await _beat(BEAT_POST_ACTION)
 
 func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
