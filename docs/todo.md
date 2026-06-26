@@ -5,6 +5,12 @@ _Active task list. Update this file at the end of every session._
 
 ## Combat — Unified System (do in order, blocks everything below)
 
+- [ ] **FactionRegistry.gd autoload** — single source of truth for all faction data: known profiles (aurelia/vanguard/zenith) + unknown faction progression list ordered by tier; `get_profile(key)`, `get_faction_for_danger_level(n)`; runtime override dict so tuning tool can hot-apply changes without touching the const.
+- [ ] **Unknown faction progression list** — ~12 factions ordered by base tier (2 per tier level 1–3, then 2 elite tier 4+); each has display name, combat role, weapon/engine/shield bias ratios so same-tier factions still feel distinct. Names: Rift Collective, Hollow Syndicate, Eclipse Legion, Obsidian Pact, Void Covenant, Shatter Bloc, etc.
+- [ ] **Faction tuning tool** — Numpad 7 dev overlay; table showing all factions × tier fields with ↑/↓ per cell; changes hot-apply to future spawns; saves to `user://faction_tuning.json` which overrides const defaults during dev, ignored in release build.
+
+
+
 - [ ] **Step 1 — CombatAction.gd: expand enum** — add BRACE, FLANK, SHIELD_ANGLE, DISABLE_ENGINES with AP costs + labels. Single source of truth for all action types.
 - [ ] **Step 2 — NPCShip.gd: tier vars + faction profiles** — replace `damage_min/max`, `combat_ap` with `weapon_tier`, `engine_tier`, `powerplant_tier`, `shield_tier`; add `FACTION_PROFILES` const; add `apply_faction_profile(key)`; derive damage + AP from tiers using same formulas as PlayerShip; update `_action_*` helpers to `CombatAction.make()`.
 - [ ] **Step 3 — CombatManager.gd: unified execution** — add `_exec_action(action, source, target)`; all handlers read stats from source node by property name; `_run_player_actions` and `_execute_npc_intent` both route through it.
