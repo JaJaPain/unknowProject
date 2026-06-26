@@ -879,10 +879,17 @@ func die():
 # ── PlayerInteractionQueue integration ───────────────────────────────────────
 
 func _request_combat_via_queue() -> void:
-	# Already queued — don't enqueue twice. Allow queueing while a fight is
-	# active; the queue holds the intent and runs it after the cooldown buffer.
+	# Already queued — don't enqueue twice.
 	if not _combat_intent_id.is_empty():
 		return
+	# Squad join: if a fight is active and the current enemy is in our squad,
+	# join that fight directly instead of queuing a separate one.
+	if squad_id != "" and CombatManager.state == CombatManager.State.PLANNING:
+		var current_enemy: Node = CombatManager.enemy_nodes[0] if not CombatManager.enemy_nodes.is_empty() else null
+		var current_squad: String = current_enemy.get("squad_id") if is_instance_valid(current_enemy) else ""
+		if current_squad == squad_id and CombatManager.enemy_nodes.size() < 3:
+			CombatManager.join_combat(self)
+			return
 	var ship_label := "%s:%s" % [faction, name]
 	_combat_intent_id = PlayerInteractionQueue.enqueue(
 		PlayerInteractionQueue.Priority.COMBAT,
@@ -1002,6 +1009,9 @@ var combat_intelligence: float = 0.5
 # boss_phase is updated by CombatManager as HP thresholds are crossed.
 var is_boss:   bool = false
 var boss_phase: int  = 1   # 1 = Dominant, 2 = Wounded, 3 = Last Stand
+# Squad membership — ships with the same non-empty squad_id fight together.
+# Set at spawn time; empty string means solo.
+var squad_id: String = ""
 # Loot dropped when this ship is killed in combat. Empty dict = no drop.
 # Future: populate per archetype/faction in MainScene or GeneratedSystemNPCManager.
 # Format: { "credits": 0, "items": [], "ore": 0 }
