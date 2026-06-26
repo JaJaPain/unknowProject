@@ -354,9 +354,15 @@ func _ready():
 	# Register combat wheel as a draggable panel (CombatPanel is an autoload CanvasLayer)
 	_ui_layout_manager.register_panel("combat", CombatPanel.get_wheel_panel())
 
-	# Hide overview during combat — it's not needed and the wheel overlaps it
-	CombatManager.combat_started.connect(func(_e: Node): overview_panel.hide())
-	CombatManager.combat_ended.connect(func(_won: bool): overview_panel.show())
+	# Hide overview and quest tracker during combat.
+	CombatManager.combat_started.connect(func(_e: Node):
+		overview_panel.hide()
+		quest_tracker_panel.hide()
+	)
+	CombatManager.combat_ended.connect(func(_won: bool):
+		overview_panel.show()
+		_update_quest_tracker()   # restores visibility based on active quest state
+	)
 
 	# L button — lock/unlock UI layout, sits right of M and I
 	var _tex_lock_closed := load("res://assets/lock_closed.png") as Texture2D

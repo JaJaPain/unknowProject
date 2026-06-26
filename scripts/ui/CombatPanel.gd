@@ -121,9 +121,10 @@ var _wheel_panel:      Control
 var _root:             Control
 var _ap_label:         Label         # "X / Y" AP counter in wheel center
 var _intent_label:     Label
-var _sensor_header:    Label         # "◈ SENSOR ANALYSIS" fixed title line
-var _typewrite_tween:  Tween        # cancelled and replaced each planning phase
-var _typing_player:    AudioStreamPlayer
+var _sensor_header:      Label         # "◈ SENSOR ANALYSIS" fixed title line
+var _typewrite_tween:    Tween        # cancelled and replaced each planning phase
+var _typing_player:      AudioStreamPlayer
+var _sensor_panel_root:  Control      # wrapper — hide during execution phase
 var _player_bar:       ProgressBar
 var _enemy_bar:        ProgressBar
 var _player_label:     Label
@@ -210,6 +211,12 @@ func _build_sensor_panel() -> void:
 	var panel_h := 76.0
 	var pad     := 8.0
 
+	# Invisible wrapper — toggled as one unit during execute phase.
+	_sensor_panel_root = Control.new()
+	_sensor_panel_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_sensor_panel_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_sensor_panel_root)
+
 	# Dark background with green border.
 	var bg := ColorRect.new()
 	bg.color = Color(0.0, 0.0, 0.0, 0.88)
@@ -220,7 +227,7 @@ func _build_sensor_panel() -> void:
 	bg.offset_top    = -114.0 - panel_h
 	bg.offset_bottom = -114.0
 	bg.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(bg)
+	_sensor_panel_root.add_child(bg)
 
 	# Green border drawn via a StyleBoxFlat on a Panel.
 	var border := Panel.new()
@@ -237,7 +244,7 @@ func _build_sensor_panel() -> void:
 	border.offset_top    = -114.0 - panel_h
 	border.offset_bottom = -114.0
 	border.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(border)
+	_sensor_panel_root.add_child(border)
 
 	# Header: "◈ SENSOR ANALYSIS" in dim green.
 	_sensor_header = Label.new()
@@ -253,7 +260,7 @@ func _build_sensor_panel() -> void:
 	_sensor_header.offset_top    = -114.0 - panel_h + 4.0
 	_sensor_header.offset_bottom = -114.0 - panel_h + 22.0
 	_sensor_header.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_sensor_header)
+	_sensor_panel_root.add_child(_sensor_header)
 
 	# Thin green divider line between header and signature text.
 	var divider := ColorRect.new()
@@ -265,7 +272,7 @@ func _build_sensor_panel() -> void:
 	divider.offset_top    = -114.0 - panel_h + 23.0
 	divider.offset_bottom = -114.0 - panel_h + 24.0
 	divider.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(divider)
+	_sensor_panel_root.add_child(divider)
 
 	# Main signature label — typewriter text appears here in bright green.
 	_intent_label = Label.new()
@@ -282,7 +289,7 @@ func _build_sensor_panel() -> void:
 	_intent_label.offset_top    = -114.0 - panel_h + 26.0
 	_intent_label.offset_bottom = -114.0 - 2.0
 	_intent_label.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_intent_label)
+	_sensor_panel_root.add_child(_intent_label)
 
 	# Scanline overlay — a custom Control that draws semi-transparent horizontal lines.
 	var scanlines := _ScanlineOverlay.new()
@@ -293,7 +300,7 @@ func _build_sensor_panel() -> void:
 	scanlines.offset_top    = -114.0 - panel_h
 	scanlines.offset_bottom = -114.0
 	scanlines.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(scanlines)
+	_sensor_panel_root.add_child(scanlines)
 
 # Inner class — draws horizontal scanlines over the sensor panel.
 class _ScanlineOverlay extends Control:
@@ -773,6 +780,8 @@ func _on_combat_started(enemy: Node) -> void:
 	_refresh_target_label()
 
 func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
+	if is_instance_valid(_sensor_panel_root):
+		_sensor_panel_root.visible = true
 	_ap_current = ap
 	_ap_max     = max_ap
 	_set_ap_display(ap, max_ap)
@@ -821,6 +830,10 @@ func _typewrite(full_text: String) -> void:
 	)
 
 func _on_execution_started() -> void:
+	if is_instance_valid(_sensor_panel_root):
+		_sensor_panel_root.visible = false
+	if is_instance_valid(_typing_player):
+		_typing_player.stop()
 	for i in _btn_blocked.size():
 		_btn_blocked[i] = true
 	_execute_btn.disabled = true
