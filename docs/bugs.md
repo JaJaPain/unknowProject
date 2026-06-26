@@ -31,6 +31,14 @@ Two complementary layers need to work together:
 
 ---
 
+### New campaign overwrites existing slot instead of using next empty slot
+**Spotted:** 2026-06-26  
+**Severity:** High — data loss risk  
+**Description:** Starting a new campaign appears to overwrite an occupied slot rather than selecting the next empty one. Player loses an existing campaign save.  
+**Where to look:** `GameRoot.gd` → new campaign slot selection logic. Check `campaign_slot_registry.first_empty_slot_id()` is being called and that the result is being used rather than defaulting to slot 1 or the active slot.
+
+---
+
 ### Quest tracker panel blue box reappears on second quest
 **Spotted:** 2026-06-25  
 **Severity:** Low — cosmetic  
@@ -44,6 +52,22 @@ Two complementary layers need to work together:
 **Severity:** Low  
 **Description:** After the player delivers a special cargo item to the mechanic NPC and receives credits, the "I'll Grab It / Not Now" buttons still show on subsequent visits. They should disappear permanently once the pickup quest is complete.  
 **Where to look:** `scripts/UIManager.gd` — wherever the mechanic dock panel is built/refreshed. The prompt visibility is likely gated on a quest state flag that isn't being cleared after completion. Check `QuestManager` or `GlobalState` for the relevant completion flag.
+
+---
+
+### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
+**Spotted:** 2026-06-26
+**Severity:** Low — immersion break
+**Description:** Agent NPC dialogue (quest offers, contract details) occasionally includes "Indy" or "Shiny" directly in the agent's speech — e.g. "3 Wraiths raiders are probing our perimeter, Indy." The agent should not know or use the player's callsign; only Kaelen uses "Shiny". "Indy" appears to be leaking from the pilot backstory or prompt context into the agent prompt.
+**Where to look:** `LLMInterface.gd` — quest generation prompt assembly. Check what context fields are passed and whether the pilot callsign/name is included in a way the agent template can pick up. Add a post-generation strip or a prompt rule: "Do NOT address the pilot by name or callsign. You do not know their name."
+
+---
+
+### Shield visual persists after combat ends
+**Spotted:** 2026-06-26
+**Severity:** Low — cosmetic
+**Description:** The shield effect sometimes remains visible on the player ship after combat ends instead of disappearing with the combat state. Likely the shield deactivation call is not firing on all combat-exit paths (timeout, enemy death, flee).
+**Where to look:** `CombatManager.gd` — wherever combat ends; check that shield deactivation is called on every exit path, not just the primary one.
 
 ---
 

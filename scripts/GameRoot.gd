@@ -1321,6 +1321,9 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
+		LLMInterface.story_state_context_text = ""
+		LLMInterface.clear_quest_fingerprints()
+		StoryManager.clear_story_state()
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
 		"SYSTEM",
@@ -1465,6 +1468,9 @@ func _initialize_campaign_registry() -> void:
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
+		LLMInterface.story_state_context_text = ""
+		LLMInterface.clear_quest_fingerprints()
+		StoryManager.clear_story_state()
 		return
 	_initialize_campaign_chronicle()
 
@@ -1539,6 +1545,9 @@ func _initialize_campaign_chronicle() -> void:
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -1671,6 +1680,8 @@ func _initialize_campaign_chronicle() -> void:
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
+	StoryManager.init_story_state(slot_path)
+	_refresh_llm_story_state_context()
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
 
@@ -1870,6 +1881,7 @@ func remember_generated_quest_idea(
 			appended.get("error", "unknown error")
 		)
 		return
+	LLMInterface.register_quest_fingerprint(fingerprint_source)
 	_refresh_llm_idea_memory_context()
 
 
@@ -2053,6 +2065,13 @@ func _refresh_llm_idea_memory_context() -> void:
 		[],
 		24
 	)
+	var fps: Array = []
+	for idea in campaign_idea_memory_store.data.get("ideas", []):
+		if idea is Dictionary and str((idea as Dictionary).get("category", "")) == "mission":
+			var fp := str((idea as Dictionary).get("fingerprint", ""))
+			if not fp.is_empty():
+				fps.append(fp)
+	LLMInterface.seed_quest_fingerprints(fps)
 
 
 func _refresh_llm_campaign_bible_context() -> void:
@@ -2060,6 +2079,10 @@ func _refresh_llm_campaign_bible_context() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	LLMInterface.campaign_bible_context_text = campaign_bible_store.prompt_context()
+
+func _refresh_llm_story_state_context() -> void:
+	var block := StoryManager.get_story_context_block()
+	LLMInterface.story_state_context_text = block
 	GenerationDiagnostics.record_content_source(
 		"campaign_bible",
 		campaign_bible_store.generation_status(),
@@ -2515,6 +2538,7 @@ func _restore_safe_location(safe_location: Dictionary) -> void:
 		)
 	player.global_position = docking_position
 	player.is_docked = true
+	StoryManager.on_docked(entity)
 	var ui := GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu") \
 			and not bool(ui.get("dock_panel").visible):
@@ -2791,6 +2815,9 @@ func _run_jump_smoke_test() -> void:
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \
 			or not _ensure_campaign_checkpoint_store(prepared["data"]):
@@ -4351,6 +4378,9 @@ func _run_legacy_import_smoke_test() -> void:
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
 	GlobalState.player_credits = 7654
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \

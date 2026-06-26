@@ -28,7 +28,9 @@ var active_model_name: String = MODEL_NAME
 var active_large_model_name: String = ""
 var world_lore_text: String = ""
 var campaign_bible_context_text: String = ""
+var story_state_context_text: String = ""
 var idea_memory_context_text: String = ""
+var _known_quest_fingerprints: Dictionary = {}   # fingerprint -> true; rejects exact duplicate candidates
 var _pending_fallback_reason: String = ""
 var _pending_substitutions: Dictionary = {}
 var _quest_candidate_prompt: String = ""
@@ -1251,6 +1253,34 @@ func _agent_memory_slug(text: String) -> String:
 	return output
 
 
+func register_quest_fingerprint(source: String) -> void:
+	if source.strip_edges().is_empty():
+		return
+	_known_quest_fingerprints[source.strip_edges().to_lower().sha256_text()] = true
+
+# Load pre-hashed fingerprints directly from saved idea memory on campaign load.
+func seed_quest_fingerprints(hashed_fingerprints: Array) -> void:
+	for fp in hashed_fingerprints:
+		if fp is String and not (fp as String).is_empty():
+			_known_quest_fingerprints[fp] = true
+
+func clear_quest_fingerprints() -> void:
+	_known_quest_fingerprints.clear()
+
+func _is_quest_fingerprint_known(quest_data: Dictionary) -> bool:
+	if _known_quest_fingerprints.is_empty():
+		return false
+	var objective: Dictionary = quest_data.get("objective", {})
+	var source := JSON.stringify({
+		"title": str(quest_data.get("title", "")),
+		"faction": str(quest_data.get("faction", "")),
+		"agent_name": str(quest_data.get("agent_name", "")),
+		"dialogue": str(quest_data.get("dialogue", "")),
+		"objective": objective,
+	})
+	return _known_quest_fingerprints.has(source.strip_edges().to_lower().sha256_text())
+
+
 func request_quest_generation(
 	agent_faction: String,
 	history_text: String,
@@ -1485,6 +1515,13 @@ func request_quest_generation(
 			+ campaign_bible_context_text
 			+ "\n\n"
 		)
+	var story_state_block = ""
+	if story_state_context_text.strip_edges() != "":
+		story_state_block = (
+			"### STORY STATE:\n"
+			+ story_state_context_text
+			+ "\n\n"
+		)
 	var system_story_pack: Dictionary = _agent_system_story_pack(agent_profile)
 	var system_story_block: String = _system_story_pack_prompt_block(system_story_pack)
 	var agent_memory_block := _agent_memory_prompt_block(agent_memory_id)
@@ -1540,6 +1577,7 @@ func request_quest_generation(
 	var system_prompt = agent_persona + "\n\n" + \
 		lore_block + \
 		campaign_bible_block + \
+		story_state_block + \
 		system_story_block + \
 		agent_memory_block + \
 		idea_memory_block + \
@@ -1899,12 +1937,18 @@ func _score_quest_candidate(quest_data: Dictionary) -> Dictionary:
 
 func _finish_quest_candidate_batch() -> void:
 	var best_candidate: Dictionary = {}
+	var duplicate_skip_count := 0
 	for candidate in _quest_candidate_results:
 		if not bool(candidate.get("ok", false)):
+			continue
+		if _is_quest_fingerprint_known(candidate.get("quest_data", {})):
+			duplicate_skip_count += 1
 			continue
 		if best_candidate.is_empty() \
 				or int(candidate.get("score", -1000)) > int(best_candidate.get("score", -1000)):
 			best_candidate = candidate
+	if duplicate_skip_count > 0:
+		print("[LLMInterface] Skipped %d exact-duplicate quest candidate(s)." % duplicate_skip_count)
 	if best_candidate.is_empty():
 		GenerationDiagnostics.record_event(
 			"quest_generation",
@@ -3727,6 +3771,7 @@ func _build_kaelen_intro_prompt(
 	history_clause: String,
 	reputation_clause: String,
 	local_tone_clause: String,
+	story_clause: String,
 	correction_suffix: String
 ) -> String:
 	return "You are Broker Kaelen. You are the speaker. " + agent_name + " is the OTHER person — the client you are about to bring in. The pilot is 'Shiny'.\n\n" + \
@@ -3748,6 +3793,7 @@ func _build_kaelen_intro_prompt(
 		history_clause + "\n" + \
 		reputation_clause + "\n" + \
 		local_tone_clause + "\n" + \
+		story_clause + \
 		correction_suffix + "\n" + \
 		"You MUST respond strictly in valid JSON format. Only output the raw JSON object:\n" + \
 		"{\n" + \
@@ -3851,18 +3897,25 @@ func request_kaelen_intro(quest_data: Dictionary, agent_history_text: String, pl
 
 	var local_tone_clause := _kaelen_local_tone_clause(quest_data)
 
+	var story_clause := ""
+	if story_state_context_text.strip_edges() != "":
+		story_clause = (
+			"Narrative context (do NOT quote or expose this directly — let it color tone and urgency only):\n"
+			+ story_state_context_text + "\n"
+		)
+
 	# First attempt. If the response fails the speaker-leakage guard, we
 	# retry ONCE with a correction suffix that tells the model what it did
 	# wrong. After that, we hard-fall-back to canned (caller picks from
 	# fallback_handoff_lines_by_agent).
-	_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, "", 0, callback)
+	_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, "", 0, callback)
 
 
 # Internal: make one LLM call for the handoff intro. `attempt` is 0 on the
 # first try, 1 on the self-critique retry. Total cap is 2 attempts — beyond
 # that the caller falls back to a canned line.
-func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, local_tone_clause: String, correction_suffix: String, attempt: int, original_callback: Callable):
-	var prompt = _build_kaelen_intro_prompt(agent_name, faction, title, examples_block, history_clause, reputation_clause, local_tone_clause, correction_suffix)
+func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, local_tone_clause: String, story_clause: String, correction_suffix: String, attempt: int, original_callback: Callable):
+	var prompt = _build_kaelen_intro_prompt(agent_name, faction, title, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, correction_suffix)
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
@@ -3988,7 +4041,7 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			# Build a correction suffix from the rejection reason and retry.
 			var new_suffix = "SELF-CRITIQUE — your previous attempt was rejected. Reason: " + rejection_reason
 			print("[LLMInterface] Kaelen intro: retrying with self-critique correction...")
-			_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, new_suffix, attempt + 1, original_callback)
+			_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, new_suffix, attempt + 1, original_callback)
 			return
 
 		_kaelen_intro_successes += 1

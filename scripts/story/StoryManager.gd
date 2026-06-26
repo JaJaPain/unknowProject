@@ -16,6 +16,27 @@ extends Node
 const _SQ_DEBUG := false
 var _sq_debug_fired := false   # guard: only fires once per session
 
+const StoryStateStoreType := preload(
+	"res://scripts/persistence/StoryStateStore.gd"
+)
+
+# ── Phase B: Living story state ───────────────────────────────────────────────
+# story_state is the in-memory working copy. StoryStateStore handles persistence.
+# player_does_not_know_yet is NEVER included in get_story_context_block().
+var story_state: Dictionary = {
+	"chapter": 1,
+	"active_tensions": [],
+	"player_knows": [],
+	"player_does_not_know_yet": [],
+	"pending_hooks": [],
+	"current_foreshadow": "",
+	"kaelen_current_mood": "guarded",
+	"intro_conversation_had": false,
+	"intro_agent_visited": false,
+	"intro_quest_delivered": false,
+}
+var _story_state_store = null   # StoryStateStore, opened by init_story_state()
+
 # ── Deferred beat schedule ────────────────────────────────────────────────────
 # Each entry: {type, beat_id, threshold, current}
 # type: "kills" | "dock" | "delay_min"
@@ -35,6 +56,127 @@ func reset_for_restart() -> void:
 	_kill_count_session = 0
 	_dock_count_session = 0
 	_sq_debug_fired = false
+
+
+# ── Phase B: Story state API ──────────────────────────────────────────────────
+
+func init_story_state(campaign_path: String) -> void:
+	_story_state_store = StoryStateStoreType.open(campaign_path)
+	if _story_state_store.is_valid():
+		story_state = _story_state_store.data.duplicate(true)
+	else:
+		push_warning("[StoryManager] Story state store failed to open; using defaults.")
+		story_state = StoryStateStoreType._default_state()
+	_push_context_to_llm()
+
+func clear_story_state() -> void:
+	_story_state_store = null
+	story_state = {
+		"chapter": 1,
+		"active_tensions": [],
+		"player_knows": [],
+		"player_does_not_know_yet": [],
+		"pending_hooks": [],
+		"current_foreshadow": "",
+		"kaelen_current_mood": "guarded",
+		"intro_conversation_had": false,
+		"intro_agent_visited": false,
+		"intro_quest_delivered": false,
+	}
+
+# Returns a formatted string safe to inject into LLM prompts.
+# Never includes player_does_not_know_yet.
+func get_story_context_block() -> String:
+	var lines: Array[String] = []
+	lines.append("Story State:")
+	lines.append("- Chapter: %d" % int(story_state.get("chapter", 1)))
+	var tensions: Array = story_state.get("active_tensions", [])
+	if not tensions.is_empty():
+		lines.append("- Active tensions: %s" % ", ".join(tensions))
+	var known: Array = story_state.get("player_knows", [])
+	if not known.is_empty():
+		lines.append("- Player knows: %s" % ", ".join(known))
+	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
+	if not foreshadow.is_empty():
+		lines.append("- Foreshadow hint: %s" % foreshadow)
+	var mood := str(story_state.get("kaelen_current_mood", "")).strip_edges()
+	if not mood.is_empty():
+		lines.append("- Kaelen mood: %s" % mood)
+	var hooks: Array = story_state.get("pending_hooks", [])
+	if not hooks.is_empty():
+		lines.append("- Open story threads: %s" % ", ".join(hooks))
+	return "\n".join(lines)
+
+# Increments chapter, promotes earned secrets to player_knows, clears resolved
+# tensions, then generates a new current_foreshadow via the small model.
+# Pass how many items from player_does_not_know_yet to promote this chapter.
+func advance_chapter(truths_to_reveal: int = 1) -> void:
+	story_state["chapter"] = int(story_state.get("chapter", 1)) + 1
+	var hidden: Array = story_state.get("player_does_not_know_yet", [])
+	var known: Array = story_state.get("player_knows", [])
+	var revealed := mini(truths_to_reveal, hidden.size())
+	for i in range(revealed):
+		known.append(hidden[i])
+	story_state["player_knows"] = known
+	story_state["player_does_not_know_yet"] = hidden.slice(revealed)
+	story_state["active_tensions"] = []
+	_save_story_state()
+	_generate_foreshadow()
+
+func _save_story_state() -> void:
+	if _story_state_store == null or not _story_state_store.is_valid():
+		return
+	var result: Dictionary = _story_state_store.save_state(story_state)
+	if not bool(result.get("ok", false)):
+		push_warning("[StoryManager] Story state save failed: %s" % str(result.get("error", "")))
+	_push_context_to_llm()
+
+func _push_context_to_llm() -> void:
+	if is_instance_valid(LLMInterface):
+		LLMInterface.story_state_context_text = get_story_context_block()
+
+# Async: asks the small model for a one-sentence foreshadow, then saves.
+func _generate_foreshadow() -> void:
+	var chapter := int(story_state.get("chapter", 1))
+	var tensions: Array = story_state.get("active_tensions", [])
+	var hooks: Array = story_state.get("pending_hooks", [])
+	var tension_text := ", ".join(tensions) if not tensions.is_empty() else "the unknown frontier"
+	var hook_text: String = hooks[0] if not hooks.is_empty() else ""
+	var prompt := (
+		"You are a narrator for a space opera. "
+		+ "Chapter %d has just begun. Current tensions: %s. " % [chapter, tension_text]
+		+ ("Open thread: %s. " % hook_text if not hook_text.is_empty() else "")
+		+ "Write ONE sentence (under 20 words) that a background NPC might hint at — "
+		+ "something ominous, incomplete, or suggestive. No names. No explanation."
+	)
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(
+		func(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+				return
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed == null or not parsed is Dictionary:
+				return
+			var text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
+			if text.is_empty():
+				return
+			story_state["current_foreshadow"] = text
+			_save_story_state()
+	)
+	var payload := JSON.stringify({
+		"model": LocalModelGateway.DEFAULT_SMALL_MODEL,
+		"prompt": prompt,
+		"stream": false,
+		"options": {"num_predict": 40, "temperature": 0.8},
+	})
+	http.request(
+		LocalModelGateway.OLLAMA_GENERATE_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		payload
+	)
 
 
 # ── Public tool: deferred beat scheduling ────────────────────────────────────
@@ -149,6 +291,20 @@ func _fire_beat(beat_id: String) -> void:
 	if beat_id.is_empty():
 		return
 	print("[StoryManager] Beat fired: %s (stub — no delivery yet)" % beat_id)
+
+
+# ── Scripted intro quest ──────────────────────────────────────────────────────
+
+# Called by UIManager when the player dismisses the Kaelen intro popup.
+# This marks the first conversation with Kaelen and unlocks the intro quest gate.
+func on_kaelen_intro_dismissed() -> void:
+	if bool(story_state.get("intro_conversation_had", false)):
+		return
+	story_state["intro_conversation_had"] = true
+	_save_story_state()
+
+# Intro quest delivery is owned by UIManager._show_kaelen_intro_quest_offer().
+# StoryManager only persists the flags (intro_quest_delivered, etc.).
 
 
 # ── DEV only — remove guard or flip _SQ_DEBUG when done ──────────────────────

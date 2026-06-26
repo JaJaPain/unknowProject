@@ -2,6 +2,79 @@
 
 ---
 
+## Session: 2026-06-26 (Intro Quest Flow + Story Context Injection + Plans) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Wired up the scripted intro quest as a proper QuestManager kill quest delivered by Kaelen directly (no agent). Added first-dock hand-holding (UI lock), story context injection into Kaelen handoff prompts, and wrote design plans for the docking sequence and Kaelen handoff pool system.
+
+### What Landed
+
+**Intro quest flow (`scripts/UIManager.gd`)**
+- First dock locks all dock buttons except "Talk to Agent" + shows teal hint message. Lock checks `intro_agent_visited` flag, lifts the instant the player clicks Talk to Agent.
+- `_show_kaelen_intro_quest_offer()` (new) — fires after the first briefing "Let's hear it." Kaelen presents the pirate kill job directly in her voice, no agent. Player clicks "I'll take it." → `QuestManager.accept_quest()` registers a normal KILL_SHIPS quest (1 reaver, 350 SC, 20-min timer), `intro_quest_delivered = true` saved, `_request_background_agent_quest()` starts LLM gen for quest 2 immediately.
+- `_show_kaelen_first_briefing()` "Let's hear it." now routes to `_show_kaelen_intro_quest_offer()` instead of `_refresh_agent_quest_board()`.
+- `on_kaelen_intro_dismissed()` called from popup dismiss handler → sets `intro_conversation_had = true`, saves.
+- `intro_agent_visited` set in `_on_talk_to_agent_pressed()` — lifts lock before agent panel opens.
+- All three agent-panel back-button paths now call `_render_dock_submenu()` on return so the re-render actually runs.
+- `try_fire_intro_quest()` removed from `_request_background_agent_quest()` — intro quest is no longer LLM-path.
+
+**Story state flags (`scripts/persistence/StoryStateStore.gd`, `scripts/story/StoryManager.gd`)**
+- Added `intro_conversation_had`, `intro_agent_visited`, `intro_quest_delivered` to story_state and default state in all three locations (StoryManager, StoryStateStore, clear_story_state).
+- `try_fire_intro_quest()`, `_maybe_fire_intro_quest()`, `_fire_intro_quest()` removed from StoryManager — delivery is now entirely UIManager's job. StoryManager only owns persistence flags.
+- `on_kaelen_intro_dismissed()` added to StoryManager.
+
+**Story context injection (`scripts/LLMInterface.gd`, `scripts/story/StoryManager.gd`)**
+- `StoryManager._save_story_state()` and `init_story_state()` both call `_push_context_to_llm()`, which writes `get_story_context_block()` into `LLMInterface.story_state_context_text`.
+- `_build_kaelen_intro_prompt()` now takes a `story_clause` parameter — injected between `local_tone_clause` and `correction_suffix`. Instruction: "color tone and urgency only, do NOT quote directly."
+- `request_kaelen_intro()` builds the clause from `story_state_context_text` if non-empty.
+- `_kaelen_intro_request_attempt()` and its retry call both thread `story_clause` through.
+
+### Plans Written
+- `docs/plan_docking_sequence.md` — full 4-phase docking animation design (approach tween, camera hold, clamp SFX, fade-in UI). Combat chase edge case: safe zone at initiation, only pursuers hold, re-engage on undock with warning. Build order: 5 pieces, one new file (DockSequence.gd).
+- `docs/plan_kaelen_handoff_pool.md` — Gemma4 pre-generates 16 story-aware Kaelen handoff lines per agent during gate travel dead time. Stored in `kaelen_handoffs.json` via new KaelenHandoffStore. Draw in `request_kaelen_intro` before falling through to small model. Triggers: game start, gate "Fly to", system arrival top-up, chapter advance replace. Build order: 5 steps.
+
+### Bugs Added to bugs.md
+- Agent dialogue sometimes addresses player as "Indy" or "Shiny" (prompt leak from backstory context)
+- Shield visual persists after combat ends
+
+### Notes
+- `_SQ_DEBUG` confirmed `false`
+- All scripts pass parse_check.gd headless with no errors
+- Story context at chapter 1 is sparse (just "guarded" mood) — pool plan will fix this materially
+
+---
+
+## Session: 2026-06-26 (Narrative Phase B — Story State Document) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Implemented Phase B of the narrative system: a living `story_state` document in StoryManager, with persistence via a new `StoryStateStore` (follows the CampaignTransactionStore pattern), and injection into LLMInterface quest-generation prompts.
+
+### What Landed
+
+**`scripts/persistence/StoryStateStore.gd`** (new) — RefCounted store following CampaignBibleStore pattern. Stores `story_state.json` in the campaign slot folder via `CampaignTransactionStore.commit_json_set`. Fields: `chapter`, `active_tensions`, `player_knows`, `player_does_not_know_yet`, `pending_hooks`, `current_foreshadow`, `kaelen_current_mood`. `prompt_context()` returns a formatted string that excludes `player_does_not_know_yet`. `save_state(data)` commits atomically.
+
+**`scripts/story/StoryManager.gd`** — Added Phase B state API:
+- `story_state: Dictionary` — in-memory working copy with all 7 fields
+- `init_story_state(campaign_path)` — opens StoryStateStore, loads persisted state
+- `clear_story_state()` — resets to defaults and drops store reference
+- `get_story_context_block() -> String` — formats public fields; never includes `player_does_not_know_yet`
+- `advance_chapter(truths_to_reveal)` — increments chapter, promotes secrets to player_knows, clears active_tensions, saves, then fires `_generate_foreshadow()`
+- `_generate_foreshadow()` — async HTTPRequest to the small Ollama model; one sentence foreshadow for ambient content; saves on completion
+
+**`scripts/LLMInterface.gd`** — Added `story_state_context_text: String = ""`. The quest-generation prompt now includes a `### STORY STATE:` block immediately after `### CAMPAIGN BIBLE:`.
+
+**`scripts/GameRoot.gd`** — Added `_refresh_llm_story_state_context()` (reads StoryManager.get_story_context_block()). Wired `StoryManager.init_story_state(slot_path)` and `_refresh_llm_story_state_context()` at the end of `_initialize_campaign_chronicle()`. Added `StoryManager.clear_story_state()` + `LLMInterface.story_state_context_text = ""` to all campaign unload/reset paths (delete slot, factory reset, new-campaign wipe).
+
+**`.godot/global_script_class_cache.cfg`** — Added `StoryStateStore` entry so Godot can resolve the class name at compile time (editor would add this automatically on next scan).
+
+### Notes
+- `_SQ_DEBUG` remains `false` — confirmed before touching StoryManager
+- All scripts pass parse_check.gd headless with no errors
+
+---
+
 ## Session: 2026-06-26 (Unified Combat System + FactionRegistry + Dev Panel) — Claude
 **Branch:** `segment-3/economy-stores-events`
 

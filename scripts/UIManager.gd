@@ -3479,11 +3479,25 @@ func _render_dock_submenu() -> void:
 		# sell/agent/maintenance entry. At an outpost, show only the
 		# outpost-specific actions (test pickup, hear gossip when added)
 		# and hide the rest.
+		#
+		# First-dock onboarding: if the intro quest hasn't fired yet, hide
+		# everything except Talk to Agent so the player can't bypass Kaelen.
+		# Lock lifts as soon as the player has visited the agent once
+		# (intro_agent_visited), not waiting for quest delivery to complete.
+		var _intro_done: bool = not is_instance_valid(StoryManager) \
+			or bool(StoryManager.story_state.get("intro_agent_visited", false)) \
+			or bool(StoryManager.story_state.get("intro_quest_delivered", false))
 		agent_service_btn.visible = not is_outpost
-		public_board_btn.visible = not is_outpost
-		station_lounge_btn.visible = _current_station_has_contacts()
-		maintenance_bay_btn.visible = not is_outpost
-		store_btn.visible = not is_outpost
+		public_board_btn.visible = not is_outpost and _intro_done
+		station_lounge_btn.visible = _current_station_has_contacts() and _intro_done
+		maintenance_bay_btn.visible = not is_outpost and _intro_done
+		store_btn.visible = not is_outpost and _intro_done
+		if not _intro_done and not is_outpost:
+			show_dock_message(
+				"Kaelen has work for you. Speak with the agent before anything else.",
+				"Station Comms",
+				Color(0.0, 0.85, 0.85)
+			)
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
 		test_pickup_btn.visible = false
@@ -6915,6 +6929,11 @@ func set_overview_collapsed(collapsed: bool):
 # Agent dialogue screen & Quest tracker HUD interactions
 func _on_talk_to_agent_pressed():
 	SpeechService.start_interaction("Talk to Agent")
+	# Lift the first-dock lock the instant the player commits to the agent.
+	# We use a separate "agent_visited" flag so intro_quest_delivered stays
+	# false until the quest actually fires inside the agent panel flow.
+	if is_instance_valid(StoryManager):
+		StoryManager.story_state["intro_agent_visited"] = true
 	dock_panel.visible = false
 	if inventory_panel:
 		inventory_panel.visible = false
@@ -7030,10 +7049,9 @@ func _show_kaelen_first_briefing() -> void:
 	accept_btn.pressed.connect(func():
 		SpeechService.stop()
 		GlobalState.kaelen_briefing_seen = true
-		GlobalState.kaelen_briefing_accepted = true
 		for child in agent_choices_container.get_children():
 			child.queue_free()
-		_refresh_agent_quest_board()
+		_show_kaelen_intro_quest_offer()
 	)
 	agent_choices_container.add_child(accept_btn)
 
@@ -7080,6 +7098,73 @@ func _show_kaelen_return_briefing() -> void:
 		_on_agent_back_pressed()
 	)
 	agent_choices_container.add_child(decline_btn)
+
+
+func _show_kaelen_intro_quest_offer() -> void:
+	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
+	_update_agent_portrait("neutral", "", "serious")
+	agent_back_btn.visible = false
+
+	var line := (
+		"Someone I know — careful type, doesn't do names — has a Reaver problem. "
+		+ "One ship. Been circling his routes, picking off things that weren't theirs to touch. "
+		+ "He wants it handled quiet. No trail, no questions. "
+		+ "You take the shot, credits come to me, I cut you in. "
+		+ "That's how this works. Let's see what you've got."
+	)
+	agent_dialogue_label.text = line
+	SpeechService.play(line, "voice.kaelen.v1")
+
+	var quest_data := {
+		"title": "Clean and Easy",
+		"faction": "neutral",
+		"agent_name": "Broker Kaelen",
+		"dialogue": line,
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 1,
+			"reward_credits": 350,
+		},
+		"choices": [],
+		"time_limit_min": 20.0,
+	}
+	var accept_choice := {
+		"text": "I'll take it.",
+		"consequence": {
+			"credits_immediate": 0,
+			"reputation_change": {},
+			"reward_credits_multiplier": 1.0,
+		},
+	}
+
+	var take_btn := Button.new()
+	take_btn.text = "I'll take it."
+	take_btn.pressed.connect(func():
+		SpeechService.stop()
+		GlobalState.kaelen_briefing_accepted = true
+		if is_instance_valid(StoryManager):
+			StoryManager.story_state["intro_quest_delivered"] = true
+			StoryManager._save_story_state()
+		for child in agent_choices_container.get_children():
+			child.queue_free()
+		if not QuestManager.accept_quest(quest_data, accept_choice):
+			push_warning("[UIManager] Intro quest rejected: " + QuestManager.last_validation_error)
+		# Start LLM generating quest 2 in background now
+		_request_background_agent_quest()
+		agent_panel.visible = false
+		dock_panel.visible = true
+		_render_dock_submenu()
+	)
+	agent_choices_container.add_child(take_btn)
+
+	var pass_btn := Button.new()
+	pass_btn.text = "Not right now."
+	pass_btn.pressed.connect(func():
+		_on_agent_back_pressed()
+	)
+	agent_choices_container.add_child(pass_btn)
 
 
 func _refresh_agent_quest_board():
@@ -7338,6 +7423,7 @@ func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 		back_btn.pressed.connect(func():
 			agent_panel.visible = false
 			dock_panel.visible = true
+			_render_dock_submenu()
 		)
 		agent_choices_container.add_child(back_btn)
 	else:
@@ -7522,6 +7608,7 @@ func _on_agent_back_pressed():
 	SpeechService.stop()
 	agent_panel.visible = false
 	dock_panel.visible = true
+	_render_dock_submenu()
 
 func _on_agent_complete_pressed():
 	SpeechService.start_interaction("Complete Contract")
@@ -7652,6 +7739,7 @@ func _on_partial_delivery_pressed(deliverable: float):
 				SpeechService.stop()
 				agent_panel.visible = false
 				dock_panel.visible = true
+				_render_dock_submenu()
 			)
 			agent_choices_container.add_child(back_btn)
 			agent_back_btn.visible = true
@@ -8946,6 +9034,7 @@ func show_kaelen_intro():
 	
 	# ── Dismiss handler ───────────────────────────────────────────────────────
 	var _dismiss = func():
+		StoryManager.on_kaelen_intro_dismissed()
 		var fade_out = create_tween()
 		fade_out.tween_property(popup, "modulate:a", 0.0, 0.35)
 		fade_out.parallel().tween_property(overlay, "modulate:a", 0.0, 0.35)
