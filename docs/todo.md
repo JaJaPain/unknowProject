@@ -6,7 +6,11 @@ _Active task list. Update this file at the end of every session._
 ## Combat — Unified System (do in order, blocks everything below)
 
 - [ ] **FactionRegistry.gd autoload** — single source of truth for all faction data: known profiles (aurelia/vanguard/zenith) + unknown faction progression list ordered by tier; `get_profile(key)`, `get_faction_for_danger_level(n)`; runtime override dict so tuning tool can hot-apply changes without touching the const.
-- [ ] **Unknown faction progression list** — ~12 factions ordered by base tier (2 per tier level 1–3, then 2 elite tier 4+); each has display name, combat role, weapon/engine/shield bias ratios so same-tier factions still feel distinct. Names: Rift Collective, Hollow Syndicate, Eclipse Legion, Obsidian Pact, Void Covenant, Shatter Bloc, etc.
+- [ ] **Unknown faction progression list** — 4 factions per tier band, each band covers ~4 generated systems; same tier = same damage/HP budget but different combat role, weapon bias, shield vs hull split, and aggression pattern so each feels distinct to fight. Proposed bands:
+  - **Band 1** (systems 2–5): Rift Collective (weapon-heavy burst), Hollow Syndicate (engine-heavy hit-and-run), Pale March (hull tank, braces constantly), Cinder Wake (repair-capable attrition)
+  - **Band 2** (systems 6–9): Eclipse Legion (balanced), Obsidian Pact (shield-heavy), Ashen Drift (reposition every turn, chip damage), Iron Chorus (disable-focused)
+  - **Band 3** (systems 10–13): Void Covenant (all-round high), Shatter Bloc (extreme weapon bias), Null Meridian (drone-specialist), Fracture Syndicate (squad-oriented)
+  - **Band 4** (systems 14+): elite tier, reserved for late-game / story systems
 - [ ] **Faction tuning tool** — Numpad 7 dev overlay; table showing all factions × tier fields with ↑/↓ per cell; changes hot-apply to future spawns; saves to `user://faction_tuning.json` which overrides const defaults during dev, ignored in release build.
 
 
@@ -25,6 +29,8 @@ _Active task list. Update this file at the end of every session._
 - [ ] **Boss as tier override** — story-triggered boss = `apply_faction_profile(faction, tier_override: 3)` instead of hardcoded stats; StoryManager trigger hook becomes trivial.
 - [ ] **Mixed-profile squads** — squad fights can mix profiles (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
 - [ ] **Phase 6 — Enemy kit parity** — BRACE and REPOSITION now in enum; wire them into NPC planners as real actions with camera beats + SFX (same pipeline as player actions).
+- [ ] **Damage type resistance** — each faction profile has `weapon_dmg_mult` and `drone_dmg_mult` (e.g. dense-plated faction: weapons 0.4×, drones 1.5×; shielded faction: weapons 1.0×, drones 0.2×). Applied in `_apply_hit()`. No tooltip or warning — player learns by watching damage numbers. Sensor scan shows hull composition ("DENSE PLATE ALLOY", "ENERGY SHIELDING TIER 2") so attentive players can adapt before the fight.
+- [ ] **Damage number visual feedback for resistance** — resisted hits show small dim numbers; effective hits show large bright numbers. Player reads the difference in the moment and learns without being told explicitly.
 - [ ] **Phase 7 — Boss (mega)** — DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 — Squads** — DONE (in-game) but needs StoryManager trigger hook (see Story section below)
 - [ ] **Shield Reroute sub-picker** — currently defaults to Front face; needs the face-select sub-wheel
