@@ -124,6 +124,13 @@ func _spawn_asteroid_ring(
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)
 
+const _ROLE_PROFILE_KEY := {
+	"Gunner":      "gunner",
+	"Interceptor": "interceptor",
+	"Logistics":   "logistics",
+	"MiningHauler":"mining_hauler",
+}
+
 func _spawn_npc(
 	faction_name: String,
 	pos: Vector3,
@@ -139,6 +146,12 @@ func _spawn_npc(
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	add_child(npc)
 	npc.global_position = pos
+	# Apply faction combat profile for known major factions.
+	var role_key: String = _ROLE_PROFILE_KEY.get(role, "gunner")
+	var profile_key := faction_name + "_" + role_key
+	var profile := FactionRegistry.get_profile(profile_key)
+	if not profile.is_empty():
+		npc.apply_faction_profile(profile)
 
 func _populate_overview():
 	if not ui_manager:
