@@ -4327,3 +4327,74 @@ Return ONLY valid JSON, no markdown fences:
 	if err != OK:
 		temp_http.queue_free()
 		callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+
+## Request a batch of generic combat taunts (not faction-specific) for the
+## general opening-taunt pool. Returns {"rage":[...], "reason":[...], "humor":[...]}.
+## Calls callback({}) on any failure so the caller can silently skip.
+func request_general_taunts(callback: Callable) -> void:
+	var prompt := """You are writing combat banter for a gritty space game. Generate exactly 12 short combat one-liners. Under 15 words each. No placeholder brackets. No names.
+
+Three categories:
+- "rage" (6 lines): enemy is furious the player shot first — pure hostility and threats ("you absolute idiot", "you're dead", "wrong move").
+- "reason" (3 lines): enemy is the aggressor, contemptuous and confident they'll win.
+- "humor" (3 lines): absurd comedic insults with the same angry delivery — the contrast is the joke.
+
+All lines are from a hostile enemy pilot to an anonymous stranger. Mild profanity fine. Never use names.
+
+Return ONLY valid JSON, no markdown:
+{"rage": ["...", "...", "...", "...", "...", "..."], "reason": ["...", "...", "..."], "humor": ["...", "...", "..."]}"""
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			print("[LLMInterface] general taunts fetch failed")
+			callback.call({})
+			return
+		var response_text: String = body.get_string_from_utf8()
+		var outer_json := JSON.new()
+		if outer_json.parse(response_text) != OK:
+			callback.call({})
+			return
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			callback.call({})
+			return
+		var inner_str: String = outer_data["response"].strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			callback.call({})
+			return
+		var data = inner_json.get_data()
+		if not data is Dictionary:
+			callback.call({})
+			return
+		# Validate each array — strip anything with brackets (placeholders).
+		var out := {"rage": [], "reason": [], "humor": []}
+		for cat in out.keys():
+			if data.has(cat) and data[cat] is Array:
+				for line in data[cat]:
+					var s := str(line).strip_edges()
+					if s.length() > 4 and not s.contains("["):
+						out[cat].append(s)
+		print("[LLMInterface] General taunts: %d rage, %d reason, %d humor" % [
+			out["rage"].size(), out["reason"].size(), out["humor"].size()])
+		callback.call(out)
+	)
+	var payload := build_generation_body("kaelen_line", prompt, "json",
+		{"temperature": 1.0, "seed": randi()})
+	var err2 := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err2 != OK:
+		temp_http.queue_free()
+		callback.call({})

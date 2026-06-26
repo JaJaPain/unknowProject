@@ -165,10 +165,14 @@ var _player_initiated: bool = false
 var _cached_rage:   Array = []   # [{text, voice}, ...] pre-cached audio pairs
 var _cached_reason: Array = []
 var _cached_humor:  Array = []
+const _TAUNT_CACHE_PATH := "user://cached_taunts.json"
+var _general_taunt_fetch_in_flight: bool = false
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	_build_and_cache_taunts()
+	_load_persisted_taunts()
+	_request_general_taunt_pool()
 
 # Build the two taunt pools, each line paired with a random angry blend, and
 # pre-cache the audio so combat playback is instant (queues if TTS isn't up yet).
@@ -177,13 +181,83 @@ func _build_and_cache_taunts() -> void:
 	_cached_reason = _make_taunt_pool(TAUNT_REASON_LINES)
 	_cached_humor  = _make_taunt_pool(TAUNT_HUMOR_LINES)
 
+# Load lines saved from the previous session immediately — instant pool boost.
+func _load_persisted_taunts() -> void:
+	if not FileAccess.file_exists(_TAUNT_CACHE_PATH):
+		return
+	var f := FileAccess.open(_TAUNT_CACHE_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	if not parsed is Dictionary:
+		return
+	for cat in ["rage", "reason", "humor"]:
+		if parsed.has(cat) and parsed[cat] is Array:
+			var target: Array = _cached_rage if cat == "rage" \
+				else (_cached_reason if cat == "reason" else _cached_humor)
+			for line in parsed[cat]:
+				var s := str(line).strip_edges()
+				if s.length() > 4 and not _pool_has_line(target, s):
+					target.append(_make_taunt_entry(s))
+	print("[CombatManager] Loaded %d persisted taunt lines." % (
+		_cached_rage.size() + _cached_reason.size() + _cached_humor.size()))
+
+# Fire an async Ollama request for generic taunts. Safe to call multiple times —
+# skips if a fetch is already in flight.
+func _request_general_taunt_pool() -> void:
+	if _general_taunt_fetch_in_flight:
+		return
+	_general_taunt_fetch_in_flight = true
+	LLMInterface.request_general_taunts(_on_general_taunts_ready)
+
+func _on_general_taunts_ready(data: Dictionary) -> void:
+	_general_taunt_fetch_in_flight = false
+	if data.is_empty():
+		return
+	var added := 0
+	var cat_map := {"rage": _cached_rage, "reason": _cached_reason, "humor": _cached_humor}
+	for cat in cat_map.keys():
+		if not data.has(cat):
+			continue
+		for line in data[cat]:
+			var s := str(line).strip_edges()
+			if s.length() > 4 and not _pool_has_line(cat_map[cat], s):
+				cat_map[cat].append(_make_taunt_entry(s))
+				TTSInterface.cache_dialogue_audio(s, _make_taunt_entry(s)["voice"],
+					TAUNT_SPEED, TAUNT_STYLE)
+				added += 1
+	if added > 0:
+		print("[CombatManager] +%d fresh general taunt lines cached." % added)
+		_save_taunt_pool()
+
+func _save_taunt_pool() -> void:
+	var out := {"rage": [], "reason": [], "humor": []}
+	for entry in _cached_rage:   out["rage"].append(entry["text"])
+	for entry in _cached_reason: out["reason"].append(entry["text"])
+	for entry in _cached_humor:  out["humor"].append(entry["text"])
+	var f := FileAccess.open(_TAUNT_CACHE_PATH, FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify(out, "\t"))
+	f.close()
+
+func _make_taunt_entry(line: String) -> Dictionary:
+	var lead: String = TAUNT_LEAD_VOICES[randi() % TAUNT_LEAD_VOICES.size()]
+	return {"text": line, "voice": "%s[0.7]+am_michael[0.3]" % lead}
+
+func _pool_has_line(pool: Array, line: String) -> bool:
+	for entry in pool:
+		if entry is Dictionary and entry.get("text", "") == line:
+			return true
+	return false
+
 func _make_taunt_pool(lines: Array) -> Array:
 	var pool: Array = []
 	for line in lines:
-		var lead: String = TAUNT_LEAD_VOICES[randi() % TAUNT_LEAD_VOICES.size()]
-		var voice := "%s[0.7]+am_michael[0.3]" % lead
-		pool.append({"text": line, "voice": voice})
-		TTSInterface.cache_dialogue_audio(line, voice, TAUNT_SPEED, TAUNT_STYLE)
+		var entry := _make_taunt_entry(line)
+		pool.append(entry)
+		TTSInterface.cache_dialogue_audio(line, entry["voice"], TAUNT_SPEED, TAUNT_STYLE)
 	return pool
 
 # Fire exactly one taunt for the attacking ship, voiced from the right pool.
@@ -388,6 +462,8 @@ func end_combat(player_won: bool) -> void:
 	# Notify queue first — it starts the 3-second buffer and releases the slot.
 	PlayerInteractionQueue.notify_combat_ended()
 	emit_signal("combat_ended", player_won)
+	# Top up the general taunt pool in the background after each fight.
+	_request_general_taunt_pool()
 
 func _reset_fight_state() -> void:
 	queued_actions.clear()
