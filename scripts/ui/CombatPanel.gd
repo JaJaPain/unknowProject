@@ -51,9 +51,12 @@ var _enemy_brace_chip:  Label
 var _enemy_shield_chip: Label
 var _boss_phase_label:  Label
 # Squad UI — shown only when enemy_nodes.size() > 1.
-var _wingman_bar:   ProgressBar
-var _wingman_label: Label
-var _target_btn:    Button
+# Top bar (_enemy_bar) always shows enemy_nodes[0]; bottom (_wingman_bar) shows enemy_nodes[1].
+# Each has its own invisible click button that selects that specific ship.
+var _wingman_bar:        ProgressBar
+var _wingman_label:      Label
+var _target_btn:         Button   # click-catcher over wingman bar → selects index 1
+var _enemy_target_btn:   Button   # click-catcher over enemy bar   → selects index 0
 # Saved bar dimensions so we can swap sizes on target switch.
 var _bar_large_w: float = 0.0
 var _bar_large_h: float = 0.0
@@ -305,6 +308,22 @@ func _build_wheel() -> void:
 	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(_enemy_bar)
 
+	# Invisible click-catcher over the top (enemy) bar — selects enemy_nodes[0].
+	_enemy_target_btn = Button.new()
+	_enemy_target_btn.flat = true
+	_enemy_target_btn.size = Vector2(ebar_w, ebar_h + elbl_h + 4.0 * S)
+	_enemy_target_btn.position = Vector2(center.x - ebar_w * 0.5, wheel_top - emargin - ebar_h - elbl_h)
+	_enemy_target_btn.modulate = Color(1, 1, 1, 0)
+	_enemy_target_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_enemy_target_btn.visible = false
+	_enemy_target_btn.pressed.connect(func() -> void: _on_bar_select(0))
+	_enemy_target_btn.mouse_entered.connect(func() -> void:
+		if is_instance_valid(_enemy_bar): _enemy_bar.modulate = Color(1, 1, 1, 1.0))
+	_enemy_target_btn.mouse_exited.connect(func() -> void:
+		if CombatManager._target_idx != 0:
+			if is_instance_valid(_enemy_bar): _enemy_bar.modulate = Color(1, 1, 1, 0.65))
+	container.add_child(_enemy_target_btn)
+
 	# Status chips — shown when enemy has an active defensive state.
 	var chip_y := wheel_top - emargin - ebar_h - elbl_h - 20.0 * S
 	var chip_h := 16.0 * S
@@ -374,13 +393,15 @@ func _build_wheel() -> void:
 	_target_btn.modulate = Color(1.0, 1.0, 1.0, 0.0)   # fully transparent
 	_target_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_target_btn.visible = false
-	_target_btn.pressed.connect(_on_target_pressed)
+	_target_btn.pressed.connect(func() -> void: _on_bar_select(1))
 	_target_btn.mouse_entered.connect(func() -> void:
-		if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
-		if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1.0, 1.0, 1.0, 1.0))
+		if CombatManager._target_idx != 1:
+			if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1, 1, 1, 1.0)
+			if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1, 1, 1, 1.0))
 	_target_btn.mouse_exited.connect(func() -> void:
-		if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1.0, 1.0, 1.0, 0.65)
-		if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1.0, 1.0, 1.0, 0.65))
+		if CombatManager._target_idx != 1:
+			if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1, 1, 1, 0.65)
+			if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1, 1, 1, 0.65))
 	container.add_child(_target_btn)
 
 # ── Wheel hit-testing ───────────────────────────────────────────────────────────
@@ -602,9 +623,10 @@ func _on_combat_started(enemy: Node) -> void:
 	_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
 	# Squad UI — show wingman bar and target button only for multi-enemy fights.
 	var is_squad: bool = CombatManager.enemy_nodes.size() > 1
-	_wingman_bar.visible   = is_squad
-	_wingman_label.visible = is_squad
-	_target_btn.visible    = is_squad
+	_wingman_bar.visible        = is_squad
+	_wingman_label.visible      = is_squad
+	_target_btn.visible         = is_squad
+	_enemy_target_btn.visible   = is_squad
 	_refresh_target_label()
 
 func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
@@ -674,38 +696,29 @@ func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
 	if is_instance_valid(_enemy_shield_chip):
 		_enemy_shield_chip.visible = shield
 
-func _on_target_pressed() -> void:
-	CombatManager.cycle_target()
-	_swap_bar_sizes()
+func _on_bar_select(idx: int) -> void:
+	CombatManager.set_target(idx)
+	_apply_bar_sizes()
 	_refresh_hp_bars()
 	_refresh_target_label()
 
-func _swap_bar_sizes() -> void:
-	# _enemy_bar is always the top bar; _wingman_bar is always below it.
-	# Whichever is now the target (_target_idx == 0 means first enemy = top bar)
-	# gets the large size; the other shrinks.
-	var target_is_top: bool = CombatManager._target_idx == 0
+func _apply_bar_sizes() -> void:
+	var ti    := CombatManager._target_idx
 	var large := Vector2(_bar_large_w, _bar_large_h)
 	var small := Vector2(_bar_small_w, _bar_small_h)
 	var cx    := _bar_center_x
-	if target_is_top:
-		_enemy_bar.custom_minimum_size = large
-		_enemy_bar.size = large
-		_enemy_bar.position.x = cx - large.x * 0.5
-		_enemy_bar.modulate = Color(1, 1, 1, 1.0)
-		_wingman_bar.custom_minimum_size = small
-		_wingman_bar.size = small
-		_wingman_bar.position.x = cx - small.x * 0.5
-		_wingman_bar.modulate = Color(1, 1, 1, 0.65)
-	else:
-		_enemy_bar.custom_minimum_size = small
-		_enemy_bar.size = small
-		_enemy_bar.position.x = cx - small.x * 0.5
-		_enemy_bar.modulate = Color(1, 1, 1, 0.65)
-		_wingman_bar.custom_minimum_size = large
-		_wingman_bar.size = large
-		_wingman_bar.position.x = cx - large.x * 0.5
-		_wingman_bar.modulate = Color(1, 1, 1, 1.0)
+	# Top bar (index 0) is large when it's the target, small otherwise.
+	var top_sz := large if ti == 0 else small
+	_enemy_bar.custom_minimum_size = top_sz
+	_enemy_bar.size = top_sz
+	_enemy_bar.position.x = cx - top_sz.x * 0.5
+	_enemy_bar.modulate = Color(1, 1, 1, 1.0 if ti == 0 else 0.65)
+	# Bottom bar (index 1) is large when it's the target, small otherwise.
+	var bot_sz := large if ti == 1 else small
+	_wingman_bar.custom_minimum_size = bot_sz
+	_wingman_bar.size = bot_sz
+	_wingman_bar.position.x = cx - bot_sz.x * 0.5
+	_wingman_bar.modulate = Color(1, 1, 1, 1.0 if ti == 1 else 0.65)
 
 func _refresh_target_label() -> void:
 	if not is_instance_valid(_enemy_label):
@@ -778,37 +791,29 @@ func _refresh_button_states() -> void:
 			Color(0.45, 1.0, 0.55) if kits > 0 else Color(0.6, 0.6, 0.6))
 
 func _refresh_hp_bars() -> void:
-	var p := CombatManager.player_node
-	var e := CombatManager.enemy_node   # targeted enemy (getter)
+	var p     := CombatManager.player_node
+	var nodes := CombatManager.enemy_nodes
 	if is_instance_valid(p):
-		var hp: float  = float(p.get("health"))     if p.get("health")     != null else 0.0
-		var mx: float  = float(p.get("max_health")) if p.get("max_health") != null else 100.0
+		var hp: float = float(p.get("health"))     if p.get("health")     != null else 0.0
+		var mx: float = float(p.get("max_health")) if p.get("max_health") != null else 100.0
 		_player_bar.max_value = mx
 		_player_bar.value     = hp
-	if is_instance_valid(e):
-		var hp: float  = float(e.get("health"))     if e.get("health")     != null else 0.0
-		var mx: float  = float(e.get("max_health")) if e.get("max_health") != null else 50.0
-		_enemy_bar.max_value = mx
-		_enemy_bar.value     = hp
-	# Wingman bar: the non-targeted enemy (index != _target_idx).
-	var nodes := CombatManager.enemy_nodes
-	var ti    := CombatManager._target_idx
-	var wingman: Node = null
-	for i in nodes.size():
-		if i != ti and is_instance_valid(nodes[i]):
-			wingman = nodes[i]
-			break
-	var show_wingman := wingman != null
-	_wingman_bar.visible   = show_wingman
-	_wingman_label.visible = show_wingman
-	_target_btn.visible    = show_wingman
+	# Top bar always shows enemy_nodes[0].
+	var e0: Node = nodes[0] if nodes.size() > 0 and is_instance_valid(nodes[0]) else null
+	if e0 != null:
+		_enemy_bar.max_value = float(e0.get("max_health") if e0.get("max_health") != null else 50.0)
+		_enemy_bar.value     = float(e0.get("health")     if e0.get("health")     != null else 0.0)
+	# Bottom bar always shows enemy_nodes[1] when present.
+	var e1: Node = nodes[1] if nodes.size() > 1 and is_instance_valid(nodes[1]) else null
+	var show_wingman := e1 != null
+	_wingman_bar.visible      = show_wingman
+	_wingman_label.visible    = show_wingman
+	_target_btn.visible       = show_wingman
+	_enemy_target_btn.visible = show_wingman
 	if show_wingman:
-		var whp: float = float(wingman.get("health"))     if wingman.get("health")     != null else 0.0
-		var wmx: float = float(wingman.get("max_health")) if wingman.get("max_health") != null else 50.0
-		_wingman_bar.max_value = wmx
-		_wingman_bar.value     = whp
-		var wname: String = wingman.get("name") if wingman.get("name") else "Wingman"
-		_wingman_label.text = wname
+		_wingman_bar.max_value = float(e1.get("max_health") if e1.get("max_health") != null else 50.0)
+		_wingman_bar.value     = float(e1.get("health")     if e1.get("health")     != null else 0.0)
+		_wingman_label.text    = str(e1.name) if e1.name else "Wingman"
 
 func _add_queue_chip(action: Dictionary) -> void:
 	var lbl := Label.new()

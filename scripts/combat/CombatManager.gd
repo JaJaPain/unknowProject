@@ -291,6 +291,18 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 
 ## Cycles the player's target to the next live enemy in the squad.
 ## Called by the TARGET ▸ button in CombatPanel. Free action, 0 AP cost.
+## Explicitly set the target by index. No-op if already targeted or index invalid.
+func set_target(idx: int) -> void:
+	if idx < 0 or idx >= enemy_nodes.size():
+		return
+	if not is_instance_valid(enemy_nodes[idx]) or enemy_nodes[idx].get("destroyed"):
+		return
+	if _target_idx == idx:
+		return
+	_target_idx = idx
+	npc_action_plan = npc_action_plans[_target_idx] if _target_idx < npc_action_plans.size() else []
+	_spawn_target_flash(enemy_nodes[_target_idx])
+
 func cycle_target() -> void:
 	if enemy_nodes.size() <= 1:
 		return
