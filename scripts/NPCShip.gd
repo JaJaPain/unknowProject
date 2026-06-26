@@ -1213,27 +1213,32 @@ func _plan_boss(plan: Array, ap: int, hp_ratio: float, _intel: float) -> void:
 				ap -= 2
 
 # ── Action builders ───────────────────────────────────────────────────────────
+# All helpers now use CombatAction.make() so type keys are int enum values,
+# matching the player action system. Damage is passed in params so
+# CombatManager can read it via action["params"]["damage"].
 func _action_fire(dmg: float, lbl: String = "Fire") -> Dictionary:
-	return {"type": "fire", "label": lbl, "damage": dmg, "ap": 2}
+	var a := CombatAction.make(CombatAction.Type.FIRE, {"damage": dmg})
+	a["label"] = lbl
+	return a
 
 func _action_boost(dir: String) -> Dictionary:
-	return {"type": "boost", "label": "Reposition (%s)" % dir, "direction": dir, "ap": 1}
+	return CombatAction.make(CombatAction.Type.BOOST, {"direction": dir})
 
 func _action_flank() -> Dictionary:
-	return {"type": "flank", "label": "Flanking run",
-		"damage": randf_range(damage_min * 0.8, damage_max * 0.9), "flanking": true, "ap": 3}
+	var dmg := randf_range(damage_min * 0.8, damage_max * 0.9)
+	return CombatAction.make(CombatAction.Type.FLANK, {"damage": dmg, "flanking": true})
 
 func _action_repair() -> Dictionary:
-	return {"type": "repair", "label": "Emergency repair", "damage": 0.0, "ap": 2}
+	return CombatAction.make(CombatAction.Type.REPAIR_KIT, {})
 
 func _action_disable_engines() -> Dictionary:
-	return {"type": "disable_engines", "label": "Engine disruption", "damage": 0.0, "ap": 2}
+	return CombatAction.make(CombatAction.Type.DISABLE_ENGINES, {})
 
 func _action_brace() -> Dictionary:
-	return {"type": "brace", "label": "⛨ Brace", "damage": 0.0, "ap": 2}
+	return CombatAction.make(CombatAction.Type.BRACE, {})
 
 func _action_shield_angle() -> Dictionary:
-	return {"type": "shield_angle", "label": "⚡ Shield angle", "damage": 0.0, "ap": 1}
+	return CombatAction.make(CombatAction.Type.SHIELD_ANGLE, {})
 
 # Legacy single-intent shim (keep for anything still calling generate_intent).
 func generate_intent() -> Dictionary:
