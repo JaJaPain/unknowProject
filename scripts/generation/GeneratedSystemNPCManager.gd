@@ -134,6 +134,7 @@ func _spawn_replacement() -> void:
 	system_root.add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = target_pos
+	_apply_npc_profile(npc, faction_name)
 
 
 func _spawn_minor_roamer() -> void:
@@ -159,6 +160,7 @@ func _spawn_minor_roamer() -> void:
 	system_root.add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = target_pos
+	_apply_npc_profile(npc, faction_name)
 
 
 func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: String) -> void:
@@ -178,6 +180,7 @@ func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: Str
 		npc.custom_model_scene = ShipGenerator.load_runtime(model_seed)
 	system_root.add_child(npc)
 	npc.global_position = pos
+	_apply_npc_profile(npc, faction_name)
 
 
 func _collect_anchors(system_root: Node3D) -> Array[Vector3]:
@@ -254,3 +257,29 @@ func _count_minor_faction_ships() -> int:
 func _next_id(category: String) -> String:
 	runtime_ship_sequence += 1
 	return "entity.%s.%s.%04d" % [config.legacy_id, category, runtime_ship_sequence]
+
+
+const _KNOWN_FACTIONS := ["aurelia", "vanguard", "zenith"]
+const _ROLE_KEY := {
+	"Gunner": "gunner", "Interceptor": "interceptor",
+	"Logistics": "logistics", "MiningHauler": "mining_hauler",
+}
+
+func _apply_npc_profile(npc: Node, faction_name: String) -> void:
+	if not npc.has_method("apply_faction_profile"):
+		return
+	var profile: Dictionary
+	if faction_name in _KNOWN_FACTIONS:
+		var role: String = str(npc.get("ship_role") if npc.get("ship_role") else "Gunner")
+		var role_key: String = _ROLE_KEY.get(role, "gunner")
+		profile = FactionRegistry.get_profile(faction_name + "_" + role_key)
+	else:
+		# Unknown faction — pick from the band matching this system's difficulty tier.
+		var tier: int = config.difficulty_tier if config else 1
+		var faction_keys: Array = config.faction_weights.keys() if config else []
+		var faction_idx: int = faction_keys.find(faction_name)
+		if faction_idx < 0:
+			faction_idx = 0
+		profile = FactionRegistry.get_faction_for_danger_level(tier, faction_idx)
+	if not profile.is_empty():
+		npc.apply_faction_profile(profile)
