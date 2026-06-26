@@ -38,11 +38,67 @@ const ACTION_DEFS := [
 	{ "type": 6, "label": "FLEE",                 "ap": 3, "color": Color(0.20,0.35,0.75), "angle": 263.0  },
 ]
 
+# ── Sensor signature table ────────────────────────────────────────────────────
+# Maps action type → faction → one or more sensor readout strings (picked randomly).
+# Faction keys: "aurelia", "vanguard", "generic" (fallback), "boss".
+const SENSOR_SIGS: Dictionary = {
+	CombatAction.Type.FIRE: {
+		"aurelia":  ["Rapid-fire array spooling up", "Dual cannon charge detected"],
+		"vanguard": ["Heavy cannon capacitors charging", "Targeting lock — your bearing"],
+		"boss":     ["PRIMARY WEAPONS CHARGING — ALL BARRELS", "Mass driver capacitors at critical level"],
+		"generic":  ["Weapon systems charging", "Energy spike — forward arc"],
+	},
+	CombatAction.Type.BOOST: {
+		"aurelia":  ["Thruster bloom — high-G intercept vector", "Maneuvering burn — fast approach"],
+		"vanguard": ["Engine output spiking — closing vector", "Drive plume detected — brute approach"],
+		"boss":     ["THRUSTER OUTPUT — MAXIMUM BURN", "Closing vector — all engines"],
+		"generic":  ["Thruster signature detected", "Maneuvering burn initiated"],
+	},
+	CombatAction.Type.SHIELD_REROUTE: {
+		"aurelia":  ["Shield emitter reorientation — rapid cycling", "Capacitor bank realigning — lateral bias"],
+		"vanguard": ["Shield matrix redistributing — forward bias", "Deflector array hardening — bow aspect"],
+		"boss":     ["FULL SHIELD MATRIX REORIENTATION DETECTED", "Deflector emitters cycling — all faces"],
+		"generic":  ["Shield emitter reorientation detected", "Capacitor bank realigning"],
+	},
+	CombatAction.Type.ATTACK_DRONE: {
+		"aurelia":  ["Launch bay doors cycling — fast drone", "Drone deployment sequence — intercept class"],
+		"vanguard": ["Drone bay pressurizing", "Heavy drone deployment sequence initiated"],
+		"boss":     ["MULTIPLE DRONE BAYS OPENING", "Combat drone swarm deployment detected"],
+		"generic":  ["Launch bay doors cycling", "Drone deployment sequence initiated"],
+	},
+	CombatAction.Type.MICRO_WARP: {
+		"aurelia":  ["Warp coil charging — short-hop vector", "Micro-warp field building — erratic signature"],
+		"vanguard": ["Warp field coil at threshold", "Displacement drive cycling"],
+		"boss":     ["WARP FIELD SURGE — EXTREME OUTPUT", "Displacement drive at maximum charge"],
+		"generic":  ["Warp field coil charging", "Micro-warp signature detected"],
+	},
+	CombatAction.Type.REPAIR_KIT: {
+		"aurelia":  ["Nanite cloud dispersal detected", "Hull nanites deploying — breach sealing"],
+		"vanguard": ["Structural repair sequence active", "Damage control systems engaging"],
+		"boss":     ["EMERGENCY REPAIR SYSTEM ACTIVATED", "Hull regeneration sequence — high output"],
+		"generic":  ["Nanite dispersal detected", "Hull breach sealing sequence active"],
+	},
+	CombatAction.Type.FLEE: {
+		"aurelia":  ["Drive plume spiking — escape vector", "Emergency burn — high-G retreat"],
+		"vanguard": ["Full engine burn — withdrawal vector", "Drive signature spiking — disengaging"],
+		"boss":     ["EMERGENCY DRIVE BURN DETECTED", "Retreat vector locked"],
+		"generic":  ["Emergency burn detected", "Drive plume spiking — escape vector"],
+	},
+}
+
+func _sensor_sig(action_type: int, faction: String, is_boss: bool) -> String:
+	var type_map: Dictionary = SENSOR_SIGS.get(action_type, {})
+	var key := "boss" if is_boss else faction.to_lower()
+	var pool: Array = type_map.get(key, type_map.get("generic", ["Scanning..."]))
+	return pool[randi() % pool.size()]
+
 # ── Node refs ─────────────────────────────────────────────────────────────────
 var _wheel_panel:      Control
 var _root:             Control
 var _ap_label:         Label         # "X / Y" AP counter in wheel center
 var _intent_label:     Label
+var _sensor_header:    Label         # "◈ SENSOR ANALYSIS" fixed title line
+var _typewrite_tween:  Tween        # cancelled and replaced each planning phase
 var _player_bar:       ProgressBar
 var _enemy_bar:        ProgressBar
 var _player_label:     Label
@@ -113,50 +169,111 @@ func _build_ui() -> void:
 	_click_sfx.stream = load(SFX_BTN_CLICK) as AudioStream
 	_click_sfx.volume_db = -6.0
 	add_child(_click_sfx)
-	_build_intent_bar()
+	_build_sensor_panel()
 	_build_wheel()
 	_build_hp_bars()
 	_build_queue_strip()
 	_build_execute_row()
 
-# ── Intent bar ────────────────────────────────────────────────────────────────
-func _build_intent_bar() -> void:
-	# Background image (intentBar.png is 1536x1024 — we scale it to a thin strip)
-	var tex := load(TEX_INTENT_BAR) as Texture2D
-	var bar_w := 700.0
-	var bar_h := 48.0
+# ── Sensor panel ──────────────────────────────────────────────────────────────
+func _build_sensor_panel() -> void:
+	var panel_w := 700.0
+	var panel_h := 76.0
+	var pad     := 8.0
 
-	var bg := TextureRect.new()
-	bg.texture = tex
-	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	# Anchor just above the execute row (which sits at offset_bottom = -64)
-	bg.anchor_left   = 0.5
-	bg.anchor_right  = 0.5
-	bg.anchor_top    = 1.0
-	bg.anchor_bottom = 1.0
-	bg.offset_left   = -(bar_w * 0.5)
-	bg.offset_right  =  (bar_w * 0.5)
-	bg.offset_top    = -114.0 - bar_h
+	# Dark background with green border.
+	var bg := ColorRect.new()
+	bg.color = Color(0.0, 0.0, 0.0, 0.88)
+	bg.anchor_left   = 0.5;  bg.anchor_right  = 0.5
+	bg.anchor_top    = 1.0;  bg.anchor_bottom = 1.0
+	bg.offset_left   = -(panel_w * 0.5)
+	bg.offset_right  =  (panel_w * 0.5)
+	bg.offset_top    = -114.0 - panel_h
 	bg.offset_bottom = -114.0
 	bg.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(bg)
 
+	# Green border drawn via a StyleBoxFlat on a Panel.
+	var border := Panel.new()
+	var style  := StyleBoxFlat.new()
+	style.bg_color            = Color(0, 0, 0, 0)
+	style.border_color        = Color(0.0, 0.85, 0.25, 0.9)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	border.add_theme_stylebox_override("panel", style)
+	border.anchor_left   = 0.5;  border.anchor_right  = 0.5
+	border.anchor_top    = 1.0;  border.anchor_bottom = 1.0
+	border.offset_left   = -(panel_w * 0.5)
+	border.offset_right  =  (panel_w * 0.5)
+	border.offset_top    = -114.0 - panel_h
+	border.offset_bottom = -114.0
+	border.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(border)
+
+	# Header: "◈ SENSOR ANALYSIS" in dim green.
+	_sensor_header = Label.new()
+	_sensor_header.text = "◈  SENSOR ANALYSIS"
+	_sensor_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_sensor_header.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	_sensor_header.add_theme_font_size_override("font_size", 10)
+	_sensor_header.add_theme_color_override("font_color", Color(0.0, 0.65, 0.20, 0.85))
+	_sensor_header.anchor_left   = 0.5;  _sensor_header.anchor_right  = 0.5
+	_sensor_header.anchor_top    = 1.0;  _sensor_header.anchor_bottom = 1.0
+	_sensor_header.offset_left   = -(panel_w * 0.5) + pad
+	_sensor_header.offset_right  =  (panel_w * 0.5) - pad
+	_sensor_header.offset_top    = -114.0 - panel_h + 4.0
+	_sensor_header.offset_bottom = -114.0 - panel_h + 22.0
+	_sensor_header.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_sensor_header)
+
+	# Thin green divider line between header and signature text.
+	var divider := ColorRect.new()
+	divider.color = Color(0.0, 0.65, 0.20, 0.5)
+	divider.anchor_left   = 0.5;  divider.anchor_right  = 0.5
+	divider.anchor_top    = 1.0;  divider.anchor_bottom = 1.0
+	divider.offset_left   = -(panel_w * 0.5) + pad
+	divider.offset_right  =  (panel_w * 0.5) - pad
+	divider.offset_top    = -114.0 - panel_h + 23.0
+	divider.offset_bottom = -114.0 - panel_h + 24.0
+	divider.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(divider)
+
+	# Main signature label — typewriter text appears here in bright green.
 	_intent_label = Label.new()
-	_intent_label.text = "Enemy: —"
-	_intent_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_intent_label.text = ""
+	_intent_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_intent_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	_intent_label.add_theme_font_size_override("font_size", 16)
-	_intent_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.75))
-	_intent_label.anchor_left   = 0.5
-	_intent_label.anchor_right  = 0.5
-	_intent_label.anchor_top    = 1.0
-	_intent_label.anchor_bottom = 1.0
-	_intent_label.offset_left   = -(bar_w * 0.5)
-	_intent_label.offset_right  =  (bar_w * 0.5)
-	_intent_label.offset_top    = -114.0 - bar_h
-	_intent_label.offset_bottom = -114.0
+	_intent_label.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
+	_intent_label.add_theme_font_size_override("font_size", 15)
+	_intent_label.add_theme_color_override("font_color", Color(0.15, 1.0, 0.45))
+	_intent_label.anchor_left   = 0.5;  _intent_label.anchor_right  = 0.5
+	_intent_label.anchor_top    = 1.0;  _intent_label.anchor_bottom = 1.0
+	_intent_label.offset_left   = -(panel_w * 0.5) + pad
+	_intent_label.offset_right  =  (panel_w * 0.5) - pad
+	_intent_label.offset_top    = -114.0 - panel_h + 26.0
+	_intent_label.offset_bottom = -114.0 - 2.0
 	_intent_label.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_intent_label)
+
+	# Scanline overlay — a custom Control that draws semi-transparent horizontal lines.
+	var scanlines := _ScanlineOverlay.new()
+	scanlines.anchor_left   = 0.5;  scanlines.anchor_right  = 0.5
+	scanlines.anchor_top    = 1.0;  scanlines.anchor_bottom = 1.0
+	scanlines.offset_left   = -(panel_w * 0.5)
+	scanlines.offset_right  =  (panel_w * 0.5)
+	scanlines.offset_top    = -114.0 - panel_h
+	scanlines.offset_bottom = -114.0
+	scanlines.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(scanlines)
+
+# Inner class — draws horizontal scanlines over the sensor panel.
+class _ScanlineOverlay extends Control:
+	func _draw() -> void:
+		var spacing := 4.0
+		var n       := int(size.y / spacing)
+		for i in n:
+			var y := i * spacing
+			draw_line(Vector2(0, y), Vector2(size.x, y), Color(0, 0, 0, 0.18), 1.0)
 
 # ── Wheel ─────────────────────────────────────────────────────────────────────
 func get_wheel_panel() -> Control:
@@ -633,12 +750,16 @@ func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Di
 	_ap_current = ap
 	_ap_max     = max_ap
 	_set_ap_display(ap, max_ap)
-	# Show the enemy's full committed plan so the player can plan a counter.
+	# Build sensor signature string from the enemy's committed plan.
+	var enemy   := CombatManager.enemy_node
+	var faction := str(enemy.get("faction") if is_instance_valid(enemy) and enemy.get("faction") else "generic")
+	var is_boss: bool = is_instance_valid(enemy) and enemy.get("is_boss") == true
 	if npc_plan.is_empty():
-		_intent_label.text = "Enemy: —"
+		_typewrite("— NO SIGNAL DETECTED —")
 	else:
-		var labels: Array = npc_plan.map(func(a: Dictionary) -> String: return a.get("label", "?"))
-		_intent_label.text = "Enemy: %s" % " → ".join(labels)
+		var sigs: Array = npc_plan.map(func(a: Dictionary) -> String:
+			return _sensor_sig(a.get("type", -1), faction, is_boss))
+		_typewrite(" ─►  ".join(sigs))
 	_clear_queue_chips()
 	_refresh_button_states()
 	_execute_btn.disabled = false
@@ -649,6 +770,20 @@ func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Di
 		_warp_cd_label.text = "(%d turns)" % cd if cd > 0 else ""
 	_reset_hover()         # clear any stale highlight from last turn
 	_fade_controls(true)   # bring the wheel back for the player's choices
+
+# Rolls the full_text into _intent_label character by character with a cursor.
+# Cancels any in-progress typewrite before starting a new one.
+func _typewrite(full_text: String) -> void:
+	if is_instance_valid(_typewrite_tween):
+		_typewrite_tween.kill()
+	_intent_label.text = "█"
+	var delay_per_char := 0.028   # seconds between characters (~36 chars/sec)
+	_typewrite_tween = create_tween()
+	for i in full_text.length():
+		_typewrite_tween.tween_callback(
+			func() -> void:
+				_intent_label.text = full_text.left(i + 1) + ("█" if i < full_text.length() - 1 else "")
+		).set_delay(delay_per_char)
 
 func _on_execution_started() -> void:
 	for i in _btn_blocked.size():
