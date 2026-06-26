@@ -3,11 +3,22 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
-## Combat
+## Combat — Unified System (do in order, blocks everything below)
 
-- [ ] **Unified action + upgrade system** — give NPCShip the same tier vars as PlayerShip (weapon_tier, engine_tier, powerplant_tier, shield_tier); derive damage/AP/flee from tiers using the same formulas; faction profiles become `{ weapon_tier: 2, engine_tier: 1, ... }`; collapse player/NPC execution into one `_exec_action(action, source, target)` path; add BRACE/FLANK/SHIELD_ANGLE/DISABLE_ENGINES to CombatAction.Type enum. **Do this before adding more combat content.**
-- [ ] **Pre-combat sensor scan** — at `combat_started`, sensor panel typewriter-decodes the target's loadout instead of "—". Detail scales with player sensor upgrade tier: Tier 0 = "THREAT LEVEL: HIGH", Tier 1 = "Hull T2 / Weapons T3 / Engine T1", Tier 2 = full assessment + specific warning ("Weapon systems exceed your fit by 2 tiers — expect hull breach in ~3 turns"). Requires unified upgrade system above.
-- [ ] **Phase 6 — Enemy kit parity** — enemies should be able to Reposition and Brace as readable actions (mirrors player options); add flavor telegraphs for each
+- [ ] **Step 1 — CombatAction.gd: expand enum** — add BRACE, FLANK, SHIELD_ANGLE, DISABLE_ENGINES with AP costs + labels. Single source of truth for all action types.
+- [ ] **Step 2 — NPCShip.gd: tier vars + faction profiles** — replace `damage_min/max`, `combat_ap` with `weapon_tier`, `engine_tier`, `powerplant_tier`, `shield_tier`; add `FACTION_PROFILES` const; add `apply_faction_profile(key)`; derive damage + AP from tiers using same formulas as PlayerShip; update `_action_*` helpers to `CombatAction.make()`.
+- [ ] **Step 3 — CombatManager.gd: unified execution** — add `_exec_action(action, source, target)`; all handlers read stats from source node by property name; `_run_player_actions` and `_execute_npc_intent` both route through it.
+- [ ] **Step 4 — Spawning: apply profiles** — `MainScene._spawn_npc()` and GameRoot debug spawns call `apply_faction_profile()`; boss = tier 3 profile.
+- [ ] **Step 5 — Sensor sig table: collapse to one** — remove `SENSOR_SIGS_NAMED`; everything uses the int enum now.
+
+## Combat — Unlocked by unified system
+
+- [ ] **Pre-combat sensor scan** — at `combat_started`, typewriter-decode target's tier loadout in sensor panel. Tier 0 sensor = "THREAT LEVEL: HIGH / EXTREME", Tier 1 = individual stats ("Hull T2 / Weapons T3 / Engine T1"), Tier 2 = full assessment + warning ("Weapon systems exceed your fit by 2 tiers"). Needs sensor_tier on PlayerShip.
+- [ ] **Sensor upgrade item** — add sensor_tier (0–2) to PlayerShip upgrades + store; gates how much pre-combat intel the player sees.
+- [ ] **Difficulty scaling via profiles** — generated systems set enemy tier by danger_level: `apply_faction_profile("vanguard_gunner", tier_override: danger_level)`. One line per spawned NPC.
+- [ ] **Boss as tier override** — story-triggered boss = `apply_faction_profile(faction, tier_override: 3)` instead of hardcoded stats; StoryManager trigger hook becomes trivial.
+- [ ] **Mixed-profile squads** — squad fights can mix profiles (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
+- [ ] **Phase 6 — Enemy kit parity** — BRACE and REPOSITION now in enum; wire them into NPC planners as real actions with camera beats + SFX (same pipeline as player actions).
 - [ ] **Phase 7 — Boss (mega)** — DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 — Squads** — DONE (in-game) but needs StoryManager trigger hook (see Story section below)
 - [ ] **Shield Reroute sub-picker** — currently defaults to Front face; needs the face-select sub-wheel
