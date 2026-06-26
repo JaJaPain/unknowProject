@@ -212,9 +212,10 @@ func _build_ui() -> void:
 
 # ── Sensor panel ──────────────────────────────────────────────────────────────
 func _build_sensor_panel() -> void:
-	var panel_w := 700.0
-	var panel_h := 76.0
-	var pad     := 8.0
+	var panel_w  := 700.0
+	var panel_h  := 76.0
+	var pad      := 8.0
+	var base_y   := -144.0   # bottom edge offset from screen bottom; raise to clear queue chips
 
 	# Invisible wrapper — toggled as one unit during execute phase.
 	_sensor_panel_root = Control.new()
@@ -229,8 +230,8 @@ func _build_sensor_panel() -> void:
 	bg.anchor_top    = 1.0;  bg.anchor_bottom = 1.0
 	bg.offset_left   = -(panel_w * 0.5)
 	bg.offset_right  =  (panel_w * 0.5)
-	bg.offset_top    = -114.0 - panel_h
-	bg.offset_bottom = -114.0
+	bg.offset_top    = base_y - panel_h
+	bg.offset_bottom = base_y
 	bg.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(bg)
 
@@ -246,8 +247,8 @@ func _build_sensor_panel() -> void:
 	border.anchor_top    = 1.0;  border.anchor_bottom = 1.0
 	border.offset_left   = -(panel_w * 0.5)
 	border.offset_right  =  (panel_w * 0.5)
-	border.offset_top    = -114.0 - panel_h
-	border.offset_bottom = -114.0
+	border.offset_top    = base_y - panel_h
+	border.offset_bottom = base_y
 	border.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(border)
 
@@ -262,8 +263,8 @@ func _build_sensor_panel() -> void:
 	_sensor_header.anchor_top    = 1.0;  _sensor_header.anchor_bottom = 1.0
 	_sensor_header.offset_left   = -(panel_w * 0.5) + pad
 	_sensor_header.offset_right  =  (panel_w * 0.5) - pad
-	_sensor_header.offset_top    = -114.0 - panel_h + 4.0
-	_sensor_header.offset_bottom = -114.0 - panel_h + 22.0
+	_sensor_header.offset_top    = base_y - panel_h + 4.0
+	_sensor_header.offset_bottom = base_y - panel_h + 22.0
 	_sensor_header.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(_sensor_header)
 
@@ -274,8 +275,8 @@ func _build_sensor_panel() -> void:
 	divider.anchor_top    = 1.0;  divider.anchor_bottom = 1.0
 	divider.offset_left   = -(panel_w * 0.5) + pad
 	divider.offset_right  =  (panel_w * 0.5) - pad
-	divider.offset_top    = -114.0 - panel_h + 23.0
-	divider.offset_bottom = -114.0 - panel_h + 24.0
+	divider.offset_top    = base_y - panel_h + 23.0
+	divider.offset_bottom = base_y - panel_h + 24.0
 	divider.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(divider)
 
@@ -291,8 +292,8 @@ func _build_sensor_panel() -> void:
 	_intent_label.anchor_top    = 1.0;  _intent_label.anchor_bottom = 1.0
 	_intent_label.offset_left   = -(panel_w * 0.5) + pad
 	_intent_label.offset_right  =  (panel_w * 0.5) - pad
-	_intent_label.offset_top    = -114.0 - panel_h + 26.0
-	_intent_label.offset_bottom = -114.0 - 2.0
+	_intent_label.offset_top    = base_y - panel_h + 26.0
+	_intent_label.offset_bottom = base_y - 2.0
 	_intent_label.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(_intent_label)
 
@@ -302,8 +303,8 @@ func _build_sensor_panel() -> void:
 	scanlines.anchor_top    = 1.0;  scanlines.anchor_bottom = 1.0
 	scanlines.offset_left   = -(panel_w * 0.5)
 	scanlines.offset_right  =  (panel_w * 0.5)
-	scanlines.offset_top    = -114.0 - panel_h
-	scanlines.offset_bottom = -114.0
+	scanlines.offset_top    = base_y - panel_h
+	scanlines.offset_bottom = base_y
 	scanlines.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	_sensor_panel_root.add_child(scanlines)
 
