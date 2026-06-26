@@ -6572,8 +6572,27 @@ func _debug_spawn_boss() -> void:
 	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawned 80u ahead.", Color(1.0, 0.4, 0.4))
 
 func _debug_spawn_squad() -> void:
-	# Stub — implemented in Phase 20 Step S6.
-	GlobalState.emit_chatter("SYSTEM", "DEBUG: Squad spawn not yet implemented (Phase 20 S6).", Color(1.0, 0.8, 0.2))
+	if not is_instance_valid(player):
+		return
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	var shared_squad_id := "debug_squad_%d" % Time.get_ticks_msec()
+	# Spawn two Aurelia Interceptors in a loose formation ~70–80u ahead.
+	var offsets := [Vector3(-18.0, 0.0, -70.0), Vector3(18.0, 0.0, -80.0)]
+	var basis: Basis = (player as Node3D).global_basis
+	for i in 2:
+		var scene: Node = NPC_SHIP_SCENE.instantiate()
+		scene.faction             = "aurelia"
+		scene.ship_role           = "Interceptor"
+		scene.squad_id            = shared_squad_id
+		scene.combat_ap           = 3   # wingmen have less AP than a solo ship
+		scene.combat_intelligence = 0.65
+		scene.speed               = 13.0
+		scene.persistent_id       = "debug.squad.%s.%d" % [shared_squad_id, i]
+		scene.name                = "DEBUG_SQUAD_%d" % i
+		spawn_root.add_child(scene)
+		var local_offset: Vector3 = basis.x * offsets[i].x + basis.z * offsets[i].z
+		(scene as Node3D).global_position = (player as Node3D).global_position + local_offset
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: 2-ship squad spawned ahead.", Color(1.0, 0.6, 0.2))
 
 # ── Debug shortcuts ────────────────────────────────────────────────────────────
 # Uses _input (not _unhandled_key_input) so UI focus can't block it.
