@@ -912,3 +912,96 @@ Output shows each quest formatted as the player would see it: agent name, role, 
 - **Ore "25" false positives:** `_sync_dialogue_to_validated_objective` searches for "25" near ore-context words. Could false-positive. Watch logs for `⚠ VALIDATE: Final objective changed`.
 - **`is_waiting` state:** Stays true during retries, set false in `_finish_quest_with_current_dialogue()` and `_trigger_fallback()`. If quests stop generating, check these paths.
 - **Kaelen intro dialogue:** Separate LLM path (`request_kaelen_intro`). Sometimes reads oddly (talking about the agent instead of to the player). Not addressed this session.
+
+---
+
+## Session: 2026-06-25 (Phase 19 Mega-Boss + Phase 20 Multi-Enemy Squads) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Full boss fight system with 3-phase AI, plus 2-on-1 squad combat. Debug keys moved to GameRoot so they work everywhere. Several crash/queue bugs fixed during playtesting.
+
+---
+
+### Debug Keys (Numpad — GameRoot._input)
+
+| Key | Action |
+|---|---|
+| Numpad 8 | Force-restock all station stores to max |
+| Numpad 9 | Spawn boss ship 80u ahead (500 HP, 1.5× scale) |
+| Numpad 0 | Spawn 2-ship Aurelia squad ~75u ahead |
+
+Previously in `MainScene._unhandled_key_input` — moved to `GameRoot._input` so UI panels can't swallow the events.
+
+---
+
+### Phase 19 — Mega-Boss
+
+**NPCShip.gd**
+- `is_boss: bool`, `boss_phase: int` (1–3) added
+- `_plan_boss()` — three phase strategies:
+  - **Phase 1 "Dominant"** (100–60% HP): 80% brace chance, then fire ×2–3
+  - **Phase 2 "Wounded"** (60–30% HP): repair if <45%, shield angle + flank/disable engines
+  - **Phase 3 "Last Stand"** (<30% HP): all AP into 1.3–1.6× kill shots, no defense
+
+**CombatManager.gd**
+- `signal boss_phase_changed(phase: int)`
+- `_check_boss_phase_transition()` — detects 60%/30% HP crossings, guarded against double-fire
+- `_transition_boss_phase()` — red system chatter + NPC voice taunt + signal emit
+- Called from `_apply_hit()` and `_after_npc_turn()`
+
+**LLMInterface.gd**
+- `npc_boss_phase_2`: "Still standing? Fine. Now I get serious."
+- `npc_boss_phase_3`: "You want to see what I'm really capable of?"
+- Prompt count 16 → 18
+
+**CombatPanel.gd**
+- `_boss_phase_label` — hidden for normal fights, shown for boss
+- Phase I (pink) → Phase II (orange-red) → Phase III (bright red)
+
+**Boss stats (debug spawn)**
+- 500 HP, 6 AP, intel 0.85, damage 14–22, scale 1.5×, Vanguard Gunner faction
+
+---
+
+### Phase 20 — Multi-Enemy Squads
+
+**NPCShip.gd**
+- `squad_id: String` — ships with matching non-empty ID fight together
+- Join path: if state is PLANNING and squad matches, calls `CombatManager.join_combat()` instead of queueing a new fight
+
+**CombatManager.gd**
+- `enemy_node: Node` → `enemy_nodes: Array` + property getter (all existing code unchanged)
+- `enemy_brace_active`/`enemy_shield_angle_active` → per-enemy array getters
+- `join_combat(enemy)` — appends enemy, generates its plan immediately so it acts this turn
+- `set_target(idx)` — explicit index selection, spawns white outline flash on ship
+- `_remove_dead_enemies()` — removes dead nodes after each turn, kill cinematic per death
+- `_kill_and_end()` gains `skip_end` param for mid-squad kills
+- `_spawn_target_flash()` — 1.08× white unshaded ghost meshes, fade out over 0.35s
+
+**CombatPanel.gd**
+- Top bar always shows `enemy_nodes[0]`, bottom always `enemy_nodes[1]`
+- Each bar has its own invisible click button — click to select that ship as target
+- Selected bar: full size + full opacity. Unselected: 70% width, 65% opacity
+- Hovering a non-selected bar brightens it as a clickable hint
+- `_wingman_label` shows the ship name
+
+---
+
+### Bug Fixes
+
+**Combat queue drop** (`NPCShip.gd`)
+- NPCs that entered attack range during the kill cinematic were silently dropped (never queued)
+- Fix: removed `CombatManager.state != IDLE` guard from `_request_combat_via_queue()`
+
+**Freed instance crash** (`CombatManager.gd`)
+- `enemy_node` getter was returning a `queue_free`'d node, crashing on first squad kill
+- Fix: `is_instance_valid()` check added to getter
+
+---
+
+### Boss Tuning
+| Stat | Old | New |
+|---|---|---|
+| Max HP | 300 | 500 |
+| Phase 1 brace chance | 55% | 80% |

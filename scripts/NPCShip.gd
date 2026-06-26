@@ -1138,7 +1138,7 @@ func _plan_boss(plan: Array, ap: int, hp_ratio: float, _intel: float) -> void:
 	match boss_phase:
 		1:
 			# Brace first, then fill remaining AP with fire.
-			if ap >= 4 and randf() < 0.55:
+			if ap >= 4 and randf() < 0.80:
 				plan.append(_action_brace())
 				ap -= 2
 			while ap >= 2:

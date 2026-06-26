@@ -6555,8 +6555,8 @@ func _debug_spawn_boss() -> void:
 	scene.faction             = "vanguard"
 	scene.ship_role           = "Gunner"
 	scene.is_boss             = true
-	scene.max_health          = 300.0
-	scene.health              = 300.0
+	scene.max_health          = 500.0
+	scene.health              = 500.0
 	scene.combat_ap           = 6
 	scene.combat_intelligence = 0.85
 	scene.damage_min          = 14.0
