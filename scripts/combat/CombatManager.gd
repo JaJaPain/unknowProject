@@ -45,6 +45,7 @@ signal action_queued(action: Dictionary)
 signal action_dequeued
 signal enemy_status_changed(brace: bool, shield: bool)
 signal combat_loot_dropped(loot: Dictionary)
+signal boss_phase_changed(phase: int)
 # ── Cinematic beat signals (drive camera + impact juice) ────────────────────────
 signal action_telegraphed(action_type: int, source: Node, target: Node)
 signal action_impact(target: Node, world_pos: Vector3, damage: float, lethal: bool, blocked: bool, crit: bool)
@@ -86,6 +87,9 @@ var _told_shield_angle_hint: bool = false
 # Low-health alarm fires once per side per fight.
 var _player_low_alarmed: bool = false
 var _enemy_low_alarmed: bool = false
+# Boss phase-transition guards — prevent double-fire if a single hit crosses a threshold.
+var _boss_phase_alarmed_2: bool = false
+var _boss_phase_alarmed_3: bool = false
 # Planning-phase counter, drives opening + between-round enemy jabs.
 var _turn_number: int = 0
 # Position of the last lethal hit — the victim may be freed before the kill beat.
@@ -298,6 +302,8 @@ func _reset_fight_state() -> void:
 	_told_shield_angle_hint = false
 	_player_low_alarmed = false
 	_enemy_low_alarmed = false
+	_boss_phase_alarmed_2 = false
+	_boss_phase_alarmed_3 = false
 	_turn_number = 0
 
 # ── AP helpers ────────────────────────────────────────────────────────────────
@@ -465,6 +471,9 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 		_sfx("hit_critical", hit_pos)
 	_spawn_damage_number(target, hit_pos, dmg, blocked, crit)
 	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
+	# Check boss phase transitions when the player damages the enemy.
+	if target == enemy_node:
+		_check_boss_phase_transition()
 	# Hit-stop freeze-frame (skip on lethal — the kill cinematic handles that).
 	if not lethal:
 		_hit_stop(0.07 + (0.05 if crit else 0.0))
@@ -1014,6 +1023,43 @@ func _spawn_enemy_shield_dome() -> void:
 	elif to_player.dot(up) < 0.0:
 		_enemy_shield_dome.rotate_object_local(Vector3.RIGHT, PI)
 
+# Checks if a boss has crossed a phase threshold and fires the transition moment.
+# Safe to call multiple times — alarmed flags prevent double-fire.
+func _check_boss_phase_transition() -> void:
+	if not is_instance_valid(enemy_node):
+		return
+	if not enemy_node.get("is_boss"):
+		return
+	var hp: float     = float(enemy_node.get("health")     if enemy_node.get("health")     != null else 1.0)
+	var max_hp: float = float(enemy_node.get("max_health") if enemy_node.get("max_health") != null else 1.0)
+	var ratio: float  = hp / max(max_hp, 1.0)
+
+	if ratio <= 0.60 and not _boss_phase_alarmed_2:
+		_boss_phase_alarmed_2 = true
+		enemy_node.set("boss_phase", 2)
+		_transition_boss_phase(2)
+	elif ratio <= 0.30 and not _boss_phase_alarmed_3:
+		_boss_phase_alarmed_3 = true
+		enemy_node.set("boss_phase", 3)
+		_transition_boss_phase(3)
+
+func _transition_boss_phase(phase: int) -> void:
+	var chatter_text: String
+	var taunt_key: String
+	match phase:
+		2:
+			chatter_text = "TARGET ENTERING PHASE II — threat level escalating."
+			taunt_key    = "npc_boss_phase_2"
+		3:
+			chatter_text = "TARGET ENTERING PHASE III — ALL WEAPONS FREE."
+			taunt_key    = "npc_boss_phase_3"
+		_:
+			return
+
+	GlobalState.emit_chatter("SYSTEM", chatter_text, Color(1.0, 0.2, 0.2))
+	_play_npc_action_taunt(taunt_key)
+	emit_signal("boss_phase_changed", phase)
+
 func _after_npc_turn() -> void:
 	# Check for deaths.
 	var player_dead: bool = not is_instance_valid(player_node) or player_node.get("destroyed") == true
@@ -1042,6 +1088,7 @@ func _after_npc_turn() -> void:
 			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
 		GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
 
+	_check_boss_phase_transition()
 	_begin_planning()
 
 # ── Taunt / voice helpers ─────────────────────────────────────────────────────
