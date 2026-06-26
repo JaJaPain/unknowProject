@@ -998,6 +998,10 @@ func _get_faction_color() -> Color:
 # combat_intelligence: 0.0 (dumb/noob) → 1.0 (optimal). Controls decision quality.
 var combat_ap:           int   = 4
 var combat_intelligence: float = 0.5
+# Boss flags — set at spawn time, not changed mid-fight.
+# boss_phase is updated by CombatManager as HP thresholds are crossed.
+var is_boss:   bool = false
+var boss_phase: int  = 1   # 1 = Dominant, 2 = Wounded, 3 = Last Stand
 # Loot dropped when this ship is killed in combat. Empty dict = no drop.
 # Future: populate per archetype/faction in MainScene or GeneratedSystemNPCManager.
 # Format: { "credits": 0, "items": [], "ore": 0 }
@@ -1024,6 +1028,10 @@ func generate_action_plan() -> Array:
 	var intel:    float = combat_intelligence
 	var ap:       int   = combat_ap
 	var plan:     Array = []
+
+	if is_boss:
+		_plan_boss(plan, ap, hp_ratio, intel)
+		return plan
 
 	match role:
 		"Gunner":     _plan_gunner(plan, ap, hp_ratio, intel)
@@ -1110,6 +1118,42 @@ func _plan_hauler(plan: Array, _ap: int, _hp_ratio: float, _intel: float) -> voi
 		plan.append({"type": "surrender", "label": "Pleading for mercy", "damage": 0.0})
 	else:
 		plan.append(_action_fire(randf_range(2.0, 6.0), "Panic shot"))
+
+# ── Boss planner ──────────────────────────────────────────────────────────────
+# Three phases driven by boss_phase (set by CombatManager as HP thresholds cross).
+# Phase 1 — Dominant (100–60%): controlled aggression, occasional brace.
+# Phase 2 — Wounded  (60–30%): shield angle + flank, repairs when low, disable engines.
+# Phase 3 — Last Stand (30–0%): no defense, all AP on heavy fire.
+func _plan_boss(plan: Array, ap: int, hp_ratio: float, _intel: float) -> void:
+	match boss_phase:
+		1:
+			# Brace first, then fill remaining AP with fire.
+			if ap >= 4 and randf() < 0.55:
+				plan.append(_action_brace())
+				ap -= 2
+			while ap >= 2:
+				plan.append(_action_fire(randf_range(damage_min, damage_max), "Hull shot"))
+				ap -= 2
+		2:
+			# Repair if bloodied, then shield angle + flank strike.
+			if hp_ratio < 0.45 and ap >= 2:
+				plan.append(_action_repair())
+				ap -= 2
+			if ap >= 1:
+				plan.append(_action_shield_angle())
+				ap -= 1
+			if ap >= 3:
+				plan.append(_action_flank())
+				ap -= 3
+			elif ap >= 2:
+				plan.append(_action_disable_engines())
+				ap -= 2
+		3:
+			# Last stand — every AP into maximum damage, no defense.
+			while ap >= 2:
+				var dmg := damage_max * randf_range(1.3, 1.6)
+				plan.append(_action_fire(dmg, "⚠ Kill shot"))
+				ap -= 2
 
 # ── Action builders ───────────────────────────────────────────────────────────
 func _action_fire(dmg: float, lbl: String = "Fire") -> Dictionary:
