@@ -6548,6 +6548,14 @@ func _fail_public_board_smoke_test(message: String) -> void:
 	delete_savegame()
 	get_tree().quit(1)
 
+func _debug_spawn_boss() -> void:
+	# Stub — implemented in Phase 19 Step B5.
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawn not yet implemented (Phase 19 B5).", Color(1.0, 0.8, 0.2))
+
+func _debug_spawn_squad() -> void:
+	# Stub — implemented in Phase 20 Step S6.
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: Squad spawn not yet implemented (Phase 20 S6).", Color(1.0, 0.8, 0.2))
+
 # ── Debug shortcuts ────────────────────────────────────────────────────────────
 # Uses _input (not _unhandled_key_input) so UI focus can't block it.
 # Numpad 8 — force-restock all station stores (buy supplies before combat tests).
@@ -6559,4 +6567,10 @@ func _input(event: InputEvent) -> void:
 		KEY_KP_8:
 			StoreRegistryScript.shared().force_restock_all()
 			GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
+			get_viewport().set_input_as_handled()
+		KEY_KP_9:
+			_debug_spawn_boss()
+			get_viewport().set_input_as_handled()
+		KEY_KP_0:
+			_debug_spawn_squad()
 			get_viewport().set_input_as_handled()
