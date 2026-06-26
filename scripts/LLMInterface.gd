@@ -14,6 +14,14 @@ const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
 var http_request: HTTPRequest
 var active_callback: Callable
 var is_waiting: bool = false
+
+# ── Ollama watchdog ───────────────────────────────────────────────────────────
+const OLLAMA_HEALTH_URL := "http://127.0.0.1:11434/"
+const _OLLAMA_POLL_INTERVAL := 2.0    # seconds between readiness polls
+const _OLLAMA_MAX_POLLS    := 15      # 15 × 2s = 30s before giving up
+var _ollama_ready:        bool = false
+var _ollama_poll_count:   int  = 0
+var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
@@ -522,9 +530,167 @@ func _ready():
 	_load_kaelen_intro_stats()
 	_load_world_lore()
 	if "--baseline-offline" in OS.get_cmdline_user_args():
-		print("[LLMInterface] Baseline offline mode: model discovery disabled.")
+		print("[LLMInterface] Baseline offline mode: Ollama watchdog disabled.")
 		return
-	_discover_ollama_model()
+	_ollama_ping(func(up: bool):
+		if up:
+			print("[LLMInterface] Ollama is already running.")
+			_ollama_after_up()
+		else:
+			push_warning("[LLMInterface] Ollama not responding — attempting to start it automatically.")
+			_ollama_launch()
+	)
+
+# ── Ollama watchdog helpers ───────────────────────────────────────────────────
+
+## Fire a single quick HTTP ping at the Ollama root. Calls callback(true/false).
+func _ollama_ping(callback: Callable) -> void:
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 3.0
+	h.request_completed.connect(func(result, code, _hdrs, _body):
+		h.queue_free()
+		callback.call(result == HTTPRequest.RESULT_SUCCESS and code == 200)
+	)
+	var err := h.request(OLLAMA_HEALTH_URL, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		h.queue_free()
+		callback.call(false)
+
+## Returns candidate exe paths in priority order: bundled → LOCALAPPDATA → none.
+func _ollama_exe_candidates() -> Array[String]:
+	var candidates: Array[String] = []
+	# 1. Bundled alongside the game executable (for shipped builds).
+	var game_dir := OS.get_executable_path().get_base_dir()
+	candidates.append(game_dir.path_join("ollama/ollama.exe"))
+	candidates.append(game_dir.path_join("ollama/ollama"))        # Linux / Mac
+	# 2. User's standard Windows install location.
+	var local_app := OS.get_environment("LOCALAPPDATA")
+	if not local_app.is_empty():
+		candidates.append(local_app.path_join("Programs/Ollama/ollama.exe"))
+	# 3. Common macOS install path.
+	candidates.append("/usr/local/bin/ollama")
+	return candidates
+
+## Try to launch `ollama serve` as a background process, then poll until ready.
+func _ollama_launch() -> void:
+	var pid: int = -1
+	var launched_from := ""
+
+	# Try bundled and known paths first before falling back to PATH.
+	for candidate in _ollama_exe_candidates():
+		if FileAccess.file_exists(candidate):
+			pid = OS.create_process(candidate, ["serve"])
+			if pid > 0:
+				launched_from = candidate
+				break
+
+	# Fall back to PATH ("ollama" command) in case it's installed system-wide.
+	if pid <= 0:
+		pid = OS.create_process("ollama", ["serve"])
+		if pid > 0:
+			launched_from = "ollama (PATH)"
+
+	if pid > 0:
+		_ollama_start_pid = pid
+		print("[LLMInterface] Launched Ollama from '%s' (PID %d) — polling for readiness..." % [launched_from, pid])
+	else:
+		push_warning("[LLMInterface] Could not launch Ollama from any known path. Is it installed? Will still poll in case it starts.")
+
+	_ollama_poll_count = 0
+	_ollama_poll()
+
+## Poll Ollama every 2s until it answers or we hit the max attempt cap.
+func _ollama_poll() -> void:
+	_ollama_poll_count += 1
+	_ollama_ping(func(up: bool):
+		if up:
+			print("[LLMInterface] Ollama responded after %d poll(s)." % _ollama_poll_count)
+			_ollama_after_up()
+			return
+		if _ollama_poll_count >= _OLLAMA_MAX_POLLS:
+			push_warning("[LLMInterface] CRITICAL: Ollama did not respond after %ds. All LLM features will use canned fallbacks." % int(_OLLAMA_MAX_POLLS * _OLLAMA_POLL_INTERVAL))
+			return
+		get_tree().create_timer(_OLLAMA_POLL_INTERVAL, true, false, true).timeout.connect(
+			func(): _ollama_poll())
+	)
+
+## Called once Ollama is confirmed up. Checks that required models are present,
+## pulling them if not, then marks the interface ready and starts model discovery.
+func _ollama_after_up() -> void:
+	_ollama_ready = true
+	_ollama_ensure_models([LocalModelGatewayType.DEFAULT_SMALL_MODEL,
+		LocalModelGatewayType.DEFAULT_LARGE_MODEL], func():
+		_discover_ollama_model()
+	)
+
+## Checks /api/tags; for any model in `required` not already present, pulls it.
+## Fires `on_done` once all models are confirmed available (or pull succeeded).
+func _ollama_ensure_models(required: Array, on_done: Callable) -> void:
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 5.0
+	h.request_completed.connect(func(result, code, _hdrs, body):
+		h.queue_free()
+		var installed: Array = []
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			var parsed = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary and parsed.has("models"):
+				for m in parsed["models"]:
+					installed.append(str(m.get("name", "")))
+
+		# Find which required models are missing.
+		var missing: Array = []
+		for req in required:
+			var found := false
+			for inst in installed:
+				# Ollama may append ":latest" — treat "model" == "model:latest".
+				if inst == req or inst == req + ":latest" or req == inst + ":latest":
+					found = true
+					break
+			if not found:
+				missing.append(req)
+
+		if missing.is_empty():
+			print("[LLMInterface] All required models present: %s" % str(required))
+			on_done.call()
+			return
+
+		print("[LLMInterface] Missing models: %s — pulling now (this may take a few minutes on first run)..." % str(missing))
+		_ollama_pull_next(missing, 0, on_done)
+	)
+	var err := h.request(LocalModelGatewayType.OLLAMA_TAGS_URL, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not check installed models — proceeding anyway.")
+		on_done.call()
+
+## Pulls models from `list` one at a time starting at `idx`, then fires `on_done`.
+func _ollama_pull_next(list: Array, idx: int, on_done: Callable) -> void:
+	if idx >= list.size():
+		on_done.call()
+		return
+	var model: String = list[idx]
+	print("[LLMInterface] Pulling model '%s'..." % model)
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 600.0  # pulls can take a long time on first install
+	h.download_chunk_size = 65536
+	h.request_completed.connect(func(result, code, _hdrs, _body):
+		h.queue_free()
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			print("[LLMInterface] Model '%s' pulled successfully." % model)
+		else:
+			push_warning("[LLMInterface] Pull of '%s' may have failed (result=%d code=%d) — will try to continue." % [model, result, code])
+		_ollama_pull_next(list, idx + 1, on_done)
+	)
+	var payload := JSON.stringify({"name": model, "stream": false})
+	var err := h.request("http://127.0.0.1:11434/api/pull",
+		["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not send pull request for '%s'." % model)
+		_ollama_pull_next(list, idx + 1, on_done)
 
 func _load_world_lore():
 	var lore_path = "res://docs/world_lore.md"
