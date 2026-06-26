@@ -4225,7 +4225,7 @@ const COMBAT_TAUNT_FALLBACKS := {
 	"kaelen_kill_confirm":    "One less headache. Logging the kill now.",
 }
 
-func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable) -> void:
+func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable, _attempt: int = 0) -> void:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
 
@@ -4272,18 +4272,27 @@ Return ONLY valid JSON, no markdown fences:
 		temp_http.queue_free()
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			print("[LLMInterface] combat taunts fetch failed — using fallback")
+			if _attempt == 0:
+				push_warning("[TAUNT FALLBACK RISK] combat taunts HTTP failed (result=%d code=%d) for %s %s — retrying in 3s" % [result, response_code, faction_cap, arch_cap])
+				get_tree().create_timer(3.0, true, false, true).timeout.connect(
+					func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1))
+				return
+			_log_combat_taunt_fallback("http_failed", faction_cap, arch_cap,
+				{"result": result, "response_code": response_code})
 			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
 			return
 
 		var response_text: String = body.get_string_from_utf8()
 		var outer_json := JSON.new()
 		if outer_json.parse(response_text) != OK:
+			_log_combat_taunt_fallback("outer_json_parse_failed", faction_cap, arch_cap,
+				{"raw_length": response_text.length()})
 			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
 			return
 
 		var outer_data = outer_json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
+			_log_combat_taunt_fallback("missing_response_key", faction_cap, arch_cap, {})
 			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
 			return
 
@@ -4298,21 +4307,30 @@ Return ONLY valid JSON, no markdown fences:
 
 		var inner_json := JSON.new()
 		if inner_json.parse(inner_str) != OK:
+			_log_combat_taunt_fallback("inner_json_parse_failed", faction_cap, arch_cap,
+				{"snippet": inner_str.substr(0, 80)})
 			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
 			return
 
 		var data = inner_json.get_data()
 		if not data is Dictionary:
+			_log_combat_taunt_fallback("response_not_dict", faction_cap, arch_cap, {})
 			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
 			return
 
-		# Fill any missing keys from fallback so callers never get nulls.
+		# Merge into fallback dict — only override keys where LLM produced a real line.
 		var result_dict := COMBAT_TAUNT_FALLBACKS.duplicate()
+		var llm_count := 0
 		for key in result_dict.keys():
 			if data.has(key) and str(data[key]).length() > 0 and not str(data[key]).contains("["):
 				result_dict[key] = str(data[key])
-
-		print("[LLMInterface] Combat taunts generated for %s %s" % [faction_cap, arch_cap])
+				llm_count += 1
+		# Warn if the LLM barely filled anything — partial fallback still happened.
+		if llm_count < result_dict.size() / 2:
+			push_warning("[TAUNT FALLBACK] combat taunts partial: only %d/%d keys filled for %s %s" % [
+				llm_count, result_dict.size(), faction_cap, arch_cap])
+		print("[LLMInterface] Combat taunts: %d/%d lines filled for %s %s" % [
+			llm_count, result_dict.size(), faction_cap, arch_cap])
 		callback.call(result_dict)
 	)
 
@@ -4326,12 +4344,27 @@ Return ONLY valid JSON, no markdown fences:
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		temp_http.queue_free()
+		if _attempt == 0:
+			push_warning("[TAUNT FALLBACK RISK] combat taunts request() error=%d for %s %s — retrying in 3s" % [err, faction_cap, arch_cap])
+			get_tree().create_timer(3.0, true, false, true).timeout.connect(
+				func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1))
+			return
+		_log_combat_taunt_fallback("request_error", faction_cap, arch_cap, {"err": err})
 		callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+
+func _log_combat_taunt_fallback(reason: String, faction: String, archetype: String, ctx: Dictionary) -> void:
+	var msg := "[TAUNT FALLBACK] combat taunts fell back to canned lines — reason: %s | %s %s" % [reason, faction, archetype]
+	push_warning(msg)
+	print(msg)
+	var diag_node = get_tree().root.get_node_or_null("GenerationDiagnostics")
+	if diag_node:
+		diag_node.record_event("combat_taunts", "fallback_used", "LLMInterface",
+			ctx.merged({"reason": reason, "faction": faction, "archetype": archetype}, true))
 
 ## Request a batch of generic combat taunts (not faction-specific) for the
 ## general opening-taunt pool. Returns {"rage":[...], "reason":[...], "humor":[...]}.
-## Calls callback({}) on any failure so the caller can silently skip.
-func request_general_taunts(callback: Callable) -> void:
+## Retries once before giving up; logs with push_warning on failure.
+func request_general_taunts(callback: Callable, _attempt: int = 0) -> void:
 	var prompt := """You are writing combat banter for a gritty space game. Generate exactly 12 short combat one-liners. Under 15 words each. No placeholder brackets. No names.
 
 Three categories:
@@ -4351,16 +4384,29 @@ Return ONLY valid JSON, no markdown:
 	temp_http.request_completed.connect(func(result, response_code, _headers, body):
 		temp_http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			print("[LLMInterface] general taunts fetch failed")
+			if _attempt == 0:
+				push_warning("[TAUNT FALLBACK RISK] general taunts HTTP failed (result=%d code=%d) — retrying in 3s" % [result, response_code])
+				get_tree().create_timer(3.0, true, false, true).timeout.connect(
+					func(): request_general_taunts(callback, 1))
+				return
+			var msg := "[TAUNT FALLBACK] general taunts failed after retry — HTTP result=%d code=%d. Canned pool only." % [result, response_code]
+			push_warning(msg)
+			print(msg)
 			callback.call({})
 			return
 		var response_text: String = body.get_string_from_utf8()
 		var outer_json := JSON.new()
 		if outer_json.parse(response_text) != OK:
+			var msg := "[TAUNT FALLBACK] general taunts outer JSON parse failed. Canned pool only."
+			push_warning(msg)
+			print(msg)
 			callback.call({})
 			return
 		var outer_data = outer_json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
+			var msg := "[TAUNT FALLBACK] general taunts missing 'response' key. Canned pool only."
+			push_warning(msg)
+			print(msg)
 			callback.call({})
 			return
 		var inner_str: String = outer_data["response"].strip_edges()
@@ -4373,10 +4419,16 @@ Return ONLY valid JSON, no markdown:
 			inner_str = inner_str.strip_edges()
 		var inner_json := JSON.new()
 		if inner_json.parse(inner_str) != OK:
+			var msg := "[TAUNT FALLBACK] general taunts inner JSON parse failed. Canned pool only."
+			push_warning(msg)
+			print(msg)
 			callback.call({})
 			return
 		var data = inner_json.get_data()
 		if not data is Dictionary:
+			var msg := "[TAUNT FALLBACK] general taunts response not a dict. Canned pool only."
+			push_warning(msg)
+			print(msg)
 			callback.call({})
 			return
 		# Validate each array — strip anything with brackets (placeholders).
@@ -4387,6 +4439,13 @@ Return ONLY valid JSON, no markdown:
 					var s := str(line).strip_edges()
 					if s.length() > 4 and not s.contains("["):
 						out[cat].append(s)
+		var total: int = out["rage"].size() + out["reason"].size() + out["humor"].size()
+		if total == 0:
+			var msg := "[TAUNT FALLBACK] general taunts returned 0 valid lines. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
 		print("[LLMInterface] General taunts: %d rage, %d reason, %d humor" % [
 			out["rage"].size(), out["reason"].size(), out["humor"].size()])
 		callback.call(out)
@@ -4397,4 +4456,12 @@ Return ONLY valid JSON, no markdown:
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err2 != OK:
 		temp_http.queue_free()
+		if _attempt == 0:
+			push_warning("[TAUNT FALLBACK RISK] general taunts request() error=%d — retrying in 3s" % err2)
+			get_tree().create_timer(3.0, true, false, true).timeout.connect(
+				func(): request_general_taunts(callback, 1))
+			return
+		var msg := "[TAUNT FALLBACK] general taunts failed after retry — request error=%d. Canned pool only." % err2
+		push_warning(msg)
+		print(msg)
 		callback.call({})

@@ -256,6 +256,7 @@ func _make_taunt_pool(lines: Array) -> Array:
 	var pool: Array = []
 	for line in lines:
 		var entry := _make_taunt_entry(line)
+		entry["canned"] = true  # tag so we can detect fallback at playback time
 		pool.append(entry)
 		TTSInterface.cache_dialogue_audio(line, entry["voice"], TAUNT_SPEED, TAUNT_STYLE)
 	return pool
@@ -277,6 +278,10 @@ func _play_combat_taunt() -> void:
 	if pool.is_empty():
 		return
 	var pick: Dictionary = pool[randi() % pool.size()]
+	if pick.get("canned", false):
+		var msg := "[TAUNT FALLBACK] opening taunt used canned line — LLM pool not ready yet. Text: \"%s\"" % pick["text"]
+		push_warning(msg)
+		print(msg)
 	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
@@ -286,6 +291,10 @@ func _play_npc_action_taunt(key: String) -> void:
 		return
 	var line: String = taunts.get(key, "")
 	if line.is_empty():
+		# Empty means this key was never filled — the per-fight LLM fetch failed or
+		# Ollama returned a partial response. Log it so we can diagnose.
+		if _taunts_ready:
+			push_warning("[TAUNT FALLBACK] action taunt key '%s' is empty — per-fight fetch may have fallen back to canned dict" % key)
 		return
 	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
@@ -448,6 +457,19 @@ func _on_taunts_ready(data: Dictionary) -> void:
 		return
 	taunts = data
 	_taunts_ready = true
+	# Detect if LLMInterface fell back to COMBAT_TAUNT_FALLBACKS for this fight.
+	var canned_ref: Dictionary = LLMInterface.COMBAT_TAUNT_FALLBACKS
+	var matched := 0
+	for k in canned_ref.keys():
+		if taunts.get(k, "") == canned_ref[k]:
+			matched += 1
+	if matched == canned_ref.size():
+		var faction: String = enemy_nodes[0].get("faction") if not enemy_nodes.is_empty() and is_instance_valid(enemy_nodes[0]) else "unknown"
+		var msg := "[TAUNT FALLBACK] per-fight taunts are ALL canned defaults for this fight (%s). Check Ollama." % faction
+		push_warning(msg)
+		print(msg)
+	elif matched > 0:
+		push_warning("[TAUNT FALLBACK] per-fight taunts: %d/%d keys are canned fallback values — partial LLM fill." % [matched, canned_ref.size()])
 	_begin_planning()
 
 func end_combat(player_won: bool) -> void:
