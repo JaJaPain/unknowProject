@@ -68,6 +68,13 @@ func purchase(item_id: String, quantity: int = 1) -> bool:
 	return true
 
 
+func force_restock() -> void:
+	for item_id in _catalog.keys():
+		var item_def: StoreItemDef = _catalog[item_id]
+		if _stock.has(item_id):
+			_stock[item_id]["quantity"] = item_def.max_stock
+			_stock[item_id]["restock_at"] = 0
+
 func restock_check(current_time_minutes: int) -> void:
 	for item_id in _catalog.keys():
 		var item_def: StoreItemDef = _catalog[item_id]

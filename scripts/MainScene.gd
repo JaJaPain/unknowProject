@@ -3,6 +3,7 @@ extends Node3D
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
 const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 const AnomalyRegistryScript = preload("res://scripts/AnomalyRegistry.gd")
+const StoreRegistryScript   = preload("res://scripts/economy/StoreRegistry.gd")
 
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
@@ -302,3 +303,13 @@ func _schedule_anomaly_rumor() -> void:
 	if rumor.is_empty():
 		return
 	GlobalState.emit_chatter(rumor["sender"], rumor["line"], Color(0.75, 0.75, 0.75))
+
+# ── Debug spawn keys (Numpad) ─────────────────────────────────────────────────
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.is_pressed():
+		return
+	match event.keycode:
+		KEY_KP_8:
+			# Restock all station stores to max — useful before combat testing.
+			StoreRegistryScript.shared().force_restock_all()
+			GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))

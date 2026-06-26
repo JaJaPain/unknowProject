@@ -52,6 +52,10 @@ func restock_all(current_time_minutes: int) -> void:
 	for store in _stores.values():
 		store.restock_check(current_time_minutes)
 
+func force_restock_all() -> void:
+	for store in _stores.values():
+		store.force_restock()
+
 
 func save_stock_state() -> Dictionary:
 	var out := {}
