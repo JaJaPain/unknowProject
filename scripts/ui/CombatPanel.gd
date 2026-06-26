@@ -84,47 +84,25 @@ const SENSOR_SIGS: Dictionary = {
 		"boss":     ["EMERGENCY DRIVE BURN DETECTED", "Retreat vector locked"],
 		"generic":  ["Emergency burn detected", "Drive plume spiking — escape vector"],
 	},
-}
-
-# Sensor signatures for NPC string-typed actions (brace, flank, etc.)
-const SENSOR_SIGS_NAMED: Dictionary = {
-	"fire": {
-		"aurelia":  ["Rapid-fire array spooling up", "Dual cannon charge detected"],
-		"vanguard": ["Heavy cannon capacitors charging", "Targeting lock — your bearing"],
-		"boss":     ["PRIMARY WEAPONS CHARGING — ALL BARRELS", "Mass driver capacitors at critical level"],
-		"generic":  ["Weapon systems charging", "Energy spike — forward arc"],
-	},
-	"boost": {
-		"aurelia":  ["Thruster bloom — high-G intercept", "Maneuvering burn — fast approach"],
-		"vanguard": ["Engine output spiking — closing vector", "Drive plume — brute approach"],
-		"boss":     ["THRUSTER OUTPUT — MAXIMUM BURN", "Closing vector — all engines"],
-		"generic":  ["Thruster signature detected", "Maneuvering burn initiated"],
-	},
-	"flank": {
-		"aurelia":  ["High-G flanking vector locked", "Off-axis intercept burn — port side"],
-		"vanguard": ["Flanking thrusters — oblique approach", "Wide arc maneuvering burn detected"],
-		"boss":     ["MULTI-AXIS FLANKING BURN — ALL THRUSTERS", "Oblique attack vector — extreme G"],
-		"generic":  ["Flanking burn detected", "Off-axis approach vector locked"],
-	},
-	"brace": {
+	CombatAction.Type.BRACE: {
 		"aurelia":  ["Hull plating tensioning — impact prep", "Reactive armor cycling"],
 		"vanguard": ["Hull stress plates tensioning", "Impact bracing sequence detected"],
 		"boss":     ["FULL HULL REINFORCEMENT SEQUENCE", "Structural bracing — maximum output"],
 		"generic":  ["Hull reinforcement detected", "Impact bracing sequence active"],
 	},
-	"shield_angle": {
+	CombatAction.Type.FLANK: {
+		"aurelia":  ["High-G flanking vector locked", "Off-axis intercept burn — port side"],
+		"vanguard": ["Flanking thrusters — oblique approach", "Wide arc maneuvering burn detected"],
+		"boss":     ["MULTI-AXIS FLANKING BURN — ALL THRUSTERS", "Oblique attack vector — extreme G"],
+		"generic":  ["Flanking burn detected", "Off-axis approach vector locked"],
+	},
+	CombatAction.Type.SHIELD_ANGLE: {
 		"aurelia":  ["Shield emitter reorientation — rapid cycling", "Capacitor bank shifting — lateral"],
 		"vanguard": ["Shield matrix redistributing — forward bias", "Deflector hardening — bow aspect"],
 		"boss":     ["FULL SHIELD MATRIX REORIENTATION", "Deflector emitters cycling — all faces"],
 		"generic":  ["Shield emitter reorientation detected", "Capacitor bank realigning"],
 	},
-	"repair": {
-		"aurelia":  ["Nanite cloud dispersal detected", "Hull nanites deploying — breach sealing"],
-		"vanguard": ["Structural repair sequence active", "Damage control systems engaging"],
-		"boss":     ["EMERGENCY REPAIR SYSTEM ACTIVATED", "Hull regeneration — high output"],
-		"generic":  ["Nanite dispersal detected", "Hull breach sealing sequence active"],
-	},
-	"disable_engines": {
+	CombatAction.Type.DISABLE_ENGINES: {
 		"aurelia":  ["Targeting solution — drive systems", "Precision lock — engine signature"],
 		"vanguard": ["Subsystem targeting lock acquired", "Engine disruption sequence initiating"],
 		"boss":     ["SUBSYSTEM TARGETING — ALL DRIVES", "Engine kill solution locked"],
@@ -132,13 +110,8 @@ const SENSOR_SIGS_NAMED: Dictionary = {
 	},
 }
 
-# action_type is either a CombatAction.Type int (player actions) or a String (NPC actions).
 func _sensor_sig(action_type: Variant, faction: String, is_boss: bool) -> String:
-	var type_map: Dictionary
-	if action_type is int:
-		type_map = SENSOR_SIGS.get(action_type, {})
-	else:
-		type_map = SENSOR_SIGS_NAMED.get(str(action_type), {})
+	var type_map: Dictionary = SENSOR_SIGS.get(int(action_type), {})
 	var key: String = "boss" if is_boss else faction.to_lower()
 	var pool: Array = type_map.get(key, type_map.get("generic", ["Scanning..."]))
 	return pool[randi() % pool.size()]
