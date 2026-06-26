@@ -49,6 +49,7 @@ var _player_label:     Label
 var _enemy_label:      Label
 var _enemy_brace_chip:  Label
 var _enemy_shield_chip: Label
+var _boss_phase_label:  Label
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
@@ -88,6 +89,7 @@ func _ready() -> void:
 	CombatManager.action_queued.connect(_on_action_queued)
 	CombatManager.action_dequeued.connect(_on_action_dequeued)
 	CombatManager.enemy_status_changed.connect(_on_enemy_status_changed)
+	CombatManager.boss_phase_changed.connect(_on_boss_phase_changed)
 
 func _build_ui() -> void:
 	_root = Control.new()
@@ -311,6 +313,18 @@ func _build_wheel() -> void:
 	_enemy_shield_chip.visible = false
 	container.add_child(_enemy_shield_chip)
 
+	# Boss phase indicator — hidden for normal enemies, shown when is_boss is true.
+	_boss_phase_label = Label.new()
+	_boss_phase_label.text = "● PHASE I"
+	_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
+	_boss_phase_label.add_theme_font_size_override("font_size", int(11 * S))
+	_boss_phase_label.size = Vector2(ebar_w, chip_h)
+	_boss_phase_label.position = Vector2(center.x - ebar_w * 0.5, chip_y - chip_h - 2.0 * S)
+	_boss_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_phase_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_phase_label.visible = false
+	container.add_child(_boss_phase_label)
+
 # ── Wheel hit-testing ───────────────────────────────────────────────────────────
 # Pixel-perfect: sample each wedge image's alpha at the cursor and pick the one
 # actually painted there. Falls back to the polar nearest-angle test if the
@@ -521,8 +535,13 @@ func _make_flat_btn(text: String, color: Color, size: Vector2) -> Button:
 	return btn
 
 # ── CombatManager signals ─────────────────────────────────────────────────────
-func _on_combat_started(_enemy: Node) -> void:
+func _on_combat_started(enemy: Node) -> void:
 	show()
+	# Show phase label only for boss fights; reset to Phase I each fight.
+	var is_boss: bool = enemy != null and enemy.get("is_boss") == true
+	_boss_phase_label.visible = is_boss
+	_boss_phase_label.text = "● PHASE I"
+	_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
 
 func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
 	_ap_current = ap
@@ -589,6 +608,17 @@ func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
 		_enemy_brace_chip.visible = brace
 	if is_instance_valid(_enemy_shield_chip):
 		_enemy_shield_chip.visible = shield
+
+func _on_boss_phase_changed(phase: int) -> void:
+	if not is_instance_valid(_boss_phase_label):
+		return
+	match phase:
+		2:
+			_boss_phase_label.text = "●● PHASE II"
+			_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.2))
+		3:
+			_boss_phase_label.text = "●●● PHASE III"
+			_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.1, 0.1))
 
 # ── Button callbacks ───────────────────────────────────────────────────────────
 func _on_action_pressed(action_type: int) -> void:
