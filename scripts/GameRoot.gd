@@ -6569,6 +6569,7 @@ func _debug_spawn_boss() -> void:
 	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
 	spawn_root.add_child(scene)
 	(scene as Node3D).global_position = (player as Node3D).global_position + offset
+	(scene as Node3D).scale = Vector3(1.5, 1.5, 1.5)
 	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawned 80u ahead.", Color(1.0, 0.4, 0.4))
 
 func _debug_spawn_squad() -> void:
