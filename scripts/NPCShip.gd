@@ -879,9 +879,9 @@ func die():
 # ── PlayerInteractionQueue integration ───────────────────────────────────────
 
 func _request_combat_via_queue() -> void:
-	# Already queued, already in an active fight, or CombatManager busy — skip.
-	if not _combat_intent_id.is_empty() \
-			or CombatManager.state != CombatManager.State.IDLE:
+	# Already queued — don't enqueue twice. Allow queueing while a fight is
+	# active; the queue holds the intent and runs it after the cooldown buffer.
+	if not _combat_intent_id.is_empty():
 		return
 	var ship_label := "%s:%s" % [faction, name]
 	_combat_intent_id = PlayerInteractionQueue.enqueue(
