@@ -6549,8 +6549,27 @@ func _fail_public_board_smoke_test(message: String) -> void:
 	get_tree().quit(1)
 
 func _debug_spawn_boss() -> void:
-	# Stub — implemented in Phase 19 Step B5.
-	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawn not yet implemented (Phase 19 B5).", Color(1.0, 0.8, 0.2))
+	if not is_instance_valid(player):
+		return
+	var scene: Node = NPC_SHIP_SCENE.instantiate()
+	scene.faction             = "vanguard"
+	scene.ship_role           = "Gunner"
+	scene.is_boss             = true
+	scene.max_health          = 300.0
+	scene.health              = 300.0
+	scene.combat_ap           = 6
+	scene.combat_intelligence = 0.85
+	scene.damage_min          = 14.0
+	scene.damage_max          = 22.0
+	scene.speed               = 10.0
+	scene.persistent_id       = "debug.boss.%d" % Time.get_ticks_msec()
+	scene.name                = "DEBUG_BOSS"
+	var offset := -(player as Node3D).global_basis.z.normalized() * 80.0
+	offset.y = 0.0
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	spawn_root.add_child(scene)
+	(scene as Node3D).global_position = (player as Node3D).global_position + offset
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawned 80u ahead.", Color(1.0, 0.4, 0.4))
 
 func _debug_spawn_squad() -> void:
 	# Stub — implemented in Phase 20 Step S6.
