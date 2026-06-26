@@ -164,6 +164,17 @@ func _ready():
 
 	_create_drones()
 	_create_boost_effects()
+	_create_nose_raycast()
+
+var _nose_ray: RayCast3D = null
+
+func _create_nose_raycast() -> void:
+	_nose_ray = RayCast3D.new()
+	_nose_ray.target_position = Vector3(0, 0, -55)  # 55 units forward (-Z = ship nose)
+	_nose_ray.collision_mask = 1  # physics layer 1 — same as obstacles
+	_nose_ray.exclude_parent = true
+	_nose_ray.enabled = false    # only enable when autopilot is active
+	add_child(_nose_ray)
 
 func sync_camera_to_ship() -> void:
 	camera_pivot.global_position = global_position
@@ -348,6 +359,8 @@ func begin_target_navigation(mode: String) -> bool:
 	_clear_planned_route()
 	route_stall_replans = 0
 	nav_mode = mode
+	if _nose_ray:
+		_nose_ray.enabled = true
 	return true
 
 
@@ -359,6 +372,8 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	_clear_planned_route()
 	route_stall_replans = 0
 	_clear_avoidance_state()
+	if _nose_ray:
+		_nose_ray.enabled = false
 	mining_laser.visible = false
 	if clear_motion:
 		current_speed = 0.0
@@ -743,6 +758,13 @@ func _physics_process(delta: float):
 		var dest := target_position as Vector3
 		var steer_target := dest
 		if nav_mode != "ORBIT":
+			# Nose whisker: if something is close ahead and isn't our target,
+			# force a fresh route plan immediately rather than waiting for stall.
+			if _nose_ray and _nose_ray.is_colliding():
+				var hit_obj := _nose_ray.get_collider()
+				if hit_obj != active_target and hit_obj != self:
+					_clear_planned_route()
+
 			var route_result := _route_steer_target(dest, active_target)
 			if not bool(route_result.get("ok", false)):
 				_emit_route_failure(str(route_result.get("error", "")))
@@ -751,6 +773,13 @@ func _physics_process(delta: float):
 			steer_target = route_result.get("steer_target", dest)
 			if not _update_route_progress(steer_target, delta):
 				return
+
+			# Real-time avoidance: scan for obstacles along the current heading
+			# and override the steer target if something is in the way.
+			var avoidance := _get_autopilot_avoidance(steer_target, active_target)
+			if avoidance.get("is_avoiding", false):
+				steer_target = avoidance.get("steer_target", steer_target)
+
 		steer_towards(steer_target, delta)
 		
 		var speed_limit: float = max_speed * GlobalState.engine_speed_mult
@@ -883,6 +912,7 @@ func _route_steer_target(
 		route_plan_count += 1
 		if planned_route.size() > 1:
 			_emit_planned_route_notice(planned_route.size())
+	var prev_index := planned_route_index
 	while planned_route_index < planned_route.size() - 1 \
 			and global_position.distance_to(
 				planned_route[planned_route_index]
@@ -890,6 +920,16 @@ func _route_steer_target(
 		planned_route_index += 1
 		route_progress_distance = INF
 		route_stall_timer = 0.0
+	# After advancing to a new waypoint, verify the remaining path is still clear.
+	# If an obstacle has moved into it since we planned, replan immediately.
+	if planned_route_index != prev_index and planned_route_index < planned_route.size():
+		var remaining: Array[Vector3] = []
+		for i in range(planned_route_index, planned_route.size()):
+			remaining.append(planned_route[i])
+		var hazards := _navigation_hazards(route_target)
+		if not NavigationRoutePlannerType.route_is_clear(global_position, remaining, hazards):
+			_clear_planned_route()
+			return _route_steer_target(destination, route_target)
 	if planned_route_index >= planned_route.size():
 		return {"ok": true, "steer_target": destination}
 	return {
