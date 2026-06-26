@@ -49,6 +49,17 @@ var fire_cooldown_max: float = 1.5
 var damage_min: float = 5.5
 var damage_max: float = 6.5
 
+# ── Faction profile tier vars ──────────────────────────────────────────────────
+# Set via apply_faction_profile(). Zero means "not yet profiled".
+var weapon_tier:      int   = 0
+var engine_tier:      int   = 0
+var powerplant_tier:  int   = 0
+var hull_tier:        int   = 0
+var shield_tier:      int   = 0
+var weapon_dmg_mult:  float = 1.0   # incoming weapon hit multiplier
+var drone_dmg_mult:   float = 1.0   # incoming drone hit multiplier
+var hull_composition: String = ""   # shown in sensor scan
+
 @onready var visual: Node3D = $Visual
 
 # Preloads
@@ -172,6 +183,42 @@ func _configure_role(role: String) -> void:
 	
 	# Override name to display archetype in UI
 	name = faction.to_upper() + " " + archetype + " " + str(randi() % 1000)
+
+## Apply a faction profile from FactionRegistry, overriding role-based stats.
+## Call this AFTER add_child() so _ready()/_configure_role() have already run.
+## Tier-derived stats then have the same multipliers re-applied on top.
+func apply_faction_profile(profile: Dictionary) -> void:
+	if profile.is_empty():
+		return
+	# Store tier vars and damage type resistances.
+	weapon_tier     = int(profile.get("weapon_tier",     weapon_tier))
+	engine_tier     = int(profile.get("engine_tier",     engine_tier))
+	powerplant_tier = int(profile.get("powerplant_tier", powerplant_tier))
+	hull_tier       = int(profile.get("hull_tier",       hull_tier))
+	shield_tier     = int(profile.get("shield_tier",     shield_tier))
+	weapon_dmg_mult = float(profile.get("weapon_dmg_mult", 1.0))
+	drone_dmg_mult  = float(profile.get("drone_dmg_mult",  1.0))
+	hull_composition = str(profile.get("hull_composition", ""))
+	combat_intelligence = float(profile.get("intelligence", combat_intelligence))
+	if profile.get("display_name", "") != "":
+		archetype = str(profile["display_name"])
+	# Derive base combat stats from tiers.
+	damage_min   = FactionRegistry.derive_damage_min(weapon_tier)
+	damage_max   = FactionRegistry.derive_damage_max(weapon_tier)
+	combat_ap    = FactionRegistry.derive_combat_ap(powerplant_tier)
+	var base_hp: float = FactionRegistry.derive_max_health(hull_tier)
+	# Re-apply the same multipliers _configure_role() would have used.
+	if is_reinforcement:
+		base_hp    *= 2.0
+		damage_min *= 1.5
+		damage_max *= 1.5
+	if difficulty_multiplier > 1.0:
+		base_hp    *= difficulty_multiplier
+		damage_min *= difficulty_multiplier
+		damage_max *= difficulty_multiplier
+	base_hp *= COMBAT_HP_MULT
+	max_health = base_hp
+	health     = max_health
 
 func _ready():
 	_generate_archetype()
