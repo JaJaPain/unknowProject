@@ -565,9 +565,16 @@ func _await_travel(from: Node, to: Node) -> void:
 	await _beat(clampf(d / PROJECTILE_SPEED, TRAVEL_MIN, TRAVEL_MAX))
 
 # Apply damage at projectile-arrival time and emit the impact beat.
-func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool) -> void:
+# is_drone=true routes damage through drone_dmg_mult instead of weapon_dmg_mult.
+func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool, is_drone: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
+	# Apply target's damage-type resistance if defined (set by apply_faction_profile).
+	if not blocked:
+		var mult_key := "drone_dmg_mult" if is_drone else "weapon_dmg_mult"
+		var resist = target.get(mult_key)
+		if resist != null:
+			dmg *= float(resist)
 	var hit_pos: Vector3 = (target as Node3D).global_position
 	if target.has_method("take_damage"):
 		target.take_damage(dmg, attacker_faction)
@@ -801,7 +808,7 @@ func _exec_attack_drone() -> void:
 	# Drone bypasses brace and shield angle — precision targeting ignores bulk defenses.
 	if enemy_brace_active or enemy_shield_angle_active:
 		GlobalState.emit_chatter("COMBAT", "Drone bypasses their defense.", Color(0.3, 0.9, 0.9))
-	_apply_hit(enemy_node, "player", drone_dmg, player_is_flanking, false)
+	_apply_hit(enemy_node, "player", drone_dmg, player_is_flanking, false, true)
 	GlobalState.emit_chatter("COMBAT", "Drone hits for %d damage." % int(drone_dmg), Color(0.3, 0.9, 0.9))
 
 func _exec_micro_warp() -> void:
@@ -889,7 +896,9 @@ func _resolve_npc_hit(base_dmg: float, intent: Dictionary) -> float:
 	var dmg: float = base_dmg * float(CombatActionType.RANGE_DAMAGE_MULT[range_band])
 	var attack_face_raw = intent.get("face")
 	var attack_face: int = attack_face_raw if attack_face_raw != null else CombatActionType.Face.FRONT
-	var flanking_raw = intent.get("flanking")
+	# flanking is in params subdict for unified-format actions; fall back to top-level for old format.
+	var params: Dictionary = intent.get("params", {}) as Dictionary
+	var flanking_raw = params.get("flanking", intent.get("flanking"))
 	var is_flanking: bool = flanking_raw if flanking_raw != null else false
 
 	# Flanking bypasses front shield entirely.
@@ -964,11 +973,12 @@ func _execute_npc_intent() -> void:
 		await _beat(BEAT_POST_ACTION)
 
 func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
-	var itype: String = action.get("type", "fire")
+	var itype = action.get("type", CombatAction.Type.FIRE)
+	var aparams: Dictionary = action.get("params", {}) as Dictionary
 	match itype:
-		"fire", "hull_shot", "suppression":
-			var npc_dmg := _resolve_npc_hit(action.get("damage", 10.0), action)
-			# Shield Reroute: active this turn and enemy didn't reposition first → 65% block.
+		CombatAction.Type.FIRE:
+			var base_dmg: float = aparams.get("damage", 10.0)
+			var npc_dmg := _resolve_npc_hit(base_dmg, action)
 			var shield_blocked := _npc_hit_shield_blocked(action)
 			if player_shield_reroute_active:
 				npc_dmg *= 0.35  # 65% mitigation
@@ -984,14 +994,13 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 			_apply_hit(player_node, npc_faction, npc_dmg, false, shield_blocked)
 			if not shield_blocked:
 				GlobalState.emit_chatter("COMBAT", "Enemy hits you for %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
-		"flank":
+		CombatAction.Type.FLANK:
 			# Reposition to flank — bypasses Shield Reroute (angle changed).
 			if player_shield_reroute_active:
 				_consume_shield_reroute()
 				GlobalState.emit_chatter("SYSTEM", "Enemy flanked — shield bypassed!", Color(1.0, 0.5, 0.2))
 			range_band = CombatActionType.RangeBand.CLOSE
-			action["flanking"] = true
-			var npc_dmg := _resolve_npc_hit(action.get("damage", 8.0), action)
+			var npc_dmg := _resolve_npc_hit(aparams.get("damage", 8.0), action)
 			_sfx("weapon_fire", enemy_node.global_position)
 			AudioManager.play_laser(enemy_node.global_position)
 			if enemy_node.has_method("spawn_projectile"):
@@ -1001,12 +1010,12 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 				return
 			_apply_hit(player_node, npc_faction, npc_dmg, true, false)
 			GlobalState.emit_chatter("COMBAT", "Flanking hit — %d damage." % int(npc_dmg), Color(1.0, 0.3, 0.3))
-		"boost":
+		CombatAction.Type.BOOST:
 			# Enemy repositions — if Shield Reroute is up, angle changed = bypassed.
 			if player_shield_reroute_active:
 				_consume_shield_reroute()
 				GlobalState.emit_chatter("SYSTEM", "Enemy repositioned — shield angle lost!", Color(1.0, 0.5, 0.2))
-			var dir: String = action.get("direction", "closer")
+			var dir: String = aparams.get("direction", "closer")
 			if dir == "closer":
 				if range_band == CombatActionType.RangeBand.LONG:
 					range_band = CombatActionType.RangeBand.MID
@@ -1018,18 +1027,18 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 				elif range_band == CombatActionType.RangeBand.MID:
 					range_band = CombatActionType.RangeBand.LONG
 			_sfx("engine_boost", enemy_node.global_position)
-		"disable_engines":
+		CombatAction.Type.DISABLE_ENGINES:
 			ap_max = max(2, ap_max - 1)
 			_sfx("enemy_charge", enemy_node.global_position)
 			GlobalState.emit_chatter("SYSTEM", "Engine disruption — AP reduced by 1 next turn.", Color(1.0, 0.5, 0.2))
-		"repair":
+		CombatAction.Type.REPAIR_KIT:
 			var npc_hp: float = float(enemy_node.get("health")) if enemy_node.get("health") else 0.0
 			var npc_max: float = float(enemy_node.get("max_health")) if enemy_node.get("max_health") else 50.0
 			var heal := npc_max * 0.20
 			enemy_node.health = min(npc_hp + heal, npc_max)
 			_sfx("repair_kit", enemy_node.global_position)
 			GlobalState.emit_chatter("COMBAT", "Enemy repairs — hull patched.", Color(0.4, 0.9, 0.6))
-		"brace":
+		CombatAction.Type.BRACE:
 			enemy_brace_active = true
 			_sfx("shield_reroute", enemy_node.global_position)
 			_enemy_status_float("BRACE", Color(0.4, 0.7, 1.0))
@@ -1039,7 +1048,7 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 			if not _told_brace_hint:
 				_told_brace_hint = true
 				GlobalState.emit_chatter("Kaelen", "They're braced. Drone punches right through it.", Color(0.85, 0.5, 1.0))
-		"shield_angle":
+		CombatAction.Type.SHIELD_ANGLE:
 			enemy_shield_angle_active = true
 			_sfx("shield_reroute", enemy_node.global_position)
 			_enemy_status_float("SHIELDED", Color(1.0, 0.5, 0.2))
@@ -1050,10 +1059,6 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 			if not _told_shield_angle_hint:
 				_told_shield_angle_hint = true
 				GlobalState.emit_chatter("Kaelen", "They've angled shields. Flank or drone — both bypass it.", Color(0.85, 0.5, 1.0))
-		"broadcast":
-			GlobalState.emit_chatter(npc_faction.to_upper(), "Calling for reinforcements...", Color(1.0, 0.3, 0.3))
-		"surrender", "panic":
-			pass
 
 # ── Shield Reroute (new mechanic) ────────────────────────────────────────────
 func _consume_shield_reroute() -> void:
