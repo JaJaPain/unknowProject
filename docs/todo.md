@@ -5,6 +5,8 @@ _Active task list. Update this file at the end of every session._
 
 ## Combat
 
+- [ ] **Unified action + upgrade system** — give NPCShip the same tier vars as PlayerShip (weapon_tier, engine_tier, powerplant_tier, shield_tier); derive damage/AP/flee from tiers using the same formulas; faction profiles become `{ weapon_tier: 2, engine_tier: 1, ... }`; collapse player/NPC execution into one `_exec_action(action, source, target)` path; add BRACE/FLANK/SHIELD_ANGLE/DISABLE_ENGINES to CombatAction.Type enum. **Do this before adding more combat content.**
+- [ ] **Pre-combat sensor scan** — at `combat_started`, sensor panel typewriter-decodes the target's loadout instead of "—". Detail scales with player sensor upgrade tier: Tier 0 = "THREAT LEVEL: HIGH", Tier 1 = "Hull T2 / Weapons T3 / Engine T1", Tier 2 = full assessment + specific warning ("Weapon systems exceed your fit by 2 tiers — expect hull breach in ~3 turns"). Requires unified upgrade system above.
 - [ ] **Phase 6 — Enemy kit parity** — enemies should be able to Reposition and Brace as readable actions (mirrors player options); add flavor telegraphs for each
 - [ ] **Phase 7 — Boss (mega)** — DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 — Squads** — DONE (in-game) but needs StoryManager trigger hook (see Story section below)
