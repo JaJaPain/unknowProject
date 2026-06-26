@@ -81,6 +81,7 @@ var event_scheduler = null
 var ship_pre_generator: ShipPreGenerator = null
 
 func _ready() -> void:
+	_init_dev_panel()
 	_init_event_scheduler()
 	RuntimeTraceType.begin_session()
 	RuntimeTraceType.event("game", "root_ready", {
@@ -6595,21 +6596,25 @@ func _debug_spawn_squad() -> void:
 		(scene as Node3D).global_position = (player as Node3D).global_position + local_offset
 	GlobalState.emit_chatter("SYSTEM", "DEBUG: 2-ship squad spawned ahead.", Color(1.0, 0.6, 0.2))
 
+# ── Dev panel ──────────────────────────────────────────────────────────────────
+var _dev_panel: DevPanel
+
+func _init_dev_panel() -> void:
+	_dev_panel = DevPanel.new()
+	add_child(_dev_panel)
+	_dev_panel.spawn_boss_requested.connect(_debug_spawn_boss)
+	_dev_panel.spawn_squad_requested.connect(_debug_spawn_squad)
+	_dev_panel.stores_restock_requested.connect(func():
+		StoreRegistryScript.shared().force_restock_all()
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
+	)
+
 # ── Debug shortcuts ────────────────────────────────────────────────────────────
-# Uses _input (not _unhandled_key_input) so UI focus can't block it.
-# Numpad 8 — force-restock all station stores (buy supplies before combat tests).
-# Numpad 9 — spawn boss (Phase 19 testing). Numpad 0 — spawn squad (Phase 20).
+# Numpad 7 — toggle dev panel (tuning + spawns).
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	match event.keycode:
-		KEY_KP_8:
-			StoreRegistryScript.shared().force_restock_all()
-			GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
-			get_viewport().set_input_as_handled()
-		KEY_KP_9:
-			_debug_spawn_boss()
-			get_viewport().set_input_as_handled()
-		KEY_KP_0:
-			_debug_spawn_squad()
-			get_viewport().set_input_as_handled()
+	if event.keycode == KEY_KP_7:
+		if _dev_panel:
+			_dev_panel.visible = not _dev_panel.visible
+		get_viewport().set_input_as_handled()
