@@ -54,7 +54,12 @@ signal combat_kill(victim: Node, world_pos: Vector3)
 # ── State ─────────────────────────────────────────────────────────────────────
 var state: State = State.IDLE
 var player_node: Node  = null
-var enemy_node:  Node  = null
+# Multi-enemy support: all enemies in the current fight.
+# enemy_node property getter keeps all existing code working unchanged.
+var enemy_nodes: Array = []
+var _target_idx: int   = 0
+var enemy_node: Node:
+	get: return enemy_nodes[_target_idx] if _target_idx < enemy_nodes.size() else null
 
 # ── AP pool ───────────────────────────────────────────────────────────────────
 var ap_current: int = 6
@@ -70,16 +75,27 @@ var micro_warp_cooldown: int  = 0   # turns remaining
 var repair_used_this_turn: bool = false
 var player_is_flanking: bool  = false
 var current_intent: Dictionary = {}       # kept for telegraph UI (first action label)
-var npc_action_plan: Array = [] # full AP-driven action list for the turn
+var npc_action_plan: Array = []  # single-enemy plan — kept for backwards compat reads
+var npc_action_plans: Array = [] # per-enemy plans (S3 multi-plan)
 var taunts: Dictionary = {}
 var _taunts_ready: bool = false
 # Shield Reroute new mechanic: auto-faces enemy, blocks first hit 65%.
 # Bypassed if enemy repositions before firing.
 var player_shield_reroute_active: bool = false
 var _shield_dome: MeshInstance3D = null
-# Enemy defensive states — per-turn, cleared at start of each planning phase.
-var enemy_brace_active: bool = false
-var enemy_shield_angle_active: bool = false
+# Enemy defensive states — per-enemy arrays; property getters target _target_idx.
+var _enemy_brace:  Array = []   # bool per enemy
+var _enemy_shield: Array = []   # bool per enemy
+var enemy_brace_active: bool:
+	get: return _enemy_brace[_target_idx]  if _target_idx < _enemy_brace.size()  else false
+	set(v):
+		if _target_idx < _enemy_brace.size():
+			_enemy_brace[_target_idx] = v
+var enemy_shield_angle_active: bool:
+	get: return _enemy_shield[_target_idx] if _target_idx < _enemy_shield.size() else false
+	set(v):
+		if _target_idx < _enemy_shield.size():
+			_enemy_shield[_target_idx] = v
 var _enemy_shield_dome: MeshInstance3D = null
 # Kaelen hint flags — fire once per fight.
 var _told_brace_hint: bool = false
@@ -251,8 +267,11 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 	# Set state immediately so physics-frame re-entry can't spawn duplicate requests
 	# while the async taunt fetch is in flight.
 	state = State.PLANNING
-	player_node = player
-	enemy_node  = enemy
+	player_node  = player
+	enemy_nodes  = [enemy]
+	_target_idx  = 0
+	_enemy_brace  = [false]
+	_enemy_shield = [false]
 	_player_initiated = player_initiated
 	_taunts_ready = false
 	taunts = {}
@@ -266,6 +285,21 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 
 	emit_signal("combat_started", enemy)
 
+## Called by a squad wingman that wants to join an active fight.
+## Only accepted during the PLANNING phase; guards against mid-execution joins.
+func join_combat(enemy: Node) -> void:
+	if state != State.PLANNING:
+		return
+	if enemy_nodes.size() >= 3:
+		return
+	if not is_instance_valid(enemy):
+		return
+	enemy_nodes.append(enemy)
+	_enemy_brace.append(false)
+	_enemy_shield.append(false)
+	npc_action_plans.append([])
+	GlobalState.emit_chatter("SYSTEM", "Wingman joined the fight!", Color(1.0, 0.5, 0.2))
+
 func _on_taunts_ready(data: Dictionary) -> void:
 	# Guard against stale callbacks from duplicate requests (race with early state set)
 	if state == State.IDLE or _taunts_ready:
@@ -277,8 +311,11 @@ func _on_taunts_ready(data: Dictionary) -> void:
 func end_combat(player_won: bool) -> void:
 	state = State.IDLE
 	_lerp_timescale(1.0, 1.0, 600)
-	player_node = null
-	enemy_node  = null
+	player_node   = null
+	enemy_nodes.clear()
+	_enemy_brace.clear()
+	_enemy_shield.clear()
+	_target_idx   = 0
 	queued_actions.clear()
 	# Notify queue first — it starts the 3-second buffer and releases the slot.
 	PlayerInteractionQueue.notify_combat_ended()
@@ -293,10 +330,16 @@ func _reset_fight_state() -> void:
 	player_is_flanking = false
 	current_intent = {}
 	npc_action_plan = []
+	npc_action_plans = []
+	for _j in enemy_nodes.size():
+		npc_action_plans.append([])
 	player_shield_reroute_active = false
 	_despawn_shield_dome()
-	enemy_brace_active = false
-	enemy_shield_angle_active = false
+	_enemy_brace  = []
+	_enemy_shield = []
+	for _i in enemy_nodes.size():
+		_enemy_brace.append(false)
+		_enemy_shield.append(false)
 	_despawn_enemy_shield_dome()
 	_told_brace_hint = false
 	_told_shield_angle_hint = false
@@ -396,11 +439,12 @@ func _begin_planning() -> void:
 	# Time-stretch riser pairs with the slow-mo + music pitch drop.
 	_sfx("slowmo_riser", null, -4.0)
 
-	# Clear last turn's shield reroute and enemy defensive states — per-turn commitments.
+	# Clear last turn's shield reroute and all enemy defensive states — per-turn commitments.
 	player_shield_reroute_active = false
 	_despawn_shield_dome()
-	enemy_brace_active = false
-	enemy_shield_angle_active = false
+	for i in _enemy_brace.size():
+		_enemy_brace[i]  = false
+		_enemy_shield[i] = false
 	_despawn_enemy_shield_dome()
 	emit_signal("enemy_status_changed", false, false)
 
