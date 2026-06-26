@@ -166,14 +166,19 @@ func _ready():
 	_create_boost_effects()
 	_create_nose_raycast()
 
-var _nose_ray: RayCast3D = null
+var _nose_ray: ShapeCast3D = null
 
 func _create_nose_raycast() -> void:
-	_nose_ray = RayCast3D.new()
+	_nose_ray = ShapeCast3D.new()
+	# Sphere radius gives the whisker its vertical + lateral reach.
+	# 10u catches obstacles the underbelly or wingtips would clip before the center does.
+	var sphere := SphereShape3D.new()
+	sphere.radius = 10.0
+	_nose_ray.shape = sphere
 	_nose_ray.target_position = Vector3(0, 0, -55)  # 55 units forward (-Z = ship nose)
-	_nose_ray.collision_mask = 1  # physics layer 1 — same as obstacles
+	_nose_ray.collision_mask = 1
 	_nose_ray.exclude_parent = true
-	_nose_ray.enabled = false    # only enable when autopilot is active
+	_nose_ray.enabled = false    # only active during autopilot
 	add_child(_nose_ray)
 
 func sync_camera_to_ship() -> void:
@@ -758,10 +763,11 @@ func _physics_process(delta: float):
 		var dest := target_position as Vector3
 		var steer_target := dest
 		if nav_mode != "ORBIT":
-			# Nose whisker: if something is close ahead and isn't our target,
-			# force a fresh route plan immediately rather than waiting for stall.
+			# Nose whisker: sphere-cast 55u forward + 10u radius (covers underbelly
+			# and wingtips). If anything other than the nav target is in the volume,
+			# force an immediate replan without waiting for the stall timer.
 			if _nose_ray and _nose_ray.is_colliding():
-				var hit_obj := _nose_ray.get_collider()
+				var hit_obj := _nose_ray.get_collider(0)
 				if hit_obj != active_target and hit_obj != self:
 					_clear_planned_route()
 
