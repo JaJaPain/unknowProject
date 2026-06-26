@@ -956,8 +956,6 @@ func _execute_npc_intent() -> void:
 		if plan.is_empty():
 			continue
 		var npc_faction: String = exec_enemy.get("faction") if exec_enemy.get("faction") else "enemy"
-		emit_signal("action_telegraphed", -1, exec_enemy, player_node)
-		await _beat(BEAT_TELEGRAPH)
 		# Temporarily point _target_idx at this enemy so defensive state
 		# getters (enemy_brace_active etc.) resolve to the right slot.
 		var saved_idx := _target_idx
@@ -965,6 +963,20 @@ func _execute_npc_intent() -> void:
 		for action in plan:
 			if state == State.IDLE or not is_instance_valid(exec_enemy) or not is_instance_valid(player_node):
 				break
+			# Per-action telegraph with context-aware target:
+			# offensive actions frame toward the player; defensive ones frame
+			# tight on the enemy ship so the camera reads the action clearly.
+			var itype = action.get("type", CombatAction.Type.FIRE)
+			var is_defensive: bool = itype in [
+				CombatAction.Type.BRACE,
+				CombatAction.Type.SHIELD_ANGLE,
+				CombatAction.Type.REPAIR_KIT,
+				CombatAction.Type.BOOST,
+				CombatAction.Type.DISABLE_ENGINES,
+			]
+			var tele_target: Node = exec_enemy if is_defensive else player_node
+			emit_signal("action_telegraphed", itype, exec_enemy, tele_target)
+			await _beat(BEAT_TELEGRAPH)
 			await _execute_npc_action(action, npc_faction)
 			if state == State.IDLE:
 				break
