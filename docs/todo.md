@@ -72,6 +72,23 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## Shipping / Deployment (Ollama)
+
+The game depends on Ollama for all LLM content (taunts, quests, Kaelen dialogue).
+The watchdog in `LLMInterface.gd` already auto-starts Ollama and pulls missing models.
+Deployment checklist for a shipped build:
+
+- [ ] **Bundle ollama.exe** — copy the Ollama binary into `ollama/ollama.exe` next to the game executable. The watchdog checks this path first before LOCALAPPDATA or PATH.
+- [ ] **Choose a shippable model** — `qwen2.5:3b-instruct-q4_K_M` (current small model) is ~2GB. Verify its license permits commercial distribution. Mistral 7B (Apache 2.0) is a clean alternative. `gemma4:12b` (large model) is too big to bundle — decide if large-model features ship or are skipped.
+- [ ] **Bundle the model file** — Ollama stores models in `%USERPROFILE%\.ollama\models\`. For a fully offline install, pre-populate this folder in the installer OR ship a GGUF file and set `OLLAMA_MODELS` env var to a path inside the game bundle.
+- [ ] **First-run model pull fallback** — if model is not bundled, the watchdog auto-pulls it on first launch. This requires internet and takes 2–5 min. Show a loading screen / progress message to the player during this window (currently silent in-game).
+- [ ] **First-run UX** — add a splash/loading state that shows "Preparing AI systems…" while the watchdog polls and the model pulls. Do not drop the player into the main menu until `_ollama_ready` is true and models are confirmed.
+- [ ] **Installer script** — write a setup script (NSIS / Inno Setup) that: copies `ollama.exe`, sets `OLLAMA_MODELS` to a bundled path, and optionally pre-warms the model on install so first launch is instant.
+- [ ] **macOS / Linux path** — watchdog already checks `/usr/local/bin/ollama` and `ollama` on PATH. Test on those platforms. Mac may need a signed/notarized ollama binary.
+- [ ] **Offline mode** — if Ollama never comes up (no internet, corporate firewall, etc.), the game should surface a clear one-time message: "AI features unavailable — game will use built-in dialogue." Currently just logs to console.
+
+---
+
 ## Polish / Future
 
 - [ ] **NAS asset migration** — move binary assets off git repo to NAS once hardware acquired; binaries-in-repo is accepted interim
