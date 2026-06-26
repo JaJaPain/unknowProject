@@ -104,11 +104,15 @@ var _orbit_radius:    float   = 40.0
 var _orbit_midpoint:  Vector3 = Vector3.ZERO
 var _cam_goal_pos:    Vector3 = Vector3.ZERO   # action-mode pivot goal
 var _cam_look_at:     Vector3 = Vector3.ZERO   # point the pivot looks at
+var _cam_look_cur:    Vector3 = Vector3.ZERO   # smoothed look target (lerps toward _cam_look_at)
 var _cam_lerp_speed:  float   = 3.0
-const _ORBIT_SPEED  := 0.10   # rad/s, wall-clock
-const _ORBIT_HEIGHT := 14.0   # units above midpoint
-const _ACTION_LERP  := 6.5    # snappier glide for punch-in framing
-const _ORBIT_LERP   := 3.0
+var _cam_entry_t:     float   = 1.0            # 0→1 ramp over _CAM_ENTRY_DUR at combat start
+const _ORBIT_SPEED    := 0.10   # rad/s, wall-clock
+const _ORBIT_HEIGHT   := 14.0   # units above midpoint
+const _ACTION_LERP    := 6.5    # snappier glide for punch-in framing
+const _ORBIT_LERP     := 3.0
+const _CAM_ENTRY_DUR  := 0.7    # seconds to ease from normal follow into orbit
+const _CAM_LOOK_LERP  := 2.5    # look-target lerp speed (separate from position)
 # Camera shake (decaying thud, applied via camera h/v offset)
 var _shake_strength: float = 0.0
 var _shake_decay:    float = 0.0
@@ -183,9 +187,13 @@ func _enter_orbit(enemy: Node) -> void:
 	_orbit_midpoint = (global_position + (enemy as Node3D).global_position) * 0.5
 	var sep := global_position.distance_to((enemy as Node3D).global_position)
 	_orbit_radius = _find_safe_orbit_radius(enemy, sep)
-	# Start orbit angle from current camera yaw so the transition is seamless
+	# Start orbit angle from current camera yaw so the transition is seamless.
 	var to_cam := camera_pivot.global_position - _orbit_midpoint
 	_orbit_angle = atan2(to_cam.x, to_cam.z)
+	# Seed the smoothed look from where the camera is currently pointing so
+	# the rotation eases in rather than snapping to the orbit midpoint.
+	_cam_look_cur = camera_pivot.global_position + (-camera_pivot.basis.z) * 20.0
+	_cam_entry_t  = 0.0   # triggers slow entry ramp
 	_cam_mode = 1
 	_cam_lerp_speed = _ORBIT_LERP
 
@@ -280,12 +288,19 @@ func _process(delta: float) -> void:
 		var x := sin(_orbit_angle) * _orbit_radius
 		var z := cos(_orbit_angle) * _orbit_radius
 		_cam_goal_pos = _orbit_midpoint + Vector3(x, _ORBIT_HEIGHT, z)
-		_cam_look_at = _orbit_midpoint
-	# Common glide toward goal + look (action mode keeps its fixed goal).
+		_cam_look_at  = _orbit_midpoint
+		# Ramp position lerp from slow entry speed up to normal orbit speed.
+		_cam_entry_t  = minf(1.0, _cam_entry_t + real_delta / _CAM_ENTRY_DUR)
+		_cam_lerp_speed = lerpf(1.0, _ORBIT_LERP, _cam_entry_t)
+	# Smooth look-target: slow ease during orbit entry, snappy during action punch-ins.
+	var _look_speed := _ACTION_LERP if _cam_mode == 2 \
+		else _CAM_LOOK_LERP * lerpf(0.25, 1.0, _cam_entry_t)
+	_cam_look_cur = _cam_look_cur.lerp(_cam_look_at, minf(real_delta * _look_speed, 1.0))
+	# Common glide toward goal (action mode keeps its fixed goal).
 	camera_pivot.global_position = camera_pivot.global_position.lerp(
 		_cam_goal_pos, minf(real_delta * _cam_lerp_speed, 1.0))
-	if camera_pivot.global_position.distance_to(_cam_look_at) > 0.5:
-		camera_pivot.look_at(_cam_look_at, Vector3.UP)
+	if camera_pivot.global_position.distance_to(_cam_look_cur) > 0.5:
+		camera_pivot.look_at(_cam_look_cur, Vector3.UP)
 	# Decaying camera shake on top of the framing.
 	if _shake_strength > 0.0:
 		_shake_strength = maxf(0.0, _shake_strength - _shake_decay * real_delta * 2.5)
