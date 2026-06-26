@@ -316,7 +316,9 @@ func join_combat(enemy: Node) -> void:
 	enemy_nodes.append(enemy)
 	_enemy_brace.append(false)
 	_enemy_shield.append(false)
-	npc_action_plans.append([])
+	# Generate a plan for the joining enemy immediately so it acts this turn.
+	var plan: Array = enemy.generate_action_plan() if enemy.has_method("generate_action_plan") else []
+	npc_action_plans.append(plan)
 	GlobalState.emit_chatter("SYSTEM", "Wingman joined the fight!", Color(1.0, 0.5, 0.2))
 
 func _on_taunts_ready(data: Dictionary) -> void:

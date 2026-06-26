@@ -594,6 +594,7 @@ func _on_combat_started(enemy: Node) -> void:
 	_wingman_bar.visible   = is_squad
 	_wingman_label.visible = is_squad
 	_target_btn.visible    = is_squad
+	_refresh_target_label()
 
 func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
 	_ap_current = ap
@@ -609,6 +610,7 @@ func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Di
 	_refresh_button_states()
 	_execute_btn.disabled = false
 	_refresh_hp_bars()
+	_refresh_target_label()
 	if _warp_cd_label:
 		var cd: int = CombatManager.micro_warp_cooldown
 		_warp_cd_label.text = "(%d turns)" % cd if cd > 0 else ""
@@ -664,6 +666,17 @@ func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
 func _on_target_pressed() -> void:
 	CombatManager.cycle_target()
 	_refresh_hp_bars()
+	_refresh_target_label()
+
+func _refresh_target_label() -> void:
+	if not is_instance_valid(_enemy_label):
+		return
+	var e := CombatManager.enemy_node
+	if is_instance_valid(e):
+		var ename: String = str(e.name) if e.name else "ENEMY"
+		_enemy_label.text = "▶ " + ename.replace("_", " ") if CombatManager.enemy_nodes.size() > 1 else "ENEMY"
+	else:
+		_enemy_label.text = "ENEMY"
 
 func _on_boss_phase_changed(phase: int) -> void:
 	if not is_instance_valid(_boss_phase_label):
