@@ -199,6 +199,11 @@ func _build_ui() -> void:
 	add_child(_typing_player)
 	if ResourceLoader.exists("res://assets/CombatWheel/soundfxs/typing.mp3"):
 		_typing_player.stream = load("res://assets/CombatWheel/soundfxs/typing.mp3") as AudioStream
+	# Replay the clip if it ends while text is still being typed.
+	_typing_player.finished.connect(func():
+		if is_instance_valid(_typewrite_tween) and _typewrite_tween.is_running():
+			_typing_player.play()
+	)
 	_build_sensor_panel()
 	_build_wheel()
 	_build_hp_bars()
@@ -815,7 +820,7 @@ func _typewrite(full_text: String) -> void:
 		_typing_player.stop()
 		_typing_player.play()
 	_intent_label.text = "█"
-	var delay_per_char := 0.028   # seconds between characters (~36 chars/sec)
+	var delay_per_char := 0.021   # seconds between characters (~48 chars/sec, 25% faster)
 	_typewrite_tween = create_tween()
 	for i in full_text.length():
 		_typewrite_tween.tween_callback(
