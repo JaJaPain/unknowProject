@@ -43,8 +43,15 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
-## Story / StoryManager
+## Story / Narrative System
+_Full design in `docs/design_narrative_system.md`. Build in order — each phase depends on the one before._
 
+- [ ] **Phase A — Campaign Spine Generator** — `CampaignBibleGenerator.gd` calls gemma4 at new-campaign start with world lore + faction registry + system map. Generates `user://campaign_bible.json`: inciting event, faction tensions, 5-6 chapter cause/effect chain, secret at the center, Kaelen's angle, ending conditions. StoryManager reads it and seeds chapter 1.
+- [ ] **Phase B — Story State Document** — StoryManager gets a live `story_state` dict (chapter, active_tensions, player_knows, hidden_truths, current_foreshadow, kaelen_mood). `get_story_context_block()` returns a short string injected into every LLM prompt. `advance_chapter()` fires on chapter-link mission completion. Persisted to `user://story_state.json`.
+- [ ] **Phase C — Mission Causality** — Mission generator receives a `because` field from StoryManager's active tensions. Brief tone, NPC urgency, and reward level all reflect it. `pending_hooks` list tracks open story threads; hook missions close them and trigger connected-agent follow-ups. Story context block prepended to all `request_quest_candidate()` calls.
+- [ ] **Phase D — Kaelen Integration** — Kaelen lines get `kaelen_mood` from story state but never her angle (StoryManager holds that). New line types: `kaelen_chapter_comment` (once per chapter advance) and `kaelen_hint` (on hook mission completion). StoryManager fires these on story events, not timers.
+- [ ] **Phase E — Ambient NPC Dialogue** — `AmbientChatGenerator.gd` fires every 3-5 min during open play. Picks topic bucket (story-adjacent / mundane / overheard-intel) from StoryManager, writes 2-4 lines between two NPC archetypes via small model, delivers via `GlobalState.emit_chatter()`. `used_topics` list prevents repeats within a chapter. Target ratio: 50% mundane, 30% story-adjacent, 20% overheard intel.
+- [ ] **Phase F — Rumors** — Station visits trigger a rumor check against `pending_hooks` (40% chance, not every visit). Single line from unnamed NPC via system chat. StoryManager marks hook as "hinted" after firing. Rumors plant questions, never answer them.
 - [ ] **Boss fight trigger tool** — expose `GameRoot.trigger_boss_encounter(faction, stats_override)` so StoryManager can script a boss ambush as a story beat
 - [ ] **Squad fight trigger tool** — expose `GameRoot.trigger_squad_encounter(faction, count)` for scripted 2-on-1 ambushes
 - [ ] **Anomaly data core delivery** — anomaly drops a named data core; player delivers to NPC for payout via special cargo system
