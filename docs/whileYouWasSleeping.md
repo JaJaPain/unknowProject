@@ -2,6 +2,39 @@
 
 ---
 
+## Session: 2026-06-26 (Unified Combat System + FactionRegistry + Dev Panel) — Claude
+**Branch:** `segment-3/economy-stores-events`
+
+### Overview
+Completed the full unified combat system (Steps 1–7). NPCs now share the same action enum, damage pipeline, and stat derivation as the player. FactionRegistry is live with 8 known profiles and 14 unknown faction entries across 4 progression bands. Damage-type resistances (weapon vs drone) are active. A single extensible dev panel replaces all scattered Numpad shortcuts.
+
+### What Landed
+
+**CombatAction.gd** — Added `BRACE`, `FLANK`, `SHIELD_ANGLE`, `DISABLE_ENGINES` to the Type enum. `make(type, params)` is now the single constructor for all action dicts.
+
+**FactionRegistry.gd** (autoload) — 8 known faction profiles (aurelia/vanguard/zenith × role), 14 unknown faction entries across 4 tier bands (Rift Collective → Apex Remnant). `get_profile(key)`, `get_faction_for_danger_level(tier, idx)`, stat derivation helpers, runtime override dict, JSON save/load.
+
+**NPCShip.gd** — Added tier vars (`weapon_tier`, `hull_tier`, `powerplant_tier`, `shield_tier`, `engine_tier`), `weapon_dmg_mult`, `drone_dmg_mult`, `hull_composition`. `apply_faction_profile(profile)` derives all combat stats from tiers and re-applies reinforcement/difficulty multipliers. All `_action_*` helpers now use `CombatAction.make()` so NPC and player action dicts share the same shape.
+
+**Spawn wiring** — `MainScene._spawn_npc()` calls `apply_faction_profile()` for known factions. `GeneratedSystemNPCManager._apply_npc_profile()` covers all three spawn paths; unknown factions pull from the tier band matching `config.difficulty_tier`.
+
+**CombatManager.gd** — `_execute_npc_action` now matches on `CombatAction.Type` int enum (not strings). Damage read from `action["params"]["damage"]`. `_apply_hit` gained `is_drone` param; applies `weapon_dmg_mult`/`drone_dmg_mult` from the target before `take_damage`. Drone hits pass `is_drone=true`.
+
+**CombatPanel.gd** — `SENSOR_SIGS_NAMED` deleted. `BRACE`, `FLANK`, `SHIELD_ANGLE`, `DISABLE_ENGINES` entries added to the int-keyed `SENSOR_SIGS` const. `_sensor_sig()` simplified to a single dict lookup.
+
+**DevPanel.gd** (new) — Extensible CanvasLayer dev tool. Numpad 7 toggles it. Left sidebar: quick-action buttons (`add_action_button(label, callable)` API). Right area: `TabContainer` with `add_tab(title)` API. Tab 0: Faction Tuning — scrollable table of all 22 factions × 7 fields with ↑/↓ per cell; changes hot-apply to `FactionRegistry._overrides`; Save writes `user://faction_tuning.json`, Reset clears. Built-in actions: Spawn Boss, Spawn Squad, Restock Stores.
+
+### How to Extend the Dev Panel
+```gdscript
+# In GameRoot._init_dev_panel(), after the existing connections:
+_dev_panel.add_action_button("My Action", my_callable)
+
+var tab := _dev_panel.add_tab("My Tool")
+# tab is a VBoxContainer — populate it freely
+```
+
+---
+
 ## Session: 2026-06-25 (Enemy AP System + Shield Reroute Redesign + UI Fixes) — Claude
 **Branch:** `segment-3/economy-stores-events`
 
