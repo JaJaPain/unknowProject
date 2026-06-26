@@ -52,8 +52,12 @@ func _build_chrome() -> void:
 	add_child(bg)
 
 	_root_panel = PanelContainer.new()
-	_root_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_root_panel.custom_minimum_size = Vector2(1500, 820)
+	# Full-rect with a small inset so it fits at any resolution.
+	_root_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root_panel.offset_left   = 30
+	_root_panel.offset_right  = -30
+	_root_panel.offset_top    = 30
+	_root_panel.offset_bottom = -30
 	_root_panel.add_theme_stylebox_override("panel", _make_panel_style())
 	add_child(_root_panel)
 
