@@ -123,6 +123,7 @@ var _ap_label:         Label         # "X / Y" AP counter in wheel center
 var _intent_label:     Label
 var _sensor_header:    Label         # "◈ SENSOR ANALYSIS" fixed title line
 var _typewrite_tween:  Tween        # cancelled and replaced each planning phase
+var _typing_player:    AudioStreamPlayer
 var _player_bar:       ProgressBar
 var _enemy_bar:        ProgressBar
 var _player_label:     Label
@@ -146,7 +147,6 @@ var _bar_center_x: float = 0.0
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
-var _respond_btn:      Button
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _btn_blocked:     Array[bool] = []          # per-button disabled state (polar hit-test)
@@ -193,6 +193,11 @@ func _build_ui() -> void:
 	_click_sfx.stream = load(SFX_BTN_CLICK) as AudioStream
 	_click_sfx.volume_db = -6.0
 	add_child(_click_sfx)
+	_typing_player = AudioStreamPlayer.new()
+	_typing_player.volume_db = -8.0
+	add_child(_typing_player)
+	if ResourceLoader.exists("res://assets/CombatWheel/soundfxs/typing.mp3"):
+		_typing_player.stream = load("res://assets/CombatWheel/soundfxs/typing.mp3") as AudioStream
 	_build_sensor_panel()
 	_build_wheel()
 	_build_hp_bars()
@@ -727,9 +732,6 @@ func _build_execute_row() -> void:
 	_execute_btn.pressed.connect(_on_execute_pressed)
 	row.add_child(_execute_btn)
 
-	_respond_btn = _make_flat_btn("💬  RESPOND", Color(0.30, 0.25, 0.50), Vector2(140, 38))
-	_respond_btn.pressed.connect(_on_respond_pressed)
-	row.add_child(_respond_btn)
 
 func _make_flat_btn(text: String, color: Color, size: Vector2) -> Button:
 	var btn := Button.new()
@@ -800,6 +802,9 @@ func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Di
 func _typewrite(full_text: String) -> void:
 	if is_instance_valid(_typewrite_tween):
 		_typewrite_tween.kill()
+	if is_instance_valid(_typing_player):
+		_typing_player.stop()
+		_typing_player.play()
 	_intent_label.text = "█"
 	var delay_per_char := 0.028   # seconds between characters (~36 chars/sec)
 	_typewrite_tween = create_tween()
@@ -808,6 +813,12 @@ func _typewrite(full_text: String) -> void:
 			func() -> void:
 				_intent_label.text = full_text.left(i + 1) + ("█" if i < full_text.length() - 1 else "")
 		).set_delay(delay_per_char)
+	# Stop typing sound once all characters are revealed.
+	_typewrite_tween.tween_callback(
+		func() -> void:
+			if is_instance_valid(_typing_player):
+				_typing_player.stop()
+	)
 
 func _on_execution_started() -> void:
 	for i in _btn_blocked.size():
@@ -917,8 +928,6 @@ func _on_execute_pressed() -> void:
 		return
 	CombatManager.commit_turn()
 
-func _on_respond_pressed() -> void:
-	CombatManager.play_player_reply()
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 func _refresh_button_states() -> void:
