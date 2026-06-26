@@ -50,6 +50,10 @@ var _enemy_label:      Label
 var _enemy_brace_chip:  Label
 var _enemy_shield_chip: Label
 var _boss_phase_label:  Label
+# Squad UI — shown only when enemy_nodes.size() > 1.
+var _wingman_bar:   ProgressBar
+var _wingman_label: Label
+var _target_btn:    Button
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
@@ -325,6 +329,37 @@ func _build_wheel() -> void:
 	_boss_phase_label.visible = false
 	container.add_child(_boss_phase_label)
 
+	# Wingman HP bar — stacked above the targeted enemy bar, hidden for solo fights.
+	var wbar_y := wheel_top - emargin - ebar_h - elbl_h - chip_h * 2.0 - 26.0 * S
+	_wingman_label = Label.new()
+	_wingman_label.text = "Wingman"
+	_wingman_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.3))
+	_wingman_label.add_theme_font_size_override("font_size", int(11 * S))
+	_wingman_label.size = Vector2(ebar_w, elbl_h)
+	_wingman_label.position = Vector2(center.x - ebar_w * 0.5, wbar_y - elbl_h)
+	_wingman_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wingman_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wingman_label.visible = false
+	container.add_child(_wingman_label)
+
+	_wingman_bar = _make_hp_bar(Color(0.9, 0.45, 0.15))
+	_wingman_bar.custom_minimum_size = Vector2(ebar_w, ebar_h)
+	_wingman_bar.size     = Vector2(ebar_w, ebar_h)
+	_wingman_bar.position = Vector2(center.x - ebar_w * 0.5, wbar_y)
+	_wingman_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wingman_bar.visible = false
+	container.add_child(_wingman_bar)
+
+	# TARGET button — cycles the targeted enemy. Hidden for solo fights.
+	_target_btn = Button.new()
+	_target_btn.text = "TARGET ▸"
+	_target_btn.add_theme_font_size_override("font_size", int(11 * S))
+	_target_btn.size = Vector2(ebar_w * 0.55, 20.0 * S)
+	_target_btn.position = Vector2(center.x - ebar_w * 0.275, wbar_y - elbl_h - 22.0 * S)
+	_target_btn.visible = false
+	_target_btn.pressed.connect(_on_target_pressed)
+	container.add_child(_target_btn)
+
 # ── Wheel hit-testing ───────────────────────────────────────────────────────────
 # Pixel-perfect: sample each wedge image's alpha at the cursor and pick the one
 # actually painted there. Falls back to the polar nearest-angle test if the
@@ -542,6 +577,11 @@ func _on_combat_started(enemy: Node) -> void:
 	_boss_phase_label.visible = is_boss
 	_boss_phase_label.text = "● PHASE I"
 	_boss_phase_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
+	# Squad UI — show wingman bar and target button only for multi-enemy fights.
+	var is_squad: bool = CombatManager.enemy_nodes.size() > 1
+	_wingman_bar.visible   = is_squad
+	_wingman_label.visible = is_squad
+	_target_btn.visible    = is_squad
 
 func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void:
 	_ap_current = ap
@@ -609,6 +649,10 @@ func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
 	if is_instance_valid(_enemy_shield_chip):
 		_enemy_shield_chip.visible = shield
 
+func _on_target_pressed() -> void:
+	CombatManager.cycle_target()
+	_refresh_hp_bars()
+
 func _on_boss_phase_changed(phase: int) -> void:
 	if not is_instance_valid(_boss_phase_label):
 		return
@@ -671,7 +715,7 @@ func _refresh_button_states() -> void:
 
 func _refresh_hp_bars() -> void:
 	var p := CombatManager.player_node
-	var e := CombatManager.enemy_node
+	var e := CombatManager.enemy_node   # targeted enemy (getter)
 	if is_instance_valid(p):
 		var hp: float  = float(p.get("health"))     if p.get("health")     != null else 0.0
 		var mx: float  = float(p.get("max_health")) if p.get("max_health") != null else 100.0
@@ -682,6 +726,25 @@ func _refresh_hp_bars() -> void:
 		var mx: float  = float(e.get("max_health")) if e.get("max_health") != null else 50.0
 		_enemy_bar.max_value = mx
 		_enemy_bar.value     = hp
+	# Wingman bar: the non-targeted enemy (index != _target_idx).
+	var nodes := CombatManager.enemy_nodes
+	var ti    := CombatManager._target_idx
+	var wingman: Node = null
+	for i in nodes.size():
+		if i != ti and is_instance_valid(nodes[i]):
+			wingman = nodes[i]
+			break
+	var show_wingman := wingman != null
+	_wingman_bar.visible   = show_wingman
+	_wingman_label.visible = show_wingman
+	_target_btn.visible    = show_wingman
+	if show_wingman:
+		var whp: float = float(wingman.get("health"))     if wingman.get("health")     != null else 0.0
+		var wmx: float = float(wingman.get("max_health")) if wingman.get("max_health") != null else 50.0
+		_wingman_bar.max_value = wmx
+		_wingman_bar.value     = whp
+		var wname: String = wingman.get("name") if wingman.get("name") else "Wingman"
+		_wingman_label.text = wname
 
 func _add_queue_chip(action: Dictionary) -> void:
 	var lbl := Label.new()

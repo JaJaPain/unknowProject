@@ -285,6 +285,21 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 
 	emit_signal("combat_started", enemy)
 
+## Cycles the player's target to the next live enemy in the squad.
+## Called by the TARGET ▸ button in CombatPanel. Free action, 0 AP cost.
+func cycle_target() -> void:
+	if enemy_nodes.size() <= 1:
+		return
+	var start := _target_idx
+	var next   := (_target_idx + 1) % enemy_nodes.size()
+	while next != start:
+		if is_instance_valid(enemy_nodes[next]) and not enemy_nodes[next].get("destroyed"):
+			_target_idx = next
+			# Sync npc_action_plan to the new target's plan for the intent label.
+			npc_action_plan = npc_action_plans[_target_idx] if _target_idx < npc_action_plans.size() else []
+			return
+		next = (next + 1) % enemy_nodes.size()
+
 ## Called by a squad wingman that wants to join an active fight.
 ## Only accepted during the PLANNING phase; guards against mid-execution joins.
 func join_combat(enemy: Node) -> void:
