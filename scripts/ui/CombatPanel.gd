@@ -329,35 +329,47 @@ func _build_wheel() -> void:
 	_boss_phase_label.visible = false
 	container.add_child(_boss_phase_label)
 
-	# Wingman HP bar — stacked above the targeted enemy bar, hidden for solo fights.
-	var wbar_y := wheel_top - emargin - ebar_h - elbl_h - chip_h * 2.0 - 26.0 * S
+	# Wingman HP bar — narrower (70%) and dimmer than the targeted bar.
+	# Click anywhere on it to switch target. Hidden for solo fights.
+	var wbar_w := ebar_w * 0.70
+	var wbar_h := ebar_h * 0.75
+	var wbar_y := wheel_top - emargin - ebar_h - elbl_h - chip_h * 2.0 - 20.0 * S
 	_wingman_label = Label.new()
 	_wingman_label.text = "Wingman"
-	_wingman_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.3))
-	_wingman_label.add_theme_font_size_override("font_size", int(11 * S))
-	_wingman_label.size = Vector2(ebar_w, elbl_h)
-	_wingman_label.position = Vector2(center.x - ebar_w * 0.5, wbar_y - elbl_h)
+	_wingman_label.add_theme_color_override("font_color", Color(0.85, 0.5, 0.25))
+	_wingman_label.add_theme_font_size_override("font_size", int(10 * S))
+	_wingman_label.size = Vector2(wbar_w, elbl_h)
+	_wingman_label.position = Vector2(center.x - wbar_w * 0.5, wbar_y - elbl_h)
 	_wingman_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_wingman_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wingman_label.visible = false
 	container.add_child(_wingman_label)
 
-	_wingman_bar = _make_hp_bar(Color(0.9, 0.45, 0.15))
-	_wingman_bar.custom_minimum_size = Vector2(ebar_w, ebar_h)
-	_wingman_bar.size     = Vector2(ebar_w, ebar_h)
-	_wingman_bar.position = Vector2(center.x - ebar_w * 0.5, wbar_y)
+	_wingman_bar = _make_hp_bar(Color(0.65, 0.30, 0.10))
+	_wingman_bar.custom_minimum_size = Vector2(wbar_w, wbar_h)
+	_wingman_bar.size     = Vector2(wbar_w, wbar_h)
+	_wingman_bar.position = Vector2(center.x - wbar_w * 0.5, wbar_y)
+	_wingman_bar.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	_wingman_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wingman_bar.visible = false
 	container.add_child(_wingman_bar)
 
-	# TARGET button — cycles the targeted enemy. Hidden for solo fights.
+	# Invisible click-catcher over the wingman label + bar area.
+	# Player clicks the secondary bar to switch target — no separate button needed.
 	_target_btn = Button.new()
-	_target_btn.text = "TARGET ▸"
-	_target_btn.add_theme_font_size_override("font_size", int(11 * S))
-	_target_btn.size = Vector2(ebar_w * 0.55, 20.0 * S)
-	_target_btn.position = Vector2(center.x - ebar_w * 0.275, wbar_y - elbl_h - 22.0 * S)
+	_target_btn.flat = true
+	_target_btn.size = Vector2(wbar_w, wbar_h + elbl_h + 4.0 * S)
+	_target_btn.position = Vector2(center.x - wbar_w * 0.5, wbar_y - elbl_h)
+	_target_btn.modulate = Color(1.0, 1.0, 1.0, 0.0)   # fully transparent
+	_target_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_target_btn.visible = false
 	_target_btn.pressed.connect(_on_target_pressed)
+	_target_btn.mouse_entered.connect(func() -> void:
+		if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1.0, 1.0, 1.0, 1.0))
+	_target_btn.mouse_exited.connect(func() -> void:
+		if is_instance_valid(_wingman_bar): _wingman_bar.modulate = Color(1.0, 1.0, 1.0, 0.65)
+		if is_instance_valid(_wingman_label): _wingman_label.modulate = Color(1.0, 1.0, 1.0, 0.65))
 	container.add_child(_target_btn)
 
 # ── Wheel hit-testing ───────────────────────────────────────────────────────────
