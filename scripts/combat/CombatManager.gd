@@ -59,7 +59,11 @@ var player_node: Node  = null
 var enemy_nodes: Array = []
 var _target_idx: int   = 0
 var enemy_node: Node:
-	get: return enemy_nodes[_target_idx] if _target_idx < enemy_nodes.size() else null
+	get:
+		if _target_idx < enemy_nodes.size():
+			var _e = enemy_nodes[_target_idx]
+			return _e if is_instance_valid(_e) else null
+		return null
 
 # ── AP pool ───────────────────────────────────────────────────────────────────
 var ap_current: int = 6
