@@ -52,6 +52,22 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## Navigation / Autopilot
+
+- [ ] **Fix autopilot avoidance regression** *(see bugs.md for full root-cause analysis)*
+  - Wire `_get_autopilot_avoidance()` back into the autopilot movement block (`PlayerShip.gd:740–754`). It exists and works but is not being called.
+  - After `_route_steer_target()` returns a `steer_target`, pass it through `_get_autopilot_avoidance(steer_target, active_target)`. When `is_avoiding` is true, use the avoidance waypoint as the actual steer target.
+  - This gives two complementary layers: A* planner handles the macro route, real-time avoidance handles surprises mid-flight.
+- [ ] **Forward whisker (nose sensor) for imminent collision**
+  - Add a `RayCast3D` pointing forward (`-Z`) on the ship. No new scene node needed — configure it in `_ready()`.
+  - In `_physics_process` during autopilot: if the raycast hits something within ~50u that is not the nav target, call `_clear_planned_route()` immediately to force a fresh A* replan without waiting for the 2.5s stall timer.
+  - Godot equivalent of the Unity "empty object on ship nose" pattern. The raycast IS the whisker.
+- [ ] **Route validity re-check while following waypoints**
+  - After each waypoint is passed (`planned_route_index` advances), call `NavigationRoutePlanner.route_is_clear()` on the remaining waypoints against current hazards. If it returns false, replan immediately.
+  - Catches cases where an obstacle moved into the planned path since the last full replan.
+
+---
+
 ## World / Exploration
 
 - [ ] **Map hover tooltips** — hovering a map node shows stations, ore types, factions present

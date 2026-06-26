@@ -7,9 +7,19 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ### Autopilot object avoidance regressed
 **Spotted:** ~2026-06-21  
-**Severity:** Medium  
-**Description:** Autopilot no longer avoids obstacles. Was working before, regressed around 2026-06-21.  
-**Where to look:** `scripts/PlayerShip.gd` autopilot logic; any recent changes to navigation or physics layers that could have broken obstacle detection.
+**Severity:** Medium — ship flies into stations and asteroids during autopilot  
+**Root cause identified:** `_get_autopilot_avoidance()` (`PlayerShip.gd:999`) is fully implemented but is **never called** from the main autopilot movement block (`PlayerShip.gd:740–754`). The movement loop only calls `_route_steer_target()` (static A* planner). The real-time avoidance system exists but got disconnected from the autopilot loop, likely when the planner was introduced.
+
+**Fix plan:**
+Two complementary layers need to work together:
+1. **Static planner** (`_route_steer_target`) — runs A* at route-start to generate waypoints around known hazards. Good for long-distance routing.
+2. **Real-time avoidance** (`_get_autopilot_avoidance`) — scans for obstacles along the current heading every frame. Acts as a forward whisker/feeler (the Unity "empty object on the ship nose" equivalent). Needs to be called every frame in the autopilot block and its `steer_target` fed into `steer_towards()` in place of the planner's output when avoidance is active.
+
+**Wire-up:** In `_physics_process`, after getting `steer_target` from `_route_steer_target`, pass it through `_get_autopilot_avoidance(steer_target, active_target)`. If `is_avoiding` is true, use avoidance's `steer_target` instead. This gives the planner the big picture and the whisker handles surprises.
+
+**Additionally:** Add a `RayCast3D` on the ship nose for imminent collision (distance < 30u) that forces `_clear_planned_route()` immediately, triggering a fresh A* replan without waiting for the 2.5s stall timer.
+
+**Where to change:** `scripts/PlayerShip.gd:740–754` (autopilot movement block).
 
 ---
 
