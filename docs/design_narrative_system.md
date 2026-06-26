@@ -262,18 +262,39 @@ Rumors are seeded from `pending_hooks` in StoryManager. They plant questions wit
 
 ## 10. What Already Exists
 
+_Surveyed 2026-06-26. Much more is built than expected._
+
 | Component | Status |
 |---|---|
-| `StoryManager.gd` | Exists — handles scripted quest triggers. Needs story state layer added. |
-| `LLMInterface` — gemma4 calls | Exists — used for large story content. Needs campaign bible prompt. |
-| `LLMInterface` — small model calls | Exists — mission generation. Needs story context injection. |
-| `NarrativeDirector.gd` | Exists as a class. Role needs clarifying relative to this design. |
-| `GlobalState.emit_chatter()` | Exists — ambient NPC chat delivery mechanism is already there. |
-| Kaelen voice + personality | Exists — needs story-state-aware line types. |
-| Faction registry | Exists — feeds into spine generator prompt. |
-| World lore (`world_lore.md`) | Exists — already injected into LLM calls. |
+| `CampaignBibleStore.gd` | **Complete.** Full persistence, validation, status tracking, rumor trails with clue templates, regeneration triggers, expansion rules. Loads/saves `campaign_bible.json` per campaign slot. |
+| `NarrativeDirector.gd` | **Complete.** Builds the gemma4 prompt for bible generation. Parses and validates the response. Handles procedural bootstrap fallback. |
+| `LLMInterface.request_campaign_bible_generation()` | **Complete.** Calls gemma4 with the NarrativeDirector prompt, handles the response, stores via CampaignBibleStore. |
+| Bible generation trigger | **Complete.** `GameRoot` calls `_queue_campaign_bible_generation_for_active_slot()` on new campaign start and on automatic new campaign. |
+| `campaign_bible_context_text` | **Complete.** Bible's tone/pressure/rules are injected into quest prompts via `campaign_bible_context_text` in LLMInterface. |
+| `story_pack` per system | **Complete.** Each system definition carries `active_tension`, `local_nickname`, `humor_guidance`. Injected into mission and arrival prompts. |
+| `SystemStoryArcEvent.gd` | **Exists.** Event type for story arc beats, registered in event scheduler. |
+| `StoryManager.gd` | **Exists.** Beat scheduling — fires story beats on kill count, dock, delay, system arrival, quest completion. Needs the story state layer (Phase B). |
+| `CampaignChronicleStore.gd` | **Complete.** Full event timeline with branching/checkpoint support. Records what happened. |
+| `CampaignKaelenMemoryStore.gd` | **Complete.** Kaelen's bounded memory store — appends memories, manages rollback, tracks reversals. |
+| `CampaignAgentMemoryStore` | **Exists.** Per-agent memory for mission context continuity. |
+| `GlobalState.emit_chatter()` | **Complete.** Ambient NPC chat delivery already wired. |
+| Kaelen voice + personality | **Complete.** TTS blend, speed, style all defined. Needs story-state-aware line types (Phase D). |
+| Faction registry | **Complete.** Feeds into bible prompt already. |
+| World lore (`world_lore.md`) | **Complete.** Injected into every LLM call. |
 
-The bones are there. This is assembly, not construction.
+**What is actually missing (the real gaps):**
+
+| Gap | Phase |
+|---|---|
+| **Story State Document** — no living `story_state` dict tracking chapter, active tensions, what player knows vs. doesn't know, pending hooks | Phase B |
+| **Mission causality** — missions have `active_tension` per system but no `because` field linking them to a causal chain or story hook | Phase C |
+| **Kaelen's angle protected** — no mechanism preventing small model from seeing Kaelen's deep angle from the bible | Phase D |
+| **Ambient two-person NPC dialogue** — chatter is single-speaker; no two-NPC conversation generator | Phase E |
+| **Rumor hook firing** — rumor trails defined in bible but no runtime system firing them at station visits | Phase F |
+| **Story screenshots** — no trigger points capturing frames at story moments | Pre-PDF |
+| **Campaign closure PDF** — no PDF/document generator at campaign end | Closure |
+
+The foundation is exceptional. Phase B is the unlock — once story state exists, Phases C–F are additive layers on top of infrastructure that's already there.
 
 ---
 
