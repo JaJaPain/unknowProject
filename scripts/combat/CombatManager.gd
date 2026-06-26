@@ -299,10 +299,45 @@ func cycle_target() -> void:
 	while next != start:
 		if is_instance_valid(enemy_nodes[next]) and not enemy_nodes[next].get("destroyed"):
 			_target_idx = next
-			# Sync npc_action_plan to the new target's plan for the intent label.
 			npc_action_plan = npc_action_plans[_target_idx] if _target_idx < npc_action_plans.size() else []
+			_spawn_target_flash(enemy_nodes[_target_idx])
 			return
 		next = (next + 1) % enemy_nodes.size()
+
+func _spawn_target_flash(target: Node) -> void:
+	if not is_instance_valid(target):
+		return
+	# Collect all MeshInstance3D children of the target ship.
+	var meshes: Array = []
+	_collect_meshes(target, meshes)
+	if meshes.is_empty():
+		return
+	# White unshaded material, slightly transparent to start.
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode    = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color    = Color(1.0, 1.0, 1.0, 0.75)
+	mat.transparency    = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.render_priority = 1
+	# For each mesh, spawn a slightly-scaled duplicate and tween it out.
+	for mesh_inst: MeshInstance3D in meshes:
+		if not is_instance_valid(mesh_inst):
+			continue
+		var ghost := MeshInstance3D.new()
+		ghost.mesh = mesh_inst.mesh
+		ghost.transform = mesh_inst.global_transform
+		ghost.scale    *= 1.08
+		ghost.material_override = mat
+		target.get_parent().add_child(ghost)
+		var tw := ghost.create_tween()
+		tw.set_ignore_time_scale(true)
+		tw.tween_property(mat, "albedo_color:a", 0.0, 0.35)
+		tw.tween_callback(ghost.queue_free)
+
+func _collect_meshes(node: Node, out: Array) -> void:
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		out.append(node)
+	for child in node.get_children():
+		_collect_meshes(child, out)
 
 ## Called by a squad wingman that wants to join an active fight.
 ## Only accepted during the PLANNING phase; guards against mid-execution joins.
