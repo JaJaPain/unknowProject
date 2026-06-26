@@ -562,13 +562,15 @@ func _hit_stop(freeze_sec: float) -> void:
 # Cinematic kill: punch in on the victim, slow-mo, big explosion + sound, hold,
 # sting, then end combat. victim is untyped — it may already be freed when a
 # ship dies mid-turn, so we fall back to the last lethal-hit position.
-func _kill_and_end(victim, player_won: bool) -> void:
+# skip_end: true when this is one of multiple enemies dying (squad kill).
+# The caller (_remove_dead_enemies) decides when to call end_combat.
+func _kill_and_end(victim, player_won: bool, skip_end: bool = false) -> void:
 	var v: Node = victim if is_instance_valid(victim) else null
 	var pos := _last_kill_pos
 	if v != null:
 		pos = (v as Node3D).global_position
 	# Roll loot before the node is freed — future systems connect to combat_loot_dropped.
-	if player_won and v != null and v.has_method("roll_loot"):
+	if v != null and v.has_method("roll_loot"):
 		var loot: Dictionary = v.roll_loot()
 		if not loot.is_empty():
 			emit_signal("combat_loot_dropped", loot)
@@ -585,7 +587,8 @@ func _kill_and_end(victim, player_won: bool) -> void:
 	await _beat(1.1)
 	_sfx("combat_sting", null, -3.0)
 	_lerp_timescale(1.0, 1.0, 300)
-	end_combat(player_won)
+	if not skip_end:
+		end_combat(player_won)
 
 # Called by CombatPanel EXECUTE button.
 func commit_turn() -> void:
@@ -1124,35 +1127,63 @@ func _transition_boss_phase(phase: int) -> void:
 	emit_signal("boss_phase_changed", phase)
 
 func _after_npc_turn() -> void:
-	# Check for deaths.
+	# Player death check first.
 	var player_dead: bool = not is_instance_valid(player_node) or player_node.get("destroyed") == true
-	var enemy_dead: bool  = not is_instance_valid(enemy_node)  or enemy_node.get("destroyed")  == true
-
 	if player_dead:
 		await _kill_and_end(player_node, false)
 		return
-	if enemy_dead:
-		await _kill_and_end(enemy_node, true)
-		return
 
-	# Low-health cues are text + alarm only — no Kaelen voice commentary mid-fight.
+	# Remove any dead enemies and play their kill cinematic.
+	await _remove_dead_enemies()
+	if state == State.IDLE:
+		return  # all enemies dead — combat ended inside _remove_dead_enemies
+
+	# Low-health cues (text + alarm only, no Kaelen voice mid-fight).
 	var player_hp:  float = float(player_node.get("health"))     if player_node.get("health")     != null else 100.0
 	var player_max: float = float(player_node.get("max_health")) if player_node.get("max_health") != null else 100.0
-	var enemy_hp:   float = float(enemy_node.get("health"))      if enemy_node.get("health")      != null else 50.0
-	var enemy_max:  float = float(enemy_node.get("max_health"))  if enemy_node.get("max_health")  != null else 50.0
-
 	if player_hp / player_max <= 0.30 and not _player_low_alarmed:
 		_player_low_alarmed = true
 		_sfx("low_health_alarm", null, -4.0)
 		GlobalState.emit_chatter("SYSTEM", "WARNING: Hull integrity critical.", Color(1.0, 0.4, 0.2))
-	if enemy_hp / enemy_max <= 0.30 and not _enemy_low_alarmed:
-		_enemy_low_alarmed = true
-		if is_instance_valid(enemy_node):
+
+	# Targeted-enemy low-health cue.
+	if is_instance_valid(enemy_node):
+		var enemy_hp:  float = float(enemy_node.get("health"))     if enemy_node.get("health")     != null else 50.0
+		var enemy_max: float = float(enemy_node.get("max_health")) if enemy_node.get("max_health") != null else 50.0
+		if enemy_hp / enemy_max <= 0.30 and not _enemy_low_alarmed:
+			_enemy_low_alarmed = true
 			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
-		GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
+			GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
 
 	_check_boss_phase_transition()
 	_begin_planning()
+
+# Scans enemy_nodes for dead/invalid entries and removes them.
+# Plays kill cinematics for each dead enemy. If none remain → end_combat(true).
+func _remove_dead_enemies() -> void:
+	var dead_indices: Array = []
+	for i in enemy_nodes.size():
+		var e: Node = enemy_nodes[i]
+		if not is_instance_valid(e) or e.get("destroyed") == true:
+			dead_indices.append(i)
+
+	# Remove in reverse order so indices stay valid as we remove.
+	for i in range(dead_indices.size() - 1, -1, -1):
+		var idx: int = dead_indices[i]
+		var dead_enemy: Node = enemy_nodes[idx]
+		enemy_nodes.remove_at(idx)
+		if idx < _enemy_brace.size():  _enemy_brace.remove_at(idx)
+		if idx < _enemy_shield.size(): _enemy_shield.remove_at(idx)
+		if idx < npc_action_plans.size(): npc_action_plans.remove_at(idx)
+		# Adjust target index if we removed at or before it.
+		if _target_idx >= idx and _target_idx > 0:
+			_target_idx -= 1
+		# Play kill cinematic. skip_end=true so we can check if more enemies remain.
+		await _kill_and_end(dead_enemy, true, true)
+
+	# If all enemies are gone, end combat as a player win.
+	if enemy_nodes.is_empty():
+		end_combat(true)
 
 # ── Taunt / voice helpers ─────────────────────────────────────────────────────
 func _combat_voice_on() -> bool:
