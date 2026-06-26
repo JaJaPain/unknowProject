@@ -54,6 +54,12 @@ var _boss_phase_label:  Label
 var _wingman_bar:   ProgressBar
 var _wingman_label: Label
 var _target_btn:    Button
+# Saved bar dimensions so we can swap sizes on target switch.
+var _bar_large_w: float = 0.0
+var _bar_large_h: float = 0.0
+var _bar_small_w: float = 0.0
+var _bar_small_h: float = 0.0
+var _bar_center_x: float = 0.0
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
@@ -276,6 +282,11 @@ func _build_wheel() -> void:
 	# Enemy HP bar — centered directly above the wheel, travels with it when dragged
 	var ebar_w  := 220.0 * S
 	var ebar_h  := 20.0  * S
+	_bar_large_w  = ebar_w
+	_bar_large_h  = ebar_h
+	_bar_small_w  = ebar_w * 0.70
+	_bar_small_h  = ebar_h * 0.75
+	_bar_center_x = center.x
 	var elbl_h  := 18.0  * S
 	var emargin := 10.0  * S
 	var wheel_top := center.y - wheel_sz * 0.5
@@ -665,8 +676,36 @@ func _on_enemy_status_changed(brace: bool, shield: bool) -> void:
 
 func _on_target_pressed() -> void:
 	CombatManager.cycle_target()
+	_swap_bar_sizes()
 	_refresh_hp_bars()
 	_refresh_target_label()
+
+func _swap_bar_sizes() -> void:
+	# _enemy_bar is always the top bar; _wingman_bar is always below it.
+	# Whichever is now the target (_target_idx == 0 means first enemy = top bar)
+	# gets the large size; the other shrinks.
+	var target_is_top: bool = CombatManager._target_idx == 0
+	var large := Vector2(_bar_large_w, _bar_large_h)
+	var small := Vector2(_bar_small_w, _bar_small_h)
+	var cx    := _bar_center_x
+	if target_is_top:
+		_enemy_bar.custom_minimum_size = large
+		_enemy_bar.size = large
+		_enemy_bar.position.x = cx - large.x * 0.5
+		_enemy_bar.modulate = Color(1, 1, 1, 1.0)
+		_wingman_bar.custom_minimum_size = small
+		_wingman_bar.size = small
+		_wingman_bar.position.x = cx - small.x * 0.5
+		_wingman_bar.modulate = Color(1, 1, 1, 0.65)
+	else:
+		_enemy_bar.custom_minimum_size = small
+		_enemy_bar.size = small
+		_enemy_bar.position.x = cx - small.x * 0.5
+		_enemy_bar.modulate = Color(1, 1, 1, 0.65)
+		_wingman_bar.custom_minimum_size = large
+		_wingman_bar.size = large
+		_wingman_bar.position.x = cx - large.x * 0.5
+		_wingman_bar.modulate = Color(1, 1, 1, 1.0)
 
 func _refresh_target_label() -> void:
 	if not is_instance_valid(_enemy_label):
