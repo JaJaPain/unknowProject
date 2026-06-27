@@ -2287,7 +2287,7 @@ func _salvage_grant_wreck_bonus() -> void:
 	if roll < 0.30:
 		# Credit pouch — 40–180 SC
 		var credits := randi_range(40, 180)
-		GlobalState.credits += credits
+		GlobalState.add_credits(credits)
 		GlobalState.emit_chatter("Drone Bay", "Loose credits recovered: %d SC." % credits, Color(1.0, 0.85, 0.3))
 	elif roll < 0.55:
 		# Damaged transponder (common)

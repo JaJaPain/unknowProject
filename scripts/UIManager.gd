@@ -849,6 +849,8 @@ func _create_target_panel():
 				_command_selected_target("DOCK")
 			elif t.is_in_group("jumpgate"):
 				activate_selected_jumpgate()
+			elif t.is_in_group("wreckage"):
+				_start_targeted_salvage(t)
 			else:
 				_command_selected_target("ATTACK")
 	)
@@ -1972,6 +1974,9 @@ func _create_context_menu():
 			elif t.is_in_group("jumpgate"):
 				GlobalState.active_target = t
 				activate_selected_jumpgate()
+			elif t.is_in_group("wreckage"):
+				GlobalState.active_target = t
+				_start_targeted_salvage(t)
 			else:
 				_command_context_target("ATTACK")
 		_close_context_menu()
@@ -3229,17 +3234,26 @@ func _on_target_changed(new_target: Node3D):
 		if target_action_btn:
 			if new_target.is_in_group("asteroid"):
 				target_action_btn.text = "Mine Asteroid"
+				target_action_btn.tooltip_text = ""
 				target_action_btn.visible = true
 			elif new_target.is_in_group("station"):
 				target_action_btn.text = "Dock at Station"
+				target_action_btn.tooltip_text = ""
 				target_action_btn.visible = true
 			elif new_target.is_in_group("jumpgate"):
 				target_action_btn.text = _gate_action_label(new_target)
+				target_action_btn.tooltip_text = ""
 				target_action_btn.visible = true
 			elif new_target.is_in_group("ship"):
 				target_action_btn.text = "Attack Hostile"
+				target_action_btn.tooltip_text = ""
+				target_action_btn.visible = true
+			elif new_target.is_in_group("wreckage"):
+				target_action_btn.text = "Salvage"
+				target_action_btn.tooltip_text = _salvage_action_tooltip(new_target)
 				target_action_btn.visible = true
 			else:
+				target_action_btn.tooltip_text = ""
 				target_action_btn.visible = false
 	else:
 		target_panel.visible = false
@@ -4640,14 +4654,9 @@ func _on_inventory_use_pressed(item_id: String) -> void:
 		return
 
 	if item_id == "salvage_drone":
-		var reason := ConsumableEffectsScript.salvage_block_reason(GlobalState.player)
-		if reason != "":
-			GlobalState.emit_chatter("Drone Bay", reason, Color(1.0, 0.6, 0.2))
-			return
-		GlobalState.inventory.remove("salvage_drone")
-		GlobalState.player.begin_salvage(GlobalState.active_target, 40.0)
-		_render_inventory_items()
-		_close_inventory_panel()
+		if _start_targeted_salvage(GlobalState.active_target):
+			_render_inventory_items()
+			_close_inventory_panel()
 		return
 
 	if not ConsumableEffectsScript.use(
@@ -5981,17 +5990,32 @@ func show_context_menu(
 	if context_action_btn:
 		if entity.is_in_group("asteroid"):
 			context_action_btn.text = "Mine Asteroid"
+			context_action_btn.disabled = false
+			context_action_btn.tooltip_text = ""
 			context_action_btn.visible = true
 		elif entity.is_in_group("station"):
 			context_action_btn.text = "Dock at Station"
+			context_action_btn.disabled = false
+			context_action_btn.tooltip_text = ""
 			context_action_btn.visible = true
 		elif entity.is_in_group("jumpgate"):
 			context_action_btn.text = _gate_action_label(entity)
+			context_action_btn.disabled = false
+			context_action_btn.tooltip_text = ""
 			context_action_btn.visible = true
 		elif entity.is_in_group("ship"):
 			context_action_btn.text = "Attack Hostile"
+			context_action_btn.disabled = false
+			context_action_btn.tooltip_text = ""
+			context_action_btn.visible = true
+		elif entity.is_in_group("wreckage"):
+			context_action_btn.text = _salvage_action_label(entity)
+			context_action_btn.disabled = not _can_start_targeted_salvage(entity)
+			context_action_btn.tooltip_text = _salvage_action_tooltip(entity)
 			context_action_btn.visible = true
 		else:
+			context_action_btn.disabled = false
+			context_action_btn.tooltip_text = ""
 			context_action_btn.visible = false
 
 
@@ -6050,6 +6074,11 @@ func _update_target_command_feedback() -> void:
 	var target := GlobalState.active_target
 	if target and is_instance_valid(target) and target.is_in_group("jumpgate"):
 		_update_gate_action_button(target, active_mode)
+	elif target and is_instance_valid(target) and target.is_in_group("wreckage"):
+		target_action_btn.text = _salvage_action_label(target)
+		target_action_btn.disabled = not _can_start_targeted_salvage(target)
+		target_action_btn.tooltip_text = _salvage_action_tooltip(target)
+		_set_command_button_state(target_action_btn, false)
 	elif active_mode in ["MINE", "ATTACK", "DOCK"]:
 		var in_range := false
 		if player_valid and target and is_instance_valid(target):
@@ -6061,6 +6090,63 @@ func _update_target_command_feedback() -> void:
 		_set_command_button_state(target_action_btn, false)
 		if target_action_btn.visible:
 			target_action_btn.disabled = false
+			target_action_btn.tooltip_text = ""
+
+
+func _start_targeted_salvage(wreck: Node3D) -> bool:
+	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
+		show_hud_warning("Return to your ship before salvaging.")
+		return false
+	if wreck == null or not is_instance_valid(wreck):
+		show_hud_warning("No wreck targeted.")
+		return false
+	GlobalState.active_target = wreck
+	if not GlobalState.inventory.has_item("salvage_drone"):
+		GlobalState.emit_chatter("Drone Bay", "No salvage drones in inventory.", Color(1.0, 0.6, 0.2))
+		return false
+	var reason := ConsumableEffectsScript.salvage_block_reason(GlobalState.player)
+	if reason != "":
+		GlobalState.emit_chatter("Drone Bay", reason, Color(1.0, 0.6, 0.2))
+		return false
+	GlobalState.inventory.remove("salvage_drone")
+	GlobalState.player.begin_salvage(wreck, 40.0)
+	show_hud_info("Salvage drone deployed.")
+	_update_target_command_feedback()
+	if inventory_panel and inventory_panel.visible:
+		_render_inventory_items()
+	return true
+
+
+func _can_start_targeted_salvage(wreck: Node3D) -> bool:
+	if not GlobalState.inventory.has_item("salvage_drone"):
+		return false
+	return ConsumableEffectsScript.salvage_block_reason_for_target(GlobalState.player, wreck) == ""
+
+
+func _salvage_action_label(wreck: Node3D) -> String:
+	if not GlobalState.inventory.has_item("salvage_drone"):
+		return "Salvage (No Drone)"
+	var reason := ConsumableEffectsScript.salvage_block_reason_for_target(GlobalState.player, wreck)
+	if reason == "":
+		return "Salvage"
+	if "closer" in reason.to_lower():
+		return "Salvage (Out of Range)"
+	if "full" in reason.to_lower():
+		return "Salvage (Hold Full)"
+	if "progress" in reason.to_lower():
+		return "Salvage (Busy)"
+	if "docked" in reason.to_lower():
+		return "Salvage (Undock)"
+	return "Salvage"
+
+
+func _salvage_action_tooltip(wreck: Node3D) -> String:
+	if not GlobalState.inventory.has_item("salvage_drone"):
+		return "You need a salvage drone in your inventory."
+	var reason := ConsumableEffectsScript.salvage_block_reason_for_target(GlobalState.player, wreck)
+	if reason == "":
+		return "Spend 1 salvage drone to strip this wreck for ore and possible salvage."
+	return reason
 
 
 func _update_gate_action_button(gate: Node, active_mode: String) -> void:

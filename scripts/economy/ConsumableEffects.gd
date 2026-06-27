@@ -40,13 +40,16 @@ static func is_usable_now(item_id: String, player: Node3D, inv, shield_cap: floa
 
 # Returns "" if the salvage drone can be used right now, otherwise a human-readable reason.
 static func salvage_block_reason(player: Node3D) -> String:
+	return salvage_block_reason_for_target(player, GlobalState.active_target)
+
+
+static func salvage_block_reason_for_target(player: Node3D, target: Node3D) -> String:
 	if player == null:
 		return "No ship."
 	if player.get("is_docked"):
 		return "Cannot use while docked."
 	if player.get("_salvage_active"):
 		return "Salvage already in progress."
-	var target = GlobalState.active_target
 	if target == null or not is_instance_valid(target):
 		return "No wreck targeted."
 	if not target.is_in_group("wreckage"):

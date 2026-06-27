@@ -36,7 +36,7 @@ _Active task list. Update this file at the end of every session._
 - [ ] **Shield Reroute sub-picker** — currently defaults to Front face; needs the face-select sub-wheel
 - [ ] **Boost direction toggle** — currently defaults to "closer to enemy"; needs toggle for Evade/Close
 - [ ] **Attack drone visual** — drone is hard to see during combat; needs a more visible model or glow
-- [ ] **Salvage drone loot prompt** — rare Kaelen hook after a kill; prompt to deploy salvage drone for bonus loot
+- [x] **Salvage drone wreck action** — wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
 - [ ] **Enemy low-health escalation arc** — enemy dialogue/behavior should escalate when below 30% HP
 - [ ] **Impact decals on player ship** — hull hit marks that persist during a fight
 - [ ] **Richer combat taunt flavor** — taunt bucket system: reason-aware taunts (flanked, shielded, drone hit, etc.)
@@ -58,7 +58,7 @@ _Full design in `docs/design_narrative_system.md`. Build in order — each phase
 - [x] **Boss fight trigger tool** — expose `GameRoot.trigger_boss_encounter(faction, tier_override, role)` so StoryManager can script a boss ambush as a story beat
 - [x] **Squad fight trigger tool** — expose `GameRoot.trigger_squad_encounter(faction, count, base_tier, roles)` for scripted 2-on-1 ambushes. Good future callers: anomaly outcomes and public-board combat contracts.
 - [x] **Anomaly data core delivery** — anomaly drops a named data core; player delivers to NPC for payout via special cargo system
-- [ ] **Salvage drone loot prompt** — (also listed under Combat) post-kill Kaelen hook
+- [x] **Salvage drone wreck action** — (also listed under Combat) targeted wreck action replaces the post-kill prompt idea so salvage is available from `Fly to` / `Orbit` / `Salvage`.
 
 ---
 
