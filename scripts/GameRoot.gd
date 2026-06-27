@@ -5925,7 +5925,7 @@ func _run_services_smoke_test() -> void:
 	ui.current_submenu = ui.DockSubmenu.MAINTENANCE
 	ui.call("_render_dock_submenu")
 	ui.call("_refresh_upgrade_ui")
-	if not ui.su_ore_bank_lbl.text.contains("Power Draw: 300 / 300 MW"):
+	if not ui.su_ore_bank_lbl.text.contains("Power Draw: 255 / 300 MW"):
 		_fail_services_smoke_test("Upgrade panel did not show current power use.")
 		return
 	ui.call("_attempt_upgrade", "power", "standard")
@@ -5946,6 +5946,7 @@ func _run_services_smoke_test() -> void:
 		"shields": {"tier": 1, "path": "base"},
 		"mining": {"tier": 1, "path": "base"},
 		"cargo": {"tier": 1, "path": "base"},
+		"sensors": {"tier": 1, "path": "base"},
 		"power": {"tier": 1, "path": "base"},
 	}
 	GlobalState.apply_upgrade_stats()

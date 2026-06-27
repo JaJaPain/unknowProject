@@ -116,6 +116,74 @@ func _sensor_sig(action_type: Variant, faction: String, is_boss: bool) -> String
 	var pool: Array = type_map.get(key, type_map.get("generic", ["Scanning..."]))
 	return pool[randi() % pool.size()]
 
+
+func _combat_scan_text(enemy: Node) -> String:
+	var sensor_tier: int = clamp(int(GlobalState.get("sensor_tier")), 0, 2)
+	var threat: int = _enemy_threat_level(enemy)
+	if sensor_tier <= 0:
+		return "THREAT LEVEL: %s" % ("EXTREME" if threat >= 4 else "HIGH")
+	var tiers: Dictionary = _enemy_tier_map(enemy)
+	if sensor_tier == 1:
+		return "HULL T%d / WEAPONS T%d / ENGINE T%d" % [
+			int(tiers.get("hull", 1)),
+			int(tiers.get("weapons", 1)),
+			int(tiers.get("engine", 1)),
+		]
+	var warning := _enemy_scan_warning(tiers)
+	var composition := str(enemy.get("hull_composition")) \
+			if is_instance_valid(enemy) and enemy.get("hull_composition") else "UNKNOWN HULL"
+	return "HULL T%d %s / WEAPONS T%d / ENGINE T%d / SHIELDS T%d / POWER T%d%s" % [
+		int(tiers.get("hull", 1)),
+		composition,
+		int(tiers.get("weapons", 1)),
+		int(tiers.get("engine", 1)),
+		int(tiers.get("shields", 0)),
+		int(tiers.get("power", 1)),
+		warning,
+	]
+
+
+func _enemy_tier_map(enemy: Node) -> Dictionary:
+	if not is_instance_valid(enemy):
+		return {
+			"hull": 1,
+			"weapons": 1,
+			"engine": 1,
+			"shields": 0,
+			"power": 1,
+		}
+	return {
+		"hull": max(1, int(enemy.get("hull_tier"))),
+		"weapons": max(1, int(enemy.get("weapon_tier"))),
+		"engine": max(1, int(enemy.get("engine_tier"))),
+		"shields": max(0, int(enemy.get("shield_tier"))),
+		"power": max(1, int(enemy.get("powerplant_tier"))),
+	}
+
+
+func _enemy_threat_level(enemy: Node) -> int:
+	var tiers := _enemy_tier_map(enemy)
+	var highest := 1
+	for value in tiers.values():
+		highest = max(highest, int(value))
+	return highest
+
+
+func _enemy_scan_warning(tiers: Dictionary) -> String:
+	var player_weapons: int = int(GlobalState.current_upgrades.get("weapons", {}).get("tier", 1))
+	var player_engine: int = int(GlobalState.current_upgrades.get("engine", {}).get("tier", 1))
+	var player_shields: int = int(GlobalState.current_upgrades.get("shields", {}).get("tier", 1))
+	var weapon_gap: int = int(tiers.get("weapons", 1)) - player_weapons
+	var engine_gap: int = int(tiers.get("engine", 1)) - player_engine
+	var shield_gap: int = int(tiers.get("shields", 0)) - player_shields
+	if weapon_gap >= 2:
+		return " / WARNING: WEAPONS EXCEED YOUR FIT BY %d TIERS" % weapon_gap
+	if engine_gap >= 2:
+		return " / WARNING: ENGINE OUTPUT EXCEEDS YOUR FIT BY %d TIERS" % engine_gap
+	if shield_gap >= 2:
+		return " / WARNING: SHIELDS EXCEED YOUR FIT BY %d TIERS" % shield_gap
+	return " / ASSESSMENT: WITHIN EXPECTED COMBAT BAND"
+
 # ── Node refs ─────────────────────────────────────────────────────────────────
 var _wheel_panel:      Control
 var _root:             Control
@@ -772,6 +840,9 @@ func _make_flat_btn(text: String, color: Color, size: Vector2) -> Button:
 # ── CombatManager signals ─────────────────────────────────────────────────────
 func _on_combat_started(enemy: Node) -> void:
 	show()
+	if is_instance_valid(_sensor_panel_root):
+		_sensor_panel_root.visible = true
+		_typewrite(_combat_scan_text(enemy))
 	# Show phase label only for boss fights; reset to Phase I each fight.
 	var is_boss: bool = enemy != null and enemy.get("is_boss") == true
 	_boss_phase_label.visible = is_boss

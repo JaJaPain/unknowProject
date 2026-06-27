@@ -120,6 +120,7 @@ var su_power_btn: Button
 var su_shields_btn: Button
 var su_storage_btn: Button
 var su_mining_btn: Button
+var su_sensors_btn: Button
 var su_ship_sys_vbox: VBoxContainer
 var su_ship_sys_lbl: RichTextLabel
 var su_ore_bank_lbl: Label
@@ -9262,6 +9263,7 @@ func _create_ship_upgrades_panel() -> void:
 	su_shields_btn = _create_slot.call("SHIELDS\nAegis Deflector\n1200 HP", Vector2(0, -220), Vector2(220, 100), func(): _on_su_slot_pressed("shields"))
 	su_storage_btn = _create_slot.call("STORAGE\nStandard Racks\n8 Slots", Vector2(0, 240), Vector2(220, 100), func(): _on_su_slot_pressed("storage"))
 	su_mining_btn = _create_slot.call("MINING LASER\nIndustrial Beam\n1.0 Yield", Vector2(350, 240), Vector2(220, 100), func(): _on_su_slot_pressed("mining"))
+	su_sensors_btn = _create_slot.call("SENSORS\nThreat Scan\nTier 0", Vector2(0, -350), Vector2(220, 90), func(): _on_su_slot_pressed("sensors"))
 
 	# Side panels
 	var left_panel = VBoxContainer.new()
@@ -9345,6 +9347,10 @@ func _refresh_upgrade_ui():
 	su_shields_btn.text = "SHIELDS\nTier %d %s" % [GlobalState.current_upgrades["shields"]["tier"], GlobalState.current_upgrades["shields"]["path"].capitalize()]
 	su_storage_btn.text = "STORAGE\nTier %d\n%d / %d Slots" % [GlobalState.current_upgrades["storage"]["tier"], GlobalState.inventory.slot_count(), GlobalState.inventory.max_slots]
 	su_mining_btn.text = "MINING LASER\nTier %d %s" % [GlobalState.current_upgrades["mining"]["tier"], GlobalState.current_upgrades["mining"]["path"].capitalize()]
+	su_sensors_btn.text = "SENSORS\nTier %d\nCombat Intel %d" % [
+		GlobalState.current_upgrades["sensors"]["tier"],
+		GlobalState.sensor_tier,
+	]
 	
 	su_ore_bank_lbl.text = "Banked Ore: %.1f / %.1f\nCredits: %d\nPower Draw: %d / %d MW" % [GlobalState.player_storage_ore, GlobalState.player_storage_max, GlobalState.player_credits, GlobalState.get_current_power_draw(), GlobalState.power_capacity]
 	

@@ -1,202 +1,80 @@
 # Claude Work Queue
 
-Low-risk work for Claude while Codex continues the main procedural story and
-game-loop path. These tasks should be useful whether or not they are completed,
-and they should not block or overlap with current Codex work.
+Fresh handoff list for Claude while Codex is on cooldown.
 
-## Guardrails
+## Current Context
 
-- Do not edit procedural story generation, campaign bible, story-pack
-  persistence, generated-system save/load, event scheduler behavior, or mission
-  generation logic unless Abe explicitly redirects you.
-- Do not change quest objective schemas, inventory transaction rules, gate
-  unlock rules, or generated faction identity rules.
-- Keep each task small and independently commit-ready.
-- If a task uncovers a bug in core systems, document it instead of refactoring
-  around it.
-- Prefer visual polish, UI clarity, metadata, tests, and documentation.
+- Codex just finished the sensor/power-budget step.
+- Codex usually cannot stage/commit/push in this workspace because its sandbox cannot write `.git`. Claude may not have this limitation. If Git works for Claude, it can use the normal project push flow.
+- Do not start a broad refactor. Keep each item small, testable, and easy for Codex to review later.
+- Before broad exploration, read `PROJECT_MAP.md`. Before resuming after another assistant, read `docs/whileYouWasSleeping.md`.
 
-## Visual Effects And Space Feel
+## Do Not Touch Unless Abe Explicitly Redirects
 
-- [x] Review the current nebula/starfield visuals in generated systems and make
-  a short note of any clipping, overpowering brightness, or samey-looking
-  palettes. Avoid changing generation logic unless the fix is purely visual.
-  (Found + fixed a hard nebula clipping seam: the billboard quad showed a
-  straight cutoff because the cloud texture reached its rectangular edge.
-  Feathered the edges in `nebula.gdshader` — purely visual, no generation change.)
-- [x] Add or tune subtle ambient variation for clear-space systems so systems
-  without nebulae still feel intentionally distinct.
-  (Starfield shader now derives per-system star color temperature + a faint
-  galactic haze band from the seed it already receives, with an occasional
-  bolder splash. `starfield.gdshader`, effect-only.)
-- [x] Check player boost/thruster visuals and list any missing polish: exhaust
-  scale, color, cooldown feedback, heat glow, or camera shake. Implement only
-  small effect-only changes.
-- [x] Add a simple visual pass checklist for combat feedback: projectile hit,
-  shield hit, hull hit, ship death, asteroid hit, cargo pickup, and repair use.
-- [x] Look for any obvious visual effects that remain after an object dies or
-  changes scene, similar to the old dead-ship thruster glow issue.
+- Campaign bible generation and story-state persistence.
+- Mission schema/objective contracts.
+- Store demand/provenance rules just added by Codex.
+- Sensor/power-budget tuning just added by Codex, except for clearly documenting issues found during testing.
+- Generated-system save/load or transaction-store behavior.
 
-## UI Polish
+## Best Tasks For Claude
 
-- [x] Audit dock/service buttons for consistent labels, capitalization, spacing,
-  and disabled-state messages.
-- [x] Check Station Lounge layout at common resolutions and note any overlap,
-  clipping, or awkward spacing. Safe fixes are okay; deeper Lounge feature work
-  should stay parked.
-- [x] Review inventory UI labels and empty states so the player understands
-  consumables, cargo, and special items without being docked.
-- [x] Add controller-focus notes for station services, inventory, system map,
-  and Lounge screens: which control should be selected first, next, and back.
-- [x] Check selected-target panel action buttons for obvious active/queued
-  feedback gaps. Do not change navigation behavior; visual state only.
+- [ ] **Manual QA: sensor scan tiers**
+  - Start combat with starter sensors and confirm the panel only shows `THREAT LEVEL: HIGH` or `EXTREME`.
+  - Upgrade sensors once and confirm it shows hull/weapons/engine tiers.
+  - Upgrade sensors twice and confirm it shows full assessment plus warnings when the enemy outclasses the player.
+  - Save screenshots or short notes of any confusing wording.
 
-## Audio And TTS Hygiene
+- [ ] **Manual QA: power budget upgrades**
+  - In the maintenance bay, confirm starter power draw reads `255 / 300 MW`.
+  - Confirm one modest upgrade can fit.
+  - Confirm stacked upgrades can hit the power limit.
+  - Confirm upgrading the powerplant allows the blocked upgrade.
+  - Do not retune numbers unless Abe asks; just document what feels wrong.
 
-- [x] Build a small list of words/faction names that TTS mispronounces or spells
-  out, such as all-caps faction labels.
-- [x] Propose a display-text versus spoken-text cleanup plan so UI can keep
-  faction emphasis while TTS receives natural casing.
-- [x] Audit recent mission dialogue screenshots/logs for repeated "Indy" usage
-  after acceptance lines and document any remaining bad examples.
-- [x] Check whether generated faction names need pronunciation hints or simple
-  spoken-name aliases.
+- [ ] **Combat UI readability pass**
+  - Check the combat sensor panel at 720p, 1080p, and ultrawide.
+  - Look for text clipping, unreadably fast typewriter text, or overlap with the combat wheel.
+  - Safe fixes: label wrapping, panel width/height, font size, or wording length.
 
-## Assets And Metadata
+- [ ] **Attack drone visibility**
+  - Review the attack drone during combat and make it easier to see if the fix is visual-only.
+  - Safe fixes: glow, scale, trail, color, or temporary marker.
+  - Avoid combat damage/rules changes.
 
-- [x] Verify Kaelen mood sprite metadata still matches the intended grid labels,
-  especially the board-turn-in/WTF expression.
-- [x] Add a short asset naming guide for portraits, badges, generated faction
-  images, ship parts, and mood sheets.
-- [x] Review newly added NPC portraits for missing metadata, duplicate names, or
-  confusing folder placement.
-- [x] Review badge assets for obvious duplicates or unreadable tiny icons.
-- [x] Make a simple "asset ready checklist" for generated factions: portrait
-  pool, badge, voice style, ship style, faction color, and name source.
+- [ ] **Damage-number resistance feedback design note**
+  - Create a short implementation note for resisted/effective damage numbers.
+  - Include suggested colors, scale difference, and where the numbers should appear.
+  - Do not implement unless Abe asks during Claude's pass.
 
-## Documentation Cleanup
+- [ ] **Store UI presentation notes**
+  - Review the current buy/sell rows after Codex's economy pass.
+  - Check whether owned-item sell prices are visible only for items in inventory.
+  - Note any places where the UI reveals too much market information.
+  - Safe fixes: spacing, labels, button disabled text.
 
-- [x] Add a short "How to test generated systems visually" checklist to docs.
-- [x] Add a short "Known harmless warnings" note for LF/CRLF Git warnings and
-  other noisy but non-blocking editor output.
-- [x] Review `docs/whileYouWasSleeping.md` and move any durable lessons into the
-  main plan or a permanent notes file, then leave the temporary file alone.
-- [x] Find outdated fallback examples in docs and mark them as old examples so
-  they do not keep being reused as desired tone.
+- [ ] **Known warnings cleanup note**
+  - Add any new harmless warnings from headless runs to the existing docs note if they are not already listed.
+  - Keep real failures separate from noisy shutdown warnings.
 
-## Test And Diagnostics Cleanup
+## Useful Commands
 
-- [x] Investigate the local headless Godot startup crash separately from gameplay
-  changes. Capture exact command, crash text, and whether it happens with a tiny
-  no-op script.
-- [x] Add a note describing which tests are safest to run after visual-only
-  changes.
-- [x] Look for tests that rely on old fixed agent names in generated systems and
-  list them for later cleanup instead of changing mission logic.
-- [x] Review diagnostics output for repeated noisy messages that hide real
-  fallback or generation failures.
+Run Godot tests sequentially with unique log files:
 
-## Gate Travel Visual Upgrade
+```powershell
+$logPath = Join-Path (Get-Location) ".tmp_godot_user\test_logs\parse_check.log"
+.\Godot\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tests/parse_check.gd --log-file $logPath
+```
 
-- [x] Implement the EVE Online–style stargate jump transition from
-  `GateTravelUpgrade.md`. Four-phase sequence: portal charge, warp snap-in,
-  warp corridor tunnel shader, and exit shockwave ripple. Upgrade
-  `jump_transition_fx.tscn` node structure, add polar-swirl tunnel shader,
-  screen-space distortion shader, star streak particles, and rewrite
-  `JumpTransitionFX.gd` with camera FOV tweening and shake. Must be fully
-  encapsulated — no changes to GameRoot, save/load, or player controls.
+Focused tests that currently matter:
 
-## Parking Lot
+```powershell
+$logPath = Join-Path (Get-Location) ".tmp_godot_user\test_logs\upgrade_power.log"
+.\Godot\Godot_v4.6.3-stable_win64_console.exe --headless --path . --script res://tests/economy/run_upgrade_power_tests.gd --log-file $logPath
+```
 
-- [x] Sketch possible light social-sim affordances for the Station Lounge, but
-  keep it as design notes only.
-- [x] Sketch possible boss-like discovery visual treatments and encounter
-  staging without touching gate or mission code.
-- [x] Sketch possible store presentation polish for future purchase-from-store
-  missions without adding the mission type yet.
+## Notes For Codex After Cooldown
 
-## Next Cooldown Batch
-
-These are fresh low-conflict tasks for the next Claude pass. They should not
-touch the main mission generator, campaign bible, gate flow, story-pack logic, or
-generated-system persistence.
-
-### Presentation And UI Clarity
-
-- [x] Add a small visual QA note for generated faction contact screens: portrait
-  fit, badge size, role subtitle, button spacing, and whether the portrait/voice
-  pairing feels plausible.
-- [x] Audit generated faction names in quest UI and map UI for raw IDs such as
-  `GEN_LATCH_PARISH_02` or `FACTION.GENERATED.*`. Document exact screens where
-  player-facing display names still need cleanup.
-- [x] Review contract detail panels for overly technical labels and write a
-  short before/after copy pass. Do not change mission schema or objective data.
-- [ ] Check the selected-target UI at 720p, 1080p, and ultrawide for action
-  button crowding, active-state readability, and boost-button placement.
-- [x] Add simple controller-focus notes for any new Station Lounge screens that
-  were added after the original controller checklist.
-
-### Audio And Spoken Text
-
-- [x] Build a spoken-text cleanup sample list from recent playtests: all-caps
-  faction names, raw generated IDs, weird station names, and repeated player
-  name usage.
-- [x] Document a safe TTS normalization rule set: keep UI text unchanged, but
-  speak display names in title case, strip raw prefixes, and preserve acronyms
-  only when they are meant to be spelled.
-- [x] Review Kokoro voice mappings and note which existing voices read as male,
-  female, or ambiguous so generated portrait/voice pairing can expand beyond the
-  old fixed NPC pool later.
-- [x] Create a small pronunciation-notes doc for generated faction names,
-  station names, ores, and common mission items.
-
-### Visual Effects And Atmosphere
-
-- [ ] Review nebula visibility in three newly generated systems and record
-  whether each system feels distinct, too bright, too empty, or visually noisy.
-- [ ] Check asteroid fields after the rock-model pass for scale readability,
-  mining-laser contact accuracy, and any cases where bobbing looks unnatural.
-- [x] Add a polish note for faction-owned asteroid belts: possible warning buoy,
-  patrol beacon, permit sign, or subtle scanner ring visuals. Notes only.
-- [ ] Review boost visuals from cockpit/player-view distance and list what still
-  needs feedback: burst start, active trail, cooldown, heat hint, or failure
-  state.
-
-### Asset And Metadata Hygiene
-
-- [x] Verify imported portrait metadata can support future generated NPCs:
-  gender tag, age group, role vibe, and any portraits that should be excluded
-  from story use.
-- [x] Make a short list of portrait IDs that look like strong faction contacts,
-  mechanics, smugglers, miners, soldiers, medics, and lounge locals.
-- [x] Check badge readability at the size used in quest screens and map panels.
-  Flag badges that blur into a blob at UI scale.
-- [x] Add a note for generated ship badge placement: minimum readable size,
-  contrast, and avoiding mirrored/rotated placement that looks accidental.
-
-### Documentation And Handoff
-
-- [x] Summarize the latest visual/polish changes from `docs/whileYouWasSleeping.md`
-  into durable docs if they are still only in the changelog.
-- [x] Add a "new campaign smoke test" checklist: Kaelen intro, first gate timer,
-  generated system arrival, local contacts, public board, station map, inventory,
-  and one completed mission.
-- [x] Add a "do not use raw IDs in player text" guideline to the relevant docs,
-  with examples of raw generated IDs versus display names.
-- [ ] Keep a running list of screenshots that show broken or awkward generated
-  content so Codex can turn them into targeted code fixes later.
-
-### Diagnostics And Safe Bug Hunts
-
-- [x] Look for warnings that mention missing portraits, missing voice mappings,
-  fallback dialogue, or raw generated IDs. Capture exact log lines and the screen
-  the player was on.
-- [x] Re-run the quest-gen test scene manually and save only the summary plus
-  the worst 3 examples. Do not edit generation code from this task.
-  (Results in `docs/quest_gen_test_results.md`. 20/20 pass, 0 fallback. Fixed a
-  blocking parse error in the test harness that had stopped it running at all.)
-- [x] Check whether old generated campaign saves carry stale NPC presentation
-  data after fixes. Document expected behavior for old saves versus new
-  campaigns.
-- [x] Make a small list of error messages that should be more player-friendly if
-  they ever appear during a normal playtest.
+- Update `docs/todo.md` after the sensor/power step is pushed.
+- If Claude changes anything, check `docs/whileYouWasSleeping.md` and this file before continuing.
+- Next likely Codex item after this step: either boss tier override or mixed-profile squads, unless Abe redirects.

@@ -32,41 +32,41 @@ const SHIP_BASE_STATS = {
 }
 const UPGRADE_TREE = {
 	"weapons": {
-		"base_power": 50,
+		"base_power": 55,
 		"branches": {
 			"rapid": {
-				2: { "cost_cr": 200, "cost_ore": 50, "power": 60, "stats": {"weapon_cooldown": 0.6, "weapon_damage": 20} },
-				3: { "cost_cr": 400, "cost_ore": 100, "power": 70, "stats": {"weapon_cooldown": 0.45, "weapon_damage": 20} },
-				4: { "cost_cr": 800, "cost_ore": 200, "power": 80, "stats": {"weapon_cooldown": 0.35, "weapon_damage": 20} },
-				5: { "cost_cr": 1600, "cost_ore": 400, "power": 100, "stats": {"weapon_cooldown": 0.25, "weapon_damage": 20, "has_max_rapid_weapon": true} }
+				2: { "cost_cr": 200, "cost_ore": 50, "power": 65, "stats": {"weapon_cooldown": 0.6, "weapon_damage": 20} },
+				3: { "cost_cr": 400, "cost_ore": 100, "power": 75, "stats": {"weapon_cooldown": 0.45, "weapon_damage": 20} },
+				4: { "cost_cr": 800, "cost_ore": 200, "power": 90, "stats": {"weapon_cooldown": 0.35, "weapon_damage": 20} },
+				5: { "cost_cr": 1600, "cost_ore": 400, "power": 110, "stats": {"weapon_cooldown": 0.25, "weapon_damage": 20, "has_max_rapid_weapon": true} }
 			},
 			"heavy": {
-				2: { "cost_cr": 200, "cost_ore": 50, "power": 60, "stats": {"weapon_cooldown": 0.8, "weapon_damage": 30} },
-				3: { "cost_cr": 400, "cost_ore": 100, "power": 70, "stats": {"weapon_cooldown": 0.9, "weapon_damage": 45} },
-				4: { "cost_cr": 800, "cost_ore": 200, "power": 80, "stats": {"weapon_cooldown": 1.0, "weapon_damage": 65} },
-				5: { "cost_cr": 1600, "cost_ore": 400, "power": 100, "stats": {"weapon_cooldown": 1.1, "weapon_damage": 90, "has_max_heavy_weapon": true} }
+				2: { "cost_cr": 200, "cost_ore": 50, "power": 75, "stats": {"weapon_cooldown": 0.8, "weapon_damage": 30} },
+				3: { "cost_cr": 400, "cost_ore": 100, "power": 90, "stats": {"weapon_cooldown": 0.9, "weapon_damage": 45} },
+				4: { "cost_cr": 800, "cost_ore": 200, "power": 110, "stats": {"weapon_cooldown": 1.0, "weapon_damage": 65} },
+				5: { "cost_cr": 1600, "cost_ore": 400, "power": 135, "stats": {"weapon_cooldown": 1.1, "weapon_damage": 90, "has_max_heavy_weapon": true} }
 			}
 		}
 	},
 	"engine": {
-		"base_power": 100,
+		"base_power": 85,
 		"branches": {
 			"speed": {
-				2: { "cost_cr": 250, "cost_ore": 0, "power": 110, "stats": {"engine_speed_mult": 1.2, "acceleration_mult": 1.2} },
-				3: { "cost_cr": 500, "cost_ore": 50, "power": 120, "stats": {"engine_speed_mult": 1.4, "acceleration_mult": 1.4} },
-				4: { "cost_cr": 1000, "cost_ore": 100, "power": 140, "stats": {"engine_speed_mult": 1.6, "acceleration_mult": 1.6} },
-				5: { "cost_cr": 2000, "cost_ore": 200, "power": 160, "stats": {"engine_speed_mult": 1.9, "acceleration_mult": 1.9, "has_max_speed_engine": true} }
+				2: { "cost_cr": 250, "cost_ore": 0, "power": 105, "stats": {"engine_speed_mult": 1.2, "acceleration_mult": 1.2} },
+				3: { "cost_cr": 500, "cost_ore": 50, "power": 125, "stats": {"engine_speed_mult": 1.4, "acceleration_mult": 1.4} },
+				4: { "cost_cr": 1000, "cost_ore": 100, "power": 150, "stats": {"engine_speed_mult": 1.6, "acceleration_mult": 1.6} },
+				5: { "cost_cr": 2000, "cost_ore": 200, "power": 180, "stats": {"engine_speed_mult": 1.9, "acceleration_mult": 1.9, "has_max_speed_engine": true} }
 			},
 			"hauler": {
-				2: { "cost_cr": 250, "cost_ore": 100, "power": 110, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.0, "acceleration_mult": 1.0} },
-				3: { "cost_cr": 500, "cost_ore": 200, "power": 120, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.05, "acceleration_mult": 1.05} },
-				4: { "cost_cr": 1000, "cost_ore": 400, "power": 140, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.1, "acceleration_mult": 1.1} },
-				5: { "cost_cr": 2000, "cost_ore": 800, "power": 160, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.15, "acceleration_mult": 1.15, "has_max_hauler_engine": true, "hull_armor": -10} }
+				2: { "cost_cr": 250, "cost_ore": 100, "power": 100, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.0, "acceleration_mult": 1.0} },
+				3: { "cost_cr": 500, "cost_ore": 200, "power": 115, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.05, "acceleration_mult": 1.05} },
+				4: { "cost_cr": 1000, "cost_ore": 400, "power": 135, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.1, "acceleration_mult": 1.1} },
+				5: { "cost_cr": 2000, "cost_ore": 800, "power": 155, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.15, "acceleration_mult": 1.15, "has_max_hauler_engine": true, "hull_armor": -10} }
 			}
 		}
 	},
 	"shields": {
-		"base_power": 50,
+		"base_power": 15,
 		"branches": {
 			"bulwark": {
 				2: { "cost_cr": 300, "cost_ore": 100, "power": 60, "stats": {"shield_capacity": 50, "shield_regen_rate": 2.0, "shield_regen_delay": 15.0} },
@@ -83,43 +83,52 @@ const UPGRADE_TREE = {
 		}
 	},
 	"mining": {
-		"base_power": 100,
+		"base_power": 80,
 		"branches": {
 			"rapid": {
-				2: { "cost_cr": 150, "cost_ore": 50, "power": 120, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 1.0} },
+				2: { "cost_cr": 150, "cost_ore": 50, "power": 115, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 1.0} },
 				3: { "cost_cr": 300, "cost_ore": 100, "power": 140, "stats": {"mining_cooldown": 0.6, "mining_laser_yield": 1.0} },
-				4: { "cost_cr": 600, "cost_ore": 200, "power": 160, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 1.0} },
-				5: { "cost_cr": 1200, "cost_ore": 400, "power": 180, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 1.0, "has_max_rapid_mining": true} }
+				4: { "cost_cr": 600, "cost_ore": 200, "power": 165, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 1.0} },
+				5: { "cost_cr": 1200, "cost_ore": 400, "power": 195, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 1.0, "has_max_rapid_mining": true} }
 			},
 			"deep": {
-				2: { "cost_cr": 150, "cost_ore": 100, "power": 120, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 2.0} },
+				2: { "cost_cr": 150, "cost_ore": 100, "power": 115, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 2.0} },
 				3: { "cost_cr": 300, "cost_ore": 200, "power": 140, "stats": {"mining_cooldown": 1.5, "mining_laser_yield": 4.0} },
-				4: { "cost_cr": 600, "cost_ore": 400, "power": 160, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 8.0} },
-				5: { "cost_cr": 1200, "cost_ore": 800, "power": 180, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 15.0, "has_max_deep_mining": true} }
+				4: { "cost_cr": 600, "cost_ore": 400, "power": 165, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 8.0} },
+				5: { "cost_cr": 1200, "cost_ore": 800, "power": 195, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 15.0, "has_max_deep_mining": true} }
 			}
 		}
 	},
 	"cargo": {
-		"base_power": 0,
+		"base_power": 5,
 		"branches": {
 			"standard": {
-				2: { "cost_cr": 100, "cost_ore": 100, "power": 0, "stats": {"cargo_max_m3": 150.0, "ore_bank_max": 3000.0} },
-				3: { "cost_cr": 200, "cost_ore": 200, "power": 0, "stats": {"cargo_max_m3": 250.0, "ore_bank_max": 8000.0} },
-				4: { "cost_cr": 400, "cost_ore": 400, "power": 0, "stats": {"cargo_max_m3": 400.0, "ore_bank_max": 20000.0} },
-				5: { "cost_cr": 800, "cost_ore": 800, "power": 0, "stats": {"cargo_max_m3": 600.0, "ore_bank_max": 50000.0} }
+				2: { "cost_cr": 100, "cost_ore": 100, "power": 10, "stats": {"cargo_max_m3": 150.0, "ore_bank_max": 3000.0} },
+				3: { "cost_cr": 200, "cost_ore": 200, "power": 15, "stats": {"cargo_max_m3": 250.0, "ore_bank_max": 8000.0} },
+				4: { "cost_cr": 400, "cost_ore": 400, "power": 20, "stats": {"cargo_max_m3": 400.0, "ore_bank_max": 20000.0} },
+				5: { "cost_cr": 800, "cost_ore": 800, "power": 25, "stats": {"cargo_max_m3": 600.0, "ore_bank_max": 50000.0} }
 			}
 		}
 	},
 	"storage": {
-		"base_power": 0,
+		"base_power": 5,
 		"branches": {
 			"standard": {
-				2: { "cost_cr": 200, "cost_ore": 100, "power": 0, "stats": {"inventory_slots": 10} },
-				3: { "cost_cr": 600, "cost_ore": 300, "power": 0, "stats": {"inventory_slots": 12} },
-				4: { "cost_cr": 1800, "cost_ore": 900, "power": 0, "stats": {"inventory_slots": 14} },
-				5: { "cost_cr": 5400, "cost_ore": 2700, "power": 0, "stats": {"inventory_slots": 16} },
-				6: { "cost_cr": 16000, "cost_ore": 8000, "power": 0, "stats": {"inventory_slots": 18} },
-				7: { "cost_cr": 48000, "cost_ore": 24000, "power": 0, "stats": {"inventory_slots": 20} }
+				2: { "cost_cr": 200, "cost_ore": 100, "power": 8, "stats": {"inventory_slots": 10} },
+				3: { "cost_cr": 600, "cost_ore": 300, "power": 12, "stats": {"inventory_slots": 12} },
+				4: { "cost_cr": 1800, "cost_ore": 900, "power": 16, "stats": {"inventory_slots": 14} },
+				5: { "cost_cr": 5400, "cost_ore": 2700, "power": 20, "stats": {"inventory_slots": 16} },
+				6: { "cost_cr": 16000, "cost_ore": 8000, "power": 25, "stats": {"inventory_slots": 18} },
+				7: { "cost_cr": 48000, "cost_ore": 24000, "power": 30, "stats": {"inventory_slots": 20} }
+			}
+		}
+	},
+	"sensors": {
+		"base_power": 10,
+		"branches": {
+			"standard": {
+				2: { "cost_cr": 300, "cost_ore": 80, "power": 20, "stats": {"sensor_tier": 1} },
+				3: { "cost_cr": 900, "cost_ore": 240, "power": 35, "stats": {"sensor_tier": 2} }
 			}
 		}
 	},
@@ -1482,6 +1491,7 @@ var current_upgrades: Dictionary = {
 	"mining": {"tier": 1, "path": "base"},
 	"cargo": {"tier": 1, "path": "base"},
 	"storage": {"tier": 1, "path": "base"},
+	"sensors": {"tier": 1, "path": "base"},
 	"power": {"tier": 1, "path": "base"}
 }
 
@@ -1499,6 +1509,7 @@ var acceleration_mult: float = SHIP_BASE_STATS["acceleration_mult"]
 var ignore_cargo_mass: bool = SHIP_BASE_STATS["ignore_cargo_mass"]
 var hull_armor: float = SHIP_BASE_STATS["hull_armor"]
 var player_max_health: float = SHIP_BASE_STATS["max_health"]
+var sensor_tier: int = 0
 
 # Max Tier Drawback Flags
 var has_max_rapid_weapon: bool = false
@@ -2000,6 +2011,7 @@ func reset_for_restart():
 		"mining": {"tier": 1, "path": "base"},
 		"cargo": {"tier": 1, "path": "base"},
 		"storage": {"tier": 1, "path": "base"},
+		"sensors": {"tier": 1, "path": "base"},
 		"power": {"tier": 1, "path": "base"}
 	}
 	apply_upgrade_stats()
@@ -2015,6 +2027,7 @@ func reset_for_restart():
 	ignore_cargo_mass = SHIP_BASE_STATS["ignore_cargo_mass"]
 	hull_armor = SHIP_BASE_STATS["hull_armor"]
 	player_max_health = SHIP_BASE_STATS["max_health"]
+	sensor_tier = 0
 	
 	has_max_rapid_weapon = false
 	has_max_heavy_weapon = false
@@ -2078,6 +2091,7 @@ func apply_upgrade_stats():
 	inventory_slots = SHIP_BASE_STATS["inventory_slots"]
 	ore_bank_max = SHIP_BASE_STATS["ore_bank_max"]
 	power_capacity = 300.0
+	sensor_tier = 0
 
 	has_max_rapid_weapon = false
 	has_max_heavy_weapon = false

@@ -23,8 +23,8 @@ _Active task list. Update this file at the end of every session._
 
 ## Combat — Unlocked by unified system
 
-- [ ] **Pre-combat sensor scan** — at `combat_started`, typewriter-decode target's tier loadout in sensor panel. Tier 0 sensor = "THREAT LEVEL: HIGH / EXTREME", Tier 1 = individual stats ("Hull T2 / Weapons T3 / Engine T1"), Tier 2 = full assessment + warning ("Weapon systems exceed your fit by 2 tiers"). Needs sensor_tier on PlayerShip.
-- [ ] **Sensor upgrade item** — add sensor_tier (0–2) to PlayerShip upgrades + store; gates how much pre-combat intel the player sees.
+- [x] **Pre-combat sensor scan** — at `combat_started`, typewriter-decode target's tier loadout in sensor panel. Tier 0 sensor = "THREAT LEVEL: HIGH / EXTREME", Tier 1 = individual stats ("Hull T2 / Weapons T3 / Engine T1"), Tier 2 = full assessment + warning ("Weapon systems exceed your fit by 2 tiers").
+- [x] **Sensor upgrade path** — adds `sensor_tier` (0–2) through maintenance-bay ship upgrades; gates how much pre-combat intel the player sees. `sensor_cluster` remains a store ship-part/trade item for now rather than a required install component.
 - [x] **Difficulty scaling via profiles** — done; all spawn paths call `apply_faction_profile()` with tier-matched unknown faction or named known faction.
 - [ ] **Boss as tier override** — story-triggered boss = `apply_faction_profile(faction, tier_override: 3)` instead of hardcoded stats; StoryManager trigger hook becomes trivial.
 - [ ] **Mixed-profile squads** — squad fights can mix profiles (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
