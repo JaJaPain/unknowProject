@@ -53,6 +53,9 @@ var _dock_count_session: int = 0
 
 func _ready() -> void:
 	GlobalState.player_kill.connect(_on_ship_destroyed)
+	# Fire starting-system handoff gen once Ollama is actually ready.
+	# init_story_state() fires before Ollama is up, so the batch would fail.
+	LLMInterface.llm_connection_established.connect(_on_llm_ready, CONNECT_ONE_SHOT)
 
 
 func reset_for_restart() -> void:
@@ -60,6 +63,11 @@ func reset_for_restart() -> void:
 	_kill_count_session = 0
 	_dock_count_session = 0
 	_sq_debug_fired = false
+
+
+func _on_llm_ready(_model_name: String) -> void:
+	# Ollama is up and models are confirmed. Safe to fire the starting-system pool now.
+	_trigger_handoff_pool_for_system("system.start")
 
 
 # ── Phase B: Story state API ──────────────────────────────────────────────────
@@ -73,8 +81,7 @@ func init_story_state(campaign_path: String) -> void:
 		story_state = StoryStateStoreType._default_state()
 	_handoff_store = KaelenHandoffStoreType.open(campaign_path)
 	_push_context_to_llm()
-	# Pre-generate handoff pool for the starting system agents on first load.
-	_trigger_handoff_pool_for_system("system.start")
+	# Handoff pool gen deferred to _on_llm_ready — Ollama isn't up yet here.
 
 func clear_story_state() -> void:
 	_story_state_store = null
