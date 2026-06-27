@@ -13,9 +13,9 @@
             "category": "consumable",
             "base_price": 30,
             "stack_max": 5,
-            "restock_interval_minutes": 90,
-            "restock_quantity": 2,
-            "max_stock": 4,
+            "restock_interval_minutes": 5,
+            "restock_quantity": 1,
+            "max_stock": 5,
             "icon_sheet": "tactical",
             "icon_cell": [
                 0,

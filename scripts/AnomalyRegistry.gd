@@ -5,6 +5,9 @@ static var _shared = null
 var _activated_ids: Array = []
 var _last_spawned_flavors: Array = []  # flavor_type strings from last generate call
 
+const MIN_ANOMALIES := 0
+const MAX_ANOMALIES := 2
+
 static func shared() -> Object:
 	if _shared == null:
 		_shared = new()
@@ -14,10 +17,11 @@ static func reset() -> void:
 	_shared = null
 
 
-# Spawn 1–3 anomaly nodes at random positions in the system.
+# Spawn 0-2 deterministic anomaly nodes at stable positions in the system.
 func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 	_last_spawned_flavors.clear()
-	var count: int = randi_range(0, 2)
+	var rng := _rng_for_system(system_id)
+	var count: int = rng.randi_range(MIN_ANOMALIES, MAX_ANOMALIES)
 
 	# story_forced_anomaly: StoryManager can plant a guaranteed anomaly of a
 	# specific flavor. Only fires when system_id matches (or is left blank).
@@ -30,18 +34,20 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 
 	print("[AnomalyRegistry] Spawning %d anomalies for system '%s'" % [count, system_id])
 	var presets: Array = _fallback_table()
-	presets.shuffle()
+	_shuffle_with_rng(presets, rng)
 	for i in range(count):
 		var data: Dictionary = presets[i % presets.size()].duplicate(true)
-		data["anomaly_id"] = "%s_%d" % [system_id, i]
+		data["anomaly_id"] = _anomaly_id(system_id, i)
 		if data["anomaly_id"] in _activated_ids:
 			continue
 		var node: StaticBody3D = StaticBody3D.new()
 		node.set_script(load("res://scripts/SpaceAnomaly.gd"))
 		node.name = "Anomaly_%d" % i
-		node.anomaly_data = data
+		node.set("persistent_id", str(data["anomaly_id"]))
+		node.set("anomaly_data", data)
+		node.position = _random_position(rng)
 		scene_parent.add_child(node)
-		node.global_position = _random_position()
+		_request_llm_event_for_node(system_id, node, data)
 		_last_spawned_flavors.append(str(data.get("flavor_type", "")))
 
 	if has_forced:
@@ -59,9 +65,11 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 				var fnode: StaticBody3D = StaticBody3D.new()
 				fnode.set_script(load("res://scripts/SpaceAnomaly.gd"))
 				fnode.name = "Anomaly_Forced"
-				fnode.anomaly_data = forced_preset
+				fnode.set("persistent_id", str(forced_preset["anomaly_id"]))
+				fnode.set("anomaly_data", forced_preset)
+				fnode.position = _random_position(rng)
 				scene_parent.add_child(fnode)
-				fnode.global_position = _random_position()
+				_request_llm_event_for_node(system_id, fnode, forced_preset)
 				_last_spawned_flavors.append(forced_flavor)
 				print("[AnomalyRegistry] Planted story anomaly '%s' for system '%s'" % [forced_flavor, system_id])
 		GlobalState.story_forced_anomaly = {}
@@ -129,10 +137,49 @@ func get_arrival_rumor() -> Dictionary:
 
 # ── private ───────────────────────────────────────────────────────────────────
 
-func _random_position() -> Vector3:
-	var angle: float = randf() * TAU
-	var dist: float = randf_range(500.0, 1200.0)
-	return Vector3(cos(angle) * dist, randf_range(-20.0, 20.0), sin(angle) * dist)
+func _rng_for_system(system_id: String) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	var seed_source := "%s|%d|anomalies" % [system_id, GlobalState.campaign_seed]
+	rng.seed = abs(hash(seed_source))
+	return rng
+
+
+func _anomaly_id(system_id: String, index: int) -> String:
+	return "anomaly.%s.%d" % [system_id.replace(":", "_"), index]
+
+
+func _random_position(rng: RandomNumberGenerator) -> Vector3:
+	var angle: float = rng.randf() * TAU
+	var dist: float = rng.randf_range(500.0, 1200.0)
+	return Vector3(cos(angle) * dist, rng.randf_range(-20.0, 20.0), sin(angle) * dist)
+
+
+func _shuffle_with_rng(items: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(items.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = items[i]
+		items[i] = items[j]
+		items[j] = tmp
+
+
+func _request_llm_event_for_node(
+	system_id: String,
+	node: StaticBody3D,
+	fallback_data: Dictionary
+) -> void:
+	if not is_instance_valid(LLMInterface) \
+			or not LLMInterface.has_method("fetch_anomaly_event"):
+		return
+	var anomaly_id := str(fallback_data.get("anomaly_id", ""))
+	LLMInterface.fetch_anomaly_event(system_id, fallback_data, func(generated: Dictionary) -> void:
+		if generated.is_empty() or not is_instance_valid(node):
+			return
+		if str(node.get("persistent_id")) != anomaly_id:
+			return
+		generated["anomaly_id"] = anomaly_id
+		node.set("anomaly_data", generated)
+		print("[AnomalyRegistry] LLM anomaly event ready for '%s'" % anomaly_id)
+	)
 
 
 func _fallback_table() -> Array:
@@ -194,7 +241,12 @@ func _fallback_table() -> Array:
 			"approach_lines": ["Encrypted signal. Flight recorder class."],
 			"actions": [
 				{ "type": "emit_chat", "sender": "Black Box", "lines": ["RECORD 04: ...coordinates confirmed... do not transmit...", "RECORD 05: ...if recovered, find CHORUS-9..."], "delay": 1.5 },
-				{ "type": "grant_item", "item_id": "encrypted_core" },
+				{
+					"type": "grant_data_core",
+					"name": "Encrypted Black Box Core",
+					"description": "A locked flight recorder recovered from a drifting black box.",
+					"payout_credits": 135,
+				},
 				{ "type": "grant_item", "item_id": "data_chip" },
 			]
 		},

@@ -4783,3 +4783,198 @@ func request_kaelen_handoff_batch(
 		http.queue_free()
 		push_warning("[LLMInterface] Handoff batch: request() failed err=%d" % err)
 		callback.call([])
+
+
+func fetch_anomaly_event(
+	system_id: String,
+	fallback_data: Dictionary,
+	callback: Callable,
+	_attempts_left: int = 1
+) -> void:
+	var local_factions: Array = GlobalState.get_current_system_minor_factions()
+	if local_factions.is_empty():
+		local_factions = GlobalState.MINOR_FACTIONS.keys()
+	var faction_labels: Array = []
+	for f in local_factions:
+		if f is Dictionary:
+			faction_labels.append(str(f.get("id", f.get("faction", ""))))
+		else:
+			faction_labels.append(str(f))
+	var prompt := (
+		"You design one small space anomaly event for SpaceGame. "
+		+ "Current system: %s. Local minor factions: %s. "
+		+ "Fallback seed event: %s. "
+		+ "Write a fresh event using ONLY this action toolkit: "
+		+ "emit_chat, grant_ore, grant_credits, grant_item, grant_data_core, spawn_hostiles, damage_player. "
+		+ "Caps: grant_ore 0-30, grant_credits 0-150, grant_item one known item, "
+		+ "grant_data_core payout_credits 40-250, spawn_hostiles count 1-3, damage_player 0-20. "
+		+ "Use short chat lines. Do not invent UI, quests, shops, docking, choices, or new mechanics. "
+		+ "Respond ONLY as valid JSON with keys name, description, flavor_type, approach_lines, actions."
+	) % [system_id, ", ".join(faction_labels), JSON.stringify(fallback_data)]
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("background_chatter")
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempts_left > 0:
+				fetch_anomaly_event(system_id, fallback_data, callback, _attempts_left - 1)
+			else:
+				callback.call({})
+			return
+		var generated := _parse_anomaly_event_response(body.get_string_from_utf8())
+		if generated.is_empty():
+			if _attempts_left > 0:
+				fetch_anomaly_event(system_id, fallback_data, callback, _attempts_left - 1)
+			else:
+				callback.call({})
+			return
+		callback.call(generated)
+	)
+	var payload := build_generation_body(
+		"background_chatter",
+		prompt,
+		"json",
+		{"temperature": 0.95, "seed": randi()}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({})
+
+
+func _parse_anomaly_event_response(response_text: String) -> Dictionary:
+	var outer_json := JSON.new()
+	if outer_json.parse(response_text) != OK:
+		return {}
+	var outer_data = outer_json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		return {}
+	var inner_str: String = str(outer_data["response"]).strip_edges()
+	if inner_str.begins_with("```"):
+		var end_idx := inner_str.find("\n", 3)
+		if end_idx != -1:
+			inner_str = inner_str.substr(end_idx + 1)
+		if inner_str.ends_with("```"):
+			inner_str = inner_str.substr(0, inner_str.length() - 3)
+		inner_str = inner_str.strip_edges()
+	var inner_json := JSON.new()
+	if inner_json.parse(inner_str) != OK:
+		return {}
+	var data = inner_json.get_data()
+	if not data is Dictionary:
+		return {}
+	return _sanitize_anomaly_event(data)
+
+
+func _sanitize_anomaly_event(data: Dictionary) -> Dictionary:
+	var name := str(data.get("name", "")).strip_edges()
+	if name.is_empty() or name.contains("["):
+		return {}
+	var flavor := str(data.get("flavor_type", "unknown")).strip_edges().to_lower()
+	if flavor not in ["military", "civilian", "pirate", "scientific", "unknown"]:
+		flavor = "unknown"
+	var approach_lines: Array = []
+	if data.get("approach_lines", []) is Array:
+		for line in data["approach_lines"]:
+			var text := str(line).strip_edges()
+			if not text.is_empty() and not text.contains("["):
+				approach_lines.append(text.left(160))
+			if approach_lines.size() >= 3:
+				break
+	var actions := _sanitize_anomaly_actions(data.get("actions", []))
+	if actions.is_empty():
+		return {}
+	return {
+		"name": name.left(60),
+		"description": str(data.get("description", "")).strip_edges().left(180),
+		"flavor_type": flavor,
+		"approach_lines": approach_lines,
+		"actions": actions,
+	}
+
+
+func _sanitize_anomaly_actions(raw_actions: Variant) -> Array:
+	if not raw_actions is Array:
+		return []
+	var valid_items := [
+		"repair_kit", "shield_cell", "scanner_probe", "salvage_drone",
+		"flare_decoy", "fuel_booster", "emp_charge", "target_painter",
+		"data_chip", "kinetic_ammo", "thermal_ammo", "explosive_ammo",
+		"energy_ammo", "damaged_transponder", "encrypted_core",
+		"antimatter_pod",
+	]
+	var valid_factions: Array = GlobalState.MINOR_FACTIONS.keys()
+	var output: Array = []
+	for raw in raw_actions:
+		if not raw is Dictionary:
+			continue
+		var t := str(raw.get("type", "")).strip_edges()
+		var action: Dictionary = {}
+		match t:
+			"emit_chat":
+				var lines: Array = []
+				if raw.get("lines", []) is Array:
+					for line in raw["lines"]:
+						var text := str(line).strip_edges()
+						if not text.is_empty() and not text.contains("["):
+							lines.append(text.left(180))
+						if lines.size() >= 3:
+							break
+				if lines.is_empty():
+					continue
+				action = {
+					"type": "emit_chat",
+					"sender": str(raw.get("sender", "Unknown Signal")).strip_edges().left(40),
+					"lines": lines,
+					"delay": clampf(float(raw.get("delay", 0.0)), 0.0, 8.0),
+				}
+			"grant_ore":
+				action = {
+					"type": "grant_ore",
+					"amount": clampf(float(raw.get("amount", 10.0)), 0.0, 30.0),
+				}
+			"grant_credits":
+				action = {
+					"type": "grant_credits",
+					"amount": clampi(int(raw.get("amount", 20)), 0, 150),
+				}
+			"grant_item":
+				var item_id := str(raw.get("item_id", ""))
+				if item_id not in valid_items:
+					continue
+				action = {"type": "grant_item", "item_id": item_id}
+			"grant_data_core":
+				action = {
+					"type": "grant_data_core",
+					"name": str(raw.get("name", "Encrypted Anomaly Core")).strip_edges().left(60),
+					"description": str(raw.get("description", "Recovered anomaly data core.")).strip_edges().left(180),
+					"payout_credits": clampi(int(raw.get("payout_credits", 120)), 40, 250),
+				}
+			"spawn_hostiles":
+				var faction := str(raw.get("faction", "reavers"))
+				if faction not in valid_factions:
+					faction = "reavers"
+				action = {
+					"type": "spawn_hostiles",
+					"faction": faction,
+					"count": clampi(int(raw.get("count", 1)), 1, 3),
+					"delay": clampf(float(raw.get("delay", 2.0)), 0.0, 12.0),
+					"spawn_chat": str(raw.get("spawn_chat", "")).strip_edges().left(120),
+				}
+			"damage_player":
+				action = {
+					"type": "damage_player",
+					"amount": clampf(float(raw.get("amount", 5.0)), 0.0, 20.0),
+				}
+			_:
+				continue
+		output.append(action)
+		if output.size() >= 5:
+			break
+	return output

@@ -1296,7 +1296,13 @@ func add_ore(amount: float) -> float:
 
 # Accept a special cargo item. Only valid when the hold is empty.
 # Returns true if accepted, false if the hold wasn't empty.
-func accept_special(item_name: String, description: String, source: String, destination: String = "") -> bool:
+func accept_special(
+	item_name: String,
+	description: String,
+	source: String,
+	destination: String = "",
+	metadata: Dictionary = {}
+) -> bool:
 	if not can_accept_special():
 		return false
 	cargo_special = {
@@ -1305,6 +1311,8 @@ func accept_special(item_name: String, description: String, source: String, dest
 		"source": source,
 		"destination": destination,
 	}
+	for key in metadata.keys():
+		cargo_special[key] = metadata[key]
 	cargo_type = CargoType.SPECIAL
 	cargo_changed.emit(cargo)
 	return true

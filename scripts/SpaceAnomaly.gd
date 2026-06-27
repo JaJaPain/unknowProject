@@ -1,5 +1,7 @@
 ﻿extends StaticBody3D
 
+const AnomalyRegistryType := preload("res://scripts/AnomalyRegistry.gd")
+
 const VALID_ITEMS := [
 	"repair_kit", "shield_cell", "scanner_probe", "salvage_drone", "flare_decoy",
 	"fuel_booster", "emp_charge", "target_painter", "data_chip", "kinetic_ammo",
@@ -7,6 +9,7 @@ const VALID_ITEMS := [
 	"encrypted_core", "antimatter_pod",
 ]
 
+var persistent_id: String = ""
 var anomaly_data: Dictionary = {}
 var _activated: bool = false
 var _action_index: int = 0
@@ -19,6 +22,12 @@ const ACTIVATION_RANGE := 50.0
 
 func _ready() -> void:
 	add_to_group("anomaly")
+	add_to_group(WorldIdentity.IDENTITY_GROUP)
+	add_to_group(WorldIdentity.STATEFUL_GROUP)
+	if persistent_id.is_empty():
+		persistent_id = str(anomaly_data.get("anomaly_id", ""))
+	if persistent_id.is_empty():
+		push_error("[SpaceAnomaly] Missing persistent_id for '%s'." % name)
 	GlobalState.active_system_entities.append(self)
 	GlobalState.entities_changed.emit()
 	_build_visuals()
@@ -82,6 +91,7 @@ func _physics_process(delta: float) -> void:
 func _activate() -> void:
 	_activated = true
 	_action_index = 0
+	_record_persistent_state()
 	_run_next_action()
 
 
@@ -128,6 +138,8 @@ func _execute_action(action: Dictionary) -> void:
 				GlobalState.emit_chatter("SYSTEM", "Item recovered: %s." % item_id.replace("_", " ").capitalize(), Color(0.0, 0.9, 0.9))
 			else:
 				push_warning("[SpaceAnomaly] Unknown item_id '%s' — skipped." % item_id)
+		"grant_data_core":
+			_grant_data_core(action)
 		"spawn_hostiles":
 			var faction: String = str(action.get("faction", "reavers"))
 			var count: int = clampi(int(action.get("count", 1)), 1, 3)
@@ -146,6 +158,42 @@ func _execute_action(action: Dictionary) -> void:
 		_:
 			if not t.is_empty():
 				push_warning("[SpaceAnomaly] Unknown action type '%s' — skipped." % t)
+
+
+func _grant_data_core(action: Dictionary) -> void:
+	var core_name: String = str(action.get("name", "Encrypted Anomaly Core"))
+	var payout: int = clampi(int(action.get("payout_credits", 120)), 40, 250)
+	var description: String = str(
+		action.get(
+			"description",
+			"Recovered from %s. Jenna can probably crack it open for a fee someone else pays." % anomaly_data.get("name", "an anomaly")
+		)
+	)
+	var source: String = str(action.get("source", anomaly_data.get("name", "Space Anomaly")))
+	var destination: String = str(action.get("destination", "Jenna Kross / Grease Monkeys"))
+	var accepted := GlobalState.accept_special(
+		core_name,
+		description,
+		source,
+		destination,
+		{
+			"cargo_kind": "anomaly_data_core",
+			"payout_credits": payout,
+			"turn_in_npc": "Jenna Kross",
+		}
+	)
+	if accepted:
+		GlobalState.emit_chatter(
+			"SYSTEM",
+			"Recovered %s. Deliver it to a maintenance bay for analysis." % core_name,
+			Color(0.0, 0.9, 0.9)
+		)
+	else:
+		GlobalState.emit_chatter(
+			"SYSTEM",
+			"Data core detected, but your hold is occupied.",
+			Color(1.0, 0.5, 0.2)
+		)
 
 
 func _spawn_hostiles(faction: String, count: int) -> void:
@@ -170,9 +218,61 @@ func _spawn_hostiles(faction: String, count: int) -> void:
 
 
 func _finish() -> void:
+	_activated = true
+	AnomalyRegistryType.shared().mark_activated(get_world_id())
+	_record_persistent_state()
 	GlobalState.active_system_entities.erase(self)
 	GlobalState.entities_changed.emit()
 	# Fade out light before freeing
 	if _light and is_instance_valid(_light):
 		_light.light_energy = 0.0
 	queue_free()
+
+
+func get_persistent_id() -> String:
+	return get_world_id()
+
+
+func get_world_id() -> String:
+	return persistent_id
+
+
+func get_world_type_id() -> String:
+	return "entity_type.anomaly"
+
+
+func get_state_schema_version() -> int:
+	return 1
+
+
+func capture_state() -> Dictionary:
+	return {
+		"type": "anomaly",
+		"activated": _activated,
+		"anomaly_data": anomaly_data.duplicate(true),
+		"position": [global_position.x, global_position.y, global_position.z],
+	}
+
+
+func restore_state(state: Dictionary) -> void:
+	if state.has("anomaly_data") and state["anomaly_data"] is Dictionary:
+		anomaly_data = state["anomaly_data"].duplicate(true)
+	var saved_position: Array = state.get("position", [])
+	if saved_position.size() == 3:
+		global_position = Vector3(
+			float(saved_position[0]),
+			float(saved_position[1]),
+			float(saved_position[2])
+		)
+	_activated = bool(state.get("activated", false))
+	if _activated:
+		AnomalyRegistryType.shared().mark_activated(get_world_id())
+		GlobalState.active_system_entities.erase(self)
+		GlobalState.entities_changed.emit()
+		queue_free()
+
+
+func _record_persistent_state() -> void:
+	var game_root := get_tree().current_scene
+	if game_root and game_root.has_method("record_persistent_entity_state"):
+		game_root.record_persistent_entity_state(self)

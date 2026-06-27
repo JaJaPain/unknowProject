@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_get_all_returns_copy()
 	_test_clear()
 	_test_save_load_roundtrip()
+	_test_origin_tracking_for_trade()
 	_test_signal_emitted()
 	_test_slot_limit()
 	_test_stack_max()
@@ -108,6 +109,20 @@ func _test_save_load_roundtrip() -> void:
 	_expect(restored.get_quantity("repair_kit") == 3, "repair_kit should roundtrip")
 	_expect(restored.get_quantity("emp_charge") == 1, "emp_charge should roundtrip")
 	_expect(restored.get_quantity("shield_cell") == 0, "absent item should be 0")
+
+
+func _test_origin_tracking_for_trade() -> void:
+	var inv = PlayerInv.new()
+	_expect(inv.add("data_chip", 2, 10, "system.a"), "add with origin should succeed")
+	_expect(inv.add("data_chip", 1, 10, "system.b"), "second origin should stack")
+	_expect(inv.get_origin_quantity("data_chip", "system.a") == 2, "system.a origin qty")
+	_expect(inv.best_origin_for_sale("data_chip", "system.a") == "system.b", "Should prefer imported origin")
+	var sold_origin := inv.remove_for_sale("data_chip", "system.a")
+	_expect(sold_origin == "system.b", "Sold origin should be imported")
+	_expect(inv.get_quantity("data_chip") == 2, "Total should decrease after sale")
+	var data = inv.to_dict()
+	var restored = PlayerInv.from_dict(data)
+	_expect(restored.get_origin_quantity("data_chip", "system.a") == 2, "Origins should roundtrip")
 
 
 func _test_signal_emitted() -> void:

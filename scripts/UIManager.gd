@@ -3437,7 +3437,12 @@ func _render_dock_submenu() -> void:
 
 		var station_quest: Dictionary = QuestManager.get_pickup_special_data()
 		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("picked_up", false)
-		deliver_part_btn.visible = can_deliver
+		var can_deliver_anomaly_core := _has_anomaly_data_core_cargo()
+		deliver_part_btn.visible = can_deliver or can_deliver_anomaly_core
+		if can_deliver_anomaly_core:
+			deliver_part_btn.text = "Turn In Data Core"
+		else:
+			deliver_part_btn.text = "Deliver Part"
 		
 		back_to_services_btn.visible = true
 		if dock_background:
@@ -4419,7 +4424,9 @@ func _on_store_pressed() -> void:
 		public_board_panel.visible = false
 	if inventory_panel:
 		inventory_panel.visible = false
-	var station_id := GlobalState.current_system_id
+	var station_id := _current_station_contact_id()
+	if station_id.is_empty():
+		station_id = GlobalState.current_system_id
 	var reg = StoreRegistryScript.shared()
 	var stores = reg.get_stores_for_station(station_id)
 	if stores.is_empty():
@@ -4671,7 +4678,34 @@ func _render_store_items() -> void:
 		var price: int = store.get_price(item_id, rep_tier)
 		var stock: int = store.get_stock(item_id)
 		var owned: int = GlobalState.inventory.get_quantity(item_id)
-		var row := _build_store_row(item_id, item_def, price, stock, owned)
+		var sell_origin: String = GlobalState.inventory.best_origin_for_sale(
+			item_id,
+			_trade_origin_id()
+		)
+		var can_sell: bool = owned > 0 and not sell_origin.is_empty() \
+			and store.get_sell_price(
+				item_id,
+				rep_tier,
+				sell_origin,
+				_trade_origin_id()
+			) > 0
+		var sell_price: int = 0
+		if can_sell:
+			sell_price = store.get_sell_price(
+				item_id,
+				rep_tier,
+				sell_origin,
+				_trade_origin_id()
+			)
+		var row := _build_store_row(
+			item_id,
+			item_def,
+			price,
+			stock,
+			owned,
+			can_sell,
+			sell_price
+		)
 		store_list.add_child(row)
 
 
@@ -4699,7 +4733,15 @@ func _get_reputation_tier() -> String:
 	return "sworn enemy"
 
 
-func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: int) -> HBoxContainer:
+func _build_store_row(
+	item_id: String,
+	item_def,
+	price: int,
+	stock: int,
+	owned: int,
+	can_sell: bool,
+	sell_price: int
+) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -4713,6 +4755,13 @@ func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: 
 	buy_btn.disabled = not can_buy
 	buy_btn.pressed.connect(_on_store_buy.bind(item_id))
 	row.add_child(buy_btn)
+
+	var sell_btn := Button.new()
+	sell_btn.text = "Sell %d SC" % sell_price if can_sell else "Sell"
+	sell_btn.custom_minimum_size.x = 50
+	sell_btn.disabled = not can_sell
+	sell_btn.pressed.connect(_on_store_sell.bind(item_id))
+	row.add_child(sell_btn)
 
 	var icon := _build_item_icon(item_def)
 	if icon:
@@ -4774,8 +4823,36 @@ func _on_store_buy(item_id: String) -> void:
 	if not store.purchase(item_id):
 		return
 	GlobalState.spend_credits(price)
-	GlobalState.inventory.add(item_id, 1, stack_max)
+	GlobalState.inventory.add(item_id, 1, stack_max, _trade_origin_id())
 	_render_store_items()
+
+
+func _on_store_sell(item_id: String) -> void:
+	var reg = StoreRegistryScript.shared()
+	var store = reg.get_store(_store_current_id)
+	if store == null:
+		return
+	var rep_tier := _get_reputation_tier()
+	var destination_origin: String = _trade_origin_id()
+	var origin: String = GlobalState.inventory.best_origin_for_sale(item_id, destination_origin)
+	if origin.is_empty():
+		return
+	var price: int = store.get_sell_price(item_id, rep_tier, origin, destination_origin)
+	if price <= 0:
+		return
+	var sold_origin: String = GlobalState.inventory.remove_for_sale(item_id, destination_origin)
+	if sold_origin.is_empty():
+		return
+	store.buy_from_player(item_id, 1)
+	GlobalState.add_credits(price)
+	var item_def = store.get_item_def(item_id)
+	var item_name: String = item_def.display_name if item_def else item_id
+	show_hud_warning("Sold %s for %d SC." % [item_name, price])
+	_render_store_items()
+
+
+func _trade_origin_id() -> String:
+	return GlobalState.current_system_id
 
 
 func _on_public_board_offer_accept(index: int) -> void:
@@ -5630,6 +5707,9 @@ const FALLBACK_MECHANIC_THANKS: Array = [
 ]
 
 func _on_deliver_part_pressed() -> void:
+	if _has_anomaly_data_core_cargo():
+		_turn_in_anomaly_data_core()
+		return
 	if not QuestManager.is_quest_active() or not QuestManager.is_quest_completed():
 		return
 	var part_name: String = QuestManager.active_quest.get("part_name", "(unknown)")
@@ -5642,6 +5722,34 @@ func _on_deliver_part_pressed() -> void:
 	SpeechService.play(line, "voice.jenna_kross.v1")
 	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
 	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
+	_render_dock_submenu()
+
+
+func _has_anomaly_data_core_cargo() -> bool:
+	return GlobalState.cargo_type == GlobalState.CargoType.SPECIAL \
+		and str(GlobalState.cargo_special.get("cargo_kind", "")) == "anomaly_data_core"
+
+
+func _turn_in_anomaly_data_core() -> void:
+	var core_name: String = str(GlobalState.cargo_special.get("name", "the data core"))
+	var payout: int = clampi(int(GlobalState.cargo_special.get("payout_credits", 120)), 0, 500)
+	GlobalState.add_credits(payout)
+	GlobalState.clear_cargo()
+	AudioManager.play_sell_ore()
+	var line_options := [
+		"That's not standard salvage. Which is why I'm buying it. %d SC, and I'm pretending I never saw the checksum.",
+		"Encrypted, scorched, and probably illegal. My favorite kind of paperwork. %d SC.",
+		"I can crack this. Or sell it to someone worse. Either way, you get %d SC.",
+	]
+	var line: String = line_options[randi() % line_options.size()] % payout
+	SpeechService.play(line, "voice.jenna_kross.v1")
+	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
+	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Delivered %s for %d SC." % [core_name, payout],
+		Color(0.0, 0.9, 0.9)
+	)
 	_render_dock_submenu()
 
 

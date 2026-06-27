@@ -19,6 +19,8 @@ func _initialize() -> void:
 	_test_restock_caps_at_max()
 	_test_restock_does_not_fire_early()
 	_test_depletion_penalty()
+	_test_same_system_sell_is_not_profitable()
+	_test_imported_demand_decays_after_sales()
 	_test_store_to_dict_from_dict_roundtrip()
 	_test_registry_loads_data()
 	_test_registry_stores_for_station()
@@ -157,6 +159,39 @@ func _test_depletion_penalty() -> void:
 	_expect(store.get_stock("test_item") == 0, "Should still be 0 during depletion penalty")
 	store.restock_check(180)
 	_expect(store.get_stock("test_item") >= 1, "Should restock after depletion penalty window")
+
+
+func _test_same_system_sell_is_not_profitable() -> void:
+	var item = _make_item({"category": "trade_good", "base_price": 100})
+	var store = _make_store([item])
+	var buy_price := store.get_price("test_item", "neutral")
+	var sell_price := store.get_sell_price(
+		"test_item",
+		"neutral",
+		"test_station",
+		"test_station"
+	)
+	_expect(sell_price < buy_price, "Same-system sale should not beat buy price")
+
+
+func _test_imported_demand_decays_after_sales() -> void:
+	var item = _make_item({"category": "trade_good", "base_price": 100, "max_stock": 10})
+	var store = _make_store([item])
+	var first_price := store.get_sell_price(
+		"test_item",
+		"neutral",
+		"other_system",
+		"test_station"
+	)
+	_expect(first_price > 100, "Imported demanded goods should have upside at full demand")
+	store.buy_from_player("test_item")
+	var second_price := store.get_sell_price(
+		"test_item",
+		"neutral",
+		"other_system",
+		"test_station"
+	)
+	_expect(second_price < first_price, "Demand price should fall after selling one")
 
 
 func _test_store_to_dict_from_dict_roundtrip() -> void:
