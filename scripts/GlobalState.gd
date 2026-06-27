@@ -1694,6 +1694,7 @@ func spawn_mission_targets(faction_name: String, count: int):
 		npc.add_to_group("persistent_entity")
 		system_root.add_child(npc)
 		npc.global_position = spawn_pos
+		npc.patrol_center = spawn_pos
 	
 	# HUD warning + chatter so the arrival feels like an event
 	var ui = get_ui_manager()

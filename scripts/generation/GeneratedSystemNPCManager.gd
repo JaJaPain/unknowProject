@@ -95,8 +95,10 @@ func _spawn_initial_patrol() -> void:
 	for i in range(config.npc_patrol_count):
 		var faction_name := _pick_faction(rng)
 		var role: String = _roles[rng.randi() % _roles.size()]
-		var pos := _pick_position_near_anchor(rng, anchors)
-		_spawn_ship(faction_name, role, pos, "patrol")
+		var patrol_route := _pick_civilian_patrol_route(system_root, role)
+		var route_anchors: Array[Vector3] = patrol_route if not patrol_route.is_empty() else anchors
+		var pos := _pick_position_near_anchor(rng, route_anchors)
+		_spawn_ship(faction_name, role, pos, "patrol", patrol_route)
 
 
 func _on_respawn_timeout() -> void:
@@ -114,10 +116,14 @@ func _spawn_replacement() -> void:
 	if system_root == null:
 		return
 	var anchors := _collect_anchors(system_root)
-	if anchors.is_empty():
-		return
 
 	var faction_name := _pick_faction_runtime()
+	var patrol_route: Array[Vector3] = []
+	if GlobalState.is_minor_faction(faction_name):
+		patrol_route = _pick_hostile_patrol_route(system_root)
+		anchors = patrol_route if not patrol_route.is_empty() else _collect_open_space_anchors(system_root)
+	if anchors.is_empty():
+		return
 	var role: String = _roles[randi() % _roles.size()]
 	var target_pos: Vector3 = anchors[randi() % anchors.size()]
 
@@ -134,6 +140,11 @@ func _spawn_replacement() -> void:
 	system_root.add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = target_pos
+	if not patrol_route.is_empty():
+		npc.patrol_route = patrol_route
+		npc.patrol_route_index = patrol_route.find(target_pos)
+		if npc.patrol_route_index < 0:
+			npc.patrol_route_index = 0
 	_apply_npc_profile(npc, faction_name)
 
 
@@ -141,7 +152,9 @@ func _spawn_minor_roamer() -> void:
 	var system_root := get_parent() as Node3D
 	if system_root == null:
 		return
-	var anchors := _collect_anchors(system_root)
+	var anchors := _pick_hostile_patrol_route(system_root)
+	if anchors.is_empty():
+		anchors = _collect_open_space_anchors(system_root)
 	if anchors.is_empty():
 		return
 
@@ -160,10 +173,21 @@ func _spawn_minor_roamer() -> void:
 	system_root.add_child(npc)
 	npc.global_position = spawn_pos
 	npc.patrol_center = target_pos
+	if anchors.size() >= 2:
+		npc.patrol_route = anchors
+		npc.patrol_route_index = anchors.find(target_pos)
+		if npc.patrol_route_index < 0:
+			npc.patrol_route_index = 0
 	_apply_npc_profile(npc, faction_name)
 
 
-func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: String) -> void:
+func _spawn_ship(
+	faction_name: String,
+	role: String,
+	pos: Vector3,
+	category: String,
+	patrol_route: Array[Vector3] = []
+) -> void:
 	var system_root := get_parent() as Node3D
 	if system_root == null or _npc_ship_scene == null:
 		return
@@ -180,6 +204,10 @@ func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: Str
 		npc.custom_model_scene = ShipGenerator.load_runtime(model_seed)
 	system_root.add_child(npc)
 	npc.global_position = pos
+	if not patrol_route.is_empty():
+		npc.patrol_route = patrol_route
+		npc.patrol_route_index = 0
+		npc.patrol_center = patrol_route[0]
 	_apply_npc_profile(npc, faction_name)
 
 
@@ -192,6 +220,95 @@ func _collect_anchors(system_root: Node3D) -> Array[Vector3]:
 	if result.is_empty():
 		result.append(Vector3.ZERO)
 	return result
+
+
+func _collect_open_space_anchors(system_root: Node3D) -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	for node in system_root.get_children():
+		if node is Node3D and node.is_in_group("celestial"):
+			result.append((node as Node3D).global_position)
+	if result.is_empty():
+		for node in system_root.get_children():
+			if node is Node3D and node.is_in_group("asteroid"):
+				result.append((node as Node3D).global_position)
+	if result.is_empty():
+		result.append(Vector3.ZERO)
+	return result
+
+
+func _pick_hostile_patrol_route(system_root: Node3D) -> Array[Vector3]:
+	var belt_route := _pick_asteroid_belt_route(system_root)
+	if not belt_route.is_empty():
+		return belt_route
+	return _pick_shipping_lane_route(system_root)
+
+
+func _pick_civilian_patrol_route(system_root: Node3D, role: String) -> Array[Vector3]:
+	if role != "Logistics":
+		return []
+	return _pick_shipping_lane_route(system_root)
+
+
+func _pick_asteroid_belt_route(system_root: Node3D) -> Array[Vector3]:
+	var belts: Dictionary = {}
+	for node in system_root.get_children():
+		if not (node is Node3D) or not node.is_in_group("asteroid"):
+			continue
+		var belt_id := str(node.get_meta("belt_id", "")).strip_edges()
+		if belt_id == "":
+			belt_id = "unmarked"
+		if not belts.has(belt_id):
+			belts[belt_id] = []
+		belts[belt_id].append((node as Node3D).global_position)
+	if belts.is_empty():
+		return []
+	var best_points: Array = []
+	for belt_id in belts.keys():
+		var points: Array = belts[belt_id]
+		if points.size() > best_points.size():
+			best_points = points
+	if best_points.is_empty():
+		return []
+	var center := Vector3.ZERO
+	for point: Vector3 in best_points:
+		center += point
+	center /= float(best_points.size())
+	var route: Array[Vector3] = []
+	for point: Vector3 in best_points:
+		if point.distance_to(center) >= 40.0:
+			route.append(point)
+	if route.size() >= 2:
+		route.sort_custom(func(a: Vector3, b: Vector3) -> bool:
+			return atan2(a.z - center.z, a.x - center.x) < atan2(b.z - center.z, b.x - center.x)
+		)
+		if route.size() > 6:
+			var sampled: Array[Vector3] = []
+			for i in range(6):
+				sampled.append(route[int(round(float(i) * float(route.size() - 1) / 5.0))])
+			return sampled
+		return route
+	return [center]
+
+
+func _pick_shipping_lane_route(system_root: Node3D) -> Array[Vector3]:
+	var lanes := _collect_shipping_lane_routes(system_root)
+	if lanes.is_empty():
+		return []
+	return lanes[randi() % lanes.size()]
+
+
+func _collect_shipping_lane_routes(system_root: Node3D) -> Array:
+	var stations: Array[Node3D] = []
+	for node in system_root.get_children():
+		if node is Node3D and node.is_in_group("station"):
+			stations.append(node)
+	if stations.size() < 2:
+		return []
+	var lanes: Array = []
+	for i in range(stations.size()):
+		for j in range(i + 1, stations.size()):
+			lanes.append([stations[i].global_position, stations[j].global_position])
+	return lanes
 
 
 func _pick_position_near_anchor(rng: RandomNumberGenerator, anchors: Array[Vector3]) -> Vector3:

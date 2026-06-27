@@ -27,6 +27,8 @@ var _combat_intent_id: String = ""   # queue id while waiting to engage
 var behavior: String = ""
 var _flee_gate: Node3D = null
 var _fleeing: bool = false
+var patrol_route: Array[Vector3] = []
+var patrol_route_index: int = 0
 
 var hardpoints: Array[Node3D] = []
 var engine_points: Array[Node3D] = []
@@ -498,6 +500,11 @@ func _update_engine_glow() -> void:
 		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3(s, s, s)), base.origin))
 
 func _refresh_role_patrol_center() -> void:
+	if bool(get_meta("is_quest_target", false)) \
+			or GlobalState.is_minor_faction(faction) \
+			or is_reinforcement \
+			or bool(get_meta("is_code_enforcement", false)):
+		return
 	var desired_group := ""
 	if ship_role == "Logistics":
 		desired_group = "station"
@@ -664,6 +671,11 @@ func _physics_process(delta: float):
 				if fire_cooldown <= 0.0:
 					fire()
 	else:
+		if not patrol_route.is_empty():
+			var route_target: Vector3 = patrol_route[patrol_route_index]
+			if global_position.distance_to(route_target) <= 80.0:
+				patrol_route_index = (patrol_route_index + 1) % patrol_route.size()
+				patrol_center = patrol_route[patrol_route_index]
 		# Patrol center behavior
 		var dist_to_center = global_position.distance_to(patrol_center)
 		if dist_to_center > 70.0:

@@ -215,6 +215,8 @@ func _spawn_story_ship(spawn: Dictionary) -> void:
 	npc.ship_role = str(spawn.get("ship_role", "Logistics"))
 	npc.persistent_id = str(spawn.get("persistent_id", "story.ship.%d" % randi()))
 	npc.name = "StoryShip_%s" % npc.persistent_id.replace(".", "_")
+	npc.set_meta("is_quest_target", true)
+	npc.add_to_group("persistent_entity")
 
 	# Story behavior flag — flee_on_sight handled by Codex in NPCShip AI
 	var behavior: String = str(spawn.get("behavior", "patrol"))
@@ -230,7 +232,7 @@ func _spawn_story_ship(spawn: Dictionary) -> void:
 	var dist := 900.0
 	npc.global_position = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
 	if "patrol_center" in npc:
-		npc.patrol_center = Vector3.ZERO
+		npc.patrol_center = npc.global_position
 
 	_spawned_ship_ids.append(npc.persistent_id)
 	print("[StoryQuestManager] Spawned story ship: %s (%s)" % [npc.persistent_id, npc.faction])
