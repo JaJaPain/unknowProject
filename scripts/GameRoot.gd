@@ -6601,7 +6601,7 @@ func trigger_boss_encounter(
 	offset.y = 0.0
 	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
 	spawn_root.add_child(scene)
-	var profile := _profile_for_faction_role(faction_name, role)
+	var profile := _profile_for_faction_role(faction_name, role, "Boss")
 	if not profile.is_empty() and scene.has_method("apply_faction_profile"):
 		scene.apply_faction_profile(profile, tier_override)
 		scene.combat_intelligence = max(float(scene.combat_intelligence), 0.85)
@@ -6615,48 +6615,84 @@ func trigger_boss_encounter(
 	)
 	return scene
 
-func _profile_for_faction_role(faction_name: String, role: String) -> Dictionary:
-	var role_key := str(role).to_lower()
-	match role_key:
-		"mininghauler":
-			role_key = "mining_hauler"
-		"logistics", "interceptor", "gunner", "mining_hauler":
-			pass
-		_:
-			role_key = "gunner"
+func _profile_for_faction_role(
+	faction_name: String,
+	role: String,
+	fallback_label: String = "Ship"
+) -> Dictionary:
+	var role_key := _profile_role_key(role)
 	var profile := FactionRegistry.get_profile("%s_%s" % [faction_name, role_key])
 	if profile.is_empty():
 		profile = FactionRegistry.get_faction_for_danger_level(12, 0)
-		profile["display_name"] = "%s Boss" % GlobalState.faction_display_name(faction_name)
+		profile["display_name"] = "%s %s" % [
+			GlobalState.faction_display_name(faction_name),
+			fallback_label,
+		]
 	return profile
+
+func _profile_role_key(role: String) -> String:
+	var role_key := str(role).to_lower()
+	match role_key:
+		"mininghauler":
+			return "mining_hauler"
+		"logistics", "interceptor", "gunner", "mining_hauler":
+			return role_key
+	return "gunner"
 
 func _debug_spawn_boss() -> void:
 	var boss := trigger_boss_encounter("vanguard", 3, "Gunner")
 	if boss:
 		GlobalState.emit_chatter("SYSTEM", "DEBUG: Profile-tier boss spawned.", Color(1.0, 0.4, 0.4))
 
-func _debug_spawn_squad() -> void:
+func trigger_squad_encounter(
+	faction_name: String = "aurelia",
+	count: int = 2,
+	base_tier: int = 1,
+	roles: Array = []
+) -> Array:
 	if not is_instance_valid(player):
-		return
+		return []
 	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
-	var shared_squad_id := "debug_squad_%d" % Time.get_ticks_msec()
-	# Spawn two Aurelia Interceptors in a loose formation ~70–80u ahead.
-	var offsets := [Vector3(-18.0, 0.0, -70.0), Vector3(18.0, 0.0, -80.0)]
+	var shared_squad_id := "story_squad_%s_%d" % [faction_name, Time.get_ticks_msec()]
+	var default_roles := ["Interceptor", "Gunner", "Logistics"]
+	var spawn_count: int = clamp(count, 1, 3)
+	var spawned: Array = []
 	var basis: Basis = (player as Node3D).global_basis
-	for i in 2:
+	for i in spawn_count:
+		var role := str(roles[i]) if i < roles.size() else str(default_roles[i])
+		var tier := base_tier if i == 0 else base_tier + 1
 		var scene: Node = NPC_SHIP_SCENE.instantiate()
-		scene.faction             = "aurelia"
-		scene.ship_role           = "Interceptor"
+		scene.faction             = faction_name
+		scene.ship_role           = role
 		scene.squad_id            = shared_squad_id
-		scene.combat_ap           = 3   # wingmen have less AP than a solo ship
-		scene.combat_intelligence = 0.65
-		scene.speed               = 13.0
-		scene.persistent_id       = "debug.squad.%s.%d" % [shared_squad_id, i]
-		scene.name                = "DEBUG_SQUAD_%d" % i
+		scene.persistent_id       = "story.squad.%s.%d" % [shared_squad_id, i]
 		spawn_root.add_child(scene)
-		var local_offset: Vector3 = basis.x * offsets[i].x + basis.z * offsets[i].z
+		var profile := _profile_for_faction_role(faction_name, role, role)
+		if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+			scene.apply_faction_profile(profile, tier)
+		scene.name = "%s_SQUAD_%s_T%d_%d" % [
+			faction_name.to_upper(),
+			_profile_role_key(role).to_upper(),
+			tier,
+			i,
+		]
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var row := float(i / 2)
+		var local_offset: Vector3 = basis.x * (side * (18.0 + row * 10.0)) \
+				+ basis.z * (-(70.0 + float(i) * 10.0))
 		(scene as Node3D).global_position = (player as Node3D).global_position + local_offset
-	GlobalState.emit_chatter("SYSTEM", "DEBUG: 2-ship squad spawned ahead.", Color(1.0, 0.6, 0.2))
+		spawned.append(scene)
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Multiple hostile signatures detected ahead.",
+		Color(1.0, 0.6, 0.2)
+	)
+	return spawned
+
+func _debug_spawn_squad() -> void:
+	var squad := trigger_squad_encounter("aurelia", 2, 1, ["Interceptor", "Gunner"])
+	if not squad.is_empty():
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: Mixed-profile squad spawned.", Color(1.0, 0.6, 0.2))
 
 # ── Dev panel ──────────────────────────────────────────────────────────────────
 var _dev_panel: DevPanel
