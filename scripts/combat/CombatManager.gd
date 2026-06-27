@@ -668,11 +668,13 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 	if not is_instance_valid(target):
 		return
 	# Apply target's damage-type resistance if defined (set by apply_faction_profile).
+	var damage_mult := 1.0
 	if not blocked:
 		var mult_key := "drone_dmg_mult" if is_drone else "weapon_dmg_mult"
 		var resist = target.get(mult_key)
 		if resist != null:
-			dmg *= float(resist)
+			damage_mult = float(resist)
+			dmg *= damage_mult
 	var hit_pos: Vector3 = (target as Node3D).global_position
 	if target.has_method("take_damage"):
 		target.take_damage(dmg, attacker_faction)
@@ -691,7 +693,7 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 		_sfx("impact_thud", hit_pos, -3.0)
 	if crit:
 		_sfx("hit_critical", hit_pos)
-	_spawn_damage_number(target, hit_pos, dmg, blocked, crit)
+	_spawn_damage_number(target, hit_pos, dmg, blocked, crit, damage_mult)
 	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
 	# Check boss phase transitions when the player damages the enemy.
 	if target == enemy_node:
@@ -701,8 +703,15 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 		_hit_stop(0.07 + (0.05 if crit else 0.0))
 
 # Floating 3D damage number at the hit point. Crit = big + gold, blocked =
-# small + cyan "BLOCKED", normal = orange.
-func _spawn_damage_number(target: Node, hit_pos: Vector3, dmg: float, blocked: bool, crit: bool) -> void:
+# small + cyan "BLOCKED", resistance = dim/small, vulnerability = bright/big.
+func _spawn_damage_number(
+	target: Node,
+	hit_pos: Vector3,
+	dmg: float,
+	blocked: bool,
+	crit: bool,
+	damage_mult: float = 1.0
+) -> void:
 	var parent: Node = null
 	if is_instance_valid(target):
 		parent = target.get_parent()
@@ -712,16 +721,27 @@ func _spawn_damage_number(target: Node, hit_pos: Vector3, dmg: float, blocked: b
 		return
 	var text: String
 	var color: Color
+	var big := crit
+	var scale := 1.0
 	if blocked:
 		text = "BLOCKED %d" % int(dmg)
 		color = Color(0.45, 0.85, 1.0)
 	elif crit:
 		text = "%d!" % int(dmg)
 		color = Color(1.0, 0.85, 0.2)
+	elif damage_mult < 0.95:
+		text = "RESIST %d" % int(dmg)
+		color = Color(0.55, 0.62, 0.7)
+		scale = 0.78
+	elif damage_mult > 1.05:
+		text = "WEAK %d" % int(dmg)
+		color = Color(1.0, 0.35, 0.16)
+		big = true
+		scale = 1.08
 	else:
 		text = "%d" % int(dmg)
 		color = Color(1.0, 0.55, 0.2)
-	CombatDamageNumber.spawn(parent, hit_pos, text, color, crit)
+	CombatDamageNumber.spawn(parent, hit_pos, text, color, big, scale)
 
 # Brief freeze-frame on impact. Fire-and-forget; wall-clock restore so the
 # sequencer's own beats (also wall-clock) keep running underneath.

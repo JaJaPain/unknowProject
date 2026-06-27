@@ -30,7 +30,7 @@ _Active task list. Update this file at the end of every session._
 - [x] **Mixed-profile squads** — `GameRoot.trigger_squad_encounter()` can spawn mixed profile squads (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
 - [x] **Phase 6 — Enemy kit parity** — BRACE and REPOSITION now in enum; NPC planners use them as real actions with camera beats, SFX, status floats, chatter, and taunts.
 - [x] **Damage type resistance** — `weapon_dmg_mult` / `drone_dmg_mult` per profile, applied in `_apply_hit()`. Hull composition in sensor scan.
-- [ ] **Damage number visual feedback for resistance** — resisted hits show small dim numbers; effective hits show large bright numbers. Player reads the difference in the moment and learns without being told explicitly.
+- [x] **Damage number visual feedback for resistance** — resisted hits show small dim `RESIST` numbers; vulnerable hits show large bright `WEAK` numbers. Player reads the difference in the moment and learns without being told explicitly.
 - [ ] **Phase 7 — Boss (mega)** — DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 — Squads** — DONE (in-game) but needs StoryManager trigger hook (see Story section below)
 - [ ] **Shield Reroute sub-picker** — currently defaults to Front face; needs the face-select sub-wheel
