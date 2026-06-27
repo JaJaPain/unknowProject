@@ -28,7 +28,7 @@ _Active task list. Update this file at the end of every session._
 - [x] **Difficulty scaling via profiles** — done; all spawn paths call `apply_faction_profile()` with tier-matched unknown faction or named known faction.
 - [x] **Boss as tier override** — story-triggered boss = `apply_faction_profile(profile, tier_override)` instead of hardcoded stats; `GameRoot.trigger_boss_encounter(faction, tier, role)` now provides the story/dev hook.
 - [x] **Mixed-profile squads** — `GameRoot.trigger_squad_encounter()` can spawn mixed profile squads (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
-- [ ] **Phase 6 — Enemy kit parity** — BRACE and REPOSITION now in enum; wire them into NPC planners as real actions with camera beats + SFX (same pipeline as player actions).
+- [x] **Phase 6 — Enemy kit parity** — BRACE and REPOSITION now in enum; NPC planners use them as real actions with camera beats, SFX, status floats, chatter, and taunts.
 - [x] **Damage type resistance** — `weapon_dmg_mult` / `drone_dmg_mult` per profile, applied in `_apply_hit()`. Hull composition in sensor scan.
 - [ ] **Damage number visual feedback for resistance** — resisted hits show small dim numbers; effective hits show large bright numbers. Player reads the difference in the moment and learns without being told explicitly.
 - [ ] **Phase 7 — Boss (mega)** — DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)

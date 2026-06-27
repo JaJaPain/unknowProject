@@ -1126,6 +1126,7 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 				_consume_shield_reroute()
 				GlobalState.emit_chatter("SYSTEM", "Enemy repositioned — shield angle lost!", Color(1.0, 0.5, 0.2))
 			var dir: String = aparams.get("direction", "closer")
+			var old_band: int = range_band
 			if dir == "closer":
 				if range_band == CombatActionType.RangeBand.LONG:
 					range_band = CombatActionType.RangeBand.MID
@@ -1137,6 +1138,19 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 				elif range_band == CombatActionType.RangeBand.MID:
 					range_band = CombatActionType.RangeBand.LONG
 			_sfx("engine_boost", enemy_node.global_position)
+			var band_names := {
+				CombatActionType.RangeBand.CLOSE: "CLOSE",
+				CombatActionType.RangeBand.MID: "MID",
+				CombatActionType.RangeBand.LONG: "LONG",
+			}
+			var band_label: String = str(band_names.get(range_band, "MID"))
+			var move_label := "CLOSING" if dir == "closer" else "EVADING"
+			_enemy_status_float("%s ▸ %s" % [move_label, band_label], Color(0.95, 0.6, 0.2))
+			if range_band != old_band:
+				GlobalState.emit_chatter("COMBAT", "Enemy repositions — range now %s." % band_label, Color(0.95, 0.6, 0.2))
+			else:
+				GlobalState.emit_chatter("COMBAT", "Enemy burns hard but holds %s range." % band_label, Color(0.95, 0.6, 0.2))
+			_play_npc_action_taunt("npc_reposition")
 		CombatAction.Type.DISABLE_ENGINES:
 			ap_max = max(2, ap_max - 1)
 			_sfx("enemy_charge", enemy_node.global_position)
