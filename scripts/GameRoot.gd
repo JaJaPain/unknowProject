@@ -6580,29 +6580,60 @@ func _fail_public_board_smoke_test(message: String) -> void:
 	delete_savegame()
 	get_tree().quit(1)
 
-func _debug_spawn_boss() -> void:
+func trigger_boss_encounter(
+	faction_name: String = "vanguard",
+	tier_override: int = 3,
+	role: String = "Gunner"
+) -> Node:
 	if not is_instance_valid(player):
-		return
+		return null
 	var scene: Node = NPC_SHIP_SCENE.instantiate()
-	scene.faction             = "vanguard"
-	scene.ship_role           = "Gunner"
+	scene.faction             = faction_name
+	scene.ship_role           = role
 	scene.is_boss             = true
-	scene.max_health          = 500.0
-	scene.health              = 500.0
-	scene.combat_ap           = 6
-	scene.combat_intelligence = 0.85
-	scene.damage_min          = 14.0
-	scene.damage_max          = 22.0
 	scene.speed               = 10.0
-	scene.persistent_id       = "debug.boss.%d" % Time.get_ticks_msec()
-	scene.name                = "DEBUG_BOSS"
+	scene.difficulty_multiplier = 2.0
+	scene.persistent_id       = "story.boss.%s.%d" % [
+		faction_name,
+		Time.get_ticks_msec(),
+	]
 	var offset := -(player as Node3D).global_basis.z.normalized() * 80.0
 	offset.y = 0.0
 	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
 	spawn_root.add_child(scene)
+	var profile := _profile_for_faction_role(faction_name, role)
+	if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+		scene.apply_faction_profile(profile, tier_override)
+		scene.combat_intelligence = max(float(scene.combat_intelligence), 0.85)
 	(scene as Node3D).global_position = (player as Node3D).global_position + offset
 	(scene as Node3D).scale = Vector3(1.5, 1.5, 1.5)
-	GlobalState.emit_chatter("SYSTEM", "DEBUG: Boss spawned 80u ahead.", Color(1.0, 0.4, 0.4))
+	scene.name = "%s_TIER_%d_BOSS" % [faction_name.to_upper(), tier_override]
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Hostile command signature detected 80u ahead.",
+		Color(1.0, 0.4, 0.4)
+	)
+	return scene
+
+func _profile_for_faction_role(faction_name: String, role: String) -> Dictionary:
+	var role_key := str(role).to_lower()
+	match role_key:
+		"mininghauler":
+			role_key = "mining_hauler"
+		"logistics", "interceptor", "gunner", "mining_hauler":
+			pass
+		_:
+			role_key = "gunner"
+	var profile := FactionRegistry.get_profile("%s_%s" % [faction_name, role_key])
+	if profile.is_empty():
+		profile = FactionRegistry.get_faction_for_danger_level(12, 0)
+		profile["display_name"] = "%s Boss" % GlobalState.faction_display_name(faction_name)
+	return profile
+
+func _debug_spawn_boss() -> void:
+	var boss := trigger_boss_encounter("vanguard", 3, "Gunner")
+	if boss:
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: Profile-tier boss spawned.", Color(1.0, 0.4, 0.4))
 
 func _debug_spawn_squad() -> void:
 	if not is_instance_valid(player):

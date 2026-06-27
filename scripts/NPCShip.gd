@@ -187,15 +187,22 @@ func _configure_role(role: String) -> void:
 ## Apply a faction profile from FactionRegistry, overriding role-based stats.
 ## Call this AFTER add_child() so _ready()/_configure_role() have already run.
 ## Tier-derived stats then have the same multipliers re-applied on top.
-func apply_faction_profile(profile: Dictionary) -> void:
+func apply_faction_profile(profile: Dictionary, tier_override: int = -1) -> void:
 	if profile.is_empty():
 		return
 	# Store tier vars and damage type resistances.
-	weapon_tier     = int(profile.get("weapon_tier",     weapon_tier))
-	engine_tier     = int(profile.get("engine_tier",     engine_tier))
-	powerplant_tier = int(profile.get("powerplant_tier", powerplant_tier))
-	hull_tier       = int(profile.get("hull_tier",       hull_tier))
-	shield_tier     = int(profile.get("shield_tier",     shield_tier))
+	if tier_override >= 0:
+		weapon_tier     = tier_override
+		engine_tier     = tier_override
+		powerplant_tier = tier_override
+		hull_tier       = tier_override
+		shield_tier     = tier_override
+	else:
+		weapon_tier     = int(profile.get("weapon_tier",     weapon_tier))
+		engine_tier     = int(profile.get("engine_tier",     engine_tier))
+		powerplant_tier = int(profile.get("powerplant_tier", powerplant_tier))
+		hull_tier       = int(profile.get("hull_tier",       hull_tier))
+		shield_tier     = int(profile.get("shield_tier",     shield_tier))
 	weapon_dmg_mult = float(profile.get("weapon_dmg_mult", 1.0))
 	drone_dmg_mult  = float(profile.get("drone_dmg_mult",  1.0))
 	hull_composition = str(profile.get("hull_composition", ""))
