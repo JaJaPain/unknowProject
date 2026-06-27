@@ -820,12 +820,13 @@ func _create_target_panel():
 	target_approach_btn = Button.new()
 	target_approach_btn.text = "Fly to"
 	target_approach_btn.pressed.connect(func():
-		_command_selected_target(
-			"JUMP_APPROACH"
-				if GlobalState.active_target
-					and GlobalState.active_target.is_in_group("jumpgate")
-				else "APPROACH"
-		)
+		var _t := GlobalState.active_target
+		var _is_gate := _t != null and is_instance_valid(_t) and _t.is_in_group("jumpgate")
+		_command_selected_target("JUMP_APPROACH" if _is_gate else "APPROACH")
+		if _is_gate and is_instance_valid(StoryManager):
+			var _dest: String = str(_t.get("destination_system_id") if _t.get("destination_system_id") else "")
+			if _dest != "":
+				StoryManager._trigger_handoff_pool_for_system(_dest)
 	)
 	target_action_box.add_child(target_approach_btn)
 	
@@ -1937,12 +1938,13 @@ func _create_context_menu():
 	var action_app = Button.new()
 	action_app.text = "Fly to"
 	action_app.pressed.connect(func():
-		_command_context_target(
-			"JUMP_APPROACH"
-				if context_highlight_target
-					and context_highlight_target.is_in_group("jumpgate")
-				else "APPROACH"
-		)
+		var _ct := context_highlight_target
+		var _ct_is_gate := _ct != null and is_instance_valid(_ct) and _ct.is_in_group("jumpgate")
+		_command_context_target("JUMP_APPROACH" if _ct_is_gate else "APPROACH")
+		if _ct_is_gate and is_instance_valid(StoryManager):
+			var _dest: String = str(_ct.get("destination_system_id") if _ct.get("destination_system_id") else "")
+			if _dest != "":
+				StoryManager._trigger_handoff_pool_for_system(_dest)
 		_close_context_menu()
 	)
 	vbox.add_child(action_app)

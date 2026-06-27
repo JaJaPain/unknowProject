@@ -19,6 +19,9 @@ var _sq_debug_fired := false   # guard: only fires once per session
 const StoryStateStoreType := preload(
 	"res://scripts/persistence/StoryStateStore.gd"
 )
+const KaelenHandoffStoreType := preload(
+	"res://scripts/persistence/KaelenHandoffStore.gd"
+)
 
 # ── Phase B: Living story state ───────────────────────────────────────────────
 # story_state is the in-memory working copy. StoryStateStore handles persistence.
@@ -36,6 +39,7 @@ var story_state: Dictionary = {
 	"intro_quest_delivered": false,
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
+var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
 
 # ── Deferred beat schedule ────────────────────────────────────────────────────
 # Each entry: {type, beat_id, threshold, current}
@@ -67,10 +71,14 @@ func init_story_state(campaign_path: String) -> void:
 	else:
 		push_warning("[StoryManager] Story state store failed to open; using defaults.")
 		story_state = StoryStateStoreType._default_state()
+	_handoff_store = KaelenHandoffStoreType.open(campaign_path)
 	_push_context_to_llm()
+	# Pre-generate handoff pool for the starting system agents on first load.
+	_trigger_handoff_pool_for_system("system.start")
 
 func clear_story_state() -> void:
 	_story_state_store = null
+	_handoff_store = null
 	story_state = {
 		"chapter": 1,
 		"active_tensions": [],
@@ -122,6 +130,8 @@ func advance_chapter(truths_to_reveal: int = 1) -> void:
 	story_state["active_tensions"] = []
 	_save_story_state()
 	_generate_foreshadow()
+	# Story context changed — replace all known agent pools so tone stays current.
+	_replace_all_handoff_pools()
 
 func _save_story_state() -> void:
 	if _story_state_store == null or not _story_state_store.is_valid():
@@ -211,6 +221,8 @@ func schedule_beat_after_delay_min(beat_id: String, delay_min: float) -> void:
 
 func on_system_arrived(system_id: String) -> void:
 	_check_delay_beats()
+	# Top-up any agent pools that have fallen below 4 lines.
+	_trigger_handoff_pool_for_system(system_id)
 
 
 func on_kill(faction: String) -> void:
@@ -305,6 +317,80 @@ func on_kaelen_intro_dismissed() -> void:
 
 # Intro quest delivery is owned by UIManager._show_kaelen_intro_quest_offer().
 # StoryManager only persists the flags (intro_quest_delivered, etc.).
+
+
+# ── Kaelen Handoff Pool ───────────────────────────────────────────────────────
+
+# Returns a pre-generated line from the pool, or "" if the pool is empty.
+func draw_kaelen_handoff(agent_name: String) -> String:
+	if _handoff_store == null or not _handoff_store.is_valid():
+		return ""
+	return _handoff_store.draw(agent_name)
+
+# Map faction IDs to the agent rosters used by LLMInterface.
+const _FACTION_AGENT_MAP := {
+	"faction.zenith":   {"agent_name": "Director Voss",  "agent_role": "Zenith Corporate Acquisitions Director",  "faction": "Zenith"},
+	"faction.aurelia":  {"agent_name": "Liaison Ryn",    "agent_role": "Aurelia Syndicate Trade Liaison",          "faction": "Aurelia"},
+	"faction.vanguard": {"agent_name": "Captain Dask",   "agent_role": "Vanguard Military Contract Officer",       "faction": "Vanguard"},
+}
+
+# Called at game start, on "Fly to" gate, and on system arrival.
+# Resolves the agent list from system_id, then generates for any pool below threshold.
+func _trigger_handoff_pool_for_system(system_id: String, force_replace: bool = false) -> void:
+	if _handoff_store == null or not _handoff_store.is_valid():
+		return
+	if not is_instance_valid(LLMInterface):
+		return
+	var faction_ids := _faction_ids_for_system(system_id)
+	for faction_id in faction_ids:
+		var entry: Dictionary = _FACTION_AGENT_MAP.get(faction_id, {})
+		if entry.is_empty():
+			continue
+		var agent_name: String = entry["agent_name"]
+		if not force_replace and _handoff_store.pool_size(agent_name) >= 4:
+			continue
+		generate_handoff_pool(agent_name, entry["faction"], entry["agent_role"])
+
+# Full replace for all known agents — called on chapter advance.
+func _replace_all_handoff_pools() -> void:
+	if _handoff_store == null or not _handoff_store.is_valid():
+		return
+	for entry in _FACTION_AGENT_MAP.values():
+		generate_handoff_pool(entry["agent_name"], entry["faction"], entry["agent_role"])
+
+# Async: asks Gemma4 for 16 handoff lines, saves to pool on success.
+func generate_handoff_pool(agent_name: String, faction: String, agent_role: String) -> void:
+	if not is_instance_valid(LLMInterface):
+		return
+	var story_context := get_story_context_block()
+	LLMInterface.request_kaelen_handoff_batch(
+		agent_name, agent_role, faction, story_context, 16,
+		func(lines: Array) -> void:
+			if lines.is_empty():
+				push_warning("[StoryManager] Handoff batch returned empty for %s" % agent_name)
+				return
+			if _handoff_store != null and _handoff_store.is_valid():
+				_handoff_store.refill(agent_name, lines)
+				print("[StoryManager] Handoff pool refilled for %s (%d lines)" % [agent_name, lines.size()])
+	)
+
+# Look up faction_ids for a system from the system registry.
+func _faction_ids_for_system(system_id: String) -> Array:
+	var registry_path := "res://data/systems/system_registry.json"
+	if not FileAccess.file_exists(registry_path):
+		return []
+	var file := FileAccess.open(registry_path, FileAccess.READ)
+	if file == null:
+		return []
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed == null or not parsed is Dictionary:
+		return []
+	var systems: Array = (parsed as Dictionary).get("systems", [])
+	for sys in systems:
+		if str(sys.get("id", "")) == system_id:
+			return sys.get("faction_ids", [])
+	return []
 
 
 # ── DEV only — remove guard or flip _SQ_DEBUG when done ──────────────────────

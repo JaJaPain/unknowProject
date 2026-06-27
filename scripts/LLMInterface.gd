@@ -3895,6 +3895,14 @@ func request_kaelen_intro(quest_data: Dictionary, agent_history_text: String, pl
 		"  - Comment on the pilot's broader social position — e.g. note that the pilot has made a lot of enemies and could use a few more friends with a particular faction, warn about a hostile faction, or contrast the pilot's friendly vs hostile relationships.\n\n" + \
 		"Kaelen is a broker — she has opinions on the pilot's political situation. Do NOT invent tiers or numbers not listed above."
 
+	# Draw from pre-generated pool first — instant, no LLM call.
+	if is_instance_valid(StoryManager):
+		var pooled_line: String = StoryManager.draw_kaelen_handoff(agent_name)
+		if pooled_line != "":
+			print("[LLMInterface] Kaelen handoff: served from pool for %s" % agent_name)
+			callback.call(pooled_line)
+			return
+
 	var local_tone_clause := _kaelen_local_tone_clause(quest_data)
 
 	var story_clause := ""
@@ -4684,3 +4692,94 @@ Return ONLY valid JSON, no markdown:
 		push_warning(msg)
 		print(msg)
 		callback.call({})
+
+
+# ── Kaelen handoff batch generation (Gemma4) ─────────────────────────────────
+# Asks the large model for 16 Kaelen intro lines for one agent.
+# Returns Array[String] to callback — empty array on failure.
+func request_kaelen_handoff_batch(
+	agent_name: String,
+	agent_role: String,
+	faction: String,
+	story_context: String,
+	count: int,
+	callback: Callable
+) -> void:
+	var story_block := ""
+	if story_context.strip_edges() != "":
+		story_block = (
+			"\nStory context (color Kaelen's tone — do NOT quote or expose directly):\n"
+			+ story_context + "\n"
+		)
+	var prompt := (
+		"You are writing for Broker Kaelen — a dry, transactional, faintly condescending space broker.\n"
+		+ "She is about to introduce %s (%s, %s faction) to the pilot \"Shiny\".\n" % [agent_name, agent_role, faction]
+		+ story_block
+		+ "\nWrite %d SHORT handoff lines (under 25 words each) in Kaelen's voice.\n" % count
+		+ "Rules:\n"
+		+ "- First person as Kaelen. She is talking TO Shiny about %s.\n" % agent_name
+		+ "- %s is silent. Never put words in their mouth.\n" % agent_name
+		+ "- Mention %s by name in every line (third person).\n" % agent_name
+		+ "- Vary the angle: some urgent, some dry, some with a hint of the story tension.\n"
+		+ "- No line should repeat another. No numbering.\n"
+		+ "- Do NOT use the word 'Shiny' more than once across all lines.\n\n"
+		+ "Respond ONLY with a valid JSON array of %d strings:\n" % count
+		+ "[\"line one\", \"line two\", ...]"
+	)
+
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.timeout = 60.0
+
+	http.request_completed.connect(
+		func(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+				push_warning("[LLMInterface] Handoff batch HTTP error result=%d code=%d" % [result, code])
+				callback.call([])
+				return
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed == null or not parsed is Dictionary:
+				push_warning("[LLMInterface] Handoff batch: non-dict response")
+				callback.call([])
+				return
+			var raw_text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
+			# Extract the JSON array from the response text.
+			var start := raw_text.find("[")
+			var end := raw_text.rfind("]")
+			if start == -1 or end == -1 or end <= start:
+				push_warning("[LLMInterface] Handoff batch: no JSON array found in response")
+				callback.call([])
+				return
+			var arr_text := raw_text.substr(start, end - start + 1)
+			var arr: Variant = JSON.parse_string(arr_text)
+			if arr == null or not arr is Array:
+				push_warning("[LLMInterface] Handoff batch: JSON array parse failed")
+				callback.call([])
+				return
+			var lines: Array[String] = []
+			for item in (arr as Array):
+				var s := str(item).strip_edges()
+				if s != "":
+					lines.append(s)
+			print("[LLMInterface] Handoff batch: got %d lines for %s" % [lines.size(), agent_name])
+			callback.call(lines)
+	)
+
+	var large_model: String = active_large_model_name if active_large_model_name != "" else LocalModelGateway.DEFAULT_LARGE_MODEL
+	var payload := JSON.stringify({
+		"model": large_model,
+		"prompt": prompt,
+		"stream": false,
+		"options": {"num_predict": 800, "temperature": 0.85},
+	})
+	var err := http.request(
+		LocalModelGateway.OLLAMA_GENERATE_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		payload
+	)
+	if err != OK:
+		http.queue_free()
+		push_warning("[LLMInterface] Handoff batch: request() failed err=%d" % err)
+		callback.call([])
