@@ -7,6 +7,10 @@ signal generation_event_recorded(event: Dictionary)
 const MAX_RECENT_EVENTS := 100
 const WARNING_MIN_CONTENT_SOURCES := 3
 const WARNING_FALLBACK_SOURCE_RATE := 0.25
+const FALLBACK_EVENT_LOG_PATH := "user://fallback_events.jsonl"
+const FALLBACK_SUMMARY_PATH := "user://fallback_summary.json"
+const FALLBACK_EVENT_LOG_BACKUP_PATH := "res://.tmp_godot_user/fallback_logs/fallback_events.jsonl"
+const FALLBACK_SUMMARY_BACKUP_PATH := "res://.tmp_godot_user/fallback_logs/fallback_summary.json"
 
 var fallback_counts_by_type: Dictionary = {}
 var fallback_counts_by_reason: Dictionary = {}
@@ -17,6 +21,8 @@ var event_counts_by_reason: Dictionary = {}
 var source_counts: Dictionary = {}
 var generation_events: Array[Dictionary] = []
 var total_events := 0
+var _active_fallback_event_log_path := FALLBACK_EVENT_LOG_PATH
+var _active_fallback_summary_path := FALLBACK_SUMMARY_PATH
 
 
 func reset() -> void:
@@ -50,6 +56,7 @@ func record_fallback(
 		"content_source": "fallback",
 		"context": context.duplicate(true),
 		"time_msec": Time.get_ticks_msec(),
+		"unix_time": Time.get_unix_time_from_system(),
 	}
 	total_fallbacks += 1
 	fallback_counts_by_type[clean_type] = int(
@@ -67,6 +74,7 @@ func record_fallback(
 		[clean_type, clean_reason, source, total_fallbacks]
 	)
 	fallback_recorded.emit(event.duplicate(true))
+	_append_fallback_event_log(event)
 	_record_generation_event(
 		clean_type,
 		"fallback",
@@ -74,6 +82,7 @@ func record_fallback(
 		context.merged({"fallback_reason": clean_reason}, true),
 		false
 	)
+	_write_fallback_summary()
 	return event
 
 
@@ -163,6 +172,21 @@ func print_summary() -> void:
 	print(summary_text())
 
 
+func fallback_event_log_path() -> String:
+	return _active_fallback_event_log_path
+
+
+func fallback_summary_path() -> String:
+	return _active_fallback_summary_path
+
+
+func clear_persistent_fallback_log() -> void:
+	_remove_user_file(FALLBACK_EVENT_LOG_PATH)
+	_remove_user_file(FALLBACK_SUMMARY_PATH)
+	_remove_user_file(FALLBACK_EVENT_LOG_BACKUP_PATH)
+	_remove_user_file(FALLBACK_SUMMARY_BACKUP_PATH)
+
+
 func content_source_total() -> int:
 	var total := 0
 	for count in source_counts.values():
@@ -221,6 +245,7 @@ func _record_generation_event(
 		"source": source,
 		"context": context.duplicate(true),
 		"time_msec": Time.get_ticks_msec(),
+		"unix_time": Time.get_unix_time_from_system(),
 	}
 	total_events += 1
 	event_counts_by_type[clean_type] = int(event_counts_by_type.get(clean_type, 0)) + 1
@@ -235,6 +260,79 @@ func _record_generation_event(
 		)
 	generation_event_recorded.emit(event.duplicate(true))
 	return event
+
+
+func _append_fallback_event_log(event: Dictionary) -> void:
+	var path := _resolve_writable_fallback_path(
+		FALLBACK_EVENT_LOG_PATH,
+		FALLBACK_EVENT_LOG_BACKUP_PATH
+	)
+	_active_fallback_event_log_path = path
+	var file := FileAccess.open(path, FileAccess.READ_WRITE)
+	if file == null:
+		file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_warning(
+			"[GenerationDiagnostics] Could not open fallback event log: %s" %
+			path
+		)
+		return
+	file.seek_end()
+	file.store_line(JSON.stringify(event))
+	file.close()
+
+
+func _write_fallback_summary() -> void:
+	var path := _resolve_writable_fallback_path(
+		FALLBACK_SUMMARY_PATH,
+		FALLBACK_SUMMARY_BACKUP_PATH
+	)
+	_active_fallback_summary_path = path
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_warning(
+			"[GenerationDiagnostics] Could not write fallback summary: %s" %
+			path
+		)
+		return
+	file.store_string(JSON.stringify(summary(), "\t"))
+	file.close()
+
+
+func _remove_user_file(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var global_path := ProjectSettings.globalize_path(path)
+	var err := DirAccess.remove_absolute(global_path)
+	if err != OK:
+		push_warning("[GenerationDiagnostics] Could not remove %s (err=%d)." % [path, err])
+
+
+func _resolve_writable_fallback_path(primary_path: String, backup_path: String) -> String:
+	if _can_open_for_write(primary_path):
+		return primary_path
+	_ensure_parent_dir(backup_path)
+	return backup_path
+
+
+func _can_open_for_write(path: String) -> bool:
+	_ensure_parent_dir(path)
+	var file := FileAccess.open(path, FileAccess.READ_WRITE)
+	if file == null:
+		file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.close()
+	return true
+
+
+func _ensure_parent_dir(path: String) -> void:
+	var base_dir := path.get_base_dir()
+	if base_dir.is_empty():
+		return
+	var global_dir := ProjectSettings.globalize_path(base_dir)
+	if not DirAccess.dir_exists_absolute(global_dir):
+		DirAccess.make_dir_recursive_absolute(global_dir)
 
 
 func _format_counts(counts: Dictionary) -> String:

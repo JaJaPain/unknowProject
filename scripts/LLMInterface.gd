@@ -4427,7 +4427,7 @@ func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason:
 # callback signature: func(taunts: Dictionary) -> void
 # Keys: npc_open, npc_player_fled_success, npc_player_fled_fail,
 #       npc_low_health, player_low_health, npc_dying,
-#       npc_brace, npc_shield_angle, npc_reposition,
+#       npc_brace, npc_shield_angle, npc_reposition, npc_enemy_fled,
 #       kaelen_open, kaelen_player_fled, kaelen_player_low_health,
 #       kaelen_winning, kaelen_kill_confirm
 
@@ -4444,6 +4444,7 @@ const COMBAT_TAUNT_FALLBACKS := {
 	"npc_brace":              "You'll break your fists on me.",
 	"npc_shield_angle":       "Angles up. Good luck.",
 	"npc_reposition":         "Try keeping up, scrap-rat.",
+	"npc_enemy_fled":         "I'm out. Tell somebody impressive I almost cared.",
 	"npc_boss_phase_2":       "Still standing? Fine. Now I get serious.",
 	"npc_boss_phase_3":       "You want to see what I'm really capable of?",
 	"kaelen_open":            "Shiny, you have company. Try not to die — I'm owed money.",
@@ -4457,7 +4458,7 @@ func request_combat_taunts(npc_faction: String, npc_archetype: String, callback:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
 
-	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 19 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
+	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 20 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
 
 There are TWO speakers. Write each line for the correct one:
 
@@ -4468,6 +4469,7 @@ There are TWO speakers. Write each line for the correct one:
 Tone examples (do not reuse — match the energy):
 - enemy: "You call that a weapon? My recycling drone hits harder, idiot."
 - enemy: "Hold still and die quiet, scrap-rat."
+- enemy fleeing: "I'm out of here. Tell your crew I said sorry about the mess."
 - kaelen: "Shiny, don't get sentimental. Just get paid."
 
 Return ONLY valid JSON, no markdown fences:
@@ -4484,6 +4486,7 @@ Return ONLY valid JSON, no markdown fences:
   "npc_brace": "...",
   "npc_shield_angle": "...",
   "npc_reposition": "...",
+  "npc_enemy_fled": "...",
   "npc_boss_phase_2": "...",
   "npc_boss_phase_3": "...",
   "kaelen_open": "...",
@@ -4587,7 +4590,7 @@ func _log_combat_taunt_fallback(reason: String, faction: String, archetype: Stri
 	print(msg)
 	var diag_node = get_tree().root.get_node_or_null("GenerationDiagnostics")
 	if diag_node:
-		diag_node.record_event("combat_taunts", "fallback_used", "LLMInterface",
+		diag_node.record_fallback("combat_taunts", reason, "LLMInterface",
 			ctx.merged({"reason": reason, "faction": faction, "archetype": archetype}, true))
 
 ## Request a batch of generic combat taunts (not faction-specific) for the

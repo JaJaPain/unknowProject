@@ -282,6 +282,11 @@ func _play_combat_taunt() -> void:
 		var msg := "[TAUNT FALLBACK] opening taunt used canned line — LLM pool not ready yet. Text: \"%s\"" % pick["text"]
 		push_warning(msg)
 		print(msg)
+		_record_combat_fallback(
+			"combat_opening_taunt",
+			"canned_pool_line",
+			{"text": str(pick.get("text", ""))}
+		)
 	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
@@ -291,6 +296,12 @@ func _play_npc_action_taunt(key: String) -> void:
 		return
 	var line: String = taunts.get(key, "")
 	if line.is_empty():
+		if _taunts_ready:
+			_record_combat_fallback(
+				"combat_action_taunt",
+				"empty_action_key",
+				{"key": key}
+			)
 		# Empty means this key was never filled — the per-fight LLM fetch failed or
 		# Ollama returned a partial response. Log it so we can diagnose.
 		if _taunts_ready:
@@ -314,6 +325,14 @@ func _play_npc_flee_taunt() -> void:
 	if not _cached_rage.is_empty():
 		var pick: Dictionary = _cached_rage[randi() % _cached_rage.size()]
 		TTSInterface.play_dialogue_audio(line, pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+
+
+func _record_combat_fallback(content_type: String, reason: String, context: Dictionary = {}) -> void:
+	var next_context := context.duplicate(true)
+	if is_instance_valid(enemy_node):
+		next_context["enemy"] = str(enemy_node.name)
+		next_context["faction"] = str(enemy_node.get("faction")) if enemy_node.get("faction") else "unknown"
+	GenerationDiagnostics.record_fallback(content_type, reason, "CombatManager", next_context)
 
 # True if the enemy belongs to an active comms-reversal (bribe) mission target,
 # whose branching transmission dialog should not be stepped on by a generic taunt.
@@ -465,10 +484,21 @@ func _on_taunts_ready(data: Dictionary) -> void:
 			matched += 1
 	if matched == canned_ref.size():
 		var faction: String = enemy_nodes[0].get("faction") if not enemy_nodes.is_empty() and is_instance_valid(enemy_nodes[0]) else "unknown"
+		_record_combat_fallback(
+			"combat_taunts",
+			"all_canned_defaults",
+			{"faction": faction, "matched": matched, "total": canned_ref.size()}
+		)
 		var msg := "[TAUNT FALLBACK] per-fight taunts are ALL canned defaults for this fight (%s). Check Ollama." % faction
 		push_warning(msg)
 		print(msg)
 	elif matched > 0:
+		var partial_faction: String = enemy_nodes[0].get("faction") if not enemy_nodes.is_empty() and is_instance_valid(enemy_nodes[0]) else "unknown"
+		_record_combat_fallback(
+			"combat_taunts",
+			"partial_canned_defaults",
+			{"faction": partial_faction, "matched": matched, "total": canned_ref.size()}
+		)
 		push_warning("[TAUNT FALLBACK] per-fight taunts: %d/%d keys are canned fallback values — partial LLM fill." % [matched, canned_ref.size()])
 	_begin_planning()
 
@@ -1091,6 +1121,7 @@ func _execute_npc_intent() -> void:
 				CombatAction.Type.REPAIR_KIT,
 				CombatAction.Type.BOOST,
 				CombatAction.Type.DISABLE_ENGINES,
+				CombatAction.Type.FLEE,
 			]
 			var tele_target: Node = exec_enemy if is_defensive else player_node
 			emit_signal("action_telegraphed", itype, exec_enemy, tele_target)
@@ -1171,6 +1202,8 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 			else:
 				GlobalState.emit_chatter("COMBAT", "Enemy burns hard but holds %s range." % band_label, Color(0.95, 0.6, 0.2))
 			_play_npc_action_taunt("npc_reposition")
+		CombatAction.Type.FLEE:
+			_exec_enemy_flee()
 		CombatAction.Type.DISABLE_ENGINES:
 			ap_max = max(2, ap_max - 1)
 			_sfx("enemy_charge", enemy_node.global_position)
@@ -1205,6 +1238,24 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 				GlobalState.emit_chatter("Kaelen", "They've angled shields. Flank or drone — both bypass it.", Color(0.85, 0.5, 1.0))
 
 # ── Shield Reroute (new mechanic) ────────────────────────────────────────────
+func _exec_enemy_flee() -> void:
+	if not is_instance_valid(enemy_node):
+		return
+	_sfx("engine_boost", enemy_node.global_position)
+	_enemy_status_float("FLEEING", Color(0.5, 1.0, 0.55))
+	_play_npc_action_taunt("npc_enemy_fled")
+	GlobalState.emit_chatter("COMBAT", "Enemy breaks off and runs.", Color(0.5, 1.0, 0.55))
+	var fleeing_enemy := enemy_node as Node3D
+	if fleeing_enemy != null and is_instance_valid(player_node):
+		var flee_dir: Vector3 = (fleeing_enemy.global_position - (player_node as Node3D).global_position).normalized()
+		if flee_dir.length() <= 0.01:
+			flee_dir = -fleeing_enemy.global_transform.basis.z.normalized()
+		fleeing_enemy.global_position += flee_dir * 180.0
+		fleeing_enemy.set("target", null)
+		fleeing_enemy.set("patrol_center", fleeing_enemy.global_position)
+	end_combat(false)
+
+
 func _consume_shield_reroute() -> void:
 	player_shield_reroute_active = false
 	_despawn_shield_dome()

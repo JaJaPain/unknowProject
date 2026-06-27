@@ -9,12 +9,15 @@ var diagnostics: GenerationDiagnosticsService
 func _initialize() -> void:
 	diagnostics = DiagnosticsType.new()
 	diagnostics.reset()
+	diagnostics.clear_persistent_fallback_log()
 	_test_records_fallback_summary()
+	_test_persistent_fallback_log_written()
 	_test_records_generation_event_summary()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
 	_test_developer_warning_marks_high_fallback_rate()
 	_test_reset_clears_summary()
+	diagnostics.clear_persistent_fallback_log()
 
 	if _failures.is_empty():
 		print("[PASS] Generation diagnostics tests")
@@ -59,6 +62,52 @@ func _test_records_fallback_summary() -> void:
 		int(summary.get("events_by_reason", {}).get("fallback", 0)) == 2,
 		"Fallbacks were not mirrored into generation events."
 	)
+
+
+func _test_persistent_fallback_log_written() -> void:
+	var log_path := diagnostics.fallback_event_log_path()
+	var summary_path := diagnostics.fallback_summary_path()
+	_expect(FileAccess.file_exists(log_path), "Persistent fallback event log was not written.")
+	_expect(FileAccess.file_exists(summary_path), "Persistent fallback summary was not written.")
+	var log_file := FileAccess.open(log_path, FileAccess.READ)
+	_expect(log_file != null, "Persistent fallback event log could not be opened.")
+	if log_file == null:
+		return
+	var rows: Array[String] = []
+	while not log_file.eof_reached():
+		var line := log_file.get_line().strip_edges()
+		if not line.is_empty():
+			rows.append(line)
+	log_file.close()
+	_expect(rows.size() == 2, "Persistent fallback event log did not contain two rows.")
+	var parsed := JSON.new()
+	_expect(parsed.parse(rows[0]) == OK, "Persistent fallback event row was not valid JSON.")
+	var event = parsed.get_data()
+	_expect(event is Dictionary, "Persistent fallback event row was not a Dictionary.")
+	if event is Dictionary:
+		_expect(
+			str(event.get("content_type", "")) == "quest_generation",
+			"Persistent fallback event did not include content type."
+		)
+		_expect(
+			str(event.get("content_source", "")) == "fallback",
+			"Persistent fallback event did not include fallback content source."
+		)
+	var summary_file := FileAccess.open(summary_path, FileAccess.READ)
+	_expect(summary_file != null, "Persistent fallback summary could not be opened.")
+	if summary_file == null:
+		return
+	var summary_json := summary_file.get_as_text()
+	summary_file.close()
+	var summary_parse := JSON.new()
+	_expect(summary_parse.parse(summary_json) == OK, "Persistent fallback summary was not valid JSON.")
+	var persisted_summary = summary_parse.get_data()
+	_expect(persisted_summary is Dictionary, "Persistent fallback summary was not a Dictionary.")
+	if persisted_summary is Dictionary:
+		_expect(
+			int(persisted_summary.get("total_fallbacks", 0)) == 2,
+			"Persistent fallback summary did not include fallback count."
+		)
 
 
 func _test_records_generation_event_summary() -> void:

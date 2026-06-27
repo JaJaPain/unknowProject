@@ -1109,6 +1109,9 @@ func generate_action_plan() -> Array:
 		_plan_boss(plan, ap, hp_ratio, intel)
 		return plan
 
+	if _maybe_plan_low_health_flee(plan, ap, hp_ratio, role, intel):
+		return plan
+
 	match role:
 		"Gunner":     _plan_gunner(plan, ap, hp_ratio, intel)
 		"Interceptor": _plan_interceptor(plan, ap, hp_ratio, intel)
@@ -1123,6 +1126,28 @@ func generate_action_plan() -> Array:
 #   Action order   — dumb enemies fire before repositioning (shield not bypassed);
 #                    smart ones reposition first so shield is already gone.
 #   AP waste       — dumb enemies randomly skip their last action.
+
+func _maybe_plan_low_health_flee(plan: Array, ap: int, hp_ratio: float, role: String, intel: float) -> bool:
+	if hp_ratio > 0.30 or ap < 3:
+		return false
+	var chance := 0.14
+	match role:
+		"MiningHauler":
+			chance = 0.55
+		"Logistics":
+			chance = 0.36
+		"Interceptor":
+			chance = 0.24
+		"Gunner":
+			chance = 0.16
+	chance += clampf((0.30 - hp_ratio) * 0.9, 0.0, 0.18)
+	chance += clampf((intel - 0.5) * 0.10, -0.04, 0.05)
+	if bool(get_meta("is_quest_target", false)):
+		chance *= 0.75
+	if randf() > chance:
+		return false
+	plan.append(_action_flee())
+	return true
 
 func _plan_gunner(plan: Array, ap: int, hp_ratio: float, intel: float) -> void:
 	# Desperate: blow remaining AP on a heavy shot first.
@@ -1252,6 +1277,9 @@ func _action_repair() -> Dictionary:
 
 func _action_disable_engines() -> Dictionary:
 	return CombatAction.make(CombatAction.Type.DISABLE_ENGINES, {})
+
+func _action_flee() -> Dictionary:
+	return CombatAction.make(CombatAction.Type.FLEE, {})
 
 func _action_brace() -> Dictionary:
 	return CombatAction.make(CombatAction.Type.BRACE, {})

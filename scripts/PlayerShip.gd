@@ -1855,6 +1855,74 @@ func spawn_projectile(target_node: Node3D, visual_only: bool = false):
 		get_parent().add_child(p)
 		p.global_position = global_position + p.direction * 2.2
 
+
+func launch_combat_drone(target_node: Node3D) -> void:
+	if target_node == null or not is_instance_valid(target_node):
+		return
+	var parent := get_parent()
+	if parent == null:
+		return
+	var target_pos: Vector3 = target_node.global_position + Vector3(0.0, 1.5, 0.0)
+	var launch_dir: Vector3 = (target_pos - global_position).normalized()
+	if launch_dir.length() <= 0.01:
+		launch_dir = -global_transform.basis.z.normalized()
+	var start_pos: Vector3 = global_position + launch_dir * 4.0 + global_transform.basis.x * 2.5 + Vector3(0.0, 1.4, 0.0)
+	var travel_time: float = clampf(start_pos.distance_to(target_pos) / 95.0, 0.18, 0.75)
+
+	var drone := Node3D.new()
+	drone.name = "CombatDroneVisual"
+	parent.add_child(drone)
+	drone.global_position = start_pos
+	drone.look_at(target_pos, Vector3.UP)
+
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.15, 0.95, 1.0, 1.0)
+	mat.emission_enabled = true
+	mat.emission = Color(0.15, 0.95, 1.0)
+	mat.emission_energy_multiplier = 7.0
+
+	var body_mesh := SphereMesh.new()
+	body_mesh.radius = 0.45
+	body_mesh.height = 0.9
+	body_mesh.material = mat
+
+	var body := MeshInstance3D.new()
+	body.name = "DroneCore"
+	body.mesh = body_mesh
+	drone.add_child(body)
+
+	var streak_mesh := CylinderMesh.new()
+	streak_mesh.top_radius = 0.08
+	streak_mesh.bottom_radius = 0.28
+	streak_mesh.height = 3.5
+	streak_mesh.material = mat
+	var streak := MeshInstance3D.new()
+	streak.name = "DroneStreak"
+	streak.mesh = streak_mesh
+	streak.rotation_degrees.x = 90.0
+	streak.position = Vector3(0.0, 0.0, 1.8)
+	drone.add_child(streak)
+
+	var light := OmniLight3D.new()
+	light.name = "DroneStrikeLight"
+	light.light_color = Color(0.15, 0.95, 1.0)
+	light.light_energy = 6.0
+	light.omni_range = 18.0
+	drone.add_child(light)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(drone, "global_position", target_pos, travel_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(drone, "scale", Vector3(1.8, 1.8, 1.8), travel_time * 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(streak, "scale", Vector3(1.0, 1.0, 2.4), travel_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func():
+		if is_instance_valid(target_node):
+			ImpactEffect.spawn_hit(parent, target_pos, Color(0.15, 0.95, 1.0))
+		if is_instance_valid(drone):
+			drone.queue_free()
+	)
+
 func double_click_move(click_pos: Vector3):
 	cancel_autopilot()
 	target_position = click_pos
