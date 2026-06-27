@@ -259,7 +259,7 @@ func _pick_asteroid_belt_route(system_root: Node3D) -> Array[Vector3]:
 			belt_id = "unmarked"
 		if not belts.has(belt_id):
 			belts[belt_id] = []
-		belts[belt_id].append((node as Node3D).global_position)
+		belts[belt_id].append(_node_route_position(node as Node3D))
 	if belts.is_empty():
 		return []
 	var best_points: Array = []
@@ -294,7 +294,11 @@ func _pick_shipping_lane_route(system_root: Node3D) -> Array[Vector3]:
 	var lanes := _collect_shipping_lane_routes(system_root)
 	if lanes.is_empty():
 		return []
-	return lanes[randi() % lanes.size()]
+	var selected: Array = lanes[randi() % lanes.size()]
+	var route: Array[Vector3] = []
+	for point: Vector3 in selected:
+		route.append(point)
+	return route
 
 
 func _collect_shipping_lane_routes(system_root: Node3D) -> Array:
@@ -307,8 +311,15 @@ func _collect_shipping_lane_routes(system_root: Node3D) -> Array:
 	var lanes: Array = []
 	for i in range(stations.size()):
 		for j in range(i + 1, stations.size()):
-			lanes.append([stations[i].global_position, stations[j].global_position])
+			lanes.append([
+				_node_route_position(stations[i]),
+				_node_route_position(stations[j]),
+			])
 	return lanes
+
+
+func _node_route_position(node: Node3D) -> Vector3:
+	return node.global_position if node.is_inside_tree() else node.position
 
 
 func _pick_position_near_anchor(rng: RandomNumberGenerator, anchors: Array[Vector3]) -> Vector3:

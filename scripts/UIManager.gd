@@ -204,6 +204,7 @@ var _wanted_posters_sheet = preload("res://assets/WantedPosters.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
+const KAELEN_BOUNTY_OFFER_CHANCE := 0.30
 const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
 const KAELEN_ALLOWED_MOODS := {
@@ -3592,7 +3593,7 @@ func _render_bounty_board(should_show: bool) -> void:
 	if not should_show:
 		_bounty_board_panel.visible = false
 		return
-	var active: Array = BountyRegistryScript.shared().get_active_bounties()
+	var active: Array = BountyRegistryScript.shared().get_active_bounties_for_system(GlobalState.current_system_id)
 	if active.is_empty():
 		_bounty_board_panel.visible = false
 		return
@@ -3762,7 +3763,7 @@ func _on_kaelen_lounge_pressed() -> void:
 		_kaelen_mood_portrait_id("amused")
 	)
 	var display_line := line
-	var active_bounties: Array = BountyRegistryScript.shared().get_active_bounties()
+	var active_bounties: Array = BountyRegistryScript.shared().get_active_bounties_for_system(GlobalState.current_system_id)
 	if not active_bounties.is_empty():
 		var paper_parts: Array[String] = []
 		for b in active_bounties:
@@ -5050,9 +5051,12 @@ func _announce_bounties_on_dock() -> void:
 	_bounty_announced_system = sys
 	var registry := BountyRegistryScript.shared()
 	# If bounties already loaded for this system, just announce them.
-	if not registry.get_active_bounties().is_empty():
-		for line in registry.announcement_lines():
+	if not registry.get_active_bounties_for_system(sys).is_empty():
+		for line in registry.announcement_lines_for_system(sys):
 			GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
+		return
+	if randf() > KAELEN_BOUNTY_OFFER_CHANCE:
+		registry.clear()
 		return
 	# Otherwise fetch fresh bounties then announce.
 	var minor_keys: Array = GlobalState.MINOR_FACTIONS.keys()
@@ -5062,7 +5066,7 @@ func _announce_bounties_on_dock() -> void:
 		if bounties.is_empty():
 			return
 		registry.set_bounties(bounties)
-		for line in registry.announcement_lines():
+		for line in registry.announcement_lines_for_system(sys):
 			GlobalState.emit_chatter("Kaelen", line, Color(0.85, 0.5, 1.0))
 	)
 
@@ -5086,7 +5090,7 @@ func _maybe_kaelen_intel_drop() -> void:
 	if not GlobalState.kaelen_briefing_seen:
 		return
 	var total_kills := 0
-	for b in BountyRegistryScript.shared().get_active_bounties():
+	for b in BountyRegistryScript.shared().get_active_bounties_for_system(GlobalState.current_system_id):
 		total_kills += int(b.get("kills_credited", 0))
 	var chance := 0.20 + clampf(total_kills * 0.02, 0.0, 0.35)
 	if randf() > chance:

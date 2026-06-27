@@ -27,6 +27,12 @@ func get_active_bounties() -> Array:
 	return all.filter(func(b): return b.get("kills_credited", 0) < _cap(b))
 
 
+func get_active_bounties_for_system(system_id: String) -> Array:
+	return get_active_bounties().filter(
+		func(b): return str(b.get("system_id", "")) == system_id
+	)
+
+
 # StoryManager: inject a bounty that survives normal set_bounties() refresh.
 # bounty dict shape: {faction, system_id, payout_per_kill, cap, kaelen_line}
 func inject_story_bounty(bounty: Dictionary) -> void:
@@ -79,7 +85,14 @@ func confirm_line(faction: String, payout: int) -> String:
 
 # Returns the announcement lines for all active bounties (caller emits them).
 func announcement_lines() -> Array:
-	var active: Array = get_active_bounties()
+	return _announcement_lines_for(get_active_bounties())
+
+
+func announcement_lines_for_system(system_id: String) -> Array:
+	return _announcement_lines_for(get_active_bounties_for_system(system_id))
+
+
+func _announcement_lines_for(active: Array) -> Array:
 	if active.is_empty():
 		return []
 	if active.size() == 1:

@@ -1657,8 +1657,10 @@ func spawn_mission_targets(faction_name: String, count: int):
 		print("[GlobalState] ERROR: Could not load npc_ship.tscn for mission targets.")
 		return
 	
-	# Use the station as the spawn anchor so targets appear in open space,
-	# not on top of the dock where the player accepted the quest
+	var patrol_route := _pick_mission_target_route(system_root)
+
+	# Use the station as the fallback spawn anchor so targets appear in open
+	# space, not on top of the dock where the player accepted the quest.
 	var spawn_anchor: Vector3 = player_node.global_position
 	var station_node = get_primary_station()
 	if station_node and is_instance_valid(station_node):
@@ -1674,10 +1676,13 @@ func spawn_mission_targets(faction_name: String, count: int):
 	)
 	QuestManager.active_quest["target_spawn_sequence"] = start_index + count
 	for i in range(count):
-		var angle = (TAU / count) * i + randf_range(-0.4, 0.4)
-		var dist = randf_range(550.0, 900.0)
+		var target_pos := spawn_anchor
+		if not patrol_route.is_empty():
+			target_pos = patrol_route[i % patrol_route.size()]
+		var angle = (TAU / max(count, 1)) * i + randf_range(-0.4, 0.4)
+		var dist = randf_range(60.0, 140.0) if not patrol_route.is_empty() else randf_range(550.0, 900.0)
 		var offset = Vector3(cos(angle), randf_range(-0.05, 0.05), sin(angle)) * dist
-		var spawn_pos = spawn_anchor + offset
+		var spawn_pos = target_pos + offset
 		
 		var npc = npc_scene.instantiate()
 		npc.faction = faction_name
@@ -1694,13 +1699,115 @@ func spawn_mission_targets(faction_name: String, count: int):
 		npc.add_to_group("persistent_entity")
 		system_root.add_child(npc)
 		npc.global_position = spawn_pos
-		npc.patrol_center = spawn_pos
+		npc.patrol_center = target_pos if not patrol_route.is_empty() else spawn_pos
+		if patrol_route.size() >= 2:
+			npc.patrol_route = patrol_route
+			npc.patrol_route_index = i % patrol_route.size()
 	
 	# HUD warning + chatter so the arrival feels like an event
 	var ui = get_ui_manager()
 	if ui and ui.has_method("show_hud_warning"):
 		ui.show_hud_warning("CONTRACT ACTIVE: " + str(count) + " " + faction_name.to_upper() + " targets have entered the sector.")
 	emit_chatter("SYSTEM", "Sensor sweep: " + str(count) + " " + faction_name.to_upper() + " signatures detected in open space.", Color(0.0, 0.9, 0.9))
+
+
+func _pick_mission_target_route(system_root: Node3D) -> Array[Vector3]:
+	var belt_route := _pick_mission_asteroid_belt_route(system_root)
+	if not belt_route.is_empty():
+		return belt_route
+	return _pick_mission_shipping_lane_route(system_root)
+
+
+func _pick_mission_asteroid_belt_route(system_root: Node3D) -> Array[Vector3]:
+	var belts: Dictionary = {}
+	if system_root == null:
+		return []
+	for node in _mission_route_nodes_in_group(system_root, "asteroid"):
+		if not (node is Node3D) or not is_instance_valid(node):
+			continue
+		var belt_id := str(node.get_meta("belt_id", "")).strip_edges()
+		if belt_id == "":
+			belt_id = _mission_belt_id_from_name(str(node.name))
+		if belt_id == "":
+			belt_id = "unmarked"
+		if not belts.has(belt_id):
+			belts[belt_id] = []
+		belts[belt_id].append(_mission_route_position(node as Node3D))
+	if belts.is_empty():
+		return []
+	var best_points: Array = []
+	for belt_id in belts.keys():
+		var points: Array = belts[belt_id]
+		if points.size() > best_points.size():
+			best_points = points
+	if best_points.is_empty():
+		return []
+	var center := Vector3.ZERO
+	for point: Vector3 in best_points:
+		center += point
+	center /= float(best_points.size())
+	var route: Array[Vector3] = []
+	for point: Vector3 in best_points:
+		if point.distance_to(center) >= 40.0:
+			route.append(point)
+	if route.size() >= 2:
+		route.sort_custom(func(a: Vector3, b: Vector3) -> bool:
+			return atan2(a.z - center.z, a.x - center.x) < atan2(b.z - center.z, b.x - center.x)
+		)
+		if route.size() > 6:
+			var sampled: Array[Vector3] = []
+			for i in range(6):
+				sampled.append(route[int(round(float(i) * float(route.size() - 1) / 5.0))])
+			return sampled
+		return route
+	return [center]
+
+
+func _mission_belt_id_from_name(node_name: String) -> String:
+	var idx := node_name.find("Asteroid")
+	if idx <= 0:
+		return ""
+	var clean := node_name.substr(0, idx).strip_edges()
+	while clean.ends_with("_") or clean.ends_with(" "):
+		clean = clean.substr(0, clean.length() - 1)
+	return clean
+
+
+func _pick_mission_shipping_lane_route(system_root: Node3D) -> Array[Vector3]:
+	if system_root == null:
+		return []
+	var stations: Array[Node3D] = []
+	for node in _mission_route_nodes_in_group(system_root, "station"):
+		if node is Node3D and is_instance_valid(node):
+			stations.append(node)
+	if stations.size() < 2:
+		return []
+	var best_a: Node3D = stations[0]
+	var best_b: Node3D = stations[1]
+	var best_dist := -1.0
+	for i in range(stations.size()):
+		for j in range(i + 1, stations.size()):
+			var dist := _mission_route_position(stations[i]).distance_squared_to(_mission_route_position(stations[j]))
+			if dist > best_dist:
+				best_dist = dist
+				best_a = stations[i]
+				best_b = stations[j]
+	return [_mission_route_position(best_a), _mission_route_position(best_b)]
+
+
+func _mission_route_nodes_in_group(root: Node, group_name: String) -> Array:
+	var result: Array = []
+	if root == null:
+		return result
+	if root.is_in_group(group_name):
+		result.append(root)
+	for child in root.get_children():
+		result.append_array(_mission_route_nodes_in_group(child, group_name))
+	return result
+
+
+func _mission_route_position(node: Node3D) -> Vector3:
+	return node.global_position if node.is_inside_tree() else node.position
 
 
 func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary:
