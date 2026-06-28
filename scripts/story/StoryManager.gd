@@ -37,6 +37,9 @@ var story_state: Dictionary = {
 	"intro_conversation_had": false,
 	"intro_agent_visited": false,
 	"intro_quest_delivered": false,
+	"hinted_lounge_rumors": [],
+	"agent_cooldown_until_minute": 0,
+	"agent_cooldown_message_index": 0,
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -97,6 +100,9 @@ func clear_story_state() -> void:
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
 		"intro_quest_delivered": false,
+		"hinted_lounge_rumors": [],
+		"agent_cooldown_until_minute": 0,
+		"agent_cooldown_message_index": 0,
 	}
 
 # Returns a formatted string safe to inject into LLM prompts.
@@ -264,6 +270,140 @@ func on_docked(_station) -> void:
 
 func on_quest_completed(_quest: Dictionary) -> void:
 	_check_delay_beats()
+
+
+func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
+	var station_name := str(context.get("station_name", "the lounge")).strip_edges()
+	if station_name.is_empty():
+		station_name = "the lounge"
+	var npc_name := str(context.get("npc_name", "this contact")).strip_edges()
+	if npc_name.is_empty():
+		npc_name = "this contact"
+	var faction_display := str(context.get("faction_display", "")).strip_edges()
+	var source_hint := "dock crews"
+	if not faction_display.is_empty() and faction_display != "independent crews":
+		source_hint = "%s crews" % faction_display
+	var hinted: Array = story_state.get("hinted_lounge_rumors", [])
+	var candidates: Array[Dictionary] = []
+	var hooks: Array = story_state.get("pending_hooks", [])
+	for hook in hooks:
+		var text := str(hook).strip_edges()
+		if text.is_empty():
+			continue
+		candidates.append({
+			"id": "hook:%s" % text.sha256_text().substr(0, 12),
+			"title": "Open Thread",
+			"source": "Story",
+			"weight": 4,
+			"line": "%s lowers their voice. Something tied to %s is moving through %s, and the %s keep pretending it is routine." % [
+				npc_name,
+				text,
+				station_name,
+				source_hint,
+			],
+		})
+	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
+	if not foreshadow.is_empty():
+		candidates.append({
+			"id": "foreshadow:%s" % foreshadow.sha256_text().substr(0, 12),
+			"title": "Soft Warning",
+			"source": "Story",
+			"weight": 3,
+			"line": "%s has been hearing the same warning from different crews: \"%s\"" % [
+				npc_name,
+				foreshadow.trim_suffix("."),
+			],
+		})
+	var tensions: Array = story_state.get("active_tensions", [])
+	for tension in tensions:
+		var text := str(tension).strip_edges()
+		if text.is_empty():
+			continue
+		candidates.append({
+			"id": "tension:%s" % text.sha256_text().substr(0, 12),
+			"title": "Local Pressure",
+			"source": "Story",
+			"weight": 2,
+			"line": "The public boards blame %s, but the dock crews in %s keep pointing at timing, not motive." % [
+				text,
+				station_name,
+			],
+		})
+	var known: Array = story_state.get("player_knows", [])
+	for truth in known:
+		var text := str(truth).strip_edges()
+		if text.is_empty():
+			continue
+		candidates.append({
+			"id": "known:%s" % text.sha256_text().substr(0, 12),
+			"title": "Echo",
+			"source": "Story",
+			"weight": 1,
+			"line": "That thing you heard about %s? It is starting to show up in ordinary dock talk now." % text,
+		})
+	if candidates.is_empty():
+		return {}
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("weight", 0)) > int(b.get("weight", 0))
+	)
+	for candidate in candidates:
+		if str(candidate.get("id", "")) not in hinted:
+			return candidate
+	return candidates[0]
+
+
+func record_lounge_rumor_heard(rumor_id: String) -> void:
+	var clean_id := rumor_id.strip_edges()
+	if clean_id.is_empty():
+		return
+	var hinted: Array = story_state.get("hinted_lounge_rumors", []).duplicate()
+	if clean_id in hinted:
+		return
+	hinted.append(clean_id)
+	while hinted.size() > 24:
+		hinted.pop_front()
+	story_state["hinted_lounge_rumors"] = hinted
+	_save_story_state()
+
+
+func get_agent_contract_availability(_context: Dictionary = {}) -> Dictionary:
+	var now_minute := int(CampaignClock.total_minutes)
+	var until_minute := int(story_state.get("agent_cooldown_until_minute", 0))
+	if until_minute <= now_minute:
+		if until_minute > 0:
+			story_state["agent_cooldown_until_minute"] = 0
+			_save_story_state()
+		return {"available": true, "remaining_minutes": 0, "message": ""}
+	var message_index := int(story_state.get("agent_cooldown_message_index", 0))
+	var messages := [
+		"No one is asking right now. I will send you a message when I need you to make us some more money.",
+		"Boards are quiet for once. Enjoy the silence. It never lasts.",
+		"Nothing worth your fuel on my desk right now. Give it a little time.",
+	]
+	message_index = clampi(message_index, 0, messages.size() - 1)
+	return {
+		"available": false,
+		"remaining_minutes": until_minute - now_minute,
+		"message": messages[message_index],
+	}
+
+
+func start_agent_contract_cooldown(reason: String = "contract_resolved") -> Dictionary:
+	var now_minute := int(CampaignClock.total_minutes)
+	var cooldown_min := 25 + (randi() % 56)
+	if reason == "contract_abandoned":
+		cooldown_min = 35 + (randi() % 76)
+	story_state["agent_cooldown_until_minute"] = now_minute + cooldown_min
+	story_state["agent_cooldown_message_index"] = randi() % 3
+	_save_story_state()
+	return get_agent_contract_availability()
+
+
+func clear_agent_contract_cooldown() -> void:
+	if int(story_state.get("agent_cooldown_until_minute", 0)) == 0:
+		return
+	story_state["agent_cooldown_until_minute"] = 0
+	_save_story_state()
 
 
 # ── Internal beat evaluation stubs ───────────────────────────────────────────

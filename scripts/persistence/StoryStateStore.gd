@@ -110,6 +110,9 @@ static func _default_state() -> Dictionary:
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
 		"intro_quest_delivered": false,
+		"hinted_lounge_rumors": [],
+		"agent_cooldown_until_minute": 0,
+		"agent_cooldown_message_index": 0,
 	}
 
 
@@ -133,7 +136,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 			"Story state chapter must be at least 1.",
 			"chapter"
 		)
-	for field in ["active_tensions", "player_knows", "player_does_not_know_yet", "pending_hooks"]:
+	for field in ["active_tensions", "player_knows", "player_does_not_know_yet", "pending_hooks", "hinted_lounge_rumors"]:
 		if not value.get(field, []) is Array:
 			result.add_error(
 				"invalid_story_state_array",

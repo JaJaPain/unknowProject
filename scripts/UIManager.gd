@@ -3406,7 +3406,10 @@ func toggle_dock_menu(
 
 		# Pre-cache quests when at a non-outpost station (main station today;
 		# outposts are still visual-only and don't talk to Kaelen).
-		if not is_outpost and not QuestManager.is_lane_occupied("AGENT") and cached_quest_data.is_empty():
+		if not is_outpost \
+				and not QuestManager.is_lane_occupied("AGENT") \
+				and cached_quest_data.is_empty() \
+				and _agent_contracts_available_for_station():
 			GlobalState.trace("[TRACE] [UIManager] Player docked. Pre-caching agent quest in the background.")
 			_request_background_agent_quest()
 
@@ -3697,24 +3700,30 @@ func _render_station_contacts(should_show: bool) -> void:
 	var contacts: Array = []
 	if not station_id.is_empty():
 		contacts = GlobalState.get_minor_npcs_at_outpost(station_id)
-	if contacts.is_empty() and not show_kaelen:
+	var visible_contacts: Array[String] = []
+	for raw_npc_name in contacts:
+		var candidate_name := str(raw_npc_name)
+		var candidate_data := GlobalState.get_minor_npc_data(candidate_name)
+		if _station_contact_has_lounge_reason(candidate_name, candidate_data):
+			visible_contacts.append(candidate_name)
+	if visible_contacts.is_empty() and not show_kaelen:
 		station_contacts_panel.visible = false
 		_selected_station_contact = ""
 		return
 	if not _selected_station_contact.is_empty() \
-			and _selected_station_contact not in contacts:
+			and _selected_station_contact not in visible_contacts:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
 	if show_kaelen:
 		if not _contacts_with_rumor.has("kaelen"):
 			_contacts_with_rumor["kaelen"] = true
-		var kaelen_badge := " ★" if _contacts_with_rumor.get("kaelen", false) else ""
+		var kaelen_badge := " (!)" if _contacts_with_rumor.get("kaelen", false) else ""
 		var kaelen_btn := Button.new()
 		kaelen_btn.text = "Broker Kaelen [Broker]%s" % kaelen_badge
 		kaelen_btn.tooltip_text = "Catch Kaelen between deals."
 		kaelen_btn.pressed.connect(_on_kaelen_lounge_pressed)
 		station_contacts_list.add_child(kaelen_btn)
-	for npc_name in contacts:
+	for npc_name in visible_contacts:
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
 		var role := str(npc_data.get("role", "Local contact"))
 		var faction := str(npc_data.get("faction", ""))
@@ -3724,9 +3733,10 @@ func _render_station_contacts(should_show: bool) -> void:
 				GlobalState.faction_info(faction).get("name", faction.capitalize())
 			)
 		var mood := _get_contact_mood(str(npc_name))
-		if not _contacts_with_rumor.has(str(npc_name)):
+		var has_intel := _station_contact_has_intel(str(npc_name), npc_data)
+		if has_intel and not _contacts_with_rumor.has(str(npc_name)):
 			_contacts_with_rumor[str(npc_name)] = true
-		var badge := " ★" if _contacts_with_rumor.get(str(npc_name), false) else ""
+		var badge := " (!)" if has_intel and _contacts_with_rumor.get(str(npc_name), false) else ""
 		var btn := Button.new()
 		btn.text = "%s [%s%s · %s]%s" % [str(npc_name), role, faction_label, mood, badge]
 		btn.tooltip_text = "Hear what this station contact has to say."
@@ -3765,10 +3775,38 @@ func _current_station_contact_id() -> String:
 
 func _current_station_has_contacts() -> bool:
 	var station_id := _current_station_contact_id()
-	return _kaelen_lounge_available() or (
-		not station_id.is_empty()
-			and not GlobalState.get_minor_npcs_at_outpost(station_id).is_empty()
-	)
+	if _kaelen_lounge_available():
+		return true
+	if station_id.is_empty():
+		return false
+	for raw_npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+		var npc_name := str(raw_npc_name)
+		var npc_data := GlobalState.get_minor_npc_data(npc_name)
+		if _station_contact_has_lounge_reason(npc_name, npc_data):
+			return true
+	return false
+
+
+func _station_contact_has_lounge_reason(
+	npc_name: String,
+	npc_data: Dictionary
+) -> bool:
+	if npc_data.is_empty():
+		return false
+	if not _station_contact_has_intel(npc_name, npc_data):
+		if str(npc_data.get("role", "")) != "Faction contact":
+			return false
+	return true
+
+
+func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool:
+	if not _station_contact_story_rumor(npc_name, npc_data).is_empty():
+		return true
+	if not _campaign_rumor_trail_clue(npc_name, npc_data).is_empty():
+		return true
+	if not _system_story_pack_rumor(npc_name, npc_data).is_empty():
+		return true
+	return false
 
 
 func _kaelen_lounge_available() -> bool:
@@ -3922,15 +3960,24 @@ func _render_station_contact_actions(npc_name: String, npc_data: Dictionary) -> 
 	summary.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
 	box.add_child(summary)
 
+	if _station_contact_has_intel(npc_name, npc_data):
+		var intel_hint := Label.new()
+		intel_hint.text = "Fresh story intel available"
+		intel_hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+		intel_hint.add_theme_font_size_override("font_size", 11)
+		intel_hint.add_theme_color_override("font_color", Color(1.0, 0.86, 0.42))
+		box.add_child(intel_hint)
+
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 4)
 	box.add_child(actions)
 	var action_defs: Array = [
 		["Faction", "faction"],
 		["Trouble", "trouble"],
-		["Rumor", "rumor"],
 		["Work", "work"],
 	]
+	if _station_contact_has_intel(npc_name, npc_data):
+		action_defs.insert(2, ["Intel", "rumor"])
 	for action_def in action_defs:
 		var btn := Button.new()
 		btn.text = str(action_def[0])
@@ -4021,11 +4068,9 @@ func _station_contact_topic_line(
 			]
 		"rumor":
 			var rumor := _station_contact_rumor_line(npc_name, npc_data, lines)
-			return "%s rumor, %s flavor: %s" % [
-				system_name,
-				humor_style,
-				rumor,
-			]
+			if rumor.is_empty():
+				return "Nothing clean enough to pass along right now."
+			return rumor
 		_:
 			return "I am the %s at %s today. Ask cleanly and maybe the answer stays cheap." % [
 				role,
@@ -4036,22 +4081,51 @@ func _station_contact_topic_line(
 func _station_contact_rumor_line(
 	npc_name: String,
 	npc_data: Dictionary,
-	lines: Array
+	_lines: Array
 ) -> String:
-	var system_rumor := _system_story_pack_rumor(npc_name, npc_data)
-	if not system_rumor.is_empty():
-		return system_rumor
-	var local_rumors: Array[String] = []
-	for raw_line in lines:
-		var clean_line := str(raw_line).strip_edges()
-		if not clean_line.is_empty():
-			local_rumors.append(clean_line)
+	var story_rumor := _station_contact_story_rumor(npc_name, npc_data)
+	if not story_rumor.is_empty():
+		var rumor_id := str(story_rumor.get("id", ""))
+		if not rumor_id.is_empty() and is_instance_valid(StoryManager):
+			StoryManager.record_lounge_rumor_heard(rumor_id)
+		return _format_station_intel_line(story_rumor)
 	var trail_clue := _campaign_rumor_trail_clue(npc_name, npc_data)
 	if not trail_clue.is_empty():
 		return trail_clue
-	if local_rumors.is_empty():
-		return "Nobody in this lounge agrees on the truth, which is usually how you know it is expensive."
-	return local_rumors[randi() % local_rumors.size()]
+	var system_rumor := _system_story_pack_rumor(npc_name, npc_data)
+	if not system_rumor.is_empty():
+		return system_rumor
+	return ""
+
+
+func _station_contact_story_rumor(
+	npc_name: String,
+	npc_data: Dictionary
+) -> Dictionary:
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("get_lounge_rumor"):
+		return {}
+	var context := _station_contact_local_context(npc_data)
+	context["npc_name"] = npc_name
+	context["station_id"] = _current_station_contact_id()
+	context["system_id"] = str(GlobalState.current_system_id)
+	var rumor: Dictionary = StoryManager.get_lounge_rumor(context)
+	if rumor.is_empty():
+		return {}
+	return rumor
+
+
+func _format_station_intel_line(rumor: Dictionary) -> String:
+	var title := str(rumor.get("title", "Intel")).strip_edges()
+	var source := str(rumor.get("source", "Story")).strip_edges()
+	var line := str(rumor.get("line", "")).strip_edges()
+	if line.is_empty():
+		return ""
+	if title.is_empty():
+		title = "Intel"
+	if source.is_empty():
+		source = "Story"
+	return "[%s - %s]\n%s" % [title, source, line]
 
 
 func _system_story_pack_rumor(npc_name: String, npc_data: Dictionary) -> String:
@@ -4073,8 +4147,8 @@ func _system_story_pack_rumor(npc_name: String, npc_data: Dictionary) -> String:
 	var rumor := str(local_rumors[abs(hash(key + "|rumor")) % local_rumors.size()])
 	var tension := str(story_pack.get("active_tension", ""))
 	if tension.is_empty():
-		return rumor
-	return "%s Around here that usually means %s." % [rumor, tension]
+		return "[Local Intel - System]\n%s" % rumor
+	return "[Local Intel - System]\n%s\nDock read: %s" % [rumor, tension]
 
 
 func _current_system_story_pack() -> Dictionary:
@@ -4122,7 +4196,10 @@ func _campaign_rumor_trail_clue(npc_name: String, npc_data: Dictionary) -> Strin
 	var clue := str(templates[abs(hash(key + "|clue")) % templates.size()]).strip_edges()
 	if clue.is_empty():
 		return ""
-	return "%s Keep that one in your pocket; it smells like a breadcrumb with invoices." % clue
+	var trail_name := str(trail.get("name", "Rumor Trail")).strip_edges()
+	if trail_name.is_empty():
+		trail_name = "Rumor Trail"
+	return "[%s - Campaign]\n%s" % [trail_name, clue]
 
 
 func _station_contact_local_context(npc_data: Dictionary) -> Dictionary:
@@ -4204,6 +4281,8 @@ func _request_station_contact_work(
 
 
 func _request_background_agent_quest() -> bool:
+	if not _agent_contracts_available_for_station():
+		return false
 	pending_quest_context = _current_agent_quest_context()
 	var profile := _current_station_agent_profile()
 	if profile.is_empty():
@@ -4276,6 +4355,47 @@ func _current_agent_quest_context() -> Dictionary:
 		"system_id": str(GlobalState.current_system_id),
 		"station_id": _current_station_contact_id(),
 	}
+
+
+func _agent_contracts_available_for_station() -> bool:
+	if QuestManager.is_lane_occupied("AGENT"):
+		return true
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("get_agent_contract_availability"):
+		return true
+	var status: Dictionary = StoryManager.get_agent_contract_availability({
+		"station_id": _current_station_contact_id(),
+		"station_name": _current_station_display_name(),
+	})
+	return bool(status.get("available", true))
+
+
+func _show_agent_contracts_unavailable() -> void:
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	var message := (
+		"No one is asking right now. I will send you a message when I need you to make us some more money."
+	)
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("get_agent_contract_availability"):
+		var status: Dictionary = StoryManager.get_agent_contract_availability({
+			"station_id": _current_station_contact_id(),
+			"station_name": _current_station_display_name(),
+		})
+		message = str(status.get("message", message))
+	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
+	_update_agent_portrait("neutral", "", "calm")
+	agent_dialogue_label.text = message
+	SpeechService.play(message, "voice.kaelen.v1")
+	agent_back_btn.visible = true
+
+
+func _start_agent_contract_cooldown(reason: String) -> void:
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("start_agent_contract_cooldown"):
+		return
+	StoryManager.start_agent_contract_cooldown(reason)
 
 
 func _is_agent_quest_context_current(context: Dictionary) -> bool:
@@ -7400,6 +7520,10 @@ func _refresh_agent_quest_board():
 	_update_agent_portrait("neutral", "", "neutral")
 	_clear_cached_agent_quest_if_stale()
 
+	if not _agent_contracts_available_for_station():
+		_show_agent_contracts_unavailable()
+		return
+
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
 		GlobalState.trace("[TRACE] [UIManager] Pre-cached quest found. Loading board instantly.")
@@ -7813,9 +7937,9 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	launch_btn.pressed.connect(undock_player)
 	agent_choices_container.add_child(launch_btn)
 	
-	# Start pre-caching the NEXT quest immediately in the background
-	GlobalState.trace("[TRACE] [UIManager] Quest accepted. Starting pre-caching of the next contract.")
-	_request_background_agent_quest()
+	# New agent work is intentionally not pre-cached here. Kaelen can go
+	# quiet after this contract resolves instead of feeling like an infinite
+	# contract printer.
 	
 	# Generate unique Kaelen completion/abandon lines for THIS quest in the background
 	cached_completion_line = ""
@@ -7875,16 +7999,15 @@ func _on_agent_complete_pressed():
 		)
 	cached_completion_line = ""
 	cached_abandon_line = ""
+	if not bool(completed_quest.get("public_board", false)):
+		_start_agent_contract_cooldown("contract_resolved")
 	
 	agent_dialogue_label.text = completion_text
 	SpeechService.play(completion_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	_add_kaelen_gate_intel_button()
 	
-	# If for some reason the cache is empty, request one now
-	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
-		GlobalState.trace("[TRACE] [UIManager] Cache empty on complete. Pre-caching next quest.")
-		_request_background_agent_quest()
+	_clear_cached_agent_quest("agent_cooldown_after_completion")
 
 func _on_agent_abandon_pressed():
 	SpeechService.start_interaction("Abandon Contract")
@@ -7916,15 +8039,13 @@ func _on_agent_abandon_pressed():
 		)
 	cached_completion_line = ""
 	cached_abandon_line = ""
+	_start_agent_contract_cooldown("contract_abandoned")
 	
 	agent_dialogue_label.text = abandon_text
 	SpeechService.play(abandon_text, "voice.kaelen.v1")
 	agent_back_btn.visible = true
 	
-	# If for some reason the cache is empty, request one now
-	if cached_quest_data.is_empty() and not LLMInterface.is_waiting:
-		GlobalState.trace("[TRACE] [UIManager] Cache empty on abandon. Pre-caching next quest.")
-		_request_background_agent_quest()
+	_clear_cached_agent_quest("agent_cooldown_after_abandon")
 
 func _on_partial_delivery_pressed(deliverable: float):
 	SpeechService.start_interaction("Partial Delivery")
