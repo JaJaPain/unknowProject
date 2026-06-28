@@ -37,7 +37,7 @@ const FACTION_STYLE := {
 # forced hull so they don't depend on the random catalog. role drives the
 # engine/weapon layout + marker setup.
 const SPECIAL_SHIPS := [
-	{"name": "Gunmetal — Tall", "faction": "gunmetal", "role": "Gunner", "hull": "hull.tall"},
+	{"name": "Gunmetal — Tall", "faction": "gunmetal", "role": "Gunner", "hull": "hull.tall", "weapon": "Turret_Set"},
 ]
 
 # Curated military part pools (file stem under each category folder).
@@ -212,7 +212,7 @@ static func _add_marker(parent: Node3D, marker_name: String, pos: Vector3) -> vo
 ## Schema:
 ##   {role, hull, parts:[{cat,stem,pos:[x,y,z]}...],
 ##    engine_markers:[[x,y,z]...], weapon_markers:[[x,y,z]...]}
-static func generate_recipe(role: String, seed_value: int, hull_override: String = "") -> Dictionary:
+static func generate_recipe(role: String, seed_value: int, hull_override: String = "", weapon_override: String = "") -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 
@@ -247,7 +247,7 @@ static func generate_recipe(role: String, seed_value: int, hull_override: String
 			engine_markers.append([xs[i], 0.0, pz + eb.position.z + eb.size.z])
 
 	# Weapons on dorsal surface in mirrored pairs, forward half.
-	var wpn_stem: String = VANGUARD_WEAPONS[rng.randi() % VANGUARD_WEAPONS.size()]
+	var wpn_stem: String = weapon_override if weapon_override != "" else VANGUARD_WEAPONS[rng.randi() % VANGUARD_WEAPONS.size()]
 	var wb = _measure_part("weapons", wpn_stem)
 	if wb != null:
 		for p in range(weapon_pairs):
@@ -425,7 +425,8 @@ static func build_special(index: int, apply_mat: bool = true) -> Node3D:
 	if index < 0 or index >= SPECIAL_SHIPS.size():
 		return null
 	var spec: Dictionary = SPECIAL_SHIPS[index]
-	var recipe := generate_recipe(str(spec["role"]), hash(str(spec["name"])), str(spec["hull"]))
+	var recipe := generate_recipe(str(spec["role"]), hash(str(spec["name"])),
+		str(spec["hull"]), str(spec.get("weapon", "")))
 	return build_from_recipe(recipe, str(spec["faction"]), apply_mat)
 
 

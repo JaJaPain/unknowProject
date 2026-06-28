@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://b8hptest01234"]
+[ext_resource type="Script" path="res://tools/assembler_preview/hp.gd" id="1_h"]
+[node name="HP" type="Node3D"]
+script = ExtResource("1_h")

@@ -14,5 +14,5 @@ func _ready() -> void:
 	for i in range(20): await get_tree().process_frame
 	for i in range(6): await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/player_view.png" % out)
-	print("PLAYERTEST_DONE size=", ps.get("_player_model_size"), " orbit=", ps.get("_drone_orbit_radius"))
+	print("PLAYERTEST_DONE size=", ps.get("_player_model_size"), " orbit=", ps.get("_drone_orbit_radius"), " hardpoints=", ps.get("hardpoints").size())
 	get_tree().quit()

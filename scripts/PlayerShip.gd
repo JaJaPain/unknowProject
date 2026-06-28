@@ -173,6 +173,8 @@ const PLAYER_SHIP_TILT_DEG := 0.0       # upright (vertical) — was close enoug
 var _player_model_size: Vector3 = Vector3(8, 4.5, 8)   # scaled model AABB (fallback ~old box)
 var _drone_orbit_radius: float = 6.8
 var _drone_size: float = 0.12
+var hardpoints: Array[Node3D] = []   # combat-fire origins (weapon_* markers on the model)
+var _hp_idx: int = 0
 
 ## Build the gunmetal hull.tall hero ship and fit it into the Visual node.
 func _build_player_ship_model() -> void:
@@ -198,6 +200,20 @@ func _build_player_ship_model() -> void:
 	# behind-and-above camera. Visual only holds the model, so this pivots clean.
 	visual.rotation_degrees.x = PLAYER_SHIP_TILT_DEG
 	_refit_collision()
+	_collect_hardpoints(model)
+
+## Gather the model's weapon_* markers as combat-fire origins (turrets).
+func _collect_hardpoints(node: Node) -> void:
+	hardpoints.clear()
+	_walk_hardpoints(node)
+
+func _walk_hardpoints(node: Node) -> void:
+	if node is Node3D:
+		var n := str(node.name).to_lower()
+		if n.begins_with("weapon_") or "hardpoint" in n:
+			hardpoints.append(node as Node3D)
+	for c in node.get_children():
+		_walk_hardpoints(c)
 
 func _refit_collision() -> void:
 	var cs := get_node_or_null("CollisionShape3D") as CollisionShape3D
@@ -1909,14 +1925,21 @@ func spawn_projectile(target_node: Node3D, visual_only: bool = false):
 	var proj_scene = load("res://scenes/projectile.tscn")
 	if proj_scene:
 		var p = proj_scene.instantiate()
+		# Fire from a hardpoint (turret) if available, cycling through them.
+		var origin := global_position
+		if not hardpoints.is_empty():
+			var hp := hardpoints[_hp_idx % hardpoints.size()]
+			_hp_idx += 1
+			if is_instance_valid(hp):
+				origin = hp.global_position
 		# Aim at the target so the cosmetic shot actually crosses the gap.
-		p.direction = (target_node.global_position - global_position).normalized()
+		p.direction = (target_node.global_position - origin).normalized()
 		# In combat, damage is resolved by CombatManager — keep the shot cosmetic.
 		p.damage = 0.0 if visual_only else GlobalState.weapon_damage
 		p.faction = "player"
 		p.color = Color.CYAN
 		get_parent().add_child(p)
-		p.global_position = global_position + p.direction * 2.2
+		p.global_position = origin + p.direction * 1.0
 
 
 func launch_combat_drone(target_node: Node3D) -> void:
