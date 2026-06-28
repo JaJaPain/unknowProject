@@ -1,5 +1,5 @@
 extends Node3D
-const VIEWS := {"top": Vector3(0.02,1,0.02), "front34": Vector3(0.5,0.5,0.8), "front": Vector3(0,0.15,1)}
+const VIEWS := {"negZ34": Vector3(0.5,0.4,-0.8), "negZ": Vector3(0,0.1,-1)}
 func _ready() -> void:
 	var out := OS.get_cmdline_user_args()[0]
 	DirAccess.make_dir_recursive_absolute(out)

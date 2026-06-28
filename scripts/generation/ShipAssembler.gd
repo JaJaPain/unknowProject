@@ -37,7 +37,7 @@ const FACTION_STYLE := {
 # forced hull so they don't depend on the random catalog. role drives the
 # engine/weapon layout + marker setup.
 const SPECIAL_SHIPS := [
-	{"name": "Gunmetal — Tall", "faction": "gunmetal", "role": "Gunner", "hull": "hull.tall", "weapon": "Turret_Set"},
+	{"name": "Gunmetal — Tall", "faction": "gunmetal", "role": "Gunner", "hull": "hull.tall", "weapon": "Turret_Set", "cockpit": true},
 ]
 
 # Curated military part pools (file stem under each category folder).
@@ -427,7 +427,42 @@ static func build_special(index: int, apply_mat: bool = true) -> Node3D:
 	var spec: Dictionary = SPECIAL_SHIPS[index]
 	var recipe := generate_recipe(str(spec["role"]), hash(str(spec["name"])),
 		str(spec["hull"]), str(spec.get("weapon", "")))
-	return build_from_recipe(recipe, str(spec["faction"]), apply_mat)
+	var node := build_from_recipe(recipe, str(spec["faction"]), apply_mat)
+	if node and apply_mat and bool(spec.get("cockpit", false)):
+		_add_cockpit_strips(node)
+	return node
+
+
+## Two emissive white "cockpit window" strips on the hull's +Z (camera-facing) face.
+static func _add_cockpit_strips(root: Node3D) -> void:
+	var hull := root.get_node_or_null("Hull") as Node3D
+	if hull == null:
+		return
+	var hb := _node_aabb(hull)
+	if hb.size == Vector3.ZERO:
+		return
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.9, 0.95, 1.0)
+	mat.emission_enabled = true
+	mat.emission = Color(0.85, 0.93, 1.0)
+	mat.emission_energy_multiplier = 4.0
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var front_z: float = hb.position.z - 0.05                  # -Z face (camera-facing in game)
+	var w: float = hb.size.x * 0.6
+	var h: float = hb.size.y * 0.035
+	# Two strips stacked in the upper third of the tall hull.
+	var ys := [hb.position.y + hb.size.y * 0.74, hb.position.y + hb.size.y * 0.62]
+	for i in range(ys.size()):
+		var q := MeshInstance3D.new()
+		q.name = "CockpitStrip_%d" % i
+		var qm := QuadMesh.new()
+		qm.size = Vector2(w, h)
+		q.mesh = qm
+		q.material_override = mat
+		q.position = Vector3(0.0, ys[i], front_z)
+		q.rotation_degrees = Vector3(0, 180, 0)     # face -Z (outward, toward camera)
+		root.add_child(q)
 
 
 ## Measure a part's AABB without keeping the instance. Returns null if missing.
