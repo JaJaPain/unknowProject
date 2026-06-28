@@ -261,20 +261,6 @@ func _tun_cell_label(parent: HBoxContainer, text: String, min_w: int) -> void:
 var _sv_viewer: Control
 var _sv_entries: Array = []   # [{faction, role, idx}]
 var _sv_dropdown: OptionButton
-var _sv_current_index: int = -1
-var _sv_strip_readout: Label
-
-func _sv_rebuild() -> void:
-	if _sv_current_index >= 0:
-		_on_sv_selected(_sv_current_index)
-
-func _update_strip_readout() -> void:
-	if _sv_strip_readout == null:
-		return
-	var f := ShipAssembler.cockpit_y_fracs
-	var z := ShipAssembler.cockpit_z_offsets
-	_sv_strip_readout.text = "→ Y: Top %.2f  Bot %.2f\n→ Z: Top %.2f  Bot %.2f\n→ Thick: %.2f" % [
-		float(f[0]), float(f[1]), float(z[0]), float(z[1]), ShipAssembler.cockpit_thickness]
 
 func _build_ship_viewer_tab() -> void:
 	var tab := add_tab("Ship Viewer")
@@ -302,78 +288,6 @@ func _build_ship_viewer_tab() -> void:
 	hint.text = "Drag = orbit\nScroll = zoom"
 	hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	left.add_child(hint)
-
-	# Cockpit strip height controls (live; rebuilds the viewer ship on change).
-	left.add_child(HSeparator.new())
-	var cs_lbl := Label.new()
-	cs_lbl.text = "Cockpit strips (Y fraction)"
-	cs_lbl.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
-	left.add_child(cs_lbl)
-	for i in range(ShipAssembler.cockpit_y_fracs.size()):
-		var rowc := HBoxContainer.new()
-		left.add_child(rowc)
-		var tag := Label.new()
-		tag.text = ("Top" if i == 0 else "Bot") + "  "
-		rowc.add_child(tag)
-		var sb := SpinBox.new()
-		sb.min_value = 0.0
-		sb.max_value = 1.0
-		sb.step = 0.01
-		sb.value = float(ShipAssembler.cockpit_y_fracs[i])
-		sb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var idx := i
-		sb.value_changed.connect(func(v):
-			ShipAssembler.cockpit_y_fracs[idx] = v
-			_update_strip_readout()
-			_sv_rebuild())
-		rowc.add_child(sb)
-
-	# Per-strip depth (Z) — push the strip into the hull so it sits flush.
-	var cz_lbl := Label.new()
-	cz_lbl.text = "Cockpit depth (Z, + = into hull)"
-	cz_lbl.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
-	left.add_child(cz_lbl)
-	for i in range(ShipAssembler.cockpit_z_offsets.size()):
-		var rowz := HBoxContainer.new()
-		left.add_child(rowz)
-		var tagz := Label.new()
-		tagz.text = ("Top" if i == 0 else "Bot") + "  "
-		rowz.add_child(tagz)
-		var sbz := SpinBox.new()
-		sbz.min_value = -2.0
-		sbz.max_value = 4.0
-		sbz.step = 0.02
-		sbz.value = float(ShipAssembler.cockpit_z_offsets[i])
-		sbz.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var idxz := i
-		sbz.value_changed.connect(func(v):
-			ShipAssembler.cockpit_z_offsets[idxz] = v
-			_update_strip_readout()
-			_sv_rebuild())
-		rowz.add_child(sbz)
-
-	# Strip thickness (Z depth of the box).
-	var rowt := HBoxContainer.new()
-	left.add_child(rowt)
-	var tagt := Label.new()
-	tagt.text = "Thick  "
-	rowt.add_child(tagt)
-	var sbt := SpinBox.new()
-	sbt.min_value = 0.05
-	sbt.max_value = 3.0
-	sbt.step = 0.05
-	sbt.value = ShipAssembler.cockpit_thickness
-	sbt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sbt.value_changed.connect(func(v):
-		ShipAssembler.cockpit_thickness = v
-		_update_strip_readout()
-		_sv_rebuild())
-	rowt.add_child(sbt)
-
-	_sv_strip_readout = Label.new()
-	_sv_strip_readout.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
-	left.add_child(_sv_strip_readout)
-	_update_strip_readout()
 
 	row.add_child(VSeparator.new())
 
@@ -405,7 +319,6 @@ func _build_ship_viewer_tab() -> void:
 func _on_sv_selected(index: int) -> void:
 	if index < 0 or index >= _sv_entries.size():
 		return
-	_sv_current_index = index
 	var e: Dictionary = _sv_entries[index]
 	if e.has("special"):
 		var node := ShipAssembler.build_special(int(e["special"]))
