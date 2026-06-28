@@ -32,6 +32,22 @@ const FACTION_STYLE := {
 		"engine": Color(1.0, 0.32, 0.08),
 		"badge": "VanguardBadge.png",
 	},
+	"zenith": {
+		"metal": "NavyBlueMetal.png",
+		"normal": "hull_normal.png",
+		"metallic": 0.82,
+		"roughness": 0.42,
+		"engine": Color(0.3, 0.6, 1.0),
+		"badge": "ZenithBadge.png",
+	},
+	"aurelia": {
+		"metal": "ForestGreenMetal.png",
+		"normal": "hull_normal.png",
+		"metallic": 0.82,
+		"roughness": 0.42,
+		"engine": Color(0.4, 1.0, 0.6),
+		"badge": "AurelliaBadge.png",
+	},
 	# Neutral gunmetal grey — no faction badge. Player-ship / showcase use.
 	"gunmetal": {
 		"metal": "metal.png",
