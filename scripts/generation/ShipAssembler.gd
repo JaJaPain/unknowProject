@@ -135,9 +135,10 @@ const PART_LOOK := {
 	# in-game by NPCShip._create_engine_glow at the engine_* markers.
 	"engine": {"tint": Color(0.5, 0.5, 0.55), "metallic": 0.7, "rough": 0.55, "emit_energy": 0.0},
 	"weapon": {"tint": Color(0.42, 0.43, 0.48), "metallic": 0.95, "rough": 0.3,  "emit_energy": 0.0},
-	# Thruster nozzles (split out of 5-Engine in Blender): crisp dark metal with a
-	# faint hot rim. Applied to surfaces whose source material is named "Thruster".
-	"thruster": {"tint": Color(0.32, 0.33, 0.36), "metallic": 0.9, "rough": 0.22, "emit_energy": 0.45},
+	# Thruster nozzles (split out of 5-Engine in Blender): crisp dark METAL — no
+	# emission. The glow is the thrust plume coming out of them (engine glow at the
+	# engine_* markers), not the part emitting. Surfaces named "Thruster".
+	"thruster": {"tint": Color(0.32, 0.33, 0.36), "metallic": 0.9, "rough": 0.22, "emit_energy": 0.0},
 }
 
 
