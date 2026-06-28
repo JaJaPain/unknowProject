@@ -40,6 +40,7 @@ _Active task list. Update this file at the end of every session._
 - [ ] **Enemy low-health escalation arc** — enemy dialogue/behavior should escalate when below 30% HP
 - [ ] **Impact decals on player ship** — hull hit marks that persist during a fight
 - [ ] **Richer combat taunt flavor** — taunt bucket system: reason-aware taunts (flanked, shielded, drone hit, etc.)
+- [ ] **Execute button flashes when AP fully spent** — when the player has spent all their AP, pulse/flash the Execute button to signal the turn is ready to commit.
 
 ---
 
@@ -89,6 +90,7 @@ _Full design in `docs/design_narrative_system.md`. Build in order — each phase
 - [ ] **Generated systems: station variety** — all proc-gen stations look the same; need visual variants
 - [ ] **Generated systems: difficulty scaling** — enemy stats should scale with system danger level
 - [ ] **Discovery visual treatments** — named/story systems should feel different on arrival: skybox tint, arrival text banner, environmental storytelling (debris, explosion haze). See `docs/design_parking_lot.md §2`
+- [ ] **Sensor contacts panel (name TBD)** — when a ship comes within passive-sensor range (or you're in combat with it), it's added to a contacts list. Open the list to view that ship's 3D model (rotatable) plus the details your sensors picked up: ship class/role, weapon types, power supply/reactor, shields, hull composition, faction, etc. Fidelity of detail could scale with sensor strength / scan time. Data already partially exists on `NPCShip` (weapon_tier, powerplant_tier, hull_composition, shield_tier, archetype) — surface it here. Kitbash ships make the 3D model view cheap to render. **3D viewer already built:** `scripts/ui/ModelViewer.gd` + `scenes/ui/model_viewer.tscn` (orbit-drag/zoom/auto-spin, `show_ship(faction,role,seed)` / `set_model(node)`) — just drop it into the panel.
 
 ---
 
@@ -119,6 +121,15 @@ Deployment checklist for a shipped build:
 
 ## Polish / Future
 
+- [ ] **Kitbash ships: extend to other factions** — only `vanguard` is wired (`ASSEMBLED_FACTIONS` in `NPCShip.gd`). Add Zenith (NavyBlueMetal/ZenithBadge), Aurelia (ForestGreenMetal/AurelliaBadge) to `ShipAssembler.FACTION_STYLE`, then add to `ASSEMBLED_FACTIONS`. Hybrid plan: introduce a few NEW hull designs for new factions and recycle existing ones in by system 4–5.
+- [ ] **Kitbash ships: per-faction normal variants** — wire `hull_normal_var_1..9.png` into `FACTION_STYLE` so factions read distinctly beyond color.
+- [ ] **Kitbash ships: mesh-merge + texture atlas (deferred opt)** — only if hundreds of ships on screen; merge each design's parts into one mesh + atlas. Recipe data already supports baking later.
+- [ ] **Kitbash ships: greeble pass** — designs currently use hull+engines+weapons only; the `greebles/` (64) and `detail/` (13) part folders are exported but unused. Add bridges/antennas/vents for extra silhouette interest.
+- [ ] **NPC exhaust glow rework** — current `NPCShip._create_engine_glow` draws flat sphere blobs at the engine markers (read as stickers, not thrust). Make them look like proper thruster exhaust — space-game stylized, not photoreal: tapered plume/cone, hot core + falloff, subtle flicker, speed-scaled length, maybe a short trail. Color per faction (`_get_engine_color`).
+- [ ] **Player ship: gunmetal hull.tall (hero ship)** — replace the old INDYMiner player model (UVs/mesh trashed from Trellis). Plan: (1) bring `hull.tall` back into Blender and **separate the thruster from the engine body** as distinct meshes/material slots so each can take its own UV (crisp exhaust is the priority — player stares down it for hours). (2) Re-export; keep hull.tall as the body. (3) Cockpit detail = two **emissive white rectangle decal strips**, one in each of the two circled front spots — that's enough once the exhaust is crisp. (4) Orient fore-aft: hull.tall's long axis is Y (14.5) — its TALL end is the engine/exhaust cluster (confirmed good-looking), point that at the camera. (5) Wire into `scenes/player_ship.tscn` / `PlayerShip.gd` Visual, refit collision box + camera distance. Gunmetal style already exists in `ShipAssembler.FACTION_STYLE`.
+- [ ] **Drones: make fitment parametric** — drone orbit/size are hardcoded to ship scale (`PlayerShip.gd` `_create_drones` orbit_radius=6.8 :2090, sphere_radius=0.12 :2091; salvage rest 6.8 ~:2311; combat drone scale 1.8 :1917). Derive from player visual AABB in `_ready` so any new ship — and future ship-upgrade hull swaps — auto-fit. See memory `project_drone_ship_fitment`.
+- [ ] **Kitbash ships: cockpit lights** — add a warm emissive glow at the cockpit/bridge area (lit windows). Approach: emissive marker/quad near the bow-top, or an emissive sub-material. Player liked the rest of the parts as-is; cockpit lights + thruster rework are the two finishing touches before these "look great."
+- [ ] **Badge polish** — dorsal badge is small/subtle on large hulls; consider cropping to emblem-only (drop wordmark) for hull decals.
 - [ ] **NAS asset migration** — move binary assets off git repo to NAS once hardware acquired; binaries-in-repo is accepted interim
 - [ ] **Boss cinematic phases** — phase transition should have its own brief camera moment / sting beyond the current chatter line
 - [ ] **Multi-boss / 3-on-1** — true squad fights beyond 2 enemies; needs a target picker on the wheel

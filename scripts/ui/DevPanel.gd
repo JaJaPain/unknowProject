@@ -39,6 +39,7 @@ func _ready() -> void:
 	visible = false
 	_build_chrome()
 	_build_faction_tuning_tab()
+	_build_ship_viewer_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
 	# _build_my_tool(my_tab)
@@ -255,6 +256,76 @@ func _tun_cell_label(parent: HBoxContainer, text: String, min_w: int) -> void:
 	lbl.custom_minimum_size = Vector2(min_w, 0)
 	lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	parent.add_child(lbl)
+
+# ── Ship viewer tab ─────────────────────────────────────────────────────────
+var _sv_viewer: Control
+var _sv_entries: Array = []   # [{faction, role, idx}]
+var _sv_dropdown: OptionButton
+
+func _build_ship_viewer_tab() -> void:
+	var tab := add_tab("Ship Viewer")
+
+	var row := HBoxContainer.new()
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tab.add_child(row)
+
+	# Left: controls.
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(230, 0)
+	row.add_child(left)
+
+	var lbl := Label.new()
+	lbl.text = "Ship"
+	lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	left.add_child(lbl)
+
+	_sv_dropdown = OptionButton.new()
+	_sv_dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_child(_sv_dropdown)
+
+	var hint := Label.new()
+	hint.text = "Drag = orbit\nScroll = zoom"
+	hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	left.add_child(hint)
+
+	row.add_child(VSeparator.new())
+
+	# Right: the reusable 3D viewer.
+	_sv_viewer = load("res://scenes/ui/model_viewer.tscn").instantiate()
+	_sv_viewer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sv_viewer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sv_viewer.custom_minimum_size = Vector2(640, 620)
+	row.add_child(_sv_viewer)
+
+	# Showcase / favourite ships first (player-ship candidates etc.).
+	for i in range(ShipAssembler.special_ship_names().size()):
+		_sv_dropdown.add_item("★ %s" % ShipAssembler.special_ship_names()[i])
+		_sv_entries.append({"special": i})
+
+	# Then every styled faction × every catalog design.
+	for faction in ShipAssembler.styled_factions():
+		for role in ShipAssembler.catalog_roles():
+			for i in range(ShipAssembler.design_count(role)):
+				_sv_dropdown.add_item("%s  %s  #%d" % [str(faction).capitalize(), role, i + 1])
+				_sv_entries.append({"faction": faction, "role": role, "idx": i})
+
+	_sv_dropdown.item_selected.connect(_on_sv_selected)
+	if _sv_entries.size() > 0:
+		_sv_dropdown.select(0)
+		# Build first ship once the viewer is in-tree and ready.
+		call_deferred("_on_sv_selected", 0)
+
+func _on_sv_selected(index: int) -> void:
+	if index < 0 or index >= _sv_entries.size():
+		return
+	var e: Dictionary = _sv_entries[index]
+	if e.has("special"):
+		var node := ShipAssembler.build_special(int(e["special"]))
+		if node:
+			_sv_viewer.set_model(node)
+	else:
+		_sv_viewer.show_ship(e["faction"], e["role"], e["idx"])
 
 # ── Styling ───────────────────────────────────────────────────────────────────
 func _make_panel_style() -> StyleBoxFlat:

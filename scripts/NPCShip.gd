@@ -91,6 +91,9 @@ const MAJOR_FACTION_MODELS := {
 	},
 }
 
+# Factions whose ships are kitbash-assembled at runtime via ShipAssembler.
+const ASSEMBLED_FACTIONS := {"vanguard": true}
+
 const MAJOR_HULL_TARGET_SIZES := {
 	"Gunner": 24.0,
 	"Interceptor": 22.0,
@@ -296,6 +299,11 @@ func _setup_hull():
 				_setup_amarr_hardpoints(hull_instance)
 		return
 	
+	# Vanguard ships are kitbash-assembled at runtime from the part library
+	# (no prebuilt GLB, no Blender). Falls through to legacy GLB on failure.
+	if ASSEMBLED_FACTIONS.has(faction) and _build_assembled_hull():
+		return
+
 	# Major factions use role-specific local models. Dynamic loading keeps the
 	# project runnable when the ignored art folders are absent on another machine.
 	var model_path := GameContentRegistry.shared().ship_path(faction, ship_role)
@@ -331,6 +339,23 @@ func _setup_hull():
 		visual.add_child(hull_instance)
 		hull_instance.scale = Vector3(6.0, 6.0, 6.0)
 		hull_instance.rotation.y = PI
+
+## Build and install a runtime kitbash hull for assembled factions.
+## Returns false if assembly failed so the caller can fall back to a GLB.
+func _build_assembled_hull() -> bool:
+	var seed_value: int = hash("%s|%s|%s" % [faction, ship_role, name])
+	var model := ShipAssembler.build_catalog_ship(faction, ship_role, seed_value)
+	if model == null:
+		push_warning("[NPCShip] Assembler failed for %s %s; using legacy hull." % [faction, ship_role])
+		return false
+	hull_instance = model
+	visual.add_child(hull_instance)
+	hull_instance.rotation.y = PI
+	_fit_major_hull(hull_instance)
+	hull_instance.scale *= 1.5
+	_setup_model_points(hull_instance)
+	return true
+
 
 func apply_generated_model(model: Node3D) -> void:
 	if destroyed or model == null:

@@ -49,3 +49,6 @@ docs/bug_screenshots/
 
 # Local Godot test logs (Claude headless runs)
 .tmp_godot_user/
+
+# Kitbash ship part library — committed as runtime source of truth for ShipAssembler
+!assets/ship_parts/**/*.glb
