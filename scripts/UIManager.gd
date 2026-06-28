@@ -2096,9 +2096,7 @@ func _create_pause_menu():
 	video_title.add_theme_font_size_override("font_size", 15)
 	video_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
 	controls.add_child(video_title)
-	_add_toggle_row(controls, "Bloom", GlobalState.bloom_enabled, func(val: bool) -> void:
-		GlobalState.bloom_enabled = val
-	)
+	_add_bloom_row(controls)
 
 	pause_panel.visible = false
 	_create_campaign_manager()
@@ -2201,6 +2199,33 @@ func _add_toggle_row(
 	row.add_child(toggle)
 	toggle.toggled.connect(func(pressed: bool) -> void:
 		setter.call(pressed)
+	)
+
+
+func _add_bloom_row(parent: Control) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var label := Label.new()
+	label.text = "Bloom"
+	label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 2.0
+	slider.step = 0.05
+	slider.value = GlobalState.bloom_amount
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(slider)
+	var value := Label.new()
+	value.custom_minimum_size = Vector2(58, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value)
+	var update_label := func(next_value: float) -> void:
+		value.text = "Off" if next_value <= 0.01 else "%d%%" % int(next_value * 100.0)
+	update_label.call(slider.value)
+	slider.value_changed.connect(func(next_value: float) -> void:
+		GlobalState.bloom_amount = next_value
+		update_label.call(next_value)
 	)
 
 

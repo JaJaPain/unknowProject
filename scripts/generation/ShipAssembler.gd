@@ -310,6 +310,7 @@ static func build_from_recipe(recipe: Dictionary, faction: String = "", apply_ma
 	root.add_child(hull)
 
 	var counters := {"engines": 0, "weapons": 0, "greebles": 0, "detail": 0}
+	var detailed_engine_socket_count := 0
 	for part in recipe.get("parts", []):
 		var cat := str(part["cat"])
 		var n := _load_part(cat, str(part["stem"]))
@@ -319,11 +320,18 @@ static func build_from_recipe(recipe: Dictionary, faction: String = "", apply_ma
 		n.name = "mount_%s_%d" % [cat, int(counters.get(cat, 0))]
 		counters[cat] = int(counters.get(cat, 0)) + 1
 		root.add_child(n)
+		if cat == "engines":
+			detailed_engine_socket_count = _add_thruster_socket_markers(
+				root,
+				n,
+				detailed_engine_socket_count
+			)
 
 	var ei := 0
-	for m in recipe.get("engine_markers", []):
-		_add_marker(root, "engine_%d" % ei, _arr_vec3(m))
-		ei += 1
+	if detailed_engine_socket_count == 0:
+		for m in recipe.get("engine_markers", []):
+			_add_marker(root, "engine_%d" % ei, _arr_vec3(m))
+			ei += 1
 	var wi := 0
 	for m in recipe.get("weapon_markers", []):
 		_add_marker(root, "weapon_%d" % wi, _arr_vec3(m))
@@ -333,6 +341,48 @@ static func build_from_recipe(recipe: Dictionary, faction: String = "", apply_ma
 		_apply_faction_materials(root, faction)
 		_add_badge(root, faction)
 	return root
+
+
+static func _add_thruster_socket_markers(root: Node3D, part_root: Node3D, start_index: int) -> int:
+	var sockets: Array[Node3D] = []
+	_collect_thruster_socket_nodes(part_root, sockets)
+	var index := start_index
+	for socket in sockets:
+		if socket is MeshInstance3D:
+			(socket as MeshInstance3D).visible = false
+			(socket as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var marker := Marker3D.new()
+		marker.name = "thruster_%d" % index
+		marker.transform = _local_transform_to_ancestor(root, socket)
+		marker.set_meta("thruster_radius", 0.34)
+		root.add_child(marker)
+		index += 1
+	return index
+
+
+static func _collect_thruster_socket_nodes(node: Node, out: Array[Node3D]) -> void:
+	if node is Node3D and _node_name_is_thruster_socket(str(node.name)):
+		out.append(node as Node3D)
+	for child in node.get_children():
+		_collect_thruster_socket_nodes(child, out)
+
+
+static func _node_name_is_thruster_socket(node_name: String) -> bool:
+	var lower_name := node_name.to_lower()
+	return "thruster" in lower_name \
+		or "truster" in lower_name \
+		or "nozzle" in lower_name \
+		or "exhaust" in lower_name
+
+
+static func _local_transform_to_ancestor(ancestor: Node3D, node: Node3D) -> Transform3D:
+	var xform := Transform3D.IDENTITY
+	var cursor: Node = node
+	while cursor != null and cursor != ancestor:
+		if cursor is Node3D:
+			xform = (cursor as Node3D).transform * xform
+		cursor = cursor.get_parent()
+	return xform
 
 
 ## Place the faction badge as a flat dorsal decal near the bow.

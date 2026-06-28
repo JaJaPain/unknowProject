@@ -1564,10 +1564,27 @@ var paused: bool = false:
 var bloom_enabled: bool = true:
 	set(val):
 		bloom_enabled = val
+		if not val and bloom_amount > 0.0:
+			bloom_amount = 0.0
+		elif val and bloom_amount <= 0.0:
+			bloom_amount = 1.0
 		bloom_changed.emit(val)
+		bloom_amount_changed.emit(bloom_amount)
 		_save_visual_prefs()
 
+var bloom_amount: float = 1.0:
+	set(val):
+		bloom_amount = clampf(val, 0.0, 2.0)
+		var next_enabled := bloom_amount > 0.01
+		if bloom_enabled != next_enabled:
+			bloom_enabled = next_enabled
+		else:
+			bloom_changed.emit(bloom_enabled)
+			bloom_amount_changed.emit(bloom_amount)
+			_save_visual_prefs()
+
 signal bloom_changed(enabled: bool)
+signal bloom_amount_changed(amount: float)
 
 # Reputation system
 var reputations: Dictionary = {
@@ -2040,7 +2057,10 @@ func _load_visual_prefs() -> void:
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
 	if parsed is Dictionary:
-		bloom_enabled = bool(parsed.get("bloom_enabled", true))
+		if parsed.has("bloom_amount"):
+			bloom_amount = float(parsed.get("bloom_amount", 1.0))
+		else:
+			bloom_enabled = bool(parsed.get("bloom_enabled", true))
 
 func _save_visual_prefs() -> void:
 	var prefs := {}
@@ -2052,6 +2072,7 @@ func _save_visual_prefs() -> void:
 			if parsed is Dictionary:
 				prefs = parsed
 	prefs["bloom_enabled"] = bloom_enabled
+	prefs["bloom_amount"] = bloom_amount
 	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.WRITE)
 	if file == null:
 		return

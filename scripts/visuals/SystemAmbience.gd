@@ -164,21 +164,32 @@ static func apply_glow(env: Environment, connect_toggle: bool = true) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var global_state := tree.root.get_node_or_null("/root/GlobalState") if tree else null
 	if global_state == null:
-		env.glow_enabled = true
+		apply_bloom_amount(env, 1.0)
 		return
-	if connect_toggle and global_state.has_signal("bloom_changed"):
-		global_state.bloom_changed.connect(func(enabled: bool) -> void:
-			env.glow_enabled = enabled
-		)
-	if not bool(global_state.get("bloom_enabled")):
+	if connect_toggle:
+		if global_state.has_signal("bloom_amount_changed"):
+			global_state.bloom_amount_changed.connect(func(amount: float) -> void:
+				apply_bloom_amount(env, amount)
+			)
+		elif global_state.has_signal("bloom_changed"):
+			global_state.bloom_changed.connect(func(enabled: bool) -> void:
+				apply_bloom_amount(env, 1.0 if enabled else 0.0)
+			)
+	apply_bloom_amount(env, float(global_state.get("bloom_amount")))
+
+
+static func apply_bloom_amount(env: Environment, amount: float) -> void:
+	amount = clampf(amount, 0.0, 2.0)
+	if amount <= 0.01:
+		env.glow_enabled = false
 		return
 	env.glow_enabled = true
-	env.glow_intensity = 1.2
-	env.glow_strength = 1.2
+	env.glow_intensity = lerpf(0.45, 1.65, amount / 2.0)
+	env.glow_strength = lerpf(0.55, 1.65, amount / 2.0)
 	env.glow_bloom = 0.0
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	env.glow_hdr_threshold = 1.0
-	env.glow_hdr_scale = 2.5
+	env.glow_hdr_scale = lerpf(1.4, 3.2, amount / 2.0)
 	env.set_glow_level(0, false)
 	env.set_glow_level(1, true)
 	env.set_glow_level(2, true)

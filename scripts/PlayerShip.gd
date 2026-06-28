@@ -3,6 +3,7 @@ extends CharacterBody3D
 const NavigationRoutePlannerType := preload(
 	"res://scripts/navigation/NavigationRoutePlanner.gd"
 )
+const ThrusterBankType := preload("res://scripts/visuals/ThrusterBank.gd")
 const WORLD_PICK_DISTANCE := 100000.0
 
 @export var max_speed: float = 25.0
@@ -27,6 +28,8 @@ var boost_effect_meshes: Array[MeshInstance3D] = []
 var boost_effect_lights: Array[OmniLight3D] = []
 var boost_effect_material: StandardMaterial3D
 var exhaust_flames: Array[MeshInstance3D] = []
+var thruster_bank: Node = null
+var _generated_thruster_sockets: Array[Node3D] = []
 
 # Drawback tracking variables
 var engine_stall_timer: float = 0.0
@@ -2081,93 +2084,132 @@ func _create_mine_particles() -> GPUParticles3D:
 func _create_boost_effects() -> void:
 	boost_effect_meshes.clear()
 	boost_effect_lights.clear()
-	boost_effect_material = StandardMaterial3D.new()
-	boost_effect_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	boost_effect_material.albedo_color = Color(0.25, 0.85, 1.0, 0.65)
-	boost_effect_material.emission_enabled = true
-	boost_effect_material.emission = Color(0.15, 0.75, 1.0)
-	boost_effect_material.emission_energy_multiplier = 5.0
+	exhaust_flames.clear()
+	for socket in _generated_thruster_sockets:
+		if is_instance_valid(socket):
+			socket.queue_free()
+	_generated_thruster_sockets.clear()
+	if thruster_bank == null:
+		thruster_bank = ThrusterBankType.new()
+		thruster_bank.name = "ThrusterBank"
+		add_child(thruster_bank)
+	else:
+		thruster_bank.clear()
 
 	var thruster_points: Array[Node3D] = []
 	_find_thruster_points(visual, thruster_points)
 	if thruster_points.is_empty():
-		_create_fallback_boost_effect(Vector3(-1.4, -0.1, 4.7))
-		_create_fallback_boost_effect(Vector3(1.4, -0.1, 4.7))
+		_create_fallback_thruster_socket(Vector3(-1.4, -0.1, 4.7))
+		_create_fallback_thruster_socket(Vector3(1.4, -0.1, 4.7))
 		_find_thruster_points(self, thruster_points)
 	else:
-		for point in thruster_points:
-			_create_boost_effect_at(point)
-	exhaust_flames = EngineExhaust.create_exhaust(
-		self, thruster_points, Color(0.15, 0.75, 1.0)
-	)
+		thruster_points = _expand_player_thruster_sockets(thruster_points)
+	thruster_bank.setup(thruster_points, Color(0.18, 0.72, 1.0), 1.0)
 	_update_boost_effects(0.0)
 
 
 func _find_thruster_points(node: Node, out: Array[Node3D]) -> void:
 	var lower_name := str(node.name).to_lower()
-	if node is Node3D \
-			and node != visual \
-			and (
-				"thruster" in lower_name
-				or "engine" in lower_name
-				or "exhaust" in lower_name
-				or "nozzle" in lower_name
-			):
+	if node is Marker3D and (
+			lower_name.begins_with("engine_")
+			or lower_name.begins_with("thruster_")
+			or lower_name.begins_with("exhaust_")
+			or lower_name.begins_with("nozzle_")
+	):
 		out.append(node as Node3D)
 	for child in node.get_children():
 		_find_thruster_points(child, out)
 
 
-func _create_fallback_boost_effect(local_position: Vector3) -> void:
-	var anchor := Node3D.new()
-	anchor.name = "FallbackBoostThruster"
+func _create_fallback_thruster_socket(local_position: Vector3) -> void:
+	var anchor := Marker3D.new()
+	anchor.name = "FallbackThrusterSocket"
 	anchor.position = local_position
+	anchor.set_meta("thruster_radius", 0.55)
 	add_child(anchor)
-	_create_boost_effect_at(anchor)
+	_generated_thruster_sockets.append(anchor)
 
 
-func _create_boost_effect_at(anchor: Node3D) -> void:
-	var flame_mesh := SphereMesh.new()
-	flame_mesh.radius = 0.42
-	flame_mesh.height = 1.4
-	flame_mesh.material = boost_effect_material
+func _expand_player_thruster_sockets(base_points: Array[Node3D]) -> Array[Node3D]:
+	if base_points.size() >= 10:
+		for point in base_points:
+			point.set_meta("thruster_radius", 0.42)
+		return base_points
+	if base_points.size() == 2:
+		return _create_player_ten_thruster_bank(base_points)
 
-	var flame := MeshInstance3D.new()
-	flame.name = "BoostFlame"
-	flame.mesh = flame_mesh
-	flame.visible = false
-	flame.position = Vector3(0.0, 0.0, 0.7)
-	anchor.add_child(flame)
-	boost_effect_meshes.append(flame)
+	var expanded: Array[Node3D] = []
+	var socket_offsets: Array[Vector3] = [
+		Vector3(0.0, 0.0, 0.0),
+		Vector3(-0.34, 0.18, 0.0),
+		Vector3(0.34, 0.18, 0.0),
+		Vector3(-0.26, -0.25, 0.0),
+		Vector3(0.26, -0.25, 0.0),
+	]
+	for base in base_points:
+		for i in range(socket_offsets.size()):
+			var socket := Marker3D.new()
+			socket.name = "ThrusterSocket_%s_%d" % [base.name, i]
+			socket.position = socket_offsets[i]
+			socket.set_meta("thruster_radius", 0.38 if i == 0 else 0.27)
+			base.add_child(socket)
+			_generated_thruster_sockets.append(socket)
+			expanded.append(socket)
+	return expanded
 
-	var light := OmniLight3D.new()
-	light.name = "BoostFlameLight"
-	light.light_color = Color(0.25, 0.75, 1.0)
-	light.light_energy = 0.0
-	light.omni_range = 8.0
-	flame.add_child(light)
-	boost_effect_lights.append(light)
+
+func _create_player_ten_thruster_bank(base_points: Array[Node3D]) -> Array[Node3D]:
+	var parent := base_points[0].get_parent() as Node3D
+	if parent == null:
+		return base_points
+
+	var left := parent.to_local(base_points[0].global_position)
+	var right := parent.to_local(base_points[1].global_position)
+	if left.x > right.x:
+		var tmp := left
+		left = right
+		right = tmp
+
+	var center := (left + right) * 0.5
+	var half_span := maxf(abs(right.x - left.x) * 0.5, 0.45)
+	var top_y := center.y + half_span * 0.34
+	var bottom_y := center.y - half_span * 0.34
+	var z := center.z + half_span * 0.04
+	var specs: Array[Dictionary] = [
+		{"x": -1.45, "y": top_y, "r": 0.32},
+		{"x": -0.82, "y": top_y, "r": 0.29},
+		{"x": -0.28, "y": top_y, "r": 0.30},
+		{"x": 0.82, "y": top_y, "r": 0.29},
+		{"x": 1.45, "y": top_y, "r": 0.32},
+		{"x": -1.12, "y": bottom_y, "r": 0.36},
+		{"x": -0.48, "y": bottom_y, "r": 0.42},
+		{"x": 0.0, "y": bottom_y, "r": 0.44},
+		{"x": 0.48, "y": bottom_y, "r": 0.42},
+		{"x": 1.12, "y": bottom_y, "r": 0.36},
+	]
+
+	var sockets: Array[Node3D] = []
+	for i in range(specs.size()):
+		var spec := specs[i]
+		var socket := Marker3D.new()
+		socket.name = "PlayerThrusterSocket_%02d" % i
+		socket.position = Vector3(
+			center.x + half_span * float(spec["x"]),
+			float(spec["y"]),
+			z
+		)
+		socket.set_meta("thruster_radius", float(spec["r"]))
+		parent.add_child(socket)
+		_generated_thruster_sockets.append(socket)
+		sockets.append(socket)
+	return sockets
 
 
 func _update_boost_effects(_delta: float) -> void:
 	var active := boost_timer > 0.0
-	var pulse := 1.0 + sin(Time.get_ticks_msec() * 0.02) * 0.2
-	for flame in boost_effect_meshes:
-		if not is_instance_valid(flame):
-			continue
-		flame.visible = active
-		if active:
-			flame.scale = Vector3(0.75, 0.75, 1.6 + pulse * 0.45)
-	for light in boost_effect_lights:
-		if not is_instance_valid(light):
-			continue
-		light.light_energy = 8.0 + pulse * 4.0 if active else 0.0
 	var speed_limit: float = max_speed * GlobalState.engine_speed_mult
-	EngineExhaust.update_intensity(
-		exhaust_flames,
-		current_speed / maxf(speed_limit, 1.0),
-		active
-	)
+	if thruster_bank:
+		thruster_bank.update_intensity(current_speed / maxf(speed_limit, 1.0), active)
 
 
 func _create_drones():
