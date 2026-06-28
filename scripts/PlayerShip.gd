@@ -162,9 +162,72 @@ func _ready():
 	CombatManager.action_impact.connect(_on_action_impact_cam)
 	CombatManager.combat_kill.connect(_on_combat_kill_cam)
 
+	_build_player_ship_model()
 	_create_drones()
 	_create_boost_effects()
 	_create_nose_raycast()
+
+# ── Kitbash player ship ──────────────────────────────────────────────────────
+const PLAYER_SHIP_TARGET_SIZE := 16.0   # largest visual extent in world units
+const PLAYER_SHIP_TILT_DEG := 0.0       # upright (vertical) — was close enough
+var _player_model_size: Vector3 = Vector3(8, 4.5, 8)   # scaled model AABB (fallback ~old box)
+var _drone_orbit_radius: float = 6.8
+var _drone_size: float = 0.12
+
+## Build the gunmetal hull.tall hero ship and fit it into the Visual node.
+func _build_player_ship_model() -> void:
+	var model := ShipAssembler.build_special(0)   # ★ Gunmetal — Tall
+	if model == null:
+		push_warning("[PlayerShip] Assembler failed; keeping empty Visual.")
+		return
+	visual.add_child(model)
+	var box := _model_aabb(model)
+	var longest: float = maxf(box.size.x, maxf(box.size.y, box.size.z))
+	if longest < 0.01:
+		return
+	var s: float = PLAYER_SHIP_TARGET_SIZE / longest
+	model.scale = Vector3(s, s, s)
+	# Center the model's AABB on the ship origin.
+	model.position = -(box.position + box.size * 0.5) * s
+	_player_model_size = box.size * s
+	# Drones fit to the new hull: orbit just outside the widest half-extent.
+	var half_w: float = maxf(_player_model_size.x, _player_model_size.z) * 0.5
+	_drone_orbit_radius = half_w + 2.5
+	_drone_size = clampf(longest * s * 0.04, 0.25, 0.6)
+	# Lean the (centered) ship off-vertical so the exhaust + top read in the
+	# behind-and-above camera. Visual only holds the model, so this pivots clean.
+	visual.rotation_degrees.x = PLAYER_SHIP_TILT_DEG
+	_refit_collision()
+
+func _refit_collision() -> void:
+	var cs := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if cs and cs.shape is BoxShape3D:
+		var box := cs.shape.duplicate() as BoxShape3D
+		box.size = Vector3(
+			maxf(_player_model_size.x * 0.7, 2.0),
+			maxf(_player_model_size.y * 0.55, 2.0),
+			maxf(_player_model_size.z * 0.8, 2.0))
+		cs.shape = box
+
+func _model_aabb(node: Node3D) -> AABB:
+	var meshes: Array[MeshInstance3D] = []
+	_collect_player_meshes(node, meshes)
+	var combined := AABB()
+	var first := true
+	for mi in meshes:
+		var rel := node.global_transform.affine_inverse() * mi.global_transform
+		var b := rel * mi.get_aabb()
+		if first:
+			combined = b; first = false
+		else:
+			combined = combined.merge(b)
+	return combined
+
+func _collect_player_meshes(node: Node, out: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		out.append(node)
+	for c in node.get_children():
+		_collect_player_meshes(c, out)
 
 var _nose_ray: ShapeCast3D = null
 
@@ -2087,8 +2150,8 @@ func _update_boost_effects(_delta: float) -> void:
 func _create_drones():
 	randomize()
 	
-	var orbit_radius = 6.8
-	var sphere_radius = 0.12 # Basketball size relative to ship scale
+	var orbit_radius = _drone_orbit_radius   # parametric: fits current ship size
+	var sphere_radius = _drone_size          # parametric: scales with ship
 	
 	# Create common glowing green material for both drones
 	var mat = StandardMaterial3D.new()
@@ -2215,7 +2278,7 @@ func _update_drones(delta: float) -> void:
 					else:
 						_drone_returning[i] = false
 						mesh.top_level = false
-						mesh.position = Vector3(6.8 * (1.0 if i == 0 else -1.0), 0.0, 0.0)
+						mesh.position = Vector3(_drone_orbit_radius * (1.0 if i == 0 else -1.0), 0.0, 0.0)
 						_drone_active_idx = 1 - i
 			elif i == _drone_active_idx:
 				var mesh_world_pos := mesh.global_position
@@ -2308,7 +2371,7 @@ func _update_salvage(delta: float) -> void:
 			else:
 				# Returned to ship — grant ore and check for rare
 				mesh.top_level = false
-				mesh.position = Vector3(6.8 * (1.0 if _salvage_drone_idx == 0 else -1.0), 0.0, 0.0)
+				mesh.position = Vector3(_drone_orbit_radius * (1.0 if _salvage_drone_idx == 0 else -1.0), 0.0, 0.0)
 				_salvage_collect_t = 1.0
 				_salvage_collect_from = Vector3.ZERO
 				_salvage_going_out = false
