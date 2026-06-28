@@ -14,6 +14,15 @@ static var _scene_cache: Dictionary = {}     # res path -> PackedScene
 static var _catalog: Dictionary = {}         # role -> Array[recipe]
 static var _catalog_loaded := false
 
+# Cockpit strip heights as fractions of hull height (live-tunable from DevPanel).
+static var cockpit_y_fracs: Array = [0.60, 0.41]
+# Per-strip depth offset along +Z (into the hull) from the frontmost face.
+# Positive pushes the strip inward so it sits flush on a recessed panel.
+static var cockpit_z_offsets: Array = [0.0, 0.0]
+# Strip thickness (Z depth). A thin box (not a flat plane) so the lit face
+# always pokes out even where the hull surface is irregular.
+static var cockpit_thickness: float = 0.10
+
 const FACTION_STYLE := {
 	"vanguard": {
 		"metal": "RedMetal.png",
@@ -451,17 +460,19 @@ static func _add_cockpit_strips(root: Node3D) -> void:
 	var front_z: float = hb.position.z - 0.05                  # -Z face (camera-facing in game)
 	var w: float = hb.size.x * 0.6
 	var h: float = hb.size.y * 0.035
-	# Two strips stacked in the upper third of the tall hull.
-	var ys := [hb.position.y + hb.size.y * 0.74, hb.position.y + hb.size.y * 0.62]
+	# Two strips on the two flat hull panels; heights are live-tunable.
+	var ys: Array = []
+	for fr in cockpit_y_fracs:
+		ys.append(hb.position.y + hb.size.y * float(fr))
 	for i in range(ys.size()):
 		var q := MeshInstance3D.new()
 		q.name = "CockpitStrip_%d" % i
-		var qm := QuadMesh.new()
-		qm.size = Vector2(w, h)
-		q.mesh = qm
+		var bm := BoxMesh.new()
+		bm.size = Vector3(w, h, cockpit_thickness)   # thin box, not a flat plane
+		q.mesh = bm
 		q.material_override = mat
-		q.position = Vector3(0.0, ys[i], front_z)
-		q.rotation_degrees = Vector3(0, 180, 0)     # face -Z (outward, toward camera)
+		var zoff: float = float(cockpit_z_offsets[i]) if i < cockpit_z_offsets.size() else 0.0
+		q.position = Vector3(0.0, ys[i], front_z + zoff)
 		root.add_child(q)
 
 

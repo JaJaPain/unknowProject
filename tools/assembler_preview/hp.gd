@@ -1,14 +1,14 @@
 extends Node3D
-const VIEWS := {"negZ34": Vector3(0.5,0.4,-0.8), "negZ": Vector3(0,0.1,-1)}
+const VIEWS := {"userang": Vector3(-0.55,0.35,-0.75)}
 func _ready() -> void:
 	var out := OS.get_cmdline_user_args()[0]
 	DirAccess.make_dir_recursive_absolute(out)
 	DisplayServer.window_set_size(Vector2i(900,900))
 	var env := Environment.new(); env.background_mode=Environment.BG_COLOR
 	env.background_color=Color(0.03,0.04,0.07); env.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color=Color(0.6,0.65,0.75); env.ambient_light_energy=1.2; env.tonemap_mode=Environment.TONE_MAPPER_FILMIC
+	env.ambient_light_color=Color(0.6,0.65,0.75); env.ambient_light_energy=2.0; env.tonemap_mode=Environment.TONE_MAPPER_FILMIC
 	var we:=WorldEnvironment.new(); we.environment=env; add_child(we)
-	var key:=DirectionalLight3D.new(); key.rotation_degrees=Vector3(-50,-30,0); key.light_energy=1.8; add_child(key)
+	var key:=DirectionalLight3D.new(); key.rotation_degrees=Vector3(-50,-30,0); key.light_energy=2.5; add_child(key)
 	var cam:=Camera3D.new(); cam.fov=45; add_child(cam); cam.current=true
 	var ship := ShipAssembler.build_special(0); add_child(ship)
 	# report weapon mount positions
