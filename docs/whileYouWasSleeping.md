@@ -1212,3 +1212,46 @@ by system 4–5. Mesh-merge + texture atlas per design is a DEFERRED optimizatio
 - Player ship NOT yet wired (still INDYMiner). Tasks remaining: cockpit emissive strip decals,
   swap gunmetal hull.tall in as player ship (orient fore-aft, refit collision/camera),
   make drones parametric to new size. See todo.md + memory project_drone_ship_fitment.
+
+---
+
+## 2026-06-28 (cont.) — Player ship build-out + more factions
+
+Built the gunmetal hull.tall into the actual player ship and iterated its details
+live via the new DevPanel controls (then removed them). Also extended the kitbash
+reskin to two more factions and fixed the thruster material.
+
+### Player ship
+- `PlayerShip.gd` now builds `ShipAssembler.build_special(0)` (★ Gunmetal — Tall)
+  into the Visual node, replacing the old INDYMiner; fit to target size, centered,
+  collision box refit. Upright (`PLAYER_SHIP_TILT_DEG = 0`; opposite-tilt is a todo).
+- **Drones parametric:** orbit radius + drone size now derive from the player visual
+  AABB (`_drone_orbit_radius` / `_drone_size`), replacing the hardcoded 6.8 / 0.12 so
+  any future ship/upgrade auto-fits. (See memory `project_drone_ship_fitment`.)
+- **Combat fires from hardpoints:** PlayerShip collects the model's `weapon_*` markers;
+  `spawn_projectile` cycles through them as fire origins. Mining laser origin untouched.
+- **Weapons:** player ship forces `Turret_Set` (reads as guns) via weapon_override.
+- **Cockpit:** two emissive white window boxes on the hull -Z face. Final baked values
+  Y 0.60/0.41, Z 0/0, thickness 0.10. Boxes (not flat planes) so they never float.
+
+### Tooling
+- DevPanel "Ship Viewer" tab: dropdown of all catalog designs + specials (★), live 3D
+  orbit/zoom via reusable `ModelViewer`. Temporary Y/Z/thickness tuning spinboxes were
+  added, used to dial in the cockpit, then removed. **Lesson logged** (memory
+  `feedback_live_tuning_debug_panel`): for eyeball tuning, build a live debug control
+  FIRST — the screenshot-calibrate loop cost ~40 min before we did.
+
+### Materials / parts
+- `5-Engine` nozzles split (Blender MCP) into `EngineBody` + `Thruster` material slots.
+  Thruster is now crisp dark METAL (no emission) — glow should be the plume at the
+  engine markers, not the part. Todo: do the same nozzle split for ALL engine parts
+  (one-time per piece, reusable forever).
+- Added `zenith` (NavyBlueMetal + ZenithBadge) and `aurelia` (ForestGreenMetal +
+  AurelliaBadge) reskin styles. Preview-only — NOT in `ASSEMBLED_FACTIONS` yet, so
+  in-game ships unchanged; they show in the Ship Viewer dropdown. One-line toggle to go live.
+
+### NOTE — "Claudework" todo list untouched this week
+We never got to the planned **Claudework** todo list this week — the kitbash ship
+system + player ship rabbit hole ate the whole session (worth it, but flagging it).
+Pick that list back up next time. Also still open: flip Zenith/Aurelia on in-game,
+the mouse-lost-on-combat-entry bug (High — forces hard exit), NPC exhaust glow rework.
