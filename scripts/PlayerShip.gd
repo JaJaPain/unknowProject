@@ -467,6 +467,11 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 		velocity = Vector3.ZERO
 
 
+func hard_stop() -> void:
+	boost_timer = 0.0
+	cancel_autopilot(true)
+
+
 func activate_boost() -> bool:
 	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0:
 		return false
@@ -497,6 +502,9 @@ func _unhandled_input(event: InputEvent):
 		return
 	# CombatPanel owns input during turn-based planning and execution.
 	if CombatManager.state != CombatManager.State.IDLE:
+		return
+	if event.is_action_pressed("hard_stop"):
+		hard_stop()
 		return
 	# Autopilot override keys
 	if event.is_action_pressed("override_approach"):

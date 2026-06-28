@@ -2061,6 +2061,7 @@ func _create_pause_menu():
 		["APPROACH", "Q"],
 		["ORBIT", "W"],
 		["ACTION", "E"],
+		["STOP", "Space"],
 		["PAUSE", "Esc"],
 	]:
 		var command := Label.new()

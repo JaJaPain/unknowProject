@@ -2391,6 +2391,7 @@ func _setup_inputs():
 	_add_key_action("override_action", KEY_E)
 	_add_key_action("pause_game", KEY_ESCAPE)
 	_add_key_action("action_jump", KEY_J)
+	_add_key_action("hard_stop", KEY_SPACE)
 	
 	# Define mouse zoom actions
 	_add_mouse_action("zoom_in", MOUSE_BUTTON_WHEEL_UP)
