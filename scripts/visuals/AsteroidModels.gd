@@ -66,6 +66,7 @@ static func _ensure_loaded() -> void:
 		_entries.append({
 			"mesh": mesh,
 			"material": mat_cache[mat_key],
+			"fragments_path": MODEL_DIR + str(entry.get("fragments_file", "")),
 		})
 
 
@@ -75,6 +76,37 @@ static func apply_random_model(mesh_instance: MeshInstance3D, rng_seed: int) -> 
 		return
 
 	var idx := absi(rng_seed) % _entries.size()
+	apply_model_index(mesh_instance, idx)
+
+
+static func apply_model_index(mesh_instance: MeshInstance3D, idx: int) -> void:
+	_ensure_loaded()
+	if _entries.is_empty():
+		return
+	idx = wrapi(idx, 0, _entries.size())
 	var entry: Dictionary = _entries[idx]
 	mesh_instance.mesh = entry["mesh"]
 	mesh_instance.set_surface_override_material(0, entry["material"])
+
+
+static func model_index_for_seed(rng_seed: int) -> int:
+	_ensure_loaded()
+	if _entries.is_empty():
+		return -1
+	return absi(rng_seed) % _entries.size()
+
+
+static func material_for_index(idx: int) -> Material:
+	_ensure_loaded()
+	if _entries.is_empty():
+		return null
+	idx = wrapi(idx, 0, _entries.size())
+	return _entries[idx]["material"] as Material
+
+
+static func fragment_scene_path_for_index(idx: int) -> String:
+	_ensure_loaded()
+	if _entries.is_empty():
+		return ""
+	idx = wrapi(idx, 0, _entries.size())
+	return str(_entries[idx].get("fragments_path", ""))
