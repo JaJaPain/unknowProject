@@ -2,6 +2,10 @@ extends Node
 
 var bgm_player: AudioStreamPlayer
 var jump_player: AudioStreamPlayer  # dedicated channel for the tunnel jet (so we can fade it)
+var mining_player: AudioStreamPlayer3D
+var tractor_player: AudioStreamPlayer3D
+var _mining_loop_active: bool = false
+var _tractor_loop_active: bool = false
 var jump_fade_tween: Tween
 var _jump_fade_dur: float = 1.0
 var _jump_fade_base_gain: float = 1.0
@@ -20,6 +24,8 @@ var bgm_track1 = preload("res://sound/BackgroundMusic/Iron Lullaby1.mp3")
 var bgm_track2 = preload("res://sound/BackgroundMusic/Iron Lullaby2.mp3")
 var sfx_laser1 = preload("res://sound/WeaponFire/Laser Weapon Firing1.mp3")
 var sfx_laser2 = preload("res://sound/WeaponFire/Laser Weapon Firing2.mp3")
+var sfx_mining = preload("res://sound/Mining/MiningSound.mp3")
+var sfx_tractor_beam = preload("res://sound/Mining/TractorBeam.mp3")
 var sfx_explosion1 = preload("res://sound/SpaceShipExplosion/Spaceship Explosion1.mp3")
 var sfx_explosion2 = preload("res://sound/SpaceShipExplosion/Spaceship Explosion2.mp3")
 var sfx_cargo_full = preload("res://assets/Cargo Full.mp3")
@@ -59,6 +65,22 @@ func _ready():
 	jump_player = AudioStreamPlayer.new()
 	jump_player.bus = "SFX"
 	add_child(jump_player)
+
+	mining_player = AudioStreamPlayer3D.new()
+	mining_player.bus = "SFX"
+	mining_player.unit_size = 15.0
+	mining_player.max_db = 2.0
+	mining_player.max_distance = 350.0
+	add_child(mining_player)
+	mining_player.finished.connect(_on_mining_loop_finished)
+
+	tractor_player = AudioStreamPlayer3D.new()
+	tractor_player.bus = "SFX"
+	tractor_player.unit_size = 15.0
+	tractor_player.max_db = 2.0
+	tractor_player.max_distance = 350.0
+	add_child(tractor_player)
+	tractor_player.finished.connect(_on_tractor_loop_finished)
 
 	tracks = [bgm_track1, bgm_track2]
 	
@@ -121,6 +143,69 @@ func play_laser(pos: Variant = null):
 		play_sfx_3d(laser, pos, -6.0)
 	else:
 		play_sfx(laser, -6.0)
+
+func play_mining_laser(pos: Variant = null):
+	if pos is Vector3:
+		play_sfx_3d(sfx_mining, pos, -2.0)
+	else:
+		play_sfx(sfx_mining, -2.0)
+
+func play_tractor_beam(pos: Variant = null):
+	if pos is Vector3:
+		play_sfx_3d(sfx_tractor_beam, pos, -4.0)
+	else:
+		play_sfx(sfx_tractor_beam, -4.0)
+
+func start_mining_loop(pos: Vector3) -> void:
+	_mining_loop_active = true
+	_start_positioned_loop(mining_player, sfx_mining, pos, -2.0)
+
+func stop_mining_loop() -> void:
+	_mining_loop_active = false
+	if mining_player:
+		mining_player.stop()
+
+func start_tractor_loop(pos: Vector3) -> void:
+	_tractor_loop_active = true
+	_start_positioned_loop(tractor_player, sfx_tractor_beam, pos, -4.0)
+
+func stop_tractor_loop() -> void:
+	_tractor_loop_active = false
+	if tractor_player:
+		tractor_player.stop()
+
+func update_mining_audio_position(pos: Vector3) -> void:
+	if mining_player and mining_player.playing:
+		mining_player.global_position = pos
+	if tractor_player and tractor_player.playing:
+		tractor_player.global_position = pos
+
+func stop_mining_audio() -> void:
+	stop_mining_loop()
+	stop_tractor_loop()
+
+func _start_positioned_loop(
+		player: AudioStreamPlayer3D,
+		stream: AudioStream,
+		pos: Vector3,
+		volume_db: float
+) -> void:
+	if player == null or stream == null:
+		return
+	player.global_position = pos
+	player.volume_db = volume_db
+	if player.stream != stream:
+		player.stream = stream
+	if not player.playing:
+		player.play()
+
+func _on_mining_loop_finished() -> void:
+	if _mining_loop_active and mining_player:
+		mining_player.play()
+
+func _on_tractor_loop_finished() -> void:
+	if _tractor_loop_active and tractor_player:
+		tractor_player.play()
 
 func play_explosion(pos: Variant = null):
 	var expl = sfx_explosion1 if randf() > 0.5 else sfx_explosion2

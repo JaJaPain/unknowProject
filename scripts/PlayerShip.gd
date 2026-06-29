@@ -22,6 +22,9 @@ const BOOST_DURATION_SECONDS := 5.0
 const BOOST_COOLDOWN_SECONDS := 60.0
 const BOOST_HEAT_DAMAGE := 2.0
 const MINING_RANGE := 75.0
+const MINING_TRACTOR_LOCK_SECONDS := 1.15
+const MINING_TRACTOR_RADIUS := 0.075
+const MINING_CUTTER_RADIUS := 0.07
 var boost_timer: float = 0.0
 var boost_cooldown_timer: float = 0.0
 var boost_effect_meshes: Array[MeshInstance3D] = []
@@ -43,6 +46,9 @@ var _drone_collecting: Array[bool] = [false, false]
 var _drone_returning: Array[bool] = [false, false]
 var _mining_target_pos: Vector3 = Vector3.ZERO
 var _was_mining: bool = false
+var _mining_tractor_laser: MeshInstance3D = null
+var _mining_tractor_target_id: int = 0
+var _mining_tractor_lock_timer: float = 0.0
 var mining_continuous_timer: float = 0.0
 
 # Salvage drone state
@@ -149,6 +155,9 @@ var drone_rotations: Array[Vector3] = []
 func _ready():
 	GlobalState.player = self
 	mining_laser.visible = false
+	_configure_mining_laser_material()
+	_mining_tractor_laser = _create_mining_tractor_laser()
+	_mining_tractor_laser.visible = false
 	_mine_particles = _create_mine_particles()
 	current_shield = GlobalState.shield_capacity
 	
@@ -169,6 +178,41 @@ func _ready():
 	_create_drones()
 	_create_boost_effects()
 	_create_nose_raycast()
+
+
+func _create_mining_tractor_laser() -> MeshInstance3D:
+	var beam := MeshInstance3D.new()
+	beam.name = "MiningTractorBeam"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 1.0
+	mesh.bottom_radius = 1.0
+	mesh.height = 2.0
+	mesh.radial_segments = 10
+	mesh.rings = 1
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.02, 0.08, 0.42, 0.48)
+	mat.emission_enabled = true
+	mat.emission = Color(0.02, 0.08, 0.55)
+	mat.emission_energy_multiplier = 2.4
+	mesh.material = mat
+	beam.mesh = mesh
+	add_child(beam)
+	return beam
+
+
+func _configure_mining_laser_material() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.08, 1.0, 0.26, 0.62)
+	mat.emission_enabled = true
+	mat.emission = Color(0.08, 1.0, 0.26)
+	mat.emission_energy_multiplier = 3.2
+	mining_laser.material_override = mat
 
 # ── Kitbash player ship ──────────────────────────────────────────────────────
 const PLAYER_SHIP_TARGET_SIZE := 16.0   # largest visual extent in world units
@@ -217,6 +261,83 @@ func _walk_hardpoints(node: Node) -> void:
 			hardpoints.append(node as Node3D)
 	for c in node.get_children():
 		_walk_hardpoints(c)
+
+
+func _get_mining_beam_origin(offset_index: int = 0) -> Vector3:
+	if offset_index == 0:
+		return global_position \
+			+ (-global_transform.basis.z * 2.0) \
+			- (global_transform.basis.x * 2.6) \
+			+ (global_transform.basis.y * 0.6)
+	if offset_index == 1:
+		return global_position \
+			+ (-global_transform.basis.z * 2.0) \
+			+ (global_transform.basis.x * 0.65) \
+			+ (global_transform.basis.y * 0.25)
+	if not hardpoints.is_empty():
+		var hp := hardpoints[abs(offset_index) % hardpoints.size()]
+		if is_instance_valid(hp):
+			return hp.global_position
+	var side := -1.0 if offset_index % 2 == 0 else 1.0
+	return global_position \
+		+ (-global_transform.basis.z * 2.0) \
+		+ (global_transform.basis.x * side * 1.4)
+
+
+func _set_beam_between(
+		beam: MeshInstance3D,
+		start: Vector3,
+		end: Vector3,
+		radius: float
+) -> void:
+	if beam == null or not is_instance_valid(beam):
+		return
+	var length := start.distance_to(end)
+	if length <= 0.05:
+		beam.visible = false
+		return
+	beam.visible = true
+	beam.global_position = (start + end) * 0.5
+	beam.look_at(end, Vector3.UP)
+	beam.rotate_object_local(Vector3.RIGHT, PI / 2.0)
+	beam.scale = Vector3(radius, length / 2.0, radius)
+
+
+func _hide_mining_beams(reset_lock: bool = true) -> void:
+	mining_laser.visible = false
+	if _mining_tractor_laser:
+		_mining_tractor_laser.visible = false
+	if _mine_particles:
+		_mine_particles.emitting = false
+	AudioManager.stop_mining_audio()
+	if reset_lock:
+		_mining_tractor_target_id = 0
+		_mining_tractor_lock_timer = 0.0
+
+
+func _get_mining_target_point(target_node: Node3D) -> Vector3:
+	var origin := _get_mining_beam_origin(0)
+	if target_node.has_method("get_mining_contact_point"):
+		return target_node.call("get_mining_contact_point", origin) as Vector3
+	return target_node.global_position
+
+
+func _get_tractor_target_point(target_node: Node3D, tractor_origin: Vector3) -> Vector3:
+	var to_ship := (tractor_origin - target_node.global_position).normalized()
+	if to_ship == Vector3.ZERO:
+		to_ship = -global_transform.basis.z.normalized()
+	var side := -global_transform.basis.x.normalized()
+	if side == Vector3.ZERO or abs(side.dot(to_ship)) > 0.85:
+		side = global_transform.basis.y.normalized()
+	return target_node.global_position + side * 3.8 + to_ship * 0.9
+
+
+func _get_desired_mining_asteroid_position(target_node: Node3D) -> Vector3:
+	var origin := _get_mining_beam_origin(1)
+	var from_ship := target_node.global_position - origin
+	if from_ship == Vector3.ZERO:
+		from_ship = -global_transform.basis.z
+	return origin + from_ship.normalized() * 35.0
 
 func _refit_collision() -> void:
 	var cs := get_node_or_null("CollisionShape3D") as CollisionShape3D
@@ -468,7 +589,7 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	_clear_avoidance_state()
 	if _nose_ray:
 		_nose_ray.enabled = false
-	mining_laser.visible = false
+	_hide_mining_beams()
 	if clear_motion:
 		current_speed = 0.0
 		velocity = Vector3.ZERO
@@ -652,7 +773,7 @@ func _physics_process(delta: float):
 			_mine_particles.emitting = false
 
 	if GlobalState.paused:
-		mining_laser.visible = false
+		_hide_mining_beams()
 		return
 		
 	# Shield Regeneration
@@ -738,14 +859,14 @@ func _physics_process(delta: float):
 	# Check if cargo filled up (only matters when carrying ore; special
 	# cargo items don't go through cargo_max the same way)
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo >= GlobalState.cargo_max:
-		mining_laser.visible = false
+		_hide_mining_beams()
 		if nav_mode == "MINE":
 			nav_mode = "MANUAL"
 			target_position = null
 	# When a special item is loaded, hide the mining laser entirely —
 	# the player can't mine until they deliver or jettison the special.
 	elif GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
-		mining_laser.visible = false
+		_hide_mining_beams()
 			
 	if fire_cooldown > 0.0:
 		fire_cooldown -= delta
@@ -793,14 +914,16 @@ func _physics_process(delta: float):
 				if not GlobalState.can_accept_ore() or GlobalState.cargo >= GlobalState.cargo_max:
 					nav_mode = "MANUAL"
 					target_position = null
-					mining_laser.visible = false
+					_hide_mining_beams()
 				else:
-					target_position = active_target.global_position
-					if dist < MINING_RANGE:
-						steer_towards(active_target.global_position, delta)
+					var mining_point := _get_mining_target_point(active_target)
+					var mining_dist := global_position.distance_to(mining_point)
+					target_position = mining_point
+					if mining_dist < MINING_RANGE + 18.0:
+						steer_towards(mining_point, delta)
 						perform_action(active_target, delta)
 					else:
-						mining_laser.visible = false
+						_hide_mining_beams()
 
 			"ATTACK":
 				target_position = active_target.global_position
@@ -851,7 +974,7 @@ func _physics_process(delta: float):
 				
 				target_position = global_position + des_dir * 10.0
 	else:
-		mining_laser.visible = false
+		_hide_mining_beams()
 		if nav_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
 			cancel_autopilot()
 
@@ -859,7 +982,9 @@ func _physics_process(delta: float):
 	if target_position != null:
 		var dest := target_position as Vector3
 		var steer_target := dest
-		if nav_mode != "ORBIT":
+		if nav_mode == "MINE":
+			steer_target = dest
+		elif nav_mode != "ORBIT":
 			# Nose whisker: sphere-cast 55u forward + 10u radius (covers underbelly
 			# and wingtips). If anything other than the nav target is in the volume,
 			# force an immediate replan without waiting for the stall timer.
@@ -921,7 +1046,14 @@ func _physics_process(delta: float):
 					)
 			elif nav_mode == "MINE" and active_target.is_in_group("asteroid"):
 				# Keep 35m from mined asteroids to prevent crashing
-				target_speed = clamp((dist - 35.0) * 3.0, -speed_limit, speed_limit)
+				var mining_point := _get_mining_target_point(active_target)
+				var mining_dist := global_position.distance_to(mining_point)
+				if _mining_tractor_target_id == active_target.get_instance_id() \
+						and _mining_tractor_laser \
+						and _mining_tractor_laser.visible:
+					target_speed = 0.0
+				else:
+					target_speed = clamp((mining_dist - 35.0) * 3.0, -speed_limit, speed_limit)
 			elif nav_mode == "ATTACK" and active_target.is_in_group("ship"):
 				# Keep 45m from attacked hostile NPC ships
 				target_speed = clamp((dist - 45.0) * 3.0, -speed_limit, speed_limit)
@@ -1885,37 +2017,91 @@ func perform_action(target_node: Node3D, delta: float):
 		# which incorrectly refused to fire the laser when the hold
 		# was empty.)
 		if not GlobalState.can_accept_ore() or GlobalState.cargo >= GlobalState.cargo_max:
-			mining_laser.visible = false
+			_hide_mining_beams()
 			return
 
-		mining_laser.visible = true
+		var target_id := target_node.get_instance_id()
+		if _mining_tractor_target_id != target_id:
+			_mining_tractor_target_id = target_id
+			_mining_tractor_lock_timer = 0.0
+		var tractor_was_visible := _mining_tractor_laser != null and _mining_tractor_laser.visible
+		if not tractor_was_visible:
+			GlobalState.emit_chatter(
+				"SYSTEM",
+				"Tractor beam engaged. Stabilizing asteroid mass.",
+				Color(0.0, 0.9, 0.9)
+			)
+			AudioManager.start_tractor_loop(global_position)
 
 		# Position laser beam cylinder
-		var ship_front = global_position + (-global_transform.basis.z * 2.0)
+		var ship_front = _get_mining_beam_origin(1)
+		var tractor_origin = _get_mining_beam_origin(0)
 		var asteroid_pos = target_node.global_position
-		var mid_point = (ship_front + asteroid_pos) / 2.0
-		var laser_len = ship_front.distance_to(asteroid_pos)
+		var tractor_pos = _get_tractor_target_point(target_node, tractor_origin)
+		if target_node.has_method("get_mining_contact_point"):
+			var contact := target_node.call("get_mining_contact_point", ship_front) as Vector3
+			asteroid_pos = contact.lerp(target_node.global_position, 0.45)
+		_set_beam_between(_mining_tractor_laser, tractor_origin, tractor_pos, MINING_TRACTOR_RADIUS)
+		AudioManager.update_mining_audio_position(global_position)
+		if target_node.has_method("hold_mining_tractor"):
+			target_node.call("hold_mining_tractor", tractor_origin)
+		current_speed = 0.0
+		velocity = Vector3.ZERO
+		var tractor_positioned := true
+		if target_node.has_method("pull_to_mining_tractor_position"):
+			var desired_position := _get_desired_mining_asteroid_position(target_node)
+			tractor_positioned = bool(target_node.call(
+				"pull_to_mining_tractor_position",
+				desired_position,
+				delta
+			))
+		var tractor_stable := true
+		if target_node.has_method("is_mining_tractor_stable"):
+			tractor_stable = bool(target_node.call("is_mining_tractor_stable"))
+		if tractor_stable and tractor_positioned:
+			_mining_tractor_lock_timer = minf(
+				_mining_tractor_lock_timer + delta,
+				MINING_TRACTOR_LOCK_SECONDS
+			)
+		else:
+			_mining_tractor_lock_timer = 0.0
+		var tractor_locked := _mining_tractor_lock_timer >= MINING_TRACTOR_LOCK_SECONDS
 
-		mining_laser.global_position = mid_point
-		mining_laser.look_at(asteroid_pos, Vector3.UP)
-		mining_laser.rotate_object_local(Vector3.RIGHT, PI / 2.0)
+		if not tractor_locked:
+			mining_laser.visible = false
+			if _mine_particles:
+				_mine_particles.emitting = false
+			AudioManager.stop_mining_loop()
+			return
+
+		var mining_was_visible := mining_laser.visible
+		_set_beam_between(mining_laser, ship_front, asteroid_pos, MINING_CUTTER_RADIUS)
+		if not mining_was_visible:
+			GlobalState.emit_chatter(
+				"SYSTEM",
+				"Asteroid held still. Mining laser commencing cut.",
+				Color(0.0, 0.9, 0.9)
+			)
+			AudioManager.start_mining_loop(global_position)
 
 		# Laser Pulse FX
 		var pulse = 0.12 + sin(Time.get_ticks_msec() * 0.025) * 0.04
-		mining_laser.scale = Vector3(pulse, laser_len / 2.0, pulse)
+		mining_laser.scale.x = pulse
+		mining_laser.scale.z = pulse
 
 		if _mine_particles:
 			_mine_particles.global_position = asteroid_pos
 			_mine_particles.emitting = true
 
 		_mining_target_pos = asteroid_pos
+		if target_node.has_method("show_mining_heat_spot"):
+			target_node.show_mining_heat_spot(ship_front)
 		
 		if fire_cooldown <= 0.0:
 			fire_cooldown = GlobalState.mining_cooldown
 			if GlobalState.has_max_bulwark_shield:
 				fire_cooldown *= 1.05
 				
-			AudioManager.play_laser(global_position)
 			if target_node.has_method("mine"):
 				target_node.mine()
 				
@@ -1926,13 +2112,13 @@ func perform_action(target_node: Node3D, delta: float):
 					mining_cycles = 0
 	
 	elif target_node.has_method("take_damage") and target_node.get("faction") != "player":
-		mining_laser.visible = false
+		_hide_mining_beams()
 		# Player fires first — trigger turn-based combat if not already in one.
 		if CombatManager.state == CombatManager.State.IDLE:
 			CombatManager.start_combat(self, target_node)
 		# Real-time fire is fully replaced by CombatManager — no direct projectile spawn.
 	else:
-		mining_laser.visible = false
+		_hide_mining_beams()
 
 func spawn_projectile(target_node: Node3D, visual_only: bool = false):
 	if target_node == null or not is_instance_valid(target_node):
