@@ -135,3 +135,5 @@ Deployment checklist for a shipped build:
 - [ ] **NAS asset migration** — move binary assets off git repo to NAS once hardware acquired; binaries-in-repo is accepted interim
 - [ ] **Boss cinematic phases** — phase transition should have its own brief camera moment / sting beyond the current chatter line
 - [ ] **Multi-boss / 3-on-1** — true squad fights beyond 2 enemies; needs a target picker on the wheel
+
+- [ ] **Player thrusters: tune yellow flame output** - current plume raggedness/motion is acceptable, but the warm/yellow fire replacement is still not visually readable. Revisit later: make warm output appear as sparse white-yellow flame flickers inside the blue exhaust, not solid rods or invisible shader noise. Current best thruster settings are backed up as `scripts/visuals/ThrusterBank.gd.current_best_backup` and `assets/shaders/thruster_plume.gdshader.current_best_backup`.

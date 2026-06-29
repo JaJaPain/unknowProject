@@ -2975,6 +2975,8 @@ func _unhandled_input(event: InputEvent):
 			_close_campaign_manager()
 			return
 		GlobalState.paused = not GlobalState.paused
+		if GlobalState.paused:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 # Overview list population
@@ -3331,6 +3333,8 @@ func _on_cargo_changed(new_cargo: float):
 		_update_quest_tracker()
 
 func _on_pause_changed(is_paused: bool):
+	if is_paused:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if pause_panel:
 		if is_paused and loading_panel and is_instance_valid(loading_panel):
 			pause_panel.visible = false
@@ -4609,6 +4613,7 @@ func _on_store_back_pressed() -> void:
 
 func _on_inventory_pressed() -> void:
 	SpeechService.stop()
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if inventory_panel and inventory_panel.visible:
 		inventory_panel.visible = false
 		var player_is_docked := GlobalState.player != null and bool(GlobalState.player.get("is_docked"))

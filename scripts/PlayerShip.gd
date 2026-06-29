@@ -268,6 +268,7 @@ func sync_camera_to_ship() -> void:
 
 # ── Combat cinematic camera ─────────────────────────────────────────────────────
 func _on_combat_started_orbit(enemy: Node) -> void:
+	_release_mouse_capture()
 	if not is_instance_valid(enemy):
 		return
 	_enter_orbit(enemy)
@@ -296,9 +297,15 @@ func _enter_orbit(enemy: Node) -> void:
 	_cam_lerp_speed = _ORBIT_LERP
 
 func _on_combat_ended_orbit(_won: bool) -> void:
+	_release_mouse_capture()
 	_cam_mode = 0
 	# Snap pivot back above the ship so the next frame resumes normal follow
 	camera_pivot.global_position = global_position
+
+
+func _release_mouse_capture() -> void:
+	rmb_dragging = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 # Punch in to frame the acting ship firing toward its target.
 func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -> void:
