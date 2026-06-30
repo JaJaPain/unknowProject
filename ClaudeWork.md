@@ -46,30 +46,38 @@ Both were run headless with unique log files. Headless still prints the known sh
 
 ## Best Tasks For Claude
 
-- [ ] **Manual QA: fallback logs**
-  - Trigger any LLM fallback or combat-taunt canned fallback.
-  - Confirm `fallback_events.jsonl` and `fallback_summary.json` update.
-  - Note whether Godot editor writes them under `user://` or the workspace backup path.
+- [x] **Manual QA: fallback logs** (Claude, 2026-06-30)
+  - Verified: `user://fallback_events.jsonl` (115 events) and `fallback_summary.json`
+    both update with real records (network failures, taunt + salvager_profile fallbacks).
+  - Write location: **`user://`** (`AppData/Roaming/Godot/app_userdata/SpaceGame/`).
+    The workspace backup path `.tmp_godot_user/fallback_logs/` stays empty unless
+    `user://` is unwritable, as designed.
 
-- [ ] **Manual QA: attack drone visibility**
-  - Use Attack Drone in combat and confirm the cyan strike is visible enough.
-  - Safe fixes only: glow, scale, trail, color, or timing.
-  - Avoid combat damage/rules changes.
+- [x] **Attack drone visibility** (Claude, 2026-06-30) — superseded by a full overhaul
+  - The cyan ball from the ship center is gone. Strike now peels the nearest green
+    orbiting drone out of formation and launches a matching green strike-drone with a
+    POV chase cam + green target reticle. Far more visible. No combat rules touched.
+  - Commits: 25eed64 (launch + POV), 7960fc1 (reticle). See `scripts/DroneReticle.gd`.
 
-- [ ] **Manual QA: low-health enemy flee**
-  - Fight several enemies down below 30% hull.
-  - Confirm fleeing feels occasional, not constant.
-  - Confirm the fight ends cleanly and the enemy moves away instead of counting as a kill.
-  - Note if mission targets fleeing feels annoying; Codex reduced their chance but did not disable it.
+- [x] **Combat voice line pass** (Claude, 2026-06-30) — already satisfied
+  - Verified: enemy flee fires `_play_npc_action_taunt("npc_enemy_fled")`
+    (`CombatManager.gd:1246`). Hostile/funny fallback present (`LLMInterface.gd:4532`),
+    key is in the 20-line LLM pool with a "fleeing" tone example, so lines vary per
+    fight. No new wheel buttons added.
 
-- [ ] **Combat voice line pass**
-  - Check that enemy fleeing can say a short flee line.
-  - Keep the tone hostile/funny but not too repetitive.
-  - Do not add new combat wheel buttons; Abe wants to keep the seven current actions for now.
+- [x] **Known warnings cleanup note** (Claude, 2026-06-30)
+  - Headless `parse_check.gd` PASS (exit 0); only the already-documented
+    `ObjectDB leaked` / `resources still in use` warnings appeared.
+  - Added the runtime LLM/taunt HTTP fallback warning and the
+    `High fallback source rate` developer-warning to `docs/known_harmless_warnings.md`.
 
-- [ ] **Known warnings cleanup note**
-  - Add any new harmless warnings from headless runs to the existing docs note if they are not already listed.
-  - Keep real failures separate from noisy shutdown warnings.
+- [ ] **Manual QA: low-health enemy flee** — CODE VERIFIED, needs Abe's feel check
+  - Logic is sound: enemy only considers fleeing below 30% hull with AP >= 3
+    (`NPCShip.gd:1156`), chance is capped/scaled, mission targets get a reduced chance
+    (`:1183`), and a successful flee ends the fight cleanly via `end_combat(false)` and
+    boosts the enemy away (`CombatManager.gd:_exec_enemy_flee`), not counted as a kill.
+  - Still needs Abe to play several fights and judge whether the frequency *feels*
+    right and mission-target fleeing isn't annoying — that's a subjective call.
 
 ## Useful Commands
 
