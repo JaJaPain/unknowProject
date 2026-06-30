@@ -121,13 +121,25 @@ var _cam_lerp_speed:  float   = 3.0
 var _cam_entry_t:     float   = 1.0            # 0→1 ramp over _CAM_ENTRY_DUR at combat start
 const _ORBIT_SPEED    := 0.10   # rad/s, wall-clock
 const _ORBIT_HEIGHT   := 14.0   # units above midpoint
-const _ACTION_LERP    := 6.5    # snappier glide for punch-in framing
+const _ACTION_LERP    := 8.5    # snappier glide for punch-in framing (was 6.5)
 const _ORBIT_LERP     := 3.0
 const _CAM_ENTRY_DUR  := 0.7    # seconds to ease from normal follow into orbit
 const _CAM_LOOK_LERP  := 2.5    # look-target lerp speed (separate from position)
+# The execute-phase framing was tuned for the original ~8-unit hero hull. The
+# kitbash upgrade is ~2x larger, so all punch-in offsets scale off this so the
+# bigger ship is framed at the same proportion (and the camera never sits inside
+# the hull). Stays parametric for future ship swaps.
+const _CAM_REF_SHIP_EXTENT := 8.0
 # Camera shake (decaying thud, applied via camera h/v offset)
 var _shake_strength: float = 0.0
 var _shake_decay:    float = 0.0
+# FOV punch (quick zoom kick that springs back — adds snap to action beats)
+var _base_fov:   float = 75.0
+var _fov_punch:  float = 0.0   # additive offset on base fov; negative = zoom-in
+# Repeated-action framing variety: when the same attack telegraphs twice in a
+# row, flip the over-the-shoulder side so the second shot reads from a new angle.
+var _last_telegraph_action: int  = -1
+var _frame_flip:            bool = false
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -168,6 +180,7 @@ func _ready():
 	camera_pivot.top_level = true
 	camera_pivot.global_position = global_position
 	camera_pivot.rotation_degrees = Vector3(-15, 0, 0) # Pitch down, looking at player
+	_base_fov = camera.fov   # rest FOV; combat punch-ins kick off this baseline
 	
 	GlobalState.target_changed.connect(_on_target_changed)
 	CombatManager.combat_started.connect(_on_combat_started_orbit)
@@ -418,6 +431,8 @@ func _enter_orbit(enemy: Node) -> void:
 	_cam_look_cur = camera_pivot.global_position + (-camera_pivot.basis.z) * 20.0
 	_cam_entry_t  = 0.0   # triggers slow entry ramp
 	_cam_mode = 1
+	# New turn settles back into orbit — start the repeat-framing streak fresh.
+	_last_telegraph_action = -1
 	_cam_lerp_speed = _ORBIT_LERP
 
 func _on_combat_ended_orbit(_won: bool) -> void:
@@ -425,6 +440,12 @@ func _on_combat_ended_orbit(_won: bool) -> void:
 	_cam_mode = 0
 	# Snap pivot back above the ship so the next frame resumes normal follow
 	camera_pivot.global_position = global_position
+	# Clear any leftover cinematic FOV/shake so normal flight isn't zoomed or jittery.
+	_fov_punch = 0.0
+	_shake_strength = 0.0
+	camera.fov = _base_fov
+	camera.h_offset = 0.0
+	camera.v_offset = 0.0
 
 
 func _release_mouse_capture() -> void:
@@ -432,10 +453,16 @@ func _release_mouse_capture() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 # Punch in to frame the acting ship firing toward its target.
-func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -> void:
+func _on_action_telegraphed_cam(action_type: int, source: Node, target: Node) -> void:
 	if _cam_mode == 0 or not is_instance_valid(source):
 		return
-	_frame_action(source, target)
+	# Same attack twice in a row → flip the framing side for a fresh angle.
+	if action_type == _last_telegraph_action:
+		_frame_flip = not _frame_flip
+	else:
+		_frame_flip = false
+	_last_telegraph_action = action_type
+	_frame_action(source, target, _frame_flip)
 	AudioManager.play_sfx(CombatManager.SFX.get("cam_whoosh"), -8.0)
 
 # Quick push toward the impact point (shake added in Phase 3).
@@ -452,6 +479,8 @@ func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _letha
 	if crit:
 		mag *= 1.4
 	_trigger_shake(mag)
+	# Snap-zoom punch on the hit — sharper for crits, barely there on a block.
+	_punch_fov(-clampf(mag * 6.0, 1.5, 7.0))
 
 func _trigger_shake(strength: float) -> void:
 	_shake_strength = maxf(_shake_strength, clampf(strength, 0.0, 1.5))
@@ -466,13 +495,30 @@ func _on_combat_kill_cam(_victim: Node, world_pos: Vector3) -> void:
 	if dir.length() < 0.01:
 		dir = Vector3(0, 6, 14)
 	dir = dir.normalized()
-	_cam_goal_pos = world_pos + dir * 16.0 + Vector3(0, 5, 0)
+	# Pull distance scales with hull size so a bigger ship's death blast still
+	# frames tight rather than overflowing the view.
+	var scale := _cam_ship_scale()
+	_cam_goal_pos = world_pos + dir * (16.0 * scale) + Vector3(0, 5.0 * scale, 0)
 	_cam_look_at = world_pos
 	_cam_mode = 2
-	_cam_lerp_speed = 5.0
+	_cam_lerp_speed = 5.5
+	# Hard snap toward the kill, then the biggest zoom punch + rattle of the fight.
+	camera_pivot.global_position = camera_pivot.global_position.lerp(_cam_goal_pos, 0.4)
 	_trigger_shake(1.1)
+	_punch_fov(-9.0)
 
-func _frame_action(source: Node, target: Node) -> void:
+# Punch-in framing scale relative to the original hero ship. ~1.0 for the old
+# hull, ~2.0 for the upgraded kitbash hull. Clamped so an extreme ship can't
+# fling the camera into the next county.
+func _cam_ship_scale() -> float:
+	var ext: float = maxf(_player_model_size.x, maxf(_player_model_size.y, _player_model_size.z))
+	return clampf(ext / _CAM_REF_SHIP_EXTENT, 1.0, 2.6)
+
+# Kick the FOV for a snap-zoom punch; springs back to _base_fov in _process.
+func _punch_fov(amount: float) -> void:
+	_fov_punch = amount
+
+func _frame_action(source: Node, target: Node, flip: bool = false) -> void:
 	var src: Vector3 = (source as Node3D).global_position
 	var tgt: Vector3 = (target as Node3D).global_position if is_instance_valid(target) else src
 	var axis := tgt - src
@@ -482,20 +528,29 @@ func _frame_action(source: Node, target: Node) -> void:
 	var side := axis.cross(Vector3.UP).normalized()
 	if side.length() < 0.01:
 		side = Vector3.RIGHT
+	# Offsets scale with hull size so the larger ship frames like the original did
+	# instead of clipping the camera into the hull or sitting too tight.
+	var scale := _cam_ship_scale()
 	var sep := clampf(src.distance_to(tgt), 18.0, 60.0)
-	var back := sep * 0.30
-	var sideways := sep * 0.50
-	var height := sep * 0.28
+	var back := sep * 0.30 * scale
+	var sideways := sep * 0.50 * scale
+	var height := sep * 0.28 * scale
 	var look := src.lerp(tgt, 0.55)   # bias toward target so the shot is in frame
 	var space := get_world_3d().direct_space_state
 	var excl := [get_rid()]
 	if is_instance_valid(target) and target is CollisionObject3D:
 		excl.append((target as CollisionObject3D).get_rid())
-	# Try both shoulders, then a pulled-back fallback, picking the first clear shot.
+	# Preferred shoulder flips on a repeated attack, and the flipped shot rides a
+	# little higher/tighter so the new angle reads as a distinct camera position.
+	var lead_sign := -1.0 if flip else 1.0
+	if flip:
+		height *= 1.25
+		back   *= 0.85
+	# Try the preferred shoulder, then the opposite, then a pulled-back fallback.
 	var candidates: Array[Vector3] = [
-		src - axis * back + side * sideways + Vector3.UP * height,
-		src - axis * back - side * sideways + Vector3.UP * height,
-		src - axis * (back + sep * 0.4) + Vector3.UP * (height + sep * 0.3),
+		src - axis * back + side * sideways * lead_sign + Vector3.UP * height,
+		src - axis * back - side * sideways * lead_sign + Vector3.UP * height,
+		src - axis * (back + sep * 0.4 * scale) + Vector3.UP * (height + sep * 0.3 * scale),
 	]
 	var chosen := candidates[0]
 	for pos in candidates:
@@ -506,6 +561,12 @@ func _frame_action(source: Node, target: Node) -> void:
 	_cam_look_at = look
 	_cam_mode = 2
 	_cam_lerp_speed = _ACTION_LERP
+	# Sharp cut-in: jump the pivot a third of the way to the goal immediately so
+	# the move starts fast and snaps to a settle, plus a quick zoom + rattle for
+	# kinetic energy that decays before the shot fires.
+	camera_pivot.global_position = camera_pivot.global_position.lerp(_cam_goal_pos, 0.35)
+	_punch_fov(-4.0)
+	_trigger_shake(0.3)
 
 func _process(delta: float) -> void:
 	if _cam_mode == 0:
@@ -538,6 +599,14 @@ func _process(delta: float) -> void:
 	elif camera.h_offset != 0.0 or camera.v_offset != 0.0:
 		camera.h_offset = 0.0
 		camera.v_offset = 0.0
+	# FOV punch springs back to rest — snaps in instantly, eases out.
+	if not is_equal_approx(_fov_punch, 0.0):
+		_fov_punch = lerpf(_fov_punch, 0.0, minf(real_delta * 7.0, 1.0))
+		if absf(_fov_punch) < 0.05:
+			_fov_punch = 0.0
+		camera.fov = _base_fov + _fov_punch
+	elif not is_equal_approx(camera.fov, _base_fov):
+		camera.fov = _base_fov
 
 func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
 	var min_r := maxf(ship_sep * 0.9, 28.0)
