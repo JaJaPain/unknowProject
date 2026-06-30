@@ -49,6 +49,17 @@ These appear in the Errors tab when scripts reload and do not affect gameplay:
   Normal when the TTS Python server is not running. Voice lines are skipped
   gracefully.
 
+- **`[TAUNT FALLBACK RISK] general taunts HTTP failed (result=13 code=0) — retrying`** —
+  Emitted by `LLMInterface` when an LLM request can't reach Ollama (result 13 =
+  connection error). It retries, then falls back to the canned taunt pool. Logged
+  to the fallback ledger (`user://fallback_events.jsonl`); harmless unless you
+  expected live LLM banter.
+
+- **`developer_warnings: ["High fallback source rate: N% ..."]` in `fallback_summary.json`** —
+  Intentional self-report from `GenerationDiagnostics`, not an engine error. It
+  just means many generations fell back to canned content this session (expected
+  when Ollama is down). Useful signal, not a bug.
+
 ## Debug Gotchas (Things That Look Like Fixes But Aren't)
 
 - **Deleting `savegame.json` does not reset campaign progress.** The game uses
