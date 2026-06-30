@@ -53,7 +53,7 @@ var dock_message_name: Label
 var dock_message_line: Label
 var dock_message_tween: Tween
 var station_contacts_panel: PanelContainer
-var station_contacts_list: VBoxContainer
+var station_contacts_list: Control
 var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
 var _bounty_board_panel: PanelContainer = null
@@ -1258,16 +1258,24 @@ func _create_dock_menu():
 	station_contacts_panel.add_theme_stylebox_override("panel", contacts_style)
 	vbox.add_child(station_contacts_panel)
 
-	var contacts_scroll := ScrollContainer.new()
-	contacts_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	contacts_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	contacts_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	station_contacts_panel.add_child(contacts_scroll)
+	var lounge_stage := Control.new()
+	lounge_stage.custom_minimum_size = Vector2(820, 454)
+	lounge_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lounge_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	station_contacts_panel.add_child(lounge_stage)
 
-	station_contacts_list = VBoxContainer.new()
-	station_contacts_list.add_theme_constant_override("separation", 4)
-	station_contacts_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	contacts_scroll.add_child(station_contacts_list)
+	var lounge_bg := TextureRect.new()
+	lounge_bg.texture = load("res://assets/lounge.png")
+	lounge_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lounge_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lounge_bg.stretch_mode = TextureRect.STRETCH_SCALE
+	lounge_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lounge_stage.add_child(lounge_bg)
+
+	station_contacts_list = Control.new()
+	station_contacts_list.set_anchors_preset(Control.PRESET_FULL_RECT)
+	station_contacts_list.mouse_filter = Control.MOUSE_FILTER_PASS
+	lounge_stage.add_child(station_contacts_list)
 
 	ore_trade_popup = PanelContainer.new()
 	ore_trade_popup.name = "OreTradePopup"
@@ -3466,6 +3474,7 @@ func _render_dock_submenu() -> void:
 		maintenance_bay_btn.text = _mechanic_service_button_text()
 
 	if current_submenu == DockSubmenu.MAINTENANCE:
+		_set_dock_panel_lounge_layout(false)
 		dock_label.text = _mechanic_dock_title()
 		# Maintenance submenu: hide services + entry button, show repair +
 		# upgrades + back button. The hangar background stays on.
@@ -3509,6 +3518,7 @@ func _render_dock_submenu() -> void:
 			if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 				mechanic_intro_panel.visible = false
 	elif current_submenu == DockSubmenu.LOUNGE:
+		_set_dock_panel_lounge_layout(true)
 		dock_label.text = "%s LOUNGE" % _current_station_display_name().to_upper()
 		agent_service_btn.visible = false
 		public_board_btn.visible = false
@@ -3531,6 +3541,7 @@ func _render_dock_submenu() -> void:
 		if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 			mechanic_intro_panel.visible = false
 	else:
+		_set_dock_panel_lounge_layout(false)
 		# Services submenu (default): at a full-service station, show
 		# sell/agent/maintenance entry. At an outpost, show only the
 		# outpost-specific actions (test pickup, hear gossip when added)
@@ -3597,6 +3608,25 @@ func _render_dock_submenu() -> void:
 
 	_update_repair_button()
 	_maybe_show_station_climate()
+
+
+func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void:
+	if not dock_panel or not is_instance_valid(dock_panel):
+		return
+	if use_lounge_layout:
+		dock_panel.anchor_left = 0.08
+		dock_panel.anchor_right = 0.92
+		dock_panel.anchor_top = 0.10
+		dock_panel.anchor_bottom = 0.86
+	else:
+		dock_panel.anchor_left = 0.3
+		dock_panel.anchor_right = 0.7
+		dock_panel.anchor_top = 0.25
+		dock_panel.anchor_bottom = 0.75
+	dock_panel.offset_left = 0.0
+	dock_panel.offset_right = 0.0
+	dock_panel.offset_top = 0.0
+	dock_panel.offset_bottom = 0.0
 
 
 func _maybe_show_station_climate() -> void:
@@ -3718,49 +3748,247 @@ func _render_station_contacts(should_show: bool) -> void:
 			and _selected_station_contact not in visible_contacts:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
+	var cards: Array[Dictionary] = []
 	if show_kaelen:
 		if not _contacts_with_rumor.has("kaelen"):
 			_contacts_with_rumor["kaelen"] = true
-		var kaelen_badge := " (!)" if _contacts_with_rumor.get("kaelen", false) else ""
-		var kaelen_btn := Button.new()
-		kaelen_btn.text = "Broker Kaelen [Broker]%s" % kaelen_badge
-		kaelen_btn.tooltip_text = "Catch Kaelen between deals."
-		kaelen_btn.pressed.connect(_on_kaelen_lounge_pressed)
-		station_contacts_list.add_child(kaelen_btn)
+		cards.append({
+			"kind": "kaelen",
+			"name": "Broker Kaelen",
+			"role": "Broker",
+			"mood": "Watching",
+			"rumor": bool(_contacts_with_rumor.get("kaelen", false)),
+			"portrait": GameContentRegistry.shared().portrait_texture(
+				_kaelen_mood_portrait_id("amused")
+			),
+		})
+	else:
+		cards.append({
+			"kind": "bartender",
+			"name": "Lounge Bartender",
+			"role": "Station Bar",
+			"mood": "Available",
+			"rumor": false,
+			"portrait": null,
+		})
 	for npc_name in visible_contacts:
+		if cards.size() >= 4:
+			break
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
 		var role := str(npc_data.get("role", "Local contact"))
 		var faction := str(npc_data.get("faction", ""))
 		var faction_label := ""
 		if not faction.is_empty():
-			faction_label = " - %s" % str(
+			faction_label = str(
 				GlobalState.faction_info(faction).get("name", faction.capitalize())
 			)
 		var mood := _get_contact_mood(str(npc_name))
 		var has_intel := _station_contact_has_intel(str(npc_name), npc_data)
 		if has_intel and not _contacts_with_rumor.has(str(npc_name)):
 			_contacts_with_rumor[str(npc_name)] = true
-		var badge := " (!)" if has_intel and _contacts_with_rumor.get(str(npc_name), false) else ""
-		var btn := Button.new()
-		btn.text = "%s [%s%s · %s]%s" % [str(npc_name), role, faction_label, mood, badge]
-		btn.tooltip_text = "Hear what this station contact has to say."
-		btn.pressed.connect(_on_station_contact_pressed.bind(str(npc_name)))
-		station_contacts_list.add_child(btn)
-		if str(npc_name) == _selected_station_contact:
-			_render_station_contact_actions(str(npc_name), npc_data)
+		cards.append({
+			"kind": "npc",
+			"name": str(npc_name),
+			"role": role,
+			"faction": faction_label,
+			"mood": mood,
+			"rumor": has_intel and bool(_contacts_with_rumor.get(str(npc_name), false)),
+			"portrait": GlobalState.get_minor_npc_portrait(str(npc_name)),
+			"data": npc_data,
+		})
 
 	# story_planted_npc: inject a one-visit story NPC into this station's contact list.
 	var planted: Dictionary = GlobalState.story_planted_npc
-	if not planted.is_empty():
+	if not planted.is_empty() and cards.size() < 4:
 		var p_station: String = str(planted.get("station_id", ""))
 		if p_station == "" or p_station == station_id:
 			var p_name: String = str(planted.get("display_name", "Unknown Contact"))
-			var p_btn := Button.new()
-			p_btn.text = "%s [Story Contact] ★" % p_name
-			p_btn.tooltip_text = "A contact you haven't spoken with before."
-			p_btn.pressed.connect(_on_planted_npc_pressed)
-			station_contacts_list.add_child(p_btn)
-			station_contacts_panel.visible = true
+			var p_portrait_id: String = str(planted.get("portrait_id", ""))
+			var p_portrait: Texture2D = null
+			if not p_portrait_id.is_empty():
+				p_portrait = GameContentRegistry.shared().portrait_texture(p_portrait_id)
+			cards.append({
+				"kind": "planted",
+				"name": p_name,
+				"role": "Story Contact",
+				"mood": "Waiting",
+				"rumor": true,
+				"portrait": p_portrait,
+			})
+	for i in range(4):
+		var card_data := cards[i] if i < cards.size() else {}
+		_add_lounge_contact_card(i, card_data)
+
+
+func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
+	var slot_rects := [
+		Rect2(0.127, 0.236, 0.193, 0.61),
+		Rect2(0.344, 0.236, 0.193, 0.61),
+		Rect2(0.526, 0.236, 0.193, 0.61),
+		Rect2(0.713, 0.236, 0.193, 0.61),
+	]
+	if slot_index < 0 or slot_index >= slot_rects.size():
+		return
+	var rect: Rect2 = slot_rects[slot_index]
+	var card := Control.new()
+	card.anchor_left = rect.position.x
+	card.anchor_top = rect.position.y
+	card.anchor_right = rect.position.x + rect.size.x
+	card.anchor_bottom = rect.position.y + rect.size.y
+	card.offset_left = 0.0
+	card.offset_top = 0.0
+	card.offset_right = 0.0
+	card.offset_bottom = 0.0
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
+	station_contacts_list.add_child(card)
+
+	if card_data.is_empty():
+		_add_lounge_empty_slot(card)
+		return
+
+	var portrait := TextureRect.new()
+	portrait.anchor_left = 0.09
+	portrait.anchor_top = 0.07
+	portrait.anchor_right = 0.91
+	portrait.anchor_bottom = 0.53
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var portrait_tex := card_data.get("portrait", null) as Texture2D
+	if portrait_tex:
+		portrait.texture = portrait_tex
+	else:
+		portrait.modulate = Color(0.2, 0.55, 0.65, 0.35)
+	card.add_child(portrait)
+
+	var name := Label.new()
+	name.anchor_left = 0.11
+	name.anchor_top = 0.59
+	name.anchor_right = 0.89
+	name.anchor_bottom = 0.67
+	name.text = str(card_data.get("name", "Unknown")).to_upper()
+	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name.clip_text = true
+	name.add_theme_font_size_override("font_size", 11)
+	name.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0))
+	name.add_theme_color_override("font_shadow_color", Color.BLACK)
+	name.add_theme_constant_override("shadow_outline_size", 2)
+	card.add_child(name)
+
+	var meta := Label.new()
+	meta.anchor_left = 0.12
+	meta.anchor_top = 0.69
+	meta.anchor_right = 0.88
+	meta.anchor_bottom = 0.76
+	var role := str(card_data.get("role", "Contact"))
+	var mood := str(card_data.get("mood", "Neutral"))
+	meta.text = "%s  /  %s" % [role, mood]
+	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	meta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	meta.clip_text = true
+	meta.add_theme_font_size_override("font_size", 9)
+	meta.add_theme_color_override("font_color", Color(0.52, 0.9, 0.95))
+	card.add_child(meta)
+
+	if bool(card_data.get("rumor", false)):
+		var badge := Label.new()
+		badge.anchor_left = 0.78
+		badge.anchor_top = 0.57
+		badge.anchor_right = 0.9
+		badge.anchor_bottom = 0.65
+		badge.text = "!"
+		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		badge.add_theme_font_size_override("font_size", 14)
+		badge.add_theme_color_override("font_color", Color(1.0, 0.78, 0.25))
+		card.add_child(badge)
+
+	_add_lounge_card_buttons(card, card_data)
+
+
+func _add_lounge_empty_slot(card: Control) -> void:
+	var label := Label.new()
+	label.anchor_left = 0.12
+	label.anchor_top = 0.59
+	label.anchor_right = 0.88
+	label.anchor_bottom = 0.68
+	label.text = "EMPTY"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color(0.35, 0.55, 0.58, 0.7))
+	card.add_child(label)
+
+	var sub := Label.new()
+	sub.anchor_left = 0.15
+	sub.anchor_top = 0.71
+	sub.anchor_right = 0.85
+	sub.anchor_bottom = 0.78
+	sub.text = "NO CONTACT"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 8)
+	sub.add_theme_color_override("font_color", Color(0.2, 0.42, 0.45, 0.65))
+	card.add_child(sub)
+
+
+func _add_lounge_card_buttons(card: Control, card_data: Dictionary) -> void:
+	var kind := str(card_data.get("kind", ""))
+	var primary := Button.new()
+	primary.anchor_left = 0.14
+	primary.anchor_top = 0.79
+	primary.anchor_right = 0.86
+	primary.anchor_bottom = 0.89
+	primary.text = "Talk"
+	primary.add_theme_font_size_override("font_size", 10)
+	card.add_child(primary)
+	if kind == "kaelen":
+		primary.pressed.connect(_on_kaelen_lounge_pressed)
+		return
+	if kind == "bartender":
+		primary.pressed.connect(_on_lounge_bartender_pressed)
+		return
+	if kind == "planted":
+		primary.pressed.connect(_on_planted_npc_pressed)
+		return
+	var npc_name := str(card_data.get("name", ""))
+	primary.pressed.connect(_on_station_contact_pressed.bind(npc_name))
+
+	var actions := HBoxContainer.new()
+	actions.anchor_left = 0.11
+	actions.anchor_top = 0.91
+	actions.anchor_right = 0.89
+	actions.anchor_bottom = 1.0
+	actions.add_theme_constant_override("separation", 3)
+	card.add_child(actions)
+	var action_defs: Array = [
+		["Faction", "faction"],
+		["Trouble", "trouble"],
+		["Work", "work"],
+	]
+	if bool(card_data.get("rumor", false)):
+		action_defs.insert(2, ["Intel", "rumor"])
+	for action_def in action_defs:
+		var btn := Button.new()
+		btn.text = str(action_def[0])
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.add_theme_font_size_override("font_size", 8)
+		btn.pressed.connect(
+			_on_station_contact_action_pressed.bind(npc_name, str(action_def[1]))
+		)
+		actions.add_child(btn)
+
+
+func _on_lounge_bartender_pressed() -> void:
+	var station_name := _current_station_display_name()
+	if station_name.is_empty():
+		station_name = "the lounge"
+	var line := (
+		"Welcome to %s. Pick a contact, keep your voice down, and don't lean "
+		+ "on anything blinking."
+	) % station_name
+	show_dock_message(line, "Lounge Bartender", Color(0.0, 0.85, 0.85))
 
 
 func _current_station_contact_id() -> String:
@@ -8128,8 +8356,6 @@ func _update_quest_tracker():
 		return
 
 	quest_tracker_panel.visible = true
-	# Reset any stale explicit size so PanelContainer shrinks to content.
-	quest_tracker_panel.call_deferred("reset_size")
 	var q = QuestManager.active_quest
 	quest_tracker_title.text = q.get("title", "Contract")
 
@@ -8152,6 +8378,13 @@ func _update_quest_tracker():
 		]
 	_update_quest_tracker_turn_in_button(q)
 	_update_quest_tracker_secondary_missions()
+	_refit_quest_tracker_panel()
+
+
+func _refit_quest_tracker_panel() -> void:
+	if not quest_tracker_panel or not is_instance_valid(quest_tracker_panel):
+		return
+	quest_tracker_panel.call_deferred("reset_size")
 
 
 func _update_quest_tracker_nav(q: Dictionary) -> void:

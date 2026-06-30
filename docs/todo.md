@@ -96,8 +96,10 @@ _Full design in `docs/design_narrative_system.md`. Build in order — each phase
 
 ## UI / UX
 
-- [ ] **Quest tracker panel blue box on second quest** — `reset_size()` fires on first show only; second quest reloading the panel brings back the oversized box (see bugs.md)
-- [ ] **Station lounge social layer** — relationship heat bar, contact moods, "last seen" timestamp, rumor badge. See `docs/design_parking_lot.md §1`
+- [ ] **Landing page / campaign select** — late-process main menu that finally gives the game a real front door. Needs a `Continue` button that loads the most recently played campaign, three visible campaign slots showing what is in each slot, actions to load another campaign, delete a campaign, and create a new one. Use a cool animated backdrop such as a rotating space station / orbital scene instead of a static flat menu. Also use this phase to brainstorm and choose the real game title, since the current title is only a placeholder.
+- [x] **Quest tracker panel blue box on second quest** — `reset_size()` now fires after the tracker content is rebuilt so the panel shrinks back to content on quest changes.
+- [ ] **Station lounge UI / social layer** — give the lounge its own polished interface instead of a plain utility menu: contact cards, relationship heat bar, contact moods, "last seen" timestamp, rumor badge, available conversation/action buttons, and a layout that can support dynamic NPCs and bartering later. See `docs/design_parking_lot.md §1`
+- [ ] **Unstable dynamic NPCs & Dynamic Bartering** — Docking at station lounges puts you in contact with unstable dynamic NPCs. Instead of traditional visual menus, trading rare cargo updates into a dynamic bartering sequence.
 - [ ] **Store presentation polish** — item cards, purchase confirm dialog, inventory integration, mission highlight. See `docs/design_parking_lot.md §3`
 
 ---
@@ -116,6 +118,16 @@ Deployment checklist for a shipped build:
 - [ ] **Installer script** — write a setup script (NSIS / Inno Setup) that: copies `ollama.exe`, sets `OLLAMA_MODELS` to a bundled path, and optionally pre-warms the model on install so first launch is instant.
 - [ ] **macOS / Linux path** — watchdog already checks `/usr/local/bin/ollama` and `ollama` on PATH. Test on those platforms. Mac may need a signed/notarized ollama binary.
 - [ ] **Offline mode** — if Ollama never comes up (no internet, corporate firewall, etc.), the game should surface a clear one-time message: "AI features unavailable — game will use built-in dialogue." Currently just logs to console.
+
+---
+
+## Illegal Upgrade Loop (Narrative & Gameplay)
+
+- [ ] **Illegal Blueprint Salvaging & Upgrades**
+  - **1. The Trigger: Salvaging the Blueprint** — Add a rare chance to drop an `Encrypted Data Core` during wreckage salvage (`Wreckage.gd` / `NPCShip.gd`). This item goes into `PlayerInventory.gd` with metadata of an illegal blueprint variant (e.g., "Overclocked Plasma Core"). Inspecting it in the inventory (`UIManager.gd`) uses LLM for rendering a short description, and triggers the AI companion Kaelen (`TTSInterface.gd` / `KokoroSpeechProvider.gd`) to warn the player: *"Warning: This schematic bypasses standard Concord safety protocols. Possession is a class-G sector felony."*
+  - **2. The Scavenger Hunt** — Require specific items: Material A (ore from mining belts with lasers) + Material B (salvaged component from a specific enemy ship archetype like Interceptor/Logistics of a particular faction, hunting them down via `CombatManager.gd`).
+  - **3. Finding a Shady Mechanic** — Tag certain stations/outposts as having a low-ethics mechanic. When docking there, the mechanic's intro (`_render_mechanic_intro` in `UIManager.gd`) adapts to offer illegal installation if the player has the core and materials, demanding a hefty credit bribe (*"but for 15,000 credits, my cameras can go offline..."*) played in a quiet, rough voice profile.
+  - **4. Mechanical Payoff & Security Risk** Once installed (`apply_upgrade_stats`), player gets a game-changing unlicensed weapon/part (e.g. purple ionized beam drone, speed-limit breaking booster). However, scans near outposts by patrols (`IllegalMiningEnforcement.gd` logic) will flag "Illegal Modification Detected", triggering alerts, massive bribes, or dogfights.
 
 ---
 
