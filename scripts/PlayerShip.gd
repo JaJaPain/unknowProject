@@ -144,6 +144,8 @@ var _frame_flip:            bool = false
 var _pov_drone:             Node3D = null   # the flying strike-drone visual
 var _pov_target:            Node3D = null   # what it's diving at (for look + reticle)
 var _pov_source_mesh:       MeshInstance3D = null   # orbiting drone hidden during strike
+var _drone_reticle:         Control = null          # green drone-cam HUD overlay
+const _DRONE_RETICLE_SCENE := preload("res://scripts/DroneReticle.gd")
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -529,6 +531,17 @@ func _punch_fov(amount: float) -> void:
 # ── Drone strike POV ─────────────────────────────────────────────────────────
 # Ride the cinematic camera behind the launched drone as it dives at the target.
 # Only engages while the combat camera is active; no-op in normal flight.
+func _ensure_drone_reticle() -> void:
+	if _drone_reticle != null and is_instance_valid(_drone_reticle):
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "DroneReticleLayer"
+	layer.layer = 10
+	add_child(layer)
+	_drone_reticle = _DRONE_RETICLE_SCENE.new()
+	_drone_reticle.visible = false
+	layer.add_child(_drone_reticle)
+
 func _begin_drone_pov(drone: Node3D, target: Node3D) -> void:
 	if _cam_mode == 0 or not is_instance_valid(drone):
 		return
@@ -536,6 +549,9 @@ func _begin_drone_pov(drone: Node3D, target: Node3D) -> void:
 	_pov_target = target
 	_cam_mode = 3
 	_cam_lerp_speed = 12.0
+	_ensure_drone_reticle()
+	if _drone_reticle != null:
+		_drone_reticle.visible = true
 
 func _end_drone_pov() -> void:
 	# Restore the orbiting drone that peeled off for the run.
@@ -544,6 +560,8 @@ func _end_drone_pov() -> void:
 	_pov_source_mesh = null
 	_pov_drone = null
 	_pov_target = null
+	if _drone_reticle != null and is_instance_valid(_drone_reticle):
+		_drone_reticle.visible = false
 	# Hand back to action framing so the impact still punches.
 	if _cam_mode == 3:
 		_cam_mode = 2
@@ -628,6 +646,14 @@ func _process(delta: float) -> void:
 			else:
 				_cam_look_at = dpos + fwd * 10.0
 			_cam_lerp_speed = 12.0
+			# Lock the green target bracket onto the enemy on the HUD overlay.
+			if _drone_reticle != null and is_instance_valid(_drone_reticle):
+				if is_instance_valid(_pov_target):
+					var wp: Vector3 = (_pov_target as Node3D).global_position + Vector3(0.0, 1.0, 0.0)
+					var on_screen := not camera.is_position_behind(wp)
+					_drone_reticle.set_target_screen(camera.unproject_position(wp), on_screen)
+				else:
+					_drone_reticle.set_target_screen(Vector2.ZERO, false)
 	# Smooth look-target: slow ease during orbit entry, snappy during action/POV.
 	var _look_speed: float
 	if _cam_mode == 3:
