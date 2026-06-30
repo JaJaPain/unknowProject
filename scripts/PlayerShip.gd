@@ -140,6 +140,10 @@ var _fov_punch:  float = 0.0   # additive offset on base fov; negative = zoom-in
 # row, flip the over-the-shoulder side so the second shot reads from a new angle.
 var _last_telegraph_action: int  = -1
 var _frame_flip:            bool = false
+# Drone strike POV: ride the camera behind the launched drone toward the target.
+var _pov_drone:             Node3D = null   # the flying strike-drone visual
+var _pov_target:            Node3D = null   # what it's diving at (for look + reticle)
+var _pov_source_mesh:       MeshInstance3D = null   # orbiting drone hidden during strike
 var dock_stuck_timer: float = 0.0
 var last_dock_distance: float = INF
 var last_dock_target: Node3D = null
@@ -437,6 +441,7 @@ func _enter_orbit(enemy: Node) -> void:
 
 func _on_combat_ended_orbit(_won: bool) -> void:
 	_release_mouse_capture()
+	_end_drone_pov()
 	_cam_mode = 0
 	# Snap pivot back above the ship so the next frame resumes normal follow
 	camera_pivot.global_position = global_position
@@ -467,8 +472,11 @@ func _on_action_telegraphed_cam(action_type: int, source: Node, target: Node) ->
 
 # Quick push toward the impact point (shake added in Phase 3).
 func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _lethal: bool, blocked: bool, crit: bool) -> void:
-	if _cam_mode != 2:
+	if _cam_mode == 0:
 		return
+	# A drone strike lands while still in POV — drop POV and frame the impact.
+	if _cam_mode == 3:
+		_end_drone_pov()
 	# Nudge the look + goal a touch toward the impact for a reactive feel.
 	_cam_look_at = _cam_look_at.lerp(world_pos, 0.5)
 	_cam_goal_pos = _cam_goal_pos.lerp(world_pos, 0.12)
@@ -517,6 +525,29 @@ func _cam_ship_scale() -> float:
 # Kick the FOV for a snap-zoom punch; springs back to _base_fov in _process.
 func _punch_fov(amount: float) -> void:
 	_fov_punch = amount
+
+# ── Drone strike POV ─────────────────────────────────────────────────────────
+# Ride the cinematic camera behind the launched drone as it dives at the target.
+# Only engages while the combat camera is active; no-op in normal flight.
+func _begin_drone_pov(drone: Node3D, target: Node3D) -> void:
+	if _cam_mode == 0 or not is_instance_valid(drone):
+		return
+	_pov_drone = drone
+	_pov_target = target
+	_cam_mode = 3
+	_cam_lerp_speed = 12.0
+
+func _end_drone_pov() -> void:
+	# Restore the orbiting drone that peeled off for the run.
+	if _pov_source_mesh != null and is_instance_valid(_pov_source_mesh):
+		_pov_source_mesh.visible = true
+	_pov_source_mesh = null
+	_pov_drone = null
+	_pov_target = null
+	# Hand back to action framing so the impact still punches.
+	if _cam_mode == 3:
+		_cam_mode = 2
+		_cam_lerp_speed = _ACTION_LERP
 
 func _frame_action(source: Node, target: Node, flip: bool = false) -> void:
 	var src: Vector3 = (source as Node3D).global_position
@@ -582,9 +613,29 @@ func _process(delta: float) -> void:
 		# Ramp position lerp from slow entry speed up to normal orbit speed.
 		_cam_entry_t  = minf(1.0, _cam_entry_t + real_delta / _CAM_ENTRY_DUR)
 		_cam_lerp_speed = lerpf(1.0, _ORBIT_LERP, _cam_entry_t)
-	# Smooth look-target: slow ease during orbit entry, snappy during action punch-ins.
-	var _look_speed := _ACTION_LERP if _cam_mode == 2 \
-		else _CAM_LOOK_LERP * lerpf(0.25, 1.0, _cam_entry_t)
+	elif _cam_mode == 3:
+		# Drone POV: trail just behind and above the diving drone, eyes on the prey.
+		if not is_instance_valid(_pov_drone):
+			_end_drone_pov()
+		else:
+			var dpos: Vector3 = _pov_drone.global_position
+			var fwd: Vector3 = -_pov_drone.global_transform.basis.z
+			if fwd.length() < 0.01:
+				fwd = (_pov_target.global_position - dpos).normalized() if is_instance_valid(_pov_target) else -global_transform.basis.z
+			_cam_goal_pos = dpos - fwd * 4.5 + Vector3(0.0, 1.3, 0.0)
+			if is_instance_valid(_pov_target):
+				_cam_look_at = (_pov_target as Node3D).global_position + Vector3(0.0, 1.0, 0.0)
+			else:
+				_cam_look_at = dpos + fwd * 10.0
+			_cam_lerp_speed = 12.0
+	# Smooth look-target: slow ease during orbit entry, snappy during action/POV.
+	var _look_speed: float
+	if _cam_mode == 3:
+		_look_speed = 14.0
+	elif _cam_mode == 2:
+		_look_speed = _ACTION_LERP
+	else:
+		_look_speed = _CAM_LOOK_LERP * lerpf(0.25, 1.0, _cam_entry_t)
 	_cam_look_cur = _cam_look_cur.lerp(_cam_look_at, minf(real_delta * _look_speed, 1.0))
 	# Common glide toward goal (action mode keeps its fixed goal).
 	camera_pivot.global_position = camera_pivot.global_position.lerp(
@@ -2436,6 +2487,26 @@ func spawn_projectile(target_node: Node3D, visual_only: bool = false):
 		p.global_position = origin + p.direction * 1.0
 
 
+# Drone strike color — matches the green orbiting drones, not a blue ball.
+const DRONE_STRIKE_COLOR := Color(0.2, 0.95, 0.45)
+
+# Pick the orbiting drone whose mesh sits closest to the target — that's the one
+# that "peels off" to attack, so the strike reads as a real drone leaving orbit.
+func _pick_strike_drone_mesh(target_pos: Vector3) -> MeshInstance3D:
+	var best: MeshInstance3D = null
+	var best_d := INF
+	for pivot in drones:
+		if not is_instance_valid(pivot) or pivot.get_child_count() == 0:
+			continue
+		var m := pivot.get_child(0) as MeshInstance3D
+		if m == null:
+			continue
+		var d := m.global_position.distance_to(target_pos)
+		if d < best_d:
+			best_d = d
+			best = m
+	return best
+
 func launch_combat_drone(target_node: Node3D) -> void:
 	if target_node == null or not is_instance_valid(target_node):
 		return
@@ -2443,10 +2514,21 @@ func launch_combat_drone(target_node: Node3D) -> void:
 	if parent == null:
 		return
 	var target_pos: Vector3 = target_node.global_position + Vector3(0.0, 1.5, 0.0)
-	var launch_dir: Vector3 = (target_pos - global_position).normalized()
-	if launch_dir.length() <= 0.01:
-		launch_dir = -global_transform.basis.z.normalized()
-	var start_pos: Vector3 = global_position + launch_dir * 4.0 + global_transform.basis.x * 2.5 + Vector3(0.0, 1.4, 0.0)
+
+	# Launch from a real orbiting drone's position and hide that drone for the
+	# duration so it looks like the drone itself broke orbit to make the run.
+	var src_mesh := _pick_strike_drone_mesh(target_pos)
+	var start_pos: Vector3
+	if src_mesh != null:
+		start_pos = src_mesh.global_position
+		src_mesh.visible = false
+		_pov_source_mesh = src_mesh
+	else:
+		var launch_dir: Vector3 = (target_pos - global_position).normalized()
+		if launch_dir.length() <= 0.01:
+			launch_dir = -global_transform.basis.z.normalized()
+		start_pos = global_position + launch_dir * 4.0 + global_transform.basis.x * 2.5 + Vector3(0.0, 1.4, 0.0)
+
 	var travel_time: float = clampf(start_pos.distance_to(target_pos) / 95.0, 0.18, 0.75)
 
 	var drone := Node3D.new()
@@ -2457,14 +2539,16 @@ func launch_combat_drone(target_node: Node3D) -> void:
 
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(0.15, 0.95, 1.0, 1.0)
+	mat.albedo_color = DRONE_STRIKE_COLOR
 	mat.emission_enabled = true
-	mat.emission = Color(0.15, 0.95, 1.0)
+	mat.emission = DRONE_STRIKE_COLOR
 	mat.emission_energy_multiplier = 7.0
 
+	# Match the orbiting drone size so it reads as the same craft, not a big ball.
+	var core_r: float = clampf(_drone_size * 1.6, 0.35, 0.7)
 	var body_mesh := SphereMesh.new()
-	body_mesh.radius = 0.45
-	body_mesh.height = 0.9
+	body_mesh.radius = core_r
+	body_mesh.height = core_r * 2.0
 	body_mesh.material = mat
 
 	var body := MeshInstance3D.new()
@@ -2474,7 +2558,7 @@ func launch_combat_drone(target_node: Node3D) -> void:
 
 	var streak_mesh := CylinderMesh.new()
 	streak_mesh.top_radius = 0.08
-	streak_mesh.bottom_radius = 0.28
+	streak_mesh.bottom_radius = core_r * 0.6
 	streak_mesh.height = 3.5
 	streak_mesh.material = mat
 	var streak := MeshInstance3D.new()
@@ -2486,19 +2570,22 @@ func launch_combat_drone(target_node: Node3D) -> void:
 
 	var light := OmniLight3D.new()
 	light.name = "DroneStrikeLight"
-	light.light_color = Color(0.15, 0.95, 1.0)
+	light.light_color = DRONE_STRIKE_COLOR
 	light.light_energy = 6.0
 	light.omni_range = 18.0
 	drone.add_child(light)
 
+	# Ride the camera behind the drone for a POV dive (only during combat cam).
+	_begin_drone_pov(drone, target_node)
+
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(drone, "global_position", target_pos, travel_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(drone, "scale", Vector3(1.8, 1.8, 1.8), travel_time * 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(streak, "scale", Vector3(1.0, 1.0, 2.4), travel_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.finished.connect(func():
 		if is_instance_valid(target_node):
-			ImpactEffect.spawn_hit(parent, target_pos, Color(0.15, 0.95, 1.0))
+			ImpactEffect.spawn_hit(parent, target_pos, DRONE_STRIKE_COLOR)
+		_end_drone_pov()
 		if is_instance_valid(drone):
 			drone.queue_free()
 	)
