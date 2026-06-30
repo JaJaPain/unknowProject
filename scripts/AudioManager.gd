@@ -22,6 +22,7 @@ var is_ducked: bool = false
 # Audio Streams
 var bgm_track1 = preload("res://sound/BackgroundMusic/Iron Lullaby1.mp3")
 var bgm_track2 = preload("res://sound/BackgroundMusic/Iron Lullaby2.mp3")
+var bgm_lounge = preload("res://sound/BackgroundMusic/LoungeMusic.wav")
 var sfx_laser1 = preload("res://sound/WeaponFire/Laser Weapon Firing1.mp3")
 var sfx_laser2 = preload("res://sound/WeaponFire/Laser Weapon Firing2.mp3")
 var sfx_mining = preload("res://sound/Mining/MiningSound.mp3")
@@ -38,6 +39,9 @@ var sfx_jump_arrival: AudioStreamWAV = null
 
 var tracks: Array = []
 var current_track_idx: int = 0
+var _lounge_music_active: bool = false
+var _pre_lounge_stream: AudioStream = null
+var _pre_lounge_position: float = 0.0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -98,12 +102,39 @@ func _ready():
 
 func play_next_bgm():
 	if tracks.size() == 0: return
+	_lounge_music_active = false
 	bgm_player.stream = tracks[current_track_idx]
 	bgm_player.play()
 	current_track_idx = (current_track_idx + 1) % tracks.size()
 
 func _on_bgm_finished():
-	play_next_bgm()
+	if _lounge_music_active:
+		bgm_player.play()
+	else:
+		play_next_bgm()
+
+func enter_lounge_music() -> void:
+	if bgm_player == null or bgm_lounge == null:
+		return
+	if _lounge_music_active:
+		return
+	_pre_lounge_stream = bgm_player.stream
+	_pre_lounge_position = bgm_player.get_playback_position() if bgm_player.playing else 0.0
+	_lounge_music_active = true
+	bgm_player.stream = bgm_lounge
+	bgm_player.play()
+
+func exit_lounge_music() -> void:
+	if bgm_player == null or not _lounge_music_active:
+		return
+	_lounge_music_active = false
+	if _pre_lounge_stream:
+		bgm_player.stream = _pre_lounge_stream
+		bgm_player.play(maxf(0.0, _pre_lounge_position))
+	else:
+		play_next_bgm()
+	_pre_lounge_stream = null
+	_pre_lounge_position = 0.0
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0):
 	for p in sfx_players:

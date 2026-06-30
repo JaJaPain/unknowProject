@@ -881,6 +881,91 @@ func diagnostics_context_for_capability(capability: String) -> Dictionary:
 	)
 
 
+func request_lounge_chatter(
+	context: Dictionary,
+	fallback_line: String,
+	callback: Callable
+) -> void:
+	var speaker := str(context.get("speaker", "Local Contact")).strip_edges()
+	var role := str(context.get("role", "station regular")).strip_edges()
+	var mood := str(context.get("mood", "neutral")).strip_edges()
+	var station := str(context.get("station", "the station lounge")).strip_edges()
+	var system_name := str(context.get("system", "this system")).strip_edges()
+	var faction := str(context.get("faction", "independent")).strip_edges()
+	var extra := str(context.get("extra", "")).strip_edges()
+	var prompt := (
+		"You are writing one ambient lounge line for a space trading game.\n"
+		+ "Speaker: %s\nRole: %s\nMood: %s\nFaction/affiliation: %s\n"
+		+ "Location: %s in %s\nExtra context: %s\n\n"
+		+ "Write exactly ONE short in-character line the speaker says to the pilot. "
+		+ "It can be useful, atmospheric, teasing, guarded, or even a polite refusal "
+		+ "like not being in the mood to talk. Do not narrate. Do not include the "
+		+ "speaker name. Keep it under 24 words. Output only valid JSON: "
+		+ "{\"line\":\"...\"}"
+	) % [speaker, role, mood, faction, station, system_name, extra]
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				callback.call(fallback_line)
+				return
+			var response_text := body.get_string_from_utf8()
+			var outer := JSON.new()
+			if outer.parse(response_text) != OK:
+				callback.call(fallback_line)
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call(fallback_line)
+				return
+			var inner_json_str := str(outer_data["response"]).strip_edges()
+			if inner_json_str.begins_with("```"):
+				var end_idx := inner_json_str.find("\n", 3)
+				if end_idx != -1:
+					inner_json_str = inner_json_str.substr(end_idx + 1)
+				if inner_json_str.ends_with("```"):
+					inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
+				inner_json_str = inner_json_str.strip_edges()
+			var inner := JSON.new()
+			if inner.parse(inner_json_str) != OK:
+				callback.call(fallback_line)
+				return
+			var data = inner.get_data()
+			if not data is Dictionary or not data.has("line"):
+				callback.call(fallback_line)
+				return
+			var line := str(data["line"]).strip_edges()
+			if line.length() < 4 or line.length() > 220:
+				callback.call(fallback_line)
+				return
+			callback.call(line)
+	)
+
+	var payload := build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
+			"temperature": 0.88,
+			"num_predict": 90,
+			"seed": randi(),
+		}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call(fallback_line)
+
+
 func request_campaign_bible_generation(
 	baseline_bible: Dictionary,
 	idea_memory_context: String,

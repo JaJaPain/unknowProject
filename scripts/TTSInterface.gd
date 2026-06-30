@@ -14,7 +14,7 @@ var last_interaction_name: String = ""
 # per-NPC voice refactor). The same line spoken in two NPC voices
 # caches separately. For callers that don't override the voice, we use
 # the resolved Kokoro voice for the faction — so legacy "neutral"
-# callers key under "af_bella|<text>", which still has a unique key
+# callers key under the resolved provider voice, which still has a unique key
 # per text and matches the old behavior on the lookup side.
 # (Old caller's existing cache entries on disk are NOT carried over
 # since the project doesn't persist TTS cache between sessions — this
@@ -168,7 +168,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 		is_requesting = false
 
 # Background pre-cache. Same call-shape change as play_dialogue_audio:
-#   cache_dialogue_audio(text, faction)              # legacy, resolves to af_bella
+#   cache_dialogue_audio(text, faction)              # legacy, resolves to a provider voice
 #   cache_dialogue_audio(text, voice_id, speed)      # per-NPC, speed is the override
 # Empty voice_id means "use faction". Speed <0 means "default 1.0".
 func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0):
@@ -182,7 +182,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 		voice_id = get_voice_for_faction(voice_id_or_faction)
 		speed = 1.0
 	else:
-		voice_id = voice_id_or_faction if voice_id_or_faction != "" else "af_bella"
+		voice_id = voice_id_or_faction if voice_id_or_faction != "" else "af_aoede"
 		if speed < 0.0:
 			speed = 1.0
 
@@ -558,7 +558,7 @@ func get_voice_for_faction(faction: String) -> String:
 		"vanguard":
 			return "am_michael"
 		"neutral", _:
-			return "af_bella"
+			return "af_aoede"
 
 func _on_audio_player_finished():
 	AudioManager.unduck_audio()

@@ -51,6 +51,7 @@ var dock_message_hbox: HBoxContainer
 var dock_message_portrait: TextureRect
 var dock_message_name: Label
 var dock_message_line: Label
+var dock_message_choices: HBoxContainer
 var dock_message_tween: Tween
 var station_contacts_panel: PanelContainer
 var station_contacts_list: Control
@@ -62,6 +63,32 @@ var _pending_kaelen_intel: String = ""
 var _kaelen_intel_btn: Button = null
 
 const _CONTACT_MOODS := ["Chatty", "Tense", "Distracted", "Focused"]
+const _LOUNGE_TALK_SCALE := 1.05
+var _lounge_tuning_slot: int = 3
+var _lounge_portrait_offsets: Array[Vector2] = [
+	Vector2(0.07, -0.03),
+	Vector2(-0.14, -0.03),
+	Vector2(-0.19, -0.03),
+	Vector2(-0.23, -0.03),
+]
+var _lounge_talk_offsets: Array[Vector2] = [
+	Vector2(0.09, -0.05),
+	Vector2(-0.13, -0.05),
+	Vector2(-0.15, -0.06),
+	Vector2(-0.21, -0.05),
+]
+var _lounge_name_offsets: Array[Vector2] = [
+	Vector2(0.085, 0.0),
+	Vector2(-0.135, 0.0),
+	Vector2(-0.155, 0.0),
+	Vector2(-0.215, 0.0),
+]
+var _lounge_meta_offsets: Array[Vector2] = [
+	Vector2(0.23, -0.005),
+	Vector2(0.0, 0.0),
+	Vector2(0.0, 0.0),
+	Vector2(0.0, 0.0),
+]
 # ── Mechanic (Jenna Kross) dock intro ───────────────────────────────────────
 # Portrait + personalized greeting that pops in the top area of the dock panel
 # when the player enters the Grease Monkeys maintenance submenu. Layout:
@@ -1202,6 +1229,11 @@ func _create_dock_menu():
 	dock_message_line.custom_minimum_size.y = 0
 	dock_message_line.max_lines_visible = 4
 	msg_text_vbox.add_child(dock_message_line)
+
+	dock_message_choices = HBoxContainer.new()
+	dock_message_choices.visible = false
+	dock_message_choices.add_theme_constant_override("separation", 6)
+	msg_text_vbox.add_child(dock_message_choices)
 
 	# Bounty board — compact read-only summary of Kaelen's active papers.
 	# Placed BEFORE station_contacts_panel so SIZE_EXPAND_FILL on that panel
@@ -3474,6 +3506,7 @@ func _render_dock_submenu() -> void:
 		maintenance_bay_btn.text = _mechanic_service_button_text()
 
 	if current_submenu == DockSubmenu.MAINTENANCE:
+		AudioManager.exit_lounge_music()
 		_set_dock_panel_lounge_layout(false)
 		dock_label.text = _mechanic_dock_title()
 		# Maintenance submenu: hide services + entry button, show repair +
@@ -3518,6 +3551,7 @@ func _render_dock_submenu() -> void:
 			if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 				mechanic_intro_panel.visible = false
 	elif current_submenu == DockSubmenu.LOUNGE:
+		AudioManager.enter_lounge_music()
 		_set_dock_panel_lounge_layout(true)
 		dock_label.text = "%s LOUNGE" % _current_station_display_name().to_upper()
 		agent_service_btn.visible = false
@@ -3535,12 +3569,13 @@ func _render_dock_submenu() -> void:
 		deliver_part_btn.visible = false
 		back_to_services_btn.visible = true
 		_render_station_contacts(true)
-		_render_bounty_board(true)
+		_render_bounty_board(false)
 		if dock_background:
 			dock_background.visible = false
 		if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 			mechanic_intro_panel.visible = false
 	else:
+		AudioManager.exit_lounge_music()
 		_set_dock_panel_lounge_layout(false)
 		# Services submenu (default): at a full-service station, show
 		# sell/agent/maintenance entry. At an outpost, show only the
@@ -3740,66 +3775,34 @@ func _render_station_contacts(should_show: bool) -> void:
 		var candidate_data := GlobalState.get_minor_npc_data(candidate_name)
 		if _station_contact_has_lounge_reason(candidate_name, candidate_data):
 			visible_contacts.append(candidate_name)
-	if visible_contacts.is_empty() and not show_kaelen:
-		station_contacts_panel.visible = false
-		_selected_station_contact = ""
-		return
 	if not _selected_station_contact.is_empty() \
 			and _selected_station_contact not in visible_contacts:
 		_selected_station_contact = ""
 	station_contacts_panel.visible = true
-	var cards: Array[Dictionary] = []
-	if show_kaelen:
-		if not _contacts_with_rumor.has("kaelen"):
-			_contacts_with_rumor["kaelen"] = true
-		cards.append({
-			"kind": "kaelen",
-			"name": "Broker Kaelen",
-			"role": "Broker",
-			"mood": "Watching",
-			"rumor": bool(_contacts_with_rumor.get("kaelen", false)),
-			"portrait": GameContentRegistry.shared().portrait_texture(
-				_kaelen_mood_portrait_id("amused")
-			),
-		})
-	else:
-		cards.append({
-			"kind": "bartender",
-			"name": "Lounge Bartender",
-			"role": "Station Bar",
-			"mood": "Available",
-			"rumor": false,
-			"portrait": null,
-		})
+	var cards: Array[Dictionary] = [
+		_lounge_bartender_card(station_id),
+		{},
+		{},
+		_lounge_kaelen_card(),
+	]
+	if not _contacts_with_rumor.has("kaelen"):
+		_contacts_with_rumor["kaelen"] = true
+	var contact_slot := 1
+	for agent_card in _lounge_station_agent_cards():
+		if contact_slot > 2:
+			break
+		cards[contact_slot] = agent_card
+		contact_slot += 1
 	for npc_name in visible_contacts:
-		if cards.size() >= 4:
+		if contact_slot > 2:
 			break
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
-		var role := str(npc_data.get("role", "Local contact"))
-		var faction := str(npc_data.get("faction", ""))
-		var faction_label := ""
-		if not faction.is_empty():
-			faction_label = str(
-				GlobalState.faction_info(faction).get("name", faction.capitalize())
-			)
-		var mood := _get_contact_mood(str(npc_name))
-		var has_intel := _station_contact_has_intel(str(npc_name), npc_data)
-		if has_intel and not _contacts_with_rumor.has(str(npc_name)):
-			_contacts_with_rumor[str(npc_name)] = true
-		cards.append({
-			"kind": "npc",
-			"name": str(npc_name),
-			"role": role,
-			"faction": faction_label,
-			"mood": mood,
-			"rumor": has_intel and bool(_contacts_with_rumor.get(str(npc_name), false)),
-			"portrait": GlobalState.get_minor_npc_portrait(str(npc_name)),
-			"data": npc_data,
-		})
+		cards[contact_slot] = _lounge_npc_card(str(npc_name), npc_data)
+		contact_slot += 1
 
 	# story_planted_npc: inject a one-visit story NPC into this station's contact list.
 	var planted: Dictionary = GlobalState.story_planted_npc
-	if not planted.is_empty() and cards.size() < 4:
+	if not planted.is_empty() and contact_slot <= 2:
 		var p_station: String = str(planted.get("station_id", ""))
 		if p_station == "" or p_station == station_id:
 			var p_name: String = str(planted.get("display_name", "Unknown Contact"))
@@ -3807,17 +3810,109 @@ func _render_station_contacts(should_show: bool) -> void:
 			var p_portrait: Texture2D = null
 			if not p_portrait_id.is_empty():
 				p_portrait = GameContentRegistry.shared().portrait_texture(p_portrait_id)
-			cards.append({
+			cards[contact_slot] = {
 				"kind": "planted",
 				"name": p_name,
 				"role": "Story Contact",
 				"mood": "Waiting",
 				"rumor": true,
 				"portrait": p_portrait,
-			})
+			}
 	for i in range(4):
 		var card_data := cards[i] if i < cards.size() else {}
 		_add_lounge_contact_card(i, card_data)
+
+
+func _lounge_bartender_card(station_id: String) -> Dictionary:
+	var portrait_ids := GlobalState.GENERATED_CONTACT_PORTRAITS
+	var portrait: Texture2D = null
+	var voice_profile_id := "voice.jenna_kross.v1"
+	if not portrait_ids.is_empty():
+		var key := station_id
+		if key.is_empty():
+			key = _current_station_display_name()
+		var profile_index := absi(key.hash()) % portrait_ids.size()
+		var portrait_id := portrait_ids[profile_index]
+		portrait = GameContentRegistry.shared().portrait_texture(portrait_id)
+		if profile_index < GlobalState.GENERATED_CONTACT_VOICES.size():
+			voice_profile_id = GlobalState.GENERATED_CONTACT_VOICES[profile_index]
+	return {
+		"kind": "bartender",
+		"name": "Lounge Bartender",
+		"role": "Bartender",
+		"mood": "Pouring",
+		"rumor": false,
+		"portrait": portrait,
+		"color": Color(0.0, 0.85, 0.85),
+		"voice_profile_id": voice_profile_id,
+	}
+
+
+func _lounge_station_agent_cards() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var registry := GameContentRegistry.shared()
+	for faction_key in GlobalState.get_current_system_factions():
+		if result.size() >= 2:
+			break
+		var faction_def := registry.faction(faction_key)
+		if faction_def == null or faction_def.agent_portrait_id.is_empty():
+			continue
+		var agent_name := "%s Agent" % faction_def.display_name
+		var npc_def: NpcDefinition = registry.npcs.get(faction_def.agent_npc_id)
+		if npc_def != null and not npc_def.display_name.is_empty():
+			agent_name = npc_def.display_name
+		var role := faction_def.descriptor
+		if role.is_empty():
+			role = "Faction Agent"
+		result.append({
+			"kind": "agent",
+			"name": agent_name,
+			"role": role,
+			"mood": "Available",
+			"rumor": false,
+			"portrait": registry.portrait_texture(faction_def.agent_portrait_id),
+			"faction": faction_def.display_name,
+			"color": faction_def.ui_color,
+			"voice_profile_id": str(faction_def.voice_profile_id),
+		})
+	return result
+
+
+func _lounge_npc_card(npc_name: String, npc_data: Dictionary) -> Dictionary:
+	var faction := str(npc_data.get("faction", "local"))
+	var faction_label := faction.capitalize()
+	if faction != "local":
+		faction_label = str(GlobalState.faction_info(faction).get("name", faction_label))
+	var has_intel := _station_contact_has_intel(npc_name, npc_data)
+	if has_intel and not _contacts_with_rumor.has(npc_name):
+		_contacts_with_rumor[npc_name] = true
+	return {
+		"kind": "npc",
+		"name": npc_name,
+		"role": str(npc_data.get("role", "Local Contact")),
+		"faction": faction_label,
+		"mood": _get_contact_mood(npc_name),
+		"rumor": has_intel,
+		"portrait": GlobalState.get_minor_npc_portrait(npc_name),
+		"data": npc_data,
+		"color": npc_data.get("flavor_color", Color.WHITE),
+		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
+	}
+
+
+func _lounge_kaelen_card() -> Dictionary:
+	return {
+		"kind": "kaelen",
+		"name": "Broker Kaelen",
+		"role": "Broker",
+		"mood": "Watching",
+		"rumor": bool(_contacts_with_rumor.get("kaelen", false)),
+		"portrait": GameContentRegistry.shared().portrait_texture(
+			_kaelen_mood_portrait_id("amused")
+		),
+		"color": Color(0.0, 0.95, 1.0),
+		"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
+	}
 
 
 func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
@@ -3844,13 +3939,16 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 
 	if card_data.is_empty():
 		_add_lounge_empty_slot(card)
+		if slot_index == _lounge_tuning_slot:
+			_add_lounge_tuning_preview(card, slot_index)
 		return
 
+	var portrait_offset := _lounge_portrait_offsets[slot_index]
 	var portrait := TextureRect.new()
-	portrait.anchor_left = 0.09
-	portrait.anchor_top = 0.07
-	portrait.anchor_right = 0.91
-	portrait.anchor_bottom = 0.53
+	portrait.anchor_left = 0.09 + portrait_offset.x
+	portrait.anchor_top = 0.07 + portrait_offset.y
+	portrait.anchor_right = 0.91 + portrait_offset.x
+	portrait.anchor_bottom = 0.53 + portrait_offset.y
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3861,33 +3959,35 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 		portrait.modulate = Color(0.2, 0.55, 0.65, 0.35)
 	card.add_child(portrait)
 
+	var name_offset := _lounge_name_offsets[slot_index]
 	var name := Label.new()
-	name.anchor_left = 0.11
-	name.anchor_top = 0.59
-	name.anchor_right = 0.89
-	name.anchor_bottom = 0.67
+	name.anchor_left = 0.11 + name_offset.x
+	name.anchor_top = 0.555 + name_offset.y
+	name.anchor_right = 0.89 + name_offset.x
+	name.anchor_bottom = 0.615 + name_offset.y
 	name.text = str(card_data.get("name", "Unknown")).to_upper()
 	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.clip_text = true
-	name.add_theme_font_size_override("font_size", 11)
+	name.add_theme_font_size_override("font_size", 10)
 	name.add_theme_color_override("font_color", Color(0.86, 0.96, 1.0))
 	name.add_theme_color_override("font_shadow_color", Color.BLACK)
 	name.add_theme_constant_override("shadow_outline_size", 2)
 	card.add_child(name)
 
+	var meta_offset := _lounge_meta_offsets[slot_index]
 	var meta := Label.new()
-	meta.anchor_left = 0.12
-	meta.anchor_top = 0.69
-	meta.anchor_right = 0.88
-	meta.anchor_bottom = 0.76
+	meta.anchor_left = 0.12 + meta_offset.x
+	meta.anchor_top = 0.635 + meta_offset.y
+	meta.anchor_right = 0.88 + meta_offset.x
+	meta.anchor_bottom = 0.695 + meta_offset.y
 	var role := str(card_data.get("role", "Contact"))
 	var mood := str(card_data.get("mood", "Neutral"))
 	meta.text = "%s  /  %s" % [role, mood]
 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	meta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	meta.clip_text = true
-	meta.add_theme_font_size_override("font_size", 9)
+	meta.add_theme_font_size_override("font_size", 8)
 	meta.add_theme_color_override("font_color", Color(0.52, 0.9, 0.95))
 	card.add_child(meta)
 
@@ -3904,7 +4004,7 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 		badge.add_theme_color_override("font_color", Color(1.0, 0.78, 0.25))
 		card.add_child(badge)
 
-	_add_lounge_card_buttons(card, card_data)
+	_add_lounge_card_buttons(card, card_data, slot_index)
 
 
 func _add_lounge_empty_slot(card: Control) -> void:
@@ -3933,33 +4033,84 @@ func _add_lounge_empty_slot(card: Control) -> void:
 	card.add_child(sub)
 
 
-func _add_lounge_card_buttons(card: Control, card_data: Dictionary) -> void:
-	var kind := str(card_data.get("kind", ""))
-	var primary := Button.new()
-	primary.anchor_left = 0.14
-	primary.anchor_top = 0.79
-	primary.anchor_right = 0.86
-	primary.anchor_bottom = 0.89
-	primary.text = "Talk"
-	primary.add_theme_font_size_override("font_size", 10)
+func _add_lounge_tuning_preview(card: Control, slot_index: int) -> void:
+	var preview := Label.new()
+	preview.anchor_left = 0.12
+	preview.anchor_top = 0.49
+	preview.anchor_right = 0.88
+	preview.anchor_bottom = 0.57
+	preview.text = "TUNING SLOT %d" % (slot_index + 1)
+	preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preview.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	preview.add_theme_font_size_override("font_size", 9)
+	preview.add_theme_color_override("font_color", Color(0.5, 1.0, 0.9, 0.8))
+	card.add_child(preview)
+
+	var portrait_offset := _lounge_portrait_offsets[slot_index]
+	var portrait := TextureRect.new()
+	portrait.anchor_left = 0.09 + portrait_offset.x
+	portrait.anchor_top = 0.07 + portrait_offset.y
+	portrait.anchor_right = 0.91 + portrait_offset.x
+	portrait.anchor_bottom = 0.53 + portrait_offset.y
+	portrait.texture = GameContentRegistry.shared().portrait_texture(
+		_kaelen_mood_portrait_id("amused")
+	)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(1.0, 1.0, 1.0, 0.82)
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(portrait)
+
+	_create_lounge_talk_button(card, slot_index).disabled = true
+
+
+func _create_lounge_talk_button(card: Control, slot_index: int) -> TextureButton:
+	var primary := TextureButton.new()
+	var talk_tex := load("res://assets/TalkBg.png") as Texture2D
+	primary.texture_normal = talk_tex
+	primary.texture_hover = talk_tex
+	primary.texture_pressed = talk_tex
+	primary.texture_disabled = talk_tex
+	primary.ignore_texture_size = true
+	primary.stretch_mode = TextureButton.STRETCH_SCALE
+	var talk_center := Vector2(0.5, 0.895) + _lounge_talk_offsets[slot_index]
+	var talk_half_size := Vector2(0.14, 0.095) * _LOUNGE_TALK_SCALE
+	primary.anchor_left = talk_center.x - talk_half_size.x
+	primary.anchor_top = talk_center.y - talk_half_size.y
+	primary.anchor_right = talk_center.x + talk_half_size.x
+	primary.anchor_bottom = talk_center.y + talk_half_size.y
+	primary.tooltip_text = "Talk"
 	card.add_child(primary)
+	return primary
+
+
+func _add_lounge_card_buttons(
+	card: Control,
+	card_data: Dictionary,
+	slot_index: int
+) -> void:
+	var kind := str(card_data.get("kind", ""))
+	var primary := _create_lounge_talk_button(card, slot_index)
 	if kind == "kaelen":
-		primary.pressed.connect(_on_kaelen_lounge_pressed)
+		primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 		return
 	if kind == "bartender":
-		primary.pressed.connect(_on_lounge_bartender_pressed)
+		primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
+		return
+	if kind == "agent":
+		primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 		return
 	if kind == "planted":
 		primary.pressed.connect(_on_planted_npc_pressed)
 		return
 	var npc_name := str(card_data.get("name", ""))
-	primary.pressed.connect(_on_station_contact_pressed.bind(npc_name))
+	primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 
 	var actions := HBoxContainer.new()
 	actions.anchor_left = 0.11
-	actions.anchor_top = 0.91
+	actions.anchor_top = 0.72
 	actions.anchor_right = 0.89
-	actions.anchor_bottom = 1.0
+	actions.anchor_bottom = 0.79
 	actions.add_theme_constant_override("separation", 3)
 	card.add_child(actions)
 	var action_defs: Array = [
@@ -3989,6 +4140,210 @@ func _on_lounge_bartender_pressed() -> void:
 		+ "on anything blinking."
 	) % station_name
 	show_dock_message(line, "Lounge Bartender", Color(0.0, 0.85, 0.85))
+
+
+func _on_lounge_agent_pressed(
+	agent_name: String,
+	faction_name: String,
+	faction_color: Color
+) -> void:
+	var line := (
+		"%s is available in the lounge. Formal faction work still routes "
+		+ "through station channels while we tune this panel."
+	) % agent_name
+	show_dock_message(line, faction_name, faction_color)
+
+
+func _on_lounge_card_pressed(card_data: Dictionary) -> void:
+	var card := card_data.duplicate(true)
+	var fallback_line := _lounge_card_fallback_line(card)
+	_show_lounge_card_line(card, "Listening...", false)
+	LLMInterface.request_lounge_chatter(
+		_lounge_card_context(card),
+		fallback_line,
+		func(line: String) -> void:
+			_show_lounge_card_line(card, line, true)
+	)
+
+
+func _show_lounge_card_line(
+	card_data: Dictionary,
+	line: String,
+	should_speak: bool = true
+) -> void:
+	var name := str(card_data.get("name", "Local Contact"))
+	var color: Color = card_data.get("color", Color(0.85, 0.85, 0.85))
+	var portrait := card_data.get("portrait", null) as Texture2D
+	show_dock_message(line, name, color, portrait)
+	if not should_speak:
+		return
+	var voice_profile_id := str(card_data.get("voice_profile_id", "voice.neutral.v1"))
+	if voice_profile_id.is_empty():
+		voice_profile_id = "voice.neutral.v1"
+	GlobalState.emit_npc_flavor({
+		"npc_name": name,
+		"line": line,
+		"color": color,
+		"voice_profile_id": voice_profile_id,
+	})
+
+
+func _lounge_card_context(card_data: Dictionary) -> Dictionary:
+	var kind := str(card_data.get("kind", "contact"))
+	var extra := ""
+	if kind == "kaelen":
+		extra = (
+			"Kaelen is a wry neutral broker. She calls the pilot Shiny. "
+			+ "She notices profitable trouble before anyone else."
+		)
+		var active_bounties: Array = BountyRegistryScript.shared().get_active_bounties_for_system(
+			GlobalState.current_system_id
+		)
+		if not active_bounties.is_empty():
+			var bounty_names: Array[String] = []
+			for bounty in active_bounties:
+				bounty_names.append(str(bounty.get("faction", "?")).capitalize())
+			extra += " Active bounty paper is posted for: %s." % ", ".join(bounty_names)
+	elif kind == "bartender":
+		extra = "The bartender hears station gossip all day but does not hand out work."
+	elif kind == "agent":
+		extra = "This is a formal faction agent relaxing in the lounge, guarded but professional."
+	elif kind == "npc":
+		var npc_data: Dictionary = card_data.get("data", {})
+		extra = _station_contact_topic_line(
+			str(card_data.get("name", "Local Contact")),
+			npc_data,
+			"greeting",
+			npc_data.get("flavor_lines", [])
+		)
+	return {
+		"speaker": str(card_data.get("name", "Local Contact")),
+		"role": str(card_data.get("role", "station regular")),
+		"mood": str(card_data.get("mood", "neutral")),
+		"faction": str(card_data.get("faction", "independent")),
+		"station": _current_station_display_name(),
+		"system": _get_current_system_display_name(),
+		"extra": extra,
+	}
+
+
+func _lounge_card_fallback_line(card_data: Dictionary) -> String:
+	var kind := str(card_data.get("kind", "contact"))
+	var name := str(card_data.get("name", "Local Contact"))
+	match kind:
+		"kaelen":
+			return _kaelen_lounge_line()
+		"bartender":
+			var station_name := _current_station_display_name()
+			if station_name.is_empty():
+				station_name = "the lounge"
+			var lines := [
+				"Welcome to %s. Keep your voice low and your tab honest." % station_name,
+				"Not in the mood to talk long, pilot. But the glassware listens better than most people.",
+				"If you came for gossip, buy something first. Station rules.",
+			]
+			return lines[randi() % lines.size()]
+		"agent":
+			var lines := [
+				"I'm off the clock, pilot. Mostly.",
+				"Not in the mood for contract talk. Try me after the room gets quieter.",
+				"Keep it brief. Lounge walls remember more than they should.",
+			]
+			return lines[randi() % lines.size()]
+		"npc":
+			var npc_data: Dictionary = card_data.get("data", {})
+			var flavor_lines: Array = npc_data.get("flavor_lines", [])
+			if not flavor_lines.is_empty():
+				return _station_contact_topic_line(name, npc_data, "greeting", flavor_lines)
+			return "I'm not in the mood to talk right now."
+		_:
+			return "Not in the mood to talk right now."
+
+
+func debug_adjust_lounge_layout(
+	target: String,
+	axis: String,
+	delta: float
+) -> String:
+	var slot := clampi(_lounge_tuning_slot, 0, 3)
+	if target == "portrait":
+		if axis == "x":
+			_lounge_portrait_offsets[slot].x += delta
+		elif axis == "y":
+			_lounge_portrait_offsets[slot].y += delta
+	elif target == "talk":
+		if axis == "x":
+			_lounge_talk_offsets[slot].x += delta
+		elif axis == "y":
+			_lounge_talk_offsets[slot].y += delta
+	_refresh_lounge_layout_if_visible()
+	return debug_lounge_layout_values()
+
+
+func debug_adjust_lounge_text(
+	target: String,
+	slot_index: int,
+	delta: float
+) -> String:
+	var slot := clampi(slot_index, 0, 3)
+	if target == "name":
+		_lounge_name_offsets[slot].x += delta
+	elif target == "meta":
+		_lounge_meta_offsets[slot].x += delta
+	_refresh_lounge_layout_if_visible()
+	return debug_lounge_text_values()
+
+
+func debug_reset_lounge_layout() -> String:
+	var slot := clampi(_lounge_tuning_slot, 0, 3)
+	_lounge_portrait_offsets[slot] = Vector2.ZERO
+	_lounge_talk_offsets[slot] = Vector2.ZERO
+	_refresh_lounge_layout_if_visible()
+	return debug_lounge_layout_values()
+
+
+func debug_set_lounge_tuning_slot(slot_index: int) -> String:
+	_lounge_tuning_slot = clampi(slot_index, 0, 3)
+	_refresh_lounge_layout_if_visible()
+	return debug_lounge_layout_values()
+
+
+func debug_lounge_layout_values() -> String:
+	var slot := clampi(_lounge_tuning_slot, 0, 3)
+	var portrait_offset := _lounge_portrait_offsets[slot]
+	var talk_offset := _lounge_talk_offsets[slot]
+	return (
+		"Slot %d | Portrait x %.3f y %.3f | Talk x %.3f y %.3f | Talk size %.2f"
+		% [
+			slot + 1,
+			portrait_offset.x,
+			portrait_offset.y,
+			talk_offset.x,
+			talk_offset.y,
+			_LOUNGE_TALK_SCALE,
+		]
+	)
+
+
+func debug_lounge_text_values() -> String:
+	return (
+		"Name X 1 %.3f | 2 %.3f | 3 %.3f | 4 %.3f | Bartender lower X %.3f"
+		% [
+			_lounge_name_offsets[0].x,
+			_lounge_name_offsets[1].x,
+			_lounge_name_offsets[2].x,
+			_lounge_name_offsets[3].x,
+			_lounge_meta_offsets[0].x,
+		]
+	)
+
+
+func _refresh_lounge_layout_if_visible() -> void:
+	if current_submenu == DockSubmenu.LOUNGE \
+			and station_contacts_panel \
+			and is_instance_valid(station_contacts_panel) \
+			and station_contacts_panel.visible:
+		_render_station_contacts(true)
 
 
 func _current_station_contact_id() -> String:
@@ -6257,6 +6612,7 @@ func _get_contact_mood(npc_name: String) -> String:
 
 
 func undock_player():
+	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	var station_before_undock := current_station
 	var game_root := get_tree().current_scene
@@ -7321,7 +7677,13 @@ func show_npc_dialogue_popup(text: String, npc_name: String, color: Color, portr
 # Pass npc_name="" + portrait=null for a generic system-style
 # message (e.g. pickup success/failure) — the speaker row collapses
 # and the line takes the full width.
-func show_dock_message(text: String, npc_name: String = "", color: Color = Color(0.85, 0.85, 0.85), portrait: Texture2D = null) -> void:
+func show_dock_message(
+	text: String,
+	npc_name: String = "",
+	color: Color = Color(0.85, 0.85, 0.85),
+	portrait: Texture2D = null,
+	choices: Array = []
+) -> void:
 	if not dock_message_slot or not is_instance_valid(dock_message_slot):
 		return
 	# Cancel any in-flight fade so a fresh message resets the timer.
@@ -7355,6 +7717,7 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 	# Configure content.
 	dock_message_line.text = text
 	dock_message_line.modulate = color
+	_set_dock_message_choices(choices, color)
 	if npc_name != "":
 		dock_message_name.text = npc_name
 		dock_message_name.modulate = color
@@ -7381,6 +7744,9 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 
 	dock_message_slot.visible = true
 
+	if not choices.is_empty():
+		return
+
 	# 7.0s hold + 1.5s fade. Long enough to read comfortably while
 	# the player is docked, short enough that a stale message won't
 	# linger after they tab away or undock quickly.
@@ -7392,6 +7758,33 @@ func show_dock_message(text: String, npc_name: String = "", color: Color = Color
 			dock_message_slot.visible = false
 			dock_message_slot.modulate.a = 1.0
 	)
+
+func _set_dock_message_choices(choices: Array, color: Color) -> void:
+	if dock_message_choices == null or not is_instance_valid(dock_message_choices):
+		return
+	for child in dock_message_choices.get_children():
+		child.queue_free()
+	dock_message_choices.visible = false
+	if choices.is_empty():
+		return
+	for raw_choice in choices:
+		if not raw_choice is Dictionary:
+			continue
+		var choice: Dictionary = raw_choice
+		var label := str(choice.get("text", "")).strip_edges()
+		if label.is_empty():
+			continue
+		var btn := Button.new()
+		btn.text = label
+		btn.add_theme_font_size_override("font_size", 11)
+		btn.add_theme_color_override("font_color", color)
+		var callback: Callable = choice.get("callback", Callable())
+		if callback.is_valid():
+			btn.pressed.connect(callback)
+		else:
+			btn.disabled = true
+		dock_message_choices.add_child(btn)
+	dock_message_choices.visible = dock_message_choices.get_child_count() > 0
 
 # Clear the docked-message slot immediately. Called on submenu change
 # and undock so an old flavor line or pickup response doesn't leak
@@ -7406,6 +7799,10 @@ func clear_dock_message() -> void:
 	dock_message_line.text = ""
 	dock_message_name.text = ""
 	dock_message_name.visible = false
+	if dock_message_choices and is_instance_valid(dock_message_choices):
+		for child in dock_message_choices.get_children():
+			child.queue_free()
+		dock_message_choices.visible = false
 	dock_message_portrait.texture = null
 	dock_message_portrait.visible = false
 

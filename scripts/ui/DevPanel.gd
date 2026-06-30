@@ -40,6 +40,7 @@ func _ready() -> void:
 	_build_chrome()
 	_build_faction_tuning_tab()
 	_build_ship_viewer_tab()
+	_build_lounge_layout_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
 	# _build_my_tool(my_tab)
@@ -122,6 +123,174 @@ func _build_chrome() -> void:
 	# ── Add more quick actions here in future sessions ──
 
 # ── Faction tuning tab ────────────────────────────────────────────────────────
+func _build_lounge_layout_tab() -> void:
+	var tab := add_tab("Lounge Layout")
+
+	var hint := Label.new()
+	hint.text = (
+		"Open a station lounge, then nudge these values. "
+		+ "Give Codex the final numbers shown below."
+	)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+
+	var values := Label.new()
+	values.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+	values.text = _lounge_layout_values()
+	tab.add_child(values)
+	tab.add_child(HSeparator.new())
+
+	var slot_row := HBoxContainer.new()
+	slot_row.add_theme_constant_override("separation", 8)
+	tab.add_child(slot_row)
+	var prev_slot := Button.new()
+	prev_slot.text = "Previous Slot"
+	prev_slot.pressed.connect(func() -> void:
+		values.text = _set_lounge_layout_slot(-1)
+	)
+	slot_row.add_child(prev_slot)
+	var next_slot := Button.new()
+	next_slot.text = "Next Slot"
+	next_slot.pressed.connect(func() -> void:
+		values.text = _set_lounge_layout_slot(1)
+	)
+	slot_row.add_child(next_slot)
+	tab.add_child(HSeparator.new())
+
+	_build_lounge_nudge_row(tab, values, "Portrait X", "portrait", "x")
+	_build_lounge_nudge_row(tab, values, "Portrait Y", "portrait", "y")
+	_build_lounge_nudge_row(tab, values, "Talk X", "talk", "x")
+	_build_lounge_nudge_row(tab, values, "Talk Y", "talk", "y")
+	tab.add_child(HSeparator.new())
+
+	var text_values := Label.new()
+	text_values.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+	text_values.text = _lounge_text_values()
+	tab.add_child(text_values)
+	_build_lounge_text_x_row(tab, text_values, "Name 1 X", "name", 0)
+	_build_lounge_text_x_row(tab, text_values, "Name 2 X", "name", 1)
+	_build_lounge_text_x_row(tab, text_values, "Name 3 X", "name", 2)
+	_build_lounge_text_x_row(tab, text_values, "Name 4 X", "name", 3)
+	_build_lounge_text_x_row(tab, text_values, "Bartender Lower X", "meta", 0)
+	tab.add_child(HSeparator.new())
+
+	var reset := Button.new()
+	reset.text = "Reset Lounge Layout"
+	reset.pressed.connect(func() -> void:
+		var ui := GlobalState.get_ui_manager()
+		if ui and ui.has_method("debug_reset_lounge_layout"):
+			values.text = ui.debug_reset_lounge_layout()
+			text_values.text = _lounge_text_values()
+	)
+	tab.add_child(reset)
+
+
+func _build_lounge_nudge_row(
+	parent: VBoxContainer,
+	values: Label,
+	label_text: String,
+	target: String,
+	axis: String,
+	step: float = 0.01
+) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(120, 0)
+	row.add_child(label)
+
+	var minus := Button.new()
+	minus.text = "- %.2f" % step
+	minus.pressed.connect(func() -> void:
+		values.text = _adjust_lounge_layout(target, axis, -step)
+	)
+	row.add_child(minus)
+
+	var plus := Button.new()
+	plus.text = "+ %.2f" % step
+	plus.pressed.connect(func() -> void:
+		values.text = _adjust_lounge_layout(target, axis, step)
+	)
+	row.add_child(plus)
+
+
+func _build_lounge_text_x_row(
+	parent: VBoxContainer,
+	values: Label,
+	label_text: String,
+	target: String,
+	slot_index: int,
+	step: float = 0.01
+) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(170, 0)
+	row.add_child(label)
+
+	var minus := Button.new()
+	minus.text = "- %.2f" % step
+	minus.pressed.connect(func() -> void:
+		values.text = _adjust_lounge_text(target, slot_index, -step)
+	)
+	row.add_child(minus)
+
+	var plus := Button.new()
+	plus.text = "+ %.2f" % step
+	plus.pressed.connect(func() -> void:
+		values.text = _adjust_lounge_text(target, slot_index, step)
+	)
+	row.add_child(plus)
+
+
+func _adjust_lounge_layout(target: String, axis: String, delta: float) -> String:
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("debug_adjust_lounge_layout"):
+		return ui.debug_adjust_lounge_layout(target, axis, delta)
+	return "UIManager not available."
+
+
+func _adjust_lounge_text(target: String, slot_index: int, delta: float) -> String:
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("debug_adjust_lounge_text"):
+		return ui.debug_adjust_lounge_text(target, slot_index, delta)
+	return "UIManager not available."
+
+
+func _set_lounge_layout_slot(delta: int) -> String:
+	var ui := GlobalState.get_ui_manager()
+	if ui == null \
+			or not ui.has_method("debug_lounge_layout_values") \
+			or not ui.has_method("debug_set_lounge_tuning_slot"):
+		return "UIManager not available."
+	var current_text: String = ui.debug_lounge_layout_values()
+	var slot := 1
+	var parts: PackedStringArray = current_text.split(" ")
+	if parts.size() >= 2 and str(parts[0]) == "Slot":
+		slot = int(parts[1]) - 1
+	return ui.debug_set_lounge_tuning_slot(clampi(slot + delta, 0, 3))
+
+
+func _lounge_layout_values() -> String:
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("debug_lounge_layout_values"):
+		return ui.debug_lounge_layout_values()
+	return "Open the game UI to tune lounge layout."
+
+
+func _lounge_text_values() -> String:
+	var ui := GlobalState.get_ui_manager()
+	if ui and ui.has_method("debug_lounge_text_values"):
+		return ui.debug_lounge_text_values()
+	return "Open the game UI to tune lounge text."
+
+
 const _TUN_FIELDS      := ["weapon_tier","hull_tier","powerplant_tier","shield_tier","weapon_dmg_mult","drone_dmg_mult","intelligence"]
 const _TUN_LABELS      := ["W.Tier","H.Tier","PP.Tier","Sh.Tier","W.Res","D.Res","Intel"]
 const _TUN_STEPS       := [1.0, 1.0, 1.0, 1.0, 0.1, 0.1, 0.05]

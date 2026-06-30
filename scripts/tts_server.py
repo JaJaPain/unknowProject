@@ -81,7 +81,7 @@ async def text_to_speech(data: dict):
         raise HTTPException(status_code=500, detail="Kokoro pipeline not initialized")
         
     text = data.get("text", "")
-    voice = data.get("voice", "af_bella")
+    voice = data.get("voice", "af_aoede")
     speed = data.get("speed", 1.0)
     style_scale = float(data.get("style_scale", 1.0))
     style_from = data.get("style_from", "")

@@ -1062,7 +1062,7 @@ static func random_minor_npc_name() -> String:
 #   { "npc_name": String, "line": String, "color": Color,
 #     "voice_id": String, "voice_speed": float }
 # `voice_id` is a Kokoro voice name (e.g. "am_onyx", "af_nicole"). The
-# default fallback is "af_bella" if an NPC has no voice data assigned.
+# default fallback is a neutral non-Kaelen voice if an NPC has no voice data assigned.
 # `voice_speed` is a 0.85-1.10 modifier that subtly differentiates
 # voices that share an underlying voice family.
 static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
@@ -2422,8 +2422,8 @@ func _add_mouse_action(action_name: String, button_index: int):
 # here, and any UI code that displays dialogue should too, so the
 # on-screen text and the spoken audio stay in sync.
 #
-# Kaelen's voice after faction resolution is "af_bella" — that's how
-# the call path identifies her. Anyone else gets the substitution.
+# Kaelen's voice is Bella. Keep this provider voice exclusive to Kaelen;
+# generic/neutral NPC fallbacks must route elsewhere.
 const KAELEN_VOICE_PROFILE_ID: String = "voice.kaelen.v1"
 const KAELEN_VOICE_ID: String = "af_bella"
 

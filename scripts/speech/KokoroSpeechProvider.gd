@@ -54,7 +54,7 @@ func resolve_delivery(
 		var mapping := registry.provider_voice(current_id)
 		if not mapping.is_empty():
 			return {
-				"provider_voice": str(mapping.get("provider_voice", "af_bella")),
+				"provider_voice": str(mapping.get("provider_voice", "af_aoede")),
 				"speed": (
 					speed_override
 					if speed_override >= 0.0
@@ -69,6 +69,6 @@ func resolve_delivery(
 		)
 	var fallback := registry.provider_voice(DEFAULT_PROFILE)
 	return {
-		"provider_voice": str(fallback.get("provider_voice", "af_bella")),
+		"provider_voice": str(fallback.get("provider_voice", "af_aoede")),
 		"speed": speed_override if speed_override >= 0.0 else float(fallback.get("speed", 1.0)),
 	}
