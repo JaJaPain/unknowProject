@@ -1477,6 +1477,10 @@ func _initialize_campaign_registry() -> void:
 			or not campaign_slot_registry.is_valid():
 		campaign_slot_registry = null
 		return
+	if Engine.has_meta("creating_new_campaign"):
+		_clear_active_campaign_runtime_context()
+		ShipGenerator.active_campaign_path = ""
+		return
 	active_campaign_slot_id = campaign_slot_registry.selected_slot_id
 	ShipGenerator.active_campaign_path = _campaign_slot_path(active_campaign_slot_id)
 	if active_campaign_slot_id.is_empty():

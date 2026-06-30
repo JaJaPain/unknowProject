@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_campaign_rename()
 	_test_registry_corruption_recovery()
 	_test_orphaned_occupied_slot_is_repaired()
+	_test_empty_slot_with_stale_directory_is_claimed()
 	_test_no_fourth_campaign()
 	_test_delete_is_isolated()
 	_cleanup()
@@ -240,6 +241,34 @@ func _test_orphaned_occupied_slot_is_repaired() -> void:
 			ProjectSettings.globalize_path("%s/slot_01" % ORPHAN_ROOT)
 		),
 		"Orphaned campaign directory was not removed."
+	)
+	_cleanup_orphan()
+
+
+func _test_empty_slot_with_stale_directory_is_claimed() -> void:
+	_cleanup_orphan()
+	var registry := RegistryType.open(ORPHAN_ROOT)
+	_make_directory("%s/slot_01/ships" % ORPHAN_ROOT)
+	_write_text("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT, "old generated mesh")
+	var created := registry.create_campaign(
+		"slot_01",
+		"Fresh Start",
+		"phase-2-test",
+		_initial_state(75),
+		_system_registry
+	)
+	_expect(
+		bool(created.get("ok", false)),
+		"Empty slot with stale files could not create a campaign: %s" %
+			created.get("error", "")
+	)
+	_expect(
+		FileAccess.file_exists("%s/slot_01/campaign.json" % ORPHAN_ROOT),
+		"Fresh campaign did not write its campaign document."
+	)
+	_expect(
+		not FileAccess.file_exists("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT),
+		"Fresh campaign creation kept stale generated files."
 	)
 	_cleanup_orphan()
 

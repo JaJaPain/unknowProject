@@ -123,7 +123,12 @@ func create_campaign(
 
 	var campaign_path := "%s/%s" % [root_path, slot_id]
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(campaign_path)):
-		return _failure("Campaign slot directory already exists.")
+		if bool(slots.get(slot_id, {}).get("occupied", false)):
+			return _failure("Campaign slot directory already exists.")
+		if not _remove_tree(campaign_path):
+			return _failure(
+				"Empty campaign slot contains stale files that could not be cleared."
+			)
 
 	var document_paths := {
 		SchemaType.CAMPAIGN: "campaign.json",
