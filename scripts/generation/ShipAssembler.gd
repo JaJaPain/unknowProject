@@ -63,6 +63,7 @@ const FACTION_STYLE := {
 # engine/weapon layout + marker setup.
 const SPECIAL_SHIPS := [
 	{"name": "Gunmetal — Tall", "faction": "gunmetal", "role": "Gunner", "hull": "hull.tall", "weapon": "Turret_Set", "cockpit": true},
+	{"name": "AMT Specialist", "faction": "vanguard", "role": "Gunner", "hull": "Hull.PugNoseAMT", "engine": "Cube_EngineAMT", "weapon": "Big_GunAMT", "cockpit": true},
 ]
 
 # Curated military part pools (file stem under each category folder).
@@ -238,7 +239,7 @@ static func _add_marker(parent: Node3D, marker_name: String, pos: Vector3) -> vo
 ## Schema:
 ##   {role, hull, parts:[{cat,stem,pos:[x,y,z]}...],
 ##    engine_markers:[[x,y,z]...], weapon_markers:[[x,y,z]...]}
-static func generate_recipe(role: String, seed_value: int, hull_override: String = "", weapon_override: String = "") -> Dictionary:
+static func generate_recipe(role: String, seed_value: int, hull_override: String = "", weapon_override: String = "", engine_override: String = "") -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 
@@ -262,7 +263,7 @@ static func generate_recipe(role: String, seed_value: int, hull_override: String
 	var weapon_markers: Array = []
 
 	# Engines clustered at the rear, spread across X (mirrored).
-	var eng_stem: String = VANGUARD_ENGINES[rng.randi() % VANGUARD_ENGINES.size()]
+	var eng_stem: String = engine_override if engine_override != "" else VANGUARD_ENGINES[rng.randi() % VANGUARD_ENGINES.size()]
 	var eb = _measure_part("engines", eng_stem)
 	if eb != null:
 		var spread := maxf(half_w * 0.55, 0.6)
@@ -502,7 +503,7 @@ static func build_special(index: int, apply_mat: bool = true) -> Node3D:
 		return null
 	var spec: Dictionary = SPECIAL_SHIPS[index]
 	var recipe := generate_recipe(str(spec["role"]), hash(str(spec["name"])),
-		str(spec["hull"]), str(spec.get("weapon", "")))
+		str(spec["hull"]), str(spec.get("weapon", "")), str(spec.get("engine", "")))
 	var node := build_from_recipe(recipe, str(spec["faction"]), apply_mat)
 	if node and apply_mat and bool(spec.get("cockpit", false)):
 		_add_cockpit_strips(node)

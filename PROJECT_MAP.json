@@ -3,6 +3,26 @@
   "name": "SpaceGame",
   "children": [
     {
+      "type": "file",
+      "name": "AGENTS.md",
+      "path": "AGENTS.md"
+    },
+    {
+      "type": "file",
+      "name": "CLAUDE.md",
+      "path": "CLAUDE.md"
+    },
+    {
+      "type": "file",
+      "name": "Claudework.md",
+      "path": "Claudework.md"
+    },
+    {
+      "type": "file",
+      "name": "GateTravelUpgrade.md",
+      "path": "GateTravelUpgrade.md"
+    },
+    {
       "type": "directory",
       "name": "Godot",
       "children": [
@@ -170,6 +190,11 @@
           ]
         }
       ]
+    },
+    {
+      "type": "file",
+      "name": "The string is missing the terminator\uf03a \uf022.",
+      "path": "The string is missing the terminator\uf03a \uf022"
     },
     {
       "type": "directory",
@@ -1323,7 +1348,8 @@
                     "func get_logs(params: Dictionary) -> Dictionary",
                     "func _get_plugin_logs(count: int, offset: int) -> Dictionary",
                     "func _get_game_logs(count: int, offset: int, include_details: bool) -> Dictionary",
-                    "func _get_editor_logs(count: int, offset: int, include_details: bool) -> Dictionary",
+                    "func _get_editor_logs(count: int, offset: int, include_details: bool, has_since_cursor: bool = false, since_cursor: int = 0) -> Dictionary",
+                    "func _get_editor_logs_since(count: int, since_cursor: int, include_details: bool) -> Dictionary",
                     "func _get_all_logs(count: int, offset: int, include_details: bool) -> Dictionary",
                     "func _debugger_search_root() -> Node",
                     "static func _find_first_of_class(node: Node, klass: String) -> Node",
@@ -2191,6 +2217,36 @@
               "name": "testing",
               "children": [
                 {
+                  "type": "directory",
+                  "name": "loggers",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "script_error_capture.gd",
+                      "path": "addons/godot_ai/testing/loggers/script_error_capture.gd",
+                      "classes": [],
+                      "functions": [
+                        "func begin_capture() -> void",
+                        "func end_capture() -> PackedStringArray"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "script_error_capture_loader.gd",
+                  "path": "addons/godot_ai/testing/script_error_capture_loader.gd",
+                  "classes": [],
+                  "functions": [
+                    "static func build() -> Object"
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "script_error_capture_loader.gd.uid",
+                  "path": "addons/godot_ai/testing/script_error_capture_loader.gd.uid"
+                },
+                {
                   "type": "file",
                   "name": "stub_backtrace.gd",
                   "path": "addons/godot_ai/testing/stub_backtrace.gd",
@@ -2216,8 +2272,14 @@
                     {
                       "name": "global class McpTestRunner",
                       "methods": [
+                        "func _notification(what: int) -> void",
                         "func run_suite(suite: McpTestSuite, test_filter: String = \"\", exclude_test_filter: String = \"\") -> void",
                         "func run_suites(suites: Array, suite_filter: String = \"\", test_filter: String = \"\", ctx: Dictionary = {}, verbose: bool = false, exclude_test_filter: String = \"\") -> Dictionary",
+                        "func _register_capture() -> void",
+                        "func _unregister_capture() -> void",
+                        "func _begin_script_error_capture() -> void",
+                        "func _end_script_error_capture() -> PackedStringArray",
+                        "static func _edited_scene_root() -> Node",
                         "func get_results(verbose: bool = false) -> Dictionary",
                         "func clear() -> void",
                         "func _cleanup_leaked_nodes(scene_root: Node, before: Array[Node]) -> void",
@@ -2246,12 +2308,16 @@
                         "func setup() -> void",
                         "func teardown() -> void",
                         "func suite_teardown() -> void",
+                        "func track(obj: Object) -> Object",
+                        "func _free_tracked() -> void",
                         "func _reset() -> void",
                         "func _reset_suite_state() -> void",
                         "func skip(reason: String = \"\") -> void",
                         "func fail_setup(reason: String) -> void",
                         "func skip_suite(reason: String) -> void",
                         "func skip_on_godot_lt(min_version: String, reason: String = \"\") -> bool",
+                        "func expect_script_error_containing(substring: String) -> void",
+                        "func _unexpected_script_errors(captured: PackedStringArray) -> PackedStringArray",
                         "func editor_undo(undo_redo: EditorUndoRedoManager) -> bool",
                         "func editor_redo(undo_redo: EditorUndoRedoManager) -> bool",
                         "func _collect_histories(undo_redo: EditorUndoRedoManager) -> Array",
@@ -2832,9 +2898,15 @@
                         "static func _manual_update_label(version: String) -> String",
                         "func start_install() -> void",
                         "func is_install_in_flight() -> bool",
+                        "static func _is_trusted_download_url(url: String) -> bool",
                         "static func _is_newer(remote: String, local: String) -> bool",
+                        "func _verify_then_install() -> void",
+                        "func _fail_verification(reason: String) -> void",
+                        "static func _parse_sha256_digest(text: String) -> String",
                         "func _install_zip() -> void",
                         "func _install_zip_inline(version: Dictionary) -> void",
+                        "func _abort_inline_install(reader: ZIPReader, reason: String) -> void",
+                        "static func _is_safe_zip_addon_file(file_path: String) -> bool",
                         "func _on_filesystem_scanned_for_update() -> void",
                         "func _reload_after_update() -> void",
                         "func _drain_dock_workers() -> void"
@@ -2962,6 +3034,291 @@
           ]
         },
         {
+          "type": "directory",
+          "name": "TestShips",
+          "children": [
+            {
+              "type": "file",
+              "name": "BLENDSWAP_LICENSE.txt",
+              "path": "assets/TestShips/BLENDSWAP_LICENSE.txt"
+            },
+            {
+              "type": "file",
+              "name": "Shipyard.blend",
+              "path": "assets/TestShips/Shipyard.blend"
+            },
+            {
+              "type": "file",
+              "name": "Shipyard_ORIGINAL_backup.blend",
+              "path": "assets/TestShips/Shipyard_ORIGINAL_backup.blend"
+            },
+            {
+              "type": "file",
+              "name": "kitbash_test_1_kitbash.glb",
+              "path": "assets/TestShips/kitbash_test_1_kitbash.glb"
+            },
+            {
+              "type": "file",
+              "name": "kitbash_test_2_kitbash.glb",
+              "path": "assets/TestShips/kitbash_test_2_kitbash.glb"
+            },
+            {
+              "type": "file",
+              "name": "kitbash_test_3_kitbash.glb",
+              "path": "assets/TestShips/kitbash_test_3_kitbash.glb"
+            },
+            {
+              "type": "file",
+              "name": "kitbash_test_4_kitbash.glb",
+              "path": "assets/TestShips/kitbash_test_4_kitbash.glb"
+            },
+            {
+              "type": "file",
+              "name": "shipyard_catalog.json",
+              "path": "assets/TestShips/shipyard_catalog.json"
+            },
+            {
+              "type": "directory",
+              "name": "textures",
+              "children": [
+                {
+                  "type": "directory",
+                  "name": "badges",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "badge_sheets_metadata.json",
+                      "path": "assets/TestShips/textures/badges/badge_sheets_metadata.json"
+                    }
+                  ]
+                },
+                {
+                  "type": "directory",
+                  "name": "metals",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "ShipPaint_Textures.json",
+                      "path": "assets/TestShips/textures/metals/ShipPaint_Textures.json"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "asteroids",
+          "children": [
+            {
+              "type": "file",
+              "name": "asteroid_00.glb",
+              "path": "assets/asteroids/asteroid_00.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_00_fragments.glb",
+              "path": "assets/asteroids/asteroid_00_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_01.glb",
+              "path": "assets/asteroids/asteroid_01.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_01_fragments.glb",
+              "path": "assets/asteroids/asteroid_01_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_02.glb",
+              "path": "assets/asteroids/asteroid_02.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_02_fragments.glb",
+              "path": "assets/asteroids/asteroid_02_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_03.glb",
+              "path": "assets/asteroids/asteroid_03.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_03_fragments.glb",
+              "path": "assets/asteroids/asteroid_03_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_04.glb",
+              "path": "assets/asteroids/asteroid_04.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_04_fragments.glb",
+              "path": "assets/asteroids/asteroid_04_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_05.glb",
+              "path": "assets/asteroids/asteroid_05.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_05_fragments.glb",
+              "path": "assets/asteroids/asteroid_05_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_06.glb",
+              "path": "assets/asteroids/asteroid_06.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_06_fragments.glb",
+              "path": "assets/asteroids/asteroid_06_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_07.glb",
+              "path": "assets/asteroids/asteroid_07.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_07_fragments.glb",
+              "path": "assets/asteroids/asteroid_07_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_08.glb",
+              "path": "assets/asteroids/asteroid_08.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_08_fragments.glb",
+              "path": "assets/asteroids/asteroid_08_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_09.glb",
+              "path": "assets/asteroids/asteroid_09.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_09_fragments.glb",
+              "path": "assets/asteroids/asteroid_09_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_10.glb",
+              "path": "assets/asteroids/asteroid_10.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_10_fragments.glb",
+              "path": "assets/asteroids/asteroid_10_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_11.glb",
+              "path": "assets/asteroids/asteroid_11.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_11_fragments.glb",
+              "path": "assets/asteroids/asteroid_11_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_12.glb",
+              "path": "assets/asteroids/asteroid_12.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_12_fragments.glb",
+              "path": "assets/asteroids/asteroid_12_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_13.glb",
+              "path": "assets/asteroids/asteroid_13.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_13_fragments.glb",
+              "path": "assets/asteroids/asteroid_13_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_14.glb",
+              "path": "assets/asteroids/asteroid_14.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_14_fragments.glb",
+              "path": "assets/asteroids/asteroid_14_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_15.glb",
+              "path": "assets/asteroids/asteroid_15.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_15_fragments.glb",
+              "path": "assets/asteroids/asteroid_15_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_16.glb",
+              "path": "assets/asteroids/asteroid_16.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_16_fragments.glb",
+              "path": "assets/asteroids/asteroid_16_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_17.glb",
+              "path": "assets/asteroids/asteroid_17.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_17_fragments.glb",
+              "path": "assets/asteroids/asteroid_17_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_18.glb",
+              "path": "assets/asteroids/asteroid_18.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_18_fragments.glb",
+              "path": "assets/asteroids/asteroid_18_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_19.glb",
+              "path": "assets/asteroids/asteroid_19.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_19_fragments.glb",
+              "path": "assets/asteroids/asteroid_19_fragments.glb"
+            },
+            {
+              "type": "file",
+              "name": "asteroid_models.json",
+              "path": "assets/asteroids/asteroid_models.json"
+            }
+          ]
+        },
+        {
           "type": "file",
           "name": "faction1.glb",
           "path": "assets/faction1.glb"
@@ -2986,6 +3343,916 @@
             "def world_pos_chain(obj)",
             "def world_bounds_v2(objs)",
             "def world_bounds(objs)"
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "shaders",
+          "children": [
+            {
+              "type": "file",
+              "name": "thruster_plume.gdshader",
+              "path": "assets/shaders/thruster_plume.gdshader"
+            },
+            {
+              "type": "file",
+              "name": "thruster_plume.gdshader.current_best_backup",
+              "path": "assets/shaders/thruster_plume.gdshader.current_best_backup"
+            },
+            {
+              "type": "file",
+              "name": "thruster_plume.gdshader.uid",
+              "path": "assets/shaders/thruster_plume.gdshader.uid"
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "ship_parts",
+          "children": [
+            {
+              "type": "directory",
+              "name": "detail",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "5_mast.glb",
+                  "path": "assets/ship_parts/detail/5_mast.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "5_star_block.glb",
+                  "path": "assets/ship_parts/detail/5_star_block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Angled_Rib-block.glb",
+                  "path": "assets/ship_parts/detail/Angled_Rib-block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Bi-Polar_Engine.glb",
+                  "path": "assets/ship_parts/detail/Bi-Polar_Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Cargo_box.glb",
+                  "path": "assets/ship_parts/detail/Cargo_box.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Dish_Panel.glb",
+                  "path": "assets/ship_parts/detail/Dish_Panel.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Flower.glb",
+                  "path": "assets/ship_parts/detail/Flower.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Hex_Tube.glb",
+                  "path": "assets/ship_parts/detail/Hex_Tube.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Res_Block.glb",
+                  "path": "assets/ship_parts/detail/Res_Block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Split_Mast.glb",
+                  "path": "assets/ship_parts/detail/Split_Mast.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "misc.glb",
+                  "path": "assets/ship_parts/detail/misc.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "mushroom.glb",
+                  "path": "assets/ship_parts/detail/mushroom.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "portal_block.glb",
+                  "path": "assets/ship_parts/detail/portal_block.glb"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "engines",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "5-Engine.glb",
+                  "path": "assets/ship_parts/engines/5-Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Block_Engine_single.glb",
+                  "path": "assets/ship_parts/engines/Block_Engine_single.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Bracket_Engine.glb",
+                  "path": "assets/ship_parts/engines/Bracket_Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Cube_Engine.glb",
+                  "path": "assets/ship_parts/engines/Cube_Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Cube_EngineAMT.glb",
+                  "path": "assets/ship_parts/engines/Cube_EngineAMT.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Cube_Engine_variant.blend",
+                  "path": "assets/ship_parts/engines/Cube_Engine_variant.blend"
+                },
+                {
+                  "type": "file",
+                  "name": "Cube_Engine_variant.blend1",
+                  "path": "assets/ship_parts/engines/Cube_Engine_variant.blend1"
+                },
+                {
+                  "type": "file",
+                  "name": "Fish_Engine.glb",
+                  "path": "assets/ship_parts/engines/Fish_Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Trap-Engine.glb",
+                  "path": "assets/ship_parts/engines/Trap-Engine.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Trusswork-Wing.glb",
+                  "path": "assets/ship_parts/engines/Trusswork-Wing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.5Pole.glb",
+                  "path": "assets/ship_parts/engines/eng.5Pole.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.Rect.glb",
+                  "path": "assets/ship_parts/engines/eng.Rect.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.Vanes.glb",
+                  "path": "assets/ship_parts/engines/eng.Vanes.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.bit.glb",
+                  "path": "assets/ship_parts/engines/eng.bit.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.Y-block.glb",
+                  "path": "assets/ship_parts/engines/eng.body.Y-block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.chin.glb",
+                  "path": "assets/ship_parts/engines/eng.body.chin.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.fish.glb",
+                  "path": "assets/ship_parts/engines/eng.body.fish.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.slant.glb",
+                  "path": "assets/ship_parts/engines/eng.body.slant.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.split.glb",
+                  "path": "assets/ship_parts/engines/eng.body.split.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.splt.glb",
+                  "path": "assets/ship_parts/engines/eng.body.splt.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.tooth.glb",
+                  "path": "assets/ship_parts/engines/eng.body.tooth.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.body.wide_mouth.glb",
+                  "path": "assets/ship_parts/engines/eng.body.wide_mouth.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.flap.glb",
+                  "path": "assets/ship_parts/engines/eng.flap.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.multi.glb",
+                  "path": "assets/ship_parts/engines/eng.multi.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.onion.glb",
+                  "path": "assets/ship_parts/engines/eng.onion.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.split.glb",
+                  "path": "assets/ship_parts/engines/eng.split.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.strut.cylindar.glb",
+                  "path": "assets/ship_parts/engines/eng.strut.cylindar.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.strut.foot.glb",
+                  "path": "assets/ship_parts/engines/eng.strut.foot.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.strut.ladder.glb",
+                  "path": "assets/ship_parts/engines/eng.strut.ladder.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.strut.vacuum.glb",
+                  "path": "assets/ship_parts/engines/eng.strut.vacuum.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eng.trumpet.glb",
+                  "path": "assets/ship_parts/engines/eng.trumpet.glb"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "greebles",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Beard.glb",
+                  "path": "assets/ship_parts/greebles/Beard.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Beard_Block.glb",
+                  "path": "assets/ship_parts/greebles/Beard_Block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Beehive.glb",
+                  "path": "assets/ship_parts/greebles/Beehive.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Bridge-1.001.glb",
+                  "path": "assets/ship_parts/greebles/Bridge-1.001.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Bridge-1.glb",
+                  "path": "assets/ship_parts/greebles/Bridge-1.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Bridge.BeerBelly.glb",
+                  "path": "assets/ship_parts/greebles/Bridge.BeerBelly.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Build-up_Block.glb",
+                  "path": "assets/ship_parts/greebles/Build-up_Block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Clip_bridge.glb",
+                  "path": "assets/ship_parts/greebles/Clip_bridge.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Crab_Claw.glb",
+                  "path": "assets/ship_parts/greebles/Crab_Claw.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Crab_face.glb",
+                  "path": "assets/ship_parts/greebles/Crab_face.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Curve_Wing.glb",
+                  "path": "assets/ship_parts/greebles/Curve_Wing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Dog_Ear.glb",
+                  "path": "assets/ship_parts/greebles/Dog_Ear.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Dual_Window.glb",
+                  "path": "assets/ship_parts/greebles/Dual_Window.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "ElephantBlock.glb",
+                  "path": "assets/ship_parts/greebles/ElephantBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Fin_Hangar.glb",
+                  "path": "assets/ship_parts/greebles/Fin_Hangar.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Fin_Runner.glb",
+                  "path": "assets/ship_parts/greebles/Fin_Runner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Fin_Wing.glb",
+                  "path": "assets/ship_parts/greebles/Fin_Wing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Fore-Bridge.glb",
+                  "path": "assets/ship_parts/greebles/Fore-Bridge.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "G_block.glb",
+                  "path": "assets/ship_parts/greebles/G_block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Hangar.glb",
+                  "path": "assets/ship_parts/greebles/Hangar.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Horns.glb",
+                  "path": "assets/ship_parts/greebles/Horns.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Horse_Thing.glb",
+                  "path": "assets/ship_parts/greebles/Horse_Thing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Instrument_Mast-2.glb",
+                  "path": "assets/ship_parts/greebles/Instrument_Mast-2.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Instrument_Mast.glb",
+                  "path": "assets/ship_parts/greebles/Instrument_Mast.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Instrument_Tube.glb",
+                  "path": "assets/ship_parts/greebles/Instrument_Tube.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Misc-1.glb",
+                  "path": "assets/ship_parts/greebles/Misc-1.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Outrigger.glb",
+                  "path": "assets/ship_parts/greebles/Outrigger.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "PE-Wing.glb",
+                  "path": "assets/ship_parts/greebles/PE-Wing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Pointer.glb",
+                  "path": "assets/ship_parts/greebles/Pointer.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Rail_Runner.glb",
+                  "path": "assets/ship_parts/greebles/Rail_Runner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Ram.glb",
+                  "path": "assets/ship_parts/greebles/Ram.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Side_Bridge.001.glb",
+                  "path": "assets/ship_parts/greebles/Side_Bridge.001.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Stub_Wing.glb",
+                  "path": "assets/ship_parts/greebles/Stub_Wing.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Tank.glb",
+                  "path": "assets/ship_parts/greebles/Tank.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Telescope.glb",
+                  "path": "assets/ship_parts/greebles/Telescope.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "TongueBlock.glb",
+                  "path": "assets/ship_parts/greebles/TongueBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Vent_Block.glb",
+                  "path": "assets/ship_parts/greebles/Vent_Block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Window_Block.glb",
+                  "path": "assets/ship_parts/greebles/Window_Block.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Window_Block_2.glb",
+                  "path": "assets/ship_parts/greebles/Window_Block_2.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Window_Block_half.001.glb",
+                  "path": "assets/ship_parts/greebles/Window_Block_half.001.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Wing-2.glb",
+                  "path": "assets/ship_parts/greebles/Wing-2.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "angleBar.glb",
+                  "path": "assets/ship_parts/greebles/angleBar.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "anglePort.glb",
+                  "path": "assets/ship_parts/greebles/anglePort.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "block.bird.glb",
+                  "path": "assets/ship_parts/greebles/block.bird.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "block.doorStop.glb",
+                  "path": "assets/ship_parts/greebles/block.doorStop.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "block.finger.glb",
+                  "path": "assets/ship_parts/greebles/block.finger.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "bridge.compact.glb",
+                  "path": "assets/ship_parts/greebles/bridge.compact.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "checkBlock.glb",
+                  "path": "assets/ship_parts/greebles/checkBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "doubleBlock.glb",
+                  "path": "assets/ship_parts/greebles/doubleBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "eleBridge.glb",
+                  "path": "assets/ship_parts/greebles/eleBridge.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "falseBlock.glb",
+                  "path": "assets/ship_parts/greebles/falseBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "fintube.glb",
+                  "path": "assets/ship_parts/greebles/fintube.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "leafPanel.glb",
+                  "path": "assets/ship_parts/greebles/leafPanel.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "lifePreserver.glb",
+                  "path": "assets/ship_parts/greebles/lifePreserver.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "plumbBlock.glb",
+                  "path": "assets/ship_parts/greebles/plumbBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "postTube.glb",
+                  "path": "assets/ship_parts/greebles/postTube.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "spire.glb",
+                  "path": "assets/ship_parts/greebles/spire.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "splitBlock.glb",
+                  "path": "assets/ship_parts/greebles/splitBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "tooCompBlock.glb",
+                  "path": "assets/ship_parts/greebles/tooCompBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "top_Wing_.glb",
+                  "path": "assets/ship_parts/greebles/top_Wing_.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "ventPortBlock.glb",
+                  "path": "assets/ship_parts/greebles/ventPortBlock.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "vert_miss_tube.glb",
+                  "path": "assets/ship_parts/greebles/vert_miss_tube.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "window_block_lowpro.glb",
+                  "path": "assets/ship_parts/greebles/window_block_lowpro.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "wrenchPlug.glb",
+                  "path": "assets/ship_parts/greebles/wrenchPlug.glb"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "hulls",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Hull.Jaw.glb",
+                  "path": "assets/ship_parts/hulls/Hull.Jaw.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Hull.PugNose.glb",
+                  "path": "assets/ship_parts/hulls/Hull.PugNose.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Hull.PugNoseAMT.glb",
+                  "path": "assets/ship_parts/hulls/Hull.PugNoseAMT.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Hull.PugNose_variant.blend",
+                  "path": "assets/ship_parts/hulls/Hull.PugNose_variant.blend"
+                },
+                {
+                  "type": "file",
+                  "name": "Hull.PugNose_variant.blend1",
+                  "path": "assets/ship_parts/hulls/Hull.PugNose_variant.blend1"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.Grill.glb",
+                  "path": "assets/ship_parts/hulls/hull.Grill.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.Horse.glb",
+                  "path": "assets/ship_parts/hulls/hull.Horse.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull._compact.glb",
+                  "path": "assets/ship_parts/hulls/hull._compact.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.angle.glb",
+                  "path": "assets/ship_parts/hulls/hull.angle.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.beard.glb",
+                  "path": "assets/ship_parts/hulls/hull.beard.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.block_split.glb",
+                  "path": "assets/ship_parts/hulls/hull.block_split.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.bullHead.glb",
+                  "path": "assets/ship_parts/hulls/hull.bullHead.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.cruise.glb",
+                  "path": "assets/ship_parts/hulls/hull.cruise.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.duckHead.glb",
+                  "path": "assets/ship_parts/hulls/hull.duckHead.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.fish.glb",
+                  "path": "assets/ship_parts/hulls/hull.fish.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.handle.glb",
+                  "path": "assets/ship_parts/hulls/hull.handle.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.hangar.glb",
+                  "path": "assets/ship_parts/hulls/hull.hangar.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.joined.glb",
+                  "path": "assets/ship_parts/hulls/hull.joined.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.knuckle.glb",
+                  "path": "assets/ship_parts/hulls/hull.knuckle.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.large.glb",
+                  "path": "assets/ship_parts/hulls/hull.large.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.long.glb",
+                  "path": "assets/ship_parts/hulls/hull.long.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.lump.glb",
+                  "path": "assets/ship_parts/hulls/hull.lump.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.pot.glb",
+                  "path": "assets/ship_parts/hulls/hull.pot.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.rib.glb",
+                  "path": "assets/ship_parts/hulls/hull.rib.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.slick.glb",
+                  "path": "assets/ship_parts/hulls/hull.slick.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.split.glb",
+                  "path": "assets/ship_parts/hulls/hull.split.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.tall.glb",
+                  "path": "assets/ship_parts/hulls/hull.tall.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hull.v.glb",
+                  "path": "assets/ship_parts/hulls/hull.v.glb"
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "manifest.json",
+              "path": "assets/ship_parts/manifest.json"
+            },
+            {
+              "type": "directory",
+              "name": "textures",
+              "children": [
+                {
+                  "type": "directory",
+                  "name": "badges",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "badge_sheets_metadata.json",
+                      "path": "assets/ship_parts/textures/badges/badge_sheets_metadata.json"
+                    }
+                  ]
+                },
+                {
+                  "type": "directory",
+                  "name": "metals",
+                  "children": [
+                    {
+                      "type": "file",
+                      "name": "ShipPaint_Textures.json",
+                      "path": "assets/ship_parts/textures/metals/ShipPaint_Textures.json"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "weapons",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Anti-Air-station.glb",
+                  "path": "assets/ship_parts/weapons/Anti-Air-station.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Big_Gun.glb",
+                  "path": "assets/ship_parts/weapons/Big_Gun.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Big_GunAMT.glb",
+                  "path": "assets/ship_parts/weapons/Big_GunAMT.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Big_Gun_variant.blend",
+                  "path": "assets/ship_parts/weapons/Big_Gun_variant.blend"
+                },
+                {
+                  "type": "file",
+                  "name": "Big_Gun_variant.blend1",
+                  "path": "assets/ship_parts/weapons/Big_Gun_variant.blend1"
+                },
+                {
+                  "type": "file",
+                  "name": "Cube.002.glb",
+                  "path": "assets/ship_parts/weapons/Cube.002.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Med_Gun.glb",
+                  "path": "assets/ship_parts/weapons/Med_Gun.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Side_Gun_Platform.glb",
+                  "path": "assets/ship_parts/weapons/Side_Gun_Platform.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Small_Gun.001.glb",
+                  "path": "assets/ship_parts/weapons/Small_Gun.001.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Squirtgun.glb",
+                  "path": "assets/ship_parts/weapons/Squirtgun.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Turret_Set.glb",
+                  "path": "assets/ship_parts/weapons/Turret_Set.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardPoint.dev.Clunk.glb",
+                  "path": "assets/ship_parts/weapons/hardPoint.dev.Clunk.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardPoint.dev.dual.glb",
+                  "path": "assets/ship_parts/weapons/hardPoint.dev.dual.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardPoint.dev.gas.glb",
+                  "path": "assets/ship_parts/weapons/hardPoint.dev.gas.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.base.3x.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.base.3x.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.base.cap.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.base.cap.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.base.clip.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.base.clip.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.base.nose.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.base.nose.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.base.tower.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.base.tower.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.dev.cruise.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.dev.cruise.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.dev.dish.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.dev.dish.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.dev.flush.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.dev.flush.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.dev.hammer.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.dev.hammer.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.dev.lowPro.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.dev.lowPro.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.gun.barb.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.gun.barb.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.gun.bracket.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.gun.bracket.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoint.gun.fork.glb",
+                  "path": "assets/ship_parts/weapons/hardpoint.gun.fork.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "hardpoitn.gun.dual.glb",
+                  "path": "assets/ship_parts/weapons/hardpoitn.gun.dual.glb"
+                }
+              ]
+            }
           ]
         },
         {
@@ -3272,6 +4539,11 @@
                   "path": "assets/ships/generated/ship_3818330344_6.glb"
                 }
               ]
+            },
+            {
+              "type": "file",
+              "name": "ship_designs.json",
+              "path": "assets/ships/ship_designs.json"
             }
           ]
         },
@@ -3284,6 +4556,11 @@
           "type": "file",
           "name": "space_station2.glb",
           "path": "assets/space_station2.glb"
+        },
+        {
+          "type": "file",
+          "name": "wanted_posters.json",
+          "path": "assets/wanted_posters.json"
         }
       ]
     },
@@ -3356,8 +4633,38 @@
       "children": [
         {
           "type": "file",
+          "name": "assets_metadata_notes.md",
+          "path": "docs/assets_metadata_notes.md"
+        },
+        {
+          "type": "file",
           "name": "attack_mission_flow.md",
           "path": "docs/attack_mission_flow.md"
+        },
+        {
+          "type": "file",
+          "name": "audit_boost_thruster.md",
+          "path": "docs/audit_boost_thruster.md"
+        },
+        {
+          "type": "file",
+          "name": "audit_combat_feedback.md",
+          "path": "docs/audit_combat_feedback.md"
+        },
+        {
+          "type": "file",
+          "name": "audit_dock_buttons.md",
+          "path": "docs/audit_dock_buttons.md"
+        },
+        {
+          "type": "file",
+          "name": "audit_lingering_vfx.md",
+          "path": "docs/audit_lingering_vfx.md"
+        },
+        {
+          "type": "file",
+          "name": "audit_station_lounge_layout.md",
+          "path": "docs/audit_station_lounge_layout.md"
         },
         {
           "type": "file",
@@ -3366,8 +4673,43 @@
         },
         {
           "type": "file",
+          "name": "bugs.md",
+          "path": "docs/bugs.md"
+        },
+        {
+          "type": "file",
+          "name": "combat_overhaul_plan.md",
+          "path": "docs/combat_overhaul_plan.md"
+        },
+        {
+          "type": "file",
+          "name": "controller_focus_notes.md",
+          "path": "docs/controller_focus_notes.md"
+        },
+        {
+          "type": "file",
+          "name": "design_narrative_system.md",
+          "path": "docs/design_narrative_system.md"
+        },
+        {
+          "type": "file",
+          "name": "design_parking_lot.md",
+          "path": "docs/design_parking_lot.md"
+        },
+        {
+          "type": "file",
+          "name": "design_station_lounge_social.md",
+          "path": "docs/design_station_lounge_social.md"
+        },
+        {
+          "type": "file",
           "name": "future_contacts.md",
           "path": "docs/future_contacts.md"
+        },
+        {
+          "type": "file",
+          "name": "handoff_anomalies_bounties.md",
+          "path": "docs/handoff_anomalies_bounties.md"
         },
         {
           "type": "file",
@@ -3398,6 +4740,11 @@
           "type": "file",
           "name": "jumpgate_implementation_plan.md",
           "path": "docs/jumpgate_implementation_plan.md"
+        },
+        {
+          "type": "file",
+          "name": "known_harmless_warnings.md",
+          "path": "docs/known_harmless_warnings.md"
         },
         {
           "type": "file",
@@ -3526,8 +4873,63 @@
         },
         {
           "type": "file",
+          "name": "plan_anomalies_bounties.md",
+          "path": "docs/plan_anomalies_bounties.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_boss_and_squads.md",
+          "path": "docs/plan_boss_and_squads.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_cheap_features.md",
+          "path": "docs/plan_cheap_features.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_combat_escalation_decals.md",
+          "path": "docs/plan_combat_escalation_decals.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_docking_sequence.md",
+          "path": "docs/plan_docking_sequence.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_enemy_kit_parity.md",
+          "path": "docs/plan_enemy_kit_parity.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_kaelen_handoff_pool.md",
+          "path": "docs/plan_kaelen_handoff_pool.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_visual_effects.md",
+          "path": "docs/plan_visual_effects.md"
+        },
+        {
+          "type": "file",
+          "name": "polish_notes_misc.md",
+          "path": "docs/polish_notes_misc.md"
+        },
+        {
+          "type": "file",
           "name": "procedural_campaign_uniqueness_plan.md",
           "path": "docs/procedural_campaign_uniqueness_plan.md"
+        },
+        {
+          "type": "file",
+          "name": "quest_gen_test_results.md",
+          "path": "docs/quest_gen_test_results.md"
+        },
+        {
+          "type": "file",
+          "name": "salvage_drone_plan.md",
+          "path": "docs/salvage_drone_plan.md"
         },
         {
           "type": "file",
@@ -3541,6 +4943,11 @@
         },
         {
           "type": "file",
+          "name": "session_handoff_2026_06_21.md",
+          "path": "docs/session_handoff_2026_06_21.md"
+        },
+        {
+          "type": "file",
           "name": "skill_adding_factions.md",
           "path": "docs/skill_adding_factions.md"
         },
@@ -3548,6 +4955,46 @@
           "type": "file",
           "name": "skill_creating_safezones.md",
           "path": "docs/skill_creating_safezones.md"
+        },
+        {
+          "type": "file",
+          "name": "story_manager_design.md",
+          "path": "docs/story_manager_design.md"
+        },
+        {
+          "type": "file",
+          "name": "story_manager_impl.md",
+          "path": "docs/story_manager_impl.md"
+        },
+        {
+          "type": "file",
+          "name": "test_and_diagnostics_notes.md",
+          "path": "docs/test_and_diagnostics_notes.md"
+        },
+        {
+          "type": "file",
+          "name": "testing_generated_systems_visual.md",
+          "path": "docs/testing_generated_systems_visual.md"
+        },
+        {
+          "type": "file",
+          "name": "todo.md",
+          "path": "docs/todo.md"
+        },
+        {
+          "type": "file",
+          "name": "tts_hygiene_notes.md",
+          "path": "docs/tts_hygiene_notes.md"
+        },
+        {
+          "type": "file",
+          "name": "turn_based_combat_design.md",
+          "path": "docs/turn_based_combat_design.md"
+        },
+        {
+          "type": "file",
+          "name": "ui_presentation_notes.md",
+          "path": "docs/ui_presentation_notes.md"
         },
         {
           "type": "file",
@@ -3600,19 +5047,33 @@
       "path": "project.godot"
     },
     {
-      "type": "file",
-      "name": "scan.log",
-      "path": "scan.log"
-    },
-    {
-      "type": "file",
-      "name": "scan_utf8.log",
-      "path": "scan_utf8.log"
-    },
-    {
       "type": "directory",
       "name": "scripts",
       "children": [
+        {
+          "type": "file",
+          "name": "AnomalyRegistry.gd",
+          "path": "scripts/AnomalyRegistry.gd",
+          "classes": [],
+          "functions": [
+            "static func shared() -> Object",
+            "static func reset() -> void",
+            "func generate_for_system(system_id: String, scene_parent: Node3D) -> void",
+            "func mark_activated(anomaly_id: String) -> void",
+            "func clear() -> void",
+            "func get_arrival_rumor() -> Dictionary",
+            "func _rng_for_system(system_id: String) -> RandomNumberGenerator",
+            "func _anomaly_id(system_id: String, index: int) -> String",
+            "func _random_position(rng: RandomNumberGenerator) -> Vector3",
+            "func _shuffle_with_rng(items: Array, rng: RandomNumberGenerator) -> void",
+            "func _fallback_table() -> Array"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "AnomalyRegistry.gd.uid",
+          "path": "scripts/AnomalyRegistry.gd.uid"
+        },
         {
           "type": "file",
           "name": "Asteroid.gd",
@@ -3621,8 +5082,27 @@
           "functions": [
             "func _ready()",
             "func _physics_process(delta: float)",
+            "func show_mining_heat_spot(laser_origin: Vector3) -> void",
+            "func hold_mining_tractor(_laser_origin: Vector3) -> void",
+            "func get_mining_contact_point(laser_origin: Vector3) -> Vector3",
+            "func _mining_contact_local(laser_origin: Vector3) -> Vector3",
+            "func _show_mining_heat_decal(laser_origin: Vector3) -> void",
+            "func _basis_with_y_axis(y_axis: Vector3) -> Basis",
+            "func _ensure_mining_heat_decal() -> void",
+            "func _create_mining_heat_decal_texture(noise_texture: Texture2D) -> Texture2D",
+            "func _ensure_mining_heat_spot() -> void",
+            "func _create_mining_heat_rock_material() -> StandardMaterial3D",
+            "func _update_mining_heat_spot(delta: float) -> void",
             "func mine()",
             "func deplete()",
+            "func _spawn_breakup_fx() -> void",
+            "func _spawn_model_fragments(parent: Node3D) -> bool",
+            "func _collect_fragment_meshes(node: Node, meshes: Array[MeshInstance3D]) -> void",
+            "func _create_fragment_material(model_index: int) -> StandardMaterial3D",
+            "func _spawn_rock_chunks(parent: Node3D) -> void",
+            "func _spawn_ash_particles(parent: Node3D) -> void",
+            "func _hide_and_free_asteroid() -> void",
+            "func _fade_and_free_asteroid() -> void",
             "func get_persistent_id() -> String",
             "func get_world_id() -> String",
             "func get_world_type_id() -> String",
@@ -3653,6 +5133,8 @@
             "func play_cargo_full()",
             "func set_music_volume(value: float)",
             "func get_music_volume() -> float",
+            "func set_music_pitch(scale: float) -> void",
+            "func reset_music_pitch() -> void",
             "func set_sfx_volume(value: float)",
             "func get_sfx_volume() -> float",
             "func _update_bus_volumes()",
@@ -3663,6 +5145,8 @@
             "func play_sell_ore()",
             "func play_jump_spool() -> void",
             "func play_jump_transit() -> void",
+            "func fade_out_jump_transit(duration: float = 1.5) -> void",
+            "func _jump_fade_step(p: float) -> void",
             "func play_jump_arrival() -> void",
             "func _create_jump_tone(duration: float, start_hz: float, end_hz: float, noise_amount: float) -> AudioStreamWAV",
             "func _load_preferences() -> void",
@@ -3703,6 +5187,9 @@
             "func _refresh_gate_states() -> void",
             "func _init_generated_system_configs() -> void",
             "func _frontier_factions_for_system_definition(sys_def: SystemDefinition) -> Array",
+            "func _maybe_emit_kaelen_system_arrival(system_id: String) -> void",
+            "func _system_story_pack_for_definition(sys_def: SystemDefinition) -> Dictionary",
+            "func _human_join(values: Array[String]) -> String",
             "func _init_event_scheduler() -> void",
             "func _tick_events() -> void",
             "func get_manual_checkpoint_status() -> Dictionary",
@@ -3710,6 +5197,8 @@
             "func get_campaign_ui_state() -> Dictionary",
             "func print_generation_diagnostics_summary() -> void",
             "func generation_diagnostics_summary_text(recent_limit: int = 8) -> String",
+            "func _run_generation_diagnostics_smoke_test() -> void",
+            "func _fail_generation_diagnostics_smoke_test(message: String) -> void",
             "func import_legacy_save(slot_id: String = \"\") -> Dictionary",
             "func select_and_load_campaign(slot_id: String) -> Dictionary",
             "func apply_opening_campaign_name(display_name: String) -> bool",
@@ -3732,6 +5221,11 @@
             "func _short_memory_text(text: String, limit: int) -> String",
             "func _refresh_llm_idea_memory_context() -> void",
             "func _refresh_llm_campaign_bible_context() -> void",
+            "func _refresh_llm_story_state_context() -> void",
+            "func request_campaign_bible_generation() -> Dictionary",
+            "func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void",
+            "func _request_campaign_bible_generation_for_active_slot() -> void",
+            "func _on_campaign_bible_generation_result(result: Dictionary) -> void",
             "func ensure_generated_frontier_factions(count: int = 6) -> Dictionary",
             "func generated_factions_for_ids(ids: Array) -> Array",
             "func revealed_generated_factions() -> Array",
@@ -3803,7 +5297,12 @@
             "func _fail_jump_smoke_test(message: String) -> void",
             "func _run_save_smoke_assertions() -> bool",
             "func _run_public_board_smoke_test() -> void",
-            "func _fail_public_board_smoke_test(message: String) -> void"
+            "func _fail_public_board_smoke_test(message: String) -> void",
+            "func _profile_role_key(role: String) -> String",
+            "func _debug_spawn_boss() -> void",
+            "func _debug_spawn_squad() -> void",
+            "func _init_dev_panel() -> void",
+            "func _input(event: InputEvent) -> void"
           ]
         },
         {
@@ -3823,6 +5322,8 @@
             "static func reputation_tier(rep: float) -> String",
             "static func reputation_color(rep: float) -> Color",
             "static func faction_info(faction_id: String) -> Dictionary",
+            "static func faction_display_name(faction_id: String, adjective: bool = false) -> String",
+            "static func _title_faction_key(faction_id: String) -> String",
             "static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture",
             "static func get_minor_npc_data(npc_name: String) -> Dictionary",
             "static func get_minor_npcs_at_outpost(outpost_id: String) -> Array",
@@ -3833,16 +5334,21 @@
             "static func _contact_faction_id(faction_name: String) -> String",
             "static func resolve_outpost_id(station: Node3D) -> String",
             "static func get_minor_npc_outpost(npc_name: String) -> String",
+            "static func is_current_system_home() -> bool",
             "static func _generated_faction_record(faction_name: String) -> Dictionary",
             "static func random_minor_npc_name() -> String",
             "static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary",
+            "static func _pick_remembered_npc_flavor_line(npc_name: String, lines: Array) -> String",
+            "static func _remember_generated_npc_line(npc_name: String, line: String) -> void",
+            "static func _npc_line_fingerprint(line: String) -> String",
             "static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array",
             "static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array",
+            "func add_credits(amount: int) -> void",
+            "func spend_credits(amount: int) -> void",
             "func normalize_cargo_state() -> void",
             "func can_accept_ore() -> bool",
             "func can_accept_special() -> bool",
             "func add_ore(amount: float) -> float",
-            "func accept_special(item_name: String, description: String, source: String, destination: String = \"\") -> bool",
             "func remove_ore(amount: float) -> float",
             "func clear_cargo() -> void",
             "static func roll_pickup_offer() -> Dictionary",
@@ -3852,11 +5358,23 @@
             "func record_kill(faction_name: String)",
             "func spawn_reinforcement(faction_name: String)",
             "func spawn_mission_targets(faction_name: String, count: int)",
+            "func _mission_belt_id_from_name(node_name: String) -> String",
+            "func _mission_route_nodes_in_group(root: Node, group_name: String) -> Array",
+            "func _mission_route_position(node: Node3D) -> Vector3",
+            "func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary",
+            "func _asteroid_owner_faction(asteroid: Node) -> String",
+            "func _asteroid_belt_id(asteroid: Node) -> String",
+            "func _belt_display_name(belt_id: String) -> String",
+            "func _has_illegal_mining_witness(owner_faction: String) -> bool",
+            "func _node3d_position(node: Node3D) -> Vector3",
             "func _active_mission_identity_key() -> String",
             "func emit_chatter(sender: String, message: String, color: Color)",
             "func emit_npc_flavor(flavor: Dictionary) -> void",
             "func adjust_reputation(faction_name: String, amount: float)",
+            "static func trace(msg: String) -> void",
             "func _ready()",
+            "func _load_visual_prefs() -> void",
+            "func _save_visual_prefs() -> void",
             "func _on_campaign_time_for_stores(total_minutes: int) -> void",
             "func get_system_root() -> Node3D",
             "func get_ui_manager() -> Control",
@@ -3901,6 +5419,7 @@
             "func _set_portal_charge(value: float) -> void",
             "func _center_and_scale_model() -> void",
             "func _find_meshes(node: Node, meshes: Array[MeshInstance3D]) -> void",
+            "func _spawn_portal_particles() -> void",
             "func _apply_knowledge_state() -> void",
             "func _apply_dim_visual() -> void",
             "func _apply_blocked_visual() -> void",
@@ -3919,16 +5438,37 @@
           "classes": [],
           "functions": [
             "func _ready() -> void",
+            "func _build_arrival_banner() -> void",
             "func play_entry(duration: float = 1.2) -> void",
-            "func play_exit(duration: float = 0.9) -> void",
             "func hold_covered(frame_count: int = 2) -> void",
-            "func _set_tunnel_intensity(value: float) -> void"
+            "func play_exit(duration: float = 2.0) -> void",
+            "func play_arrival_banner(system_name: String) -> void",
+            "func _find_player_camera() -> Camera3D",
+            "func _trigger_camera_shake(camera: Camera3D, duration: float, start_delay: float = 0.0) -> void"
           ]
         },
         {
           "type": "file",
           "name": "JumpTransitionFX.gd.uid",
           "path": "scripts/JumpTransitionFX.gd.uid"
+        },
+        {
+          "type": "file",
+          "name": "JumpTunnel.gd",
+          "path": "scripts/JumpTunnel.gd",
+          "classes": [],
+          "functions": [
+            "func _ready() -> void",
+            "func setup_real_ship(player: CharacterBody3D) -> void",
+            "func cleanup() -> void",
+            "func _process(delta: float) -> void",
+            "func begin_exit_burst(duration: float) -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "JumpTunnel.gd.uid",
+          "path": "scripts/JumpTunnel.gd.uid"
         },
         {
           "type": "file",
@@ -3939,6 +5479,12 @@
             "func _sanitize_campaign_name(raw_name: String) -> String",
             "func _fallback_campaign_name() -> String",
             "func _ready()",
+            "func _ollama_ping(callback: Callable) -> void",
+            "func _ollama_launch() -> void",
+            "func _ollama_poll() -> void",
+            "func _ollama_after_up() -> void",
+            "func _ollama_ensure_models(required: Array, on_done: Callable) -> void",
+            "func _ollama_pull_next(list: Array, idx: int, on_done: Callable) -> void",
             "func _load_world_lore()",
             "func reset_for_restart()",
             "func _discover_ollama_model()",
@@ -3948,13 +5494,20 @@
             "func diagnostics_context_for_capability(capability: String) -> Dictionary",
             "func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary",
             "func _agent_memory_prompt_block(agent_id: String) -> String",
+            "func _agent_system_story_pack(agent_profile: Dictionary) -> Dictionary",
+            "func _system_story_pack_prompt_block(story_pack: Dictionary) -> String",
             "func _agent_memory_slug(text: String) -> String",
+            "func register_quest_fingerprint(source: String) -> void",
+            "func seed_quest_fingerprints(hashed_fingerprints: Array) -> void",
+            "func clear_quest_fingerprints() -> void",
+            "func _is_quest_fingerprint_known(quest_data: Dictionary) -> bool",
             "func _start_next_quest_candidate() -> void",
             "func _score_quest_candidate(quest_data: Dictionary) -> Dictionary",
             "func _finish_quest_candidate_batch() -> void",
             "func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray)",
             "func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void",
             "func _apply_replacements(text: String, replacements: Dictionary) -> String",
+            "func _thin_pilot_name(text: String, nickname: String, keep: int = 1) -> String",
             "func _request_dialogue_retry(quest_data: Dictionary, first_elapsed: float) -> void",
             "func _finish_quest_with_current_dialogue(quest_data: Dictionary, elapsed: float) -> void",
             "func _validate_quest_data(quest_data: Dictionary)",
@@ -3974,7 +5527,7 @@
             "func fetch_chatter_background(type: String, context: Dictionary = {})",
             "func fetch_salvager_profile(callback: Callable)",
             "func _call_salvager_profile_callback(callback: Callable, profile: Dictionary) -> void",
-            "func request_kaelen_reaction(quest_data: Dictionary, callback: Callable)",
+            "func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attempts_left: int = 1)",
             "func get_handoff_examples_for_agent(agent_name: String) -> Array",
             "func get_kaelen_intro_stats() -> Dictionary",
             "func reset_kaelen_intro_stats() -> void",
@@ -3982,12 +5535,19 @@
             "func _save_kaelen_intro_stats() -> void",
             "func print_kaelen_intro_stats() -> void",
             "func _notification(what: int) -> void",
-            "func _build_kaelen_intro_prompt(agent_name: String, faction: String, title: String, examples_block: String, history_clause: String, reputation_clause: String, correction_suffix: String) -> String",
             "func _check_kaelen_intro_speaker(line: String, agent_name: String) -> String",
+            "func _kaelen_local_tone_clause(quest_data: Dictionary) -> String",
             "func request_kaelen_intro(quest_data: Dictionary, agent_history_text: String, player_reps: Dictionary, callback: Callable)",
-            "func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, correction_suffix: String, attempt: int, original_callback: Callable)",
+            "func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, local_tone_clause: String, story_clause: String, correction_suffix: String, attempt: int, original_callback: Callable)",
             "func request_partial_delivery_line(quest_title: String, delivered_amount: float, total_banked: float, total_required: float, callback: Callable)",
-            "func generate_campaign_system_names(count: int, callback: Callable)"
+            "func generate_campaign_system_names(count: int, callback: Callable)",
+            "func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason: String) -> void",
+            "func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable, _attempt: int = 0) -> void",
+            "func _log_combat_taunt_fallback(reason: String, faction: String, archetype: String, ctx: Dictionary) -> void",
+            "func request_general_taunts(callback: Callable, _attempt: int = 0) -> void",
+            "func _parse_anomaly_event_response(response_text: String) -> Dictionary",
+            "func _sanitize_anomaly_event(data: Dictionary) -> Dictionary",
+            "func _sanitize_anomaly_actions(raw_actions: Variant) -> Array"
           ]
         },
         {
@@ -4010,7 +5570,8 @@
             "func _count_minor_faction_ships() -> int",
             "func _spawn_minor_faction_ship()",
             "func _spawn_npc_flying_in()",
-            "func _next_runtime_ship_id(category: String) -> String"
+            "func _next_runtime_ship_id(category: String) -> String",
+            "func _schedule_anomaly_rumor() -> void"
           ]
         },
         {
@@ -4044,8 +5605,10 @@
           "functions": [
             "func _generate_archetype()",
             "func _configure_role(role: String) -> void",
+            "func apply_faction_profile(profile: Dictionary, tier_override: int = -1) -> void",
             "func _ready()",
             "func _setup_hull()",
+            "func _build_assembled_hull() -> bool",
             "func apply_generated_model(model: Node3D) -> void",
             "func _get_legacy_major_hull() -> PackedScene",
             "func _fit_major_hull(model_root: Node3D) -> void",
@@ -4057,14 +5620,21 @@
             "func _create_fallback_marker(marker_name: String, marker_position: Vector3) -> Marker3D",
             "func _create_engine_glow() -> void",
             "func _get_engine_color() -> Color",
+            "func _update_engine_glow() -> void",
             "func _refresh_role_patrol_center() -> void",
             "func _apply_tint(node: Node, tint_color: Color)",
             "func _setup_amarr_hardpoints(node: Node)",
             "func _physics_process(delta: float)",
+            "func _find_nearest_gate() -> Node3D",
+            "func _process_flee_on_sight(delta: float) -> void",
             "func steer_towards(target_pos: Vector3, delta: float)",
             "func fire()",
+            "func spawn_projectile(target_node: Node3D, visual_only: bool = false) -> void",
             "func take_damage(amount: float, attacker_faction: String = \"\")",
             "func die()",
+            "func _request_combat_via_queue() -> void",
+            "func _start_queued_combat(done: Callable) -> void",
+            "func _cancel_combat_intent() -> void",
             "func get_persistent_id() -> String",
             "func get_world_id() -> String",
             "func get_world_type_id() -> String",
@@ -4073,7 +5643,28 @@
             "func restore_state(state: Dictionary) -> void",
             "func _record_persistent_state() -> void",
             "func _apply_reputation_changes()",
-            "func _get_faction_color() -> Color"
+            "func _get_faction_color() -> Color",
+            "func roll_loot() -> Dictionary",
+            "func generate_action_plan() -> Array",
+            "func _maybe_plan_low_health_flee(plan: Array, ap: int, hp_ratio: float, role: String, intel: float) -> bool",
+            "func _plan_gunner(plan: Array, ap: int, hp_ratio: float, intel: float) -> void",
+            "func _plan_interceptor(plan: Array, ap: int, hp_ratio: float, intel: float) -> void",
+            "func _plan_logistics(plan: Array, ap: int, hp_ratio: float, intel: float) -> void",
+            "func _plan_hauler(plan: Array, _ap: int, _hp_ratio: float, _intel: float) -> void",
+            "func _plan_boss(plan: Array, ap: int, hp_ratio: float, _intel: float) -> void",
+            "func _action_fire(dmg: float, lbl: String = \"Fire\") -> Dictionary",
+            "func _action_boost(dir: String) -> Dictionary",
+            "func _action_flank() -> Dictionary",
+            "func _action_repair() -> Dictionary",
+            "func _action_disable_engines() -> Dictionary",
+            "func _action_flee() -> Dictionary",
+            "func _action_brace() -> Dictionary",
+            "func _action_shield_angle() -> Dictionary",
+            "func generate_intent() -> Dictionary",
+            "func _intent_gunner(hp_ratio: float) -> Dictionary",
+            "func _intent_interceptor(hp_ratio: float) -> Dictionary",
+            "func _intent_logistics(hp_ratio: float) -> Dictionary",
+            "func _intent_mining_hauler(_hp_ratio: float) -> Dictionary"
           ]
         },
         {
@@ -4105,15 +5696,65 @@
         },
         {
           "type": "file",
+          "name": "PlayerInteractionQueue.gd",
+          "path": "scripts/PlayerInteractionQueue.gd",
+          "classes": [],
+          "functions": [
+            "func _ready() -> void",
+            "func cancel(id: String) -> void",
+            "func is_busy() -> bool",
+            "func in_combat_window() -> bool",
+            "func cooldown_remaining_ms() -> int",
+            "func notify_combat_ended() -> void",
+            "func _tick() -> void",
+            "func _complete_active() -> void",
+            "func _can_run(priority: int) -> bool",
+            "func _sort_queue() -> void",
+            "func _priority_name(p: int) -> String",
+            "func _log(msg: String) -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "PlayerInteractionQueue.gd.uid",
+          "path": "scripts/PlayerInteractionQueue.gd.uid"
+        },
+        {
+          "type": "file",
           "name": "PlayerShip.gd",
           "path": "scripts/PlayerShip.gd",
           "classes": [],
           "functions": [
             "func _ready()",
+            "func _create_mining_tractor_laser() -> MeshInstance3D",
+            "func _build_player_ship_model() -> void",
+            "func _collect_hardpoints(node: Node) -> void",
+            "func _walk_hardpoints(node: Node) -> void",
+            "func _get_mining_beam_origin(offset_index: int = 0) -> Vector3",
+            "func _hide_mining_beams(reset_lock: bool = true) -> void",
+            "func _get_mining_target_point(target_node: Node3D) -> Vector3",
+            "func _refit_collision() -> void",
+            "func _model_aabb(node: Node3D) -> AABB",
+            "func _collect_player_meshes(node: Node, out: Array[MeshInstance3D]) -> void",
+            "func _create_nose_raycast() -> void",
             "func sync_camera_to_ship() -> void",
+            "func _on_combat_started_orbit(enemy: Node) -> void",
+            "func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary) -> void",
+            "func _enter_orbit(enemy: Node) -> void",
+            "func _on_combat_ended_orbit(_won: bool) -> void",
+            "func _release_mouse_capture() -> void",
+            "func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -> void",
+            "func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _lethal: bool, blocked: bool, crit: bool) -> void",
+            "func _trigger_shake(strength: float) -> void",
+            "func _on_combat_kill_cam(_victim: Node, world_pos: Vector3) -> void",
+            "func _frame_action(source: Node, target: Node) -> void",
+            "func _process(delta: float) -> void",
+            "func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float",
+            "func _cam_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3, targets: Array) -> bool",
             "func _on_target_changed(new_target: Node3D)",
             "func begin_target_navigation(mode: String) -> bool",
             "func cancel_autopilot(clear_motion: bool = false) -> void",
+            "func hard_stop() -> void",
             "func activate_boost() -> bool",
             "func boost_cooldown_remaining() -> float",
             "func boost_active_remaining() -> float",
@@ -4142,16 +5783,25 @@
             "func _get_docking_position(dockable: Node3D) -> Vector3",
             "func _estimate_docking_distance(dockable: Node3D) -> float",
             "func perform_action(target_node: Node3D, delta: float)",
-            "func spawn_projectile(target_node: Node3D)",
+            "func spawn_projectile(target_node: Node3D, visual_only: bool = false)",
+            "func launch_combat_drone(target_node: Node3D) -> void",
             "func double_click_move(click_pos: Vector3)",
             "func die(death_source: String = \"\")",
+            "func _create_mine_particles() -> GPUParticles3D",
             "func _create_boost_effects() -> void",
             "func _find_thruster_points(node: Node, out: Array[Node3D]) -> void",
-            "func _create_fallback_boost_effect(local_position: Vector3) -> void",
-            "func _create_boost_effect_at(anchor: Node3D) -> void",
+            "func _create_fallback_thruster_socket(local_position: Vector3) -> void",
             "func _update_boost_effects(_delta: float) -> void",
             "func _create_drones()",
             "func take_damage(amount: float, attacker_faction: String = \"\")",
+            "func _update_drones(delta: float) -> void",
+            "func _respawn_drones() -> void",
+            "func begin_salvage(wreck: Node3D, total_ore: float) -> void",
+            "func _update_salvage(delta: float) -> void",
+            "func _salvage_collect_return() -> void",
+            "func _salvage_grant_wreck_bonus() -> void",
+            "func _abort_salvage(reason: String) -> void",
+            "func _end_salvage() -> void",
             "func _update_drone_colors()"
           ]
         },
@@ -4236,6 +5886,36 @@
         },
         {
           "type": "file",
+          "name": "SpaceAnomaly.gd",
+          "path": "scripts/SpaceAnomaly.gd",
+          "classes": [],
+          "functions": [
+            "func _ready() -> void",
+            "func _build_visuals() -> void",
+            "func _pick_color() -> Color",
+            "func _physics_process(delta: float) -> void",
+            "func _activate() -> void",
+            "func _run_next_action() -> void",
+            "func _execute_action(action: Dictionary) -> void",
+            "func _grant_data_core(action: Dictionary) -> void",
+            "func _spawn_hostiles(faction: String, count: int) -> void",
+            "func _finish() -> void",
+            "func get_persistent_id() -> String",
+            "func get_world_id() -> String",
+            "func get_world_type_id() -> String",
+            "func get_state_schema_version() -> int",
+            "func capture_state() -> Dictionary",
+            "func restore_state(state: Dictionary) -> void",
+            "func _record_persistent_state() -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "SpaceAnomaly.gd.uid",
+          "path": "scripts/SpaceAnomaly.gd.uid"
+        },
+        {
+          "type": "file",
           "name": "Station.gd",
           "path": "scripts/Station.gd",
           "classes": [],
@@ -4266,8 +5946,8 @@
           "functions": [
             "func start_interaction(interaction_name: String)",
             "func _ready()",
-            "func play_dialogue_audio(text: String, voice_id_override: Variant = \"neutral\", speed_override: float = -1.0)",
-            "func cache_dialogue_audio(text: String, voice_id_or_faction: String = \"neutral\", speed: float = -1.0)",
+            "func play_dialogue_audio(text: String, voice_id_override: Variant = \"neutral\", speed_override: float = -1.0, style_scale: float = 1.0)",
+            "func cache_dialogue_audio(text: String, voice_id_or_faction: String = \"neutral\", speed: float = -1.0, style_scale: float = 1.0)",
             "func _is_known_faction(s: String) -> bool",
             "func clean_dialogue_text(text: String) -> String",
             "func normalize_tts_pronunciation(text: String) -> String",
@@ -4278,6 +5958,8 @@
             "func load_wav_from_buffer(bytes: PackedByteArray) -> AudioStreamWAV",
             "func _discover_and_verify_tts()",
             "func _launch_tts_server_process()",
+            "func _resolve_python_launcher() -> Dictionary",
+            "func _resolve_python_executable(candidate: String) -> String",
             "func get_voice_for_faction(faction: String) -> String",
             "func _on_audio_player_finished()"
           ]
@@ -4334,6 +6016,7 @@
             "func _create_context_menu()",
             "func _create_pause_menu()",
             "func _make_pause_card(title_text: String) -> PanelContainer",
+            "func _add_bloom_row(parent: Control) -> void",
             "func _create_campaign_manager() -> void",
             "func _create_campaign_load_fade() -> void",
             "func _open_campaign_manager() -> void",
@@ -4363,16 +6046,46 @@
             "func _on_cargo_changed(new_cargo: float)",
             "func _on_pause_changed(is_paused: bool)",
             "func _render_dock_submenu() -> void",
+            "func _maybe_show_station_climate() -> void",
+            "func _render_bounty_board(should_show: bool) -> void",
+            "func _build_wanted_poster(b: Dictionary) -> Control",
             "func _render_station_contacts(should_show: bool) -> void",
             "func _current_station_contact_id() -> String",
+            "func _current_station_has_contacts() -> bool",
+            "func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool",
+            "func _kaelen_lounge_available() -> bool",
+            "func _on_kaelen_lounge_pressed() -> void",
+            "func _kaelen_lounge_line() -> String",
+            "func _current_station_lounge_faction_names() -> String",
+            "func _on_planted_npc_pressed() -> void",
             "func _on_station_contact_pressed(npc_name: String) -> void",
             "func _render_station_contact_actions(npc_name: String, npc_data: Dictionary) -> void",
             "func _on_station_contact_action_pressed(npc_name: String, topic: String) -> void",
-            "func _request_background_agent_quest() -> void",
+            "func _format_station_intel_line(rumor: Dictionary) -> String",
+            "func _system_story_pack_rumor(npc_name: String, npc_data: Dictionary) -> String",
+            "func _current_system_story_pack() -> Dictionary",
+            "func _campaign_rumor_trail_clue(npc_name: String, npc_data: Dictionary) -> String",
+            "func _station_contact_local_context(npc_data: Dictionary) -> Dictionary",
+            "func _request_background_agent_quest() -> bool",
             "func _current_station_agent_profile() -> Dictionary",
             "func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> Dictionary",
+            "func _current_agent_quest_context() -> Dictionary",
+            "func _agent_contracts_available_for_station() -> bool",
+            "func _show_agent_contracts_unavailable() -> void",
+            "func _start_agent_contract_cooldown(reason: String) -> void",
+            "func _is_agent_quest_context_current(context: Dictionary) -> bool",
+            "func _clear_cached_agent_quest(reason: String = \"\") -> void",
+            "func _clear_cached_agent_quest_if_stale() -> void",
+            "func _current_system_allows_major_agent_fallback() -> bool",
             "func _current_mechanic_profile() -> Dictionary",
+            "func _current_station_display_name() -> String",
+            "func _mechanic_destination_name(mechanic_profile: Dictionary = {}) -> String",
+            "func _mechanic_service_button_text(mechanic_profile: Dictionary = {}) -> String",
+            "func _mechanic_dock_title(mechanic_profile: Dictionary = {}) -> String",
+            "func _generated_mechanic_shop_name(mechanic_profile: Dictionary) -> String",
+            "func _title_case_words(value: String) -> String",
             "func _on_maintenance_bay_pressed() -> void",
+            "func _on_station_lounge_pressed() -> void",
             "func _on_back_to_services_pressed() -> void",
             "func _on_public_board_pressed() -> void",
             "func _on_public_board_back_pressed() -> void",
@@ -4380,20 +6093,33 @@
             "func _on_store_back_pressed() -> void",
             "func _on_inventory_pressed() -> void",
             "func _on_inventory_back_pressed() -> void",
+            "func _close_inventory_panel() -> void",
+            "func _on_inventory_filter_toggled() -> void",
             "func _render_inventory_items() -> void",
             "func _build_inventory_section_label(text: String) -> Label",
+            "func _build_item_icon(item_def) -> TextureRect",
             "func _build_inventory_cargo_row() -> VBoxContainer",
             "func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBoxContainer",
             "func _on_inventory_use_pressed(item_id: String) -> void",
             "func _render_store_items() -> void",
             "func _get_reputation_tier() -> String",
-            "func _build_store_row(item_id: String, item_def, price: int, stock: int, owned: int) -> HBoxContainer",
             "func _on_store_buy(item_id: String) -> void",
+            "func _on_store_sell(item_id: String) -> void",
+            "func _trade_origin_id() -> String",
             "func _on_public_board_offer_accept(index: int) -> void",
             "func _should_show_public_board_turn_in() -> bool",
             "func _on_public_board_turn_in_pressed() -> void",
+            "func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool",
+            "func _current_turn_in_station_id() -> String",
             "func _worst_reputation_tier() -> String",
             "func _best_reputation_tier() -> String",
+            "func _announce_bounties_on_dock() -> void",
+            "func notify_system_arrived(system_id: String) -> void",
+            "func show_intercepted_transmission(text: String, delay_s: float = 0.0) -> void",
+            "func _maybe_kaelen_intel_drop() -> void",
+            "func queue_kaelen_voice_message(text: String) -> void",
+            "func open_kaelen_hail(line: String) -> void",
+            "func _on_kaelen_intel_btn_pressed() -> void",
             "func _cache_mechanic_intro() -> void",
             "func _request_mechanic_intro(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary, callback: Callable) -> void",
             "func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: String, credits: int, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary) -> String",
@@ -4405,16 +6131,24 @@
             "func _on_test_pickup_pressed() -> void",
             "func _on_test_deliver_pressed() -> void",
             "func _on_deliver_part_pressed() -> void",
+            "func _has_anomaly_data_core_cargo() -> bool",
+            "func _turn_in_anomaly_data_core() -> void",
             "func _on_test_pickup_part_pressed() -> void",
             "func _on_hear_gossip_pressed() -> void",
             "func _on_npc_flavor_spoken(flavor: Dictionary) -> void",
+            "func _get_contact_mood(npc_name: String) -> String",
             "func undock_player()",
             "func _sell_ore()",
             "func _close_context_menu() -> void",
             "func _command_selected_target(mode: String) -> bool",
             "func _on_boost_pressed() -> void",
             "func _update_target_command_feedback() -> void",
-            "func _set_command_button_active(button: Button, active: bool) -> void",
+            "func _start_targeted_salvage(wreck: Node3D) -> bool",
+            "func _can_start_targeted_salvage(wreck: Node3D) -> bool",
+            "func _salvage_action_label(wreck: Node3D) -> String",
+            "func _salvage_action_tooltip(wreck: Node3D) -> String",
+            "func _update_gate_action_button(gate: Node, active_mode: String) -> void",
+            "func _set_command_button_state(button: Button, active: bool, queued: bool = false) -> void",
             "func _update_boost_button() -> void",
             "func _command_context_target(mode: String) -> bool",
             "func activate_selected_jumpgate() -> void",
@@ -4447,12 +6181,14 @@
             "func show_npc_dialogue_popup(text: String, npc_name: String, color: Color, portrait: Texture2D = null) -> void",
             "func show_dock_message(text: String, npc_name: String = \"\", color: Color = Color(0.85, 0.85, 0.85), portrait: Texture2D = null) -> void",
             "func clear_dock_message() -> void",
+            "func _update_sell_button()",
             "func _update_repair_button()",
             "func _repair_ship()",
             "func set_overview_collapsed(collapsed: bool)",
             "func _on_talk_to_agent_pressed()",
             "func _show_kaelen_first_briefing() -> void",
             "func _show_kaelen_return_briefing() -> void",
+            "func _show_kaelen_intro_quest_offer() -> void",
             "func _refresh_agent_quest_board()",
             "func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool)",
             "func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool)",
@@ -4477,6 +6213,10 @@
             "func _update_quest_tracker_secondary_missions() -> void",
             "func _on_quest_tracker_turn_in_pressed() -> void",
             "func _update_quest_tracker_logo(faction: String)",
+            "func _create_story_quest_panel() -> void",
+            "func _on_story_quest_ui_updated(title: String, objective_line: String, time_remaining_s: float) -> void",
+            "func _on_story_quest_ui_hidden() -> void",
+            "func _reposition_story_quest_panel() -> void",
             "func _create_comms_hail_panel() -> void",
             "func _on_comms_reversal_triggered(mission_data: Dictionary) -> void",
             "func _show_comms_hail(mission_data: Dictionary) -> void",
@@ -4484,6 +6224,8 @@
             "func _fallback_comms_line(faction: String) -> String",
             "func _kaelen_mood_portrait_id(mood: String) -> String",
             "func _show_agent_portrait(should_show: bool) -> void",
+            "func _add_icon_hover(btn: TextureButton) -> void",
+            "func _update_chat_font_size() -> void",
             "func add_chat_message(sender: String, message: String, sender_color: Color)",
             "func _on_mechanic_pickup_accept_pressed() -> void",
             "func _on_mechanic_pickup_decline_pressed() -> void",
@@ -4503,12 +6245,14 @@
             "func _on_tts_connected()",
             "func _update_connection_status_display()",
             "func _check_both_services_ready()",
+            "func _finish_loading_without_contract() -> void",
             "func _on_tts_cache_completed()",
             "func show_kaelen_intro()",
             "func _style_action_button(btn: Button)",
             "func _create_ship_upgrades_panel() -> void",
             "func _on_ship_upgrades_pressed() -> void",
             "func _refresh_upgrade_ui()",
+            "func _format_ore_bank_max() -> String",
             "func _on_su_slot_pressed(slot: String) -> void",
             "func _attempt_upgrade(slot: String, path: String)"
           ]
@@ -4517,6 +6261,20 @@
           "type": "file",
           "name": "UIManager.gd.uid",
           "path": "scripts/UIManager.gd.uid"
+        },
+        {
+          "type": "file",
+          "name": "WarpExitBubble.gd",
+          "path": "scripts/WarpExitBubble.gd",
+          "classes": [],
+          "functions": [
+            "func _ready() -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "WarpExitBubble.gd.uid",
+          "path": "scripts/WarpExitBubble.gd.uid"
         },
         {
           "type": "file",
@@ -4559,6 +6317,134 @@
               "type": "file",
               "name": "LocalModelGateway.gd.uid",
               "path": "scripts/ai/LocalModelGateway.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "NarrativeDirector.gd",
+              "path": "scripts/ai/NarrativeDirector.gd",
+              "classes": [
+                {
+                  "name": "global class NarrativeDirector",
+                  "methods": [
+                    "static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResult",
+                    "static func _failure(reason: String, validation: ValidationResult) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "NarrativeDirector.gd.uid",
+              "path": "scripts/ai/NarrativeDirector.gd.uid"
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "combat",
+          "children": [
+            {
+              "type": "file",
+              "name": "CombatAction.gd",
+              "path": "scripts/combat/CombatAction.gd",
+              "classes": [
+                {
+                  "name": "global class CombatAction",
+                  "methods": [
+                    "static func make(type: Type, params: Dictionary = {}) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "CombatAction.gd.uid",
+              "path": "scripts/combat/CombatAction.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "CombatManager.gd",
+              "path": "scripts/combat/CombatManager.gd",
+              "classes": [],
+              "functions": [
+                "func _sfx(key: String, world_pos: Variant = null, db: float = 0.0) -> void",
+                "func _ready() -> void",
+                "func _build_and_cache_taunts() -> void",
+                "func _load_persisted_taunts() -> void",
+                "func _request_general_taunt_pool() -> void",
+                "func _on_general_taunts_ready(data: Dictionary) -> void",
+                "func _save_taunt_pool() -> void",
+                "func _make_taunt_entry(line: String) -> Dictionary",
+                "func _pool_has_line(pool: Array, line: String) -> bool",
+                "func _make_taunt_pool(lines: Array) -> Array",
+                "func _play_combat_taunt() -> void",
+                "func _play_npc_action_taunt(key: String) -> void",
+                "func _play_npc_flee_taunt() -> void",
+                "func _record_combat_fallback(content_type: String, reason: String, context: Dictionary = {}) -> void",
+                "func _is_comms_reversal_target() -> bool",
+                "func _process(_delta: float) -> void",
+                "func _lerp_timescale(to_scale: float, to_pitch: float, duration_ms: int = 400) -> void",
+                "func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> void",
+                "func set_target(idx: int) -> void",
+                "func cycle_target() -> void",
+                "func _spawn_target_flash(target: Node) -> void",
+                "func _collect_meshes(node: Node, out: Array) -> void",
+                "func join_combat(enemy: Node) -> void",
+                "func _on_taunts_ready(data: Dictionary) -> void",
+                "func end_combat(player_won: bool) -> void",
+                "func _reset_fight_state() -> void",
+                "func _load_upgrade_stats() -> void",
+                "func _spend_ap(amount: int) -> void",
+                "func _restore_ap() -> void",
+                "func queue_action(type: CombatActionType.Type, params: Dictionary = {}) -> bool",
+                "func dequeue_last() -> void",
+                "func _begin_planning() -> void",
+                "func _intent_is_attack(intent: Dictionary) -> bool",
+                "func _beat(sec: float) -> void",
+                "func _await_travel(from: Node, to: Node) -> void",
+                "func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool, is_drone: bool = false) -> void",
+                "func _hit_stop(freeze_sec: float) -> void",
+                "func _kill_and_end(victim, player_won: bool, skip_end: bool = false) -> void",
+                "func commit_turn() -> void",
+                "func _run_turn_sequence() -> void",
+                "func _run_player_actions() -> void",
+                "func _dispatch_action(action: Dictionary) -> void",
+                "func _exec_fire() -> void",
+                "func _player_status_float(text: String, color: Color) -> void",
+                "func _enemy_status_float(text: String, color: Color) -> void",
+                "func _exec_boost(params: Dictionary) -> void",
+                "func _exec_shield_reroute(_params: Dictionary) -> void",
+                "func _exec_attack_drone() -> void",
+                "func _exec_micro_warp() -> void",
+                "func _exec_repair_kit() -> void",
+                "func _exec_flee() -> void",
+                "func _resolve_player_hit(base_dmg: float) -> float",
+                "func _resolve_npc_hit(base_dmg: float, intent: Dictionary) -> float",
+                "func _adjacent_face(face: int) -> int",
+                "func _npc_hit_shield_blocked(action: Dictionary) -> bool",
+                "func _execute_npc_intent() -> void",
+                "func _execute_npc_action(action: Dictionary, npc_faction: String) -> void",
+                "func _exec_enemy_flee() -> void",
+                "func _consume_shield_reroute() -> void",
+                "func _spawn_shield_dome() -> void",
+                "func _despawn_shield_dome() -> void",
+                "func _despawn_enemy_shield_dome() -> void",
+                "func _spawn_enemy_shield_dome() -> void",
+                "func _check_boss_phase_transition() -> void",
+                "func _transition_boss_phase(phase: int) -> void",
+                "func _after_npc_turn() -> void",
+                "func _remove_dead_enemies() -> void",
+                "func _combat_voice_on() -> bool",
+                "func _play_kaelen_line(key: String) -> void",
+                "func play_player_reply() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "CombatManager.gd.uid",
+              "path": "scripts/combat/CombatManager.gd.uid"
             }
           ]
         },
@@ -4578,9 +6464,18 @@
                     "func summary() -> Dictionary",
                     "func summary_text(recent_limit: int = 8) -> String",
                     "func print_summary() -> void",
+                    "func fallback_event_log_path() -> String",
+                    "func fallback_summary_path() -> String",
+                    "func clear_persistent_fallback_log() -> void",
                     "func content_source_total() -> int",
                     "func fallback_source_count() -> int",
                     "func fallback_source_rate() -> float",
+                    "func _append_fallback_event_log(event: Dictionary) -> void",
+                    "func _write_fallback_summary() -> void",
+                    "func _remove_user_file(path: String) -> void",
+                    "func _resolve_writable_fallback_path(primary_path: String, backup_path: String) -> String",
+                    "func _can_open_for_write(path: String) -> bool",
+                    "func _ensure_parent_dir(path: String) -> void",
                     "func _format_counts(counts: Dictionary) -> String",
                     "func _format_context(context: Variant) -> String"
                   ]
@@ -4732,6 +6627,7 @@
                   "name": "global class MissionAdapter",
                   "methods": [
                     "static func validate_active_state(source: Dictionary) -> ValidationResult",
+                    "static func _display_faction_key(faction_key: String) -> String",
                     "static func normalize_legacy_state(source: Dictionary) -> Dictionary",
                     "static func _legacy_objective(source: Dictionary) -> Dictionary"
                   ]
@@ -4757,7 +6653,9 @@
                     "func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Dictionary",
                     "func format_tracker_text(data: Dictionary) -> String",
                     "func on_complete(data: Dictionary) -> Dictionary",
-                    "func on_cleanup(data: Dictionary) -> Dictionary"
+                    "func on_cleanup(data: Dictionary) -> Dictionary",
+                    "func faction_display(data: Dictionary, fallback_key: String = \"hostile\") -> String",
+                    "func _display_faction_key(faction_key: String) -> String"
                   ]
                 }
               ],
@@ -5006,6 +6904,7 @@
                 {
                   "name": "global class MissionTextGenerator",
                   "methods": [
+                    "static func _diagnostics() -> Node",
                     "static func _validate_kaelen(payload: Dictionary) -> Dictionary",
                     "static func render_text(text: String, offer: Dictionary) -> String",
                     "static func _render(text: String, offer: Dictionary) -> String",
@@ -5090,9 +6989,22 @@
                   "name": "global class PublicBoardOfferBuilder",
                   "methods": [
                     "static func _apply_cooldowns(offers: Array[Dictionary]) -> void",
+                    "static func _apply_story_intent_priority(offers: Array[Dictionary]) -> void",
+                    "static func _offer_matches_intent(offer: Dictionary, intent: String) -> bool",
                     "static func _build_ore_offer(current_time_minutes: int) -> Dictionary",
                     "static func _build_pickup_offer(current_time_minutes: int) -> Dictionary",
+                    "static func _build_courier_offer(current_time_minutes: int) -> Dictionary",
+                    "static func _build_purchase_offer(current_time_minutes: int) -> Dictionary",
                     "static func _build_recovery_preview() -> Dictionary",
+                    "static func _story_board_context(_offer_kind: String) -> String",
+                    "static func _story_recovery_target_faction() -> String",
+                    "static func _current_system_story_pack() -> Dictionary",
+                    "static func _store_purchase_item(current_time_minutes: int) -> Dictionary",
+                    "static func _main_station_id() -> String",
+                    "static func _main_station_display() -> String",
+                    "static func _current_system_config() -> SystemConfig",
+                    "static func _global_state() -> Node",
+                    "static func _story_faction_display(faction_name: String) -> String",
                     "static func _objective_summary(objective: Dictionary) -> String"
                   ]
                 }
@@ -5270,6 +7182,26 @@
                 },
                 {
                   "type": "file",
+                  "name": "DeliveryCourierCapability.gd",
+                  "path": "scripts/domain/capabilities/DeliveryCourierCapability.gd",
+                  "classes": [],
+                  "functions": [
+                    "func capability_id() -> String",
+                    "func is_completed(data: Dictionary) -> bool",
+                    "func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary",
+                    "func format_tracker_text(data: Dictionary) -> String",
+                    "func on_complete(data: Dictionary) -> Dictionary",
+                    "func on_cleanup(data: Dictionary) -> Dictionary",
+                    "func _global_state() -> Node"
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "DeliveryCourierCapability.gd.uid",
+                  "path": "scripts/domain/capabilities/DeliveryCourierCapability.gd.uid"
+                },
+                {
+                  "type": "file",
                   "name": "KillShipsCapability.gd",
                   "path": "scripts/domain/capabilities/KillShipsCapability.gd",
                   "classes": [],
@@ -5308,6 +7240,26 @@
                 },
                 {
                   "type": "file",
+                  "name": "PurchaseDeliveryCapability.gd",
+                  "path": "scripts/domain/capabilities/PurchaseDeliveryCapability.gd",
+                  "classes": [],
+                  "functions": [
+                    "func capability_id() -> String",
+                    "func is_completed(data: Dictionary) -> bool",
+                    "func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary",
+                    "func format_tracker_text(data: Dictionary) -> String",
+                    "func on_complete(data: Dictionary) -> Dictionary",
+                    "func on_cleanup(_data: Dictionary) -> Dictionary",
+                    "func _global_state() -> Node"
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "PurchaseDeliveryCapability.gd.uid",
+                  "path": "scripts/domain/capabilities/PurchaseDeliveryCapability.gd.uid"
+                },
+                {
+                  "type": "file",
                   "name": "RecoverCombatDropCapability.gd",
                   "path": "scripts/domain/capabilities/RecoverCombatDropCapability.gd",
                   "classes": [],
@@ -5335,12 +7287,41 @@
           "children": [
             {
               "type": "file",
+              "name": "BountyRegistry.gd",
+              "path": "scripts/economy/BountyRegistry.gd",
+              "classes": [],
+              "functions": [
+                "static func shared() -> Object",
+                "static func reset() -> void",
+                "func set_bounties(bounties: Array) -> void",
+                "func get_active_bounties() -> Array",
+                "func get_active_bounties_for_system(system_id: String) -> Array",
+                "func inject_story_bounty(bounty: Dictionary) -> void",
+                "func clear_injected_bounties() -> void",
+                "func check_kill(faction: String, system_id: String) -> int",
+                "func confirm_line(faction: String, payout: int) -> String",
+                "func announcement_lines() -> Array",
+                "func announcement_lines_for_system(system_id: String) -> Array",
+                "func _announcement_lines_for(active: Array) -> Array",
+                "func clear() -> void",
+                "func _cap(b: Dictionary) -> int"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "BountyRegistry.gd.uid",
+              "path": "scripts/economy/BountyRegistry.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "ConsumableEffects.gd",
               "path": "scripts/economy/ConsumableEffects.gd",
               "classes": [],
               "functions": [
                 "static func can_use(item_id: String) -> bool",
                 "static func is_usable_now(item_id: String, player: Node3D, inv, shield_cap: float) -> bool",
+                "static func salvage_block_reason(player: Node3D) -> String",
+                "static func salvage_block_reason_for_target(player: Node3D, target: Node3D) -> String",
                 "static func use(item_id: String, player: Node3D, inv, shield_cap: float) -> bool",
                 "static func _apply_effect(effect: Dictionary, player: Node3D, shield_cap: float) -> bool"
               ]
@@ -5352,18 +7333,51 @@
             },
             {
               "type": "file",
+              "name": "FactionRegistry.gd",
+              "path": "scripts/economy/FactionRegistry.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _load_overrides() -> void",
+                "func save_overrides() -> void",
+                "func set_override(profile_key: String, field: String, value: Variant) -> void",
+                "func clear_overrides() -> void",
+                "func get_profile(key: String) -> Dictionary",
+                "func get_faction_for_danger_level(danger_level: int, system_index: int = 0) -> Dictionary",
+                "static func derive_damage_min(weapon_tier: int) -> float",
+                "static func derive_damage_max(weapon_tier: int) -> float",
+                "static func derive_combat_ap(powerplant_tier: int) -> int",
+                "static func derive_max_health(hull_tier: int) -> float"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "FactionRegistry.gd.uid",
+              "path": "scripts/economy/FactionRegistry.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "PlayerInventory.gd",
               "path": "scripts/economy/PlayerInventory.gd",
               "classes": [],
               "functions": [
-                "func add(item_id: String, quantity: int = 1) -> bool",
+                "func slot_count() -> int",
+                "func is_full() -> bool",
+                "func can_add(item_id: String, quantity: int = 1, stack_max: int = -1) -> bool",
                 "func remove(item_id: String, quantity: int = 1) -> bool",
+                "func remove_for_sale(item_id: String, destination_origin: String) -> String",
+                "func remove_from_origin(item_id: String, origin_id: String, quantity: int = 1) -> bool",
                 "func has_item(item_id: String, min_quantity: int = 1) -> bool",
                 "func get_quantity(item_id: String) -> int",
+                "func get_origin_quantity(item_id: String, origin_id: String) -> int",
+                "func best_origin_for_sale(item_id: String, destination_origin: String) -> String",
+                "func get_origins(item_id: String) -> Dictionary",
                 "func get_all() -> Dictionary",
                 "func clear() -> void",
                 "func to_dict() -> Dictionary",
-                "static func from_dict(data: Dictionary)"
+                "static func from_dict(data: Dictionary)",
+                "func _add_origin(item_id: String, origin_id: String, quantity: int) -> void",
+                "func _remove_origin_quantity(item_id: String, quantity: int) -> void"
               ]
             },
             {
@@ -5381,11 +7395,15 @@
                 "func get_item_def(item_id: String) -> StoreItemDef",
                 "func get_catalog_ids() -> Array",
                 "func get_price(item_id: String, reputation_tier: String) -> int",
+                "func get_demand(item_id: String) -> int",
                 "func get_stock(item_id: String) -> int",
                 "func purchase(item_id: String, quantity: int = 1) -> bool",
+                "func buy_from_player(item_id: String, quantity: int = 1) -> bool",
+                "func force_restock() -> void",
                 "func restock_check(current_time_minutes: int) -> void",
                 "func to_dict() -> Dictionary",
-                "static func from_dict(data: Dictionary, catalog: Dictionary)"
+                "static func from_dict(data: Dictionary, catalog: Dictionary)",
+                "func _default_demand_for(item_def: StoreItemDef) -> int"
               ]
             },
             {
@@ -5421,6 +7439,7 @@
                 "func get_store(store_id: String) -> StoreDef",
                 "func get_stores_for_station(station_id: String) -> Array",
                 "func restock_all(current_time_minutes: int) -> void",
+                "func force_restock_all() -> void",
                 "func save_stock_state() -> Dictionary",
                 "func restore_stock_state(data: Dictionary) -> void",
                 "func _load_data() -> void",
@@ -5547,13 +7566,39 @@
                     "func priority(context) -> float",
                     "func execute(context) -> Dictionary",
                     "func _pick_faction(context) -> String",
-                    "func _pick_count(context) -> int"
+                    "func _pick_count(context) -> int",
+                    "func _pick_story_faction(context) -> String",
+                    "func _current_story_pack(context) -> Dictionary",
+                    "func _current_system_config(context)",
+                    "func _story_faction_label(faction_name: String) -> String"
                   ]
                 },
                 {
                   "type": "file",
                   "name": "InterceptorEvent.gd.uid",
                   "path": "scripts/events/types/InterceptorEvent.gd.uid"
+                },
+                {
+                  "type": "file",
+                  "name": "SystemStoryArcEvent.gd",
+                  "path": "scripts/events/types/SystemStoryArcEvent.gd",
+                  "classes": [],
+                  "functions": [
+                    "func event_type_id() -> String",
+                    "func is_eligible(context) -> bool",
+                    "func priority(_context) -> float",
+                    "func execute(context) -> Dictionary",
+                    "func _current_system_config(context) -> SystemConfig",
+                    "func _scene_system_registry()",
+                    "func _global_state() -> Node",
+                    "func _remote_consequence_summary(pack: Dictionary, pressure: int) -> Dictionary",
+                    "func _arc_note(pack: Dictionary, pressure: int) -> String"
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "SystemStoryArcEvent.gd.uid",
+                  "path": "scripts/events/types/SystemStoryArcEvent.gd.uid"
                 }
               ]
             }
@@ -5606,13 +7651,15 @@
                     "func _on_respawn_timeout() -> void",
                     "func _spawn_replacement() -> void",
                     "func _spawn_minor_roamer() -> void",
-                    "func _spawn_ship(faction_name: String, role: String, pos: Vector3, category: String) -> void",
+                    "func _collect_shipping_lane_routes(system_root: Node3D) -> Array",
+                    "func _node_route_position(node: Node3D) -> Vector3",
                     "func _pick_position_near_anchor(rng: RandomNumberGenerator, anchors: Array[Vector3]) -> Vector3",
                     "func _pick_faction(rng: RandomNumberGenerator) -> String",
                     "func _pick_faction_runtime() -> String",
                     "func _pick_minor_faction_runtime() -> String",
                     "func _count_minor_faction_ships() -> int",
-                    "func _next_id(category: String) -> String"
+                    "func _next_id(category: String) -> String",
+                    "func _apply_npc_profile(npc: Node, faction_name: String) -> void"
                   ]
                 }
               ],
@@ -5622,6 +7669,54 @@
               "type": "file",
               "name": "GeneratedSystemNPCManager.gd.uid",
               "path": "scripts/generation/GeneratedSystemNPCManager.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "ShipAssembler.gd",
+              "path": "scripts/generation/ShipAssembler.gd",
+              "classes": [
+                {
+                  "name": "global class ShipAssembler",
+                  "methods": [
+                    "static func _part_path(cat: String, stem: String) -> String",
+                    "static func _load_part(cat: String, stem: String) -> Node3D",
+                    "static func _node_aabb(node: Node3D) -> AABB",
+                    "static func _collect_meshes(node: Node, out: Array[MeshInstance3D]) -> void",
+                    "static func _build_part_material(faction: String, kind: String = \"hull\") -> StandardMaterial3D",
+                    "static func _build_material(faction: String) -> StandardMaterial3D",
+                    "static func _apply_material(root: Node3D, mat: Material) -> void",
+                    "static func _apply_faction_materials(root: Node3D, faction: String) -> void",
+                    "static func _surface_is_thruster(mi: MeshInstance3D, s: int) -> bool",
+                    "static func _add_marker(parent: Node3D, marker_name: String, pos: Vector3) -> void",
+                    "static func generate_recipe(role: String, seed_value: int, hull_override: String = \"\", weapon_override: String = \"\", engine_override: String = \"\") -> Dictionary",
+                    "static func build_from_recipe(recipe: Dictionary, faction: String = \"\", apply_mat: bool = true) -> Node3D",
+                    "static func _add_thruster_socket_markers(root: Node3D, part_root: Node3D, start_index: int) -> int",
+                    "static func _collect_thruster_socket_nodes(node: Node, out: Array[Node3D]) -> void",
+                    "static func _node_name_is_thruster_socket(node_name: String) -> bool",
+                    "static func _local_transform_to_ancestor(ancestor: Node3D, node: Node3D) -> Transform3D",
+                    "static func _add_badge(root: Node3D, faction: String) -> void",
+                    "static func build(faction: String, role: String, seed_value: int, apply_mat: bool = true) -> Node3D",
+                    "static func _ensure_catalog() -> void",
+                    "static func pick_design(role: String, seed_value: int) -> Dictionary",
+                    "static func build_catalog_ship(faction: String, role: String, seed_value: int, apply_mat: bool = true) -> Node3D",
+                    "static func catalog_roles() -> Array",
+                    "static func design_count(role: String) -> int",
+                    "static func styled_factions() -> Array",
+                    "static func special_ship_names() -> Array",
+                    "static func build_special(index: int, apply_mat: bool = true) -> Node3D",
+                    "static func _add_cockpit_strips(root: Node3D) -> void",
+                    "static func _measure_part(cat: String, stem: String)",
+                    "static func _arr_vec3(a) -> Vector3",
+                    "static func _spread_positions(n: int, spread: float) -> Array"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ShipAssembler.gd.uid",
+              "path": "scripts/generation/ShipAssembler.gd.uid"
             },
             {
               "type": "file",
@@ -5681,8 +7776,15 @@
                 {
                   "name": "global class SystemConfig",
                   "methods": [
+                    "func to_dict() -> Dictionary",
+                    "static func from_dict(data: Dictionary) -> SystemConfig",
+                    "static func _color_to_dict(color: Color) -> Dictionary",
+                    "static func _color_from_variant(raw_color: Variant, fallback: Color) -> Color",
                     "func canonical_faction_id(faction_name: String) -> String",
-                    "func ship_style_for_faction(faction_name: String) -> Dictionary"
+                    "func ship_style_for_faction(faction_name: String) -> Dictionary",
+                    "static func _story_faction_display(faction_name: String) -> String",
+                    "static func _story_nickname(system_name: String, rng: RandomNumberGenerator) -> String",
+                    "static func _story_danger_summary(tier: int) -> String"
                   ]
                 }
               ],
@@ -5704,7 +7806,7 @@
                     "func _load_resources() -> void",
                     "static func generate(config: SystemConfig) -> Dictionary",
                     "func _build(config: SystemConfig) -> Dictionary",
-                    "func _create_planet(config: SystemConfig, index: int) -> Dictionary",
+                    "func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool = false) -> Dictionary",
                     "func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -> Dictionary",
                     "func _find_placement(clearance: float, max_attempts: int) -> Vector3",
                     "func _is_clear(pos: Vector3, clearance: float) -> bool",
@@ -5766,27 +7868,22 @@
               "type": "file",
               "name": "GateDiscoveryManager.gd",
               "path": "scripts/navigation/GateDiscoveryManager.gd",
-              "classes": [
-                {
-                  "name": "global class GateDiscoveryManager",
-                  "methods": [
-                    "func apply_rumor(gate_id: String, narrative: String = \"\") -> Dictionary",
-                    "func kaelen_reveal(gate_id: String, cost: int) -> Dictionary",
-                    "func is_kaelen_gate_eligible() -> bool",
-                    "func seed_kaelen_gate_rumor_if_ready() -> Dictionary",
-                    "func get_kaelen_reveal_cost(gate_id: String) -> int",
-                    "func get_gate_state(gate_id: String) -> String",
-                    "func ensure_destinations_for_system(system_id: String) -> void",
-                    "func _has_revealable_gates() -> bool",
-                    "func _is_kaelen_offer_ready() -> bool",
-                    "func _ensure_destination_generated(gate_id: String) -> void",
-                    "func _sync_active_gate_target(gate_def: GateDefinition) -> void",
-                    "func _get_store() -> CampaignCheckpointStore",
-                    "func _get_game_root() -> Node"
-                  ]
-                }
-              ],
-              "functions": []
+              "classes": [],
+              "functions": [
+                "func apply_rumor(gate_id: String, narrative: String = \"\") -> Dictionary",
+                "func kaelen_reveal(gate_id: String, cost: int) -> Dictionary",
+                "func is_kaelen_gate_eligible() -> bool",
+                "func seed_kaelen_gate_rumor_if_ready() -> Dictionary",
+                "func get_kaelen_reveal_cost(gate_id: String) -> int",
+                "func get_gate_state(gate_id: String) -> String",
+                "func ensure_destinations_for_system(system_id: String) -> void",
+                "func _has_revealable_gates() -> bool",
+                "func _is_kaelen_offer_ready() -> bool",
+                "func _ensure_destination_generated(gate_id: String) -> void",
+                "func _sync_active_gate_target(gate_def: GateDefinition) -> void",
+                "func _get_store() -> CampaignCheckpointStore",
+                "func _get_game_root() -> Node"
+              ]
             },
             {
               "type": "file",
@@ -5881,11 +7978,22 @@
                     "static func open(path: String) -> CampaignBibleStore",
                     "func is_valid() -> bool",
                     "func prompt_context() -> String",
+                    "func generation_status() -> String",
+                    "func source_name() -> String",
+                    "func status_summary() -> String",
                     "func replace_bible(next_data: Dictionary) -> Dictionary",
+                    "func mark_model_unavailable(reason: String, model_name: String = \"\") -> Dictionary",
+                    "func mark_generation_failed(reason: String, model_name: String = \"\") -> Dictionary",
                     "func _load_or_create() -> void",
                     "func _commit(next_data: Dictionary, operation: String) -> Dictionary",
                     "static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictionary",
                     "static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult",
+                    "static func normalize_rumor_trails(source: Variant) -> Array",
+                    "static func normalize_regeneration_triggers(source: Variant) -> Array",
+                    "static func _default_trigger_metric(trigger_id: String) -> String",
+                    "static func _default_trigger_action(metric: String) -> String",
+                    "static func _default_trigger_threshold(metric: String) -> int",
+                    "static func _slug(value: String) -> String",
                     "static func _failure(message: String) -> Dictionary"
                   ]
                 }
@@ -5990,9 +8098,17 @@
                     "func _load_or_create() -> void",
                     "func _commit(next_data: Dictionary, operation: String) -> Dictionary",
                     "static func _default_document(campaign_id: String, campaign_seed: String) -> Dictionary",
+                    "static func _normalize_document(source: Dictionary, campaign_id: String, campaign_seed: String) -> Dictionary",
+                    "static func _normalize_faction(source: Dictionary, seed_text: String, index: int) -> Dictionary",
                     "static func _generate_faction(seed_text: String, index: int) -> Dictionary",
                     "static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult",
                     "static func _abbreviation(name: String) -> String",
+                    "static func _badge_options() -> Array",
+                    "static func _normalize_badge_fields(faction: Dictionary, seed_text: String, index: int) -> void",
+                    "static func _normalize_voice_style(faction: Dictionary, slug: String, seed_text: String, index: int) -> void",
+                    "static func _normalize_mission_preferences(faction: Dictionary, seed_text: String, index: int) -> void",
+                    "static func _fallback_faction_text(field: String, seed_text: String, index: int) -> String",
+                    "static func _slug(value: String) -> String",
                     "static func _failure(message: String) -> Dictionary"
                   ]
                 }
@@ -6014,6 +8130,8 @@
                   "methods": [
                     "static func open(path: String) -> CampaignIdeaMemoryStore",
                     "func is_valid() -> bool",
+                    "func campaign_bible_prompt_context(limit: int = MAX_PROMPT_ITEMS) -> String",
+                    "func remember_campaign_bible(bible: Dictionary) -> Dictionary",
                     "func summary() -> Dictionary",
                     "func _load_or_create() -> void",
                     "func _commit(next_data: Dictionary, operation: String) -> Dictionary",
@@ -6022,6 +8140,7 @@
                     "static func _bounded_ideas(ideas: Array) -> Array",
                     "static func _string_set(values: Array) -> Dictionary",
                     "static func _idea_has_any_tag(idea: Dictionary, tag_filter: Dictionary) -> bool",
+                    "static func _count_append_result(result: Dictionary, failures: Array[String]) -> void",
                     "static func _fingerprint(source: String) -> String",
                     "static func _new_id(sequence: int) -> String",
                     "static func _sequence_asc(left: Dictionary, right: Dictionary) -> bool",
@@ -6210,6 +8329,7 @@
                     "func load_initial_bundle(slot_id: String) -> Dictionary",
                     "func _load_or_create() -> void",
                     "func _load_slot_registry(data: Dictionary) -> void",
+                    "func _repair_orphaned_slots() -> void",
                     "func _strip_tactical_state(value: Variant) -> void",
                     "func _write_slot_registry() -> bool",
                     "func _write_json(path: String, data: Dictionary) -> bool",
@@ -6257,6 +8377,31 @@
             },
             {
               "type": "file",
+              "name": "KaelenHandoffStore.gd",
+              "path": "scripts/persistence/KaelenHandoffStore.gd",
+              "classes": [
+                {
+                  "name": "global class KaelenHandoffStore",
+                  "methods": [
+                    "static func open(path: String) -> KaelenHandoffStore",
+                    "func is_valid() -> bool",
+                    "func draw(agent_name: String) -> String",
+                    "func pool_size(agent_name: String) -> int",
+                    "func refill(agent_name: String, lines: Array) -> void",
+                    "func _load_or_create() -> void",
+                    "func _commit() -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "KaelenHandoffStore.gd.uid",
+              "path": "scripts/persistence/KaelenHandoffStore.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "SaveMigrator.gd",
               "path": "scripts/persistence/SaveMigrator.gd",
               "classes": [
@@ -6277,6 +8422,33 @@
               "type": "file",
               "name": "SaveMigrator.gd.uid",
               "path": "scripts/persistence/SaveMigrator.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "StoryStateStore.gd",
+              "path": "scripts/persistence/StoryStateStore.gd",
+              "classes": [
+                {
+                  "name": "global class StoryStateStore",
+                  "methods": [
+                    "static func open(path: String) -> StoryStateStore",
+                    "func is_valid() -> bool",
+                    "func prompt_context() -> String",
+                    "func save_state(next_data: Dictionary) -> Dictionary",
+                    "func _load_or_create() -> void",
+                    "func _commit(next_data: Dictionary, operation: String) -> Dictionary",
+                    "static func _default_state() -> Dictionary",
+                    "static func _validate_data(value: Dictionary) -> ValidationResult",
+                    "static func _failure(message: String) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "StoryStateStore.gd.uid",
+              "path": "scripts/persistence/StoryStateStore.gd.uid"
             }
           ]
         },
@@ -6343,6 +8515,8 @@
                     "func import_generated_systems(records: Variant) -> ValidationResult",
                     "func set_generated_config(system_id: String, config: SystemConfig) -> void",
                     "func get_generated_config(system_id: String) -> SystemConfig",
+                    "func _config_for_definition(definition: SystemDefinition) -> SystemConfig",
+                    "func _import_generated_config(record: Dictionary) -> void",
                     "func _build_generated_root(definition: SystemDefinition) -> Node3D",
                     "func _load_from_dict(data: Dictionary) -> void",
                     "func _register_system(definition: SystemDefinition, index: int) -> void",
@@ -6418,6 +8592,122 @@
           ]
         },
         {
+          "type": "directory",
+          "name": "story",
+          "children": [
+            {
+              "type": "file",
+              "name": "StoryManager.gd",
+              "path": "scripts/story/StoryManager.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func reset_for_restart() -> void",
+                "func _on_llm_ready(_model_name: String) -> void",
+                "func init_story_state(campaign_path: String) -> void",
+                "func clear_story_state() -> void",
+                "func get_story_context_block() -> String",
+                "func advance_chapter(truths_to_reveal: int = 1) -> void",
+                "func _save_story_state() -> void",
+                "func _push_context_to_llm() -> void",
+                "func _generate_foreshadow() -> void",
+                "func schedule_beat_after_kills(beat_id: String, n: int) -> void",
+                "func schedule_beat_on_next_dock(beat_id: String) -> void",
+                "func schedule_beat_after_delay_min(beat_id: String, delay_min: float) -> void",
+                "func on_system_arrived(system_id: String) -> void",
+                "func on_kill(faction: String) -> void",
+                "func _resolve_kill(faction: String) -> void",
+                "func _on_ship_destroyed(faction: String) -> void",
+                "func on_docked(_station) -> void",
+                "func on_quest_completed(_quest: Dictionary) -> void",
+                "func get_lounge_rumor(context: Dictionary = {}) -> Dictionary",
+                "func record_lounge_rumor_heard(rumor_id: String) -> void",
+                "func get_agent_contract_availability(_context: Dictionary = {}) -> Dictionary",
+                "func start_agent_contract_cooldown(reason: String = \"contract_resolved\") -> Dictionary",
+                "func clear_agent_contract_cooldown() -> void",
+                "func _check_kill_beats() -> void",
+                "func _check_dock_beats() -> void",
+                "func _check_delay_beats() -> void",
+                "func _fire_beat(beat_id: String) -> void",
+                "func on_kaelen_intro_dismissed() -> void",
+                "func draw_kaelen_handoff(agent_name: String) -> String",
+                "func _trigger_handoff_pool_for_system(system_id: String, force_replace: bool = false) -> void",
+                "func _replace_all_handoff_pools() -> void",
+                "func generate_handoff_pool(agent_name: String, faction: String, agent_role: String) -> void",
+                "func _faction_ids_for_system(system_id: String) -> Array",
+                "func _fire_debug_story_quest() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "StoryManager.gd.uid",
+              "path": "scripts/story/StoryManager.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "StoryQuestManager.gd",
+              "path": "scripts/story/StoryQuestManager.gd",
+              "classes": [],
+              "functions": [
+                "func _process(delta: float) -> void",
+                "func reset_for_restart() -> void",
+                "func is_active() -> bool",
+                "func get_active_quest() -> Dictionary",
+                "func begin_quest(def: Dictionary) -> void",
+                "func on_planted_npc_talked(npc_id: String) -> void",
+                "func on_ship_destroyed(persistent_id: String, faction: String) -> void",
+                "func on_docked(station) -> void",
+                "func on_system_arrived(system_id: String) -> void",
+                "func _deliver_hook(hook: Dictionary) -> void",
+                "func _execute_spawn(spawn: Dictionary) -> void",
+                "func _spawn_story_ship(spawn: Dictionary) -> void",
+                "func _complete_quest() -> void",
+                "func _fail_quest(reason: String) -> void",
+                "func _emit_ui_update() -> void",
+                "func _objective_display_line() -> String",
+                "func _find_ui_manager() -> Node"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "StoryQuestManager.gd.uid",
+              "path": "scripts/story/StoryQuestManager.gd.uid"
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "systems",
+          "children": [
+            {
+              "type": "file",
+              "name": "IllegalMiningEnforcement.gd",
+              "path": "scripts/systems/IllegalMiningEnforcement.gd",
+              "classes": [
+                {
+                  "name": "global class IllegalMiningEnforcement",
+                  "methods": [
+                    "func clear_expired(now_msec: int) -> int",
+                    "func active_response_count(system_id: String, owner_faction: String = \"\") -> int",
+                    "func is_heat_active(system_id: String, owner_faction: String) -> bool",
+                    "func fine_due(system_id: String, owner_faction: String) -> int",
+                    "func pay_fine(system_id: String, owner_faction: String, credits_available: int) -> Dictionary",
+                    "static func mark_enforcement_ship(ship: Node, owner_faction: String, system_id: String) -> void",
+                    "static func is_enforcement_ship(ship: Node) -> bool",
+                    "func _key(system_id: String, owner_faction: String) -> String"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "IllegalMiningEnforcement.gd.uid",
+              "path": "scripts/systems/IllegalMiningEnforcement.gd.uid"
+            }
+          ]
+        },
+        {
           "type": "file",
           "name": "test_quest_gen.gd",
           "path": "scripts/test_quest_gen.gd",
@@ -6468,8 +8758,19 @@
           "classes": [],
           "functions": [
             "def resolve_voice(voice_str)",
+            "def apply_style(pack, style_scale, style_from)",
             "async def health_check()",
             "async def text_to_speech(data)"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "tts_style_test.py",
+          "path": "scripts/tts_style_test.py",
+          "classes": [],
+          "functions": [
+            "def synth(label, text, voice, style_scale, style_from)",
+            "def main()"
           ]
         },
         {
@@ -6521,6 +8822,158 @@
               "type": "file",
               "name": "BranchMapUI.gd.uid",
               "path": "scripts/ui/BranchMapUI.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "CombatPanel.gd",
+              "path": "scripts/ui/CombatPanel.gd",
+              "classes": [
+                {
+                  "name": "_ScanlineOverlay",
+                  "methods": [
+                    "func _draw() -> void"
+                  ]
+                }
+              ],
+              "functions": [
+                "func _sensor_sig(action_type: Variant, faction: String, is_boss: bool) -> String",
+                "func _combat_scan_text(enemy: Node) -> String",
+                "func _enemy_tier_map(enemy: Node) -> Dictionary",
+                "func _enemy_threat_level(enemy: Node) -> int",
+                "func _enemy_scan_warning(tiers: Dictionary) -> String",
+                "func _ready() -> void",
+                "func _build_ui() -> void",
+                "func _build_sensor_panel() -> void",
+                "func get_wheel_panel() -> Control",
+                "func _build_wheel() -> void",
+                "func _wheel_action_at(local_pos: Vector2) -> int",
+                "func _wheel_action_at_polar(local_pos: Vector2) -> int",
+                "func _on_wheel_input(ev: InputEvent) -> void",
+                "func _update_hover(idx: int) -> void",
+                "func _make_wheel_layer(path: String, pos: Vector2, sz: float) -> TextureRect",
+                "func _set_ap_display(current: int, max_ap: int) -> void",
+                "func _build_hp_bars() -> void",
+                "func _make_hp_label(text: String) -> Label",
+                "func _make_hp_bar(color: Color) -> ProgressBar",
+                "func _build_queue_strip() -> void",
+                "func _build_execute_row() -> void",
+                "func _make_flat_btn(text: String, color: Color, size: Vector2) -> Button",
+                "func _on_combat_started(enemy: Node) -> void",
+                "func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Dictionary, npc_plan: Array) -> void",
+                "func _typewrite(full_text: String) -> void",
+                "func _on_execution_started() -> void",
+                "func _reset_hover() -> void",
+                "func _fade_controls(visible_state: bool) -> void",
+                "func _on_combat_ended(_player_won: bool) -> void",
+                "func _on_ap_changed(current: int, max_ap: int) -> void",
+                "func _on_action_queued(action: Dictionary) -> void",
+                "func _on_action_dequeued() -> void",
+                "func _on_enemy_status_changed(brace: bool, shield: bool) -> void",
+                "func _on_bar_select(idx: int) -> void",
+                "func _apply_bar_sizes() -> void",
+                "func _refresh_target_label() -> void",
+                "func _on_boss_phase_changed(phase: int) -> void",
+                "func _on_action_pressed(action_type: int) -> void",
+                "func _on_undo_pressed() -> void",
+                "func _on_execute_pressed() -> void",
+                "func _refresh_button_states() -> void",
+                "func _refresh_hp_bars() -> void",
+                "func _add_queue_chip(action: Dictionary) -> void",
+                "func _remove_last_queue_chip() -> void",
+                "func _clear_queue_chips() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "CombatPanel.gd.uid",
+              "path": "scripts/ui/CombatPanel.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "DevPanel.gd",
+              "path": "scripts/ui/DevPanel.gd",
+              "classes": [
+                {
+                  "name": "global class DevPanel",
+                  "methods": [
+                    "func add_action_button(label: String, callback: Callable) -> Button",
+                    "func add_tab(title: String) -> VBoxContainer",
+                    "func _ready() -> void",
+                    "func _build_chrome() -> void",
+                    "func _build_faction_tuning_tab() -> void",
+                    "func _build_tuning_row(parent: VBoxContainer, key: String, display: String, base: Dictionary) -> void",
+                    "func _adjust_tuning(key: String, field_idx: int, delta: float) -> void",
+                    "func _on_reset_tuning() -> void",
+                    "func _parse_tun_label(text: String) -> float",
+                    "func _tun_fmt(field_idx: int, val: float) -> String",
+                    "func _tun_cell_label(parent: HBoxContainer, text: String, min_w: int) -> void",
+                    "func _build_ship_viewer_tab() -> void",
+                    "func _on_sv_selected(index: int) -> void",
+                    "func _make_panel_style() -> StyleBoxFlat",
+                    "func _style_action_btn(btn: Button) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DevPanel.gd.uid",
+              "path": "scripts/ui/DevPanel.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "ModelViewer.gd",
+              "path": "scripts/ui/ModelViewer.gd",
+              "classes": [
+                {
+                  "name": "global class ModelViewer",
+                  "methods": [
+                    "func _ready() -> void",
+                    "func _build_rig() -> void",
+                    "func show_ship(faction: String, role: String, seed_value: int = 0) -> void",
+                    "func set_model(node: Node3D) -> void",
+                    "func clear() -> void",
+                    "func _frame_distance() -> float",
+                    "func _process(delta: float) -> void",
+                    "func _gui_input(event: InputEvent) -> void",
+                    "func _zoom(amount: float) -> void",
+                    "func _aabb(node: Node3D) -> AABB",
+                    "func _collect(node: Node, out: Array) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ModelViewer.gd.uid",
+              "path": "scripts/ui/ModelViewer.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "UILayoutManager.gd",
+              "path": "scripts/ui/UILayoutManager.gd",
+              "classes": [],
+              "functions": [
+                "func register_panel(id: String, panel: Control) -> void",
+                "func toggle_edit_mode() -> void",
+                "func is_edit_mode() -> bool",
+                "func handle_input(event: InputEvent) -> void",
+                "func _create_overlay(id: String) -> void",
+                "func _sync_overlay(id: String) -> void",
+                "func _is_dynamic(id: String) -> bool",
+                "func _create_placeholder(id: String) -> void",
+                "func _snap_back_if_overlapping(id: String) -> void",
+                "func _save_layout() -> void",
+                "func _load_layout() -> void",
+                "func _to_pixel_pos(p: Control) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "UILayoutManager.gd.uid",
+              "path": "scripts/ui/UILayoutManager.gd.uid"
             }
           ]
         },
@@ -6528,6 +8981,86 @@
           "type": "directory",
           "name": "visuals",
           "children": [
+            {
+              "type": "file",
+              "name": "AsteroidModels.gd",
+              "path": "scripts/visuals/AsteroidModels.gd",
+              "classes": [
+                {
+                  "name": "global class AsteroidModels",
+                  "methods": [
+                    "static func _ensure_loaded() -> void",
+                    "static func apply_random_model(mesh_instance: MeshInstance3D, rng_seed: int) -> void",
+                    "static func apply_model_index(mesh_instance: MeshInstance3D, idx: int) -> void",
+                    "static func model_index_for_seed(rng_seed: int) -> int",
+                    "static func material_for_index(idx: int) -> Material",
+                    "static func fragment_scene_path_for_index(idx: int) -> String"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "AsteroidModels.gd.uid",
+              "path": "scripts/visuals/AsteroidModels.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "CombatDamageNumber.gd",
+              "path": "scripts/visuals/CombatDamageNumber.gd",
+              "classes": [
+                {
+                  "name": "global class CombatDamageNumber",
+                  "methods": [
+                    "static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: bool = false, scale: float = 1.0) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "CombatDamageNumber.gd.uid",
+              "path": "scripts/visuals/CombatDamageNumber.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "EngineExhaust.gd",
+              "path": "scripts/visuals/EngineExhaust.gd",
+              "classes": [
+                {
+                  "name": "global class EngineExhaust",
+                  "methods": []
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "EngineExhaust.gd.uid",
+              "path": "scripts/visuals/EngineExhaust.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "ImpactEffect.gd",
+              "path": "scripts/visuals/ImpactEffect.gd",
+              "classes": [
+                {
+                  "name": "global class ImpactEffect",
+                  "methods": [
+                    "static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void",
+                    "static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ImpactEffect.gd.uid",
+              "path": "scripts/visuals/ImpactEffect.gd.uid"
+            },
             {
               "type": "file",
               "name": "PlanetRotation.gd",
@@ -6546,19 +9079,68 @@
             },
             {
               "type": "file",
+              "name": "SkyFollower.gd",
+              "path": "scripts/visuals/SkyFollower.gd",
+              "classes": [],
+              "functions": [
+                "func _process(_delta: float) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "SkyFollower.gd.uid",
+              "path": "scripts/visuals/SkyFollower.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "SystemAmbience.gd",
               "path": "scripts/visuals/SystemAmbience.gd",
               "classes": [],
               "functions": [
                 "static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D",
                 "static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D",
-                "static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D"
+                "static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D",
+                "static func apply_glow(env: Environment, connect_toggle: bool = true) -> void",
+                "static func apply_bloom_amount(env: Environment, amount: float) -> void"
               ]
             },
             {
               "type": "file",
               "name": "SystemAmbience.gd.uid",
               "path": "scripts/visuals/SystemAmbience.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "ThrusterBank.gd",
+              "path": "scripts/visuals/ThrusterBank.gd",
+              "classes": [
+                {
+                  "name": "global class ThrusterBank",
+                  "methods": [
+                    "func setup(anchor_points: Array[Node3D], color: Color, scale_factor: float = 1.0) -> void",
+                    "func clear() -> void",
+                    "func update_intensity(throttle: float, boosting: bool) -> void",
+                    "func _create_effect(anchor: Node3D) -> Dictionary",
+                    "func _create_core(socket_scale: float) -> MeshInstance3D",
+                    "func _create_plume_material(hot: bool) -> ShaderMaterial",
+                    "func _create_halo(socket_scale: float) -> MeshInstance3D",
+                    "func _create_shared_light() -> void",
+                    "func _socket_scale_for(anchor: Node3D) -> float",
+                    "func _set_node_visible(effect: Dictionary, visible: bool) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ThrusterBank.gd.current_best_backup",
+              "path": "scripts/visuals/ThrusterBank.gd.current_best_backup"
+            },
+            {
+              "type": "file",
+              "name": "ThrusterBank.gd.uid",
+              "path": "scripts/visuals/ThrusterBank.gd.uid"
             }
           ]
         }
@@ -6568,6 +9150,36 @@
       "type": "directory",
       "name": "shaders",
       "children": [
+        {
+          "type": "file",
+          "name": "distortion.gdshader",
+          "path": "shaders/distortion.gdshader"
+        },
+        {
+          "type": "file",
+          "name": "distortion.gdshader.uid",
+          "path": "shaders/distortion.gdshader.uid"
+        },
+        {
+          "type": "file",
+          "name": "hyperspace_tunnel.gdshader",
+          "path": "shaders/hyperspace_tunnel.gdshader"
+        },
+        {
+          "type": "file",
+          "name": "hyperspace_tunnel.gdshader.uid",
+          "path": "shaders/hyperspace_tunnel.gdshader.uid"
+        },
+        {
+          "type": "file",
+          "name": "hyperspace_tunnel_3d.gdshader",
+          "path": "shaders/hyperspace_tunnel_3d.gdshader"
+        },
+        {
+          "type": "file",
+          "name": "hyperspace_tunnel_3d.gdshader.uid",
+          "path": "shaders/hyperspace_tunnel_3d.gdshader.uid"
+        },
         {
           "type": "file",
           "name": "nebula.gdshader",
@@ -6587,6 +9199,16 @@
           "type": "file",
           "name": "starfield.gdshader.uid",
           "path": "shaders/starfield.gdshader.uid"
+        },
+        {
+          "type": "file",
+          "name": "warp_exit_bubble.gdshader",
+          "path": "shaders/warp_exit_bubble.gdshader"
+        },
+        {
+          "type": "file",
+          "name": "warp_exit_bubble.gdshader.uid",
+          "path": "shaders/warp_exit_bubble.gdshader.uid"
         }
       ]
     },
@@ -6608,6 +9230,11 @@
           "type": "file",
           "name": "skill_creating_fetch_quests.md",
           "path": "skills/skill_creating_fetch_quests.md"
+        },
+        {
+          "type": "file",
+          "name": "skill_jump_gate_transition.md",
+          "path": "skills/skill_jump_gate_transition.md"
         },
         {
           "type": "file",
@@ -6653,6 +9280,26 @@
               "type": "file",
               "name": "run_local_model_gateway_tests.gd.uid",
               "path": "tests/ai/run_local_model_gateway_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_narrative_director_tests.gd",
+              "path": "tests/ai/run_narrative_director_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_campaign_bible_prompt_includes_guardrails() -> void",
+                "func _test_parses_campaign_bible_response() -> void",
+                "func _test_rejects_invalid_campaign_bible_response() -> void",
+                "func _baseline_bible() -> Dictionary",
+                "func _failure_text(result: Dictionary) -> String",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_narrative_director_tests.gd.uid",
+              "path": "tests/ai/run_narrative_director_tests.gd.uid"
             }
           ]
         },
@@ -6668,6 +9315,7 @@
               "functions": [
                 "func _initialize() -> void",
                 "func _test_records_fallback_summary() -> void",
+                "func _test_persistent_fallback_log_written() -> void",
                 "func _test_records_generation_event_summary() -> void",
                 "func _test_records_content_source_summary() -> void",
                 "func _test_summary_text_is_readable() -> void",
@@ -6687,6 +9335,32 @@
           "type": "directory",
           "name": "domain",
           "children": [
+            {
+              "type": "file",
+              "name": "run_bounty_registry_tests.gd",
+              "path": "tests/domain/run_bounty_registry_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _make_registry() -> RefCounted",
+                "func _test_check_kill_returns_payout() -> void",
+                "func _test_cap_respected() -> void",
+                "func _test_wrong_system_no_payout() -> void",
+                "func _test_wrong_faction_no_payout() -> void",
+                "func _test_get_active_bounties() -> void",
+                "func _test_confirm_line_not_empty() -> void",
+                "func _test_announcement_lines_single() -> void",
+                "func _test_announcement_lines_empty() -> void",
+                "func _pass(label: String) -> void",
+                "func _fail(label: String, detail: String) -> void",
+                "func _print_results() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_bounty_registry_tests.gd.uid",
+              "path": "tests/domain/run_bounty_registry_tests.gd.uid"
+            },
             {
               "type": "file",
               "name": "run_domain_foundation_tests.gd",
@@ -6728,6 +9402,7 @@
                 "func _initialize() -> void",
                 "func _expect(condition: bool, message: String) -> void",
                 "func _test_registry_extension_register_and_lookup() -> void",
+                "func _test_registry_default_new_mission_types() -> void",
                 "func _test_extension_handle_event() -> void",
                 "func _test_extension_is_completed() -> void",
                 "func _test_extension_format_tracker_text() -> void",
@@ -6737,13 +9412,20 @@
                 "func _test_kill_ships_handle_event_wrong_faction() -> void",
                 "func _test_kill_ships_handle_event_no_respawn_when_done() -> void",
                 "func _test_kill_ships_format_tracker() -> void",
+                "func _test_kill_ships_format_tracker_generated_faction() -> void",
                 "func _test_recover_handle_event_increments() -> void",
                 "func _test_recover_handle_event_wrong_faction() -> void",
                 "func _test_recover_handle_event_recovered_sets_flag() -> void",
                 "func _test_recover_on_complete_blocks_if_not_recovered() -> void",
                 "func _test_recover_on_complete_allows_if_recovered() -> void",
                 "func _test_recover_format_tracker_hunting() -> void",
-                "func _test_recover_format_tracker_recovered() -> void"
+                "func _test_recover_format_tracker_recovered() -> void",
+                "func _test_delivery_courier_requires_matching_special_cargo() -> void",
+                "func _test_delivery_courier_clears_matching_cargo() -> void",
+                "func _test_delivery_courier_failure_message() -> void",
+                "func _test_purchase_delivery_requires_inventory_item() -> void",
+                "func _test_purchase_delivery_removes_inventory_quantity() -> void",
+                "func _test_purchase_delivery_failure_message() -> void"
               ]
             },
             {
@@ -6792,12 +9474,18 @@
                 "func _test_ore_offer() -> void",
                 "func _test_kill_offer() -> void",
                 "func _test_pickup_offer() -> void",
+                "func _test_delivery_courier_offer() -> void",
+                "func _test_purchase_delivery_offer() -> void",
                 "func _test_recovery_offer() -> void",
+                "func _test_generated_faction_display_name() -> void",
                 "func _test_timed_offer() -> void",
                 "func _test_public_board_text_generation() -> void",
+                "func _test_public_board_story_intents_prioritize_offers() -> void",
                 "func _test_malformed_offers() -> void",
                 "func _test_legacy_runtime_state() -> void",
+                "func _test_delivery_purchase_legacy_runtime_state() -> void",
                 "func _test_invalid_runtime_state() -> void",
+                "func _has_offer_template(offers: Array, template_id: String) -> bool",
                 "func _expect(condition: bool, message: String) -> void"
               ]
             },
@@ -6857,8 +9545,15 @@
                 "func _initialize() -> void",
                 "func _test_builder_produces_all_templates() -> void",
                 "func _test_builder_offers_have_required_fields() -> void",
+                "func _test_courier_and_purchase_offers_adapt_to_active_state() -> void",
                 "func _test_pickup_offer_uses_current_system_outpost() -> void",
+                "func _test_generated_system_without_outpost_does_not_use_starter_pickup() -> void",
+                "func _test_generated_system_offers_use_story_pack() -> void",
                 "func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void",
+                "func _test_generated_contact_portrait_voice_gender_matches() -> void",
+                "func _presentation_gender(presentation_id: String) -> String",
+                "func _test_generated_contact_flavor_lines_do_not_repeat_immediately() -> void",
+                "func _test_restart_clears_generated_contact_state() -> void",
                 "func _test_ore_offer_is_urgent() -> void",
                 "func _test_fallback_renders_all_placeholders() -> void",
                 "func _test_fallback_preserves_board_metadata() -> void",
@@ -6893,12 +9588,16 @@
                 "func _test_urgent_reward_multiplier() -> void",
                 "func _test_expiration_clears_active_state() -> void",
                 "func _test_expiration_clears_special_cargo() -> void",
+                "func _test_expiration_clears_courier_cargo() -> void",
+                "func _test_expiration_preserves_purchase_inventory() -> void",
                 "func _test_no_expiration_before_deadline() -> void",
                 "func _test_remaining_time_counts_down() -> void",
                 "func _test_zero_duration_rejected() -> void",
                 "func _test_negative_duration_rejected() -> void",
                 "func _ore_offer(amount: float, reward: int) -> Dictionary",
                 "func _pickup_offer() -> Dictionary",
+                "func _courier_offer() -> Dictionary",
+                "func _purchase_offer() -> Dictionary",
                 "func _accept_choice() -> Dictionary",
                 "func _expect(condition: bool, message: String) -> void"
               ]
@@ -6993,7 +9692,11 @@
                 "func _test_get_all_returns_copy() -> void",
                 "func _test_clear() -> void",
                 "func _test_save_load_roundtrip() -> void",
-                "func _test_signal_emitted() -> void"
+                "func _test_origin_tracking_for_trade() -> void",
+                "func _test_signal_emitted() -> void",
+                "func _test_slot_limit() -> void",
+                "func _test_stack_max() -> void",
+                "func _test_save_load_max_slots() -> void"
               ]
             },
             {
@@ -7022,6 +9725,8 @@
                 "func _test_restock_caps_at_max() -> void",
                 "func _test_restock_does_not_fire_early() -> void",
                 "func _test_depletion_penalty() -> void",
+                "func _test_same_system_sell_is_not_profitable() -> void",
+                "func _test_imported_demand_decays_after_sales() -> void",
                 "func _test_store_to_dict_from_dict_roundtrip() -> void",
                 "func _make_registry()",
                 "func _test_registry_loads_data() -> void",
@@ -7034,6 +9739,25 @@
               "type": "file",
               "name": "run_store_tests.gd.uid",
               "path": "tests/economy/run_store_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_upgrade_power_tests.gd",
+              "path": "tests/economy/run_upgrade_power_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _expect(condition: bool, message: String) -> void",
+                "func _reset_with_resources() -> void",
+                "func _test_baseline_power_budget() -> void",
+                "func _test_sensor_upgrade_power_draw() -> void",
+                "func _test_powerplant_gates_stacked_upgrades() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_upgrade_power_tests.gd.uid",
+              "path": "tests/economy/run_upgrade_power_tests.gd.uid"
             }
           ]
         },
@@ -7068,7 +9792,10 @@
                 "func _test_scheduler_ignores_unapplied_events() -> void",
                 "func _test_scheduler_type_cooldown() -> void",
                 "func _test_scheduler_seed_determinism() -> void",
-                "func _test_scheduler_save_restore() -> void"
+                "func _test_scheduler_save_restore() -> void",
+                "func _test_system_story_arc_event_advances_pack() -> void",
+                "func _test_interceptor_event_uses_system_story_pack() -> void",
+                "func _test_story_arc_named_npc_irreversible_guard() -> void"
               ]
             },
             {
@@ -7115,20 +9842,45 @@
                 "func _initialize() -> void",
                 "func _test_config_from_seed() -> void",
                 "func _test_config_deterministic() -> void",
+                "func _test_config_story_pack() -> void",
                 "func _test_config_faction_weights() -> void",
                 "func _test_config_generated_faction_pool() -> void",
                 "func _test_config_difficulty_multiplier() -> void",
                 "func _test_config_npc_count() -> void",
+                "func _test_generated_system_minimum_density() -> void",
                 "func _test_campaign_system_names() -> void",
                 "func _test_registry_generated_system() -> void",
                 "func _test_generated_outbound_gate_defs() -> void",
-                "func _expect(condition: bool, message: String) -> void"
+                "func _expect(condition: bool, message: String) -> void",
+                "func _count_descendants_in_group(root: Node, group_name: String) -> int"
               ]
             },
             {
               "type": "file",
               "name": "run_system_factory_tests.gd.uid",
               "path": "tests/generation/run_system_factory_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_system_npc_route_tests.gd",
+              "path": "tests/generation/run_system_npc_route_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_hostiles_use_shipping_lane_without_belt() -> void",
+                "func _test_hostiles_prefer_belt_over_shipping_lane() -> void",
+                "func _test_mission_targets_use_shipping_lane_without_belt() -> void",
+                "func _test_mission_targets_prefer_belt_over_shipping_lane() -> void",
+                "func _make_station(label: String, pos: Vector3) -> Node3D",
+                "func _make_asteroid(belt_id: String, pos: Vector3) -> Node3D",
+                "func _make_manager() -> Node",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_system_npc_route_tests.gd.uid",
+              "path": "tests/generation/run_system_npc_route_tests.gd.uid"
             }
           ]
         },
@@ -7155,6 +9907,20 @@
               "path": "tests/navigation/run_navigation_route_planner_tests.gd.uid"
             }
           ]
+        },
+        {
+          "type": "file",
+          "name": "parse_check.gd",
+          "path": "tests/parse_check.gd",
+          "classes": [],
+          "functions": [
+            "func _init() -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "parse_check.gd.uid",
+          "path": "tests/parse_check.gd.uid"
         },
         {
           "type": "directory",
@@ -7247,7 +10013,9 @@
               "functions": [
                 "func _initialize() -> void",
                 "func _test_bootstrap_generate_reveal_and_reopen() -> void",
+                "func _test_old_faction_records_normalize_on_load() -> void",
                 "func _initial_state() -> Dictionary",
+                "func _write_generated_factions_fixture(data: Dictionary) -> void",
                 "func _cleanup() -> void",
                 "func _remove_directory(path: String) -> void",
                 "func _expect(condition: bool, message: String) -> void"
@@ -7267,6 +10035,7 @@
                 "func _initialize() -> void",
                 "func _test_idea_memory_bootstrap_append_query_and_reopen() -> void",
                 "func _initial_state() -> Dictionary",
+                "func _campaign_bible_fixture() -> Dictionary",
                 "func _cleanup() -> void",
                 "func _remove_directory(path: String) -> void",
                 "func _expect(condition: bool, message: String) -> void"
@@ -7405,9 +10174,12 @@
                 "func _test_no_fourth_campaign() -> void",
                 "func _test_campaign_rename() -> void",
                 "func _test_registry_corruption_recovery() -> void",
+                "func _test_orphaned_occupied_slot_is_repaired() -> void",
                 "func _test_delete_is_isolated() -> void",
                 "func _initial_state(credits: int) -> Dictionary",
                 "func _cleanup() -> void",
+                "func _cleanup_orphan() -> void",
+                "func _make_directory(path: String) -> void",
                 "func _write_text(path: String, text: String) -> void",
                 "func _remove_directory(path: String) -> void",
                 "func _expect(condition: bool, message: String) -> void"
@@ -7621,6 +10393,34 @@
         },
         {
           "type": "directory",
+          "name": "systems",
+          "children": [
+            {
+              "type": "file",
+              "name": "run_illegal_mining_enforcement_tests.gd",
+              "path": "tests/systems/run_illegal_mining_enforcement_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_first_violation_dispatches_two_ships() -> void",
+                "func _test_repeated_violation_refreshes_heat_without_stacking() -> void",
+                "func _test_heat_expires() -> void",
+                "func _test_fine_payment_clears_heat() -> void",
+                "func _test_enforcement_ship_marker() -> void",
+                "func _test_unwitnessed_global_report_does_not_dispatch() -> void",
+                "func _test_witnessed_global_report_dispatches_and_spawns() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_illegal_mining_enforcement_tests.gd.uid",
+              "path": "tests/systems/run_illegal_mining_enforcement_tests.gd.uid"
+            }
+          ]
+        },
+        {
+          "type": "directory",
           "name": "time",
           "children": [
             {
@@ -7646,6 +10446,323 @@
       "type": "directory",
       "name": "tools",
       "children": [
+        {
+          "type": "directory",
+          "name": "assembler_preview",
+          "children": [
+            {
+              "type": "file",
+              "name": "catalog_gen.gd",
+              "path": "tools/assembler_preview/catalog_gen.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _first_stem(recipe: Dictionary, cat: String) -> String",
+                "func _score(role: String, box: AABB) -> float",
+                "func _render_sheet(role: String, designs: Array, cam: Camera3D, out_dir: String) -> void",
+                "func _aabb(node: Node3D) -> AABB",
+                "func _collect(node: Node, out: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "catalog_gen.gd.uid",
+              "path": "tools/assembler_preview/catalog_gen.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "devpanel_test.gd",
+              "path": "tools/assembler_preview/devpanel_test.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _find_tab_container(node: Node) -> TabContainer",
+                "func _settle(frames: int) -> void",
+                "func _shot(out_dir: String, tag: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "devpanel_test.gd.uid",
+              "path": "tools/assembler_preview/devpanel_test.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "export_parts.py",
+              "path": "tools/assembler_preview/export_parts.py",
+              "classes": [],
+              "functions": [
+                "def safe_filename(name)"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "faction_check.gd",
+              "path": "tools/assembler_preview/faction_check.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _ab(n: Node3D) -> AABB",
+                "func _c(n: Node,o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "faction_check.gd.uid",
+              "path": "tools/assembler_preview/faction_check.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "focused.gd",
+              "path": "tools/assembler_preview/focused.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _aabb(n: Node3D) -> AABB",
+                "func _c(n: Node, o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "focused.gd.uid",
+              "path": "tools/assembler_preview/focused.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "guns.gd",
+              "path": "tools/assembler_preview/guns.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _ab(n: Node3D) -> AABB",
+                "func _c(n: Node,o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "guns.gd.uid",
+              "path": "tools/assembler_preview/guns.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "hp.gd",
+              "path": "tools/assembler_preview/hp.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _ab(n: Node3D) -> AABB",
+                "func _c(n: Node,o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "hp.gd.uid",
+              "path": "tools/assembler_preview/hp.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "hull_sheet.gd",
+              "path": "tools/assembler_preview/hull_sheet.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _aabb(node: Node3D) -> AABB",
+                "func _collect(node: Node, out: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "hull_sheet.gd.uid",
+              "path": "tools/assembler_preview/hull_sheet.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "inspect_engine_part.gd",
+              "path": "tools/assembler_preview/inspect_engine_part.gd",
+              "classes": [],
+              "functions": [
+                "func _init() -> void",
+                "func _print_tree(node: Node, depth: int) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "inspect_engine_part.gd.uid",
+              "path": "tools/assembler_preview/inspect_engine_part.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "integ.gd",
+              "path": "tools/assembler_preview/integ.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _aabb(node: Node3D) -> AABB",
+                "func _collect(node: Node, out: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "integ.gd.uid",
+              "path": "tools/assembler_preview/integ.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "orient.gd",
+              "path": "tools/assembler_preview/orient.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _aabb(n: Node3D) -> AABB",
+                "func _c(n: Node,o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "orient.gd.uid",
+              "path": "tools/assembler_preview/orient.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "playertest.gd",
+              "path": "tools/assembler_preview/playertest.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "playertest.gd.uid",
+              "path": "tools/assembler_preview/playertest.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "preview.gd",
+              "path": "tools/assembler_preview/preview.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _aabb(node: Node3D, mcount: Array = []) -> AABB",
+                "func _collect(node: Node, out: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "preview.gd.uid",
+              "path": "tools/assembler_preview/preview.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "probe.gd",
+              "path": "tools/assembler_preview/probe.gd",
+              "classes": [],
+              "functions": [
+                "func _init()",
+                "func _c(n: Node, o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "probe.gd.uid",
+              "path": "tools/assembler_preview/probe.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "recipe_print.gd",
+              "path": "tools/assembler_preview/recipe_print.gd",
+              "classes": [],
+              "functions": [
+                "func _init()"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "recipe_print.gd.uid",
+              "path": "tools/assembler_preview/recipe_print.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "thruster_preview.gd",
+              "path": "tools/assembler_preview/thruster_preview.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _setup_world() -> void",
+                "func _capture(path: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "thruster_preview.gd.uid",
+              "path": "tools/assembler_preview/thruster_preview.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "tilt.gd",
+              "path": "tools/assembler_preview/tilt.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _ab(n: Node3D) -> AABB",
+                "func _c(n: Node,o: Array) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "tilt.gd.uid",
+              "path": "tools/assembler_preview/tilt.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "viewer_test.gd",
+              "path": "tools/assembler_preview/viewer_test.gd",
+              "classes": [],
+              "functions": [
+                "func _ready() -> void",
+                "func _settle(frames: int) -> void",
+                "func _shot(out_dir: String, tag: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "viewer_test.gd.uid",
+              "path": "tools/assembler_preview/viewer_test.gd.uid"
+            }
+          ]
+        },
+        {
+          "type": "file",
+          "name": "generate_asteroid_fragments.py",
+          "path": "tools/generate_asteroid_fragments.py",
+          "classes": [],
+          "functions": [
+            "def clear_scene()",
+            "def import_mesh(filepath)",
+            "def export_fragments(source_path, output_path, model_index)",
+            "def main()"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "generate_asteroids.py",
+          "path": "tools/generate_asteroids.py",
+          "classes": [],
+          "functions": [
+            "def clear_scene()",
+            "def create_rock(index, seed_val)",
+            "def export_rock(rock, filepath)"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "generate_jet_spool.py",
+          "path": "tools/generate_jet_spool.py",
+          "classes": [],
+          "functions": [
+            "def lowpass(x, cutoff, order)"
+          ]
+        },
         {
           "type": "file",
           "name": "measure_phase_2_storage.gd",
