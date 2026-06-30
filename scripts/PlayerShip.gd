@@ -25,6 +25,7 @@ const MINING_RANGE := 75.0
 const MINING_TRACTOR_LOCK_SECONDS := 1.15
 const MINING_TRACTOR_RADIUS := 0.075
 const MINING_CUTTER_RADIUS := 0.07
+const AUTOPILOT_BELT_CLEARANCE_Y := 180.0
 var boost_timer: float = 0.0
 var boost_cooldown_timer: float = 0.0
 var boost_effect_meshes: Array[MeshInstance3D] = []
@@ -70,6 +71,8 @@ var planned_route: Array[Vector3] = []
 var planned_route_index: int = 0
 var planned_destination: Vector3 = Vector3.ZERO
 var route_plan_count: int = 0
+var route_notice_sent: bool = false
+var route_notice_override: String = ""
 var route_progress_distance: float = INF
 var route_stall_timer: float = 0.0
 var route_stall_replans: int = 0
@@ -572,6 +575,8 @@ func begin_target_navigation(mode: String) -> bool:
 		return false
 	navigation_target = selected
 	_clear_planned_route()
+	route_notice_sent = false
+	route_notice_override = ""
 	route_stall_replans = 0
 	nav_mode = mode
 	if _nose_ray:
@@ -585,6 +590,8 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	target_position = null
 	staged_jump_gate_id = 0
 	_clear_planned_route()
+	route_notice_sent = false
+	route_notice_override = ""
 	route_stall_replans = 0
 	_clear_avoidance_state()
 	if _nose_ray:
@@ -749,17 +756,39 @@ func get_mouse_raycast_hit(
 		if screen_position is Vector2
 		else get_viewport().get_mouse_position()
 	)
-	var ray_origin = camera.project_ray_origin(mouse_pos)
-	var ray_normal = camera.project_ray_normal(mouse_pos)
+	var ray_origin: Vector3 = camera.project_ray_origin(mouse_pos)
+	var ray_normal: Vector3 = camera.project_ray_normal(mouse_pos)
 	
 	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(
-		ray_origin,
-		ray_origin + ray_normal * WORLD_PICK_DISTANCE
-	)
-	query.collide_with_areas = true
-	var result = space_state.intersect_ray(query)
-	return result
+	var ray_end := ray_origin + ray_normal * WORLD_PICK_DISTANCE
+	var excluded_rids: Array[RID] = [get_rid()]
+	for _attempt in range(8):
+		var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+		query.collide_with_areas = true
+		query.exclude = excluded_rids
+		var result = space_state.intersect_ray(query)
+		if result.is_empty():
+			return result
+		var collider = result.get("collider")
+		if not _mouse_pick_should_pass_through(collider):
+			return result
+		if collider is CollisionObject3D:
+			excluded_rids.append((collider as CollisionObject3D).get_rid())
+		else:
+			return result
+	return {}
+
+
+func _mouse_pick_should_pass_through(collider: Variant) -> bool:
+	if not collider is Node3D:
+		return false
+	var node := collider as Node3D
+	if not node.is_in_group("station"):
+		return false
+	var ring_node := node.get_node_or_null("Ring") as MeshInstance3D
+	if ring_node == null or not ring_node.visible:
+		return false
+	return node.get_node_or_null("CoreSelection") != null
 
 func _physics_process(delta: float):
 	if boost_timer > 0.0:
@@ -1132,11 +1161,23 @@ func _route_steer_target(
 		or planned_destination.distance_to(destination) > 35.0
 	if needs_plan:
 		var hazards := _navigation_hazards(route_target)
-		var planned := NavigationRoutePlannerType.plan_route(
-			global_position,
+		var planned := _plan_route_with_belt_clearance(
 			destination,
+			route_target,
 			hazards
 		)
+		if planned.is_empty():
+			planned = NavigationRoutePlannerType.plan_route(
+				global_position,
+				destination,
+				hazards
+			)
+		if not bool(planned.get("ok", false)):
+			planned = _plan_route_with_vertical_clearance(
+				destination,
+				route_target,
+				hazards
+			)
 		if not bool(planned.get("ok", false)):
 			return planned
 		planned_route.clear()
@@ -1145,6 +1186,8 @@ func _route_steer_target(
 		planned_route_index = 0
 		planned_destination = destination
 		route_plan_count += 1
+		route_stall_replans = 0
+		route_notice_override = str(planned.get("notice", ""))
 		if planned_route.size() > 1:
 			_emit_planned_route_notice(planned_route.size())
 	var prev_index := planned_route_index
@@ -1171,6 +1214,179 @@ func _route_steer_target(
 		"ok": true,
 		"steer_target": planned_route[planned_route_index],
 	}
+
+
+func _plan_route_with_belt_clearance(
+	destination: Vector3,
+	route_target: Node3D,
+	hazards: Array
+) -> Dictionary:
+	var belt_planet := _find_belt_planet_crossing_route(destination, route_target)
+	if belt_planet == null:
+		return {}
+	var clearance_y := float(
+		belt_planet.get_meta("belt_clearance_y", AUTOPILOT_BELT_CLEARANCE_Y)
+	)
+	clearance_y = maxf(clearance_y, AUTOPILOT_BELT_CLEARANCE_Y)
+	for y_sign in [-1.0, 1.0]:
+		var lane_y: float = belt_planet.global_position.y + clearance_y * y_sign
+		var waypoints: Array[Vector3] = [
+			Vector3(global_position.x, lane_y, global_position.z),
+			Vector3(destination.x, lane_y, destination.z),
+			destination,
+		]
+		if NavigationRoutePlannerType.route_is_clear(
+			global_position,
+			waypoints,
+			hazards
+		):
+			return {
+				"ok": true,
+				"waypoints": waypoints,
+				"notice": (
+					"NAVIGATION: Moving clear of the asteroid field. "
+					+ "Replanning safe destination checkpoints."
+				),
+			}
+	return {}
+
+
+func _find_belt_planet_crossing_route(
+	destination: Vector3,
+	route_target: Node3D
+) -> Node3D:
+	if (
+		route_target == null
+		or not is_instance_valid(route_target)
+		or not route_target.is_in_group("station")
+	):
+		return null
+	var best_planet: Node3D = null
+	var best_distance := INF
+	for candidate in get_tree().get_nodes_in_group("celestial"):
+		if not candidate is Node3D:
+			continue
+		var planet := candidate as Node3D
+		if not planet.has_meta("belt_clearance_y") \
+				or not _planet_has_orbiting_asteroids(planet):
+			continue
+		var route_distance := _distance_point_to_segment(
+			planet.global_position,
+			global_position,
+			destination
+		)
+		var ring_clearance := float(
+			planet.get_meta("navigation_clearance_radius", 0.0)
+		)
+		if ring_clearance <= 0.0 or route_distance > ring_clearance + 120.0:
+			continue
+		if route_distance < best_distance:
+			best_distance = route_distance
+			best_planet = planet
+	return best_planet
+
+
+func _plan_route_with_vertical_clearance(
+	destination: Vector3,
+	route_target: Node3D,
+	hazards: Array
+) -> Dictionary:
+	if route_target != null \
+			and is_instance_valid(route_target) \
+			and route_target.is_in_group("asteroid"):
+		return {
+			"ok": false,
+			"error": "No safe route is available.",
+			"waypoints": [],
+		}
+	var blocker := _find_celestial_crossing_route(destination, route_target)
+	if blocker == null:
+		return {
+			"ok": false,
+			"error": "No safe route is available.",
+			"waypoints": [],
+		}
+	var clearance_y := maxf(
+		float(blocker.get_meta("belt_clearance_y", AUTOPILOT_BELT_CLEARANCE_Y)),
+		_get_obstacle_radius(blocker) + _get_obstacle_safety_margin(blocker) + 80.0
+	)
+	for y_sign in [-1.0, 1.0]:
+		var lane_y: float = blocker.global_position.y + clearance_y * y_sign
+		var waypoints: Array[Vector3] = [
+			Vector3(global_position.x, lane_y, global_position.z),
+			Vector3(destination.x, lane_y, destination.z),
+			destination,
+		]
+		if NavigationRoutePlannerType.route_is_clear(
+			global_position,
+			waypoints,
+			hazards
+		):
+			return {
+				"ok": true,
+				"waypoints": waypoints,
+				"notice": (
+					"NAVIGATION: Direct path obstructed. "
+					+ "Replanning safe destination checkpoints."
+				),
+			}
+	return {
+		"ok": false,
+		"error": "No safe route is available.",
+		"waypoints": [],
+	}
+
+
+func _find_celestial_crossing_route(
+	destination: Vector3,
+	route_target: Node3D
+) -> Node3D:
+	var best_body: Node3D = null
+	var best_distance := INF
+	for candidate in get_tree().get_nodes_in_group("celestial"):
+		if not candidate is Node3D or candidate == route_target:
+			continue
+		var body := candidate as Node3D
+		var clearance := _get_navigation_clearance_for_destination(
+			body,
+			destination,
+			route_target
+		)
+		var route_distance := _distance_point_to_segment(
+			body.global_position,
+			global_position,
+			destination
+		)
+		if route_distance > clearance:
+			continue
+		if route_distance < best_distance:
+			best_distance = route_distance
+			best_body = body
+	return best_body
+
+
+func _planet_has_orbiting_asteroids(planet: Node3D) -> bool:
+	for candidate in get_tree().get_nodes_in_group("asteroid"):
+		if candidate is Node and candidate.get("navigation_parent") == planet:
+			return true
+	return false
+
+
+func _distance_point_to_segment(
+	point: Vector3,
+	start: Vector3,
+	finish: Vector3
+) -> float:
+	var segment := finish - start
+	var length_squared := segment.length_squared()
+	if length_squared < 0.001:
+		return point.distance_to(start)
+	var along := clampf(
+		(point - start).dot(segment) / length_squared,
+		0.0,
+		1.0
+	)
+	return point.distance_to(start + segment * along)
 
 
 func _navigation_hazards(route_target: Node3D) -> Array:
@@ -1232,10 +1448,15 @@ func _update_route_progress(steer_target: Vector3, delta: float) -> bool:
 
 
 func _emit_planned_route_notice(waypoint_count: int) -> void:
-	last_navigation_status_message = (
-		"NAVIGATION: Safe route confirmed through %d waypoints."
-		% waypoint_count
-	)
+	if route_notice_sent:
+		return
+	route_notice_sent = true
+	last_navigation_status_message = route_notice_override
+	if last_navigation_status_message.is_empty():
+		last_navigation_status_message = (
+			"NAVIGATION: Safe route confirmed through %d waypoints."
+			% waypoint_count
+		)
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		last_navigation_status_message,
@@ -2215,6 +2436,8 @@ func launch_combat_drone(target_node: Node3D) -> void:
 
 func double_click_move(click_pos: Vector3):
 	cancel_autopilot()
+	route_notice_sent = false
+	route_notice_override = ""
 	target_position = click_pos
 	nav_mode = "MOVE_TO_POINT"
 	var ui = GlobalState.get_ui_manager()

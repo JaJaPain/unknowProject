@@ -6,6 +6,7 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 ## Active
 
 ### Autopilot object avoidance regressed
+**Status:** Fix attempts made 2026-06-26 and 2026-06-30. The latest pass appears to fix the main station ring click blocker and the "behind planet / asteroid belt" return-to-station route by adding a core-only station selection volume, belt clearance metadata, station-bound belt clearance routes, and quieter route-replan chatter. Keep open until a few normal play sessions confirm station targeting, mining approaches, and return-to-station autopilot all behave.
 **Spotted:** ~2026-06-21  
 **Severity:** Medium — ship flies into stations and asteroids during autopilot  
 **Root cause identified:** `_get_autopilot_avoidance()` (`PlayerShip.gd:999`) is fully implemented but is **never called** from the main autopilot movement block (`PlayerShip.gd:740–754`). The movement loop only calls `_route_steer_target()` (static A* planner). The real-time avoidance system exists but got disconnected from the autopilot loop, likely when the planner was introduced.

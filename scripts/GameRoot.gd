@@ -4499,6 +4499,7 @@ func _run_legacy_import_smoke_test() -> void:
 
 func _run_autopilot_smoke_test() -> void:
 	await get_tree().process_frame
+	GlobalState.paused = false
 	if not _verify_autopilot_control_contract():
 		return
 	var original_transform := player.global_transform

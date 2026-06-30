@@ -139,6 +139,8 @@ func _create_planet(spec: Dictionary) -> Node3D:
 		"navigation_clearance_radius",
 		maxf(physical_clearance, ring_clearance)
 	)
+	if ring_radius > 0.0:
+		planet.set_meta("belt_clearance_y", maxf(180.0, ring_width * 1.5 + 80.0))
 
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = spec["texture"] as Texture2D

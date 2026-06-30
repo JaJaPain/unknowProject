@@ -189,6 +189,8 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	var physical_clearance := radius + maxf(100.0, radius * 0.25)
 	var ring_clearance := (ring_radius + ring_width * 0.5 + 90.0) if ring_radius > 0.0 else 0.0
 	planet.set_meta("navigation_clearance_radius", maxf(physical_clearance, ring_clearance))
+	if ring_radius > 0.0:
+		planet.set_meta("belt_clearance_y", maxf(180.0, ring_width * 1.5 + 80.0))
 
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = texture
@@ -250,6 +252,7 @@ func _build_ring_spec(
 		"navigation_clearance_radius",
 		maxf(current_clearance, ring_clearance)
 	)
+	planet.set_meta("belt_clearance_y", maxf(180.0, ring_width * 1.5 + 80.0))
 	return {
 		"ring_radius": ring_radius,
 		"ring_width": ring_width,

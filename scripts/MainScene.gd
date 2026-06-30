@@ -93,6 +93,7 @@ func _spawn_asteroid_ring(
 	count: int,
 	prefix: String
 ):
+	planet.set_meta("belt_clearance_y", maxf(180.0, width * 1.5 + 80.0))
 	var center := planet.global_position
 	for i in range(count):
 		var angle = randf() * TAU
