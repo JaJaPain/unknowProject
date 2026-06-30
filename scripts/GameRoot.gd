@@ -1180,6 +1180,21 @@ func create_campaign_in_slot(
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return {"ok": false, "error": "Campaign storage is unavailable."}
+	if creating_fresh_campaign:
+		_clear_active_campaign_runtime_context()
+		var requested_slot := campaign_slot_registry.get_slot(slot_id)
+		if slot_id.is_empty() \
+				or requested_slot.is_empty() \
+				or bool(requested_slot.get("occupied", false)):
+			slot_id = campaign_slot_registry.first_empty_slot_id()
+		if slot_id.is_empty():
+			Engine.remove_meta("creating_new_campaign")
+			if Engine.has_meta("pending_opening_campaign_name"):
+				Engine.remove_meta("pending_opening_campaign_name")
+			return {
+				"ok": false,
+				"error": "All three campaigns are occupied. Delete one to start another.",
+			}
 	var created := campaign_slot_registry.create_campaign(
 		slot_id,
 		display_name,
@@ -1437,6 +1452,25 @@ func _campaign_slot_path(slot_id: String) -> String:
 	return "%s/%s" % [campaign_slot_registry.root_path, slot_id]
 
 
+func _clear_active_campaign_runtime_context() -> void:
+	active_campaign_slot_id = ""
+	campaign_checkpoint_store = null
+	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	campaign_bible_store = null
+	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	campaign_agent_memory_store = null
+	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_agent_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
+
+
 func _initialize_campaign_registry() -> void:
 	campaign_slot_registry = CampaignSlotRegistryType.open()
 	if campaign_slot_registry == null \
@@ -1478,7 +1512,9 @@ func _initialize_campaign_registry() -> void:
 func _ensure_campaign_checkpoint_store(
 	prepared_runtime_state: Dictionary
 ) -> bool:
-	if campaign_checkpoint_store != null \
+	var creating_fresh_campaign := Engine.has_meta("creating_new_campaign")
+	if not creating_fresh_campaign \
+			and campaign_checkpoint_store != null \
 			and campaign_checkpoint_store.is_valid():
 		return true
 	if campaign_slot_registry == null:
@@ -1486,11 +1522,13 @@ func _ensure_campaign_checkpoint_store(
 	if campaign_slot_registry == null:
 		return false
 	var created_new_campaign := false
-	if not campaign_slot_registry.selected_slot_id.is_empty():
-		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
-	else:
+	if creating_fresh_campaign:
+		_clear_active_campaign_runtime_context()
 		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
 		if active_campaign_slot_id.is_empty():
+			Engine.remove_meta("creating_new_campaign")
+			if Engine.has_meta("pending_opening_campaign_name"):
+				Engine.remove_meta("pending_opening_campaign_name")
 			return false
 		var automatic_name := str(
 			Engine.get_meta(
@@ -1498,9 +1536,8 @@ func _ensure_campaign_checkpoint_store(
 				"Shiny's Campaign"
 			)
 		)
-		if Engine.has_meta("creating_new_campaign"):
-			QuestManager.reset_for_restart()
-			prepared_runtime_state["quest"] = {}
+		QuestManager.reset_for_restart()
+		prepared_runtime_state["quest"] = {}
 		var created := campaign_slot_registry.create_campaign(
 			active_campaign_slot_id,
 			automatic_name,
@@ -1516,8 +1553,36 @@ func _ensure_campaign_checkpoint_store(
 			active_campaign_slot_id = ""
 			return false
 		created_new_campaign = true
-		if Engine.has_meta("creating_new_campaign"):
-			Engine.remove_meta("creating_new_campaign")
+		Engine.remove_meta("creating_new_campaign")
+		if Engine.has_meta("pending_opening_campaign_name"):
+			Engine.remove_meta("pending_opening_campaign_name")
+	elif not campaign_slot_registry.selected_slot_id.is_empty():
+		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
+	else:
+		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
+		if active_campaign_slot_id.is_empty():
+			return false
+		var automatic_name := str(
+			Engine.get_meta(
+				"pending_opening_campaign_name",
+				"Shiny's Campaign"
+			)
+		)
+		var created := campaign_slot_registry.create_campaign(
+			active_campaign_slot_id,
+			automatic_name,
+			"prototype-phase-2",
+			prepared_runtime_state,
+			system_registry
+		)
+		if not bool(created.get("ok", false)):
+			push_warning(
+				"[GameRoot] Campaign creation failed: %s" %
+				created.get("error", "unknown error")
+			)
+			active_campaign_slot_id = ""
+			return false
+		created_new_campaign = true
 		if Engine.has_meta("pending_opening_campaign_name"):
 			Engine.remove_meta("pending_opening_campaign_name")
 	var slot_path := "%s/%s" % [
@@ -2602,7 +2667,9 @@ func _load_startup_save() -> void:
 					]
 				)
 		CampaignSystemNames.reset()
-		ShipGenerator.active_campaign_path = _campaign_slot_path(target_slot_id)
+		ShipGenerator.active_campaign_path = _campaign_slot_path(
+			active_campaign_slot_id
+		)
 		startup_save_loaded = false
 		startup_load_finished = true
 		_refresh_gate_states()

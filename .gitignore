@@ -52,3 +52,16 @@ docs/bug_screenshots/
 
 # Kitbash ship part library — committed as runtime source of truth for ShipAssembler
 !assets/ship_parts/**/*.glb
+
+# Local Antigravity ship-part experiments
+assets/TestShips/
+assets/ship_parts/**/*AMT.glb
+assets/ship_parts/**/*_variant.blend
+assets/ship_parts/**/*_variant.blend.import
+assets/ship_parts/**/*_variant.blend1
+docs/ship_previews/thrusters/
+docs/ship_previews/*.png.import
+tools/assembler_preview/*.gd.uid
+tools/assembler_preview/inspect_engine_part.gd
+tools/assembler_preview/thruster_preview.gd
+tools/assembler_preview/thruster_preview.tscn

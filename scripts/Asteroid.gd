@@ -7,6 +7,11 @@ var resources: float = 300.0
 var destroyed: bool = false
 const FIRE_NOISE_PATH := "res://assets/T_Noise56ko.png"
 const USE_MINING_HEAT_DECAL := false
+const LOD_NEAR_DISTANCE := 900.0
+const LOD_MID_DISTANCE := 1800.0
+const LOD_MID_UPDATE_SECONDS := 0.20
+const LOD_FAR_UPDATE_SECONDS := 0.75
+const LOD_POLL_SECONDS := 0.45
 
 # Orbiting variables
 var orbit_center: Vector3 = Vector3.ZERO
@@ -33,6 +38,10 @@ var _orbit_has_hold_position: bool = false
 var _tractor_stable_until: float = 0.0
 var _base_scale: Vector3 = Vector3.ONE
 var _model_index: int = -1
+var _collision_shape: CollisionShape3D = null
+var _lod_level: int = 0
+var _lod_poll_timer: float = 0.0
+var _lod_update_accum: float = 0.0
 var _mining_heat_decal: Decal = null
 var _mining_heat_spot: MeshInstance3D = null
 var _mining_heat_overlay: MeshInstance3D = null
@@ -54,6 +63,7 @@ func _ready():
 	scale = Vector3(r_scale, r_scale, r_scale)
 	_base_scale = scale
 	_mesh = get_node_or_null("MeshInstance3D") as MeshInstance3D
+	_collision_shape = get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if _mesh:
 		_model_index = AsteroidModels.model_index_for_seed(persistent_id.hash())
 		AsteroidModels.apply_model_index(_mesh, _model_index)
@@ -74,13 +84,18 @@ func _ready():
 func _physics_process(delta: float):
 	if destroyed or GlobalState.paused:
 		return
-	_bob_time += delta
 	var now := Time.get_ticks_msec() / 1000.0
 	var mining_held := now <= _mining_heat_visible_until
+	var force_full_detail := mining_held or _is_mining_heat_visible()
+	_update_lod(delta, force_full_detail)
+	var update_delta := _consume_lod_update_delta(delta, force_full_detail)
+	if update_delta <= 0.0:
+		return
+	_bob_time += update_delta
 	_orbit_motion_factor = 0.0 if mining_held else lerpf(
 		_orbit_motion_factor,
 		1.0,
-		min(1.0, delta * 2.0)
+		min(1.0, update_delta * 2.0)
 	)
 	if is_orbiting:
 		if mining_held and not _orbit_has_hold_position:
@@ -90,7 +105,7 @@ func _physics_process(delta: float):
 			global_position = _orbit_hold_position
 		else:
 			_orbit_has_hold_position = false
-		current_angle += orbit_speed * delta * _orbit_motion_factor
+		current_angle += orbit_speed * update_delta * _orbit_motion_factor
 		var x = orbit_center.x + cos(current_angle) * orbit_radius
 		var z = orbit_center.z + sin(current_angle) * orbit_radius
 		var y_offset = sin(_bob_time * _bob_freq1 + _bob_phase1) * _bob_amp1 \
@@ -106,9 +121,64 @@ func _physics_process(delta: float):
 		if mining_held:
 			_tumble_speed = 0.0
 		else:
-			_tumble_speed = lerpf(_tumble_speed, _tumble_base_speed, min(1.0, delta * 4.5))
-		_mesh.rotate(_tumble_axis, _tumble_speed * delta)
-	_update_mining_heat_spot(delta)
+			_tumble_speed = lerpf(_tumble_speed, _tumble_base_speed, min(1.0, update_delta * 4.5))
+		_mesh.rotate(_tumble_axis, _tumble_speed * update_delta)
+	_update_mining_heat_spot(update_delta)
+
+
+func _update_lod(delta: float, force_full_detail: bool) -> void:
+	if force_full_detail:
+		_set_lod_level(0)
+		return
+	_lod_poll_timer -= delta
+	if _lod_poll_timer > 0.0:
+		return
+	var stagger := float(abs(persistent_id.hash()) % 100) * 0.001
+	_lod_poll_timer = LOD_POLL_SECONDS + stagger
+	var player_ref: Variant = GlobalState.player
+	if player_ref == null or not is_instance_valid(player_ref) or not (player_ref is Node3D):
+		_set_lod_level(0)
+		return
+	var player := player_ref as Node3D
+	var dist_sq := global_position.distance_squared_to(player.global_position)
+	var near_sq := LOD_NEAR_DISTANCE * LOD_NEAR_DISTANCE
+	var mid_sq := LOD_MID_DISTANCE * LOD_MID_DISTANCE
+	if dist_sq <= near_sq:
+		_set_lod_level(0)
+	elif dist_sq <= mid_sq:
+		_set_lod_level(1)
+	else:
+		_set_lod_level(2)
+
+
+func _set_lod_level(level: int) -> void:
+	if _lod_level == level:
+		return
+	_lod_level = level
+	_lod_update_accum = 0.0
+	if _collision_shape:
+		_collision_shape.disabled = _lod_level >= 2
+
+
+func _consume_lod_update_delta(delta: float, force_full_detail: bool) -> float:
+	if force_full_detail or _lod_level == 0:
+		_lod_update_accum = 0.0
+		return delta
+	var interval := LOD_MID_UPDATE_SECONDS if _lod_level == 1 else LOD_FAR_UPDATE_SECONDS
+	_lod_update_accum += delta
+	if _lod_update_accum < interval:
+		return 0.0
+	var update_delta := _lod_update_accum
+	_lod_update_accum = 0.0
+	return update_delta
+
+
+func _is_mining_heat_visible() -> bool:
+	if _mining_heat_decal and is_instance_valid(_mining_heat_decal) and _mining_heat_decal.visible:
+		return true
+	if _mining_heat_spot and is_instance_valid(_mining_heat_spot) and _mining_heat_spot.visible:
+		return true
+	return false
 
 
 func show_mining_heat_spot(laser_origin: Vector3) -> void:
