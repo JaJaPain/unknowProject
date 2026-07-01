@@ -71,13 +71,14 @@ Both were run headless with unique log files. Headless still prints the known sh
   - Added the runtime LLM/taunt HTTP fallback warning and the
     `High fallback source rate` developer-warning to `docs/known_harmless_warnings.md`.
 
-- [ ] **Manual QA: low-health enemy flee** — CODE VERIFIED, needs Abe's feel check
-  - Logic is sound: enemy only considers fleeing below 30% hull with AP >= 3
-    (`NPCShip.gd:1156`), chance is capped/scaled, mission targets get a reduced chance
-    (`:1183`), and a successful flee ends the fight cleanly via `end_combat(false)` and
-    boosts the enemy away (`CombatManager.gd:_exec_enemy_flee`), not counted as a kill.
-  - Still needs Abe to play several fights and judge whether the frequency *feels*
-    right and mission-target fleeing isn't annoying — that's a subjective call.
+- [x] **Manual QA: low-health enemy flee** (Abe + Claude playtest, 2026-06-30)
+  - Live-confirmed: an Interceptor at 20% hull fled organically (genuine chance roll —
+    HP was only lowered to make it eligible, the flee was never forced), ran away, and
+    mouthed off with the `npc_enemy_fled` taunt. Fight ended cleanly, not a kill.
+  - Frequency measured with 400 live rolls on the same enemy: 32.8%/turn at 20% hull
+    (AP gate 5 >= 3 fine) — matches the intended ~1-in-3. Occasional, not constant;
+    streaks of 3-5 attacks are normal variance. Abe is happy with the current rate.
+  - Rate knob if ever wanted: per-role base chance in `NPCShip.gd:1158-1167`.
 
 ## Useful Commands
 
