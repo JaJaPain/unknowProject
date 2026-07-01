@@ -161,3 +161,16 @@ Deployment checklist for a shipped build:
 - [ ] **Multi-boss / 3-on-1** -- true squad fights beyond 2 enemies; needs a target picker on the wheel
 
 - [ ] **Player thrusters: tune yellow flame output** - current plume raggedness/motion is acceptable, but the warm/yellow fire replacement is still not visually readable. Revisit later: make warm output appear as sparse white-yellow flame flickers inside the blue exhaust, not solid rods or invisible shader noise. Current best thruster settings are backed up as `scripts/visuals/ThrusterBank.gd.current_best_backup` and `assets/shaders/thruster_plume.gdshader.current_best_backup`.
+
+---
+
+## Localization / i18n groundwork
+_Lay the foundations NOW so we don't retrofit at the very end and hate ourselves. This is not "translate the game" — it's "make the game translatable" so adding a language later is content work, not a rewrite. Do the cheap structural stuff early._
+
+- [ ] **Decide the strategy + write it down** -- one short design doc: which layers are static (UI, menus, tooltips, item names, fixed system/quest-template text) vs dynamic (LLM-generated NPC dialogue). They need different solutions; deciding now prevents a mixed mess later.
+- [ ] **Static strings: adopt `tr()` + translation keys from here on** -- stop hardcoding user-facing literals in code/scenes. Route them through Godot's translation system (CSV or PO + `TranslationServer`). Even shipping English-only, wiring `tr("KEY")` now means the day-1 cost of a second language is a spreadsheet, not a code sweep. Add a lint/grep habit: no bare user-facing string literals in UI code.
+- [ ] **Externalize the strings we already have** -- audit UIManager / menus / DevPanel-facing player text and pull them into a translation table. Big-bang later = painful; incremental now = trivial.
+- [ ] **LLM dialogue is the hard case — design it, don't solve it yet** -- most NPC lines are generated in English at runtime, so they can't be pre-translated. Options to weigh: (a) prompt the model in the target language using per-locale content files (the new `data/content/llm_dialogue_content.json` registry is the right seam for this — examples/tone per locale), (b) post-generation translation pass, (c) locale-gated static fallback lines for unsupported languages. Note tradeoffs; don't build yet. Ties to `project_fallbacks_are_failures` (a translation miss must log, not silently ship English).
+- [ ] **Fonts / glyph coverage** -- pick UI fonts that cover intended target scripts (accented Latin at minimum; CJK/Cyrillic if in scope) BEFORE deep UI polish, so layouts are tested against wider/taller glyphs. Reserve layout slack for text expansion (German/Russian run long).
+- [ ] **No text baked into textures/images** -- keep rendered text out of art assets (badges, HUD sprites, store signage) so it doesn't need re-arting per language. Flag any existing offenders.
+- [ ] **Formatting: numbers / units / dates** -- centralize credit/ore/quantity formatting through a helper now so locale-specific separators and unit strings ("m³", "SC") have one place to change.
