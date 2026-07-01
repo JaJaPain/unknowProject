@@ -170,6 +170,14 @@ _Standing goal (ties to `project_fallbacks_are_failures`): incidental Kaelen/NPC
 - [ ] **Kaelen "no work available" cooldown lines** -- `StoryManager.get_agent_contract_availability()` (`scripts/story/StoryManager.gd` ~line 378) returns one of 3 hardcoded strings by `agent_cooldown_message_index` (e.g. "Nothing worth your fuel on my desk right now. Give it a little time."). Convert to an LLM call (Kaelen voice, "Shiny" allowed, first-person, mentions no contracts + to wait) so it's new each dock. Feed current story/faction context. Keep the 3 existing lines as the fallback bucket in `llm_dialogue_content.json` and log via `record_fallback("kaelen_no_work", reason, ...)` if the model is unavailable.
 - [ ] **Audit for sibling static-line arrays** -- grep StoryManager / UIManager / QuestManager for other fixed `messages := [...]` / rotating-index NPC lines (abandon, greeting filler, etc.) and queue each for the same LLM-with-logged-fallback treatment.
 
+- [ ] **Station-aware line precaching (BIG — story-coupled, design first)** -- Concept: when the small model finishes loading (or on dock), look at where the player is docked and pre-generate the FIRST line for each NPC at that station so the first interaction is never a fallback. NOT just chatter — these lines are StoryManager-driven, which is the real lift:
+  - **What to precache per station:** mechanic intro (already has `UIManager._cache_mechanic_intro()` + `_cached_mechanic_line_is_fallback` — the one clean seam today); lounge bartender/local/agent/Kaelen cards; the agent quest-availability line; optionally the first quest candidate (the 45s cold path).
+  - **StoryManager dependencies (why it's not "random talk"):** agent availability = `get_agent_contract_availability()` (cooldown/no-work state); quest gen pulls `story_state_context` + `campaign_bible` + agent memory + system story pack; Kaelen lines are chapter/angle-aware; lounge lines should reflect faction tension/rep. Precache must snapshot this story state, not fire generic prompts.
+  - **Cache key + invalidation:** key by `station_id` + a story-state fingerprint; invalidate when quest accepted, rep shifts, or chapter advances so a stale line is never served. Reuse the existing chatter_cache pop/refill pattern where it fits.
+  - **Trigger:** on model-ready, refresh any station line currently cached as a FALLBACK (leverage `_cached_mechanic_line_is_fallback`-style flags) so the cold-start fallback gets swapped out before the player clicks in. Every precache miss still logs `record_fallback`.
+  - **Phase it:** (1) mechanic intro refresh-on-model-ready (smallest, seam exists), (2) lounge cards, (3) agent quest availability line, (4) full quest candidate precache. Write a short design doc before phase 2+.
+  - _Do the cold-start warm-up playtest FIRST and in isolation — don't stack this on top or we can't tell which change moved the fallback rate._
+
 ---
 
 ## Localization / i18n groundwork
