@@ -2360,6 +2360,11 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 		obj["target_npc"] = real_npc
 		obj["part_name"] = real_item
 
+	# Title gets the same dummy-name substitution as the dialogue — otherwise the
+	# LLM's "Slithern"/"George" leak straight into the mission card title (the
+	# slither* regex in _apply_replacements also catches inflected leftovers).
+	quest_data["title"] = _apply_replacements(str(quest_data.get("title", "")), replacements)
+
 	quest_data["dialogue"] = _thin_pilot_name(
 		_apply_replacements(str(quest_data.get("dialogue", "")), replacements), nickname)
 

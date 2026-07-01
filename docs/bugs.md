@@ -6,7 +6,7 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 ## Active
 
 ### Autopilot object avoidance regressed
-**Status:** Fix attempts made 2026-06-26 and 2026-06-30. The latest pass appears to fix the main station ring click blocker and the "behind planet / asteroid belt" return-to-station route by adding a core-only station selection volume, belt clearance metadata, station-bound belt clearance routes, and quieter route-replan chatter. Keep open until a few normal play sessions confirm station targeting, mining approaches, and return-to-station autopilot all behave.
+**Status:** STILL BROKEN — confirmed 2026-07-01 playtest. Prior fix attempts (2026-06-26, 2026-06-30) did NOT hold. New symptom: trying to "Fly to" a hostile target on the far side of a planet, the ship flew the OPPOSITE direction, then got stuck/stalled and never reached the target — playtest was unplayable because of it. So the failure is not just grazing hazards; the route/steer target itself is inverting or dead-ending when a large body (planet/gas giant) sits between ship and target. Re-investigate `_route_steer_target` planner output + `_get_autopilot_avoidance` wiring; check for a heading sign-flip and a stall with no replan. Previous notes below still apply.
 **Spotted:** ~2026-06-21  
 **Severity:** Medium — ship flies into stations and asteroids during autopilot  
 **Root cause identified:** `_get_autopilot_avoidance()` (`PlayerShip.gd:999`) is fully implemented but is **never called** from the main autopilot movement block (`PlayerShip.gd:740–754`). The movement loop only calls `_route_steer_target()` (static A* planner). The real-time avoidance system exists but got disconnected from the autopilot loop, likely when the planner was introduced.
@@ -81,10 +81,35 @@ Two complementary layers need to work together:
 
 ---
 
+### NPC kills count toward player's KILL_SHIPS mission
+**Spotted:** 2026-07-01
+**Severity:** High — lets missions "complete" without the player doing anything; combined with the autopilot bug the player literally couldn't reach the target, yet the kill counter climbed to 2/3 from NPC-vs-NPC kills.
+**Description:** A KILL_SHIPS objective (target faction Dustborn) incremented "Kills: 2/3" from ships destroyed by OTHER NPCs (Aurelia combat vessels killing Dustborn), not by the player. Kill credit must require the player (or the player's drones) as the killer.
+**Where to look:** `scripts/QuestManager.gd` kill-tracking / the combat death signal handler that increments KILL_SHIPS progress. Check the killer attribution — it likely counts any death of a matching-faction ship rather than deaths where `killer == GlobalState.player` (or a player-owned drone/projectile). Gate the increment on player attribution.
+
+---
+
+### "Trade Ore for <part>" errand button broken
+**Spotted:** 2026-07-01
+**Severity:** High — blocks completing PICKUP/errand quests that require clearing cargo for the part
+**Description:** At Iron Reach Outpost lounge, the "Trade Ore for Quantum Drive Bypass Coil (15 m³ → 45 SC)" action (and its "Sell Ore, Take the Part" confirm) did nothing / did not complete the trade. The errand pickup (Parts Run: Quantum Drive Bypass Coil from Oleg Stroud) could not be fulfilled.
+**Where to look:** `scripts/UIManager.gd` — the outpost lounge "trade ore for part" button handler and its confirm buttons; verify the pressed signal is wired, the ore-sell + item-grant transaction fires, and quest state advances. Cross-check with `QuestManager` pickup/errand completion.
+
+---
+
+### Campaign bible (gemma4:12b) JSON parse fails + starves small-model dialogue at session start
+**Spotted:** 2026-07-01 (from logs/fallback_summary.txt)
+**Severity:** Medium — causes session-start fallbacks
+**Description:** Two issues, both at session start. (1) `campaign_bible` generation on `gemma4:12b` fails with `response_json_parse_failed` (quality — model returns unparseable JSON). (2) While the 12B runs the bible, three `mechanic_intro` requests time out (`http_failed_result_13`, 8s) even though the small model was warmed — GPU/VRAM contention from the large model starves the small dialogue model. NOTE: the cold-start warm-up fix DID work for quest generation (candidates now return in 3–6s vs prior 15s timeouts; quest came from `llm`, not fallback).
+**Where to look:** (1) `NarrativeDirector`/`CampaignBibleStore` prompt + JSON-mode/schema for gemma4; (2) sequence campaign_bible generation so it doesn't run concurrently with the first dock's small-model calls, or raise `mechanic_line` timeout, or don't block dialogue behind the large model.
+
+---
+
 ## Fixed
 
 | Date | Bug | Fix |
 |---|---|---|
-| 2026-06-26 | Autopilot object avoidance regressed | Re-wired `_get_autopilot_avoidance()` into autopilot loop; added `RayCast3D` nose whisker; added mid-route validity re-check — `PlayerShip.gd` |
+| 2026-07-01 | Dummy word "Slithern" leaked into quest TITLE (e.g. "Slithern Scourper") | `_substitute_dialogue_placeholders` now applies replacements to `quest_data["title"]`, not just dialogue/choices — `LLMInterface.gd` |
+| 2026-06-26 | Autopilot object avoidance regressed | Re-wired `_get_autopilot_avoidance()` into autopilot loop; added `RayCast3D` nose whisker; added mid-route validity re-check — `PlayerShip.gd` (NOTE: regressed again, see Active) |
 | 2026-06-25 | Combat flee taunt used Kaelen voice | Added `_play_npc_flee_taunt()` in `CombatManager._exec_flee()` |
 
