@@ -8221,7 +8221,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 			quest_data.get("agent_voice_profile_id", "")
 		)
 		if agent_voice_profile_id.is_empty():
-			agent_voice_profile_id = str(quest_data.get("agent_name", "neutral"))
+			agent_voice_profile_id = _quest_giver_voice_ref(quest_data)
 		# Pre-cache main briefing TTS
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":
@@ -8398,6 +8398,16 @@ func _record_static_text_fallback(
 	)
 
 
+func _quest_giver_voice_ref(quest_data: Dictionary) -> String:
+	var voice_ref := str(quest_data.get("agent_voice_profile_id", "")).strip_edges()
+	if not voice_ref.is_empty():
+		return voice_ref
+	voice_ref = str(quest_data.get("agent_name", "")).strip_edges()
+	if not voice_ref.is_empty():
+		return voice_ref
+	return str(quest_data.get("faction", "neutral")).strip_edges()
+
+
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 	var result := GateDiscovery.kaelen_reveal(gate_id, cost)
 	if result.get("ok", false):
@@ -8435,7 +8445,7 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		quest_data.get("agent_voice_profile_id", "")
 	).strip_edges()
 	if agent_voice_profile_id.is_empty():
-		agent_voice_profile_id = agent_name
+		agent_voice_profile_id = _quest_giver_voice_ref(quest_data)
 	_update_agent_portrait(
 		quest_data.get("faction", "neutral"),
 		agent_name,
@@ -8541,13 +8551,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	
 	var consequence = choice.get("consequence", {})
 	var raw_response = consequence.get("dialogue_response", "")
-	var response_voice_ref = quest_data.get(
-		"agent_voice_profile_id",
-		quest_data.get(
-		"agent_name",
-		quest_data.get("faction", "neutral")
-		)
-	)
+	var response_voice_ref = _quest_giver_voice_ref(quest_data)
 	var response_profile := SpeechService.resolve_voice_profile(response_voice_ref)
 	var clean_response = SpeechService.prepare_followup_text(
 		raw_response,

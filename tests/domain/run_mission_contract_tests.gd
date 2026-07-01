@@ -19,6 +19,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
+	_test_agent_voice_profile_survives_acceptance()
 	_test_pickup_offer()
 	_test_delivery_courier_offer()
 	_test_purchase_delivery_offer()
@@ -103,6 +104,35 @@ func _test_kill_offer() -> void:
 			and int(state.get("count_required")) == 4
 			and int(state.get("current_count")) == 0,
 		"Kill offer did not apply its combat multiplier correctly."
+	)
+
+
+func _test_agent_voice_profile_survives_acceptance() -> void:
+	var offer := _offer(
+		"Agent Voice Contract",
+		"aurelia",
+		"Liaison Ryn",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 18.0,
+			"reward_credits": 140,
+		}
+	)
+	offer["agent_voice_profile_id"] = "voice.agent.liaison_ryn.v1"
+	var adapted := AdapterType.build_active_state(
+		offer,
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.voice_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Voice-profile offer failed validation."
+	)
+	_expect(
+		adapted["state"].get("agent_voice_profile_id", "")
+			== "voice.agent.liaison_ryn.v1",
+		"Agent voice profile was not preserved on accepted mission state."
 	)
 
 

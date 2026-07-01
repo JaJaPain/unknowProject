@@ -47,6 +47,9 @@ static func build_active_state(
 		"faction_id": str(definition.faction_id),
 		"agent_name": str(quest_data.get("agent_name", "Broker Kaelen")),
 		"agent_memory_id": str(quest_data.get("agent_memory_id", "")),
+		"agent_voice_profile_id": str(
+			quest_data.get("agent_voice_profile_id", "")
+		),
 		"giver_npc_id": str(definition.giver_npc_id),
 		"dialogue": definition.dialogue,
 		"objective_type": definition.objective.type,
@@ -347,6 +350,9 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 		normalized["urgent_reward_multiplier"] = 1.0
 	normalized["choice_text_selected"] = str(
 		normalized.get("choice_text_selected", "")
+	)
+	normalized["agent_voice_profile_id"] = str(
+		normalized.get("agent_voice_profile_id", "")
 	)
 	normalized["system_id"] = str(
 		normalized.get("system_id", "start_system")

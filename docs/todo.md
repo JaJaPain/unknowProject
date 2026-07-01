@@ -129,6 +129,7 @@ Deployment checklist for a shipped build:
 - [ ] **Installer script** -- write a setup script (NSIS / Inno Setup) that: copies `ollama.exe`, sets `OLLAMA_MODELS` to a bundled path, and optionally pre-warms the model on install so first launch is instant.
 - [ ] **macOS / Linux path** -- watchdog already checks `/usr/local/bin/ollama` and `ollama` on PATH. Test on those platforms. Mac may need a signed/notarized ollama binary.
 - [ ] **Offline mode** -- if Ollama never comes up (no internet, corporate firewall, etc.), the game should surface a clear one-time message: "AI features unavailable -- game will use built-in dialogue." Currently just logs to console.
+- [ ] **Maybe: optional cloud AI provider settings** -- long-term possibility: let the player choose to use cloud APIs instead of bundled/local Ollama and local TTS. This should be opt-in, clearly labeled, and never required for offline play. Needs a provider abstraction for LLM + TTS, secure API key storage, cost/privacy warnings, rate-limit handling, fallback to built-in/local dialogue, and separate settings for text generation vs voice generation. Good fit after `llm_model_profiles.json` / provider adapters exist.
 
 ---
 
