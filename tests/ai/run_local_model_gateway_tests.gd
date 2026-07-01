@@ -70,6 +70,10 @@ func _test_builds_generation_body_from_capability() -> void:
 		int((body.get("options", {}) as Dictionary).get("num_predict", 0)) == 220,
 		"Generation body did not preserve options."
 	)
+	_expect(
+		str(body.get("keep_alive", "")) == GatewayType.MODEL_KEEP_ALIVE,
+		"Generation body did not set keep_alive to keep the model resident."
+	)
 
 
 func _test_unknown_capability_uses_small_profile() -> void:

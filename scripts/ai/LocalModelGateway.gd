@@ -7,6 +7,12 @@ const OLLAMA_TAGS_URL := "http://127.0.0.1:11434/api/tags"
 const DEFAULT_SMALL_MODEL := "qwen2.5:3b-instruct-q4_K_M"
 const DEFAULT_LARGE_MODEL := "gemma4:12b"
 
+# How long Ollama keeps a model resident in VRAM after a request. Ollama's default
+# is "5m", so a quiet stretch mid-session unloads the model and the next line eats
+# a cold reload (a top fallback cause — see logs/fallback_summary.txt). A game
+# session wants the model to stay hot; "30m" covers normal play gaps.
+const MODEL_KEEP_ALIVE := "30m"
+
 const SMALL_DIALOGUE_MODELS: Array[String] = [
 	"qwen2.5:3b-instruct-q4_K_M",
 	"qwen2.5:3b-instruct",
@@ -123,6 +129,7 @@ static func generation_body(
 		"model": model_for_capability(capability, active_small_model, active_large_model),
 		"prompt": prompt,
 		"stream": false,
+		"keep_alive": MODEL_KEEP_ALIVE,
 		"options": options.duplicate(true),
 	}
 	if not response_format.strip_edges().is_empty():

@@ -1316,3 +1316,24 @@ validation, speech_service, game_content_registry, local_model_gateway.
   (parse/validation/shape) — that split is the fix roadmap. by_reason counts tell
   us what to attack first.
 - diagnostics + parse tests green. Log getter is path-agnostic so tests unaffected.
+
+### Ollama cold-start fix (morning follow-up to fallback log)
+- Root-caused the first playtest's fallbacks from logs/fallback_events.jsonl: 3 of 4
+  hit in the first ~51s, all the SMALL dialogue model (qwen2.5:3b) timing out at
+  cold-load (Godot result 13 = TIMEOUT). Campaign_bible's 2 fails were gemma4:12b
+  JSON parse (quality, separate).
+- Fix 1 — keep_alive: LocalModelGateway.generation_body now sets keep_alive="30m"
+  (const MODEL_KEEP_ALIVE) on every request, so models stay resident instead of
+  unloading after Ollama's 5min default (also helps the mid-session
+  reaction_line_not_ready case).
+- Fix 2 — proactive preload: after model discovery, LLMInterface._ollama_warm_models
+  fires an empty-prompt /api/generate (done_reason=load) to pull the small model into
+  VRAM BEFORE the first dock, then sequences chatter pre-warm behind it. Guarded
+  against re-warm. Logs a model_warmup diagnostics event.
+- Large model intentionally NOT pre-warmed (its fail was quality not timeout; long
+  60s callers absorb a cold load; avoids evicting the small model from VRAM).
+- Verified live against running Ollama: warm call returns done_reason=load in 0.2s,
+  /api/ps shows the model resident with a ~30min expires_at.
+- Tests green: gateway (now asserts keep_alive), parse, mission_contract, diagnostics.
+- WATCH next playtest: confirm the first-50s timeouts are gone; the lone
+  reaction_line_not_ready at ~11min and gemma4:12b JSON parse are separate follow-ups.

@@ -22,6 +22,7 @@ const _OLLAMA_MAX_POLLS    := 15      # 15 × 2s = 30s before giving up
 var _ollama_ready:        bool = false
 var _ollama_poll_count:   int  = 0
 var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
+var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
@@ -830,11 +831,12 @@ func _discover_ollama_model():
 			llm_connected = true
 			llm_connection_established.emit(active_model_name)
 			model_discovered.emit(active_model_name)
-			# Pre-warm ALL chatter caches immediately so static fallback lines
-			# are never used during the first combat encounter
-			GlobalState.trace("[TRACE] [LLMInterface] Pre-warming chatter caches...")
-			for chatter_type in chatter_cache.keys():
-				fetch_chatter_background(chatter_type)
+			# Force-load the models into VRAM now, before the first dock asks for a
+			# line. Cold weight-loading was the dominant session-start fallback cause
+			# (timeouts clustered in the first ~50s). Chatter pre-warm is sequenced
+			# to run once the small model is actually resident.
+			GlobalState.trace("[TRACE] [LLMInterface] Warming models + chatter caches...")
+			_ollama_warm_models()
 		else:
 			print("[LLMInterface] Connection to Ollama failed (attempt %d). Retrying in 1.5s..." % connection_attempts)
 			get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
@@ -845,6 +847,67 @@ func _discover_ollama_model():
 		tags_http.queue_free()
 		print("[LLMInterface] Failed to initiate tags check. Retrying in 1.5s...")
 		get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
+
+
+## Force-load the SMALL dialogue model into memory right after discovery, before
+## the first dock asks for a line. Cold weight-loading is the dominant session-start
+## fallback cause (see logs/fallback_summary.txt: every startup timeout was the small
+## model, clustered in the first ~50s). Once it is resident we kick off chatter
+## pre-warm. Guarded so a reconnect does not warm twice.
+##
+## The large story model is intentionally NOT pre-warmed: its only logged failure
+## was a JSON parse (a quality issue, not a cold-load timeout), its callers use long
+## 60s timeouts that absorb a cold load, and pinning a 12B in VRAM at startup could
+## evict the small model that gameplay needs constantly. keep_alive still keeps it
+## resident once it loads on first use.
+func _ollama_warm_models() -> void:
+	if _models_warm_started:
+		return
+	_models_warm_started = true
+	_warm_single_model(active_model_name, "small", func() -> void:
+		for chatter_type in chatter_cache.keys():
+			fetch_chatter_background(chatter_type)
+	)
+
+
+## Ask Ollama to load one model into VRAM without generating (empty prompt) and
+## keep it resident (keep_alive). Fire-and-forget: on completion it logs a
+## model_warmup diagnostics event and calls on_done. A cold 12B load can be slow,
+## so the timeout is generous.
+func _warm_single_model(model_name: String, label: String, on_done: Callable) -> void:
+	if model_name.strip_edges().is_empty():
+		on_done.call()
+		return
+	var started := Time.get_ticks_msec()
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 90.0
+	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, _body: PackedByteArray) -> void:
+		h.queue_free()
+		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			print("[LLMInterface] Warmed %s model '%s' in %.1fs." % [label, model_name, elapsed])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "loaded", "LLMInterface",
+				{"model": model_name, "profile": label, "elapsed_seconds": elapsed}
+			)
+		else:
+			push_warning("[LLMInterface] Warm-up of %s model '%s' failed (result=%d code=%d, %.1fs)." % [label, model_name, result, code, elapsed])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "failed_result_%d_code_%d" % [result, code], "LLMInterface",
+				{"model": model_name, "profile": label, "elapsed_seconds": elapsed}
+			)
+		on_done.call()
+	)
+	var payload := JSON.stringify({
+		"model": model_name,
+		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
+	})
+	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not start warm-up for %s model '%s'." % [label, model_name])
+		on_done.call()
 
 
 func model_for_capability(capability: String) -> String:
