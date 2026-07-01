@@ -164,6 +164,14 @@ Deployment checklist for a shipped build:
 
 ---
 
+## LLM Dialogue -- kill static/canned lines
+_Standing goal (ties to `project_fallbacks_are_failures`): incidental Kaelen/NPC lines that currently cycle a fixed string array should be generated fresh each time so they never repeat and never read as canned. Convert as spotted. Each conversion keeps the existing static lines as the LOGGED fallback bucket (LLM offline/slow), not the default._
+
+- [ ] **Kaelen "no work available" cooldown lines** -- `StoryManager.get_agent_contract_availability()` (`scripts/story/StoryManager.gd` ~line 378) returns one of 3 hardcoded strings by `agent_cooldown_message_index` (e.g. "Nothing worth your fuel on my desk right now. Give it a little time."). Convert to an LLM call (Kaelen voice, "Shiny" allowed, first-person, mentions no contracts + to wait) so it's new each dock. Feed current story/faction context. Keep the 3 existing lines as the fallback bucket in `llm_dialogue_content.json` and log via `record_fallback("kaelen_no_work", reason, ...)` if the model is unavailable.
+- [ ] **Audit for sibling static-line arrays** -- grep StoryManager / UIManager / QuestManager for other fixed `messages := [...]` / rotating-index NPC lines (abandon, greeting filler, etc.) and queue each for the same LLM-with-logged-fallback treatment.
+
+---
+
 ## Localization / i18n groundwork
 _Lay the foundations NOW so we don't retrofit at the very end and hate ourselves. This is not "translate the game" — it's "make the game translatable" so adding a language later is content work, not a rewrite. Do the cheap structural stuff early._
 
