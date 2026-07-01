@@ -61,14 +61,6 @@ Two complementary layers need to work together:
 
 ---
 
-### Mechanic pickup prompt persists after quest delivery
-**Spotted:** 2026-06-25  
-**Severity:** Low  
-**Description:** After the player delivers a special cargo item to the mechanic NPC and receives credits, the "I'll Grab It / Not Now" buttons still show on subsequent visits. They should disappear permanently once the pickup quest is complete.  
-**Where to look:** `scripts/UIManager.gd` — wherever the mechanic dock panel is built/refreshed. The prompt visibility is likely gated on a quest state flag that isn't being cleared after completion. Check `QuestManager` or `GlobalState` for the relevant completion flag.
-
----
-
 ### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
 **Spotted:** 2026-06-26
 **Severity:** Low — immersion break
@@ -119,6 +111,7 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-07-01 | Mechanic pickup offer buttons appeared during turn-in | Completing the pickup freed the STATION lane, unmasking the next dock's already-rolled offer mid-turn-in. `_on_deliver_part_pressed` now clears `_mechanic_pickup_offer`, hides the buttons, and sets the cached greeting to the thanks line — `UIManager.gd` |
 | 2026-07-01 | NPC kills counted toward player's KILL_SHIPS mission | Split attribution via existing signals: `player_kill` (player-only) counts progress; `ship_destroyed` now fires ONLY for non-player kills (`NPCShip.gd`) and schedules a replacement target instead of counting. KILL_SHIPS capability refuses credit when `by_player=false`; respawn now 20s + ≥800u from the player (`QuestManager.gd`, `KillShipsCapability.gd`, `GlobalState.spawn_mission_targets`). Design per Abe: NPC-killed targets replaced far away so the contract stays player-completable. |
 | 2026-07-01 | Dummy word "Slithern" leaked into quest TITLE (e.g. "Slithern Scourper") | `_substitute_dialogue_placeholders` now applies replacements to `quest_data["title"]`, not just dialogue/choices — `LLMInterface.gd` |
 | 2026-06-26 | Autopilot object avoidance regressed | Re-wired `_get_autopilot_avoidance()` into autopilot loop; added `RayCast3D` nose whisker; added mid-route validity re-check — `PlayerShip.gd` (NOTE: regressed again, see Active) |

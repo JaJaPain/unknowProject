@@ -6481,6 +6481,21 @@ func _on_deliver_part_pressed() -> void:
 	SpeechService.play(line, "voice.jenna_kross.v1")
 	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
 	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
+
+	# Completing the pickup frees the STATION lane, which would otherwise unmask the
+	# next dock's already-rolled pickup offer (accept/decline buttons + its stale
+	# "grab it" greeting) right in the middle of this turn-in. Clear it and replace
+	# the cached greeting with the thanks line so the panel reads as a clean
+	# completion; the next dock re-rolls a fresh offer.
+	_mechanic_pickup_offer = {}
+	_mechanic_pickup_declined = false
+	_cached_mechanic_line = line
+	_cached_mechanic_line_is_fallback = true
+	_last_played_mechanic_line = line
+	if mechanic_pickup_accept_btn and is_instance_valid(mechanic_pickup_accept_btn):
+		mechanic_pickup_accept_btn.visible = false
+	if mechanic_pickup_decline_btn and is_instance_valid(mechanic_pickup_decline_btn):
+		mechanic_pickup_decline_btn.visible = false
 	_render_dock_submenu()
 
 

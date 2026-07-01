@@ -740,6 +740,7 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	route_notice_override = ""
 	route_stall_replans = 0
 	_clear_avoidance_state()
+	_steer_smooth_active = false
 	if _nose_ray:
 		_nose_ray.enabled = false
 	_hide_mining_beams()
@@ -1173,7 +1174,17 @@ func _physics_process(delta: float):
 			# Recomputed every frame from the current position — no stored route to
 			# invert or stall on. The _nose_ray whisker above is the last-resort hard
 			# stop for anything that slips inside the margin.
-			steer_target = _tangent_steer_target(dest, active_target)
+			var raw_steer := _tangent_steer_target(dest, active_target)
+			# Low-pass the steer point to damp the round-the-obstacle fishtail; snap
+			# through big legitimate jumps so the heading never lags the trajectory.
+			if _steer_smooth_active and _steer_smooth_pos.distance_to(raw_steer) < _STEER_SMOOTH_SNAP_DIST:
+				_steer_smooth_pos = _steer_smooth_pos.lerp(
+					raw_steer, clampf(delta * _STEER_SMOOTH_SPEED, 0.0, 1.0)
+				)
+			else:
+				_steer_smooth_pos = raw_steer
+			_steer_smooth_active = true
+			steer_target = _steer_smooth_pos
 
 		steer_towards(steer_target, delta)
 		
@@ -1874,6 +1885,17 @@ func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -
 # hugs the OUTSIDE of the sphere and slides around it. Recomputed every frame from
 # the current position, so it cannot invert ("fly opposite") or dead-end.
 const _TANGENT_OBSTACLE_GROUPS := ["celestial", "asteroid", "wreckage", "station", "jumpgate", "ship"]
+
+# Steer-target smoothing to kill the fishtail when rounding an obstacle. The raw
+# tangent waypoint slides sideways frame-to-frame as the ship moves; feeding that
+# straight to the heading makes the nose wag. We low-pass the steer POINT so the
+# heading eases along the arc — the trajectory is unchanged, just the swing. Big
+# jumps (new Fly To, or popping free of the obstacle) exceed the snap threshold and
+# pass through instantly, so smoothing never lags the real path.
+const _STEER_SMOOTH_SPEED := 6.0        # higher = snappier, lower = smoother
+const _STEER_SMOOTH_SNAP_DIST := 600.0  # jumps larger than this bypass smoothing
+var _steer_smooth_pos: Vector3 = Vector3.ZERO
+var _steer_smooth_active: bool = false
 
 func _keepout_radius(obstacle: Node3D) -> float:
 	return _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
