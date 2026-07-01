@@ -198,6 +198,7 @@ var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
 var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
+var quest_tracker_route_btn: Button
 var quest_tracker_turn_in_btn: Button
 var quest_tracker_secondary_container: VBoxContainer
 var quest_tracker_nav_container: HBoxContainer
@@ -710,7 +711,17 @@ func _create_hud():
 	# 2-3 lines inside the panel and the panel grows to fit.
 	quest_tracker_progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_tracker_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_tracker_progress.mouse_filter = Control.MOUSE_FILTER_STOP
+	quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	quest_tracker_progress.gui_input.connect(_on_quest_tracker_progress_gui_input)
 	tracker_vbox.add_child(quest_tracker_progress)
+
+	quest_tracker_route_btn = Button.new()
+	quest_tracker_route_btn.text = "Set Course"
+	quest_tracker_route_btn.visible = false
+	quest_tracker_route_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	quest_tracker_route_btn.pressed.connect(_on_quest_tracker_route_pressed)
+	tracker_vbox.add_child(quest_tracker_route_btn)
 
 	quest_tracker_turn_in_btn = Button.new()
 	quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
@@ -4629,8 +4640,8 @@ func _station_contact_topic_line(
 	match topic:
 		"greeting":
 			if faction.is_empty():
-				return "Indy, welcome to %s. I keep my head down, my channels paid up, and my opinions deniable." % station_name
-			return "Indy, %s keeps a desk at %s. Your name is not flashing red yet, which is our version of hospitality." % [
+				return "Welcome to %s. I keep my head down, my channels paid up, and my opinions deniable." % station_name
+			return "%s keeps a desk at %s. Your name is not flashing red yet, which is our version of hospitality." % [
 				faction_display,
 				station_name,
 			]
@@ -5734,13 +5745,13 @@ const FALLBACK_MECHANIC_GREETINGS: Array = [
 	"INDY Miner, right? Heard your thruster's been screaming bloody murder for three sectors. Drop her on the rack — I'll work my magic.",
 	"Cute ship. Zenith's not going to be happy you scratched the paint, but don't worry, I don't snitch. What hurts first?",
 	"INDY Miner. Of course. You Aurelia contracts or Vanguard contracts? I can tell from the scorch marks. Sit down, I've got you.",
-	"Oh good, the pilot Vanguard put on a watchlist. Don't worry, Indy — Grease Monkeys is neutral ground. Mostly. What's broken?",
+	"Oh good, the pilot Vanguard put on a watchlist. Don't worry — Grease Monkeys is neutral ground. Mostly. What's broken?",
 	"You flew that thing here on three engine cycles? Respect. And stupidity. Park it, I'll patch the frame before I judge the rest of you.",
 	"INDY Miner hull, unlisted cargo, Zenith is friendly, Vanguard is pissed. Yeah, I read the registry. I read everything. What do you need?",
 	"Your ship's prettier than your rep sheet, and that's not a compliment. Cute INDY though. Bring her around, I'll fix what Aurelia's goons dented.",
 	"Heard you picked a fight with a Reaver in an INDY Miner and walked away. I'm calling bullshit, but I'm also curious. Pop the hood.",
 	"You know, when INDY Miner pilots start showing up at my bay, it's usually because they're one bad landing from exploding. Which one are you?",
-	"Yeah, yeah — famous pilot, dangerous reputation, pristine INDY Miner. Sit down before I charge you for standing in my workspace, Indy.",
+	"Yeah, yeah — famous pilot, dangerous reputation, pristine INDY Miner. Sit down before I charge you for standing in my workspace.",
 	"That {ship} looks like it could use some love. But first, I need a favor. Head to {outpost} and get {part} from {npc} for me.",
 	"Before we look at the {ship}, I'm short a {part}. Grab it from {npc} at {outpost} and I'll make it worth your while.",
 	"Nice {ship}. You want it fixed? Do me a solid. I left a {part} with {npc} over at {outpost}. Go get it."
@@ -6018,7 +6029,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 	if is_generated:
 		examples = [
 			"Your ship is making a noise that costs money. Lucky for both of us, I like money.",
-			"Indy, that crate limped in like it owes the docking clamps an apology. What broke first?",
+			"That crate limped in like it owes the docking clamps an apology. What broke first?",
 			"I can keep your rig breathing, but I charge extra when the dents have politics.",
 		]
 	# If an offer is rolling, use the offer templates (indices 10-12) instead
@@ -6107,7 +6118,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		+ "Write ONE NEW greeting. HARD REQUIREMENTS:\n"
 		+ reqs
 		+ "4. Cocky mechanic voice — second person (\"you\"), observational, a little too personal.\n"
-		+ "5. NO phrases like \"your best friend\", \"stay put\", \"sit tight\", \"wait here\", \"I'll fetch\", \"hold on\", \"Shiny\". Those are KAELEN's phrases, not yours. Call the pilot \"Indy\" or just \"you\" — NEVER \"Shiny\".\n"
+		+ "5. NO phrases like \"your best friend\", \"stay put\", \"sit tight\", \"wait here\", \"I'll fetch\", \"hold on\", \"Shiny\". Those are KAELEN's phrases, not yours. Use \"you\" most of the time; \"Indy\" is allowed only rarely. NEVER \"Shiny\".\n"
 		+ "6. NO hashtags, NO emojis, NO quotes around the line.\n\n"
 		+ "Output ONLY valid JSON: {\"line\": \"<your greeting>\"}"
 	)
@@ -6262,7 +6273,7 @@ func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tie
 		var part = active_quest.get("part_name", "the part")
 		var has_part = active_quest.get("picked_up", false)
 		if not has_part:
-			return "Where's my %s? Don't tell me you got lost, Indy." % part
+			return "Where's my %s? Don't tell me you got lost." % part
 		else:
 			return "You actually got the %s. Drop it on the bench before you break it." % part
 	if is_generated:
@@ -6450,7 +6461,7 @@ func _on_test_deliver_pressed() -> void:
 const FALLBACK_MECHANIC_THANKS: Array = [
 	"Thanks for the {part}. I'd say you're my favorite courier, but my dog brings me things faster. Here's your creds.",
 	"Got the {part}. It's a miracle you didn't explode on the way back. Take your money and get out of my bay.",
-	"Not bad, Indy. Next time try not to scuff the casing. Credits are in your account.",
+	"Not bad. Next time try not to scuff the casing. Credits are in your account.",
 	"I'll take that {part}. You're almost useful when you're not getting shot at. Don't spend the payout all in one place.",
 ]
 
@@ -8748,6 +8759,8 @@ func _on_quest_expired(title: String) -> void:
 func _update_quest_tracker():
 	if not QuestManager.is_quest_active():
 		quest_tracker_panel.visible = false
+		if quest_tracker_route_btn:
+			quest_tracker_route_btn.visible = false
 		if quest_tracker_turn_in_btn:
 			quest_tracker_turn_in_btn.visible = false
 		return
@@ -8764,6 +8777,7 @@ func _update_quest_tracker():
 		quest_tracker_progress.text = _cap.format_tracker_text(q)
 	else:
 		quest_tracker_progress.text = q.get("objective_type", "Unknown")
+	quest_tracker_progress.tooltip_text = ""
 	if QuestManager.is_active_quest_timed():
 		var remaining := QuestManager.get_active_quest_remaining_minutes()
 		var urgency := "URGENT" if q.get("is_urgent", false) else "TIMED"
@@ -8773,9 +8787,104 @@ func _update_quest_tracker():
 			CampaignClock.format_duration(remaining),
 			payout,
 		]
+	_update_quest_tracker_route_button(q)
 	_update_quest_tracker_turn_in_button(q)
 	_update_quest_tracker_secondary_missions()
 	_refit_quest_tracker_panel()
+
+
+func _update_quest_tracker_route_button(q: Dictionary) -> void:
+	if not quest_tracker_route_btn:
+		return
+	quest_tracker_route_btn.visible = false
+	if quest_tracker_progress:
+		quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
+		return
+	var target := _quest_tracker_route_target(q)
+	if target == null or not is_instance_valid(target):
+		quest_tracker_route_btn.text = "Target Not In System"
+		quest_tracker_route_btn.disabled = true
+		quest_tracker_route_btn.visible = true
+		return
+	var label := "Return" if bool(q.get("picked_up", false)) else "Set Course"
+	var target_name := str(target.get("display_name") if target.get("display_name") else target.name)
+	quest_tracker_route_btn.text = "%s: %s" % [label, target_name.to_upper()]
+	quest_tracker_route_btn.disabled = false
+	quest_tracker_route_btn.visible = true
+	if quest_tracker_progress:
+		quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		quest_tracker_progress.tooltip_text = "Click to set course to %s." % target_name
+
+
+func _on_quest_tracker_progress_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed:
+		var q := QuestManager.active_quest
+		if _quest_tracker_route_target(q) != null:
+			_on_quest_tracker_route_pressed()
+			accept_event()
+
+
+func _on_quest_tracker_route_pressed() -> void:
+	if not QuestManager.is_quest_active():
+		return
+	var q := QuestManager.active_quest
+	var target := _quest_tracker_route_target(q)
+	if target == null or not is_instance_valid(target):
+		show_hud_warning("That mission target is not in this system.")
+		return
+	GlobalState.active_target = target
+	if not _command_selected_target("APPROACH"):
+		show_hud_warning("Could not set course to the mission target.")
+
+
+func _quest_tracker_route_target(q: Dictionary) -> Node3D:
+	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
+		return null
+	if bool(q.get("picked_up", false)):
+		return GlobalState.get_primary_station()
+	return _find_station_by_contact_id(str(q.get("target_outpost", "")))
+
+
+func _find_station_by_contact_id(target_id: String) -> Node3D:
+	var normalized := _normalize_station_contact_id(target_id)
+	if normalized.is_empty():
+		return null
+	for entity in GlobalState.active_system_entities:
+		var station := entity as Node3D
+		if station and is_instance_valid(station) and station.is_in_group("station"):
+			if _normalize_station_contact_id(_station_contact_id_for_node(station)) == normalized:
+				return station
+	for station_node in get_tree().get_nodes_in_group("station"):
+		var station := station_node as Node3D
+		if station and is_instance_valid(station):
+			if _normalize_station_contact_id(_station_contact_id_for_node(station)) == normalized:
+				return station
+	return null
+
+
+func _station_contact_id_for_node(station: Node3D) -> String:
+	var station_id: String = OUTPOST_NODE_TO_ID.get(station.name, "")
+	if station_id.is_empty():
+		station_id = GlobalState.resolve_outpost_id(station)
+	if station_id.is_empty():
+		var raw_world_id: Variant = station.get("world_id")
+		station_id = str(raw_world_id) if raw_world_id != null else ""
+	if station_id.is_empty() or station_id == "<null>":
+		station_id = str(station.get_meta("world_id", ""))
+	return station_id
+
+
+func _normalize_station_contact_id(station_id: String) -> String:
+	match station_id:
+		"station.start.iron_reach":
+			return "iron_reach"
+		"station.start.kova":
+			return "kova"
+		_:
+			return station_id
 
 
 func _refit_quest_tracker_panel() -> void:

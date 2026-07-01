@@ -37,14 +37,14 @@ func _initialize() -> void:
 	)
 	_expect(
 		service.prepare_text("Shiny, your ship is ready.", "voice.jenna_kross.v1")
-		== "Indy, your ship is ready.",
-		"Non-Kaelen Indy rule was not applied."
+		== "Pilot, your ship is ready.",
+		"Non-Kaelen Shiny cleanup was not applied."
 	)
 	_expect(
 		service.prepare_text(
 			"(quietly) Shiny, proceed. [static]",
 			"voice.agent.vanguard.v1"
-		) == "Indy, proceed.",
+		) == "Pilot, proceed.",
 		"Text cleanup and tone guard did not produce one stable line."
 	)
 	var follow_up: String = service.prepare_followup_text(

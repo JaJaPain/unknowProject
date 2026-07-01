@@ -175,7 +175,7 @@ const MINOR_FACTIONS = {
 # 0.85-1.10) for unique TTS voices — see skills/skill_using_tts_in_spacegame.md.
 const MINOR_NPCS = {
 	"Cassen Vane":   { "image": "res://assets/MinorNPC01.png", "position": "top_left",     "vibe": "grizzled mercenary, scars and salt-and-pepper hair", "outpost": "kova",       "voice_id": "am_onyx",   "voice_speed": 0.92, "flavor_color": Color(1.0, 0.6, 0.55), "flavor_lines": [
-		"Kova's got no rules, Shiny. Just people with guns and people without.",
+		"Kova's got no rules for you. Just people with guns and people without.",
 		"Vanguard patrols hit Sector 7 hard last week. Someone's paying them to.",
 		"Aurelia tried to recruit me once. I declined. Politely. With a knife.",
 	], "pickup_handoff_fallback_lines": [
@@ -186,12 +186,12 @@ const MINOR_NPCS = {
 		"There you go. The mechanic's credit cleared this morning, so I expect you to do the same.",
 	] },
 	"Mariska Vonn":  { "image": "res://assets/MinorNPC01.png", "position": "top_right",    "vibe": "young blonde corporate fixer, white-and-gold outfit", "outpost": "iron_reach", "voice_id": "af_nicole", "voice_speed": 1.05, "flavor_color": Color(0.55, 0.85, 1.0), "flavor_lines": [
-		"Zenith's been running the numbers on you, Shiny. Try not to disappoint the spreadsheet.",
+		"Zenith's been running the numbers on you. Try not to disappoint the spreadsheet.",
 		"Iron Reach's market is... complicated. Keep your credits close and your questions closer.",
 		"Aurelia's been sniffing our freight lanes again. Don't ask what they're moving.",
 	], "pickup_handoff_fallback_lines": [
 		"There's the part. Receipts on delivery, no exceptions. Tell Jenna I said hi.",
-		"All yours, Indy. Don't make me file a claim when it shows up scratched.",
+		"All yours. Don't make me file a claim when it shows up scratched.",
 		"Part's in your bay. Contract's signed, courier's gone, my liability ends here.",
 		"There. Iron Reach is nothing if not punctual. Try to return the favor.",
 		"Invoice, manifest, release code. All yours. Next time, route the requisition through procurement.",
@@ -447,6 +447,15 @@ static var npc_line_memory: Dictionary = {}
 static var campaign_npc_identity_store = null
 static var campaign_agent_memory_store = null
 
+static func _canonical_minor_outpost_id(outpost_id: String) -> String:
+	match outpost_id:
+		"station.start.iron_reach":
+			return "iron_reach"
+		"station.start.kova":
+			return "kova"
+		_:
+			return outpost_id
+
 const GENERATED_CONTACT_FIRST_NAMES: Array[String] = [
 	"Rook",
 	"Vale",
@@ -559,9 +568,12 @@ const GENERATED_CONTACT_FACTION_HANDOFF_LINES := {
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 	if generated_outpost_npcs.has(outpost_id):
 		return generated_outpost_npcs[outpost_id].duplicate()
+	var canonical_id := _canonical_minor_outpost_id(outpost_id)
+	if generated_outpost_npcs.has(canonical_id):
+		return generated_outpost_npcs[canonical_id].duplicate()
 	var result: Array = []
 	for npc_name in MINOR_NPCS:
-		if MINOR_NPCS[npc_name].get("outpost", "") == outpost_id:
+		if MINOR_NPCS[npc_name].get("outpost", "") == canonical_id:
 			result.append(npc_name)
 	return result
 
@@ -915,7 +927,7 @@ static func get_current_system_outposts() -> Array[Dictionary]:
 		if display.is_empty() or display == "<null>":
 			display = str(entity.get_meta("display_name", ""))
 		result.append({
-			"id": outpost_id,
+			"id": _canonical_minor_outpost_id(outpost_id),
 			"display": display if not display.is_empty() else outpost_id,
 		})
 	return result
@@ -1387,21 +1399,35 @@ const PICKUP_PART_NAMES: Array = [
 # What the mechanic pays on successful delivery. Single source of truth —
 # the live offer path AND the test buttons read this.
 const PICKUP_REWARD_CREDITS: int = 200
+static var last_mechanic_pickup_roll_debug: Dictionary = {}
 
 # Returns a pickup-offer roll. The offer is a single (outpost, npc, part)
 # tuple shared by the LLM prompt and the quest-build so they can't drift.
 # Returns {offer: false} on the negative side of the chance roll. Caller
 # is responsible for the per-dock lock (this is a single call — not stateful).
 static func roll_pickup_offer() -> Dictionary:
-	if randf() > MECHANIC_PICKUP_OFFER_CHANCE:
-		return { "offer": false }
+	var roll := randf()
 	var outposts := get_current_pickup_outposts()
 	var valid_outposts: Array = []
 	for outpost in outposts:
 		if outpost is Dictionary \
 				and not get_minor_npcs_at_outpost(str(outpost.get("id", ""))).is_empty():
 			valid_outposts.append(outpost)
+	last_mechanic_pickup_roll_debug = {
+		"chance": MECHANIC_PICKUP_OFFER_CHANCE,
+		"roll": roll,
+		"outpost_count": outposts.size(),
+		"valid_outpost_count": valid_outposts.size(),
+		"outposts": outposts.duplicate(true),
+		"valid_outposts": valid_outposts.duplicate(true),
+		"offered": false,
+		"reason": "",
+	}
+	if roll > MECHANIC_PICKUP_OFFER_CHANCE:
+		last_mechanic_pickup_roll_debug["reason"] = "chance_missed"
+		return { "offer": false }
 	if valid_outposts.is_empty():
+		last_mechanic_pickup_roll_debug["reason"] = "no_valid_pickup_outposts"
 		return { "offer": false }
 	var selected: Dictionary = valid_outposts[randi() % valid_outposts.size()]
 	var outpost_id: String = str(selected.get("id", ""))
@@ -1410,9 +1436,15 @@ static func roll_pickup_offer() -> Dictionary:
 		# Defensive: the outposts always have NPCs today, but if that
 		# ever changes we want a clean negative result, not a crash.
 		push_warning("[GlobalState] roll_pickup_offer: outpost '%s' has no NPCs." % outpost_id)
+		last_mechanic_pickup_roll_debug["reason"] = "selected_outpost_had_no_npcs"
 		return { "offer": false }
 	var npc_name: String = npcs[randi() % npcs.size()]
 	var part_name: String = PICKUP_PART_NAMES[randi() % PICKUP_PART_NAMES.size()]
+	last_mechanic_pickup_roll_debug["offered"] = true
+	last_mechanic_pickup_roll_debug["reason"] = "offer_created"
+	last_mechanic_pickup_roll_debug["selected_outpost"] = outpost_id
+	last_mechanic_pickup_roll_debug["selected_npc"] = npc_name
+	last_mechanic_pickup_roll_debug["selected_part"] = part_name
 	return {
 		"offer": true,
 		"outpost_id": outpost_id,
@@ -2432,9 +2464,8 @@ const KAELEN_VOICE_ID: String = "af_bella"
 # in order — first match wins. Add more rules here as more voice-leak
 # bugs show up.
 const TONE_REPLACEMENTS: Array = [
-	# "Shiny" → "Indy" (preserves the call-out feel; matches the
-	# player's ship class name, so it reads as "Indy pilot").
-	{ "from": "shiny", "to": ["indy"] },
+	# "Shiny" belongs to Kaelen. Other voices get a neutral pilot address.
+	{ "from": "shiny", "to": ["pilot"] },
 ]
 
 # Returns true if the resolved voice_id is Kaelen's. Cheap pointer

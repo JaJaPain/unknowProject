@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_builder_produces_all_templates()
 	_test_builder_offers_have_required_fields()
 	_test_courier_and_purchase_offers_adapt_to_active_state()
+	_test_starter_world_ids_resolve_to_authored_pickup_contacts()
 	_test_pickup_offer_uses_current_system_outpost()
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_generated_system_offers_use_story_pack()
@@ -165,6 +166,18 @@ func _test_pickup_offer_uses_current_system_outpost() -> void:
 	_expect(
 		str(objective.get("target_npc", "")) not in gs.MINOR_NPCS,
 		"local_pickup: generated outpost reused an authored minor NPC."
+	)
+
+
+func _test_starter_world_ids_resolve_to_authored_pickup_contacts() -> void:
+	var gs = root.get_node("GlobalState")
+	_expect(
+		not gs.get_minor_npcs_at_outpost("station.start.iron_reach").is_empty(),
+		"starter_pickup: Iron Reach world id did not resolve to authored pickup contacts."
+	)
+	_expect(
+		not gs.get_minor_npcs_at_outpost("station.start.kova").is_empty(),
+		"starter_pickup: Kova world id did not resolve to authored pickup contacts."
 	)
 
 

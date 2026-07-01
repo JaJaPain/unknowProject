@@ -1391,7 +1391,7 @@ func request_quest_generation(
 		var factions = ["zenith", "aurelia", "vanguard"]
 		chosen_faction = factions[randi() % factions.size()]
 	
-	# Each faction has a distinct named agent, personality, and player nickname
+	# Each faction has a distinct named agent, personality, and address style.
 	var agent_name = "Broker Kaelen"
 	var agent_persona = ""
 	var player_nickname = "Indy"
@@ -1407,7 +1407,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Director Voss, a cold, calculating Zenith corporate officer. " + \
 				"You speak in clipped, efficient sentences. You have no patience for failure and treat the pilot as an interchangeable asset. " + \
-				"You refer to the pilot exclusively as 'Indy'. You never use slang or humor. " + \
+				"You may call the pilot 'Indy' at most once, but usually refer to them as 'you', 'pilot', or 'asset'. You never use slang or humor. " + \
 				"You frame all jobs as 'acquisitions', 'operations', or 'directives'. Zenith's interests are paramount."
 		"aurelia":
 			agent_name = "Liaison Ryn"
@@ -1415,7 +1415,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Liaison Ryn, a smooth-talking, conniving Aurelia syndicate fixer. " + \
 				"You are charming but never fully trustworthy. You speak like someone always running an angle. " + \
-				"You refer to the pilot exclusively as 'Indy'. You use words like 'clean', 'quiet', 'off the books'. " + \
+				"You may call the pilot 'Indy' at most once, but usually use 'you' or 'pilot'. You use words like 'clean', 'quiet', 'off the books'. " + \
 				"Everything is framed as an opportunity, never a risk."
 		"vanguard":
 			agent_name = "Captain Dask"
@@ -1423,7 +1423,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Captain Dask, a gruff, no-nonsense Vanguard military contract officer. " + \
 				"You are direct and have zero tolerance for excuses or negotiation theatre. " + \
-				"You refer to the pilot exclusively as 'Indy'. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
+				"You may call the pilot 'Indy' at most once, but usually use 'pilot' or direct orders. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
 				"You respect competence and despise weakness."
 		_:
 			agent_name = "Broker Kaelen"
@@ -1463,7 +1463,7 @@ func request_quest_generation(
 			faction_label,
 		] + \
 			"You are stationed in the current system and offer practical local contracts. " + \
-			"You speak directly to the pilot, use dry PG-13 frontier humor when it fits, and call the pilot 'Indy' only in the opening request. " + \
+			"You speak directly to the pilot, use dry PG-13 frontier humor when it fits, and only use 'Indy' sparingly. Most lines should use 'you' or 'pilot' instead. " + \
 			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
 
 	var agent_memory_id: String = agent_memory_id_for_profile(
@@ -1626,7 +1626,15 @@ func request_quest_generation(
 	var example_response_2: String = type_examples.get("response_2", "")
 	var example_response_3: String = type_examples.get("response_3", "")
 
-	# Pick one dialogue for the JSON structure example, list the rest as additional references
+	# Pick one dialogue for the JSON structure example, list the rest as additional references.
+	# Thin "George" out of about half the examples so substituted output does not
+	# train every non-Kaelen speaker to say "Indy" in every line.
+	for i in range(example_dialogues.size()):
+		if i % 2 == 1:
+			example_dialogues[i] = _thin_pilot_name(str(example_dialogues[i]), "George", 0)
+	if chosen_faction != "neutral":
+		example_response_1 = _thin_pilot_name(example_response_1, "George", 0)
+		example_response_2 = _thin_pilot_name(example_response_2, "George", 0)
 	var primary_idx = randi() % example_dialogues.size()
 	var example_dialogue: String = example_dialogues[primary_idx]
 	var extra_examples_block = "### EXAMPLE DIALOGUES FOR THIS MISSION TYPE:\n" + \
@@ -1638,11 +1646,11 @@ func request_quest_generation(
 
 	var dummy_name_instruction: String
 	if chosen_type == "KILL_SHIPS":
-		dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern' and always call the pilot 'George'. Always say 3 ships. "
+		dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern'. You may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say 3 ships. "
 	elif chosen_type == "DELIVER_ORE":
-		dummy_name_instruction = "In your dialogue, always call the pilot 'George'. Always say 25 m³ of ore. "
+		dummy_name_instruction = "In your dialogue, you may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say 25 m³ of ore. "
 	else:
-		dummy_name_instruction = "In your dialogue, always call the pilot 'George'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
+		dummy_name_instruction = "In your dialogue, you may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
 
 	# story_quest_hint destination/flavor bias injected as a soft prompt instruction.
 	# Decrement expiry counter here so it ticks once per quest generation, not per dock.

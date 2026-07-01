@@ -41,6 +41,7 @@ func _ready() -> void:
 	_build_faction_tuning_tab()
 	_build_ship_viewer_tab()
 	_build_lounge_layout_tab()
+	_build_mechanic_debug_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
 	# _build_my_tool(my_tab)
@@ -289,6 +290,65 @@ func _lounge_text_values() -> String:
 	if ui and ui.has_method("debug_lounge_text_values"):
 		return ui.debug_lounge_text_values()
 	return "Open the game UI to tune lounge text."
+
+
+func _build_mechanic_debug_tab() -> void:
+	var tab := add_tab("Mechanic Debug")
+
+	var hint := Label.new()
+	hint.text = "Dock at the main station, enter maintenance, then refresh this to see why the mechanic pickup offer did or did not appear."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+
+	var values := Label.new()
+	values.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+	values.autowrap_mode = TextServer.AUTOWRAP_WORD
+	values.text = _mechanic_debug_values()
+	tab.add_child(values)
+
+	var refresh := Button.new()
+	refresh.text = "Refresh Mechanic Debug"
+	refresh.pressed.connect(func() -> void:
+		values.text = _mechanic_debug_values()
+	)
+	tab.add_child(refresh)
+
+
+func _mechanic_debug_values() -> String:
+	var debug: Dictionary = GlobalState.last_mechanic_pickup_roll_debug
+	if debug.is_empty():
+		return "No mechanic pickup roll recorded yet."
+	var station_lane_occupied := QuestManager.is_lane_occupied("STATION")
+	var station_data := QuestManager.get_lane_data("STATION")
+	var lines: Array[String] = [
+		"Offered: %s" % str(bool(debug.get("offered", false))),
+		"Reason: %s" % str(debug.get("reason", "")),
+		"Roll: %.3f / Chance: %.3f" % [
+			float(debug.get("roll", 0.0)),
+			float(debug.get("chance", 0.0)),
+		],
+		"Pickup outposts: %d total, %d valid" % [
+			int(debug.get("outpost_count", 0)),
+			int(debug.get("valid_outpost_count", 0)),
+		],
+		"Station lane occupied: %s" % str(station_lane_occupied),
+	]
+	if station_lane_occupied:
+		lines.append("Station lane title: %s" % str(station_data.get("title", "")))
+	if bool(debug.get("offered", false)):
+		lines.append("Selected: %s / %s / %s" % [
+			str(debug.get("selected_outpost", "")),
+			str(debug.get("selected_npc", "")),
+			str(debug.get("selected_part", "")),
+		])
+	var valid_outposts: Array = debug.get("valid_outposts", [])
+	if not valid_outposts.is_empty():
+		var names: Array[String] = []
+		for entry in valid_outposts:
+			if entry is Dictionary:
+				names.append(str(entry.get("display", entry.get("id", ""))))
+		lines.append("Valid destinations: %s" % ", ".join(names))
+	return "\n".join(lines)
 
 
 const _TUN_FIELDS      := ["weapon_tier","hull_tier","powerplant_tier","shield_tier","weapon_dmg_mult","drone_dmg_mult","intelligence"]

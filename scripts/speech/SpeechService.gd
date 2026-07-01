@@ -95,7 +95,7 @@ func prepare_followup_text(text: String, voice_profile: Variant) -> String:
 func resolve_voice_profile(value: Variant) -> StringName:
 	var raw := str(value)
 	if raw.is_empty() or raw == "neutral":
-		return DEFAULT_PROFILE
+		return KAELEN_PROFILE
 	var canonical := DomainId.canonicalize(raw)
 	var registry := GameContentRegistry.shared()
 	if registry.voices.has(canonical):
