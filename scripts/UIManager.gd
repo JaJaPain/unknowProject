@@ -1963,6 +1963,7 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		accept.text = "Turn In Active Board Job To Local Agent"
 		accept.disabled = false
 		accept.pressed.connect(_on_public_board_turn_in_pressed)
+		_set_npc_attention_button(accept, true, Color(1.0, 0.82, 0.18, 1.0))
 	elif QuestManager.is_lane_occupied("BOARD"):
 		accept.text = "Board Job Already Active"
 		accept.disabled = true
@@ -3752,6 +3753,11 @@ func _render_dock_submenu() -> void:
 			agent_service_btn,
 			agent_service_btn.visible and _agent_is_waiting_for_player(),
 			Color(0.2, 0.95, 1.0, 1.0)
+		)
+		_set_npc_attention_button(
+			public_board_btn,
+			public_board_btn.visible and _public_board_is_waiting_for_player(),
+			Color(1.0, 0.82, 0.18, 1.0)
 		)
 		_set_npc_attention_button(
 			maintenance_bay_btn,
@@ -7158,17 +7164,20 @@ func _agent_is_waiting_for_player() -> bool:
 		return true
 	if GlobalState.kaelen_briefing_seen and not GlobalState.kaelen_briefing_accepted:
 		return true
-	if not QuestManager.is_lane_occupied("AGENT") and not QuestManager.is_lane_occupied("BOARD"):
+	if not QuestManager.is_lane_occupied("AGENT"):
 		return false
 	var collection = QuestManager.get_mission_collection()
 	for m in collection.get_all_active():
-		if m.source_lane != MissionInstance.SourceLane.AGENT \
-				and m.source_lane != MissionInstance.SourceLane.BOARD:
+		if m.source_lane != MissionInstance.SourceLane.AGENT:
 			continue
 		var cap = MissionCapabilityRegistry.get_for_type(m.data.get("objective_type", ""))
 		if cap and cap.is_completed(m.data):
 			return true
 	return false
+
+
+func _public_board_is_waiting_for_player() -> bool:
+	return _should_show_public_board_turn_in()
 
 
 func _mechanic_is_waiting_for_player() -> bool:
@@ -7301,6 +7310,12 @@ func _refresh_visible_npc_attention_buttons() -> void:
 			maintenance_bay_btn,
 			maintenance_bay_btn.visible and _mechanic_is_waiting_for_player(),
 			Color(1.0, 0.75, 0.2, 1.0)
+		)
+	if public_board_btn and is_instance_valid(public_board_btn):
+		_set_npc_attention_button(
+			public_board_btn,
+			public_board_btn.visible and _public_board_is_waiting_for_player(),
+			Color(1.0, 0.82, 0.18, 1.0)
 		)
 	if deliver_part_btn and is_instance_valid(deliver_part_btn):
 		_set_npc_attention_button(
