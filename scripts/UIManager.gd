@@ -336,6 +336,7 @@ var _intro_handhold_arrow_end: Vector2 = Vector2.ZERO
 var _intro_handhold_target_button: Button = null
 var combat_tutorial_overlay: Control = null
 var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the combat wheel (CombatPanel is layer 10)
+var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
 
 func _ready():
@@ -1476,7 +1477,7 @@ func _create_dock_menu():
 	back_to_services_btn.pressed.connect(_on_back_to_services_pressed)
 	vbox.add_child(back_to_services_btn)
 
-	var undock_btn = Button.new()
+	undock_btn = Button.new()
 	undock_btn.text = "Undock Ship"
 	undock_btn.pressed.connect(undock_player)
 	vbox.add_child(undock_btn)
@@ -3756,6 +3757,13 @@ func _render_dock_submenu() -> void:
 			maintenance_bay_btn,
 			maintenance_bay_btn.visible and _mechanic_is_waiting_for_player(),
 			Color(1.0, 0.75, 0.2, 1.0)
+		)
+		# Intro tutorial: flash Undock so the player knows to head out and fight the
+		# starter Reaver once the contract is accepted (and not yet complete).
+		_set_npc_attention_button(
+			undock_btn,
+			undock_btn != null and _should_flash_undock(),
+			Color(1.0, 0.9, 0.2, 1.0)
 		)
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
@@ -9221,6 +9229,14 @@ func _completed_contract_tracker_text(q: Dictionary) -> String:
 	return objective_text + "\nReturn to the station and speak with your agent."
 
 
+func _should_flash_undock() -> bool:
+	# Only during the intro starter contract, while it's active and not yet complete
+	# (the player needs to undock and go kill the Reaver).
+	if not QuestManager.is_quest_active() or QuestManager.is_quest_completed():
+		return false
+	return _is_intro_starter_contract(QuestManager.active_quest)
+
+
 func _is_intro_starter_contract(q: Dictionary) -> bool:
 	return str(q.get("title", "")) == "Clean and Easy" \
 		and str(q.get("objective_type", "")) == "KILL_SHIPS" \
@@ -9245,6 +9261,17 @@ func _update_quest_tracker_route_button(q: Dictionary) -> void:
 	quest_tracker_route_btn.visible = false
 	if quest_tracker_progress:
 		quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	# Once the contract is complete, offer a one-click "dock at the home station" so
+	# the player (especially in the intro) knows exactly where to hand it in.
+	if QuestManager.is_quest_completed():
+		var home := GlobalState.get_primary_station()
+		if home and is_instance_valid(home):
+			quest_tracker_route_btn.text = "Dock at Station"
+			quest_tracker_route_btn.disabled = false
+			quest_tracker_route_btn.visible = true
+			if quest_tracker_progress:
+				quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		return
 	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
 		return
 	var target := _quest_tracker_route_target(q)
@@ -9277,6 +9304,16 @@ func _on_quest_tracker_route_pressed() -> void:
 	if not QuestManager.is_quest_active():
 		return
 	var q := QuestManager.active_quest
+	# Completed contract: select the home station and dock to hand it in.
+	if QuestManager.is_quest_completed():
+		var home := GlobalState.get_primary_station()
+		if home and is_instance_valid(home):
+			GlobalState.active_target = home
+			if not _command_selected_target("DOCK"):
+				show_hud_warning("Could not set course to the station.")
+		else:
+			show_hud_warning("Home station is not in this system.")
+		return
 	var target := _quest_tracker_route_target(q)
 	if target == null or not is_instance_valid(target):
 		show_hud_warning("That mission target is not in this system.")
