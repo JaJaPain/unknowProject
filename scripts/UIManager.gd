@@ -335,6 +335,7 @@ var _intro_handhold_arrow_start: Vector2 = Vector2.ZERO
 var _intro_handhold_arrow_end: Vector2 = Vector2.ZERO
 var _intro_handhold_target_button: Button = null
 var combat_tutorial_overlay: Control = null
+var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the combat wheel (CombatPanel is layer 10)
 var selected_row_style: StyleBoxFlat
 
 func _ready():
@@ -2238,16 +2239,22 @@ func _maybe_show_combat_tutorial() -> void:
 
 func _show_combat_tutorial_popup(_from_pause: bool = false) -> void:
 	if combat_tutorial_overlay and is_instance_valid(combat_tutorial_overlay):
-		move_child(combat_tutorial_overlay, -1)
+		# Already open on its high CanvasLayer — nothing to reorder.
 		return
+
+	# Host the overlay on its own CanvasLayer above the combat wheel (CombatPanel
+	# is a CanvasLayer at layer 10, so a plain child of UIManager rendered UNDER it).
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	combat_tutorial_layer = layer
+	add_child(layer)
 
 	var overlay := ColorRect.new()
 	combat_tutorial_overlay = overlay
 	overlay.color = Color(0.0, 0.0, 0.0, 0.62)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(overlay)
-	move_child(overlay, -1)
+	layer.add_child(overlay)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -2307,9 +2314,13 @@ func _show_combat_tutorial_popup(_from_pause: bool = false) -> void:
 	close_btn.custom_minimum_size = Vector2(0, 46)
 	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	close_btn.pressed.connect(func() -> void:
-		if combat_tutorial_overlay and is_instance_valid(combat_tutorial_overlay):
+		# Free the whole CanvasLayer (which owns the overlay), not just the overlay.
+		if combat_tutorial_layer and is_instance_valid(combat_tutorial_layer):
+			combat_tutorial_layer.queue_free()
+		elif combat_tutorial_overlay and is_instance_valid(combat_tutorial_overlay):
 			combat_tutorial_overlay.queue_free()
 		combat_tutorial_overlay = null
+		combat_tutorial_layer = null
 	)
 	layout.add_child(close_btn)
 
