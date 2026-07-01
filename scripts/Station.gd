@@ -129,6 +129,15 @@ func get_docking_distance() -> float:
 	return minimum_docking_distance
 
 func dock_player():
+	# Refuse to dock mid-fight: an autopilot dock (e.g. the completed-mission
+	# "Dock at Station" button) can carry the ship to a station while combat starts
+	# en route, leaving the dock panel open over the combat wheel. Bail if a combat
+	# window is active — the player must clear hostiles first.
+	if PlayerInteractionQueue.in_combat_window():
+		var busy_ui = GlobalState.get_ui_manager()
+		if busy_ui and busy_ui.has_method("show_hud_warning"):
+			busy_ui.show_hud_warning("Can't dock while under fire — clear the hostiles first.")
+		return
 	var ui = GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu"):
 		ui.toggle_dock_menu(self)
