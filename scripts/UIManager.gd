@@ -22,6 +22,10 @@ var target_boost_btn: Button
 var target_approach_btn: Button
 var target_orbit_btn: Button
 var target_action_btn: Button
+# Tracks the currently-selected target so we can announce when it's destroyed or
+# salvaged and clear the target window (see _check_active_target_alive).
+var _tracked_target_id: int = 0
+var _tracked_target_lost_msg: String = ""
 var icons_sheet = preload("res://assets/icons.png")
 
 var overview_panel: Panel
@@ -547,6 +551,38 @@ func _process(delta):
 	# Update selection marker position
 	_update_selection_marker_position()
 	_update_target_command_feedback()
+	_check_active_target_alive()
+
+## Watches the selected target. While it's alive we cache a "why it's gone" line;
+## when it becomes invalid (destroyed) or is freed (salvaged), we announce that and
+## clear the target window so the player isn't left aiming at a ghost.
+func _check_active_target_alive() -> void:
+	var t = GlobalState.active_target
+	var alive: bool = t != null and is_instance_valid(t) and not t.get("destroyed")
+	if alive:
+		# (Re)track and refresh the reason line while the node still exists.
+		_tracked_target_id = t.get_instance_id()
+		_tracked_target_lost_msg = _target_lost_message(t)
+		return
+	if _tracked_target_id == 0:
+		return  # nothing was tracked; ordinary "no target" state
+	# The tracked target just vanished.
+	GlobalState.emit_chatter("SYSTEM", _tracked_target_lost_msg, Color(1.0, 0.7, 0.3))
+	_tracked_target_id = 0
+	_tracked_target_lost_msg = ""
+	if GlobalState.active_target == t:
+		GlobalState.active_target = null
+	_on_target_changed(null)
+
+
+func _target_lost_message(t: Node) -> String:
+	if t.is_in_group("wreckage"):
+		return "Target salvaged — the wreck has been cleared."
+	if t.is_in_group("ship"):
+		var label := str(t.get("display_name") if t.get("display_name") else t.name)
+		return "Target destroyed — %s is no longer on scanners." % label
+	return "Target no longer available."
+
 
 func _create_hud():
 	hud_panel = Panel.new()
