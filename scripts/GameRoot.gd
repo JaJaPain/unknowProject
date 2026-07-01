@@ -578,9 +578,20 @@ func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 			npc.faction = str(entity_state.get("faction", "zenith"))
 			npc.ship_role = str(entity_state.get("ship_role", "Gunner"))
 			npc.set_meta("is_quest_target", true)
+			if _is_intro_tutorial_mission_ship(entity_state):
+				npc.set_meta("intro_tutorial_target", true)
+				npc.set_meta("npc_attack_protected", true)
 			npc.add_to_group("persistent_entity")
 			system_root.add_child(npc)
 			npc.restore_state(entity_state)
+
+
+func _is_intro_tutorial_mission_ship(entity_state: Dictionary) -> bool:
+	return QuestManager.is_quest_active() \
+		and str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
+		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers" \
+		and str(entity_state.get("faction", "")) == "reavers"
 
 func save_game() -> bool:
 	var prepared := _capture_prepared_runtime_state()
@@ -2808,6 +2819,8 @@ func _capture_global_state() -> Dictionary:
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
 		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
+		"intro_tutorial_player_protected": GlobalState.intro_tutorial_player_protected,
+		"combat_tutorial_seen": GlobalState.combat_tutorial_seen,
 		"kaelen_arrival_systems_seen": GlobalState.kaelen_arrival_systems_seen.duplicate(),
 		"campaign_seed": GlobalState.campaign_seed,
 	}
@@ -2848,6 +2861,8 @@ func _apply_global_state(state: Dictionary) -> void:
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
 	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
 	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
+	GlobalState.intro_tutorial_player_protected = bool(state.get("intro_tutorial_player_protected", false))
+	GlobalState.combat_tutorial_seen = bool(state.get("combat_tutorial_seen", false))
 	GlobalState.kaelen_arrival_systems_seen.clear()
 	for system_id in state.get("kaelen_arrival_systems_seen", []):
 		GlobalState.kaelen_arrival_systems_seen.append(str(system_id))

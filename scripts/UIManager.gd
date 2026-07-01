@@ -157,6 +157,9 @@ var test_deliver_btn: Button
 var test_pickup_part_btn: Button
 var hear_gossip_btn: Button
 var public_board_btn: Button
+var _npc_attention_buttons: Array[Button] = []
+var _button_base_modulates: Dictionary = {}
+var _button_attention_colors: Dictionary = {}
 
 # Dock submenu state. Every dockable station (main station, outposts)
 # shows station services plus focused submenus:
@@ -327,6 +330,11 @@ var marker_active: bool = false
 var marker_timer: float = 0.0
 var marker_pos_3d: Vector3 = Vector3.ZERO
 var selection_marker: Control
+var intro_handhold_arrow: Control
+var _intro_handhold_arrow_start: Vector2 = Vector2.ZERO
+var _intro_handhold_arrow_end: Vector2 = Vector2.ZERO
+var _intro_handhold_target_button: Button = null
+var combat_tutorial_overlay: Control = null
 var selected_row_style: StyleBoxFlat
 
 func _ready():
@@ -388,6 +396,7 @@ func _ready():
 	CombatManager.combat_started.connect(func(_e: Node):
 		overview_panel.hide()
 		quest_tracker_panel.hide()
+		_maybe_show_combat_tutorial()
 	)
 	CombatManager.combat_ended.connect(func(_won: bool):
 		overview_panel.show()
@@ -443,6 +452,19 @@ func _ready():
 	add_child(selection_marker)
 	selection_marker.draw.connect(_on_selection_marker_draw)
 	selection_marker.visible = false
+
+	# Startup tutorial pointer. It draws above HUD controls but never eats input.
+	intro_handhold_arrow = Control.new()
+	intro_handhold_arrow.name = "IntroHandholdArrow"
+	intro_handhold_arrow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro_handhold_arrow.offset_left = 0
+	intro_handhold_arrow.offset_top = 0
+	intro_handhold_arrow.offset_right = 0
+	intro_handhold_arrow.offset_bottom = 0
+	intro_handhold_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	intro_handhold_arrow.visible = false
+	add_child(intro_handhold_arrow)
+	intro_handhold_arrow.draw.connect(_on_intro_handhold_arrow_draw)
 	
 	# Initial UI state
 	_on_credits_changed(GlobalState.player_credits)
@@ -504,6 +526,8 @@ func _process(delta):
 
 	# Update overview list item distances
 	_update_overview_distances(delta)
+	_update_intro_handhold()
+	_update_npc_attention_buttons()
 	
 	# Update target indicator marker
 	if marker_active:
@@ -2086,6 +2110,7 @@ func _create_pause_menu():
 	columns.add_child(actions_card)
 	var actions := actions_card.get_child(0) as VBoxContainer
 	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
+	_add_pause_action(actions, "COMBAT HELP", func(): _show_combat_tutorial_popup(true))
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
 	pause_new_campaign_button = _add_pause_action(
 		actions,
@@ -2202,6 +2227,91 @@ func _add_pause_action(
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
+
+
+func _maybe_show_combat_tutorial() -> void:
+	if GlobalState.combat_tutorial_seen:
+		return
+	GlobalState.combat_tutorial_seen = true
+	call_deferred("_show_combat_tutorial_popup", false)
+
+
+func _show_combat_tutorial_popup(_from_pause: bool = false) -> void:
+	if combat_tutorial_overlay and is_instance_valid(combat_tutorial_overlay):
+		move_child(combat_tutorial_overlay, -1)
+		return
+
+	var overlay := ColorRect.new()
+	combat_tutorial_overlay = overlay
+	overlay.color = Color(0.0, 0.0, 0.0, 0.62)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+	move_child(overlay, -1)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(620, 430)
+	shell.add_theme_stylebox_override(
+		"panel",
+		_make_menu_style(Color(0.055, 0.06, 0.085, 0.98), Color(0.0, 0.9, 1.0, 0.7), 26)
+	)
+	center.add_child(shell)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 14)
+	shell.add_child(layout)
+
+	var title := Label.new()
+	title.text = "COMBAT BASICS"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	layout.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "First fight checklist"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92))
+	layout.add_child(subtitle)
+
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 10)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(body)
+
+	for line in [
+		"1. Combat is turn based. You choose actions first, then press Execute.",
+		"2. Each action spends AP. Queue attacks, shield reroutes, repairs, or movement until you are ready.",
+		"3. Watch the enemy plan at the top of the combat panel. Use shields or repairs when they are about to hit hard.",
+		"4. Fire until the enemy breaks. If a fight is too much, use escape options when available.",
+	]:
+		var label := Label.new()
+		label.text = line
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_font_size_override("font_size", 16)
+		label.add_theme_color_override("font_color", Color(0.9, 0.92, 0.96))
+		body.add_child(label)
+
+	var reminder := Label.new()
+	reminder.text = "You can reopen this from Pause > Combat Help."
+	reminder.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reminder.add_theme_color_override("font_color", Color(1.0, 0.86, 0.25))
+	layout.add_child(reminder)
+
+	var close_btn := Button.new()
+	close_btn.text = "GOT IT"
+	close_btn.custom_minimum_size = Vector2(0, 46)
+	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_btn.pressed.connect(func() -> void:
+		if combat_tutorial_overlay and is_instance_valid(combat_tutorial_overlay):
+			combat_tutorial_overlay.queue_free()
+		combat_tutorial_overlay = null
+	)
+	layout.add_child(close_btn)
 
 
 func _add_volume_row(
@@ -3049,7 +3159,11 @@ func update_overview_list(entities: Array):
 			var btn = Button.new()
 			btn.custom_minimum_size = Vector2(0, 30)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			btn.pressed.connect(func(): GlobalState.active_target = entity)
+			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			btn.pressed.connect(func():
+				GlobalState.active_target = entity
+				_update_intro_handhold()
+			)
 			btn.gui_input.connect(func(event: InputEvent):
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 					btn.accept_event()
@@ -3340,6 +3454,7 @@ func _on_target_changed(new_target: Node3D):
 		target_label.text = "No Target Selected"
 		if target_icon:
 			target_icon.visible = false
+	call_deferred("_update_intro_handhold")
 		
 	_update_target_command_feedback()
 	if overview_collapsed:
@@ -3382,6 +3497,7 @@ func _on_cargo_changed(new_cargo: float):
 			AudioManager.play_cargo_full()
 
 		_update_quest_tracker()
+		_refresh_visible_npc_attention_buttons()
 
 func _on_pause_changed(is_paused: bool):
 	if is_paused:
@@ -3423,6 +3539,9 @@ func toggle_dock_menu(
 	else:
 		_clear_cached_agent_quest_if_stale()
 		dock_panel.visible = true
+		GlobalState.active_target = null
+		if target_panel:
+			target_panel.visible = false
 		# Collapse overview while docked — station UI takes priority
 		set_overview_collapsed(true)
 
@@ -3441,6 +3560,7 @@ func toggle_dock_menu(
 			dock_label.text = sname if sname != "" else "STATION SERVICES"
 
 		_render_dock_submenu()
+		_update_intro_handhold()
 
 		if GlobalState.player:
 			GlobalState.player.is_docked = true
@@ -3538,13 +3658,18 @@ func _render_dock_submenu() -> void:
 		_render_bounty_board(false)
 
 		var station_quest: Dictionary = QuestManager.get_pickup_special_data()
-		var can_deliver: bool = not station_quest.is_empty() and station_quest.get("picked_up", false)
+		var can_deliver: bool = _mechanic_pickup_ready_to_deliver()
 		var can_deliver_anomaly_core := _has_anomaly_data_core_cargo()
 		deliver_part_btn.visible = can_deliver or can_deliver_anomaly_core
 		if can_deliver_anomaly_core:
 			deliver_part_btn.text = "Turn In Data Core"
 		else:
 			deliver_part_btn.text = "Deliver Part"
+		_set_npc_attention_button(
+			deliver_part_btn,
+			deliver_part_btn.visible,
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
 		
 		back_to_services_btn.visible = true
 		if dock_background:
@@ -3611,11 +3736,22 @@ func _render_dock_submenu() -> void:
 				"Station Comms",
 				Color(0.0, 0.85, 0.85)
 			)
+		_set_npc_attention_button(
+			agent_service_btn,
+			agent_service_btn.visible and _agent_is_waiting_for_player(),
+			Color(0.2, 0.95, 1.0, 1.0)
+		)
+		_set_npc_attention_button(
+			maintenance_bay_btn,
+			maintenance_bay_btn.visible and _mechanic_is_waiting_for_player(),
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
 		ship_upgrades_btn.visible = false
 		repair_btn.visible = false
 		test_pickup_btn.visible = false
 		test_deliver_btn.visible = false
 		deliver_part_btn.visible = false
+		_set_npc_attention_button(deliver_part_btn, false)
 		
 		var show_ask_btn: bool = false
 		var station_quest_svc: Dictionary = QuestManager.get_pickup_special_data()
@@ -3627,6 +3763,11 @@ func _render_dock_submenu() -> void:
 			if docked_outpost_id_for_btn != "" and docked_outpost_id_for_btn == station_quest_svc.get("target_outpost", ""):
 				show_ask_btn = true
 		ask_for_part_btn.visible = show_ask_btn
+		_set_npc_attention_button(
+			ask_for_part_btn,
+			show_ask_btn,
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
 		
 		if show_ask_btn:
 			var part_name: String = str(QuestManager.active_quest.get("part_name", "the part"))
@@ -6798,6 +6939,8 @@ func _command_selected_target(mode: String) -> bool:
 			or GlobalState.player == null \
 			or not is_instance_valid(GlobalState.player):
 		return false
+	if mode == "ATTACK":
+		GlobalState.clear_intro_tutorial_player_protection()
 	if not GlobalState.player.has_method("begin_target_navigation") \
 			or not bool(
 				GlobalState.player.call("begin_target_navigation", mode)
@@ -6954,6 +7097,204 @@ func _set_command_button_state(button: Button, active: bool, queued: bool = fals
 		button.self_modulate = Color(1.0, 0.7, 0.2, 0.75 + pulse * 0.25)
 	else:
 		button.self_modulate = Color(0.2, 0.9, 1.0, 0.75 + pulse * 0.25)
+
+
+func _set_npc_attention_button(button: Button, active: bool, color: Color = Color(0.2, 0.9, 1.0, 1.0)) -> void:
+	if button == null or not is_instance_valid(button):
+		return
+	if active:
+		if not _button_base_modulates.has(button):
+			_button_base_modulates[button] = button.self_modulate
+		_button_attention_colors[button] = color
+		if not _npc_attention_buttons.has(button):
+			_npc_attention_buttons.append(button)
+	else:
+		_button_attention_colors.erase(button)
+		_npc_attention_buttons.erase(button)
+		button.self_modulate = _button_base_modulates.get(button, Color.WHITE)
+		_button_base_modulates.erase(button)
+
+
+func _update_npc_attention_buttons() -> void:
+	for i in range(_npc_attention_buttons.size() - 1, -1, -1):
+		var button: Button = _npc_attention_buttons[i]
+		if button == null or not is_instance_valid(button):
+			_npc_attention_buttons.remove_at(i)
+			continue
+		if not bool(button.visible) or bool(button.disabled):
+			button.self_modulate = _button_base_modulates.get(button, Color.WHITE)
+			continue
+		var color: Color = _button_attention_colors.get(button, Color(0.2, 0.9, 1.0, 1.0))
+		var pulse := 0.55 + sin(Time.get_ticks_msec() * 0.012) * 0.35
+		button.self_modulate = Color(
+			lerpf(1.0, color.r, pulse),
+			lerpf(1.0, color.g, pulse),
+			lerpf(1.0, color.b, pulse),
+			0.8 + pulse * 0.2
+		)
+
+
+func _agent_is_waiting_for_player() -> bool:
+	if not GlobalState.kaelen_briefing_seen:
+		return true
+	if GlobalState.kaelen_briefing_seen and not GlobalState.kaelen_briefing_accepted:
+		return true
+	if not QuestManager.is_lane_occupied("AGENT") and not QuestManager.is_lane_occupied("BOARD"):
+		return false
+	var collection = QuestManager.get_mission_collection()
+	for m in collection.get_all_active():
+		if m.source_lane != MissionInstance.SourceLane.AGENT \
+				and m.source_lane != MissionInstance.SourceLane.BOARD:
+			continue
+		var cap = MissionCapabilityRegistry.get_for_type(m.data.get("objective_type", ""))
+		if cap and cap.is_completed(m.data):
+			return true
+	return false
+
+
+func _mechanic_is_waiting_for_player() -> bool:
+	return _has_anomaly_data_core_cargo() or _mechanic_pickup_ready_to_deliver()
+
+
+func _mechanic_pickup_ready_to_deliver() -> bool:
+	var station_quest: Dictionary = QuestManager.get_pickup_special_data()
+	return not station_quest.is_empty() and bool(station_quest.get("picked_up", false))
+
+
+func _intro_handhold_active() -> bool:
+	if not is_instance_valid(StoryManager):
+		return false
+	if bool(StoryManager.story_state.get("intro_agent_visited", false)):
+		return false
+	if bool(StoryManager.story_state.get("intro_quest_delivered", false)):
+		return false
+	return true
+
+
+func _intro_popup_dismissed() -> bool:
+	return is_instance_valid(StoryManager) \
+		and bool(StoryManager.story_state.get("intro_conversation_had", false))
+
+
+func _update_intro_handhold() -> void:
+	if not intro_handhold_arrow or not is_instance_valid(intro_handhold_arrow):
+		return
+	if GlobalState.paused or (loading_panel and is_instance_valid(loading_panel)):
+		_clear_intro_handhold_arrow()
+		return
+	var next_button: Button = null
+	var arrow_visible := false
+	if _intro_handhold_active() and _intro_popup_dismissed():
+		if dock_panel and dock_panel.visible and agent_service_btn and agent_service_btn.visible:
+			next_button = agent_service_btn
+		elif _intro_primary_station_selected() and target_action_btn \
+				and target_action_btn.visible and not bool(target_action_btn.disabled):
+			next_button = target_action_btn
+		elif not (dock_panel and dock_panel.visible):
+			next_button = _find_intro_station_overview_button()
+		if next_button and is_instance_valid(next_button) and next_button.is_visible_in_tree():
+			arrow_visible = true
+	if _intro_handhold_target_button != next_button:
+		if _intro_handhold_target_button and is_instance_valid(_intro_handhold_target_button):
+			_set_npc_attention_button(_intro_handhold_target_button, false)
+		_intro_handhold_target_button = next_button
+	if arrow_visible:
+		_set_npc_attention_button(next_button, true, Color(1.0, 0.88, 0.05, 1.0))
+		_position_intro_handhold_arrow(next_button)
+	else:
+		_clear_intro_handhold_arrow()
+
+
+func _clear_intro_handhold_arrow() -> void:
+	if _intro_handhold_target_button and is_instance_valid(_intro_handhold_target_button):
+		_set_npc_attention_button(_intro_handhold_target_button, false)
+	_intro_handhold_target_button = null
+	if intro_handhold_arrow and is_instance_valid(intro_handhold_arrow):
+		intro_handhold_arrow.visible = false
+
+
+func _position_intro_handhold_arrow(target: Control) -> void:
+	var rect := Rect2(target.global_position, target.size)
+	if rect.size == Vector2.ZERO:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	intro_handhold_arrow.size = viewport_size
+	var end := rect.get_center()
+	var start := Vector2.ZERO
+	if target == target_action_btn:
+		end = Vector2(rect.get_center().x, rect.position.y + rect.size.y + 2.0)
+		start = end + Vector2(-80.0, 270.0)
+	elif target == agent_service_btn:
+		end = Vector2(rect.get_center().x, rect.position.y - 4.0)
+		start = end + Vector2(180.0, -180.0)
+	else:
+		end = Vector2(rect.position.x + rect.size.x + 8.0, rect.get_center().y)
+		start = end + Vector2(430.0, 135.0)
+	start.x = clamp(start.x, 24.0, viewport_size.x - 24.0)
+	start.y = clamp(start.y, 24.0, viewport_size.y - 24.0)
+	_intro_handhold_arrow_start = start
+	_intro_handhold_arrow_end = end
+	intro_handhold_arrow.visible = true
+	move_child(intro_handhold_arrow, get_child_count() - 1)
+	intro_handhold_arrow.queue_redraw()
+
+
+func _intro_primary_station_selected() -> bool:
+	var station := _intro_primary_station()
+	return station != null and is_instance_valid(station) and GlobalState.active_target == station
+
+
+func _intro_primary_station() -> Node3D:
+	var station = GlobalState.get_primary_station()
+	if station and is_instance_valid(station):
+		return station
+	for node in get_tree().get_nodes_in_group("station"):
+		var station_node := node as Node3D
+		if station_node and is_instance_valid(station_node):
+			var stype = station_node.get("station_type") if station_node.get("station_type") else "full_service"
+			if stype != "outpost":
+				return station_node
+	return null
+
+
+func _find_intro_station_overview_button() -> Button:
+	if not overview_list or not is_instance_valid(overview_list):
+		return null
+	var station := _intro_primary_station()
+	if station == null or not is_instance_valid(station):
+		return null
+	for child in overview_list.get_children():
+		var btn := child as Button
+		if btn and is_instance_valid(btn) and btn.get_meta("entity_ref", null) == station:
+			return btn
+	return null
+
+
+func _refresh_visible_npc_attention_buttons() -> void:
+	if agent_service_btn and is_instance_valid(agent_service_btn):
+		_set_npc_attention_button(
+			agent_service_btn,
+			agent_service_btn.visible and _agent_is_waiting_for_player(),
+			Color(0.2, 0.95, 1.0, 1.0)
+		)
+	if maintenance_bay_btn and is_instance_valid(maintenance_bay_btn):
+		_set_npc_attention_button(
+			maintenance_bay_btn,
+			maintenance_bay_btn.visible and _mechanic_is_waiting_for_player(),
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
+	if deliver_part_btn and is_instance_valid(deliver_part_btn):
+		_set_npc_attention_button(
+			deliver_part_btn,
+			deliver_part_btn.visible and _mechanic_is_waiting_for_player(),
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
+	if ask_for_part_btn and is_instance_valid(ask_for_part_btn):
+		_set_npc_attention_button(
+			ask_for_part_btn,
+			ask_for_part_btn.visible,
+			Color(1.0, 0.75, 0.2, 1.0)
+		)
 
 
 func _update_boost_button() -> void:
@@ -7247,6 +7588,33 @@ func _on_selection_marker_draw():
 		var start = dir * screen_radius
 		var end = dir * (screen_radius + tick_len)
 		selection_marker.draw_line(start, end, marker_color, 2.0, true)
+
+
+func _on_intro_handhold_arrow_draw() -> void:
+	if not intro_handhold_arrow or not intro_handhold_arrow.visible:
+		return
+	var start := _intro_handhold_arrow_start
+	var end := _intro_handhold_arrow_end
+	if start.distance_to(end) < 8.0:
+		return
+	var t := Time.get_ticks_msec() * 0.006
+	var pulse := 0.65 + sin(t) * 0.25
+	var color := Color(1.0, 0.88, 0.05, 0.75 + pulse * 0.25)
+	var dir := (end - start).normalized()
+	var normal := Vector2(-dir.y, dir.x)
+	var mid := (start + end) * 0.5 + normal * 20.0 * sin(t * 0.7)
+	var points := PackedVector2Array([start, mid, end])
+	intro_handhold_arrow.draw_polyline(points, Color(0.18, 0.12, 0.0, 0.45), 12.0, true)
+	intro_handhold_arrow.draw_polyline(points, color, 6.0, true)
+	var head_len := 34.0
+	var head_w := 24.0
+	var head := PackedVector2Array([
+		end,
+		end - dir * head_len + normal * head_w,
+		end - dir * head_len - normal * head_w,
+	])
+	intro_handhold_arrow.draw_colored_polygon(head, color)
+
 
 func _update_hud_health():
 	if not hud_panel: return
@@ -7937,7 +8305,10 @@ func _on_talk_to_agent_pressed():
 	# false until the quest actually fires inside the agent panel flow.
 	if is_instance_valid(StoryManager):
 		StoryManager.story_state["intro_agent_visited"] = true
+	_update_intro_handhold()
 	dock_panel.visible = false
+	if target_panel:
+		target_panel.visible = false
 	if inventory_panel:
 		inventory_panel.visible = false
 	if store_panel:
@@ -8007,6 +8378,11 @@ func _on_talk_to_agent_pressed():
 		comp_btn.disabled = not QuestManager.is_quest_completed()
 		comp_btn.pressed.connect(_on_agent_complete_pressed)
 		agent_choices_container.add_child(comp_btn)
+		_set_npc_attention_button(
+			comp_btn,
+			not comp_btn.disabled,
+			Color(0.2, 0.95, 1.0, 1.0)
+		)
 		
 		# Partial shipment button — ore quests only, when player has cargo but isn't done yet
 		if q["objective_type"] == "DELIVER_ORE" and GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.5 and not QuestManager.is_quest_completed():
@@ -8049,7 +8425,9 @@ func _show_kaelen_first_briefing() -> void:
 
 	var accept_btn := Button.new()
 	accept_btn.text = "Let's hear it."
+	_set_npc_attention_button(accept_btn, true, Color(1.0, 0.88, 0.05, 1.0))
 	accept_btn.pressed.connect(func():
+		_set_npc_attention_button(accept_btn, false)
 		SpeechService.stop()
 		GlobalState.kaelen_briefing_seen = true
 		for child in agent_choices_container.get_children():
@@ -8144,7 +8522,9 @@ func _show_kaelen_intro_quest_offer() -> void:
 
 	var take_btn := Button.new()
 	take_btn.text = "I'll take it."
+	_set_npc_attention_button(take_btn, true, Color(1.0, 0.88, 0.05, 1.0))
 	take_btn.pressed.connect(func():
+		_set_npc_attention_button(take_btn, false)
 		SpeechService.stop()
 		GlobalState.kaelen_briefing_accepted = true
 		if is_instance_valid(StoryManager):
@@ -8757,18 +9137,23 @@ func _on_partial_delivery_pressed(deliverable: float):
 
 func _on_quest_accepted():
 	_update_quest_tracker()
+	_refresh_visible_npc_attention_buttons()
 
 func _on_quest_progress_updated():
 	_update_quest_tracker()
+	_refresh_visible_npc_attention_buttons()
 
 func _on_quest_completed():
 	_update_quest_tracker()
+	_refresh_visible_npc_attention_buttons()
 
 func _on_quest_abandoned():
 	_update_quest_tracker()
+	_refresh_visible_npc_attention_buttons()
 
 func _on_quest_expired(title: String) -> void:
 	_update_quest_tracker()
+	_refresh_visible_npc_attention_buttons()
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Contract expired: %s." % title,
@@ -8792,7 +9177,11 @@ func _update_quest_tracker():
 	_update_quest_tracker_logo(q.get("faction", "neutral"))
 
 	var _cap = MissionCapabilityRegistry.get_for_type(q.get("objective_type", ""))
-	if _cap:
+	if QuestManager.is_quest_completed():
+		quest_tracker_progress.text = _completed_contract_tracker_text(q)
+	elif _is_intro_starter_contract(q):
+		quest_tracker_progress.text = _intro_starter_contract_tracker_text(q)
+	elif _cap:
 		quest_tracker_progress.text = _cap.format_tracker_text(q)
 	else:
 		quest_tracker_progress.text = q.get("objective_type", "Unknown")
@@ -8810,6 +9199,33 @@ func _update_quest_tracker():
 	_update_quest_tracker_turn_in_button(q)
 	_update_quest_tracker_secondary_missions()
 	_refit_quest_tracker_panel()
+
+
+func _completed_contract_tracker_text(q: Dictionary) -> String:
+	var objective_text := "Mission complete."
+	if bool(q.get("public_board", false)):
+		objective_text = "Board job complete."
+	elif str(q.get("objective_type", "")) == "PICKUP_SPECIAL":
+		objective_text = "Pickup complete."
+	return objective_text + "\nReturn to the station and speak with your agent."
+
+
+func _is_intro_starter_contract(q: Dictionary) -> bool:
+	return str(q.get("title", "")) == "Clean and Easy" \
+		and str(q.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(q.get("target_faction", "")) == "reavers"
+
+
+func _intro_starter_contract_tracker_text(q: Dictionary) -> String:
+	var current := int(q.get("current_count", 0))
+	var required := int(q.get("count_required", 1))
+	if current >= required:
+		return "Reaver destroyed.\nReturn to the station and click Talk to Agent to hand in the contract."
+	return (
+		"Find and click the Reaver in the overview.\n"
+		+ "Once selected, click Attack Hostile in the target window.\n"
+		+ "Kills: %d / %d (Reavers)" % [current, required]
+	)
 
 
 func _update_quest_tracker_route_button(q: Dictionary) -> void:
@@ -10135,6 +10551,7 @@ func show_kaelen_intro():
 	dismiss_btn.text = "Got it. Heading to the station."
 	dismiss_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	vbox.add_child(dismiss_btn)
+	_set_npc_attention_button(dismiss_btn, true, Color(1.0, 0.88, 0.05, 1.0))
 	
 	# ── Fade in ───────────────────────────────────────────────────────────────
 	popup.modulate.a = 0.0
@@ -10145,13 +10562,18 @@ func show_kaelen_intro():
 	
 	# ── Dismiss handler ───────────────────────────────────────────────────────
 	var _dismiss = func():
+		_set_npc_attention_button(dismiss_btn, false)
+		_clear_intro_handhold_arrow()
 		StoryManager.on_kaelen_intro_dismissed()
+		set_overview_collapsed(false)
+		refresh_overview()
 		var fade_out = create_tween()
 		fade_out.tween_property(popup, "modulate:a", 0.0, 0.35)
 		fade_out.parallel().tween_property(overlay, "modulate:a", 0.0, 0.35)
 		fade_out.tween_callback(func():
 			popup.queue_free()
 			overlay.queue_free()
+			_update_intro_handhold()
 		)
 	dismiss_btn.pressed.connect(_dismiss)
 	

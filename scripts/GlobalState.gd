@@ -1582,6 +1582,8 @@ var runtime_entity_sequence: int = 0
 var player: Node3D = null
 var active_system_root: Node3D = null
 var current_system_id: String = "start_system"
+var intro_tutorial_player_protected: bool = false
+var combat_tutorial_seen: bool = false
 var active_target: Node3D = null:
 	set(val):
 		active_target = val
@@ -1592,6 +1594,10 @@ var paused: bool = false:
 	set(val):
 		paused = val
 		game_paused.emit(paused)
+
+
+func clear_intro_tutorial_player_protection() -> void:
+	intro_tutorial_player_protected = false
 
 var bloom_enabled: bool = true:
 	set(val):
@@ -1723,6 +1729,9 @@ func spawn_mission_targets(faction_name: String, count: int, min_player_distance
 	# Spread ships evenly in a ring 550-900m from the station — far enough
 	# that the player has to fly out to engage, close enough to feel immediate
 	var mission_key := _active_mission_identity_key()
+	var is_intro_tutorial_target := _active_mission_is_intro_tutorial()
+	if is_intro_tutorial_target:
+		intro_tutorial_player_protected = true
 	var start_index := int(
 		QuestManager.active_quest.get("target_spawn_sequence", 0)
 	)
@@ -1752,6 +1761,9 @@ func spawn_mission_targets(faction_name: String, count: int, min_player_distance
 		# Mark as a quest target so QuestManager can count survivors and
 		# decide when to spawn replacements after NPC kills.
 		npc.set_meta("is_quest_target", true)
+		if is_intro_tutorial_target:
+			npc.set_meta("intro_tutorial_target", true)
+			npc.set_meta("npc_attack_protected", true)
 		npc.persistent_id = "entity.mission.%s.%06d" % [
 			mission_key,
 			start_index + i,
@@ -2029,6 +2041,13 @@ func _node3d_position(node: Node3D) -> Vector3:
 	return node.position
 
 
+func _active_mission_is_intro_tutorial() -> bool:
+	return QuestManager.is_quest_active() \
+		and str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
+		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers"
+
+
 func _active_mission_identity_key() -> String:
 	var runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
 	if not runtime_id.is_empty():
@@ -2159,6 +2178,8 @@ func reset_for_restart():
 	player = null
 	active_system_root = null
 	current_system_id = "start_system"
+	intro_tutorial_player_protected = false
+	combat_tutorial_seen = false
 	active_system_entities.clear()
 	generated_outpost_npcs.clear()
 	generated_outpost_npc_data.clear()

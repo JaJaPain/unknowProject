@@ -370,6 +370,11 @@ func _lerp_timescale(to_scale: float, to_pitch: float, duration_ms: int = 400) -
 func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> void:
 	if state != State.IDLE:
 		return
+	if not player_initiated and is_training_combat_active() \
+			and not bool(enemy.get_meta("intro_tutorial_target", false)):
+		if enemy.has_method("_redirect_from_combat_queue"):
+			enemy.call("_redirect_from_combat_queue")
+		return
 	# Set state immediately so physics-frame re-entry can't spawn duplicate requests
 	# while the async taunt fetch is in flight.
 	state = State.PLANNING
@@ -457,6 +462,10 @@ func _collect_meshes(node: Node, out: Array) -> void:
 ## Only accepted during the PLANNING phase; guards against mid-execution joins.
 func join_combat(enemy: Node) -> void:
 	if state != State.PLANNING:
+		return
+	if is_training_combat_active() and not bool(enemy.get_meta("intro_tutorial_target", false)):
+		if enemy.has_method("_redirect_from_combat_queue"):
+			enemy.call("_redirect_from_combat_queue")
 		return
 	if enemy_nodes.size() >= 3:
 		return
@@ -575,6 +584,8 @@ func _restore_ap() -> void:
 func queue_action(type: CombatActionType.Type, params: Dictionary = {}) -> bool:
 	if state != State.PLANNING:
 		return false
+	if type == CombatActionType.Type.MICRO_WARP and is_training_combat_active():
+		return false
 
 	var cost: int = CombatActionType.AP_COST[type]
 
@@ -597,6 +608,14 @@ func queue_action(type: CombatActionType.Type, params: Dictionary = {}) -> bool:
 		repair_used_this_turn = true
 	emit_signal("action_queued", action)
 	return true
+
+
+func is_training_combat_active() -> bool:
+	if not QuestManager.is_quest_active():
+		return false
+	return str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
+		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers"
 
 func dequeue_last() -> void:
 	if queued_actions.is_empty() or state != State.PLANNING:
@@ -852,6 +871,8 @@ func _run_player_actions() -> void:
 
 func _dispatch_action(action: Dictionary) -> void:
 	var t = action.get("type")
+	if t in _ATTACK_TYPES:
+		GlobalState.clear_intro_tutorial_player_protection()
 	var target: Node = enemy_node if t in _ATTACK_TYPES else player_node
 	emit_signal("action_telegraphed", t, player_node, target)
 	await _beat(BEAT_TELEGRAPH)

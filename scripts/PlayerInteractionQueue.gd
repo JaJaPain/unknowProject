@@ -141,10 +141,11 @@ func _complete_active() -> void:
 func _can_run(priority: int) -> bool:
 	match priority:
 		int(Priority.COMBAT):
-			# Can start a new fight when no fight is currently live.
-			# The cooldown is not applied here — it blocks NPC re-engagement
-			# at the NPCShip level, but we always allow player-initiated combat.
-			return CombatManager.state == CombatManager.State.IDLE
+			# NPC-initiated fights must respect the post-combat breather.
+			# Player-initiated attacks call CombatManager directly, so they are
+			# still allowed to start immediately when the player chooses to engage.
+			return CombatManager.state == CombatManager.State.IDLE \
+				and Time.get_ticks_msec() >= _cooldown_until
 		int(Priority.STORY), int(Priority.AMBIENT), int(Priority.UI):
 			# All non-combat intents wait until combat is fully over + buffer elapsed.
 			return not in_combat_window()

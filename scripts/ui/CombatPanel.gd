@@ -1030,6 +1030,8 @@ func _refresh_button_states() -> void:
 		var blocked: bool = false
 		if def["type"] == 4 and CombatManager.micro_warp_cooldown > 0:
 			blocked = true
+		if def["type"] == 4 and CombatManager.is_training_combat_active():
+			blocked = true
 		if def["type"] == 5 and not GlobalState.inventory.has_item("repair_kit"):
 			blocked = true
 		if def["type"] == 5 and CombatManager.repair_used_this_turn:

@@ -23,6 +23,7 @@ var last_attacker_faction: String = ""
 var taunted_player: bool = false
 var ceasefire: bool = false
 var _combat_intent_id: String = ""   # queue id while waiting to engage
+var _combat_queue_redirect_until_msec: int = 0
 
 var behavior: String = ""
 var _flee_gate: Node3D = null
@@ -589,23 +590,40 @@ func _physics_process(delta: float):
 		
 	if fire_cooldown > 0.0:
 		fire_cooldown -= delta
+
+	if target == GlobalState.player and _should_redirect_from_player_engagement():
+		_redirect_from_combat_queue()
 		
 	# Check target distance leash
 	if target and is_instance_valid(target):
-		var dist = global_position.distance_to(target.global_position)
-		if dist > 150.0:
+		if bool(target.get_meta("npc_attack_protected", false)):
+			target = null
+		else:
+			var dist = global_position.distance_to(target.global_position)
+			if dist > 150.0:
+				target = null
+
+	if bool(get_meta("intro_tutorial_target", false)):
+		var p = GlobalState.player
+		if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked"):
+			target = p
+		else:
 			target = null
 		
 	# Scanning and targeting
 	if ceasefire:
 		target = null
-	elif target == null or not is_instance_valid(target) or target.get("destroyed") or (target == GlobalState.player and GlobalState.player.get("is_docked")):
+	elif not bool(get_meta("intro_tutorial_target", false)) \
+			and (target == null or not is_instance_valid(target) or target.get("destroyed") or (target == GlobalState.player and GlobalState.player.get("is_docked"))):
 		target = null
 
 		var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
 
 		# Elite reinforcements and active code-enforcement ships target the player immediately.
-		if is_reinforcement or is_code_enforcement:
+		if (is_reinforcement or is_code_enforcement) \
+					and not GlobalState.intro_tutorial_player_protected \
+					and not _should_redirect_from_player_engagement() \
+				and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:
 			var p = GlobalState.player
 			if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked"):
 				target = p
@@ -622,7 +640,10 @@ func _physics_process(delta: float):
 			
 			# 1. Check if player is an enemy and in range
 			var p = GlobalState.player
-			if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked"):
+			if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked") \
+					and not GlobalState.intro_tutorial_player_protected \
+					and not _should_redirect_from_player_engagement() \
+					and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:
 				var is_player_enemy = false
 				
 				# Minor factions are always hostile to the player
@@ -646,6 +667,8 @@ func _physics_process(delta: float):
 			# 2. Check other active system entities (NPC ships)
 			for entity in GlobalState.active_system_entities:
 				if entity and is_instance_valid(entity) and entity != self and not entity.get("destroyed"):
+					if bool(entity.get_meta("npc_attack_protected", false)):
+						continue
 					if entity.get("faction") != faction:
 						var dist = global_position.distance_to(entity.global_position)
 						if dist < min_dist:
@@ -784,6 +807,8 @@ func fire():
 	
 	# If targeting the player, trigger hostile taunt
 	if target == GlobalState.player:
+		if bool(get_meta("intro_tutorial_target", false)):
+			GlobalState.clear_intro_tutorial_player_protection()
 		if not taunted_player:
 			taunted_player = true
 			var taunt = LLMInterface.get_chatter_line("hostile_taunt", {
@@ -855,6 +880,10 @@ func spawn_projectile(target_node: Node3D, visual_only: bool = false) -> void:
 
 func take_damage(amount: float, attacker_faction: String = ""):
 	if destroyed: return
+	if bool(get_meta("npc_attack_protected", false)) \
+			and attacker_faction != "" \
+			and attacker_faction != "player":
+		return
 	var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
 	RuntimeTraceType.event("combat", "npc_damage", {
 		"ship": name,
@@ -972,8 +1001,13 @@ func die():
 # ── PlayerInteractionQueue integration ───────────────────────────────────────
 
 func _request_combat_via_queue() -> void:
-	# Already queued — don't enqueue twice.
 	if not _combat_intent_id.is_empty():
+		if PlayerInteractionQueue.in_combat_window() or PlayerInteractionQueue.is_busy():
+			_cancel_combat_intent()
+			_redirect_from_combat_queue()
+		return
+	if PlayerInteractionQueue.in_combat_window() or PlayerInteractionQueue.is_busy():
+		_redirect_from_combat_queue()
 		return
 	# Squad join: if a fight is active and the current enemy is in our squad,
 	# join that fight directly instead of queuing a separate one.
@@ -990,6 +1024,29 @@ func _request_combat_via_queue() -> void:
 		ship_label
 	)
 
+
+func _redirect_from_combat_queue() -> void:
+	var p := GlobalState.player as Node3D
+	if not is_instance_valid(p):
+		return
+	var away := global_position - p.global_position
+	if away.length_squared() < 1.0:
+		away = global_transform.basis.x
+	away = away.normalized()
+	target = null
+	patrol_route.clear()
+	patrol_center = global_position + away * randf_range(900.0, 1300.0)
+	_combat_queue_redirect_until_msec = Time.get_ticks_msec() + 30000
+	fire_cooldown = maxf(fire_cooldown, 3.0)
+
+
+func _should_redirect_from_player_engagement() -> bool:
+	if bool(get_meta("intro_tutorial_target", false)):
+		return false
+	return PlayerInteractionQueue.in_combat_window() \
+		or PlayerInteractionQueue.is_busy() \
+		or (CombatManager.has_method("is_training_combat_active") and CombatManager.is_training_combat_active())
+
 func _start_queued_combat(done: Callable) -> void:
 	_combat_intent_id = ""
 	# Validate: ship and player must still be valid and clear to fight.
@@ -998,6 +1055,10 @@ func _start_queued_combat(done: Callable) -> void:
 	if not is_instance_valid(self) or destroyed or ceasefire or already_fighting \
 			or not is_instance_valid(p) or p.get("destroyed") or p.get("is_docked"):
 		done.call()   # nothing to fight — release the slot cleanly
+		return
+	if CombatManager.is_training_combat_active() and not bool(get_meta("intro_tutorial_target", false)):
+		_redirect_from_combat_queue()
+		done.call()
 		return
 	CombatManager.start_combat(p, self, false)
 	# Release the queue slot when this fight ends (one-shot connection).
@@ -1031,6 +1092,8 @@ func capture_state() -> Dictionary:
 		"health": health,
 		"faction": faction,
 		"ship_role": ship_role,
+		"intro_tutorial_target": bool(get_meta("intro_tutorial_target", false)),
+		"npc_attack_protected": bool(get_meta("npc_attack_protected", false)),
 		"position": [global_position.x, global_position.y, global_position.z],
 		"rotation": [global_rotation.x, global_rotation.y, global_rotation.z],
 	}
@@ -1050,6 +1113,10 @@ func restore_state(state: Dictionary) -> void:
 		engine_glow = null
 		_setup_hull()
 	health = clampf(float(state.get("health", max_health)), 0.0, max_health)
+	if bool(state.get("intro_tutorial_target", false)):
+		set_meta("intro_tutorial_target", true)
+	if bool(state.get("npc_attack_protected", false)):
+		set_meta("npc_attack_protected", true)
 	var saved_position: Array = state.get("position", [])
 	if saved_position.size() == 3:
 		global_position = Vector3(float(saved_position[0]), float(saved_position[1]), float(saved_position[2]))

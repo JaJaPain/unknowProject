@@ -542,6 +542,7 @@ func mark_pickup_complete() -> bool:
 func complete_quest():
 	if not is_quest_active() or not is_quest_completed():
 		return
+	GlobalState.clear_intro_tutorial_player_protection()
 
 	var cap = MissionCapabilityRegistryType.get_for_type(
 		active_quest["objective_type"]
@@ -577,6 +578,7 @@ func complete_quest():
 func abandon_quest():
 	if not is_quest_active():
 		return
+	GlobalState.clear_intro_tutorial_player_protection()
 
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
