@@ -1915,6 +1915,14 @@ func _keepout_radius(obstacle: Node3D) -> float:
 	return _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
 
 
+## The actual (visual) body radius, ignoring the keep-out margin. Used to decide
+## whether a target is truly unreachable (inside the body) vs merely inside the
+## comfortable margin around it.
+func _physical_radius(obstacle: Node3D) -> float:
+	var r := float(obstacle.get_meta("physical_radius", 0.0))
+	return r if r > 0.0 else _get_obstacle_radius(obstacle)
+
+
 ## Returns the steer waypoint from `from_pos`: the destination if the path is clear,
 ## otherwise a point that carries the ship around the nearest blocking sphere.
 ## Position-parameterized so the path planner can march it forward from any point.
@@ -1931,16 +1939,23 @@ func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_tar
 		if candidate == navigation_target:
 			continue  # the thing we're flying to is never its own obstacle
 		var radius := _keepout_radius(candidate)
-		if _segment_clears_sphere(from_pos, destination, candidate.global_position, radius):
+		var phys := _physical_radius(candidate)
+		var dest_from_center := candidate.global_position.distance_to(destination)
+		# Target is inside the actual body — genuinely unavoidable, approach direct.
+		if dest_from_center < phys + 30.0:
 			continue
-		# If the destination itself is inside this sphere (e.g. an enemy hugging a
-		# planet), we must go in — don't treat it as a blocker.
-		if candidate.global_position.distance_to(destination) < radius:
+		# Target sits within the comfortable margin (e.g. an enemy orbiting a planet):
+		# shrink the avoidance radius so we still round the BODY but can reach the
+		# target, instead of scraping the surface via the "approach direct" shortcut.
+		var eff_radius := radius
+		if dest_from_center < radius:
+			eff_radius = maxf(phys + 40.0, dest_from_center - 40.0)
+		if _segment_clears_sphere(from_pos, destination, candidate.global_position, eff_radius):
 			continue
 		var d := from_pos.distance_to(candidate.global_position)
 		if d < blocker_dist:
 			blocker = candidate
-			blocker_radius = radius
+			blocker_radius = eff_radius
 			blocker_dist = d
 	if blocker == null:
 		return destination
