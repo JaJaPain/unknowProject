@@ -1910,6 +1910,19 @@ func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> V
 	if blocker == null:
 		return destination
 
+	# If we're already INSIDE the blocking sphere (e.g. sitting in a planet's belt
+	# when Fly To is clicked, with the target outside), exit radially to the nearest
+	# surface point FIRST, then normal tangent steering takes over once we're out.
+	# This is the predictable "get out, then go" behavior rather than arcing sideways.
+	if global_position.distance_to(blocker.global_position) < blocker_radius:
+		var out_dir := global_position - blocker.global_position
+		if out_dir.length() < 0.001:
+			out_dir = destination - blocker.global_position
+		if out_dir.length() < 0.001:
+			out_dir = Vector3.RIGHT
+		out_dir = out_dir.normalized()
+		return blocker.global_position + out_dir * (blocker_radius + blocker_radius * 0.15 + 20.0)
+
 	return _sphere_tangent_waypoint(blocker.global_position, blocker_radius, destination)
 
 
