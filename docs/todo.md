@@ -164,6 +164,11 @@ Deployment checklist for a shipped build:
 
 ---
 
+## Agent exploration quests (new objective type)
+- [ ] **Exploration / investigate contracts** -- agents (and maybe Kaelen) offer "go look at X" jobs that aren't kill/deliver/pickup: investigate an **anomaly**, a **dead/derelict ship**, or a **strange signal**. Outcome is a reveal on arrival — sometimes loot/data, sometimes a **trap** (ambush spawns, comms flips hostile). Ties into anomaly data-core delivery (see memory `project_anomaly_data_core_delivery`) and the story system. Needs: a new MissionCapability (e.g. INVESTIGATE_SIGNAL) + spawn/arrival trigger + LLM-generated hook/reveal lines (fallback bucket in `llm_dialogue_content.json`). Keep the trap odds tunable.
+
+---
+
 ## LLM Dialogue -- kill static/canned lines
 _Standing goal (ties to `project_fallbacks_are_failures`): incidental Kaelen/NPC lines that currently cycle a fixed string array should be generated fresh each time so they never repeat and never read as canned. Convert as spotted. Each conversion keeps the existing static lines as the LOGGED fallback bucket (LLM offline/slow), not the default._
 

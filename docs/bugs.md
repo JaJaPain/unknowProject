@@ -5,6 +5,14 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Public board pickup offer shows oddly at station (same family as mechanic offer)
+**Spotted:** 2026-07-01
+**Severity:** Low-Med — confusing offer/pickup state on the station board panel
+**Description:** At KOVA STATION the board panel showed two WANTED bounty cards (Reavers 0/4, Obsidian 0/5) AND a side pickup offer "Unlabeled Heat Sink Pickup From KOVA STATION, Please Stop Asking Why — Pickup: Unlabeled Heat Sink from Dasha Invar @ KOVA STATION" with a "Set Course: KOVA STATION" button. Likely the same class of bug as the mechanic offer: a pickup offer surfacing at the wrong time / pointing the pickup at the SAME station you're docked at (set course to where you already are). Also the LLM flavor title reads as placeholder-ish ("Please Stop Asking Why").
+**Where to look:** `scripts/UIManager.gd` public board / station board panel builder + the pickup offer that renders alongside board bounties; and `MissionTemplateRegistry` / public board offer builder for the pickup destination (should not be the current station). Cross-check with the mechanic offer gating fix (2026-07-01) — same "offer unmasked at wrong moment" pattern.
+
+---
+
 ### Autopilot object avoidance regressed
 **Status:** STILL BROKEN — confirmed 2026-07-01 playtest. Prior fix attempts (2026-06-26, 2026-06-30) did NOT hold. New symptom: trying to "Fly to" a hostile target on the far side of a planet, the ship flew the OPPOSITE direction, then got stuck/stalled and never reached the target — playtest was unplayable because of it. So the failure is not just grazing hazards; the route/steer target itself is inverting or dead-ending when a large body (planet/gas giant) sits between ship and target. Re-investigate `_route_steer_target` planner output + `_get_autopilot_avoidance` wiring; check for a heading sign-flip and a stall with no replan. Previous notes below still apply.
 

@@ -1892,7 +1892,7 @@ const _TANGENT_OBSTACLE_GROUPS := ["celestial", "asteroid", "wreckage", "station
 # heading eases along the arc — the trajectory is unchanged, just the swing. Big
 # jumps (new Fly To, or popping free of the obstacle) exceed the snap threshold and
 # pass through instantly, so smoothing never lags the real path.
-const _STEER_SMOOTH_SPEED := 6.0        # higher = snappier, lower = smoother
+const _STEER_SMOOTH_SPEED := 3.0        # higher = snappier, lower = smoother (stronger damping)
 const _STEER_SMOOTH_SNAP_DIST := 600.0  # jumps larger than this bypass smoothing
 var _steer_smooth_pos: Vector3 = Vector3.ZERO
 var _steer_smooth_active: bool = false
