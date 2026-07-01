@@ -1692,7 +1692,10 @@ func spawn_reinforcement(faction_name: String):
 			var alert = LLMInterface.get_chatter_line("system_alert")
 			emit_chatter("SYSTEM", alert, Color(0.0, 0.9, 0.9))
 
-func spawn_mission_targets(faction_name: String, count: int):
+func spawn_mission_targets(faction_name: String, count: int, min_player_distance: float = 0.0):
+	# min_player_distance > 0 forces each target to spawn at least that far from the
+	# player (used by NPC-kill respawns so a replacement never pops in the player's
+	# lap or on the fresh wreckage). 0 keeps the original station-ring behavior.
 	var player_node = player
 	if not player_node or not is_instance_valid(player_node) or player_node.get("destroyed"):
 		return
@@ -1732,7 +1735,15 @@ func spawn_mission_targets(faction_name: String, count: int):
 		var dist = randf_range(60.0, 140.0) if not patrol_route.is_empty() else randf_range(550.0, 900.0)
 		var offset = Vector3(cos(angle), randf_range(-0.05, 0.05), sin(angle)) * dist
 		var spawn_pos = target_pos + offset
-		
+		# Push the target out to a safe distance from the player if requested.
+		if min_player_distance > 0.0 \
+				and spawn_pos.distance_to(player_node.global_position) < min_player_distance:
+			var away: Vector3 = spawn_pos - player_node.global_position
+			if away.length() < 1.0:
+				away = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+			spawn_pos = player_node.global_position \
+				+ away.normalized() * (min_player_distance + randf_range(50.0, 200.0))
+
 		var npc = npc_scene.instantiate()
 		npc.faction = faction_name
 		npc.is_reinforcement = false

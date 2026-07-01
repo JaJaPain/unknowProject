@@ -81,14 +81,6 @@ Two complementary layers need to work together:
 
 ---
 
-### NPC kills count toward player's KILL_SHIPS mission
-**Spotted:** 2026-07-01
-**Severity:** High — lets missions "complete" without the player doing anything; combined with the autopilot bug the player literally couldn't reach the target, yet the kill counter climbed to 2/3 from NPC-vs-NPC kills.
-**Description:** A KILL_SHIPS objective (target faction Dustborn) incremented "Kills: 2/3" from ships destroyed by OTHER NPCs (Aurelia combat vessels killing Dustborn), not by the player. Kill credit must require the player (or the player's drones) as the killer.
-**Where to look:** `scripts/QuestManager.gd` kill-tracking / the combat death signal handler that increments KILL_SHIPS progress. Check the killer attribution — it likely counts any death of a matching-faction ship rather than deaths where `killer == GlobalState.player` (or a player-owned drone/projectile). Gate the increment on player attribution.
-
----
-
 ### "Trade Ore for <part>" errand button broken
 **Spotted:** 2026-07-01
 **Severity:** High — blocks completing PICKUP/errand quests that require clearing cargo for the part
@@ -109,6 +101,7 @@ Two complementary layers need to work together:
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-07-01 | NPC kills counted toward player's KILL_SHIPS mission | Split attribution via existing signals: `player_kill` (player-only) counts progress; `ship_destroyed` now fires ONLY for non-player kills (`NPCShip.gd`) and schedules a replacement target instead of counting. KILL_SHIPS capability refuses credit when `by_player=false`; respawn now 20s + ≥800u from the player (`QuestManager.gd`, `KillShipsCapability.gd`, `GlobalState.spawn_mission_targets`). Design per Abe: NPC-killed targets replaced far away so the contract stays player-completable. |
 | 2026-07-01 | Dummy word "Slithern" leaked into quest TITLE (e.g. "Slithern Scourper") | `_substitute_dialogue_placeholders` now applies replacements to `quest_data["title"]`, not just dialogue/choices — `LLMInterface.gd` |
 | 2026-06-26 | Autopilot object avoidance regressed | Re-wired `_get_autopilot_avoidance()` into autopilot loop; added `RayCast3D` nose whisker; added mid-route validity re-check — `PlayerShip.gd` (NOTE: regressed again, see Active) |
 | 2026-06-25 | Combat flee taunt used Kaelen voice | Added `_play_npc_flee_taunt()` in `CombatManager._exec_flee()` |

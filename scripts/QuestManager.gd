@@ -48,7 +48,11 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Create history file if it does not exist
 	_load_quest_history()
-	# Connect to ship destroyed signals to track combat quests
+	# Connect to ship destroyed signals to track combat quests.
+	# player_kill = the player landed the killing blow (counts toward the contract).
+	# ship_destroyed = a NON-player kill (never counts; schedules a replacement
+	# target so an NPC clearing your target can't finish — or stall — the contract).
+	GlobalState.player_kill.connect(_on_player_ship_kill)
 	GlobalState.ship_destroyed.connect(_on_ship_destroyed)
 	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
@@ -609,7 +613,18 @@ func _cleanup_mission(mission) -> void:
 func _on_campaign_time_changed(_total_minutes: int) -> void:
 	check_active_quest_expiration()
 
-func _on_ship_destroyed(faction_name: String):
+func _on_player_ship_kill(faction_name: String) -> void:
+	_dispatch_ship_destroyed(faction_name, true)
+
+
+func _on_ship_destroyed(faction_name: String) -> void:
+	# Reached only for NON-player kills now (see NPCShip: player kills go through
+	# player_kill). Passing by_player=false lets KILL_SHIPS refuse the credit and
+	# request a replacement target instead.
+	_dispatch_ship_destroyed(faction_name, false)
+
+
+func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 	for m in _collection.get_all_active():
 		var cap = MissionCapabilityRegistryType.get_for_type(
 			m.data.get("objective_type", "")
@@ -618,7 +633,7 @@ func _on_ship_destroyed(faction_name: String):
 			continue
 
 		var hints := cap.handle_event(
-			m.data, "ship_destroyed", {"faction": faction_name}
+			m.data, "ship_destroyed", {"faction": faction_name, "by_player": by_player}
 		)
 		if hints.is_empty():
 			continue
@@ -723,8 +738,11 @@ func _apply_cleanup_hints(hints: Dictionary) -> void:
 		_set_ceasefire_for_faction(cf_faction, false)
 
 
+const RESPAWN_DELAY_SECONDS := 20.0        # gap before a replacement target arrives
+const RESPAWN_MIN_PLAYER_DISTANCE := 800.0  # spawn far from the player + wreckage
+
 func _schedule_respawn(faction: String) -> void:
-	get_tree().create_timer(2.0).timeout.connect(func():
+	get_tree().create_timer(RESPAWN_DELAY_SECONDS).timeout.connect(func():
 		var needs_targets := false
 		for m in _collection.get_all_active():
 			if m.data.get("target_faction", "") != faction:
@@ -743,8 +761,8 @@ func _schedule_respawn(faction: String) -> void:
 				if e.is_in_group("ship") and e.get_meta("is_quest_target", false):
 					alive_targets += 1
 		if alive_targets == 0:
-			GlobalState.spawn_mission_targets(faction, 1)
-			print("[QuestManager] Respawned quest target after NPC kill.")
+			GlobalState.spawn_mission_targets(faction, 1, RESPAWN_MIN_PLAYER_DISTANCE)
+			print("[QuestManager] Respawned quest target far from player after NPC kill.")
 	)
 
 

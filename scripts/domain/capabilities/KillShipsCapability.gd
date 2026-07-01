@@ -19,6 +19,15 @@ func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Di
 	var faction := str(event_data.get("faction", ""))
 	if str(data.get("target_faction", "")) != faction:
 		return {}
+	# by_player defaults true so legacy callers/tests (which omit it) still count.
+	var by_player := bool(event_data.get("by_player", true))
+	if not by_player:
+		# An NPC (or the environment) destroyed the quest target. Do NOT credit the
+		# player — schedule a replacement so the contract stays completable instead
+		# of being finished, or stalled, by a kill the player never made.
+		if is_completed(data):
+			return {}
+		return {"needs_respawn": true, "respawn_faction": faction}
 	data["current_count"] = int(data.get("current_count", 0)) + 1
 	var result := {"progress_changed": true}
 	if int(data["current_count"]) < int(data.get("count_required", 0)):

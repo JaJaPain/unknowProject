@@ -21,6 +21,8 @@ func _initialize() -> void:
 	_test_kill_ships_handle_event_increments()
 	_test_kill_ships_handle_event_wrong_faction()
 	_test_kill_ships_handle_event_no_respawn_when_done()
+	_test_kill_ships_npc_kill_does_not_count()
+	_test_kill_ships_player_kill_counts()
 	_test_kill_ships_format_tracker()
 	_test_kill_ships_format_tracker_generated_faction()
 	_test_recover_handle_event_increments()
@@ -136,6 +138,26 @@ func _test_kill_ships_handle_event_wrong_faction() -> void:
 	var hints := cap.handle_event(data, "ship_destroyed", {"faction": "aurelia"})
 	_expect(hints.is_empty(), "wrong faction should be ignored")
 	_expect(int(data["current_count"]) == 0, "wrong faction incremented")
+
+
+func _test_kill_ships_npc_kill_does_not_count() -> void:
+	# An NPC kill (by_player=false) must NOT advance the contract, but must ask for
+	# a replacement target so the player can still complete it.
+	var cap := KillCap.new()
+	var data := {"current_count": 1, "count_required": 3, "target_faction": "zenith"}
+	var hints := cap.handle_event(data, "ship_destroyed", {"faction": "zenith", "by_player": false})
+	_expect(int(data["current_count"]) == 1, "NPC kill should not increment the count")
+	_expect(not hints.get("progress_changed", false), "NPC kill should not report progress")
+	_expect(hints.get("needs_respawn", false), "NPC kill should request a replacement target")
+
+
+func _test_kill_ships_player_kill_counts() -> void:
+	# Explicit by_player=true still counts (parity with the legacy default).
+	var cap := KillCap.new()
+	var data := {"current_count": 0, "count_required": 3, "target_faction": "zenith"}
+	var hints := cap.handle_event(data, "ship_destroyed", {"faction": "zenith", "by_player": true})
+	_expect(int(data["current_count"]) == 1, "player kill should increment")
+	_expect(hints.get("progress_changed", false), "player kill should report progress")
 
 
 func _test_kill_ships_handle_event_no_respawn_when_done() -> void:

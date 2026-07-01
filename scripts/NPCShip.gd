@@ -947,11 +947,13 @@ func die():
 		if is_instance_valid(StoryQuestManager):
 			StoryQuestManager.on_ship_destroyed(str(persistent_id), faction)
 
-	# Always emit ship_destroyed so quest progress counts NPC kills too.
-	# Previously this only fired inside the player-killed branch (via
-	# record_kill), so an NPC killing a quest target left the quest count
-	# stuck and the contract unfinishable.
-	if not is_code_enforcement:
+	# ship_destroyed now fires ONLY for non-player kills. Player kills are already
+	# signalled via player_kill above. QuestManager uses the split to attribute
+	# correctly: a player kill advances a KILL_SHIPS contract; an NPC killing your
+	# quest target does NOT count — instead a replacement target is spawned far away
+	# so the contract stays player-completable. (Making it unconditional previously
+	# credited the player for kills they never made.)
+	elif not is_code_enforcement:
 		GlobalState.ship_destroyed.emit(faction)
 	
 	# Remove from entities list
