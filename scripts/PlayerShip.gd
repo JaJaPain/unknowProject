@@ -2074,12 +2074,22 @@ func _catmull_point(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float
 ## Advance past reached points, then return a point ~_PATH_LOOKAHEAD ahead along
 ## the path (falls back to the destination near the end).
 func _path_lookahead_target(destination: Vector3) -> Vector3:
-	while _auto_path_index < _auto_path.size() - 1 \
-			and global_position.distance_to(_auto_path[_auto_path_index]) < _PATH_MARCH_STEP:
-		_auto_path_index += 1
+	# Advance the index to the CLOSEST remaining path point (never backward). This
+	# is robust to the ship drifting slightly off the exact curve — the old
+	# "within 50u of path[index]" test could freeze the index and whip the nose
+	# backward once the ship strayed.
+	var best_i := _auto_path_index
+	var best_d := INF
+	for i in range(_auto_path_index, _auto_path.size()):
+		var d := global_position.distance_to(_auto_path[i])
+		if d < best_d:
+			best_d = d
+			best_i = i
+	_auto_path_index = best_i
+	# Walk forward from the closest point by the lookahead distance.
 	var accum := 0.0
-	var idx := _auto_path_index
-	var prev := global_position
+	var idx := best_i
+	var prev := _auto_path[best_i]
 	while idx < _auto_path.size():
 		var pt := _auto_path[idx]
 		accum += prev.distance_to(pt)
