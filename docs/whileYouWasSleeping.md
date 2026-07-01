@@ -1255,3 +1255,64 @@ We never got to the planned **Claudework** todo list this week — the kitbash s
 system + player ship rabbit hole ate the whole session (worth it, but flagging it).
 Pick that list back up next time. Also still open: flip Zenith/Aurelia on in-game,
 the mouse-lost-on-combat-entry bug (High — forces hard exit), NPC exhaust glow rework.
+
+---
+
+## LLM Dialogue Content Registry — first slice (segment-3/economy-stores-events)
+
+Started migrating scattered LLM dialogue steering out of GDScript into a single
+human-editable JSON file (Codex plan: `docs/plan_llm_dialogue_content_registry.md`,
+editing guide: `docs/llm_dialogue_content_editing.md`).
+
+**Moved into JSON** (`data/content/llm_dialogue_content.json`):
+- Quest few-shot examples for all 4 agent voices × 3 mission types (the old
+  `_get_type_examples` content — verbatim).
+- Per-mission-type `dummy_constraints` (Slithern/George/3 ships, 25 m³ ore, Sable
+  Mercer @ Morrow Station / Sealed Data Drive).
+- `global_rules` + `speakers` cards documenting nickname ownership (Shiny = Kaelen
+  only; Indy = rare for faction agents; enemies never address the player). These are
+  documentation/future-wiring for now.
+
+**New code:** `scripts/registry/LLMDialogueContentRegistry.gd` (boring accessor, safe
+defaults on bad/missing JSON), test `tests/registry/run_llm_dialogue_content_registry_tests.gd`.
+
+**Wired:** `LLMInterface._get_type_examples()` and the quest `dummy_name_instruction`
+now read the registry; the original hardcoded strings remain as a byte-identical
+safety-net fallback (renamed `_get_type_examples_fallback`).
+
+**Still hardcoded (with TODO markers pointing at JSON keys):** faction agent persona
+strings, Kaelen handoff few-shot lines, and everything in UIManager (mechanic/lounge)
+and combat taunts. Model-profile file/registry deliberately NOT built yet (future).
+
+Tests run & passing: parse_check, new registry test, mission_contract, public_board
+validation, speech_service, game_content_registry, local_model_gateway.
+
+### Follow-up: in-game editor + base/override safety net
+- Added DevPanel tabs (Numpad 7): **Dialogue Content** (quest examples/dummy
+  constraints, per mission-type × agent dropdowns) and **Dialogue Rules**
+  (global nickname rules + speaker cards). Live "Shiny is Kaelen-only" validation;
+  edits blocked if they'd leak Shiny into a non-Kaelen bucket.
+- **Base/override split** (Abe's idea): panel edits save to a *delta* file
+  `data/content/llm_dialogue_content.override.json`, deep-merged over the trusted
+  base at load. Base file is never written by the panel. Malformed override is
+  ignored (base still runs). Toggle to flip override on/off live for A/B; Discard
+  deletes it. Review = diff base vs override; promote = fold into base + delete.
+- Registry gained base_data/override_data/merged data, has_override(),
+  set_override_enabled(), discard_override(); save() writes only the delta.
+- Tests extended: in-memory mutation + full override lifecycle (save→reload→
+  toggle→discard, self-cleaning). parse/mission_contract green.
+
+### Permanent fallback log (Abe: "fallbacks are failures")
+- Relocated GenerationDiagnostics' persistent log from user:// into the repo at
+  **logs/** (gitignored): `fallback_events.jsonl` (raw), `fallback_summary.json`
+  (machine), `fallback_summary.txt` (human-readable, glanceable). Exported builds
+  fall back to user:// (res:// read-only there). So "check our fallback status" =
+  read logs/fallback_summary.txt.
+- Closed two SILENT fallback paths so the log is complete: request_lounge_chatter
+  (now logs a specific reason per failure branch) and the content-file-missing
+  path in _get_type_examples (logs content_file_missing). Rule going forward: no
+  callback.call(fallback_line) without a record_fallback(reason).
+- Reason codes split into environment (http/timeout/model_unavailable) vs quality
+  (parse/validation/shape) — that split is the fix roadmap. by_reason counts tell
+  us what to attack first.
+- diagnostics + parse tests green. Log getter is path-agnostic so tests unaffected.

@@ -42,6 +42,8 @@ func _ready() -> void:
 	_build_ship_viewer_tab()
 	_build_lounge_layout_tab()
 	_build_mechanic_debug_tab()
+	_build_dialogue_content_tab()
+	_build_dialogue_rules_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
 	# _build_my_tool(my_tab)
@@ -349,6 +351,481 @@ func _mechanic_debug_values() -> String:
 				names.append(str(entry.get("display", entry.get("id", ""))))
 		lines.append("Valid destinations: %s" % ", ".join(names))
 	return "\n".join(lines)
+
+
+# ── Dialogue content editor tab ───────────────────────────────────────────────
+# Compact editor for the migrated LLM quest dialogue in
+# data/content/llm_dialogue_content.json. Two dropdowns pick the bucket
+# (mission type × agent voice); the fields below edit just that bucket so the
+# panel never shows everything at once.
+const _DC_TYPES  := ["KILL_SHIPS", "DELIVER_ORE", "PICKUP_SPECIAL"]
+const _DC_AGENTS := ["zenith", "aurelia", "vanguard", "neutral"]
+const _DC_AGENT_LABELS := {
+	"zenith": "Zenith — Director Voss",
+	"aurelia": "Aurelia — Liaison Ryn",
+	"vanguard": "Vanguard — Captain Dask",
+	"neutral": "Neutral — Broker Kaelen (Shiny OK)",
+}
+
+var _dc_type_dd: OptionButton
+var _dc_agent_dd: OptionButton
+var _dc_constraints: TextEdit
+var _dc_dialogues: TextEdit
+var _dc_r1: LineEdit
+var _dc_r2: LineEdit
+var _dc_r3: LineEdit
+var _dc_validation: Label
+var _dc_status: Label
+
+
+func _build_dialogue_content_tab() -> void:
+	var tab := add_tab("Dialogue Content")
+
+	var hint := Label.new()
+	hint.text = "Edit the LLM quest dialogue examples. Pick a mission type + agent, edit the bucket, then Apply (this session) or Save (writes the JSON file). One dialogue per line. Shiny is Kaelen-only — allowed only for the Neutral agent."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+	tab.add_child(HSeparator.new())
+
+	# ── Section selectors ─────────────────────────────────────────────────────
+	var picker := HBoxContainer.new()
+	tab.add_child(picker)
+
+	_dc_type_dd = OptionButton.new()
+	for t in _DC_TYPES:
+		_dc_type_dd.add_item(t)
+	_dc_type_dd.item_selected.connect(func(_i: int): _dc_load_fields())
+	picker.add_child(_dc_type_dd)
+
+	_dc_agent_dd = OptionButton.new()
+	for a in _DC_AGENTS:
+		_dc_agent_dd.add_item(str(_DC_AGENT_LABELS.get(a, a)))
+	_dc_agent_dd.item_selected.connect(func(_i: int): _dc_load_fields())
+	picker.add_child(_dc_agent_dd)
+
+	var reload_btn := Button.new()
+	reload_btn.text = "Reload from file"
+	reload_btn.pressed.connect(func() -> void:
+		LLMDialogueContentRegistry.shared().reload()
+		_dc_load_fields()
+		_dc_set_status("Reloaded from disk.", Color(0.6, 0.9, 1.0))
+	)
+	picker.add_child(reload_btn)
+
+	# ── Dummy constraints ─────────────────────────────────────────────────────
+	tab.add_child(_dc_field_label("Dummy constraint line (fact-steering; keep Slithern / 3 ships / 25 m³ / Sable Mercer intact):"))
+	_dc_constraints = TextEdit.new()
+	_dc_constraints.custom_minimum_size = Vector2(0, 54)
+	_dc_constraints.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	tab.add_child(_dc_constraints)
+
+	# ── Example dialogues ─────────────────────────────────────────────────────
+	tab.add_child(_dc_field_label("Example dialogues — ONE per line:"))
+	_dc_dialogues = TextEdit.new()
+	_dc_dialogues.custom_minimum_size = Vector2(0, 150)
+	_dc_dialogues.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_dc_dialogues.text_changed.connect(_dc_validate)
+	tab.add_child(_dc_dialogues)
+
+	# ── Choice responses ──────────────────────────────────────────────────────
+	tab.add_child(_dc_field_label("Choice responses (accept / advance / haggle):"))
+	_dc_r1 = LineEdit.new()
+	_dc_r2 = LineEdit.new()
+	_dc_r3 = LineEdit.new()
+	for le in [_dc_r1, _dc_r2, _dc_r3]:
+		le.text_changed.connect(func(_t: String): _dc_validate())
+		tab.add_child(le)
+
+	# ── Validation + actions ──────────────────────────────────────────────────
+	tab.add_child(HSeparator.new())
+	_dc_validation = Label.new()
+	_dc_validation.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(_dc_validation)
+
+	var actions := HBoxContainer.new()
+	tab.add_child(actions)
+	var apply_btn := Button.new()
+	apply_btn.text = "Apply (this session)"
+	apply_btn.pressed.connect(func(): _dc_apply(false))
+	actions.add_child(apply_btn)
+	var save_btn := Button.new()
+	save_btn.text = "Save to override file"
+	save_btn.pressed.connect(func(): _dc_apply(true))
+	actions.add_child(save_btn)
+
+	_dc_status = Label.new()
+	_dc_status.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(_dc_status)
+
+	_build_override_controls(tab)
+	_dc_load_fields()
+
+
+func _dc_field_label(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	return lbl
+
+
+func _dc_current_type() -> String:
+	return _DC_TYPES[clampi(_dc_type_dd.selected, 0, _DC_TYPES.size() - 1)]
+
+
+func _dc_current_agent() -> String:
+	return _DC_AGENTS[clampi(_dc_agent_dd.selected, 0, _DC_AGENTS.size() - 1)]
+
+
+func _dc_load_fields() -> void:
+	var reg := LLMDialogueContentRegistry.shared()
+	var objective_type := _dc_current_type()
+	var agent := _dc_current_agent()
+	_dc_constraints.text = reg.quest_dummy_constraints(objective_type)
+	var bundle := reg.quest_examples(agent, objective_type)
+	var dialogues: Array = bundle.get("dialogues", [])
+	var joined: Array[String] = []
+	for line in dialogues:
+		joined.append(str(line))
+	_dc_dialogues.text = "\n".join(joined)
+	_dc_r1.text = str(bundle.get("response_1", ""))
+	_dc_r2.text = str(bundle.get("response_2", ""))
+	_dc_r3.text = str(bundle.get("response_3", ""))
+	_dc_set_status("Loaded %s / %s." % [objective_type, agent], Color(0.6, 0.6, 0.6))
+	_dc_validate()
+
+
+func _dc_parsed_dialogues() -> Array[String]:
+	var out: Array[String] = []
+	for raw in _dc_dialogues.text.split("\n"):
+		var line := str(raw).strip_edges()
+		if not line.is_empty():
+			out.append(line)
+	return out
+
+
+func _dc_validate() -> void:
+	var agent := _dc_current_agent()
+	var kaelen := agent == "neutral"
+	var problems: Array[String] = []
+	var dialogues := _dc_parsed_dialogues()
+	if dialogues.is_empty():
+		problems.append("No dialogues — need at least one (empty buckets fall back to the built-in copy).")
+	if not kaelen:
+		var offenders: Array[String] = []
+		for line in dialogues:
+			if line.contains("Shiny"):
+				offenders.append(line)
+		for resp in [_dc_r1.text, _dc_r2.text, _dc_r3.text]:
+			if str(resp).contains("Shiny"):
+				offenders.append(str(resp))
+		if not offenders.is_empty():
+			problems.append("'Shiny' is Kaelen-only — remove it from this agent (%d line(s))." % offenders.size())
+	if problems.is_empty():
+		_dc_validation.text = "✓ Looks good."
+		_dc_validation.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+	else:
+		_dc_validation.text = "⚠ " + "  ".join(problems)
+		_dc_validation.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
+
+
+func _dc_apply(save_to_disk: bool) -> void:
+	var dialogues := _dc_parsed_dialogues()
+	if dialogues.is_empty():
+		_dc_set_status("Blocked: add at least one dialogue line before applying.", Color(1.0, 0.5, 0.4))
+		return
+	var agent := _dc_current_agent()
+	if agent != "neutral":
+		for line in dialogues:
+			if line.contains("Shiny"):
+				_dc_set_status("Blocked: 'Shiny' is Kaelen-only. Remove it from the %s bucket first." % agent, Color(1.0, 0.5, 0.4))
+				return
+	var reg := LLMDialogueContentRegistry.shared()
+	reg.set_quest_content(
+		agent,
+		_dc_current_type(),
+		dialogues,
+		_dc_r1.text.strip_edges(),
+		_dc_r2.text.strip_edges(),
+		_dc_r3.text.strip_edges(),
+		_dc_constraints.text.strip_edges() + " "
+	)
+	if not save_to_disk:
+		_refresh_override_ui()
+		_dc_set_status("Applied to the override (this session, not written to disk yet).", Color(0.6, 0.9, 1.0))
+		return
+	var result := reg.save()
+	_refresh_override_ui()
+	if result.is_valid():
+		_dc_set_status("Saved to override file: data/content/llm_dialogue_content.override.json (base untouched).", Color(0.4, 1.0, 0.6))
+	else:
+		_dc_set_status("Save error: %s" % result.summary(), Color(1.0, 0.5, 0.4))
+
+
+func _dc_set_status(text: String, color: Color) -> void:
+	if _dc_status == null:
+		return
+	_dc_status.text = text
+	_dc_status.add_theme_color_override("font_color", color)
+
+
+# ── Shared override controls (used by both dialogue tabs) ─────────────────────
+# The override is a delta file the panel writes; the base stays trusted. The
+# toggle flips it on/off live for A/B comparison; Discard deletes it entirely.
+var _override_checks: Array = []          # CheckButtons kept in sync
+var _override_status_labels: Array = []   # status Labels kept in sync
+
+
+func _build_override_controls(tab: VBoxContainer) -> void:
+	tab.add_child(HSeparator.new())
+	var row := HBoxContainer.new()
+	tab.add_child(row)
+
+	var chk := CheckButton.new()
+	chk.text = "Use override (my edits)"
+	chk.button_pressed = LLMDialogueContentRegistry.shared().override_enabled
+	chk.toggled.connect(func(on: bool) -> void:
+		LLMDialogueContentRegistry.shared().set_override_enabled(on)
+		_refresh_override_ui()
+		_reload_all_content_fields()
+	)
+	_override_checks.append(chk)
+	row.add_child(chk)
+
+	var discard := Button.new()
+	discard.text = "Discard override"
+	discard.pressed.connect(func() -> void:
+		LLMDialogueContentRegistry.shared().discard_override()
+		_refresh_override_ui()
+		_reload_all_content_fields()
+	)
+	row.add_child(discard)
+
+	var status := Label.new()
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_override_status_labels.append(status)
+	tab.add_child(status)
+
+	_refresh_override_ui()
+
+
+func _refresh_override_ui() -> void:
+	var reg := LLMDialogueContentRegistry.shared()
+	for chk in _override_checks:
+		if chk != null:
+			chk.button_pressed = reg.override_enabled
+	var msg := "No override — runtime is using the trusted base file."
+	var col := Color(0.6, 0.6, 0.6)
+	if reg.has_override():
+		if reg.override_enabled:
+			msg = "Override ACTIVE — runtime is using your edits (data/content/llm_dialogue_content.override.json)."
+			col = Color(1.0, 0.85, 0.4)
+		else:
+			msg = "Override present but OFF — runtime is using the trusted base."
+			col = Color(0.6, 0.8, 1.0)
+	for lbl in _override_status_labels:
+		if lbl != null:
+			lbl.text = msg
+			lbl.add_theme_color_override("font_color", col)
+
+
+func _reload_all_content_fields() -> void:
+	if _dc_type_dd != null:
+		_dc_load_fields()
+	if _dr_speaker_dd != null:
+		_dr_load()
+
+
+# ── Dialogue rules tab (global nickname rules + speaker cards) ─────────────────
+# NOTE: these rules are documentation/reference right now — the live personas are
+# still built in code (see TODO(llm-content) markers). Editing here is safe and
+# saved to the override; future prompt wiring will read from it.
+const _DR_SPEAKERS := ["kaelen", "faction_agent", "mechanic", "lounge_local", "enemy_pilot"]
+
+var _dr_guidance: TextEdit
+var _dr_kaelen_words: LineEdit
+var _dr_banned: LineEdit
+var _dr_rare: LineEdit
+var _dr_max_rare: LineEdit
+var _dr_speaker_dd: OptionButton
+var _dr_voice: Label
+var _dr_addr: TextEdit
+var _dr_tone: TextEdit
+var _dr_validation: Label
+var _dr_status: Label
+
+
+func _build_dialogue_rules_tab() -> void:
+	var tab := add_tab("Dialogue Rules")
+
+	var hint := Label.new()
+	hint.text = "Reference rules for nickname/voice ownership. These document intent today (personas are still built in code); edits save to the override for future wiring. Shiny is Kaelen-only."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+	tab.add_child(HSeparator.new())
+
+	# ── Global rules ──────────────────────────────────────────────────────────
+	tab.add_child(_dc_field_label("GLOBAL — non-Kaelen address guidance:"))
+	_dr_guidance = TextEdit.new()
+	_dr_guidance.custom_minimum_size = Vector2(0, 48)
+	_dr_guidance.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	tab.add_child(_dr_guidance)
+
+	tab.add_child(_dc_field_label("Kaelen-only words (comma-separated):"))
+	_dr_kaelen_words = LineEdit.new()
+	tab.add_child(_dr_kaelen_words)
+
+	tab.add_child(_dc_field_label("Banned non-Kaelen phrases (comma-separated):"))
+	_dr_banned = LineEdit.new()
+	tab.add_child(_dr_banned)
+
+	tab.add_child(_dc_field_label("Allowed rare non-Kaelen addresses (comma-separated):"))
+	_dr_rare = LineEdit.new()
+	tab.add_child(_dr_rare)
+
+	tab.add_child(_dc_field_label("Max rare address uses (integer):"))
+	_dr_max_rare = LineEdit.new()
+	tab.add_child(_dr_max_rare)
+
+	# ── Speaker cards ─────────────────────────────────────────────────────────
+	tab.add_child(HSeparator.new())
+	tab.add_child(_dc_field_label("SPEAKER card:"))
+	_dr_speaker_dd = OptionButton.new()
+	for s in _DR_SPEAKERS:
+		_dr_speaker_dd.add_item(s)
+	_dr_speaker_dd.item_selected.connect(func(_i: int): _dr_load_speaker())
+	tab.add_child(_dr_speaker_dd)
+
+	_dr_voice = Label.new()
+	_dr_voice.add_theme_color_override("font_color", Color(0.5, 0.7, 0.9))
+	tab.add_child(_dr_voice)
+
+	tab.add_child(_dc_field_label("Address rule:"))
+	_dr_addr = TextEdit.new()
+	_dr_addr.custom_minimum_size = Vector2(0, 48)
+	_dr_addr.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_dr_addr.text_changed.connect(_dr_validate)
+	tab.add_child(_dr_addr)
+
+	tab.add_child(_dc_field_label("Tone card:"))
+	_dr_tone = TextEdit.new()
+	_dr_tone.custom_minimum_size = Vector2(0, 48)
+	_dr_tone.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_dr_tone.text_changed.connect(_dr_validate)
+	tab.add_child(_dr_tone)
+
+	# ── Validation + actions ──────────────────────────────────────────────────
+	tab.add_child(HSeparator.new())
+	_dr_validation = Label.new()
+	_dr_validation.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(_dr_validation)
+
+	var actions := HBoxContainer.new()
+	tab.add_child(actions)
+	var apply_btn := Button.new()
+	apply_btn.text = "Apply (this session)"
+	apply_btn.pressed.connect(func(): _dr_apply(false))
+	actions.add_child(apply_btn)
+	var save_btn := Button.new()
+	save_btn.text = "Save to override file"
+	save_btn.pressed.connect(func(): _dr_apply(true))
+	actions.add_child(save_btn)
+
+	_dr_status = Label.new()
+	_dr_status.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(_dr_status)
+
+	_build_override_controls(tab)
+	_dr_load()
+
+
+func _dr_current_speaker() -> String:
+	return _DR_SPEAKERS[clampi(_dr_speaker_dd.selected, 0, _DR_SPEAKERS.size() - 1)]
+
+
+func _dr_load() -> void:
+	var rules := LLMDialogueContentRegistry.shared().global_non_kaelen_rules()
+	_dr_guidance.text = str(rules.get("non_kaelen_address_guidance", ""))
+	_dr_kaelen_words.text = _dr_join(rules.get("kaelen_only_words", []))
+	_dr_banned.text = _dr_join(rules.get("banned_non_kaelen_phrases", []))
+	_dr_rare.text = _dr_join(rules.get("allowed_rare_non_kaelen_addresses", []))
+	_dr_max_rare.text = str(int(rules.get("max_rare_address_uses", 1)))
+	_dr_load_speaker()
+
+
+func _dr_load_speaker() -> void:
+	var card := LLMDialogueContentRegistry.shared().speaker(_dr_current_speaker())
+	var voice := str(card.get("voice_profile_id", ""))
+	_dr_voice.text = "voice_profile_id: %s" % (voice if not voice.is_empty() else "(none)")
+	_dr_addr.text = str(card.get("address_rule", ""))
+	_dr_tone.text = str(card.get("tone_card", ""))
+	_dr_validate()
+
+
+func _dr_validate() -> void:
+	var speaker := _dr_current_speaker()
+	if speaker == "kaelen":
+		_dr_validation.text = "✓ Kaelen may use Shiny."
+		_dr_validation.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+		return
+	var leaked := _dr_addr.text.contains("Shiny") or _dr_tone.text.contains("Shiny")
+	if leaked:
+		_dr_validation.text = "⚠ 'Shiny' is Kaelen-only — remove it from speaker '%s'." % speaker
+		_dr_validation.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
+	else:
+		_dr_validation.text = "✓ Looks good."
+		_dr_validation.add_theme_color_override("font_color", Color(0.4, 1.0, 0.6))
+
+
+func _dr_apply(save_to_disk: bool) -> void:
+	var speaker := _dr_current_speaker()
+	if speaker != "kaelen" and (_dr_addr.text.contains("Shiny") or _dr_tone.text.contains("Shiny")):
+		_dr_set_status("Blocked: 'Shiny' is Kaelen-only. Remove it from speaker '%s' first." % speaker, Color(1.0, 0.5, 0.4))
+		return
+	var reg := LLMDialogueContentRegistry.shared()
+	reg.set_global_rules({
+		"non_kaelen_address_guidance": _dr_guidance.text.strip_edges(),
+		"kaelen_only_words": _dr_split(_dr_kaelen_words.text),
+		"banned_non_kaelen_phrases": _dr_split(_dr_banned.text),
+		"allowed_rare_non_kaelen_addresses": _dr_split(_dr_rare.text),
+		"max_rare_address_uses": int(_dr_max_rare.text.strip_edges()),
+	})
+	reg.set_speaker(speaker, _dr_addr.text.strip_edges(), _dr_tone.text.strip_edges())
+	if not save_to_disk:
+		_refresh_override_ui()
+		_dr_set_status("Applied to the override (this session, not written to disk yet).", Color(0.6, 0.9, 1.0))
+		return
+	var result := reg.save()
+	_refresh_override_ui()
+	if result.is_valid():
+		_dr_set_status("Saved to override file (base untouched).", Color(0.4, 1.0, 0.6))
+	else:
+		_dr_set_status("Save error: %s" % result.summary(), Color(1.0, 0.5, 0.4))
+
+
+func _dr_set_status(text: String, color: Color) -> void:
+	if _dr_status == null:
+		return
+	_dr_status.text = text
+	_dr_status.add_theme_color_override("font_color", color)
+
+
+func _dr_join(value: Variant) -> String:
+	if not value is Array:
+		return ""
+	var parts: Array[String] = []
+	for item in value:
+		parts.append(str(item))
+	return ", ".join(parts)
+
+
+func _dr_split(text: String) -> Array:
+	var out: Array = []
+	for raw in text.split(","):
+		var item := str(raw).strip_edges()
+		if not item.is_empty():
+			out.append(item)
+	return out
 
 
 const _TUN_FIELDS      := ["weapon_tier","hull_tier","powerplant_tier","shield_tier","weapon_dmg_mult","drone_dmg_mult","intelligence"]

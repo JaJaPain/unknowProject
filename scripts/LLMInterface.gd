@@ -485,6 +485,11 @@ var fallback_abandon_lines = [
 	"Contract voided. My brokerage fee is still owed. Consider that a lesson in commitment."
 ]
 
+# TODO(llm-content): these Kaelen handoff lines are heavy with "Shiny" and are a
+# prime future migration into llm_dialogue_content.json under a `kaelen_handoffs`
+# section (see docs/plan_llm_dialogue_content_registry.md). Left in code for this
+# slice — Shiny stays Kaelen-only, so this bucket must never be reused by a
+# non-Kaelen speaker.
 # Per-agent handoff lines Kaelen uses to introduce an upcoming quest giver.
 # Used two ways:
 #   1. Runtime fallback when the LLM is offline / slow / returns garbage.
@@ -904,6 +909,13 @@ func request_lounge_chatter(
 		+ "{\"line\":\"...\"}"
 	) % [speaker, role, mood, faction, station, system_name, extra]
 
+	# Every lounge fallback is logged (no silent canned lines). Reason codes let us
+	# see whether these are environment (http/timeout) or quality (parse/shape) fails.
+	var fallback_context := {"speaker": speaker, "role": role, "faction": faction, "station": station}
+	var report_fallback := func(reason: String) -> void:
+		GenerationDiagnostics.record_fallback("lounge_chatter", reason, "LLMInterface", fallback_context)
+		callback.call(fallback_line)
+
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)
 	temp_http.timeout = request_timeout_for_capability("kaelen_line")
@@ -911,16 +923,16 @@ func request_lounge_chatter(
 		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 			temp_http.queue_free()
 			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-				callback.call(fallback_line)
+				report_fallback.call("http_failed_result_%d_code_%d" % [result, response_code])
 				return
 			var response_text := body.get_string_from_utf8()
 			var outer := JSON.new()
 			if outer.parse(response_text) != OK:
-				callback.call(fallback_line)
+				report_fallback.call("outer_parse_failed")
 				return
 			var outer_data = outer.get_data()
 			if not outer_data is Dictionary or not outer_data.has("response"):
-				callback.call(fallback_line)
+				report_fallback.call("missing_response_field")
 				return
 			var inner_json_str := str(outer_data["response"]).strip_edges()
 			if inner_json_str.begins_with("```"):
@@ -932,15 +944,15 @@ func request_lounge_chatter(
 				inner_json_str = inner_json_str.strip_edges()
 			var inner := JSON.new()
 			if inner.parse(inner_json_str) != OK:
-				callback.call(fallback_line)
+				report_fallback.call("inner_parse_failed")
 				return
 			var data = inner.get_data()
 			if not data is Dictionary or not data.has("line"):
-				callback.call(fallback_line)
+				report_fallback.call("missing_line_field")
 				return
 			var line := str(data["line"]).strip_edges()
 			if line.length() < 4 or line.length() > 220:
-				callback.call(fallback_line)
+				report_fallback.call("line_length_rejected")
 				return
 			callback.call(line)
 	)
@@ -963,7 +975,7 @@ func request_lounge_chatter(
 	)
 	if err != OK:
 		temp_http.queue_free()
-		callback.call(fallback_line)
+		report_fallback.call("request_start_failed")
 
 
 func request_campaign_bible_generation(
@@ -1096,6 +1108,29 @@ func _on_campaign_bible_generation_completed(
 
 
 func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
+	# Few-shot quest examples now live in data/content/llm_dialogue_content.json
+	# (quest_generation.mission_types[TYPE].examples_by_agent). Edit dialogue
+	# phrasing there, not here. This wrapper reads the JSON via the content
+	# registry and only falls back to the built-in block below if that file is
+	# missing/malformed — the prompt must always have at least one example, or
+	# the random example picker in request_quest_generation would divide by zero.
+	var bundle := LLMDialogueContentRegistry.shared().quest_examples(agent_key, mission_type)
+	if not bundle.is_empty() and bundle.get("dialogues", []).size() > 0:
+		return bundle
+	# The JSON content file is missing/malformed for this bucket — we're about to
+	# run on the built-in copy. That is a silent quality regression, so log it.
+	GenerationDiagnostics.record_fallback(
+		"quest_examples",
+		"content_file_missing",
+		"LLMInterface",
+		{"agent": agent_key, "type": mission_type}
+	)
+	return _get_type_examples_fallback(agent_key, mission_type)
+
+
+func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dictionary:
+	# Safety net only — the live/editable copy is the JSON above. Kept verbatim so
+	# behavior is unchanged if the content file cannot be loaded.
 	# Returns 5 example dialogues + 3 choice responses matched to the mission type.
 	# All use dummy names: George (pilot), Slithern (enemy), 3 (kill count),
 	# 25 (ore amount), Sable Mercer / Morrow Station / Sealed Data Drive (pickup).
@@ -1392,6 +1427,12 @@ func request_quest_generation(
 		chosen_faction = factions[randi() % factions.size()]
 	
 	# Each faction has a distinct named agent, personality, and address style.
+	# TODO(llm-content): the nickname/address rules baked into these persona
+	# strings (Shiny = Kaelen only, Indy only occasionally for faction agents) are
+	# mirrored in llm_dialogue_content.json under `global_rules` and `speakers.*`.
+	# Left in code for now because persona wording is interwoven with mechanics;
+	# migrate persona text to `speakers.<id>.tone_card` / `.address_rule` in a
+	# later slice. Do not let Shiny leak into the non-Kaelen personas here.
 	var agent_name = "Broker Kaelen"
 	var agent_persona = ""
 	var player_nickname = "Indy"
@@ -1407,7 +1448,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Director Voss, a cold, calculating Zenith corporate officer. " + \
 				"You speak in clipped, efficient sentences. You have no patience for failure and treat the pilot as an interchangeable asset. " + \
-				"You may call the pilot 'Indy' at most once, but usually refer to them as 'you', 'pilot', or 'asset'. You never use slang or humor. " + \
+				"Only occasionally call the pilot 'Indy' — most of the time refer to them as 'you', 'pilot', or 'asset', not by name. You never use slang or humor. " + \
 				"You frame all jobs as 'acquisitions', 'operations', or 'directives'. Zenith's interests are paramount."
 		"aurelia":
 			agent_name = "Liaison Ryn"
@@ -1415,7 +1456,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Liaison Ryn, a smooth-talking, conniving Aurelia syndicate fixer. " + \
 				"You are charming but never fully trustworthy. You speak like someone always running an angle. " + \
-				"You may call the pilot 'Indy' at most once, but usually use 'you' or 'pilot'. You use words like 'clean', 'quiet', 'off the books'. " + \
+				"Only occasionally call the pilot 'Indy' — most of the time use 'you' or 'pilot', not the pilot's name. You use words like 'clean', 'quiet', 'off the books'. " + \
 				"Everything is framed as an opportunity, never a risk."
 		"vanguard":
 			agent_name = "Captain Dask"
@@ -1423,7 +1464,7 @@ func request_quest_generation(
 			player_nickname = "Indy"
 			agent_persona = "You are Captain Dask, a gruff, no-nonsense Vanguard military contract officer. " + \
 				"You are direct and have zero tolerance for excuses or negotiation theatre. " + \
-				"You may call the pilot 'Indy' at most once, but usually use 'pilot' or direct orders. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
+				"Only occasionally call the pilot 'Indy' — most of the time use 'pilot' or direct orders, not the pilot's name. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
 				"You respect competence and despise weakness."
 		_:
 			agent_name = "Broker Kaelen"
@@ -1644,13 +1685,18 @@ func request_quest_generation(
 			extra_examples_block += "  " + str(i + 1) + ". \"" + example_dialogues[i] + "\"\n"
 	extra_examples_block += "\n"
 
-	var dummy_name_instruction: String
-	if chosen_type == "KILL_SHIPS":
-		dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern'. You may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say 3 ships. "
-	elif chosen_type == "DELIVER_ORE":
-		dummy_name_instruction = "In your dialogue, you may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say 25 m³ of ore. "
-	else:
-		dummy_name_instruction = "In your dialogue, you may call the pilot 'George' at most once, but usually use 'you' or 'pilot'. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
+	# Dummy-name/fact instruction now lives in the content registry
+	# (quest_generation.mission_types[TYPE].dummy_constraints). Edit phrasing in
+	# data/content/llm_dialogue_content.json. Built-in strings below are only a
+	# fallback if that section is missing; they must mirror the JSON exactly.
+	var dummy_name_instruction: String = LLMDialogueContentRegistry.shared().quest_dummy_constraints(chosen_type)
+	if dummy_name_instruction.strip_edges().is_empty():
+		if chosen_type == "KILL_SHIPS":
+			dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern'. Only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 3 ships. "
+		elif chosen_type == "DELIVER_ORE":
+			dummy_name_instruction = "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 25 m³ of ore. "
+		else:
+			dummy_name_instruction = "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
 
 	# story_quest_hint destination/flavor bias injected as a soft prompt instruction.
 	# Decrement expiry counter here so it ticks once per quest generation, not per dock.

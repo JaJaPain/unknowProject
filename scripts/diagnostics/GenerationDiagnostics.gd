@@ -7,10 +7,14 @@ signal generation_event_recorded(event: Dictionary)
 const MAX_RECENT_EVENTS := 100
 const WARNING_MIN_CONTENT_SOURCES := 3
 const WARNING_FALLBACK_SOURCE_RATE := 0.25
-const FALLBACK_EVENT_LOG_PATH := "user://fallback_events.jsonl"
-const FALLBACK_SUMMARY_PATH := "user://fallback_summary.json"
-const FALLBACK_EVENT_LOG_BACKUP_PATH := "res://.tmp_godot_user/fallback_logs/fallback_events.jsonl"
-const FALLBACK_SUMMARY_BACKUP_PATH := "res://.tmp_godot_user/fallback_logs/fallback_summary.json"
+# Permanent, in-repo fallback log so it can be reviewed any session (gitignored
+# via logs/). res:// is writable when running from source (editor/dev); an
+# exported build can't write res://, so it falls back to user://.
+const FALLBACK_EVENT_LOG_PATH := "res://logs/fallback_events.jsonl"
+const FALLBACK_SUMMARY_PATH := "res://logs/fallback_summary.json"
+const FALLBACK_SUMMARY_TEXT_PATH := "res://logs/fallback_summary.txt"
+const FALLBACK_EVENT_LOG_BACKUP_PATH := "user://fallback_events.jsonl"
+const FALLBACK_SUMMARY_BACKUP_PATH := "user://fallback_summary.json"
 
 var fallback_counts_by_type: Dictionary = {}
 var fallback_counts_by_reason: Dictionary = {}
@@ -183,8 +187,10 @@ func fallback_summary_path() -> String:
 func clear_persistent_fallback_log() -> void:
 	_remove_user_file(FALLBACK_EVENT_LOG_PATH)
 	_remove_user_file(FALLBACK_SUMMARY_PATH)
+	_remove_user_file(FALLBACK_SUMMARY_TEXT_PATH)
 	_remove_user_file(FALLBACK_EVENT_LOG_BACKUP_PATH)
 	_remove_user_file(FALLBACK_SUMMARY_BACKUP_PATH)
+	_remove_user_file("user://fallback_summary.txt")
 
 
 func content_source_total() -> int:
@@ -297,6 +303,12 @@ func _write_fallback_summary() -> void:
 		return
 	file.store_string(JSON.stringify(summary(), "\t"))
 	file.close()
+	# Human-readable sibling so the status can be eyeballed without parsing JSON.
+	var text_path := path.get_base_dir().path_join("fallback_summary.txt")
+	var text_file := FileAccess.open(text_path, FileAccess.WRITE)
+	if text_file != null:
+		text_file.store_string(summary_text(20))
+		text_file.close()
 
 
 func _remove_user_file(path: String) -> void:

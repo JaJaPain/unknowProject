@@ -50,6 +50,9 @@ docs/bug_screenshots/
 # Local Godot test logs (Claude headless runs)
 .tmp_godot_user/
 
+# Permanent fallback diagnostics log (runtime data; persists on disk, out of git)
+logs/
+
 # Local scratch / quarantine (stray files kept off the repo)
 _local/
 
