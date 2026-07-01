@@ -1168,20 +1168,12 @@ func _physics_process(delta: float):
 				if hit_obj != active_target and hit_obj != self:
 					_clear_planned_route()
 
-			var route_result := _route_steer_target(dest, active_target)
-			if not bool(route_result.get("ok", false)):
-				_emit_route_failure(str(route_result.get("error", "")))
-				cancel_autopilot()
-				return
-			steer_target = route_result.get("steer_target", dest)
-			if not _update_route_progress(steer_target, delta):
-				return
-
-			# Real-time avoidance: scan for obstacles along the current heading
-			# and override the steer target if something is in the way.
-			var avoidance := _get_autopilot_avoidance(steer_target, active_target)
-			if avoidance.get("is_avoiding", false):
-				steer_target = avoidance.get("steer_target", steer_target)
+			# Keep-out sphere tangent steering: aim straight at the destination
+			# unless a keep-out sphere is in the way, in which case skim its edge.
+			# Recomputed every frame from the current position — no stored route to
+			# invert or stall on. The _nose_ray whisker above is the last-resort hard
+			# stop for anything that slips inside the margin.
+			steer_target = _tangent_steer_target(dest, active_target)
 
 		steer_towards(steer_target, delta)
 		
@@ -1873,6 +1865,111 @@ func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -
 		"obstacle_distance": best_distance_along_route,
 		"obstacle": best_obstacle,
 	}
+
+# ── Keep-out sphere tangent steering (replaces the old planner + avoider) ──────
+# Every obstacle is a keep-out sphere (radius = body radius + safety margin, which
+# for celestials already covers the asteroid belt). If the straight line to the
+# destination pierces the nearest such sphere, we steer to a point on that sphere's
+# silhouette (a tangent-ish waypoint) instead of at the destination — so the ship
+# hugs the OUTSIDE of the sphere and slides around it. Recomputed every frame from
+# the current position, so it cannot invert ("fly opposite") or dead-end.
+const _TANGENT_OBSTACLE_GROUPS := ["celestial", "asteroid", "wreckage", "station", "jumpgate", "ship"]
+
+func _keepout_radius(obstacle: Node3D) -> float:
+	return _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
+
+
+## Returns the steer target for this frame: the destination if the path is clear,
+## otherwise a waypoint that carries the ship around the nearest blocking sphere.
+func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3:
+	var to_dest := destination - global_position
+	var dest_dist := to_dest.length()
+	if dest_dist < 1.0:
+		return destination
+	var dir := to_dest / dest_dist
+
+	# Find the nearest obstacle whose keep-out sphere the segment ship->dest pierces.
+	var blocker: Node3D = null
+	var blocker_radius := 0.0
+	var blocker_dist := INF
+	for candidate in _tangent_obstacles():
+		if candidate == navigation_target:
+			continue  # the thing we're flying to is never its own obstacle
+		var radius := _keepout_radius(candidate)
+		if _segment_clears_sphere(global_position, destination, candidate.global_position, radius):
+			continue
+		# If the destination itself is inside this sphere (e.g. an enemy hugging a
+		# planet), we must go in — don't treat it as a blocker.
+		if candidate.global_position.distance_to(destination) < radius:
+			continue
+		var d := global_position.distance_to(candidate.global_position)
+		if d < blocker_dist:
+			blocker = candidate
+			blocker_radius = radius
+			blocker_dist = d
+	if blocker == null:
+		return destination
+
+	return _sphere_tangent_waypoint(blocker.global_position, blocker_radius, destination)
+
+
+## Obstacles are the same nodes the old system used, plus wreckage.
+func _tangent_obstacles() -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	var seen := {}
+	for group_name in _TANGENT_OBSTACLE_GROUPS:
+		for candidate in get_tree().get_nodes_in_group(group_name):
+			if not candidate is Node3D or candidate == self:
+				continue
+			var node := candidate as Node3D
+			var id := node.get_instance_id()
+			if seen.has(id):
+				continue
+			seen[id] = true
+			out.append(node)
+	return out
+
+
+## True if the segment a->b stays at least `radius` from sphere center c.
+func _segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -> bool:
+	var ab := b - a
+	var len_sq := ab.length_squared()
+	if len_sq < 1.0:
+		return a.distance_to(c) >= radius
+	var t := clampf((c - a).dot(ab) / len_sq, 0.0, 1.0)
+	var closest := a + ab * t
+	return closest.distance_to(c) >= radius
+
+
+## A waypoint on the near silhouette of the keep-out sphere, biased toward the
+## destination side, that carries the ship around the outside of the sphere.
+func _sphere_tangent_waypoint(center: Vector3, radius: float, destination: Vector3) -> Vector3:
+	var to_center := center - global_position
+	var center_dist := to_center.length()
+	if center_dist < 0.001:
+		to_center = (destination - global_position)
+		center_dist = max(to_center.length(), 0.001)
+	var center_dir := to_center / center_dist
+
+	# Direction from the sphere center toward the chord between ship and dest, made
+	# perpendicular to the ship->center line — this is the "go around" sideways push.
+	var dest_dir := (destination - global_position)
+	if dest_dir.length() < 0.001:
+		dest_dir = center_dir
+	dest_dir = dest_dir.normalized()
+	var side := dest_dir - center_dir * dest_dir.dot(center_dir)
+	if side.length() < 0.01:
+		# Ship, center and dest are nearly collinear — pick a stable sideways axis.
+		side = center_dir.cross(Vector3.UP)
+		if side.length() < 0.01:
+			side = center_dir.cross(Vector3.RIGHT)
+	side = side.normalized()
+
+	# Aim just outside the sphere: a point offset sideways by the full radius at the
+	# level of the sphere center, so the ship skims the edge rather than the body.
+	var margin := radius * 0.15 + 20.0
+	return center + side * (radius + margin)
+
 
 func _get_locked_avoidance_obstacle() -> Node3D:
 	if avoidance_obstacle_id == 0:
