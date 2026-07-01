@@ -741,6 +741,7 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	route_stall_replans = 0
 	_clear_avoidance_state()
 	_steer_smooth_active = false
+	_clear_autopilot_path()
 	if _nose_ray:
 		_nose_ray.enabled = false
 	_hide_mining_beams()
@@ -1168,23 +1169,13 @@ func _physics_process(delta: float):
 				var hit_obj := _nose_ray.get_collider(0)
 				if hit_obj != active_target and hit_obj != self:
 					_clear_planned_route()
+					_clear_autopilot_path()  # force a fresh plan around the surprise
 
-			# Keep-out sphere tangent steering: aim straight at the destination
-			# unless a keep-out sphere is in the way, in which case skim its edge.
-			# Recomputed every frame from the current position — no stored route to
-			# invert or stall on. The _nose_ray whisker above is the last-resort hard
-			# stop for anything that slips inside the margin.
-			var raw_steer := _tangent_steer_target(dest, active_target)
-			# Low-pass the steer point to damp the round-the-obstacle fishtail; snap
-			# through big legitimate jumps so the heading never lags the trajectory.
-			if _steer_smooth_active and _steer_smooth_pos.distance_to(raw_steer) < _STEER_SMOOTH_SNAP_DIST:
-				_steer_smooth_pos = _steer_smooth_pos.lerp(
-					raw_steer, clampf(delta * _STEER_SMOOTH_SPEED, 0.0, 1.0)
-				)
-			else:
-				_steer_smooth_pos = raw_steer
-			_steer_smooth_active = true
-			steer_target = _steer_smooth_pos
+			# Planned + spline-smoothed path: trace the route once with the tangent
+			# logic, fit a Catmull-Rom curve, and follow it with a lookahead so the
+			# heading changes are continuous (no fishtail). Replans when the target
+			# moves, we stray off the path, or the nose whisker fires above.
+			steer_target = _autopilot_steer_target(dest, active_target)
 
 		steer_towards(steer_target, delta)
 		
@@ -1897,20 +1888,35 @@ const _STEER_SMOOTH_SNAP_DIST := 600.0  # jumps larger than this bypass smoothin
 var _steer_smooth_pos: Vector3 = Vector3.ZERO
 var _steer_smooth_active: bool = false
 
+# ── Planned + spline-smoothed autopilot path ──────────────────────────────────
+# Instead of recomputing one steer point per frame (which fishtailed when the raw
+# tangent waypoint slid sideways), we plan the whole route ONCE by marching the
+# tangent logic forward, then fit a Catmull-Rom spline through those doglegs so the
+# ship follows a smooth curve. We replan when the target moves, the ship strays off
+# the path, the nose whisker hits, or the path is consumed.
+const _PATH_MARCH_STEP := 50.0          # marching step when tracing raw waypoints
+const _PATH_MAX_STEPS := 60             # cap so a bad case can't loop forever
+const _PATH_SMOOTH_SAMPLES := 6         # spline samples per raw segment
+const _PATH_LOOKAHEAD := 90.0           # how far along the path to aim the nose
+const _PATH_REPLAN_DEST_MOVE := 120.0   # replan if the destination shifts this far
+const _PATH_OFFCOURSE := 250.0          # replan if the ship strays this far off path
+var _auto_path: PackedVector3Array = PackedVector3Array()
+var _auto_path_dest: Vector3 = Vector3.ZERO
+var _auto_path_index: int = 0
+
 func _keepout_radius(obstacle: Node3D) -> float:
 	return _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
 
 
-## Returns the steer target for this frame: the destination if the path is clear,
-## otherwise a waypoint that carries the ship around the nearest blocking sphere.
-func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3:
-	var to_dest := destination - global_position
-	var dest_dist := to_dest.length()
-	if dest_dist < 1.0:
+## Returns the steer waypoint from `from_pos`: the destination if the path is clear,
+## otherwise a point that carries the ship around the nearest blocking sphere.
+## Position-parameterized so the path planner can march it forward from any point.
+func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_target: Node3D) -> Vector3:
+	var to_dest := destination - from_pos
+	if to_dest.length() < 1.0:
 		return destination
-	var dir := to_dest / dest_dist
 
-	# Find the nearest obstacle whose keep-out sphere the segment ship->dest pierces.
+	# Find the nearest obstacle whose keep-out sphere the segment from->dest pierces.
 	var blocker: Node3D = null
 	var blocker_radius := 0.0
 	var blocker_dist := INF
@@ -1918,13 +1924,13 @@ func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> V
 		if candidate == navigation_target:
 			continue  # the thing we're flying to is never its own obstacle
 		var radius := _keepout_radius(candidate)
-		if _segment_clears_sphere(global_position, destination, candidate.global_position, radius):
+		if _segment_clears_sphere(from_pos, destination, candidate.global_position, radius):
 			continue
 		# If the destination itself is inside this sphere (e.g. an enemy hugging a
 		# planet), we must go in — don't treat it as a blocker.
 		if candidate.global_position.distance_to(destination) < radius:
 			continue
-		var d := global_position.distance_to(candidate.global_position)
+		var d := from_pos.distance_to(candidate.global_position)
 		if d < blocker_dist:
 			blocker = candidate
 			blocker_radius = radius
@@ -1932,12 +1938,9 @@ func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> V
 	if blocker == null:
 		return destination
 
-	# If we're already INSIDE the blocking sphere (e.g. sitting in a planet's belt
-	# when Fly To is clicked, with the target outside), exit radially to the nearest
-	# surface point FIRST, then normal tangent steering takes over once we're out.
-	# This is the predictable "get out, then go" behavior rather than arcing sideways.
-	if global_position.distance_to(blocker.global_position) < blocker_radius:
-		var out_dir := global_position - blocker.global_position
+	# Inside the blocking sphere -> exit radially to the nearest surface point first.
+	if from_pos.distance_to(blocker.global_position) < blocker_radius:
+		var out_dir := from_pos - blocker.global_position
 		if out_dir.length() < 0.001:
 			out_dir = destination - blocker.global_position
 		if out_dir.length() < 0.001:
@@ -1945,7 +1948,145 @@ func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> V
 		out_dir = out_dir.normalized()
 		return blocker.global_position + out_dir * (blocker_radius + blocker_radius * 0.15 + 20.0)
 
-	return _sphere_tangent_waypoint(blocker.global_position, blocker_radius, destination)
+	return _sphere_tangent_waypoint(from_pos, blocker.global_position, blocker_radius, destination)
+
+
+## Convenience: tangent waypoint from the ship's current position.
+func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3:
+	return _tangent_steer_from(global_position, destination, navigation_target)
+
+
+## Main autopilot entry: follow a planned, spline-smoothed path to the destination,
+## replanning as needed. Returns the point the nose should aim at this frame.
+func _autopilot_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3:
+	if _auto_path.is_empty() or _needs_path_replan(destination):
+		_plan_autopilot_path(destination, navigation_target)
+	if _auto_path.is_empty():
+		return destination
+	return _path_lookahead_target(destination)
+
+
+func _needs_path_replan(destination: Vector3) -> bool:
+	return _auto_path_dest.distance_to(destination) > _PATH_REPLAN_DEST_MOVE \
+		or _path_offcourse_distance() > _PATH_OFFCOURSE
+
+
+## Distance from the ship to the nearest point of the remaining path (INF if none).
+func _path_offcourse_distance() -> float:
+	if _auto_path.is_empty():
+		return INF
+	var best := INF
+	for i in range(_auto_path_index, _auto_path.size()):
+		var d := global_position.distance_to(_auto_path[i])
+		if d < best:
+			best = d
+	return best
+
+
+## Build the raw dogleg with the tangent logic, then Catmull-Rom smooth it.
+func _plan_autopilot_path(destination: Vector3, navigation_target: Node3D) -> void:
+	var raw := _march_tangent_waypoints(destination, navigation_target)
+	_auto_path = _push_path_clear(_catmull_rom_smooth(raw), destination)
+	_auto_path_dest = destination
+	_auto_path_index = 0
+
+
+## Safety pass: a Catmull-Rom curve can bow inward and clip a sphere even when the
+## raw waypoints clear it. Push any interior point back out to the sphere surface.
+## Endpoints (ship, destination) are left alone, and spheres that contain the
+## destination are skipped (a target hugging a planet is approached directly).
+func _push_path_clear(path: PackedVector3Array, destination: Vector3) -> PackedVector3Array:
+	if path.size() < 3:
+		return path
+	var obstacles := _tangent_obstacles()
+	for i in range(1, path.size() - 1):
+		var p := path[i]
+		for ob in obstacles:
+			var c := ob.global_position
+			var r := _keepout_radius(ob)
+			if c.distance_to(destination) < r:
+				continue
+			var d := p.distance_to(c)
+			if d < r and d > 0.001:
+				p = c + (p - c) / d * (r + 4.0)  # a hair past the surface, never on it
+		path[i] = p
+	return path
+
+
+## March the tangent steer forward from the ship to the destination, recording the
+## corner points. A clear shot yields [start, dest]; a blocked shot bends around.
+func _march_tangent_waypoints(destination: Vector3, navigation_target: Node3D) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	pts.append(global_position)
+	var cur := global_position
+	for _i in _PATH_MAX_STEPS:
+		if cur.distance_to(destination) <= _PATH_MARCH_STEP:
+			break
+		var steer := _tangent_steer_from(cur, destination, navigation_target)
+		if steer.distance_to(destination) < 1.0:
+			break  # clear line from here on — no more bends, go straight to dest
+		var dir := steer - cur
+		if dir.length() < 0.001:
+			dir = destination - cur
+		if dir.length() < 0.001:
+			break
+		cur += dir.normalized() * _PATH_MARCH_STEP
+		pts.append(cur)
+	pts.append(destination)
+	return pts
+
+
+## Catmull-Rom spline through the raw points -> dense smooth point list.
+func _catmull_rom_smooth(raw: PackedVector3Array) -> PackedVector3Array:
+	if raw.size() < 3:
+		return raw
+	var out := PackedVector3Array()
+	for i in range(raw.size() - 1):
+		var p0 := raw[maxi(i - 1, 0)]
+		var p1 := raw[i]
+		var p2 := raw[i + 1]
+		var p3 := raw[mini(i + 2, raw.size() - 1)]
+		for s in _PATH_SMOOTH_SAMPLES:
+			var t := float(s) / float(_PATH_SMOOTH_SAMPLES)
+			out.append(_catmull_point(p0, p1, p2, p3, t))
+	out.append(raw[raw.size() - 1])
+	return out
+
+
+func _catmull_point(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
+	var t2 := t * t
+	var t3 := t2 * t
+	return 0.5 * (
+		(2.0 * p1)
+		+ (-p0 + p2) * t
+		+ (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2
+		+ (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3
+	)
+
+
+## Advance past reached points, then return a point ~_PATH_LOOKAHEAD ahead along
+## the path (falls back to the destination near the end).
+func _path_lookahead_target(destination: Vector3) -> Vector3:
+	while _auto_path_index < _auto_path.size() - 1 \
+			and global_position.distance_to(_auto_path[_auto_path_index]) < _PATH_MARCH_STEP:
+		_auto_path_index += 1
+	var accum := 0.0
+	var idx := _auto_path_index
+	var prev := global_position
+	while idx < _auto_path.size():
+		var pt := _auto_path[idx]
+		accum += prev.distance_to(pt)
+		if accum >= _PATH_LOOKAHEAD:
+			return pt
+		prev = pt
+		idx += 1
+	return destination
+
+
+func _clear_autopilot_path() -> void:
+	_auto_path = PackedVector3Array()
+	_auto_path_dest = Vector3.ZERO
+	_auto_path_index = 0
 
 
 ## Obstacles are the same nodes the old system used, plus wreckage.
@@ -1978,17 +2119,17 @@ func _segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -
 
 ## A waypoint on the near silhouette of the keep-out sphere, biased toward the
 ## destination side, that carries the ship around the outside of the sphere.
-func _sphere_tangent_waypoint(center: Vector3, radius: float, destination: Vector3) -> Vector3:
-	var to_center := center - global_position
+func _sphere_tangent_waypoint(from_pos: Vector3, center: Vector3, radius: float, destination: Vector3) -> Vector3:
+	var to_center := center - from_pos
 	var center_dist := to_center.length()
 	if center_dist < 0.001:
-		to_center = (destination - global_position)
+		to_center = (destination - from_pos)
 		center_dist = max(to_center.length(), 0.001)
 	var center_dir := to_center / center_dist
 
 	# Direction from the sphere center toward the chord between ship and dest, made
 	# perpendicular to the ship->center line — this is the "go around" sideways push.
-	var dest_dir := (destination - global_position)
+	var dest_dir := (destination - from_pos)
 	if dest_dir.length() < 0.001:
 		dest_dir = center_dir
 	dest_dir = dest_dir.normalized()
