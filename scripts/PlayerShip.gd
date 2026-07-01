@@ -1165,11 +1165,17 @@ func _physics_process(delta: float):
 			# Nose whisker: sphere-cast 55u forward + 10u radius (covers underbelly
 			# and wingtips). If anything other than the nav target is in the volume,
 			# force an immediate replan without waiting for the stall timer.
+			# The planned path already routes around every obstacle sphere, so the
+			# whisker is only a last-resort surprise handler. Throttle it hard —
+			# clearing the path every frame near the belt/traffic caused the ship to
+			# thrash ("seizure") as it rebuilt the route continuously.
 			if _nose_ray and _nose_ray.is_colliding():
 				var hit_obj := _nose_ray.get_collider(0)
 				if hit_obj != active_target and hit_obj != self:
-					_clear_planned_route()
-					_clear_autopilot_path()  # force a fresh plan around the surprise
+					var now_ms := Time.get_ticks_msec()
+					if now_ms - _last_whisker_replan_ms > 1500:
+						_last_whisker_replan_ms = now_ms
+						_clear_autopilot_path()  # one fresh plan around the surprise
 
 			# Planned + spline-smoothed path: trace the route once with the tangent
 			# logic, fit a Catmull-Rom curve, and follow it with a lookahead so the
@@ -1903,6 +1909,7 @@ const _PATH_OFFCOURSE := 250.0          # replan if the ship strays this far off
 var _auto_path: PackedVector3Array = PackedVector3Array()
 var _auto_path_dest: Vector3 = Vector3.ZERO
 var _auto_path_index: int = 0
+var _last_whisker_replan_ms: int = 0    # throttle so the nose whisker can't thrash
 
 func _keepout_radius(obstacle: Node3D) -> float:
 	return _get_obstacle_radius(obstacle) + _get_obstacle_safety_margin(obstacle)
