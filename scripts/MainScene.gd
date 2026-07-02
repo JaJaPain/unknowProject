@@ -180,8 +180,16 @@ func _generate_salvager_identity(salvager: Node3D):
 	if not is_instance_valid(salvager):
 		return
 
-	LLMInterface.fetch_salvager_profile(
-		_on_salvager_profile_generated.bind(salvager.get_instance_id())
+	# Wait for the small model to pass its readiness probe so this doesn't race the
+	# cold-start warm-up and fall back to a canned backstory. Captures the instance
+	# id now; re-checks validity when the model is ready.
+	var salvager_id := salvager.get_instance_id()
+	LLMInterface.when_small_model_ready(func() -> void:
+		if not is_instance_valid(instance_from_id(salvager_id)):
+			return
+		LLMInterface.fetch_salvager_profile(
+			_on_salvager_profile_generated.bind(salvager_id)
+		)
 	)
 
 
