@@ -143,6 +143,16 @@ Deployment checklist for a shipped build:
 
 ---
 
+## Ship A.I. Companion (fake AI, LLM-driven)
+
+- [ ] **Onboard ship A.I. ("fake" AI) with personality** -- a persistent voice on the player's own ship that talks to them during play, primarily to fill the long transit stretches between stations/gates. Core jobs:
+  - **Threat alerts (priority)** -- TTS warning on severe threats (incoming hostiles, low hull/shield, ambush, high-tier enemy detected on sensors). These pre-empt jokes/idle chatter.
+  - **Navigation/status callouts** -- announce when the ship needs to reroute (hazard, blocked route, autopilot avoidance, fuel, gate coords updated), arrival ETA, "approaching X".
+  - **Idle transit chatter** -- during long flights with nothing happening, fill the silence: observations, ship-status musings, and deliberately terrible **dad-style jokes / puns** (almost painful, that's the charm). Rate-limited so it stays charming, not annoying.
+  - **Personality** -- consistent character and voice (distinct from Kaelen). Dry-but-earnest, over-eager, bad-comedian energy. Give it a name later.
+  - _More responsibilities to flesh out later (combat commentary, contract reminders, rumor/lead nudges, reacting to player deeds, mood tied to story state, etc.)._
+  - **Tech notes:** LLM-generated lines (small model) with logged fallback bucket per `project_fallbacks_are_failures`; TTS via `SpeechService` with its own voice profile; gate delivery through PlayerInteractionQueue so it never talks over combat/cutscenes; severity tiers so threat alerts always beat idle jokes. Design a short doc before building — decide trigger sources (sensors, autopilot, CampaignClock idle timer) and the anti-annoyance pacing/cooldown rules first.
+
 ## Polish / Future
 
 - [ ] **Kitbash ships: extend to other factions** -- only `vanguard` is wired (`ASSEMBLED_FACTIONS` in `NPCShip.gd`). Add Zenith (NavyBlueMetal/ZenithBadge), Aurelia (ForestGreenMetal/AurelliaBadge) to `ShipAssembler.FACTION_STYLE`, then add to `ASSEMBLED_FACTIONS`. Hybrid plan: introduce a few NEW hull designs for new factions and recycle existing ones in by system 4-5.
