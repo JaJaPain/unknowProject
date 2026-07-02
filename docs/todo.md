@@ -161,15 +161,20 @@ Deployment checklist for a shipped build:
   - **Visual/FX:** needs a cool jump animation/effect similar to the existing gate-jump sequence (reuse the gate portal shader/transition where possible, but distinct enough to read as a short-range beacon jump, not a gate).
   - **Design notes:** decide targeting UI (pick destination from system map/known outposts only); block use if already in combat; refund vs. no-refund on cancel (current call: consumed, no refund); interaction with autopilot/PlayerInteractionQueue for the warmup timer.
 
-## Ship A.I. Companion (fake AI, LLM-driven)
+## N.O.V.A. — Ship A.I. (LLM-driven cast member)
 
-- [ ] **Onboard ship A.I. ("fake" AI) with personality** -- a persistent voice on the player's own ship that talks to them during play, primarily to fill the long transit stretches between stations/gates. Core jobs:
-  - **Threat alerts (priority)** -- TTS warning on severe threats (incoming hostiles, low hull/shield, ambush, high-tier enemy detected on sensors). These pre-empt jokes/idle chatter.
-  - **Navigation/status callouts** -- announce when the ship needs to reroute (hazard, blocked route, autopilot avoidance, fuel, gate coords updated), arrival ETA, "approaching X".
-  - **Idle transit chatter** -- during long flights with nothing happening, fill the silence: observations, ship-status musings, and deliberately terrible **dad-style jokes / puns** (almost painful, that's the charm). Rate-limited so it stays charming, not annoying.
-  - **Personality** -- consistent character and voice (distinct from Kaelen). Dry-but-earnest, over-eager, bad-comedian energy. Give it a name later.
-  - _More responsibilities to flesh out later (combat commentary, contract reminders, rumor/lead nudges, reacting to player deeds, mood tied to story state, etc.)._
-  - **Tech notes:** LLM-generated lines (small model) with logged fallback bucket per `project_fallbacks_are_failures`; TTS via `SpeechService` with its own voice profile; gate delivery through PlayerInteractionQueue so it never talks over combat/cutscenes; severity tiers so threat alerts always beat idle jokes. Design a short doc before building — decide trigger sources (sensors, autopilot, CampaignClock idle timer) and the anti-annoyance pacing/cooldown rules first.
+**N.O.V.A. = Network Optimized Virtual Agent** — the AI installed on the player's own ship, and the game's second persistent storytelling agent after Kaelen. She rides along the whole game: warns the player in combat, narrates the world, and keeps him company on the long transit hauls between stations and quest objectives. Distinct from Kaelen — Kaelen is the external broker who hands out work; N.O.V.A. is the internal voice who is always there.
+
+- **Portrait:** `assets/Portraits/ShipAI.png` — a holographic blue "networked constellation" woman rendered as a **3x3 emotion sheet** (9 expressions: neutral, warm smile, serious, thoughtful, calm/eyes-closed, alert/surprised, worried/concerned, wondering/looking-up, downcast). Slice into 9 frames and swap by state so her face reacts (alert during threats, calm on idle, worried when outmatched, etc.).
+
+- [ ] **N.O.V.A. combat & threat warnings (priority)** -- the player's tactical early-warning system:
+  - **"You're being targeted"** -- when a hostile acquires a lock on the player, N.O.V.A. calls it out (voice + alert expression + optional HUD cue). Hook into the sensor/combat targeting signals.
+  - **"This one's out of our league"** -- when a detected ship is too powerful to engage (use the existing sensor-tier / `apply_faction_profile` threat assessment — Tier 2 sensor already says "exceeds your fit by N tiers"), she gives a spoken read + recommendation (disengage / run / reroute). Escalate her worried expression with the threat gap.
+  - **In-combat commentary** -- optional running read during fights (enemy bracing, low shields, "drone incoming"), gated so it never buries combat SFX.
+- [ ] **N.O.V.A. navigation / status callouts** -- reroute notices (hazard, blocked route, autopilot avoidance, gate coords updated), arrival ETA, "approaching X", fuel/hull status.
+- [ ] **N.O.V.A. long-flight companionship** -- during quiet transit she fills the silence to make travel feel alive: observations about the destination, ship musings, reactions to recent player deeds (pull from StoryManager `player_choices` / faction pressure), light humor. **Personality/voice is a design decision to lock before building** — the earlier concept was deliberately-bad dad jokes; her portrait reads warmer/elegant, so decide whether she's dry-and-earnest, wry, motherly, or the goofy-pun angle. Rate-limited so it stays charming, not annoying.
+- [ ] **N.O.V.A. story integration** -- can surface story-adjacent nudges (rumor leads, contract reminders, "Kaelen pinged us"); mood/expression can track story state. Could eventually carry a light mystery of her own (who wrote her, what she isn't saying) — but keep her clearly a tool/companion, not a second Kaelen.
+  - **Tech notes:** LLM lines (small model) with logged fallback bucket per `project_fallbacks_are_failures`; TTS via `SpeechService` with **her own voice profile** (blends TBD — af_bella stays Kaelen-only per the voice-blend rule); delivery through PlayerInteractionQueue with severity tiers so **threat warnings always pre-empt idle chatter/jokes**; triggers = combat/sensor targeting signals, autopilot/nav events, CampaignClock idle timer; portrait state machine maps events -> one of the 9 expressions. Write a short design doc first (triggers + anti-annoyance pacing + expression map + voice choice).
 
 ## Polish / Future
 
