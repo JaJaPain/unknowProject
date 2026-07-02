@@ -105,6 +105,7 @@ static func build_campaign_bible_prompt(
 		"- Kaelen must publicly appear as a broker, fixer, or contract handler, not a scavenger, scientist, commander, prophet, mechanic, AI, archive, or failsafe.",
 		"- Kaelen's hidden identity can be strange, mundane, human, non-human, technological, or unknown, but the story bible must frame it as hidden director knowledge only.",
 		"- kaelen_angle is HIDDEN director-only knowledge: what she secretly knows or did. It must never restate kaelen_rule's public role, and must never be shown to the player or to small-model prompts.",
+		"- kaelen_hint_plan entries are player-safe SURFACE observations that only HINT at kaelen_angle (odd habits, small inconsistencies); they must never state or explain her secret.",
 		"- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
 		"- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.",
@@ -147,6 +148,9 @@ static func build_campaign_bible_prompt(
 		"  \"factions\": {\"zenith\": string under 140 chars, \"aurelia\": string under 140 chars, \"vanguard\": string under 140 chars} — each a one-line local problem, player-safe,",
 		"  \"kaelen_rule\": string that says she is publicly a broker, fixer, or contract handler,",
 		"  \"kaelen_angle\": string under 220 chars — HIDDEN. What Kaelen secretly knows or did. Never shown to the player or small-model prompts. Director-only knowledge.,",
+		"  \"kaelen_hint_plan\": [3-5 strings] — HIDDEN. Player-safe surface observations that hint at kaelen_angle without explaining it. Delivered one at a time later.,",
+		"  \"kaelen_hint_style\": string — how Kaelen deflects this campaign (e.g. deflect-with-jokes, over-precise-details, selective-silence).,",
+		"  \"kaelen_never_reveal\": string — HIDDEN. One line naming what must stay unresolved even at full trail completion. Director-only.,",
 		"  \"faction_reveal_rule\": string,",
 		"  \"humor_rule\": string,",
 		"  \"address_rule\": string describing how NPCs address the player,",
@@ -406,6 +410,7 @@ static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: A
 			repairs.append("string_to_array:%s" % field)
 	_repair_kaelen_public_role(repaired, repairs)
 	_repair_kaelen_angle(repaired, repairs)
+	_repair_kaelen_hints(repaired, repairs)
 	_repair_factions(repaired, repairs)
 	_repair_rumor_trails(repaired, repairs)
 	_repair_regeneration_triggers(repaired)
@@ -456,6 +461,26 @@ static func _repair_kaelen_angle(target: Dictionary, repairs: Array = []) -> voi
 			"but never explains why."
 		)
 		repairs.append("kaelen_angle_defaulted")
+
+
+# Shape-only scaffolding for Kaelen's hint delivery (plan §5). hint_plan/never_reveal
+# are director-only (kept private by the public_prompt_context allowlist); hint_style
+# is player-safe. Defaults are neutral delivery scaffolding, not the secret itself.
+static func _repair_kaelen_hints(target: Dictionary, repairs: Array = []) -> void:
+	if not target.get("kaelen_hint_plan", null) is Array:
+		if target.get("kaelen_hint_plan", null) is String \
+				and not str(target["kaelen_hint_plan"]).strip_edges().is_empty():
+			target["kaelen_hint_plan"] = [str(target["kaelen_hint_plan"]).strip_edges()]
+			repairs.append("string_to_array:kaelen_hint_plan")
+		else:
+			target["kaelen_hint_plan"] = []
+			repairs.append("kaelen_hint_plan_defaulted")
+	if str(target.get("kaelen_hint_style", "")).strip_edges().is_empty():
+		target["kaelen_hint_style"] = "deflects with dry jokes and changes the subject"
+		repairs.append("kaelen_hint_style_defaulted")
+	if str(target.get("kaelen_never_reveal", "")).strip_edges().is_empty():
+		target["kaelen_never_reveal"] = "Kaelen's full identity and true motive are never confirmed."
+		repairs.append("kaelen_never_reveal_defaulted")
 
 
 static func _repair_kaelen_public_role(target: Dictionary, repairs: Array = []) -> void:
@@ -640,6 +665,9 @@ static func _normalized_campaign_bible(
 		"factions",
 		"kaelen_rule",
 		"kaelen_angle",
+		"kaelen_hint_plan",
+		"kaelen_hint_style",
+		"kaelen_never_reveal",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",

@@ -205,6 +205,8 @@ func _test_public_prompt_context_excludes_secrets() -> void:
 	const MYSTERY_SECRET := "SECRETMYSTERY_who_sank_the_convoy"
 	const OUTLINE_SECRET := "SECRETBEAT_meet_the_broker_at_dawn"
 	const PAYOFF_SECRET := "SECRETPAYOFF_hidden_transmitter_belt"
+	const HINT_SECRET := "SECRETHINT_she_overpays_for_silence"
+	const NEVER_SECRET := "SECRETNEVER_her_origin_stays_unknown"
 
 	var replacement := store.data.duplicate(true)
 	replacement["long_term_reveal"] = REVEAL_SECRET
@@ -216,11 +218,13 @@ func _test_public_prompt_context_excludes_secrets() -> void:
 		"hint_theme": "manifests that do not add up",
 		"payoff": PAYOFF_SECRET,
 	}]
+	replacement["kaelen_hint_plan"] = [HINT_SECRET]
+	replacement["kaelen_never_reveal"] = NEVER_SECRET
 	var replaced := store.replace_bible(replacement)
 	_expect(bool(replaced.get("ok", false)), replaced.get("error", ""))
 
 	var public_block := store.public_prompt_context()
-	for secret in [REVEAL_SECRET, MYSTERY_SECRET, OUTLINE_SECRET, PAYOFF_SECRET]:
+	for secret in [REVEAL_SECRET, MYSTERY_SECRET, OUTLINE_SECRET, PAYOFF_SECRET, HINT_SECRET, NEVER_SECRET]:
 		_expect(
 			not public_block.contains(secret),
 			"public_prompt_context leaked a director-only secret: %s" % secret

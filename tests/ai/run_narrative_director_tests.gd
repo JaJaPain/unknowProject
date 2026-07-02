@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_faction_triad_repair_and_normalize()
 	_test_variety_axes_in_prompt_and_bible()
 	_test_lane_rotation_against_history()
+	_test_kaelen_hint_fields()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -412,6 +413,9 @@ func _test_repair_telemetry_records_fired_repairs() -> void:
 			"campaign_title": "Clean",
 			"kaelen_rule": "Kaelen is a broker.",
 			"kaelen_angle": "She owes a debt.",
+			"kaelen_hint_plan": ["A hint."],
+			"kaelen_hint_style": "dry jokes",
+			"kaelen_never_reveal": "Her origin stays unknown.",
 			"factions": {"zenith": "Z problem.", "aurelia": "A problem.", "vanguard": "V problem."},
 		},
 		clean_repairs
@@ -612,6 +616,43 @@ func _test_lane_rotation_against_history() -> void:
 	_expect(
 		not normalized.has("_recent_lanes"),
 		"Transient _recent_lanes hint leaked into the stored bible."
+	)
+
+
+func _test_kaelen_hint_fields() -> void:
+	# Missing hint fields get defaulted (with telemetry); a string hint_plan is
+	# coerced to an array; valid values pass through normalize.
+	var repairs: Array = []
+	var repaired := DirectorType._repaired_generated_campaign_bible(
+		{"kaelen_hint_plan": "She overpays for silence."},
+		repairs
+	)
+	_expect(
+		repaired.get("kaelen_hint_plan", null) is Array
+			and (repaired["kaelen_hint_plan"] as Array).size() == 1,
+		"String kaelen_hint_plan should be coerced to a one-item array."
+	)
+	_expect(
+		repairs.has("string_to_array:kaelen_hint_plan")
+			and repairs.has("kaelen_hint_style_defaulted")
+			and repairs.has("kaelen_never_reveal_defaulted"),
+		"Kaelen hint repair telemetry not recorded. Got: %s" % str(repairs)
+	)
+
+	var normalized := DirectorType._normalized_campaign_bible(
+		{
+			"kaelen_hint_plan": ["Hint one.", "Hint two."],
+			"kaelen_hint_style": "over-precise details",
+			"kaelen_never_reveal": "Her origin stays unknown.",
+		},
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(
+		(normalized.get("kaelen_hint_plan", []) as Array).size() == 2
+			and str(normalized.get("kaelen_hint_style", "")) == "over-precise details"
+			and str(normalized.get("kaelen_never_reveal", "")) == "Her origin stays unknown.",
+		"Normalized bible did not carry the Kaelen hint fields."
 	)
 
 
