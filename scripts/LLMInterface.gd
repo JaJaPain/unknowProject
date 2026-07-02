@@ -67,8 +67,16 @@ var _kaelen_intro_parse_failures: int = 0        # outer / inner JSON parse fail
 signal model_discovered(model_name: String)
 signal llm_connection_attempt(attempt: int)
 signal llm_connection_established(model_name: String)
+# Fires only after the small dialogue model has answered a real test generation
+# ("hello" probe), i.e. it is loaded AND actually responding — not merely resident.
+# Startup small-model work (mechanic intro, salvager profile, taunts, chatter, the
+# opening quest) should gate on THIS, not on llm_connection_established, to avoid
+# the cold-start race where those calls time out during the ~12s warm-up.
+signal small_model_ready(model_name: String)
 
 var llm_connected: bool = false
+# True once the small model has passed the test generation above.
+var small_model_verified: bool = false
 var connection_attempts: int = 0
 
 
@@ -936,10 +944,100 @@ func _ollama_warm_models() -> void:
 	if _models_warm_started:
 		return
 	_models_warm_started = true
+	# Load the small model into VRAM, THEN confirm it actually generates before we
+	# let startup work fire. The empty-prompt load alone can report success while
+	# the model is still not answering; a real "hello" probe is the reliable gate.
 	_warm_single_model(active_model_name, "small", func() -> void:
-		for chatter_type in chatter_cache.keys():
-			fetch_chatter_background(chatter_type)
+		_verify_small_model_ready(active_model_name, 0)
 	)
+
+
+## Sends a tiny real generation ("ready" probe) to confirm the small model is
+## responding, not just resident. On the first success it marks the model
+## verified, emits small_model_ready, and kicks off chatter pre-warm. Retries
+## once on failure; if it still fails it releases the gate anyway (marks ready +
+## emits) so a flaky probe can never permanently strand the loading screen — the
+## failure is logged so it stays visible.
+func _verify_small_model_ready(model_name: String, attempt: int) -> void:
+	if small_model_verified:
+		return
+	if model_name.strip_edges().is_empty():
+		_release_small_model_gate(model_name, "empty_model_name")
+		return
+	var started := Time.get_ticks_msec()
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 30.0
+	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, body: PackedByteArray) -> void:
+		h.queue_free()
+		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+		var ok := result == HTTPRequest.RESULT_SUCCESS and code == 200
+		var response_text := ""
+		if ok:
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary:
+				response_text = str((parsed as Dictionary).get("response", "")).strip_edges()
+			ok = not response_text.is_empty()
+		if ok:
+			print("[LLMInterface] Small model '%s' passed readiness probe in %.1fs (attempt %d)." % [model_name, elapsed, attempt + 1])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "probe_ok", "LLMInterface",
+				{"model": model_name, "attempt": attempt + 1, "elapsed_seconds": elapsed}
+			)
+			_release_small_model_gate(model_name, "")
+			return
+		if attempt < 1:
+			push_warning("[LLMInterface] Small model readiness probe failed (result=%d code=%d) — retrying once." % [result, code])
+			_verify_small_model_ready(model_name, attempt + 1)
+			return
+		push_warning("[LLMInterface] Small model readiness probe failed after retry (result=%d code=%d) — releasing gate anyway." % [result, code])
+		GenerationDiagnostics.record_event(
+			"model_warmup", "probe_failed_result_%d_code_%d" % [result, code], "LLMInterface",
+			{"model": model_name, "attempt": attempt + 1, "elapsed_seconds": elapsed}
+		)
+		_release_small_model_gate(model_name, "probe_failed")
+	)
+	var payload := JSON.stringify({
+		"model": model_name,
+		"prompt": "Reply with the single word: ready",
+		"stream": false,
+		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
+		"options": {"num_predict": 8, "temperature": 0.0},
+	})
+	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		if attempt < 1:
+			_verify_small_model_ready(model_name, attempt + 1)
+		else:
+			_release_small_model_gate(model_name, "probe_request_start_failed")
+
+
+## Marks the small model verified, emits small_model_ready once, and starts
+## chatter pre-warm. Idempotent — safe to call from any probe outcome.
+func _release_small_model_gate(model_name: String, failure_reason: String) -> void:
+	if small_model_verified:
+		return
+	small_model_verified = true
+	if not failure_reason.is_empty():
+		GenerationDiagnostics.record_event(
+			"model_warmup", "gate_released_without_probe", "LLMInterface",
+			{"model": model_name, "reason": failure_reason}
+		)
+	small_model_ready.emit(model_name)
+	for chatter_type in chatter_cache.keys():
+		fetch_chatter_background(chatter_type)
+
+
+## Runs cb now (deferred) if the small model is already verified, else once when
+## small_model_ready next fires. Use this to gate any startup small-model call.
+func when_small_model_ready(cb: Callable) -> void:
+	if not cb.is_valid():
+		return
+	if small_model_verified:
+		cb.call_deferred()
+		return
+	small_model_ready.connect(func(_m: String) -> void: cb.call(), CONNECT_ONE_SHOT)
 
 
 ## Ask Ollama to load one model into VRAM without generating (empty prompt) and

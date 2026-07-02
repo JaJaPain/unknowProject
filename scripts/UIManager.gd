@@ -491,7 +491,10 @@ func _ready():
 		call_deferred("_complete_offline_loading_for_tests")
 	
 	LLMInterface.llm_connection_attempt.connect(_on_llm_connection_attempt)
-	LLMInterface.llm_connection_established.connect(_on_llm_connected)
+	# Gate on the small model actually answering a test generation, not merely on
+	# Ollama being reachable — otherwise gameplay entry races the ~12s warm-up and
+	# the first mechanic/salvager/taunt/quest lines fall back to canned content.
+	LLMInterface.small_model_ready.connect(_on_llm_connected)
 	SpeechService.speech_connection_attempt.connect(_on_tts_connection_attempt)
 	SpeechService.speech_connection_established.connect(_on_tts_connected)
 
@@ -10504,8 +10507,8 @@ func _check_both_services_ready():
 		# Disconnect signals to avoid multiple calls if reconnection happens later
 		if LLMInterface.llm_connection_attempt.is_connected(_on_llm_connection_attempt):
 			LLMInterface.llm_connection_attempt.disconnect(_on_llm_connection_attempt)
-		if LLMInterface.llm_connection_established.is_connected(_on_llm_connected):
-			LLMInterface.llm_connection_established.disconnect(_on_llm_connected)
+		if LLMInterface.small_model_ready.is_connected(_on_llm_connected):
+			LLMInterface.small_model_ready.disconnect(_on_llm_connected)
 		if SpeechService.speech_connection_attempt.is_connected(_on_tts_connection_attempt):
 			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
 		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
