@@ -2,6 +2,55 @@
 
 ---
 
+## Session: 2026-07-01/02 (Campaign Bible Reliability + Wire Story Into Gameplay) — Claude
+**Branch:** `segment-3/economy-stores-events`
+**Commit:** `9ea1301`
+
+### Overview
+Two connected pieces of work. First, reviewed and independently tested the team's Ollama/gemma4 campaign-bible generation consensus work — root-caused the JSON reliability problem to gemma4 being a thinking model with `think` never set (fixed via `think:false`, landed by Codex in `2f1ffbac`). Second, and the larger piece: traced the actual gameplay pipeline and found the generated campaign bible never reached the player — `StoryManager.story_state` (the living doc injected into every mission/dialogue prompt) was seeded from a hardcoded empty default and never read the bible at all. Implemented the missing bridge plus mission causality, Kaelen's protected hidden angle, and rumor firing (design doc's Phases B/C/D/F). Found and fixed three real bugs along the way while testing live in the user's running game.
+
+### What Landed
+
+**Campaign bible → story_state bridge (`scripts/story/StoryManager.gd`, `scripts/GameRoot.gd`)**
+- `StoryManager.seed_story_state_from_bible()` — one-time, idempotent, maps `story_arcs`→`active_tensions`, unconsumed `act_1_outline` beats + `main_mystery`→`player_does_not_know_yet`, `rumor_trails` clue templates→`pending_hooks`, `kaelen_angle`→`kaelen_hidden_angle`.
+- Called both at `init_story_state()` (covers a bible already generated in a prior session) and from `GameRoot._on_campaign_bible_generation_result()` (covers the common async case for a fresh campaign).
+- `CampaignBibleStore._migrate_legacy_bible()` — backfills fields added to the schema after a save was written, so an old save doesn't fail validation forever; resets `generation_status` to bootstrap so it gets a real fresh regeneration next.
+
+**Mission causality (`scripts/LLMInterface.gd`, `scripts/story/StoryManager.gd`)**
+- `because` field (from `active_tensions[0]`) now threads into quest generation prompts.
+- Quests get stamped with `story_hook_ref`; `on_quest_completed()` resolves that hook and checks chapter advancement.
+- Chapters never end the campaign — hook exhaustion refills from the bible's `act_1_outline`/`story_arcs`/`rumor_trails` reserve, then (once exhausted) fires a `regeneration_trigger` LLM call (`NarrativeDirector.build_story_horizon_expansion_prompt` + `LLMInterface.request_story_horizon_expansion`) that appends fresh content. Retry-once before any fallback; every fallback logged via `GenerationDiagnostics`, loudly `push_warning`'d, and counted in `story_state.regeneration_fallback_count` (never resets) so it can't silently become the norm.
+
+**Kaelen's hidden angle (`scripts/ai/NarrativeDirector.gd`, `scripts/persistence/CampaignBibleStore.gd`, `scripts/story/StoryManager.gd`)**
+- `kaelen_angle` added to the bible schema as director-only knowledge (prompt + validation + repair-pass fallback).
+- Seeded into `story_state.kaelen_hidden_angle`, never included in `get_story_context_block()`.
+- `_update_kaelen_mood()` derives a safe 2-4 word mood descriptor from the angle via the small model; `request_kaelen_reaction()` (previously got zero story context) now gets the mood.
+
+**Rumor firing (`scripts/story/StoryManager.gd`)**
+- `on_docked()` now has a ~40% chance to fire a rumor via the existing (already fully built, just never triggered) `get_lounge_rumor()`/`record_lounge_rumor_heard()` pipeline.
+
+**Ollama recovery (`scripts/LLMInterface.gd`, `scripts/ui/DevPanel.gd`, `scripts/GameRoot.gd`)**
+- Connection-level generation failures (timeout/http_failed, not content/validation failures) now auto-trigger the existing startup watchdog's launch-if-missing flow mid-session.
+- Opt-in DevPanel toggle ("Allow Ollama Auto-Restart") lets the game kill+relaunch a hung Ollama process it didn't start itself — off by default, since that's a much more invasive action than launching a missing one.
+
+**Bugs found + fixed live while testing**
+- Untyped `Array` indexing in `_use_story_horizon_expansion_fallback` crashed the parser (`factions: Array` → `Array[String]`).
+- Stuck-loading race: `_wait_for_campaign_story_before_gameplay()` had no retry path when the campaign slot wasn't initialized yet at the moment it first checked — added a 1s retry.
+- No retry existed for content-level campaign bible parse/validation failures (only connection failures) — added a capped 3-retry, 3s-apart path.
+- Dock message panel resized on every NPC "Talk" press — `dock_message_slot`/`dock_message_portrait` toggled `.visible`, which shrank/grew their shared VBoxContainer (also affecting the lounge card grid below it). Fixed by keeping both permanently visible and fading via `modulate.a` / clearing texture instead.
+- Diagnosed (not code-fixed, it's an editor-only quirk) a `RefCounted` script hot-reload gotcha: editing a `RefCounted`-derived script while an instance is already alive in a running game can degrade that instance to its base class, throwing "nonexistent function" on real methods. Added defensive `has_method()` guards around `_campaign_bible_store` usage so a stale reference degrades gracefully instead of crashing.
+
+### Verification
+Bash/PowerShell were gated by a tool-safety-classifier outage for most of the session. Verified all new logic (Phase B seed mapping + idempotency, Phase C hook resolution + chapter refill, Phase D prompt/parse/repair, Phase F rumor ranking/firing, the legacy-bible migration) via `game_eval` — live execution inside the user's running Godot instance with real return values — since the headless CLI test runner wasn't reachable. The four new/extended test files (`tests/persistence/run_story_state_bible_seed_tests.gd`, `tests/story/run_story_manager_hook_tests.gd`, extended `run_narrative_director_tests.gd` + `run_campaign_bible_store_tests.gd`) are committed in the project's standard format for a normal headless run once the classifier issue clears.
+
+### Still Open For Next Session
+- **Handoff batch intermittent parse failures**: `[LLMInterface] Handoff batch: no JSON array found in response` fired for all 3 faction agents during one live test session (see bugs.md). Not investigated this session — possibly Ollama resource contention from a concurrent campaign_bible generation call.
+- **Phase E (ambient two-person NPC dialogue)** — explicitly deferred, new subsystem not wiring.
+- **Kaelen chapter_comment/hint line types** — deferred from Phase D, design is ready in `docs/design_narrative_system.md`.
+- Full B/C/D/F flow hasn't been playtested end-to-end over a real session yet (hook resolution → chapter advance → rumor firing over actual play) — only unit-verified.
+
+---
+
 ## Session: 2026-06-26 (Intro Quest Flow + Story Context Injection + Plans) — Claude
 **Branch:** `segment-3/economy-stores-events`
 
