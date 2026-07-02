@@ -2172,7 +2172,9 @@ func _refresh_llm_campaign_bible_context() -> void:
 	if campaign_bible_store == null or not campaign_bible_store.is_valid():
 		LLMInterface.campaign_bible_context_text = ""
 		return
-	LLMInterface.campaign_bible_context_text = campaign_bible_store.prompt_context()
+	# Small-model prompts get the player-safe projection only — never the raw
+	# bible, which carries the campaign twist, mystery, and rumor payoffs.
+	LLMInterface.campaign_bible_context_text = campaign_bible_store.public_prompt_context()
 
 func _refresh_llm_story_state_context() -> void:
 	var block := StoryManager.get_story_context_block()
@@ -6865,7 +6867,10 @@ func _dev_story_debug_snapshot() -> Dictionary:
 	if campaign_bible_store != null and campaign_bible_store.is_valid():
 		status = campaign_bible_store.status_summary()
 		bible_json = JSON.stringify(campaign_bible_store.data, "\t")
-		bible_context = campaign_bible_store.prompt_context()
+		# The "Prompt Block" box shows what small models actually receive: the
+		# player-safe projection. The raw JSON box above still shows the full
+		# bible (including secrets) for debugging.
+		bible_context = campaign_bible_store.public_prompt_context()
 		overarching_story = _dev_format_overarching_story(campaign_bible_store.data)
 		var idea_context := LLMInterface.idea_memory_context_text
 		if campaign_idea_memory_store != null \

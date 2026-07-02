@@ -59,6 +59,53 @@ func is_valid() -> bool:
 	return validation.is_valid()
 
 
+# Player-safe projection of the bible for small-model (dialogue/contract/
+# chatter) prompts. This is an ALLOWLIST, not a denylist: only fields the
+# player is meant to know — the premise and the voice/behavior rules — are
+# included. Director-only fields (main_mystery, long_term_reveal, act_1_outline,
+# story_arcs summaries, rumor-trail payoffs/hint themes, and the horizon
+# machinery) are deliberately excluded so a chatty qwen completion can never
+# paraphrase the campaign twist into dock gossip. New bible fields default to
+# private: they only reach small models if explicitly added here.
+#
+# The full view (with secrets) lives in director_context()/prompt_context() and
+# is only for debug tooling and large, director-privileged model calls.
+#
+# ── LEAK-HUNT NOTE (deviation from docs/storytelling_architecture_plan.md §7.1) ──
+# The plan's item #1 named only long_term_reveal, rumor payoffs, and act_1_outline
+# as the leaking fields. During implementation we also classified `main_mystery`
+# as director-only, because StoryManager.seed_story_state_from_bible() seeds it
+# into `player_does_not_know_yet` (the never-exposed list) — so it was leaking too.
+# If a future story-secret leak turns up, THIS allowlist is the first place to
+# look: any bible field NOT listed below is invisible to small models by design,
+# so a leak means either (a) a secret field was mistakenly added here, or (b) a
+# secret is reaching qwen through a *different* path (story_state block, a direct
+# prompt, or _update_kaelen_mood — see plan §7.2). Confirm which before editing.
+func public_prompt_context() -> String:
+	if not is_valid() or data.is_empty():
+		return ""
+	var lines: Array[String] = []
+	lines.append("Campaign Premise (player-safe):")
+	lines.append("- Campaign title: %s" % str(data.get("campaign_title", "")))
+	lines.append("- Logline: %s" % str(data.get("campaign_logline", "")))
+	lines.append("- Opening situation: %s" % str(data.get("opening_situation", "")))
+	lines.append("- Tone: %s" % str(data.get("tone", "")))
+	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
+	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
+	lines.append("- Faction reveal rule: %s" % str(data.get("faction_reveal_rule", "")))
+	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
+	lines.append("- Address rule: %s" % str(data.get("address_rule", "")))
+	return "\n".join(lines)
+
+
+# Full bible view, INCLUDING director-only secrets (mystery, reveal, outline,
+# rumor payoffs, horizon machinery). Only for debug tooling and large,
+# director-privileged model calls — never feed this to small-model prompts.
+# Alias of prompt_context(); the explicit name documents intent at call sites.
+func director_context() -> String:
+	return prompt_context()
+
+
 func prompt_context() -> String:
 	if not is_valid() or data.is_empty():
 		return ""

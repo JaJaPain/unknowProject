@@ -178,7 +178,9 @@ func _build_story_debug_tab() -> void:
 	_story_bible_text = _story_readonly_text_edit(300)
 	tab.add_child(_story_bible_text)
 
-	tab.add_child(_story_section_label("Campaign Bible Prompt Block"))
+	tab.add_child(_story_section_label(
+		"Campaign Bible Prompt Block (player-safe — what small models actually see)"
+	))
 	_story_context_text = _story_readonly_text_edit(220)
 	tab.add_child(_story_context_text)
 

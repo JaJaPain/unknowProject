@@ -20,6 +20,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_bible_bootstrap_replace_and_reopen()
 	_cleanup()
+	_test_public_prompt_context_excludes_secrets()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign bible store tests")
@@ -173,6 +175,70 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 	_expect(
 		unavailable_reopened.status_summary().contains("campaign_bible_validation_failed"),
 		"Campaign bible failed status did not keep the failure reason."
+	)
+
+
+# Guards the public/director split: public_prompt_context() must never leak the
+# campaign twist, mystery, act outline, or rumor payoff to small-model prompts,
+# while the full prompt_context() (debug + large-model use) still carries them.
+func _test_public_prompt_context_excludes_secrets() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"Leak Fixture",
+		"leak-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+
+	var store := BibleStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "Leak-fixture bible store is invalid.")
+	if not store.is_valid():
+		return
+
+	const REVEAL_SECRET := "SECRETREVEAL_kaelen_forged_the_ledger"
+	const MYSTERY_SECRET := "SECRETMYSTERY_who_sank_the_convoy"
+	const OUTLINE_SECRET := "SECRETBEAT_meet_the_broker_at_dawn"
+	const PAYOFF_SECRET := "SECRETPAYOFF_hidden_transmitter_belt"
+
+	var replacement := store.data.duplicate(true)
+	replacement["long_term_reveal"] = REVEAL_SECRET
+	replacement["main_mystery"] = MYSTERY_SECRET
+	replacement["act_1_outline"] = [OUTLINE_SECRET, "later beat", "final beat"]
+	replacement["rumor_trails"] = [{
+		"name": "Silent Belt",
+		"clue_count": 2,
+		"hint_theme": "manifests that do not add up",
+		"payoff": PAYOFF_SECRET,
+	}]
+	var replaced := store.replace_bible(replacement)
+	_expect(bool(replaced.get("ok", false)), replaced.get("error", ""))
+
+	var public_block := store.public_prompt_context()
+	for secret in [REVEAL_SECRET, MYSTERY_SECRET, OUTLINE_SECRET, PAYOFF_SECRET]:
+		_expect(
+			not public_block.contains(secret),
+			"public_prompt_context leaked a director-only secret: %s" % secret
+		)
+
+	# The premise the player IS meant to see must still be present.
+	_expect(
+		public_block.contains(str(store.data.get("campaign_title", ""))),
+		"public_prompt_context dropped the player-safe campaign title."
+	)
+	_expect(
+		public_block.contains("Kaelen"),
+		"public_prompt_context dropped Kaelen's public role."
+	)
+
+	# The full/director view must still carry the secrets for debug + large-model use.
+	var director_block := store.director_context()
+	_expect(
+		director_block.contains(REVEAL_SECRET) and director_block.contains(PAYOFF_SECRET),
+		"director_context should retain the full bible including secrets."
 	)
 
 
