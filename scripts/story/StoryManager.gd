@@ -449,15 +449,11 @@ func _generate_foreshadow() -> void:
 	)
 
 
-# Defensive leak guard for kaelen_current_mood. The mood prompt sends Kaelen's
-# hidden angle to the small model and forbids repeating it — but a chatty qwen
-# completion can still echo distinctive words from it, and mood IS fed to
-# small-model prompts (get_story_context_block), so a leak here reaches the
-# player. This is the net: reject any candidate mood that shares a distinctive
-# (long, non-stopword) token with the angle, or that is too long to be a real
-# 2-4 word mood. See docs/storytelling_architecture_plan.md §7.2 — the fuller
-# fix (derive mood from the Kaelen hint plan instead of the raw angle) waits on
-# the hint-plan system (plan item #12).
+# Belt-and-suspenders leak guard for kaelen_current_mood. As of item #12 the mood
+# prompt no longer sends the hidden angle at all (mood is derived from delivery
+# stage + style), so this should effectively never trigger — but it stays as a
+# net: reject any candidate mood that shares a distinctive (long, non-stopword)
+# token with the angle, or that is too long to be a real 2-4 word mood.
 const _MOOD_STOPWORDS := {
 	"the": true, "and": true, "with": true, "that": true, "this": true,
 	"from": true, "into": true, "over": true, "your": true, "their": true,
@@ -498,21 +494,25 @@ static func _distinctive_words(text: String) -> Dictionary:
 	return out
 
 
-# Async: derives a short mood descriptor from Kaelen's hidden angle. The angle
-# itself is director-only — this prompt asks for a 2-4 word mood only and
-# never lets the model repeat or paraphrase the angle back. The response is
-# additionally screened by mood_leaks_secret() before storing, since the prompt
-# rule alone can't guarantee a chatty completion won't echo the angle.
+# Async: derives a short mood descriptor from Kaelen's hint-delivery STAGE and
+# deflection style — NOT her hidden angle (plan §5.3 fuller fix, item #12). The
+# angle is deliberately never placed in the prompt, so the small model can't
+# echo it. mood_leaks_secret() stays as a belt-and-suspenders check.
 func _update_kaelen_mood() -> void:
-	var angle := str(story_state.get("kaelen_hidden_angle", "")).strip_edges()
-	if angle.is_empty():
-		return
 	var chapter := int(story_state.get("chapter", 1))
+	var style := str(story_state.get("kaelen_hint_style", "")).strip_edges()
+	if style.is_empty():
+		style = "dry and evasive"
+	var delivered := (story_state.get("kaelen_hints_delivered", []) as Array).size()
+	var held_back := (story_state.get("kaelen_hidden_hints", []) as Array).size()
+	# Only used by the post-response leak guard below; NOT put in the prompt.
+	var angle := str(story_state.get("kaelen_hidden_angle", "")).strip_edges()
 	var prompt := (
-		"Director-only context, chapter %d. Kaelen's private situation: %s\n" % [chapter, angle]
-		+ "Output ONLY a 2-4 word mood descriptor for how this makes Kaelen come across "
-		+ "right now (e.g. \"guarded and terse\", \"unusually generous\"). "
-		+ "Do NOT repeat, quote, or explain the private situation. No punctuation besides commas."
+		"Kaelen is a guarded broker with a private past she never explains. "
+		+ "Her deflection style: %s. " % style
+		+ "It is chapter %d; she has let slip %d small hints so far, with %d still held back. " % [chapter, delivered, held_back]
+		+ "Output ONLY a 2-4 word mood descriptor for how she comes across right now "
+		+ "(e.g. \"guarded and terse\", \"unusually candid\"). No punctuation besides commas."
 	)
 	var http := HTTPRequest.new()
 	add_child(http)
