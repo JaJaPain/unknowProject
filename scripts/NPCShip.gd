@@ -677,6 +677,11 @@ func _physics_process(delta: float):
 							
 			if best_target:
 				target = best_target
+				# N.O.V.A. warns the captain the moment a hostile locks onto the
+				# player. She self-gates (free flight only) and rate-limits, so
+				# calling per-acquisition here is safe.
+				if best_target == GlobalState.player and is_instance_valid(Nova):
+					Nova.warn_targeted()
 							
 	if target != null and not is_instance_valid(target):
 		target = null
