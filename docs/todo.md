@@ -143,6 +143,15 @@ Deployment checklist for a shipped build:
 
 ---
 
+## Intra-System Jump Consumable
+
+- [ ] **Emergency jump beacon (expensive consumable)** -- one-use item that jumps the player directly to any station/outpost **in the current solar system** (not cross-gate). Details:
+  - **Warmup:** 5-second charge before the jump fires. If combat starts (or an existing fight interrupts) during warmup, the jump is **canceled AND the consumable is still consumed** — the risk is part of the cost.
+  - **Cost/economy:** expensive to buy; a deliberate "get me out of here / skip the haul" luxury, not routine travel.
+  - **Acquisition:** buyable at stores, plus a **chance to drop from salvaged wreckage** (ties into the salvage loop).
+  - **Visual/FX:** needs a cool jump animation/effect similar to the existing gate-jump sequence (reuse the gate portal shader/transition where possible, but distinct enough to read as a short-range beacon jump, not a gate).
+  - **Design notes:** decide targeting UI (pick destination from system map/known outposts only); block use if already in combat; refund vs. no-refund on cancel (current call: consumed, no refund); interaction with autopilot/PlayerInteractionQueue for the warmup timer.
+
 ## Ship A.I. Companion (fake AI, LLM-driven)
 
 - [ ] **Onboard ship A.I. ("fake" AI) with personality** -- a persistent voice on the player's own ship that talks to them during play, primarily to fill the long transit stretches between stations/gates. Core jobs:
