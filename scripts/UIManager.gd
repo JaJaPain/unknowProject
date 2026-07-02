@@ -5081,6 +5081,9 @@ func _request_station_contact_work(
 
 
 func _request_background_agent_quest() -> bool:
+	if not _campaign_story_ready_for_gameplay():
+		print("[UIManager] Deferring background contract generation until campaign story is ready.")
+		return true
 	if not _agent_contracts_available_for_station():
 		return false
 	pending_quest_context = _current_agent_quest_context()
@@ -10472,9 +10475,9 @@ func _update_connection_status_display():
 
 func _check_both_services_ready():
 	if is_llm_ready and is_tts_ready:
-		GlobalState.trace("[TRACE] [UIManager] Both services connected! Starting first quest generation.")
+		GlobalState.trace("[TRACE] [UIManager] Both services connected! Checking required campaign story.")
 		loading_bar.value = 35.0
-		loading_status_label.text = "Syncing Neural Broker Uplink: Generating first contract briefing..."
+		loading_status_label.text = "Syncing Neural Broker Uplink: Writing campaign story..."
 		
 		# Disconnect signals to avoid multiple calls if reconnection happens later
 		if LLMInterface.llm_connection_attempt.is_connected(_on_llm_connection_attempt):
@@ -10485,6 +10488,10 @@ func _check_both_services_ready():
 			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
 		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
 			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
+
+		if not _campaign_story_ready_for_gameplay():
+			_wait_for_campaign_story_before_gameplay()
+			return
 
 		# If no opening contract can be generated for the current station —
 		# e.g. a campaign resumed at a generated frontier station with no local
@@ -10518,6 +10525,73 @@ func _on_tts_cache_completed():
 		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
 		
 	GlobalState.trace("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
+	if not _campaign_story_ready_for_gameplay():
+		_wait_for_campaign_story_before_gameplay()
+		return
+	_finish_loading_after_story_ready()
+
+
+func _campaign_story_ready_for_gameplay() -> bool:
+	var game_root := get_tree().current_scene
+	return game_root != null \
+		and game_root.has_method("is_campaign_story_ready") \
+		and bool(game_root.call("is_campaign_story_ready"))
+
+
+func _wait_for_campaign_story_before_gameplay() -> void:
+	var game_root := get_tree().current_scene
+	loading_bar.value = minf(loading_bar.value, 92.0)
+	var summary := ""
+	var status := "Writing campaign story with large story model..."
+	if game_root != null and game_root.has_method("campaign_story_status_summary"):
+		summary = str(game_root.call("campaign_story_status_summary"))
+		status += "\n" + summary
+	if summary.contains("llm_unavailable") or summary.contains("generation_failed"):
+		status = (
+			"Campaign story required. Large story model did not generate the campaign bible.\n"
+			+ summary
+		)
+	loading_status_label.text = status
+	GlobalState.paused = true
+	if game_root != null \
+			and game_root.has_signal("campaign_bible_generation_finished") \
+			and not game_root.campaign_bible_generation_finished.is_connected(_on_campaign_story_gate_result):
+		game_root.campaign_bible_generation_finished.connect(_on_campaign_story_gate_result)
+	if game_root != null and game_root.has_method("request_campaign_bible_generation"):
+		var requested = game_root.call("request_campaign_bible_generation")
+		if requested is Dictionary:
+			var request_status := str(requested.get("status", ""))
+			if request_status == "requested":
+				loading_status_label.text = (
+					"Writing campaign story with large story model..."
+					+ "\nLarge story request sent. This can take a few minutes."
+				)
+			elif request_status == "waiting_for_llm_connection":
+				loading_status_label.text = (
+					"Campaign story required. Waiting for local LLM connection..."
+				)
+
+
+func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
+	if ok:
+		var game_root := get_tree().current_scene
+		if game_root != null \
+				and game_root.has_signal("campaign_bible_generation_finished") \
+				and game_root.campaign_bible_generation_finished.is_connected(_on_campaign_story_gate_result):
+			game_root.campaign_bible_generation_finished.disconnect(_on_campaign_story_gate_result)
+		_finish_loading_after_story_ready()
+		return
+	loading_bar.value = 92.0
+	loading_status_label.text = (
+		"Campaign story required. Large story model did not generate the campaign bible.\n"
+		+ status
+	)
+	GlobalState.paused = true
+
+
+func _finish_loading_after_story_ready() -> void:
+	if loading_panel == null or not is_instance_valid(loading_panel):
+		return
 	loading_bar.value = 100.0
 	loading_status_label.text = "Uplink fully secured. System Ready."
 	

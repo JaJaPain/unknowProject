@@ -12,6 +12,10 @@ const DEFAULT_LARGE_MODEL := "gemma4:12b"
 # a cold reload (a top fallback cause — see logs/fallback_summary.txt). A game
 # session wants the model to stay hot; "30m" covers normal play gaps.
 const MODEL_KEEP_ALIVE := "30m"
+# Large story generations are startup/transition jobs, not moment-to-moment
+# gameplay. Unload them after each request so 8GB cards do not keep Gemma
+# resident beside the small dialogue model and Godot renderer.
+const LARGE_MODEL_KEEP_ALIVE := 0
 
 const SMALL_DIALOGUE_MODELS: Array[String] = [
 	"qwen2.5:3b-instruct-q4_K_M",
@@ -63,7 +67,7 @@ const REQUEST_TIMEOUTS := {
 	"salvager_profile": 10.0,
 	"partial_delivery_line": 10.0,
 	"system_names": 30.0,
-	"campaign_bible": 60.0,
+	"campaign_bible": 600.0,
 	"faction_batch": 45.0,
 	"system_story_pack": 60.0,
 	"story_horizon": 60.0,
@@ -129,11 +133,16 @@ static func generation_body(
 		"model": model_for_capability(capability, active_small_model, active_large_model),
 		"prompt": prompt,
 		"stream": false,
-		"keep_alive": MODEL_KEEP_ALIVE,
 		"options": options.duplicate(true),
 	}
+	body["keep_alive"] = (
+		LARGE_MODEL_KEEP_ALIVE
+		if profile_for_capability(capability) == "large_story" else MODEL_KEEP_ALIVE
+	)
 	if not response_format.strip_edges().is_empty():
 		body["format"] = response_format
+	if profile_for_capability(capability) == "large_story":
+		body["think"] = false
 	return body
 
 

@@ -1,0 +1,78 @@
+[
+  {
+    "name": "compact_resource_01",
+    "variant": "compact_resource",
+    "seed": 954177,
+    "elapsed_seconds": 32.01,
+    "valid": false,
+    "score": 75,
+    "title": "Dust of the Belt",
+    "logline": "A pilot's debt is paid in scrap and cargo.",
+    "errors": [
+      "missing_nested:factions.vanguard_problem",
+      "bad_rumor_discovery_type",
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "compact_criminal_01",
+    "variant": "compact_criminal",
+    "seed": 954194,
+    "elapsed_seconds": 29.58,
+    "valid": false,
+    "score": 84,
+    "title": "The Scarcity Protocol",
+    "logline": "A desperate pilot navigates a web of forged contracts and corporate sabotage.",
+    "errors": [
+      "missing_nested:recurring_clue.name"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "compact_political_01",
+    "variant": "compact_political",
+    "seed": 954211,
+    "elapsed_seconds": 29.22,
+    "valid": false,
+    "score": 73,
+    "title": "Fractured Orbit",
+    "logline": "A desperate pilot navigates the tense trade routes between three competing corporate empires.",
+    "errors": [
+      "missing_field:story_questions_for_future_generation",
+      "missing_nested:factions.vanguard_problem",
+      "missing_nested:horizon.future_pressure_tease",
+      "story_questions_not_five_items"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_salvage_01",
+    "variant": "compact_salvage",
+    "seed": 954228,
+    "elapsed_seconds": 31.17,
+    "valid": false,
+    "score": 84,
+    "title": "Wreckage of the Gilded Age",
+    "logline": "A broke pilot navigates a decaying economic zone where salvage rights are the only currency.",
+    "errors": [
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  }
+]

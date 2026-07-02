@@ -1,0 +1,61 @@
+{
+  "campaign_title": "The Silted Vein",
+  "campaign_logline": "Asteroid mining in the Aurelia sector has unearthed a reactive, caustic sludge that is corroding hulls and poisoning local oxygen supplies.",
+  "opening_situation": "Your ship is docked at a Zenith refinery. The air smells of copper and sulfur. A panicked foreman offers a high-pay contract to clear 'clogged' pipes in the lower shafts.",
+  "main_mystery": "The toxic sludge isn't a natural byproduct; it is a deliberate industrial waste spill being hidden as an accidental seepage.",
+  "act_1_outline": [
+    "Identify and clear localized blockages in the Aurelia mining hub.",
+    "Investigate reports of 'phantom leaks' occurring only during high-output shifts.",
+    "Recover encrypted logs from a derelict transport ship near the Vanguard zone."
+  ],
+  "long_term_reveal": "The sludge is byproduct from illegal refining of prohibited isotopes, laundered through shell companies and masked as environmental accidents.",
+  "tone": "Dry, gritty, industrial-gothic with cynical corporate satire.",
+  "core_pressure": "Degrading hull integrity and oxygen scarcity caused by corrosive particulates.",
+  "kaelen_rule": "Kaelen is publicly a contract handler; she never reveals her true nature or identity.",
+  "faction_reveal_rule": "Only reveal new factions, ores, and ships accessible through jump gates to new systems.",
+  "humor_rule": "Dry, dark humor regarding corporate bureaucracy and the absurdity of working in hazardous zones.",
+  "address_rule": "NPCs address the player as 'Pilot' or 'Contractor'.",
+  "fallback_rule": "If content is missing, default to environmental storytelling about local industrial decay.",
+  "story_horizon_rule": "When active_story_arcs_remaining falls below 2, trigger append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Corrosive Pipeline",
+      "summary": "Trace the source of the acid leaks from local mines to a central processing hub used by shadow entities."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost in the Pipes",
+      "trail_id": "rumor_trail.ghost_pipes",
+      "clue_count": 2,
+      "hint_theme": "Corrupted telemetry logs",
+      "clue_templates": [
+        "A frequency-scrambled log mentioning 'Project Midas'.",
+        "An encrypted manifest for 'non-reactive' industrial chemicals."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "rare",
+      "payoff": "Unlocks a hidden faction: The Purifiers, who oppose the current corporate oversight."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_exhaustion_check",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 2,
+      "action": "append_story_horizon",
+      "description": "Add new sector content when the current plot arc is completed."
+    }
+  ],
+  "expansion_rules": [
+    "Do not reveal future frontier factions in the opening system.",
+    "Never retcon player choices; add new branches based on previous outcomes."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "purge protocol",
+    "ancient signal",
+    "chosen one",
+    "fate of the universe"
+  ]
+}

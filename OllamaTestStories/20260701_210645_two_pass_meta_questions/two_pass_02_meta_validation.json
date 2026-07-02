@@ -1,0 +1,8 @@
+{
+  "valid": false,
+  "score": 90,
+  "errors": [
+    "non_ascii_output"
+  ],
+  "warnings": []
+}

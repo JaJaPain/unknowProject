@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay and Resource Scarcity",
+  "freshness_rule": "Focus on the physical logistics of survival in a dying ecosystem.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the cost of trading high-risk cargo?",
+    "Why does the local economy collapse under heavy demand?",
+    "How many lives are traded for a single shipment of fuel?",
+    "Who holds the monopoly on orbital manufacturing?",
+    "Where do the desperate miners find their sanctuary?"
+  ],
+  "starter_mission_questions": [
+    "What makes this Reaver ship's hull integrity compromised?",
+    "Why is the pilot to target it now rather than waiting for a scrap haul?",
+    "How does the loot from thes ship impact the player's immediate survival?"
+  ],
+  "kaelen_questions": [
+    "What information is Kaelen trading for?",
+    "Why does Kaelen have access to specific black-market routes?",
+    "How much of the current deal is a setup?"
+  ],
+  "faction_questions": [
+    "What defines the Zenith's manufacturing priority?",
+    "Why does Aurelia prioritize orbital stability over trade?",
+    "How do Vanguard forces react when their supply lines are cut?"
+  ],
+  "future_generation_questions": [
+    "What is the scale of the rest of the universe?",
+    "Why is there no central government?",
+    "How does a new faction emerge from the collapse?",
+    "Who will be the first to abandon the ship?",
+    "Where can the player find a relic of pre-spaceflight?"
+  ]
+}

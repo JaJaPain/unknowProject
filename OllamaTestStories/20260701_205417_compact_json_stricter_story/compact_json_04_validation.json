@@ -1,0 +1,26 @@
+{
+  "valid": false,
+  "score": 11,
+  "errors": [
+    "missing_field:rumor_trail",
+    "missing_nested:kaelen.never_reveal_rule",
+    "missing_nested:act_1.player_takeaway",
+    "missing_nested:starter_mission.aftershock",
+    "missing_nested:rumor_trail.name",
+    "missing_nested:rumor_trail.trail_id",
+    "missing_nested:rumor_trail.hint_theme",
+    "missing_nested:rumor_trail.payoff",
+    "placeholder_text:rumor_t",
+    "empty_string:rumor_trail.trail_id",
+    "bad_rumor_trail_id_format",
+    "rumor_clue_templates_not_two_nonempty_items",
+    "bad_rumor_discovery_type",
+    "bad_rumor_rarity",
+    "bad_trigger_id_format"
+  ],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin",
+    "hidden_crisis_may_not_connect_to_playable_systems"
+  ]
+}

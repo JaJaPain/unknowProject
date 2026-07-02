@@ -66,6 +66,10 @@ func prompt_context() -> String:
 	lines.append("Campaign Bible:")
 	lines.append("- Generation status: %s" % generation_status())
 	lines.append("- Source: %s" % source_name())
+	lines.append("- Campaign title: %s" % str(data.get("campaign_title", "")))
+	lines.append("- Logline: %s" % str(data.get("campaign_logline", "")))
+	lines.append("- Opening situation: %s" % str(data.get("opening_situation", "")))
+	lines.append("- Main mystery: %s" % str(data.get("main_mystery", "")))
 	lines.append("- Tone: %s" % str(data.get("tone", "")))
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
@@ -73,6 +77,12 @@ func prompt_context() -> String:
 	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
 	lines.append("- Address rule: %s" % str(data.get("address_rule", "")))
 	lines.append("- Story horizon rule: %s" % str(data.get("story_horizon_rule", "")))
+	var act_1_outline: Array = data.get("act_1_outline", [])
+	if not act_1_outline.is_empty():
+		lines.append("Act 1 outline:")
+		for beat in act_1_outline:
+			lines.append("- %s" % str(beat))
+	lines.append("- Long-term reveal direction: %s" % str(data.get("long_term_reveal", "")))
 	var arcs: Array = data.get("story_arcs", [])
 	if not arcs.is_empty():
 		lines.append("Story arcs:")
@@ -261,41 +271,38 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"source": STATUS_PROCEDURAL_BOOTSTRAP,
 		"generation_status": STATUS_PROCEDURAL_BOOTSTRAP,
 		"source_model": "",
-		"generation_note": "LLM campaign bible generation has not run yet; this bootstrap is labeled so diagnostics can see it.",
+		"generation_note": "Waiting for the large story model to generate the required campaign bible.",
 		"last_generation_error": "",
+		"campaign_title": "Pending Large-Model Campaign",
+		"campaign_logline": "Waiting for Gemma to write the campaign premise.",
+		"opening_situation": "Gameplay must wait until the large story model writes the opening situation.",
+		"main_mystery": "Pending large-model mystery.",
+		"act_1_outline": [],
+		"long_term_reveal": "Pending large-model reveal direction.",
 		"tone": "PG-13 frontier space opera with dry, slightly dark humor.",
-		"core_pressure": "The old home-system powers are stable enough to feel known, but the frontier beyond the gates is changing faster than anyone admits.",
+		"core_pressure": "Pending large-model campaign story generation.",
 		"kaelen_rule": "Kaelen is the only fixed recurring character. Her actions can be revealed, but her true nature and full mystery should never be completely explained.",
 		"faction_reveal_rule": "Reveal new factions, conflicts, ores, upgrades, and secrets through gate travel rather than upfront exposition.",
 		"humor_rule": "Use humor as relief from killing, betrayal, power, and money. Prefer dry or dark wit, with occasional oddballs.",
 		"address_rule": "Agents may call the player Indy in an opening request, but should avoid repeating the name in immediate acceptance follow-ups.",
 		"fallback_rule": "Fallback content is last-resort only and should be visible to diagnostics.",
 		"story_horizon_rule": "The campaign bible owns the current prepared story horizon. When the player nears its edge, append a new horizon with the larger model instead of replacing known canon.",
-		"story_arcs": [
-			{
-				"name": "Home Powers, Frontier Pressure",
-				"summary": "Zenith, Aurelia, and Vanguard remain the known baseline while new factions appear past the gates.",
-			},
-			{
-				"name": "Kaelen's Unfinished Map",
-				"summary": "Kaelen can guide, delay, and bargain over exits, but her deeper motive remains unresolved.",
-			},
-		],
+		"story_arcs": [],
 		"rumor_trails": [
 			{
-				"name": "The Thing Everyone Heard Wrong",
-				"trail_id": "rumor_trail.thing_everyone_heard_wrong",
+				"name": "Pending Large-Model Rumor Trail",
+				"trail_id": "rumor_trail.pending_large_model",
 				"clue_count": 4,
-				"hint_theme": "misquoted gate chatter that gradually points toward a hidden object in deep frontier space",
+				"hint_theme": "placeholder diagnostics only; gameplay must wait for generated story",
 				"clue_templates": [
-					"Someone repeats a phrase that sounds wrong in exactly the same way.",
-					"A station contact claims the rumor came from a gate log that no longer exists.",
-					"Kaelen recognizes part of the phrase but refuses to explain why.",
-					"The final clue names a place the map does not yet admit exists.",
+					"Large story model has not generated clue one.",
+					"Large story model has not generated clue two.",
+					"Large story model has not generated clue three.",
+					"Large story model has not generated clue four.",
 				],
 				"discovery_type": "endgame_easter_egg",
 				"rarity": "legendary",
-				"payoff": "A rare hidden discovery or endgame easter egg chosen by the future campaign-level LLM.",
+				"payoff": "No payoff until the large story model writes the campaign bible.",
 			},
 		],
 		"regeneration_triggers": [
@@ -362,6 +369,11 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"generation_status"
 		)
 	for field in [
+		"campaign_title",
+		"campaign_logline",
+		"opening_situation",
+		"main_mystery",
+		"long_term_reveal",
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
@@ -379,6 +391,12 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			)
 	if not value.get("story_arcs", []) is Array:
 		result.add_error("invalid_story_arcs", "Story arcs must be an array.", "story_arcs")
+	if not value.get("act_1_outline", []) is Array:
+		result.add_error(
+			"invalid_act_1_outline",
+			"Act 1 outline must be an array.",
+			"act_1_outline"
+		)
 	if not value.get("rumor_trails", []) is Array:
 		result.add_error("invalid_rumor_trails", "Rumor trails must be an array.", "rumor_trails")
 	else:

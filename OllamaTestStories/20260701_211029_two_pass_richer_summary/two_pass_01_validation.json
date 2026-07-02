@@ -1,0 +1,10 @@
+{
+  "valid": true,
+  "score": 88,
+  "errors": [],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin",
+    "hidden_crisis_may_not_connect_to_playable_systems"
+  ]
+}

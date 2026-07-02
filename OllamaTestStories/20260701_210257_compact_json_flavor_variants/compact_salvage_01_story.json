@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Wreckage of the Gilded Age",
+  "campaign_subtitle": "Scavenging the Dead Zones",
+  "campaign_logline": "A broke pilot navigates a decaying economic zone where salvage rights are the only currency.",
+  "campaign_pitch": "The Zenith Corporation owns the mineral rights. Aurelia seeks to reclaim lost trade routes. The Vanguard protects the local mining colonies.",
+  "campaign_story_summary": "Trade routes have collapsed into debris fields. Corporations and militias now fight over salvaged scrap. You are a pilot seeking profit in the ruins. Kaelen offers contracts for high-risk salvage jobs. Each haul brings you closer to a contested zone. The void is silent but the market is hungry.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "Mining zones are depleted and heavily guarded by private security.",
+    "visible_crisis": "Supply chains for essential minerals are failing in the sector.",
+    "hidden_crisis": "A shortage of heavy industrial components is crippling local manufacturing.",
+    "why_now": "The central trade hub has declared a state of emergency.",
+    "player_role": "An independent pilot with an aging ship and empty pockets."
+  },
+  "mystery": {
+    "question": "Why are the salvage rights so heavily contested?",
+    "false_answer": "A rumor says the ships were destroyed by pirates.",
+    "true_answer_hint": "The mining corporations secretly hoarded materials for a private project.",
+    "long_term_reveal_direction": "The hoarding is part of an industrial infrastructure plan."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows the location of the hidden manufacturing hubs.",
+    "address_rule": "Address her as a broker or contractor.",
+    "never_reveal_rule": "Never reveal her role in the logistics network."
+  },
+  "factions": {
+    "zenith_problem": "Zenith wants to monopolize the remaining high-grade ore.",
+    "aurelia_problem": "Aurelia seeks to secure trade routes for their merchant fleet.",
+    "vanguard_problem": "Vanguard is struggling to maintain order in lawless zones.",
+    "conflict_triangle": "Zenith and Aurelia fight over the same scrap heaps.",
+    "neutral_space_pressure": "Pirates and scavengers are encroaching on the contested zones."
+  },
+  "act_1": {
+    "name": "The Scavenger's Path",
+    "goal": "Secure enough salvage to establish a stable route.",
+    "opening_incident": "You find a ship with an intact manifest of high-value cargo.",
+    "midpoint_turn": "A Vanguard patrol finds you and demands your haul.",
+    "finale": "You successfully deliver the scrap to a neutral station.",
+    "player_takeaway": "The market for salvage is lucrative but dangerous."
+  },
+  "starter_mission": {
+    "title": "Clear the Path",
+    "reason": "A local scavenger group needs you to clear out a rogue drone-ship.",
+    "enemy_identity": "Reaver ship",
+    "enemy_knows": "The Reaver is patrolling its designated sector.",
+    "after_effect": "You earn your first payout and a new cargo manifest."
+  },
+  "recurring_clue": {
+    "name": "Ghost Manifests",
+    "signal": "A recurring pattern in the scrap metadata.",
+    "first_appearance": "Found on a high-value salvage haul.",
+    "escalation": "More manifests appear as you explore deeper.",
+    "payoff_hint": "The manifest lists items for a construction project."
+  },
+  "rumor_trail": {
+    "name": "The Iron Mine",
+    "trail_id": "rumor_trail.iron_mine_scavenge",
+    "hint_theme": "Old mining equipment and heavy machinery.",
+    "clue_templates": [
+      "A rumor of a massive mine buried under debris.",
+      "A whisper of a hidden refinery in the sector."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Access to a high-value industrial zone."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads to a deeper mining district.",
+    "new_system_reveal_rule": "Do not reveal future factions or names of other systems.",
+    "future_pressure_tease": "A rumor of larger conflicts over industrial zones.",
+    "future_ore_or_upgrade_tease": "The promise of more complex machinery and tools.",
+    "regeneration_trigger": {
+      "id": "regeneration.scavenge_path",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first act ends, a new scavenger path is granted."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical frontier humor.",
+    "fallback": "If no content is available, use a default salvage contract.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ancient signal",
+      "ghost signal",
+      "mysterious pulse"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the reasons for the current salvage crisis?",
+    "Why do the factions involved in player's haul be more aggressive?",
+    "How many of other systems have been abandoned by corporations?",
+    "Who is the primary owner of the rest of the high-value scrap?",
+    "Where is the next collection point for the security forces?"
+  ]
+}

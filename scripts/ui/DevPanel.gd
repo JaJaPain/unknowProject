@@ -10,6 +10,13 @@ signal stores_restock_requested
 var _action_vbox: VBoxContainer
 var _tab_container: TabContainer
 var _root_panel: PanelContainer
+var _story_debug_provider: Callable
+var _story_status_label: Label
+var _story_overarching_text: TextEdit
+var _story_input_prompt_text: TextEdit
+var _story_bible_text: TextEdit
+var _story_context_text: TextEdit
+var _story_state_text: TextEdit
 
 # ── Public API ────────────────────────────────────────────────────────────────
 ## Add a button to the left quick-action sidebar.
@@ -33,6 +40,11 @@ func add_tab(title: String) -> VBoxContainer:
 	_tab_container.set_tab_title(_tab_container.get_tab_count() - 1, title)
 	return vbox
 
+
+func set_story_debug_provider(provider: Callable) -> void:
+	_story_debug_provider = provider
+	_refresh_story_debug_tab()
+
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	layer   = 200
@@ -44,6 +56,7 @@ func _ready() -> void:
 	_build_mechanic_debug_tab()
 	_build_dialogue_content_tab()
 	_build_dialogue_rules_tab()
+	_build_story_debug_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
 	# _build_my_tool(my_tab)
@@ -126,6 +139,91 @@ func _build_chrome() -> void:
 	# ── Add more quick actions here in future sessions ──
 
 # ── Faction tuning tab ────────────────────────────────────────────────────────
+func _build_story_debug_tab() -> void:
+	var tab := add_tab("Story Debug")
+
+	var hint := Label.new()
+	hint.text = (
+		"Read-only story data. Campaign Bible is the main large-story model document. "
+		+ "Input Prompt is what would be sent to the large story model for this campaign."
+	)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+
+	var refresh_btn := Button.new()
+	refresh_btn.text = "Refresh Story View"
+	refresh_btn.pressed.connect(_refresh_story_debug_tab)
+	tab.add_child(refresh_btn)
+
+	_story_status_label = Label.new()
+	_story_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_story_status_label.add_theme_color_override("font_color", Color(0.55, 0.95, 1.0))
+	tab.add_child(_story_status_label)
+
+	tab.add_child(HSeparator.new())
+	tab.add_child(_story_section_label("Overarching Story Gemma Wrote"))
+	_story_overarching_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_overarching_text)
+
+	tab.add_child(_story_section_label("Large Story Model Input Prompt"))
+	_story_input_prompt_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_input_prompt_text)
+
+	tab.add_child(_story_section_label("Campaign Bible JSON / Raw Stored Data"))
+	_story_bible_text = _story_readonly_text_edit(300)
+	tab.add_child(_story_bible_text)
+
+	tab.add_child(_story_section_label("Campaign Bible Prompt Block"))
+	_story_context_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_context_text)
+
+	tab.add_child(_story_section_label("Live Story State Prompt Block"))
+	_story_state_text = _story_readonly_text_edit(180)
+	tab.add_child(_story_state_text)
+
+	_refresh_story_debug_tab()
+
+
+func _story_section_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.35))
+	return label
+
+
+func _story_readonly_text_edit(height: int) -> TextEdit:
+	var editor := TextEdit.new()
+	editor.custom_minimum_size = Vector2(0, height)
+	editor.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	editor.editable = false
+	return editor
+
+
+func _refresh_story_debug_tab() -> void:
+	if _story_status_label == null \
+			or _story_overarching_text == null \
+			or _story_input_prompt_text == null \
+			or _story_bible_text == null \
+			or _story_context_text == null \
+			or _story_state_text == null:
+		return
+	if not _story_debug_provider.is_valid():
+		_story_status_label.text = "Story provider not connected yet."
+		_story_overarching_text.text = ""
+		_story_input_prompt_text.text = ""
+		_story_bible_text.text = ""
+		_story_context_text.text = ""
+		_story_state_text.text = ""
+		return
+	var snapshot: Dictionary = _story_debug_provider.call()
+	_story_status_label.text = str(snapshot.get("status", "No story status available."))
+	_story_overarching_text.text = str(snapshot.get("overarching_story", ""))
+	_story_input_prompt_text.text = str(snapshot.get("campaign_bible_input_prompt", ""))
+	_story_bible_text.text = str(snapshot.get("campaign_bible_json", ""))
+	_story_context_text.text = str(snapshot.get("campaign_bible_context", ""))
+	_story_state_text.text = str(snapshot.get("story_state_context", ""))
+
+
 func _build_lounge_layout_tab() -> void:
 	var tab := add_tab("Lounge Layout")
 

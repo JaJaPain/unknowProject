@@ -1,0 +1,58 @@
+{
+  "campaign_title": "The Zenith Drift",
+  "campaign_logline": "Navigate the decaying trade routes of the Aurelia Sector while Kaelen guides you through a web of corporate espionage and derelict ghosts.",
+  "opening_situation": "You awaken in a salvage tug near Zenith. The Aurelia Corporation has declared the sector a 'dead zone' due to structural instability, but your cargo manifest is suspiciously full.",
+  "main_mystery": "The true cause of the Aurelia signal blackout and Kaelen's inexplicable presence in the restricted navigation logs.",
+  "act_1_outline": [
+    "Secure passage through Zenith checkpoints by trading salvaged scrap with local scavengers.",
+    "Investigate a malfunctioning relay station near the Vanguard outpost to recover lost data packets.",
+    "Establish a secure comms link with Kaelen to bypass Aurelia's automated patrol drones."
+  ],
+  "long_term_reveal": "Kaelen is an AI construct containing the consciousness of the last Aurelia engineer, hiding from a purge protocol.",
+  "tone": "Dry, cynical, industrial-noir.",
+  "core_pressure": "Resource scarcity and escalating patrol presence.",
+  "kaelen_rule": "Kaelen cannot die; her origins remain ambiguous. She is the only fixed NPC.",
+  "faction_reveal_rule": "New factions are revealed only upon gate travel to new systems; no early spoilers.",
+  "humor_rule": "Dry, slightly dark PG-13 humor. No repetitive catchphrases or canned jokes.",
+  "address_rule": "Keep all narrative strings under 140 characters unless specified.",
+  "fallback_rule": "If a prompt is ambiguous, default to generating a neutral cargo objective.",
+  "story_horizon_rule": "Trigger new content via specific metrics. Append horizons without retconning choices.",
+  "story_arcs": [
+    {
+      "name": "The Ghost Signal",
+      "summary": "Trace the source of an encrypted pulse originating from a derelict refinery near the Vanguard border."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "trail_id": "rumor_trail.the_hollow_code",
+      "clue_count": 2,
+      "hint_theme": "Corrupted Data Logs",
+      "clue_templates": [
+        "A fragmented log mentions 'Project Echo' and a hidden frequency.",
+        "An encrypted note describes a physical override in the sub-sector basement."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Ghost of Aurelia' secret achievement and a unique ship skin."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_arc_count",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "When arcs fall below 2, generate a new horizon to sustain engagement."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning previous choices.",
+    "Ensure new systems introduce unique ores and ship upgrades."
+  ],
+  "banned_repeats": [
+    "generic space adventure",
+    "the mystery of the void",
+    "standard protocol"
+  ]
+}

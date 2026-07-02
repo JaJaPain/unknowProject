@@ -1,0 +1,97 @@
+{
+  "campaign_title": "Dust of the Belt",
+  "campaign_subtitle": "The Scarcity Chronicles",
+  "campaign_logline": "A pilot's debt is paid in scrap and cargo.",
+  "campaign_pitch": "Debt collectors are closing in on the outer rim. You must secure trade routes for survival. Profit from the mines to stay ahead of the creditors.",
+  "campaign_story_summary": "The Zenith Corporation owns the primary ore veins. Aurelia seeks independence through independent mining claims. The Vanguard protects the shipping lanes against pirate raids. A shortage of refined minerals causes prices to skyrocket. You navigate these tensions to clear your debts. Every shipment delivered is a step toward freedom.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "Mining colonies are struggling with high fuel costs.",
+    "visible_crisis": "A shortage of refined minerals has crippled trade routes.",
+    "hidden_crisis": "The Zenith Corporation is hoarding supplies to manipulate market prices.",
+    "why_now": "Your debt collectors have issued a final notice.",
+    "player_role": "An independent pilot with an overdue bill."
+  },
+  "mystery": {
+    "question": "Why are the mineral markets so unstable?",
+    "false_answer": "Pirate raids are destroying the transport ships.",
+    "true_answer_hint": "The Zenith Corporation is intentionally sabotaging their own supply lines to create a monopoly.",
+    "long_term_reveal_direction": "A shadow organization plans to control all trade by controlling the scarcity."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows exactly who is manipulating the market.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never mention her role in any official capacity."
+  },
+  "factions": {
+    "zenith_problem": "They are monopolizing ore veins and creating artificial shortages.",
+    "aurelia_problem": "They want to break the monopoly but lack the resources to do so alone.",
+    "aurelia_problem_2": "They struggle with logistics and pirate activity in their zones.",
+    "conflict_triangle": "Zenith wants control, Aurelia wants freedom, Vanguard protects the lanes.",
+    "neutral_space_pressure": "Pirates and scavengers are moving into the empty gaps."
+  },
+  "act_1": {
+    "name": "The First Shipment",
+    "goal": "Deliver a haul of refined minerals to a nearby station.",
+    "opening_incident": "A pirate ship is intercepted by your sensors during a delivery.",
+    "midpoint_turn": "You discover that the shipment you are carrying is actually stolen from a Zenith site.",
+    "finale": "You successfully deliver the cargo and receive a payment for your debts.",
+    "player_takeaway": "The market is more complex than it seems."
+  },
+  "starter_mission": {
+    "title": "Clear the Path",
+    "reason": "A pirate ship has blocked the main trade route.",
+    "enemy_identity": "Reaver-class scout ship.",
+    "enemy_knows": "The enemy is unaware of your presence until you engage.",
+    "after_effect": "You clear the path and receive a small reward for it."
+  },
+  "recurring_clue": {
+    "name": "Marked Cargo",
+    "signal": "A recurring symbol on stolen Zenith crates.",
+    "first_appearance": "Found during your first delivery mission.",
+    "escalation": "The number of marked crates appears to increase over time.",
+    "payoff_hint": "These marks indicate a coordinated effort to move goods outside the law."
+  },
+  "rumor_trail": {
+    "name": "Shadow Trade",
+    "trail_id": "rumor_trail.shadow_trade",
+    "hint_theme": "Illegal trade routes and hidden markets.",
+    "clue_templates": [
+      "The market is flooded with cheap, high-quality ore.",
+      "There are rumors of a secret tunnel in the belt."
+    ],
+    "discovery_type": "hidden_delivery_route",
+    "rarity": "rare",
+    "payoff": "A hidden trade route that provides higher rewards for delivery."
+  },
+  "horizon": {
+    "gate_tease": "The gates lead to systems with even more desperate resources.",
+    "new_system_reveal_rule": "Do not mention any other factions or specific names of new systems.",
+    "future_pressure_tease": "The demand for lure-based tactics and more complex trade routes is growing.",
+    "future_ore_or_upgrade_tease": "Better ships will allow you to deliver more cargo and earn more profit.",
+    "regeneration_trigger": {
+      "id": "regeneration_trigger.scarcity_cycle",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When a major arc is completed, new trade routes and hazards are added."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical humor about the fuel costs and debt.",
+    "fallback": "If no quest is available, offer a contract for basic cargo delivery.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "scarcity_crisis"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the reasons for the competition between Zenith and Aurelia?",
+    "Why is there a marked cargo symbol on stolen crates?",
+    "How do the markets be manipulated by a single corporation?",
+    "Who are the people behind the shadow trade routes?",
+    "Where can you find more refined minerals in the outlands?"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "valid": false,
+  "score": 0,
+  "errors": [
+    "no_json",
+    "json_parse_failed: Expecting ',' delimiter: line 45 column 119 (char 6379)"
+  ],
+  "warnings": []
+}

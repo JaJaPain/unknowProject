@@ -9,54 +9,115 @@ const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
 
+const CREATIVE_LANES := [
+	{
+		"name": "criminal economy",
+		"guidance": "center smuggling, forged manifests, protection rackets, stolen cargo, and who profits when legal trade breaks.",
+	},
+	{
+		"name": "corporate espionage",
+		"guidance": "center deniable sabotage, leaked patents, dirty audits, black-budget security, and contracts that hide ownership.",
+	},
+	{
+		"name": "infrastructure collapse",
+		"guidance": "center failing stations, broken relays, unsafe gates, repair scarcity, and factions blaming each other for neglect.",
+	},
+	{
+		"name": "political succession",
+		"guidance": "center leadership disputes, emergency powers, contested permits, quiet coups, and brokers selling access.",
+	},
+	{
+		"name": "salvage rights",
+		"guidance": "center wreck claims, disputed manifests, dead ships, insurance fraud, and evidence hidden in recovered parts.",
+	},
+	{
+		"name": "debt and privatization",
+		"guidance": "center repossession, company towns, privatized security, predatory loans, and survival under owned infrastructure.",
+	},
+	{
+		"name": "ecological or industrial hazard",
+		"guidance": "center toxic ore, failing life support, unsafe extraction, poisoned habitats, and coverups disguised as accidents.",
+	},
+]
+
 
 static func build_campaign_bible_prompt(
 	baseline_bible: Dictionary,
 	idea_memory_context: String = ""
 ) -> String:
 	var campaign_seed := str(baseline_bible.get("campaign_seed", ""))
+	var creative_lane := _creative_lane_for_seed(campaign_seed)
 	var idea_block := "No prior idea memory yet."
 	if not idea_memory_context.strip_edges().is_empty():
 		idea_block = idea_memory_context.strip_edges()
 	return "\n".join([
 		"You are the large local story model for a procedural space game.",
-		"Create the campaign bible for one new campaign.",
+		"Create a compact first-horizon campaign bible for one new campaign.",
+		"Be concise. This is a startup-critical request; short valid JSON is better than rich prose.",
 		"",
 		"Hard constraints:",
 		"- Keep the handcrafted first system anchored by Zenith, Aurelia, and Vanguard.",
 		"- Do not reveal future frontier factions to the player up front.",
 		"- Kaelen is the only fixed recurring NPC besides the player.",
 		"- Kaelen cannot die and her full mystery must never be completely solved.",
+		"- Kaelen must publicly appear as a broker, fixer, or contract handler, not a scavenger, scientist, commander, prophet, mechanic, AI, archive, or failsafe.",
+		"- Kaelen's hidden identity can be strange, mundane, human, non-human, technological, or unknown, but the story bible must frame it as hidden director knowledge only.",
 		"- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
-		"- Rumors should include at least one trail that can eventually lead to a hidden discovery or endgame easter egg.",
-		"- Rumor trails need concrete clue templates and a discovery type so later systems can turn them into real breadcrumbs.",
-		"- Story horizon regeneration triggers must name a metric, threshold, and action so future code can decide when to append more story.",
+		"- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.",
+		"- The rumor trail needs exactly two concrete clue templates and a discovery type.",
+		"- Include exactly one story horizon regeneration trigger with a metric, threshold, and action.",
 		"- If story extends later, append a new horizon. Do not retcon known player choices.",
+		"- Keep every string under 140 characters unless the field says otherwise.",
 		"",
 		"Campaign seed: %s" % campaign_seed,
+		"Creative lane for this campaign: %s." % str(creative_lane.get("name", "")),
+		"Lane guidance: %s" % str(creative_lane.get("guidance", "")),
+		"",
+		"Anti-motif guidance:",
+		"- Do not use a 'Zenith [single abstract noun]' title pattern.",
+		"- Avoid overusing Kaelen-as-AI/archive/failsafe unless it is genuinely the freshest fit for this specific campaign lane.",
+		"- Do not use Great Silence, Great Collapse, purge protocol, ancient signal, ghost signal, prophecy, alien owner, mysterious pulse, chosen one, or destiny as the core reveal.",
+		"- Prefer campaign-facing secrets the player can chase through jobs: debt, fraud, leverage, sabotage, jurisdiction, inheritance, stolen cargo, repair scarcity, hidden ownership, or carefully buried identity hints.",
+		"- Make the reveal fit the chosen creative lane instead of defaulting to cosmic explanation.",
 		"",
 		"Existing idea memory:",
 		idea_block,
 		"",
 		"Return only JSON. No markdown. No comments.",
-		"Required object fields:",
+		"Return exactly this object shape:",
 		"{",
+		"  \"campaign_title\": string,",
+		"  \"campaign_logline\": string under 220 chars,",
+		"  \"opening_situation\": string under 260 chars,",
+		"  \"main_mystery\": string under 220 chars,",
+		"  \"act_1_outline\": [three strings under 180 chars each],",
+		"  \"long_term_reveal\": string under 220 chars,",
 		"  \"tone\": string,",
 		"  \"core_pressure\": string,",
-		"  \"kaelen_rule\": string,",
+		"  \"kaelen_rule\": string that says she is publicly a broker, fixer, or contract handler,",
 		"  \"faction_reveal_rule\": string,",
 		"  \"humor_rule\": string,",
-		"  \"address_rule\": string,",
-		"  \"fallback_rule\": string,",
+		"  \"address_rule\": string describing how NPCs address the player,",
+		"  \"fallback_rule\": string describing how to handle missing story data,",
 		"  \"story_horizon_rule\": string,",
-		"  \"story_arcs\": [{\"name\": string, \"summary\": string}],",
-		"  \"rumor_trails\": [{\"name\": string, \"trail_id\": string, \"clue_count\": number, \"hint_theme\": string, \"clue_templates\": [string], \"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", \"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string}],",
-		"  \"regeneration_triggers\": [{\"id\": string, \"metric\": \"prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state\", \"threshold\": number, \"action\": \"append_story_horizon|append_rumor_trail|append_story_arc\", \"description\": string}],",
-		"  \"expansion_rules\": [string],",
+		"  \"story_arcs\": [{\"name\": string, \"summary\": string under 180 chars}],",
+		"  \"rumor_trails\": [{\"name\": string, \"trail_id\": \"rumor_trail.\" plus snake_case_id, \"clue_count\": 2, \"hint_theme\": string, \"clue_templates\": [two strings], \"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", \"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string under 180 chars}],",
+		"  \"regeneration_triggers\": [{\"id\": snake_case_string, \"metric\": \"prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state\", \"threshold\": number, \"action\": \"append_story_horizon|append_rumor_trail|append_story_arc\", \"description\": string}],",
+		"  \"expansion_rules\": [two strings],",
 		"  \"banned_repeats\": [string]",
 		"}",
+		"Use exactly one story_arcs item, one rumor_trails item, and one regeneration_triggers item.",
 	])
+
+
+static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary:
+	if CREATIVE_LANES.is_empty():
+		return {}
+	var accumulator := 0
+	for index in range(campaign_seed.length()):
+		accumulator += campaign_seed.unicode_at(index) * (index + 1)
+	return CREATIVE_LANES[abs(accumulator) % CREATIVE_LANES.size()]
 
 
 static func parse_campaign_bible_response(
@@ -81,11 +142,12 @@ static func parse_campaign_bible_response(
 	var response_validation := parsed["validation"] as ValidationResult
 	if not response_validation.is_valid():
 		return _failure("response_json_parse_failed", response_validation)
-	var generated_validation := _validate_campaign_bible_shape(parsed["data"])
+	var repaired_generated := _repaired_generated_campaign_bible(parsed["data"])
+	var generated_validation := _validate_campaign_bible_shape(repaired_generated)
 	if not generated_validation.is_valid():
 		return _failure("campaign_bible_validation_failed", generated_validation)
 	var bible := _normalized_campaign_bible(
-		parsed["data"],
+		repaired_generated,
 		baseline_bible,
 		model_name
 	)
@@ -93,6 +155,213 @@ static func parse_campaign_bible_response(
 	if not validation.is_valid():
 		return _failure("campaign_bible_validation_failed", validation)
 	return {"ok": true, "bible": bible}
+
+
+static func _repaired_generated_campaign_bible(generated: Dictionary) -> Dictionary:
+	var repaired := _repair_text_tree(generated.duplicate(true)) as Dictionary
+	_apply_key_aliases(
+		repaired,
+		{
+			"campaign_name": "campaign_title",
+			"title": "campaign_title",
+			"logline": "campaign_logline",
+			"campaign_summary": "campaign_logline",
+			"opening": "opening_situation",
+			"mystery": "main_mystery",
+			"act_one_outline": "act_1_outline",
+			"act_i_outline": "act_1_outline",
+			"longterm_reveal": "long_term_reveal",
+			"long_term_reveal_direction": "long_term_reveal",
+			"kaelen": "kaelen_rule",
+			"kaelen_public_rule": "kaelen_rule",
+			"faction_rule": "faction_reveal_rule",
+			"humor": "humor_rule",
+			"fallback": "fallback_rule",
+			"story_horizon": "story_horizon_rule",
+			"story_arc": "story_arcs",
+			"story_arc_list": "story_arcs",
+			"rumor_trail": "rumor_trails",
+			"rumor__trails": "rumor_trails",
+			"regeneration_trigger": "regeneration_triggers",
+			"regeneration_trigger_list": "regeneration_triggers",
+			"expansion_rule": "expansion_rules",
+			"banned_repeat": "banned_repeats",
+		}
+	)
+	if repaired.get("story_arcs", null) is Dictionary:
+		repaired["story_arcs"] = [repaired["story_arcs"]]
+	if repaired.get("rumor_trails", null) is Dictionary:
+		repaired["rumor_trails"] = [repaired["rumor_trails"]]
+	if repaired.get("regeneration_triggers", null) is Dictionary:
+		repaired["regeneration_triggers"] = [repaired["regeneration_triggers"]]
+	if repaired.get("act_1_outline", null) is String:
+		repaired["act_1_outline"] = [str(repaired.get("act_1_outline", "")).strip_edges()]
+	if repaired.get("expansion_rules", null) is String:
+		repaired["expansion_rules"] = [str(repaired.get("expansion_rules", "")).strip_edges()]
+	if repaired.get("banned_repeats", null) is String:
+		repaired["banned_repeats"] = [str(repaired.get("banned_repeats", "")).strip_edges()]
+	_repair_kaelen_public_role(repaired)
+	_repair_rumor_trails(repaired)
+	_repair_regeneration_triggers(repaired)
+	_repair_banned_repeats(repaired)
+	return repaired
+
+
+static func _apply_key_aliases(target: Dictionary, aliases: Dictionary) -> void:
+	for source_key in aliases.keys():
+		var target_key := str(aliases[source_key])
+		if target.has(source_key) and not target.has(target_key):
+			target[target_key] = target[source_key]
+
+
+static func _repair_kaelen_public_role(target: Dictionary) -> void:
+	var original := str(target.get("kaelen_rule", "")).strip_edges()
+	if original.is_empty():
+		return
+	var lower := original.to_lower()
+	if lower.contains("broker") or lower.contains("fixer") or lower.contains("contract"):
+		return
+	if lower.contains("public") or lower.contains("appears as") or lower.contains("works as"):
+		for public_role in ["mechanic", "scientist", "commander", "prophet", " ai", "archive", "failsafe"]:
+			if lower.contains(public_role):
+				return
+	for forbidden in [" ai", "archive", "failsafe", "uploaded mind", "non-human"]:
+		if lower.contains(forbidden.strip_edges()):
+			return
+	target["kaelen_rule"] = (
+		"Kaelen publicly works as a broker and fixer; %s" % original
+	)
+
+
+static func _repair_rumor_trails(target: Dictionary) -> void:
+	var trails: Array = target.get("rumor_trails", []) if target.get("rumor_trails", []) is Array else []
+	for index in range(trails.size()):
+		if not trails[index] is Dictionary:
+			continue
+		var trail: Dictionary = trails[index]
+		_apply_key_aliases(
+			trail,
+			{
+				"trail": "trail_id",
+				"id": "trail_id",
+				"clues": "clue_templates",
+				"templates": "clue_templates",
+				"type": "discovery_type",
+				"reward": "payoff",
+			}
+		)
+		var trail_id := _snake_case_id(str(trail.get("trail_id", trail.get("name", "local_trail"))))
+		if not trail_id.begins_with("rumor_trail."):
+			trail_id = "rumor_trail.%s" % trail_id.trim_prefix("rumor_trail_")
+		trail["trail_id"] = trail_id
+		if not trail.get("clue_templates", []) is Array:
+			trail["clue_templates"] = [str(trail.get("clue_templates", "")).strip_edges()]
+		var clues: Array = trail.get("clue_templates", [])
+		while clues.size() < 2:
+			clues.append("A dockside rumor repeats the same suspicious detail.")
+		trail["clue_templates"] = clues
+		trail["clue_count"] = max(2, int(trail.get("clue_count", clues.size())))
+		if str(trail.get("discovery_type", "")).strip_edges().is_empty():
+			trail["discovery_type"] = "hidden_discovery"
+		if str(trail.get("rarity", "")).strip_edges().is_empty():
+			trail["rarity"] = "local"
+		var payoff := str(trail.get("payoff", "")).strip_edges()
+		var payoff_lower := payoff.to_lower()
+		if payoff_lower.contains("hidden faction") or payoff_lower.contains("future faction"):
+			trail["payoff"] = (
+				"Unlocks evidence of an unnamed outside power without revealing it yet."
+			)
+
+
+static func _repair_regeneration_triggers(target: Dictionary) -> void:
+	var triggers: Array = (
+		target.get("regeneration_triggers", [])
+		if target.get("regeneration_triggers", []) is Array else []
+	)
+	for index in range(triggers.size()):
+		if not triggers[index] is Dictionary:
+			continue
+		var trigger: Dictionary = triggers[index]
+		_apply_key_aliases(
+			trigger,
+			{
+				"trigger_id": "id",
+				"when": "metric",
+				"operation": "action",
+			}
+		)
+		trigger["id"] = _snake_case_id(str(trigger.get("id", "story_horizon_trigger")))
+
+
+static func _repair_banned_repeats(target: Dictionary) -> void:
+	var repeats: Array = (
+		target.get("banned_repeats", [])
+		if target.get("banned_repeats", []) is Array else []
+	)
+	for required in ["chosen one", "destiny"]:
+		var found := false
+		for repeat in repeats:
+			if str(repeat).to_lower() == required:
+				found = true
+				break
+		if not found:
+			repeats.append(required)
+	target["banned_repeats"] = repeats
+
+
+static func _repair_text_tree(value: Variant) -> Variant:
+	if value is Dictionary:
+		var copy := {}
+		for key in (value as Dictionary).keys():
+			copy[key] = _repair_text_tree((value as Dictionary)[key])
+		return copy
+	if value is Array:
+		var fixed: Array = []
+		for item in value:
+			fixed.append(_repair_text_tree(item))
+		return fixed
+	if value is String:
+		return _repair_common_text(str(value))
+	return value
+
+
+static func _repair_common_text(value: String) -> String:
+	return value \
+		.replace("â€™", "'") \
+		.replace("â€œ", "\"") \
+		.replace("â€", "\"") \
+		.replace("â€“", "-") \
+		.replace("â€”", "-") \
+		.replace("’", "'") \
+		.replace("“", "\"") \
+		.replace("”", "\"") \
+		.replace("–", "-") \
+		.replace("—", "-")
+
+
+static func _snake_case_id(value: String) -> String:
+	var clean := value.strip_edges().to_lower()
+	var output := ""
+	var previous_underscore := false
+	for index in range(clean.length()):
+		var code := clean.unicode_at(index)
+		var is_alnum := (code >= 97 and code <= 122) or (code >= 48 and code <= 57)
+		if is_alnum:
+			output += char(code)
+			previous_underscore = false
+		elif clean[index] == ".":
+			if not output.ends_with("."):
+				output += "."
+			previous_underscore = false
+		elif not previous_underscore:
+			output += "_"
+			previous_underscore = true
+	output = output.strip_edges()
+	while output.begins_with("_") or output.begins_with("."):
+		output = output.substr(1)
+	while output.ends_with("_") or output.ends_with("."):
+		output = output.substr(0, output.length() - 1)
+	return output if not output.is_empty() else "generated_story_id"
 
 
 static func _normalized_campaign_bible(
@@ -113,6 +382,12 @@ static func _normalized_campaign_bible(
 			)
 		)
 	for field in [
+		"campaign_title",
+		"campaign_logline",
+		"opening_situation",
+		"main_mystery",
+		"act_1_outline",
+		"long_term_reveal",
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
@@ -140,6 +415,11 @@ static func _normalized_campaign_bible(
 static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResult:
 	var result := ValidationResultType.new()
 	for field in [
+		"campaign_title",
+		"campaign_logline",
+		"opening_situation",
+		"main_mystery",
+		"long_term_reveal",
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
@@ -156,6 +436,7 @@ static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResul
 				field
 			)
 	for array_field in [
+		"act_1_outline",
 		"story_arcs",
 		"rumor_trails",
 		"regeneration_triggers",
@@ -168,6 +449,17 @@ static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResul
 				"Generated campaign bible field '%s' must be an array." % array_field,
 				array_field
 			)
+	var kaelen_rule := str(bible.get("kaelen_rule", "")).to_lower()
+	if not (
+		kaelen_rule.contains("broker")
+		or kaelen_rule.contains("fixer")
+		or kaelen_rule.contains("contract")
+	):
+		result.add_error(
+			"invalid_kaelen_public_role",
+			"Kaelen must publicly remain a broker, fixer, or contract handler.",
+			"kaelen_rule"
+		)
 	return result
 
 

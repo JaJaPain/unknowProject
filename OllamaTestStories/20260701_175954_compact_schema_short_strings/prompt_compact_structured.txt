@@ -1,0 +1,26 @@
+You are the large local story model for SpaceGame, a procedural space game.
+
+Create a first campaign story bible. It must contain a real playable story premise, not just rules.
+
+Creative constraints:
+- First system factions: Zenith, Aurelia, Vanguard.
+- Do not reveal future frontier factions up front.
+- Kaelen is the only fixed recurring NPC besides the player.
+- Kaelen cannot die, and her full mystery must never be solved.
+- Kaelen appears publicly as a broker, fixer, and contract handler. Do not make her publicly a gate scientist, official liaison, commander, prophet, or mechanic.
+- Kaelen may privately know more than she admits.
+- The player starts as a broke independent pilot, not a chosen one.
+- The first mission must be a simple combat tutorial against exactly one Reaver or Reaver-like hostile ship.
+- The starter enemy is one hostile ship. Do not write a swarm, fleet, squad, drone cloud, or multi-enemy encounter.
+- The story must support mining, salvage, delivery, combat, station services, rumors, and gate exploration.
+- Use dry, slightly dark PG-13 frontier humor.
+- Use plain ASCII punctuation only.
+- Future questions must leave room for other campaigns to become different. Do not force a recurring motif, culprit, technology, prophecy, ancient species, signal, or final explanation.
+
+Return only the requested JSON object. Do not include a thought, reasoning, notes, markdown, or extra keys.
+Write concrete story content for every field.
+Use clean, direct English.
+Most string values must be one short sentence under 24 words.
+campaign_pitch may be 2-3 short sentences.
+campaign_story_summary may be 5 short sentences.
+Do not ramble. Do not repeat words. Do not invent joke placeholders.

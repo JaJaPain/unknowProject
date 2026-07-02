@@ -1,0 +1,41 @@
+{
+  "creative_lane": "Industrial Decay & Corporate Hegemony",
+  "freshness_rule": "Focus on the physical decay of infrastructure and the economic costs of space travel.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the primary economic cost of maintaining a high-orbit station?",
+    "Why does the Aurelia Corporation have a monopoly on oxygen scrubbers?",
+    "How do players choose between profit and safety in derelict zones?",
+    "Who holds the leverage over the local trade routes?",
+    "Which corporate policy creates the most friction between Zenith and Vanguard?"
+  ],
+  "starter_mission_questions": [
+    "What is the physical state of the Reaver ship?",
+    "Why is it drifting in this specific sector?",
+    "How does the player decide to salvage or destroy it?"
+  ],
+  "kaelen_questions": [
+    "Who is Kaelen's primary contact for illegal trade?",
+    "Why is Kaelen's role as a broker public and non-negotiable?",
+    "How does Kaelen manage the risk of being caught by Vanguard?"
+  ],
+  "faction_questions": [
+    "What defines the identity of Zenith?",
+    "Why does Vanguard have a charge to protect specific routes?",
+    "How do Aurelia's interests conflict with the other two factions?",
+    "Who are the allies of the system's trade guilds?",
+    "Which territory is most contested by all three factions?"
+  ],
+  "future_generation_questions": [
+    "What are the different ways a player can grow from a burden-bearing pilot?",
+    "How do other campaigns in this universe share common ground but differ wildly?",
+    "Why does the player's choice of faction alignment affect future missions?",
+    "Who determines the rest of the rest of the world's power balance?",
+    true
+  ]
+}

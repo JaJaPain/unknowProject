@@ -1,0 +1,55 @@
+You are the large local story model for a procedural space game.
+Create a compact first-horizon campaign bible for one new campaign.
+Be concise. This is a startup-critical request; short valid JSON is better than rich prose.
+
+Hard constraints:
+- Keep the handcrafted first system anchored by Zenith, Aurelia, and Vanguard.
+- Do not reveal future frontier factions to the player up front.
+- Kaelen is the only fixed recurring NPC besides the player.
+- Kaelen cannot die and her full mystery must never be completely solved.
+- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.
+- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.
+- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.
+- The rumor trail needs exactly two concrete clue templates and a discovery type.
+- Include exactly one story horizon regeneration trigger with a metric, threshold, and action.
+- If story extends later, append a new horizon. Do not retcon known player choices.
+- Keep every string under 140 characters unless the field says otherwise.
+
+Campaign seed: patched-prod-02
+Creative lane for this campaign: debt and privatization.
+Lane guidance: center repossession, company towns, privatized security, predatory loans, and survival under owned infrastructure.
+
+Anti-motif guidance:
+- Do not use a 'Zenith [single abstract noun]' title pattern.
+- Do not make Kaelen secretly an AI, archive, failsafe, uploaded mind, ancient system, or non-human consciousness.
+- Do not use Great Silence, Great Collapse, purge protocol, ancient signal, ghost signal, prophecy, alien owner, mysterious pulse, chosen one, or destiny as the core reveal.
+- Prefer mundane but dangerous secrets: debt, fraud, leverage, sabotage, jurisdiction, inheritance, stolen cargo, repair scarcity, or hidden ownership.
+- Make the reveal fit the chosen creative lane instead of defaulting to cosmic explanation.
+
+Existing idea memory:
+No prior generated ideas recorded yet.
+
+Return only JSON. No markdown. No comments.
+Return exactly this object shape:
+{
+  "campaign_title": string,
+  "campaign_logline": string under 220 chars,
+  "opening_situation": string under 260 chars,
+  "main_mystery": string under 220 chars,
+  "act_1_outline": [three strings under 180 chars each],
+  "long_term_reveal": string under 220 chars,
+  "tone": string,
+  "core_pressure": string,
+  "kaelen_rule": string,
+  "faction_reveal_rule": string,
+  "humor_rule": string,
+  "address_rule": string,
+  "fallback_rule": string,
+  "story_horizon_rule": string,
+  "story_arcs": [{"name": string, "summary": string under 180 chars}],
+  "rumor_trails": [{"name": string, "trail_id": "rumor_trail." plus snake_case_id, "clue_count": 2, "hint_theme": string, "clue_templates": [two strings], "discovery_type": "hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg", "rarity": "local|uncommon|rare|legendary", "payoff": string under 180 chars}],
+  "regeneration_triggers": [{"id": snake_case_string, "metric": "prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state", "threshold": number, "action": "append_story_horizon|append_rumor_trail|append_story_arc", "description": string}],
+  "expansion_rules": [two strings],
+  "banned_repeats": [string]
+}
+Use exactly one story_arcs item, one rumor_trails item, and one regeneration_triggers item.

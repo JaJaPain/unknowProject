@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Interest Margin",
+  "campaign_logline": "In a sector owned by creditors, your oxygen is a subscription service and the only thing cheaper than the interest rates is the bail.",
+  "opening_situation": "You start with a debt-leveraged ship in Aurelia's docking bays. Zenith patrols for 'delinquent assets,' while Vanguard secures the heavy manufacturing hubs.",
+  "main_mystery": "The true owners of the local infrastructure are not who they claim to be, but rather a shell company managing a massive liquidation of state assets.",
+  "act_1_outline": [
+    "Navigate Aurelia's shipping lanes while dodging repossession drones and high-interest collection agents.",
+    "Identify 'Ghost Accounts' in the Zenith ledger that allow for illicit smuggling of basic supplies.",
+    "Negotiate a temporary reprieve from the debt-hold by performing a risky escort into Vanguard territory."
+  ],
+  "long_term_reveal": "The local government didn't collapse; it was sold to a private equity firm that pays employees in scrip only valid at company stores.",
+  "tone": "Dry, cynical, and corporate-noir. Jokes should focus on the absurdity of bureaucratic bureaucracy.",
+  "core_pressure": "Debt cycles and resource scarcity under privatized infrastructure.",
+  "kaelen_rule": "Kaelen is a fixer who knows too much about the ledger; she cannot die and her motives remain ambiguous.",
+  "faction_reveal_rule": "New factions are only revealed upon entering new systems via gates. No forward references.",
+  "humor_rule": "Dry, dark humor regarding corporate bureaucracy and survival. Avoid catchphrases and repetitive tropes.",
+  "address_rule": "Keep all strings under 140 characters unless otherwise specified.",
+  "fallback_rule": "If a query is ambiguous, default to the nearest applicable narrative constraint in the core lane.",
+  "story_horizon_rule": "Trigger new content based on metric thresholds to ensure continuous progression.",
+  "story_arcs": [
+    {
+      "name": "The Interest Hike",
+      "summary": "Evade Vanguard enforcers while smuggling 'off-book' oxygen canisters from the industrial zones."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ledger Ghost",
+      "trail_id": "rumor_trail.ledger_ghost_audit",
+      "clue_count": 2,
+      "hint_theme": "Accounting anomalies in the Aurelia sector.",
+      "clue_templates": [
+        "A corrupted log of 'unclaimed' debt certificates from a defunct mining station.",
+        "A series of encrypted messages between two high-level execs regarding a 'Zero-Sum' settlement."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Find the hidden offshore account where the true ownership papers are buried."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "system_exhaustion_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the current arc concludes, generate a new narrative hook for the next system."
+    }
+  ],
+  "expansion_rules": [
+    "Append a new horizon when 'active_story_arcs_remaining' hits 0.",
+    "Never retroactively change established player choices or known faction statuses."
+  ],
+  "banned_repeats": [
+    "Zenith [Noun]",
+    "Great Silence",
+    "Prophecy",
+    "Chosen One"
+  ]
+}

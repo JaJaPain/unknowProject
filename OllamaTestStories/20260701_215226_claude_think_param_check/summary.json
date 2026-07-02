@@ -1,0 +1,48 @@
+{
+  "think_false": [
+    {
+      "parses": true,
+      "missing_keys": [],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 3181,
+      "elapsed": 20.88,
+      "done_reason": "stop",
+      "eval_count": 802,
+      "had_thinking_field": false
+    },
+    {
+      "parses": true,
+      "missing_keys": [],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2981,
+      "elapsed": 20.2,
+      "done_reason": "stop",
+      "eval_count": 773,
+      "had_thinking_field": false
+    },
+    {
+      "parses": true,
+      "missing_keys": [],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 3139,
+      "elapsed": 21.2,
+      "done_reason": "stop",
+      "eval_count": 819,
+      "had_thinking_field": false
+    },
+    {
+      "parses": true,
+      "missing_keys": [],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2975,
+      "elapsed": 20.19,
+      "done_reason": "stop",
+      "eval_count": 774,
+      "had_thinking_field": false
+    }
+  ]
+}

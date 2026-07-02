@@ -1,0 +1,58 @@
+{
+  "campaign_title": "The Zenith Paradox",
+  "campaign_logline": "Navigate the decaying infrastructure of the Aurelia Belt while Kaelen guides you through a web of corporate lies and derelict ghosts.",
+  "opening_situation": "You arrive at Zenith Station, a crumbling hub. The Vanguard patrol is tense, and your ship's life support is whining in a key that suggests imminent failure.",
+  "main_mystery": "Why did the Aurelia Corporation scrub the records of the 'Great Silence' and what Kaelen is actually hiding in her encrypted logs.",
+  "act_1_outline": [
+    "Establish trade routes between Zenith and Aurelia outposts while dodging Vanguard patrols.",
+    "Recover a corrupted data core from a derelict freighter near the primary jump gate.",
+    "Decipher the first layer of Kaelen's hidden frequency to unlock restricted zones."
+  ],
+  "long_term_reveal": "Kaelen is a sentient archive of a dead civilization, projected into a human shell to preserve history from the Aurelia purge.",
+  "tone": "Dry, cynical, space-industrial. Humor focuses on the absurdity of bureaucratic decay and malfunctioning tech.",
+  "core_pressure": "Resource scarcity and escalating Vanguard scrutiny as you probe restricted sectors.",
+  "kaelen_rule": "Kaelen is immortal and enigmatic; her true nature remains a mystery even after completion.",
+  "faction_reveal_rule": "New factions are only revealed upon passing jump gates into new systems.",
+  "humor_rule": "Avoid clichés. Use dry wit regarding the incompetence of automated systems and corporate red tape.",
+  "address_rule": "Keep all narrative text under 140 characters unless specified.",
+  "fallback_rule": "If a prompt is ambiguous, prioritize procedural consistency over plot expansion.",
+  "story_horizon_rule": "Trigger new content based on system exploration metrics to ensure a persistent world.",
+  "story_arcs": [
+    {
+      "name": "The Silent Frequency",
+      "summary": "Track down the source of an unauthorized signal broadcasting from the Aurelia wasteland."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "trail_id": "rumor_trail.ghost_signal_echo",
+      "clue_count": 2,
+      "hint_theme": "Corrupted data fragments from the pre-collapse era.",
+      "clue_templates": [
+        "An encrypted ping at coordinates [X] suggests a hidden cache.",
+        "A frantic log entry mentions 'The Vault' beneath the Aurelia waste."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Origin' archive, revealing a secret history of the first jump."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "gate_expansion_trigger",
+      "metric": "prepared_systems_remaining",
+      "threshold": 2,
+      "action": "append_story_horizon",
+      "description": "Add new content when the player reaches the edge of known territory."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning previous choices.",
+    "Generate unique ore types for each newly discovered system."
+  ],
+  "banned_repeats": [
+    "No 'space magic' explanations",
+    "No repeating Kaelen's core mystery clues early",
+    "No reusing the phrase 'the void beckons'"
+  ]
+}

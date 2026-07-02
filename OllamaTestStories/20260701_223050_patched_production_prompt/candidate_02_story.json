@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Yield of Zenith",
+  "campaign_logline": "In the Aurelia sector, your ship isn't yours; it is a leased asset in a system governed by debt-cycles and privatized air.",
+  "opening_situation": "Player starts with a high-interest lien on their vessel. To keep flight privileges, they must accept contracts from Vanguard security to clear 'delinquent' cargo in the Zenith zone.",
+  "main_mystery": "The truth behind why Aurelia’s infrastructure is owned by a shadowy consortium and who actually owns the 'debt' of the citizens.",
+  "act_1_outline": [
+    "Negotiate with Vanguard to settle initial docking fees.",
+    "Recover stolen luxury components from pirate-held outposts.",
+    "Uncover the discrepancy between local law and corporate ownership."
+  ],
+  "long_term_reveal": "The 'Debt' is a curated loop: some sectors are intentionally foreclosed to consolidate resources for a select group of elite shareholders.",
+  "tone": "Gritty, cynical, dryly humorous, industrial.",
+  "core_pressure": "Resource Scarcity and Debt Accumulation.",
+  "kaelen_rule": "Kaelen is publicly a broker; she manages contracts and settles debt disputes.",
+  "faction_reveal_rule": "New factions are only revealed upon passing through jump gates to adjacent systems.",
+  "humor_rule": "Dry, dark humor. No catchphrases or repeated jokes about 'space' tropes.",
+  "address_rule": "NPCs address the player as 'Pilot', 'Contractor', or by their ship's registration ID.",
+  "fallback_rule": "If data is missing, NPCs default to standard logistical updates regarding cargo and fuel costs.",
+  "story_horizon_rule": "If active_story_arcs_remaining falls below 2, append_story_arc.",
+  "story_arcs": [
+    {
+      "name": "The Foreclosure Path",
+      "summary": "Investigate the legal loophole allowing Vanguard to seize ships from 'non-compliant' pilots in the Aurelia sector."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost Ledger",
+      "trail_id": "rumor_trail.ghost_ledger",
+      "clue_count": 2,
+      "hint_theme": "Accounting Discrepancies",
+      "clue_templates": [
+        "A recurring 'Admin Fee' that doesn't appear on the public manifest.",
+        "An encrypted log of a shipment that was never legally registered."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Owner's Override' title and a unique hidden system core."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_depletion_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_arc",
+      "description": "Generate a new arc when the player completes the main primary narrative thread."
+    }
+  ],
+  "expansion_rules": [
+    "No retconning of past choices; append new content to existing timelines.",
+    "New minerals and ship upgrades must appear only in newly accessible sectors."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Purge Protocol",
+    "Chosen One",
+    "Ancient Signal"
+  ]
+}

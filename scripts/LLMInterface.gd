@@ -31,6 +31,7 @@ var world_lore_text: String = ""
 var campaign_bible_context_text: String = ""
 var story_state_context_text: String = ""
 var idea_memory_context_text: String = ""
+var campaign_bible_priority_active: bool = false
 var _known_quest_fingerprints: Dictionary = {}   # fingerprint -> true; rejects exact duplicate candidates
 var _pending_fallback_reason: String = ""
 var _pending_substitutions: Dictionary = {}
@@ -61,6 +62,24 @@ signal llm_connection_established(model_name: String)
 
 var llm_connected: bool = false
 var connection_attempts: int = 0
+
+
+func set_campaign_bible_priority_active(active: bool) -> void:
+	campaign_bible_priority_active = active
+
+
+func is_campaign_bible_priority_active() -> bool:
+	return campaign_bible_priority_active
+
+
+func _skip_for_campaign_bible_priority(capability: String) -> bool:
+	if not campaign_bible_priority_active:
+		return false
+	print(
+		"[LLMInterface] Deferring %s while required campaign bible is generating." %
+			capability
+	)
+	return true
 
 # Politically neutral, profit-driven fallback templates
 var fallback_templates = [
@@ -954,6 +973,9 @@ func request_lounge_chatter(
 	fallback_line: String,
 	callback: Callable
 ) -> void:
+	if _skip_for_campaign_bible_priority("lounge_chatter"):
+		callback.call(fallback_line)
+		return
 	var speaker := str(context.get("speaker", "Local Contact")).strip_edges()
 	var role := str(context.get("role", "station regular")).strip_edges()
 	var mood := str(context.get("mood", "neutral")).strip_edges()
@@ -1046,9 +1068,11 @@ func request_campaign_bible_generation(
 	idea_memory_context: String,
 	callback: Callable
 ) -> void:
+	set_campaign_bible_priority_active(true)
 	var capability := "campaign_bible"
 	var model_name := model_for_capability(capability)
 	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		set_campaign_bible_priority_active(false)
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
 			"model_unavailable",
@@ -1070,8 +1094,8 @@ func request_campaign_bible_generation(
 		prompt,
 		"json",
 		{
-			"temperature": 0.85,
-			"num_predict": 1800,
+			"temperature": 0.95,
+			"num_predict": 900,
 			"seed": randi(),
 		}
 	)
@@ -1104,6 +1128,7 @@ func request_campaign_bible_generation(
 	)
 	if err != OK:
 		temp_http.queue_free()
+		set_campaign_bible_priority_active(false)
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
 			"request_start_failed",
@@ -1130,9 +1155,12 @@ func _on_campaign_bible_generation_completed(
 	var temp_http := instance_from_id(request_id) as HTTPRequest
 	if temp_http != null and is_instance_valid(temp_http):
 		temp_http.queue_free()
+	set_campaign_bible_priority_active(false)
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
-		if response_code == 0 or response_code == 404:
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "campaign_bible_timeout"
+		elif response_code == 404:
 			reason = "model_unavailable"
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
@@ -1472,6 +1500,8 @@ func request_quest_generation(
 	callback: Callable,
 	agent_profile: Dictionary = {}
 ) -> void:
+	if _skip_for_campaign_bible_priority("quest_generation"):
+		return
 	if is_waiting:
 		return
 	
@@ -3426,6 +3456,8 @@ func _build_chatter_context(extra: Dictionary = {}) -> Dictionary:
 
 
 func fetch_chatter_background(type: String, context: Dictionary = {}):
+	if _skip_for_campaign_bible_priority("background_chatter"):
+		return
 	active_fetches[type] = true
 	
 	# Merge in live GlobalState context
@@ -4804,6 +4836,9 @@ func _log_combat_taunt_fallback(reason: String, faction: String, archetype: Stri
 ## general opening-taunt pool. Returns {"rage":[...], "reason":[...], "humor":[...]}.
 ## Retries once before giving up; logs with push_warning on failure.
 func request_general_taunts(callback: Callable, _attempt: int = 0) -> void:
+	if _skip_for_campaign_bible_priority("general_taunts"):
+		callback.call({})
+		return
 	var prompt := """You are writing combat banter for a gritty space game. Generate exactly 12 short combat one-liners. Under 15 words each. No placeholder brackets. No names.
 
 Three categories:
@@ -5003,6 +5038,9 @@ func fetch_anomaly_event(
 	callback: Callable,
 	_attempts_left: int = 1
 ) -> void:
+	if _skip_for_campaign_bible_priority("anomaly_event"):
+		callback.call({})
+		return
 	var local_factions: Array = GlobalState.get_current_system_minor_factions()
 	if local_factions.is_empty():
 		local_factions = GlobalState.MINOR_FACTIONS.keys()

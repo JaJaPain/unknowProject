@@ -1,0 +1,61 @@
+{
+  "campaign_title": "The Orbital Scarcity",
+  "campaign_logline": "Resources are drying up in the Aurelia belt; corporate lords are desperate to secure the Zenith vein before the miners go on strike.",
+  "opening_situation": "You start as a freelancer hired by Vanguard Logistics. Your task: escort a cargo haul through the heavy debris of the Aurelia belt while dodging rival scavengers.",
+  "main_mystery": "Kaelen is hiding a massive personal debt to an offshore syndicate; she isn't a ghost, just very, very bad at hiding her financial liabilities.",
+  "act_1_outline": [
+    "Establish trade routes between the Aurelia mining hubs and Vanguard outposts.",
+    "Identify 'scavenger' groups who are actually desperate laborers looking for better pay.",
+    "Negotiate with local coordinators to secure stable mineral rights in the high-risk zones."
+  ],
+  "long_term_reveal": "Kaelen didn't sabotage the system; she just stole a crate of vintage wine and is trying to sell it back on the black market.",
+  "tone": "Dry, cynical corporate satire with occasional dry wit about the absurdity of space bureaucracy.",
+  "core_pressure": "Resource scarcity and escalating insurance premiums for deep-space operations.",
+  "kaelen_rule": "Kaelen cannot die; her mystery must remain a mundane personal secret rather than a sci-fi twist.",
+  "faction_reveal_rule": "New factions, ores, and rumors are revealed only upon crossing jump gates to new systems.",
+  "humor_rule": "Avoid standard tropes. Use dry wit regarding the inconveniences of space travel and corporate red tape.",
+  "address_rule": "Keep all dialogue concise; avoid melodrama in favor of pragmatic, weary professionalism.",
+  "fallback_rule": "If a player's choice leads to a dead end, Kaelen provides a 'technically legal' workaround.",
+  "story_horizon_rule": "When the metric falls below the threshold, add a new horizon by appending content to the campaign file.",
+  "story_arcs": [
+    {
+      "name": "The Ore Grab",
+      "summary": "Navigate the diplomatic minefield between mining unions and corporate security in the Aurelia belt."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Ledger",
+      "trail_id": "rumor_trail.ghost_ledger",
+      "clue_count": 2,
+      "hint_theme": "Corrupted financial logs in derelict cargo ships.",
+      "clue_templates": [
+        "A series of encrypted invoices for 'Specialized Vintage Goods' found in a derelict hull.",
+        "An encrypted personal log mentioning a 'private debt' that keeps Kaelen awake at night."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Locate the hidden stash of vintage wine and clear Kaelen's outstanding debt."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_arc_count",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "When the primary arc concludes, generate a new regional focus."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons to the end of the file without altering existing quest flags.",
+    "Ensure no previously unlocked faction data is overwritten during expansion."
+  ],
+  "banned_repeats": [
+    "ancient_civilization",
+    "sentient_ai",
+    "purge_protocols",
+    "great_silence",
+    "the_zenith_title"
+  ]
+}

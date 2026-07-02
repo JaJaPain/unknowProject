@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Rust and Revenue",
+  "campaign_subtitle": "The Scarcity of the Rim",
+  "campaign_logline": "A debt-ridden pilot navigates a decaying industrial sector where trade is survival.",
+  "campaign_pitch": "Scavenge parts from derelicts. Navigate corporate tensions. Survive the heavy costs of space travel.",
+  "campaign_story_summary": "The Aurelia corporation owns the primary refining routes. Zenith provides high-end logistics and security. Vanguard seeks freedom through decentralized trade. You are a pilot trying to pay off your ship's lease. Each delivery is a step toward independence from corporate masters. Every scrap of metal counts in this dying sector.",
+  "tone": "Dry, gritty industrial humor.",
+  "opening": {
+    "status_quo": "The local trade routes are crumbling under high maintenance costs.",
+    "visible_crisis": "Resource shortages have forced corporations to tighten their grip on supply lines.",
+    "hidden_crisis": "A systemic infrastructure collapse is making independent operations nearly impossible.",
+    "why_now": "A major refinery has failed, creating a sudden demand for local scrap and parts.",
+    "player_role": "You are an independent pilot with mounting debts and a failing ship."
+  },
+  "mystery": {
+    "question": "Why is the brokerage system favoring specific corporations?",
+    "false_answer": "The system is designed to prioritize high-priority corporate contracts.",
+    "true_answer_hint": "The brokers are intentionally starving out smaller independent operators.",
+    "long_term_reveal_direction": "The infrastructure collapse is being orchestrated by a central oversight body."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She manages the flow of information between competing factions.",
+    "address_rule": "Address her as a professional contact for logistics and repairs.",
+    "never_reveal_rule": "Never reveal her true role in the data-brokerage network."
+  },
+  "factions": {
+    "zenith_problem": "Zenith faces high costs to maintain their premium infrastructure.",
+    "aurelia_problem": "Aurelia struggles to secure raw materials from independent sources.",
+    "vanguard_problem": "Vanguard is struggling to find reliable transport for their decentralized network.",
+    "conflict_triangle": "The three factions fight over the remaining viable trade routes.",
+    "neutral_space_pressure": "Independent pilots are being squeezed by increasing corporate taxes."
+  },
+  "act_1": {
+    "name": "Scrap and Salvage",
+    "goal": "Secure enough parts to keep your ship operational for one month.",
+    "opening_itement": "A Reaver scout ship is intercepted near a derelict refinery.",
+    "midpoint_turn": "You find high-value components in the wreckage of an old transport.",
+    "finale": "You successfully deliver a critical component to a local hub.",
+    "player_takeaway": "Survival requires navigating the politics of scrap and parts."
+  },
+  "starter_mission": {
+    "title": "The Scraped Hull",
+    "reason": "A Reaver ship is encroaching on a local trade lane.",
+    "enemy_identity": "Reaver Scavenger Ship",
+    "enemy_knows": "It is hunting for scrap in the same zone as you.",
+    "after_effect": "You gain access to a list of high-value salvage targets."
+  },
+  "recurring_clue": {
+    "name": "The Ghost Circuit",
+    "signal": "A repeating pattern of data packets lost during transit.",
+    "first_appearance": "Found in the logs of a derelict refinery ship.",
+    "escalation": "More ships are reporting missing data packets in trade zones.",
+    "payoff_hint": "The circuit is part of an old, hidden communication network."
+  },
+  "rumor_trail": {
+    "name": "The Black Market Route",
+    "trail_id": "rumor_trail.black_market_route",
+    "hint_theme": "Illegal trade routes and off-grid data.",
+    "clue_templates": [
+      "A local smuggler mentions a shortcut through the Asteroid Belt.",
+      "A broken radio signal from an unregistered ship."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Access to a hidden, high-value trade route."
+  },
+  "horizon": {
+    "gate_tease": "A stable gate leads toward the northern industrial sector.",
+    "new_system_reveal_rule": "New systems are revealed as you reach the edge of known territory.",
+    "future_pressure_tease": "The demand for cargo and scrap will increase in the next zone.",
+    "future_ore_or_upgrade_tease": "Higher-grade minerals can be found in the outer rim sectors.",
+    "regeneration_trigger": {
+      "id": "system_regen_trigger",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main arc is complete, new story beats are added."
+    }
+  },
+  "rules": {
+    "humor__rule": "Dry, slightly dark humor.",
+    "fallback": "If a contract fails, you must pay for repairs and fuel.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ghost signal",
+      "echoes of the void",
+      "mysterious pulse"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What will be the next major threat to trade routes?",
+    "Why are the core factions' demands more urgent and frequent?",
+    "How does the player's reputation with Vanguard impact their future options?",
+    "Who is the primary authority over the sector's infrastructure? ",
+    "Which path leads to the most significant change in power balance?"
+  ]
+}

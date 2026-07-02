@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Echoes of the Void",
+  "campaign_subtitle": "The Scarcity Crisis",
+  "campaign_logline": "A desperate pilot navigates a crumbling economy and shifting loyalties in the outer rim.",
+  "campaign_pitch": "Resource shortages are destabilizing the inner systems. You must navigate the friction between three expanding powers.",
+  "campaign_story_summary": "The Zenith Corporation seeks to monopolize energy cores. The Aurelia Collective values decentralized trade routes. The Vanguard protects the borders against pirates. You start as a pilot seeking enough credits to refuel your ship.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "The local sector is suffering from severe fuel shortages.",
+    "visible_crisis": "Pirates are raiding trade convoys and stealing essential supplies.",
+    "hidden_crisis": "A massive decline in natural energy deposits is causing systemic instability.",
+    "why_now": "Recent blockade measures have forced traders to take riskier routes.",
+    "player_role": "You are a freelance pilot trying to stay solvent."
+  },
+  "mystery": {
+    "question": "Why is the fuel shortage so sudden and severe?",
+    "false_answer": "The shortages are caused by pirate raids on supply lines.",
+    "true_answer_hint": "A secret industrial project is draining the local energy fields.",
+    "long_term_reveal_direction": "The true cause involves deep-space mining infrastructure."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She monitors the flow of illegal trade data.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Her true purpose is hidden from all observers."
+  },
+  "factions": {
+    "zenith_problem": "Zenith seeks to control the energy market through heavy-handed tactics.",
+    "aurelia_problem": "Aurelia wants to keep trade routes open for independent traders.",
+    "vanguard_problem": "Vanguard is struggling to maintain safety in a lawless zone.",
+    "conflict_triangle": "The three factions are competing for the last known energy hubs.",
+    "neutral_space_pressure": "Independent pilots must choose sides or risk being stranded."
+  },
+  "act_1": {
+    "name": "The Scarcity Hunt",
+    "goal": "Secure enough fuel to reach a stable station.",
+    "opening_incident": "A cargo ship is intercepted by a pirate vessel.",
+    "midpoint_turn": "You find a shipment of high-grade energy cores.",
+    "finale": "You deliver the haul and gain your first contract from Kaelen.",
+    "player_takeaway": "Survival in this sector requires finding reliable allies."
+  },
+  "starter_mission": {
+    "title": "The Last Shipment",
+    "reason": "A shipment of cargo is being contested by a pirate ship.",
+    "enemy_identity": "Reaver-class scout ship.",
+    "enemy_knows": "The pirate knows the value of the haul.",
+    "aftershock": "You find a log indicating the pirates are desperate."
+  },
+  "recurring_clue": {
+    "name": "Flickering Beacons",
+    "signal": "A rhythmic pulse from an abandoned mining station.",
+    "first_appearance": "Detected during the first jump to a new sector.",
+    "escalation": "The frequency of the pulses increases as you approach hubs.",
+    "payoff_hint": "The beacons are linked to the automated mining network."
+  },
+  "rumor_trail": {
+    "name": "The Ghost Route",
+    "trail_id": "rumor_trail.ghost_route",
+    "hint_theme": "Whispers of a hidden trade route.",
+    "clue_templates": [
+      "\"They say the old path is still active.\"",
+      "\"The signal is faint but steady.\""
+    ],
+    "discovery_type": "secret_route",
+    "rarity": "uncommon",
+    "payoff": "A shortcut through a hazardous zone."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads to systems with more stable resources.",
+    "new_system_reveal_rule": "New systems are revealed only when the player enters a gate.",
+    "future_faction_tease": "Rumors of a distant, militant group called the Iron Reach.",
+    "future_ore_or_upgrade_tease": "Rare minerals found in deep-space mining zones.",
+    "regeneration_trigger": {
+      "id": "regen_scarcity_hunt",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When Act 1 is complete, reveal the next stage of the scarcity crisis."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty frontier humor.",
+    "fall_back_rule": "If a player action is not specified, default to a trade-focused outcome.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "ancient signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the consequences of choosing a side in the conflict?",
+    "Why is the energy crisis causing such extreme measures?",
+    "How does Kaelen's role as a fixer affect her knowledge of the rest of world?",
+    "Who is funding the system-wide fuel shortage?",
+    "Where is the source of the hidden mining infrastructure?"
+  ]
+}

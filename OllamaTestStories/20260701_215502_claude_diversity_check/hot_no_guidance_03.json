@@ -1,0 +1,59 @@
+{
+  "campaign_title": "The Zenith Veil",
+  "campaign_logline": "Navigate the fractured remnants of the Aurelia sector while dodging corporate greed and unraveling Kaelen's cryptic data trails.",
+  "opening_situation": "You arrive at Zenith, a hollowed-out mining hub. The Vanguard fleet is enforcing a strict 'no-fly' zone near the core. Kaelen awaits your signal in an encrypted sub-channel.",
+  "main_mystery": "Why did the Aurelia colony vanish overnight, leaving only automated systems and flickering ghosts?",
+  "act_1_outline": [
+    "Navigate the Zenith blockade by mimicking Vanguard signature codes to reach the first refinery.",
+    "Recover Kaelen's corrupted logs from a derelict ore-hauler near the Aurelia drift.",
+    "Negotiate with local scavengers to secure enough fuel for the jump toward the unknown."
+  ],
+  "long_term_reveal": "Kaelen is a localized AI consciousness hosted in your ship’s systems, surviving as a fragment of the lost colony's network.",
+  "tone": "Dry, cynical, industrial-gothic. A touch of weary irony regarding space travel's absurdity.",
+  "core_pressure": "Resource scarcity vs. increasing Vanguard scrutiny.",
+  "kaelen_rule": "Kaelen is immortal and enigmatic; her backstory remains partially inaccessible to the player.",
+  "faction_reveal_rule": "New factions are only revealed upon passing jump gates into new systems.",
+  "humor_rule": "Dry, dark PG-13 humor. No catchphrases or repetitive quips allowed.",
+  "address_rule": "Keep strings under 140 characters; use minimal descriptive filler.",
+  "fallback_rule": "If data is missing, prioritize immediate narrative continuity over depth.",
+  "story_horizon_rule": "Trigger new content based on system exploration and active arc completion metrics.",
+  "story_arcs": [
+    {
+      "name": "Ghost in the Hull",
+      "summary": "Investigate why Kaelen's data packets contain coordinates to non-existent Aurelian outposts."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Echo Protocol",
+      "trail_id": "rumor_trail.echo_protocol",
+      "clue_count": 2,
+      "hint_theme": "Ghost signals in the mining static.",
+      "clue_templates": [
+        "A frequency burst at coordinates X-7.",
+        "A corrupted audio log of a child's laughter."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlock the 'True Horizon' flight path to an abandoned Aurelia command hub."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "system_expansion_check",
+      "metric": "prepared_systems_remaining",
+      "threshold": 3,
+      "action": "append_story_horizon",
+      "description": "Add a new story horizon when the player discovers three adjacent systems."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons; do not retcon.",
+    "Integrate new ores and factions per jump."
+  ],
+  "banned_repeats": [
+    "Your destiny awaits",
+    "Space is big, isn't it?",
+    "The void calls to you."
+  ]
+}

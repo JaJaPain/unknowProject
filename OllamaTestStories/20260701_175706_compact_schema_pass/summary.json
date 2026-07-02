@@ -1,0 +1,47 @@
+[
+  {
+    "name": "compact_structured_01",
+    "variant": "compact_structured",
+    "seed": 943026,
+    "elapsed_seconds": 37.93,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Unterminated string starting at: line 1 column 5916 (char 5915)"
+    ],
+    "warnings": []
+  },
+  {
+    "name": "compact_structured_02",
+    "variant": "compact_structured",
+    "seed": 943044,
+    "elapsed_seconds": 38.32,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Unterminated string starting at: line 52 column 17 (char 5737)"
+    ],
+    "warnings": []
+  },
+  {
+    "name": "compact_structured_03",
+    "variant": "compact_structured",
+    "seed": 943062,
+    "elapsed_seconds": 38.03,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Expecting property name enclosed in double quotes: line 50 column 19 (char 5828)"
+    ],
+    "warnings": []
+  }
+]

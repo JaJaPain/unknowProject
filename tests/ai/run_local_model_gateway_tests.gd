@@ -74,6 +74,26 @@ func _test_builds_generation_body_from_capability() -> void:
 		str(body.get("keep_alive", "")) == GatewayType.MODEL_KEEP_ALIVE,
 		"Generation body did not set keep_alive to keep the model resident."
 	)
+	_expect(
+		not body.has("think"),
+		"Small dialogue generation should not force a thinking-model setting."
+	)
+	var large_body: Dictionary = GatewayType.generation_body(
+		"campaign_bible",
+		"Write the campaign bible.",
+		"qwen2.5:3b-instruct-q4_K_M",
+		"json",
+		{"temperature": 0.95, "num_predict": 900},
+		"gemma4:12b"
+	)
+	_expect(
+		bool(large_body.get("think", true)) == false,
+		"Large story generation should disable thinking output for Ollama."
+	)
+	_expect(
+		int(large_body.get("keep_alive", -1)) == GatewayType.LARGE_MODEL_KEEP_ALIVE,
+		"Large story generation should unload after each request to protect VRAM."
+	)
 
 
 func _test_unknown_capability_uses_small_profile() -> void:

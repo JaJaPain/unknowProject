@@ -1,0 +1,99 @@
+{
+  "campaign_title": "The Scarcity Protocol",
+  "campaign_subtitle": "Trade Routes of the Broken Rim",
+  "campaign_logline": "A desperate pilot navigates a web of forged contracts and corporate sabotage.",
+  "campaign_pitch": "You are a debt-ridden freighter. You must navigate competing interests in the outer rim. Survival depends on finding legitimate routes.",
+  "campaign_story_summary": "The Zenith Corporation owns the primary trade gates. Aurelia seeks to bypass their tolls. The Vanguard militia secures the contested border zones. A shortage of refined minerals causes high tensions. Smuggling becomes a lucrative but dangerous necessity. You are hired by Kaelen to move illicit cargo.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "The Rim is a lawless trade hub.",
+    "visible_crisis": "Trade routes are collapsing due to heavy tariffs.",
+    "hidden_crisis": "A shortage of refined minerals is causing supply chain collapse.",
+    "why_now": "Kaelen offers high-paying contracts for 'special' cargo.",
+    "player_role": "A debt-ridden independent pilot."
+  },
+  "mystery": {
+    "question": "Why are the trade gates failing?",
+    "false_answer": "The gates are suffering from mechanical decay.",
+    "true_answer_hint": "The gate infrastructure is being intentionally sabotaged by a third party.",
+    "long_term_reveal_direction": "A shadow organization is dismantling the network to monopolize transit."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows which factions are actively sabotaging the gates.",
+    "address_rule": "Refer to her as a broker or contractor.",
+    "never_reveal_rule": "Her origins and true motives remain unknown."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is struggling to maintain gate integrity against pirates.",
+    "aurelia_problem": "Aurelia seeks independent routes outside Zenith control.",
+    "vanguard_problem": "Vanguard patrols are becoming increasingly aggressive and restrictive.",
+    "conflict_triangle": "The three factions fight over the remaining stable gates.",
+    "neutral_space_pressure": "Pirates and scavengers haunt the unregulated zones."
+  },
+  "act_1": {
+    "name": "The Black Market Loop",
+    "goal": "Deliver a shipment of refined minerals to an Aurelian outpost.",
+    "opening_incident": "Kaelen gives you a contract for 'medical supplies'.",
+    "midpoint_turn": "You are intercepted by a Zenith patrol ship.",
+    "finale": "You successfully deliver the cargo and receive a payout.",
+    "player_takeaway": "The market is flooded with forged contracts."
+  },
+  "starter_mission": {
+    "title": "The Ghost Cargo",
+    "reason": "Kaelen needs you to move supplies past a patrol.",
+    "enemy_identity": "A lone Reaver scout ship.",
+    "enemy_knows": "The Reaver is patrolling the sector for illegal trade.",
+    "after_effect": "You receive payment and Kaelen's next lead."
+  },
+  "recurring_clue": {
+    "10-year-old-scout_id": "Scout Logs",
+    "signal": "A faint signal from a derelict scout ship.",
+    "first_appearance": "Found near the first delivery point.",
+    "escalation": "The logs mention a specific gate failure.",
+    "payoff_hint": "The logs lead to a location of interest."
+  },
+  "rumor_trail": {
+    "name": "The Shadow Network",
+    "trail_id": "rumor_trail.shadow_network",
+    "hint_theme": "Smuggling routes and hidden paths.",
+    "clue_templates": [
+      "A whisper of a secret route.",
+      "A rumor of forged documents."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "uncommon",
+    "payoff": "Unlocks a hidden passage in the sector."
+  },
+  "horizon": {
+    "gate_tease": "Rumors of gates that do not appear on maps.",
+    "new_system_reveal_rule": "Do not mention other factions or specific names.",
+    "future_pressure_tease": "The tension between the forces is growing.",
+    "future_ore_or_upgrade_tease": "Rare minerals are needed for ship upgrades.",
+    "regeneration_trigger": {
+      "id": "gate_passage_trigger",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main arc ends, a new gate is revealed."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical frontier humor.",
+    "fallback": "If no clue is found, Kaelen gives you another contract.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ghost signal",
+      "echoes of the void",
+      "mysterious pulse"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the consequences of choosing a side?",
+    "Why is the gate infrastructure being sabotaged?",
+    "How do they find the other smuggling routes?",
+    "Who is behind the rumors of shadow networks?",
+    "Where is the next stable gate located?"
+  ]
+}

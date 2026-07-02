@@ -1,0 +1,39 @@
+[
+  {
+    "name": "two_pass_01",
+    "variant": "two_pass",
+    "seed": 954459,
+    "elapsed_seconds": 41.95,
+    "valid": false,
+    "score": 80,
+    "title": "Rust and Revenue",
+    "logline": "A debt-ridden pilot navigates a decaying industrial sector where trade is survival.",
+    "errors": [
+      "missing_nested:act_1.opening_incident",
+      "missing_nested:rules.humor_rule"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "two_pass_02",
+    "variant": "two_pass",
+    "seed": 954490,
+    "elapsed_seconds": 42.38,
+    "valid": false,
+    "score": 84,
+    "title": "Iron Scarcity",
+    "logline": "A desperate pilot navigates a crumbling trade network where every scrap of metal is worth its weight in gold.",
+    "errors": [
+      "missing_nested:factions.vanguard_problem"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  }
+]

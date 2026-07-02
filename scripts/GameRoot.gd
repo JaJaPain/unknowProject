@@ -2,6 +2,7 @@
 
 signal system_changed(system_id: String, arrival_gate_id: String)
 signal startup_load_completed(save_loaded: bool)
+signal campaign_bible_generation_finished(ok: bool, status: String)
 
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
@@ -46,6 +47,9 @@ const CampaignLegacySaveImporterType := preload(
 const RuntimeTraceType := preload(
 	"res://scripts/diagnostics/RuntimeTrace.gd"
 )
+const NarrativeDirectorType := preload(
+	"res://scripts/ai/NarrativeDirector.gd"
+)
 const StoreRegistryScript := preload("res://scripts/economy/StoreRegistry.gd")
 
 @onready var system_container: Node3D = $SystemContainer
@@ -71,6 +75,7 @@ var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
 var campaign_agent_memory_store = null
 var campaign_bible_generation_requested_slots: Dictionary = {}
+var campaign_bible_generation_in_flight: bool = false
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
@@ -2186,6 +2191,14 @@ func request_campaign_bible_generation() -> Dictionary:
 			"status": "already_generated",
 			"bible": campaign_bible_store.data.duplicate(true),
 		}
+	if LLMInterface.has_method("set_campaign_bible_priority_active"):
+		LLMInterface.set_campaign_bible_priority_active(true)
+	if campaign_bible_generation_in_flight:
+		return {"ok": true, "status": "already_requested"}
+	if not LLMInterface.llm_connected:
+		if not LLMInterface.llm_connection_established.is_connected(_on_llm_ready_for_campaign_bible):
+			LLMInterface.llm_connection_established.connect(_on_llm_ready_for_campaign_bible, CONNECT_ONE_SHOT)
+		return {"ok": true, "status": "waiting_for_llm_connection"}
 	var baseline := campaign_bible_store.data.duplicate(true)
 	var idea_context := LLMInterface.idea_memory_context_text
 	if campaign_idea_memory_store != null \
@@ -2196,7 +2209,12 @@ func request_campaign_bible_generation() -> Dictionary:
 		idea_context,
 		_on_campaign_bible_generation_result
 	)
+	campaign_bible_generation_in_flight = true
 	return {"ok": true, "status": "requested"}
+
+
+func _on_llm_ready_for_campaign_bible(_model_name: String) -> void:
+	call_deferred("_request_campaign_bible_generation_for_active_slot")
 
 
 func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void:
@@ -2204,6 +2222,9 @@ func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void:
 		return
 	if campaign_bible_generation_requested_slots.has(active_campaign_slot_id):
 		return
+	if LLMInterface.has_method("set_campaign_bible_priority_active") \
+			and not is_campaign_story_ready():
+		LLMInterface.set_campaign_bible_priority_active(true)
 	campaign_bible_generation_requested_slots[active_campaign_slot_id] = true
 	GenerationDiagnostics.record_event(
 		"campaign_bible",
@@ -2224,8 +2245,10 @@ func _request_campaign_bible_generation_for_active_slot() -> void:
 
 
 func _on_campaign_bible_generation_result(result: Dictionary) -> void:
+	campaign_bible_generation_in_flight = false
 	if campaign_bible_store == null or not campaign_bible_store.is_valid():
 		push_warning("[GameRoot] Campaign bible generation result arrived without a valid store.")
+		campaign_bible_generation_finished.emit(false, "Campaign bible store unavailable.")
 		return
 	var model_name := str(result.get("model", ""))
 	var committed := {}
@@ -2261,6 +2284,22 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 			"[GameRoot] Campaign bible generation did not complete: %s" %
 				str(result.get("reason", "unknown"))
 		)
+	campaign_bible_generation_finished.emit(
+		is_campaign_story_ready(),
+		campaign_story_status_summary()
+	)
+
+
+func is_campaign_story_ready() -> bool:
+	return campaign_bible_store != null \
+		and campaign_bible_store.is_valid() \
+		and campaign_bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED
+
+
+func campaign_story_status_summary() -> String:
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		return "Campaign story unavailable: no valid campaign bible store."
+	return campaign_bible_store.status_summary()
 
 
 func ensure_generated_frontier_factions(count: int = 6) -> Dictionary:
@@ -6787,12 +6826,102 @@ var _dev_panel: DevPanel
 func _init_dev_panel() -> void:
 	_dev_panel = DevPanel.new()
 	add_child(_dev_panel)
+	_dev_panel.set_story_debug_provider(_dev_story_debug_snapshot)
 	_dev_panel.spawn_boss_requested.connect(_debug_spawn_boss)
 	_dev_panel.spawn_squad_requested.connect(_debug_spawn_squad)
 	_dev_panel.stores_restock_requested.connect(func():
 		StoreRegistryScript.shared().force_restock_all()
 		GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
 	)
+
+
+func _dev_story_debug_snapshot() -> Dictionary:
+	var bible_json := ""
+	var bible_context := ""
+	var input_prompt := ""
+	var overarching_story := "No campaign bible is currently loaded."
+	var status := "Campaign Bible: unavailable"
+	if campaign_bible_store != null and campaign_bible_store.is_valid():
+		status = campaign_bible_store.status_summary()
+		bible_json = JSON.stringify(campaign_bible_store.data, "\t")
+		bible_context = campaign_bible_store.prompt_context()
+		overarching_story = _dev_format_overarching_story(campaign_bible_store.data)
+		var idea_context := LLMInterface.idea_memory_context_text
+		if campaign_idea_memory_store != null \
+				and campaign_idea_memory_store.is_valid():
+			idea_context = campaign_idea_memory_store.campaign_bible_prompt_context(32)
+		input_prompt = NarrativeDirectorType.build_campaign_bible_prompt(
+			campaign_bible_store.data,
+			idea_context
+		)
+	var story_context := ""
+	if is_instance_valid(StoryManager):
+		story_context = StoryManager.get_story_context_block()
+	return {
+		"status": status,
+		"overarching_story": overarching_story,
+		"campaign_bible_input_prompt": input_prompt,
+		"campaign_bible_json": bible_json,
+		"campaign_bible_context": bible_context,
+		"story_state_context": story_context,
+	}
+
+
+func _dev_format_overarching_story(bible: Dictionary) -> String:
+	var status := str(bible.get("generation_status", "")).strip_edges()
+	if status != CampaignBibleStoreType.STATUS_LLM_GENERATED:
+		return (
+			"Gemma has not generated an overarching story for this campaign yet.\n\n"
+			+ "Current status: %s\n" % status
+			+ "Model: %s\n" % str(bible.get("source_model", ""))
+			+ "Note: %s\n\n" % str(bible.get("generation_note", ""))
+			+ "The JSON below is the procedural fallback/baseline, not a Gemma-written campaign arc."
+		)
+	var lines: Array[String] = []
+	lines.append("Title: %s" % str(bible.get("campaign_title", "")))
+	lines.append("")
+	lines.append("Logline: %s" % str(bible.get("campaign_logline", "")))
+	lines.append("")
+	lines.append("Opening situation: %s" % str(bible.get("opening_situation", "")))
+	lines.append("")
+	lines.append("Main mystery: %s" % str(bible.get("main_mystery", "")))
+	lines.append("")
+	var act_1_outline: Array = bible.get("act_1_outline", [])
+	if not act_1_outline.is_empty():
+		lines.append("Act 1:")
+		for beat in act_1_outline:
+			lines.append("- %s" % str(beat))
+		lines.append("")
+	lines.append("Long-term reveal direction: %s" % str(bible.get("long_term_reveal", "")))
+	lines.append("")
+	lines.append("Core pressure: %s" % str(bible.get("core_pressure", "")))
+	lines.append("")
+	var arcs: Array = bible.get("story_arcs", [])
+	if arcs.is_empty():
+		lines.append("Story arcs: none provided.")
+	else:
+		lines.append("Story arcs:")
+		for arc in arcs:
+			if arc is Dictionary:
+				lines.append(
+					"- %s: %s" %
+					[str(arc.get("name", "")), str(arc.get("summary", ""))]
+				)
+	var trails: Array = bible.get("rumor_trails", [])
+	if not trails.is_empty():
+		lines.append("")
+		lines.append("Rumor trails:")
+		for trail in trails:
+			if trail is Dictionary:
+				lines.append(
+					"- %s: %s -> %s" %
+					[
+						str(trail.get("name", "")),
+						str(trail.get("hint_theme", "")),
+						str(trail.get("payoff", "")),
+					]
+				)
+	return "\n".join(lines)
 
 # ── Debug shortcuts ────────────────────────────────────────────────────────────
 # Numpad 7 — toggle dev panel (tuning + spawns).

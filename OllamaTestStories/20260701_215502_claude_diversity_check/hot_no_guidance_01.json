@@ -1,0 +1,60 @@
+{
+  "campaign_title": "Echoes of Zenith",
+  "campaign_logline": "Navigate the graveyard of the Zenith sector where Aurelia's silence is deafening and Vanguard's steel is cold.",
+  "opening_situation": "You arrive at Zenith, a derelict hub. Kaelen greets you via a flickering holo-link. She claims the Aurelia fleet vanished into 'the static'.",
+  "main_mystery": "What caused the Aurelia signals to invert into a permanent loop of distress calls?",
+  "act_1_outline": [
+    "Secure the Zenith perimeter from scavengers.",
+    "Decode the first Aurelia data-packet near Vanguard outpost.",
+    "Identify why Kaelen's signal remains stable while the local grid decays."
+  ],
+  "long_term_reveal": "The 'static' is a deliberate quarantine of a subspace anomaly that cannot be closed, only bypassed.",
+  "tone": "Dry, cynical, industrial-noir.",
+  "core_pressure": "Oxygen scarcity and signal degradation.",
+  "kaelen_rule": "Kaelen is immortal; her mystery remains partially veiled. She knows more than she shares.",
+  "faction_reveal_rule": "New factions are only revealed via gate travel to new systems.",
+  "humor_rule": "Dry, dark PG-13 humor. No catchphrases. Avoid repetitive jokes about space-vacuum life.",
+  "address_rule": "Keep all narrative beats under 140 characters for UI display.",
+  "fallback_rule": "If a prompt is ambiguous, default to 'System Error' flavored as localized tech glitches.",
+  "story_horizon_rule": "Trigger expansion when the player reaches specific progression milestones.",
+  "story_arcs": [
+    {
+      "name": "The Vanguard Protocol",
+      "summary": "Investigate the military's failed attempt to contain the Aurelia signal breach."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost Frequency",
+      "trail_id": "rumor_trail.ghost_frequency",
+      "clue_count": 2,
+      "hint_theme": "Ancient communication protocols.",
+      "clue_templates": [
+        "A frequency pulse recorded near the core.",
+        "An encrypted log from a pilot who 'saw' the fold."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlock the 'Void-Walker' title and a unique ship skin."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_exhaustion_check",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When a major arc concludes, generate a new horizon for the next system."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning past choices.",
+    "New systems must introduce unique ores and faction-specific tech."
+  ],
+  "banned_repeats": [
+    "Space is big.",
+    "Hold on tight!",
+    "The void calls.",
+    "I'm just doing my job."
+  ]
+}

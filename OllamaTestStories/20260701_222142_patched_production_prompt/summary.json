@@ -1,0 +1,29 @@
+[
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Scrap-Heap Ledger",
+    "long_term_reveal": "The 'ghost' ships were actually corporate assets hidden from tax audits, and the owner sold them off as phantom entities.",
+    "elapsed_seconds": 20.11,
+    "done_reason": "stop",
+    "eval_count": 758
+  },
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Interest Margin",
+    "long_term_reveal": "The local government didn't collapse; it was sold to a private equity firm that pays employees in scrip only valid at company stores.",
+    "elapsed_seconds": 21.92,
+    "done_reason": "stop",
+    "eval_count": 842
+  },
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Methane Veil",
+    "long_term_reveal": "The corporate owners know the air is lethal but are waiting for 'natural' casualties to bypass safety regulations and claim ownership of the mineral veins.",
+    "elapsed_seconds": 21.72,
+    "done_reason": "stop",
+    "eval_count": 828
+  }
+]
