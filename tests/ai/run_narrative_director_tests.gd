@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_repairs_missing_kaelen_angle_with_fallback()
 	_test_validation_correction_notes_formats_errors()
 	_test_correction_notes_injected_into_retry_prompt()
+	_test_repair_telemetry_records_fired_repairs()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -368,6 +369,45 @@ func _test_correction_notes_injected_into_retry_prompt() -> void:
 	_expect(
 		retry.contains("Return exactly this object shape:"),
 		"Retry prompt should still include the JSON shape spec after corrections."
+	)
+
+
+func _test_repair_telemetry_records_fired_repairs() -> void:
+	# Drifted input that should trigger several distinct safe repairs.
+	var drifted := {
+		"title": "An Aliased Title",  # key_alias:title->campaign_title
+		"rumor_trail": {"name": "Solo Trail"},  # alias + object_to_array:rumor_trails
+		"kaelen_rule": "She keeps to herself and knows everyone worth knowing.",  # masked
+		"kaelen_angle": "",  # defaulted
+	}
+	var repairs: Array = []
+	DirectorType._repaired_generated_campaign_bible(drifted, repairs)
+	_expect(
+		repairs.has("key_alias:title->campaign_title"),
+		"Repair telemetry did not record the title key alias. Got: %s" % str(repairs)
+	)
+	_expect(
+		repairs.has("object_to_array:rumor_trails"),
+		"Repair telemetry did not record the rumor_trails object->array coercion."
+	)
+	_expect(
+		repairs.has("kaelen_public_role_masked"),
+		"Repair telemetry did not record the Kaelen public-role mask."
+	)
+	_expect(
+		repairs.has("kaelen_angle_defaulted"),
+		"Repair telemetry did not record the Kaelen angle default."
+	)
+
+	# A clean input should record no repairs.
+	var clean_repairs: Array = []
+	DirectorType._repaired_generated_campaign_bible(
+		{"campaign_title": "Clean", "kaelen_rule": "Kaelen is a broker.", "kaelen_angle": "She owes a debt."},
+		clean_repairs
+	)
+	_expect(
+		clean_repairs.is_empty(),
+		"Clean input should fire no repairs. Got: %s" % str(clean_repairs)
 	)
 
 

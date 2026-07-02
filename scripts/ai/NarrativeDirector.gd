@@ -176,7 +176,8 @@ static func parse_campaign_bible_response(
 	var response_validation := parsed["validation"] as ValidationResult
 	if not response_validation.is_valid():
 		return _failure("response_json_parse_failed", response_validation)
-	var repaired_generated := _repaired_generated_campaign_bible(parsed["data"])
+	var repairs: Array = []
+	var repaired_generated := _repaired_generated_campaign_bible(parsed["data"], repairs)
 	var generated_validation := _validate_campaign_bible_shape(repaired_generated)
 	if not generated_validation.is_valid():
 		return _failure("campaign_bible_validation_failed", generated_validation)
@@ -188,10 +189,14 @@ static func parse_campaign_bible_response(
 	var validation := _validate_campaign_bible_shape(bible)
 	if not validation.is_valid():
 		return _failure("campaign_bible_validation_failed", validation)
-	return {"ok": true, "bible": bible}
+	return {"ok": true, "bible": bible, "repairs": repairs}
 
 
-static func _repaired_generated_campaign_bible(generated: Dictionary) -> Dictionary:
+# repairs (optional) accumulates the name of each repair that actually changed
+# something, so LLMInterface can log which safe repairs fired (model-drift
+# signal — see docs/storytelling_architecture_plan.md §4 Tier 1). Empty when no
+# repair was needed.
+static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: Array = []) -> Dictionary:
 	var repaired := _repair_text_tree(generated.duplicate(true)) as Dictionary
 	_apply_key_aliases(
 		repaired,
@@ -223,44 +228,47 @@ static func _repaired_generated_campaign_bible(generated: Dictionary) -> Diction
 			"regeneration_trigger_list": "regeneration_triggers",
 			"expansion_rule": "expansion_rules",
 			"banned_repeat": "banned_repeats",
-		}
+		},
+		repairs
 	)
-	if repaired.get("story_arcs", null) is Dictionary:
-		repaired["story_arcs"] = [repaired["story_arcs"]]
-	if repaired.get("rumor_trails", null) is Dictionary:
-		repaired["rumor_trails"] = [repaired["rumor_trails"]]
-	if repaired.get("regeneration_triggers", null) is Dictionary:
-		repaired["regeneration_triggers"] = [repaired["regeneration_triggers"]]
-	if repaired.get("act_1_outline", null) is String:
-		repaired["act_1_outline"] = [str(repaired.get("act_1_outline", "")).strip_edges()]
-	if repaired.get("expansion_rules", null) is String:
-		repaired["expansion_rules"] = [str(repaired.get("expansion_rules", "")).strip_edges()]
-	if repaired.get("banned_repeats", null) is String:
-		repaired["banned_repeats"] = [str(repaired.get("banned_repeats", "")).strip_edges()]
-	_repair_kaelen_public_role(repaired)
-	_repair_kaelen_angle(repaired)
-	_repair_rumor_trails(repaired)
+	for field in ["story_arcs", "rumor_trails", "regeneration_triggers"]:
+		if repaired.get(field, null) is Dictionary:
+			repaired[field] = [repaired[field]]
+			repairs.append("object_to_array:%s" % field)
+	for field in ["act_1_outline", "expansion_rules", "banned_repeats"]:
+		if repaired.get(field, null) is String:
+			repaired[field] = [str(repaired.get(field, "")).strip_edges()]
+			repairs.append("string_to_array:%s" % field)
+	_repair_kaelen_public_role(repaired, repairs)
+	_repair_kaelen_angle(repaired, repairs)
+	_repair_rumor_trails(repaired, repairs)
 	_repair_regeneration_triggers(repaired)
 	_repair_banned_repeats(repaired)
 	return repaired
 
 
-static func _apply_key_aliases(target: Dictionary, aliases: Dictionary) -> void:
+static func _apply_key_aliases(
+	target: Dictionary,
+	aliases: Dictionary,
+	repairs: Array = []
+) -> void:
 	for source_key in aliases.keys():
 		var target_key := str(aliases[source_key])
 		if target.has(source_key) and not target.has(target_key):
 			target[target_key] = target[source_key]
+			repairs.append("key_alias:%s->%s" % [source_key, target_key])
 
 
-static func _repair_kaelen_angle(target: Dictionary) -> void:
+static func _repair_kaelen_angle(target: Dictionary, repairs: Array = []) -> void:
 	if str(target.get("kaelen_angle", "")).strip_edges().is_empty():
 		target["kaelen_angle"] = (
 			"Kaelen has a personal stake in how this campaign's central conflict resolves, " +
 			"but never explains why."
 		)
+		repairs.append("kaelen_angle_defaulted")
 
 
-static func _repair_kaelen_public_role(target: Dictionary) -> void:
+static func _repair_kaelen_public_role(target: Dictionary, repairs: Array = []) -> void:
 	var original := str(target.get("kaelen_rule", "")).strip_edges()
 	if original.is_empty():
 		return
@@ -277,9 +285,10 @@ static func _repair_kaelen_public_role(target: Dictionary) -> void:
 	target["kaelen_rule"] = (
 		"Kaelen publicly works as a broker and fixer; %s" % original
 	)
+	repairs.append("kaelen_public_role_masked")
 
 
-static func _repair_rumor_trails(target: Dictionary) -> void:
+static func _repair_rumor_trails(target: Dictionary, repairs: Array = []) -> void:
 	var trails: Array = target.get("rumor_trails", []) if target.get("rumor_trails", []) is Array else []
 	for index in range(trails.size()):
 		if not trails[index] is Dictionary:
@@ -294,7 +303,8 @@ static func _repair_rumor_trails(target: Dictionary) -> void:
 				"templates": "clue_templates",
 				"type": "discovery_type",
 				"reward": "payoff",
-			}
+			},
+			repairs
 		)
 		var trail_id := _snake_case_id(str(trail.get("trail_id", trail.get("name", "local_trail"))))
 		if not trail_id.begins_with("rumor_trail."):
@@ -317,6 +327,7 @@ static func _repair_rumor_trails(target: Dictionary) -> void:
 			trail["payoff"] = (
 				"Unlocks evidence of an unnamed outside power without revealing it yet."
 			)
+			repairs.append("rumor_payoff_faction_leak_masked")
 
 
 static func _repair_regeneration_triggers(target: Dictionary) -> void:

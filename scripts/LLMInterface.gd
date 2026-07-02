@@ -1306,6 +1306,17 @@ func _on_campaign_bible_generation_completed(
 		"llm_interface",
 		{"model": model_name, "capability": "campaign_bible"}
 	)
+	# Log which safe repairs the response needed — a slow drift here (e.g. every
+	# response now needs the Kaelen-role mask) is a signal the prompt or model
+	# changed. See plan §4 Tier 1.
+	var repairs: Array = parsed.get("repairs", [])
+	if not repairs.is_empty():
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"repairs_applied",
+			"llm_interface",
+			{"model": model_name, "attempt": attempt, "repairs": repairs}
+		)
 	callback.call(parsed)
 
 
