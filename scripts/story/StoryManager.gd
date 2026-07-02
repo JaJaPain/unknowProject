@@ -44,6 +44,9 @@ var story_state: Dictionary = {
 	"agent_contracts_since_cooldown": 0,
 	"faction_pressure": {},
 	"player_choices": [],
+	"kaelen_hidden_hints": [],
+	"kaelen_hints_delivered": [],
+	"kaelen_hint_style": "",
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -153,6 +156,21 @@ func seed_story_state_from_bible(bible_data: Dictionary) -> void:
 	if not kaelen_angle.is_empty():
 		story_state["kaelen_hidden_angle"] = kaelen_angle
 
+	# Seed Kaelen's hint plan. Undelivered hints are director-only (never in
+	# get_story_context_block, same as player_does_not_know_yet); they move to the
+	# player-safe delivered list only when deliver_next_kaelen_hint() pops them.
+	var hint_plan: Array = bible_data.get("kaelen_hint_plan", []) if bible_data.get("kaelen_hint_plan", []) is Array else []
+	var undelivered: Array = []
+	for h in hint_plan:
+		var ht := str(h).strip_edges()
+		if not ht.is_empty():
+			undelivered.append(ht)
+	story_state["kaelen_hidden_hints"] = undelivered
+	story_state["kaelen_hints_delivered"] = []
+	var hint_style := str(bible_data.get("kaelen_hint_style", "")).strip_edges()
+	if not hint_style.is_empty():
+		story_state["kaelen_hint_style"] = hint_style
+
 	# Seed faction pressure from the bible's anchor faction problems: each anchor
 	# starts at neutral pressure (0) with its problem as the posture line. Gameplay
 	# (kills, contracts, cargo seizures) shifts pressure later via
@@ -194,6 +212,9 @@ func clear_story_state() -> void:
 		"agent_contracts_since_cooldown": 0,
 		"faction_pressure": {},
 		"player_choices": [],
+		"kaelen_hidden_hints": [],
+		"kaelen_hints_delivered": [],
+		"kaelen_hint_style": "",
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -294,6 +315,24 @@ func record_player_choice(choice_id: String, description: String, faction_deltas
 	for faction in faction_deltas.keys():
 		adjust_faction_pressure(str(faction), int(faction_deltas[faction]))
 	_save_story_state()
+
+
+# Pops the next undelivered Kaelen hint (director-only until this call) and moves
+# it to the delivered list (player-safe). Returns "" if none remain. The caller
+# hands the returned line to the small model as text to deliver in Kaelen's voice.
+# Delivery is code-paced (chapter advance, trail progress) so hints escalate.
+func deliver_next_kaelen_hint() -> String:
+	var undelivered: Array = story_state.get("kaelen_hidden_hints", [])
+	if undelivered.is_empty():
+		return ""
+	var hint := str(undelivered[0]).strip_edges()
+	story_state["kaelen_hidden_hints"] = undelivered.slice(1)
+	if not hint.is_empty():
+		var delivered: Array = story_state.get("kaelen_hints_delivered", [])
+		delivered.append(hint)
+		story_state["kaelen_hints_delivered"] = delivered
+	_save_story_state()
+	return hint
 
 
 # Compact, player-safe digest of the most recent choices for horizon-expansion

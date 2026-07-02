@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_seed_maps_bible_fields_into_story_state()
 	_test_seed_is_idempotent()
 	_test_seed_maps_factions_into_pressure()
+	_test_kaelen_hint_delivery()
 
 	if _failures.is_empty():
 		print("[PASS] Story state bible seed tests")
@@ -45,6 +46,11 @@ func _fake_bible() -> Dictionary:
 			"aurelia": "Aurelia is quietly buying out debt.",
 			"vanguard": "Vanguard is massing patrols near the gate.",
 		},
+		"kaelen_hint_plan": [
+			"She pays dock fees for a hauler she never mentions.",
+			"She flinches at the name of a dead station.",
+		],
+		"kaelen_hint_style": "over-precise details",
 	}
 
 
@@ -141,6 +147,42 @@ func _test_seed_maps_factions_into_pressure() -> void:
 	_expect(
 		int(manager.story_state.get("faction_pressure", {}).get("vanguard", {}).get("pressure", 0)) == -3,
 		"adjust_faction_pressure did not clamp the scalar to -3."
+	)
+	manager.queue_free()
+
+
+func _test_kaelen_hint_delivery() -> void:
+	var manager := _fresh_manager()
+	manager.seed_story_state_from_bible(_fake_bible())
+
+	var hidden: Array = manager.story_state.get("kaelen_hidden_hints", [])
+	_expect(hidden.size() == 2, "Kaelen hint plan did not seed the undelivered hints.")
+	_expect(
+		str(manager.story_state.get("kaelen_hint_style", "")) == "over-precise details",
+		"kaelen_hint_style was not seeded from the bible."
+	)
+	# Undelivered hints are director-only — never in the prompt context block.
+	var block: String = manager.get_story_context_block()
+	_expect(
+		not block.contains("hauler she never mentions"),
+		"get_story_context_block() leaked an undelivered Kaelen hint."
+	)
+
+	# Delivery pops hints in order and moves them to the player-safe delivered list.
+	var first: String = manager.deliver_next_kaelen_hint()
+	_expect(
+		first.contains("hauler she never mentions"),
+		"deliver_next_kaelen_hint did not return the first hint. Got: %s" % first
+	)
+	_expect(
+		(manager.story_state.get("kaelen_hidden_hints", []) as Array).size() == 1
+			and (manager.story_state.get("kaelen_hints_delivered", []) as Array).size() == 1,
+		"Delivering a hint did not move it from hidden to delivered."
+	)
+	manager.deliver_next_kaelen_hint()
+	_expect(
+		manager.deliver_next_kaelen_hint() == "",
+		"Delivering past the last hint should return an empty string."
 	)
 	manager.queue_free()
 
