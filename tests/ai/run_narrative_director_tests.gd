@@ -11,6 +11,8 @@ func _initialize() -> void:
 	_test_parses_campaign_bible_response()
 	_test_repairs_safe_campaign_bible_drift()
 	_test_rejects_invalid_campaign_bible_response()
+	_test_parses_kaelen_angle_from_response()
+	_test_repairs_missing_kaelen_angle_with_fallback()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -44,6 +46,10 @@ func _test_campaign_bible_prompt_includes_guardrails() -> void:
 	_expect(
 		prompt.contains("hidden identity can be strange"),
 		"Prompt did not include the hidden Kaelen identity guidance."
+	)
+	_expect(
+		prompt.contains("kaelen_angle") and prompt.contains("HIDDEN director-only knowledge"),
+		"Prompt did not include the kaelen_angle field spec and director-only guardrail."
 	)
 	_expect(prompt.contains("Return only JSON"), "Prompt did not require JSON-only output.")
 	_expect(
@@ -226,6 +232,41 @@ func _test_repairs_safe_campaign_bible_drift() -> void:
 	_expect(
 		str(trigger.get("id", "")) == "echo_clues.low",
 		"Regeneration trigger id drift was not repaired."
+	)
+
+
+func _test_parses_kaelen_angle_from_response() -> void:
+	var generated := _valid_generated_bible()
+	generated["kaelen_angle"] = "Kaelen personally profits from the route war continuing."
+	var result := DirectorType.parse_campaign_bible_response(
+		JSON.stringify({"response": JSON.stringify(generated)}),
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(bool(result.get("ok", false)), _failure_text(result))
+	var bible: Dictionary = result.get("bible", {})
+	_expect(
+		str(bible.get("kaelen_angle", "")) == "Kaelen personally profits from the route war continuing.",
+		"kaelen_angle did not round-trip into the normalized bible."
+	)
+
+
+func _test_repairs_missing_kaelen_angle_with_fallback() -> void:
+	var generated := _valid_generated_bible()
+	generated.erase("kaelen_angle")
+	var result := DirectorType.parse_campaign_bible_response(
+		JSON.stringify({"response": JSON.stringify(generated)}),
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(
+		bool(result.get("ok", false)),
+		"Missing kaelen_angle should be repaired with a fallback, not fail validation."
+	)
+	var bible: Dictionary = result.get("bible", {})
+	_expect(
+		not str(bible.get("kaelen_angle", "")).strip_edges().is_empty(),
+		"Repaired bible did not fill a non-empty kaelen_angle fallback."
 	)
 
 

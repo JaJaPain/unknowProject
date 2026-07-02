@@ -306,6 +306,12 @@ var cached_abandon_line: String = ""
 var loading_panel: Panel
 var loading_bar: ProgressBar
 var loading_status_label: Label
+# Retries for a campaign bible that generated but failed content
+# validation/parsing (as opposed to a connection-level Ollama failure, which
+# has its own longer-delay retry). Capped so a persistently broken model
+# doesn't loop the player forever without ever surfacing the failure.
+const _CAMPAIGN_BIBLE_CONTENT_RETRY_MAX := 3
+var _campaign_bible_content_retry_count: int = 0
 
 var is_llm_ready: bool = false
 var is_tts_ready: bool = false
@@ -1245,11 +1251,15 @@ func _create_dock_menu():
 	mechanic_pickup_decline_btn.pressed.connect(_on_mechanic_pickup_decline_pressed)
 	offer_btns_hbox.add_child(mechanic_pickup_decline_btn)
 
-	# Docked-message slot. Hidden by default; surfaces flavor lines
-	# (Hear Gossip) and quest pickup responses inside the dock panel.
-	# See show_dock_message() for the display + auto-dismiss logic.
+	# Docked-message slot. Surfaces flavor lines (Hear Gossip) and quest
+	# pickup responses inside the dock panel. Always visible (its layout
+	# space is reserved permanently) and hidden via modulate.a instead of
+	# .visible when idle — toggling .visible on/off resized every sibling
+	# in this vbox (e.g. the lounge card grid) each time a message
+	# appeared/disappeared. See show_dock_message() for display + fade logic.
 	dock_message_slot = PanelContainer.new()
-	dock_message_slot.visible = false
+	dock_message_slot.visible = true
+	dock_message_slot.modulate.a = 0.0
 	dock_message_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Subtle style: translucent dark bg, no border. The portrait chip
 	# and name label carry the speaker identity color themselves.
@@ -8206,8 +8216,13 @@ func show_dock_message(
 		dock_message_portrait.add_theme_stylebox_override("normal", portrait_border)
 		dock_message_portrait.visible = true
 	else:
+		# Keep the slot visible (reserves its layout space) instead of hiding
+		# it — toggling .visible shrinks the parent container, which caused
+		# the whole dock message box to resize every time a speaker without
+		# a portrait (e.g. the bartender) talked, then grow back for the
+		# next speaker. Clearing the texture is enough; no resize needed.
 		dock_message_portrait.texture = null
-		dock_message_portrait.visible = false
+		dock_message_portrait.visible = true
 
 	dock_message_slot.visible = true
 
@@ -8222,8 +8237,13 @@ func show_dock_message(
 	dock_message_tween.tween_property(dock_message_slot, "modulate:a", 0.0, 1.5)
 	dock_message_tween.tween_callback(func() -> void:
 		if is_instance_valid(dock_message_slot):
-			dock_message_slot.visible = false
-			dock_message_slot.modulate.a = 1.0
+			# Slot stays visible (layout space reserved) — just clear the
+			# content it faded out. modulate.a stays at 0 until the next
+			# show_dock_message() call resets it to 1.0.
+			dock_message_line.text = ""
+			dock_message_name.text = ""
+			dock_message_name.visible = false
+			dock_message_portrait.texture = null
 	)
 
 func _set_dock_message_choices(choices: Array, color: Color) -> void:
@@ -8261,8 +8281,10 @@ func clear_dock_message() -> void:
 		return
 	if dock_message_tween and dock_message_tween.is_valid():
 		dock_message_tween.kill()
-	dock_message_slot.visible = false
-	dock_message_slot.modulate.a = 1.0
+	# Slot stays visible (layout space reserved) — fade it out via alpha
+	# instead of hiding it, so sibling layout (e.g. the lounge card grid)
+	# doesn't resize.
+	dock_message_slot.modulate.a = 0.0
 	dock_message_line.text = ""
 	dock_message_name.text = ""
 	dock_message_name.visible = false
@@ -10551,6 +10573,13 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 			"Campaign story required. Large story model did not generate the campaign bible.\n"
 			+ summary
 		)
+	if summary.contains("timeout") or summary.contains("http_failed"):
+		status = (
+			"Campaign story required, but Ollama is not responding.\n"
+			+ "The game is attempting to relaunch it automatically — if this doesn't clear in a "
+			+ "minute or two, please make sure Ollama is running and try again.\n"
+			+ summary
+		)
 	loading_status_label.text = status
 	GlobalState.paused = true
 	if game_root != null \
@@ -10570,10 +10599,22 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 				loading_status_label.text = (
 					"Campaign story required. Waiting for local LLM connection..."
 				)
+			elif not bool(requested.get("ok", false)):
+				# Campaign slot/bible store isn't initialized yet — this is a
+				# startup race with GameRoot's own campaign init, not a real
+				# generation failure. Nothing else re-checks this on its own,
+				# so retry shortly instead of leaving the loading screen stuck.
+				loading_status_label.text = (
+					"Preparing campaign slot before writing the campaign story..."
+				)
+				get_tree().create_timer(1.0, true, false, true).timeout.connect(
+					func(): _wait_for_campaign_story_before_gameplay()
+				)
 
 
 func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 	if ok:
+		_campaign_bible_content_retry_count = 0
 		var game_root := get_tree().current_scene
 		if game_root != null \
 				and game_root.has_signal("campaign_bible_generation_finished") \
@@ -10582,10 +10623,37 @@ func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 		_finish_loading_after_story_ready()
 		return
 	loading_bar.value = 92.0
-	loading_status_label.text = (
-		"Campaign story required. Large story model did not generate the campaign bible.\n"
-		+ status
-	)
+	if status.contains("timeout") or status.contains("http_failed"):
+		loading_status_label.text = (
+			"Campaign story required, but Ollama is not responding.\n"
+			+ "The game is attempting to relaunch it automatically and will retry shortly. "
+			+ "If this doesn't clear, please make sure Ollama is running.\n"
+			+ status
+		)
+		# Ollama's watchdog poll cap is ~30s; give it a bit longer than that
+		# before asking for the campaign bible again.
+		get_tree().create_timer(35.0, true, false, true).timeout.connect(
+			func(): _wait_for_campaign_story_before_gameplay()
+		)
+	elif status.contains("generation_failed") \
+			and _campaign_bible_content_retry_count < _CAMPAIGN_BIBLE_CONTENT_RETRY_MAX:
+		# Ollama answered fine; the content just didn't parse/validate. This is
+		# rare but not zero — retry a few times before giving up, rather than
+		# stalling on the first bad response with no automatic recovery.
+		_campaign_bible_content_retry_count += 1
+		loading_status_label.text = (
+			"Campaign story required. The large story model's first attempt didn't parse — "
+			+ "retrying (%d/%d)...\n" % [_campaign_bible_content_retry_count, _CAMPAIGN_BIBLE_CONTENT_RETRY_MAX]
+			+ status
+		)
+		get_tree().create_timer(3.0, true, false, true).timeout.connect(
+			func(): _wait_for_campaign_story_before_gameplay()
+		)
+	else:
+		loading_status_label.text = (
+			"Campaign story required. Large story model did not generate the campaign bible.\n"
+			+ status
+		)
 	GlobalState.paused = true
 
 

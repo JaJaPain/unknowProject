@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Paper Trail of Ghost Freight",
+  "campaign_logline": "In a sector choked by blockade taxes, you're the only one willing to falsify the manifests and move what 'legally' doesn't exist.",
+  "opening_situation": "You start in the Zenith hub with a cracked manifest for a shipment of Aurelian luxury goods. Vanguard enforcers are tightening patrols; the only way out is through Kaelen's back-alley shortcuts.",
+  "main_mystery": "Who is funding the illicit flow of 'ghost' cargo and why are they bribing officials to overlook specific, high-value shipments?",
+  "act_1_outline": [
+    "Establish a smuggling route between Zenith and Aurelia while dodging Vanguard patrol zones.",
+    "Identify the corporate entity providing forged documents for 'black-market' medical supplies.",
+    "Negotiate with local syndicates to establish a protection racket against independent haulers."
+  ],
+  "long_term_reveal": "The illicit cargo is being diverted from a private foundation that is secretly buying up entire moons to create tax-free zones.",
+  "tone": "Dry, cynical, and slightly weary. The universe doesn't care about your morals, only your profit margins.",
+  "core_pressure": "Increasingly aggressive Vanguard patrols and escalating 'heat' levels from competing smuggling syndicates.",
+  "kaelen_rule": "Kaelen is a contract handler; she stays in the shadows of the trade, managing the logistics of the illicit economy.",
+  "faction_reveal_rule": "New factions and minerals are only revealed upon crossing jump gates into uncharted sectors.",
+  "humor_rule": "Dry, deadpan irony regarding corporate incompetence and the absurdity of space-law bureaucracy.",
+  "address_rule": "NPCs address the player as 'Captain', 'Freelancer', or 'Contractor'.",
+  "fallback_rule": "If data is missing, NPCs default to standard trade requests with no narrative flavoring.",
+  "story_horizon_rule": "When active_story_arcs_remaining reaches 0, append_story_arc for a new regional conflict.",
+  "story_arcs": [
+    {
+      "name": "The Aurelian Shortcut",
+      "summary": "Navigate the legal gray zones of the Aurelia trade routes to establish a reliable smuggling pipeline."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Signature",
+      "trail_id": "rumor_trail.ghost_signature",
+      "clue_count": 2,
+      "hint_theme": "Encoded ledger fragments in derelict freighters.",
+      "clue_templates": [
+        "A log entry mentioning a 'phantom' port code.",
+        "A damaged physical manifest for a shipment of non-existent ore."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks an ancient, hidden refueling station accessible only via specific coordinates."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_exhaustion_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "Generate a new conflict when the current arc concludes."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning previous player choices.",
+    "Ensure all new cargo types reflect the local economy's specific shortages."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Prophecy",
+    "Chosen One",
+    "Zenith Legacy"
+  ]
+}

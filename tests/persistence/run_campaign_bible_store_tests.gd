@@ -67,6 +67,17 @@ func _test_bible_bootstrap_replace_and_reopen() -> void:
 		store.prompt_context().contains("Story horizon regeneration triggers"),
 		"Default campaign bible prompt context did not include regeneration triggers."
 	)
+	_expect(
+		not str(store.data.get("kaelen_angle", "")).strip_edges().is_empty(),
+		"Default campaign bible did not include a kaelen_angle placeholder."
+	)
+	var missing_angle := store.data.duplicate(true)
+	missing_angle.erase("kaelen_angle")
+	var rejected := store.replace_bible(missing_angle)
+	_expect(
+		not bool(rejected.get("ok", true)),
+		"Campaign bible store accepted a bible missing kaelen_angle."
+	)
 	var default_trail: Dictionary = store.data.get("rumor_trails", [])[0]
 	_expect(
 		str(default_trail.get("trail_id", "")).begins_with("rumor_trail."),

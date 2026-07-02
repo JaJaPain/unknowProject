@@ -62,6 +62,7 @@ static func build_campaign_bible_prompt(
 		"- Kaelen cannot die and her full mystery must never be completely solved.",
 		"- Kaelen must publicly appear as a broker, fixer, or contract handler, not a scavenger, scientist, commander, prophet, mechanic, AI, archive, or failsafe.",
 		"- Kaelen's hidden identity can be strange, mundane, human, non-human, technological, or unknown, but the story bible must frame it as hidden director knowledge only.",
+		"- kaelen_angle is HIDDEN director-only knowledge: what she secretly knows or did. It must never restate kaelen_rule's public role, and must never be shown to the player or to small-model prompts.",
 		"- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
 		"- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.",
@@ -96,6 +97,7 @@ static func build_campaign_bible_prompt(
 		"  \"tone\": string,",
 		"  \"core_pressure\": string,",
 		"  \"kaelen_rule\": string that says she is publicly a broker, fixer, or contract handler,",
+		"  \"kaelen_angle\": string under 220 chars — HIDDEN. What Kaelen secretly knows or did. Never shown to the player or small-model prompts. Director-only knowledge.,",
 		"  \"faction_reveal_rule\": string,",
 		"  \"humor_rule\": string,",
 		"  \"address_rule\": string describing how NPCs address the player,",
@@ -174,6 +176,9 @@ static func _repaired_generated_campaign_bible(generated: Dictionary) -> Diction
 			"long_term_reveal_direction": "long_term_reveal",
 			"kaelen": "kaelen_rule",
 			"kaelen_public_rule": "kaelen_rule",
+			"kaelen_secret": "kaelen_angle",
+			"kaelen_hidden_angle": "kaelen_angle",
+			"angle": "kaelen_angle",
 			"faction_rule": "faction_reveal_rule",
 			"humor": "humor_rule",
 			"fallback": "fallback_rule",
@@ -201,6 +206,7 @@ static func _repaired_generated_campaign_bible(generated: Dictionary) -> Diction
 	if repaired.get("banned_repeats", null) is String:
 		repaired["banned_repeats"] = [str(repaired.get("banned_repeats", "")).strip_edges()]
 	_repair_kaelen_public_role(repaired)
+	_repair_kaelen_angle(repaired)
 	_repair_rumor_trails(repaired)
 	_repair_regeneration_triggers(repaired)
 	_repair_banned_repeats(repaired)
@@ -212,6 +218,14 @@ static func _apply_key_aliases(target: Dictionary, aliases: Dictionary) -> void:
 		var target_key := str(aliases[source_key])
 		if target.has(source_key) and not target.has(target_key):
 			target[target_key] = target[source_key]
+
+
+static func _repair_kaelen_angle(target: Dictionary) -> void:
+	if str(target.get("kaelen_angle", "")).strip_edges().is_empty():
+		target["kaelen_angle"] = (
+			"Kaelen has a personal stake in how this campaign's central conflict resolves, " +
+			"but never explains why."
+		)
 
 
 static func _repair_kaelen_public_role(target: Dictionary) -> void:
@@ -391,6 +405,7 @@ static func _normalized_campaign_bible(
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
+		"kaelen_angle",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",
@@ -423,6 +438,7 @@ static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResul
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
+		"kaelen_angle",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",
@@ -469,3 +485,92 @@ static func _failure(reason: String, validation: ValidationResult) -> Dictionary
 		"reason": reason,
 		"validation": validation,
 	}
+
+
+# ── Phase C: Story horizon expansion ───────────────────────────────────────────
+# Fires only when a campaign's prepared act_1_outline/story_arcs/rumor_trails
+# reserve is exhausted. Extends the campaign — never retcons or replaces
+# existing canon. One action per call, matching the bible's own
+# regeneration_trigger schema (action: append_story_horizon|append_rumor_trail|
+# append_story_arc).
+static func build_story_horizon_expansion_prompt(
+	bible_data: Dictionary,
+	trigger: Dictionary,
+	story_state_summary: String
+) -> String:
+	var action := str(trigger.get("action", "append_story_horizon"))
+	var shape := "{\"act_1_outline_addition\": [three strings under 180 chars each]}"
+	if action == "append_story_arc":
+		shape = "{\"story_arc\": {\"name\": string, \"summary\": string under 180 chars}}"
+	elif action == "append_rumor_trail":
+		shape = (
+			"{\"rumor_trail\": {\"name\": string, \"trail_id\": \"rumor_trail.\" plus snake_case_id, "
+			+ "\"clue_count\": 2, \"hint_theme\": string, \"clue_templates\": [two strings], "
+			+ "\"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", "
+			+ "\"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string under 180 chars}}"
+		)
+	return "\n".join([
+		"You are the large local story model for a procedural space game.",
+		"This campaign's prepared story reserve is running low. Extend it — do not retcon or replace anything that already happened.",
+		"Be concise. Short valid JSON is better than rich prose.",
+		"",
+		"Established campaign so far:",
+		"- Title: %s" % str(bible_data.get("campaign_title", "")),
+		"- Main mystery: %s" % str(bible_data.get("main_mystery", "")),
+		"- Tone: %s" % str(bible_data.get("tone", "")),
+		"- Core pressure: %s" % str(bible_data.get("core_pressure", "")),
+		"",
+		"Current state:",
+		story_state_summary,
+		"",
+		"Reason for this expansion: %s" % str(trigger.get("description", "")),
+		"",
+		"Banned repeats (do not reuse): %s" % ", ".join(bible_data.get("banned_repeats", [])),
+		"",
+		"Return only JSON. No markdown. No comments. Return exactly this shape:",
+		shape,
+	])
+
+
+static func parse_story_horizon_expansion_response(
+	envelope_text: String,
+	action: String,
+	model_name: String
+) -> Dictionary:
+	var envelope := DomainJsonType.parse_object(envelope_text, "story_horizon_expansion_envelope")
+	var envelope_validation := envelope["validation"] as ValidationResult
+	if not envelope_validation.is_valid():
+		return _failure("response_envelope_parse_failed", envelope_validation)
+	var envelope_data: Dictionary = envelope["data"]
+	if not envelope_data.has("response"):
+		var missing_response := ValidationResultType.new()
+		missing_response.add_error(
+			"response_envelope_missing_response",
+			"Ollama response envelope did not include a response field."
+		)
+		return _failure("response_envelope_missing_response", missing_response)
+	var response_text := str(envelope_data.get("response", "")).strip_edges()
+	var parsed := DomainJsonType.parse_object(response_text, "story_horizon_expansion_response")
+	var response_validation := parsed["validation"] as ValidationResult
+	if not response_validation.is_valid():
+		return _failure("response_json_parse_failed", response_validation)
+	var repaired := _repair_text_tree(parsed["data"]) as Dictionary
+	var result := ValidationResultType.new()
+	if action == "append_story_arc":
+		var arc: Dictionary = repaired.get("story_arc", {})
+		if str(arc.get("name", "")).strip_edges().is_empty() \
+				or str(arc.get("summary", "")).strip_edges().is_empty():
+			result.add_error("invalid_story_arc_addition", "story_arc must have name and summary.")
+			return _failure("story_horizon_expansion_validation_failed", result)
+		return {"ok": true, "action": action, "story_arc": arc, "model": model_name}
+	if action == "append_rumor_trail":
+		var trails := CampaignBibleStoreType.normalize_rumor_trails([repaired.get("rumor_trail", {})])
+		if trails.is_empty():
+			result.add_error("invalid_rumor_trail_addition", "rumor_trail could not be normalized.")
+			return _failure("story_horizon_expansion_validation_failed", result)
+		return {"ok": true, "action": action, "rumor_trail": trails[0], "model": model_name}
+	var addition: Array = repaired.get("act_1_outline_addition", [])
+	if addition.is_empty():
+		result.add_error("invalid_act_1_outline_addition", "act_1_outline_addition must be non-empty.")
+		return _failure("story_horizon_expansion_validation_failed", result)
+	return {"ok": true, "action": action, "act_1_outline_addition": addition, "model": model_name}

@@ -5,6 +5,9 @@ class_name DevPanel
 signal spawn_boss_requested
 signal spawn_squad_requested
 signal stores_restock_requested
+signal force_dock_rumor_requested
+signal ollama_auto_restart_toggled(enabled: bool)
+signal force_restart_ollama_requested
 
 # ── Layout refs ───────────────────────────────────────────────────────────────
 var _action_vbox: VBoxContainer
@@ -17,6 +20,8 @@ var _story_input_prompt_text: TextEdit
 var _story_bible_text: TextEdit
 var _story_context_text: TextEdit
 var _story_state_text: TextEdit
+var _story_bridge_summary_label: Label
+var _story_full_debug_text: TextEdit
 
 # ── Public API ────────────────────────────────────────────────────────────────
 ## Add a button to the left quick-action sidebar.
@@ -181,6 +186,44 @@ func _build_story_debug_tab() -> void:
 	_story_state_text = _story_readonly_text_edit(180)
 	tab.add_child(_story_state_text)
 
+	tab.add_child(HSeparator.new())
+	tab.add_child(_story_section_label("Bridge Status (bible → story state)"))
+	_story_bridge_summary_label = Label.new()
+	_story_bridge_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_story_bridge_summary_label.add_theme_color_override("font_color", Color(0.55, 0.95, 1.0))
+	tab.add_child(_story_bridge_summary_label)
+
+	var force_rumor_btn := Button.new()
+	force_rumor_btn.text = "Force Dock Rumor Roll"
+	force_rumor_btn.pressed.connect(func(): force_dock_rumor_requested.emit())
+	tab.add_child(force_rumor_btn)
+
+	tab.add_child(HSeparator.new())
+	tab.add_child(_story_section_label("Ollama Recovery"))
+	var auto_restart_hint := Label.new()
+	auto_restart_hint.text = (
+		"Off by default. When ON, Force Restart may kill a pre-existing "
+		+ "(not game-launched) ollama.exe process by name — only enable if you "
+		+ "understand that."
+	)
+	auto_restart_hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(auto_restart_hint)
+	var auto_restart_check := CheckBox.new()
+	auto_restart_check.text = "Allow Ollama Auto-Restart (kill + relaunch)"
+	auto_restart_check.toggled.connect(func(enabled: bool): ollama_auto_restart_toggled.emit(enabled))
+	tab.add_child(auto_restart_check)
+	var force_restart_btn := Button.new()
+	force_restart_btn.text = "Force Restart Ollama Now"
+	force_restart_btn.pressed.connect(func(): force_restart_ollama_requested.emit())
+	tab.add_child(force_restart_btn)
+
+	tab.add_child(_story_section_label(
+		"Full Story State (DEBUG ONLY — includes kaelen_hidden_angle / "
+		+ "player_does_not_know_yet, which must NEVER appear in the prompt block above)"
+	))
+	_story_full_debug_text = _story_readonly_text_edit(180)
+	tab.add_child(_story_full_debug_text)
+
 	_refresh_story_debug_tab()
 
 
@@ -205,7 +248,9 @@ func _refresh_story_debug_tab() -> void:
 			or _story_input_prompt_text == null \
 			or _story_bible_text == null \
 			or _story_context_text == null \
-			or _story_state_text == null:
+			or _story_state_text == null \
+			or _story_bridge_summary_label == null \
+			or _story_full_debug_text == null:
 		return
 	if not _story_debug_provider.is_valid():
 		_story_status_label.text = "Story provider not connected yet."
@@ -214,6 +259,8 @@ func _refresh_story_debug_tab() -> void:
 		_story_bible_text.text = ""
 		_story_context_text.text = ""
 		_story_state_text.text = ""
+		_story_bridge_summary_label.text = ""
+		_story_full_debug_text.text = ""
 		return
 	var snapshot: Dictionary = _story_debug_provider.call()
 	_story_status_label.text = str(snapshot.get("status", "No story status available."))
@@ -222,6 +269,8 @@ func _refresh_story_debug_tab() -> void:
 	_story_bible_text.text = str(snapshot.get("campaign_bible_json", ""))
 	_story_context_text.text = str(snapshot.get("campaign_bible_context", ""))
 	_story_state_text.text = str(snapshot.get("story_state_context", ""))
+	_story_bridge_summary_label.text = str(snapshot.get("bridge_summary", ""))
+	_story_full_debug_text.text = str(snapshot.get("full_story_state_json", ""))
 
 
 func _build_lounge_layout_tab() -> void:

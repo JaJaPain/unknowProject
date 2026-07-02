@@ -23,6 +23,14 @@ var _ollama_ready:        bool = false
 var _ollama_poll_count:   int  = 0
 var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
 var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
+# Opt-in only — session-level, defaults off. When true, force_restart_ollama()
+# is allowed to kill a pre-existing (not game-launched) ollama.exe by name via
+# taskkill, not just relaunch a missing one. Toggle lives in DevPanel Story
+# Debug tab. Killing an external process the game didn't start is a much more
+# invasive action than the normal watchdog's "launch if missing" behavior, so
+# it stays behind explicit player consent per session.
+var ollama_auto_restart_allowed: bool = false
+var _ollama_recovery_in_progress: bool = false
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
@@ -642,6 +650,51 @@ func _ollama_poll() -> void:
 			func(): _ollama_poll())
 	)
 
+## Mid-session recovery, safe and non-destructive: re-runs the same
+## launch-if-missing + poll flow used at startup. If Ollama is already running
+## (just a transient blip), the first ping in _ollama_poll() succeeds
+## immediately and this is a near-no-op. Called automatically on a
+## connection-level generation failure (see _campaign_bible/story_horizon
+## completion handlers) — never on a content/validation failure, since those
+## mean Ollama answered fine and the problem is elsewhere.
+func attempt_ollama_recovery() -> void:
+	if _ollama_recovery_in_progress:
+		return
+	_ollama_recovery_in_progress = true
+	GenerationDiagnostics.record_event(
+		"ollama_watchdog", "mid_session_recovery_attempted", "llm_interface", {}
+	)
+	_ollama_ping(func(up: bool):
+		_ollama_recovery_in_progress = false
+		if up:
+			return
+		_ollama_launch()
+	)
+
+## Opt-in only (see ollama_auto_restart_allowed). If the game itself launched
+## the running Ollama process, kill just that PID — always safe, it's our own
+## child process. Otherwise, only proceed to taskkill-by-name if the player
+## has explicitly allowed it this session; that path can affect an Ollama
+## instance the player started themselves, so it must never fire silently.
+func force_restart_ollama() -> void:
+	if _ollama_start_pid > 0:
+		print("[LLMInterface] Force restart: killing game-launched Ollama PID %d." % _ollama_start_pid)
+		OS.kill(_ollama_start_pid)
+		_ollama_start_pid = -1
+		_ollama_launch()
+		return
+	if not ollama_auto_restart_allowed:
+		push_warning(
+			"[LLMInterface] force_restart_ollama() called but ollama_auto_restart_allowed is false " +
+			"and this Ollama instance was not launched by the game — refusing to kill it. " +
+			"Enable the DevPanel toggle to allow this, or restart Ollama manually."
+		)
+		return
+	print("[LLMInterface] Force restart: taskkill on ollama.exe (player-allowed).")
+	OS.execute("taskkill", ["/IM", "ollama.exe", "/F"], [], false)
+	_ollama_launch()
+
+
 ## Called once Ollama is confirmed up. Checks that required models are present,
 ## pulling them if not, then marks the interface ready and starts model discovery.
 func _ollama_after_up() -> void:
@@ -1168,6 +1221,12 @@ func _on_campaign_bible_generation_completed(
 			"llm_interface",
 			{"model": model_name}
 		)
+		# Connection-level failure (couldn't reach Ollama at all, not just a
+		# missing model) — this is exactly the "prevents the game from
+		# progressing" case, since campaign_bible generation gates the
+		# loading screen. Attempt the safe non-destructive recovery.
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
 		callback.call({
 			"ok": false,
 			"reason": reason,
@@ -1194,6 +1253,116 @@ func _on_campaign_bible_generation_completed(
 		"llm",
 		"llm_interface",
 		{"model": model_name, "capability": "campaign_bible"}
+	)
+	callback.call(parsed)
+
+
+# ── Phase C: Story horizon expansion ───────────────────────────────────────────
+# Small follow-up call, only fired when a campaign's prepared reserve runs out.
+# Same think:false/keep_alive:0 large_story handling as campaign_bible.
+func request_story_horizon_expansion(
+	bible_data: Dictionary,
+	trigger: Dictionary,
+	story_state_summary: String,
+	callback: Callable
+) -> void:
+	var capability := "story_horizon"
+	var model_name := model_for_capability(capability)
+	var action := str(trigger.get("action", "append_story_horizon"))
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable", "model": model_name})
+		return
+	var prompt := NarrativeDirectorType.build_story_horizon_expansion_prompt(
+		bible_data,
+		trigger,
+		story_state_summary
+	)
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"json",
+		{
+			"temperature": 0.85,
+			"num_predict": 400,
+			"seed": randi(),
+		}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	var request_id := temp_http.get_instance_id()
+	temp_http.request_completed.connect(
+		func(
+			result: int,
+			response_code: int,
+			_headers: PackedStringArray,
+			body: PackedByteArray
+		) -> void:
+			_on_story_horizon_expansion_completed(
+				result, response_code, body, action, model_name, callback, request_id
+			)
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			"request_start_failed",
+			"llm_interface",
+			{"model": model_name, "error": err}
+		)
+		callback.call({"ok": false, "reason": "request_start_failed", "model": model_name})
+
+
+func _on_story_horizon_expansion_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	action: String,
+	model_name: String,
+	callback: Callable,
+	request_id: int
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "story_horizon_expansion_timeout"
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion", reason, "llm_interface", {"model": model_name}
+		)
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
+		callback.call({"ok": false, "reason": reason, "model": model_name})
+		return
+	var parsed := NarrativeDirectorType.parse_story_horizon_expansion_response(
+		body.get_string_from_utf8(), action, model_name
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name}
+		)
+		parsed["model"] = model_name
+		callback.call(parsed)
+		return
+	GenerationDiagnostics.record_content_source(
+		"story_horizon_expansion", "llm", "llm_interface", {"model": model_name}
 	)
 	callback.call(parsed)
 
@@ -1716,6 +1885,7 @@ func request_quest_generation(
 		"pickup_outpost_display": pickup_outpost_display,
 		"pickup_npc": pickup_npc,
 		"pickup_item": pickup_item,
+		"story_hook_ref": StoryManager.current_hook_ref(),
 	}
 
 
@@ -1739,6 +1909,14 @@ func request_quest_generation(
 		story_state_block = (
 			"### STORY STATE:\n"
 			+ story_state_context_text
+			+ "\n\n"
+		)
+	var because_block = ""
+	var because_text := StoryManager.get_current_because()
+	if not because_text.is_empty():
+		because_block = (
+			"### WHY THIS MISSION EXISTS (do not state this directly — let it shape tone, urgency, and subtext only):\n"
+			+ because_text
 			+ "\n\n"
 		)
 	var system_story_pack: Dictionary = _agent_system_story_pack(agent_profile)
@@ -1810,6 +1988,7 @@ func request_quest_generation(
 		lore_block + \
 		campaign_bible_block + \
 		story_state_block + \
+		because_block + \
 		system_story_block + \
 		agent_memory_block + \
 		idea_memory_block + \
@@ -2352,6 +2531,8 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 		subs.get("faction", quest_data.get("faction", "neutral"))
 	).to_lower().strip_edges()
 	quest_data["agent_name"] = str(subs.get("agent_name", quest_data.get("agent_name", "Broker Kaelen")))
+	if subs.has("story_hook_ref"):
+		quest_data["story_hook_ref"] = str(subs.get("story_hook_ref", ""))
 
 	var replacements := {}
 	# Swap dummy pilot name for the real nickname
@@ -3776,8 +3957,16 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 	else:
 		task_desc = "complete the contract"
 
+	# Mood-only, never the hidden angle — same protective pattern as
+	# request_kaelen_intro/request_kaelen_handoff_batch.
+	var mood := str(StoryManager.story_state.get("kaelen_current_mood", "")).strip_edges()
+	var mood_block := ""
+	if not mood.is_empty():
+		mood_block = "Kaelen's current mood (color her tone with this — do NOT quote or explain it): %s. " % mood
+
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
+		mood_block + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
 		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \

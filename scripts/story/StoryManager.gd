@@ -34,15 +34,22 @@ var story_state: Dictionary = {
 	"pending_hooks": [],
 	"current_foreshadow": "",
 	"kaelen_current_mood": "guarded",
+	"kaelen_hidden_angle": "",
 	"intro_conversation_had": false,
 	"intro_agent_visited": false,
 	"intro_quest_delivered": false,
 	"hinted_lounge_rumors": [],
 	"agent_cooldown_until_minute": 0,
 	"agent_cooldown_message_index": 0,
+	"bible_seeded": false,
+	"act_1_outline_consumed_index": 0,
+	"story_arcs_consumed_index": 0,
+	"rumor_trails_consumed_index": 0,
+	"regeneration_fallback_count": 0,
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
+var _campaign_bible_store = null   # CampaignBibleStore reference, set by init_story_state()
 
 # ── Deferred beat schedule ────────────────────────────────────────────────────
 # Each entry: {type, beat_id, threshold, current}
@@ -75,7 +82,11 @@ func _on_llm_ready(_model_name: String) -> void:
 
 # ── Phase B: Story state API ──────────────────────────────────────────────────
 
-func init_story_state(campaign_path: String) -> void:
+func init_story_state(
+	campaign_path: String,
+	bible_data: Dictionary = {},
+	campaign_bible_store = null
+) -> void:
 	_story_state_store = StoryStateStoreType.open(campaign_path)
 	if _story_state_store.is_valid():
 		story_state = _story_state_store.data.duplicate(true)
@@ -83,12 +94,73 @@ func init_story_state(campaign_path: String) -> void:
 		push_warning("[StoryManager] Story state store failed to open; using defaults.")
 		story_state = StoryStateStoreType._default_state()
 	_handoff_store = KaelenHandoffStoreType.open(campaign_path)
+	_campaign_bible_store = campaign_bible_store
+	if not bible_data.is_empty() and not bool(story_state.get("bible_seeded", false)):
+		seed_story_state_from_bible(bible_data)
 	_push_context_to_llm()
 	# Handoff pool gen deferred to _on_llm_ready — Ollama isn't up yet here.
+
+
+# ── Phase B: Seed the living story state from the generated campaign bible ────
+# Runs once per campaign, guarded by bible_seeded. The bible is the fixed spine;
+# this copies its opening beats into the state StoryManager actually mutates and
+# injects into prompts. kaelen_hidden_angle is director-only knowledge and must
+# never appear in get_story_context_block() — same protection as
+# player_does_not_know_yet.
+func seed_story_state_from_bible(bible_data: Dictionary) -> void:
+	if bool(story_state.get("bible_seeded", false)):
+		return
+	var active_tensions: Array = story_state.get("active_tensions", [])
+	var hidden: Array = story_state.get("player_does_not_know_yet", [])
+	var hooks: Array = story_state.get("pending_hooks", [])
+
+	var story_arcs: Array = bible_data.get("story_arcs", [])
+	if not story_arcs.is_empty() and story_arcs[0] is Dictionary:
+		var arc_summary := str((story_arcs[0] as Dictionary).get("summary", "")).strip_edges()
+		if not arc_summary.is_empty():
+			active_tensions.append(arc_summary)
+	story_state["story_arcs_consumed_index"] = 1 if not story_arcs.is_empty() else 0
+
+	var outline: Array = bible_data.get("act_1_outline", [])
+	for i in range(1, outline.size()):
+		var beat := str(outline[i]).strip_edges()
+		if not beat.is_empty():
+			hidden.append(beat)
+	story_state["act_1_outline_consumed_index"] = mini(1, outline.size())
+
+	var main_mystery := str(bible_data.get("main_mystery", "")).strip_edges()
+	if not main_mystery.is_empty():
+		hidden.append(main_mystery)
+
+	var rumor_trails: Array = bible_data.get("rumor_trails", [])
+	if not rumor_trails.is_empty() and rumor_trails[0] is Dictionary:
+		var clue_templates: Array = (rumor_trails[0] as Dictionary).get("clue_templates", [])
+		for clue in clue_templates:
+			var clue_text := str(clue).strip_edges()
+			if not clue_text.is_empty():
+				hooks.append(clue_text)
+	story_state["rumor_trails_consumed_index"] = 1 if not rumor_trails.is_empty() else 0
+
+	var opening_situation := str(bible_data.get("opening_situation", "")).strip_edges()
+	if not opening_situation.is_empty() \
+			and str(story_state.get("current_foreshadow", "")).strip_edges().is_empty():
+		story_state["current_foreshadow"] = opening_situation
+
+	var kaelen_angle := str(bible_data.get("kaelen_angle", "")).strip_edges()
+	if not kaelen_angle.is_empty():
+		story_state["kaelen_hidden_angle"] = kaelen_angle
+
+	story_state["active_tensions"] = active_tensions
+	story_state["player_does_not_know_yet"] = hidden
+	story_state["pending_hooks"] = hooks
+	story_state["bible_seeded"] = true
+	_save_story_state()
+	_update_kaelen_mood()
 
 func clear_story_state() -> void:
 	_story_state_store = null
 	_handoff_store = null
+	_campaign_bible_store = null
 	story_state = {
 		"chapter": 1,
 		"active_tensions": [],
@@ -97,13 +169,41 @@ func clear_story_state() -> void:
 		"pending_hooks": [],
 		"current_foreshadow": "",
 		"kaelen_current_mood": "guarded",
+		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
 		"intro_quest_delivered": false,
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
+		"bible_seeded": false,
+		"act_1_outline_consumed_index": 0,
+		"story_arcs_consumed_index": 0,
+		"rumor_trails_consumed_index": 0,
+		"regeneration_fallback_count": 0,
 	}
+
+# ── Phase C: Mission causality ─────────────────────────────────────────────────
+# The single reason a mission generated right now exists. Safe for prompts —
+# active_tensions is player-facing world state, not a hidden truth.
+func get_current_because() -> String:
+	var tensions: Array = story_state.get("active_tensions", [])
+	if tensions.is_empty():
+		return ""
+	return str(tensions[0]).strip_edges()
+
+
+# Same hash scheme as get_lounge_rumor()'s "hook:" ids so a hook stamped onto a
+# quest here matches the same hook if it's also surfaced as a lounge rumor.
+func current_hook_ref() -> String:
+	var hooks: Array = story_state.get("pending_hooks", [])
+	if hooks.is_empty():
+		return ""
+	var text := str(hooks[0]).strip_edges()
+	if text.is_empty():
+		return ""
+	return "hook:%s" % text.sha256_text().substr(0, 12)
+
 
 # Returns a formatted string safe to inject into LLM prompts.
 # Never includes player_does_not_know_yet.
@@ -128,10 +228,16 @@ func get_story_context_block() -> String:
 		lines.append("- Open story threads: %s" % ", ".join(hooks))
 	return "\n".join(lines)
 
-# Increments chapter, promotes earned secrets to player_knows, clears resolved
-# tensions, then generates a new current_foreshadow via the small model.
+# Increments chapter, promotes earned secrets to player_knows, then replaces
+# the cleared tensions/hooks with refill content atomically (no chapter should
+# ever land with an empty slate — new_tensions/new_hooks come from the bible's
+# reserve or a regeneration_trigger call; see _check_chapter_advance_after_hook_resolution).
 # Pass how many items from player_does_not_know_yet to promote this chapter.
-func advance_chapter(truths_to_reveal: int = 1) -> void:
+func advance_chapter(
+	truths_to_reveal: int = 1,
+	new_tensions: Array = [],
+	new_hooks: Array = []
+) -> void:
 	story_state["chapter"] = int(story_state.get("chapter", 1)) + 1
 	var hidden: Array = story_state.get("player_does_not_know_yet", [])
 	var known: Array = story_state.get("player_knows", [])
@@ -140,9 +246,11 @@ func advance_chapter(truths_to_reveal: int = 1) -> void:
 		known.append(hidden[i])
 	story_state["player_knows"] = known
 	story_state["player_does_not_know_yet"] = hidden.slice(revealed)
-	story_state["active_tensions"] = []
+	story_state["active_tensions"] = new_tensions
+	story_state["pending_hooks"] = new_hooks
 	_save_story_state()
 	_generate_foreshadow()
+	_update_kaelen_mood()
 	# Story context changed — replace all known agent pools so tone stays current.
 	_replace_all_handoff_pools()
 
@@ -193,6 +301,51 @@ func _generate_foreshadow() -> void:
 		"prompt": prompt,
 		"stream": false,
 		"options": {"num_predict": 40, "temperature": 0.8},
+	})
+	http.request(
+		LocalModelGateway.OLLAMA_GENERATE_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		payload
+	)
+
+
+# Async: derives a short mood descriptor from Kaelen's hidden angle. The angle
+# itself is director-only — this prompt asks for a 2-4 word mood only and
+# never lets the model repeat or paraphrase the angle back. Result feeds
+# kaelen_current_mood, which IS safe for small-model prompts.
+func _update_kaelen_mood() -> void:
+	var angle := str(story_state.get("kaelen_hidden_angle", "")).strip_edges()
+	if angle.is_empty():
+		return
+	var chapter := int(story_state.get("chapter", 1))
+	var prompt := (
+		"Director-only context, chapter %d. Kaelen's private situation: %s\n" % [chapter, angle]
+		+ "Output ONLY a 2-4 word mood descriptor for how this makes Kaelen come across "
+		+ "right now (e.g. \"guarded and terse\", \"unusually generous\"). "
+		+ "Do NOT repeat, quote, or explain the private situation. No punctuation besides commas."
+	)
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(
+		func(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+				return
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed == null or not parsed is Dictionary:
+				return
+			var text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
+			if text.is_empty():
+				return
+			story_state["kaelen_current_mood"] = text
+			_save_story_state()
+	)
+	var payload := JSON.stringify({
+		"model": LocalModelGateway.DEFAULT_SMALL_MODEL,
+		"prompt": prompt,
+		"stream": false,
+		"options": {"num_predict": 20, "temperature": 0.8},
 	})
 	http.request(
 		LocalModelGateway.OLLAMA_GENERATE_URL,
@@ -262,14 +415,235 @@ func _on_ship_destroyed(faction: String) -> void:
 	on_kill(faction)
 
 
-func on_docked(_station) -> void:
+func on_docked(station) -> void:
 	_dock_count_session += 1
 	_check_dock_beats()
 	_check_delay_beats()
+	_maybe_fire_dock_rumor(station)
 
 
-func on_quest_completed(_quest: Dictionary) -> void:
+# Ambient rumor firing on dock, parallel to the NPC-conversation-triggered
+# path in UIManager._station_contact_story_rumor — both share
+# record_lounge_rumor_heard() for dedup, so a rumor heard via one path
+# correctly suppresses it on the other. force=true lets a debug button bypass
+# the roll for manual testing.
+func _maybe_fire_dock_rumor(station, force: bool = false) -> void:
+	if not force and randf() >= 0.40:
+		return
+	var context := _dock_rumor_context(station)
+	var rumor: Dictionary = get_lounge_rumor(context)
+	if rumor.is_empty():
+		return
+	var rumor_id := str(rumor.get("id", ""))
+	if not rumor_id.is_empty():
+		record_lounge_rumor_heard(rumor_id)
+	var line := str(rumor.get("line", "")).strip_edges()
+	if not line.is_empty():
+		GlobalState.emit_chatter("SYSTEM", line, Color(0.6, 0.85, 1.0))
+
+
+func _dock_rumor_context(_station) -> Dictionary:
+	# The station node's display-name resolution is private to UIManager
+	# (_current_station_display_name) and not safely reachable from here.
+	# get_lounge_rumor() already has solid defaults ("the lounge", "this
+	# contact", "dock crews") for a missing context, so an empty context is
+	# the safe choice rather than guessing at station property names.
+	return {}
+
+
+func on_quest_completed(quest: Dictionary) -> void:
 	_check_delay_beats()
+	_resolve_hooks_for_quest(quest)
+
+
+# If this quest was stamped with the hook that was open when it was generated,
+# close that hook out. Only ever resolves the one hook it was stamped with —
+# never mass-clears pending_hooks, so unrelated open threads survive.
+func _resolve_hooks_for_quest(quest: Dictionary) -> void:
+	var ref := str(quest.get("story_hook_ref", "")).strip_edges()
+	if ref.is_empty():
+		return
+	var hooks: Array = story_state.get("pending_hooks", [])
+	var remaining: Array = []
+	var resolved := false
+	for hook in hooks:
+		var text := str(hook).strip_edges()
+		if not resolved and "hook:%s" % text.sha256_text().substr(0, 12) == ref:
+			resolved = true
+			continue
+		remaining.append(hook)
+	if not resolved:
+		return
+	story_state["pending_hooks"] = remaining
+	_save_story_state()
+	_check_chapter_advance_after_hook_resolution()
+
+
+# Fires when the player has closed out every hook seeded for the current
+# chapter. This game has no ending state — advancing always refills rather
+# than finishing. Reserve order: unused act_1_outline beat, then an unused
+# story_arc/rumor_trail, then (only if the bible's reserve is exhausted) a
+# regeneration_trigger LLM call that appends fresh content. Chapter count
+# climbs forever; nothing here can produce a "the story is over" state.
+func _check_chapter_advance_after_hook_resolution() -> void:
+	if not story_state.get("pending_hooks", []).is_empty():
+		return
+	if not _campaign_bible_store_ready():
+		return
+	var bible: Dictionary = _campaign_bible_store.data
+
+	var outline_idx := int(story_state.get("act_1_outline_consumed_index", 0))
+	var outline: Array = bible.get("act_1_outline", [])
+	if outline_idx < outline.size():
+		var beat := str(outline[outline_idx]).strip_edges()
+		story_state["act_1_outline_consumed_index"] = outline_idx + 1
+		if not beat.is_empty():
+			advance_chapter(1, [beat], [beat])
+			return
+
+	var arc_idx := int(story_state.get("story_arcs_consumed_index", 0))
+	var arcs: Array = bible.get("story_arcs", [])
+	var rumor_idx := int(story_state.get("rumor_trails_consumed_index", 0))
+	var rumor_trails: Array = bible.get("rumor_trails", [])
+	if arc_idx < arcs.size() or rumor_idx < rumor_trails.size():
+		var next_tensions: Array = []
+		var next_hooks: Array = []
+		if arc_idx < arcs.size() and arcs[arc_idx] is Dictionary:
+			var summary := str((arcs[arc_idx] as Dictionary).get("summary", "")).strip_edges()
+			if not summary.is_empty():
+				next_tensions.append(summary)
+			story_state["story_arcs_consumed_index"] = arc_idx + 1
+		if rumor_idx < rumor_trails.size() and rumor_trails[rumor_idx] is Dictionary:
+			var clue_templates: Array = (rumor_trails[rumor_idx] as Dictionary).get("clue_templates", [])
+			for clue in clue_templates:
+				var clue_text := str(clue).strip_edges()
+				if not clue_text.is_empty():
+					next_hooks.append(clue_text)
+			story_state["rumor_trails_consumed_index"] = rumor_idx + 1
+		if not next_tensions.is_empty() or not next_hooks.is_empty():
+			advance_chapter(1, next_tensions, next_hooks)
+			return
+
+	# Bible's prepared reserve is exhausted — extend the campaign rather than
+	# stalling. See C6 fallback policy: retry-once, loud+counted fallback only
+	# as a last resort, never a permanent give-up.
+	_request_story_horizon_expansion(0)
+
+
+# Defensive against: _campaign_bible_store being null, or (rare live-reload
+# edge case) holding an object whose script didn't resolve is_valid(). Never
+# let a stale/bad reference crash the chapter-advance flow.
+func _campaign_bible_store_ready() -> bool:
+	if _campaign_bible_store == null:
+		return false
+	if not is_instance_valid(_campaign_bible_store):
+		return false
+	if not _campaign_bible_store.has_method("is_valid"):
+		push_warning(
+			"[StoryManager] _campaign_bible_store has no is_valid() method — " +
+			"likely a stale reference from a live script reload. Ignoring until next campaign init."
+		)
+		return false
+	return _campaign_bible_store.is_valid()
+
+
+func _request_story_horizon_expansion(attempt: int) -> void:
+	if not _campaign_bible_store_ready():
+		return
+	var bible: Dictionary = _campaign_bible_store.data
+	var triggers: Array = bible.get("regeneration_triggers", [])
+	var trigger: Dictionary = triggers[0] if not triggers.is_empty() and triggers[0] is Dictionary else {}
+	LLMInterface.request_story_horizon_expansion(
+		bible,
+		trigger,
+		get_story_context_block(),
+		func(result: Dictionary) -> void:
+			if bool(result.get("ok", false)):
+				_apply_story_horizon_expansion(result)
+				return
+			if attempt < 1:
+				_request_story_horizon_expansion(attempt + 1)
+				return
+			_use_story_horizon_expansion_fallback(str(result.get("reason", "unknown")))
+	)
+
+
+func _apply_story_horizon_expansion(result: Dictionary) -> void:
+	# The campaign may have reset/reloaded while this async request was in
+	# flight — re-check rather than trusting the caller's earlier check.
+	if not _campaign_bible_store_ready():
+		return
+	var bible: Dictionary = _campaign_bible_store.data.duplicate(true)
+	var action := str(result.get("action", ""))
+	var next_tensions: Array = []
+	var next_hooks: Array = []
+	if action == "append_story_arc":
+		var arc: Dictionary = result.get("story_arc", {})
+		var arcs: Array = bible.get("story_arcs", [])
+		arcs.append(arc)
+		bible["story_arcs"] = arcs
+		var summary := str(arc.get("summary", "")).strip_edges()
+		if not summary.is_empty():
+			next_tensions.append(summary)
+	elif action == "append_rumor_trail":
+		var trail: Dictionary = result.get("rumor_trail", {})
+		var trails: Array = bible.get("rumor_trails", [])
+		trails.append(trail)
+		bible["rumor_trails"] = trails
+		for clue in trail.get("clue_templates", []):
+			var clue_text := str(clue).strip_edges()
+			if not clue_text.is_empty():
+				next_hooks.append(clue_text)
+	else:
+		var addition: Array = result.get("act_1_outline_addition", [])
+		var outline: Array = bible.get("act_1_outline", [])
+		var start_idx := outline.size()
+		outline.append_array(addition)
+		bible["act_1_outline"] = outline
+		story_state["act_1_outline_consumed_index"] = start_idx
+		# The freshly-appended beats become this chapter's refill; consuming
+		# the first one now keeps the same reserve-then-consume flow as the
+		# normal path above.
+		if not addition.is_empty():
+			next_tensions.append(str(addition[0]).strip_edges())
+			next_hooks.append(str(addition[0]).strip_edges())
+			story_state["act_1_outline_consumed_index"] = start_idx + 1
+	_campaign_bible_store.replace_bible(bible)
+	GenerationDiagnostics.record_content_source(
+		"story_horizon_expansion", "llm", "story_manager", {"action": action}
+	)
+	if next_tensions.is_empty() and next_hooks.is_empty():
+		# Nothing usable came back despite a structurally valid response —
+		# treat as a fallback so the chapter still advances.
+		_use_story_horizon_expansion_fallback("empty_expansion_content")
+		return
+	advance_chapter(1, next_tensions, next_hooks)
+
+
+# Last resort only, per user requirement this must never become the norm:
+# retried once already before this is ever called, and every use here is
+# logged, counted, and never silently repeated forever — the real LLM path is
+# always retried again on the next hook exhaustion regardless of past failures.
+func _use_story_horizon_expansion_fallback(reason: String) -> void:
+	var count := int(story_state.get("regeneration_fallback_count", 0)) + 1
+	story_state["regeneration_fallback_count"] = count
+	GenerationDiagnostics.record_event(
+		"story_horizon_expansion",
+		"fallback_used",
+		"story_manager",
+		{"reason": reason, "count": count}
+	)
+	push_warning(
+		"[STORY FALLBACK RISK] regeneration_trigger failed twice (%s) — using procedural filler. Count this campaign: %d" %
+			[reason, count]
+	)
+	var bible: Dictionary = _campaign_bible_store.data if _campaign_bible_store != null else {}
+	var factions: Array[String] = ["Zenith", "Aurelia", "Vanguard"]
+	var faction: String = factions[randi() % factions.size()]
+	var filler := "Tensions with %s are quietly escalating." % faction
+	if not str(bible.get("core_pressure", "")).strip_edges().is_empty():
+		filler = str(bible.get("core_pressure", "")).strip_edges()
+	advance_chapter(1, [filler], [filler])
 
 
 func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:

@@ -107,12 +107,18 @@ static func _default_state() -> Dictionary:
 		"pending_hooks": [],
 		"current_foreshadow": "",
 		"kaelen_current_mood": "guarded",
+		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
 		"intro_quest_delivered": false,
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
+		"bible_seeded": false,
+		"act_1_outline_consumed_index": 0,
+		"story_arcs_consumed_index": 0,
+		"rumor_trails_consumed_index": 0,
+		"regeneration_fallback_count": 0,
 	}
 
 

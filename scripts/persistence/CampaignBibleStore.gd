@@ -244,11 +244,14 @@ func _load_or_create() -> void:
 	if not validation.is_valid():
 		return
 	data = bible_result["data"]
+	data = _migrate_legacy_bible(data, campaign_id)
 	data["rumor_trails"] = normalize_rumor_trails(data.get("rumor_trails", []))
 	data["regeneration_triggers"] = normalize_regeneration_triggers(
 		data.get("regeneration_triggers", [])
 	)
 	validation.merge(_validate_data(data, campaign_id), "campaign_bible")
+	if validation.is_valid():
+		_commit(data, "campaign_bible_migration")
 
 
 func _commit(next_data: Dictionary, operation: String) -> Dictionary:
@@ -260,6 +263,40 @@ func _commit(next_data: Dictionary, operation: String) -> Dictionary:
 		func(_path: String, value: Dictionary) -> ValidationResult:
 			return _validate_data(value, str(campaign.get("id", "")))
 	)
+
+
+# Backfills fields added to the schema after a save was written, so an
+# existing campaign bible from an older session doesn't fail validation and
+# get stuck forever (validation requires these fields non-empty). If any
+# backfill was needed, resets generation_status to bootstrap so the now-
+# reliable large-story pipeline writes complete fresh content next time
+# instead of leaving a permanent mix of real old content + placeholder text.
+static func _migrate_legacy_bible(data: Dictionary, campaign_id: String) -> Dictionary:
+	var migrated := data.duplicate(true)
+	var defaults := _default_bible(campaign_id, str(data.get("campaign_seed", "")))
+	var backfilled := false
+	for field in [
+		"campaign_title",
+		"campaign_logline",
+		"opening_situation",
+		"main_mystery",
+		"long_term_reveal",
+		"kaelen_angle",
+	]:
+		if str(migrated.get(field, "")).strip_edges().is_empty():
+			migrated[field] = defaults[field]
+			backfilled = true
+	if not migrated.has("act_1_outline") or not migrated.get("act_1_outline", null) is Array:
+		migrated["act_1_outline"] = []
+		backfilled = true
+	if backfilled:
+		migrated["generation_status"] = STATUS_PROCEDURAL_BOOTSTRAP
+		migrated["source"] = STATUS_PROCEDURAL_BOOTSTRAP
+		migrated["generation_note"] = (
+			"Campaign bible schema was updated since this campaign was created; " +
+			"waiting for the large story model to write complete fresh content."
+		)
+	return migrated
 
 
 static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictionary:
@@ -282,6 +319,7 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"tone": "PG-13 frontier space opera with dry, slightly dark humor.",
 		"core_pressure": "Pending large-model campaign story generation.",
 		"kaelen_rule": "Kaelen is the only fixed recurring character. Her actions can be revealed, but her true nature and full mystery should never be completely explained.",
+		"kaelen_angle": "Pending large-model Kaelen angle.",
 		"faction_reveal_rule": "Reveal new factions, conflicts, ores, upgrades, and secrets through gate travel rather than upfront exposition.",
 		"humor_rule": "Use humor as relief from killing, betrayal, power, and money. Prefer dry or dark wit, with occasional oddballs.",
 		"address_rule": "Agents may call the player Indy in an opening request, but should avoid repeating the name in immediate acceptance follow-ups.",
@@ -377,6 +415,7 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 		"tone",
 		"core_pressure",
 		"kaelen_rule",
+		"kaelen_angle",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",

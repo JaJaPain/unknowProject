@@ -1,0 +1,59 @@
+{
+  "campaign_title": "The Sulfur Veil",
+  "campaign_logline": "Navigate the toxic wealth of a dying industrial zone while the corporate owners quietly blame 'natural' decay for their profitable negligence.",
+  "opening_situation": "The player arrives at Zenith to stabilize failing scrubbers in an Aurelia mining outpost. The air is thick with yellow silt, and the locals are coughing up heavy metals.",
+  "main_mystery": "Who authorized the intentional bypass of safety protocols to maximize yield from high-toxicity ore deposits?",
+  "act_1_outline": [
+    "Investigate a 'leak' in a local refinery that seems suspiciously localized near corporate headquarters.",
+    "Negotiate with Aurelia labor unions who suspect their safety gear is intentionally substandard.",
+    "Trace the supply chain of the tainted ore back to its primary processing hub."
+  ],
+  "long_term_reveal": "The 'leak' wasn't an accident; it was a deliberate strategy to declare the zone uninhabitable, allowing for legal land seizure.",
+  "tone": "Gritty industrial noir with dry, cynical humor regarding corporate safety protocols.",
+  "core_pressure": "Oxygen levels are degrading due to sulfur saturation; the clock is ticking on breathable air.",
+  "kaelen_rule": "Kaelen must appear only as a contract handler or fixer. Her true identity remains hidden from the player.",
+  "faction_reveal_rule": "New factions and resource types are only revealed upon passing jump gates into adjacent systems.",
+  "humor_rule": "Incorporate dry, dark humor regarding corporate bureaucracy and the absurdity of hazardous work conditions.",
+  "address_rule": "NPCs address the player as 'Pilot', 'Contractor', or by their ship's designation.",
+  "fallback_rule": "If data is missing, generate a generic logistics contract with a high-risk hazard rating.",
+  "story_horizon_rule": "Trigger new horizon when active_story_arcs_remaining reaches 0.",
+  "story_arcs": [
+    {
+      "name": "The Silted Truth",
+      "summary": "Uncover the paper trail of intentionally sabotaged air filtration units in the Aurelia mining district."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost Logs",
+      "trail_id": "rumor_trail.ghost_logs",
+      "clue_count": 2,
+      "hint_theme": "Corrupted maintenance logs mentioning 'Projected Liability'.",
+      "clue_templates": [
+        "A corrupted log file mentions a manual override of the Level 4 scrubbers.",
+        "An encrypted memo discusses 'cost-effective' ways to manage worker exposure."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "rare",
+      "payoff": "Reveal the specific executive who signed off on the hazardous omission."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_exhaustion_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main arc concludes, generate a new local objective related to expanding influence."
+    }
+  ],
+  "expansion_rules": [
+    "Never retcon player choices or previous contract outcomes.",
+    "Keep all future factions hidden until gated travel occurs."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Purge Protocol",
+    "Chosen One"
+  ]
+}

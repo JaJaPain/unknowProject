@@ -126,6 +126,7 @@ func _ready() -> void:
 	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
 	QuestManager.quest_completed_details.connect(_on_quest_completed_chronicle)
+	QuestManager.quest_completed_details.connect(StoryManager.on_quest_completed)
 	QuestManager.quest_abandoned_details.connect(_on_quest_abandoned_chronicle)
 	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
 	if "--performance-baseline" in OS.get_cmdline_user_args():
@@ -1765,7 +1766,15 @@ func _initialize_campaign_chronicle() -> void:
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
-	StoryManager.init_story_state(slot_path)
+	# Only seed from a bible that's actually been written by the large story
+	# model — at this point in a fresh campaign it's still the bootstrap
+	# placeholder; generation finishes async later and seeds via
+	# _on_campaign_bible_generation_result instead.
+	var bible_for_seed := {}
+	if campaign_bible_store != null and campaign_bible_store.is_valid() \
+			and campaign_bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+		bible_for_seed = campaign_bible_store.data
+	StoryManager.init_story_state(slot_path, bible_for_seed, campaign_bible_store)
 	_refresh_llm_story_state_context()
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
@@ -2254,6 +2263,8 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 	var committed := {}
 	if bool(result.get("ok", false)):
 		committed = campaign_bible_store.replace_bible(result.get("bible", {}))
+		if bool(committed.get("ok", false)):
+			StoryManager.seed_story_state_from_bible(campaign_bible_store.data)
 	else:
 		var reason := str(result.get("reason", "campaign_bible_generation_failed"))
 		if reason == "model_unavailable":
@@ -6833,6 +6844,16 @@ func _init_dev_panel() -> void:
 		StoreRegistryScript.shared().force_restock_all()
 		GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
 	)
+	_dev_panel.force_dock_rumor_requested.connect(func():
+		if is_instance_valid(StoryManager):
+			StoryManager._maybe_fire_dock_rumor(null, true)
+	)
+	_dev_panel.ollama_auto_restart_toggled.connect(func(enabled: bool):
+		LLMInterface.ollama_auto_restart_allowed = enabled
+	)
+	_dev_panel.force_restart_ollama_requested.connect(func():
+		LLMInterface.force_restart_ollama()
+	)
 
 
 func _dev_story_debug_snapshot() -> Dictionary:
@@ -6855,8 +6876,21 @@ func _dev_story_debug_snapshot() -> Dictionary:
 			idea_context
 		)
 	var story_context := ""
+	var bridge_summary := ""
+	var full_story_state_json := ""
 	if is_instance_valid(StoryManager):
 		story_context = StoryManager.get_story_context_block()
+		var state: Dictionary = StoryManager.story_state
+		bridge_summary = (
+			"Bible seeded: %s | Chapter: %d | Tensions: %d | Hooks: %d | Regeneration fallback count: %d" % [
+				str(bool(state.get("bible_seeded", false))),
+				int(state.get("chapter", 1)),
+				(state.get("active_tensions", []) as Array).size(),
+				(state.get("pending_hooks", []) as Array).size(),
+				int(state.get("regeneration_fallback_count", 0)),
+			]
+		)
+		full_story_state_json = JSON.stringify(state, "\t")
 	return {
 		"status": status,
 		"overarching_story": overarching_story,
@@ -6864,6 +6898,8 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		"campaign_bible_json": bible_json,
 		"campaign_bible_context": bible_context,
 		"story_state_context": story_context,
+		"bridge_summary": bridge_summary,
+		"full_story_state_json": full_story_state_json,
 	}
 
 
