@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_repair_telemetry_records_fired_repairs()
 	_test_normalized_bible_stores_creative_lane()
 	_test_motif_similarity_detection()
+	_test_motif_collision_note()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -465,6 +466,34 @@ func _test_motif_similarity_detection() -> void:
 			"Illicit mineral movements were hidden as lost cargo insurance fraud."
 		),
 		"Reworded but substantially overlapping reveals should be flagged."
+	)
+
+
+func _test_motif_collision_note() -> void:
+	var bible := {
+		"campaign_title": "The Zenith Drift",
+		"long_term_reveal": "A quiet debt scheme forecloses sectors to enrich shareholders.",
+	}
+	# Title collides with a recent one.
+	var note := DirectorType.motif_collision_note(
+		bible, ["The Zenith Paradox"], []
+	)
+	_expect(
+		note.contains("campaign_title") and note.contains("different"),
+		"Colliding title should produce a correction note. Got: %s" % note
+	)
+	# Reveal collides.
+	var reveal_note := DirectorType.motif_collision_note(
+		bible, [], ["A debt scheme quietly forecloses sectors to enrich shareholders."]
+	)
+	_expect(
+		reveal_note.contains("long_term_reveal"),
+		"Colliding reveal should produce a correction note. Got: %s" % reveal_note
+	)
+	# No collision against distinct history.
+	_expect(
+		DirectorType.motif_collision_note(bible, ["The Silted Vein"], ["Toxic ore coverup."]) == "",
+		"Distinct history should produce no collision note."
 	)
 
 

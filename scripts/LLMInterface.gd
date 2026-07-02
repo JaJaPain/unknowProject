@@ -1124,12 +1124,17 @@ func request_lounge_chatter(
 const CAMPAIGN_BIBLE_MAX_ATTEMPTS := 2
 
 
+# motif_history (optional): {"titles": [recent title strings], "reveals": [recent
+# reveal strings]} from idea memory, used to retry on a near-duplicate title/
+# reveal (plan §3.2). A collision is a SOFT signal — see the success branch of
+# _on_campaign_bible_generation_completed.
 func request_campaign_bible_generation(
 	baseline_bible: Dictionary,
 	idea_memory_context: String,
-	callback: Callable
+	callback: Callable,
+	motif_history: Dictionary = {}
 ) -> void:
-	_start_campaign_bible_attempt(baseline_bible, idea_memory_context, callback, 1, "")
+	_start_campaign_bible_attempt(baseline_bible, idea_memory_context, callback, 1, "", motif_history)
 
 
 # One generation attempt. attempt is 1-based; correction_notes is empty on the
@@ -1141,7 +1146,8 @@ func _start_campaign_bible_attempt(
 	idea_memory_context: String,
 	callback: Callable,
 	attempt: int,
-	correction_notes: String
+	correction_notes: String,
+	motif_history: Dictionary = {}
 ) -> void:
 	set_campaign_bible_priority_active(true)
 	var capability := "campaign_bible"
@@ -1195,7 +1201,8 @@ func _start_campaign_bible_attempt(
 				callback,
 				request_id,
 				attempt,
-				idea_memory_context
+				idea_memory_context,
+				motif_history
 			)
 	)
 	var err := temp_http.request(
@@ -1230,7 +1237,8 @@ func _on_campaign_bible_generation_completed(
 	callback: Callable,
 	request_id: int,
 	attempt: int,
-	idea_memory_context: String
+	idea_memory_context: String,
+	motif_history: Dictionary = {}
 ) -> void:
 	var temp_http := instance_from_id(request_id) as HTTPRequest
 	if temp_http != null and is_instance_valid(temp_http):
@@ -1294,12 +1302,36 @@ func _on_campaign_bible_generation_completed(
 				idea_memory_context,
 				callback,
 				attempt + 1,
-				correction_notes
+				correction_notes,
+				motif_history
 			)
 			return
 		parsed["model"] = model_name
 		callback.call(parsed)
 		return
+	# Soft motif gate (plan §3.2): if the accepted title/reveal is a near-duplicate
+	# of a recent campaign's, retry with a "pick something different" note — but
+	# only while attempts remain. A collision on the FINAL attempt is accepted, not
+	# blocked: a slightly similar title beats stranding the campaign at the gate.
+	var motif_note := NarrativeDirectorType.motif_collision_note(
+		parsed.get("bible", {}),
+		motif_history.get("titles", []),
+		motif_history.get("reveals", [])
+	)
+	if not motif_note.is_empty():
+		if attempt < CAMPAIGN_BIBLE_MAX_ATTEMPTS:
+			GenerationDiagnostics.record_event(
+				"campaign_bible", "motif_retry", "llm_interface",
+				{"model": model_name, "attempt": attempt, "note": motif_note}
+			)
+			_start_campaign_bible_attempt(
+				baseline_bible, idea_memory_context, callback, attempt + 1, motif_note, motif_history
+			)
+			return
+		GenerationDiagnostics.record_event(
+			"campaign_bible", "motif_collision_accepted", "llm_interface",
+			{"model": model_name, "attempt": attempt, "note": motif_note}
+		)
 	GenerationDiagnostics.record_content_source(
 		"campaign_bible",
 		"llm",

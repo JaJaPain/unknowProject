@@ -2212,13 +2212,20 @@ func request_campaign_bible_generation() -> Dictionary:
 		return {"ok": true, "status": "waiting_for_llm_connection"}
 	var baseline := campaign_bible_store.data.duplicate(true)
 	var idea_context := LLMInterface.idea_memory_context_text
+	var motif_history := {}
 	if campaign_idea_memory_store != null \
 			and campaign_idea_memory_store.is_valid():
 		idea_context = campaign_idea_memory_store.campaign_bible_prompt_context(32)
+		# Recent titles/reveals so LLMInterface can retry on a near-duplicate.
+		motif_history = {
+			"titles": campaign_idea_memory_store.query_recent("campaign_title", 12),
+			"reveals": campaign_idea_memory_store.query_recent("reveal", 12),
+		}
 	LLMInterface.request_campaign_bible_generation(
 		baseline,
 		idea_context,
-		_on_campaign_bible_generation_result
+		_on_campaign_bible_generation_result,
+		motif_history
 	)
 	campaign_bible_generation_in_flight = true
 	return {"ok": true, "status": "requested"}

@@ -207,6 +207,33 @@ static func _motif_words(text: String) -> Dictionary:
 	return out
 
 
+# Returns a model-facing correction note if the generated bible's title or
+# reveal is too similar to any recent campaign's (from idea memory), else "".
+# Used as a SOFT signal: LLMInterface retries with this note appended, but a
+# collision on the final attempt is accepted rather than blocking game start —
+# a slightly similar title beats no campaign.
+static func motif_collision_note(
+	bible: Dictionary,
+	recent_titles: Array,
+	recent_reveals: Array
+) -> String:
+	var title := str(bible.get("campaign_title", "")).strip_edges()
+	for prior in recent_titles:
+		if is_text_too_similar(title, str(prior)):
+			return (
+				"campaign_title '%s' is too similar to a recent campaign's title. " % title
+				+ "Choose a clearly different, unrelated title."
+			)
+	var reveal := str(bible.get("long_term_reveal", "")).strip_edges()
+	for prior in recent_reveals:
+		if is_text_too_similar(reveal, str(prior)):
+			return (
+				"long_term_reveal repeats a recent campaign's core twist. "
+				+ "Choose a clearly different reveal."
+			)
+	return ""
+
+
 static func _first_distinctive_word(text: String) -> String:
 	var lower := text.to_lower()
 	var token := ""
