@@ -8,6 +8,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_seed_maps_bible_fields_into_story_state()
 	_test_seed_is_idempotent()
+	_test_seed_maps_factions_into_pressure()
 
 	if _failures.is_empty():
 		print("[PASS] Story state bible seed tests")
@@ -39,6 +40,11 @@ func _fake_bible() -> Dictionary:
 				"clue_templates": ["Clue A about the fixture.", "Clue B about the fixture."],
 			},
 		],
+		"factions": {
+			"zenith": "Zenith is auditing every dock ledger twice.",
+			"aurelia": "Aurelia is quietly buying out debt.",
+			"vanguard": "Vanguard is massing patrols near the gate.",
+		},
 	}
 
 
@@ -81,7 +87,7 @@ func _test_seed_maps_bible_fields_into_story_state() -> void:
 		bool(state.get("bible_seeded", false)),
 		"bible_seeded was not set to true after seeding."
 	)
-	var context_block := manager.get_story_context_block()
+	var context_block: String = manager.get_story_context_block()
 	_expect(
 		not context_block.contains("Kaelen secretly wrote the fixture herself."),
 		"get_story_context_block() leaked kaelen_hidden_angle — this must never reach prompts."
@@ -102,6 +108,39 @@ func _test_seed_is_idempotent() -> void:
 	_expect(
 		tensions_after_second.size() == tensions_after_first.size(),
 		"Calling seed_story_state_from_bible twice duplicated active_tensions instead of being a no-op."
+	)
+	manager.queue_free()
+
+
+func _test_seed_maps_factions_into_pressure() -> void:
+	var manager := _fresh_manager()
+	manager.seed_story_state_from_bible(_fake_bible())
+	var pressure: Dictionary = manager.story_state.get("faction_pressure", {})
+	_expect(
+		pressure.has("zenith") and pressure.has("aurelia") and pressure.has("vanguard"),
+		"faction_pressure was not seeded for all three anchors."
+	)
+	_expect(
+		str(pressure.get("vanguard", {}).get("posture", "")).contains("massing patrols")
+			and int(pressure.get("vanguard", {}).get("pressure", 99)) == 0,
+		"vanguard pressure did not seed posture from the faction problem at neutral scalar."
+	)
+	# Faction pressure rides in the player-safe story-state block.
+	var block: String = manager.get_story_context_block()
+	_expect(
+		block.contains("Faction pressure:") and block.contains("massing patrols"),
+		"get_story_context_block() did not surface faction pressure. Got: %s" % block
+	)
+	# Write path clamps and updates the scalar.
+	manager.adjust_faction_pressure("vanguard", 5)
+	_expect(
+		int(manager.story_state.get("faction_pressure", {}).get("vanguard", {}).get("pressure", 0)) == 3,
+		"adjust_faction_pressure did not clamp the scalar to +3."
+	)
+	manager.adjust_faction_pressure("vanguard", -10)
+	_expect(
+		int(manager.story_state.get("faction_pressure", {}).get("vanguard", {}).get("pressure", 0)) == -3,
+		"adjust_faction_pressure did not clamp the scalar to -3."
 	)
 	manager.queue_free()
 

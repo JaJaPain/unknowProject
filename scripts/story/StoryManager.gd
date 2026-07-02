@@ -42,6 +42,7 @@ var story_state: Dictionary = {
 	"agent_cooldown_until_minute": 0,
 	"agent_cooldown_message_index": 0,
 	"agent_contracts_since_cooldown": 0,
+	"faction_pressure": {},
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -151,6 +152,18 @@ func seed_story_state_from_bible(bible_data: Dictionary) -> void:
 	if not kaelen_angle.is_empty():
 		story_state["kaelen_hidden_angle"] = kaelen_angle
 
+	# Seed faction pressure from the bible's anchor faction problems: each anchor
+	# starts at neutral pressure (0) with its problem as the posture line. Gameplay
+	# (kills, contracts, cargo seizures) shifts pressure later via
+	# adjust_faction_pressure(). Player-safe world texture, so it rides in the
+	# normal story-state context block.
+	var factions: Dictionary = bible_data.get("factions", {}) if bible_data.get("factions", {}) is Dictionary else {}
+	var pressure := {}
+	for anchor in ["zenith", "aurelia", "vanguard"]:
+		var problem := str(factions.get(anchor, "")).strip_edges()
+		pressure[anchor] = {"pressure": 0, "posture": problem if not problem.is_empty() else "stable"}
+	story_state["faction_pressure"] = pressure
+
 	story_state["active_tensions"] = active_tensions
 	story_state["player_does_not_know_yet"] = hidden
 	story_state["pending_hooks"] = hooks
@@ -178,6 +191,7 @@ func clear_story_state() -> void:
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
 		"agent_contracts_since_cooldown": 0,
+		"faction_pressure": {},
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -228,7 +242,46 @@ func get_story_context_block() -> String:
 	var hooks: Array = story_state.get("pending_hooks", [])
 	if not hooks.is_empty():
 		lines.append("- Open story threads: %s" % ", ".join(hooks))
+	_append_faction_pressure_lines(lines)
 	return "\n".join(lines)
+
+
+# Player-safe faction pressure line for LLM prompts: each anchor's posture plus a
+# neutral/rising/easing sign from its pressure scalar. No secrets.
+func _append_faction_pressure_lines(lines: Array) -> void:
+	var pressure: Dictionary = story_state.get("faction_pressure", {})
+	if pressure.is_empty():
+		return
+	var parts: Array[String] = []
+	for anchor in ["zenith", "aurelia", "vanguard"]:
+		var fp = pressure.get(anchor, null)
+		if not fp is Dictionary:
+			continue
+		var posture := str(fp.get("posture", "")).strip_edges()
+		var scalar := int(fp.get("pressure", 0))
+		var sign_word := "neutral"
+		if scalar > 0:
+			sign_word = "rising(+%d)" % scalar
+		elif scalar < 0:
+			sign_word = "easing(%d)" % scalar
+		if not posture.is_empty():
+			parts.append("%s [%s]: %s" % [anchor.capitalize(), sign_word, posture])
+	if not parts.is_empty():
+		lines.append("- Faction pressure: %s" % " | ".join(parts))
+
+
+# Write path for gameplay to shift a faction's pressure (kills, contracts, cargo
+# seizures). Clamps to -3..3 and persists. Unknown factions are ignored.
+func adjust_faction_pressure(faction: String, delta: int) -> void:
+	var key := faction.strip_edges().to_lower()
+	var pressure: Dictionary = story_state.get("faction_pressure", {})
+	if not pressure.get(key, null) is Dictionary:
+		return
+	var fp: Dictionary = pressure[key]
+	fp["pressure"] = clampi(int(fp.get("pressure", 0)) + delta, -3, 3)
+	pressure[key] = fp
+	story_state["faction_pressure"] = pressure
+	_save_story_state()
 
 # Increments chapter, promotes earned secrets to player_knows, then replaces
 # the cleared tensions/hooks with refill content atomically (no chapter should
