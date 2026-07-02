@@ -43,13 +43,24 @@ const CREATIVE_LANES := [
 
 static func build_campaign_bible_prompt(
 	baseline_bible: Dictionary,
-	idea_memory_context: String = ""
+	idea_memory_context: String = "",
+	correction_notes: String = ""
 ) -> String:
 	var campaign_seed := str(baseline_bible.get("campaign_seed", ""))
 	var creative_lane := _creative_lane_for_seed(campaign_seed)
 	var idea_block := "No prior idea memory yet."
 	if not idea_memory_context.strip_edges().is_empty():
 		idea_block = idea_memory_context.strip_edges()
+	# When a prior attempt failed validation, LLMInterface feeds the specific
+	# errors back so the retry can fix exactly what broke instead of rerolling
+	# blind. Empty on the first attempt.
+	var correction_lines: Array[String] = []
+	if not correction_notes.strip_edges().is_empty():
+		correction_lines = [
+			"",
+			"IMPORTANT: your previous attempt failed validation. Fix these exact problems and return corrected JSON:",
+			correction_notes.strip_edges(),
+		]
 	return "\n".join([
 		"You are the large local story model for a procedural space game.",
 		"Create a compact first-horizon campaign bible for one new campaign.",
@@ -84,6 +95,7 @@ static func build_campaign_bible_prompt(
 		"",
 		"Existing idea memory:",
 		idea_block,
+	] + correction_lines + [
 		"",
 		"Return only JSON. No markdown. No comments.",
 		"Return exactly this object shape:",
@@ -111,6 +123,26 @@ static func build_campaign_bible_prompt(
 		"}",
 		"Use exactly one story_arcs item, one rumor_trails item, and one regeneration_triggers item.",
 	])
+
+
+# Formats a failed ValidationResult into a compact, model-facing correction
+# list for a retry prompt (see build_campaign_bible_prompt's correction_notes).
+# One line per error: the field path (when known) plus the human message.
+# Returns "" when there is nothing to correct.
+static func validation_correction_notes(validation: ValidationResult) -> String:
+	if validation == null or validation.is_valid():
+		return ""
+	var lines: Array[String] = []
+	for issue in validation.errors:
+		var path := str(issue.get("path", "")).strip_edges()
+		var message := str(issue.get("message", "")).strip_edges()
+		if message.is_empty():
+			message = str(issue.get("code", "invalid field")).strip_edges()
+		if path.is_empty():
+			lines.append("- %s" % message)
+		else:
+			lines.append("- [%s] %s" % [path, message])
+	return "\n".join(lines)
 
 
 static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary:

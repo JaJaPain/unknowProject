@@ -1116,10 +1116,32 @@ func request_lounge_chatter(
 		report_fallback.call("request_start_failed")
 
 
+# Total campaign-bible generation attempts before giving up. A validation
+# failure on attempt N retries with the specific errors appended to the prompt
+# (see NarrativeDirector.validation_correction_notes). Startup-critical, but
+# latency-bounded — 2 keeps a bad sample from stranding a campaign without
+# turning the loading screen into a stall.
+const CAMPAIGN_BIBLE_MAX_ATTEMPTS := 2
+
+
 func request_campaign_bible_generation(
 	baseline_bible: Dictionary,
 	idea_memory_context: String,
 	callback: Callable
+) -> void:
+	_start_campaign_bible_attempt(baseline_bible, idea_memory_context, callback, 1, "")
+
+
+# One generation attempt. attempt is 1-based; correction_notes is empty on the
+# first try and carries the prior attempt's validation errors on a retry.
+# Priority stays active across retries — it is only cleared on final resolution
+# in _on_campaign_bible_generation_completed.
+func _start_campaign_bible_attempt(
+	baseline_bible: Dictionary,
+	idea_memory_context: String,
+	callback: Callable,
+	attempt: int,
+	correction_notes: String
 ) -> void:
 	set_campaign_bible_priority_active(true)
 	var capability := "campaign_bible"
@@ -1140,7 +1162,8 @@ func request_campaign_bible_generation(
 		return
 	var prompt := NarrativeDirectorType.build_campaign_bible_prompt(
 		baseline_bible,
-		idea_memory_context
+		idea_memory_context,
+		correction_notes
 	)
 	var payload := build_generation_body(
 		capability,
@@ -1170,7 +1193,9 @@ func request_campaign_bible_generation(
 				baseline_bible,
 				model_name,
 				callback,
-				request_id
+				request_id,
+				attempt,
+				idea_memory_context
 			)
 	)
 	var err := temp_http.request(
@@ -1203,7 +1228,9 @@ func _on_campaign_bible_generation_completed(
 	baseline_bible: Dictionary,
 	model_name: String,
 	callback: Callable,
-	request_id: int
+	request_id: int,
+	attempt: int,
+	idea_memory_context: String
 ) -> void:
 	var temp_http := instance_from_id(request_id) as HTTPRequest
 	if temp_http != null and is_instance_valid(temp_http):
@@ -1243,8 +1270,33 @@ func _on_campaign_bible_generation_completed(
 			"campaign_bible",
 			str(parsed.get("reason", "parse_failed")),
 			"llm_interface",
-			{"model": model_name}
+			{"model": model_name, "attempt": attempt}
 		)
+		# Retry once with the specific validation errors appended, so the model
+		# fixes exactly what broke instead of rerolling blind. Only worth it when
+		# we got a real 200 response that failed to parse/validate (handled here);
+		# HTTP/connection failures returned above and have their own recovery.
+		var validation := parsed.get("validation") as ValidationResult
+		var correction_notes := NarrativeDirectorType.validation_correction_notes(validation)
+		if attempt < CAMPAIGN_BIBLE_MAX_ATTEMPTS:
+			GenerationDiagnostics.record_event(
+				"campaign_bible",
+				"validation_retry",
+				"llm_interface",
+				{
+					"model": model_name,
+					"attempt": attempt,
+					"reason": str(parsed.get("reason", "parse_failed")),
+				}
+			)
+			_start_campaign_bible_attempt(
+				baseline_bible,
+				idea_memory_context,
+				callback,
+				attempt + 1,
+				correction_notes
+			)
+			return
 		parsed["model"] = model_name
 		callback.call(parsed)
 		return

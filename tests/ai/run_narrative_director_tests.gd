@@ -2,6 +2,7 @@ extends SceneTree
 
 const DirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
 const BibleStoreType := preload("res://scripts/persistence/CampaignBibleStore.gd")
+const ValidationResultType := preload("res://scripts/domain/ValidationResult.gd")
 
 var _failures: Array[String] = []
 
@@ -13,6 +14,8 @@ func _initialize() -> void:
 	_test_rejects_invalid_campaign_bible_response()
 	_test_parses_kaelen_angle_from_response()
 	_test_repairs_missing_kaelen_angle_with_fallback()
+	_test_validation_correction_notes_formats_errors()
+	_test_correction_notes_injected_into_retry_prompt()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -320,6 +323,52 @@ func _valid_generated_bible() -> Dictionary:
 		],
 		"banned_repeats": ["dad joke station tax"],
 	}
+
+
+func _test_validation_correction_notes_formats_errors() -> void:
+	var empty := ValidationResultType.new()
+	_expect(
+		DirectorType.validation_correction_notes(empty) == "",
+		"A valid ValidationResult should produce no correction notes."
+	)
+	var validation := ValidationResultType.new()
+	validation.add_error("missing_field", "field cannot be empty", "kaelen_angle")
+	validation.add_error("bad_role", "Kaelen must remain a broker.")
+	var notes := DirectorType.validation_correction_notes(validation)
+	_expect(
+		notes.contains("[kaelen_angle]") and notes.contains("field cannot be empty"),
+		"Correction notes should include the field path and message."
+	)
+	_expect(
+		notes.contains("Kaelen must remain a broker."),
+		"Correction notes should include pathless error messages."
+	)
+
+
+func _test_correction_notes_injected_into_retry_prompt() -> void:
+	var baseline := _baseline_bible()
+	var first := DirectorType.build_campaign_bible_prompt(baseline, "")
+	_expect(
+		not first.contains("previous attempt failed validation"),
+		"First-attempt prompt should not carry a correction block."
+	)
+	var retry := DirectorType.build_campaign_bible_prompt(
+		baseline,
+		"",
+		"- [kaelen_rule] Kaelen must publicly remain a broker, fixer, or contract handler."
+	)
+	_expect(
+		retry.contains("previous attempt failed validation"),
+		"Retry prompt should announce the prior validation failure."
+	)
+	_expect(
+		retry.contains("Kaelen must publicly remain a broker"),
+		"Retry prompt should include the specific correction notes."
+	)
+	_expect(
+		retry.contains("Return exactly this object shape:"),
+		"Retry prompt should still include the JSON shape spec after corrections."
+	)
 
 
 func _baseline_bible() -> Dictionary:

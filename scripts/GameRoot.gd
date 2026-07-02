@@ -2273,6 +2273,12 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 			committed = campaign_bible_store.mark_model_unavailable(reason, model_name)
 		else:
 			committed = campaign_bible_store.mark_generation_failed(reason, model_name)
+		# Clear the per-slot request guard so a later slot activation or relaunch
+		# re-requests generation instead of leaving this campaign permanently
+		# stranded behind the manual recovery button. LLMInterface has already
+		# retried once internally; this is the between-sessions safety net.
+		if not active_campaign_slot_id.is_empty():
+			campaign_bible_generation_requested_slots.erase(active_campaign_slot_id)
 	if not bool(committed.get("ok", false)):
 		push_warning(
 			"[GameRoot] Campaign bible generation status could not be stored: %s" %
