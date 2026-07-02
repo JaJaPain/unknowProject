@@ -749,12 +749,46 @@ func _campaign_bible_store_ready() -> bool:
 	return _campaign_bible_store.is_valid()
 
 
+# Picks the first regeneration_trigger whose metric value is at/under its
+# threshold (metrics computed from the live reserve counts). Falls back to the
+# first valid trigger if none match, and {} if there are none. Honors all
+# triggers and their thresholds instead of always using triggers[0] (plan #14).
+func _select_regeneration_trigger(bible: Dictionary) -> Dictionary:
+	var triggers: Array = bible.get("regeneration_triggers", [])
+	for t in triggers:
+		if not t is Dictionary:
+			continue
+		if _regeneration_metric_value(str(t.get("metric", "")), bible) <= int(t.get("threshold", 0)):
+			return t
+	for t in triggers:
+		if t is Dictionary:
+			return t
+	return {}
+
+
+# Live value of a regeneration-trigger metric from the bible reserve minus the
+# consumed index tracked in story_state. major_arc_state has no numeric model
+# yet, so it reports 0 (always eligible once its trigger is reached).
+func _regeneration_metric_value(metric: String, bible: Dictionary) -> int:
+	match metric:
+		"active_story_arcs_remaining":
+			return maxi(0, (bible.get("story_arcs", []) as Array).size() - int(story_state.get("story_arcs_consumed_index", 0)))
+		"rumor_trails_remaining":
+			return maxi(0, (bible.get("rumor_trails", []) as Array).size() - int(story_state.get("rumor_trails_consumed_index", 0)))
+		"prepared_systems_remaining":
+			return maxi(0, (bible.get("act_1_outline", []) as Array).size() - int(story_state.get("act_1_outline_consumed_index", 0)))
+		_:
+			return 0
+
+
 func _request_story_horizon_expansion(attempt: int) -> void:
 	if not _campaign_bible_store_ready():
 		return
 	var bible: Dictionary = _campaign_bible_store.data
-	var triggers: Array = bible.get("regeneration_triggers", [])
-	var trigger: Dictionary = triggers[0] if not triggers.is_empty() and triggers[0] is Dictionary else {}
+	# Select the trigger whose metric is at/under its threshold (honor all triggers
+	# and the bible's ordering, not just triggers[0]) so we append the kind of
+	# content that actually ran out. See plan item #14.
+	var trigger: Dictionary = _select_regeneration_trigger(bible)
 	# Fold recent player choices into the summary so appended story reacts to who
 	# the player has been, not just what reserve remains (plan §2.6).
 	var summary := get_story_context_block()

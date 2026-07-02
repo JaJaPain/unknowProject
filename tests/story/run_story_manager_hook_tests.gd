@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_mood_leak_guard()
 	_test_agent_cooldown_allows_three_in_a_row()
 	_test_player_choice_recording_and_digest()
+	_test_regeneration_trigger_selection()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -218,6 +219,49 @@ func _test_player_choice_recording_and_digest() -> void:
 	_expect(
 		(manager.story_state.get("player_choices", []) as Array).size() == 2,
 		"An empty choice should not be recorded."
+	)
+	manager.queue_free()
+
+
+# _select_regeneration_trigger honors metric/threshold across all triggers, not
+# just triggers[0], and _regeneration_metric_value reads live reserve counts.
+func _test_regeneration_trigger_selection() -> void:
+	var manager := _fresh_manager()
+	var bible := {
+		"story_arcs": [{"name": "A", "summary": "s"}],   # 1 arc
+		"rumor_trails": [{"name": "R"}],                  # 1 trail
+		"act_1_outline": ["b0", "b1", "b2"],              # 3 beats
+		"regeneration_triggers": [
+			{"id": "arcs", "metric": "active_story_arcs_remaining", "threshold": 0, "action": "append_story_arc"},
+			{"id": "rumors", "metric": "rumor_trails_remaining", "threshold": 0, "action": "append_rumor_trail"},
+			{"id": "horizon", "metric": "prepared_systems_remaining", "threshold": 2, "action": "append_story_horizon"},
+		],
+	}
+	# Nothing consumed: arcs_remaining=1(>0), rumors_remaining=1(>0),
+	# prepared=3(>2) -> none at threshold except... 3<=2 false. So falls back to
+	# the first valid trigger.
+	manager.story_state["story_arcs_consumed_index"] = 0
+	manager.story_state["rumor_trails_consumed_index"] = 0
+	manager.story_state["act_1_outline_consumed_index"] = 0
+	_expect(
+		str(manager._select_regeneration_trigger(bible).get("id", "")) == "arcs",
+		"With no metric under threshold, selection should fall back to the first trigger."
+	)
+	# Consume the arc only: arcs_remaining=0 <= 0 -> the arcs trigger matches first.
+	manager.story_state["story_arcs_consumed_index"] = 1
+	_expect(
+		str(manager._select_regeneration_trigger(bible).get("id", "")) == "arcs",
+		"Exhausted arcs should select the active_story_arcs_remaining trigger."
+	)
+	# Metric value reads the live reserve.
+	_expect(
+		manager._regeneration_metric_value("prepared_systems_remaining", bible) == 3,
+		"prepared_systems_remaining should equal the unconsumed act_1_outline count."
+	)
+	manager.story_state["rumor_trails_consumed_index"] = 1
+	_expect(
+		manager._regeneration_metric_value("rumor_trails_remaining", bible) == 0,
+		"rumor_trails_remaining should drop to 0 once consumed."
 	)
 	manager.queue_free()
 
