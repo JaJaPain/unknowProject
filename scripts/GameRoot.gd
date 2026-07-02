@@ -6872,6 +6872,9 @@ func _dev_story_debug_snapshot() -> Dictionary:
 	var status := "Campaign Bible: unavailable"
 	if campaign_bible_store != null and campaign_bible_store.is_valid():
 		status = campaign_bible_store.status_summary()
+		var lane := str(campaign_bible_store.data.get("creative_lane", "")).strip_edges()
+		if not lane.is_empty():
+			status += ", creative_lane=%s" % lane
 		bible_json = JSON.stringify(campaign_bible_store.data, "\t")
 		# The "Prompt Block" box shows what small models actually receive: the
 		# player-safe projection. The raw JSON box above still shows the full

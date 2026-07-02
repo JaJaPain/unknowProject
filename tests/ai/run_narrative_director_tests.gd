@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_validation_correction_notes_formats_errors()
 	_test_correction_notes_injected_into_retry_prompt()
 	_test_repair_telemetry_records_fired_repairs()
+	_test_normalized_bible_stores_creative_lane()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -408,6 +409,23 @@ func _test_repair_telemetry_records_fired_repairs() -> void:
 	_expect(
 		clean_repairs.is_empty(),
 		"Clean input should fire no repairs. Got: %s" % str(clean_repairs)
+	)
+
+
+func _test_normalized_bible_stores_creative_lane() -> void:
+	var baseline := _baseline_bible()
+	var normalized := DirectorType._normalized_campaign_bible(
+		{"campaign_title": "Any"},
+		baseline,
+		"gemma4:12b"
+	)
+	var lane := str(normalized.get("creative_lane", "")).strip_edges()
+	_expect(not lane.is_empty(), "Normalized bible did not store a creative_lane.")
+	var expected := DirectorType._creative_lane_for_seed(str(baseline.get("campaign_seed", "")))
+	_expect(
+		lane == str(expected.get("name", "")),
+		"Stored creative_lane (%s) did not match the seed's deterministic lane (%s)." %
+			[lane, str(expected.get("name", ""))]
 	)
 
 
