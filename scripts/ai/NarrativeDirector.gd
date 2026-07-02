@@ -74,7 +74,8 @@ static func build_campaign_bible_prompt(
 	correction_notes: String = ""
 ) -> String:
 	var campaign_seed := str(baseline_bible.get("campaign_seed", ""))
-	var creative_lane := _creative_lane_for_seed(campaign_seed)
+	var excluded_lanes: Array = baseline_bible.get("_recent_lanes", []) if baseline_bible.get("_recent_lanes", []) is Array else []
+	var creative_lane := _creative_lane_for_seed(campaign_seed, excluded_lanes)
 	var opening := _axis_for_seed(campaign_seed, OPENING_TYPES, 101)
 	var mystery := _axis_for_seed(campaign_seed, MYSTERY_SHAPES, 211)
 	var pressure := _axis_for_seed(campaign_seed, PRESSURE_TYPES, 331)
@@ -286,13 +287,24 @@ static func _first_distinctive_word(text: String) -> String:
 	return ""
 
 
-static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary:
+# excluded_names: recently-used lane names (from idea memory) to skip, so
+# consecutive campaigns don't repeat a lane even when their seeds hash to the
+# same one. Still deterministic per seed within the remaining pool. If every lane
+# is excluded, falls back to the full set rather than returning nothing.
+static func _creative_lane_for_seed(campaign_seed: String, excluded_names: Array = []) -> Dictionary:
 	if CREATIVE_LANES.is_empty():
 		return {}
+	var pool: Array = []
+	for lane in CREATIVE_LANES:
+		if str(lane.get("name", "")) in excluded_names:
+			continue
+		pool.append(lane)
+	if pool.is_empty():
+		pool = CREATIVE_LANES
 	var accumulator := 0
 	for index in range(campaign_seed.length()):
 		accumulator += campaign_seed.unicode_at(index) * (index + 1)
-	return CREATIVE_LANES[abs(accumulator) % CREATIVE_LANES.size()]
+	return pool[abs(accumulator) % pool.size()]
 
 
 # Deterministic per-seed pick from one variety-axis table. The salt shifts the
@@ -651,7 +663,10 @@ static func _normalized_campaign_bible(
 	# so it's reliable metadata for the debug panel and cross-campaign lane
 	# rotation (plan §3.1). Optional field; not required by bible validation.
 	var seed_text := str(baseline.get("campaign_seed", ""))
-	var lane := _creative_lane_for_seed(seed_text)
+	var excluded_lanes: Array = baseline.get("_recent_lanes", []) if baseline.get("_recent_lanes", []) is Array else []
+	# Transient hint from GameRoot; never persist it into the stored bible.
+	bible.erase("_recent_lanes")
+	var lane := _creative_lane_for_seed(seed_text, excluded_lanes)
 	if not lane.is_empty():
 		bible["creative_lane"] = str(lane.get("name", ""))
 	# Same deterministic axes the prompt was built with (plan §3.5/§3.6), stored

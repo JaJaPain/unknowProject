@@ -2221,6 +2221,10 @@ func request_campaign_bible_generation() -> Dictionary:
 			"titles": campaign_idea_memory_store.query_recent("campaign_title", 12),
 			"reveals": campaign_idea_memory_store.query_recent("reveal", 12),
 		}
+		# Recent creative lanes so generation avoids repeating one back-to-back
+		# (plan §3.1). Transient hint on the baseline; NarrativeDirector strips it
+		# before storing. Window of 2 leaves 5 of 7 lanes eligible.
+		baseline["_recent_lanes"] = campaign_idea_memory_store.query_recent("creative_lane", 2)
 	LLMInterface.request_campaign_bible_generation(
 		baseline,
 		idea_context,

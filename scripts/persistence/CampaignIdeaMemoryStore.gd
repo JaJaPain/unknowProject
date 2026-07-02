@@ -26,6 +26,7 @@ const ALLOWED_CATEGORIES := [
 	"banned_repeat",
 	"campaign_title",
 	"reveal",
+	"creative_lane",
 ]
 const CAMPAIGN_BIBLE_CATEGORIES := [
 	"faction",
@@ -218,7 +219,7 @@ func remember_campaign_bible(bible: Dictionary) -> Dictionary:
 	# steer away from near-duplicates. reveal only ever feeds the large-story
 	# (director-privileged) prompt via campaign_bible_prompt_context — never a
 	# small-model prompt — so it does not leak the current campaign's twist.
-	for field_and_category in [["campaign_title", "campaign_title"], ["long_term_reveal", "reveal"]]:
+	for field_and_category in [["campaign_title", "campaign_title"], ["long_term_reveal", "reveal"], ["creative_lane", "creative_lane"]]:
 		var field := str(field_and_category[0])
 		var category := str(field_and_category[1])
 		var value := str(bible.get(field, "")).strip_edges()

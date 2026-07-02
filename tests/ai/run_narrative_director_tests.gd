@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_motif_collision_note()
 	_test_faction_triad_repair_and_normalize()
 	_test_variety_axes_in_prompt_and_bible()
+	_test_lane_rotation_against_history()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -579,6 +580,38 @@ func _test_variety_axes_in_prompt_and_bible() -> void:
 	_expect(
 		DirectorType._axis_for_seed("seedA", DirectorType.MYSTERY_SHAPES, 211).has("name"),
 		"_axis_for_seed returned no option for a non-empty table."
+	)
+
+
+func _test_lane_rotation_against_history() -> void:
+	# The lane a seed normally picks, with no history.
+	var natural := str(DirectorType._creative_lane_for_seed("424242").get("name", ""))
+	_expect(not natural.is_empty(), "Lane selection returned nothing for a seed.")
+	# Excluding that lane must pick a different one.
+	var rotated := str(DirectorType._creative_lane_for_seed("424242", [natural]).get("name", ""))
+	_expect(
+		rotated != natural and not rotated.is_empty(),
+		"Excluding the natural lane did not rotate to a different lane."
+	)
+	# Excluding every lane falls back to the full set (never empty).
+	var all_names: Array = []
+	for lane in DirectorType.CREATIVE_LANES:
+		all_names.append(str(lane.get("name", "")))
+	_expect(
+		not str(DirectorType._creative_lane_for_seed("424242", all_names).get("name", "")).is_empty(),
+		"Excluding all lanes should fall back to the full set, not return empty."
+	)
+	# _recent_lanes is honored in the prompt and stripped from the stored bible.
+	var baseline := _baseline_bible()
+	baseline["_recent_lanes"] = [natural]
+	var normalized := DirectorType._normalized_campaign_bible({"campaign_title": "A"}, baseline, "gemma4:12b")
+	_expect(
+		str(normalized.get("creative_lane", "")) != natural,
+		"Normalized bible stored a lane that should have been rotated away from history."
+	)
+	_expect(
+		not normalized.has("_recent_lanes"),
+		"Transient _recent_lanes hint leaked into the stored bible."
 	)
 
 
