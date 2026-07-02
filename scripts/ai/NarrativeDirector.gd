@@ -145,6 +145,84 @@ static func validation_correction_notes(validation: ValidationResult) -> String:
 	return "\n".join(lines)
 
 
+# ── Motif-repeat detection (plan §3.2) ──────────────────────────────────────────
+# Cheap, code-side check so consecutive campaigns can't open with a near-duplicate
+# title/reveal (e.g. "The Zenith Paradox" vs "The Zenith Drift"). No LLM call.
+# Two signals, either of which flags a collision:
+#   1. Distinctive-word Jaccard overlap >= threshold (default 0.6).
+#   2. A shared distinctive FIRST word — catches the "Zenith X" title collapse
+#      that Jaccard alone misses (only 1 shared word out of 3 => 0.33 < 0.6).
+const _MOTIF_STOPWORDS := {
+	"the": true, "of": true, "a": true, "an": true, "and": true, "in": true,
+	"to": true, "for": true, "on": true, "at": true, "by": true, "with": true,
+	"is": true, "it": true, "its": true, "this": true, "that": true,
+}
+
+
+static func is_text_too_similar(candidate: String, prior: String, threshold := 0.6) -> bool:
+	var c := candidate.strip_edges()
+	var p := prior.strip_edges()
+	if c.is_empty() or p.is_empty():
+		return false
+	if text_similarity(c, p) >= threshold:
+		return true
+	var cf := _first_distinctive_word(c)
+	var pf := _first_distinctive_word(p)
+	return not cf.is_empty() and cf == pf
+
+
+# Jaccard overlap of the two texts' distinctive-word sets (0.0 .. 1.0).
+static func text_similarity(a: String, b: String) -> float:
+	var wa := _motif_words(a)
+	var wb := _motif_words(b)
+	if wa.is_empty() or wb.is_empty():
+		return 0.0
+	var intersection := 0
+	for word in wa:
+		if wb.has(word):
+			intersection += 1
+	var union := wb.size()
+	for word in wa:
+		if not wb.has(word):
+			union += 1
+	if union == 0:
+		return 0.0
+	return float(intersection) / float(union)
+
+
+static func _motif_words(text: String) -> Dictionary:
+	var out := {}
+	var lower := text.to_lower()
+	var token := ""
+	for i in range(lower.length()):
+		var c := lower[i]
+		if (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
+			token += c
+			continue
+		if token.length() >= 3 and not _MOTIF_STOPWORDS.has(token):
+			out[token] = true
+		token = ""
+	if token.length() >= 3 and not _MOTIF_STOPWORDS.has(token):
+		out[token] = true
+	return out
+
+
+static func _first_distinctive_word(text: String) -> String:
+	var lower := text.to_lower()
+	var token := ""
+	for i in range(lower.length()):
+		var c := lower[i]
+		if (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
+			token += c
+			continue
+		if token.length() >= 3 and not _MOTIF_STOPWORDS.has(token):
+			return token
+		token = ""
+	if token.length() >= 3 and not _MOTIF_STOPWORDS.has(token):
+		return token
+	return ""
+
+
 static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary:
 	if CREATIVE_LANES.is_empty():
 		return {}

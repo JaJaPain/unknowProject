@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_correction_notes_injected_into_retry_prompt()
 	_test_repair_telemetry_records_fired_repairs()
 	_test_normalized_bible_stores_creative_lane()
+	_test_motif_similarity_detection()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -426,6 +427,44 @@ func _test_normalized_bible_stores_creative_lane() -> void:
 		lane == str(expected.get("name", "")),
 		"Stored creative_lane (%s) did not match the seed's deterministic lane (%s)." %
 			[lane, str(expected.get("name", ""))]
+	)
+
+
+func _test_motif_similarity_detection() -> void:
+	# The "Zenith X" collapse — shared distinctive first word, low Jaccard.
+	_expect(
+		DirectorType.is_text_too_similar("The Zenith Paradox", "The Zenith Drift"),
+		"'Zenith X' near-duplicate titles should be flagged."
+	)
+	# High word overlap should flag even without a shared first word.
+	_expect(
+		DirectorType.is_text_too_similar(
+			"Debt and the Broken Ledger",
+			"The Broken Ledger of Debt"
+		),
+		"High-overlap titles should be flagged."
+	)
+	# Genuinely distinct titles must pass.
+	_expect(
+		not DirectorType.is_text_too_similar("The Silted Vein", "Sovereign Debt"),
+		"Distinct titles should not be flagged."
+	)
+	_expect(
+		not DirectorType.is_text_too_similar("The Scavenger's Ledger", "Orbital Scarcity"),
+		"Distinct titles should not be flagged."
+	)
+	# Empty inputs never flag.
+	_expect(
+		not DirectorType.is_text_too_similar("", "The Zenith Drift"),
+		"Empty candidate should never be flagged as similar."
+	)
+	# Reveal-length text: same core twist phrased differently should flag.
+	_expect(
+		DirectorType.is_text_too_similar(
+			"The insurance fraud hid illicit mineral movements as lost cargo.",
+			"Illicit mineral movements were hidden as lost cargo insurance fraud."
+		),
+		"Reworded but substantially overlapping reveals should be flagged."
 	)
 
 
