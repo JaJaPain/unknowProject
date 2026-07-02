@@ -40,6 +40,33 @@ const CREATIVE_LANES := [
 	},
 ]
 
+# Extra variety axes rotated independently of the lane (plan §3.5/§3.6). Each is
+# chosen deterministically per seed with its own salt so they don't all track the
+# lane. Injected as prompt guidance and stored in the bible for debug/rotation.
+# All openings must stay tutorial-compatible: player broke, one starter Reaver,
+# first mission simple — the opening only changes WHY the tutorial matters.
+const OPENING_TYPES := [
+	{"name": "broke-and-hungry", "guidance": "player starts broke and desperate for any paying work."},
+	{"name": "inherited-a-problem", "guidance": "player inherited a debt, ship, or obligation that drags them in."},
+	{"name": "owed-a-favor", "guidance": "someone owes the player, and calling it in starts the trouble."},
+	{"name": "witnessed-something", "guidance": "the player saw something they shouldn't have at the wrong moment."},
+	{"name": "wrong-place-wrong-time", "guidance": "the player is caught in a deal gone bad or mistaken for someone else."},
+	{"name": "small-win-gone-sour", "guidance": "an early lucky break quietly turns into a liability."},
+]
+const MYSTERY_SHAPES := [
+	{"name": "whodunit", "guidance": "a crime or event is known; who is behind it is not."},
+	{"name": "whatisit", "guidance": "an actor is known; their real scheme is hidden."},
+	{"name": "whereisit", "guidance": "something or someone is missing and must be traced."},
+	{"name": "whyisit", "guidance": "an event is known; the motive behind it is buried."},
+]
+const PRESSURE_TYPES := [
+	{"name": "debt-clock", "guidance": "a debt or deadline tightens over time."},
+	{"name": "reputation-squeeze", "guidance": "factions are watching; standing is fragile."},
+	{"name": "scarcity", "guidance": "a critical resource is drying up."},
+	{"name": "protection-dependency", "guidance": "safety depends on someone who charges for it."},
+	{"name": "legal-jeopardy", "guidance": "one wrong move brings jurisdiction down."},
+]
+
 
 static func build_campaign_bible_prompt(
 	baseline_bible: Dictionary,
@@ -48,6 +75,9 @@ static func build_campaign_bible_prompt(
 ) -> String:
 	var campaign_seed := str(baseline_bible.get("campaign_seed", ""))
 	var creative_lane := _creative_lane_for_seed(campaign_seed)
+	var opening := _axis_for_seed(campaign_seed, OPENING_TYPES, 101)
+	var mystery := _axis_for_seed(campaign_seed, MYSTERY_SHAPES, 211)
+	var pressure := _axis_for_seed(campaign_seed, PRESSURE_TYPES, 331)
 	var idea_block := "No prior idea memory yet."
 	if not idea_memory_context.strip_edges().is_empty():
 		idea_block = idea_memory_context.strip_edges()
@@ -86,6 +116,10 @@ static func build_campaign_bible_prompt(
 		"Campaign seed: %s" % campaign_seed,
 		"Creative lane for this campaign: %s." % str(creative_lane.get("name", "")),
 		"Lane guidance: %s" % str(creative_lane.get("guidance", "")),
+		"Opening type: %s — %s" % [str(opening.get("name", "")), str(opening.get("guidance", ""))],
+		"Mystery shape: %s — %s" % [str(mystery.get("name", "")), str(mystery.get("guidance", ""))],
+		"Pressure type: %s — %s" % [str(pressure.get("name", "")), str(pressure.get("guidance", ""))],
+		"Honor these axes, but keep the first mission simple and tutorial-safe: the player is broke and faces exactly one starter Reaver-class hostile.",
 		"",
 		"Anti-motif guidance:",
 		"- Do not use a 'Zenith [single abstract noun]' title pattern.",
@@ -259,6 +293,18 @@ static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary:
 	for index in range(campaign_seed.length()):
 		accumulator += campaign_seed.unicode_at(index) * (index + 1)
 	return CREATIVE_LANES[abs(accumulator) % CREATIVE_LANES.size()]
+
+
+# Deterministic per-seed pick from one variety-axis table. The salt shifts the
+# hash so opening/mystery/pressure axes vary independently of each other and of
+# the lane, while staying stable for a given seed (same seed → same campaign).
+static func _axis_for_seed(campaign_seed: String, options: Array, salt: int) -> Dictionary:
+	if options.is_empty():
+		return {}
+	var accumulator := salt
+	for index in range(campaign_seed.length()):
+		accumulator += campaign_seed.unicode_at(index) * (index + 1 + salt)
+	return options[abs(accumulator) % options.size()]
 
 
 static func parse_campaign_bible_response(
@@ -604,9 +650,15 @@ static func _normalized_campaign_bible(
 	# Not model-authored — derived from the seed the same way the prompt was —
 	# so it's reliable metadata for the debug panel and cross-campaign lane
 	# rotation (plan §3.1). Optional field; not required by bible validation.
-	var lane := _creative_lane_for_seed(str(baseline.get("campaign_seed", "")))
+	var seed_text := str(baseline.get("campaign_seed", ""))
+	var lane := _creative_lane_for_seed(seed_text)
 	if not lane.is_empty():
 		bible["creative_lane"] = str(lane.get("name", ""))
+	# Same deterministic axes the prompt was built with (plan §3.5/§3.6), stored
+	# for debug visibility and cross-campaign rotation.
+	bible["opening_type"] = str(_axis_for_seed(seed_text, OPENING_TYPES, 101).get("name", ""))
+	bible["mystery_shape"] = str(_axis_for_seed(seed_text, MYSTERY_SHAPES, 211).get("name", ""))
+	bible["pressure_type"] = str(_axis_for_seed(seed_text, PRESSURE_TYPES, 331).get("name", ""))
 	return bible
 
 

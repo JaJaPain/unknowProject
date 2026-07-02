@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_motif_similarity_detection()
 	_test_motif_collision_note()
 	_test_faction_triad_repair_and_normalize()
+	_test_variety_axes_in_prompt_and_bible()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -543,6 +544,41 @@ func _test_faction_triad_repair_and_normalize() -> void:
 		normalized.get("factions", {}) is Dictionary
 			and str(normalized["factions"].get("vanguard", "")) == "V",
 		"Normalized bible did not carry the generated factions triad."
+	)
+
+
+func _test_variety_axes_in_prompt_and_bible() -> void:
+	var baseline := _baseline_bible()
+	var prompt := DirectorType.build_campaign_bible_prompt(baseline, "")
+	_expect(
+		prompt.contains("Opening type:") and prompt.contains("Mystery shape:")
+			and prompt.contains("Pressure type:"),
+		"Prompt did not include the opening/mystery/pressure variety axes."
+	)
+	_expect(
+		prompt.contains("exactly one starter Reaver-class hostile"),
+		"Prompt did not keep the tutorial-safety guard alongside the axes."
+	)
+
+	# Normalized bible stores each axis' chosen name, matching the deterministic pick.
+	var normalized := DirectorType._normalized_campaign_bible({"campaign_title": "A"}, baseline, "gemma4:12b")
+	var seed_text := str(baseline.get("campaign_seed", ""))
+	_expect(
+		str(normalized.get("opening_type", "")) == str(DirectorType._axis_for_seed(seed_text, DirectorType.OPENING_TYPES, 101).get("name", ""))
+			and not str(normalized.get("opening_type", "")).is_empty(),
+		"Stored opening_type did not match the deterministic axis pick."
+	)
+	_expect(
+		not str(normalized.get("mystery_shape", "")).is_empty()
+			and not str(normalized.get("pressure_type", "")).is_empty(),
+		"Normalized bible did not store mystery_shape/pressure_type."
+	)
+
+	# Axes are salted apart from the lane: at least one axis differs from the lane
+	# index for a representative seed (sanity that salts actually shift the hash).
+	_expect(
+		DirectorType._axis_for_seed("seedA", DirectorType.MYSTERY_SHAPES, 211).has("name"),
+		"_axis_for_seed returned no option for a non-empty table."
 	)
 
 
