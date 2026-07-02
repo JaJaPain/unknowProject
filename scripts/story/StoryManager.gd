@@ -41,6 +41,7 @@ var story_state: Dictionary = {
 	"hinted_lounge_rumors": [],
 	"agent_cooldown_until_minute": 0,
 	"agent_cooldown_message_index": 0,
+	"agent_contracts_since_cooldown": 0,
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -176,6 +177,7 @@ func clear_story_state() -> void:
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
+		"agent_contracts_since_cooldown": 0,
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -825,7 +827,23 @@ func get_agent_contract_availability(_context: Dictionary = {}) -> Dictionary:
 	}
 
 
+# The player may take up to this many contracts back-to-back before a "no work"
+# cooldown can hit, so early play isn't gated on the clock every single time.
+const AGENT_CONTRACTS_BEFORE_COOLDOWN := 3
+
+
 func start_agent_contract_cooldown(reason: String = "contract_resolved") -> Dictionary:
+	# A completed contract counts toward the streak; only once the streak reaches
+	# the threshold does the cooldown actually apply. Abandoning a contract breaks
+	# the streak and applies the cooldown immediately, as before.
+	if reason != "contract_abandoned":
+		var streak := int(story_state.get("agent_contracts_since_cooldown", 0)) + 1
+		if streak < AGENT_CONTRACTS_BEFORE_COOLDOWN:
+			story_state["agent_contracts_since_cooldown"] = streak
+			_save_story_state()
+			return get_agent_contract_availability()
+	# Threshold reached (or contract abandoned): apply cooldown, reset the streak.
+	story_state["agent_contracts_since_cooldown"] = 0
 	var now_minute := int(CampaignClock.total_minutes)
 	var cooldown_min := 25 + (randi() % 56)
 	if reason == "contract_abandoned":

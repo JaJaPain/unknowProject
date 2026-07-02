@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
 	_test_mood_leak_guard()
+	_test_agent_cooldown_allows_three_in_a_row()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -149,6 +150,43 @@ func _test_mood_leak_guard() -> void:
 		not StoryManagerType.mood_leaks_secret("evasive and tense", angle),
 		"Shared stopwords should not count as a secret leak."
 	)
+
+
+# The player should be able to take AGENT_CONTRACTS_BEFORE_COOLDOWN contracts
+# back-to-back before a cooldown hits; abandoning applies the cooldown at once.
+func _test_agent_cooldown_allows_three_in_a_row() -> void:
+	var manager := _fresh_manager()
+	# First two completions stay available (no cooldown yet).
+	var first: Dictionary = manager.start_agent_contract_cooldown("contract_resolved")
+	_expect(
+		bool(first.get("available", false)),
+		"First completed contract should not trigger a cooldown."
+	)
+	var second: Dictionary = manager.start_agent_contract_cooldown("contract_resolved")
+	_expect(
+		bool(second.get("available", false)),
+		"Second completed contract should not trigger a cooldown."
+	)
+	# The third crosses the threshold — cooldown applies.
+	var third: Dictionary = manager.start_agent_contract_cooldown("contract_resolved")
+	_expect(
+		not bool(third.get("available", true)),
+		"Third completed contract should trigger the cooldown."
+	)
+	_expect(
+		int(manager.story_state.get("agent_contracts_since_cooldown", -1)) == 0,
+		"Streak counter should reset to 0 after the cooldown applies."
+	)
+	manager.queue_free()
+
+	# Abandoning applies the cooldown immediately, without a streak.
+	var abandon_manager := _fresh_manager()
+	var abandoned: Dictionary = abandon_manager.start_agent_contract_cooldown("contract_abandoned")
+	_expect(
+		not bool(abandoned.get("available", true)),
+		"Abandoning a contract should apply the cooldown immediately."
+	)
+	abandon_manager.queue_free()
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -114,6 +114,7 @@ static func _default_state() -> Dictionary:
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
+		"agent_contracts_since_cooldown": 0,
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
