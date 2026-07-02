@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_normalized_bible_stores_creative_lane()
 	_test_motif_similarity_detection()
 	_test_motif_collision_note()
+	_test_faction_triad_repair_and_normalize()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -405,7 +406,12 @@ func _test_repair_telemetry_records_fired_repairs() -> void:
 	# A clean input should record no repairs.
 	var clean_repairs: Array = []
 	DirectorType._repaired_generated_campaign_bible(
-		{"campaign_title": "Clean", "kaelen_rule": "Kaelen is a broker.", "kaelen_angle": "She owes a debt."},
+		{
+			"campaign_title": "Clean",
+			"kaelen_rule": "Kaelen is a broker.",
+			"kaelen_angle": "She owes a debt.",
+			"factions": {"zenith": "Z problem.", "aurelia": "A problem.", "vanguard": "V problem."},
+		},
 		clean_repairs
 	)
 	_expect(
@@ -494,6 +500,49 @@ func _test_motif_collision_note() -> void:
 	_expect(
 		DirectorType.motif_collision_note(bible, ["The Silted Vein"], ["Toxic ore coverup."]) == "",
 		"Distinct history should produce no collision note."
+	)
+
+
+func _test_faction_triad_repair_and_normalize() -> void:
+	# Missing/partial triad: repair fills all three anchors, records telemetry,
+	# and accepts a per-faction object form ({problem: ...}).
+	var drifted := {
+		"factions": {
+			"zenith": "Zenith is quietly foreclosing on debtor stations.",
+			"aurelia": {"problem": "Aurelia's trade permits are being forged."},
+			# vanguard missing entirely
+		},
+	}
+	var repairs: Array = []
+	var repaired := DirectorType._repaired_generated_campaign_bible(drifted, repairs)
+	var factions: Dictionary = repaired.get("factions", {})
+	_expect(
+		str(factions.get("zenith", "")).contains("foreclosing"),
+		"Repair should preserve a valid faction problem string."
+	)
+	_expect(
+		str(factions.get("aurelia", "")).contains("forged"),
+		"Repair should extract 'problem' from a per-faction object."
+	)
+	_expect(
+		not str(factions.get("vanguard", "")).strip_edges().is_empty(),
+		"Repair should fill a placeholder for a missing anchor faction."
+	)
+	_expect(
+		repairs.has("faction_problem_defaulted:vanguard"),
+		"Repair telemetry should record the defaulted vanguard faction."
+	)
+
+	# Normalize copies the generated factions through to the stored bible.
+	var normalized := DirectorType._normalized_campaign_bible(
+		{"factions": {"zenith": "Z", "aurelia": "A", "vanguard": "V"}},
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(
+		normalized.get("factions", {}) is Dictionary
+			and str(normalized["factions"].get("vanguard", "")) == "V",
+		"Normalized bible did not carry the generated factions triad."
 	)
 
 

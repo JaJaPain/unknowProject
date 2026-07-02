@@ -79,6 +79,7 @@ static func build_campaign_bible_prompt(
 		"- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.",
 		"- The rumor trail needs exactly two concrete clue templates and a discovery type.",
 		"- Include exactly one story horizon regeneration trigger with a metric, threshold, and action.",
+		"- Give each anchor faction (Zenith, Aurelia, Vanguard) one concrete local problem tied to this campaign's lane — player-facing world texture, not a hidden twist.",
 		"- If story extends later, append a new horizon. Do not retcon known player choices.",
 		"- Keep every string under 140 characters unless the field says otherwise.",
 		"",
@@ -108,6 +109,7 @@ static func build_campaign_bible_prompt(
 		"  \"long_term_reveal\": string under 220 chars,",
 		"  \"tone\": string,",
 		"  \"core_pressure\": string,",
+		"  \"factions\": {\"zenith\": string under 140 chars, \"aurelia\": string under 140 chars, \"vanguard\": string under 140 chars} — each a one-line local problem, player-safe,",
 		"  \"kaelen_rule\": string that says she is publicly a broker, fixer, or contract handler,",
 		"  \"kaelen_angle\": string under 220 chars — HIDDEN. What Kaelen secretly knows or did. Never shown to the player or small-model prompts. Director-only knowledge.,",
 		"  \"faction_reveal_rule\": string,",
@@ -346,10 +348,35 @@ static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: A
 			repairs.append("string_to_array:%s" % field)
 	_repair_kaelen_public_role(repaired, repairs)
 	_repair_kaelen_angle(repaired, repairs)
+	_repair_factions(repaired, repairs)
 	_repair_rumor_trails(repaired, repairs)
 	_repair_regeneration_triggers(repaired)
 	_repair_banned_repeats(repaired)
 	return repaired
+
+
+# Ensures the factions triad exists with all three anchor keys as non-empty
+# strings. Accepts aliases (a per-faction "problem"/"issue" object) and fills a
+# neutral placeholder for any missing anchor so downstream faction_pressure
+# seeding always has three entries. Player-safe world texture, not a secret.
+static func _repair_factions(target: Dictionary, repairs: Array = []) -> void:
+	var factions = target.get("factions", null)
+	if not factions is Dictionary:
+		factions = {}
+		repairs.append("factions_defaulted")
+	for anchor in ["zenith", "aurelia", "vanguard"]:
+		var value := ""
+		if factions.has(anchor):
+			var raw = factions[anchor]
+			if raw is Dictionary:
+				value = str(raw.get("problem", raw.get("issue", raw.get("summary", "")))).strip_edges()
+			else:
+				value = str(raw).strip_edges()
+		if value.is_empty():
+			value = "%s keeps its local troubles quiet for now." % anchor.capitalize()
+			repairs.append("faction_problem_defaulted:%s" % anchor)
+		factions[anchor] = value
+	target["factions"] = factions
 
 
 static func _apply_key_aliases(
@@ -552,6 +579,7 @@ static func _normalized_campaign_bible(
 		"long_term_reveal",
 		"tone",
 		"core_pressure",
+		"factions",
 		"kaelen_rule",
 		"kaelen_angle",
 		"faction_reveal_rule",

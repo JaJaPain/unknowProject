@@ -22,6 +22,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_public_prompt_context_excludes_secrets()
 	_cleanup()
+	_test_factions_triad_present_and_in_context()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign bible store tests")
@@ -239,6 +241,46 @@ func _test_public_prompt_context_excludes_secrets() -> void:
 	_expect(
 		director_block.contains(REVEAL_SECRET) and director_block.contains(PAYOFF_SECRET),
 		"director_context should retain the full bible including secrets."
+	)
+
+
+# The factions triad exists by default and its player-safe problems surface in
+# both the public and director context views.
+func _test_factions_triad_present_and_in_context() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01", "Factions Fixture", "factions-test",
+		_initial_state(), SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := BibleStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "Factions-fixture bible store is invalid.")
+	if not store.is_valid():
+		return
+	var factions = store.data.get("factions", null)
+	_expect(
+		factions is Dictionary
+			and factions.has("zenith") and factions.has("aurelia") and factions.has("vanguard"),
+		"Default bible did not include the zenith/aurelia/vanguard factions triad."
+	)
+
+	var replacement := store.data.duplicate(true)
+	replacement["factions"] = {
+		"zenith": "Zenith is repossessing mining rigs on missed payments.",
+		"aurelia": "Aurelia's cartel is skimming refined ore shipments.",
+		"vanguard": "Vanguard is conscripting haulers for a border push.",
+	}
+	var replaced := store.replace_bible(replacement)
+	_expect(bool(replaced.get("ok", false)), replaced.get("error", ""))
+	_expect(
+		store.public_prompt_context().contains("repossessing mining rigs"),
+		"Faction problems should appear in the public context (player-safe world texture)."
+	)
+	_expect(
+		store.prompt_context().contains("conscripting haulers"),
+		"Faction problems should appear in the director context."
 	)
 
 

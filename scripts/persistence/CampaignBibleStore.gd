@@ -91,11 +91,27 @@ func public_prompt_context() -> String:
 	lines.append("- Opening situation: %s" % str(data.get("opening_situation", "")))
 	lines.append("- Tone: %s" % str(data.get("tone", "")))
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
+	_append_faction_lines(lines, data)
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
 	lines.append("- Faction reveal rule: %s" % str(data.get("faction_reveal_rule", "")))
 	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
 	lines.append("- Address rule: %s" % str(data.get("address_rule", "")))
 	return "\n".join(lines)
+
+
+# Anchor faction problems are player-safe world texture, so they appear in both
+# the public and director views. Shared by public_prompt_context/prompt_context.
+static func _append_faction_lines(lines: Array, data: Dictionary) -> void:
+	var factions = data.get("factions", null)
+	if not factions is Dictionary:
+		return
+	var parts: Array[String] = []
+	for anchor in ["zenith", "aurelia", "vanguard"]:
+		var problem := str(factions.get(anchor, "")).strip_edges()
+		if not problem.is_empty():
+			parts.append("%s: %s" % [anchor.capitalize(), problem])
+	if not parts.is_empty():
+		lines.append("- Faction problems: %s" % " | ".join(parts))
 
 
 # Full bible view, INCLUDING director-only secrets (mystery, reveal, outline,
@@ -119,6 +135,7 @@ func prompt_context() -> String:
 	lines.append("- Main mystery: %s" % str(data.get("main_mystery", "")))
 	lines.append("- Tone: %s" % str(data.get("tone", "")))
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
+	_append_faction_lines(lines, data)
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
 	lines.append("- Faction reveal rule: %s" % str(data.get("faction_reveal_rule", "")))
 	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
@@ -336,6 +353,14 @@ static func _migrate_legacy_bible(data: Dictionary, campaign_id: String) -> Dict
 	if not migrated.has("act_1_outline") or not migrated.get("act_1_outline", null) is Array:
 		migrated["act_1_outline"] = []
 		backfilled = true
+	# factions is optional metadata added later — backfill a neutral triad WITHOUT
+	# forcing a full regeneration of an otherwise-complete campaign.
+	if not migrated.get("factions", null) is Dictionary:
+		migrated["factions"] = defaults["factions"]
+	else:
+		for anchor in ["zenith", "aurelia", "vanguard"]:
+			if str(migrated["factions"].get(anchor, "")).strip_edges().is_empty():
+				migrated["factions"][anchor] = defaults["factions"][anchor]
 	if backfilled:
 		migrated["generation_status"] = STATUS_PROCEDURAL_BOOTSTRAP
 		migrated["source"] = STATUS_PROCEDURAL_BOOTSTRAP
@@ -365,6 +390,11 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		"long_term_reveal": "Pending large-model reveal direction.",
 		"tone": "PG-13 frontier space opera with dry, slightly dark humor.",
 		"core_pressure": "Pending large-model campaign story generation.",
+		"factions": {
+			"zenith": "Pending large-model faction problem.",
+			"aurelia": "Pending large-model faction problem.",
+			"vanguard": "Pending large-model faction problem.",
+		},
 		"kaelen_rule": "Kaelen is the only fixed recurring character. Her actions can be revealed, but her true nature and full mystery should never be completely explained.",
 		"kaelen_angle": "Pending large-model Kaelen angle.",
 		"faction_reveal_rule": "Reveal new factions, conflicts, ores, upgrades, and secrets through gate travel rather than upfront exposition.",
@@ -475,6 +505,12 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 				"Campaign bible field '%s' cannot be empty." % field,
 				field
 			)
+	if value.has("factions") and not value.get("factions", {}) is Dictionary:
+		result.add_error(
+			"invalid_factions",
+			"Campaign bible factions must be an object.",
+			"factions"
+		)
 	if not value.get("story_arcs", []) is Array:
 		result.add_error("invalid_story_arcs", "Story arcs must be an array.", "story_arcs")
 	if not value.get("act_1_outline", []) is Array:
