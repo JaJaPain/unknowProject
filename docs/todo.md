@@ -143,6 +143,15 @@ Deployment checklist for a shipped build:
 
 ---
 
+## Electronic Warfare (combat extension)
+
+- [ ] **Electronic warfare capability** -- an EW option that extends the existing turn-based combat ring. Delivery is open (decide later):
+  - **As a ship upgrade** -- installed capability that adds an EW action/tab to the combat wheel (parallels shield reroute / drone slots).
+  - **As a consumable drone** -- a deployable EW drone (like the attack/salvage drones) for a one-off effect without a permanent install.
+  - **Or replacing/adding a combat-ring tab** -- fold EW into the action wheel as its own pick.
+  - **Possible effects to flesh out:** sensor jamming (reduce enemy accuracy / delay their turn), disable enemy shields or engines for a turn, spoof targeting, scramble drones, mask the player's signature to break lock. Tie into the existing `DISABLE_ENGINES`/`SHIELD_ANGLE` action vocabulary and faction resistances.
+  - **Why it fits:** natural extension of the unified combat system (AP costs, camera beats, status floats already exist); gives a non-damage tactical lane and more build variety. Design the effect set + delivery method before building.
+
 ## Intra-System Jump Consumable
 
 - [ ] **Emergency jump beacon (expensive consumable)** -- one-use item that jumps the player directly to any station/outpost **in the current solar system** (not cross-gate). Details:
