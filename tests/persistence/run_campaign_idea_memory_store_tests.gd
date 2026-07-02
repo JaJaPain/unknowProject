@@ -102,6 +102,16 @@ func _test_idea_memory_bootstrap_append_query_and_reopen() -> void:
 		int(remembered.get("added", 0)) >= 5,
 		"Campaign bible ideas were not written into idea memory."
 	)
+	var recent_titles := reopened.query_recent("campaign_title", 5)
+	_expect(
+		recent_titles.has("The Silted Vein"),
+		"query_recent did not return the remembered campaign title. Got: %s" % str(recent_titles)
+	)
+	var recent_reveals := reopened.query_recent("reveal", 5)
+	_expect(
+		recent_reveals.size() == 1 and str(recent_reveals[0]).contains("laundered"),
+		"query_recent did not return the remembered long-term reveal. Got: %s" % str(recent_reveals)
+	)
 	var bible_context := reopened.campaign_bible_prompt_context(12)
 	_expect(
 		bible_context.contains("Low Signal War")
@@ -133,6 +143,8 @@ func _initial_state() -> Dictionary:
 
 func _campaign_bible_fixture() -> Dictionary:
 	return {
+		"campaign_title": "The Silted Vein",
+		"long_term_reveal": "Prohibited isotopes were laundered through shell companies as accidents.",
 		"humor_rule": "Use dark, dry humor and never repeat canned jokes.",
 		"faction_reveal_rule": "Reveal new factions only as gates and rumors expose them.",
 		"story_horizon_rule": "Append future horizons without retconning known choices.",

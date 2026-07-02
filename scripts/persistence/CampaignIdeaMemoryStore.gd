@@ -24,6 +24,8 @@ const ALLOWED_CATEGORIES := [
 	"story_beat",
 	"style_rule",
 	"banned_repeat",
+	"campaign_title",
+	"reveal",
 ]
 const CAMPAIGN_BIBLE_CATEGORIES := [
 	"faction",
@@ -34,6 +36,8 @@ const CAMPAIGN_BIBLE_CATEGORIES := [
 	"story_beat",
 	"style_rule",
 	"banned_repeat",
+	"campaign_title",
+	"reveal",
 ]
 
 var campaign_path: String
@@ -209,12 +213,44 @@ func remember_campaign_bible(bible: Dictionary) -> Dictionary:
 		_count_append_result(rule_result, failures)
 		added += 1 if bool(rule_result.get("ok", false)) and not bool(rule_result.get("duplicate", false)) else 0
 		duplicates += 1 if bool(rule_result.get("duplicate", false)) else 0
+	# Record the title and long-term reveal so the next campaign's similarity gate
+	# (see NarrativeDirector.is_text_too_similar) and the generation prompt can
+	# steer away from near-duplicates. reveal only ever feeds the large-story
+	# (director-privileged) prompt via campaign_bible_prompt_context — never a
+	# small-model prompt — so it does not leak the current campaign's twist.
+	for field_and_category in [["campaign_title", "campaign_title"], ["long_term_reveal", "reveal"]]:
+		var field := str(field_and_category[0])
+		var category := str(field_and_category[1])
+		var value := str(bible.get(field, "")).strip_edges()
+		if value.is_empty():
+			continue
+		var entry_result := append_idea(
+			category,
+			value,
+			["campaign_bible", field],
+			"%s|%s" % [category, value]
+		)
+		_count_append_result(entry_result, failures)
+		added += 1 if bool(entry_result.get("ok", false)) and not bool(entry_result.get("duplicate", false)) else 0
+		duplicates += 1 if bool(entry_result.get("duplicate", false)) else 0
 	return {
 		"ok": failures.is_empty(),
 		"added": added,
 		"duplicates": duplicates,
 		"errors": failures,
 	}
+
+
+# Returns up to `limit` recent idea summaries for one category, newest first —
+# structured history for the similarity gate and lane rotation (plan §3.2/§3.3)
+# instead of parsing the formatted prompt-context string.
+func query_recent(category: String, limit: int = 12) -> Array:
+	var summaries: Array = []
+	for idea in query_ideas([category], [], limit):
+		var summary := str((idea as Dictionary).get("summary", "")).strip_edges()
+		if not summary.is_empty():
+			summaries.append(summary)
+	return summaries
 
 
 func query_ideas(
