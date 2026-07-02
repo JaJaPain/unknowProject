@@ -310,10 +310,60 @@ func _generate_foreshadow() -> void:
 	)
 
 
+# Defensive leak guard for kaelen_current_mood. The mood prompt sends Kaelen's
+# hidden angle to the small model and forbids repeating it — but a chatty qwen
+# completion can still echo distinctive words from it, and mood IS fed to
+# small-model prompts (get_story_context_block), so a leak here reaches the
+# player. This is the net: reject any candidate mood that shares a distinctive
+# (long, non-stopword) token with the angle, or that is too long to be a real
+# 2-4 word mood. See docs/storytelling_architecture_plan.md §7.2 — the fuller
+# fix (derive mood from the Kaelen hint plan instead of the raw angle) waits on
+# the hint-plan system (plan item #12).
+const _MOOD_STOPWORDS := {
+	"the": true, "and": true, "with": true, "that": true, "this": true,
+	"from": true, "into": true, "over": true, "your": true, "their": true,
+	"them": true, "they": true, "have": true, "will": true, "been": true,
+	"about": true, "very": true, "just": true, "than": true, "then": true,
+	"kaelen": true, "situation": true, "private": true, "director": true,
+	"comes": true, "across": true, "right": true, "makes": true,
+}
+
+
+static func mood_leaks_secret(candidate: String, secret: String) -> bool:
+	var mood_words := _distinctive_words(candidate)
+	# A real mood is 2-4 words; more distinctive tokens means it's explaining,
+	# not describing — treat that as a leak regardless of overlap.
+	if mood_words.size() > 6:
+		return true
+	var secret_words := _distinctive_words(secret)
+	for word in mood_words:
+		if secret_words.has(word):
+			return true
+	return false
+
+
+static func _distinctive_words(text: String) -> Dictionary:
+	var out := {}
+	var lower := text.to_lower()
+	var token := ""
+	for i in range(lower.length()):
+		var c := lower[i]
+		if (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
+			token += c
+			continue
+		if token.length() >= 4 and not _MOOD_STOPWORDS.has(token):
+			out[token] = true
+		token = ""
+	if token.length() >= 4 and not _MOOD_STOPWORDS.has(token):
+		out[token] = true
+	return out
+
+
 # Async: derives a short mood descriptor from Kaelen's hidden angle. The angle
 # itself is director-only — this prompt asks for a 2-4 word mood only and
-# never lets the model repeat or paraphrase the angle back. Result feeds
-# kaelen_current_mood, which IS safe for small-model prompts.
+# never lets the model repeat or paraphrase the angle back. The response is
+# additionally screened by mood_leaks_secret() before storing, since the prompt
+# rule alone can't guarantee a chatty completion won't echo the angle.
 func _update_kaelen_mood() -> void:
 	var angle := str(story_state.get("kaelen_hidden_angle", "")).strip_edges()
 	if angle.is_empty():
@@ -337,6 +387,19 @@ func _update_kaelen_mood() -> void:
 				return
 			var text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
 			if text.is_empty():
+				return
+			if mood_leaks_secret(text, angle):
+				# The completion echoed the hidden angle. Drop it, keep the
+				# prior mood, and record the near-leak so drift is visible.
+				GenerationDiagnostics.record_event(
+					"kaelen_mood",
+					"leak_blocked",
+					"story_manager",
+					{"chapter": chapter, "rejected_mood": text}
+				)
+				push_warning(
+					"[StoryManager] Blocked a Kaelen mood that echoed the hidden angle: %s" % text
+				)
 				return
 			story_state["kaelen_current_mood"] = text
 			_save_story_state()

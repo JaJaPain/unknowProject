@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
+	_test_mood_leak_guard()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -108,6 +109,46 @@ func _test_force_dock_rumor_fires_and_dedups() -> void:
 		"_maybe_fire_dock_rumor(force=true) with a pending hook should record a heard rumor."
 	)
 	manager.queue_free()
+
+
+# Guards mood_leaks_secret(): a mood echoing distinctive words from Kaelen's
+# hidden angle, or run long enough to be explaining it, must be rejected; a
+# genuine short mood with no overlap must pass.
+func _test_mood_leak_guard() -> void:
+	var angle := "Kaelen forged the convoy manifests to bury a stolen ledger."
+
+	# Direct echo of a distinctive angle word (ledger) — leak.
+	_expect(
+		StoryManagerType.mood_leaks_secret("hiding the ledger", angle),
+		"Mood echoing a distinctive angle word (ledger) should be flagged as a leak."
+	)
+	# Another distinctive overlap (forged / manifests).
+	_expect(
+		StoryManagerType.mood_leaks_secret("worried about the forged manifests", angle),
+		"Mood echoing forged/manifests should be flagged as a leak."
+	)
+	# A whole sentence paraphrasing the angle — too long to be a mood.
+	_expect(
+		StoryManagerType.mood_leaks_secret(
+			"she secretly altered the shipping records to hide what she took",
+			angle
+		),
+		"An over-long explaining mood should be flagged even without exact overlap."
+	)
+	# Genuine safe moods — no overlap, short. Must pass.
+	_expect(
+		not StoryManagerType.mood_leaks_secret("guarded and terse", angle),
+		"A safe short mood with no angle overlap was wrongly flagged."
+	)
+	_expect(
+		not StoryManagerType.mood_leaks_secret("unusually generous", angle),
+		"A safe short mood with no angle overlap was wrongly flagged."
+	)
+	# Stopwords shared between mood and angle must not trigger a false leak.
+	_expect(
+		not StoryManagerType.mood_leaks_secret("evasive and tense", angle),
+		"Shared stopwords should not count as a secret leak."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:
