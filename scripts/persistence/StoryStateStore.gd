@@ -116,6 +116,7 @@ static func _default_state() -> Dictionary:
 		"agent_cooldown_message_index": 0,
 		"agent_contracts_since_cooldown": 0,
 		"faction_pressure": {},
+		"player_choices": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,

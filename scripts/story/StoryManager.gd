@@ -43,6 +43,7 @@ var story_state: Dictionary = {
 	"agent_cooldown_message_index": 0,
 	"agent_contracts_since_cooldown": 0,
 	"faction_pressure": {},
+	"player_choices": [],
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -192,6 +193,7 @@ func clear_story_state() -> void:
 		"agent_cooldown_message_index": 0,
 		"agent_contracts_since_cooldown": 0,
 		"faction_pressure": {},
+		"player_choices": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -268,6 +270,49 @@ func _append_faction_pressure_lines(lines: Array) -> void:
 			parts.append("%s [%s]: %s" % [anchor.capitalize(), sign_word, posture])
 	if not parts.is_empty():
 		lines.append("- Faction pressure: %s" % " | ".join(parts))
+
+
+# Records a durable player choice (contract sided-with/refused/betrayed, cargo
+# fenced, faction favored). Applies any faction_deltas through the pressure write
+# path so a choice both remembers itself AND shifts the world. faction_deltas:
+# {faction_key: int delta}. Player-safe world facts, not hidden truths.
+func record_player_choice(choice_id: String, description: String, faction_deltas: Dictionary = {}) -> void:
+	var clean_id := choice_id.strip_edges()
+	var clean_desc := description.strip_edges()
+	if clean_id.is_empty() and clean_desc.is_empty():
+		return
+	var choices: Array = story_state.get("player_choices", [])
+	choices.append({
+		"choice_id": clean_id,
+		"description": clean_desc,
+		"faction_deltas": faction_deltas.duplicate(true),
+		"at_minute": int(CampaignClock.total_minutes),
+	})
+	while choices.size() > 64:
+		choices.pop_front()
+	story_state["player_choices"] = choices
+	for faction in faction_deltas.keys():
+		adjust_faction_pressure(str(faction), int(faction_deltas[faction]))
+	_save_story_state()
+
+
+# Compact, player-safe digest of the most recent choices for horizon-expansion
+# prompts, so appended story reacts to who the player has been. "" if none.
+func player_choice_digest(limit: int = 6) -> String:
+	var choices: Array = story_state.get("player_choices", [])
+	if choices.is_empty():
+		return ""
+	var start := maxi(0, choices.size() - limit)
+	var lines: Array[String] = []
+	for i in range(start, choices.size()):
+		var c = choices[i]
+		if c is Dictionary:
+			var desc := str(c.get("description", "")).strip_edges()
+			if not desc.is_empty():
+				lines.append("- %s" % desc)
+	if lines.is_empty():
+		return ""
+	return "Recent player choices:\n%s" % "\n".join(lines)
 
 
 # Write path for gameplay to shift a faction's pressure (kills, contracts, cargo
@@ -671,10 +716,16 @@ func _request_story_horizon_expansion(attempt: int) -> void:
 	var bible: Dictionary = _campaign_bible_store.data
 	var triggers: Array = bible.get("regeneration_triggers", [])
 	var trigger: Dictionary = triggers[0] if not triggers.is_empty() and triggers[0] is Dictionary else {}
+	# Fold recent player choices into the summary so appended story reacts to who
+	# the player has been, not just what reserve remains (plan §2.6).
+	var summary := get_story_context_block()
+	var choice_digest := player_choice_digest()
+	if not choice_digest.is_empty():
+		summary += "\n" + choice_digest
 	LLMInterface.request_story_horizon_expansion(
 		bible,
 		trigger,
-		get_story_context_block(),
+		summary,
 		func(result: Dictionary) -> void:
 			if bool(result.get("ok", false)):
 				_apply_story_horizon_expansion(result)

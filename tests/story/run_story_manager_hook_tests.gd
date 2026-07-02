@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_force_dock_rumor_fires_and_dedups()
 	_test_mood_leak_guard()
 	_test_agent_cooldown_allows_three_in_a_row()
+	_test_player_choice_recording_and_digest()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -187,6 +188,38 @@ func _test_agent_cooldown_allows_three_in_a_row() -> void:
 		"Abandoning a contract should apply the cooldown immediately."
 	)
 	abandon_manager.queue_free()
+
+
+# record_player_choice logs the choice, feeds the digest, and shifts faction
+# pressure via the deltas; the digest reflects recent choices.
+func _test_player_choice_recording_and_digest() -> void:
+	var manager := _fresh_manager()
+	# Seed a faction_pressure entry so a delta has somewhere to land.
+	manager.story_state["faction_pressure"] = {"vanguard": {"pressure": 0, "posture": "stable"}}
+
+	manager.record_player_choice("sided_aurelia_1", "Ran cargo for Aurelia against Vanguard.", {"vanguard": -2})
+	manager.record_player_choice("refused_vanguard_1", "Refused a Vanguard escort contract.", {})
+
+	var choices: Array = manager.story_state.get("player_choices", [])
+	_expect(choices.size() == 2, "Both player choices should be recorded.")
+	_expect(
+		int(manager.story_state.get("faction_pressure", {}).get("vanguard", {}).get("pressure", 0)) == -2,
+		"record_player_choice did not apply the faction delta through the pressure write path."
+	)
+
+	var digest: String = manager.player_choice_digest()
+	_expect(
+		digest.contains("Ran cargo for Aurelia") and digest.contains("Refused a Vanguard escort"),
+		"player_choice_digest did not include the recent choices. Got: %s" % digest
+	)
+
+	# Empty id + empty description is a no-op.
+	manager.record_player_choice("", "", {})
+	_expect(
+		(manager.story_state.get("player_choices", []) as Array).size() == 2,
+		"An empty choice should not be recorded."
+	)
+	manager.queue_free()
 
 
 func _expect(condition: bool, message: String) -> void:
