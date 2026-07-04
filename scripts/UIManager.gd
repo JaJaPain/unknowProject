@@ -239,6 +239,7 @@ var _wanted_posters_sheet = preload("res://assets/WantedPosters.png")
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
+const LoungeConversationType = preload("res://scripts/story/LoungeConversation.gd")
 const KAELEN_BOUNTY_OFFER_CHANCE := 0.30
 const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
@@ -3673,6 +3674,12 @@ func toggle_dock_menu(
 			# re-trigger her (and can't wrongly climb her "docking again?" streak).
 			if not _was_docked and is_instance_valid(Nova):
 				Nova.on_docked()
+			if not _was_docked:
+				# Fresh dock: lounge social session state resets (completion rep
+				# bumps and drinks are once per contact per DOCK, not per open).
+				_lounge_convo_done.clear()
+				_lounge_convo = {}
+				_lounge_convo_serial += 1
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -4444,27 +4451,155 @@ func _on_lounge_agent_pressed(
 	show_dock_message(line, faction_name, faction_color)
 
 
+# ── Lounge Social Layer L1: two-way conversations ─────────────────────────────
+# (docs/plan_lounge_social_layer.md). One active conversation at a time; the
+# serial cancels stale async turns when the player switches cards. Session
+# dict _lounge_convo_done gates the once-per-dock completion rep bump.
+var _lounge_convo: Dictionary = {}
+var _lounge_convo_serial: int = 0
+var _lounge_convo_done: Dictionary = {}
+
+
 func _on_lounge_card_pressed(card_data: Dictionary) -> void:
-	var card := card_data.duplicate(true)
-	var fallback_line := _lounge_card_fallback_line(card)
+	_start_lounge_conversation(card_data.duplicate(true))
+
+
+func _start_lounge_conversation(card: Dictionary) -> void:
+	_lounge_convo_serial += 1
+	var serial := _lounge_convo_serial
+	var context := _lounge_card_context(card)
+	var npc := {
+		"name": str(context.get("speaker", "Local Contact")),
+		"role": str(context.get("role", "station regular")),
+		"mood": str(context.get("mood", "neutral")),
+		"faction": str(context.get("faction", "independent")),
+		"station": str(context.get("station", "this station")),
+		"extra": str(context.get("extra", "")),
+	}
+	_lounge_convo = {
+		"card": card,
+		"npc": npc,
+		"turns": [],
+		"npc_turns_left": LoungeConversationType.MAX_TURNS - 1,
+		"serial": serial,
+	}
 	_show_lounge_card_line(card, "Listening...", false)
-	LLMInterface.request_lounge_chatter(
-		_lounge_card_context(card),
-		fallback_line,
-		func(line: String) -> void:
-			_show_lounge_card_line(card, line, true)
+	var prompt: String = LoungeConversationType.build_opener_prompt(npc, _lounge_flavor_block())
+	LLMInterface.request_lounge_conversation_turn(
+		prompt,
+		func(result: Dictionary) -> void: _on_lounge_turn_result(serial, result)
 	)
+
+
+func _lounge_flavor_block() -> String:
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
+		return str(StoryManager.get_ambient_flavor_block())
+	return ""
+
+
+func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
+	if serial != _lounge_convo_serial or _lounge_convo.is_empty():
+		return  # player moved on; drop the stale turn
+	var card: Dictionary = _lounge_convo.get("card", {})
+	var npc: Dictionary = _lounge_convo.get("npc", {})
+	var inner_text := str(result.get("inner_text", ""))
+	var parsed: Dictionary = {"ok": false, "reason": str(result.get("reason", "transport_failed"))}
+	if bool(result.get("ok", false)):
+		parsed = LoungeConversationType.parse_turn(inner_text, str(npc.get("name", "")))
+	if not bool(parsed.get("ok", false)):
+		# Conversation engine failed — log it, then the OLD one-liner path so
+		# the lounge never goes mute (its own fallback logging applies).
+		GenerationDiagnostics.record_fallback(
+			"lounge_chat", str(parsed.get("reason", "unknown")), "UIManager",
+			{"npc": str(npc.get("name", ""))}
+		)
+		_lounge_convo = {}
+		LLMInterface.request_lounge_chatter(
+			_lounge_card_context(card),
+			_lounge_card_fallback_line(card),
+			func(line: String) -> void: _show_lounge_card_line(card, line, true)
+		)
+		return
+	var line := str(parsed.get("line", ""))
+	var turns: Array = _lounge_convo.get("turns", [])
+	turns.append({"speaker": "npc", "text": line})
+	_lounge_convo["turns"] = turns
+	var replies: Array = parsed.get("replies", [])
+	var npc_turns_left := int(_lounge_convo.get("npc_turns_left", 0))
+	var choices: Array = []
+	if npc_turns_left > 0 and not replies.is_empty():
+		for reply in replies:
+			var reply_text := str(reply)
+			choices.append({
+				"text": reply_text,
+				"callback": func() -> void: _on_lounge_reply_pressed(serial, reply_text),
+			})
+		choices.append({
+			"text": "(nod and leave)",
+			"callback": func() -> void: _end_lounge_conversation(serial),
+		})
+	else:
+		# Wind-down turn: the chat concluded naturally — that's a completed
+		# conversation. Gentle code-owned consequence, once per contact per dock.
+		_apply_lounge_completion(npc)
+		_lounge_convo = {}
+	_show_lounge_card_line(card, line, true, choices)
+
+
+func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
+	if serial != _lounge_convo_serial or _lounge_convo.is_empty():
+		return
+	var card: Dictionary = _lounge_convo.get("card", {})
+	var npc: Dictionary = _lounge_convo.get("npc", {})
+	var turns: Array = _lounge_convo.get("turns", [])
+	turns.append({"speaker": "you", "text": reply_text})
+	_lounge_convo["turns"] = turns
+	var npc_turns_left := int(_lounge_convo.get("npc_turns_left", 0)) - 1
+	_lounge_convo["npc_turns_left"] = npc_turns_left
+	_show_lounge_card_line(card, "...", false)
+	var prompt: String = LoungeConversationType.build_reply_prompt(
+		npc,
+		_lounge_flavor_block(),
+		LoungeConversationType.transcript_block(turns),
+		reply_text,
+		npc_turns_left
+	)
+	LLMInterface.request_lounge_conversation_turn(
+		prompt,
+		func(result: Dictionary) -> void: _on_lounge_turn_result(serial, result)
+	)
+
+
+func _end_lounge_conversation(serial: int) -> void:
+	if serial != _lounge_convo_serial:
+		return
+	_lounge_convo = {}
+	show_dock_message("You nod and drift back to your drink.", "", Color(0.7, 0.7, 0.7))
+
+
+# Finishing a conversation with a faction-affiliated contact warms that
+# faction slightly — people talk about who's decent company. Once per contact
+# per dock (dict cleared on dock, see Nova.on_docked site).
+func _apply_lounge_completion(npc: Dictionary) -> void:
+	var npc_name := str(npc.get("name", ""))
+	if npc_name.is_empty() or _lounge_convo_done.has(npc_name):
+		return
+	_lounge_convo_done[npc_name] = true
+	var faction := str(npc.get("faction", "")).strip_edges().to_lower()
+	if faction in ["zenith", "aurelia", "vanguard"]:
+		GlobalState.adjust_reputation(faction, 1.0)
 
 
 func _show_lounge_card_line(
 	card_data: Dictionary,
 	line: String,
-	should_speak: bool = true
+	should_speak: bool = true,
+	choices: Array = []
 ) -> void:
 	var name := str(card_data.get("name", "Local Contact"))
 	var color: Color = card_data.get("color", Color(0.85, 0.85, 0.85))
 	var portrait := card_data.get("portrait", null) as Texture2D
-	show_dock_message(line, name, color, portrait)
+	show_dock_message(line, name, color, portrait, choices)
 	if not should_speak:
 		return
 	var voice_profile_id := str(card_data.get("voice_profile_id", "voice.neutral.v1"))
