@@ -21,6 +21,8 @@ func _initialize() -> void:
 	_test_seed_maps_factions_into_pressure()
 	_test_kaelen_hint_delivery()
 	_test_nova_fields_seed_and_privacy()
+	_test_kaelen_hint_surfacing_pacing()
+	_test_glitch_line_leak_guard()
 
 	if _failures.is_empty():
 		print("[PASS] Story state bible seed tests")
@@ -237,6 +239,71 @@ func _test_nova_fields_seed_and_privacy() -> void:
 		"clear_story_state did not wipe the nova fields."
 	)
 	manager.queue_free()
+
+
+# The bible's kaelen_hint_plan must actually reach the player: paced at most one
+# hint per chapter, surfaced as a top-weight lounge observation, and popped from
+# hidden to delivered only when genuinely heard.
+func _test_kaelen_hint_surfacing_pacing() -> void:
+	var manager := _fresh_manager()
+	manager.seed_story_state_from_bible(_fake_bible())
+
+	# Chapter 1, zero delivered: the hint outranks every other rumor candidate.
+	var rumor: Dictionary = manager.get_lounge_rumor({"npc_name": "Test Contact"})
+	_expect(
+		str(rumor.get("id", "")).begins_with("kaelen_hint:"),
+		"Chapter 1 lounge rumor should lead with the Kaelen hint. Got: %s" % str(rumor.get("id", ""))
+	)
+	_expect(
+		str(rumor.get("line", "")).contains("hauler she never mentions"),
+		"Kaelen hint candidate did not carry the first hint's text."
+	)
+	# Hearing it delivers it: hidden shrinks, delivered grows.
+	manager.record_lounge_rumor_heard(str(rumor.get("id", "")))
+	_expect(
+		(manager.story_state.get("kaelen_hidden_hints", []) as Array).size() == 1
+			and (manager.story_state.get("kaelen_hints_delivered", []) as Array).size() == 1,
+		"Hearing the Kaelen-hint rumor did not pop it from hidden to delivered."
+	)
+	# Same chapter: no second hint is offered (pacing: one per chapter).
+	var next_rumor: Dictionary = manager.get_lounge_rumor({"npc_name": "Test Contact"})
+	_expect(
+		not str(next_rumor.get("id", "")).begins_with("kaelen_hint:"),
+		"A second Kaelen hint surfaced within the same chapter — pacing rule broken."
+	)
+	# Chapter advance unlocks the next one.
+	manager.story_state["chapter"] = 2
+	var ch2_rumor: Dictionary = manager.get_lounge_rumor({"npc_name": "Test Contact"})
+	_expect(
+		str(ch2_rumor.get("id", "")).begins_with("kaelen_hint:")
+			and str(ch2_rumor.get("line", "")).contains("dead station"),
+		"Chapter 2 did not unlock the second Kaelen hint."
+	)
+	manager.queue_free()
+
+
+func _test_glitch_line_leak_guard() -> void:
+	var flicker := "A registry stub she cannot open reacts to the refinery's name."
+	_expect(
+		StoryManagerType.glitch_line_leaks_flicker(
+			"There is a registry stub in me that hates this gate.", flicker
+		),
+		"A glitch line echoing the flicker's distinctive words should be rejected."
+	)
+	_expect(
+		not StoryManagerType.glitch_line_leaks_flicker(
+			"Static again. Same shape as last time. I don't have a file for it.", flicker
+		),
+		"An oblique, non-echoing glitch line should pass the leak guard."
+	)
+	# Gate-adjacent vocabulary is allowlisted — 'memory'/'systems' never count.
+	_expect(
+		not StoryManagerType.glitch_line_leaks_flicker(
+			"My memory has a hole exactly this shape. My systems disagree about why.",
+			"A memory sector in her systems was overwritten during the accident."
+		),
+		"Allowlisted gate/memory vocabulary should not trip the leak guard."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

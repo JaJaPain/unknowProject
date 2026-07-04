@@ -49,6 +49,7 @@ var story_state: Dictionary = {
 	"kaelen_hint_style": "",
 	"nova_quirk": "",
 	"nova_memory_flicker": "",
+	"nova_glitch_hints": [],
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -86,6 +87,7 @@ func reset_for_restart() -> void:
 func _on_llm_ready(_model_name: String) -> void:
 	# Ollama is up and models are confirmed. Safe to fire the starting-system pool now.
 	_trigger_handoff_pool_for_system("system.start")
+	_ensure_nova_glitch_hints()
 
 
 # ── Phase B: Story state API ──────────────────────────────────────────────────
@@ -233,6 +235,7 @@ func clear_story_state() -> void:
 		"kaelen_hint_style": "",
 		"nova_quirk": "",
 		"nova_memory_flicker": "",
+		"nova_glitch_hints": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -414,13 +417,104 @@ func advance_chapter(
 	# Story context changed — replace all known agent pools so tone stays current.
 	_replace_all_handoff_pools()
 
-# Hands N.O.V.A. her campaign-specific quirk so her ambient line pools can lean
-# on it. Quirk only — the memory flicker is director-only and never leaves here.
+# Hands N.O.V.A. her campaign-specific quirk and gate-glitch lines. The quirk
+# and the glitch lines are player-safe; the raw memory flicker is director-only
+# and never leaves here — the glitch lines are its oblique, leak-guarded shadow.
 func _push_nova_campaign_flavor() -> void:
 	if not is_instance_valid(Nova):
 		return
 	if Nova.has_method("set_campaign_quirk"):
 		Nova.set_campaign_quirk(str(story_state.get("nova_quirk", "")).strip_edges())
+	if Nova.has_method("set_memory_glitch_lines"):
+		var hints: Array = story_state.get("nova_glitch_hints", []) if story_state.get("nova_glitch_hints", []) is Array else []
+		Nova.set_memory_glitch_lines(hints)
+
+
+# Belt-and-suspenders guard for N.O.V.A.'s glitch lines: a line that shares a
+# long distinctive word with the hidden flicker is explaining, not evoking —
+# reject it. Short/common gate-adjacent words are allowlisted because every
+# glitch line legitimately talks about gates, memory, and systems.
+const _GLITCH_ALLOWED_WORDS := {
+	"memory": true, "memories": true, "systems": true, "captain": true,
+	"remember": true, "archives": true, "something": true, "nothing": true,
+	"through": true, "transit": true, "feeling": true, "somewhere": true,
+}
+
+
+static func glitch_line_leaks_flicker(line: String, flicker: String) -> bool:
+	var line_words := _distinctive_words(line)
+	var flicker_words := _distinctive_words(flicker)
+	for word in line_words:
+		if str(word).length() < 6:
+			continue
+		if _GLITCH_ALLOWED_WORDS.has(word):
+			continue
+		if flicker_words.has(word):
+			return true
+	return false
+
+
+# Generates N.O.V.A.'s campaign gate-glitch lines from the director-only memory
+# flicker — once per campaign, on the LARGE model, leak-guarded line by line.
+# No canned fallback: if generation fails twice, she simply keeps her stock gate
+# lines this session (absence, not filler) and we log it; the next _on_llm_ready
+# (next session) retries naturally because the stored list is still empty.
+func _ensure_nova_glitch_hints(attempt: int = 0) -> void:
+	if not bool(story_state.get("bible_seeded", false)):
+		return
+	var existing: Array = story_state.get("nova_glitch_hints", []) if story_state.get("nova_glitch_hints", []) is Array else []
+	if not existing.is_empty():
+		_push_nova_campaign_flavor()
+		return
+	var flicker := str(story_state.get("nova_memory_flicker", "")).strip_edges()
+	if flicker.is_empty():
+		return
+	if not is_instance_valid(LLMInterface) or not LLMInterface.has_method("request_nova_glitch_hints"):
+		return
+	var tone := ""
+	if _campaign_bible_store_ready():
+		tone = str(_campaign_bible_store.data.get("tone", "")).strip_edges()
+	LLMInterface.request_nova_glitch_hints(
+		flicker,
+		tone,
+		func(result: Dictionary) -> void:
+			if not bool(result.get("ok", false)):
+				if attempt < 1:
+					_ensure_nova_glitch_hints(attempt + 1)
+					return
+				GenerationDiagnostics.record_event(
+					"nova_glitch_hints", "generation_failed_twice", "story_manager",
+					{"reason": str(result.get("reason", "unknown"))}
+				)
+				return
+			var kept: Array = []
+			for line in result.get("lines", []):
+				var clean := str(line).strip_edges()
+				if clean.is_empty():
+					continue
+				if glitch_line_leaks_flicker(clean, flicker):
+					GenerationDiagnostics.record_event(
+						"nova_glitch_hints", "leak_blocked", "story_manager",
+						{"rejected_line": clean}
+					)
+					continue
+				kept.append(clean)
+			if kept.size() < 2:
+				if attempt < 1:
+					_ensure_nova_glitch_hints(attempt + 1)
+					return
+				GenerationDiagnostics.record_event(
+					"nova_glitch_hints", "too_few_clean_lines", "story_manager",
+					{"kept": kept.size()}
+				)
+				return
+			story_state["nova_glitch_hints"] = kept
+			_save_story_state()
+			_push_nova_campaign_flavor()
+			GenerationDiagnostics.record_content_source(
+				"nova_glitch_hints", "llm", "story_manager", {"count": kept.size()}
+			)
+	)
 
 
 # Compact, player-safe campaign flavor for AMBIENT prompts (background chatter,
@@ -964,6 +1058,25 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 		source_hint = "%s crews" % faction_display
 	var hinted: Array = story_state.get("hinted_lounge_rumors", [])
 	var candidates: Array[Dictionary] = []
+	# Chapter-paced Kaelen observation (closes the loop on the bible's
+	# kaelen_hint_plan, which was generated but never delivered anywhere).
+	# Hints are player-safe SURFACE observations about her, so they surface as
+	# something the contact noticed — never as Kaelen explaining herself. Pacing
+	# rule: the player can have heard at most one hint per chapter; the pop from
+	# hidden to delivered happens in record_lounge_rumor_heard() only when the
+	# line was actually heard.
+	var next_kaelen_hint := _next_kaelen_hint_if_due()
+	if not next_kaelen_hint.is_empty():
+		candidates.append({
+			"id": "kaelen_hint:%s" % next_kaelen_hint.sha256_text().substr(0, 12),
+			"title": "Something About Kaelen",
+			"source": "Story",
+			"weight": 5,
+			"line": "%s glances toward the broker's corner and drops their voice. %s Nobody else seems to clock it." % [
+				npc_name,
+				next_kaelen_hint.trim_suffix(".") + ".",
+			],
+		})
 	var hooks: Array = story_state.get("pending_hooks", [])
 	for hook in hooks:
 		var text := str(hook).strip_edges()
@@ -1035,6 +1148,19 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 	return candidates[0]
 
 
+# The next undelivered Kaelen hint, or "" when none is due. Due = hints remain
+# AND the player has heard fewer hints than the current chapter number, so hints
+# escalate at most one per chapter no matter how much lounge-hopping happens.
+func _next_kaelen_hint_if_due() -> String:
+	var undelivered: Array = story_state.get("kaelen_hidden_hints", [])
+	if undelivered.is_empty():
+		return ""
+	var delivered_count := (story_state.get("kaelen_hints_delivered", []) as Array).size()
+	if delivered_count >= int(story_state.get("chapter", 1)):
+		return ""
+	return str(undelivered[0]).strip_edges()
+
+
 func record_lounge_rumor_heard(rumor_id: String) -> void:
 	var clean_id := rumor_id.strip_edges()
 	if clean_id.is_empty():
@@ -1046,6 +1172,16 @@ func record_lounge_rumor_heard(rumor_id: String) -> void:
 	while hinted.size() > 24:
 		hinted.pop_front()
 	story_state["hinted_lounge_rumors"] = hinted
+	# Hearing a Kaelen-hint rumor is the delivery moment: pop it from the
+	# director-only hidden list to the player-safe delivered list, and let her
+	# mood drift now that she's let one more thing slip.
+	if clean_id.begins_with("kaelen_hint:"):
+		var current := _next_kaelen_hint_if_due()
+		if not current.is_empty() \
+				and clean_id == "kaelen_hint:%s" % current.sha256_text().substr(0, 12):
+			deliver_next_kaelen_hint()
+			_update_kaelen_mood()
+			return  # deliver_next_kaelen_hint already saved state
 	_save_story_state()
 
 

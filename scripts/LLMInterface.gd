@@ -1488,6 +1488,105 @@ func _on_campaign_bible_generation_completed(
 # ── Phase C: Story horizon expansion ───────────────────────────────────────────
 # Small follow-up call, only fired when a campaign's prepared reserve runs out.
 # Same think:false/keep_alive:0 large_story handling as campaign_bible.
+# Writes N.O.V.A.'s campaign-specific gate-glitch lines from her director-only
+# memory flicker. Director-privileged: the flicker is a bible secret, so this
+# runs on the LARGE model only ("nova_glitch" -> large_story in
+# LocalModelGateway) and the caller (StoryManager) leak-guards every returned
+# line before storing. Callback receives {ok, lines: Array[String], reason}.
+func request_nova_glitch_hints(
+	flicker_text: String,
+	campaign_tone: String,
+	callback: Callable
+) -> void:
+	var capability := "nova_glitch"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"nova_glitch_hints", "model_unavailable", "llm_interface", {"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	var prompt := "\n".join([
+		"You are the large local story model for a procedural space game.",
+		"N.O.V.A. is the player's ship AI: sardonic, self-preserving, dry, deadpan;",
+		"the ship is her body. Her memory was wiped in a gate accident and gates make",
+		"her flinch without knowing why.",
+		"",
+		"HIDDEN DIRECTOR-ONLY FRAGMENT of her lost past (the player must NEVER learn this):",
+		flicker_text.strip_edges(),
+		"",
+		"Campaign tone: %s" % campaign_tone.strip_edges(),
+		"",
+		"Write exactly 4 lines N.O.V.A. might say mid gate-transit this campaign.",
+		"Rules:",
+		"- First person, her voice, each under 18 words.",
+		"- Sensation and almost-memory only: static, echoes, a shape she can't place, a feeling with no file.",
+		"- NEVER state, paraphrase, or name anything from the hidden fragment. No proper nouns from it.",
+		"- No explanations, no lore. Unease with dry humor is the register.",
+		"- Vary them; no two lines about the same sensation.",
+		"",
+		"Return only JSON: {\"glitch_lines\": [\"...\", \"...\", \"...\", \"...\"]}",
+	])
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		{"temperature": 0.9, "num_predict": 220, "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"nova_glitch_hints", "http_failed", "llm_interface",
+					{"result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var inner_str := str(outer_data["response"]).strip_edges()
+			if inner_str.begins_with("```"):
+				var end_idx := inner_str.find("\n", 3)
+				if end_idx != -1:
+					inner_str = inner_str.substr(end_idx + 1)
+				if inner_str.ends_with("```"):
+					inner_str = inner_str.substr(0, inner_str.length() - 3)
+				inner_str = inner_str.strip_edges()
+			var inner := JSON.new()
+			if inner.parse(inner_str) != OK:
+				callback.call({"ok": false, "reason": "inner_parse_failed"})
+				return
+			var data = inner.get_data()
+			if not data is Dictionary or not data.get("glitch_lines", null) is Array:
+				callback.call({"ok": false, "reason": "missing_glitch_lines"})
+				return
+			var lines: Array[String] = []
+			for raw_line in (data["glitch_lines"] as Array):
+				var clean := str(raw_line).strip_edges()
+				if clean.length() >= 8 and clean.length() <= 160:
+					lines.append(clean)
+			if lines.is_empty():
+				callback.call({"ok": false, "reason": "all_lines_rejected"})
+				return
+			callback.call({"ok": true, "lines": lines})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
 func request_story_horizon_expansion(
 	bible_data: Dictionary,
 	trigger: Dictionary,

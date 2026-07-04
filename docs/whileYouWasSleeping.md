@@ -1427,3 +1427,25 @@ validation, speech_service, game_content_registry, local_model_gateway.
   plot-armor + nova cases), campaign_bible_store, story_state_bible_seed (+
   nova seed/privacy/wipe), story_manager_hooks (+ quest plot-armor guard),
   nova (+ quirk lifecycle), parse_check, parse_check_scene_scripts.
+
+### Follow-up same day — the two dark narrative features now fire (2026-07-04)
+- **Kaelen's hint plan was generated but NEVER delivered** — `deliver_next_kaelen_hint()`
+  had zero callers since Phase D landed. Now wired: `get_lounge_rumor()` offers the
+  next hint as a top-weight (5) "Something About Kaelen" observation from the lounge
+  contact ("<npc> glances toward the broker's corner..."), paced at most ONE hint per
+  chapter; the hidden→delivered pop happens in `record_lounge_rumor_heard()` only when
+  the player actually hears it, and nudges `_update_kaelen_mood()` — so she reads
+  progressively more slippable as the campaign uncovers her.
+- **N.O.V.A. memory-flicker delivery** (todo item from this morning): new
+  `nova_glitch` capability (large_story profile — the prompt carries the director-only
+  flicker, so it must never run on the small model). One request per campaign at
+  `_on_llm_ready` writes 4 first-person gate-transit glitch lines (sensation/almost-
+  memory only, no facts); `StoryManager.glitch_line_leaks_flicker()` rejects any line
+  sharing a long distinctive word with the flicker (gate/memory vocabulary allowlisted);
+  kept lines persist in `story_state.nova_glitch_hints` and interleave with her stock
+  gate-flinch lines (~40% share). Failure path: retry once, then stock lines + logged
+  diagnostics event — absence, not canned filler; retries naturally next session.
+- Wipe contract extended: glitch lines cleared in `Nova.reset_for_restart()` and
+  `clear_story_state()`.
+- Tests green (real passes): seed suite (+ hint pacing + leak guard cases), nova
+  (+ glitch lifecycle), gateway (capability map), story hooks, scene parse check.

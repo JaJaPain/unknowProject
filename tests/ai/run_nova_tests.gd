@@ -86,15 +86,23 @@ func _test_campaign_quirk_lifecycle() -> void:
 		str(nova._campaign_quirk) == "I inventory the escape pods twice. Trust issues.",
 		"set_campaign_quirk should strip and store the quirk."
 	)
-	# Wipe contract: restart clears the quirk and her repeat/streak memory.
+	# Glitch lines: stored stripped, blanks dropped.
+	nova.set_memory_glitch_lines(["  Static with a shape to it.  ", "", "A hum I almost recognize."])
+	_expect(
+		(nova._memory_glitch_lines as Array).size() == 2
+			and str(nova._memory_glitch_lines[0]) == "Static with a shape to it.",
+		"set_memory_glitch_lines should strip lines and drop blanks."
+	)
+	# Wipe contract: restart clears quirk, glitch lines, and repeat/streak memory.
 	nova._last_line_index["dock"] = 2
 	nova._event_memory["dock"] = {"streak": 3, "last_ms": 12345}
 	nova.reset_for_restart()
 	_expect(
 		str(nova._campaign_quirk).is_empty()
+			and (nova._memory_glitch_lines as Array).is_empty()
 			and (nova._last_line_index as Dictionary).is_empty()
 			and (nova._event_memory as Dictionary).is_empty(),
-		"reset_for_restart should wipe quirk, line-picker memory, and streaks."
+		"reset_for_restart should wipe quirk, glitch lines, line-picker memory, and streaks."
 	)
 	# Disarmed Nova never speaks a quirk line.
 	_expect(

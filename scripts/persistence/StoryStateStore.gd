@@ -122,6 +122,7 @@ static func _default_state() -> Dictionary:
 		"kaelen_hint_style": "",
 		"nova_quirk": "",
 		"nova_memory_flicker": "",
+		"nova_glitch_hints": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,

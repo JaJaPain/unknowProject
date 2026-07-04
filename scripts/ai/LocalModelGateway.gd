@@ -53,6 +53,9 @@ const CAPABILITY_PROFILES := {
 	"faction_batch": "large_story",
 	"system_story_pack": "large_story",
 	"story_horizon": "large_story",
+	# Director-privileged: the prompt carries nova_memory_flicker (a director-only
+	# bible secret), so this must NEVER be downgraded to the small-dialogue model.
+	"nova_glitch": "large_story",
 }
 
 const REQUEST_TIMEOUTS := {
@@ -71,6 +74,7 @@ const REQUEST_TIMEOUTS := {
 	"faction_batch": 45.0,
 	"system_story_pack": 60.0,
 	"story_horizon": 60.0,
+	"nova_glitch": 60.0,
 }
 
 
