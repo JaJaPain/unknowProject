@@ -19,6 +19,9 @@ var _sq_debug_fired := false   # guard: only fires once per session
 const StoryStateStoreType := preload(
 	"res://scripts/persistence/StoryStateStore.gd"
 )
+const StoryScreenshotsType := preload(
+	"res://scripts/story/StoryScreenshots.gd"
+)
 const KaelenHandoffStoreType := preload(
 	"res://scripts/persistence/KaelenHandoffStore.gd"
 )
@@ -208,6 +211,8 @@ func seed_story_state_from_bible(bible_data: Dictionary) -> void:
 	story_state["bible_seeded"] = true
 	_save_story_state()
 	_update_kaelen_mood()
+	# Silent narrative-moment screenshot: the campaign's opening frame.
+	StoryScreenshotsType.capture_deferred(_campaign_path(), "campaign_start")
 
 func clear_story_state() -> void:
 	_story_state_store = null
@@ -417,6 +422,9 @@ func advance_chapter(
 	# dock talk moves on, and last chapter's subjects are fair game again.
 	story_state["ambient_used_topics"] = []
 	_save_story_state()
+	StoryScreenshotsType.capture_deferred(
+		_campaign_path(), "chapter_%d" % int(story_state.get("chapter", 1))
+	)
 	_generate_foreshadow()
 	_update_kaelen_mood()
 	# Story context changed — replace all known agent pools so tone stays current.
@@ -840,7 +848,20 @@ func _resolve_hooks_for_quest(quest: Dictionary) -> void:
 		return
 	story_state["pending_hooks"] = remaining
 	_save_story_state()
+	# Screenshot the moment a story thread closes — but only when this was NOT
+	# the chapter's last hook, since advance_chapter captures its own frame and
+	# two near-identical shots in the same second help nobody.
+	if not remaining.is_empty():
+		StoryScreenshotsType.capture_deferred(_campaign_path(), "hook_resolved")
 	_check_chapter_advance_after_hook_resolution()
+
+
+# Campaign directory for narrative artifacts (screenshots, future PDF). ""
+# when no campaign is open — StoryScreenshots treats that as a no-op.
+func _campaign_path() -> String:
+	if _story_state_store == null or not _story_state_store.is_valid():
+		return ""
+	return str(_story_state_store.campaign_path)
 
 
 # Fires when the player has closed out every hook seeded for the current

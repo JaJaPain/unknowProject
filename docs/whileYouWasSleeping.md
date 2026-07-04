@@ -1520,3 +1520,19 @@ validation, speech_service, game_content_registry, local_model_gateway.
   "Ran a tug through it. Now it's just giving quarters."
 - run_ambient_chat_tests updated for the flat protocol + live-fired self-tag
   variants; all suites green.
+
+### Story screenshots — capture core + first three triggers (2026-07-04)
+- New StoryScreenshots.gd: silent frame grabs at narrative moments, saved to
+  <campaign>/screenshots/<unix>_<tag>.png (beside the save, so the future
+  closure-PDF generator finds them). frame_post_draw-timed so never half-drawn;
+  200-shot cap per campaign (stop, don't rotate — the PDF wants the whole arc).
+- Triggers wired in StoryManager: campaign_start (bible seed), chapter_N
+  (advance), hook_resolved (only when it's NOT the chapter's last hook — the
+  chapter shot covers that moment).
+- Two engine gotchas found by the test suite: (1) root.get_viewport() is NULL —
+  the root Window IS the viewport, cast it; (2) a never-firing frame_post_draw
+  connection in headless dangles into shutdown and crashes at exit (0xC0000005)
+  — headless now returns early from both entry points.
+- Remaining triggers (first system jump, boss kill, first dock, kill cinematic)
+  live in GameRoot/CombatManager and are logged in todo.
+- Tests: run_story_screenshot_tests + hooks/seed/scene-parse all EXIT 0.
