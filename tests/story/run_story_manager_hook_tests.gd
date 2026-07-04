@@ -1,6 +1,10 @@
 extends SceneTree
 
-const StoryManagerType := preload("res://scripts/story/StoryManager.gd")
+# Runtime load, not const preload: preloading fires before autoloads register,
+# so these autoload-referencing scripts would cache a failed compile and the
+# suite would "pass" with zero assertions (see run_story_state_bible_seed_tests).
+var StoryManagerType: GDScript = null
+var StoryQuestManagerType: GDScript = null
 
 var _failures: Array[String] = []
 
@@ -17,6 +21,13 @@ class FakeBibleStore extends RefCounted:
 
 
 func _initialize() -> void:
+	StoryManagerType = load("res://scripts/story/StoryManager.gd")
+	StoryQuestManagerType = load("res://scripts/story/StoryQuestManager.gd")
+	if StoryManagerType == null or not StoryManagerType.can_instantiate() \
+			or StoryQuestManagerType == null or not StoryQuestManagerType.can_instantiate():
+		push_error("[FAIL] Story scripts did not compile — suite cannot run.")
+		quit(1)
+		return
 	_test_resolve_hooks_removes_only_matching_hook()
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
@@ -25,6 +36,7 @@ func _initialize() -> void:
 	_test_agent_cooldown_allows_three_in_a_row()
 	_test_player_choice_recording_and_digest()
 	_test_regeneration_trigger_selection()
+	_test_story_quest_plot_armor_guard()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -36,9 +48,41 @@ func _initialize() -> void:
 
 
 func _fresh_manager() -> Node:
-	var manager := StoryManagerType.new()
+	var manager: Node = StoryManagerType.new()
 	root.add_child(manager)
 	return manager
+
+
+# Layer 3 of the plot-armor contract: no quest def may make Kaelen or N.O.V.A.
+# a kill target or a destroyable spawn, whatever upstream generation said.
+func _test_story_quest_plot_armor_guard() -> void:
+	var kill_kaelen := {
+		"id": "bad_quest_1",
+		"objective": {"type": "kill_tagged_ship", "target_persistent_id": "story.kaelen.ship"},
+	}
+	_expect(
+		not StoryQuestManagerType.quest_violates_plot_armor(kill_kaelen).is_empty(),
+		"A kill objective targeting Kaelen was not rejected."
+	)
+	var spawn_nova := {
+		"id": "bad_quest_2",
+		"objective": {"type": "kill_tagged_ship", "target_persistent_id": "story.raider.7"},
+		"spawns": [{"type": "ship", "faction": "reavers", "persistent_id": "story.nova.decoy"}],
+	}
+	_expect(
+		not StoryQuestManagerType.quest_violates_plot_armor(spawn_nova).is_empty(),
+		"A destroyable ship spawn carrying N.O.V.A.'s identity was not rejected."
+	)
+	var clean_quest := {
+		"id": "good_quest",
+		"objective": {"type": "kill_tagged_ship", "target_persistent_id": "story.reaver.leader"},
+		"spawns": [{"type": "ship", "faction": "reavers", "persistent_id": "story.reaver.leader"}],
+		"hook": {"type": "kaelen_voice", "text": "Kaelen has work: clear the Reaver leader."},
+	}
+	_expect(
+		StoryQuestManagerType.quest_violates_plot_armor(clean_quest).is_empty(),
+		"A legitimate Reaver kill quest (with Kaelen as the voice hook) was wrongly rejected."
+	)
 
 
 func _test_resolve_hooks_removes_only_matching_hook() -> void:

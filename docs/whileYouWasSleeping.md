@@ -1386,3 +1386,44 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Tests green: gateway (now asserts keep_alive), parse, mission_contract, diagnostics.
 - WATCH next playtest: confirm the first-50s timeouts are gone; the lone
   reaction_line_not_ready at ~11min and gemma4:12b JSON parse are separate follow-ups.
+
+### Procedural campaign architecture pass — N.O.V.A. in the bible, plot armor, no-vacuum ambience (2026-07-04)
+- Checkpoint first: commit f5df569, tag `pre-fable-narrative-overhaul` (rollback:
+  `git reset --hard pre-fable-narrative-overhaul`).
+- New doc `docs/campaign_bible_schema.md` — the enforced bible schema, privacy
+  tiers (player-safe vs director-only allowlist), the 3-layer plot-armor
+  contract, top-down data flow, and the new-campaign wipe contract.
+- **N.O.V.A. joins the campaign bible**: `nova_quirk` (first-person line, player-
+  safe — she speaks it verbatim as an occasional arrival/long-dock aside, 7min
+  cooldown, per-campaign unique) and `nova_memory_flicker` (director-only
+  fragment of her wiped past tied to the mystery; delivery beats still todo).
+  Full pipeline: @@labels, aliases, repairs w/ telemetry, migration backfill for
+  old saves (no forced regen — factions pattern), seeding into story_state,
+  wipe on clear/restart (`Nova.reset_for_restart` added to GameRoot reset chain).
+- **Plot armor, 3 layers** (Kaelen + N.O.V.A. can never die/be removed):
+  (1) prompt hard constraints; (2) `NarrativeDirector.plot_armor_offense()` —
+  narrow death-assertion phrase templates (word-boundary matched, supernova/
+  goes-nova masked, Kaelen can still ASSIGN kill work) validated on generated
+  bibles AND story-horizon expansions, feeding the correction-retry loop;
+  (3) `StoryQuestManager.quest_violates_plot_armor()` — hard runtime wall
+  rejecting kill objectives/destroyable spawns naming protected cast, logged
+  via GenerationDiagnostics.
+- **Narrative Relevance Rule (no line in a vacuum)**: new
+  `StoryManager.get_ambient_flavor_block()` — compact player-safe block (tone,
+  core pressure, humor rule, lead tension, foreshadow, latest known truth) now
+  injected into `fetch_chatter_background` (taunts/death cries/salvager banter)
+  and `request_lounge_chatter`; UIManager greeting/faction/trouble canned topics
+  + bartender press gained story-anchored variants; lounge rumor Echo weight
+  scales with chapter so late-campaign dock talk audibly catches up to what the
+  player has uncovered.
+- **Test harness bug found + fixed (pre-existing)**: suites that `const preload`
+  autoload-referencing scripts (StoryManager, Nova) cached a FAILED compile in
+  --script mode and printed PASS with zero assertions (verified vacuous at the
+  checkpoint too). Fixed via runtime `load()` after autoloads register + loud
+  quit(1) if compile fails: seed/hook/nova suites now genuinely execute. Other
+  suites may share the flaw — flagged for a follow-up audit. New
+  `tests/parse_check_scene_scripts.gd` compile-checks UIManager/GameRoot/etc.
+- Tests green (real passes, serial, unique --log-file): narrative_director (+
+  plot-armor + nova cases), campaign_bible_store, story_state_bible_seed (+
+  nova seed/privacy/wipe), story_manager_hooks (+ quest plot-armor guard),
+  nova (+ quirk lifecycle), parse_check, parse_check_scene_scripts.

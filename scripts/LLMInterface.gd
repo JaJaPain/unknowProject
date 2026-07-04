@@ -1148,10 +1148,21 @@ func request_lounge_chatter(
 	var system_name := str(context.get("system", "this system")).strip_edges()
 	var faction := str(context.get("faction", "independent")).strip_edges()
 	var extra := str(context.get("extra", "")).strip_edges()
+	# Narrative Relevance Rule: lounge small talk lives inside the campaign's
+	# current phase, not in a vacuum. Player-safe flavor only.
+	var flavor_block := ""
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
+		var ambient_flavor: String = StoryManager.get_ambient_flavor_block()
+		if not ambient_flavor.is_empty():
+			flavor_block = (
+				"Campaign flavor (let it shape what the room is worried or joking about — "
+				+ "never quote it directly):\n" + ambient_flavor + "\n\n"
+			)
 	var prompt := (
 		"You are writing one ambient lounge line for a space trading game.\n"
 		+ "Speaker: %s\nRole: %s\nMood: %s\nFaction/affiliation: %s\n"
 		+ "Location: %s in %s\nExtra context: %s\n\n"
+		+ flavor_block
 		+ "Write exactly ONE short in-character line the speaker says to the pilot. "
 		+ "It can be useful, atmospheric, teasing, guarded, or even a polite refusal "
 		+ "like not being in the mood to talk. Do not narrate. Do not include the "
@@ -3876,6 +3887,15 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		"- Cargo hold: " + cargo_str + "\n" + \
 		"- Faction reputations: " + rep_str + "\n" + \
 		"- Active contract: " + quest_str + "\n"
+
+	# Narrative Relevance Rule: even throwaway radio chatter anchors to the
+	# campaign's current phase. Player-safe flavor only (get_ambient_flavor_block
+	# never carries director secrets).
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
+		var ambient_flavor: String = StoryManager.get_ambient_flavor_block()
+		if not ambient_flavor.is_empty():
+			context_block += "\nCampaign flavor (let it color worries and word choice — never quote it directly):\n" + \
+				ambient_flavor + "\n"
 	
 	# Describe the generation task to Ollama based on type
 	var description = ""

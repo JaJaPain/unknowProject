@@ -25,6 +25,8 @@ func _initialize() -> void:
 	_test_variety_axes_in_prompt_and_bible()
 	_test_lane_rotation_against_history()
 	_test_kaelen_hint_fields()
+	_test_nova_fields_repair_and_normalize()
+	_test_plot_armor_validation()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative director tests")
@@ -545,6 +547,8 @@ func _test_repair_telemetry_records_fired_repairs() -> void:
 			"kaelen_hint_plan": ["A hint."],
 			"kaelen_hint_style": "dry jokes",
 			"kaelen_never_reveal": "Her origin stays unknown.",
+			"nova_quirk": "I count the airlock cycles. Someone has to.",
+			"nova_memory_flicker": "A registry stub she cannot open reacts to the refinery's name.",
 			"factions": {"zenith": "Z problem.", "aurelia": "A problem.", "vanguard": "V problem."},
 		},
 		clean_repairs
@@ -782,6 +786,116 @@ func _test_kaelen_hint_fields() -> void:
 			and str(normalized.get("kaelen_hint_style", "")) == "over-precise details"
 			and str(normalized.get("kaelen_never_reveal", "")) == "Her origin stays unknown.",
 		"Normalized bible did not carry the Kaelen hint fields."
+	)
+
+
+func _test_nova_fields_repair_and_normalize() -> void:
+	# Missing nova fields default with telemetry (a model that skips the labels
+	# still yields a working campaign).
+	var repairs: Array = []
+	var repaired := DirectorType._repaired_generated_campaign_bible({}, repairs)
+	_expect(
+		not str(repaired.get("nova_quirk", "")).strip_edges().is_empty()
+			and not str(repaired.get("nova_memory_flicker", "")).strip_edges().is_empty(),
+		"Missing nova fields were not defaulted by repair."
+	)
+	_expect(
+		repairs.has("nova_quirk_defaulted") and repairs.has("nova_memory_flicker_defaulted"),
+		"Nova repair telemetry not recorded. Got: %s" % str(repairs)
+	)
+	# Aliases: nova_secret -> nova_memory_flicker, nova_habit -> nova_quirk.
+	var aliased_repairs: Array = []
+	var aliased := DirectorType._repaired_generated_campaign_bible(
+		{
+			"nova_habit": "I recount the cargo manifest during every burn.",
+			"nova_secret": "A checksum in her boot log matches a ship that no longer exists.",
+		},
+		aliased_repairs
+	)
+	_expect(
+		str(aliased.get("nova_quirk", "")).contains("manifest")
+			and str(aliased.get("nova_memory_flicker", "")).contains("checksum"),
+		"Nova key aliases were not applied."
+	)
+	# Explicit values round-trip through normalization into the stored bible.
+	var normalized := DirectorType._normalized_campaign_bible(
+		{
+			"nova_quirk": "I audit the coolant loop hourly. It knows what it did.",
+			"nova_memory_flicker": "One wiped nav entry still hums when the gate spins up.",
+		},
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(
+		str(normalized.get("nova_quirk", "")).contains("coolant")
+			and str(normalized.get("nova_memory_flicker", "")).contains("nav entry"),
+		"Normalized bible did not carry the nova fields."
+	)
+	# The bible prompt itself asks for the fields and states the protection.
+	var prompt := DirectorType.build_campaign_bible_prompt(_baseline_bible(), "")
+	_expect(
+		prompt.contains("@@nova_quirk") and prompt.contains("@@nova_memory_flicker"),
+		"Prompt did not request the nova @@labels."
+	)
+	_expect(
+		prompt.contains("N.O.V.A. and Kaelen can never die"),
+		"Prompt did not include the N.O.V.A./Kaelen plot-armor constraint."
+	)
+
+
+func _test_plot_armor_validation() -> void:
+	# Direct offense detection.
+	_expect(
+		not DirectorType.plot_armor_offense("In the finale, Kaelen dies to save the station.").is_empty(),
+		"'Kaelen dies' was not flagged as a plot-armor offense."
+	)
+	_expect(
+		not DirectorType.plot_armor_offense("The syndicate plans to kill Kaelen at the handoff.").is_empty(),
+		"'kill Kaelen' was not flagged."
+	)
+	_expect(
+		not DirectorType.plot_armor_offense("Nova is destroyed when the relay overloads.").is_empty(),
+		"'Nova is destroyed' was not flagged."
+	)
+	_expect(
+		not DirectorType.plot_armor_offense("They will erase N.O.V.A and reflash the core.").is_empty(),
+		"'erase N.O.V.A' was not flagged."
+	)
+	# Legitimate usage must pass: Kaelen assigning kill work, dead third parties,
+	# celestial novas, and lookalike tokens.
+	_expect(
+		DirectorType.plot_armor_offense("Kaelen wants the depot destroyed before the audit.").is_empty(),
+		"Kaelen assigning destruction work should not be flagged."
+	)
+	_expect(
+		DirectorType.plot_armor_offense("Kaelen studies the manifest of the dead smuggler.").is_empty(),
+		"Kaelen near a dead third party should not be flagged."
+	)
+	_expect(
+		DirectorType.plot_armor_offense("The refinery star goes nova in old miner tales.").is_empty(),
+		"Celestial 'goes nova' should not be flagged."
+	)
+	_expect(
+		DirectorType.plot_armor_offense("Supernovae killed the first survey team.").is_empty(),
+		"'Supernovae' should not count as the character Nova."
+	)
+	# A generated bible carrying an offense fails validation with the right code.
+	var doomed := _valid_generated_bible()
+	doomed["long_term_reveal"] = "The campaign ends when Kaelen is killed by her old partner."
+	var result := DirectorType.parse_campaign_bible_response(
+		JSON.stringify({"response": JSON.stringify(doomed)}),
+		_baseline_bible(),
+		"gemma4:12b"
+	)
+	_expect(not bool(result.get("ok", true)), "A bible that kills Kaelen was accepted.")
+	var validation: ValidationResult = result.get("validation")
+	var codes: Array[String] = []
+	if validation != null:
+		for error in validation.errors:
+			codes.append(str(error.get("code", "")))
+	_expect(
+		"plot_armor_violation" in codes,
+		"Kaelen-death bible did not report plot_armor_violation. Got: %s" % str(codes)
 	)
 
 

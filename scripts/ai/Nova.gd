@@ -110,6 +110,15 @@ const HULL_WARN_COOLDOWN_MS := 15000
 const ARRIVAL_CHANCE := 0.6
 const ARRIVAL_COOLDOWN_MS := 20000
 
+# Campaign-specific quirk line, written in her first-person voice by the
+# campaign bible (nova_quirk, player-safe). Set by StoryManager at bible seed /
+# campaign load; "" between campaigns. Delivered occasionally as a dry aside so
+# every playthrough's N.O.V.A. has one habit that's hers alone this run.
+const QUIRK_LINE_CHANCE := 0.18
+const QUIRK_LINE_COOLDOWN_MS := 420000  # at most once per 7 min — a spice, not a catchphrase
+var _campaign_quirk := ""
+var _last_quirk_line_ms := -100000000
+
 var _in_combat := false
 var _last_targeted_warn_ms := -100000
 var _last_combat_warn_ms := -100000
@@ -130,6 +139,35 @@ func _ready() -> void:
 			CombatManager.combat_ended.connect(on_combat_ended)
 		if CombatManager.has_signal("action_impact"):
 			CombatManager.action_impact.connect(_on_action_impact)
+
+
+func set_campaign_quirk(quirk: String) -> void:
+	_campaign_quirk = quirk.strip_edges()
+
+
+# Wipe contract (docs/campaign_bible_schema.md): a new campaign must not inherit
+# the old one's quirk, streak memory, or no-repeat picker state.
+func reset_for_restart() -> void:
+	_campaign_quirk = ""
+	_last_quirk_line_ms = -100000000
+	_event_memory.clear()
+	_last_line_index.clear()
+	_in_combat = false
+
+
+# Occasionally delivers her campaign quirk as an idle aside. Returns true if she
+# spoke, so callers can skip their own line this beat (no double-talk).
+func _maybe_speak_quirk() -> bool:
+	if _campaign_quirk.is_empty():
+		return false
+	var now := Time.get_ticks_msec()
+	if now - _last_quirk_line_ms < QUIRK_LINE_COOLDOWN_MS:
+		return false
+	if randf() > QUIRK_LINE_CHANCE:
+		return false
+	_last_quirk_line_ms = now
+	speak(_campaign_quirk, Severity.IDLE, expression_for_event("idle"))
+	return true
 
 
 # True only when N.O.V.A. should speak an in-flight line: the player exists, is
@@ -437,6 +475,9 @@ func welcome_back() -> void:
 	if randf() > WELCOME_CHANCE:
 		return  # random: only sometimes, so it never feels scripted
 	_last_welcome_ms = now
+	# A long dock is her other natural quirk moment — she had time to stew on it.
+	if _maybe_speak_quirk():
+		return
 	var lines := [
 		"Welcome back, Captain. I kept the hull warm.",
 		"There you are. I was starting to enjoy the quiet.",
@@ -533,6 +574,10 @@ func on_system_arrived() -> void:
 	if randf() > ARRIVAL_CHANCE:
 		return
 	_last_arrival_ms = now
+	# Sometimes the arrival beat is her campaign quirk instead of stock lines —
+	# a fresh system is exactly when an obsession resurfaces.
+	if _maybe_speak_quirk():
+		return
 	var lines := [
 		"New system. Same statistical odds of something in it trying to kill me.",
 		"We're through. I'll start cataloguing the threats — it's usually a long list.",

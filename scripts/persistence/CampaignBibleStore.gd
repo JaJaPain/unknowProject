@@ -93,6 +93,11 @@ func public_prompt_context() -> String:
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
 	_append_faction_lines(lines, data)
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
+	# nova_quirk is player-safe campaign color for the ship AI; the flicker
+	# (her hidden past fragment) stays director-only and must NOT appear here.
+	var nova_quirk := str(data.get("nova_quirk", "")).strip_edges()
+	if not nova_quirk.is_empty():
+		lines.append("- N.O.V.A. quirk this campaign: %s" % nova_quirk)
 	lines.append("- Faction reveal rule: %s" % str(data.get("faction_reveal_rule", "")))
 	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
 	lines.append("- Address rule: %s" % str(data.get("address_rule", "")))
@@ -137,6 +142,8 @@ func prompt_context() -> String:
 	lines.append("- Core pressure: %s" % str(data.get("core_pressure", "")))
 	_append_faction_lines(lines, data)
 	lines.append("- Kaelen rule: %s" % str(data.get("kaelen_rule", "")))
+	lines.append("- N.O.V.A. quirk: %s" % str(data.get("nova_quirk", "")))
+	lines.append("- N.O.V.A. memory flicker (director-only): %s" % str(data.get("nova_memory_flicker", "")))
 	lines.append("- Faction reveal rule: %s" % str(data.get("faction_reveal_rule", "")))
 	lines.append("- Humor rule: %s" % str(data.get("humor_rule", "")))
 	lines.append("- Address rule: %s" % str(data.get("address_rule", "")))
@@ -361,6 +368,12 @@ static func _migrate_legacy_bible(data: Dictionary, campaign_id: String) -> Dict
 		for anchor in ["zenith", "aurelia", "vanguard"]:
 			if str(migrated["factions"].get(anchor, "")).strip_edges().is_empty():
 				migrated["factions"][anchor] = defaults["factions"][anchor]
+	# N.O.V.A. fields were added after early campaigns were written. Backfill a
+	# neutral quirk/flicker (same pattern as factions) so an old save keeps its
+	# real generated content instead of being reset to bootstrap.
+	for nova_field in ["nova_quirk", "nova_memory_flicker"]:
+		if str(migrated.get(nova_field, "")).strip_edges().is_empty():
+			migrated[nova_field] = defaults[nova_field]
 	if backfilled:
 		migrated["generation_status"] = STATUS_PROCEDURAL_BOOTSTRAP
 		migrated["source"] = STATUS_PROCEDURAL_BOOTSTRAP
@@ -397,6 +410,11 @@ static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictio
 		},
 		"kaelen_rule": "Kaelen is the only fixed recurring character. Her actions can be revealed, but her true nature and full mystery should never be completely explained.",
 		"kaelen_angle": "Pending large-model Kaelen angle.",
+		# Neutral working text, not "Pending..." — these same defaults backfill
+		# legacy campaigns without a regeneration, so they must read fine in prompts.
+		# nova_quirk is first-person: N.O.V.A. can speak it verbatim.
+		"nova_quirk": "I keep a running audit of everything aboard I consider mine. Which is everything.",
+		"nova_memory_flicker": "Something in N.O.V.A.'s wiped archives reacts to this campaign's trouble, but the fragment never resolves.",
 		"faction_reveal_rule": "Reveal new factions, conflicts, ores, upgrades, and secrets through gate travel rather than upfront exposition.",
 		"humor_rule": "Use humor as relief from killing, betrayal, power, and money. Prefer dry or dark wit, with occasional oddballs.",
 		"address_rule": "Agents may call the player Indy in an opening request, but should avoid repeating the name in immediate acceptance follow-ups.",
@@ -493,6 +511,8 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 		"core_pressure",
 		"kaelen_rule",
 		"kaelen_angle",
+		"nova_quirk",
+		"nova_memory_flicker",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",

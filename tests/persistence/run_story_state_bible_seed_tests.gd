@@ -1,15 +1,26 @@
 extends SceneTree
 
-const StoryManagerType := preload("res://scripts/story/StoryManager.gd")
+# Loaded at runtime, NOT via const preload: a preload here fires before the
+# autoload singletons register, so StoryManager (which references GlobalState,
+# LLMInterface, Nova, ...) caches a FAILED compile and every test aborts on a
+# Nil manager while the suite still prints PASS with zero assertions. Loading
+# lazily inside _initialize() compiles it after autoloads exist.
+var StoryManagerType: GDScript = null
 
 var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	StoryManagerType = load("res://scripts/story/StoryManager.gd")
+	if StoryManagerType == null or not StoryManagerType.can_instantiate():
+		push_error("[FAIL] StoryManager.gd did not compile — suite cannot run.")
+		quit(1)
+		return
 	_test_seed_maps_bible_fields_into_story_state()
 	_test_seed_is_idempotent()
 	_test_seed_maps_factions_into_pressure()
 	_test_kaelen_hint_delivery()
+	_test_nova_fields_seed_and_privacy()
 
 	if _failures.is_empty():
 		print("[PASS] Story state bible seed tests")
@@ -51,11 +62,13 @@ func _fake_bible() -> Dictionary:
 			"She flinches at the name of a dead station.",
 		],
 		"kaelen_hint_style": "over-precise details",
+		"nova_quirk": "I recount the fixture's bolts every jump. The count changes.",
+		"nova_memory_flicker": "A wiped diagnostic log hums whenever the fixture is named.",
 	}
 
 
 func _fresh_manager() -> Node:
-	var manager := StoryManagerType.new()
+	var manager: Node = StoryManagerType.new()
 	root.add_child(manager)
 	return manager
 
@@ -183,6 +196,45 @@ func _test_kaelen_hint_delivery() -> void:
 	_expect(
 		manager.deliver_next_kaelen_hint() == "",
 		"Delivering past the last hint should return an empty string."
+	)
+	manager.queue_free()
+
+
+func _test_nova_fields_seed_and_privacy() -> void:
+	var manager := _fresh_manager()
+	manager.seed_story_state_from_bible(_fake_bible())
+
+	_expect(
+		str(manager.story_state.get("nova_quirk", "")).contains("bolts"),
+		"nova_quirk was not seeded from the bible."
+	)
+	_expect(
+		str(manager.story_state.get("nova_memory_flicker", "")).contains("diagnostic log"),
+		"nova_memory_flicker was not seeded from the bible."
+	)
+	# The flicker is director-only: never in the prompt-facing context block.
+	var block: String = manager.get_story_context_block()
+	_expect(
+		not block.contains("diagnostic log"),
+		"get_story_context_block() leaked nova_memory_flicker — this must never reach prompts."
+	)
+	# Ambient flavor block is player-safe: carries the current tension, never the
+	# flicker, never undelivered Kaelen hints.
+	var flavor: String = manager.get_ambient_flavor_block()
+	_expect(
+		flavor.contains("The fixture's opening tension."),
+		"get_ambient_flavor_block() did not carry the active tension. Got: %s" % flavor
+	)
+	_expect(
+		not flavor.contains("diagnostic log") and not flavor.contains("hauler she never mentions"),
+		"get_ambient_flavor_block() leaked a director-only field."
+	)
+	# clear_story_state wipes both fields (new campaigns inherit nothing).
+	manager.clear_story_state()
+	_expect(
+		str(manager.story_state.get("nova_quirk", "")).is_empty()
+			and str(manager.story_state.get("nova_memory_flicker", "")).is_empty(),
+		"clear_story_state did not wipe the nova fields."
 	)
 	manager.queue_free()
 

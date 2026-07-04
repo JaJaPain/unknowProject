@@ -4407,10 +4407,28 @@ func _on_lounge_bartender_pressed() -> void:
 	var station_name := _current_station_display_name()
 	if station_name.is_empty():
 		station_name = "the lounge"
-	var line := (
-		"Welcome to %s. Pick a contact, keep your voice down, and don't lean "
-		+ "on anything blinking."
-	) % station_name
+	# The bartender hears everything — she's the cheapest place to feel the
+	# campaign's pulse, so her stock line shifts with the current story phase.
+	var candidates: Array[String] = [
+		(
+			"Welcome to %s. Pick a contact, keep your voice down, and don't lean "
+			+ "on anything blinking."
+		) % station_name,
+	]
+	if is_instance_valid(StoryManager):
+		var tensions: Array = StoryManager.story_state.get("active_tensions", [])
+		if not tensions.is_empty():
+			candidates.append(
+				"Half my tips this week came with an opinion about %s. The other half tipped better." %
+				str(tensions[0]).strip_edges().trim_suffix(".")
+			)
+		var foreshadow := str(StoryManager.story_state.get("current_foreshadow", "")).strip_edges()
+		if not foreshadow.is_empty():
+			candidates.append(
+				"Word behind the bar, pilot: \"%s\" I just pour drinks. The drinks agree, though." %
+				foreshadow.trim_suffix(".")
+			)
+	var line := candidates[randi() % candidates.size()]
 	show_dock_message(line, "Lounge Bartender", Color(0.0, 0.85, 0.85))
 
 
@@ -4898,8 +4916,23 @@ func _station_contact_topic_line(
 	var local_humor := str(context.get("local_humor", "")).strip_edges()
 	if local_humor.is_empty():
 		local_humor = humor_style
+	# Narrative Relevance Rule: even these canned fallback topics anchor to the
+	# campaign's current phase when story state has something to anchor to.
+	# Player-safe fields only (active tension + foreshadow, never hidden truths).
+	var story_tension := ""
+	var story_foreshadow := ""
+	if is_instance_valid(StoryManager):
+		var tensions: Array = StoryManager.story_state.get("active_tensions", [])
+		if not tensions.is_empty():
+			story_tension = str(tensions[0]).strip_edges()
+		story_foreshadow = str(StoryManager.story_state.get("current_foreshadow", "")).strip_edges()
 	match topic:
 		"greeting":
+			if not story_foreshadow.is_empty() and randf() < 0.4:
+				return "Welcome to %s. Fair warning — everyone in here has heard the same thing lately: \"%s\" So moods are what they are." % [
+					station_name,
+					story_foreshadow.trim_suffix("."),
+				]
 			if faction.is_empty():
 				return "Welcome to %s. I keep my head down, my channels paid up, and my opinions deniable." % station_name
 			return "%s keeps a desk at %s. Your name is not flashing red yet, which is our version of hospitality." % [
@@ -4907,6 +4940,12 @@ func _station_contact_topic_line(
 				station_name,
 			]
 		"faction":
+			if not story_tension.is_empty() and randf() < 0.4:
+				return "%s says it's business as usual in %s. Business as usual currently includes %s, so make of that what you will." % [
+					faction_display if not faction.is_empty() else npc_name,
+					system_name,
+					story_tension.trim_suffix("."),
+				]
 			if faction.is_empty():
 				return "%s keeps things independent in %s. No banner, no anthem, fewer meetings." % [
 					npc_name,
@@ -4919,6 +4958,12 @@ func _station_contact_topic_line(
 				rep_tier,
 			]
 		"trouble":
+			if not story_tension.is_empty() and randf() < 0.5:
+				return "You want local trouble? Same story as the whole sector right now — %s. %s just gets to host a slice of it, and the %s bill by the hour." % [
+					story_tension.trim_suffix("."),
+					station_name,
+					faction_display,
+				]
 			return "Local trouble runs between %s and %s. %s need work done, nobody wants their name on it, and the humor is %s." % [
 				station_name,
 				outpost_summary,

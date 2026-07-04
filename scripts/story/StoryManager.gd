@@ -47,6 +47,8 @@ var story_state: Dictionary = {
 	"kaelen_hidden_hints": [],
 	"kaelen_hints_delivered": [],
 	"kaelen_hint_style": "",
+	"nova_quirk": "",
+	"nova_memory_flicker": "",
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -103,6 +105,9 @@ func init_story_state(
 	_campaign_bible_store = campaign_bible_store
 	if not bible_data.is_empty() and not bool(story_state.get("bible_seeded", false)):
 		seed_story_state_from_bible(bible_data)
+	else:
+		# Reloaded campaign: state already carries the quirk — re-arm Nova with it.
+		_push_nova_campaign_flavor()
 	_push_context_to_llm()
 	# Handoff pool gen deferred to _on_llm_ready — Ollama isn't up yet here.
 
@@ -155,6 +160,17 @@ func seed_story_state_from_bible(bible_data: Dictionary) -> void:
 	var kaelen_angle := str(bible_data.get("kaelen_angle", "")).strip_edges()
 	if not kaelen_angle.is_empty():
 		story_state["kaelen_hidden_angle"] = kaelen_angle
+
+	# N.O.V.A.'s campaign color. The quirk is player-safe and rides into ambient
+	# prompts + her line pools; the memory flicker is director-only (same
+	# protection as kaelen_hidden_angle — never in get_story_context_block()).
+	var nova_quirk := str(bible_data.get("nova_quirk", "")).strip_edges()
+	if not nova_quirk.is_empty():
+		story_state["nova_quirk"] = nova_quirk
+	var nova_flicker := str(bible_data.get("nova_memory_flicker", "")).strip_edges()
+	if not nova_flicker.is_empty():
+		story_state["nova_memory_flicker"] = nova_flicker
+	_push_nova_campaign_flavor()
 
 	# Seed Kaelen's hint plan. Undelivered hints are director-only (never in
 	# get_story_context_block, same as player_does_not_know_yet); they move to the
@@ -215,12 +231,17 @@ func clear_story_state() -> void:
 		"kaelen_hidden_hints": [],
 		"kaelen_hints_delivered": [],
 		"kaelen_hint_style": "",
+		"nova_quirk": "",
+		"nova_memory_flicker": "",
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
 		"rumor_trails_consumed_index": 0,
 		"regeneration_fallback_count": 0,
 	}
+	# Part of the wipe contract: a new campaign must not inherit the old
+	# campaign's N.O.V.A. quirk (pushes the now-empty quirk, disarming her).
+	_push_nova_campaign_flavor()
 
 # ── Phase C: Mission causality ─────────────────────────────────────────────────
 # The single reason a mission generated right now exists. Safe for prompts —
@@ -392,6 +413,48 @@ func advance_chapter(
 	_update_kaelen_mood()
 	# Story context changed — replace all known agent pools so tone stays current.
 	_replace_all_handoff_pools()
+
+# Hands N.O.V.A. her campaign-specific quirk so her ambient line pools can lean
+# on it. Quirk only — the memory flicker is director-only and never leaves here.
+func _push_nova_campaign_flavor() -> void:
+	if not is_instance_valid(Nova):
+		return
+	if Nova.has_method("set_campaign_quirk"):
+		Nova.set_campaign_quirk(str(story_state.get("nova_quirk", "")).strip_edges())
+
+
+# Compact, player-safe campaign flavor for AMBIENT prompts (background chatter,
+# lounge lines, minor NPC topics). Smaller than get_story_context_block() on
+# purpose: ambient generation runs on the small model with tight budgets, so
+# this carries only what shifts tone — tone/pressure from the bible, the current
+# chapter's lead tension, the foreshadow whisper, and N.O.V.A.'s quirk when the
+# speaker is her. Never includes any director-only field.
+func get_ambient_flavor_block() -> String:
+	var lines: Array[String] = []
+	if _campaign_bible_store_ready():
+		var bible: Dictionary = _campaign_bible_store.data
+		var tone := str(bible.get("tone", "")).strip_edges()
+		if not tone.is_empty():
+			lines.append("Campaign tone: %s" % tone)
+		var pressure := str(bible.get("core_pressure", "")).strip_edges()
+		if not pressure.is_empty():
+			lines.append("What everyone is worried about: %s" % pressure)
+		var humor := str(bible.get("humor_rule", "")).strip_edges()
+		if not humor.is_empty():
+			lines.append("Humor register: %s" % humor)
+	var tensions: Array = story_state.get("active_tensions", [])
+	if not tensions.is_empty():
+		lines.append("Current local tension: %s" % str(tensions[0]).strip_edges())
+	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
+	if not foreshadow.is_empty():
+		lines.append("Whisper going around: %s" % foreshadow)
+	var known: Array = story_state.get("player_knows", [])
+	if not known.is_empty():
+		lines.append("Common knowledge by now: %s" % str(known[known.size() - 1]).strip_edges())
+	if lines.is_empty():
+		return ""
+	return "\n".join(lines)
+
 
 func _save_story_state() -> void:
 	if _story_state_store == null or not _story_state_store.is_valid():
@@ -945,6 +1008,10 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 				station_name,
 			],
 		})
+	# Echo weight climbs with chapter: early on, dock talk chases open threads;
+	# by late campaign the things the player has already uncovered dominate the
+	# room — the world audibly catches up to the mystery as it unravels.
+	var echo_weight := clampi(int(story_state.get("chapter", 1)) - 1, 1, 5)
 	var known: Array = story_state.get("player_knows", [])
 	for truth in known:
 		var text := str(truth).strip_edges()
@@ -954,7 +1021,7 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 			"id": "known:%s" % text.sha256_text().substr(0, 12),
 			"title": "Echo",
 			"source": "Story",
-			"weight": 1,
+			"weight": echo_weight,
 			"line": "That thing you heard about %s? It is starting to show up in ordinary dock talk now." % text,
 		})
 	if candidates.is_empty():

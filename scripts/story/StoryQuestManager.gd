@@ -63,9 +63,51 @@ func is_active() -> bool:
 func get_active_quest() -> Dictionary:
 	return _quest.duplicate(true)
 
+# Layer 3 of the plot-armor contract (docs/campaign_bible_schema.md): Kaelen and
+# N.O.V.A. are permanent cast. No generated or scripted quest may make either one
+# a kill target or spawn them as a destroyable ship — whatever the bible or an
+# LLM response said upstream, this is the hard wall.
+const PLOT_PROTECTED_IDS := ["kaelen", "nova", "n.o.v.a"]
+
+
+# True when a quest definition would put protected cast in a killable position.
+# Checks the kill objective's target and every spawn's persistent_id/faction.
+static func quest_violates_plot_armor(def: Dictionary) -> String:
+	var obj: Dictionary = def.get("objective", {}) if def.get("objective", {}) is Dictionary else {}
+	var obj_type := str(obj.get("type", ""))
+	if obj_type.begins_with("kill"):
+		for field in ["target_persistent_id", "target_npc_id", "target_faction"]:
+			var target := str(obj.get(field, "")).to_lower()
+			for protected in PLOT_PROTECTED_IDS:
+				if target.contains(protected):
+					return "objective.%s targets protected cast '%s'" % [field, protected]
+	for spawn in def.get("spawns", []):
+		if not spawn is Dictionary:
+			continue
+		var pid := str((spawn as Dictionary).get("persistent_id", "")).to_lower()
+		var spawn_faction := str((spawn as Dictionary).get("faction", "")).to_lower()
+		for protected in PLOT_PROTECTED_IDS:
+			# A destroyable ship spawn carrying a protected identity is the risk;
+			# stations/props named after them are fine.
+			if str((spawn as Dictionary).get("type", "")) == "ship" \
+					and (pid.contains(protected) or spawn_faction == protected):
+				return "spawn persistent_id/faction '%s' would make protected cast destroyable" % protected
+	return ""
+
+
 func begin_quest(def: Dictionary) -> void:
 	if _active:
 		push_warning("[StoryQuestManager] Quest already active — ignoring begin_quest.")
+		return
+	var armor_violation := quest_violates_plot_armor(def)
+	if not armor_violation.is_empty():
+		push_warning("[StoryQuestManager] REJECTED quest '%s': %s" % [str(def.get("id", "?")), armor_violation])
+		GenerationDiagnostics.record_event(
+			"story_quest",
+			"plot_armor_rejected",
+			"story_quest_manager",
+			{"quest_id": str(def.get("id", "?")), "violation": armor_violation}
+		)
 		return
 	_quest = def.duplicate(true)
 	_active = true

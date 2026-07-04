@@ -121,6 +121,10 @@ const _CAMPAIGN_BIBLE_LABEL_FIELDS := [
 	 "guide": "How Kaelen deflects this campaign, e.g. deflect-with-jokes, over-precise-details, selective-silence."},
 	{"label": "kaelen_never_reveal", "kind": "text",
 	 "guide": "HIDDEN: one line naming what must stay unresolved even at full trail completion."},
+	{"label": "nova_quirk", "kind": "text",
+	 "guide": "One campaign-specific habit or fixation for N.O.V.A., the ship's dry, self-preserving AI, written in HER first-person voice as a line she could say aloud (e.g. 'I audit the air filters hourly. Someone aboard has to have standards.'). Player-safe. Under 140 chars."},
+	{"label": "nova_memory_flicker", "kind": "text",
+	 "guide": "HIDDEN director-only: one corrupted fragment of N.O.V.A.'s wiped past that obliquely connects to the main mystery. Never shown to the player; surfaces only as glitch-flavored hints. Under 180 chars."},
 	{"label": "faction_reveal_rule", "kind": "text",
 	 "guide": "Rule for how new factions get revealed through gate travel."},
 	{"label": "humor_rule", "kind": "text", "guide": "Rule for the dry, slightly dark PG-13 humor."},
@@ -189,6 +193,9 @@ static func build_campaign_bible_prompt(
 		"- Kaelen's hidden identity can be strange, mundane, human, non-human, technological, or unknown, but the story bible must frame it as hidden director knowledge only.",
 		"- kaelen_angle is HIDDEN director-only knowledge: what she secretly knows or did. It must never restate kaelen_rule's public role, and must never be shown to the player or to small-model prompts.",
 		"- kaelen_hint_plan entries are player-safe SURFACE observations that only HINT at kaelen_angle (odd habits, small inconsistencies); they must never state or explain her secret.",
+		"- N.O.V.A., the player's ship AI, is fixed cast alongside Kaelen: sardonic, self-preserving, the ship is her body. She and the player both woke with wiped memories after the gate accident.",
+		"- N.O.V.A. and Kaelen can never die, be destroyed, deleted, or permanently removed in ANY beat, arc, rumor, or reveal. Do not write their deaths even as a threat that comes true.",
+		"- nova_memory_flicker is HIDDEN director-only: one corrupted fragment of N.O.V.A.'s lost past that obliquely ties into the main mystery without explaining either.",
 		"- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
 		"- Use dry, slightly dark PG-13 humor. Avoid repeating example jokes or catchphrases.",
 		"- Include exactly one rumor trail that can eventually lead to a hidden discovery or endgame easter egg.",
@@ -555,6 +562,8 @@ static func assemble_campaign_bible_from_labels(blocks: Dictionary) -> Dictionar
 		"kaelen_hint_plan": v.get("kaelen_hint_plan", []),
 		"kaelen_hint_style": v.get("kaelen_hint_style", ""),
 		"kaelen_never_reveal": v.get("kaelen_never_reveal", ""),
+		"nova_quirk": v.get("nova_quirk", ""),
+		"nova_memory_flicker": v.get("nova_memory_flicker", ""),
 		"faction_reveal_rule": v.get("faction_reveal_rule", ""),
 		"humor_rule": v.get("humor_rule", ""),
 		"address_rule": v.get("address_rule", ""),
@@ -686,6 +695,11 @@ static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: A
 			"kaelen_secret": "kaelen_angle",
 			"kaelen_hidden_angle": "kaelen_angle",
 			"angle": "kaelen_angle",
+			"nova_rule": "nova_quirk",
+			"nova_habit": "nova_quirk",
+			"nova_secret": "nova_memory_flicker",
+			"nova_fragment": "nova_memory_flicker",
+			"nova_memory": "nova_memory_flicker",
 			"faction_rule": "faction_reveal_rule",
 			"humor": "humor_rule",
 			"fallback": "fallback_rule",
@@ -712,6 +726,7 @@ static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: A
 	_repair_kaelen_public_role(repaired, repairs)
 	_repair_kaelen_angle(repaired, repairs)
 	_repair_kaelen_hints(repaired, repairs)
+	_repair_nova_fields(repaired, repairs)
 	_repair_factions(repaired, repairs)
 	_repair_rumor_trails(repaired, repairs)
 	_repair_regeneration_triggers(repaired)
@@ -782,6 +797,25 @@ static func _repair_kaelen_hints(target: Dictionary, repairs: Array = []) -> voi
 	if str(target.get("kaelen_never_reveal", "")).strip_edges().is_empty():
 		target["kaelen_never_reveal"] = "Kaelen's full identity and true motive are never confirmed."
 		repairs.append("kaelen_never_reveal_defaulted")
+
+
+# N.O.V.A. is fixed cast (see plot-armor contract in docs/campaign_bible_schema.md).
+# nova_quirk is player-safe campaign color; nova_memory_flicker is director-only.
+# Defaults are neutral scaffolding so a model that skips the labels still yields
+# a working campaign — the quirk just stays generic instead of campaign-flavored.
+static func _repair_nova_fields(target: Dictionary, repairs: Array = []) -> void:
+	if str(target.get("nova_quirk", "")).strip_edges().is_empty():
+		target["nova_quirk"] = (
+			"I keep a running audit of everything aboard I consider mine. " +
+			"Which is everything."
+		)
+		repairs.append("nova_quirk_defaulted")
+	if str(target.get("nova_memory_flicker", "")).strip_edges().is_empty():
+		target["nova_memory_flicker"] = (
+			"Something in N.O.V.A.'s wiped archives reacts to this campaign's trouble, " +
+			"but the fragment never resolves."
+		)
+		repairs.append("nova_memory_flicker_defaulted")
 
 
 static func _repair_kaelen_public_role(target: Dictionary, repairs: Array = []) -> void:
@@ -969,6 +1003,8 @@ static func _normalized_campaign_bible(
 		"kaelen_hint_plan",
 		"kaelen_hint_style",
 		"kaelen_never_reveal",
+		"nova_quirk",
+		"nova_memory_flicker",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",
@@ -1018,6 +1054,8 @@ static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResul
 		"core_pressure",
 		"kaelen_rule",
 		"kaelen_angle",
+		"nova_quirk",
+		"nova_memory_flicker",
 		"faction_reveal_rule",
 		"humor_rule",
 		"address_rule",
@@ -1055,7 +1093,113 @@ static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResul
 			"Kaelen must publicly remain a broker, fixer, or contract handler.",
 			"kaelen_rule"
 		)
+	_validate_plot_armor(bible, result)
 	return result
+
+
+# ── Plot armor: Kaelen and N.O.V.A. are structural cast and can never die ──────
+# Layer 2 of the plot-armor contract (docs/campaign_bible_schema.md): scan every
+# string in a generated bible (or horizon expansion) for phrasing that kills,
+# destroys, or permanently removes either character. A hit is a validation error,
+# which feeds the correction-retry loop — the model gets told exactly what to fix.
+# "supernova"/"goes nova" style celestial usage is masked out before matching so
+# a star can still explode without tripping the guard.
+# Explicit death-assertion templates, {n} = protected name. Deliberately
+# NARROW: Kaelen assigning kill contracts ("Kaelen wants the depot destroyed")
+# or gossiping about dead smugglers must never trip this — a false positive here
+# can block campaign generation entirely. The model evading tight phrasing is
+# acceptable because layer 3 (StoryQuestManager runtime guard) is the hard wall;
+# this layer just catches the obvious cases early enough to retry cheaply.
+const _PLOT_ARMOR_DEATH_PATTERNS := [
+	"{n} dies", "{n} died", "{n} must die", "{n} will die",
+	"{n} is dead", "{n} was dead", "{n} turns up dead", "{n} is found dead",
+	"{n} is killed", "{n} was killed", "{n} gets killed",
+	"{n} is destroyed", "{n} was destroyed", "{n} gets destroyed",
+	"{n} is deleted", "{n} was deleted", "{n} is erased", "{n} was erased",
+	"{n} is decommissioned", "{n} is dismantled", "{n} is scrapped",
+	"{n} sacrifices herself", "{n} sacrifices itself", "{n} sacrifices themself",
+	"{n}'s death", "death of {n}",
+	"kill {n}", "kills {n}", "killing {n}", "kill off {n}",
+	"destroy {n}", "destroys {n}", "destroying {n}",
+	"delete {n}", "deletes {n}", "deleting {n}",
+	"erase {n}", "erases {n}", "erasing {n}",
+	"sacrifice {n}", "sacrifices {n}",
+	"assassinate {n}", "assassinates {n}",
+	"{n} is gone for good", "{n} is permanently offline",
+	"{n} shuts down for good", "{n} is shut down for good",
+]
+
+
+static func _validate_plot_armor(bible: Dictionary, result: ValidationResult) -> void:
+	var texts: Array[String] = []
+	_collect_strings(bible, texts)
+	for text in texts:
+		var offense := plot_armor_offense(text)
+		if not offense.is_empty():
+			result.add_error(
+				"plot_armor_violation",
+				"Kaelen and N.O.V.A. are permanent cast and can never die or be removed. Rewrite without this: \"%s\"" % offense,
+				"plot_armor"
+			)
+			return  # one clear correction per attempt beats a wall of errors
+
+
+# Returns a short excerpt of the offending phrasing, or "" if the text is clean.
+# Public so StoryQuestManager (layer 3) and tests can reuse the same rule.
+static func plot_armor_offense(text: String) -> String:
+	var lower := text.to_lower()
+	# Mask celestial usage so "the star goes supernova" can't false-positive.
+	lower = lower.replace("supernova", "star-event").replace("goes nova", "flares") \
+		.replace("going nova", "flaring")
+	# Collapse whitespace so multi-word patterns match across line breaks.
+	lower = lower.replace("\n", " ").replace("\t", " ")
+	while lower.contains("  "):
+		lower = lower.replace("  ", " ")
+	for cast_name in ["kaelen", "nova", "n.o.v.a"]:
+		for pattern in _PLOT_ARMOR_DEATH_PATTERNS:
+			var phrase := str(pattern).replace("{n}", cast_name)
+			var idx := _find_word(lower, phrase)
+			if idx != -1:
+				var start := maxi(0, idx - 24)
+				return lower.substr(start, phrase.length() + 48).strip_edges()
+	return ""
+
+
+# Index of `word`/phrase in `text` delimited by non-alphanumeric characters —
+# so "dies" never matches inside "studies" and "nova" never inside "supernovae".
+# Returns -1 when absent.
+static func _find_word(text: String, word: String) -> int:
+	var idx := text.find(word)
+	while idx != -1:
+		if _is_word_at(text, word, idx):
+			return idx
+		idx = text.find(word, idx + 1)
+	return -1
+
+
+static func _is_word_at(text: String, word: String, idx: int) -> bool:
+	if idx > 0 and _is_word_char(text[idx - 1]):
+		return false
+	var end := idx + word.length()
+	if end < text.length() and _is_word_char(text[end]):
+		return false
+	return true
+
+
+static func _is_word_char(c: String) -> bool:
+	return (c >= "a" and c <= "z") or (c >= "0" and c <= "9")
+
+
+static func _collect_strings(value: Variant, out: Array) -> void:
+	if value is Dictionary:
+		for key in (value as Dictionary).keys():
+			_collect_strings((value as Dictionary)[key], out)
+	elif value is Array:
+		for item in value:
+			_collect_strings(item, out)
+	elif value is String:
+		if not str(value).strip_edges().is_empty():
+			out.append(str(value))
 
 
 static func _failure(reason: String, validation: ValidationResult) -> Dictionary:
@@ -1135,6 +1279,19 @@ static func parse_story_horizon_expansion_response(
 		return _failure("response_json_parse_failed", response_validation)
 	var repaired := _repair_text_tree(parsed["data"]) as Dictionary
 	var result := ValidationResultType.new()
+	# Horizon expansions extend the campaign mid-run — the same plot-armor rule
+	# that guards initial generation applies to every appended arc/trail/beat.
+	var expansion_texts: Array[String] = []
+	_collect_strings(repaired, expansion_texts)
+	for expansion_text in expansion_texts:
+		var offense := plot_armor_offense(expansion_text)
+		if not offense.is_empty():
+			result.add_error(
+				"plot_armor_violation",
+				"Kaelen and N.O.V.A. can never die or be removed. Offending text: \"%s\"" % offense,
+				"plot_armor"
+			)
+			return _failure("story_horizon_expansion_validation_failed", result)
 	if action == "append_story_arc":
 		var arc: Dictionary = repaired.get("story_arc", {})
 		if str(arc.get("name", "")).strip_edges().is_empty() \
