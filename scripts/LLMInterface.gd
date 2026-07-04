@@ -1496,19 +1496,31 @@ func _on_campaign_bible_generation_completed(
 # so it stays unit-testable without a network. Callback receives
 # {ok, inner_text} or {ok: false, reason}.
 func request_ambient_chat(prompt: String, callback: Callable) -> void:
-	if _skip_for_campaign_bible_priority("ambient_chat"):
+	_request_small_inner_text("ambient_chat", prompt, callback)
+
+
+# Lounge Social Layer L1: one conversation turn (opener or reply). Same flat
+# protocol discipline; parsing lives in LoungeConversation.parse_turn.
+func request_lounge_conversation_turn(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text("lounge_chat", prompt, callback)
+
+
+# Shared small-model transport: request under `capability`, unwrap the Ollama
+# envelope (+ markdown fences), return the inner text for the caller's own
+# parser. format:"json" is load-bearing: freeform lets qwen3:4b narrate its
+# planning instead of answering (live-fired 6/6, 2026-07-04). Requested shapes
+# must be FLAT few-key objects — nesting is what it corrupts, not JSON itself.
+func _request_small_inner_text(capability: String, prompt: String, callback: Callable) -> void:
+	if _skip_for_campaign_bible_priority(capability):
 		callback.call({"ok": false, "reason": "campaign_bible_priority"})
 		return
-	# format:"json" is load-bearing here: freeform lets qwen3:4b narrate its
-	# planning instead of answering (live-fired 6/6). The requested shape is a
-	# FLAT four-key object — nesting is what it corrupts, not JSON itself.
 	var payload := build_generation_body(
-		"ambient_chat", prompt, "json",
+		capability, prompt, "json",
 		{"temperature": 0.95, "num_predict": 220, "seed": randi()}
 	)
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = request_timeout_for_capability("ambient_chat")
+	temp_http.timeout = request_timeout_for_capability(capability)
 	temp_http.request_completed.connect(
 		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 			temp_http.queue_free()

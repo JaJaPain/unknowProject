@@ -59,6 +59,7 @@ const CAPABILITY_PROFILES := {
 	"salvager_profile": "small_dialogue",
 	"partial_delivery_line": "small_dialogue",
 	"ambient_chat": "small_dialogue",
+	"lounge_chat": "small_dialogue",
 	"system_names": "large_story",
 	"campaign_bible": "large_story",
 	"faction_batch": "large_story",
@@ -83,6 +84,9 @@ const REQUEST_TIMEOUTS := {
 	# Background beat with no player waiting on it — give the 2-4 line convo
 	# room to finish rather than racing an 8s default.
 	"ambient_chat": 14.0,
+	# Player IS waiting on lounge turns (they just pressed a reply) — keep it
+	# tighter; a slow turn falls back to the one-liner path rather than stalling.
+	"lounge_chat": 12.0,
 	"system_names": 30.0,
 	"campaign_bible": 600.0,
 	"faction_batch": 45.0,
