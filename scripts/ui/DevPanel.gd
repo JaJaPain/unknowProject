@@ -144,6 +144,10 @@ func _build_chrome() -> void:
 	add_action_button("Spawn Boss",     func(): emit_signal("spawn_boss_requested"))
 	add_action_button("Spawn Squad",    func(): emit_signal("spawn_squad_requested"))
 	add_action_button("Restock Stores", func(): emit_signal("stores_restock_requested"))
+	add_action_button("Fire Ambient Chat", func():
+		if is_instance_valid(AmbientChat) and AmbientChat.has_method("debug_fire_now"):
+			print("[DevPanel] %s" % str(AmbientChat.debug_fire_now()))
+	)
 	# ── Add more quick actions here in future sessions ──
 
 # ── Faction tuning tab ────────────────────────────────────────────────────────

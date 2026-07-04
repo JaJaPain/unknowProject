@@ -50,6 +50,7 @@ var story_state: Dictionary = {
 	"nova_quirk": "",
 	"nova_memory_flicker": "",
 	"nova_glitch_hints": [],
+	"ambient_used_topics": [],
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -236,6 +237,7 @@ func clear_story_state() -> void:
 		"nova_quirk": "",
 		"nova_memory_flicker": "",
 		"nova_glitch_hints": [],
+		"ambient_used_topics": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -411,6 +413,9 @@ func advance_chapter(
 	story_state["player_does_not_know_yet"] = hidden.slice(revealed)
 	story_state["active_tensions"] = new_tensions
 	story_state["pending_hooks"] = new_hooks
+	# Ambient topics retire per chapter (design doc §7): a new chapter means the
+	# dock talk moves on, and last chapter's subjects are fair game again.
+	story_state["ambient_used_topics"] = []
 	_save_story_state()
 	_generate_foreshadow()
 	_update_kaelen_mood()
@@ -1159,6 +1164,23 @@ func _next_kaelen_hint_if_due() -> String:
 	if delivered_count >= int(story_state.get("chapter", 1)):
 		return ""
 	return str(undelivered[0]).strip_edges()
+
+
+# Ambient-chat topic dedup (Phase E). Capped like hinted_lounge_rumors so the
+# state file can't grow unbounded on a very long chapter.
+func record_ambient_topic_used(topic_id: String) -> void:
+	var clean_id := topic_id.strip_edges()
+	if clean_id.is_empty():
+		return
+	var used: Array = story_state.get("ambient_used_topics", []).duplicate() \
+		if story_state.get("ambient_used_topics", []) is Array else []
+	if clean_id in used:
+		return
+	used.append(clean_id)
+	while used.size() > 48:
+		used.pop_front()
+	story_state["ambient_used_topics"] = used
+	_save_story_state()
 
 
 func record_lounge_rumor_heard(rumor_id: String) -> void:

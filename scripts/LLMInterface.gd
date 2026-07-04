@@ -1490,6 +1490,55 @@ func _on_campaign_bible_generation_completed(
 # ── Phase C: Story horizon expansion ───────────────────────────────────────────
 # Small follow-up call, only fired when a campaign's prepared reserve runs out.
 # Same think:false/keep_alive:0 large_story handling as campaign_bible.
+# Phase E ambient conversations (AmbientChatGenerator). Thin transport: builds
+# the small-model request, unwraps the Ollama envelope, and hands the INNER
+# text back — shape validation lives in AmbientChatGenerator.parse_chat_lines
+# so it stays unit-testable without a network. Callback receives
+# {ok, inner_text} or {ok: false, reason}.
+func request_ambient_chat(prompt: String, callback: Callable) -> void:
+	if _skip_for_campaign_bible_priority("ambient_chat"):
+		callback.call({"ok": false, "reason": "campaign_bible_priority"})
+		return
+	var payload := build_generation_body(
+		"ambient_chat", prompt, "json",
+		{"temperature": 0.95, "num_predict": 220, "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("ambient_chat")
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				callback.call({"ok": false, "reason": "http_failed_result_%d_code_%d" % [result, response_code]})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var inner_str := str(outer_data["response"]).strip_edges()
+			if inner_str.begins_with("```"):
+				var end_idx := inner_str.find("\n", 3)
+				if end_idx != -1:
+					inner_str = inner_str.substr(end_idx + 1)
+				if inner_str.ends_with("```"):
+					inner_str = inner_str.substr(0, inner_str.length() - 3)
+				inner_str = inner_str.strip_edges()
+			callback.call({"ok": true, "inner_text": inner_str})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
 # Writes N.O.V.A.'s campaign-specific gate-glitch lines from her director-only
 # memory flicker. Director-privileged: the flicker is a bible secret, so this
 # runs on the LARGE model only ("nova_glitch" -> large_story in

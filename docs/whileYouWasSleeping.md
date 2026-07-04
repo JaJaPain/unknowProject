@@ -1472,3 +1472,30 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Budget check: bible prompt + labeled output fits comfortably in 16k; quest-gen
   prompt (biggest small-model prompt: examples + bible + story state) fits in 8k.
   If a future prompt grows past these, raise the profile const — do NOT per-call.
+
+### Phase E landed — the world now talks to itself (2026-07-04, dedicated session)
+- Checkpoint tag: `pre-phase-e-ambient-chat` (rollback: git reset --hard <tag>).
+- New autoload `AmbientChat` (scripts/story/AmbientChatGenerator.gd), per
+  docs/design_narrative_system.md §7: every 3-5 min of open play, two named
+  station locals (8 archetype pools: hauler captain, dock controller, customs
+  clerk, cafeteria cook...) have a 2-4 line conversation in system chat.
+- Bucket roll per beat: 50% mundane (24-subject pool — sock-eating laundry
+  cyclers, form 77-C in triplicate, the horoscope printer that only prints bad
+  omens), 30% story-adjacent (active tension / foreshadow / uncovered truths),
+  20% overheard intel (pending hooks as half-heard fragments — "at least one
+  detail wrong or disputed between them").
+- Privacy: candidates read ONLY player-safe story-state keys; test suite feeds
+  a state salted with SECRET_* tokens in every director-only field and asserts
+  none can surface. Flavor comes from get_ambient_flavor_block() (already safe).
+- used_topics: per-chapter retirement in story_state.ambient_used_topics
+  (advance_chapter clears; capped 48). Story/intel exhaustion falls back to
+  mundane; full mundane exhaustion allows reuse over silence.
+- Delivery: staggered 2.4-4.2s line gaps, two muted speaker colors, mid-convo
+  abort on dock/combat/restart (reads as the channel drifting out of range).
+- Fallback policy: generation/shape failure = silence + GenerationDiagnostics
+  event ("fallbacks are failures" — no canned filler). Single-voice responses
+  rejected (a monologue is not a conversation).
+- Wiring: ambient_chat capability (small profile, 14s timeout), project.godot
+  autoload, GameRoot reset chain, DevPanel "Fire Ambient Chat" action button.
+- Tests green: new run_ambient_chat_tests (buckets, privacy, dedup, prompt,
+  parser, chapter bookkeeping) + parse_check, seed, hooks, gateway all EXIT 0.

@@ -123,6 +123,7 @@ static func _default_state() -> Dictionary:
 		"nova_quirk": "",
 		"nova_memory_flicker": "",
 		"nova_glitch_hints": [],
+		"ambient_used_topics": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
