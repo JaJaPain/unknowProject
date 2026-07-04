@@ -284,6 +284,29 @@ Root: `SpaceGame`
       - 📄 [pass1.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass1.json)
       - 📄 [pass2.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass2.json)
     - 📄 [generate_story_candidates.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/generate_story_candidates.py)
+    - 📄 [labeled_bible.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_bible.py)
+      - `def _field_ask(field)`
+      - `def build_oneshot_prompt(seed)`
+      - `def build_repair_prompt(seed, failed_labels, prior_values)`
+      - `def parse_blocks(text)`
+      - `def _coerce(field, lines)`
+      - `def _truncate_words(value, limit)`
+      - `def _slugify(value)`
+      - `def _extract_int(value)`
+      - `def validate(blocks)`
+      - `def assemble_bible(v)`
+      - `def ollama_generate(prompt)`
+      - `def condense_text(text, limit)`
+      - `def condense_overlong(values, verbose)`
+      - `def generate_bible(seed, max_repair_rounds, verbose)`
+      - `def main()`
+    - 📂 **labeled_runs/**
+      - 📄 [bible_20260702_204618_seed424242.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204618_seed424242.json)
+      - 📄 [bible_20260702_204703_seed7.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204703_seed7.json)
+      - 📄 [bible_20260702_204731_seed918273.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204731_seed918273.json)
+      - 📄 [bible_20260702_204744_seed555001.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204744_seed555001.json)
+      - 📄 [bible_20260702_204849_seed918273.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204849_seed918273.json)
+      - 📄 [bible_20260702_204903_seed313131.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204903_seed313131.json)
     - 📄 [notes_two_pass_findings.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/notes_two_pass_findings.md)
     - 📄 [patched_production_prompt_status.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/patched_production_prompt_status.md)
     - 📄 [progress.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/progress.md)
@@ -1984,6 +2007,7 @@ Root: `SpaceGame`
     - 📄 [space_station1.glb](file:///C:/CodingProjects/SpaceGame/assets/space_station1.glb)
     - 📄 [space_station2.glb](file:///C:/CodingProjects/SpaceGame/assets/space_station2.glb)
     - 📄 [wanted_posters.json](file:///C:/CodingProjects/SpaceGame/assets/wanted_posters.json)
+  - 📄 [clean_saves.bat](file:///C:/CodingProjects/SpaceGame/clean_saves.bat)
   - 📂 **data/**
     - 📂 **content/**
       - 📄 [factions.json](file:///C:/CodingProjects/SpaceGame/data/content/factions.json)
@@ -1998,6 +2022,7 @@ Root: `SpaceGame`
     - 📂 **systems/**
       - 📄 [system_registry.json](file:///C:/CodingProjects/SpaceGame/data/systems/system_registry.json)
   - 📂 **docs/**
+    - 📄 [GateMalfunctionWTF.md](file:///C:/CodingProjects/SpaceGame/docs/GateMalfunctionWTF.md)
     - 📄 [assets_metadata_notes.md](file:///C:/CodingProjects/SpaceGame/docs/assets_metadata_notes.md)
     - 📄 [attack_mission_flow.md](file:///C:/CodingProjects/SpaceGame/docs/attack_mission_flow.md)
     - 📄 [audit_boost_thruster.md](file:///C:/CodingProjects/SpaceGame/docs/audit_boost_thruster.md)
@@ -2067,6 +2092,7 @@ Root: `SpaceGame`
     - 📄 [skill_creating_safezones.md](file:///C:/CodingProjects/SpaceGame/docs/skill_creating_safezones.md)
     - 📄 [story_manager_design.md](file:///C:/CodingProjects/SpaceGame/docs/story_manager_design.md)
     - 📄 [story_manager_impl.md](file:///C:/CodingProjects/SpaceGame/docs/story_manager_impl.md)
+    - 📄 [storytelling_architecture_plan.md](file:///C:/CodingProjects/SpaceGame/docs/storytelling_architecture_plan.md)
     - 📄 [test_and_diagnostics_notes.md](file:///C:/CodingProjects/SpaceGame/docs/test_and_diagnostics_notes.md)
     - 📄 [testing_generated_systems_visual.md](file:///C:/CodingProjects/SpaceGame/docs/testing_generated_systems_visual.md)
     - 📄 [todo.md](file:///C:/CodingProjects/SpaceGame/docs/todo.md)
@@ -2336,6 +2362,8 @@ Root: `SpaceGame`
       - `func _profile_role_key(role: String) -> String`
       - `func _debug_spawn_boss() -> void`
       - `func _debug_spawn_squad() -> void`
+      - `func _debug_spawn_inbound_hostile() -> void`
+      - `func _debug_clear_test_hostiles() -> void`
       - `func _init_dev_panel() -> void`
       - `func _dev_story_debug_snapshot() -> Dictionary`
       - `func _dev_format_overarching_story(bible: Dictionary) -> String`
@@ -2383,6 +2411,7 @@ Root: `SpaceGame`
       - `func buyback_ore_at_outpost() -> int`
       - `func cargo_display_text() -> String`
       - `func clear_intro_tutorial_player_protection() -> void`
+      - `func is_intro_tutorial_player_protection_active() -> bool`
       - `func record_kill(faction_name: String)`
       - `func spawn_reinforcement(faction_name: String)`
       - `func spawn_mission_targets(faction_name: String, count: int, min_player_distance: float = 0.0)`
@@ -2479,6 +2508,10 @@ Root: `SpaceGame`
       - `func reset_for_restart()`
       - `func _discover_ollama_model()`
       - `func _ollama_warm_models() -> void`
+      - `func warm_small_model_after_story_gate() -> void`
+      - `func _verify_small_model_ready(model_name: String, attempt: int) -> void`
+      - `func _release_small_model_gate(model_name: String, failure_reason: String) -> void`
+      - `func when_small_model_ready(cb: Callable) -> void`
       - `func _warm_single_model(model_name: String, label: String, on_done: Callable) -> void`
       - `func model_for_capability(capability: String) -> String`
       - `func request_timeout_for_capability(capability: String) -> float`
@@ -2696,6 +2729,7 @@ Root: `SpaceGame`
       - `func boost_cooldown_remaining() -> float`
       - `func boost_active_remaining() -> float`
       - `func can_activate_boost() -> bool`
+      - `func engage_evasive_maneuver(attacker: Node3D) -> bool`
       - `func _unhandled_input(event: InputEvent)`
       - `func _mouse_pick_should_pass_through(collider: Variant) -> bool`
       - `func _physics_process(delta: float)`
@@ -2802,6 +2836,7 @@ Root: `SpaceGame`
       - `func _on_player_ship_kill(faction_name: String) -> void`
       - `func _on_ship_destroyed(faction_name: String) -> void`
       - `func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void`
+      - `func _is_intro_tutorial_contract(data: Dictionary) -> bool`
       - `func resolve_comms_branch(branch_id: String) -> void`
       - `func _set_ceasefire_for_faction(faction_name: String, value: bool) -> void`
       - `func _despawn_ceasefire_targets(faction_name: String) -> void`
@@ -3097,6 +3132,14 @@ Root: `SpaceGame`
       - `func show_hud_warning(text: String)`
       - `func show_hud_info(text: String, tint: Color = Color(0.0, 0.85, 1.0))`
       - `func show_npc_dialogue_popup(text: String, npc_name: String, color: Color, portrait: Texture2D = null) -> void`
+      - `func _raise_nova_ambush_alert(enemy: Node) -> void`
+      - `func _dismiss_nova_ambush_alert() -> void`
+      - `func _nova_portrait_texture(expression: String) -> Texture2D`
+      - `func _nova_alert_portrait() -> Texture2D`
+      - `func _show_nova_talk_portrait(expression: String) -> void`
+      - `func _fade_nova_talk_portrait() -> void`
+      - `func _kill_talk_portrait_fade() -> void`
+      - `func show_nova_ambush_alert(enemy: Node, message: String) -> void`
       - `func _set_dock_message_choices(choices: Array, color: Color) -> void`
       - `func clear_dock_message() -> void`
       - `func _update_sell_button()`
@@ -3175,6 +3218,7 @@ Root: `SpaceGame`
       - `func _on_tts_connection_attempt(attempt: int)`
       - `func _on_tts_connected()`
       - `func _update_connection_status_display()`
+      - `func _disconnect_loading_service_signals() -> void`
       - `func _check_both_services_ready()`
       - `func _finish_loading_without_contract() -> void`
       - `func _on_tts_cache_completed()`
@@ -3209,12 +3253,28 @@ Root: `SpaceGame`
       - 📄 [LocalModelGateway.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/LocalModelGateway.gd.uid)
       - 📄 [NarrativeDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd)
         - 🏛️ **global class NarrativeDirector**
-          - `static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary`
-          - `static func _repaired_generated_campaign_bible(generated: Dictionary) -> Dictionary`
-          - `static func _apply_key_aliases(target: Dictionary, aliases: Dictionary) -> void`
-          - `static func _repair_kaelen_angle(target: Dictionary) -> void`
-          - `static func _repair_kaelen_public_role(target: Dictionary) -> void`
-          - `static func _repair_rumor_trails(target: Dictionary) -> void`
+          - `static func _campaign_bible_label_protocol_lines() -> Array`
+          - `static func validation_correction_notes(validation: ValidationResult) -> String`
+          - `static func is_text_too_similar(candidate: String, prior: String, threshold := 0.6) -> bool`
+          - `static func text_similarity(a: String, b: String) -> float`
+          - `static func _motif_words(text: String) -> Dictionary`
+          - `static func _first_distinctive_word(text: String) -> String`
+          - `static func _creative_lane_for_seed(campaign_seed: String, excluded_names: Array = []) -> Dictionary`
+          - `static func _axis_for_seed(campaign_seed: String, options: Array, salt: int) -> Dictionary`
+          - `static func _extract_json_object_text(text: String) -> String`
+          - `static func parse_labeled_blocks(text: String) -> Dictionary`
+          - `static func assemble_campaign_bible_from_labels(blocks: Dictionary) -> Dictionary`
+          - `static func _coerce_labeled_field(field: Dictionary, lines: Array) -> Variant`
+          - `static func _join_labeled_text(lines: Array) -> String`
+          - `static func _labeled_list_items(lines: Array) -> Array`
+          - `static func _slugify(value: String) -> String`
+          - `static func _extract_leading_int(text: String) -> int`
+          - `static func _repaired_generated_campaign_bible(generated: Dictionary, repairs: Array = []) -> Dictionary`
+          - `static func _repair_factions(target: Dictionary, repairs: Array = []) -> void`
+          - `static func _repair_kaelen_angle(target: Dictionary, repairs: Array = []) -> void`
+          - `static func _repair_kaelen_hints(target: Dictionary, repairs: Array = []) -> void`
+          - `static func _repair_kaelen_public_role(target: Dictionary, repairs: Array = []) -> void`
+          - `static func _repair_rumor_trails(target: Dictionary, repairs: Array = []) -> void`
           - `static func _repair_regeneration_triggers(target: Dictionary) -> void`
           - `static func _repair_banned_repeats(target: Dictionary) -> void`
           - `static func _repair_text_tree(value: Variant) -> Variant`
@@ -3223,6 +3283,30 @@ Root: `SpaceGame`
           - `static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResult`
           - `static func _failure(reason: String, validation: ValidationResult) -> Dictionary`
       - 📄 [NarrativeDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd.uid)
+      - 📄 [Nova.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/Nova.gd)
+        - `static func frame_index_for(expression: String) -> int`
+        - `static func region_for_frame(index: int, tex_width: float, tex_height: float) -> Rect2`
+        - `static func expression_for_event(event_kind: String) -> String`
+        - `static func should_preempt(incoming: int, current: int) -> bool`
+        - `func _ready() -> void`
+        - `func can_speak_in_flight() -> bool`
+        - `func speak(text: String, _severity: int = Severity.IDLE, expression: String = "neutral") -> void`
+        - `func warn_targeted() -> void`
+        - `func warn_hostile_engagement(enemy: Node = null) -> String`
+        - `func _pick_line(tag: String, pool: Array) -> String`
+        - `func _reactive_streak(tag: String, window_ms: int) -> int`
+        - `func on_docked(_station_name: String = "") -> void`
+        - `func _is_powerful_enemy(enemy: Node) -> bool`
+        - `func on_combat_started(enemy: Node = null) -> void`
+        - `func on_combat_ended(player_won: bool = false) -> void`
+        - `func on_undock() -> void`
+        - `func welcome_back() -> void`
+        - `func on_combat_tutorial() -> void`
+        - `func on_gate_transition() -> void`
+        - `func _on_action_impact(target: Node, _pos: Vector3, _damage: float, lethal: bool, _blocked: bool, _crit: bool) -> void`
+        - `func on_hull_critical() -> void`
+        - `func on_system_arrived() -> void`
+      - 📄 [Nova.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/Nova.gd.uid)
     - 📂 **combat/**
       - 📄 [CombatAction.gd](file:///C:/CodingProjects/SpaceGame/scripts/combat/CombatAction.gd)
         - 🏛️ **global class CombatAction**
@@ -3917,6 +4001,9 @@ Root: `SpaceGame`
         - 🏛️ **global class CampaignBibleStore**
           - `static func open(path: String) -> CampaignBibleStore`
           - `func is_valid() -> bool`
+          - `func public_prompt_context() -> String`
+          - `static func _append_faction_lines(lines: Array, data: Dictionary) -> void`
+          - `func director_context() -> String`
           - `func prompt_context() -> String`
           - `func generation_status() -> String`
           - `func source_name() -> String`
@@ -4013,6 +4100,7 @@ Root: `SpaceGame`
           - `func is_valid() -> bool`
           - `func campaign_bible_prompt_context(limit: int = MAX_PROMPT_ITEMS) -> String`
           - `func remember_campaign_bible(bible: Dictionary) -> Dictionary`
+          - `func query_recent(category: String, limit: int = 12) -> Array`
           - `func summary() -> Dictionary`
           - `func _load_or_create() -> void`
           - `func _commit(next_data: Dictionary, operation: String) -> Dictionary`
@@ -4258,6 +4346,8 @@ Root: `SpaceGame`
       - 📄 [KokoroSpeechProvider.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/speech/KokoroSpeechProvider.gd.uid)
       - 📄 [SpeechService.gd](file:///C:/CodingProjects/SpaceGame/scripts/speech/SpeechService.gd)
         - `func _ready() -> void`
+        - `func _connect_playback_finished() -> void`
+        - `func _on_playback_finished() -> void`
         - `func start_interaction(interaction_name: String) -> void`
         - `func stop() -> void`
         - `func prepare_text(text: String, voice_profile: Variant) -> String`
@@ -4281,9 +4371,16 @@ Root: `SpaceGame`
         - `func get_current_because() -> String`
         - `func current_hook_ref() -> String`
         - `func get_story_context_block() -> String`
+        - `func _append_faction_pressure_lines(lines: Array) -> void`
+        - `func record_player_choice(choice_id: String, description: String, faction_deltas: Dictionary = {}) -> void`
+        - `func deliver_next_kaelen_hint() -> String`
+        - `func player_choice_digest(limit: int = 6) -> String`
+        - `func adjust_faction_pressure(faction: String, delta: int) -> void`
         - `func _save_story_state() -> void`
         - `func _push_context_to_llm() -> void`
         - `func _generate_foreshadow() -> void`
+        - `static func mood_leaks_secret(candidate: String, secret: String) -> bool`
+        - `static func _distinctive_words(text: String) -> Dictionary`
         - `func _update_kaelen_mood() -> void`
         - `func schedule_beat_after_kills(beat_id: String, n: int) -> void`
         - `func schedule_beat_on_next_dock(beat_id: String) -> void`
@@ -4299,6 +4396,8 @@ Root: `SpaceGame`
         - `func _resolve_hooks_for_quest(quest: Dictionary) -> void`
         - `func _check_chapter_advance_after_hook_resolution() -> void`
         - `func _campaign_bible_store_ready() -> bool`
+        - `func _select_regeneration_trigger(bible: Dictionary) -> Dictionary`
+        - `func _regeneration_metric_value(metric: String, bible: Dictionary) -> int`
         - `func _request_story_horizon_expansion(attempt: int) -> void`
         - `func _apply_story_horizon_expansion(result: Dictionary) -> void`
         - `func _use_story_horizon_expansion_fallback(reason: String) -> void`
@@ -4464,6 +4563,7 @@ Root: `SpaceGame`
           - `func _ready() -> void`
           - `func _build_chrome() -> void`
           - `func _build_story_debug_tab() -> void`
+          - `func _build_combat_feel_tab() -> void`
           - `func _story_section_label(text: String) -> Label`
           - `func _story_readonly_text_edit(height: int) -> TextEdit`
           - `func _refresh_story_debug_tab() -> void`
@@ -4622,15 +4722,34 @@ Root: `SpaceGame`
         - `func _initialize() -> void`
         - `func _test_campaign_bible_prompt_includes_guardrails() -> void`
         - `func _test_parses_campaign_bible_response() -> void`
+        - `func _test_parses_labeled_campaign_bible_response() -> void`
         - `func _test_rejects_invalid_campaign_bible_response() -> void`
         - `func _test_repairs_safe_campaign_bible_drift() -> void`
         - `func _test_parses_kaelen_angle_from_response() -> void`
         - `func _test_repairs_missing_kaelen_angle_with_fallback() -> void`
         - `func _valid_generated_bible() -> Dictionary`
+        - `func _test_validation_correction_notes_formats_errors() -> void`
+        - `func _test_correction_notes_injected_into_retry_prompt() -> void`
+        - `func _test_repair_telemetry_records_fired_repairs() -> void`
+        - `func _test_normalized_bible_stores_creative_lane() -> void`
+        - `func _test_motif_similarity_detection() -> void`
+        - `func _test_motif_collision_note() -> void`
+        - `func _test_faction_triad_repair_and_normalize() -> void`
+        - `func _test_variety_axes_in_prompt_and_bible() -> void`
+        - `func _test_lane_rotation_against_history() -> void`
+        - `func _test_kaelen_hint_fields() -> void`
         - `func _baseline_bible() -> Dictionary`
         - `func _failure_text(result: Dictionary) -> String`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_narrative_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_narrative_director_tests.gd.uid)
+      - 📄 [run_nova_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_tests.gd)
+        - `func _initialize() -> void`
+        - `func _test_expression_frame_mapping() -> void`
+        - `func _test_region_math() -> void`
+        - `func _test_event_expression_and_preempt() -> void`
+        - `func _test_combat_warning_api_exists() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_nova_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_tests.gd.uid)
     - 📂 **diagnostics/**
       - 📄 [run_generation_diagnostics_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/diagnostics/run_generation_diagnostics_tests.gd)
         - `func _initialize() -> void`
@@ -5002,6 +5121,8 @@ Root: `SpaceGame`
       - 📄 [run_campaign_bible_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_bible_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bible_bootstrap_replace_and_reopen() -> void`
+        - `func _test_public_prompt_context_excludes_secrets() -> void`
+        - `func _test_factions_triad_present_and_in_context() -> void`
         - `func _initial_state() -> Dictionary`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
@@ -5168,6 +5289,8 @@ Root: `SpaceGame`
         - `func _fresh_manager() -> Node`
         - `func _test_seed_maps_bible_fields_into_story_state() -> void`
         - `func _test_seed_is_idempotent() -> void`
+        - `func _test_seed_maps_factions_into_pressure() -> void`
+        - `func _test_kaelen_hint_delivery() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_story_state_bible_seed_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_bible_seed_tests.gd.uid)
     - 📂 **registry/**
@@ -5254,6 +5377,10 @@ Root: `SpaceGame`
         - `func _test_last_hook_resolution_refills_from_act_1_outline_reserve() -> void`
         - `func _test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring() -> void`
         - `func _test_force_dock_rumor_fires_and_dedups() -> void`
+        - `func _test_mood_leak_guard() -> void`
+        - `func _test_agent_cooldown_allows_three_in_a_row() -> void`
+        - `func _test_player_choice_recording_and_digest() -> void`
+        - `func _test_regeneration_trigger_selection() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_story_manager_hook_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_manager_hook_tests.gd.uid)
     - 📂 **systems/**
