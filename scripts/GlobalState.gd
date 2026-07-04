@@ -1599,6 +1599,18 @@ var paused: bool = false:
 func clear_intro_tutorial_player_protection() -> void:
 	intro_tutorial_player_protected = false
 
+
+func is_intro_tutorial_player_protection_active() -> bool:
+	if not intro_tutorial_player_protected:
+		return false
+	if not _active_mission_is_intro_tutorial():
+		intro_tutorial_player_protected = false
+		return false
+	if QuestManager.is_quest_completed():
+		intro_tutorial_player_protected = false
+		return false
+	return true
+
 var bloom_enabled: bool = true:
 	set(val):
 		bloom_enabled = val
@@ -2490,6 +2502,12 @@ func _add_mouse_action(action_name: String, button_index: int):
 # generic/neutral NPC fallbacks must route elsewhere.
 const KAELEN_VOICE_PROFILE_ID: String = "voice.kaelen.v1"
 const KAELEN_VOICE_ID: String = "af_bella"
+
+# Live-tunable combat feel values (DevPanel → "Combat Feel" tab). Session-only,
+# not persisted. UIManager reads nova_warn_distance for the ambush-alert gate;
+# NPCShip reads combat_warning_grace_ms for the hold before combat auto-starts.
+var nova_warn_distance: float = 600.0
+var combat_warning_grace_ms: int = 7000
 
 # Substitutions for non-Kaelen speakers. Keyed on the source token
 # (case-insensitive, word-boundary aware). Each entry's "to" is tried

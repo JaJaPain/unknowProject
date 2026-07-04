@@ -10,6 +10,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_campaign_bible_prompt_includes_guardrails()
 	_test_parses_campaign_bible_response()
+	_test_parses_labeled_campaign_bible_response()
 	_test_repairs_safe_campaign_bible_drift()
 	_test_rejects_invalid_campaign_bible_response()
 	_test_parses_kaelen_angle_from_response()
@@ -62,7 +63,8 @@ func _test_campaign_bible_prompt_includes_guardrails() -> void:
 		prompt.contains("kaelen_angle") and prompt.contains("HIDDEN director-only knowledge"),
 		"Prompt did not include the kaelen_angle field spec and director-only guardrail."
 	)
-	_expect(prompt.contains("Return only JSON"), "Prompt did not require JSON-only output.")
+	_expect(prompt.contains("Do NOT write JSON"), "Prompt should forbid JSON and require @@label blocks.")
+	_expect(prompt.contains("@@campaign_title"), "Prompt did not use the @@label output protocol.")
 	_expect(
 		prompt.contains("campaign_logline") and prompt.contains("act_1_outline"),
 		"Prompt did not request explicit story fields."
@@ -158,6 +160,133 @@ func _test_parses_campaign_bible_response() -> void:
 		str(trigger.get("metric", "")) == "rumor_trails_remaining"
 			and str(trigger.get("action", "")) == "append_rumor_trail",
 		"Parsed bible did not preserve structured regeneration trigger fields."
+	)
+
+
+# Exercises the PRIMARY (labeled @@block) parse path with deliberately messy
+# output, proving code owns all structure: enum case/period normalization,
+# trail_id prefix dedup, integer extraction from prose, and the guaranteed
+# banned_repeats phrases.
+func _test_parses_labeled_campaign_bible_response() -> void:
+	var labeled := "\n".join([
+		"Here is the campaign bible:",
+		"@@campaign_title",
+		"The Hollowed Vein",
+		"@@campaign_logline",
+		"A broke pilot untangles a refinery fraud before three factions pin it on her.",
+		"@@opening_situation",
+		"You are a broke independent pilot. A lone Reaver-class hostile is closing over Zenith space.",
+		"@@main_mystery",
+		"Who manufactured the debt that ensnares every local player.",
+		"@@act_1_outline",
+		"- Take the only job on the board.",
+		"- The manifest lists cargo never loaded.",
+		"- Kaelen offers to bury it, for a price.",
+		"@@long_term_reveal",
+		"The refinery collapse was engineered to erase a debt ledger.",
+		"@@tone",
+		"dry, wary, blue-collar",
+		"@@core_pressure",
+		"Everyone needs the refinery running and no one can afford the truth.",
+		"@@factions.zenith",
+		"Zenith lost its refining permits and is quietly bleeding credits.",
+		"@@factions.aurelia",
+		"Aurelia buys stranded cargo at pennies and calls it charity.",
+		"@@factions.vanguard",
+		"Vanguard impounds ships to look useful to the council.",
+		"@@kaelen_rule",
+		"Kaelen is publicly a contract broker who handles the board jobs nobody wants.",
+		"@@kaelen_angle",
+		"She holds the original debt ledger and knows who really owns the refinery.",
+		"@@kaelen_hint_plan",
+		"- She never charges for jobs near the refinery.",
+		"- She flinches when old permit numbers come up.",
+		"- She knows dock schedules she should not.",
+		"@@kaelen_hint_style",
+		"deflect-with-jokes",
+		"@@kaelen_never_reveal",
+		"Who she was before she started brokering here.",
+		"@@faction_reveal_rule",
+		"New factions surface only through gate travel and rumor.",
+		"@@humor_rule",
+		"Dry gallows humor about paperwork and repair bills.",
+		"@@address_rule",
+		"NPCs call the player by ship name or 'pilot'.",
+		"@@fallback_rule",
+		"If story data is missing, fall back to generic board-job framing.",
+		"@@story_horizon_rule",
+		"Append a new horizon past the gate; never retcon prior choices.",
+		"@@story_arc.name",
+		"Ledger of the Hollowed Vein",
+		"@@story_arc.summary",
+		"Trace the manifest fraud back to the missing debt ledger.",
+		"@@rumor.name",
+		"The Manifest That Loaded Itself",
+		"@@rumor.trail_id",
+		"rumor_trail.hollow_manifest",
+		"@@rumor.hint_theme",
+		"Cargo that exists on paper but never in a hold.",
+		"@@rumor.clue_templates",
+		"- A manifest listing crates nobody remembers loading.",
+		"- A dock worker who flinches at the name Vale.",
+		"@@rumor.discovery_type",
+		"Faction_Secret.",
+		"@@rumor.rarity",
+		"uncommon",
+		"@@rumor.payoff",
+		"The buried ledger naming the refinery's true owner.",
+		"@@trigger.id",
+		"low_prepared_systems",
+		"@@trigger.metric",
+		"prepared_systems_remaining",
+		"@@trigger.threshold",
+		"about 2 systems left",
+		"@@trigger.action",
+		"append_story_horizon",
+		"@@trigger.description",
+		"When prepared systems run low, extend the horizon past the gate.",
+		"@@expansion_rules",
+		"- Reveal new ore and upgrades only through gate travel.",
+		"- Escalate faction pressure as the ledger surfaces.",
+		"@@banned_repeats",
+		"- space taxes",
+	])
+	var result := DirectorType.parse_campaign_bible_response(
+		JSON.stringify({"response": labeled}),
+		_baseline_bible(),
+		"gemma4:e4b"
+	)
+	_expect(bool(result.get("ok", false)), _failure_text(result))
+	var bible: Dictionary = result.get("bible", {})
+	_expect(
+		str(bible.get("campaign_title", "")) == "The Hollowed Vein",
+		"Labeled parse did not read campaign_title."
+	)
+	_expect(
+		(bible.get("act_1_outline", []) as Array).size() == 3,
+		"Labeled parse did not split act_1_outline into three items."
+	)
+	var trail: Dictionary = bible.get("rumor_trails", [])[0]
+	_expect(
+		str(trail.get("trail_id", "")) == "rumor_trail.hollow_manifest",
+		"Labeled parse did not dedup the rumor_trail. prefix (got '%s')." % str(trail.get("trail_id", ""))
+	)
+	_expect(
+		str(trail.get("discovery_type", "")) == "faction_secret",
+		"Labeled parse did not normalize the enum case/period (got '%s')." % str(trail.get("discovery_type", ""))
+	)
+	var trigger: Dictionary = bible.get("regeneration_triggers", [])[0]
+	_expect(
+		int(trigger.get("threshold", -1)) == 2,
+		"Labeled parse did not extract the integer threshold (got '%s')." % str(trigger.get("threshold", ""))
+	)
+	var banned: Array = bible.get("banned_repeats", [])
+	var banned_lower := ""
+	for b in banned:
+		banned_lower += str(b).to_lower() + "|"
+	_expect(
+		banned_lower.contains("chosen one") and banned_lower.contains("destiny"),
+		"Labeled parse did not guarantee the required banned_repeats phrases."
 	)
 
 
@@ -374,8 +503,8 @@ func _test_correction_notes_injected_into_retry_prompt() -> void:
 		"Retry prompt should include the specific correction notes."
 	)
 	_expect(
-		retry.contains("Return exactly this object shape:"),
-		"Retry prompt should still include the JSON shape spec after corrections."
+		retry.contains("@@campaign_title"),
+		"Retry prompt should still include the @@label field spec after corrections."
 	)
 
 

@@ -24,6 +24,11 @@ var taunted_player: bool = false
 var ceasefire: bool = false
 var _combat_intent_id: String = ""   # queue id while waiting to engage
 var _combat_queue_redirect_until_msec: int = 0
+# True only while this ship is holding fire in its post-warning grace window
+# (inside _start_queued_combat). Suppresses the "queue busy -> flee" redirect and
+# real-time firing during the hold, so the ship keeps closing but doesn't attack
+# or bail before the grace ends.
+var _combat_grace_active: bool = false
 
 var behavior: String = ""
 var _flee_gate: Node3D = null
@@ -621,7 +626,7 @@ func _physics_process(delta: float):
 
 		# Elite reinforcements and active code-enforcement ships target the player immediately.
 		if (is_reinforcement or is_code_enforcement) \
-					and not GlobalState.intro_tutorial_player_protected \
+					and not GlobalState.is_intro_tutorial_player_protection_active() \
 					and not _should_redirect_from_player_engagement() \
 				and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:
 			var p = GlobalState.player
@@ -641,7 +646,7 @@ func _physics_process(delta: float):
 			# 1. Check if player is an enemy and in range
 			var p = GlobalState.player
 			if p and is_instance_valid(p) and not p.get("destroyed") and not p.get("is_docked") \
-					and not GlobalState.intro_tutorial_player_protected \
+					and not GlobalState.is_intro_tutorial_player_protection_active() \
 					and not _should_redirect_from_player_engagement() \
 					and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:
 				var is_player_enemy = false
@@ -677,11 +682,10 @@ func _physics_process(delta: float):
 							
 			if best_target:
 				target = best_target
-				# N.O.V.A. warns the captain the moment a hostile locks onto the
-				# player. She self-gates (free flight only) and rate-limits, so
-				# calling per-acquisition here is safe.
-				if best_target == GlobalState.player and is_instance_valid(Nova):
-					Nova.warn_targeted()
+				# N.O.V.A.'s "hostile on sensors" warning fires from the overview
+				# the moment this lock turns the contact red, which covers every
+				# targeting path (see UIManager._update_overview_distances), so we
+				# don't warn here.
 							
 	if target != null and not is_instance_valid(target):
 		target = null
@@ -716,7 +720,7 @@ func _physics_process(delta: float):
 			return
 
 		# Fire only when NOT in turn-based combat (CombatManager handles damage).
-		if not in_turn_combat and dist <= 60.0:
+		if not in_turn_combat and not _combat_grace_active and dist <= 60.0:
 			var to_target = (target.global_position - global_position).normalized()
 			var forward = -global_transform.basis.z.normalized()
 			var angle = forward.angle_to(to_target)
@@ -1006,6 +1010,11 @@ func die():
 # ── PlayerInteractionQueue integration ───────────────────────────────────────
 
 func _request_combat_via_queue() -> void:
+	# Mid-grace this ship is intentionally holding the queue slot (see
+	# _start_queued_combat). Don't treat that busy queue as a reason to flee —
+	# just wait; combat starts when the hold ends.
+	if _combat_grace_active:
+		return
 	if not _combat_intent_id.is_empty():
 		if PlayerInteractionQueue.in_combat_window() or PlayerInteractionQueue.is_busy():
 			_cancel_combat_intent()
@@ -1065,6 +1074,31 @@ func _start_queued_combat(done: Callable) -> void:
 		_redirect_from_combat_queue()
 		done.call()
 		return
+	# Nova called the threat out when this ship locked onto the player (overview
+	# turned it red — see UIManager._update_overview_distances). Hold fire until at
+	# least COMBAT_WARNING_GRACE_MS has passed since that warning, so the player has
+	# a beat to react before combat snaps on. If the warning fired long ago (slow
+	# approach) the remainder is <= 0 and we start immediately.
+	var warned_at: int = int(get_meta("nova_warned_at_msec", 0))
+	if warned_at > 0:
+		var remaining_ms: int = GlobalState.combat_warning_grace_ms - (Time.get_ticks_msec() - warned_at)
+		if remaining_ms > 0:
+			_combat_grace_active = true
+			await get_tree().create_timer(remaining_ms / 1000.0).timeout
+			_combat_grace_active = false
+			# Re-validate after the hold: state may have changed (player fled/docked/
+			# died, this ship died, ceasefire, or a fight already started).
+			if not is_instance_valid(self) or destroyed or ceasefire \
+					or CombatManager.state != CombatManager.State.IDLE \
+					or not is_instance_valid(p) or p.get("destroyed") or p.get("is_docked"):
+				done.call()
+				return
+			# If the player broke away during the grace (e.g. chose Evasive), don't
+			# yank them back into combat — release the slot; _physics_process will
+			# re-request naturally if this ship closes to range again.
+			if global_position.distance_to((p as Node3D).global_position) > 90.0:
+				done.call()
+				return
 	CombatManager.start_combat(p, self, false)
 	# Release the queue slot when this fight ends (one-shot connection).
 	CombatManager.combat_ended.connect(

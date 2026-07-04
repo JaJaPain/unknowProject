@@ -26,13 +26,14 @@ func _test_prefers_qwen_3b_for_small_dialogue() -> void:
 		[
 			"qwen2.5:1.5b-instruct-q4_K_M",
 			"qwen2.5:3b-instruct-q4_K_M",
+			"qwen3:4b",
 			"gemma4:12b",
 		],
 		"mechanic_line"
 	)
 	_expect(
-		selected == "qwen2.5:3b-instruct-q4_K_M",
-		"Small dialogue profile did not prefer Qwen 2.5 3B."
+		selected == "qwen3:4b",
+		"Small dialogue profile did not prefer Qwen3 4B."
 	)
 
 
@@ -41,12 +42,13 @@ func _test_prefers_large_story_model_for_bible() -> void:
 		[
 			"qwen2.5:3b-instruct-q4_K_M",
 			"gemma4:12b",
+			"qwen3:8b",
 		],
 		"campaign_bible"
 	)
 	_expect(
-		selected == "gemma4:12b",
-		"Large story profile did not prefer Gemma 12B."
+		selected == "qwen3:8b",
+		"Large story profile did not prefer Qwen3 8B."
 	)
 
 
@@ -75,8 +77,8 @@ func _test_builds_generation_body_from_capability() -> void:
 		"Generation body did not set keep_alive to keep the model resident."
 	)
 	_expect(
-		not body.has("think"),
-		"Small dialogue generation should not force a thinking-model setting."
+		bool(body.get("think", true)) == false,
+		"Small dialogue generation should disable thinking (Qwen3 is a thinking model in both roles)."
 	)
 	var large_body: Dictionary = GatewayType.generation_body(
 		"campaign_bible",

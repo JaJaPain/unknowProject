@@ -4,7 +4,7 @@ Root: `SpaceGame`
 
   - 📄 [AGENTS.md](file:///C:/CodingProjects/SpaceGame/AGENTS.md)
   - 📄 [CLAUDE.md](file:///C:/CodingProjects/SpaceGame/CLAUDE.md)
-  - 📄 [Claudework.md](file:///C:/CodingProjects/SpaceGame/Claudework.md)
+  - 📄 [ClaudeWork.md](file:///C:/CodingProjects/SpaceGame/ClaudeWork.md)
   - 📄 [GateTravelUpgrade.md](file:///C:/CodingProjects/SpaceGame/GateTravelUpgrade.md)
   - 📂 **Godot/**
     - 📄 [Godot_v4.6.3-stable_win64.exe](file:///C:/CodingProjects/SpaceGame/Godot/Godot_v4.6.3-stable_win64.exe)
@@ -18,6 +18,283 @@ Root: `SpaceGame`
         - 📄 [salvager_backstory.md](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/salvager_backstory.md)
         - 📂 **vulkan/**
           - 📄 [pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/vulkan/pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache)
+  - 📂 **OllamaTestStories/**
+    - 📂 **20260701_175058_first_pass/**
+      - 📄 [balanced_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/balanced_01_envelope.json)
+      - 📄 [balanced_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/balanced_01_validation.json)
+      - 📄 [faction_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_envelope.json)
+      - 📄 [faction_forward_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_story.json)
+      - 📄 [faction_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_validation.json)
+      - 📄 [kaelen_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_envelope.json)
+      - 📄 [kaelen_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_validation.json)
+      - 📄 [mystery_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_envelope.json)
+      - 📄 [mystery_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_validation.json)
+      - 📄 [prompt_balanced.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_balanced.txt)
+      - 📄 [prompt_faction_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_faction_forward.txt)
+      - 📄 [prompt_kaelen_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_kaelen_forward.txt)
+      - 📄 [prompt_mystery_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_mystery_forward.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/summary.json)
+    - 📂 **20260701_175706_compact_schema_pass/**
+      - 📄 [compact_structured_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_envelope.json)
+      - 📄 [compact_structured_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_validation.json)
+      - 📄 [compact_structured_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_envelope.json)
+      - 📄 [compact_structured_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_validation.json)
+      - 📄 [compact_structured_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_envelope.json)
+      - 📄 [compact_structured_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_validation.json)
+      - 📄 [prompt_compact_structured.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/prompt_compact_structured.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/summary.json)
+    - 📂 **20260701_175954_compact_schema_short_strings/**
+      - 📄 [compact_structured_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_envelope.json)
+      - 📄 [compact_structured_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_validation.json)
+      - 📄 [prompt_compact_structured.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/prompt_compact_structured.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/summary.json)
+    - 📂 **20260701_180120_compact_json_no_schema/**
+      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/summary.json)
+    - 📂 **20260701_205138_compact_json_with_shape/**
+      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/summary.json)
+    - 📂 **20260701_205417_compact_json_stricter_story/**
+      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/summary.json)
+    - 📂 **20260701_205656_compact_json_keyfix/**
+      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/summary.json)
+    - 📂 **20260701_210002_compact_json_renamed_slots/**
+      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/summary.json)
+    - 📂 **20260701_210257_compact_json_flavor_variants/**
+      - 📄 [compact_criminal_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_envelope.json)
+      - 📄 [compact_criminal_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_story.json)
+      - 📄 [compact_criminal_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_validation.json)
+      - 📄 [compact_political_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_envelope.json)
+      - 📄 [compact_political_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_story.json)
+      - 📄 [compact_political_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_validation.json)
+      - 📄 [compact_resource_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_envelope.json)
+      - 📄 [compact_resource_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_story.json)
+      - 📄 [compact_resource_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_validation.json)
+      - 📄 [compact_salvage_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_envelope.json)
+      - 📄 [compact_salvage_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_story.json)
+      - 📄 [compact_salvage_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_validation.json)
+      - 📄 [prompt_compact_criminal.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_criminal.txt)
+      - 📄 [prompt_compact_political.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_political.txt)
+      - 📄 [prompt_compact_resource.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_resource.txt)
+      - 📄 [prompt_compact_salvage.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_salvage.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/summary.json)
+    - 📂 **20260701_210645_two_pass_meta_questions/**
+      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/summary.json)
+      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_validation.json)
+    - 📂 **20260701_210739_two_pass_meta_questions_v2/**
+      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_story.json)
+      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_validation.json)
+    - 📂 **20260701_211029_two_pass_richer_summary/**
+      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_validation.json)
+      - 📄 [two_pass_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_envelope.json)
+      - 📄 [two_pass_03_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_final_prompt.txt)
+      - 📄 [two_pass_03_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta.json)
+      - 📄 [two_pass_03_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_envelope.json)
+      - 📄 [two_pass_03_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_validation.json)
+      - 📄 [two_pass_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_story.json)
+      - 📄 [two_pass_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_validation.json)
+    - 📂 **20260701_211332_two_pass_near_field_questions/**
+      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_validation.json)
+      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_envelope.json)
+      - 📄 [two_pass_03_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_final_prompt.txt)
+      - 📄 [two_pass_03_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta.json)
+      - 📄 [two_pass_03_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_envelope.json)
+      - 📄 [two_pass_03_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_validation.json)
+      - 📄 [two_pass_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_story.json)
+      - 📄 [two_pass_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_validation.json)
+    - 📂 **20260701_211618_two_pass_final_check/**
+      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/summary.json)
+      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_story.json)
+      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_validation.json)
+    - 📂 **20260701_215004_claude_production_prompt_check/**
+      - 📄 [high_2800_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_01.json)
+      - 📄 [high_2800_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_02.json)
+      - 📄 [high_2800_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_03.json)
+      - 📄 [prod_900_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_01.json)
+      - 📄 [prod_900_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_02.json)
+      - 📄 [prod_900_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_03.json)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/summary.json)
+    - 📂 **20260701_215226_claude_think_param_check/**
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/summary.json)
+      - 📄 [think_false_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_01.json)
+      - 📄 [think_false_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_02.json)
+      - 📄 [think_false_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_03.json)
+      - 📄 [think_false_04.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_04.json)
+    - 📂 **20260701_215502_claude_diversity_check/**
+      - 📄 [hot_no_guidance_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_01.json)
+      - 📄 [hot_no_guidance_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_02.json)
+      - 📄 [hot_no_guidance_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_03.json)
+      - 📄 [hot_with_guidance_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_01.json)
+      - 📄 [hot_with_guidance_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_02.json)
+      - 📄 [hot_with_guidance_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_03.json)
+    - 📂 **20260701_222142_patched_production_prompt/**
+      - 📄 [candidate_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_envelope.json)
+      - 📄 [candidate_01_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_prompt.txt)
+      - 📄 [candidate_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_story.json)
+      - 📄 [candidate_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_envelope.json)
+      - 📄 [candidate_02_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_prompt.txt)
+      - 📄 [candidate_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_story.json)
+      - 📄 [candidate_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_envelope.json)
+      - 📄 [candidate_03_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_prompt.txt)
+      - 📄 [candidate_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_story.json)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/summary.json)
+    - 📂 **20260701_223050_patched_production_prompt/**
+      - 📄 [candidate_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_envelope.json)
+      - 📄 [candidate_01_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_prompt.txt)
+      - 📄 [candidate_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_story.json)
+      - 📄 [candidate_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_envelope.json)
+      - 📄 [candidate_02_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_prompt.txt)
+      - 📄 [candidate_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_story.json)
+      - 📄 [candidate_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_envelope.json)
+      - 📄 [candidate_03_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_prompt.txt)
+      - 📄 [candidate_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_story.json)
+      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/summary.json)
+    - 📂 **20260701_224541_claude_current_prod_check/**
+      - 📄 [cand_01_criminal_economy.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_01_criminal_economy.json)
+      - 📄 [cand_02_ecological_or_industrial_hazard.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_02_ecological_or_industrial_hazard.json)
+      - 📄 [cand_03_criminal_economy.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_03_criminal_economy.json)
+      - 📄 [cand_04_ecological_or_industrial_hazard.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_04_ecological_or_industrial_hazard.json)
+      - 📄 [cand_05_infrastructure_collapse.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_05_infrastructure_collapse.json)
+      - 📄 [cand_06_political_succession.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_06_political_succession.json)
+    - 📄 [claude_critique_and_recommendations.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_critique_and_recommendations.md)
+    - 📄 [claude_test_current_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_current_prompt.py)
+      - `def lane_for_seed(seed)`
+      - `def build_prompt(seed)`
+      - `def call_ollama(prompt, seed_int)`
+      - `def kaelen_violates(rule)`
+    - 📄 [claude_test_diversity.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_diversity.py)
+      - `def call_ollama(prompt, temperature, seed)`
+      - `def run(label, prompt, temperature, count, out_dir)`
+    - 📄 [claude_test_production_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_production_prompt.py)
+      - `def call_ollama(prompt, num_predict, temperature, seed)`
+      - `def evaluate(raw_text)`
+      - `def run_variant(label, num_predict, temperature, count, out_dir)`
+    - 📄 [claude_test_think_param.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_think_param.py)
+      - `def call_ollama(prompt, num_predict, temperature, seed, think)`
+      - `def run_variant(label, think, count, out_dir)`
+    - 📄 [consensus_brief_story_generation.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/consensus_brief_story_generation.md)
+    - 📄 [gemma4_insights.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_insights.md)
+    - 📂 **gemma4_test_run/**
+      - 📄 [pass1.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass1.json)
+      - 📄 [pass2.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass2.json)
+    - 📄 [generate_story_candidates.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/generate_story_candidates.py)
+    - 📄 [notes_two_pass_findings.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/notes_two_pass_findings.md)
+    - 📄 [patched_production_prompt_status.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/patched_production_prompt_status.md)
+    - 📄 [progress.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/progress.md)
+    - 📄 [run_test.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/run_test.py)
+      - `def generate(prompt)`
+    - 📄 [verify_patched_production_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/verify_patched_production_prompt.py)
+      - `def creative_lane_for_seed(seed)`
+      - `def build_prompt(seed, idea_memory)`
+      - `def call_ollama(prompt, seed)`
+      - `def evaluate(response_text)`
+      - `def main()`
   - 📄 [PROJECT_MAP.json](file:///C:/CodingProjects/SpaceGame/PROJECT_MAP.json)
   - 📄 [PROJECT_MAP.md](file:///C:/CodingProjects/SpaceGame/PROJECT_MAP.md)
   - 📂 **Ships/**
@@ -38,7 +315,8 @@ Root: `SpaceGame`
       - 📄 [Zenith_Logistics.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_Logistics.glb)
       - 📄 [Zenith_MiningHauler.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_MiningHauler.glb)
       - 📄 [desktop.ini](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/desktop.ini)
-  - 📄 [The string is missing the terminator .](file:///C:/CodingProjects/SpaceGame/The string is missing the terminator )
+  - 📂 **_local/**
+    - 📄 [The string is missing the terminator .](file:///C:/CodingProjects/SpaceGame/_local/The string is missing the terminator )
   - 📂 **addons/**
     - 📂 **godot_ai/**
       - 📄 [LICENSE](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/LICENSE)
@@ -1709,6 +1987,7 @@ Root: `SpaceGame`
   - 📂 **data/**
     - 📂 **content/**
       - 📄 [factions.json](file:///C:/CodingProjects/SpaceGame/data/content/factions.json)
+      - 📄 [llm_dialogue_content.json](file:///C:/CodingProjects/SpaceGame/data/content/llm_dialogue_content.json)
       - 📄 [npcs.json](file:///C:/CodingProjects/SpaceGame/data/content/npcs.json)
       - 📄 [portrait_sheets.json](file:///C:/CodingProjects/SpaceGame/data/content/portrait_sheets.json)
       - 📄 [ship_designs.json](file:///C:/CodingProjects/SpaceGame/data/content/ship_designs.json)
@@ -1742,6 +2021,7 @@ Root: `SpaceGame`
     - 📄 [handoff_segment5_map_rework.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_segment5_map_rework.md)
     - 📄 [jumpgate_implementation_plan.md](file:///C:/CodingProjects/SpaceGame/docs/jumpgate_implementation_plan.md)
     - 📄 [known_harmless_warnings.md](file:///C:/CodingProjects/SpaceGame/docs/known_harmless_warnings.md)
+    - 📄 [llm_dialogue_content_editing.md](file:///C:/CodingProjects/SpaceGame/docs/llm_dialogue_content_editing.md)
     - 📄 [long_term_campaign_architecture.md](file:///C:/CodingProjects/SpaceGame/docs/long_term_campaign_architecture.md)
     - 📄 [phase_0_baseline_checks.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_checks.md)
     - 📄 [phase_0_baseline_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_plan.md)
@@ -1774,6 +2054,7 @@ Root: `SpaceGame`
     - 📄 [plan_docking_sequence.md](file:///C:/CodingProjects/SpaceGame/docs/plan_docking_sequence.md)
     - 📄 [plan_enemy_kit_parity.md](file:///C:/CodingProjects/SpaceGame/docs/plan_enemy_kit_parity.md)
     - 📄 [plan_kaelen_handoff_pool.md](file:///C:/CodingProjects/SpaceGame/docs/plan_kaelen_handoff_pool.md)
+    - 📄 [plan_llm_dialogue_content_registry.md](file:///C:/CodingProjects/SpaceGame/docs/plan_llm_dialogue_content_registry.md)
     - 📄 [plan_visual_effects.md](file:///C:/CodingProjects/SpaceGame/docs/plan_visual_effects.md)
     - 📄 [polish_notes_misc.md](file:///C:/CodingProjects/SpaceGame/docs/polish_notes_misc.md)
     - 📄 [procedural_campaign_uniqueness_plan.md](file:///C:/CodingProjects/SpaceGame/docs/procedural_campaign_uniqueness_plan.md)
@@ -1808,6 +2089,10 @@ Root: `SpaceGame`
     - `def main()`
   - 📄 [godot-ai-LICENSE.txt](file:///C:/CodingProjects/SpaceGame/godot-ai-LICENSE.txt)
   - 📄 [godot_transition_plan.md](file:///C:/CodingProjects/SpaceGame/godot_transition_plan.md)
+  - 📂 **logs/**
+    - 📄 [fallback_events.jsonl](file:///C:/CodingProjects/SpaceGame/logs/fallback_events.jsonl)
+    - 📄 [fallback_summary.json](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.json)
+    - 📄 [fallback_summary.txt](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.txt)
   - 📄 [project.godot](file:///C:/CodingProjects/SpaceGame/project.godot)
   - 📂 **scripts/**
     - 📄 [AnomalyRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/AnomalyRegistry.gd)
@@ -1826,8 +2111,14 @@ Root: `SpaceGame`
     - 📄 [Asteroid.gd](file:///C:/CodingProjects/SpaceGame/scripts/Asteroid.gd)
       - `func _ready()`
       - `func _physics_process(delta: float)`
+      - `func _update_lod(delta: float, force_full_detail: bool) -> void`
+      - `func _set_lod_level(level: int) -> void`
+      - `func _consume_lod_update_delta(delta: float, force_full_detail: bool) -> float`
+      - `func _is_mining_heat_visible() -> bool`
       - `func show_mining_heat_spot(laser_origin: Vector3) -> void`
       - `func hold_mining_tractor(_laser_origin: Vector3) -> void`
+      - `func is_mining_tractor_stable() -> bool`
+      - `func pull_to_mining_tractor_position(desired_position: Vector3, delta: float) -> bool`
       - `func get_mining_contact_point(laser_origin: Vector3) -> Vector3`
       - `func _mining_contact_local(laser_origin: Vector3) -> Vector3`
       - `func _show_mining_heat_decal(laser_origin: Vector3) -> void`
@@ -1859,9 +2150,21 @@ Root: `SpaceGame`
       - `func _ready()`
       - `func play_next_bgm()`
       - `func _on_bgm_finished()`
+      - `func enter_lounge_music() -> void`
+      - `func exit_lounge_music() -> void`
       - `func play_sfx(stream: AudioStream, volume_db: float = 0.0)`
       - `func play_sfx_3d(stream: AudioStream, position: Vector3, volume_db: float = 0.0)`
       - `func play_laser(pos: Variant = null)`
+      - `func play_mining_laser(pos: Variant = null)`
+      - `func play_tractor_beam(pos: Variant = null)`
+      - `func start_mining_loop(pos: Vector3) -> void`
+      - `func stop_mining_loop() -> void`
+      - `func start_tractor_loop(pos: Vector3) -> void`
+      - `func stop_tractor_loop() -> void`
+      - `func update_mining_audio_position(pos: Vector3) -> void`
+      - `func stop_mining_audio() -> void`
+      - `func _on_mining_loop_finished() -> void`
+      - `func _on_tractor_loop_finished() -> void`
       - `func play_explosion(pos: Variant = null)`
       - `func play_cargo_full()`
       - `func set_music_volume(value: float)`
@@ -1885,6 +2188,11 @@ Root: `SpaceGame`
       - `func _load_preferences() -> void`
       - `func _save_preferences() -> void`
     - 📄 [AudioManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/AudioManager.gd.uid)
+    - 📄 [DroneReticle.gd](file:///C:/CodingProjects/SpaceGame/scripts/DroneReticle.gd)
+      - `func _ready() -> void`
+      - `func set_target_screen(p: Vector2, on_target: bool) -> void`
+      - `func _draw() -> void`
+    - 📄 [DroneReticle.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/DroneReticle.gd.uid)
     - 📄 [GameRoot.gd](file:///C:/CodingProjects/SpaceGame/scripts/GameRoot.gd)
       - `func _ready() -> void`
       - `func get_active_system_root() -> Node3D`
@@ -1902,6 +2210,7 @@ Root: `SpaceGame`
       - `func _validate_persistent_entities(system_root: Node3D) -> ValidationResult`
       - `func _get_world_identity_entities(system_root: Node3D) -> Array`
       - `func _restore_system_state(system_id: String, system_root: Node3D) -> void`
+      - `func _is_intro_tutorial_mission_ship(entity_state: Dictionary) -> bool`
       - `func save_game() -> bool`
       - `func request_autosave() -> bool`
       - `func _advance_campaign_time_for_safe_checkpoint(source_reason: String) -> void`
@@ -1930,6 +2239,7 @@ Root: `SpaceGame`
       - `func _notify_system_warning(message: String) -> void`
       - `func _capture_prepared_runtime_state() -> Dictionary`
       - `func _campaign_slot_path(slot_id: String) -> String`
+      - `func _clear_active_campaign_runtime_context() -> void`
       - `func _initialize_campaign_registry() -> void`
       - `func _initialize_campaign_chronicle() -> void`
       - `func _classify_kaelen_rollback(restored: Dictionary) -> bool`
@@ -1945,9 +2255,12 @@ Root: `SpaceGame`
       - `func _refresh_llm_campaign_bible_context() -> void`
       - `func _refresh_llm_story_state_context() -> void`
       - `func request_campaign_bible_generation() -> Dictionary`
+      - `func _on_llm_ready_for_campaign_bible(_model_name: String) -> void`
       - `func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void`
       - `func _request_campaign_bible_generation_for_active_slot() -> void`
       - `func _on_campaign_bible_generation_result(result: Dictionary) -> void`
+      - `func is_campaign_story_ready() -> bool`
+      - `func campaign_story_status_summary() -> String`
       - `func ensure_generated_frontier_factions(count: int = 6) -> Dictionary`
       - `func generated_factions_for_ids(ids: Array) -> Array`
       - `func revealed_generated_factions() -> Array`
@@ -2024,6 +2337,8 @@ Root: `SpaceGame`
       - `func _debug_spawn_boss() -> void`
       - `func _debug_spawn_squad() -> void`
       - `func _init_dev_panel() -> void`
+      - `func _dev_story_debug_snapshot() -> Dictionary`
+      - `func _dev_format_overarching_story(bible: Dictionary) -> String`
       - `func _input(event: InputEvent) -> void`
     - 📄 [GameRoot.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/GameRoot.gd.uid)
     - 📄 [GlobalState.gd](file:///C:/CodingProjects/SpaceGame/scripts/GlobalState.gd)
@@ -2037,6 +2352,7 @@ Root: `SpaceGame`
       - `static func _title_faction_key(faction_id: String) -> String`
       - `static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture`
       - `static func get_minor_npc_data(npc_name: String) -> Dictionary`
+      - `static func _canonical_minor_outpost_id(outpost_id: String) -> String`
       - `static func get_minor_npcs_at_outpost(outpost_id: String) -> Array`
       - `static func _system_id_from_station_id(station_id: String) -> String`
       - `static func _generated_contact_humor_style(role: String, faction_name: String) -> String`
@@ -2066,9 +2382,10 @@ Root: `SpaceGame`
       - `func buyback_price_per_m3() -> float`
       - `func buyback_ore_at_outpost() -> int`
       - `func cargo_display_text() -> String`
+      - `func clear_intro_tutorial_player_protection() -> void`
       - `func record_kill(faction_name: String)`
       - `func spawn_reinforcement(faction_name: String)`
-      - `func spawn_mission_targets(faction_name: String, count: int)`
+      - `func spawn_mission_targets(faction_name: String, count: int, min_player_distance: float = 0.0)`
       - `func _mission_belt_id_from_name(node_name: String) -> String`
       - `func _mission_route_nodes_in_group(root: Node, group_name: String) -> Array`
       - `func _mission_route_position(node: Node3D) -> Vector3`
@@ -2078,6 +2395,7 @@ Root: `SpaceGame`
       - `func _belt_display_name(belt_id: String) -> String`
       - `func _has_illegal_mining_witness(owner_faction: String) -> bool`
       - `func _node3d_position(node: Node3D) -> Vector3`
+      - `func _active_mission_is_intro_tutorial() -> bool`
       - `func _active_mission_identity_key() -> String`
       - `func emit_chatter(sender: String, message: String, color: Color)`
       - `func emit_npc_flavor(flavor: Dictionary) -> void`
@@ -2143,23 +2461,31 @@ Root: `SpaceGame`
       - `func begin_exit_burst(duration: float) -> void`
     - 📄 [JumpTunnel.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/JumpTunnel.gd.uid)
     - 📄 [LLMInterface.gd](file:///C:/CodingProjects/SpaceGame/scripts/LLMInterface.gd)
+      - `func set_campaign_bible_priority_active(active: bool) -> void`
+      - `func is_campaign_bible_priority_active() -> bool`
+      - `func _skip_for_campaign_bible_priority(capability: String) -> bool`
       - `func _sanitize_campaign_name(raw_name: String) -> String`
       - `func _fallback_campaign_name() -> String`
       - `func _ready()`
       - `func _ollama_ping(callback: Callable) -> void`
       - `func _ollama_launch() -> void`
       - `func _ollama_poll() -> void`
+      - `func attempt_ollama_recovery() -> void`
+      - `func force_restart_ollama() -> void`
       - `func _ollama_after_up() -> void`
       - `func _ollama_ensure_models(required: Array, on_done: Callable) -> void`
       - `func _ollama_pull_next(list: Array, idx: int, on_done: Callable) -> void`
       - `func _load_world_lore()`
       - `func reset_for_restart()`
       - `func _discover_ollama_model()`
+      - `func _ollama_warm_models() -> void`
+      - `func _warm_single_model(model_name: String, label: String, on_done: Callable) -> void`
       - `func model_for_capability(capability: String) -> String`
       - `func request_timeout_for_capability(capability: String) -> float`
       - `func ollama_generate_url() -> String`
       - `func diagnostics_context_for_capability(capability: String) -> Dictionary`
       - `func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary`
+      - `func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dictionary`
       - `func _agent_memory_prompt_block(agent_id: String) -> String`
       - `func _agent_system_story_pack(agent_profile: Dictionary) -> Dictionary`
       - `func _system_story_pack_prompt_block(story_pack: Dictionary) -> String`
@@ -2267,6 +2593,8 @@ Root: `SpaceGame`
       - `func take_damage(amount: float, attacker_faction: String = "")`
       - `func die()`
       - `func _request_combat_via_queue() -> void`
+      - `func _redirect_from_combat_queue() -> void`
+      - `func _should_redirect_from_player_engagement() -> bool`
       - `func _start_queued_combat(done: Callable) -> void`
       - `func _cancel_combat_intent() -> void`
       - `func get_persistent_id() -> String`
@@ -2328,12 +2656,15 @@ Root: `SpaceGame`
     - 📄 [PlayerShip.gd](file:///C:/CodingProjects/SpaceGame/scripts/PlayerShip.gd)
       - `func _ready()`
       - `func _create_mining_tractor_laser() -> MeshInstance3D`
+      - `func _configure_mining_laser_material() -> void`
       - `func _build_player_ship_model() -> void`
       - `func _collect_hardpoints(node: Node) -> void`
       - `func _walk_hardpoints(node: Node) -> void`
       - `func _get_mining_beam_origin(offset_index: int = 0) -> Vector3`
       - `func _hide_mining_beams(reset_lock: bool = true) -> void`
       - `func _get_mining_target_point(target_node: Node3D) -> Vector3`
+      - `func _get_tractor_target_point(target_node: Node3D, tractor_origin: Vector3) -> Vector3`
+      - `func _get_desired_mining_asteroid_position(target_node: Node3D) -> Vector3`
       - `func _refit_collision() -> void`
       - `func _model_aabb(node: Node3D) -> AABB`
       - `func _collect_player_meshes(node: Node, out: Array[MeshInstance3D]) -> void`
@@ -2344,11 +2675,16 @@ Root: `SpaceGame`
       - `func _enter_orbit(enemy: Node) -> void`
       - `func _on_combat_ended_orbit(_won: bool) -> void`
       - `func _release_mouse_capture() -> void`
-      - `func _on_action_telegraphed_cam(_action_type: int, source: Node, target: Node) -> void`
+      - `func _on_action_telegraphed_cam(action_type: int, source: Node, target: Node) -> void`
       - `func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _lethal: bool, blocked: bool, crit: bool) -> void`
       - `func _trigger_shake(strength: float) -> void`
       - `func _on_combat_kill_cam(_victim: Node, world_pos: Vector3) -> void`
-      - `func _frame_action(source: Node, target: Node) -> void`
+      - `func _cam_ship_scale() -> float`
+      - `func _punch_fov(amount: float) -> void`
+      - `func _ensure_drone_reticle() -> void`
+      - `func _begin_drone_pov(drone: Node3D, target: Node3D) -> void`
+      - `func _end_drone_pov() -> void`
+      - `func _frame_action(source: Node, target: Node, flip: bool = false) -> void`
       - `func _process(delta: float) -> void`
       - `func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float`
       - `func _cam_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3, targets: Array) -> bool`
@@ -2361,7 +2697,9 @@ Root: `SpaceGame`
       - `func boost_active_remaining() -> float`
       - `func can_activate_boost() -> bool`
       - `func _unhandled_input(event: InputEvent)`
+      - `func _mouse_pick_should_pass_through(collider: Variant) -> bool`
       - `func _physics_process(delta: float)`
+      - `func _planet_has_orbiting_asteroids(planet: Node3D) -> bool`
       - `func _navigation_hazards(route_target: Node3D) -> Array`
       - `func _clear_planned_route() -> void`
       - `func _update_route_progress(steer_target: Vector3, delta: float) -> bool`
@@ -2369,6 +2707,22 @@ Root: `SpaceGame`
       - `func _emit_route_failure(message: String) -> void`
       - `func planned_route_is_clear() -> bool`
       - `func _get_autopilot_avoidance(destination: Vector3, navigation_target: Node3D) -> Dictionary`
+      - `func _keepout_radius(obstacle: Node3D) -> float`
+      - `func _physical_radius(obstacle: Node3D) -> float`
+      - `func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_target: Node3D) -> Vector3`
+      - `func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3`
+      - `func _autopilot_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3`
+      - `func _needs_path_replan(destination: Vector3) -> bool`
+      - `func _path_offcourse_distance() -> float`
+      - `func _plan_autopilot_path(destination: Vector3, navigation_target: Node3D) -> void`
+      - `func _push_path_clear(path: PackedVector3Array, destination: Vector3) -> PackedVector3Array`
+      - `func _march_tangent_waypoints(destination: Vector3, navigation_target: Node3D) -> PackedVector3Array`
+      - `func _catmull_rom_smooth(raw: PackedVector3Array) -> PackedVector3Array`
+      - `func _catmull_point(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3`
+      - `func _path_lookahead_target(destination: Vector3) -> Vector3`
+      - `func _clear_autopilot_path() -> void`
+      - `func _segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -> bool`
+      - `func _sphere_tangent_waypoint(from_pos: Vector3, center: Vector3, radius: float, destination: Vector3) -> Vector3`
       - `func _get_locked_avoidance_obstacle() -> Node3D`
       - `func _has_clear_navigation_line(navigation_target: Node3D) -> bool`
       - `func _is_inside_gate_entry_corridor(gate: Node3D, approach_position: Vector3) -> bool`
@@ -2385,6 +2739,7 @@ Root: `SpaceGame`
       - `func _estimate_docking_distance(dockable: Node3D) -> float`
       - `func perform_action(target_node: Node3D, delta: float)`
       - `func spawn_projectile(target_node: Node3D, visual_only: bool = false)`
+      - `func _pick_strike_drone_mesh(target_pos: Vector3) -> MeshInstance3D`
       - `func launch_combat_drone(target_node: Node3D) -> void`
       - `func double_click_move(click_pos: Vector3)`
       - `func die(death_source: String = "")`
@@ -2444,7 +2799,9 @@ Root: `SpaceGame`
       - `func _cleanup_expired_quest() -> void`
       - `func _cleanup_mission(mission) -> void`
       - `func _on_campaign_time_changed(_total_minutes: int) -> void`
-      - `func _on_ship_destroyed(faction_name: String)`
+      - `func _on_player_ship_kill(faction_name: String) -> void`
+      - `func _on_ship_destroyed(faction_name: String) -> void`
+      - `func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void`
       - `func resolve_comms_branch(branch_id: String) -> void`
       - `func _set_ceasefire_for_faction(faction_name: String, value: bool) -> void`
       - `func _despawn_ceasefire_targets(faction_name: String) -> void`
@@ -2525,6 +2882,8 @@ Root: `SpaceGame`
       - `func _on_startup_load_completed(save_loaded: bool) -> void`
       - `func refresh_restored_state() -> void`
       - `func _process(delta)`
+      - `func _check_active_target_alive() -> void`
+      - `func _target_lost_message(t: Node) -> String`
       - `func _create_hud()`
       - `func _create_target_panel()`
       - `func _create_overview()`
@@ -2540,6 +2899,8 @@ Root: `SpaceGame`
       - `func _create_context_menu()`
       - `func _create_pause_menu()`
       - `func _make_pause_card(title_text: String) -> PanelContainer`
+      - `func _maybe_show_combat_tutorial() -> void`
+      - `func _show_combat_tutorial_popup(_from_pause: bool = false) -> void`
       - `func _add_bloom_row(parent: Control) -> void`
       - `func _create_campaign_manager() -> void`
       - `func _create_campaign_load_fade() -> void`
@@ -2570,10 +2931,27 @@ Root: `SpaceGame`
       - `func _on_cargo_changed(new_cargo: float)`
       - `func _on_pause_changed(is_paused: bool)`
       - `func _render_dock_submenu() -> void`
+      - `func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void`
       - `func _maybe_show_station_climate() -> void`
       - `func _render_bounty_board(should_show: bool) -> void`
       - `func _build_wanted_poster(b: Dictionary) -> Control`
       - `func _render_station_contacts(should_show: bool) -> void`
+      - `func _lounge_bartender_card(station_id: String) -> Dictionary`
+      - `func _lounge_npc_card(npc_name: String, npc_data: Dictionary) -> Dictionary`
+      - `func _lounge_kaelen_card() -> Dictionary`
+      - `func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void`
+      - `func _add_lounge_empty_slot(card: Control) -> void`
+      - `func _add_lounge_tuning_preview(card: Control, slot_index: int) -> void`
+      - `func _create_lounge_talk_button(card: Control, slot_index: int) -> TextureButton`
+      - `func _on_lounge_bartender_pressed() -> void`
+      - `func _on_lounge_card_pressed(card_data: Dictionary) -> void`
+      - `func _lounge_card_context(card_data: Dictionary) -> Dictionary`
+      - `func _lounge_card_fallback_line(card_data: Dictionary) -> String`
+      - `func debug_reset_lounge_layout() -> String`
+      - `func debug_set_lounge_tuning_slot(slot_index: int) -> String`
+      - `func debug_lounge_layout_values() -> String`
+      - `func debug_lounge_text_values() -> String`
+      - `func _refresh_lounge_layout_if_visible() -> void`
       - `func _current_station_contact_id() -> String`
       - `func _current_station_has_contacts() -> bool`
       - `func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool`
@@ -2673,6 +3051,21 @@ Root: `SpaceGame`
       - `func _salvage_action_tooltip(wreck: Node3D) -> String`
       - `func _update_gate_action_button(gate: Node, active_mode: String) -> void`
       - `func _set_command_button_state(button: Button, active: bool, queued: bool = false) -> void`
+      - `func _set_npc_attention_button(button: Button, active: bool, color: Color = Color(0.2, 0.9, 1.0, 1.0)) -> void`
+      - `func _update_npc_attention_buttons() -> void`
+      - `func _agent_is_waiting_for_player() -> bool`
+      - `func _public_board_is_waiting_for_player() -> bool`
+      - `func _mechanic_is_waiting_for_player() -> bool`
+      - `func _mechanic_pickup_ready_to_deliver() -> bool`
+      - `func _intro_handhold_active() -> bool`
+      - `func _intro_popup_dismissed() -> bool`
+      - `func _update_intro_handhold() -> void`
+      - `func _clear_intro_handhold_arrow() -> void`
+      - `func _position_intro_handhold_arrow(target: Control) -> void`
+      - `func _intro_primary_station_selected() -> bool`
+      - `func _intro_primary_station() -> Node3D`
+      - `func _find_intro_station_overview_button() -> Button`
+      - `func _refresh_visible_npc_attention_buttons() -> void`
       - `func _update_boost_button() -> void`
       - `func _command_context_target(mode: String) -> bool`
       - `func activate_selected_jumpgate() -> void`
@@ -2684,6 +3077,7 @@ Root: `SpaceGame`
       - `func _on_target_marker_draw()`
       - `func _update_selection_marker_position()`
       - `func _on_selection_marker_draw()`
+      - `func _on_intro_handhold_arrow_draw() -> void`
       - `func _update_hud_health()`
       - `func _update_hud_reputations()`
       - `func _update_faction_rep_label(label_name: String, faction_id: String)`
@@ -2703,7 +3097,7 @@ Root: `SpaceGame`
       - `func show_hud_warning(text: String)`
       - `func show_hud_info(text: String, tint: Color = Color(0.0, 0.85, 1.0))`
       - `func show_npc_dialogue_popup(text: String, npc_name: String, color: Color, portrait: Texture2D = null) -> void`
-      - `func show_dock_message(text: String, npc_name: String = "", color: Color = Color(0.85, 0.85, 0.85), portrait: Texture2D = null) -> void`
+      - `func _set_dock_message_choices(choices: Array, color: Color) -> void`
       - `func clear_dock_message() -> void`
       - `func _update_sell_button()`
       - `func _update_repair_button()`
@@ -2717,6 +3111,7 @@ Root: `SpaceGame`
       - `func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool)`
       - `func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool)`
       - `func _add_kaelen_gate_intel_button() -> void`
+      - `func _quest_giver_voice_ref(quest_data: Dictionary) -> String`
       - `func _kaelen_gate_reveal(gate_id: String, cost: int) -> void`
       - `func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool)`
       - `func _on_choice_selected(quest_data: Dictionary, choice: Dictionary)`
@@ -2730,6 +3125,18 @@ Root: `SpaceGame`
       - `func _on_quest_abandoned()`
       - `func _on_quest_expired(title: String) -> void`
       - `func _update_quest_tracker()`
+      - `func _completed_contract_tracker_text(q: Dictionary) -> String`
+      - `func _should_flash_undock() -> bool`
+      - `func _is_intro_starter_contract(q: Dictionary) -> bool`
+      - `func _intro_starter_contract_tracker_text(q: Dictionary) -> String`
+      - `func _update_quest_tracker_route_button(q: Dictionary) -> void`
+      - `func _on_quest_tracker_progress_gui_input(event: InputEvent) -> void`
+      - `func _on_quest_tracker_route_pressed() -> void`
+      - `func _quest_tracker_route_target(q: Dictionary) -> Node3D`
+      - `func _find_station_by_contact_id(target_id: String) -> Node3D`
+      - `func _station_contact_id_for_node(station: Node3D) -> String`
+      - `func _normalize_station_contact_id(station_id: String) -> String`
+      - `func _refit_quest_tracker_panel() -> void`
       - `func _update_quest_tracker_nav(q: Dictionary) -> void`
       - `func _on_quest_tracker_prev() -> void`
       - `func _on_quest_tracker_next() -> void`
@@ -2771,6 +3178,10 @@ Root: `SpaceGame`
       - `func _check_both_services_ready()`
       - `func _finish_loading_without_contract() -> void`
       - `func _on_tts_cache_completed()`
+      - `func _campaign_story_ready_for_gameplay() -> bool`
+      - `func _wait_for_campaign_story_before_gameplay() -> void`
+      - `func _on_campaign_story_gate_result(ok: bool, status: String) -> void`
+      - `func _finish_loading_after_story_ready() -> void`
       - `func show_kaelen_intro()`
       - `func _style_action_button(btn: Button)`
       - `func _create_ship_upgrades_panel() -> void`
@@ -2798,6 +3209,17 @@ Root: `SpaceGame`
       - 📄 [LocalModelGateway.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/LocalModelGateway.gd.uid)
       - 📄 [NarrativeDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd)
         - 🏛️ **global class NarrativeDirector**
+          - `static func _creative_lane_for_seed(campaign_seed: String) -> Dictionary`
+          - `static func _repaired_generated_campaign_bible(generated: Dictionary) -> Dictionary`
+          - `static func _apply_key_aliases(target: Dictionary, aliases: Dictionary) -> void`
+          - `static func _repair_kaelen_angle(target: Dictionary) -> void`
+          - `static func _repair_kaelen_public_role(target: Dictionary) -> void`
+          - `static func _repair_rumor_trails(target: Dictionary) -> void`
+          - `static func _repair_regeneration_triggers(target: Dictionary) -> void`
+          - `static func _repair_banned_repeats(target: Dictionary) -> void`
+          - `static func _repair_text_tree(value: Variant) -> Variant`
+          - `static func _repair_common_text(value: String) -> String`
+          - `static func _snake_case_id(value: String) -> String`
           - `static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResult`
           - `static func _failure(reason: String, validation: ValidationResult) -> Dictionary`
       - 📄 [NarrativeDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd.uid)
@@ -2837,6 +3259,7 @@ Root: `SpaceGame`
         - `func _spend_ap(amount: int) -> void`
         - `func _restore_ap() -> void`
         - `func queue_action(type: CombatActionType.Type, params: Dictionary = {}) -> bool`
+        - `func is_training_combat_active() -> bool`
         - `func dequeue_last() -> void`
         - `func _begin_planning() -> void`
         - `func _intent_is_attack(intent: Dictionary) -> bool`
@@ -3503,6 +3926,7 @@ Root: `SpaceGame`
           - `func mark_generation_failed(reason: String, model_name: String = "") -> Dictionary`
           - `func _load_or_create() -> void`
           - `func _commit(next_data: Dictionary, operation: String) -> Dictionary`
+          - `static func _migrate_legacy_bible(data: Dictionary, campaign_id: String) -> Dictionary`
           - `static func _default_bible(campaign_id: String, campaign_seed: String) -> Dictionary`
           - `static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult`
           - `static func normalize_rumor_trails(source: Variant) -> Array`
@@ -3768,6 +4192,32 @@ Root: `SpaceGame`
           - `func _load_provider_mappings() -> void`
           - `func _cross_validate() -> void`
       - 📄 [GameContentRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/registry/GameContentRegistry.gd.uid)
+      - 📄 [LLMDialogueContentRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/registry/LLMDialogueContentRegistry.gd)
+        - 🏛️ **global class LLMDialogueContentRegistry**
+          - `static func shared() -> LLMDialogueContentRegistry`
+          - `static func reset_shared() -> void`
+          - `func is_valid() -> bool`
+          - `func has_override() -> bool`
+          - `func _load() -> void`
+          - `func _load_override() -> void`
+          - `func _rebuild() -> void`
+          - `static func _deep_merge(base: Dictionary, over: Dictionary) -> Dictionary`
+          - `func quest_examples(agent_key: String, objective_type: String) -> Dictionary`
+          - `func quest_dummy_constraints(objective_type: String) -> String`
+          - `func set_override_enabled(enabled: bool) -> void`
+          - `func _override_branch(path: PackedStringArray) -> Dictionary`
+          - `func save() -> ValidationResult`
+          - `func discard_override() -> void`
+          - `func reload() -> void`
+          - `func _mission_type_section(objective_type: String) -> Dictionary`
+          - `func global_non_kaelen_rules() -> Dictionary`
+          - `func speaker_tone(speaker_id: String) -> String`
+          - `func speaker_address_rule(speaker_id: String) -> String`
+          - `func _speaker(speaker_id: String) -> Dictionary`
+          - `func speaker(speaker_id: String) -> Dictionary`
+          - `func set_speaker(speaker_id: String, address_rule: String, tone_card: String) -> void`
+          - `func set_global_rules(rules: Dictionary) -> void`
+      - 📄 [LLMDialogueContentRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/registry/LLMDialogueContentRegistry.gd.uid)
       - 📄 [SystemRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/registry/SystemRegistry.gd)
         - 🏛️ **global class SystemRegistry**
           - `static func load_default() -> SystemRegistry`
@@ -3826,13 +4276,15 @@ Root: `SpaceGame`
         - `func _ready() -> void`
         - `func reset_for_restart() -> void`
         - `func _on_llm_ready(_model_name: String) -> void`
-        - `func init_story_state(campaign_path: String) -> void`
+        - `func seed_story_state_from_bible(bible_data: Dictionary) -> void`
         - `func clear_story_state() -> void`
+        - `func get_current_because() -> String`
+        - `func current_hook_ref() -> String`
         - `func get_story_context_block() -> String`
-        - `func advance_chapter(truths_to_reveal: int = 1) -> void`
         - `func _save_story_state() -> void`
         - `func _push_context_to_llm() -> void`
         - `func _generate_foreshadow() -> void`
+        - `func _update_kaelen_mood() -> void`
         - `func schedule_beat_after_kills(beat_id: String, n: int) -> void`
         - `func schedule_beat_on_next_dock(beat_id: String) -> void`
         - `func schedule_beat_after_delay_min(beat_id: String, delay_min: float) -> void`
@@ -3840,8 +4292,16 @@ Root: `SpaceGame`
         - `func on_kill(faction: String) -> void`
         - `func _resolve_kill(faction: String) -> void`
         - `func _on_ship_destroyed(faction: String) -> void`
-        - `func on_docked(_station) -> void`
-        - `func on_quest_completed(_quest: Dictionary) -> void`
+        - `func on_docked(station) -> void`
+        - `func _maybe_fire_dock_rumor(station, force: bool = false) -> void`
+        - `func _dock_rumor_context(_station) -> Dictionary`
+        - `func on_quest_completed(quest: Dictionary) -> void`
+        - `func _resolve_hooks_for_quest(quest: Dictionary) -> void`
+        - `func _check_chapter_advance_after_hook_resolution() -> void`
+        - `func _campaign_bible_store_ready() -> bool`
+        - `func _request_story_horizon_expansion(attempt: int) -> void`
+        - `func _apply_story_horizon_expansion(result: Dictionary) -> void`
+        - `func _use_story_horizon_expansion_fallback(reason: String) -> void`
         - `func get_lounge_rumor(context: Dictionary = {}) -> Dictionary`
         - `func record_lounge_rumor_heard(rumor_id: String) -> void`
         - `func get_agent_contract_availability(_context: Dictionary = {}) -> Dictionary`
@@ -4000,8 +4460,41 @@ Root: `SpaceGame`
         - 🏛️ **global class DevPanel**
           - `func add_action_button(label: String, callback: Callable) -> Button`
           - `func add_tab(title: String) -> VBoxContainer`
+          - `func set_story_debug_provider(provider: Callable) -> void`
           - `func _ready() -> void`
           - `func _build_chrome() -> void`
+          - `func _build_story_debug_tab() -> void`
+          - `func _story_section_label(text: String) -> Label`
+          - `func _story_readonly_text_edit(height: int) -> TextEdit`
+          - `func _refresh_story_debug_tab() -> void`
+          - `func _build_lounge_layout_tab() -> void`
+          - `func _adjust_lounge_layout(target: String, axis: String, delta: float) -> String`
+          - `func _adjust_lounge_text(target: String, slot_index: int, delta: float) -> String`
+          - `func _set_lounge_layout_slot(delta: int) -> String`
+          - `func _lounge_layout_values() -> String`
+          - `func _lounge_text_values() -> String`
+          - `func _build_mechanic_debug_tab() -> void`
+          - `func _mechanic_debug_values() -> String`
+          - `func _build_dialogue_content_tab() -> void`
+          - `func _dc_field_label(text: String) -> Label`
+          - `func _dc_current_type() -> String`
+          - `func _dc_current_agent() -> String`
+          - `func _dc_load_fields() -> void`
+          - `func _dc_validate() -> void`
+          - `func _dc_apply(save_to_disk: bool) -> void`
+          - `func _dc_set_status(text: String, color: Color) -> void`
+          - `func _build_override_controls(tab: VBoxContainer) -> void`
+          - `func _refresh_override_ui() -> void`
+          - `func _reload_all_content_fields() -> void`
+          - `func _build_dialogue_rules_tab() -> void`
+          - `func _dr_current_speaker() -> String`
+          - `func _dr_load() -> void`
+          - `func _dr_load_speaker() -> void`
+          - `func _dr_validate() -> void`
+          - `func _dr_apply(save_to_disk: bool) -> void`
+          - `func _dr_set_status(text: String, color: Color) -> void`
+          - `func _dr_join(value: Variant) -> String`
+          - `func _dr_split(text: String) -> Array`
           - `func _build_faction_tuning_tab() -> void`
           - `func _build_tuning_row(parent: VBoxContainer, key: String, display: String, base: Dictionary) -> void`
           - `func _adjust_tuning(key: String, field_idx: int, delta: float) -> void`
@@ -4130,6 +4623,10 @@ Root: `SpaceGame`
         - `func _test_campaign_bible_prompt_includes_guardrails() -> void`
         - `func _test_parses_campaign_bible_response() -> void`
         - `func _test_rejects_invalid_campaign_bible_response() -> void`
+        - `func _test_repairs_safe_campaign_bible_drift() -> void`
+        - `func _test_parses_kaelen_angle_from_response() -> void`
+        - `func _test_repairs_missing_kaelen_angle_with_fallback() -> void`
+        - `func _valid_generated_bible() -> Dictionary`
         - `func _baseline_bible() -> Dictionary`
         - `func _failure_text(result: Dictionary) -> String`
         - `func _expect(condition: bool, message: String) -> void`
@@ -4190,6 +4687,8 @@ Root: `SpaceGame`
         - `func _test_kill_ships_is_completed() -> void`
         - `func _test_kill_ships_handle_event_increments() -> void`
         - `func _test_kill_ships_handle_event_wrong_faction() -> void`
+        - `func _test_kill_ships_npc_kill_does_not_count() -> void`
+        - `func _test_kill_ships_player_kill_counts() -> void`
         - `func _test_kill_ships_handle_event_no_respawn_when_done() -> void`
         - `func _test_kill_ships_format_tracker() -> void`
         - `func _test_kill_ships_format_tracker_generated_faction() -> void`
@@ -4231,6 +4730,7 @@ Root: `SpaceGame`
         - `func _initialize() -> void`
         - `func _test_ore_offer() -> void`
         - `func _test_kill_offer() -> void`
+        - `func _test_agent_voice_profile_survives_acceptance() -> void`
         - `func _test_pickup_offer() -> void`
         - `func _test_delivery_courier_offer() -> void`
         - `func _test_purchase_delivery_offer() -> void`
@@ -4283,6 +4783,7 @@ Root: `SpaceGame`
         - `func _test_builder_offers_have_required_fields() -> void`
         - `func _test_courier_and_purchase_offers_adapt_to_active_state() -> void`
         - `func _test_pickup_offer_uses_current_system_outpost() -> void`
+        - `func _test_starter_world_ids_resolve_to_authored_pickup_contacts() -> void`
         - `func _test_generated_system_without_outpost_does_not_use_starter_pickup() -> void`
         - `func _test_generated_system_offers_use_story_pack() -> void`
         - `func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void`
@@ -4613,6 +5114,7 @@ Root: `SpaceGame`
         - `func _test_campaign_rename() -> void`
         - `func _test_registry_corruption_recovery() -> void`
         - `func _test_orphaned_occupied_slot_is_repaired() -> void`
+        - `func _test_empty_slot_with_stale_directory_is_claimed() -> void`
         - `func _test_delete_is_isolated() -> void`
         - `func _initial_state(credits: int) -> Dictionary`
         - `func _cleanup() -> void`
@@ -4660,11 +5162,29 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_save_migration_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_save_migration_tests.gd.uid)
+      - 📄 [run_story_state_bible_seed_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_bible_seed_tests.gd)
+        - `func _initialize() -> void`
+        - `func _fake_bible() -> Dictionary`
+        - `func _fresh_manager() -> Node`
+        - `func _test_seed_maps_bible_fields_into_story_state() -> void`
+        - `func _test_seed_is_idempotent() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_story_state_bible_seed_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_bible_seed_tests.gd.uid)
     - 📂 **registry/**
       - 📄 [run_game_content_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_game_content_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_game_content_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/registry/run_game_content_registry_tests.gd.uid)
+      - 📄 [run_llm_dialogue_content_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_llm_dialogue_content_registry_tests.gd)
+        - `func _initialize() -> void`
+        - `func _test_quest_content(registry: LLMDialogueContentRegistry) -> void`
+        - `func _test_global_rules(registry: LLMDialogueContentRegistry) -> void`
+        - `func _test_speakers(registry: LLMDialogueContentRegistry) -> void`
+        - `func _test_fallbacks(registry: LLMDialogueContentRegistry) -> void`
+        - `func _test_in_memory_mutation(registry: LLMDialogueContentRegistry) -> void`
+        - `func _test_override_lifecycle(registry: LLMDialogueContentRegistry) -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_llm_dialogue_content_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/registry/run_llm_dialogue_content_registry_tests.gd.uid)
       - 📄 [run_system_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_system_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _test_resolution(registry: SystemRegistry) -> void`
@@ -4723,6 +5243,19 @@ Root: `SpaceGame`
         - `func _check_gameplay_caller(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_speech_service_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/speech/run_speech_service_tests.gd.uid)
+    - 📂 **story/**
+      - 📄 [run_story_manager_hook_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_manager_hook_tests.gd)
+        - 🏛️ **FakeBibleStore**
+          - `func is_valid() -> bool`
+          - `func replace_bible(next_data: Dictionary) -> Dictionary`
+        - `func _initialize() -> void`
+        - `func _fresh_manager() -> Node`
+        - `func _test_resolve_hooks_removes_only_matching_hook() -> void`
+        - `func _test_last_hook_resolution_refills_from_act_1_outline_reserve() -> void`
+        - `func _test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring() -> void`
+        - `func _test_force_dock_rumor_fires_and_dedups() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_story_manager_hook_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_manager_hook_tests.gd.uid)
     - 📂 **systems/**
       - 📄 [run_illegal_mining_enforcement_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/systems/run_illegal_mining_enforcement_tests.gd)
         - `func _initialize() -> void`

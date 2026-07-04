@@ -67,6 +67,89 @@ const PRESSURE_TYPES := [
 	{"name": "legal-jeopardy", "guidance": "one wrong move brings jurisdiction down."},
 ]
 
+# ── Labeled-field generation (gemma4:e4b) ───────────────────────────────────────
+# gemma4:e4b writes good story CONTENT but cannot hold this ~25-key nested JSON
+# tree together under format:"json" — it drops nested keys every run. So we never
+# ask it for JSON. It answers flat @@label blocks (one label per field, "- " for
+# list items) and CODE owns all structure: parse_labeled_blocks +
+# assemble_campaign_bible_from_labels build the exact production shape here, so a
+# brace/quote/comma error is impossible by construction. Prototyped and validated
+# 2026-07-02 (5/5 seeds clean vs 0/N with format:json). See memory
+# project_labeled_field_generation.
+const _RUMOR_DISCOVERY_TYPES := [
+	"hidden_discovery", "secret_route", "rare_upgrade", "faction_secret", "endgame_easter_egg",
+]
+const _RUMOR_RARITIES := ["local", "uncommon", "rare", "legendary"]
+const _TRIGGER_METRICS := [
+	"prepared_systems_remaining", "active_story_arcs_remaining",
+	"rumor_trails_remaining", "major_arc_state",
+]
+const _TRIGGER_ACTIONS := ["append_story_horizon", "append_rumor_trail", "append_story_arc"]
+
+# Each field is addressable by its @@label. `kind` drives coercion in assembly:
+#   text -> one string; list -> one item per "- " line; enum -> normalized to
+#   choices; int -> integer extracted; slug -> snake_case id (prefix added later).
+# `guide` is the plain-language ask shown in the prompt (no JSON, no braces).
+const _CAMPAIGN_BIBLE_LABEL_FIELDS := [
+	{"label": "campaign_title", "kind": "text",
+	 "guide": "A distinct campaign title. Not a 'Zenith <single abstract noun>' pattern."},
+	{"label": "campaign_logline", "kind": "text",
+	 "guide": "One-sentence logline of the campaign hook, under 220 chars."},
+	{"label": "opening_situation", "kind": "text",
+	 "guide": "The opening: a broke independent pilot facing exactly one starter Reaver-class hostile. Under 260 chars."},
+	{"label": "main_mystery", "kind": "text",
+	 "guide": "The central campaign mystery the player chases through jobs. Under 220 chars."},
+	{"label": "act_1_outline", "kind": "list", "min": 3, "max": 3,
+	 "guide": "Exactly THREE act-1 beats, one per line, each under 180 chars."},
+	{"label": "long_term_reveal", "kind": "text",
+	 "guide": "The eventual long-term reveal, fit to the lane; avoid cosmic cliche. Under 220 chars."},
+	{"label": "tone", "kind": "text", "guide": "Campaign tone in a short phrase."},
+	{"label": "core_pressure", "kind": "text", "guide": "The core pressure driving the campaign, under 140 chars."},
+	{"label": "factions.zenith", "kind": "text",
+	 "guide": "Zenith's one concrete local problem this campaign. Player-facing, not a hidden twist. Under 140 chars."},
+	{"label": "factions.aurelia", "kind": "text",
+	 "guide": "Aurelia's one concrete local problem this campaign. Under 140 chars."},
+	{"label": "factions.vanguard", "kind": "text",
+	 "guide": "Vanguard's one concrete local problem this campaign. Under 140 chars."},
+	{"label": "kaelen_rule", "kind": "text", "must_contain": ["broker", "fixer", "contract"],
+	 "guide": "States Kaelen is PUBLICLY a broker, fixer, or contract handler. Must use the word broker, fixer, or contract."},
+	{"label": "kaelen_angle", "kind": "text",
+	 "guide": "HIDDEN director-only: what Kaelen secretly knows or did. Never restates her public role. Never shown to the player. Under 220 chars."},
+	{"label": "kaelen_hint_plan", "kind": "list", "min": 3, "max": 5,
+	 "guide": "3 to 5 player-safe surface observations that only HINT at her secret (odd habits, small inconsistencies). One per line. Never explain the secret."},
+	{"label": "kaelen_hint_style", "kind": "text",
+	 "guide": "How Kaelen deflects this campaign, e.g. deflect-with-jokes, over-precise-details, selective-silence."},
+	{"label": "kaelen_never_reveal", "kind": "text",
+	 "guide": "HIDDEN: one line naming what must stay unresolved even at full trail completion."},
+	{"label": "faction_reveal_rule", "kind": "text",
+	 "guide": "Rule for how new factions get revealed through gate travel."},
+	{"label": "humor_rule", "kind": "text", "guide": "Rule for the dry, slightly dark PG-13 humor."},
+	{"label": "address_rule", "kind": "text", "guide": "How NPCs address the player."},
+	{"label": "fallback_rule", "kind": "text", "guide": "How to handle missing story data."},
+	{"label": "story_horizon_rule", "kind": "text",
+	 "guide": "Rule for extending the story with a new horizon later without retconning player choices."},
+	{"label": "story_arc.name", "kind": "text", "guide": "Name of the single first story arc."},
+	{"label": "story_arc.summary", "kind": "text", "guide": "Summary of that story arc, under 180 chars."},
+	{"label": "rumor.name", "kind": "text", "guide": "Name of the single rumor trail."},
+	{"label": "rumor.trail_id", "kind": "slug", "prefix": "rumor_trail.",
+	 "guide": "A snake_case id for the rumor trail (letters, digits, underscores only). No prefix needed; code adds 'rumor_trail.'."},
+	{"label": "rumor.hint_theme", "kind": "text", "guide": "The theme tying the rumor trail's clues together."},
+	{"label": "rumor.clue_templates", "kind": "list", "min": 2, "max": 2,
+	 "guide": "Exactly TWO concrete clue templates the player could encounter. One per line."},
+	{"label": "rumor.discovery_type", "kind": "enum", "choices": _RUMOR_DISCOVERY_TYPES},
+	{"label": "rumor.rarity", "kind": "enum", "choices": _RUMOR_RARITIES},
+	{"label": "rumor.payoff", "kind": "text", "guide": "What the rumor trail eventually pays off into. Under 180 chars."},
+	{"label": "trigger.id", "kind": "slug", "guide": "A snake_case id for the regeneration trigger (letters, digits, underscores only)."},
+	{"label": "trigger.metric", "kind": "enum", "choices": _TRIGGER_METRICS},
+	{"label": "trigger.threshold", "kind": "int", "guide": "A single integer threshold for the trigger metric."},
+	{"label": "trigger.action", "kind": "enum", "choices": _TRIGGER_ACTIONS},
+	{"label": "trigger.description", "kind": "text", "guide": "One line describing what the trigger does."},
+	{"label": "expansion_rules", "kind": "list", "min": 2, "max": 2,
+	 "guide": "Exactly TWO rules for how the campaign expands later. One per line."},
+	{"label": "banned_repeats", "kind": "list", "min": 1, "max": 8,
+	 "guide": "Phrases/motifs this campaign should never repeat. One per line. Include 'chosen one' and 'destiny'."},
+]
+
 
 static func build_campaign_bible_prompt(
 	baseline_bible: Dictionary,
@@ -132,38 +215,48 @@ static func build_campaign_bible_prompt(
 		"",
 		"Existing idea memory:",
 		idea_block,
-	] + correction_lines + [
+	] + correction_lines + _campaign_bible_label_protocol_lines())
+
+
+# The output-format tail of build_campaign_bible_prompt: the labeled @@block
+# protocol plus one instruction line per field, generated from
+# _CAMPAIGN_BIBLE_LABEL_FIELDS so the prompt and parser can never drift apart.
+static func _campaign_bible_label_protocol_lines() -> Array:
+	var lines := [
 		"",
-		"Return only JSON. No markdown. No comments.",
-		"Return exactly this object shape:",
-		"{",
-		"  \"campaign_title\": string,",
-		"  \"campaign_logline\": string under 220 chars,",
-		"  \"opening_situation\": string under 260 chars,",
-		"  \"main_mystery\": string under 220 chars,",
-		"  \"act_1_outline\": [three strings under 180 chars each],",
-		"  \"long_term_reveal\": string under 220 chars,",
-		"  \"tone\": string,",
-		"  \"core_pressure\": string,",
-		"  \"factions\": {\"zenith\": string under 140 chars, \"aurelia\": string under 140 chars, \"vanguard\": string under 140 chars} — each a one-line local problem, player-safe,",
-		"  \"kaelen_rule\": string that says she is publicly a broker, fixer, or contract handler,",
-		"  \"kaelen_angle\": string under 220 chars — HIDDEN. What Kaelen secretly knows or did. Never shown to the player or small-model prompts. Director-only knowledge.,",
-		"  \"kaelen_hint_plan\": [3-5 strings] — HIDDEN. Player-safe surface observations that hint at kaelen_angle without explaining it. Delivered one at a time later.,",
-		"  \"kaelen_hint_style\": string — how Kaelen deflects this campaign (e.g. deflect-with-jokes, over-precise-details, selective-silence).,",
-		"  \"kaelen_never_reveal\": string — HIDDEN. One line naming what must stay unresolved even at full trail completion. Director-only.,",
-		"  \"faction_reveal_rule\": string,",
-		"  \"humor_rule\": string,",
-		"  \"address_rule\": string describing how NPCs address the player,",
-		"  \"fallback_rule\": string describing how to handle missing story data,",
-		"  \"story_horizon_rule\": string,",
-		"  \"story_arcs\": [{\"name\": string, \"summary\": string under 180 chars}],",
-		"  \"rumor_trails\": [{\"name\": string, \"trail_id\": \"rumor_trail.\" plus snake_case_id, \"clue_count\": 2, \"hint_theme\": string, \"clue_templates\": [two strings], \"discovery_type\": \"hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg\", \"rarity\": \"local|uncommon|rare|legendary\", \"payoff\": string under 180 chars}],",
-		"  \"regeneration_triggers\": [{\"id\": snake_case_string, \"metric\": \"prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state\", \"threshold\": number, \"action\": \"append_story_horizon|append_rumor_trail|append_story_arc\", \"description\": string}],",
-		"  \"expansion_rules\": [two strings],",
-		"  \"banned_repeats\": [string]",
-		"}",
-		"Use exactly one story_arcs item, one rumor_trails item, and one regeneration_triggers item.",
-	])
+		"OUTPUT FORMAT -- READ CAREFULLY:",
+		"Do NOT write JSON. Do NOT use braces, brackets, quotes, or commas as structure.",
+		"Answer each field as a block that starts with its label on its own line, prefixed by @@,",
+		"then the value on the following line(s). Example:",
+		"",
+		"@@campaign_title",
+		"The Hollowed Vein",
+		"@@act_1_outline",
+		"- First beat here.",
+		"- Second beat here.",
+		"- Third beat here.",
+		"",
+		"Rules:",
+		"- One @@label line per field, spelled exactly as given below.",
+		"- For list fields, put ONE item per line, each starting with \"- \".",
+		"- Do not add labels that were not requested. Do not skip any requested label.",
+		"- Plain ASCII text values only. No markdown headers, no numbering, no extra commentary.",
+		"",
+		"Answer ALL of these fields, each as its own @@label block:",
+		"",
+	]
+	for field in _CAMPAIGN_BIBLE_LABEL_FIELDS:
+		var kind := str(field.get("kind", "text"))
+		var tag := ""
+		match kind:
+			"list": tag = " (list, one per line)"
+			"enum": tag = " (pick one of: %s)" % ", ".join(field.get("choices", []))
+			"int": tag = " (a whole number)"
+			"slug": tag = " (snake_case)"
+		var guide := str(field.get("guide", ""))
+		var suffix := (" -- %s" % guide) if not guide.is_empty() else ""
+		lines.append("@@%s%s%s" % [str(field.get("label", "")), tag, suffix])
+	return lines
 
 
 # Formats a failed ValidationResult into a compact, model-facing correction
@@ -341,12 +434,35 @@ static func parse_campaign_bible_response(
 		)
 		return _failure("response_envelope_missing_response", missing_response)
 	var response_text := str(envelope_data.get("response", "")).strip_edges()
-	var parsed := DomainJsonType.parse_object(response_text, "campaign_bible_response")
-	var response_validation := parsed["validation"] as ValidationResult
-	if not response_validation.is_valid():
-		return _failure("response_json_parse_failed", response_validation)
+	# Primary path: the model answers flat @@label blocks, not JSON (gemma4:e4b
+	# can't hold the nested tree together). Structure is owned entirely by code.
+	# Fallback path: if no @@blocks are present the response is legacy/other-model
+	# JSON, so parse it as an object. Either way we hand a `generated` dict to the
+	# same downstream repair + validation.
+	var generated := {}
+	var response_parse_error: ValidationResult = null
+	var blocks := parse_labeled_blocks(response_text)
+	if not blocks.is_empty():
+		generated = assemble_campaign_bible_from_labels(blocks)
+	else:
+		var parsed := DomainJsonType.parse_object(response_text, "campaign_bible_response")
+		var response_validation := parsed["validation"] as ValidationResult
+		if not response_validation.is_valid():
+			var extracted_response := _extract_json_object_text(response_text)
+			if extracted_response != response_text:
+				parsed = DomainJsonType.parse_object(
+					extracted_response,
+					"campaign_bible_response_extracted"
+				)
+				response_validation = parsed["validation"] as ValidationResult
+		if response_validation.is_valid():
+			generated = parsed["data"]
+		else:
+			response_parse_error = response_validation
+	if response_parse_error != null:
+		return _failure("response_parse_failed", response_parse_error)
 	var repairs: Array = []
-	var repaired_generated := _repaired_generated_campaign_bible(parsed["data"], repairs)
+	var repaired_generated := _repaired_generated_campaign_bible(generated, repairs)
 	var generated_validation := _validate_campaign_bible_shape(repaired_generated)
 	if not generated_validation.is_valid():
 		return _failure("campaign_bible_validation_failed", generated_validation)
@@ -359,6 +475,191 @@ static func parse_campaign_bible_response(
 	if not validation.is_valid():
 		return _failure("campaign_bible_validation_failed", validation)
 	return {"ok": true, "bible": bible, "repairs": repairs}
+
+
+static func _extract_json_object_text(text: String) -> String:
+	var start := text.find("{")
+	var end := text.rfind("}")
+	if start == -1 or end == -1 or end <= start:
+		return text
+	return text.substr(start, end - start + 1).strip_edges()
+
+
+# ── Labeled-block parsing + assembly (gemma4:e4b) ───────────────────────────────
+# Splits the model's @@label output into {label: [raw lines]}. Ignores any
+# preamble before the first @@ and any label we didn't ask for. Tolerant of the
+# model echoing the guide after a label ("@@label -- ...") by keeping the first
+# token only.
+static func parse_labeled_blocks(text: String) -> Dictionary:
+	var blocks := {}
+	var current := ""
+	for raw_line in text.split("\n"):
+		var line := str(raw_line)
+		var stripped := line.strip_edges()
+		if stripped.begins_with("@@"):
+			var label := stripped.substr(2).strip_edges()
+			var space_idx := label.find(" ")
+			if space_idx != -1:
+				label = label.substr(0, space_idx)
+			var tab_idx := label.find("\t")
+			if tab_idx != -1:
+				label = label.substr(0, tab_idx)
+			current = label.strip_edges()
+			blocks[current] = []
+			continue
+		if current != "":
+			(blocks[current] as Array).append(line)
+	return blocks
+
+
+# Builds the exact production campaign-bible shape from parsed label blocks. All
+# structure lives here in code; the model never wrote a brace. Missing labels
+# fall back to "" / [] so assembly never throws (downstream repair + validation
+# catch gaps and drive the correction retry).
+static func assemble_campaign_bible_from_labels(blocks: Dictionary) -> Dictionary:
+	var v := {}
+	for field in _CAMPAIGN_BIBLE_LABEL_FIELDS:
+		var label := str(field.get("label", ""))
+		if blocks.has(label):
+			v[label] = _coerce_labeled_field(field, blocks[label])
+
+	var trail_id := str(v.get("rumor.trail_id", ""))
+	if not trail_id.is_empty() and not trail_id.begins_with("rumor_trail."):
+		trail_id = "rumor_trail." + trail_id
+
+	# Guarantee the two hard-required banned phrases regardless of model output.
+	var banned: Array = (v.get("banned_repeats", []) as Array).duplicate()
+	var lowered := {}
+	for b in banned:
+		lowered[str(b).strip_edges().to_lower()] = true
+	for required in ["chosen one", "destiny"]:
+		if not lowered.has(required):
+			banned.append(required)
+
+	return {
+		"campaign_title": v.get("campaign_title", ""),
+		"campaign_logline": v.get("campaign_logline", ""),
+		"opening_situation": v.get("opening_situation", ""),
+		"main_mystery": v.get("main_mystery", ""),
+		"act_1_outline": v.get("act_1_outline", []),
+		"long_term_reveal": v.get("long_term_reveal", ""),
+		"tone": v.get("tone", ""),
+		"core_pressure": v.get("core_pressure", ""),
+		"factions": {
+			"zenith": v.get("factions.zenith", ""),
+			"aurelia": v.get("factions.aurelia", ""),
+			"vanguard": v.get("factions.vanguard", ""),
+		},
+		"kaelen_rule": v.get("kaelen_rule", ""),
+		"kaelen_angle": v.get("kaelen_angle", ""),
+		"kaelen_hint_plan": v.get("kaelen_hint_plan", []),
+		"kaelen_hint_style": v.get("kaelen_hint_style", ""),
+		"kaelen_never_reveal": v.get("kaelen_never_reveal", ""),
+		"faction_reveal_rule": v.get("faction_reveal_rule", ""),
+		"humor_rule": v.get("humor_rule", ""),
+		"address_rule": v.get("address_rule", ""),
+		"fallback_rule": v.get("fallback_rule", ""),
+		"story_horizon_rule": v.get("story_horizon_rule", ""),
+		"story_arcs": [{
+			"name": v.get("story_arc.name", ""),
+			"summary": v.get("story_arc.summary", ""),
+		}],
+		"rumor_trails": [{
+			"name": v.get("rumor.name", ""),
+			"trail_id": trail_id,
+			"clue_count": 2,
+			"hint_theme": v.get("rumor.hint_theme", ""),
+			"clue_templates": v.get("rumor.clue_templates", []),
+			"discovery_type": v.get("rumor.discovery_type", ""),
+			"rarity": v.get("rumor.rarity", ""),
+			"payoff": v.get("rumor.payoff", ""),
+		}],
+		"regeneration_triggers": [{
+			"id": v.get("trigger.id", ""),
+			"metric": v.get("trigger.metric", ""),
+			"threshold": v.get("trigger.threshold", 0),
+			"action": v.get("trigger.action", ""),
+			"description": v.get("trigger.description", ""),
+		}],
+		"expansion_rules": v.get("expansion_rules", []),
+		"banned_repeats": banned,
+	}
+
+
+# Coerces one field's raw block lines to a typed value per its `kind`. Pure and
+# offline: never a network call. Length caps are NOT enforced here (production
+# never validated length; over-length text is harmless and can be condensed
+# later — see memory project_labeled_field_generation).
+static func _coerce_labeled_field(field: Dictionary, lines: Array) -> Variant:
+	var kind := str(field.get("kind", "text"))
+	match kind:
+		"list":
+			return _labeled_list_items(lines)
+		"int":
+			return _extract_leading_int(_join_labeled_text(lines))
+		"enum":
+			return _join_labeled_text(lines).strip_edges().to_lower().trim_suffix(".")
+		"slug":
+			var slug := _slugify(_join_labeled_text(lines))
+			if field.has("prefix"):
+				var pslug := _slugify(str(field["prefix"]))
+				if slug == pslug:
+					slug = ""
+				elif slug.begins_with(pslug + "_"):
+					slug = slug.substr(pslug.length() + 1)
+			return slug
+		_:
+			return _join_labeled_text(lines)
+
+
+static func _join_labeled_text(lines: Array) -> String:
+	var parts := PackedStringArray()
+	for l in lines:
+		var s := str(l).strip_edges()
+		if not s.is_empty():
+			parts.append(s)
+	return " ".join(parts).strip_edges()
+
+
+static func _labeled_list_items(lines: Array) -> Array:
+	var items := []
+	for l in lines:
+		var s := str(l).strip_edges()
+		if s.is_empty():
+			continue
+		if s.begins_with("- "):
+			s = s.substr(2).strip_edges()
+		elif s.begins_with("-"):
+			s = s.substr(1).strip_edges()
+		if not s.is_empty():
+			items.append(s)
+	return items
+
+
+static func _slugify(value: String) -> String:
+	var out := ""
+	for ch in value.strip_edges().to_lower():
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			out += ch
+		elif (ch == " " or ch == "-" or ch == "_" or ch == ".") \
+				and not out.is_empty() and out[out.length() - 1] != "_":
+			out += "_"
+	return out.lstrip("_").rstrip("_")
+
+
+static func _extract_leading_int(text: String) -> int:
+	var digits := ""
+	for i in text.length():
+		var ch := text[i]
+		if ch >= "0" and ch <= "9":
+			digits += ch
+		elif ch == "-" and digits.is_empty():
+			digits += ch
+		elif not digits.is_empty():
+			break
+	if digits.is_empty() or digits == "-":
+		return 0
+	return int(digits)
 
 
 # repairs (optional) accumulates the name of each repair that actually changed

@@ -305,6 +305,13 @@ var cached_abandon_line: String = ""
 
 var loading_panel: Panel
 var loading_bar: ProgressBar
+# N.O.V.A.'s interactive ambush alert (Dismiss / Evasive / Engage). Only one at a
+# time; tracked so a new lock or a button press can dismiss the previous one.
+var _nova_ambush_alert: Panel = null
+# Persistent portrait shown ABOVE the chat window while N.O.V.A. is talking (her
+# reactive/complaining lines), faded out when she stops. Separate from the alert
+# popup portrait. Click-through (MOUSE_FILTER_IGNORE); placed once, does not follow.
+var _nova_talk_portrait: TextureRect = null
 var loading_status_label: Label
 # Retries for a campaign bible that generated but failed content
 # validation/parsing (as opposed to a connection-level Ollama failure, which
@@ -491,10 +498,10 @@ func _ready():
 		call_deferred("_complete_offline_loading_for_tests")
 	
 	LLMInterface.llm_connection_attempt.connect(_on_llm_connection_attempt)
-	# Gate on the small model actually answering a test generation, not merely on
-	# Ollama being reachable — otherwise gameplay entry races the ~12s warm-up and
-	# the first mechanic/salvager/taunt/quest lines fall back to canned content.
-	LLMInterface.small_model_ready.connect(_on_llm_connected)
+	# The startup gate only needs Ollama reachable so the required campaign bible
+	# can claim the large model first. Optional gameplay lines still gate on
+	# small_model_ready at their call sites.
+	LLMInterface.llm_connection_established.connect(_on_llm_connected)
 	SpeechService.speech_connection_attempt.connect(_on_tts_connection_attempt)
 	SpeechService.speech_connection_established.connect(_on_tts_connected)
 
@@ -507,8 +514,13 @@ func _ready():
 	last_llm_attempt = LLMInterface.connection_attempts
 	last_tts_attempt = SpeechService.connection_attempts
 	_update_connection_status_display()
-	call_deferred("_check_both_services_ready")
 	var game_root := get_tree().current_scene
+	if game_root != null \
+			and game_root.has_method("is_campaign_story_ready") \
+			and not bool(game_root.call("is_campaign_story_ready")) \
+			and LLMInterface.has_method("set_campaign_bible_priority_active"):
+		LLMInterface.set_campaign_bible_priority_active(true)
+	call_deferred("_check_both_services_ready")
 	if game_root and game_root.has_signal("startup_load_completed"):
 		game_root.startup_load_completed.connect(_on_startup_load_completed)
 		if bool(game_root.get("startup_load_finished")):
@@ -872,6 +884,8 @@ func _create_hud():
 	# in the NPC's unique Kokoro voice. System chatter (alerts, sensor
 	# sweeps) doesn't go through this path so it stays text-only.
 	GlobalState.npc_flavor_spoken.connect(_on_npc_flavor_spoken)
+	if SpeechService.has_signal("playback_finished"):
+		SpeechService.playback_finished.connect(_fade_nova_talk_portrait)
 
 	# Story quest HUD — connect signals so the panel updates without polling
 	if is_instance_valid(StoryQuestManager):
@@ -2285,6 +2299,9 @@ func _maybe_show_combat_tutorial() -> void:
 	if GlobalState.combat_tutorial_seen:
 		return
 	GlobalState.combat_tutorial_seen = true
+	# N.O.V.A. heckles the hesitation the instant before the combat wheel appears.
+	if is_instance_valid(Nova):
+		Nova.on_combat_tutorial()
 	call_deferred("_show_combat_tutorial_popup", false)
 
 
@@ -3374,10 +3391,28 @@ func _update_overview_distances(delta: float = 999.0):
 				# Update label color if attacking player
 				var name_lbl = btn.get_meta("name_label_ref")
 				if is_instance_valid(name_lbl):
-					if entity.is_in_group("ship") and entity.get("target") == GlobalState.player:
+					var targeting_player: bool = entity.is_in_group("ship") \
+						and entity.get("target") == GlobalState.player
+					if targeting_player:
 						name_lbl.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25))
 					else:
 						name_lbl.remove_theme_color_override("font_color")
+					# The white->red transition is the "hostile detected on sensors"
+					# moment the player reacts to, so this is where N.O.V.A. calls it
+					# out — covering every targeting path at once. State is tracked on
+					# the ship (not the button) so an overview rebuild can't re-fire it,
+					# and it re-arms if the ship later drops its lock. Nova rate-limits
+					# and self-gates internally.
+					# Only warn once the hostile is actually closing — not the instant it
+					# locks on from across the system (intro/aggressive ships target from
+					# spawn range). The overview still turns red immediately; Nova just
+					# holds her callout until it's within warning distance.
+					if targeting_player and dist <= GlobalState.nova_warn_distance:
+						if not bool(entity.get_meta("nova_hostile_warned", false)):
+							_raise_nova_ambush_alert(entity)
+							entity.set_meta("nova_hostile_warned", true)
+					elif not targeting_player:
+						entity.set_meta("nova_hostile_warned", false)
 						
 				# Highlight selected object in overview spreadsheet
 				if GlobalState.active_target == entity:
@@ -3601,6 +3636,11 @@ func toggle_dock_menu(
 	else:
 		_clear_cached_agent_quest_if_stale()
 		dock_panel.visible = true
+		# Ease the menu in over ~1.5s (built while transparent, then fades up) so it
+		# doesn't pop — gives N.O.V.A.'s docking line a beat to land over the fade.
+		dock_panel.modulate.a = 0.0
+		var _dock_fade := dock_panel.create_tween()
+		_dock_fade.tween_property(dock_panel, "modulate:a", 1.0, 1.5)
 		GlobalState.active_target = null
 		if target_panel:
 			target_panel.visible = false
@@ -3625,8 +3665,14 @@ func toggle_dock_menu(
 		_update_intro_handhold()
 
 		if GlobalState.player:
+			var _was_docked: bool = bool(GlobalState.player.is_docked)
 			GlobalState.player.is_docked = true
 			GlobalState.player.velocity = Vector3.ZERO
+			# Fire N.O.V.A.'s dock callout only on the real not-docked -> docked
+			# transition, so re-rendering the dock menu while already docked can't
+			# re-trigger her (and can't wrongly climb her "docking again?" streak).
+			if not _was_docked and is_instance_valid(Nova):
+				Nova.on_docked()
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -6845,6 +6891,10 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 		return
 	var voice_profile_id: String = flavor.get("voice_profile_id", "voice.neutral.v1")
 	SpeechService.play(line, voice_profile_id)
+	# N.O.V.A. lines carry an expression — show her portrait above the chat while
+	# she talks (faded out on SpeechService.playback_finished).
+	if flavor.has("nova_expression"):
+		_show_nova_talk_portrait(str(flavor.get("nova_expression", "neutral")))
 
 
 func _get_contact_mood(npc_name: String) -> String:
@@ -6858,6 +6908,8 @@ func _get_contact_mood(npc_name: String) -> String:
 func undock_player():
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
+	if is_instance_valid(Nova):
+		Nova.on_undock()  # may welcome the captain back if they were parked a while
 	var station_before_undock := current_station
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("request_safe_checkpoint"):
@@ -8144,6 +8196,213 @@ func show_npc_dialogue_popup(text: String, npc_name: String, color: Color, portr
 	tween.tween_interval(4.0)
 	tween.tween_property(panel, "modulate:a", 0.0, 1.5)
 	tween.tween_callback(panel.queue_free)
+
+
+# Entry point from the overview red-transition: N.O.V.A. calls the threat out
+# (chatter + line, rate-limited) and, if she spoke, raises the interactive
+# ambush alert. Suppressed while docked or already in combat.
+func _raise_nova_ambush_alert(enemy: Node) -> void:
+	if not is_instance_valid(Nova) or not is_instance_valid(enemy):
+		return
+	if CombatManager.state != CombatManager.State.IDLE:
+		return
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or bool(p.get("is_docked")):
+		return
+	var line := str(Nova.warn_hostile_engagement(enemy))
+	if line == "":
+		return  # guarded or on cooldown — no popup either
+	# Stamp when the sensor warning fired so NPCShip._start_queued_combat can hold
+	# fire for a grace window afterward (gives the player a beat to react).
+	enemy.set_meta("nova_warned_at_msec", Time.get_ticks_msec())
+	show_nova_ambush_alert(enemy, line)
+
+
+func _dismiss_nova_ambush_alert() -> void:
+	if is_instance_valid(_nova_ambush_alert):
+		_nova_ambush_alert.queue_free()
+	_nova_ambush_alert = null
+
+
+# Builds an AtlasTexture of one N.O.V.A. expression frame from her 3x3 sheet.
+func _nova_portrait_texture(expression: String) -> Texture2D:
+	var sheet := load(Nova.PORTRAIT_PATH) as Texture2D
+	if sheet == null:
+		return null
+	var idx := Nova.frame_index_for(expression)
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Nova.region_for_frame(idx, sheet.get_width(), sheet.get_height())
+	return atlas
+
+
+# The interactive-alert portrait uses her alert frame.
+func _nova_alert_portrait() -> Texture2D:
+	return _nova_portrait_texture(Nova.expression_for_event("ambush"))
+
+
+# Shows N.O.V.A.'s portrait above the chat window while she talks. Sized to the
+# chat width (scales when the player resizes chat) and placed once — it lives
+# above the chat, it does not follow it. Click-through.
+func _show_nova_talk_portrait(expression: String) -> void:
+	if not chat_window_panel or not is_instance_valid(chat_window_panel):
+		return
+	var tex := _nova_portrait_texture(expression)
+	if tex == null:
+		return
+	if _nova_talk_portrait == null or not is_instance_valid(_nova_talk_portrait):
+		_nova_talk_portrait = TextureRect.new()
+		_nova_talk_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_nova_talk_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_nova_talk_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		add_child(_nova_talk_portrait)
+	_nova_talk_portrait.texture = tex
+	var side: float = clampf(chat_window_panel.size.x * 0.5, 90.0, 360.0)
+	_nova_talk_portrait.size = Vector2(side, side)
+	# Sit OVER the chat window (top-aligned to it), not above it — so she stays
+	# on-screen no matter where the player parks the chat (e.g. at the top edge).
+	_nova_talk_portrait.global_position = chat_window_panel.global_position
+	_nova_talk_portrait.visible = true
+	_kill_talk_portrait_fade()
+	_nova_talk_portrait.modulate.a = 0.0
+	var tw := _nova_talk_portrait.create_tween()
+	tw.tween_property(_nova_talk_portrait, "modulate:a", 1.0, 0.25)
+	_nova_talk_portrait.set_meta("fade_tween", tw)
+
+
+# Fades the talk portrait out (called when she stops speaking).
+func _fade_nova_talk_portrait() -> void:
+	if _nova_talk_portrait == null or not is_instance_valid(_nova_talk_portrait) \
+			or not _nova_talk_portrait.visible:
+		return
+	_kill_talk_portrait_fade()
+	var tw := _nova_talk_portrait.create_tween()
+	tw.tween_property(_nova_talk_portrait, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(func():
+		if is_instance_valid(_nova_talk_portrait):
+			_nova_talk_portrait.visible = false
+	)
+	_nova_talk_portrait.set_meta("fade_tween", tw)
+
+
+func _kill_talk_portrait_fade() -> void:
+	if _nova_talk_portrait and _nova_talk_portrait.has_meta("fade_tween"):
+		var t = _nova_talk_portrait.get_meta("fade_tween")
+		if t is Tween and t.is_valid():
+			t.kill()
+
+
+# Interactive ambush alert: N.O.V.A.'s line plus three tactical choices —
+# Evasive Maneuvers (turn away + boost/flee), Target & Engage (lock + attack
+# vector), Dismiss. Auto-fades after a few seconds; if ignored, combat begins
+# when the hostile closes to range. Only one alert at a time.
+func show_nova_ambush_alert(enemy: Node, message: String) -> void:
+	_dismiss_nova_ambush_alert()  # replace any prior alert
+	var threat := Color(1.0, 0.32, 0.32)
+
+	var panel := Panel.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.09, 0.04, 0.05, 0.93)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(threat.r, threat.g, threat.b, 0.9)
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_right = 6
+	style.corner_radius_bottom_left = 6
+	style.content_margin_left = 21
+	style.content_margin_right = 21
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	panel.add_theme_stylebox_override("panel", style)
+	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	panel.offset_left = -480
+	panel.offset_right = 480
+	panel.offset_top = 110
+	panel.offset_bottom = 110
+	panel.custom_minimum_size = Vector2(960, 0)
+	add_child(panel)
+	_nova_ambush_alert = panel
+
+	var root := VBoxContainer.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_theme_constant_override("separation", 10)
+	panel.add_child(root)
+
+	# Header: portrait + name + line
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	root.add_child(head)
+	var portrait := _nova_alert_portrait()
+	if portrait:
+		var prect := TextureRect.new()
+		prect.custom_minimum_size = Vector2(84, 84)
+		prect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		prect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		prect.texture = portrait
+		head.add_child(prect)
+	var text_vbox := VBoxContainer.new()
+	text_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(text_vbox)
+	var name_label := Label.new()
+	name_label.text = "N.O.V.A."
+	name_label.add_theme_color_override("font_color", threat)
+	name_label.add_theme_font_size_override("font_size", 24)
+	text_vbox.add_child(name_label)
+	var line_label := Label.new()
+	line_label.text = message
+	line_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	line_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line_label.add_theme_font_size_override("font_size", 26)
+	text_vbox.add_child(line_label)
+
+	# Choices
+	var btns := HBoxContainer.new()
+	btns.add_theme_constant_override("separation", 10)
+	root.add_child(btns)
+
+	var p = GlobalState.player
+	var boost_ready: bool = is_instance_valid(p) and p.has_method("can_activate_boost") and p.can_activate_boost()
+
+	var evasive_btn := Button.new()
+	evasive_btn.text = "Evasive Maneuvers" if boost_ready else "Evasive Maneuvers (no boost)"
+	evasive_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	evasive_btn.pressed.connect(func() -> void:
+		var pl = GlobalState.player
+		if is_instance_valid(pl) and pl.has_method("engage_evasive_maneuver"):
+			pl.engage_evasive_maneuver(enemy)
+		_dismiss_nova_ambush_alert()
+	)
+	btns.add_child(evasive_btn)
+
+	var engage_btn := Button.new()
+	engage_btn.text = "Target && Engage"
+	engage_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	engage_btn.pressed.connect(func() -> void:
+		if is_instance_valid(enemy):
+			GlobalState.active_target = enemy
+			var pl = GlobalState.player
+			if is_instance_valid(pl) and pl.has_method("begin_target_navigation"):
+				pl.begin_target_navigation("ATTACK")
+		_dismiss_nova_ambush_alert()
+	)
+	btns.add_child(engage_btn)
+
+	var dismiss_btn := Button.new()
+	dismiss_btn.text = "Dismiss"
+	dismiss_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dismiss_btn.pressed.connect(_dismiss_nova_ambush_alert)
+	btns.add_child(dismiss_btn)
+
+	# Panel-bound tween: auto-killed if a button frees the panel first, so it can
+	# never write modulate into a freed node. Holds ~7s, fades, then clears.
+	var tween := panel.create_tween()
+	tween.tween_interval(7.0)
+	tween.tween_property(panel, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(_dismiss_nova_ambush_alert)
+
 
 # Show a message inside the dock panel (between title and buttons).
 # Used for "Hear Gossip" flavor lines and quest pickup responses —
@@ -10498,21 +10757,35 @@ func _update_connection_status_display():
 	if is_tts_ready: progress += 10.0
 	loading_bar.value = progress
 
+func _disconnect_loading_service_signals() -> void:
+	# Drops the four loading-screen service-connection signals. Idempotent and
+	# safe to call from any completion/teardown path, so a late LLM or TTS connect
+	# can never invoke the loading callbacks after loading_panel has been freed.
+	if LLMInterface.llm_connection_attempt.is_connected(_on_llm_connection_attempt):
+		LLMInterface.llm_connection_attempt.disconnect(_on_llm_connection_attempt)
+	if LLMInterface.llm_connection_established.is_connected(_on_llm_connected):
+		LLMInterface.llm_connection_established.disconnect(_on_llm_connected)
+	if SpeechService.speech_connection_attempt.is_connected(_on_tts_connection_attempt):
+		SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
+	if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
+		SpeechService.speech_connection_established.disconnect(_on_tts_connected)
+
+
 func _check_both_services_ready():
+	# A late service connection can fire this after the loading screen was already
+	# torn down — e.g. the TTS server finishes launching seconds after the player
+	# has undocked and loading_panel was freed. Guard the freed loading UI and drop
+	# the now-stale connections rather than assigning into a previously-freed node.
+	if loading_bar == null or not is_instance_valid(loading_bar):
+		_disconnect_loading_service_signals()
+		return
 	if is_llm_ready and is_tts_ready:
 		GlobalState.trace("[TRACE] [UIManager] Both services connected! Checking required campaign story.")
 		loading_bar.value = 35.0
 		loading_status_label.text = "Syncing Neural Broker Uplink: Writing campaign story..."
-		
+
 		# Disconnect signals to avoid multiple calls if reconnection happens later
-		if LLMInterface.llm_connection_attempt.is_connected(_on_llm_connection_attempt):
-			LLMInterface.llm_connection_attempt.disconnect(_on_llm_connection_attempt)
-		if LLMInterface.small_model_ready.is_connected(_on_llm_connected):
-			LLMInterface.small_model_ready.disconnect(_on_llm_connected)
-		if SpeechService.speech_connection_attempt.is_connected(_on_tts_connection_attempt):
-			SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
-		if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
-			SpeechService.speech_connection_established.disconnect(_on_tts_connected)
+		_disconnect_loading_service_signals()
 
 		if not _campaign_story_ready_for_gameplay():
 			_wait_for_campaign_story_before_gameplay()
@@ -10663,6 +10936,12 @@ func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 func _finish_loading_after_story_ready() -> void:
 	if loading_panel == null or not is_instance_valid(loading_panel):
 		return
+	# Every completion path funnels through here, so this is the one place to drop
+	# the service-connection signals. Do it before the fade-out tween so a late
+	# LLM/TTS connect during the 0.8s hold + fade can't re-enter the loading flow.
+	_disconnect_loading_service_signals()
+	if LLMInterface.has_method("warm_small_model_after_story_gate"):
+		LLMInterface.warm_small_model_after_story_gate()
 	loading_bar.value = 100.0
 	loading_status_label.text = "Uplink fully secured. System Ready."
 	
@@ -10677,6 +10956,13 @@ func _finish_loading_after_story_ready() -> void:
 		if not startup_save_loaded:
 			get_tree().create_timer(1.0).timeout.connect(func():
 				show_kaelen_intro()
+			)
+		elif is_instance_valid(Nova):
+			# Loaded an existing campaign: N.O.V.A. welcomes the captain back, but
+			# only now that the overlay is gone and gameplay is actually running
+			# (chance-gated inside welcome_back so it stays occasional).
+			get_tree().create_timer(1.0).timeout.connect(func():
+				Nova.welcome_back()
 			)
 	)
 

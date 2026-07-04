@@ -643,6 +643,9 @@ func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 		if hints.get("progress_changed", false):
 			print("[QuestManager] Quest progress: ", m.data.get("current_count", 0),
 				"/", m.data.get("count_required", 0))
+			if _is_intro_tutorial_contract(m.data) \
+					and int(m.data.get("current_count", 0)) >= int(m.data.get("count_required", 1)):
+				GlobalState.clear_intro_tutorial_player_protection()
 			quest_progress_updated.emit()
 
 		if hints.has("chatter"):
@@ -657,6 +660,12 @@ func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 		if hints.get("needs_respawn", false):
 			var respawn_faction: String = hints.get("respawn_faction", faction_name)
 			_schedule_respawn(respawn_faction)
+
+
+func _is_intro_tutorial_contract(data: Dictionary) -> bool:
+	return str(data.get("title", "")) == "Clean and Easy" \
+		and str(data.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(data.get("target_faction", "")) == "reavers"
 
 
 func resolve_comms_branch(branch_id: String) -> void:

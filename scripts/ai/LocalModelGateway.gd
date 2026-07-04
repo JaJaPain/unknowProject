@@ -4,8 +4,8 @@ extends RefCounted
 const OLLAMA_GENERATE_URL := "http://127.0.0.1:11434/api/generate"
 const OLLAMA_TAGS_URL := "http://127.0.0.1:11434/api/tags"
 
-const DEFAULT_SMALL_MODEL := "qwen2.5:3b-instruct-q4_K_M"
-const DEFAULT_LARGE_MODEL := "gemma4:12b"
+const DEFAULT_SMALL_MODEL := "qwen3:4b"
+const DEFAULT_LARGE_MODEL := "qwen3:8b"
 
 # How long Ollama keeps a model resident in VRAM after a request. Ollama's default
 # is "5m", so a quiet stretch mid-session unloads the model and the next line eats
@@ -18,23 +18,23 @@ const MODEL_KEEP_ALIVE := "30m"
 const LARGE_MODEL_KEEP_ALIVE := 0
 
 const SMALL_DIALOGUE_MODELS: Array[String] = [
+	"qwen3:4b",
 	"qwen2.5:3b-instruct-q4_K_M",
 	"qwen2.5:3b-instruct",
 	"qwen2.5:3b",
-	"qwen3:3b",
 	"qwen2.5:1.5b-instruct-q4_K_M",
 	"qwen2.5:1.5b-instruct",
 	"qwen2.5:1.5b",
-	"qwen2.5-coder:7b",
 	"qwen3:8b",
 ]
 
 const LARGE_STORY_MODELS: Array[String] = [
+	"qwen3:8b",
+	"qwen3:14b",
+	"gemma4:e4b",
 	"gemma4:12b",
 	"gemma4:latest",
 	"qwen3.6:35b-a3b",
-	"qwen3:14b",
-	"qwen3:8b",
 ]
 
 const CAPABILITY_PROFILES := {
@@ -141,8 +141,11 @@ static func generation_body(
 	)
 	if not response_format.strip_edges().is_empty():
 		body["format"] = response_format
-	if profile_for_capability(capability) == "large_story":
-		body["think"] = false
+	# Both default models are now Qwen3 (thinking models), for the small dialogue
+	# role AND the large story role. Disable Ollama's thinking for every call so
+	# the model never leaks <think> reasoning into dialogue or structured output —
+	# same failure class as the gemma4 chain-of-thought leak, now handled globally.
+	body["think"] = false
 	return body
 
 

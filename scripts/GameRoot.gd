@@ -2888,7 +2888,7 @@ func _capture_global_state() -> Dictionary:
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
 		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
-		"intro_tutorial_player_protected": GlobalState.intro_tutorial_player_protected,
+		"intro_tutorial_player_protected": GlobalState.is_intro_tutorial_player_protection_active(),
 		"combat_tutorial_seen": GlobalState.combat_tutorial_seen,
 		"kaelen_arrival_systems_seen": GlobalState.kaelen_arrival_systems_seen.duplicate(),
 		"campaign_seed": GlobalState.campaign_seed,
@@ -2931,6 +2931,7 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
 	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
 	GlobalState.intro_tutorial_player_protected = bool(state.get("intro_tutorial_player_protected", false))
+	GlobalState.is_intro_tutorial_player_protection_active()
 	GlobalState.combat_tutorial_seen = bool(state.get("combat_tutorial_seen", false))
 	GlobalState.kaelen_arrival_systems_seen.clear()
 	for system_id in state.get("kaelen_arrival_systems_seen", []):
@@ -6850,6 +6851,53 @@ func _debug_spawn_squad() -> void:
 	if not squad.is_empty():
 		GlobalState.emit_chatter("SYSTEM", "DEBUG: Mixed-profile squad spawned.", Color(1.0, 0.6, 0.2))
 
+
+# Tracked test hostiles spawned from the Combat Feel dev tab, so they can be
+# cleared on demand without touching real encounter ships.
+var _debug_test_hostiles: Array = []
+
+
+# Spawns ONE inbound hostile far ahead of the player (well beyond the Nova warn
+# distance) that locks on and flies in — so you can watch the whole sensor →
+# warn → grace → combat sequence and tune the feel values live.
+func _debug_spawn_inbound_hostile() -> void:
+	if not is_instance_valid(player):
+		return
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	var scene: Node = NPC_SHIP_SCENE.instantiate()
+	scene.faction = "vanguard"
+	scene.ship_role = "Interceptor"
+	scene.is_reinforcement = true  # locks the player from range + bypasses the leash, so it closes in
+	scene.persistent_id = "debug.test_hostile.%d" % Time.get_ticks_msec()
+	spawn_root.add_child(scene)
+	var profile := _profile_for_faction_role("vanguard", "Interceptor", "Interceptor")
+	if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+		scene.apply_faction_profile(profile, 1)
+	scene.name = "DEBUG_TEST_HOSTILE_%d" % _debug_test_hostiles.size()
+	# Spawn directly ahead of the player, outside the current warn distance.
+	var forward: Vector3 = -(player as Node3D).global_basis.z
+	var dist: float = maxf(1000.0, GlobalState.nova_warn_distance + 300.0)
+	(scene as Node3D).global_position = (player as Node3D).global_position + forward * dist
+	_debug_test_hostiles.append(scene)
+	# Auto-select it as the active target so it's tracked on the overview/HUD the
+	# moment it spawns — no manual clicking to watch it close in.
+	GlobalState.active_target = scene
+	GlobalState.emit_chatter(
+		"SYSTEM", "DEBUG: inbound test hostile spawned at %.0fm." % dist, Color(1.0, 0.5, 0.4)
+	)
+
+
+# Despawns every tracked test hostile (guards against ones already gone).
+func _debug_clear_test_hostiles() -> void:
+	var cleared := 0
+	for ship in _debug_test_hostiles:
+		if is_instance_valid(ship):
+			ship.set("destroyed", true)
+			ship.queue_free()
+			cleared += 1
+	_debug_test_hostiles.clear()
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: cleared %d test hostile(s)." % cleared, Color(0.7, 0.7, 0.7))
+
 # ── Dev panel ──────────────────────────────────────────────────────────────────
 var _dev_panel: DevPanel
 
@@ -6859,6 +6907,8 @@ func _init_dev_panel() -> void:
 	_dev_panel.set_story_debug_provider(_dev_story_debug_snapshot)
 	_dev_panel.spawn_boss_requested.connect(_debug_spawn_boss)
 	_dev_panel.spawn_squad_requested.connect(_debug_spawn_squad)
+	_dev_panel.spawn_test_hostile_requested.connect(_debug_spawn_inbound_hostile)
+	_dev_panel.clear_test_hostiles_requested.connect(_debug_clear_test_hostiles)
 	_dev_panel.stores_restock_requested.connect(func():
 		StoreRegistryScript.shared().force_restock_all()
 		GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))

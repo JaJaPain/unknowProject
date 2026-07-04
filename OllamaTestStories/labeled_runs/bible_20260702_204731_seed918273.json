@@ -1,0 +1,74 @@
+{
+  "campaign_title": "The Scrimshaw Debt",
+  "campaign_logline": "A broke pilot gets tangled in jurisdictional disputes between three major corporate players over a valuable piece of forgotten real estate.",
+  "opening_situation": "You are running on fumes and credits; your only immediate threat is a single, heavily armed Reaver-class scavenger that seems determined to claim whatever scraps you pick up near the fringe border.",
+  "main_mystery": "The true nature and ownership history of derelict automated shipping lanes connecting Zenith, Aurelia, and Vanguard.",
+  "act_1_outline": [
+    "Take a low-paying retrieval job in Zenith's outer sectors; it involves retrieving something highly sensitive but worthless on its face.",
+    "In Aurelia, you are hired to move cargo that is suspiciously light for the manifest, suggesting illegal component smuggling.",
+    "A confrontation near Vanguard forces you to mediate a dispute over salvage rights between two minor corporate enforcers."
+  ],
+  "long_term_reveal": "The three corporations aren't fighting over territory or resources; they are battling over outdated property deeds and proprietary maintenance protocols etched into the very structure of the jump gates themselves.",
+  "tone": "Gritty, bureaucratic desperation with a touch of cynical wit.",
+  "core_pressure": "Maintaining enough capital to keep your ship running while avoiding permanent entanglement with corporate legal action.",
+  "factions": {
+    "zenith": "Zenith is aggressively enforcing outdated salvage tariffs on all non-registered salvage operations in their claim zone.",
+    "aurelia": "The established trade consortium controls the primary jump points, enforcing prohibitive tariffs on goods that bypass their registered manifests. Independent passage is economically discouraged by paperwork and arbitrary inspection fees.",
+    "vanguard": "Vanguard has begun deploying automated border patrols that treat any non-affiliated vessel as potential contraband or trespasser."
+  },
+  "kaelen_rule": "Kaelen operates exclusively in neutral docking hubs, offering services only after a significant upfront deposit is confirmed.",
+  "kaelen_angle": "She possesses the original, pre-corporate mapping keys for several disputed jump gate nexus points.",
+  "kaelen_hint_plan": [
+    "She always accepts payment in untraceable physical commodity chips rather than standard credits.",
+    "When discussing jurisdictional lines, she uses overly complex, archaic legal terminology.",
+    "She seems to know the optimal docking bay number before you even check the port manifest.",
+    "She occasionally references a specific brand of obsolete life support filtration unit that no one else remembers."
+  ],
+  "kaelen_hint_style": "Over-precise-details regarding logistics and paperwork minutiae.",
+  "kaelen_never_reveal": "The true identity of the original architects who established the three corporate jurisdictions in the first place.",
+  "faction_reveal_rule": "New systems reveal a faction by having its primary governing entity issue an immediate, mandatory notice or tariff change upon arrival.",
+  "humor_rule": "Humor must derive from bureaucratic incompetence, absurd regulatory hurdles, or mundane desperation.",
+  "address_rule": "By your ship's registered callsign, followed by a dismissive title like 'Pilot' or 'Independent'.",
+  "fallback_rule": "If no specific data exists for a location/faction, assume the local problem is exaggerated petty bureaucracy regarding tariffs or docking rights.",
+  "story_horizon_rule": "New horizons introduce a new primary corporate conflict that directly intersects with one of the existing three major players' established interests.",
+  "story_arcs": [
+    {
+      "name": "The Deed Dispute",
+      "summary": "You must navigate escalating legal and physical skirmishes between Zenith, Aurelia, and Vanguard to uncover who truly controls the passage rights in the contested nexus points."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost Manifests",
+      "trail_id": "rumor_trail.gate_manifest_leak",
+      "clue_count": 2,
+      "hint_theme": "Evidence suggesting that cargo manifests are being intentionally falsified across multiple jurisdictions simultaneously.",
+      "clue_templates": [
+        "A corrupted data chip found near a restricted transfer point detailing manifest codes for non-existent goods.",
+        "An intercepted, partially redacted message mentioning 'the ledger reconciliation' regarding specific tonnage weights."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "uncommon",
+      "payoff": "A temporary exemption pass that allows passage through a heavily policed sector without triggering immediate corporate scrutiny."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main story arc concludes, a new primary conflict emerges in adjacent space."
+    }
+  ],
+  "expansion_rules": [
+    "New horizons will focus on corporate law or resource scarcity disputes rather than outright warfare.",
+    "The next set of factions must challenge the established economic model connecting Zenith, Aurelia, and Vanguard."
+  ],
+  "banned_repeats": [
+    "chosen one",
+    "destiny",
+    "Great Silence",
+    "ancient signal"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "campaign_title": "The Salvage Ledger",
+  "campaign_logline": "A broke pilot gets entangled in a jurisdictional dispute over salvage rights and questionable debts.",
+  "opening_situation": "The player's ship is running on fumes, with one Reaver-class hostile visible at the edge of their immediate jump vector.",
+  "main_mystery": "Unraveling who actually owns the valuable, contested assets floating between Zenith, Aurelia, and Vanguard.",
+  "act_1_outline": [
+    "A minor salvage job goes sour when corporate claims conflict with local law.",
+    "Kaelen offers a seemingly simple retrieval contract that proves too complicated.",
+    "The player must navigate disputed docking fees to keep their ship operational enough for the next jump."
+  ],
+  "long_term_reveal": "The primary asset dispute is actually cover for a coordinated effort to seize control of regional trade manifests through debt accumulation.",
+  "tone": "Gritty resource management with bad corporate etiquette.",
+  "core_pressure": "Maintaining sufficient credits and reputation to operate legally between three conflicting powers.",
+  "factions": {
+    "zenith": "Zenith's overzealous adherence to outdated salvage law is crippling local independent operations.",
+    "aurelia": "Aurelia’s resource taxation system is predatory, bleeding small operators dry through bureaucracy.",
+    "vanguard": "Vanguard is openly engaging in industrial espionage disguised as border security sweeps."
+  },
+  "kaelen_rule": "Kaelen operates exclusively out of a neutral-zone brokerage office or bar front.",
+  "kaelen_angle": "She possesses the actual, untraceable ledger detailing every disputed asset and debt owed by all three major powers.",
+  "kaelen_hint_plan": [
+    "She always asks about local commodity futures before discussing cargo manifests.",
+    "Her preferred brand of ration synth is suspiciously rare in this region.",
+    "She seems overly concerned with proper documentation formatting for minor transactions.",
+    "She never makes eye contact when mentioning the names of high-ranking officials from any faction."
+  ],
+  "kaelen_hint_style": "Overly precise details regarding obscure legal precedents and paperwork minutiae.",
+  "kaelen_never_reveal": "The true nature of her initial funding or why she established a presence in this specific nexus point.",
+  "faction_reveal_rule": "New factions are revealed when the player jumps through a gate into a system that has not been previously associated with Zenith, Aurelia, or Vanguard jurisdiction.",
+  "humor_rule": "Humor should derive from bureaucratic incompetence, petty greed, and low-grade mechanical failure.",
+  "address_rule": "NPCs address the player as \"Pilot\" or by their ship's registered callsign if known.",
+  "fallback_rule": "If a required element is missing, assume it relates to minor equipment malfunction or negligible local wildlife hazard until more data appears.",
+  "story_horizon_rule": "New horizons should introduce new types of contested goods (e.g., specific bio-matter, exotic fuel isotopes) and unique jurisdictional challenges related to those goods.",
+  "story_arcs": [
+    {
+      "name": "The Manifest Dispute",
+      "summary": "The player gets dragged into a multi-party fight over the ownership rights to valuable salvaged materials trapped in disputed territory."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Black Box Claims",
+      "trail_id": "rumor_trail.asset_ownership_ledger",
+      "clue_count": 2,
+      "hint_theme": "Unaccounted for, high-value corporate data or physical property passing through the sector.",
+      "clue_templates": [
+        "A corrupted data slate mentioning a transfer authorization code that doesn't match known registries.",
+        "Finding discarded security logs detailing unauthorized personnel access to a restricted vault area."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "uncommon",
+      "payoff": "A single, high-value contract granting temporary immunity from one of the three major factions' fees."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_rumor_trail",
+      "description": "When the main story arc is resolved, trigger the next major thread of mystery via a new rumor trail."
+    }
+  ],
+  "expansion_rules": [
+    "Introduce entirely new economic resource types that require specialized processing technology not available in current systems.",
+    "Establish a minor non-aligned governmental body whose charter conflicts with all three existing powers."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Great Collapse",
+    "purge protocol",
+    "ancient signal",
+    "ghost signal",
+    "prophecy",
+    "alien owner",
+    "mysterious pulse",
+    "chosen one",
+    "destiny"
+  ]
+}

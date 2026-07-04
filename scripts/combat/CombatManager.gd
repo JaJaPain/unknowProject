@@ -613,6 +613,8 @@ func queue_action(type: CombatActionType.Type, params: Dictionary = {}) -> bool:
 func is_training_combat_active() -> bool:
 	if not QuestManager.is_quest_active():
 		return false
+	if QuestManager.is_quest_completed():
+		return false
 	return str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
 		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
 		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers"

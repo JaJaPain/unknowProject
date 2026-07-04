@@ -5,6 +5,14 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### First mission target ship never respawns after logout/login (mission uncompletable)
+**Spotted:** 2026-07-03 (playtest)
+**Severity:** High — soft-locks the first mission; the kill objective can never be satisfied
+**Description:** If the player logs out (saves + quits) BEFORE the first mission's target ship is destroyed, then loads that save back in, the mission ship does not come back. The KILL objective stays at 0 with no target present in the system, so the first mission can never be completed. Mission targets are spawned at mission start but appear not to be persisted into the campaign save and not re-spawned on load.
+**Where to look:** `GlobalState.spawn_mission_targets` (spawns the starter target(s) at mission start) + the save/restore path — `savegame.json` / `CampaignManifestStore` and the persistent-entity system (`NPCShip.capture_state`/`restore_state`, `persistent_id`). Confirm whether mission target ships are included in the persisted entity set. If they aren't persisted, `QuestManager` should, on load, detect any in-progress KILL_SHIPS mission whose targets are missing and re-spawn them (mirror the "respawn replacement target far away" logic already used when an NPC kills a target — see the 2026-07-01 fixed entry). Also verify the mission's own state (progress, target ids) round-trips through save/load.
+
+---
+
 ### Kaelen handoff batch intermittently returns no JSON array
 **Spotted:** 2026-07-02 (live playtest during story-wiring session)
 **Severity:** Low — falls back gracefully (`StoryManager.generate_handoff_pool` just logs "Handoff batch returned empty" and the pool stays at its previous size), but worth root-causing.

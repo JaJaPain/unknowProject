@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_expression_frame_mapping()
 	_test_region_math()
 	_test_event_expression_and_preempt()
+	_test_combat_warning_api_exists()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -57,6 +58,15 @@ func _test_event_expression_and_preempt() -> void:
 		not NovaType.should_preempt(NovaType.Severity.NAV, NovaType.Severity.NAV),
 		"Equal severity should not pre-empt."
 	)
+
+
+func _test_combat_warning_api_exists() -> void:
+	var nova := NovaType.new()
+	_expect(
+		nova.has_method("warn_hostile_engagement"),
+		"Nova should expose hostile engagement warning for NPC-initiated combat."
+	)
+	nova.free()
 
 
 func _expect(condition: bool, message: String) -> void:

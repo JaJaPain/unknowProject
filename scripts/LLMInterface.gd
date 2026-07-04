@@ -943,6 +943,14 @@ func _discover_ollama_model():
 func _ollama_warm_models() -> void:
 	if _models_warm_started:
 		return
+	if campaign_bible_priority_active:
+		GenerationDiagnostics.record_event(
+			"model_warmup",
+			"small_warm_deferred_for_campaign_bible",
+			"LLMInterface",
+			{"model": active_model_name}
+		)
+		return
 	_models_warm_started = true
 	# Load the small model into VRAM, THEN confirm it actually generates before we
 	# let startup work fire. The empty-prompt load alone can report success while
@@ -950,6 +958,12 @@ func _ollama_warm_models() -> void:
 	_warm_single_model(active_model_name, "small", func() -> void:
 		_verify_small_model_ready(active_model_name, 0)
 	)
+
+
+func warm_small_model_after_story_gate() -> void:
+	if small_model_verified or _models_warm_started:
+		return
+	call_deferred("_ollama_warm_models")
 
 
 ## Sends a tiny real generation ("ready" probe) to confirm the small model is
@@ -1269,15 +1283,25 @@ func _start_campaign_bible_attempt(
 		idea_memory_context,
 		correction_notes
 	)
+	# Empty response_format => no Ollama "format":"json" constraint. The campaign
+	# bible is generated as flat @@label blocks and assembled into JSON in code
+	# (NarrativeDirector.parse_campaign_bible_response); forcing json here would
+	# reintroduce the dropped-nested-key failures this design fixes.
 	var payload := build_generation_body(
 		capability,
 		prompt,
-		"json",
+		"",
 		{
-			"temperature": 0.95,
-			"num_predict": 900,
+			"temperature": 0.75,
+			"num_predict": 2200,
 			"seed": randi(),
 		}
+	)
+	GenerationDiagnostics.record_event(
+		"campaign_bible",
+		"request_started",
+		"llm_interface",
+		{"model": model_name, "attempt": attempt}
 	)
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)
@@ -5334,6 +5358,9 @@ func request_kaelen_handoff_batch(
 	count: int,
 	callback: Callable
 ) -> void:
+	if _skip_for_campaign_bible_priority("pickup_handoff"):
+		callback.call([])
+		return
 	var story_block := ""
 	if story_context.strip_edges() != "":
 		story_block = (
@@ -5400,6 +5427,8 @@ func request_kaelen_handoff_batch(
 		"model": large_model,
 		"prompt": prompt,
 		"stream": false,
+		"keep_alive": LocalModelGateway.LARGE_MODEL_KEEP_ALIVE,
+		"think": false,
 		"options": {"num_predict": 800, "temperature": 0.85},
 	})
 	var err := http.request(

@@ -8,6 +8,8 @@ signal stores_restock_requested
 signal force_dock_rumor_requested
 signal ollama_auto_restart_toggled(enabled: bool)
 signal force_restart_ollama_requested
+signal spawn_test_hostile_requested
+signal clear_test_hostiles_requested
 
 # ── Layout refs ───────────────────────────────────────────────────────────────
 var _action_vbox: VBoxContainer
@@ -61,6 +63,7 @@ func _ready() -> void:
 	_build_mechanic_debug_tab()
 	_build_dialogue_content_tab()
 	_build_dialogue_rules_tab()
+	_build_combat_feel_tab()
 	_build_story_debug_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
@@ -227,6 +230,92 @@ func _build_story_debug_tab() -> void:
 	tab.add_child(_story_full_debug_text)
 
 	_refresh_story_debug_tab()
+
+
+func _build_combat_feel_tab() -> void:
+	var tab := add_tab("Combat Feel")
+
+	var hint := Label.new()
+	hint.text = (
+		"Live tuning (this session only). Provoke a hostile and nudge these while "
+		+ "you watch it close in. Report the final numbers when they feel right."
+	)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+	tab.add_child(HSeparator.new())
+
+	# N.O.V.A. warn distance — how close a locked hostile gets before she calls it.
+	_build_feel_row(
+		tab, "N.O.V.A. warn distance", "nova_warn_distance", 50.0, false, "%.0f m"
+	)
+	# Grace hold — seconds after the warning before combat auto-starts.
+	_build_feel_row(
+		tab, "Combat grace (warning → fight)", "combat_warning_grace_ms", 500.0, true, "%d ms"
+	)
+
+	tab.add_child(HSeparator.new())
+	var spawn_hint := Label.new()
+	spawn_hint.text = "Spawn an inbound hostile (far ahead, locks on and closes in) to watch the sensor → warn → grace → fight sequence. Destroy it when done."
+	spawn_hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(spawn_hint)
+
+	var spawn_row := HBoxContainer.new()
+	spawn_row.add_theme_constant_override("separation", 8)
+	tab.add_child(spawn_row)
+
+	var spawn_btn := Button.new()
+	spawn_btn.text = "Spawn Inbound Hostile"
+	spawn_btn.pressed.connect(func(): spawn_test_hostile_requested.emit())
+	spawn_row.add_child(spawn_btn)
+
+	var clear_btn := Button.new()
+	clear_btn.text = "Destroy Test Hostile(s)"
+	clear_btn.pressed.connect(func(): clear_test_hostiles_requested.emit())
+	spawn_row.add_child(clear_btn)
+
+
+# One live-tunable GlobalState value with -/+ buttons and a current-value readout.
+func _build_feel_row(
+	parent: VBoxContainer,
+	label_text: String,
+	prop: String,
+	step: float,
+	is_int: bool,
+	fmt: String
+) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(230, 0)
+	row.add_child(label)
+
+	var value := Label.new()
+	value.custom_minimum_size = Vector2(90, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+	row.add_child(value)
+
+	var refresh := func() -> void:
+		value.text = fmt % (int(GlobalState.get(prop)) if is_int else float(GlobalState.get(prop)))
+	var nudge := func(delta: float) -> void:
+		var next: float = maxf(0.0, float(GlobalState.get(prop)) + delta)
+		GlobalState.set(prop, int(next) if is_int else next)
+		refresh.call()
+
+	var minus := Button.new()
+	minus.text = "-%.0f" % step
+	minus.pressed.connect(func() -> void: nudge.call(-step))
+	row.add_child(minus)
+
+	var plus := Button.new()
+	plus.text = "+%.0f" % step
+	plus.pressed.connect(func() -> void: nudge.call(step))
+	row.add_child(plus)
+
+	refresh.call()
 
 
 func _story_section_label(text: String) -> Label:

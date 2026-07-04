@@ -6,6 +6,10 @@ const KAELEN_PROFILE := &"voice.kaelen.v1"
 signal cache_queue_completed()
 signal speech_connection_attempt(attempt: int)
 signal speech_connection_established()
+# Fires when a spoken clip finishes playing. A clean public re-expose of the
+# audio player's native `finished`, so callers can time things off "she stopped
+# talking" (e.g. fade N.O.V.A.'s portrait, sequence the cold-open).
+signal playback_finished()
 
 var provider := KokoroSpeechProvider.new()
 var last_interaction_time: float = 0.0
@@ -36,6 +40,19 @@ func _ready() -> void:
 	TTSInterface.cache_queue_completed.connect(cache_queue_completed.emit)
 	TTSInterface.tts_connection_attempt.connect(speech_connection_attempt.emit)
 	TTSInterface.tts_connection_established.connect(speech_connection_established.emit)
+	# Deferred: TTSInterface.audio_player is created in its own _ready, which may
+	# run after this one depending on autoload order.
+	call_deferred("_connect_playback_finished")
+
+
+func _connect_playback_finished() -> void:
+	var ap = TTSInterface.audio_player
+	if ap and is_instance_valid(ap) and not ap.finished.is_connected(_on_playback_finished):
+		ap.finished.connect(_on_playback_finished)
+
+
+func _on_playback_finished() -> void:
+	playback_finished.emit()
 
 
 func start_interaction(interaction_name: String) -> void:

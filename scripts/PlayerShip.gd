@@ -21,6 +21,8 @@ const BOOST_SPEED_MULTIPLIER := 1.25
 const BOOST_DURATION_SECONDS := 5.0
 const BOOST_COOLDOWN_SECONDS := 60.0
 const BOOST_HEAT_DAMAGE := 2.0
+# How far along the escape vector N.O.V.A.'s evasive maneuver runs the ship.
+const EVASIVE_FLEE_DISTANCE := 150.0
 const MINING_RANGE := 75.0
 const MINING_TRACTOR_LOCK_SECONDS := 1.15
 const MINING_TRACTOR_RADIUS := 0.075
@@ -775,6 +777,24 @@ func boost_active_remaining() -> float:
 
 func can_activate_boost() -> bool:
 	return not destroyed and not is_docked and boost_timer <= 0.0 and boost_cooldown_timer <= 0.0
+
+
+# N.O.V.A.'s evasive maneuver (see UIManager ambush alert): turn away from
+# `attacker` and autopilot to a point EVASIVE_FLEE_DISTANCE along the escape
+# vector. Boost is a bonus, not a requirement — on cooldown the ship still
+# turns and runs at normal speed. Returns true if boost fired.
+func engage_evasive_maneuver(attacker: Node3D) -> bool:
+	if destroyed or is_docked:
+		return false
+	var away := global_position - attacker.global_position if is_instance_valid(attacker) else Vector3.ZERO
+	if away.length_squared() < 0.01:
+		away = -global_transform.basis.z  # coincident/unknown: flee along the nose
+	away = away.normalized()
+	# MOVE_TO_POINT autopilot flies to (and rotates the nose toward) this point,
+	# which is directly away from the attacker — so the ship turns its back on it.
+	target_position = global_position + away * EVASIVE_FLEE_DISTANCE
+	nav_mode = "MOVE_TO_POINT"
+	return activate_boost()
 
 func _unhandled_input(event: InputEvent):
 	# While docked the dock UI owns the screen — block any world-bound
