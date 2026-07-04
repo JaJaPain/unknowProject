@@ -251,6 +251,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	jump_request_pending = false
 	transition_in_progress = true
 	_prepare_player_for_system_change()
+	if is_instance_valid(Nova):
+		Nova.on_gate_transition()  # occasional unsettled gate line (mystery seed)
 	var source_gate := GlobalState.active_target
 	var source_gate_id := (
 		str(source_gate.call("get_world_id"))
@@ -442,6 +444,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		ui_mgr.call_deferred("refresh_overview")
 	if ui_mgr and ui_mgr.has_method("notify_system_arrived"):
 		ui_mgr.call_deferred("notify_system_arrived", runtime_system_id)
+	if is_instance_valid(Nova):
+		Nova.on_system_arrived()  # occasional dry arrival line (skips if she spoke going through)
 	if is_instance_valid(StoryManager):
 		StoryManager.on_system_arrived(runtime_system_id)
 	if is_instance_valid(StoryQuestManager):

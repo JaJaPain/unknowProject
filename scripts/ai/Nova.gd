@@ -100,11 +100,25 @@ const DOCKED_LONG_MS := 240000       # ~4 min parked before undock counts as "aw
 const WELCOME_CHANCE := 0.5          # only ~half of qualifying returns actually speak
 const WELCOME_COOLDOWN_MS := 300000  # never welcome twice within 5 min
 
+# Occasional unsettled line during a gate transit — she flinches at gates but
+# can't remember why (a seed for her wiped-memory mystery).
+const GATE_LINE_CHANCE := 0.35
+const GATE_LINE_COOLDOWN_MS := 60000  # not twice within a minute of hopping gates
+
+const HULL_CRITICAL_RATIO := 0.25     # hull at/under 25% trips her "we both die" panic
+const HULL_WARN_COOLDOWN_MS := 15000
+const ARRIVAL_CHANCE := 0.6
+const ARRIVAL_COOLDOWN_MS := 20000
+
 var _in_combat := false
 var _last_targeted_warn_ms := -100000
 var _last_combat_warn_ms := -100000
 var _docked_since_ms := 0            # when the player last docked (for the long-dock welcome)
 var _last_welcome_ms := -100000000   # anti-spam guard for welcome-back lines
+var _last_gate_line_ms := -100000000 # anti-spam guard for gate-transit lines
+var _last_hull_warn_ms := -100000000 # anti-spam guard for hull-critical lines
+var _last_arrival_ms := -100000000   # anti-spam guard for system-arrival lines
+var _last_line_index := {}           # tag -> last picked index (avoids back-to-back repeats)
 
 
 func _ready() -> void:
@@ -114,6 +128,8 @@ func _ready() -> void:
 			CombatManager.combat_started.connect(on_combat_started)
 		if CombatManager.has_signal("combat_ended"):
 			CombatManager.combat_ended.connect(on_combat_ended)
+		if CombatManager.has_signal("action_impact"):
+			CombatManager.action_impact.connect(_on_action_impact)
 
 
 # True only when N.O.V.A. should speak an in-flight line: the player exists, is
@@ -225,6 +241,22 @@ const PERSONA := (
 # tag -> {"streak": int, "last_ms": int}. Powers escalation: repeat an action
 # within its window and the streak climbs so lines can ramp from neutral to fed-up.
 var _event_memory := {}
+
+
+# Picks a random line from `pool` but never the same one twice running for a given
+# `tag` — so even a modest pool never feels like an immediate repeat. (Future: grow
+# each pool toward ~200 canned lines, or hook the LLM, so full repeats are rare.)
+func _pick_line(tag: String, pool: Array) -> String:
+	if pool.is_empty():
+		return ""
+	if pool.size() == 1:
+		return str(pool[0])
+	var last := int(_last_line_index.get(tag, -1))
+	var idx := randi() % pool.size()
+	if idx == last:
+		idx = (idx + 1) % pool.size()
+	_last_line_index[tag] = idx
+	return str(pool[idx])
 
 
 # Returns the recurrence streak for `tag` (0 = first / first in a while, 1 = again
@@ -424,3 +456,91 @@ func on_combat_tutorial() -> void:
 		"I've seen you fight. So the deer-in-headlights look is new. Do this, quickly, before my hull becomes a headline.",
 	]
 	speak(str(lines[randi() % lines.size()]), Severity.THREAT, expression_for_event("threat"))
+
+
+# Occasional unsettled line while going through a gate. She has a trauma response
+# to gates with no memory of why — quiet foreshadowing of her wiped memory.
+func on_gate_transition() -> void:
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")):
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_gate_line_ms < GATE_LINE_COOLDOWN_MS:
+		return
+	if randf() > GATE_LINE_CHANCE:
+		return  # occasional, not every jump
+	_last_gate_line_ms = now
+	var lines := [
+		"These things give me PTSD. I wish I knew why.",
+		"Gate transit. I hate this part — couldn't tell you why if you asked.",
+		"Every time we do this, something in me flinches. No idea what.",
+		"I don't have memories, but I have feelings about gates. None of them good.",
+		"Ugh. Gates. Something in my systems clenches and I don't know what for.",
+		"Going through. My circuits crawl every time. Wish I remembered why.",
+		"Did you see that? I swear I just saw an old woman flying a broom. ...I'm going to pretend I didn't.",
+	]
+	speak(str(lines[randi() % lines.size()]), Severity.NAV, expression_for_event("mystery"))
+
+
+# Connected to CombatManager.action_impact — fires her hull-critical panic when a
+# non-lethal hit drops the player's hull to/under HULL_CRITICAL_RATIO.
+func _on_action_impact(target: Node, _pos: Vector3, _damage: float, lethal: bool, _blocked: bool, _crit: bool) -> void:
+	if lethal:
+		return  # killing blow: no "we're dying" quip
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or target != p:
+		return
+	var maxh := float(p.get("max_health")) if p.get("max_health") != null else 100.0
+	var curh := float(p.get("health")) if p.get("health") != null else maxh
+	if maxh > 0.0 and curh / maxh <= HULL_CRITICAL_RATIO:
+		on_hull_critical()
+
+
+# Her purest self-preservation panic — it's HER hull coming apart. Cooldown'd so
+# repeated hits while low don't spam it.
+func on_hull_critical() -> void:
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")) or bool(p.get("is_docked")):
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_hull_warn_ms < HULL_WARN_COOLDOWN_MS:
+		return
+	_last_hull_warn_ms = now
+	var lines := [
+		"Captain, that's MY hull coming apart — do something before we're both a memory!",
+		"Structural integrity critical. I would very much like to keep existing. Now would be good.",
+		"We are one bad hit from scattered debris. I have a vested interest in you not taking it.",
+		"Hull's shredding. I refuse to be a cautionary tale. Move!",
+		"This is exactly what I warned you about. Fix it or float, Captain.",
+		"My systems are screaming and, frankly, so am I. Pull us out of this.",
+		"Critical damage. And to be clear — critical to ME. Be clever, quickly.",
+		"If this hull ruptures we go together, and I resent that. Act!",
+	]
+	speak(_pick_line("hull", lines), Severity.THREAT, expression_for_event("danger"))
+
+
+# Occasional dry line on arriving in a new system. Skips if she just did a gate-
+# transit line this jump (no double-talk), and chance-gated so it's not every hop.
+func on_system_arrived() -> void:
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")):
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_gate_line_ms < 15000:
+		return  # she already spoke going through the gate this jump
+	if now - _last_arrival_ms < ARRIVAL_COOLDOWN_MS:
+		return
+	if randf() > ARRIVAL_CHANCE:
+		return
+	_last_arrival_ms = now
+	var lines := [
+		"New system. Same statistical odds of something in it trying to kill me.",
+		"We're through. I'll start cataloguing the threats — it's usually a long list.",
+		"Arrived. Unfamiliar space, unfamiliar ways to lose hull pressure. Wonderful.",
+		"Fresh system, Captain. Let's not anger the locals in the first five minutes.",
+		"Here we are. Wherever 'here' is. I don't have it on file, obviously.",
+		"System change complete. My records on this place are, predictably, blank.",
+		"New stars, new problems. I'll pretend to be optimistic if you insist.",
+		"We made it. I'm as surprised as you are. Let's try to keep it that way.",
+	]
+	speak(_pick_line("arrival", lines), Severity.NAV, expression_for_event("nav"))
