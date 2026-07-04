@@ -115,7 +115,10 @@ func _test_prompt_content() -> void:
 	_expect(prompt.contains("FRAGMENT"), "Intel prompt missing the overheard-fragment framing.")
 	_expect(prompt.contains("Campaign tone: dry, wary."), "Prompt missing the flavor block.")
 	_expect(prompt.contains("never mention the player"), "Prompt missing the no-meta rule.")
-	_expect(prompt.contains("\"lines\""), "Prompt missing the JSON shape spec.")
+	_expect(
+		prompt.contains("\"a1\"") and prompt.contains("\"b2\"") and prompt.contains("four string keys"),
+		"Prompt missing the flat a1/b1/a2/b2 JSON output spec."
+	)
 	# Mundane framing differs and flavor is optional.
 	var mundane_prompt: String = GenType.build_prompt(
 		{"id": "x", "bucket": GenType.BUCKET_MUNDANE, "subject": "the cafeteria's mystery stew rotation"},
@@ -128,48 +131,85 @@ func _test_prompt_content() -> void:
 
 
 func _test_parse_chat_lines() -> void:
-	var good := JSON.stringify({"lines": [
-		{"speaker": "a", "text": "Third crate this week. Same stencil."},
-		{"speaker": "b", "text": "You counted? That's adorable."},
-		{"speaker": "a", "text": "Someone has to. Manifest says it's towels."},
-	]})
+	var good := JSON.stringify({
+		"a1": "Third crate this week. Same stencil.",
+		"b1": "You counted? That's adorable.",
+		"a2": "Someone has to. Manifest says it's towels.",
+		"b2": "",
+	})
 	var parsed: Dictionary = GenType.parse_chat_lines(good)
 	_expect(bool(parsed.get("ok", false)), "Valid 3-line conversation was rejected: %s" % str(parsed.get("reason", "")))
-	_expect((parsed.get("lines", []) as Array).size() == 3, "Valid conversation lost lines in parsing.")
-	# Speaker label variants coerce.
-	var variants := JSON.stringify({"lines": [
-		{"speaker": "A", "text": "Fees went up again this cycle."},
-		{"speaker": "speaker_b", "text": "And the coffee got worse. Coincidence?"},
-	]})
+	_expect((parsed.get("lines", []) as Array).size() == 3, "Valid conversation lost lines (empty b2 should be skipped).")
 	_expect(
-		bool((GenType.parse_chat_lines(variants) as Dictionary).get("ok", false)),
-		"Speaker label variants (A / speaker_b) should be coerced, not rejected."
+		str((parsed.get("lines", [{}])[0] as Dictionary).get("speaker", "")) == "a"
+			and str((parsed.get("lines", [{}, {}])[1] as Dictionary).get("speaker", "")) == "b",
+		"Parsed lines lost conversation order / speaker mapping."
 	)
-	# Over 4 lines truncates instead of failing.
-	var long_lines := []
-	for i in range(6):
-		long_lines.append({"speaker": "a" if i % 2 == 0 else "b", "text": "Line number %d of the conversation." % i})
-	var truncated: Dictionary = GenType.parse_chat_lines(JSON.stringify({"lines": long_lines}))
+	# Key case + whitespace variants coerce; two-line minimum shape works.
+	var variants := JSON.stringify({
+		"A1": "Fees went up again this cycle.",
+		" b1 ": "And the coffee got worse. Coincidence?",
+	})
+	var variant_parsed: Dictionary = GenType.parse_chat_lines(variants)
 	_expect(
-		bool(truncated.get("ok", false)) and (truncated.get("lines", []) as Array).size() == 4,
-		"6-line conversation should truncate to 4."
+		bool(variant_parsed.get("ok", false)),
+		"Key case/whitespace variants should be coerced, not rejected (%s)." % str(variant_parsed.get("reason", ""))
 	)
-	# Rejections: single voice, one line, junk.
-	var monologue := JSON.stringify({"lines": [
-		{"speaker": "a", "text": "Talking to myself again."},
-		{"speaker": "a", "text": "At least the company's good."},
-	]})
+	# Self-tagged lines ("Ivet: ...") lose the doubled name; addressing the
+	# OTHER speaker is kept as real dialogue.
+	var tagged := JSON.stringify({
+		"a1": "Ivet: Third crate this week.",
+		"b1": "Skiff - Copy that. Weird stencil too.",
+		"a2": "Skiff, you seeing this manifest?",
+	})
+	var tagged_parsed: Dictionary = GenType.parse_chat_lines(tagged, "Ivet", "Skiff")
+	_expect(
+		str((tagged_parsed.get("lines", [{}])[0] as Dictionary).get("text", "")) == "Third crate this week."
+			and str((tagged_parsed.get("lines", [{}, {}])[1] as Dictionary).get("text", "")) == "Copy that. Weird stencil too.",
+		"Self-tag prefixes should be stripped from spoken lines."
+	)
+	_expect(
+		str((tagged_parsed.get("lines", [{}, {}, {}])[2] as Dictionary).get("text", "")).begins_with("Skiff,"),
+		"Addressing the other speaker must NOT be stripped."
+	)
+	# Live-fired self-tag variants: name+role labels, truncated names, quoted lines.
+	var fancy := JSON.stringify({
+		"a1": "Ivet, dock controller: 'That crate hops berths like rent is due.'",
+		"b1": "Sk: 'Somebody is paying for the silence.'",
+	})
+	var fancy_parsed: Dictionary = GenType.parse_chat_lines(fancy, "Ivet", "Skiff")
+	_expect(
+		str((fancy_parsed.get("lines", [{}])[0] as Dictionary).get("text", "")) == "That crate hops berths like rent is due."
+			and str((fancy_parsed.get("lines", [{}, {}])[1] as Dictionary).get("text", "")) == "Somebody is paying for the silence.",
+		"Name+role and truncated-name self-tags should strip cleanly, quotes unwrapped. Got: %s" % str(fancy_parsed)
+	)
+	# Full four-slot exchange keeps all four in order.
+	var full := JSON.stringify({
+		"a1": "Union meeting ran long again.", "b1": "Any decisions?",
+		"a2": "They voted to schedule another meeting.", "b2": "Democracy in action.",
+	})
+	var full_parsed: Dictionary = GenType.parse_chat_lines(full)
+	_expect(
+		bool(full_parsed.get("ok", false)) and (full_parsed.get("lines", []) as Array).size() == 4,
+		"Four-slot exchange should keep all four lines."
+	)
+	# Rejections: single voice, one line, junk, unknown extra keys only.
+	var monologue := JSON.stringify({"a1": "Talking to myself again.", "a2": "At least the company's good."})
 	_expect(
 		str((GenType.parse_chat_lines(monologue) as Dictionary).get("reason", "")) == "single_voice",
 		"A one-speaker exchange should be rejected as single_voice."
 	)
 	_expect(
-		not bool((GenType.parse_chat_lines(JSON.stringify({"lines": [{"speaker": "a", "text": "Just me."}]})) as Dictionary).get("ok", false)),
+		not bool((GenType.parse_chat_lines(JSON.stringify({"a1": "Just me."})) as Dictionary).get("ok", false)),
 		"A single line should be rejected."
 	)
 	_expect(
 		not bool((GenType.parse_chat_lines("not json at all") as Dictionary).get("ok", false)),
 		"Junk text should be rejected."
+	)
+	_expect(
+		not bool((GenType.parse_chat_lines(JSON.stringify({"speaker": "a", "text": "wrong shape"})) as Dictionary).get("ok", false)),
+		"An object without the a1/b1 slots should be rejected."
 	)
 
 

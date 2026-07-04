@@ -208,41 +208,54 @@ static func build_prompt(
 		"- Each line under 22 words. Spoken, casual, specific — no narration, no stage directions.",
 		"- They never mention the player, 'a pilot listening', or anything meta.",
 		"- No new lore inventions: no new faction names, no new station names, no history dumps.",
+		"- Never start a line with the speaker's own name or role — the radio already tags who is speaking.",
 		"",
-		"Return only JSON, exactly this shape:",
-		"{\"lines\": [{\"speaker\": \"a\", \"text\": \"...\"}, {\"speaker\": \"b\", \"text\": \"...\"}]}",
+		# FLAT json, exactly four string keys. Live-fired 2026-07-04 on qwen3:4b:
+		# nested arrays-of-objects get corrupted on the second element (3/3 runs),
+		# and freeform text makes the model narrate its planning instead of
+		# writing lines (6/6 runs, even with think:false). A flat object under
+		# format:"json" is the one envelope it holds reliably — same lesson as
+		# the campaign bible's flat @@labels. Code owns all structure.
+		"Return only JSON with exactly these four string keys and nothing else:",
+		"{\"a1\": \"A's first line\", \"b1\": \"B's reply\", \"a2\": \"A again, or empty\", \"b2\": \"B again, or empty\"}",
+		"a1 and b1 are required. Set a2 and/or b2 to \"\" for a shorter exchange.",
 	])
 
 
-# Validates and normalizes the model's inner JSON into [{speaker: "a"|"b",
-# text: String}]. Hard requirements: 2-4 usable lines and BOTH speakers
-# present (one voice is a monologue, not a conversation — reject, skip the
-# beat). Extra lines past 4 are dropped, not fatal.
-static func parse_chat_lines(inner_json_text: String) -> Dictionary:
+# Parses the model's FLAT json ({"a1": ..., "b1": ..., "a2": ..., "b2": ...})
+# into [{speaker: "a"|"b", text: String}] in conversation order. Key case and
+# stray whitespace are tolerated; empty/short optional slots are skipped. Hard
+# requirements: 2-4 usable lines and BOTH speakers present (one voice is a
+# monologue, not a conversation — reject, skip the beat). Structure is owned
+# entirely here; nesting was proven unreliable (see build_prompt note).
+static func parse_chat_lines(
+	inner_json_text: String,
+	name_a: String = "",
+	name_b: String = ""
+) -> Dictionary:
 	var parser := JSON.new()
 	if parser.parse(inner_json_text.strip_edges()) != OK:
 		return {"ok": false, "reason": "inner_parse_failed"}
 	var data: Variant = parser.get_data()
-	if not data is Dictionary or not (data as Dictionary).get("lines", null) is Array:
-		return {"ok": false, "reason": "missing_lines_array"}
+	if not data is Dictionary:
+		return {"ok": false, "reason": "not_an_object"}
+	# Normalize keys once so "A1"/" a1 " still land.
+	var normalized := {}
+	for key in (data as Dictionary).keys():
+		normalized[str(key).strip_edges().to_lower()] = (data as Dictionary)[key]
 	var lines: Array = []
 	var saw_a := false
 	var saw_b := false
-	for entry in ((data as Dictionary)["lines"] as Array):
-		if lines.size() >= 4:
-			break
-		if not entry is Dictionary:
-			continue
-		var text := str((entry as Dictionary).get("text", "")).strip_edges()
+	for slot in ["a1", "b1", "a2", "b2"]:
+		var text := str(normalized.get(slot, "")).strip_edges()
+		text = text.trim_prefix("\"").trim_suffix("\"").strip_edges()
+		var speaker := str(slot).substr(0, 1)
+		# Despite the prompt rule, the model sometimes self-tags ("Ivet: ...").
+		# The feed already shows the sender, so strip a leading own-name/label
+		# prefix rather than shipping a doubled name.
+		var own_name := name_a if speaker == "a" else name_b
+		text = _strip_speaker_prefix(text, own_name, speaker)
 		if text.length() < 4 or text.length() > 170:
-			continue
-		var raw_speaker := str((entry as Dictionary).get("speaker", "")).strip_edges().to_lower()
-		var speaker := ""
-		if raw_speaker.begins_with("a") or raw_speaker == "1" or raw_speaker.ends_with("_a"):
-			speaker = "a"
-		elif raw_speaker.begins_with("b") or raw_speaker == "2" or raw_speaker.ends_with("_b"):
-			speaker = "b"
-		else:
 			continue
 		if speaker == "a":
 			saw_a = true
@@ -254,6 +267,38 @@ static func parse_chat_lines(inner_json_text: String) -> Dictionary:
 	if not (saw_a and saw_b):
 		return {"ok": false, "reason": "single_voice"}
 	return {"ok": true, "lines": lines}
+
+
+# Removes a leading self-tag from a spoken line. Live-fired variants seen:
+# "Ivet: ...", "Ivet - ...", "Ivet, dock controller: '...'", truncated "Sk: ...",
+# bare "a: ...". Strategy: if a ":" or "-" separator appears early, and the
+# label before it relates to the speaker's OWN name (either is a prefix of the
+# other) or the slot letter, drop label+separator. Addressing the OTHER speaker
+# ("Skiff, you seeing this?") has no early separator and passes untouched.
+# Finally unwraps a fully quote-wrapped line.
+static func _strip_speaker_prefix(text: String, own_name: String, slot_letter: String) -> String:
+	var out := text.strip_edges()
+	var sep := -1
+	for i in range(mini(out.length(), 28)):
+		if out[i] == ":" or (out[i] == "-" and i > 0 and out[i - 1] == " "):
+			sep = i
+			break
+	if sep > 0:
+		var label := out.substr(0, sep).strip_edges().to_lower()
+		label = label.lstrip("*\"'").rstrip("*\"'").strip_edges()
+		var lower_name := own_name.strip_edges().to_lower()
+		var matches_own := false
+		if label == slot_letter:
+			matches_own = true
+		elif not lower_name.is_empty() and label.length() >= 2:
+			matches_own = label.begins_with(lower_name) or lower_name.begins_with(label)
+		if matches_own:
+			out = out.substr(sep + 1).strip_edges()
+	# Unwrap a line the model quoted wholesale.
+	for quote in ["'", "\""]:
+		if out.length() >= 2 and out.begins_with(quote) and out.ends_with(quote):
+			out = out.substr(1, out.length() - 2).strip_edges()
+	return out
 
 
 # ── Runtime (autoload) ───────────────────────────────────────────────────────────
@@ -371,7 +416,11 @@ func _fire_conversation() -> void:
 					{"bucket": str(topic.get("bucket", "")), "topic": str(topic.get("subject", "")).left(60)}
 				)
 				return  # silence, never canned filler
-			var parsed := parse_chat_lines(str(result.get("inner_text", "")))
+			var parsed := parse_chat_lines(
+				str(result.get("inner_text", "")),
+				str(pair[0].get("name", "")),
+				str(pair[1].get("name", ""))
+			)
 			if not bool(parsed.get("ok", false)):
 				GenerationDiagnostics.record_fallback(
 					"ambient_chat",

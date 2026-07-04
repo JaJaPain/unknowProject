@@ -1499,3 +1499,24 @@ validation, speech_service, game_content_registry, local_model_gateway.
   autoload, GameRoot reset chain, DevPanel "Fire Ambient Chat" action button.
 - Tests green: new run_ambient_chat_tests (buckets, privacy, dedup, prompt,
   parser, chapter bookkeeping) + parse_check, seed, hooks, gateway all EXIT 0.
+
+### Phase E follow-up — protocol hardened by live-firing the real model (2026-07-04)
+- Live-fired the actual build_prompt() output against qwen3:4b (probe tool:
+  tests/tools/print_ambient_prompts.gd + shell). Two failure modes found that
+  unit tests could never catch:
+  1. NESTED json ({"lines":[{...},{...}]}): corrupted the second speaker
+     object in 3/3 runs (garbage keys, placeholder rambling).
+  2. Freeform labeled lines (no format:json): model narrates its PLANNING
+     instead of answering, 6/6 runs, even with think:false.
+- Fix: FLAT four-key json under format:"json" — {"a1","b1","a2","b2"} — the
+  same flat-fields lesson as the campaign bible's @@labels. 6/6 valid after.
+- Residual artifact handled in code: model sometimes self-tags lines
+  ("Ivet: ...", "Ivet, dock controller: '...'", truncated "Sk: ...").
+  _strip_speaker_prefix removes own-name/slot labels + unwraps quoted lines;
+  addressing the OTHER speaker is preserved as real dialogue. Prompt also now
+  forbids self-tagging.
+- Sample of what players will overhear (mundane bucket, real model output):
+  "Another one of these double-vending machines broke on the pier." /
+  "Ran a tug through it. Now it's just giving quarters."
+- run_ambient_chat_tests updated for the flat protocol + live-fired self-tag
+  variants; all suites green.

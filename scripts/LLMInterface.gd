@@ -1499,6 +1499,9 @@ func request_ambient_chat(prompt: String, callback: Callable) -> void:
 	if _skip_for_campaign_bible_priority("ambient_chat"):
 		callback.call({"ok": false, "reason": "campaign_bible_priority"})
 		return
+	# format:"json" is load-bearing here: freeform lets qwen3:4b narrate its
+	# planning instead of answering (live-fired 6/6). The requested shape is a
+	# FLAT four-key object — nesting is what it corrupts, not JSON itself.
 	var payload := build_generation_body(
 		"ambient_chat", prompt, "json",
 		{"temperature": 0.95, "num_predict": 220, "seed": randi()}
