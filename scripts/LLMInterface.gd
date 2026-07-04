@@ -1016,7 +1016,9 @@ func _verify_small_model_ready(model_name: String, attempt: int) -> void:
 		"prompt": "Reply with the single word: ready",
 		"stream": false,
 		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
-		"options": {"num_predict": 8, "temperature": 0.0},
+		# Same num_ctx as every other small call — a mismatch here would warm the
+		# model at one context size and force a reload on the first real request.
+		"options": {"num_predict": 8, "temperature": 0.0, "num_ctx": LocalModelGatewayType.SMALL_NUM_CTX},
 	})
 	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
 	if err != OK:
@@ -5548,7 +5550,7 @@ func request_kaelen_handoff_batch(
 		"stream": false,
 		"keep_alive": LocalModelGateway.LARGE_MODEL_KEEP_ALIVE,
 		"think": false,
-		"options": {"num_predict": 800, "temperature": 0.85},
+		"options": {"num_predict": 800, "temperature": 0.85, "num_ctx": LocalModelGateway.LARGE_NUM_CTX},
 	})
 	var err := http.request(
 		LocalModelGateway.OLLAMA_GENERATE_URL,

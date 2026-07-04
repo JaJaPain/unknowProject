@@ -1449,3 +1449,26 @@ validation, speech_service, game_content_registry, local_model_gateway.
   `clear_story_state()`.
 - Tests green (real passes): seed suite (+ hint pacing + leak guard cases), nova
   (+ glitch lifecycle), gateway (capability map), story hooks, scene parse check.
+
+### Stuck-at-35% campaign generation — root cause + fix (2026-07-04)
+- SYMPTOM: new campaign hangs at 35% "Writing campaign story with large story
+  model"; fallback log showed EVERY small-model call also timing out (mechanic
+  8s, quest gen 45s, salvager ~100s).
+- ROOT CAUSE: not the qwen3 wiring, not Ollama being down. Ollama 0.31.1 loads a
+  model at its FULL trained context when the request omits num_ctx — and the game
+  never sent num_ctx. qwen3's trained context is 262144, so qwen3:4b (a 2.3GB
+  model) loaded as a 43GB allocation, 66% spilled to CPU (ollama ps: "43 GB,
+  66%/34% CPU/GPU, CONTEXT 262144" on a 16GB 5060 Ti). Every small generation
+  crawled → timeouts; and qwen3:8b could never fit beside it → the campaign-bible
+  request queued forever behind a model pinned resident for 30min → 35% deadlock.
+- FIX: explicit context pinned per profile in LocalModelGateway.generation_body —
+  SMALL_NUM_CTX=8192, LARGE_NUM_CTX=16384 — plus the 4 raw-payload sites that
+  bypass generation_body (warmup probe, handoff batch, foreshadow, kaelen mood).
+  Caller-supplied num_ctx is deliberately ignored (one odd value = full reload).
+  Gateway test asserts all three behaviors so this can't silently regress.
+- VERIFIED LIVE: after eviction, qwen3:4b@8k = 3.9GB 100% GPU (4.5s), qwen3:8b@16k
+  = 7.5GB 100% GPU cold load 7.8s, BOTH resident simultaneously — vs 300s+ never
+  loading before. Restart the game; campaign gen should now clear 35% in seconds.
+- Budget check: bible prompt + labeled output fits comfortably in 16k; quest-gen
+  prompt (biggest small-model prompt: examples + bible + story state) fits in 8k.
+  If a future prompt grows past these, raise the profile const — do NOT per-call.

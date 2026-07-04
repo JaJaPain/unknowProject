@@ -12,6 +12,16 @@ const DEFAULT_LARGE_MODEL := "qwen3:8b"
 # a cold reload (a top fallback cause — see logs/fallback_summary.txt). A game
 # session wants the model to stay hot; "30m" covers normal play gaps.
 const MODEL_KEEP_ALIVE := "30m"
+# Explicit context windows — REQUIRED on every request. Ollama 0.31+ loads a
+# model at its full trained context when num_ctx is absent; for qwen3 that is
+# 262144, which turned the 2.3GB 4b into a 43GB allocation (66% spilled to CPU),
+# timed out every small call, and deadlocked campaign-bible generation because
+# the 8b could never fit beside it (root-caused 2026-07-04, the "stuck at 35%"
+# bug). Keep ALL calls per profile at the SAME value so Ollama never reloads
+# the model to grow the context mid-session. At these sizes both models fit in
+# 16GB VRAM together: 4b@8k ~3.5GB + 8b@16k ~7GB.
+const SMALL_NUM_CTX := 8192
+const LARGE_NUM_CTX := 16384
 # Large story generations are startup/transition jobs, not moment-to-moment
 # gameplay. Unload them after each request so 8GB cards do not keep Gemma
 # resident beside the small dialogue model and Godot renderer.
@@ -139,10 +149,12 @@ static func generation_body(
 		"stream": false,
 		"options": options.duplicate(true),
 	}
-	body["keep_alive"] = (
-		LARGE_MODEL_KEEP_ALIVE
-		if profile_for_capability(capability) == "large_story" else MODEL_KEEP_ALIVE
-	)
+	var is_large := profile_for_capability(capability) == "large_story"
+	body["keep_alive"] = LARGE_MODEL_KEEP_ALIVE if is_large else MODEL_KEEP_ALIVE
+	# Never let Ollama fall back to the model's trained context (see
+	# SMALL_NUM_CTX note). Callers may not override this per-request: a single
+	# odd num_ctx forces a full model reload and reintroduces the swap thrash.
+	(body["options"] as Dictionary)["num_ctx"] = LARGE_NUM_CTX if is_large else SMALL_NUM_CTX
 	if not response_format.strip_edges().is_empty():
 		body["format"] = response_format
 	# Both default models are now Qwen3 (thinking models), for the small dialogue

@@ -96,6 +96,25 @@ func _test_builds_generation_body_from_capability() -> void:
 		int(large_body.get("keep_alive", -1)) == GatewayType.LARGE_MODEL_KEEP_ALIVE,
 		"Large story generation should unload after each request to protect VRAM."
 	)
+	# num_ctx must ALWAYS be explicit: without it Ollama 0.31+ loads the model at
+	# its full trained context (262144 for qwen3 → 43GB alloc, CPU spill, and the
+	# stuck-at-35% campaign deadlock root-caused 2026-07-04).
+	_expect(
+		int((body.get("options", {}) as Dictionary).get("num_ctx", 0)) == GatewayType.SMALL_NUM_CTX,
+		"Small generation body must pin num_ctx to SMALL_NUM_CTX."
+	)
+	_expect(
+		int((large_body.get("options", {}) as Dictionary).get("num_ctx", 0)) == GatewayType.LARGE_NUM_CTX,
+		"Large generation body must pin num_ctx to LARGE_NUM_CTX."
+	)
+	# Caller-supplied num_ctx must NOT win — one odd value forces a model reload.
+	var override_attempt: Dictionary = GatewayType.generation_body(
+		"public_board", "x", "qwen3:4b", "json", {"num_ctx": 999999}
+	)
+	_expect(
+		int((override_attempt.get("options", {}) as Dictionary).get("num_ctx", 0)) == GatewayType.SMALL_NUM_CTX,
+		"Per-request num_ctx overrides must be ignored."
+	)
 
 
 func _test_unknown_capability_uses_small_profile() -> void:
