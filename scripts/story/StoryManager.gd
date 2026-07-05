@@ -54,6 +54,7 @@ var story_state: Dictionary = {
 	"nova_memory_flicker": "",
 	"nova_glitch_hints": [],
 	"ambient_used_topics": [],
+	"lounge_warmth": {},
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -243,6 +244,7 @@ func clear_story_state() -> void:
 		"nova_memory_flicker": "",
 		"nova_glitch_hints": [],
 		"ambient_used_topics": [],
+		"lounge_warmth": {},
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -1185,6 +1187,42 @@ func _next_kaelen_hint_if_due() -> String:
 	if delivered_count >= int(story_state.get("chapter", 1)):
 		return ""
 	return str(undelivered[0]).strip_edges()
+
+
+# ── Lounge Social Layer L2: contact warmth ────────────────────────────────────
+# Warmth 0..3 per lounge contact, earned by buying drinks (and later, good
+# conversations). Player-safe world texture: colors conversation openers and
+# raises L3 approach odds. Keyed by a slug of the contact's display name so it
+# survives card rebuilds.
+
+static func lounge_warmth_key(npc_name: String) -> String:
+	var out := ""
+	for ch in npc_name.strip_edges().to_lower():
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			out += ch
+		elif not out.is_empty() and not out.ends_with("_"):
+			out += "_"
+	return out.trim_suffix("_")
+
+
+func lounge_warmth_for(npc_name: String) -> int:
+	var warmth: Dictionary = story_state.get("lounge_warmth", {}) \
+		if story_state.get("lounge_warmth", {}) is Dictionary else {}
+	return clampi(int(warmth.get(lounge_warmth_key(npc_name), 0)), 0, 3)
+
+
+func adjust_lounge_warmth(npc_name: String, delta: int) -> void:
+	var key := lounge_warmth_key(npc_name)
+	if key.is_empty():
+		return
+	var warmth: Dictionary = story_state.get("lounge_warmth", {}).duplicate() \
+		if story_state.get("lounge_warmth", {}) is Dictionary else {}
+	warmth[key] = clampi(int(warmth.get(key, 0)) + delta, 0, 3)
+	# Cap the dict so a long campaign of one-off contacts can't grow unbounded.
+	while warmth.size() > 64:
+		warmth.erase(warmth.keys()[0])
+	story_state["lounge_warmth"] = warmth
+	_save_story_state()
 
 
 # Ambient-chat topic dedup (Phase E). Capped like hinted_lounge_rumors so the

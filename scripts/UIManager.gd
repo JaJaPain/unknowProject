@@ -3678,6 +3678,7 @@ func toggle_dock_menu(
 				# Fresh dock: lounge social session state resets (completion rep
 				# bumps and drinks are once per contact per DOCK, not per open).
 				_lounge_convo_done.clear()
+				_lounge_drinks_bought.clear()
 				_lounge_convo = {}
 				_lounge_convo_serial += 1
 		if is_instance_valid(StoryManager):
@@ -4399,6 +4400,14 @@ func _add_lounge_card_buttons(
 	]
 	if bool(card_data.get("rumor", false)):
 		action_defs.insert(2, ["Intel", "rumor"])
+	# L2: buy them a drink — warms the contact (persisted), once per dock.
+	var drink_btn := Button.new()
+	drink_btn.text = "Drink"
+	drink_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	drink_btn.add_theme_font_size_override("font_size", 8)
+	drink_btn.tooltip_text = "Buy them a drink (%d cr)" % LOUNGE_DRINK_COST
+	drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, card_data))
+	actions.add_child(drink_btn)
 	for action_def in action_defs:
 		var btn := Button.new()
 		btn.text = str(action_def[0])
@@ -4458,6 +4467,29 @@ func _on_lounge_agent_pressed(
 var _lounge_convo: Dictionary = {}
 var _lounge_convo_serial: int = 0
 var _lounge_convo_done: Dictionary = {}
+# L2: one drink per contact per dock; warmth itself persists via StoryManager.
+const LOUNGE_DRINK_COST := 20
+var _lounge_drinks_bought: Dictionary = {}
+
+
+func _on_buy_drink_pressed(npc_name: String, card_data: Dictionary) -> void:
+	if _lounge_drinks_bought.has(npc_name):
+		_show_lounge_card_line(card_data, "They raise the glass you already bought them. One's plenty.", false)
+		return
+	if GlobalState.player_credits < LOUNGE_DRINK_COST:
+		show_hud_warning("Not enough credits for a round (%d cr)." % LOUNGE_DRINK_COST)
+		return
+	GlobalState.spend_credits(LOUNGE_DRINK_COST)
+	_lounge_drinks_bought[npc_name] = true
+	if is_instance_valid(StoryManager) and StoryManager.has_method("adjust_lounge_warmth"):
+		StoryManager.adjust_lounge_warmth(npc_name, 1)
+	# Instant code-template confirmation — feedback speed beats LLM variety here.
+	var confirmations := [
+		"%s nods thanks and slides the glass closer. The room feels a degree warmer." % npc_name,
+		"%s tips the fresh drink your way. \"Didn't think you had manners.\"" % npc_name,
+		"The bartender pours; %s looks mildly less suspicious of you." % npc_name,
+	]
+	_show_lounge_card_line(card_data, confirmations[randi() % confirmations.size()], false)
 
 
 func _on_lounge_card_pressed(card_data: Dictionary) -> void:
@@ -4476,6 +4508,13 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		"station": str(context.get("station", "this station")),
 		"extra": str(context.get("extra", "")),
 	}
+	# L2: warmth colors the conversation. 0 = stranger-polite; drinks bought
+	# across visits make the opener warmer without scripting friendliness.
+	if is_instance_valid(StoryManager) and StoryManager.has_method("lounge_warmth_for"):
+		var warmth: int = StoryManager.lounge_warmth_for(str(npc.get("name", "")))
+		if warmth > 0:
+			npc["extra"] = str(npc.get("extra", "")) + \
+				" The speaker remembers this pilot has bought them drinks before (warmth %d of 3) — friendlier than with a stranger." % warmth
 	_lounge_convo = {
 		"card": card,
 		"npc": npc,
