@@ -127,6 +127,49 @@ static func parse_turn(inner_json_text: String, npc_name: String = "") -> Dictio
 	return {"ok": true, "line": line, "replies": replies}
 
 
+# ── Phase L5a: agent social checks ───────────────────────────────────────────
+# How a faction agent receives the player at a given reputation. Pure and
+# code-owned: the model gets context_line as flavor; the NUMBERS never come
+# from the model. Gentle by design — social texture, not a rep farm.
+static func agent_disposition(rep: float) -> Dictionary:
+	var tier: String = GlobalState.reputation_tier(rep)
+	match tier:
+		"sworn enemy":
+			return {
+				"tier": tier, "refuses": true,
+				"context_line": "",
+				"completion_rep": 0.0, "bail_rep": 0.0, "lead_chance": 0.0,
+			}
+		"hostile", "unfriendly":
+			return {
+				"tier": tier, "refuses": false,
+				"context_line": (
+					"The speaker's faction reads this pilot as %s — openly cold, " % tier
+					+ "professional at best; any thaw must be earned inside the conversation."
+				),
+				"completion_rep": 2.0, "bail_rep": -0.5, "lead_chance": 0.05,
+			}
+		"friendly", "trusted", "allied":
+			return {
+				"tier": tier, "refuses": false,
+				"context_line": (
+					"The speaker's faction reads this pilot as %s — relaxed, candid, " % tier
+					+ "the good chair gets pulled out."
+				),
+				"completion_rep": 1.0, "bail_rep": -0.25, "lead_chance": 0.3,
+			}
+		_:
+			# wary / neutral / cordial — the workaday middle.
+			return {
+				"tier": tier, "refuses": false,
+				"context_line": (
+					"The speaker's faction reads this pilot as %s — polite, measured, " % tier
+					+ "keeping score without saying so."
+				),
+				"completion_rep": 1.5, "bail_rep": -0.5, "lead_chance": 0.15,
+			}
+
+
 # "NPC: ... / You: ..." block for reply prompts; only the last `keep` entries
 # so a long chat can't balloon the prompt. turns: [{speaker: "npc"|"you",
 # text: String}].

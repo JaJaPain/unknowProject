@@ -3685,6 +3685,7 @@ func toggle_dock_menu(
 				_lounge_approach_npc = ""
 				_lounge_stranger_rolled = false
 				_lounge_stranger_deal = {}
+				_lounge_cold_contacts.clear()
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -4253,6 +4254,8 @@ func _lounge_station_agent_cards() -> Array[Dictionary]:
 			"rumor": false,
 			"portrait": registry.portrait_texture(faction_def.agent_portrait_id),
 			"faction": faction_def.display_name,
+			# L5a: reputation lookups key on this, not the display name.
+			"rep_key": str(faction_key).trim_prefix("faction."),
 			"color": faction_def.ui_color,
 			"voice_profile_id": str(faction_def.voice_profile_id),
 		})
@@ -4596,6 +4599,8 @@ var _lounge_approach_npc: String = ""
 # {ask: int, kind: "intel"|"goods", is_scam: bool, haggled: bool, resolved: bool}
 var _lounge_stranger_deal: Dictionary = {}
 var _lounge_stranger_rolled: bool = false
+# L5a: contacts the player walked out on this dock (name -> true).
+var _lounge_cold_contacts: Dictionary = {}
 
 
 func _on_buy_drink_pressed(npc_name: String, card_data: Dictionary) -> void:
@@ -4623,6 +4628,20 @@ func _on_lounge_card_pressed(card_data: Dictionary) -> void:
 
 
 func _start_lounge_conversation(card: Dictionary) -> void:
+	var card_name := str(card.get("name", ""))
+	# L5a: a contact the player walked out on earlier this dock stays cold.
+	if _lounge_cold_contacts.has(card_name):
+		_show_lounge_card_line(card, "%s glances over, then back to their drink. Whatever it was, the moment's gone." % card_name, false)
+		return
+	# L5a: agents check the ledger before they check their drink.
+	var agent_disposition: Dictionary = {}
+	if str(card.get("kind", "")) == "agent":
+		var rep_key := str(card.get("rep_key", "")).to_lower()
+		var rep := float(GlobalState.reputations.get(rep_key, 0.0))
+		agent_disposition = LoungeConversationType.agent_disposition(rep)
+		if bool(agent_disposition.get("refuses", false)):
+			_show_lounge_card_line(card, "%s looks straight through you. Their faction's ledger on you reads: not worth the seat." % card_name, false)
+			return
 	_lounge_convo_serial += 1
 	var serial := _lounge_convo_serial
 	var context := _lounge_card_context(card)
@@ -4641,12 +4660,17 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		if warmth > 0:
 			npc["extra"] = str(npc.get("extra", "")) + \
 				" The speaker remembers this pilot has bought them drinks before (warmth %d of 3) — friendlier than with a stranger." % warmth
+	if not agent_disposition.is_empty():
+		var disposition_line := str(agent_disposition.get("context_line", ""))
+		if not disposition_line.is_empty():
+			npc["extra"] = str(npc.get("extra", "")) + " " + disposition_line
 	_lounge_convo = {
 		"card": card,
 		"npc": npc,
 		"turns": [],
 		"npc_turns_left": LoungeConversationType.MAX_TURNS - 1,
 		"serial": serial,
+		"agent_disposition": agent_disposition,
 	}
 	_show_lounge_card_line(card, "Listening...", false)
 	var prompt: String = LoungeConversationType.build_opener_prompt(
@@ -4745,7 +4769,7 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 	else:
 		# Wind-down turn: the chat concluded naturally — that's a completed
 		# conversation. Gentle code-owned consequence, once per contact per dock.
-		_apply_lounge_completion(npc)
+		_apply_lounge_completion(npc, _lounge_convo.get("agent_disposition", {}))
 		_lounge_convo = {}
 	_show_lounge_card_line(card, line, true, choices)
 
@@ -4887,21 +4911,73 @@ func _record_stranger_outcome(choice_id: String, description: String) -> void:
 func _end_lounge_conversation(serial: int) -> void:
 	if serial != _lounge_convo_serial:
 		return
+	# L5a: walking out on a faction officer's OPENER is noticed. Costs a
+	# little standing and the officer stays cold for the rest of this dock.
+	var disposition: Dictionary = _lounge_convo.get("agent_disposition", {})
+	var turns: Array = _lounge_convo.get("turns", [])
+	if not disposition.is_empty() and turns.size() <= 1:
+		var card: Dictionary = _lounge_convo.get("card", {})
+		var rep_key := str(card.get("rep_key", "")).to_lower()
+		var card_name := str(card.get("name", ""))
+		if not rep_key.is_empty():
+			GlobalState.adjust_reputation(rep_key, float(disposition.get("bail_rep", -0.5)))
+		if not card_name.is_empty():
+			_lounge_cold_contacts[card_name] = true
+		_lounge_convo = {}
+		show_dock_message(
+			"You walk mid-sentence. Their expression files it somewhere permanent.",
+			"", Color(0.75, 0.6, 0.5)
+		)
+		return
 	_lounge_convo = {}
 	show_dock_message("You nod and drift back to your drink.", "", Color(0.7, 0.7, 0.7))
 
 
 # Finishing a conversation with a faction-affiliated contact warms that
 # faction slightly — people talk about who's decent company. Once per contact
-# per dock (dict cleared on dock, see Nova.on_docked site).
-func _apply_lounge_completion(npc: Dictionary) -> void:
+# per dock (dict cleared on dock, see Nova.on_docked site). Agents use their
+# disposition's scaled rep and may slip the player a lead (L5a).
+func _apply_lounge_completion(npc: Dictionary, agent_disposition: Dictionary = {}) -> void:
 	var npc_name := str(npc.get("name", ""))
 	if npc_name.is_empty() or _lounge_convo_done.has(npc_name):
 		return
 	_lounge_convo_done[npc_name] = true
+	if not agent_disposition.is_empty():
+		var card: Dictionary = _lounge_convo.get("card", {})
+		var rep_key := str(card.get("rep_key", "")).to_lower()
+		if not rep_key.is_empty():
+			GlobalState.adjust_reputation(rep_key, float(agent_disposition.get("completion_rep", 1.0)))
+		if randf() < float(agent_disposition.get("lead_chance", 0.0)):
+			_deliver_agent_lead(npc_name)
+		return
 	var faction := str(npc.get("faction", "")).strip_edges().to_lower()
 	if faction in ["zenith", "aurelia", "vanguard"]:
 		GlobalState.adjust_reputation(faction, 1.0)
+
+
+# A good chat with an agent can shake loose a lead: the first unhinted story
+# hook, delivered as a discreet extra a few seconds after the goodbye (marked
+# heard via the same dedup as rumors/approaches, so nothing double-fires).
+func _deliver_agent_lead(agent_name: String) -> void:
+	if not is_instance_valid(StoryManager):
+		return
+	var hooks: Array = StoryManager.story_state.get("pending_hooks", [])
+	var hinted: Array = StoryManager.story_state.get("hinted_lounge_rumors", [])
+	for hook in hooks:
+		var text := str(hook).strip_edges()
+		if text.is_empty():
+			continue
+		var hook_id := "hook:%s" % text.sha256_text().substr(0, 12)
+		if hook_id in hinted:
+			continue
+		StoryManager.record_lounge_rumor_heard(hook_id)
+		var line := "%s pauses at your shoulder on the way out. \"Didn't hear it from me — %s.\"" % [
+			agent_name, text.trim_suffix(".")
+		]
+		get_tree().create_timer(3.0).timeout.connect(
+			func() -> void: show_dock_message(line, agent_name, Color(0.9, 0.85, 0.6))
+		)
+		return
 
 
 func _show_lounge_card_line(

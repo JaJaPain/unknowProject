@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_parse_turn()
 	_test_prompt_content()
 	_test_transcript_block()
+	_test_agent_disposition()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -116,6 +117,45 @@ func _test_transcript_block() -> void:
 		block.contains("NPC: Line 2") and block.contains("You: Line 3"),
 		"transcript_block speaker labels wrong."
 	)
+
+
+func _test_agent_disposition() -> void:
+	# Sworn enemies refuse outright — no conversation, no rep movement.
+	var enemy: Dictionary = ConvoType.agent_disposition(-80.0)
+	_expect(
+		bool(enemy.get("refuses", false)) and float(enemy.get("completion_rep", 1.0)) == 0.0,
+		"Sworn-enemy disposition should refuse with zero rep movement."
+	)
+	# Hostile: talkable, hard-won completion is worth the most.
+	var hostile: Dictionary = ConvoType.agent_disposition(-60.0)
+	_expect(
+		not bool(hostile.get("refuses", true))
+			and float(hostile.get("completion_rep", 0.0)) == 2.0
+			and str(hostile.get("context_line", "")).contains("cold"),
+		"Hostile disposition wrong: %s" % str(hostile)
+	)
+	# Neutral middle.
+	var neutral: Dictionary = ConvoType.agent_disposition(0.0)
+	_expect(
+		float(neutral.get("completion_rep", 0.0)) == 1.5
+			and float(neutral.get("lead_chance", 0.0)) == 0.15,
+		"Neutral disposition wrong: %s" % str(neutral)
+	)
+	# Friends tip friends: highest lead chance, smallest rep movement.
+	var allied: Dictionary = ConvoType.agent_disposition(80.0)
+	_expect(
+		float(allied.get("lead_chance", 0.0)) == 0.3
+			and float(allied.get("completion_rep", 0.0)) == 1.0
+			and float(allied.get("bail_rep", -1.0)) == -0.25,
+		"Allied disposition wrong: %s" % str(allied)
+	)
+	# Every talkable tier ships a non-empty context line for the prompt.
+	for rep in [-60.0, -10.0, 0.0, 20.0, 60.0]:
+		var d: Dictionary = ConvoType.agent_disposition(rep)
+		_expect(
+			not str(d.get("context_line", "")).strip_edges().is_empty(),
+			"Talkable disposition at rep %s missing context_line." % str(rep)
+		)
 
 
 func _expect(condition: bool, message: String) -> void:

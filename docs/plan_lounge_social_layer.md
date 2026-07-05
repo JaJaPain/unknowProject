@@ -167,3 +167,28 @@ flavor block, no director fields), transcript capping.
    found" followed by [PASS] means the suite did NOT run (use runtime load()).
 4. Update docs/todo.md + docs/whileYouWasSleeping.md, commit with a clear
    message. Tag stays `pre-lounge-social-layer` for full rollback.
+
+## Phase L5a — Faction lounge social checks (IMPLEMENTED 2026-07-05)
+
+Todo anchor: "Faction lounge social checks" (~line 64). Agents in the lounge
+react to standing; conversations move standing; walking out on an officer has
+a cost. Numbers stay gentle — this is social texture, not a rep farm.
+
+- `LoungeConversation.agent_disposition(rep) -> Dictionary` (pure, tested):
+  tier via GlobalState.reputation_tier; returns {tier, refuses, context_line,
+  completion_rep, bail_rep, lead_chance}. sworn enemy (<= -75) REFUSES to
+  talk (template brush-off, no LLM call, no rep change). hostile/unfriendly:
+  completion +2.0 (hard-won), bail -0.5, lead 5%. wary..cordial: +1.5 /
+  -0.5 / 15%. friendly+: +1.0 / -0.25 / 30% (friends tip friends).
+- Agent cards gain `rep_key` (faction_key minus "faction." prefix) so rep
+  lookups don't depend on display names.
+- `_start_lounge_conversation`: agent + refuses -> template line, done;
+  cold contacts (walked out on earlier this dock) -> template line, no LLM.
+  Otherwise disposition.context_line joins npc.extra so the model plays the
+  actual relationship.
+- Completion: agents use disposition.completion_rep instead of the flat
+  +1.0; on completion, roll lead_chance -> agent slips an unhinted pending
+  hook as "something extra" (marked heard via the rumor dedup, same as L3).
+- Bail on the OPENER (nod-and-leave with <=1 turn heard) with an agent:
+  bail_rep penalty + contact goes cold for this dock
+  (`_lounge_cold_contacts` session dict, cleared on fresh dock).

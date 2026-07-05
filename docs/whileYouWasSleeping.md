@@ -1579,3 +1579,18 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - _first_visit_and_record helper is viewport-free and unit-tested (dedup,
   empty-id, 64-entry cap) in run_story_manager_hook_tests.
 - hooks/seed/shots/parse suites all EXIT 0.
+
+### L5a — agents in the lounge now read the ledger (2026-07-05)
+- LoungeConversation.agent_disposition(rep): pure, code-owned numbers.
+  Sworn enemy = refused outright (template line, no LLM, no rep change).
+  hostile/unfriendly = talkable but cold, completion +2.0 (hard-won).
+  wary..cordial = +1.5, lead 15%. friendly+ = +1.0, lead 30%, bail -0.25.
+- Disposition context_line joins the agent's conversation prompt so the model
+  plays the actual relationship instead of generic politeness.
+- Completion lead: first unhinted pending hook, slipped as a discreet aside
+  3s after the goodbye, marked heard via the shared rumor dedup.
+- Walking out on an agent's OPENER: bail_rep hit + contact cold for the dock
+  (_lounge_cold_contacts, cleared on fresh dock) + a dry consequence line.
+- Agent cards gained rep_key (faction_key minus prefix) for rep lookups.
+- Tests: agent_disposition tier table in run_lounge_conversation_tests;
+  lounge/scene/parse suites EXIT 0.
