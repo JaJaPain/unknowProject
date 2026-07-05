@@ -3683,6 +3683,8 @@ func toggle_dock_menu(
 				_lounge_convo_serial += 1
 				_lounge_approach_rolled = false
 				_lounge_approach_npc = ""
+				_lounge_stranger_rolled = false
+				_lounge_stranger_deal = {}
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -4101,6 +4103,7 @@ func _render_station_contacts(should_show: bool) -> void:
 				"portrait": p_portrait,
 			}
 	_roll_lounge_approach(cards)
+	_roll_lounge_stranger(cards)
 	for i in range(4):
 		var card_data := cards[i] if i < cards.size() else {}
 		if not card_data.is_empty() and str(card_data.get("name", "")) == _lounge_approach_npc:
@@ -4114,6 +4117,61 @@ func _render_station_contacts(should_show: bool) -> void:
 const LOUNGE_APPROACH_BASE_CHANCE := 0.12
 const LOUNGE_APPROACH_WARMTH_BONUS := 0.04
 const LOUNGE_APPROACH_COOLDOWN_MIN := 45
+# L4: the stranger — rarer than approaches, mutually exclusive with them,
+# never in the tutorial start system, long cooldown so it stays an event.
+const LOUNGE_STRANGER_CHANCE := 0.06
+const LOUNGE_STRANGER_COOLDOWN_MIN := 90
+const LOUNGE_STRANGER_SCAM_CHANCE := 0.35
+
+
+# Fills the first empty card slot with a temporary stranger, deal pre-rolled
+# code-side (the model only ever phrases it). Gone next dock.
+func _roll_lounge_stranger(cards: Array) -> void:
+	if _lounge_stranger_rolled:
+		# Sticky within the dock: re-renders keep the card while the deal lives.
+		if not _lounge_stranger_deal.is_empty() and not bool(_lounge_stranger_deal.get("resolved", false)):
+			_inject_stranger_card(cards)
+		return
+	_lounge_stranger_rolled = true
+	if not _lounge_approach_npc.is_empty():
+		return  # one unusual thing per dock, max
+	if not is_instance_valid(StoryManager) or str(GlobalState.current_system_id) == "system.start":
+		return
+	var last_minute := int(StoryManager.story_state.get("lounge_last_stranger_minute", -100000))
+	var now_minute := int(CampaignClock.total_minutes)
+	if now_minute - last_minute < LOUNGE_STRANGER_COOLDOWN_MIN:
+		return
+	if randf() >= LOUNGE_STRANGER_CHANCE:
+		return
+	var chapter := int(StoryManager.story_state.get("chapter", 1))
+	_lounge_stranger_deal = {
+		"ask": 150 + (randi() % 200) + chapter * 50,
+		"kind": "intel" if randf() < 0.5 else "goods",
+		"is_scam": randf() < LOUNGE_STRANGER_SCAM_CHANCE,
+		"haggled": false,
+		"resolved": false,
+	}
+	StoryManager.story_state["lounge_last_stranger_minute"] = now_minute
+	if StoryManager.has_method("_save_story_state"):
+		StoryManager._save_story_state()
+	_inject_stranger_card(cards)
+
+
+func _inject_stranger_card(cards: Array) -> void:
+	var stranger := {
+		"kind": "stranger",
+		"name": "A Stranger",
+		"role": "no one you've seen before",
+		"mood": "unreadable",
+		"rumor": false,
+		"color": Color(0.75, 0.45, 0.4),
+	}
+	for i in range(cards.size()):
+		if cards[i] is Dictionary and (cards[i] as Dictionary).is_empty():
+			cards[i] = stranger
+			return
+	if cards.size() < 4:
+		cards.append(stranger)
 
 func _roll_lounge_approach(cards: Array) -> void:
 	if _lounge_approach_rolled:
@@ -4440,6 +4498,9 @@ func _add_lounge_card_buttons(
 	if kind == "planted":
 		primary.pressed.connect(_on_planted_npc_pressed)
 		return
+	if kind == "stranger":
+		primary.pressed.connect(_on_stranger_card_pressed.bind(card_data))
+		return
 	var npc_name := str(card_data.get("name", ""))
 	primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 
@@ -4531,6 +4592,10 @@ var _lounge_drinks_bought: Dictionary = {}
 # across lounge re-renders until talked to.
 var _lounge_approach_rolled: bool = false
 var _lounge_approach_npc: String = ""
+# L4 session state: the stranger's deal for this dock ({} = no stranger).
+# {ask: int, kind: "intel"|"goods", is_scam: bool, haggled: bool, resolved: bool}
+var _lounge_stranger_deal: Dictionary = {}
+var _lounge_stranger_rolled: bool = false
 
 
 func _on_buy_drink_pressed(npc_name: String, card_data: Dictionary) -> void:
@@ -4706,6 +4771,116 @@ func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
 	LLMInterface.request_lounge_conversation_turn(
 		prompt,
 		func(result: Dictionary) -> void: _on_lounge_turn_result(serial, result)
+	)
+
+
+# ── L4: the stranger's deal ───────────────────────────────────────────────────
+# The deal itself is code-owned; the LLM only writes the pitch line. If the
+# pitch generation fails we use a template — the stranger showing up and then
+# refusing to talk would read as a bug, not mystique.
+func _on_stranger_card_pressed(card_data: Dictionary) -> void:
+	var deal := _lounge_stranger_deal
+	if deal.is_empty() or bool(deal.get("resolved", false)):
+		_show_lounge_card_line(card_data, "The stranger's seat is empty. Just a glass, still sweating.", false)
+		return
+	var card := card_data.duplicate(true)
+	_show_lounge_card_line(card, "...", false)
+	var kind_text := "coordinates and a name — the kind of intel that isn't sold in daylight" \
+		if str(deal.get("kind", "")) == "intel" else "a crate of goods with the serial numbers politely removed"
+	var npc := {
+		"name": "A Stranger", "role": "no one you've seen before", "mood": "unreadable",
+		"faction": "none you can place", "station": _current_station_display_name(),
+		"extra": (
+			"The speaker is a passing stranger making a quiet black-market offer: %s, " % kind_text
+			+ "for %d credits. Shady, calm, PG-13. They pitch it in one short remark and let it hang." % int(deal.get("ask", 300))
+		),
+	}
+	var prompt: String = LoungeConversationType.build_opener_prompt(
+		npc, _lounge_flavor_block(),
+		"The speaker leans in uninvited and makes their pitch — one remark, no pleasantries."
+	)
+	LLMInterface.request_lounge_conversation_turn(
+		prompt,
+		func(result: Dictionary) -> void:
+			var line := "Got %s. %d credits and it's yours. Decide before my drink's done." % [kind_text, int(deal.get("ask", 300))]
+			if bool(result.get("ok", false)):
+				var parsed: Dictionary = LoungeConversationType.parse_turn(str(result.get("inner_text", "")), "A Stranger")
+				if bool(parsed.get("ok", false)):
+					line = str(parsed.get("line", line))
+			_show_stranger_offer(card, line)
+	)
+
+
+func _show_stranger_offer(card: Dictionary, line: String) -> void:
+	var deal := _lounge_stranger_deal
+	if deal.is_empty() or bool(deal.get("resolved", false)):
+		return
+	var ask := int(deal.get("ask", 300))
+	var choices: Array = [
+		{"text": "Pay %d cr" % ask, "callback": func() -> void: _resolve_stranger_deal(card, "pay")},
+		{"text": "Haggle", "callback": func() -> void: _resolve_stranger_deal(card, "haggle")},
+		{"text": "Walk away", "callback": func() -> void: _resolve_stranger_deal(card, "walk")},
+	]
+	if bool(deal.get("haggled", false)):
+		choices.remove_at(1)  # one haggle per deal
+	_show_lounge_card_line(card, line, true, choices)
+
+
+func _resolve_stranger_deal(card: Dictionary, action: String) -> void:
+	var deal := _lounge_stranger_deal
+	if deal.is_empty() or bool(deal.get("resolved", false)):
+		return
+	var ask := int(deal.get("ask", 300))
+	match action:
+		"haggle":
+			deal["haggled"] = true
+			if randf() < 0.5:
+				deal["ask"] = int(ask * 0.8)
+				_show_stranger_offer(card, "Fine. %d. Because I like your nerve, not your face." % int(deal["ask"]))
+			else:
+				deal["resolved"] = true
+				_show_lounge_card_line(card, "The stranger stands, unhurried. \"Wrong answer.\" They're gone before the door hisses.", false)
+				_record_stranger_outcome("stranger_deal_soured", "Haggled a stranger's deal into the void.")
+		"walk":
+			if not bool(deal.get("haggled", false)) and randf() < 0.10:
+				deal["haggled"] = true
+				deal["ask"] = int(ask * 0.7)
+				_show_stranger_offer(card, "Hold on. %d. Final. Some cargo just wants to be somebody's problem." % int(deal["ask"]))
+			else:
+				deal["resolved"] = true
+				_show_lounge_card_line(card, "You leave the deal on the table. The stranger doesn't watch you go. Professionals never do.", false)
+				_record_stranger_outcome("stranger_deal_declined", "Walked away from a stranger's black-market offer.")
+		"pay":
+			if GlobalState.player_credits < ask:
+				_show_lounge_card_line(card, "The stranger glances at your credit chit and almost smiles. \"Come back richer.\"", false)
+				return
+			GlobalState.spend_credits(ask)
+			deal["resolved"] = true
+			if bool(deal.get("is_scam", false)):
+				_show_lounge_card_line(card, "The chip they slipped you is blank. Seat's empty. Drink's paid for — with your money.", false)
+				_record_stranger_outcome("stranger_deal_scammed", "Paid %d credits to a stranger for a blank chip." % ask)
+				return
+			if str(deal.get("kind", "")) == "goods":
+				var haul := int(ask * 1.6)
+				GlobalState.add_credits(haul)
+				_show_lounge_card_line(card, "The crate is where they said. Fenced quiet, %d credits clear. No names, no receipts." % (haul - ask), false)
+				_record_stranger_outcome("stranger_deal_goods", "Bought unmarked goods off a stranger; fenced for profit.")
+			else:
+				if is_instance_valid(StoryManager):
+					var hooks: Array = StoryManager.story_state.get("pending_hooks", [])
+					hooks.append("a paid tip from a stranger at %s" % _current_station_display_name())
+					StoryManager.story_state["pending_hooks"] = hooks
+					if StoryManager.has_method("_save_story_state"):
+						StoryManager._save_story_state()
+				_show_lounge_card_line(card, "Coordinates and a name, burned onto a cheap chip. Real or not — that's tomorrow's problem.", false)
+				_record_stranger_outcome("stranger_deal_intel", "Paid %d credits for black-market intel." % ask)
+
+
+func _record_stranger_outcome(choice_id: String, description: String) -> void:
+	if is_instance_valid(StoryManager) and StoryManager.has_method("record_player_choice"):
+		StoryManager.record_player_choice(choice_id, description)
+	GenerationDiagnostics.record_content_source(
+		"lounge_stranger", "resolved", "UIManager", {"outcome": choice_id}
 	)
 
 
