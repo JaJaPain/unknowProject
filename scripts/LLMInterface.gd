@@ -1262,6 +1262,42 @@ func request_campaign_bible_generation(
 	_start_campaign_bible_attempt(baseline_bible, idea_memory_context, callback, 1, "", motif_history)
 
 
+# Unloads each Ollama model from VRAM (keep_alive:0) in parallel, then calls
+# on_done exactly once. Used before campaign-bible generation: on a 16GB card a
+# resident small model — or a half-spilled prior attempt — starves the 8B story
+# model, forcing CPU offload and a >180s timeout (the stuck-at-35% bug). We wipe
+# the slate and let the bible request reload the big model fresh into a clean GPU.
+func _evict_models_then(models: Array, on_done: Callable) -> void:
+	if OLLAMA_URL.is_empty() or models.is_empty():
+		on_done.call()
+		return
+	# Shared counter in a dict so the per-request lambdas can mutate it.
+	var state := {"remaining": models.size(), "fired": false}
+	var finish := func() -> void:
+		state["remaining"] -= 1
+		if state["remaining"] <= 0 and not state["fired"]:
+			state["fired"] = true
+			on_done.call()
+	for m in models:
+		var model_name := str(m).strip_edges()
+		if model_name.is_empty():
+			finish.call()
+			continue
+		var http := HTTPRequest.new()
+		add_child(http)
+		http.timeout = 10.0
+		http.request_completed.connect(
+			func(_r: int, _c: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
+				http.queue_free()
+				finish.call()
+		)
+		var payload := JSON.stringify({"model": model_name, "keep_alive": 0, "prompt": ""})
+		var err := http.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+		if err != OK:
+			http.queue_free()
+			finish.call()
+
+
 # One generation attempt. attempt is 1-based; correction_notes is empty on the
 # first try and carries the prior attempt's validation errors on a retry.
 # Priority stays active across retries — it is only cleared on final resolution
@@ -1310,57 +1346,72 @@ func _start_campaign_bible_attempt(
 			"seed": randi(),
 		}
 	)
-	GenerationDiagnostics.record_event(
-		"campaign_bible",
-		"request_started",
-		"llm_interface",
-		{"model": model_name, "attempt": attempt}
-	)
-	var temp_http := HTTPRequest.new()
-	add_child(temp_http)
-	temp_http.timeout = request_timeout_for_capability(capability)
-	var request_id := temp_http.get_instance_id()
-	temp_http.request_completed.connect(
-		func(
-			result: int,
-			response_code: int,
-			_headers: PackedStringArray,
-			body: PackedByteArray
-		) -> void:
-			_on_campaign_bible_generation_completed(
-				result,
-				response_code,
-				body,
-				baseline_bible,
-				model_name,
-				callback,
-				request_id,
-				attempt,
-				idea_memory_context,
-				motif_history
-			)
-	)
-	var err := temp_http.request(
-		OLLAMA_URL,
-		["Content-Type: application/json"],
-		HTTPClient.METHOD_POST,
-		JSON.stringify(payload)
-	)
-	if err != OK:
-		temp_http.queue_free()
-		set_campaign_bible_priority_active(false)
+	# The actual large-model request, deferred until VRAM is cleared below.
+	var fire_bible_request := func() -> void:
 		GenerationDiagnostics.record_event(
 			"campaign_bible",
-			"request_start_failed",
+			"request_started",
 			"llm_interface",
-			{"model": model_name, "error": err}
+			{"model": model_name, "attempt": attempt}
 		)
-		callback.call({
-			"ok": false,
-			"reason": "request_start_failed",
-			"model": model_name,
-			"error": err,
-		})
+		var temp_http := HTTPRequest.new()
+		add_child(temp_http)
+		temp_http.timeout = request_timeout_for_capability(capability)
+		var request_id := temp_http.get_instance_id()
+		temp_http.request_completed.connect(
+			func(
+				result: int,
+				response_code: int,
+				_headers: PackedStringArray,
+				body: PackedByteArray
+			) -> void:
+				_on_campaign_bible_generation_completed(
+					result,
+					response_code,
+					body,
+					baseline_bible,
+					model_name,
+					callback,
+					request_id,
+					attempt,
+					idea_memory_context,
+					motif_history
+				)
+		)
+		var err := temp_http.request(
+			OLLAMA_URL,
+			["Content-Type: application/json"],
+			HTTPClient.METHOD_POST,
+			JSON.stringify(payload)
+		)
+		if err != OK:
+			temp_http.queue_free()
+			set_campaign_bible_priority_active(false)
+			GenerationDiagnostics.record_event(
+				"campaign_bible",
+				"request_start_failed",
+				"llm_interface",
+				{"model": model_name, "error": err}
+			)
+			callback.call({
+				"ok": false,
+				"reason": "request_start_failed",
+				"model": model_name,
+				"error": err,
+			})
+
+	# Wipe VRAM first (both models), then reload the big model fresh. On a 16GB
+	# card a resident small model starves the 8B story model into a CPU spill and
+	# a timeout (stuck-at-35%). model_name is the large model; active_model_name
+	# the small one — evict both, the request reloads the large cleanly.
+	var small_model := active_model_name if active_model_name != "" else LocalModelGatewayType.DEFAULT_SMALL_MODEL
+	GenerationDiagnostics.record_event(
+		"campaign_bible",
+		"vram_cleared_for_generation",
+		"llm_interface",
+		{"evicted": [small_model, model_name]}
+	)
+	_evict_models_then([small_model, model_name], fire_bible_request)
 
 
 func _on_campaign_bible_generation_completed(

@@ -1609,3 +1609,22 @@ validation, speech_service, game_content_registry, local_model_gateway.
   _reset_fight_state (before that emission). Reopening the popup from the pause
   menu calls release harmlessly (no-op when nothing held). Tag:
   pre-tutorial-taunt-hold.
+
+### Stuck-at-35% (recurrence) — evict VRAM before bible generation (2026-07-05)
+- Same symptom as the num_ctx bug, different root cause. That fix (pinned
+  num_ctx) is still working — qwen3:4b loads at 8192 fine. But: the startup
+  combat-taunt fetch loads qwen3:4b into VRAM BEFORE campaign_bible_priority
+  activates (so the priority-deferral can't stop it — the model's already
+  resident). On a 16GB card, 4b (3.6GB) + Godot rendering (~2.3GB) leaves too
+  little for the 8B story model, so Ollama spills 8B layers to CPU and the
+  bible request times out. Proven: 8B alone = 6.4s; 8B with 4b+game resident
+  = >180s timeout.
+- Fix (user's call): before generating the bible, evict BOTH models
+  (keep_alive:0) so the 8B model reloads into a clean GPU.
+  LLMInterface._evict_models_then([small, large], fire) wraps the bible send
+  in a closure fired only after eviction completes. Logs a
+  vram_cleared_for_generation diagnostics event. Small model warms back up
+  after the bible gate releases (existing behavior). Tag:
+  pre-tutorial-taunt-hold covers this too (same session; also see
+  pre-screenshot-triggers).
+- Verified live: 4b resident -> evict both -> 8B fresh = 2.4s (vs timeout).
