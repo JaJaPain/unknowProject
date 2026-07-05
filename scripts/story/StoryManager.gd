@@ -55,6 +55,8 @@ var story_state: Dictionary = {
 	"nova_glitch_hints": [],
 	"ambient_used_topics": [],
 	"lounge_warmth": {},
+	"screenshot_systems_seen": [],
+	"screenshot_stations_seen": [],
 	"bible_seeded": false,
 	"act_1_outline_consumed_index": 0,
 	"story_arcs_consumed_index": 0,
@@ -80,6 +82,10 @@ func _ready() -> void:
 	# Fire starting-system handoff gen once Ollama is actually ready.
 	# init_story_state() fires before Ollama is up, so the batch would fail.
 	LLMInterface.llm_connection_established.connect(_on_llm_ready, CONNECT_ONE_SHOT)
+	# Kill-cinematic / boss-kill screenshots ride the same lethal-impact signal
+	# N.O.V.A. uses — the execute camera framing is on screen at that moment.
+	if is_instance_valid(CombatManager) and CombatManager.has_signal("action_impact"):
+		CombatManager.action_impact.connect(_on_screenshot_action_impact)
 
 
 func reset_for_restart() -> void:
@@ -245,6 +251,8 @@ func clear_story_state() -> void:
 		"nova_glitch_hints": [],
 		"ambient_used_topics": [],
 		"lounge_warmth": {},
+		"screenshot_systems_seen": [],
+		"screenshot_stations_seen": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,
@@ -763,6 +771,13 @@ func on_system_arrived(system_id: String) -> void:
 	_check_delay_beats()
 	# Top-up any agent pools that have fallen below 4 lines.
 	_trigger_handoff_pool_for_system(system_id)
+	# First arrival in a NEW system is a narrative moment. An empty seen-list
+	# means this is the campaign-load arrival — campaign_start covers that.
+	var seen_before := not (story_state.get("screenshot_systems_seen", []) as Array).is_empty()
+	if _first_visit_and_record("screenshot_systems_seen", system_id) and seen_before:
+		StoryScreenshotsType.capture_deferred(
+			_campaign_path(), "system_first_visit_%s" % system_id.replace(".", "_")
+		)
 
 
 func on_kill(faction: String) -> void:
@@ -794,6 +809,53 @@ func on_docked(station) -> void:
 	_check_dock_beats()
 	_check_delay_beats()
 	_maybe_fire_dock_rumor(station)
+	# First dock at a NEW station — station node name is stable per system.
+	if station != null and is_instance_valid(station):
+		if _first_visit_and_record("screenshot_stations_seen", str(station.name)):
+			StoryScreenshotsType.capture_deferred(_campaign_path(), "station_first_dock")
+
+
+# True exactly once per id: appends unseen ids to the story_state list (capped
+# 64, oldest dropped) and saves. Pure enough to unit-test without a viewport —
+# the capture itself is a separate headless-safe call.
+func _first_visit_and_record(list_key: String, id: String) -> bool:
+	var clean_id := id.strip_edges()
+	if clean_id.is_empty():
+		return false
+	var seen: Array = story_state.get(list_key, []).duplicate() \
+		if story_state.get(list_key, []) is Array else []
+	if clean_id in seen:
+		return false
+	seen.append(clean_id)
+	while seen.size() > 64:
+		seen.pop_front()
+	story_state[list_key] = seen
+	_save_story_state()
+	return true
+
+
+# Kill-cinematic / boss-kill screenshot triggers. Boss kills always capture
+# (rare, earned); ordinary kills are rate-limited so a busy campaign doesn't
+# burn the 200-shot cap on routine Reavers.
+const _KILL_SHOT_COOLDOWN_MS := 600000  # 10 real minutes
+var _last_kill_shot_ms: int = -100000000
+
+
+func _on_screenshot_action_impact(
+	target: Node, _pos: Vector3, _damage: float, lethal: bool, _blocked: bool, _crit: bool
+) -> void:
+	if not lethal or target == null or not is_instance_valid(target):
+		return
+	if target == GlobalState.player:
+		return  # the player dying is not a keepsake
+	if bool(target.get("is_boss")):
+		StoryScreenshotsType.capture_deferred(_campaign_path(), "boss_kill")
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_kill_shot_ms < _KILL_SHOT_COOLDOWN_MS:
+		return
+	_last_kill_shot_ms = now
+	StoryScreenshotsType.capture_deferred(_campaign_path(), "kill_cinematic")
 
 
 # Ambient rumor firing on dock, parallel to the NPC-conversation-triggered

@@ -125,6 +125,8 @@ static func _default_state() -> Dictionary:
 		"nova_glitch_hints": [],
 		"ambient_used_topics": [],
 		"lounge_warmth": {},
+		"screenshot_systems_seen": [],
+		"screenshot_stations_seen": [],
 		"bible_seeded": false,
 		"act_1_outline_consumed_index": 0,
 		"story_arcs_consumed_index": 0,

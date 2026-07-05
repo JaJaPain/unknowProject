@@ -1566,3 +1566,16 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Tests: run_lounge_conversation_tests (new) + lounge/hooks/gateway/ambient/
   seed/scene-parse all EXIT 0. L5 (real quest side-jobs, heat-bar UI) parked
   in the plan doc.
+
+### Story screenshots complete — all seven triggers live (2026-07-05)
+- Finished the PARTIAL item (plan: docs/plan_screenshot_triggers.md, tag
+  pre-screenshot-triggers). New triggers, all in StoryManager:
+  - system_first_visit_<id>: on_system_arrived + screenshot_systems_seen list
+    (campaign-load arrival excluded — campaign_start shot covers it)
+  - station_first_dock: on_docked + screenshot_stations_seen (node name key)
+  - kill_cinematic: lethal CombatManager.action_impact (the execute-camera
+    frame), rate-limited 10 real minutes
+  - boss_kill: same signal, is_boss targets always capture
+- _first_visit_and_record helper is viewport-free and unit-tested (dedup,
+  empty-id, 64-entry cap) in run_story_manager_hook_tests.
+- hooks/seed/shots/parse suites all EXIT 0.

@@ -37,6 +37,7 @@ func _initialize() -> void:
 	_test_player_choice_recording_and_digest()
 	_test_regeneration_trigger_selection()
 	_test_story_quest_plot_armor_guard()
+	_test_screenshot_first_visit_tracking()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -51,6 +52,37 @@ func _fresh_manager() -> Node:
 	var manager: Node = StoryManagerType.new()
 	root.add_child(manager)
 	return manager
+
+
+# Screenshot triggers: _first_visit_and_record fires exactly once per id,
+# dedups, and caps the seen-list. (Capture itself is headless-no-op; this is
+# the logic that decides WHEN it would fire.)
+func _test_screenshot_first_visit_tracking() -> void:
+	var manager := _fresh_manager()
+	_expect(
+		manager._first_visit_and_record("screenshot_systems_seen", "system.kova"),
+		"First visit to a new system should report true."
+	)
+	_expect(
+		not manager._first_visit_and_record("screenshot_systems_seen", "system.kova"),
+		"Second visit to the same system should report false."
+	)
+	_expect(
+		manager._first_visit_and_record("screenshot_systems_seen", "system.meridian"),
+		"A different system should still report true."
+	)
+	_expect(
+		not manager._first_visit_and_record("screenshot_stations_seen", ""),
+		"Empty ids should never count as a first visit."
+	)
+	# Cap: 70 inserts leaves at most 64 remembered.
+	for i in range(70):
+		manager._first_visit_and_record("screenshot_stations_seen", "station_%d" % i)
+	_expect(
+		(manager.story_state.get("screenshot_stations_seen", []) as Array).size() <= 64,
+		"Seen-station list should cap at 64 entries."
+	)
+	manager.queue_free()
 
 
 # Layer 3 of the plot-armor contract: no quest def may make Kaelen or N.O.V.A.
