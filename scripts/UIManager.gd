@@ -240,6 +240,7 @@ const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
 const LoungeConversationType = preload("res://scripts/story/LoungeConversation.gd")
+const IntroCinematicType = preload("res://scripts/story/IntroCinematic.gd")
 const KAELEN_BOUNTY_OFFER_CHANCE := 0.30
 const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
@@ -11530,11 +11531,14 @@ func _finish_loading_after_story_ready() -> void:
 		loading_panel.queue_free()
 		GlobalState.paused = false # Resume gameplay!
 		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
-		# Trigger Kaelen's intro popup 1s after loading — safely AFTER the overlay is gone
+		# NEW campaign: run the "thrown through" intro cinematic (no UI, no
+		# control — docs/plan_intro_cinematic.md). It calls show_kaelen_intro()
+		# itself when it finishes or is skipped, so Kaelen's intro is unchanged,
+		# just later. Loads keep the welcome-back path below.
 		if not startup_save_loaded:
-			get_tree().create_timer(1.0).timeout.connect(func():
-				show_kaelen_intro()
-			)
+			var cinematic: Node = IntroCinematicType.new()
+			add_child(cinematic)
+			cinematic.start(self)
 		elif is_instance_valid(Nova):
 			# Loaded an existing campaign: N.O.V.A. welcomes the captain back, but
 			# only now that the overlay is gone and gameplay is actually running

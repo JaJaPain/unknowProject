@@ -10,6 +10,7 @@ const _SCRIPTS := [
 	"res://scripts/ai/NarrativeDirector.gd",
 	"res://scripts/ai/Nova.gd",
 	"res://scripts/story/StoryQuestManager.gd",
+	"res://scripts/story/IntroCinematic.gd",
 ]
 
 

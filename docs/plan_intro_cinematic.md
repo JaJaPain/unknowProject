@@ -87,13 +87,16 @@ the game must never be stuck controllerless.
 
 ## Checklist (mark as you land each phase; commit per phase)
 
-- [ ] I1: glitch shader + IntroCinematic scaffold (layer/overlay/subtitle/
-      watchdog/skip plumbing + finish/restore path) — parse-checked
-- [ ] I2: beat timeline (tumble/fling/arrival/data-stream tweens + NOVA
-      lines + damage + credits math) — parse-checked
-- [ ] I3: UIManager hook swap (new-campaign path only) + changelog/todo +
-      commit. Playtest note for user: feel-tune constants at top of
-      IntroCinematic.gd (durations, spin counts, damage pct).
+- [x] I1: glitch shader + IntroCinematic scaffold (layer/overlay/subtitle/
+      watchdog/skip plumbing + finish/restore path) — parse-checked 2026-07-05
+- [x] I2: beat timeline (tumble/fling/arrival/data-stream tweens + NOVA
+      lines + damage + credits math) — parse-checked 2026-07-05
+- [x] I3: UIManager hook swap (new-campaign path only) + changelog + commit
+      2026-07-05. NOT YET DONE: playtest — feel-tune the consts at the top of
+      IntroCinematic.gd (durations, SPIN_TURNS, DAMAGE_HEALTH_PCT); verify TTS
+      timing vs subtitle beats; confirm skip key feels right; check the
+      repair cost still exactly matches (REPAIR_COST_PER_HP must track
+      UIManager._repair_ship cost_per_hp = 2.0).
 
 House rules: small edits, save+commit per phase, PS5.1 quoting gotchas in
 [[project_lounge_social_layer]] memory apply to commits.

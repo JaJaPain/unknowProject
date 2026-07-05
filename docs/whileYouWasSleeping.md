@@ -1628,3 +1628,21 @@ validation, speech_service, game_content_registry, local_model_gateway.
   pre-tutorial-taunt-hold covers this too (same session; also see
   pre-screenshot-triggers).
 - Verified live: 4b resident -> evict both -> 8B fresh = 2.4s (vs timeout).
+
+### Intro cinematic — the thrown-through cold open (2026-07-05)
+- Plan + living checklist: docs/plan_intro_cinematic.md (tag
+  pre-intro-cinematic). New campaign only: after the loading panel fades,
+  instead of scheduling Kaelen directly, UIManager spawns IntroCinematic.
+- Sequence (no UI, no control): violent gate tumble w/ new
+  shaders/intro_glitch.gdshader (screen-tear bands + chromatic aberration +
+  white-out, one intensity uniform) + full-axis ship spin (camera rides the
+  ship, so the spin sells it); N.O.V.A.'s first-ever line lands mid-crisis
+  ("ONE last thing I can try!"); white-flash FLING; reveal shows the ship
+  thrown INTO the system (no gate); hull set to 40%; her amnesia beat ("my
+  memory starts fourteen seconds ago"); untraceable data stream wires
+  EXACTLY the repair bill (missing_hp * 2.0, mirrors _repair_ship); then UI
+  restores and the existing show_kaelen_intro() runs unchanged.
+- Safety: SPACE skips (consequences still applied, idempotent _finish), 30s
+  watchdog forces restore, load-game path untouched (welcome_back as before).
+- Verified: scene parse check green. NOT playtested — feel-tune consts at top
+  of IntroCinematic.gd; TTS pacing vs subtitles needs a real run.
