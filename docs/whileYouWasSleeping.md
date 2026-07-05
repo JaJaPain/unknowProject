@@ -1536,3 +1536,33 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Remaining triggers (first system jump, boss kill, first dock, kill cinematic)
   live in GameRoot/CombatManager and are logged in todo.
 - Tests: run_story_screenshot_tests + hooks/seed/scene-parse all EXIT 0.
+
+### Lounge Social Layer L1-L4 — the bar is a place now (2026-07-05)
+- Plan-first session (18% weekly budget): docs/plan_lounge_social_layer.md is
+  the hand-off doc — phases, exact seams, house rules — written and committed
+  BEFORE code so any smaller model can continue. Tag: pre-lounge-social-layer.
+- L1 two-way conversations: LoungeConversation.gd (flat line/r1/r2/r3 JSON,
+  parse_turn, transcript capping) + shared _request_small_inner_text transport
+  (lounge_chat capability, 12s). Card press = opener + reply buttons on the
+  existing dock-message choices row + always-available "(nod and leave)".
+  Up to 3 NPC turns, wind-down instructed at the end. Completing a chat with
+  a faction contact: +1.0 rep, once per contact per dock. Failure falls back
+  to the old one-liner path, logged.
+- L2 buy them a drink: 20cr, once per contact per dock; persistent warmth
+  0..3 per contact (story_state.lounge_warmth, capped 64); warmth warms
+  openers via prompt context and raises approach odds.
+- L3 wants-a-word: one contact per dock may seek the player out (12% +4%/
+  warmth, 45-min cooldown stamp) — amber "wants a word" card badge; opener
+  priority: unhinted story hook as personal tip (consumes it via rumor dedup)
+  > personal beat at warmth 2+ > odd station observation.
+- L4 the stranger: 6%/90-min rare temp card, exclusive with L3, never in the
+  start system. LLM only writes the pitch; the deal is code (intel|goods,
+  chapter-scaled ask, 35% scam, one haggle, 10% walk-away sweetener). Goods
+  fence 1.6x, intel appends a pending story hook, scams sting dryly. All
+  outcomes via record_player_choice + diagnostics.
+- Gotchas hit: fresh class_name not visible headless (use preload consts —
+  fixed LoungeConversation refs); PS5.1 mangles embedded double quotes in
+  git commit -m here-strings (avoid them).
+- Tests: run_lounge_conversation_tests (new) + lounge/hooks/gateway/ambient/
+  seed/scene-parse all EXIT 0. L5 (real quest side-jobs, heat-bar UI) parked
+  in the plan doc.
