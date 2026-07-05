@@ -1594,3 +1594,18 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Agent cards gained rep_key (faction_key minus prefix) for rep lookups.
 - Tests: agent_disposition tier table in run_lounge_conversation_tests;
   lounge/scene/parse suites EXIT 0.
+
+### Tutorial: hold enemy opening taunt until N.O.V.A. finishes (2026-07-05)
+- Bug: on the first-ever fight, the enemy's opening taunt fired while N.O.V.A.'s
+  combat-tutorial line was still playing, cutting her off.
+- Fix: CombatManager.hold_opening_taunt() / release_opening_taunt() — UIManager
+  holds the taunt when it shows the one-time tutorial popup
+  (_maybe_show_combat_tutorial) and releases it on the GOT IT close button. A
+  taunt that tries to fire while held is queued (_opening_taunt_pending) and
+  flushed on release.
+- Race-free by construction: the hold is set synchronously inside the
+  combat_started emission, which precedes the async taunt fetch + first
+  planning phase where _play_combat_taunt runs. Flags reset in
+  _reset_fight_state (before that emission). Reopening the popup from the pause
+  menu calls release harmlessly (no-op when nothing held). Tag:
+  pre-tutorial-taunt-hold.

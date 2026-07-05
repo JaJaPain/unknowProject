@@ -2300,6 +2300,11 @@ func _maybe_show_combat_tutorial() -> void:
 	if GlobalState.combat_tutorial_seen:
 		return
 	GlobalState.combat_tutorial_seen = true
+	# Hold the enemy's opening taunt until the player closes the tutorial popup,
+	# so it doesn't talk over N.O.V.A.'s line. Set BEFORE the taunt can fire —
+	# the taunt waits on the async taunt fetch, which is still in flight here.
+	if is_instance_valid(CombatManager) and CombatManager.has_method("hold_opening_taunt"):
+		CombatManager.hold_opening_taunt()
 	# N.O.V.A. heckles the hesitation the instant before the combat wheel appears.
 	if is_instance_valid(Nova):
 		Nova.on_combat_tutorial()
@@ -2390,6 +2395,9 @@ func _show_combat_tutorial_popup(_from_pause: bool = false) -> void:
 			combat_tutorial_overlay.queue_free()
 		combat_tutorial_overlay = null
 		combat_tutorial_layer = null
+		# Let the held opening taunt play now that N.O.V.A. has had her moment.
+		if is_instance_valid(CombatManager) and CombatManager.has_method("release_opening_taunt"):
+			CombatManager.release_opening_taunt()
 	)
 	layout.add_child(close_btn)
 

@@ -162,6 +162,12 @@ const TAUNT_HUMOR_LINES := [
 	"I've seen escape pods with more fight in them than you.",
 ]
 var _player_initiated: bool = false
+# When the one-time combat tutorial popup is up, hold the opening enemy taunt so
+# it doesn't talk over N.O.V.A.'s tutorial line. UIManager sets/clears the hold
+# around the popup; a taunt that tries to fire while held is queued and flushed
+# on release. (Only ever engages on the very first fight — the tutorial is once.)
+var _opening_taunt_held: bool = false
+var _opening_taunt_pending: bool = false
 var _cached_rage:   Array = []   # [{text, voice}, ...] pre-cached audio pairs
 var _cached_reason: Array = []
 var _cached_humor:  Array = []
@@ -261,9 +267,30 @@ func _make_taunt_pool(lines: Array) -> Array:
 		TTSInterface.cache_dialogue_audio(line, entry["voice"], TAUNT_SPEED, TAUNT_STYLE)
 	return pool
 
+# Holds the opening taunt (see _opening_taunt_held). Called by UIManager when it
+# shows the one-time combat tutorial popup, so the enemy doesn't cut off N.O.V.A.
+func hold_opening_taunt() -> void:
+	_opening_taunt_held = true
+
+
+# Releases the hold and plays the opening taunt if one tried to fire while held.
+# Called when the player dismisses the combat tutorial popup. Safe no-op when
+# nothing was held (e.g. the popup reopened later from the pause menu).
+func release_opening_taunt() -> void:
+	_opening_taunt_held = false
+	if _opening_taunt_pending:
+		_opening_taunt_pending = false
+		_play_combat_taunt()
+
+
 # Fire exactly one taunt for the attacking ship, voiced from the right pool.
 func _play_combat_taunt() -> void:
 	if not _combat_voice_on():
+		return
+	# Tutorial popup is up — queue the taunt and let it play once dismissed so it
+	# doesn't step on N.O.V.A.'s tutorial line (release_opening_taunt flushes it).
+	if _opening_taunt_held:
+		_opening_taunt_pending = true
 		return
 	# Bribe / board-mission (comms-reversal) targets keep their own branching
 	# dialog — skip the generic taunt for them.
@@ -527,6 +554,10 @@ func end_combat(player_won: bool) -> void:
 	_request_general_taunt_pool()
 
 func _reset_fight_state() -> void:
+	# Runs before combat_started is emitted, so any stale tutorial hold clears
+	# here and UIManager re-arms it (if needed) during that emission.
+	_opening_taunt_held = false
+	_opening_taunt_pending = false
 	queued_actions.clear()
 	range_band = CombatActionType.RangeBand.MID
 	player_shield_face = CombatActionType.Face.FRONT
