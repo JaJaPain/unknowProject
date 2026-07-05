@@ -3681,6 +3681,8 @@ func toggle_dock_menu(
 				_lounge_drinks_bought.clear()
 				_lounge_convo = {}
 				_lounge_convo_serial += 1
+				_lounge_approach_rolled = false
+				_lounge_approach_npc = ""
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -4098,9 +4100,50 @@ func _render_station_contacts(should_show: bool) -> void:
 				"rumor": true,
 				"portrait": p_portrait,
 			}
+	_roll_lounge_approach(cards)
 	for i in range(4):
 		var card_data := cards[i] if i < cards.size() else {}
+		if not card_data.is_empty() and str(card_data.get("name", "")) == _lounge_approach_npc:
+			card_data["approach"] = true
 		_add_lounge_contact_card(i, card_data)
+
+
+# L3: at most one contact per dock may "want a word" — rolled once, sticky
+# across lounge re-renders, cooled down across docks via a campaign-minute
+# stamp so it stays a someone-crossed-the-room moment, not a mechanic.
+const LOUNGE_APPROACH_BASE_CHANCE := 0.12
+const LOUNGE_APPROACH_WARMTH_BONUS := 0.04
+const LOUNGE_APPROACH_COOLDOWN_MIN := 45
+
+func _roll_lounge_approach(cards: Array) -> void:
+	if _lounge_approach_rolled:
+		return
+	_lounge_approach_rolled = true
+	_lounge_approach_npc = ""
+	if not is_instance_valid(StoryManager):
+		return
+	var last_minute := int(StoryManager.story_state.get("lounge_last_approach_minute", -100000))
+	var now_minute := int(CampaignClock.total_minutes)
+	if now_minute - last_minute < LOUNGE_APPROACH_COOLDOWN_MIN:
+		return
+	var eligible: Array = []
+	for card in cards:
+		if card is Dictionary and str((card as Dictionary).get("kind", "")) == "npc":
+			eligible.append(card)
+	if eligible.is_empty():
+		return
+	var pick: Dictionary = eligible[randi() % eligible.size()]
+	var pick_name := str(pick.get("name", ""))
+	var warmth := 0
+	if StoryManager.has_method("lounge_warmth_for"):
+		warmth = int(StoryManager.lounge_warmth_for(pick_name))
+	var chance := LOUNGE_APPROACH_BASE_CHANCE + LOUNGE_APPROACH_WARMTH_BONUS * warmth
+	if randf() >= chance:
+		return
+	_lounge_approach_npc = pick_name
+	StoryManager.story_state["lounge_last_approach_minute"] = now_minute
+	if StoryManager.has_method("_save_story_state"):
+		StoryManager._save_story_state()
 
 
 func _lounge_bartender_card(station_id: String) -> Dictionary:
@@ -4238,6 +4281,20 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 	else:
 		portrait.modulate = Color(0.2, 0.55, 0.65, 0.35)
 	card.add_child(portrait)
+
+	# L3: subtle glance-across-the-bar cue — amber sublabel, no quest-marker energy.
+	if bool(card_data.get("approach", false)):
+		var approach_label := Label.new()
+		approach_label.text = "· wants a word ·"
+		approach_label.add_theme_font_size_override("font_size", 9)
+		approach_label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.35))
+		approach_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		approach_label.anchor_left = 0.05
+		approach_label.anchor_right = 0.95
+		approach_label.anchor_top = 0.0
+		approach_label.anchor_bottom = 0.06
+		approach_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(approach_label)
 
 	var name_offset := _lounge_name_offsets[slot_index]
 	var name := Label.new()
@@ -4470,6 +4527,10 @@ var _lounge_convo_done: Dictionary = {}
 # L2: one drink per contact per dock; warmth itself persists via StoryManager.
 const LOUNGE_DRINK_COST := 20
 var _lounge_drinks_bought: Dictionary = {}
+# L3 session state: rolled once per dock; the chosen contact keeps the badge
+# across lounge re-renders until talked to.
+var _lounge_approach_rolled: bool = false
+var _lounge_approach_npc: String = ""
 
 
 func _on_buy_drink_pressed(npc_name: String, card_data: Dictionary) -> void:
@@ -4523,7 +4584,9 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		"serial": serial,
 	}
 	_show_lounge_card_line(card, "Listening...", false)
-	var prompt: String = LoungeConversationType.build_opener_prompt(npc, _lounge_flavor_block())
+	var prompt: String = LoungeConversationType.build_opener_prompt(
+		npc, _lounge_flavor_block(), _lounge_approach_instruction(card, npc)
+	)
 	LLMInterface.request_lounge_conversation_turn(
 		prompt,
 		func(result: Dictionary) -> void: _on_lounge_turn_result(serial, result)
@@ -4534,6 +4597,43 @@ func _lounge_flavor_block() -> String:
 	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
 		return str(StoryManager.get_ambient_flavor_block())
 	return ""
+
+
+# L3: opener instruction when THIS contact sought the player out. Content
+# priority (code picks, model phrases): unhinted story hook as a quiet
+# personal tip > personal beat for warm contacts > small world observation.
+# "" for normal (player-initiated) conversations. Consumes the badge.
+func _lounge_approach_instruction(card: Dictionary, npc: Dictionary) -> String:
+	if not bool(card.get("approach", false)):
+		return ""
+	if str(card.get("name", "")) == _lounge_approach_npc:
+		_lounge_approach_npc = ""  # badge consumed; re-renders drop it
+	var base := (
+		"The speaker crossed the room specifically to talk to the pilot — "
+		+ "they open the conversation, low-key, like someone with something on their mind. "
+	)
+	if is_instance_valid(StoryManager):
+		var hooks: Array = StoryManager.story_state.get("pending_hooks", [])
+		var hinted: Array = StoryManager.story_state.get("hinted_lounge_rumors", [])
+		for hook in hooks:
+			var text := str(hook).strip_edges()
+			if text.is_empty():
+				continue
+			var hook_id := "hook:%s" % text.sha256_text().substr(0, 12)
+			if hook_id in hinted:
+				continue
+			StoryManager.record_lounge_rumor_heard(hook_id)
+			return base + (
+				"They quietly tip the pilot off about this, in their own words, "
+				+ "personal and incomplete — not a briefing: \"%s\"" % text
+			)
+		if StoryManager.has_method("lounge_warmth_for") \
+				and int(StoryManager.lounge_warmth_for(str(npc.get("name", "")))) >= 2:
+			return base + (
+				"No agenda — they consider the pilot good company now and share "
+				+ "something small and personal (a worry, a win, a plan)."
+			)
+	return base + "They mention something odd they noticed around the station lately."
 
 
 func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
