@@ -11,7 +11,7 @@ extends Node
 # game must never be left controllerless.
 
 # ── Feel-tuning knobs ─────────────────────────────────────────────────────────
-const TUMBLE_DURATION := 4.5
+const TUMBLE_DURATION := 20.0    # the long, violent haul THROUGH the failing gate
 const FLING_FLASH := 0.15
 const REVEAL_DURATION := 1.2
 const ARRIVAL_LINE2_AT := 1.0    # seconds after reveal
@@ -19,10 +19,11 @@ const ARRIVAL_LINE3_AT := 5.0
 const DATA_STREAM_AT := 8.0
 const DATA_LINE4_AT := 10.0
 const HANDOFF_AT := 14.0         # after reveal; total runtime ~= 6s + this
+const HANDOFF_TO_KAELEN_S := 4.0 # beat to breathe after the intro, before Kaelen
 const DAMAGE_HEALTH_PCT := 0.4   # ship arrives at 40% hull
 const REPAIR_COST_PER_HP := 2.0  # MUST match UIManager._repair_ship cost_per_hp
-const SPIN_TURNS := 2.5          # full-axis tumble rotations
-const WATCHDOG_S := 30.0
+const SPIN_TURNS := 9.0          # full-axis tumble rotations (scaled to TUMBLE_DURATION)
+const WATCHDOG_S := 60.0  # fallback only; must exceed full runtime (~40s)
 
 const GLITCH_SHADER := preload("res://shaders/intro_glitch.gdshader")
 
@@ -175,7 +176,7 @@ func _finish() -> void:
 	if _ui != null and is_instance_valid(_ui):
 		_ui.visible = true
 		var ui := _ui
-		get_tree().create_timer(1.0, true, false, true).timeout.connect(func() -> void:
+		get_tree().create_timer(HANDOFF_TO_KAELEN_S, true, false, true).timeout.connect(func() -> void:
 			if is_instance_valid(ui) and ui.has_method("show_kaelen_intro"):
 				ui.show_kaelen_intro()
 		)
@@ -207,7 +208,7 @@ func _run() -> void:
 	# All intro tweens ignore time scale to stay in sync with the wall-clock
 	# beats above — otherwise a non-1.0x engine desyncs visuals from dialogue.
 	var flicker := create_tween().set_ignore_time_scale(true)
-	flicker.set_loops(6)
+	flicker.set_loops(0)  # pulse for the whole tumble; killed at the fling
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 0.7, 0.35)
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 1.0, 0.4)
 	await _beat(1.0)
