@@ -51,7 +51,7 @@ func start(ui_manager: Control) -> void:
 	p.set_physics_process(false)
 	_build_visuals()
 	# Watchdog: whatever happens, control comes back.
-	get_tree().create_timer(WATCHDOG_S).timeout.connect(_finish)
+	get_tree().create_timer(WATCHDOG_S, true, false, true).timeout.connect(_finish)
 	_run()
 
 
@@ -113,7 +113,7 @@ func _build_visuals() -> void:
 	_skip_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_skip_hint)
 	# Fade the hint in after a couple of seconds — present, not pushy.
-	var hint_tween := create_tween()
+	var hint_tween := create_tween().set_ignore_time_scale(true)
 	hint_tween.tween_interval(2.0)
 	hint_tween.tween_property(_skip_hint, "theme_override_colors/font_color", Color(0.6, 0.6, 0.6, 0.8), 0.6)
 
@@ -175,7 +175,7 @@ func _finish() -> void:
 	if _ui != null and is_instance_valid(_ui):
 		_ui.visible = true
 		var ui := _ui
-		get_tree().create_timer(1.0).timeout.connect(func() -> void:
+		get_tree().create_timer(1.0, true, false, true).timeout.connect(func() -> void:
 			if is_instance_valid(ui) and ui.has_method("show_kaelen_intro"):
 				ui.show_kaelen_intro()
 		)
@@ -184,21 +184,29 @@ func _finish() -> void:
 
 # ── The beat timeline ─────────────────────────────────────────────────────────
 
+# Wall-clock wait: the 4th arg (ignore_time_scale=true) makes each phase last
+# REAL seconds no matter what Engine.time_scale is doing. Without it, if the
+# engine is running at anything but 1.0x (combat drives it to 0.02x and back —
+# CombatManager) every beat fires near-instantly and the whole intro collapses
+# into a couple of seconds instead of spacing out. process_always=true so a
+# paused tree can't stall it either.
 func _beat(seconds: float) -> void:
-	await get_tree().create_timer(seconds).timeout
+	await get_tree().create_timer(seconds, true, false, true).timeout
 
 
 func _run() -> void:
 	var p = GlobalState.player
 	# TUMBLE — thrown through a dying gate: violent spin, screaming glitch.
 	if p != null and is_instance_valid(p):
-		var spin := create_tween()
+		var spin := create_tween().set_ignore_time_scale(true)
 		var target: Vector3 = p.rotation + Vector3(
 			TAU * SPIN_TURNS, TAU * (SPIN_TURNS * 0.7), TAU * (SPIN_TURNS * 1.3)
 		)
 		spin.tween_property(p, "rotation", target, TUMBLE_DURATION + REVEAL_DURATION) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	var flicker := create_tween()
+	# All intro tweens ignore time scale to stay in sync with the wall-clock
+	# beats above — otherwise a non-1.0x engine desyncs visuals from dialogue.
+	var flicker := create_tween().set_ignore_time_scale(true)
 	flicker.set_loops(6)
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 0.7, 0.35)
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 1.0, 0.4)
@@ -220,7 +228,7 @@ func _run() -> void:
 	await _beat(FLING_FLASH)
 	if _finished:
 		return
-	var reveal := create_tween()
+	var reveal := create_tween().set_ignore_time_scale(true)
 	reveal.set_parallel(true)
 	reveal.tween_property(_black, "color:a", 0.0, REVEAL_DURATION)
 	reveal.tween_property(_glitch_mat, "shader_parameter/white_out", 0.0, REVEAL_DURATION * 0.6)
@@ -232,7 +240,7 @@ func _run() -> void:
 	# ARRIVAL — battered and drifting. Damage + mystery credits land here (the
 	# skip path applies them too, via _apply_consequences' guard).
 	_apply_consequences()
-	var residual := create_tween()
+	var residual := create_tween().set_ignore_time_scale(true)
 	residual.set_loops(0)
 	residual.tween_property(_glitch_mat, "shader_parameter/intensity", 0.02, 0.9)
 	residual.tween_property(_glitch_mat, "shader_parameter/intensity", 0.14, 0.12)
@@ -262,7 +270,7 @@ func _run() -> void:
 	_stream_label.text = "INCOMING DATA STREAM  //  ORIGIN: [UNRESOLVED]  //  CREDITS RECEIVED: %d" % credits_shown
 	_stream_label.visible = true
 	_stream_label.modulate.a = 0.0
-	var stream_tween := create_tween()
+	var stream_tween := create_tween().set_ignore_time_scale(true)
 	stream_tween.tween_property(_stream_label, "modulate:a", 1.0, 0.4)
 	await _beat(DATA_LINE4_AT - DATA_STREAM_AT)
 	if _finished:

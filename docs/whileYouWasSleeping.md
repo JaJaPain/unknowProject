@@ -1646,3 +1646,16 @@ validation, speech_service, game_content_registry, local_model_gateway.
   watchdog forces restore, load-game path untouched (welcome_back as before).
 - Verified: scene parse check green. NOT playtested — feel-tune consts at top
   of IntroCinematic.gd; TTS pacing vs subtitles needs a real run.
+
+### Intro cinematic timing fix — phases were collapsing together (2026-07-05)
+- Symptom: the whole thrown-through intro rushed into ~3s instead of ~20s.
+- Cause: _beat() used get_tree().create_timer(seconds) and the tweens used
+  plain create_tween(), both affected by Engine.time_scale. Combat drives
+  time_scale to 0.02x and back (CombatManager); any non-1.0x state makes every
+  beat fire near-instantly. Same class of bug the combat code already guards
+  against with set_ignore_time_scale(true) + wall-clock timers.
+- Fix: _beat now create_timer(s, true, false, true) (ignore_time_scale=true);
+  every intro tween (spin/flicker/reveal/residual/stream/hint) gets
+  set_ignore_time_scale(true); watchdog + Kaelen-handoff timers too. Phases now
+  last real wall-clock seconds regardless of engine time scale. Parse green.
+  Still needs a real playtest to feel-tune the per-phase durations.
