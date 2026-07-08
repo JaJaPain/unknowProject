@@ -18,25 +18,71 @@ const ARRIVAL_LINE2_AT := 1.0    # seconds after reveal
 const ARRIVAL_LINE3_AT := 5.0
 const DATA_STREAM_AT := 8.0
 const DATA_LINE4_AT := 10.0
-const HANDOFF_AT := 14.0         # after reveal; total runtime ~= 6s + this
-const HANDOFF_TO_KAELEN_S := 4.0 # beat to breathe after the intro, before Kaelen
+const HANDOFF_AT := 18.0         # after reveal; lets Nova's last spoken line finish
+const HANDOFF_TO_KAELEN_S := 11.0 # beat to breathe after the UI returns, before Kaelen
+const TTS_READY_WAIT_S := 45.0
 const DAMAGE_HEALTH_PCT := 0.4   # ship arrives at 40% hull
 const REPAIR_COST_PER_HP := 2.0  # MUST match UIManager._repair_ship cost_per_hp
 const SPIN_TURNS := 9.0          # full-axis tumble rotations (scaled to TUMBLE_DURATION)
 const WATCHDOG_S := 60.0  # fallback only; must exceed full runtime (~40s)
 
 const GLITCH_SHADER := preload("res://shaders/intro_glitch.gdshader")
+const JUMP_TUNNEL_SCENE := preload("res://scenes/jump_tunnel.tscn")
+const NOVA_PORTRAIT_TEXTURE := preload("res://assets/Portraits/ShipAI.png")
+const SFX_GATE_1 := "res://sound/Opening/GateSound1.wav"
+const SFX_GATE_2 := "res://sound/Opening/GateSound2.wav"
+const SFX_MALFUNCTION := "res://sound/Opening/Damaged_spaceship_systems_malf_take2.wav"
+const SFX_FLASH := "res://sound/Opening/A_powerful_sci-fi_energy_disch_take2.wav"
+const SFX_WARP_DROP := "res://sound/Opening/Spaceship_thrown_out_of_warp_i_take1.wav"
+const NOVA_VOICE_PROFILE_ID := "voice.nova.v1"
+const NOVA_LINE_1 := "Hold on, Captain! I'm doing everything I can to stabilize the ship - I've got ONE last thing I can try!"
+const NOVA_LINE_2 := "We're... somewhere. That wasn't a gate transit, Captain - we were thrown. Hull's a mess, but we're alive."
+const NOVA_LINE_3 := "Here's the part I don't like: my memory starts fourteen seconds ago. I know you're my captain. I know I trust you. I just can't tell you WHY I know either of those things."
+const NOVA_LINE_4 := "Someone just wired us what I am guessing is the local currency. No routing data. No sender. I ran the trace twice - it goes nowhere. I'd say 'lucky us', but luck doesn't usually know our account number."
+const NOVA_LINES := [
+	NOVA_LINE_1,
+	NOVA_LINE_2,
+	NOVA_LINE_3,
+	NOVA_LINE_4,
+]
 
 var _ui: Control = null            # UIManager root (hidden during the sequence)
 var _layer: CanvasLayer = null
 var _glitch_rect: ColorRect = null
 var _glitch_mat: ShaderMaterial = null
 var _black: ColorRect = null
+var _nova_panel: PanelContainer = null
+var _nova_portrait: TextureRect = null
 var _subtitle: Label = null
 var _stream_label: Label = null
 var _skip_hint: Label = null
+var _tunnel: Node3D = null
+var _tunnel_mat: ShaderMaterial = null
+var _player_camera: Camera3D = null
+var _camera_base_fov := 70.0
+var _camera_base_h_offset := 0.0
+var _camera_base_v_offset := 0.0
+var _ship_light: OmniLight3D = null
+var _ship_light_energy := 4.0
+var _elapsed := 0.0
+var _camera_settling := false
+var _gate_player_1: AudioStreamPlayer = null
+var _gate_player_2: AudioStreamPlayer = null
+var _malfunction_player: AudioStreamPlayer = null
+var _audio_players: Array[Node] = []
+var _gate_pan_1: AudioEffectPanner = null
+var _gate_pan_2: AudioEffectPanner = null
+var _data_sfx_played := false
 var _finished := false
 var _consequences_applied := false
+
+
+static func cache_nova_voice_lines() -> void:
+	if not is_instance_valid(SpeechService):
+		return
+	for line in NOVA_LINES:
+		SpeechService.cache(str(line), NOVA_VOICE_PROFILE_ID)
+	print("[IntroCinematic] Queued Nova intro voice cache lines: ", NOVA_LINES.size())
 
 
 # Entry point. ui_manager is hidden/restored by us; on finish (or skip, or
@@ -50,7 +96,11 @@ func start(ui_manager: Control) -> void:
 		return
 	_ui.visible = false
 	p.set_physics_process(false)
+	if p.has_method("hard_stop"):
+		p.hard_stop()
+	_setup_broken_tunnel(p)
 	_build_visuals()
+	_start_intro_audio()
 	# Watchdog: whatever happens, control comes back.
 	get_tree().create_timer(WATCHDOG_S, true, false, true).timeout.connect(_finish)
 	_run()
@@ -77,12 +127,40 @@ func _build_visuals() -> void:
 	_glitch_rect.material = _glitch_mat
 	_layer.add_child(_glitch_rect)
 
+	_nova_panel = PanelContainer.new()
+	_nova_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_nova_panel.offset_left = 42.0
+	_nova_panel.offset_top = -382.0
+	_nova_panel.offset_right = 354.0
+	_nova_panel.offset_bottom = -70.0
+	_nova_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_nova_panel.modulate.a = 0.0
+	var portrait_style := StyleBoxFlat.new()
+	portrait_style.bg_color = Color(0.02, 0.06, 0.10, 0.82)
+	portrait_style.border_color = Color(0.26, 0.72, 1.0, 0.95)
+	portrait_style.border_width_left = 2
+	portrait_style.border_width_top = 2
+	portrait_style.border_width_right = 2
+	portrait_style.border_width_bottom = 2
+	portrait_style.corner_radius_top_left = 5
+	portrait_style.corner_radius_top_right = 5
+	portrait_style.corner_radius_bottom_right = 5
+	portrait_style.corner_radius_bottom_left = 5
+	_nova_panel.add_theme_stylebox_override("panel", portrait_style)
+	_layer.add_child(_nova_panel)
+
+	_nova_portrait = TextureRect.new()
+	_nova_portrait.custom_minimum_size = Vector2(292, 292)
+	_nova_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_nova_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_nova_panel.add_child(_nova_portrait)
+
 	_subtitle = Label.new()
 	_subtitle.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_subtitle.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_subtitle.offset_bottom = -90.0
-	_subtitle.offset_left = 120.0
+	_subtitle.offset_left = 390.0
 	_subtitle.offset_right = -120.0
 	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_subtitle.add_theme_font_size_override("font_size", 22)
@@ -125,10 +203,259 @@ func _build_visuals() -> void:
 func _nova_line(text: String, expression: String) -> void:
 	if _finished:
 		return
-	if _subtitle != null and is_instance_valid(_subtitle):
-		_subtitle.text = "N.O.V.A.:  " + text
+	_show_nova_line_visual(text, expression)
 	if is_instance_valid(Nova) and Nova.has_method("speak"):
 		Nova.speak(text, Nova.Severity.THREAT, expression)
+
+
+func _show_nova_line_visual(text: String, expression: String) -> void:
+	_show_nova_portrait(expression)
+	if _subtitle != null and is_instance_valid(_subtitle):
+		_subtitle.text = "N.O.V.A.:  " + text
+
+
+func _nova_line_after_voice_ready(text: String, expression: String) -> void:
+	_show_nova_line_visual(text, expression)
+	if not _speech_ready_for_intro():
+		await _wait_for_speech_ready(TTS_READY_WAIT_S)
+	if _finished:
+		return
+	if _speech_ready_for_intro():
+		if is_instance_valid(SpeechService):
+			SpeechService.play(text, NOVA_VOICE_PROFILE_ID)
+			await _wait_for_nova_playback(18.0)
+	else:
+		print("[IntroCinematic] Nova TTS skipped after waiting; voice service still busy/offline.")
+
+
+func _speech_ready_for_intro() -> bool:
+	if not is_instance_valid(TTSInterface):
+		return false
+	if not bool(TTSInterface.get("tts_connected")):
+		return false
+	if bool(TTSInterface.get("is_requesting")):
+		return false
+	if int(TTSInterface.get("active_cache_requests")) > 0:
+		return false
+	return true
+
+
+func _wait_for_speech_ready(max_seconds: float) -> void:
+	var elapsed := 0.0
+	var announced := false
+	while not _finished and not _speech_ready_for_intro() and elapsed < max_seconds:
+		if not announced:
+			announced = true
+			print("[IntroCinematic] Waiting for Nova TTS to be ready...")
+		await _beat(0.25)
+		elapsed += 0.25
+	if _speech_ready_for_intro():
+		print("[IntroCinematic] Nova TTS ready after %.1fs." % elapsed)
+
+
+func _wait_for_nova_playback(max_seconds: float) -> void:
+	if not is_instance_valid(TTSInterface):
+		return
+	var elapsed := 0.0
+	var saw_voice_activity := false
+	while not _finished and elapsed < max_seconds:
+		var requesting := bool(TTSInterface.get("is_requesting"))
+		var playing := false
+		var player = TTSInterface.get("audio_player")
+		if player != null and is_instance_valid(player):
+			playing = bool(player.get("playing"))
+		if requesting or playing:
+			saw_voice_activity = true
+		elif saw_voice_activity:
+			return
+		await _beat(0.1)
+		elapsed += 0.1
+
+
+func _show_nova_portrait(expression: String) -> void:
+	if _nova_portrait == null or not is_instance_valid(_nova_portrait):
+		return
+	var atlas := AtlasTexture.new()
+	atlas.atlas = NOVA_PORTRAIT_TEXTURE
+	var frame := 0
+	if is_instance_valid(Nova) and Nova.has_method("frame_index_for"):
+		frame = Nova.frame_index_for(expression)
+	atlas.region = Nova.region_for_frame(
+		frame,
+		float(NOVA_PORTRAIT_TEXTURE.get_width()),
+		float(NOVA_PORTRAIT_TEXTURE.get_height())
+	)
+	_nova_portrait.texture = atlas
+	if _nova_panel != null and is_instance_valid(_nova_panel):
+		var tween := create_tween().set_ignore_time_scale(true)
+		tween.tween_property(_nova_panel, "modulate:a", 1.0, 0.25)
+
+
+func _setup_broken_tunnel(player: CharacterBody3D) -> void:
+	if DisplayServer.get_name() == "headless" or player == null or not is_instance_valid(player):
+		return
+	_player_camera = player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
+	if _player_camera != null:
+		_camera_base_fov = _player_camera.fov
+		_camera_base_h_offset = _player_camera.h_offset
+		_camera_base_v_offset = _player_camera.v_offset
+	_ship_light = player.get_node_or_null("ShipLight") as OmniLight3D
+	if _ship_light != null:
+		_ship_light_energy = _ship_light.light_energy
+	_tunnel = JUMP_TUNNEL_SCENE.instantiate() as Node3D
+	player.get_parent().add_child(_tunnel)
+	_tunnel.global_position = player.global_position
+	if _tunnel.has_method("setup_real_ship"):
+		_tunnel.call("setup_real_ship", player)
+	var cylinder := _tunnel.get_node_or_null("TunnelCylinder") as MeshInstance3D
+	if cylinder != null:
+		cylinder.visible = true
+		var mat := cylinder.get_active_material(0) as ShaderMaterial
+		if mat != null:
+			_tunnel_mat = mat.duplicate() as ShaderMaterial
+			_tunnel_mat.set_shader_parameter("speed", 9.0)
+			_tunnel_mat.set_shader_parameter("ring_speed", 15.0)
+			_tunnel_mat.set_shader_parameter("ring_frequency", 18.0)
+			_tunnel_mat.set_shader_parameter("base_color", Color(0.01, 0.02, 0.08, 1.0))
+			_tunnel_mat.set_shader_parameter("neon_color", Color(0.02, 0.75, 1.0, 1.0))
+			_tunnel_mat.set_shader_parameter("accent_color", Color(1.0, 0.08, 0.18, 1.0))
+			cylinder.material_override = _tunnel_mat
+	var particles := _tunnel.get_node_or_null("WarpParticles") as CPUParticles3D
+	if particles != null:
+		particles.amount = 300
+		particles.initial_velocity_min = 360.0
+		particles.initial_velocity_max = 620.0
+		particles.emitting = true
+
+
+func _cleanup_tunnel() -> void:
+	if _tunnel != null and is_instance_valid(_tunnel):
+		if _tunnel.has_method("cleanup"):
+			_tunnel.call("cleanup")
+		_tunnel.queue_free()
+	_tunnel = null
+	_tunnel_mat = null
+
+
+func _start_intro_audio() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	_gate_player_1 = _create_loop_player(SFX_GATE_1, 10.0)
+
+
+func _ensure_intro_pan_bus(bus_name: String, start_pan: float) -> AudioEffectPanner:
+	var bus_idx := AudioServer.get_bus_index(bus_name)
+	if bus_idx == -1:
+		AudioServer.add_bus()
+		bus_idx = AudioServer.get_bus_count() - 1
+		AudioServer.set_bus_name(bus_idx, bus_name)
+		AudioServer.set_bus_send(bus_idx, "SFX")
+	var effect: AudioEffectPanner = null
+	for i in range(AudioServer.get_bus_effect_count(bus_idx)):
+		var existing := AudioServer.get_bus_effect(bus_idx, i)
+		if existing is AudioEffectPanner:
+			effect = existing as AudioEffectPanner
+			break
+	if effect == null:
+		effect = AudioEffectPanner.new()
+		AudioServer.add_bus_effect(bus_idx, effect)
+	effect.pan = start_pan
+	return effect
+
+
+func _create_panned_loop(path: String, volume_db: float, bus_name: String) -> AudioStreamPlayer:
+	var stream := _load_loop_stream(path)
+	if stream == null:
+		return null
+	var player := AudioStreamPlayer.new()
+	player.bus = bus_name
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	_audio_players.append(player)
+	player.play()
+	print("[IntroCinematic] Playing panned loop: ", path, " bus=", bus_name, " volume_db=", volume_db)
+	return player
+
+
+func _create_loop_player(path: String, volume_db: float) -> AudioStreamPlayer:
+	var stream := _load_loop_stream(path)
+	if stream == null:
+		return null
+	var player := AudioStreamPlayer.new()
+	player.bus = "SFX"
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	_audio_players.append(player)
+	player.play()
+	print("[IntroCinematic] Playing loop: ", path, " volume_db=", volume_db)
+	return player
+
+
+func _load_loop_stream(path: String) -> AudioStream:
+	var stream := load(path) as AudioStream
+	if stream == null:
+		return null
+	if stream is AudioStreamWAV:
+		var wav := (stream as AudioStreamWAV).duplicate() as AudioStreamWAV
+		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		return wav
+	return stream
+
+
+func _play_intro_one_shot(path: String, volume_db: float = 0.0) -> void:
+	var stream := load(path) as AudioStream
+	if stream == null:
+		print("[IntroCinematic] Missing intro sound: ", path)
+		return
+	var player := AudioStreamPlayer.new()
+	player.bus = "SFX"
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+	print("[IntroCinematic] Playing one-shot: ", path, " volume_db=", volume_db)
+
+
+func _stop_intro_audio() -> void:
+	for player in _audio_players:
+		if player == null or not is_instance_valid(player):
+			continue
+		if player.has_method("stop"):
+			player.call("stop")
+		player.queue_free()
+	_audio_players.clear()
+	_gate_player_1 = null
+	_gate_player_2 = null
+	_malfunction_player = null
+	if _gate_pan_1 != null:
+		_gate_pan_1.pan = 0.0
+	if _gate_pan_2 != null:
+		_gate_pan_2.pan = 0.0
+	_gate_pan_1 = null
+	_gate_pan_2 = null
+
+
+func _process(delta: float) -> void:
+	if _finished:
+		return
+	var real_delta := delta / maxf(Engine.time_scale, 0.01)
+	_elapsed += real_delta
+	if not _camera_settling and _player_camera != null and is_instance_valid(_player_camera):
+		var decay := clampf(1.0 - (_elapsed / maxf(TUMBLE_DURATION + REVEAL_DURATION, 0.1)), 0.0, 1.0)
+		var shock := 0.35 + sin(_elapsed * 8.0) * 0.18 + randf() * 0.18
+		var strength := decay * shock
+		_player_camera.h_offset = _camera_base_h_offset + randf_range(-strength, strength)
+		_player_camera.v_offset = _camera_base_v_offset + randf_range(-strength, strength)
+		_player_camera.fov = _camera_base_fov + sin(_elapsed * 2.6) * 2.0 * decay + 5.0 * decay
+	if _ship_light != null and is_instance_valid(_ship_light):
+		var pulse := 0.35 + randf() * 1.4 + maxf(0.0, sin(_elapsed * 18.0)) * 1.8
+		_ship_light.light_energy = _ship_light_energy * pulse
+	if _tunnel_mat != null:
+		_tunnel_mat.set_shader_parameter("speed", 8.0 + randf() * 7.0)
+		_tunnel_mat.set_shader_parameter("ring_speed", 10.0 + randf() * 14.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -151,6 +478,8 @@ func _apply_consequences() -> void:
 		return
 	var max_hp := float(p.get("max_health")) if p.get("max_health") != null else 100.0
 	p.set("health", max_hp * DAMAGE_HEALTH_PCT)
+	if p.has_method("_update_drone_colors"):
+		p.call("_update_drone_colors")
 	var missing := max_hp - (max_hp * DAMAGE_HEALTH_PCT)
 	var credits := int(ceil(missing * REPAIR_COST_PER_HP))
 	GlobalState.add_credits(credits)
@@ -173,6 +502,14 @@ func _finish() -> void:
 		# Leave the ship level — the tumble may have ended mid-spin.
 		var rot: Vector3 = p.rotation
 		p.rotation = Vector3(0.0, rot.y, 0.0)
+	_cleanup_tunnel()
+	if _player_camera != null and is_instance_valid(_player_camera):
+		_player_camera.fov = _camera_base_fov
+		_player_camera.h_offset = _camera_base_h_offset
+		_player_camera.v_offset = _camera_base_v_offset
+	if _ship_light != null and is_instance_valid(_ship_light):
+		_ship_light.light_energy = _ship_light_energy
+	_stop_intro_audio()
 	if _ui != null and is_instance_valid(_ui):
 		_ui.visible = true
 		var ui := _ui
@@ -195,6 +532,25 @@ func _beat(seconds: float) -> void:
 	await get_tree().create_timer(seconds, true, false, true).timeout
 
 
+func _settle_to_gameplay_camera(duration: float = 2.0) -> void:
+	_camera_settling = true
+	if _player_camera != null and is_instance_valid(_player_camera):
+		var camera_tween := create_tween().set_ignore_time_scale(true)
+		camera_tween.set_parallel(true)
+		camera_tween.tween_property(_player_camera, "fov", _camera_base_fov, duration) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		camera_tween.tween_property(_player_camera, "h_offset", _camera_base_h_offset, duration) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		camera_tween.tween_property(_player_camera, "v_offset", _camera_base_v_offset, duration) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var p = GlobalState.player
+	if p != null and is_instance_valid(p):
+		var rot: Vector3 = p.rotation
+		var ship_tween := create_tween().set_ignore_time_scale(true)
+		ship_tween.tween_property(p, "rotation", Vector3(0.0, rot.y, 0.0), duration) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func _run() -> void:
 	var p = GlobalState.player
 	# TUMBLE — thrown through a dying gate: violent spin, screaming glitch.
@@ -211,13 +567,12 @@ func _run() -> void:
 	flicker.set_loops(0)  # pulse for the whole tumble; killed at the fling
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 0.7, 0.35)
 	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 1.0, 0.4)
+	var black_fade := create_tween().set_ignore_time_scale(true)
+	black_fade.tween_property(_black, "color:a", 0.0, 1.4)
 	await _beat(1.0)
 	if _finished:
 		return
-	_nova_line(
-		"Hold on, Captain! I'm doing everything I can to stabilize the ship — I've got ONE last thing I can try!",
-		"alert"
-	)
+	await _nova_line_after_voice_ready(NOVA_LINE_1, "alert")
 	await _beat(TUMBLE_DURATION - 1.0)
 	if _finished:
 		return
@@ -225,10 +580,17 @@ func _run() -> void:
 	# FLING — her last-ditch trick fires: white-out, then thrown INTO the
 	# system. No gate on the other side. The black shell peels away to space.
 	flicker.kill()
+	if _tunnel != null and is_instance_valid(_tunnel) and _tunnel.has_method("begin_exit_burst"):
+		_tunnel.call("begin_exit_burst", 0.8)
+	_play_intro_one_shot(SFX_FLASH, 4.0)
 	_glitch_mat.set_shader_parameter("white_out", 1.0)
 	await _beat(FLING_FLASH)
 	if _finished:
 		return
+	_cleanup_tunnel()
+	_stop_intro_audio()
+	_apply_consequences()
+	_play_intro_one_shot(SFX_WARP_DROP, 4.0)
 	var reveal := create_tween().set_ignore_time_scale(true)
 	reveal.set_parallel(true)
 	reveal.tween_property(_black, "color:a", 0.0, REVEAL_DURATION)
@@ -238,9 +600,8 @@ func _run() -> void:
 	if _finished:
 		return
 
-	# ARRIVAL — battered and drifting. Damage + mystery credits land here (the
-	# skip path applies them too, via _apply_consequences' guard).
-	_apply_consequences()
+	# ARRIVAL — battered and drifting. Damage already landed behind the white-out.
+	_settle_to_gameplay_camera(2.4)
 	var residual := create_tween().set_ignore_time_scale(true)
 	residual.set_loops(0)
 	residual.tween_property(_glitch_mat, "shader_parameter/intensity", 0.02, 0.9)
@@ -248,17 +609,11 @@ func _run() -> void:
 	await _beat(ARRIVAL_LINE2_AT)
 	if _finished:
 		return
-	_nova_line(
-		"We're... somewhere. That wasn't a gate transit, Captain — we were thrown. Hull's a mess, but we're alive.",
-		"worried"
-	)
+	await _nova_line_after_voice_ready(NOVA_LINE_2, "worried")
 	await _beat(ARRIVAL_LINE3_AT - ARRIVAL_LINE2_AT)
 	if _finished:
 		return
-	_nova_line(
-		"Here's the part I don't like: my memory starts fourteen seconds ago. I know you're my captain. I know I trust you. I just can't tell you WHY I know either of those things.",
-		"wondering"
-	)
+	await _nova_line_after_voice_ready(NOVA_LINE_3, "wondering")
 	await _beat(DATA_STREAM_AT - ARRIVAL_LINE3_AT)
 	if _finished:
 		return
@@ -271,15 +626,16 @@ func _run() -> void:
 	_stream_label.text = "INCOMING DATA STREAM  //  ORIGIN: [UNRESOLVED]  //  CREDITS RECEIVED: %d" % credits_shown
 	_stream_label.visible = true
 	_stream_label.modulate.a = 0.0
+	if not _data_sfx_played:
+		_data_sfx_played = true
+		if is_instance_valid(AudioManager) and AudioManager.has_method("play_sell_ore"):
+			AudioManager.play_sell_ore()
 	var stream_tween := create_tween().set_ignore_time_scale(true)
 	stream_tween.tween_property(_stream_label, "modulate:a", 1.0, 0.4)
 	await _beat(DATA_LINE4_AT - DATA_STREAM_AT)
 	if _finished:
 		return
-	_nova_line(
-		"Someone just wired us exactly enough to fix the hull. No routing data. No sender. I ran the trace twice — it goes nowhere. I'd say 'lucky us', but luck doesn't usually know our account number.",
-		"thoughtful"
-	)
+	await _nova_line_after_voice_ready(NOVA_LINE_4, "thoughtful")
 	await _beat(HANDOFF_AT - DATA_LINE4_AT)
 	if _finished:
 		return

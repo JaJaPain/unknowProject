@@ -3,6 +3,7 @@ extends Node
 const TTS_URL = "http://127.0.0.1:5000/tts"
 const PYTHON_SETTING := "application/run/python_executable"
 const PYTHON_ENV_VAR := "SPACEGAME_PYTHON"
+const MAX_BACKGROUND_CACHE_REQUESTS := 2
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
 var is_requesting: bool = false
@@ -198,17 +199,43 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	if tts_audio_cache.has(cache_key):
 		return
 		
-	if not tts_connected:
-		var already_queued = false
-		for item in cache_queue:
-			if item.key == cache_key:
-				already_queued = true
-				break
-		if not already_queued:
-			cache_queue.append({"key": cache_key, "text": clean_text, "voice_id": voice_id, "speed": speed, "style_scale": style_scale})
+	if not tts_connected or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
+		_enqueue_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
+		if not tts_connected:
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
+		else:
+			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (cache throttle): %d voice=%s" % [clean_text.hash(), voice_id])
 		return
-		
+
+	_start_background_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
+
+
+func _enqueue_cache_request(
+	cache_key: String,
+	clean_text: String,
+	voice_id: String,
+	speed: float,
+	style_scale: float
+) -> void:
+	for item in cache_queue:
+		if str(item.get("key", "")) == cache_key:
+			return
+	cache_queue.append({
+		"key": cache_key,
+		"text": clean_text,
+		"voice_id": voice_id,
+		"speed": speed,
+		"style_scale": style_scale,
+	})
+
+
+func _start_background_cache_request(
+	cache_key: String,
+	clean_text: String,
+	voice_id: String,
+	speed: float,
+	style_scale: float
+) -> void:
 	# Create a dynamic HTTPRequest node for caching
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
@@ -240,18 +267,35 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 			
 		active_cache_requests -= 1
 		GlobalState.trace("[TRACE] [TTSInterface] Active cache requests left: %d" % active_cache_requests)
-		if active_cache_requests <= 0:
-			active_cache_requests = 0
-			cache_queue_completed.emit()
+		_drain_cache_queue()
 	)
 	
 	var err = temp_http.request(TTS_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
 		active_cache_requests -= 1
-		if active_cache_requests <= 0:
-			active_cache_requests = 0
-			cache_queue_completed.emit()
+		_drain_cache_queue()
+
+
+func _drain_cache_queue() -> void:
+	active_cache_requests = maxi(active_cache_requests, 0)
+	while tts_connected \
+			and active_cache_requests < MAX_BACKGROUND_CACHE_REQUESTS \
+			and not cache_queue.is_empty():
+		var item: Dictionary = cache_queue.pop_front()
+		var cache_key := str(item.get("key", ""))
+		if cache_key.is_empty() or tts_audio_cache.has(cache_key):
+			continue
+		_start_background_cache_request(
+			cache_key,
+			str(item.get("text", "")),
+			str(item.get("voice_id", "af_aoede")),
+			float(item.get("speed", 1.0)),
+			float(item.get("style_scale", 1.0))
+		)
+	if active_cache_requests <= 0 and cache_queue.is_empty():
+		active_cache_requests = 0
+		cache_queue_completed.emit()
 
 # Returns true if the given string matches one of the legacy faction
 # names that callers pass as the 2nd arg of play_dialogue_audio /

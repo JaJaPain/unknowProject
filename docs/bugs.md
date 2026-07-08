@@ -5,6 +5,14 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### N.O.V.A. talks during first dock flow
+**Spotted:** 2026-07-08 (intro cinematic playtest)
+**Severity:** Medium - can interrupt/confuse the first dock onboarding beat
+**Description:** On the player's first dock after the opening cinematic, N.O.V.A. can speak as part of the normal dock flow. That first dock is supposed to belong to Kaelen's onboarding / station direction, so regular N.O.V.A. dock chatter should be suppressed until the first-dock intro flow has cleared.
+**Where to look:** `scripts/UIManager.gd` first-dock / dock-menu flow and any `Nova.on_docked` or dock-chatter calls. Gate the regular N.O.V.A. dock line behind the same first-dock story flags that control Kaelen's starter guidance.
+
+---
+
 ### First mission target ship never respawns after logout/login (mission uncompletable)
 **Spotted:** 2026-07-03 (playtest)
 **Severity:** High — soft-locks the first mission; the kill objective can never be satisfied
@@ -141,4 +149,3 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 | 2026-07-01 | Dummy word "Slithern" leaked into quest TITLE (e.g. "Slithern Scourper") | `_substitute_dialogue_placeholders` now applies replacements to `quest_data["title"]`, not just dialogue/choices — `LLMInterface.gd` |
 | 2026-06-26 | Autopilot object avoidance regressed | Re-wired `_get_autopilot_avoidance()` into autopilot loop; added `RayCast3D` nose whisker; added mid-route validity re-check — `PlayerShip.gd` (NOTE: regressed again, see Active) |
 | 2026-06-25 | Combat flee taunt used Kaelen voice | Added `_play_npc_flee_taunt()` in `CombatManager._exec_flee()` |
-

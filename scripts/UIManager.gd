@@ -327,6 +327,8 @@ var is_tts_ready: bool = false
 var last_llm_attempt: int = 0
 var last_tts_attempt: int = 0
 var startup_save_loaded: bool = false
+var _intro_cinematic_voice_cache_requested: bool = false
+var _waiting_for_intro_cinematic_voice_cache: bool = false
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -9595,6 +9597,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		
 	# If loading panel is still visible, wait for TTS cache completion
 	if loading_panel and is_instance_valid(loading_panel):
+		_queue_intro_cinematic_voice_cache()
 		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
 		if SpeechService.active_cache_requests <= 0:
 			_on_tts_cache_completed()
@@ -11387,6 +11390,7 @@ func _finish_loading_without_contract() -> void:
 	if loading_panel == null or not is_instance_valid(loading_panel):
 		return
 	GlobalState.trace("[TRACE] [UIManager] No opening contract for this station; finishing loading screen without a briefing.")
+	_queue_intro_cinematic_voice_cache()
 	if not SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
 		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
 	if SpeechService.active_cache_requests <= 0:
@@ -11400,11 +11404,28 @@ func _on_tts_cache_completed():
 	# Disconnect to prevent double trigger on future cache events
 	if SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
 		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
+	if SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_intro_cinematic_voice_cache_completed)
+	_waiting_for_intro_cinematic_voice_cache = false
 		
 	GlobalState.trace("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
 	if not _campaign_story_ready_for_gameplay():
 		_wait_for_campaign_story_before_gameplay()
 		return
+	_finish_loading_after_story_ready()
+
+
+func _queue_intro_cinematic_voice_cache() -> void:
+	if startup_save_loaded or _intro_cinematic_voice_cache_requested:
+		return
+	_intro_cinematic_voice_cache_requested = true
+	IntroCinematicType.cache_nova_voice_lines()
+
+
+func _on_intro_cinematic_voice_cache_completed() -> void:
+	if SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_intro_cinematic_voice_cache_completed)
+	_waiting_for_intro_cinematic_voice_cache = false
 	_finish_loading_after_story_ready()
 
 
@@ -11515,6 +11536,15 @@ func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 func _finish_loading_after_story_ready() -> void:
 	if loading_panel == null or not is_instance_valid(loading_panel):
 		return
+	if not startup_save_loaded and not _waiting_for_intro_cinematic_voice_cache:
+		_queue_intro_cinematic_voice_cache()
+		if SpeechService.active_cache_requests > 0:
+			_waiting_for_intro_cinematic_voice_cache = true
+			loading_bar.value = 92.0
+			loading_status_label.text = "Pre-caching N.O.V.A. cold-open voice lines..."
+			if not SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
+				SpeechService.cache_queue_completed.connect(_on_intro_cinematic_voice_cache_completed)
+			return
 	# Every completion path funnels through here, so this is the one place to drop
 	# the service-connection signals. Do it before the fade-out tween so a late
 	# LLM/TTS connect during the 0.8s hold + fade can't re-enter the loading flow.
