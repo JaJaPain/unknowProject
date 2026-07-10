@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_records_generation_event_summary()
 	_test_records_lifecycle_timestamps()
 	_test_records_percentile_summaries()
+	_test_reports_click_to_generate_paths()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
 	_test_developer_warning_marks_high_fallback_rate()
@@ -283,6 +284,37 @@ func _test_records_percentile_summaries() -> void:
 	)
 
 
+func _test_reports_click_to_generate_paths() -> void:
+	var click_diagnostics := DiagnosticsType.new()
+	click_diagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"test",
+		{"interaction_name": "Fixture Button"}
+	)
+	click_diagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_started",
+		"test",
+		{"model": "fixture-model"}
+	)
+	var summary: Dictionary = click_diagnostics.summary()
+	var reports: Array = summary.get("click_to_generate_reports", [])
+	_expect(
+		reports.size() == 1,
+		"Click-to-generate report was not recorded."
+	)
+	if not reports.is_empty():
+		_expect(
+			str((reports[0] as Dictionary).get("interaction_name", "")) == "Fixture Button",
+			"Click-to-generate report did not retain interaction name."
+		)
+	_expect(
+		not (summary.get("developer_warnings", []) as Array).is_empty(),
+		"Click-to-generate report did not produce a developer warning."
+	)
+
+
 func _test_records_content_source_summary() -> void:
 	diagnostics.record_content_source(
 		"quest_generation",
@@ -392,6 +424,10 @@ func _test_reset_clears_summary() -> void:
 	_expect(
 		(summary.get("recent_events", []) as Array).is_empty(),
 		"Reset did not clear recent generation events."
+	)
+	_expect(
+		(summary.get("click_to_generate_reports", []) as Array).is_empty(),
+		"Reset did not clear click-to-generate reports."
 	)
 	_expect(
 		(summary.get("source_counts", {}) as Dictionary).is_empty(),

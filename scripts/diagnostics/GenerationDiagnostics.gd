@@ -7,6 +7,7 @@ signal generation_event_recorded(event: Dictionary)
 const MAX_RECENT_EVENTS := 100
 const WARNING_MIN_CONTENT_SOURCES := 3
 const WARNING_FALLBACK_SOURCE_RATE := 0.25
+const CLICK_TO_GENERATE_REPORT_WINDOW_MS := 750
 const LIFECYCLE_STAGES := [
 	"job_queued",
 	"generation_started",
@@ -35,6 +36,7 @@ var event_counts_by_reason: Dictionary = {}
 var source_counts: Dictionary = {}
 var generation_events: Array[Dictionary] = []
 var total_events := 0
+var click_to_generate_reports: Array[Dictionary] = []
 var _active_fallback_event_log_path := FALLBACK_EVENT_LOG_PATH
 var _active_fallback_summary_path := FALLBACK_SUMMARY_PATH
 
@@ -49,6 +51,7 @@ func reset() -> void:
 	source_counts.clear()
 	generation_events.clear()
 	total_events = 0
+	click_to_generate_reports.clear()
 
 
 func record_fallback(
@@ -120,6 +123,8 @@ func record_lifecycle_timestamp(
 		return {}
 	var next_context := context.duplicate(true)
 	next_context["lifecycle_stage"] = stage
+	if stage == "generation_started":
+		_report_click_to_generate_if_recent(content_type, source, next_context)
 	return _record_generation_event(content_type, stage, source, next_context)
 
 
@@ -153,6 +158,7 @@ func summary() -> Dictionary:
 		"fallback_source_rate": fallback_source_rate(),
 		"developer_warnings": developer_warnings(),
 		"percentile_summaries": percentile_summaries(),
+		"click_to_generate_reports": click_to_generate_reports.duplicate(true),
 		"recent_events": generation_events.duplicate(true),
 	}
 
@@ -205,6 +211,8 @@ func summary_text(recent_limit: int = 8) -> String:
 		lines.append("- developer_warnings:")
 		for warning in warnings:
 			lines.append("  %s" % warning)
+	if not click_to_generate_reports.is_empty():
+		lines.append("- click_to_generate_reports: %d" % click_to_generate_reports.size())
 	lines.append("- fallback_types: %s" % _format_counts(fallback_counts_by_type))
 	lines.append("- fallback_reasons: %s" % _format_counts(fallback_counts_by_reason))
 	lines.append("- event_reasons: %s" % _format_counts(event_counts_by_reason))
@@ -284,7 +292,48 @@ func developer_warnings() -> Array[String]:
 				total,
 			]
 		)
+	if not click_to_generate_reports.is_empty():
+		warnings.append(
+			"Player-facing click-to-generate reports: %d. Report-only until V2 gates enforce cache-first paths." %
+			click_to_generate_reports.size()
+		)
 	return warnings
+
+
+func _report_click_to_generate_if_recent(
+	content_type: String,
+	source: String,
+	context: Dictionary
+) -> void:
+	var now := Time.get_ticks_msec()
+	for index in range(generation_events.size() - 1, -1, -1):
+		var event: Dictionary = generation_events[index]
+		var stage := str(event.get("context", {}).get("lifecycle_stage", event.get("reason", "")))
+		if stage != "interaction_clicked":
+			continue
+		var elapsed_ms := now - int(event.get("time_msec", 0))
+		if elapsed_ms < 0:
+			return
+		if elapsed_ms > CLICK_TO_GENERATE_REPORT_WINDOW_MS:
+			return
+		var interaction_context: Dictionary = event.get("context", {})
+		var report := {
+			"content_type": content_type,
+			"source": source,
+			"elapsed_ms": elapsed_ms,
+			"interaction_name": str(interaction_context.get("interaction_name", "")),
+			"generation_context": context.duplicate(true),
+			"time_msec": now,
+			"unix_time": Time.get_unix_time_from_system(),
+		}
+		click_to_generate_reports.append(report)
+		while click_to_generate_reports.size() > MAX_RECENT_EVENTS:
+			click_to_generate_reports.pop_front()
+		push_warning(
+			"[GenerationDiagnostics] Report-only click-to-generate path: %s after '%s' in %dms" %
+			[content_type, str(report.get("interaction_name", "")), elapsed_ms]
+		)
+		return
 
 
 func _duration_summary_from_pair(start_stage: String, end_stage: String) -> Dictionary:
