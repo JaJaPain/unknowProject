@@ -59,6 +59,15 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 			"Active mission reward cannot be negative.",
 			"reward_credits"
 		)
+	var selected_choice_id := str(source.get("choice_id_selected", ""))
+	if not selected_choice_id.is_empty() \
+			and not DomainIdType.is_valid(selected_choice_id, "choice"):
+		result.add_error(
+			"invalid_choice_id",
+			"Active mission selected choice ID is invalid: %s" %
+				DomainIdType.validation_error(selected_choice_id, "choice"),
+			"choice_id_selected"
+		)
 	_validate_timing(source, result)
 	result.merge(
 		NarrativeMetadataType.validate_source(source),

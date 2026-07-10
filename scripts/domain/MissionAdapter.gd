@@ -14,6 +14,7 @@ const StateType := preload("res://scripts/domain/MissionState.gd")
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
+const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 
 
 static func build_active_state(
@@ -30,6 +31,17 @@ static func build_active_state(
 		consequence.load_from_choice(selected_choice),
 		"selected_choice"
 	)
+	var selected_choice_id := _choice_id_from_offer(
+		quest_data,
+		selected_choice
+	)
+	if not DomainIdType.is_valid(selected_choice_id, "choice"):
+		validation.add_error(
+			"invalid_selected_choice_id",
+			"Selected choice ID is invalid: %s" %
+				DomainIdType.validation_error(selected_choice_id, "choice"),
+			"choice_id_selected"
+		)
 	if not validation.is_valid():
 		return {
 			"state": {},
@@ -59,6 +71,7 @@ static func build_active_state(
 		"combat_multiplier": consequence.combat_multiplier,
 		"reward_credits_multiplier": consequence.reward_credits_multiplier,
 		"reward_credits": definition.reward.credits,
+		"choice_id_selected": selected_choice_id,
 		"choice_text_selected": str(selected_choice.get("text", "")),
 		"agent_response": consequence.dialogue_response,
 		"system_id": system_id,
@@ -358,6 +371,9 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	normalized["choice_text_selected"] = str(
 		normalized.get("choice_text_selected", "")
 	)
+	normalized["choice_id_selected"] = str(
+		normalized.get("choice_id_selected", "")
+	)
 	normalized["agent_voice_profile_id"] = str(
 		normalized.get("agent_voice_profile_id", "")
 	)
@@ -447,6 +463,47 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 				normalized.get("comms_reversal_line", "")
 			)
 	return normalized
+
+
+static func _choice_id_from_offer(
+	quest_data: Dictionary,
+	selected_choice: Dictionary
+) -> String:
+	var explicit_id := _choice_id_from_source(selected_choice, -1)
+	if not explicit_id.is_empty():
+		return explicit_id
+
+	var choices: Array = quest_data.get("choices", [])
+	for i in range(choices.size()):
+		if not choices[i] is Dictionary:
+			continue
+		var candidate: Dictionary = choices[i]
+		if _choices_match(candidate, selected_choice):
+			return _choice_id_from_source(candidate, i)
+
+	return "choice.selected_direct"
+
+
+static func _choice_id_from_source(choice: Dictionary, index: int) -> String:
+	var explicit_id := str(choice.get("choice_id", "")).strip_edges()
+	if explicit_id.is_empty():
+		explicit_id = str(choice.get("id", "")).strip_edges()
+	if not explicit_id.is_empty():
+		return explicit_id
+	if index >= 0:
+		return "choice.selected_%02d" % index
+	return ""
+
+
+static func _choices_match(left: Dictionary, right: Dictionary) -> bool:
+	if left == right:
+		return true
+	return (
+		str(left.get("text", "")) == str(right.get("text", ""))
+		and JSON.stringify(left.get("consequence", {})) == JSON.stringify(
+			right.get("consequence", {})
+		)
+	)
 
 
 static func _legacy_objective(source: Dictionary) -> Dictionary:

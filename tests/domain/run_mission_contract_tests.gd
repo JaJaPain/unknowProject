@@ -20,6 +20,8 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_agent_voice_profile_survives_acceptance()
+	_test_selected_choice_id_survives_acceptance()
+	_test_selected_choice_id_defaults_from_offer_position()
 	_test_narrative_metadata_survives_acceptance_and_restore()
 	_test_pickup_offer()
 	_test_delivery_courier_offer()
@@ -135,6 +137,73 @@ func _test_agent_voice_profile_survives_acceptance() -> void:
 		adapted["state"].get("agent_voice_profile_id", "")
 			== "voice.agent.liaison_ryn.v1",
 		"Agent voice profile was not preserved on accepted mission state."
+	)
+
+
+func _test_selected_choice_id_survives_acceptance() -> void:
+	var offer := _offer(
+		"Choice ID Contract",
+		"zenith",
+		"Director Voss",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 12.0,
+			"reward_credits": 90,
+		}
+	)
+	var selected := _choice(
+		0,
+		{"zenith": 1.0},
+		1.0,
+		1.0,
+		"choice.accept_standard"
+	)
+	offer["choices"] = [selected]
+	var adapted := AdapterType.build_active_state(
+		offer,
+		selected,
+		"mission.runtime.choice_id_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Choice-ID offer failed validation."
+	)
+	_expect(
+		adapted["state"].get("choice_id_selected", "")
+			== "choice.accept_standard"
+			and adapted["state"].get("choice_text_selected", "") == "Accepted.",
+		"Accepted mission did not preserve selected choice ID and text."
+	)
+
+
+func _test_selected_choice_id_defaults_from_offer_position() -> void:
+	var offer := _offer(
+		"Choice Position Contract",
+		"aurelia",
+		"Liaison Ryn",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 14.0,
+			"reward_credits": 95,
+		}
+	)
+	var first := _choice(0, {}, 1.0, 1.0)
+	var selected := _choice(5, {"aurelia": 1.0}, 1.0, 1.1)
+	offer["choices"] = [first, selected]
+	var adapted := AdapterType.build_active_state(
+		offer,
+		selected,
+		"mission.runtime.choice_position_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Choice-position offer failed validation."
+	)
+	_expect(
+		adapted["state"].get("choice_id_selected", "") == "choice.selected_01",
+		"Accepted mission did not derive a stable selected choice ID."
 	)
 
 
@@ -759,9 +828,10 @@ func _choice(
 	credits: int,
 	reputation: Dictionary,
 	combat_multiplier: float,
-	reward_multiplier: float
+	reward_multiplier: float,
+	choice_id: String = ""
 ) -> Dictionary:
-	return {
+	var choice := {
 		"text": "Accepted.",
 		"consequence": {
 			"credits_immediate": credits,
@@ -771,6 +841,9 @@ func _choice(
 			"dialogue_response": "Proceed.",
 		},
 	}
+	if not choice_id.is_empty():
+		choice["choice_id"] = choice_id
+	return choice
 
 
 func _has_offer_template(offers: Array, template_id: String) -> bool:
