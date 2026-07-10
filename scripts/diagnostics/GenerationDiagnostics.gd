@@ -152,8 +152,38 @@ func summary() -> Dictionary:
 		"fallback_source_count": fallback_source_count(),
 		"fallback_source_rate": fallback_source_rate(),
 		"developer_warnings": developer_warnings(),
+		"percentile_summaries": percentile_summaries(),
 		"recent_events": generation_events.duplicate(true),
 	}
+
+
+func percentile_summaries() -> Dictionary:
+	var metrics := {
+		"click_to_text_ms": _duration_summary_from_pair(
+			"interaction_clicked",
+			"text_presented"
+		),
+		"click_to_audio_ms": _duration_summary_from_pair(
+			"interaction_clicked",
+			"tts_ready"
+		),
+		"queue_wait_ms": _duration_summary_from_pair(
+			"job_queued",
+			"generation_started"
+		),
+		"model_generation_ms": _duration_summary_from_pair(
+			"generation_started",
+			"generation_finished"
+		),
+		"cache": _cache_summary(),
+		"stale_discard": _reason_rate_summary(["stale"]),
+		"degraded_field": _reason_rate_summary([
+			"validation_repaired",
+			"objective_dialogue_rewritten",
+			"fallback",
+		]),
+	}
+	return metrics
 
 
 func summary_text(recent_limit: int = 8) -> String:
@@ -178,6 +208,7 @@ func summary_text(recent_limit: int = 8) -> String:
 	lines.append("- fallback_types: %s" % _format_counts(fallback_counts_by_type))
 	lines.append("- fallback_reasons: %s" % _format_counts(fallback_counts_by_reason))
 	lines.append("- event_reasons: %s" % _format_counts(event_counts_by_reason))
+	lines.append("- percentiles: %s" % _format_percentile_summaries(percentile_summaries()))
 	var recent_count: int = mini(maxi(recent_limit, 0), generation_events.size())
 	if recent_count > 0:
 		lines.append("- recent_events:")
@@ -254,6 +285,137 @@ func developer_warnings() -> Array[String]:
 			]
 		)
 	return warnings
+
+
+func _duration_summary_from_pair(start_stage: String, end_stage: String) -> Dictionary:
+	var durations: Array[float] = []
+	var last_start_msec := -1
+	for event in generation_events:
+		var stage := str(event.get("context", {}).get("lifecycle_stage", event.get("reason", "")))
+		if stage == start_stage:
+			last_start_msec = int(event.get("time_msec", 0))
+		elif stage == end_stage and last_start_msec >= 0:
+			var end_msec := int(event.get("time_msec", 0))
+			if end_msec >= last_start_msec:
+				durations.append(float(end_msec - last_start_msec))
+			last_start_msec = -1
+	return _percentile_summary(durations)
+
+
+func _percentile_summary(values: Array[float]) -> Dictionary:
+	if values.is_empty():
+		return {
+			"count": 0,
+			"p50": 0.0,
+			"p95": 0.0,
+			"p99": 0.0,
+		}
+	var sorted := values.duplicate()
+	sorted.sort()
+	return {
+		"count": sorted.size(),
+		"p50": _percentile(sorted, 0.50),
+		"p95": _percentile(sorted, 0.95),
+		"p99": _percentile(sorted, 0.99),
+	}
+
+
+func _percentile(sorted_values: Array, percentile: float) -> float:
+	if sorted_values.is_empty():
+		return 0.0
+	var index := int(ceil(percentile * float(sorted_values.size())) - 1.0)
+	index = clampi(index, 0, sorted_values.size() - 1)
+	return float(sorted_values[index])
+
+
+func _cache_summary() -> Dictionary:
+	var hit_count := 0
+	var ready_count := 0
+	for event in generation_events:
+		var stage := str(event.get("context", {}).get("lifecycle_stage", event.get("reason", "")))
+		if stage != "tts_ready":
+			continue
+		ready_count += 1
+		if str(event.get("context", {}).get("cache_state", "")) == "already_cached":
+			hit_count += 1
+	var miss_count := int(event_counts_by_reason.get("tts_cache_started", 0))
+	var total := hit_count + miss_count
+	var hit_rate := 0.0
+	if total > 0:
+		hit_rate = float(hit_count) / float(total)
+	return {
+		"hits": hit_count,
+		"misses": miss_count,
+		"ready": ready_count,
+		"hit_rate": hit_rate,
+	}
+
+
+func _reason_rate_summary(markers: Array[String]) -> Dictionary:
+	var count := 0
+	for reason in event_counts_by_reason.keys():
+		var reason_text := str(reason)
+		var matched := false
+		for marker in markers:
+			if reason_text.find(marker) != -1:
+				matched = true
+				break
+		if matched:
+			count += int(event_counts_by_reason.get(reason, 0))
+	var rate := 0.0
+	if total_events > 0:
+		rate = float(count) / float(total_events)
+	return {
+		"count": count,
+		"rate": rate,
+	}
+
+
+func _format_percentile_summaries(metrics: Dictionary) -> String:
+	var parts: Array[String] = []
+	for key in [
+		"click_to_text_ms",
+		"click_to_audio_ms",
+		"queue_wait_ms",
+		"model_generation_ms",
+	]:
+		var metric: Dictionary = metrics.get(key, {})
+		parts.append(
+			"%s(count=%d,p50=%.0f,p95=%.0f,p99=%.0f)" %
+			[
+				key,
+				int(metric.get("count", 0)),
+				float(metric.get("p50", 0.0)),
+				float(metric.get("p95", 0.0)),
+				float(metric.get("p99", 0.0)),
+			]
+		)
+	var cache: Dictionary = metrics.get("cache", {})
+	parts.append(
+		"cache(hits=%d,misses=%d,hit_rate=%.1f%%)" %
+		[
+			int(cache.get("hits", 0)),
+			int(cache.get("misses", 0)),
+			float(cache.get("hit_rate", 0.0)) * 100.0,
+		]
+	)
+	var stale: Dictionary = metrics.get("stale_discard", {})
+	parts.append(
+		"stale_discard(count=%d,rate=%.1f%%)" %
+		[
+			int(stale.get("count", 0)),
+			float(stale.get("rate", 0.0)) * 100.0,
+		]
+	)
+	var degraded: Dictionary = metrics.get("degraded_field", {})
+	parts.append(
+		"degraded_field(count=%d,rate=%.1f%%)" %
+		[
+			int(degraded.get("count", 0)),
+			float(degraded.get("rate", 0.0)) * 100.0,
+		]
+	)
+	return ", ".join(parts)
 
 
 func _record_generation_event(

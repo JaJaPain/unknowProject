@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_persistent_fallback_log_written()
 	_test_records_generation_event_summary()
 	_test_records_lifecycle_timestamps()
+	_test_records_percentile_summaries()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
 	_test_developer_warning_marks_high_fallback_rate()
@@ -193,6 +194,92 @@ func _test_records_lifecycle_timestamps() -> void:
 	_expect(
 		diagnostics.record_lifecycle_timestamp("quest_generation", "unknown_stage", "test", {}).is_empty(),
 		"Unknown lifecycle stage was accepted."
+	)
+
+
+func _test_records_percentile_summaries() -> void:
+	var percentile_diagnostics := DiagnosticsType.new()
+	var event := percentile_diagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"job_queued",
+		"test",
+		{}
+	)
+	event["time_msec"] = 100
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_started",
+		"test",
+		{}
+	)
+	event["time_msec"] = 160
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_finished",
+		"test",
+		{}
+	)
+	event["time_msec"] = 310
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"test",
+		{}
+	)
+	event["time_msec"] = 400
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"quest_briefing",
+		"text_presented",
+		"test",
+		{}
+	)
+	event["time_msec"] = 440
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"tts_cache",
+		"tts_cache_started",
+		"test",
+		{}
+	)
+	event["time_msec"] = 500
+	event = percentile_diagnostics.record_lifecycle_timestamp(
+		"tts_cache",
+		"tts_ready",
+		"test",
+		{"cache_state": "already_cached"}
+	)
+	event["time_msec"] = 520
+	percentile_diagnostics.record_event("quest_generation", "validation_repaired", "test", {})
+	percentile_diagnostics.record_event("quest_generation", "stale_discarded", "test", {})
+
+	var metrics: Dictionary = percentile_diagnostics.summary().get("percentile_summaries", {})
+	_expect(
+		int(metrics.get("queue_wait_ms", {}).get("p50", 0)) == 60,
+		"Queue wait percentile was not calculated."
+	)
+	_expect(
+		int(metrics.get("model_generation_ms", {}).get("p50", 0)) == 150,
+		"Model generation percentile was not calculated."
+	)
+	_expect(
+		int(metrics.get("click_to_text_ms", {}).get("p50", 0)) == 40,
+		"Click-to-text percentile was not calculated."
+	)
+	_expect(
+		int(metrics.get("click_to_audio_ms", {}).get("p50", 0)) == 120,
+		"Click-to-audio percentile was not calculated."
+	)
+	_expect(
+		int(metrics.get("cache", {}).get("hits", 0)) == 1
+				and int(metrics.get("cache", {}).get("misses", 0)) == 1,
+		"Cache hit/miss summary was not calculated."
+	)
+	_expect(
+		int(metrics.get("stale_discard", {}).get("count", 0)) == 1,
+		"Stale discard summary was not calculated."
+	)
+	_expect(
+		int(metrics.get("degraded_field", {}).get("count", 0)) == 1,
+		"Degraded field summary was not calculated."
 	)
 
 
