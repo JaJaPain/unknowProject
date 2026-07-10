@@ -33,6 +33,7 @@ func _initialize() -> void:
 		return
 	_test_resolve_hooks_removes_only_matching_hook()
 	_test_accepted_mission_story_hook_reaches_completion()
+	_test_stamped_completion_does_not_resolve_first_hook_by_accident()
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
@@ -176,6 +177,48 @@ func _test_accepted_mission_story_hook_reaches_completion() -> void:
 	_expect(
 		not remaining.has(hook) and remaining.has(other_hook),
 		"StoryManager.on_quest_completed did not resolve exactly the stamped hook."
+	)
+	manager.queue_free()
+
+
+func _test_stamped_completion_does_not_resolve_first_hook_by_accident() -> void:
+	var manager := _fresh_manager()
+	var first_hook := "The first hook should not be touched."
+	var stamped_hook := "The second hook is the stamped mission cause."
+	var ref := "hook:%s" % stamped_hook.sha256_text().substr(0, 12)
+	manager.story_state["pending_hooks"] = [first_hook, stamped_hook]
+	var offer := {
+		"title": "Second Hook Contract",
+		"faction": "aurelia",
+		"agent_name": "Liaison Ryn",
+		"dialogue": "Make this look like ordinary business.",
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 12.0,
+			"reward_credits": 120,
+		},
+		"choices": [_choice()],
+		"narrative_metadata": {
+			"story_hook_ref": ref,
+			"cause_id": "cause.second_hook",
+		},
+	}
+	var adapted: Dictionary = MissionAdapterType.build_active_state(
+		offer,
+		_choice(),
+		"mission.runtime.second_hook_regression",
+		"start_system"
+	)
+	_expect(
+		adapted.get("validation", null) != null
+				and adapted["validation"].is_valid(),
+		"Second-hook offer did not build a valid active state."
+	)
+	manager.on_quest_completed(adapted.get("state", {}))
+	var remaining: Array = manager.story_state.get("pending_hooks", [])
+	_expect(
+		remaining.has(first_hook) and not remaining.has(stamped_hook),
+		"Completing a stamped mission resolved the wrong pending hook."
 	)
 	manager.queue_free()
 
