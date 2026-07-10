@@ -6,17 +6,20 @@ const AgentMemoryStoreType := preload(
 const SlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
-const SystemRegistryType := preload(
-	"res://scripts/registry/SystemRegistry.gd"
-)
 
 const TEST_ROOT := "user://campaign_agent_memory_fixture"
 const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
 
 var _failures: Array[String] = []
+var SystemRegistryType: GDScript = null
 
 
 func _initialize() -> void:
+	SystemRegistryType = load("res://scripts/registry/SystemRegistry.gd")
+	if SystemRegistryType == null:
+		push_error("[FAIL] SystemRegistry.gd did not compile - suite cannot run.")
+		quit(1)
+		return
 	_cleanup()
 	_test_agent_memory_bootstrap_append_context_and_reopen()
 	_cleanup()
@@ -66,7 +69,13 @@ func _test_agent_memory_bootstrap_append_context_and_reopen() -> void:
 		"zenith",
 		"Indy recovered a hazardous container after Zenith reported supply shortages.",
 		["pickup", "logistics_shortage"],
-		{"objective_type": "PICKUP_SPECIAL"}
+		{
+			"objective_type": "PICKUP_SPECIAL",
+			"narrative_metadata": {
+				"story_hook_ref": "hook:agentmemory123",
+				"completion_fact_ids": ["fact.hazardous_container_recovered"],
+			},
+		}
 	)
 	_expect(bool(first.get("ok", false)), first.get("error", ""))
 	var duplicate: Dictionary = store.append_snippet(
@@ -112,6 +121,19 @@ func _test_agent_memory_bootstrap_append_context_and_reopen() -> void:
 	_expect(
 		reopened.prompt_context("agent.liaison_ryn").contains("Wraith ships"),
 		"Reopened agent memory could not retrieve Liaison Ryn snippet."
+	)
+	var director_snippets: Array = reopened.snippets_for_agent("agent.director_voss", 1)
+	var director_metadata: Dictionary = (
+		director_snippets[0].get("metadata", {})
+		if not director_snippets.is_empty() else {}
+	)
+	var narrative_metadata: Dictionary = director_metadata.get("narrative_metadata", {})
+	_expect(
+		narrative_metadata.get("story_hook_ref", "") == "hook:agentmemory123"
+			and (narrative_metadata.get("completion_fact_ids", []) as Array).has(
+				"fact.hazardous_container_recovered"
+			),
+		"Agent memory snippet metadata did not preserve narrative metadata."
 	)
 
 

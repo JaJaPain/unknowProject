@@ -41,6 +41,9 @@ const CampaignNpcIdentityStoreType := preload(
 const CampaignAgentMemorySnippetStoreType := preload(
 	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
 )
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -2061,6 +2064,7 @@ func remember_agent_memory_snippet(quest_data: Dictionary, outcome: String) -> v
 			"agent_name": agent_name,
 			"objective_type": objective_type,
 			"objective": objective.duplicate(true),
+			"narrative_metadata": NarrativeMetadataType.from_source(quest_data),
 			"system_id": str(
 				quest_data.get("system_id", GlobalState.current_system_id)
 			),
@@ -2461,14 +2465,7 @@ func _append_quest_chronicle_event(
 	var appended := campaign_chronicle_store.append_event(
 		event_type,
 		[campaign_chronicle_store.campaign["id"]],
-		{
-			"runtime_id": str(quest.get("runtime_id", "")),
-			"definition_id": str(quest.get("definition_id", "")),
-			"title": quest.get("title", ""),
-			"objective_type": quest.get("objective_type", ""),
-			"faction": quest.get("faction", ""),
-			"outcome": outcome,
-		},
+		_quest_chronicle_payload(quest, outcome),
 		str(active.get("checkpoint_id", ""))
 	)
 	if bool(appended.get("ok", false)):
@@ -2488,7 +2485,8 @@ func _append_timed_quest_chronicle_event(
 	var active := campaign_checkpoint_store.runtime_state_from_active()
 	if not bool(active.get("ok", false)):
 		return
-	var payload := {
+	var payload := _quest_chronicle_payload(quest, outcome)
+	payload.merge({
 		"runtime_id": str(quest.get("runtime_id", "")),
 		"definition_id": str(quest.get("definition_id", "")),
 		"title": str(quest.get("title", "")),
@@ -2507,7 +2505,7 @@ func _append_timed_quest_chronicle_event(
 		"reward_credits": int(quest.get("reward_credits", 0)),
 		"reward_credits_multiplier": float(quest.get("reward_credits_multiplier", 1.0)),
 		"urgent_reward_multiplier": float(quest.get("urgent_reward_multiplier", 1.0)),
-	}
+	}, true)
 	for time_key in [
 		"completed_time_minutes",
 		"abandoned_time_minutes",
@@ -2525,6 +2523,18 @@ func _append_timed_quest_chronicle_event(
 	)
 	if bool(appended.get("ok", false)):
 		_sync_checkpoint_chronicle_context()
+
+
+static func _quest_chronicle_payload(quest: Dictionary, outcome: String) -> Dictionary:
+	return {
+		"runtime_id": str(quest.get("runtime_id", "")),
+		"definition_id": str(quest.get("definition_id", "")),
+		"title": str(quest.get("title", "")),
+		"objective_type": str(quest.get("objective_type", "")),
+		"faction": str(quest.get("faction", "")),
+		"outcome": outcome,
+		"narrative_metadata": NarrativeMetadataType.from_source(quest),
+	}
 
 
 func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
