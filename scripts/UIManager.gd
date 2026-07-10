@@ -9483,6 +9483,7 @@ func _show_kaelen_intro_quest_offer() -> void:
 	var pass_btn := Button.new()
 	pass_btn.text = "Not right now."
 	pass_btn.pressed.connect(func():
+		QuestManager.decline_quest(quest_data, "intro_offer_declined")
 		_on_agent_back_pressed()
 	)
 	agent_choices_container.add_child(pass_btn)
@@ -9950,6 +9951,9 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio
 	SpeechService.stop()
+	if not cached_quest_data.is_empty():
+		QuestManager.decline_quest(cached_quest_data, "agent_offer_back")
+		_clear_cached_agent_quest("agent_offer_declined")
 	agent_panel.visible = false
 	dock_panel.visible = true
 	_render_dock_submenu()
@@ -10949,6 +10953,11 @@ func _on_mechanic_pickup_accept_pressed() -> void:
 
 func _on_mechanic_pickup_decline_pressed() -> void:
 	_mechanic_pickup_declined = true
+	if _mechanic_pickup_offer.get("offer", false):
+		QuestManager.decline_quest(
+			_mechanic_pickup_offer,
+			"mechanic_pickup_declined"
+		)
 	if mechanic_pickup_accept_btn and is_instance_valid(mechanic_pickup_accept_btn):
 		mechanic_pickup_accept_btn.visible = false
 	if mechanic_pickup_decline_btn and is_instance_valid(mechanic_pickup_decline_btn):

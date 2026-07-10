@@ -62,6 +62,7 @@ var story_state: Dictionary = {
 	"story_arcs_consumed_index": 0,
 	"rumor_trails_consumed_index": 0,
 	"regeneration_fallback_count": 0,
+	"mission_history_revision": 0,
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -258,6 +259,7 @@ func clear_story_state() -> void:
 		"story_arcs_consumed_index": 0,
 		"rumor_trails_consumed_index": 0,
 		"regeneration_fallback_count": 0,
+		"mission_history_revision": 0,
 	}
 	# Part of the wipe contract: a new campaign must not inherit the old
 	# campaign's N.O.V.A. quirk (pushes the now-empty quirk, disarming her).
@@ -356,6 +358,26 @@ func record_player_choice(choice_id: String, description: String, faction_deltas
 	for faction in faction_deltas.keys():
 		adjust_faction_pressure(str(faction), int(faction_deltas[faction]))
 	_save_story_state()
+
+
+func increment_mission_history_revision(
+	event_type: String,
+	mission_data: Dictionary = {}
+) -> int:
+	var next_revision := maxi(
+		0,
+		int(story_state.get("mission_history_revision", 0))
+	) + 1
+	story_state["mission_history_revision"] = next_revision
+	_save_story_state()
+	GlobalState.trace(
+		"[TRACE] [StoryManager] mission_history_revision=%d after %s (%s)" % [
+			next_revision,
+			event_type,
+			str(mission_data.get("runtime_id", mission_data.get("title", ""))),
+		]
+	)
+	return next_revision
 
 
 # Pops the next undelivered Kaelen hint (director-only until this call) and moves

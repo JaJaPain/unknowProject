@@ -132,6 +132,7 @@ static func _default_state() -> Dictionary:
 		"story_arcs_consumed_index": 0,
 		"rumor_trails_consumed_index": 0,
 		"regeneration_fallback_count": 0,
+		"mission_history_revision": 0,
 	}
 
 
@@ -154,6 +155,12 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 			"invalid_story_state_chapter",
 			"Story state chapter must be at least 1.",
 			"chapter"
+		)
+	if int(value.get("mission_history_revision", 0)) < 0:
+		result.add_error(
+			"invalid_mission_history_revision",
+			"Story state mission_history_revision cannot be negative.",
+			"mission_history_revision"
 		)
 	for field in ["active_tensions", "player_knows", "player_does_not_know_yet", "pending_hooks", "hinted_lounge_rumors"]:
 		if not value.get(field, []) is Array:

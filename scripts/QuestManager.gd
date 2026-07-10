@@ -23,6 +23,7 @@ signal quest_abandoned()
 signal quest_abandoned_details(quest_data: Dictionary)
 signal quest_expired(title: String)
 signal quest_expired_details(quest_data: Dictionary)
+signal quest_declined_details(quest_data: Dictionary)
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 signal comms_reversal_triggered(mission_data: Dictionary)
 
@@ -319,9 +320,21 @@ func accept_quest(
 		active_quest["combat_multiplier"],
 		")"
 	)
+	_increment_mission_history_revision("accepted", active_quest)
 	quest_accepted.emit()
 	quest_accepted_details.emit(active_quest.duplicate(true))
 	return true
+
+
+func decline_quest(
+	quest_data: Dictionary = {},
+	reason: String = "declined"
+) -> void:
+	var declined_quest := quest_data.duplicate(true)
+	declined_quest["declined_time_minutes"] = CampaignClock.total_minutes
+	declined_quest["decline_reason"] = reason
+	_increment_mission_history_revision("declined", declined_quest)
+	quest_declined_details.emit(declined_quest)
 
 
 func _create_runtime_mission_id(quest_data: Dictionary) -> String:
@@ -403,6 +416,7 @@ func check_active_quest_expiration() -> bool:
 		var rid: String = m.runtime_id
 		_collection.remove(rid)
 		print("[QuestManager] Quest expired: ", expired_title)
+		_increment_mission_history_revision("expired", expired_quest)
 		quest_expired.emit(expired_title)
 		quest_expired_details.emit(expired_quest)
 		any_expired = true
@@ -483,6 +497,15 @@ func _validation_message(validation: ValidationResult) -> String:
 			message if path.is_empty() else "%s: %s" % [path, message]
 		)
 	return "; ".join(messages)
+
+
+func _increment_mission_history_revision(
+	event_type: String,
+	mission_data: Dictionary
+) -> void:
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("increment_mission_history_revision"):
+		StoryManager.increment_mission_history_revision(event_type, mission_data)
 
 
 # Set the LLM-generated (or fallback) handoff line for an active
@@ -580,6 +603,7 @@ func complete_quest():
 	if focused:
 		focused.transition_to(MissionInstanceType.State.COMPLETED)
 	_collection.remove(completed_id)
+	_increment_mission_history_revision("completed", completed_quest)
 	quest_completed.emit()
 	quest_completed_details.emit(completed_quest)
 
@@ -600,6 +624,7 @@ func abandon_quest():
 	if focused:
 		focused.transition_to(MissionInstanceType.State.ABANDONED)
 	_collection.remove(abandoned_id)
+	_increment_mission_history_revision("abandoned", abandoned_quest)
 	quest_abandoned.emit()
 	quest_abandoned_details.emit(abandoned_quest)
 
@@ -703,6 +728,7 @@ func resolve_comms_branch(branch_id: String) -> void:
 			bribe_quest["final_payout"] = bribe
 			bribe_quest["outcome_detail"] = "accepted_bribe"
 			_collection.remove(rid)
+			_increment_mission_history_revision("completed", bribe_quest)
 			quest_completed.emit()
 			quest_completed_details.emit(bribe_quest)
 		"walk_away":
@@ -716,6 +742,7 @@ func resolve_comms_branch(branch_id: String) -> void:
 			walkaway_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
 			walkaway_quest["outcome_detail"] = "walked_away"
 			_collection.remove(rid)
+			_increment_mission_history_revision("abandoned", walkaway_quest)
 			quest_abandoned.emit()
 			quest_abandoned_details.emit(walkaway_quest)
 
