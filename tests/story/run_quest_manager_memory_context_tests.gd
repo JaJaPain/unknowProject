@@ -31,6 +31,7 @@ func _initialize() -> void:
 	_test_filter_history_honors_persisted_agent_memory_id()
 	_test_generation_history_uses_profile_agent_memory()
 	_test_empty_store_uses_first_contact_context()
+	_test_campaign_memory_context_does_not_cross_stores()
 	_global_state.campaign_agent_memory_store = _previous_store
 
 	if _failures.is_empty():
@@ -117,6 +118,39 @@ func _test_empty_store_uses_first_contact_context() -> void:
 	_expect(
 		context.contains("No prior contracts"),
 		"Missing campaign memory store did not produce first-contact context."
+	)
+
+
+func _test_campaign_memory_context_does_not_cross_stores() -> void:
+	var campaign_a := FakeAgentMemoryStore.new()
+	campaign_a.contexts["agent.fixed.zenith.director_voss"] = (
+		"Campaign A memory: Indy recovered the red beacon."
+	)
+	var campaign_b := FakeAgentMemoryStore.new()
+	campaign_b.contexts["agent.fixed.zenith.director_voss"] = (
+		"Campaign B memory: Indy escorted the blue convoy."
+	)
+
+	_global_state.campaign_agent_memory_store = campaign_a
+	var context_a: String = _quest_manager.filter_history_for_agent(
+		"Director Voss",
+		"zenith"
+	)
+	_global_state.campaign_agent_memory_store = campaign_b
+	var context_b: String = _quest_manager.filter_history_for_agent(
+		"Director Voss",
+		"zenith"
+	)
+
+	_expect(
+		context_a.contains("red beacon")
+			and not context_a.contains("blue convoy"),
+		"Campaign A prompt context leaked Campaign B memory."
+	)
+	_expect(
+		context_b.contains("blue convoy")
+			and not context_b.contains("red beacon"),
+		"Campaign B prompt context leaked Campaign A memory."
 	)
 
 
