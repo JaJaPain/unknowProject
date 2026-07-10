@@ -11,6 +11,9 @@ const ConsequenceType := preload(
 	"res://scripts/domain/MissionConsequenceDefinition.gd"
 )
 const StateType := preload("res://scripts/domain/MissionState.gd")
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 
 
 static func build_active_state(
@@ -87,6 +90,10 @@ static func build_active_state(
 		),
 		"station_errand": bool(quest_data.get("station_errand", false)),
 	}
+	state = NarrativeMetadataType.apply_to_state(
+		state,
+		definition.narrative_metadata
+	)
 
 	match definition.objective.type:
 		"KILL_SHIPS":
@@ -369,6 +376,10 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	)
 	normalized["station_errand"] = bool(
 		normalized.get("station_errand", false)
+	)
+	normalized = NarrativeMetadataType.apply_to_state(
+		normalized,
+		NarrativeMetadataType.from_source(normalized)
 	)
 	match str(normalized.get("objective_type", "")):
 		"KILL_SHIPS":

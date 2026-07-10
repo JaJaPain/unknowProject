@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_agent_voice_profile_survives_acceptance()
+	_test_narrative_metadata_survives_acceptance_and_restore()
 	_test_pickup_offer()
 	_test_delivery_courier_offer()
 	_test_purchase_delivery_offer()
@@ -133,6 +134,73 @@ func _test_agent_voice_profile_survives_acceptance() -> void:
 		adapted["state"].get("agent_voice_profile_id", "")
 			== "voice.agent.liaison_ryn.v1",
 		"Agent voice profile was not preserved on accepted mission state."
+	)
+
+
+func _test_narrative_metadata_survives_acceptance_and_restore() -> void:
+	var offer := _offer(
+		"Narrative Thread Contract",
+		"vanguard",
+		"Captain Dask",
+		{
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 2,
+			"reward_credits": 180,
+		}
+	)
+	offer["story_hook_ref"] = "hook:legacyabc123"
+	offer["narrative_metadata"] = {
+		"offer_id": "offer.narrative.alpha",
+		"story_thread_id": "thread.alpha",
+		"story_beat_id": "beat.opening",
+		"cause_id": "cause.reaver_pressure",
+		"public_because": "Reaver pressure is rising near the shipping lane.",
+		"stake": "Keep the dock route open.",
+		"question_fact_ids": ["fact.reaver_pressure"],
+		"completion_fact_ids": ["fact.route_safe"],
+		"conversation_cache_key": "conversation.cache.alpha",
+		"conversation_state": "briefed",
+		"outcome_snapshot": {"route": "safer"},
+	}
+	var adapted := AdapterType.build_active_state(
+		offer,
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.narrative_metadata_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Narrative metadata offer failed validation."
+	)
+	var definition = adapted["definition"]
+	var state: Dictionary = adapted["state"]
+	var metadata: Dictionary = state.get("narrative_metadata", {})
+	_expect(
+		definition.narrative_metadata.get("offer_id", "") == "offer.narrative.alpha",
+		"Narrative metadata did not survive offer -> definition."
+	)
+	_expect(
+		metadata.get("story_hook_ref", "") == "hook:legacyabc123"
+				and state.get("story_hook_ref", "") == "hook:legacyabc123",
+		"Narrative metadata did not preserve legacy story_hook_ref on active state."
+	)
+	_expect(
+		(metadata.get("question_fact_ids", []) as Array).size() == 1
+				and metadata.get("outcome_snapshot", {}) is Dictionary,
+		"Narrative metadata arrays/dictionaries did not survive active state."
+	)
+	var restored = MissionInstance.from_dict(MissionInstance.create_active(state).to_dict())
+	_expect(
+		restored.data.get("narrative_metadata", {}).get("cause_id", "")
+				== "cause.reaver_pressure",
+		"Narrative metadata did not survive mission instance restore."
+	)
+	var normalized := AdapterType.normalize_legacy_state(restored.data)
+	_expect(
+		normalized.get("narrative_metadata", {}).get("completion_fact_ids", []) is Array
+				and normalized.get("completion_fact_ids", []) is Array,
+		"Narrative metadata did not survive legacy normalization."
 	)
 
 

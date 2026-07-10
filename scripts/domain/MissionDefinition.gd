@@ -11,6 +11,9 @@ const RewardType := preload(
 const TimingType := preload(
 	"res://scripts/domain/MissionTimingDefinition.gd"
 )
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 
 var title: String = ""
 var faction_id: StringName
@@ -20,6 +23,7 @@ var objective: MissionObjectiveDefinition
 var reward: MissionRewardDefinition
 var timing: MissionTimingDefinition
 var choices: Array = []
+var narrative_metadata: Dictionary = {}
 
 
 func load_from_offer(source: Dictionary) -> ValidationResult:
@@ -104,6 +108,7 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		)
 	else:
 		choices = (raw_choices as Array).duplicate(true)
+	narrative_metadata = NarrativeMetadataType.from_source(source)
 	return result
 
 
@@ -118,6 +123,7 @@ func to_dict() -> Dictionary:
 		"reward": reward.to_dict() if reward else {},
 		"timing": timing.to_dict() if timing else {},
 		"choices": choices.duplicate(true),
+		"narrative_metadata": narrative_metadata.duplicate(true),
 	})
 	return result
 

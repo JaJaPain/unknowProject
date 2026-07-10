@@ -8,6 +8,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_allowed_field_contract()
 	_test_empty_metadata_defaults_are_legacy_safe()
+	_test_extracts_nested_and_legacy_fields()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative metadata tests")
@@ -67,6 +68,39 @@ func _test_empty_metadata_defaults_are_legacy_safe() -> void:
 					and (metadata.get(field, {}) as Dictionary).is_empty(),
 			"Dictionary field did not default to empty dictionary: %s" % field
 		)
+
+
+func _test_extracts_nested_and_legacy_fields() -> void:
+	var metadata := NarrativeMetadataType.from_source({
+		"story_hook_ref": "hook:legacy",
+		"narrative_metadata": {
+			"offer_id": "offer.alpha",
+			"question_fact_ids": ["fact.public"],
+			"outcome_snapshot": {"clean": true},
+			"director_secret": "do not copy",
+		},
+	})
+	_expect(
+		metadata.get("story_hook_ref", "") == "hook:legacy",
+		"Legacy top-level story_hook_ref was not extracted."
+	)
+	_expect(
+		metadata.get("offer_id", "") == "offer.alpha",
+		"Nested offer_id was not extracted."
+	)
+	_expect(
+		(metadata.get("question_fact_ids", []) as Array).size() == 1,
+		"Nested question_fact_ids were not extracted."
+	)
+	_expect(
+		metadata.get("outcome_snapshot", {}) is Dictionary
+				and bool(metadata.get("outcome_snapshot", {}).get("clean", false)),
+		"Nested outcome_snapshot was not extracted."
+	)
+	_expect(
+		not metadata.has("director_secret"),
+		"Unknown nested metadata field was copied."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:
