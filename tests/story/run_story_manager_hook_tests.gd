@@ -5,6 +5,7 @@ extends SceneTree
 # suite would "pass" with zero assertions (see run_story_state_bible_seed_tests).
 var StoryManagerType: GDScript = null
 var StoryQuestManagerType: GDScript = null
+var MissionAdapterType: GDScript = null
 
 var _failures: Array[String] = []
 
@@ -23,12 +24,15 @@ class FakeBibleStore extends RefCounted:
 func _initialize() -> void:
 	StoryManagerType = load("res://scripts/story/StoryManager.gd")
 	StoryQuestManagerType = load("res://scripts/story/StoryQuestManager.gd")
+	MissionAdapterType = load("res://scripts/domain/MissionAdapter.gd")
 	if StoryManagerType == null or not StoryManagerType.can_instantiate() \
-			or StoryQuestManagerType == null or not StoryQuestManagerType.can_instantiate():
+			or StoryQuestManagerType == null or not StoryQuestManagerType.can_instantiate() \
+			or MissionAdapterType == null:
 		push_error("[FAIL] Story scripts did not compile — suite cannot run.")
 		quit(1)
 		return
 	_test_resolve_hooks_removes_only_matching_hook()
+	_test_accepted_mission_story_hook_reaches_completion()
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
@@ -128,6 +132,51 @@ func _test_resolve_hooks_removes_only_matching_hook() -> void:
 
 	var remaining: Array = manager.story_state.get("pending_hooks", [])
 	_expect(remaining.size() == 1 and remaining.has(hook_b), "Resolving hook_a should leave only hook_b.")
+	manager.queue_free()
+
+
+func _test_accepted_mission_story_hook_reaches_completion() -> void:
+	var manager := _fresh_manager()
+	var hook := "A stamped mission should resolve this hook."
+	var other_hook := "A different hook should survive."
+	var ref := "hook:%s" % hook.sha256_text().substr(0, 12)
+	manager.story_state["pending_hooks"] = [hook, other_hook]
+	var offer := {
+		"title": "Stamped Hook Contract",
+		"faction": "vanguard",
+		"agent_name": "Captain Dask",
+		"dialogue": "Clear the lane so the convoy can breathe.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 1,
+			"reward_credits": 150,
+		},
+		"choices": [_choice()],
+		"story_hook_ref": ref,
+	}
+	var adapted: Dictionary = MissionAdapterType.build_active_state(
+		offer,
+		_choice(),
+		"mission.runtime.story_hook_regression",
+		"start_system"
+	)
+	_expect(
+		adapted.get("validation", null) != null
+				and adapted["validation"].is_valid(),
+		"Stamped story-hook offer did not build a valid active state."
+	)
+	var active_state: Dictionary = adapted.get("state", {})
+	_expect(
+		active_state.get("story_hook_ref", "") == ref,
+		"story_hook_ref did not survive offer acceptance into active state."
+	)
+	manager.on_quest_completed(active_state)
+	var remaining: Array = manager.story_state.get("pending_hooks", [])
+	_expect(
+		not remaining.has(hook) and remaining.has(other_hook),
+		"StoryManager.on_quest_completed did not resolve exactly the stamped hook."
+	)
 	manager.queue_free()
 
 
@@ -340,6 +389,19 @@ func _test_regeneration_trigger_selection() -> void:
 		"rumor_trails_remaining should drop to 0 once consumed."
 	)
 	manager.queue_free()
+
+
+func _choice() -> Dictionary:
+	return {
+		"text": "Accepted.",
+		"consequence": {
+			"dialogue_response": "Accepted. Keep the route clear.",
+			"credits_immediate": 0,
+			"reputation_change": {},
+			"combat_multiplier": 1.0,
+			"reward_credits_multiplier": 1.0,
+		},
+	}
 
 
 func _expect(condition: bool, message: String) -> void:
