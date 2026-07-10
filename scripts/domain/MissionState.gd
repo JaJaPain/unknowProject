@@ -8,6 +8,9 @@ const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 const ObjectiveType := preload(
 	"res://scripts/domain/MissionObjectiveDefinition.gd"
 )
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 
 const SCHEMA_VERSION := 1
 
@@ -57,6 +60,10 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 			"reward_credits"
 		)
 	_validate_timing(source, result)
+	result.merge(
+		NarrativeMetadataType.validate_source(source),
+		"narrative_metadata"
+	)
 
 	match objective_type:
 		ObjectiveType.TYPE_KILL_SHIPS:

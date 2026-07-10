@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_timed_offer()
 	_test_public_board_text_generation()
 	_test_public_board_story_intents_prioritize_offers()
+	_test_malformed_narrative_metadata_rejected()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
 	_test_delivery_purchase_legacy_runtime_state()
@@ -201,6 +202,52 @@ func _test_narrative_metadata_survives_acceptance_and_restore() -> void:
 		normalized.get("narrative_metadata", {}).get("completion_fact_ids", []) is Array
 				and normalized.get("completion_fact_ids", []) is Array,
 		"Narrative metadata did not survive legacy normalization."
+	)
+
+
+func _test_malformed_narrative_metadata_rejected() -> void:
+	var offer := _offer(
+		"Bad Metadata Contract",
+		"vanguard",
+		"Captain Dask",
+		{
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 2,
+			"reward_credits": 180,
+		}
+	)
+	offer["narrative_metadata"] = {
+		"story_thread_id": "bad id with spaces",
+		"question_fact_ids": "fact.should_be_array",
+		"outcome_snapshot": [],
+	}
+	var adapted := AdapterType.build_active_state(
+		offer,
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.bad_narrative_metadata_test",
+		"start_system"
+	)
+	_expect(
+		not adapted["validation"].is_valid(),
+		"Malformed narrative metadata offer was accepted."
+	)
+	_expect(
+		not AdapterType.validate_active_state(
+			AdapterType.normalize_legacy_state({
+				"runtime_id": "mission.runtime.bad_narrative_metadata_state",
+				"definition_id": "mission.offer.bad_narrative_metadata_state",
+				"title": "Bad Metadata State",
+				"faction": "vanguard",
+				"objective_type": "KILL_SHIPS",
+				"reward_credits": 180,
+				"target_faction": "reavers",
+				"count_required": 2,
+				"current_count": 0,
+				"narrative_metadata": {"completion_fact_ids": [12]},
+			})
+		).is_valid(),
+		"Malformed narrative metadata saved state was accepted."
 	)
 
 

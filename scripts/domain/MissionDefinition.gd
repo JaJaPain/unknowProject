@@ -37,6 +37,10 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		"mission",
 		SUPPORTED_SCHEMA_VERSION
 	)
+	result.merge(
+		NarrativeMetadataType.validate_source(source),
+		"narrative_metadata"
+	)
 
 	title = str(source.get("title", "")).strip_edges()
 	if title.is_empty():

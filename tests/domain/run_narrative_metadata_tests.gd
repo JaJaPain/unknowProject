@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_allowed_field_contract()
 	_test_empty_metadata_defaults_are_legacy_safe()
 	_test_extracts_nested_and_legacy_fields()
+	_test_validates_present_metadata()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative metadata tests")
@@ -100,6 +101,31 @@ func _test_extracts_nested_and_legacy_fields() -> void:
 	_expect(
 		not metadata.has("director_secret"),
 		"Unknown nested metadata field was copied."
+	)
+
+
+func _test_validates_present_metadata() -> void:
+	var valid := NarrativeMetadataType.validate_source({
+		"narrative_metadata": {
+			"offer_id": "offer.alpha-01",
+			"story_hook_ref": "hook:abc123",
+			"question_fact_ids": ["fact.alpha"],
+			"completion_fact_ids": [],
+			"outcome_snapshot": {},
+		},
+	})
+	_expect(valid.is_valid(), "Valid present narrative metadata was rejected.")
+
+	var invalid := NarrativeMetadataType.validate_source({
+		"narrative_metadata": {
+			"offer_id": "not a stable id",
+			"question_fact_ids": "fact.alpha",
+			"outcome_snapshot": [],
+		},
+	})
+	_expect(
+		not invalid.is_valid() and invalid.errors.size() == 3,
+		"Malformed present narrative metadata was not rejected."
 	)
 
 
