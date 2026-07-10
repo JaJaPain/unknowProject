@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_records_fallback_summary()
 	_test_persistent_fallback_log_written()
 	_test_records_generation_event_summary()
+	_test_records_lifecycle_timestamps()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
 	_test_developer_warning_marks_high_fallback_rate()
@@ -129,6 +130,69 @@ func _test_records_generation_event_summary() -> void:
 	_expect(
 		(summary.get("recent_events", []) as Array).size() == 3,
 		"Recent generation event list was not recorded."
+	)
+
+
+func _test_records_lifecycle_timestamps() -> void:
+	var stages := [
+		"job_queued",
+		"generation_started",
+		"generation_finished",
+		"validation_finished",
+		"text_presented",
+		"tts_cache_started",
+		"tts_ready",
+		"interaction_clicked",
+	]
+	for stage in stages:
+		diagnostics.record_lifecycle_timestamp(
+			"quest_generation",
+			stage,
+			"test",
+			{"request_id": "fixture-1"}
+		)
+	var summary: Dictionary = diagnostics.summary()
+	var recent_events: Array = summary.get("recent_events", [])
+	_expect(
+		int(summary.get("events_by_reason", {}).get("generation_started", 0)) == 1,
+		"Lifecycle start timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("generation_finished", 0)) == 1,
+		"Lifecycle finish timestamp was not recorded."
+	)
+	var lifecycle_event: Dictionary = recent_events[recent_events.size() - 1]
+	_expect(
+		int(summary.get("events_by_reason", {}).get("validation_finished", 0)) == 1,
+		"Lifecycle validation timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("text_presented", 0)) == 1,
+		"Lifecycle text presentation timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("tts_cache_started", 0)) == 1,
+		"Lifecycle TTS cache start timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("tts_ready", 0)) == 1,
+		"Lifecycle TTS ready timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == 1,
+		"Lifecycle interaction click timestamp was not recorded."
+	)
+	_expect(
+		str(lifecycle_event.get("context", {}).get("lifecycle_stage", "")) == "interaction_clicked",
+		"Lifecycle event did not retain its stage."
+	)
+	_expect(
+		int(lifecycle_event.get("time_msec", 0)) > 0,
+		"Lifecycle event did not retain a timestamp."
+	)
+	_expect(
+		diagnostics.record_lifecycle_timestamp("quest_generation", "unknown_stage", "test", {}).is_empty(),
+		"Unknown lifecycle stage was accepted."
 	)
 
 

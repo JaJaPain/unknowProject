@@ -2122,6 +2122,12 @@ func request_quest_generation(
 	is_waiting = true
 	last_history_text = history_text
 	request_start_time = Time.get_ticks_msec()
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_started",
+		"LLMInterface",
+		{"model": active_model_name}
+	)
 	GlobalState.trace("[TRACE] [LLMInterface] request_quest_generation initiated at: %d ms" % request_start_time)
 	
 	var rand_comp = complications[randi() % complications.size()]
@@ -2843,6 +2849,12 @@ func _finish_quest_candidate_batch() -> void:
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
 	var now = Time.get_ticks_msec()
 	var elapsed = (now - request_start_time) / 1000.0
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_finished",
+		"LLMInterface",
+		{"result": result, "response_code": response_code, "elapsed_seconds": elapsed, "model": active_model_name}
+	)
 	GlobalState.trace("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[LLMInterface] HTTP request failed or timed out. Response code: ", response_code)
@@ -2935,6 +2947,12 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	)
 	_substitute_dialogue_placeholders(quest_data)
 	_validate_quest_data(quest_data)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"validation_finished",
+		"LLMInterface",
+		{"model": active_model_name, "title": str(quest_data.get("title", ""))}
+	)
 	if quest_data.get("objective_dialogue_rewritten", false):
 		print("[LLMInterface] Dialogue was rewritten — requesting retry from LLM with locked objective.")
 		_request_dialogue_retry(quest_data, elapsed)

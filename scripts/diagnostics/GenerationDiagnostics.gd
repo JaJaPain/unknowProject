@@ -7,6 +7,16 @@ signal generation_event_recorded(event: Dictionary)
 const MAX_RECENT_EVENTS := 100
 const WARNING_MIN_CONTENT_SOURCES := 3
 const WARNING_FALLBACK_SOURCE_RATE := 0.25
+const LIFECYCLE_STAGES := [
+	"job_queued",
+	"generation_started",
+	"generation_finished",
+	"validation_finished",
+	"text_presented",
+	"tts_cache_started",
+	"tts_ready",
+	"interaction_clicked",
+]
 # Permanent, in-repo fallback log so it can be reviewed any session (gitignored
 # via logs/). res:// is writable when running from source (editor/dev); an
 # exported build can't write res://, so it falls back to user://.
@@ -97,6 +107,20 @@ func record_event(
 	context: Dictionary = {}
 ) -> Dictionary:
 	return _record_generation_event(content_type, reason, source, context)
+
+
+func record_lifecycle_timestamp(
+	content_type: String,
+	stage: String,
+	source: String = "",
+	context: Dictionary = {}
+) -> Dictionary:
+	if not LIFECYCLE_STAGES.has(stage):
+		push_warning("[GenerationDiagnostics] Unknown lifecycle stage: %s" % stage)
+		return {}
+	var next_context := context.duplicate(true)
+	next_context["lifecycle_stage"] = stage
+	return _record_generation_event(content_type, stage, source, next_context)
 
 
 func record_content_source(

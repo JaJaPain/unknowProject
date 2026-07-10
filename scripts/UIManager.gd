@@ -9787,6 +9787,16 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		str(quest_data.get("agent_portrait_id", ""))
 	)
 	agent_dialogue_label.text = display_dialogue + note
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_briefing",
+		"text_presented",
+		"UIManager",
+		{
+			"title": str(quest_data.get("title", "")),
+			"agent_name": agent_name,
+			"is_fallback": is_fallback,
+		}
+	)
 	
 	# Play the quest giver's briefing voice
 	SpeechService.play(quest_data.get("dialogue", ""), agent_voice_profile_id)

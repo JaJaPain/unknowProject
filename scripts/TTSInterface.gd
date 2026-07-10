@@ -197,6 +197,16 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 
 	var cache_key: String = voice_id + "|" + clean_text
 	if tts_audio_cache.has(cache_key):
+		GenerationDiagnostics.record_lifecycle_timestamp(
+			"tts_cache",
+			"tts_ready",
+			"TTSInterface",
+			{
+				"voice_id": voice_id,
+				"text_hash": clean_text.hash(),
+				"cache_state": "already_cached",
+			}
+		)
 		return
 		
 	if not tts_connected or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
@@ -251,6 +261,16 @@ func _start_background_cache_request(
 	var headers = ["Content-Type: application/json"]
 
 	active_cache_requests += 1
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"tts_cache",
+		"tts_cache_started",
+		"TTSInterface",
+		{
+			"voice_id": voice_id,
+			"text_hash": clean_text.hash(),
+			"active_cache_requests": active_cache_requests,
+		}
+	)
 	GlobalState.trace("[TRACE] [TTSInterface] Background caching started for text hash: %d (len: %d), active: %d using voice: %s speed: %.1f" % [clean_text.hash(), clean_text.length(), active_cache_requests, voice_id, speed])
 	
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
@@ -259,6 +279,16 @@ func _start_background_cache_request(
 			var stream = load_wav_from_buffer(body)
 			if stream:
 				tts_audio_cache[cache_key] = stream
+				GenerationDiagnostics.record_lifecycle_timestamp(
+					"tts_cache",
+					"tts_ready",
+					"TTSInterface",
+					{
+						"voice_id": voice_id,
+						"text_hash": clean_text.hash(),
+						"response_code": response_code,
+					}
+				)
 				GlobalState.trace("[TRACE] [TTSInterface] Background caching completed for text hash: %d voice=%s" % [clean_text.hash(), voice_id])
 			else:
 				print("[TTSInterface] Background cache parsing failed for text hash: ", clean_text.hash())

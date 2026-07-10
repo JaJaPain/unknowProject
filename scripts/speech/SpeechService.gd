@@ -58,6 +58,12 @@ func _on_playback_finished() -> void:
 func start_interaction(interaction_name: String) -> void:
 	last_interaction_time = Time.get_ticks_msec()
 	last_interaction_name = interaction_name
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"SpeechService",
+		{"interaction_name": interaction_name}
+	)
 	TTSInterface.start_interaction(interaction_name)
 
 

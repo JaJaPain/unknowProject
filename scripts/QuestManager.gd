@@ -209,6 +209,15 @@ func request_new_quest(
 	agent_profile: Dictionary = {}
 ) -> void:
 	var history_text = _load_quest_history()
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"job_queued",
+		"QuestManager",
+		{
+			"agent_faction": agent_faction,
+			"agent_name": str(agent_profile.get("name", "")),
+		}
+	)
 	LLMInterface.request_quest_generation(
 		agent_faction,
 		history_text,
