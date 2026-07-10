@@ -43,6 +43,10 @@ var active_quest: Dictionary:
 var last_validation_error: String = ""
 var _board_cooldowns: Dictionary = {}
 const BOARD_COOLDOWN_MINUTES: int = 120
+const EMPTY_AGENT_MEMORY_CONTEXT := (
+	"No prior contracts with this agent are recorded yet. "
+	+ "Treat the relationship as first-contact or strictly professional."
+)
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -86,54 +90,49 @@ func _log_quest_to_file(quest_title: String, quest_type: String, outcome: String
 		f.close()
 
 
-# Returns only the history lines relevant to `agent_name` (e.g. "Director Voss").
-# Since the on-disk history doesn't store agent_name, we filter by the faction
-# the agent speaks for — Zenith=Voss, Aurelia=Ryn, Vanguard=Dask, neutral=Kaelen.
-# This keeps the LLM prompt short and focused on the pilot's relationship with
-# the upcoming quest giver's faction, instead of dumping the whole log.
-# Falls back to a substring search on the quest title if the faction map misses.
-func filter_history_for_agent(agent_name: String, faction: String) -> String:
-	var full = _load_quest_history()
-	if full.strip_edges() == "":
-		return ""
+# Returns campaign-scoped memory for the quest giver instead of scraping the
+# legacy global markdown log. The markdown file remains useful as human-readable
+# debug output, but model prompts should query structured per-campaign memory.
+func filter_history_for_agent(
+	agent_name: String,
+	faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var agent_id := LLMInterface.agent_memory_id_for_profile(
+		agent_name,
+		faction,
+		agent_profile
+	)
+	return _agent_memory_context_for_id(agent_id)
 
-	# Map agent → faction keyword to look for in the quest title (lowercased)
-	var faction_keyword: String = ""
-	match faction.to_lower():
-		"zenith":
-			faction_keyword = "zenith"
-		"aurelia":
-			faction_keyword = "aurelia"
-		"vanguard":
-			faction_keyword = "vanguard"
-		_:
-			# neutral / unknown — treat as "the rest". Return last 5 lines unfiltered
-			# so Kaelen can still reference the pilot's overall track record.
-			var all_lines = full.split("\n")
-			var tail: Array = []
-			for i in range(max(0, all_lines.size() - 5), all_lines.size()):
-				if all_lines[i].strip_edges() != "":
-					tail.append(all_lines[i])
-			return "\n".join(tail)
 
-	# Filter: keep lines that mention the faction keyword OR contain the agent's
-	# name directly (covers edge cases where the LLM uses a unique title).
-	var kept: Array = []
-	for line in full.split("\n"):
-		var lower = line.to_lower()
-		if line.strip_edges() == "":
-			continue
-		if lower.find(faction_keyword) != -1 or lower.find(agent_name.to_lower()) != -1:
-			kept.append(line)
+func _generation_history_context(
+	agent_faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var agent_name := str(agent_profile.get("name", "Broker Kaelen")).strip_edges()
+	if agent_name.is_empty():
+		agent_name = "Broker Kaelen"
+	var faction := str(
+		agent_profile.get("faction", agent_faction)
+	).strip_edges().to_lower()
+	if faction.is_empty():
+		faction = "neutral"
+	return filter_history_for_agent(agent_name, faction, agent_profile)
 
-	if kept.is_empty():
-		return ""
 
-	# Cap at the most recent 8 entries to keep the prompt small
-	if kept.size() > 8:
-		kept = kept.slice(kept.size() - 8, kept.size())
-
-	return "\n".join(kept)
+func _agent_memory_context_for_id(agent_id: String) -> String:
+	var clean_agent_id := agent_id.strip_edges()
+	if clean_agent_id.is_empty():
+		return EMPTY_AGENT_MEMORY_CONTEXT
+	if GlobalState.campaign_agent_memory_store != null \
+			and GlobalState.campaign_agent_memory_store.has_method("prompt_context"):
+		var context := str(
+			GlobalState.campaign_agent_memory_store.prompt_context(clean_agent_id)
+		).strip_edges()
+		if not context.is_empty():
+			return context
+	return EMPTY_AGENT_MEMORY_CONTEXT
 
 func is_quest_active() -> bool:
 	return _collection.has_any_active()
@@ -208,7 +207,7 @@ func request_new_quest(
 	callback: Callable,
 	agent_profile: Dictionary = {}
 ) -> void:
-	var history_text = _load_quest_history()
+	var history_text := _generation_history_context(agent_faction, agent_profile)
 	GenerationDiagnostics.record_lifecycle_timestamp(
 		"quest_generation",
 		"job_queued",

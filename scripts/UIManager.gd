@@ -9575,7 +9575,11 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		if not is_fallback:
 			var agent_name = quest_data.get("agent_name", "Broker Kaelen")
 			var faction = quest_data.get("faction", "neutral")
-			var agent_history = QuestManager.filter_history_for_agent(agent_name, faction)
+			var agent_history = QuestManager.filter_history_for_agent(
+				agent_name,
+				faction,
+				quest_data
+			)
 			var kaelen_intro_data := quest_data.duplicate(true)
 			kaelen_intro_data["system_story_pack"] = _current_system_story_pack()
 			LLMInterface.request_kaelen_intro(kaelen_intro_data, agent_history, GlobalState.reputations, func(unique_line: String):

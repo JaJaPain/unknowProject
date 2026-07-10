@@ -1989,6 +1989,8 @@ func agent_memory_id_for_profile(
 	agent_profile: Dictionary = {}
 ) -> String:
 	var profile_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if profile_id.is_empty():
+		profile_id = str(agent_profile.get("agent_memory_id", "")).strip_edges()
 	if not profile_id.is_empty():
 		return profile_id
 	var clean_faction := str(faction).strip_edges().to_lower()
@@ -2449,8 +2451,8 @@ func request_quest_generation(
 		"- Zenith reputation: " + str(player_reps.get("zenith", 50.0)) + "\n" + \
 		"- Aurelia reputation: " + str(player_reps.get("aurelia", -20.0)) + "\n" + \
 		"- Vanguard reputation: " + str(player_reps.get("vanguard", -20.0)) + "\n\n" + \
-		"### COMPLETED MISSION HISTORY:\n" + \
-		"Reference past contracts naturally in your dialogue if the list is not empty:\n" + \
+		"### RECENT STRUCTURED CONTRACT MEMORY:\n" + \
+		"Reference these campaign-scoped memories naturally if they are relevant:\n" + \
 		history_text + "\n\n" + \
 		"### QUEST COMPLICATION:\n" + \
 		rand_comp + "\n\n" + \
