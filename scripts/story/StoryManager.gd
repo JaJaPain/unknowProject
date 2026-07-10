@@ -62,7 +62,11 @@ var story_state: Dictionary = {
 	"story_arcs_consumed_index": 0,
 	"rumor_trails_consumed_index": 0,
 	"regeneration_fallback_count": 0,
+	"story_revision": 0,
+	"knowledge_revision": 0,
 	"mission_history_revision": 0,
+	"knowledge_states": {},
+	"beat_states": {},
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -259,7 +263,11 @@ func clear_story_state() -> void:
 		"story_arcs_consumed_index": 0,
 		"rumor_trails_consumed_index": 0,
 		"regeneration_fallback_count": 0,
+		"story_revision": 0,
+		"knowledge_revision": 0,
 		"mission_history_revision": 0,
+		"knowledge_states": {},
+		"beat_states": {},
 	}
 	# Part of the wipe contract: a new campaign must not inherit the old
 	# campaign's N.O.V.A. quirk (pushes the now-empty quirk, disarming her).

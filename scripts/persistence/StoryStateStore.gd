@@ -9,7 +9,7 @@ const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
 
-const DOCUMENT_VERSION := 1
+const DOCUMENT_VERSION := 2
 const STATE_PATH := "story_state.json"
 
 var campaign_path: String
@@ -81,7 +81,16 @@ func _load_or_create() -> void:
 	validation.merge(result["validation"], "story_state")
 	if not validation.is_valid():
 		return
-	data = result["data"]
+	data = _migrate_legacy_state(result["data"])
+	if int(result["data"].get("schema_version", 0)) != DOCUMENT_VERSION:
+		var committed := _commit(data, "story_state_migrate")
+		if not bool(committed.get("ok", false)):
+			validation.add_error(
+				"story_state_migration_failed",
+				str(committed.get("error", "Story state migration failed.")),
+				STATE_PATH
+			)
+			return
 	validation.merge(_validate_data(data), "story_state")
 
 
@@ -132,8 +141,38 @@ static func _default_state() -> Dictionary:
 		"story_arcs_consumed_index": 0,
 		"rumor_trails_consumed_index": 0,
 		"regeneration_fallback_count": 0,
+		"story_revision": 0,
+		"knowledge_revision": 0,
 		"mission_history_revision": 0,
+		"knowledge_states": {},
+		"beat_states": {},
 	}
+
+
+static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
+	if int(source.get("schema_version", 0)) == DOCUMENT_VERSION:
+		var current := source.duplicate(true)
+		current["document_type"] = "story_state"
+		return current
+
+	var migrated := _default_state()
+	for key in source.keys():
+		migrated[key] = source[key]
+	migrated["schema_version"] = DOCUMENT_VERSION
+	migrated["document_type"] = "story_state"
+	if not migrated.get("player_knows", []) is Array:
+		migrated["player_knows"] = []
+	for revision_field in [
+		"story_revision",
+		"knowledge_revision",
+		"mission_history_revision",
+	]:
+		migrated[revision_field] = maxi(0, int(migrated.get(revision_field, 0)))
+	if not migrated.get("knowledge_states", {}) is Dictionary:
+		migrated["knowledge_states"] = {}
+	if not migrated.get("beat_states", {}) is Dictionary:
+		migrated["beat_states"] = {}
+	return migrated
 
 
 static func _validate_data(value: Dictionary) -> ValidationResult:
@@ -156,12 +195,24 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 			"Story state chapter must be at least 1.",
 			"chapter"
 		)
-	if int(value.get("mission_history_revision", 0)) < 0:
-		result.add_error(
-			"invalid_mission_history_revision",
-			"Story state mission_history_revision cannot be negative.",
-			"mission_history_revision"
-		)
+	for revision_field in [
+		"story_revision",
+		"knowledge_revision",
+		"mission_history_revision",
+	]:
+		if int(value.get(revision_field, 0)) < 0:
+			result.add_error(
+				"invalid_story_state_revision",
+				"Story state field '%s' cannot be negative." % revision_field,
+				revision_field
+			)
+	for dictionary_field in ["knowledge_states", "beat_states"]:
+		if not value.get(dictionary_field, {}) is Dictionary:
+			result.add_error(
+				"invalid_story_state_dictionary",
+				"Story state field '%s' must be a dictionary." % dictionary_field,
+				dictionary_field
+			)
 	for field in ["active_tensions", "player_knows", "player_does_not_know_yet", "pending_hooks", "hinted_lounge_rumors"]:
 		if not value.get(field, []) is Array:
 			result.add_error(
