@@ -200,10 +200,13 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"knowledge_revision",
 		"mission_history_revision",
 	]:
-		if int(value.get(revision_field, 0)) < 0:
+		if not _is_non_negative_integer(value.get(revision_field, 0)):
 			result.add_error(
 				"invalid_story_state_revision",
-				"Story state field '%s' cannot be negative." % revision_field,
+				(
+					"Story state field '%s' must be a non-negative integer."
+					% revision_field
+				),
 				revision_field
 			)
 	for dictionary_field in ["knowledge_states", "beat_states"]:
@@ -221,6 +224,13 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 				field
 			)
 	return result
+
+
+static func _is_non_negative_integer(value: Variant) -> bool:
+	if not (value is int or value is float):
+		return false
+	var numeric := float(value)
+	return numeric >= 0.0 and is_equal_approx(numeric, floorf(numeric))
 
 
 static func _failure(message: String) -> Dictionary:

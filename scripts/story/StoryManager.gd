@@ -372,17 +372,44 @@ func increment_mission_history_revision(
 	event_type: String,
 	mission_data: Dictionary = {}
 ) -> int:
+	return _increment_revision(
+		"mission_history_revision",
+		event_type,
+		mission_data
+	)
+
+
+func increment_story_revision(
+	event_type: String,
+	event_data: Dictionary = {}
+) -> int:
+	return _increment_revision("story_revision", event_type, event_data)
+
+
+func increment_knowledge_revision(
+	event_type: String,
+	event_data: Dictionary = {}
+) -> int:
+	return _increment_revision("knowledge_revision", event_type, event_data)
+
+
+func _increment_revision(
+	revision_field: String,
+	event_type: String,
+	event_data: Dictionary = {}
+) -> int:
 	var next_revision := maxi(
 		0,
-		int(story_state.get("mission_history_revision", 0))
+		int(story_state.get(revision_field, 0))
 	) + 1
-	story_state["mission_history_revision"] = next_revision
+	story_state[revision_field] = next_revision
 	_save_story_state()
 	GlobalState.trace(
-		"[TRACE] [StoryManager] mission_history_revision=%d after %s (%s)" % [
+		"[TRACE] [StoryManager] %s=%d after %s (%s)" % [
+			revision_field,
 			next_revision,
 			event_type,
-			str(mission_data.get("runtime_id", mission_data.get("title", ""))),
+			str(event_data.get("runtime_id", event_data.get("title", ""))),
 		]
 	)
 	return next_revision

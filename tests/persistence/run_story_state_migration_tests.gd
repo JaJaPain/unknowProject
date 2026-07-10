@@ -12,6 +12,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_cleanup()
 	_test_version_1_state_migrates_to_current_shape()
+	_test_new_story_state_fields_validate_type_and_range()
 	_cleanup()
 
 	if _failures.is_empty():
@@ -64,6 +65,27 @@ func _test_version_1_state_migrates_to_current_shape() -> void:
 					== StoryStateStoreType.DOCUMENT_VERSION,
 			"Migrated story_state.json on disk did not have the current version."
 		)
+
+
+func _test_new_story_state_fields_validate_type_and_range() -> void:
+	var invalid_revision := StoryStateStoreType._default_state()
+	invalid_revision["story_revision"] = "one"
+	_expect(
+		not StoryStateStoreType._validate_data(invalid_revision).is_valid(),
+		"Story state validation accepted a non-numeric story_revision."
+	)
+	var negative_revision := StoryStateStoreType._default_state()
+	negative_revision["knowledge_revision"] = -1
+	_expect(
+		not StoryStateStoreType._validate_data(negative_revision).is_valid(),
+		"Story state validation accepted a negative knowledge_revision."
+	)
+	var invalid_dictionary := StoryStateStoreType._default_state()
+	invalid_dictionary["knowledge_states"] = []
+	_expect(
+		not StoryStateStoreType._validate_data(invalid_dictionary).is_valid(),
+		"Story state validation accepted a non-dictionary knowledge_states field."
+	)
 
 
 func _write_legacy_story_state() -> void:

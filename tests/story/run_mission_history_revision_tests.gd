@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_story_manager.story_state = {"mission_history_revision": 0}
 
 	_test_story_manager_increments_revision()
+	_test_story_and_knowledge_revision_methods_increment_owned_fields()
 	_test_quest_decline_increments_revision()
 
 	_story_manager.story_state = _previous_state
@@ -46,6 +47,29 @@ func _test_story_manager_increments_revision() -> void:
 		revision == 1
 			and int(_story_manager.story_state.get("mission_history_revision", 0)) == 1,
 		"StoryManager did not increment mission_history_revision."
+	)
+
+
+func _test_story_and_knowledge_revision_methods_increment_owned_fields() -> void:
+	_story_manager.story_state["story_revision"] = 0
+	_story_manager.story_state["knowledge_revision"] = 0
+	var story_revision: int = _story_manager.increment_story_revision(
+		"test_story_change",
+		{"title": "Story Revision Fixture"}
+	)
+	var knowledge_revision: int = _story_manager.increment_knowledge_revision(
+		"test_knowledge_change",
+		{"title": "Knowledge Revision Fixture"}
+	)
+	_expect(
+		story_revision == 1
+			and int(_story_manager.story_state.get("story_revision", 0)) == 1,
+		"Story revision did not increment through its owned method."
+	)
+	_expect(
+		knowledge_revision == 1
+			and int(_story_manager.story_state.get("knowledge_revision", 0)) == 1,
+		"Knowledge revision did not increment through its owned method."
 	)
 
 
