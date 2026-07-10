@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_test_resolve_hooks_removes_only_matching_hook()
 	_test_accepted_mission_story_hook_reaches_completion()
 	_test_stamped_completion_does_not_resolve_first_hook_by_accident()
+	_test_stamped_mission_hook_resolves_after_save_reload()
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
@@ -219,6 +220,57 @@ func _test_stamped_completion_does_not_resolve_first_hook_by_accident() -> void:
 	_expect(
 		remaining.has(first_hook) and not remaining.has(stamped_hook),
 		"Completing a stamped mission resolved the wrong pending hook."
+	)
+	manager.queue_free()
+
+
+func _test_stamped_mission_hook_resolves_after_save_reload() -> void:
+	var manager := _fresh_manager()
+	var first_hook := "Reload should not make this first hook look selected."
+	var stamped_hook := "Reloaded stamped mission should resolve this hook."
+	var ref := "hook:%s" % stamped_hook.sha256_text().substr(0, 12)
+	manager.story_state["pending_hooks"] = [first_hook, stamped_hook]
+	var offer := {
+		"title": "Reloaded Hook Contract",
+		"faction": "zenith",
+		"agent_name": "Director Voss",
+		"dialogue": "Keep this quiet and keep it moving.",
+		"objective": {
+			"type": "DELIVER_ORE",
+			"amount_required": 16.0,
+			"reward_credits": 130,
+		},
+		"choices": [_choice()],
+		"narrative_metadata": {
+			"story_hook_ref": ref,
+			"cause_id": "cause.reload_hook",
+		},
+	}
+	var adapted: Dictionary = MissionAdapterType.build_active_state(
+		offer,
+		_choice(),
+		"mission.runtime.reload_hook_regression",
+		"start_system"
+	)
+	_expect(
+		adapted.get("validation", null) != null
+				and adapted["validation"].is_valid(),
+		"Reload-hook offer did not build a valid active state."
+	)
+	var serialized: Dictionary = JSON.parse_string(
+		JSON.stringify(adapted.get("state", {}))
+	)
+	var restored: Dictionary = MissionAdapterType.normalize_legacy_state(serialized)
+	_expect(
+		MissionAdapterType.validate_active_state(restored).is_valid()
+			and restored.get("story_hook_ref", "") == ref,
+		"story_hook_ref did not survive save/reload normalization."
+	)
+	manager.on_quest_completed(restored)
+	var remaining: Array = manager.story_state.get("pending_hooks", [])
+	_expect(
+		remaining.has(first_hook) and not remaining.has(stamped_hook),
+		"Reloaded stamped mission did not resolve its intended story hook."
 	)
 	manager.queue_free()
 
