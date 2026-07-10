@@ -2,10 +2,13 @@ extends Node
 
 const ITERATIONS := 20
 const DELAY_BETWEEN := 0.5
+const RESULT_ARTIFACT_PATH := "res://logs/quest_generation_harness_runs.json"
 
 var _run_count := 0
 var _results: Array[Dictionary] = []
 var _start_time := 0.0
+var _current_generation_start_msec := 0
+var _current_requested_faction := ""
 
 func _ready() -> void:
 	_start_time = Time.get_ticks_msec()
@@ -22,6 +25,8 @@ func _run_next() -> void:
 	_run_count += 1
 	var factions := ["zenith", "aurelia", "vanguard", "neutral"]
 	var faction: String = factions[randi() % factions.size()]
+	_current_generation_start_msec = Time.get_ticks_msec()
+	_current_requested_faction = faction
 	LLMInterface.request_quest_generation(
 		faction,
 		"",
@@ -38,6 +43,9 @@ func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void:
 	var dialogue: String = quest_data.get("dialogue", "")
 	var title: String = quest_data.get("title", "???")
 	var faction: String = quest_data.get("faction", "???")
+	var generation_duration_seconds := (
+		float(Time.get_ticks_msec() - _current_generation_start_msec) / 1000.0
+	)
 
 	# --- Build contract details like the player sees ---
 	var contract_lines := ""
@@ -107,6 +115,7 @@ func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void:
 
 	# Check choice responses for dummy names
 	var choices: Array = quest_data.get("choices", [])
+	var player_options: Array[Dictionary] = []
 	for i in range(choices.size()):
 		var c: Dictionary = choices[i] if choices[i] is Dictionary else {}
 		var resp: String = str(c.get("consequence", {}).get("dialogue_response", "")).to_lower()
@@ -114,10 +123,30 @@ func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void:
 			issues.append("CHOICE_%d_GEORGE" % (i + 1))
 		if resp.find("slither") != -1:
 			issues.append("CHOICE_%d_SLITHERN" % (i + 1))
+		player_options.append({
+			"text": str(c.get("text", "???")),
+			"response": str(c.get("consequence", {}).get("dialogue_response", "")),
+			"answer_relevance": _score_answer_relevance(c, obj_type, obj),
+		})
 
 	var status := "PASS" if issues.is_empty() else "FAIL"
+	var validation_repairs := _validation_repairs_since(_current_generation_start_msec)
+	if bool(quest_data.get("objective_dialogue_rewritten", false)):
+		validation_repairs.append("objective_dialogue_rewritten")
 	_results.append({
 		"status": status,
+		"run": _run_count,
+		"requested_faction": _current_requested_faction,
+		"objective_type": obj_type,
+		"giver": agent_name,
+		"faction": faction,
+		"cause_ids": _cause_ids_for_quest(quest_data),
+		"title": title,
+		"opening": dialogue,
+		"player_options": player_options,
+		"generation_duration_seconds": generation_duration_seconds,
+		"source": "fallback" if is_fallback else _content_source_since(_current_generation_start_msec),
+		"validation_repairs": validation_repairs,
 		"type": obj_type,
 		"agent": agent_name,
 		"issues": issues,
@@ -190,6 +219,7 @@ func _print_summary() -> void:
 		for issue in sorted_issues:
 			print("    %-30s %d" % [issue, issue_counts[issue]])
 	print("=" .repeat(80))
+	_write_results_artifact()
 
 
 func _text_mentions_phrase(text_lower: String, phrase: String) -> bool:
@@ -206,3 +236,92 @@ func _text_mentions_phrase(text_lower: String, phrase: String) -> bool:
 		if str(word).length() >= 4 and text_lower.find(str(word)) != -1:
 			hits += 1
 	return hits >= mini(2, words.size())
+
+
+func _score_answer_relevance(choice: Dictionary, obj_type: String, objective: Dictionary) -> Dictionary:
+	var choice_text := str(choice.get("text", ""))
+	var response := str(choice.get("consequence", {}).get("dialogue_response", ""))
+	var combined := ("%s %s" % [choice_text, response]).to_lower()
+	var anchors: Array[String] = []
+	match obj_type:
+		"KILL_SHIPS":
+			anchors.append(str(objective.get("target_faction", "")))
+			anchors.append("ship")
+			anchors.append("destroy")
+		"DELIVER_ORE":
+			anchors.append("ore")
+			anchors.append("deliver")
+			anchors.append("cargo")
+		"PICKUP_SPECIAL":
+			anchors.append(str(objective.get("part_name", "")))
+			anchors.append(str(objective.get("target_npc", "")))
+			anchors.append(str(objective.get("target_outpost_display", "")))
+	var hits := 0
+	for anchor in anchors:
+		var clean_anchor := anchor.strip_edges().to_lower()
+		if clean_anchor.is_empty():
+			continue
+		if _text_mentions_phrase(combined, clean_anchor):
+			hits += 1
+	var missing_response := response.strip_edges().is_empty()
+	return {
+		"score": hits,
+		"anchor_count": anchors.size(),
+		"has_response": not missing_response,
+		"passes": hits > 0 and not missing_response,
+	}
+
+
+func _cause_ids_for_quest(quest_data: Dictionary) -> Dictionary:
+	return {
+		"story_thread_id": str(quest_data.get("story_thread_id", "")),
+		"story_beat_id": str(quest_data.get("story_beat_id", "")),
+		"story_hook_ref": str(quest_data.get("story_hook_ref", "")),
+		"cause_id": str(quest_data.get("cause_id", "")),
+	}
+
+
+func _validation_repairs_since(start_msec: int) -> Array[String]:
+	var repairs: Array[String] = []
+	for event in GenerationDiagnostics.summary().get("recent_events", []):
+		if int(event.get("time_msec", 0)) < start_msec:
+			continue
+		var reason := str(event.get("reason", ""))
+		if reason.begins_with("validation_") \
+				or reason.find("repaired") != -1 \
+				or reason.find("rewrote") != -1 \
+				or reason.find("remapped") != -1 \
+				or reason.find("clamped") != -1 \
+				or reason.find("retyped") != -1:
+			repairs.append(reason)
+	return repairs
+
+
+func _content_source_since(start_msec: int) -> String:
+	var source := "llm"
+	for event in GenerationDiagnostics.summary().get("recent_events", []):
+		if int(event.get("time_msec", 0)) < start_msec:
+			continue
+		var context: Dictionary = event.get("context", {})
+		var content_source := str(context.get("content_source", ""))
+		if not content_source.is_empty():
+			source = content_source
+	return source
+
+
+func _write_results_artifact() -> void:
+	var base_dir := RESULT_ARTIFACT_PATH.get_base_dir()
+	var global_dir := ProjectSettings.globalize_path(base_dir)
+	if not DirAccess.dir_exists_absolute(global_dir):
+		DirAccess.make_dir_recursive_absolute(global_dir)
+	var file := FileAccess.open(RESULT_ARTIFACT_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("[QuestGenHarness] Could not write result artifact: %s" % RESULT_ARTIFACT_PATH)
+		return
+	file.store_string(JSON.stringify({
+		"iterations": ITERATIONS,
+		"elapsed_seconds": float(Time.get_ticks_msec() - _start_time) / 1000.0,
+		"runs": _results,
+	}, "\t"))
+	file.close()
+	print("[TEST] Wrote structured quest harness results to %s" % RESULT_ARTIFACT_PATH)
