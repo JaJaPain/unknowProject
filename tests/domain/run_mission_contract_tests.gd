@@ -12,6 +12,9 @@ const PublicBoardOfferBuilderType := preload(
 const PublicBoardTextGeneratorType := preload(
 	"res://scripts/domain/PublicBoardTextGenerator.gd"
 )
+const MissionCapabilityRegistryType := preload(
+	"res://scripts/domain/MissionCapabilityRegistry.gd"
+)
 
 var _failures: Array[String] = []
 
@@ -34,6 +37,7 @@ func _initialize() -> void:
 	_test_malformed_narrative_metadata_rejected()
 	_test_malformed_offers()
 	_test_legacy_runtime_state()
+	_test_authored_tutorial_offer_loads_and_can_complete()
 	_test_delivery_purchase_legacy_runtime_state()
 	_test_invalid_runtime_state()
 
@@ -758,6 +762,55 @@ func _test_legacy_runtime_state() -> void:
 			and metadata.get("outcome_snapshot", {}) is Dictionary
 			and (metadata.get("outcome_snapshot", {}) as Dictionary).is_empty(),
 		"Legacy runtime state did not receive empty narrative metadata defaults."
+	)
+
+
+func _test_authored_tutorial_offer_loads_and_can_complete() -> void:
+	var tutorial_offer := {
+		"title": "Clean and Easy",
+		"faction": "neutral",
+		"agent_name": "Broker Kaelen",
+		"dialogue": "One Reaver problem. Handle it quiet.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 1,
+			"reward_credits": 350,
+		},
+		"choices": [],
+		"time_limit_min": 20.0,
+	}
+	var adapted := AdapterType.build_active_state(
+		tutorial_offer,
+		{
+			"text": "I'll take it.",
+			"consequence": {
+				"credits_immediate": 0,
+				"reputation_change": {},
+				"reward_credits_multiplier": 1.0,
+			},
+		},
+		"mission.runtime.clean_easy_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Authored tutorial offer failed acceptance validation."
+	)
+	var restored: Dictionary = AdapterType.normalize_legacy_state(
+		JSON.parse_string(JSON.stringify(adapted["state"]))
+	)
+	restored["current_count"] = int(restored.get("count_required", 1))
+	_expect(
+		AdapterType.validate_active_state(restored).is_valid(),
+		"Authored tutorial mission did not load as a valid restored state."
+	)
+	var cap = MissionCapabilityRegistryType.get_for_type(
+		str(restored.get("objective_type", ""))
+	)
+	_expect(
+		cap != null and cap.is_completed(restored),
+		"Authored tutorial mission could not complete after restored progress."
 	)
 
 
