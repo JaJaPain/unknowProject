@@ -680,6 +680,16 @@ func _test_legacy_runtime_state() -> void:
 			and int(normalized.get("mission_schema_version", 0)) == 1,
 		"Legacy runtime state did not receive typed identity metadata."
 	)
+	var metadata: Dictionary = normalized.get("narrative_metadata", {})
+	_expect(
+		metadata.get("offer_id", "") == ""
+			and metadata.get("story_hook_ref", "") == ""
+			and metadata.get("question_fact_ids", []) is Array
+			and (metadata.get("question_fact_ids", []) as Array).is_empty()
+			and metadata.get("outcome_snapshot", {}) is Dictionary
+			and (metadata.get("outcome_snapshot", {}) as Dictionary).is_empty(),
+		"Legacy runtime state did not receive empty narrative metadata defaults."
+	)
 
 
 func _test_delivery_purchase_legacy_runtime_state() -> void:
