@@ -281,5 +281,176 @@ func _write_results_artifact() -> void:
 		"lounge_conversations": _lounge_results,
 		"nova_events": _nova_results,
 		"kaelen_turn_ins": _kaelen_results,
+		"worst_examples": _worst_examples(),
 	}, "\t"))
 	file.close()
+
+
+func _worst_examples() -> Dictionary:
+	return {
+		"disconnected_cause": _worst_disconnected_cause(),
+		"assumed_knowledge": _worst_assumed_knowledge(),
+		"irrelevant_question": _worst_irrelevant_question(),
+		"persona_drift": _worst_persona_drift(),
+		"repeated_premise": _worst_repeated_premise(),
+		"repeated_phrasing": _worst_repeated_phrasing(),
+		"generic_turn_in": _worst_generic_turn_in(),
+		"visible_wait": _worst_visible_wait(),
+	}
+
+
+func _worst_disconnected_cause() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for offer in _agent_results:
+		var cause: Dictionary = offer.get("cause_ids", {})
+		if str(cause.get("story_thread_id", "")).is_empty() \
+				and str(cause.get("story_beat_id", "")).is_empty() \
+				and str(cause.get("story_hook_ref", "")).is_empty() \
+				and str(cause.get("cause_id", "")).is_empty():
+			rows.append(_example("agent_offer", offer, 10, "No cause/thread/story hook ID retained."))
+	return _top_five(rows)
+
+
+func _worst_assumed_knowledge() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for offer in _agent_results:
+		var text := ("%s %s" % [str(offer.get("title", "")), str(offer.get("opening", ""))]).to_lower()
+		var score := _count_any(text, ["you know", "remember", "as discussed", "again", "the usual", "obviously"])
+		if score > 0:
+			rows.append(_example("agent_offer", offer, score, "Opening may assume prior player knowledge."))
+	for lounge in _lounge_results:
+		var opener: Dictionary = lounge.get("opener", {})
+		var line := str(opener.get("line", "")).to_lower()
+		var score := _count_any(line, ["you know", "remember", "again", "obviously"])
+		if score > 0:
+			rows.append(_example("lounge", lounge, score, "Lounge line may assume prior player knowledge."))
+	return _top_five(rows)
+
+
+func _worst_irrelevant_question() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for offer in _agent_results:
+		for option in offer.get("player_options", []):
+			if not option is Dictionary:
+				continue
+			var relevance: Dictionary = (option as Dictionary).get("answer_relevance", {})
+			if not bool(relevance.get("mentions_objective", false)):
+				rows.append(_example("agent_option", {
+					"offer_title": str(offer.get("title", "")),
+					"giver": str(offer.get("giver", "")),
+					"option": option,
+				}, 5, "Player option/answer does not mention objective anchors."))
+	return _top_five(rows)
+
+
+func _worst_persona_drift() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for offer in _agent_results:
+		var giver := str(offer.get("giver", ""))
+		var text := str(offer.get("opening", "")).to_lower()
+		var score := 0
+		if giver != "Broker Kaelen" and text.find("shiny") != -1:
+			score += 10
+		if giver == "Director Voss" and _count_any(text, ["sweetheart", "darlin", "kid"]) > 0:
+			score += 5
+		if score > 0:
+			rows.append(_example("agent_offer", offer, score, "Speaker voice may have drifted."))
+	return _top_five(rows)
+
+
+func _worst_repeated_premise() -> Array[Dictionary]:
+	return _worst_repeated_by_key(_agent_results, "objective_type", "Repeated objective premise.")
+
+
+func _worst_repeated_phrasing() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var seen := {}
+	for offer in _agent_results:
+		var signature := _phrase_signature(str(offer.get("opening", "")))
+		if signature.is_empty():
+			continue
+		seen[signature] = int(seen.get(signature, 0)) + 1
+		if int(seen.get(signature, 0)) > 1:
+			rows.append(_example("agent_offer", offer, int(seen.get(signature, 0)), "Opening shares a repeated phrasing signature."))
+	for turn_in in _kaelen_results:
+		var signature := _phrase_signature(str(turn_in.get("completion", "")))
+		if signature.is_empty():
+			continue
+		seen[signature] = int(seen.get(signature, 0)) + 1
+		if int(seen.get(signature, 0)) > 1:
+			rows.append(_example("kaelen_turn_in", turn_in, int(seen.get(signature, 0)), "Turn-in shares a repeated phrasing signature."))
+	return _top_five(rows)
+
+
+func _worst_generic_turn_in() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for turn_in in _kaelen_results:
+		var completion := str(turn_in.get("completion", "")).to_lower()
+		var score := _count_any(completion, ["good work", "payment transferred", "contract complete", "job done", "pleasure doing business"])
+		if score > 0 or str(turn_in.get("source", "")) == "fallback":
+			rows.append(_example("kaelen_turn_in", turn_in, score + 5, "Turn-in may be generic or fallback."))
+	return _top_five(rows)
+
+
+func _worst_visible_wait() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for offer in _agent_results:
+		var seconds := float(offer.get("generation_duration_seconds", 0.0))
+		if seconds >= 1.0:
+			rows.append(_example("agent_offer", offer, int(round(seconds * 100.0)), "Generation took long enough to be visible if not hidden by cache."))
+	for lounge in _lounge_results:
+		var seconds := float(lounge.get("generation_duration_seconds", 0.0))
+		if seconds >= 1.0:
+			rows.append(_example("lounge", lounge, int(round(seconds * 100.0)), "Lounge generation took long enough to be visible if click-triggered."))
+	for turn_in in _kaelen_results:
+		var seconds := float(turn_in.get("generation_duration_seconds", 0.0))
+		if seconds >= 1.0:
+			rows.append(_example("kaelen_turn_in", turn_in, int(round(seconds * 100.0)), "Kaelen reaction took long enough to be visible if not precomputed."))
+	return _top_five(rows)
+
+
+func _worst_repeated_by_key(rows_to_scan: Array[Dictionary], key: String, reason: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var counts := {}
+	for row in rows_to_scan:
+		var value := str(row.get(key, ""))
+		counts[value] = int(counts.get(value, 0)) + 1
+		if int(counts.get(value, 0)) > 2:
+			rows.append(_example("agent_offer", row, int(counts.get(value, 0)), reason))
+	return _top_five(rows)
+
+
+func _example(kind: String, payload: Dictionary, score: int, reason: String) -> Dictionary:
+	return {
+		"kind": kind,
+		"score": score,
+		"reason": reason,
+		"payload": payload,
+	}
+
+
+func _top_five(rows: Array[Dictionary]) -> Array[Dictionary]:
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("score", 0)) > int(b.get("score", 0))
+	)
+	return rows.slice(0, mini(5, rows.size()))
+
+
+func _count_any(text: String, needles: Array[String]) -> int:
+	var count := 0
+	for needle in needles:
+		if text.find(needle) != -1:
+			count += 1
+	return count
+
+
+func _phrase_signature(text: String) -> String:
+	var words := text.to_lower().split(" ", false)
+	var kept: Array[String] = []
+	for word in words:
+		var clean := str(word).strip_edges().strip_escapes()
+		if clean.length() >= 5:
+			kept.append(clean)
+		if kept.size() >= 6:
+			break
+	return " ".join(kept)
