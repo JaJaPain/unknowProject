@@ -42,6 +42,21 @@ func _test_version_1_state_migrates_to_current_shape() -> void:
 		(store.data.get("player_knows", []) as Array).has("Kaelen has a buyer."),
 		"Story state migration lost existing player_knows entries."
 	)
+	var fact_id := StoryStateStoreType.legacy_player_knows_fact_id(
+		"Kaelen has a buyer."
+	)
+	var knowledge_states: Dictionary = store.data.get("knowledge_states", {})
+	var fact_record: Dictionary = knowledge_states.get(fact_id, {})
+	_expect(
+		fact_record.get("state", "") == "known"
+			and fact_record.get("source", "") == "legacy_player_knows"
+			and fact_record.get("legacy_text", "") == "Kaelen has a buyer.",
+		"Story state migration did not create the expected legacy fact record."
+	)
+	_expect(
+		store.prompt_context().contains("Kaelen has a buyer."),
+		"Story state prompt projection no longer exposes readable legacy knowledge."
+	)
 	_expect(
 		int(store.data.get("story_revision", -1)) == 0
 			and int(store.data.get("knowledge_revision", -1)) == 0

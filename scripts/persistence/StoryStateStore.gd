@@ -81,8 +81,9 @@ func _load_or_create() -> void:
 	validation.merge(result["validation"], "story_state")
 	if not validation.is_valid():
 		return
-	data = _migrate_legacy_state(result["data"])
-	if int(result["data"].get("schema_version", 0)) != DOCUMENT_VERSION:
+	var raw_data: Dictionary = result["data"]
+	data = _migrate_legacy_state(raw_data)
+	if JSON.stringify(data) != JSON.stringify(raw_data):
 		var committed := _commit(data, "story_state_migrate")
 		if not bool(committed.get("ok", false)):
 			validation.add_error(
@@ -150,11 +151,6 @@ static func _default_state() -> Dictionary:
 
 
 static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
-	if int(source.get("schema_version", 0)) == DOCUMENT_VERSION:
-		var current := source.duplicate(true)
-		current["document_type"] = "story_state"
-		return current
-
 	var migrated := _default_state()
 	for key in source.keys():
 		migrated[key] = source[key]
@@ -172,7 +168,37 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["knowledge_states"] = {}
 	if not migrated.get("beat_states", {}) is Dictionary:
 		migrated["beat_states"] = {}
+	_backfill_legacy_player_knows(migrated)
 	return migrated
+
+
+static func legacy_player_knows_fact_id(text: String) -> String:
+	var clean_text := text.strip_edges()
+	if clean_text.is_empty():
+		return ""
+	return "fact.legacy_player_knows.%s" % clean_text.sha256_text().substr(0, 16)
+
+
+static func _backfill_legacy_player_knows(state: Dictionary) -> void:
+	var player_knows: Array = state.get("player_knows", [])
+	if player_knows.is_empty():
+		return
+	var knowledge_states: Dictionary = state.get("knowledge_states", {})
+	for item in player_knows:
+		var text := str(item).strip_edges()
+		if text.is_empty():
+			continue
+		var fact_id := legacy_player_knows_fact_id(text)
+		if fact_id.is_empty() or knowledge_states.has(fact_id):
+			continue
+		knowledge_states[fact_id] = {
+			"state": "known",
+			"source": "legacy_player_knows",
+			"learned_at_minute": 0,
+			"confidence": "legacy",
+			"legacy_text": text,
+		}
+	state["knowledge_states"] = knowledge_states
 
 
 static func _validate_data(value: Dictionary) -> ValidationResult:
