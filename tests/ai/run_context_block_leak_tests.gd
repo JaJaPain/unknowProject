@@ -41,7 +41,18 @@ func _test_named_small_model_blocks_do_not_leak_director_fields() -> void:
 		"kaelen": ContextBlockBuilderType.kaelen_block(state),
 	}
 	for block_name in blocks.keys():
-		_assert_no_secret_tokens(str(blocks[block_name]), block_name)
+		var block := str(blocks[block_name])
+		_expect(
+			block.contains("### ") and block.contains("Purpose: "),
+			"%s did not include a capability-specific header and purpose." %
+				block_name
+		)
+		_expect(
+			block.contains("Story State:"),
+			"%s did not include the shared public story-state projection." %
+				block_name
+		)
+		_assert_no_secret_tokens(block, block_name)
 
 
 func _salted_story_state() -> Dictionary:

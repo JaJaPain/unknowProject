@@ -39,31 +39,74 @@ static func story_state_public_block(story_state: Dictionary) -> String:
 
 
 static func mission_offer_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Mission Offer Context",
+		"Use for mission premise, urgency, and visible continuity.",
+		story_state
+	)
 
 
 static func mission_answer_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Mission Answer Context",
+		"Use for answers to player questions without revealing hidden facts.",
+		story_state
+	)
 
 
 static func character_conversation_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Character Conversation Context",
+		"Use for grounded NPC conversation and relationship-safe small talk.",
+		story_state
+	)
 
 
 static func ambient_chatter_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Ambient Chatter Context",
+		"Use for optional background lines that should feel locally specific.",
+		story_state
+	)
 
 
 static func nova_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"N.O.V.A. Context",
+		"Use for ship-AI reactions that may reference only player-safe context.",
+		story_state
+	)
 
 
 static func kaelen_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Kaelen Context",
+		"Use for Kaelen-facing handoffs, comments, and reactions.",
+		story_state
+	)
 
 
 static func director_block(story_state: Dictionary) -> String:
-	return story_state_public_block(story_state)
+	return _capability_block(
+		"Large Model Director Context",
+		"Use for high-level planning from public current-timeline state only.",
+		story_state
+	)
+
+
+static func _capability_block(
+	title: String,
+	purpose: String,
+	story_state: Dictionary
+) -> String:
+	var public_block := story_state_public_block(story_state)
+	if public_block.is_empty():
+		return ""
+	var lines: Array[String] = []
+	lines.append("### %s" % title)
+	lines.append("Purpose: %s" % purpose)
+	lines.append(public_block)
+	return "\n".join(lines)
 
 
 static func _append_string_array_line(
