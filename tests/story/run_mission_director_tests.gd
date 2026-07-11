@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_hard_rejects_missing_mechanics_entities_givers_and_consumed_beats()
 	_test_scores_candidates_with_documented_weight_buckets()
 	_test_pacing_rules_block_repetition()
+	_test_repeated_mechanic_requires_three_changes()
 
 	if _failures.is_empty():
 		print("[PASS] Mission director tests")
@@ -240,6 +241,45 @@ func _test_pacing_rules_block_repetition() -> void:
 	_expect(
 		kept.size() == 1 and str(kept[0].get("objective_type", "")) == "DELIVERY_COURIER",
 		"Pacing filter should keep only non-repeating alternatives"
+	)
+
+
+func _test_repeated_mechanic_requires_three_changes() -> void:
+	var prior := {
+		"objective_type": "KILL_SHIPS",
+		"cause_id": "cause.raids",
+		"stake": "Stop the relay raids.",
+		"giver_id": "agent.jenna",
+		"location_id": "outpost.red",
+		"complication": "storm",
+		"faction_id": "zenith",
+		"disclosure_fact_ids": ["fact.a"],
+		"world_consequence": "raids spread",
+	}
+	var too_similar := prior.duplicate(true)
+	too_similar["stake"] = "Stop the relay raids before they spread."
+	too_similar["premise_fingerprint"] = "new-fingerprint"
+	_expect(
+		MissionDirectorType.repeated_mechanic_change_count(too_similar, prior) == 1,
+		"Expected only stake to differ"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(too_similar, [prior]) \
+			== "repeated_mechanic_not_differentiated",
+		"Repeated mechanic with fewer than 3 changes should be blocked"
+	)
+	var meaningfully_changed := prior.duplicate(true)
+	meaningfully_changed["stake"] = "Save the courier lane."
+	meaningfully_changed["giver_id"] = "agent.voss"
+	meaningfully_changed["location_id"] = "outpost.blue"
+	meaningfully_changed["premise_fingerprint"] = "another-new-fingerprint"
+	_expect(
+		MissionDirectorType.repeated_mechanic_change_count(meaningfully_changed, prior) >= 3,
+		"Expected at least 3 changed dimensions"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(meaningfully_changed, [prior]).is_empty(),
+		"Repeated mechanic with at least 3 changes should pass"
 	)
 
 

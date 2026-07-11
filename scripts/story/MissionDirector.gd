@@ -176,6 +176,13 @@ static func pacing_rejection_reason(
 			same_in_four += 1
 	if same_in_four >= 2:
 		return "objective_overrepresented_in_last_four"
+	for entry in last_four:
+		if entry is Dictionary \
+				and str((entry as Dictionary).get("objective_type", "")) == objective:
+			var changed := repeated_mechanic_change_count(candidate, entry as Dictionary)
+			if changed < 3:
+				return "repeated_mechanic_not_differentiated"
+			break
 	var fingerprint := str(candidate.get("premise_fingerprint", "")).strip_edges()
 	if not fingerprint.is_empty():
 		var last_eight := recent_agent_contracts.slice(maxi(0, recent_agent_contracts.size() - 8))
@@ -184,6 +191,51 @@ static func pacing_rejection_reason(
 					and str((entry as Dictionary).get("premise_fingerprint", "")) == fingerprint:
 				return "repeated_premise_fingerprint"
 	return ""
+
+
+static func repeated_mechanic_change_count(
+	candidate: Dictionary,
+	prior_contract: Dictionary
+) -> int:
+	var changed := 0
+	if _field_changed(candidate, prior_contract, "cause_id"):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "stake"):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "giver_id"):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "location_id"):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "complication"):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "faction_id"):
+		changed += 1
+	if _array_fingerprint(candidate.get("disclosure_fact_ids", [])) \
+			!= _array_fingerprint(prior_contract.get("disclosure_fact_ids", [])):
+		changed += 1
+	if _field_changed(candidate, prior_contract, "world_consequence"):
+		changed += 1
+	return changed
+
+
+static func _field_changed(
+	left: Dictionary,
+	right: Dictionary,
+	field: String
+) -> bool:
+	var left_value := str(left.get(field, "")).strip_edges()
+	var right_value := str(right.get(field, "")).strip_edges()
+	if left_value.is_empty() and right_value.is_empty():
+		return false
+	return left_value != right_value
+
+
+static func _array_fingerprint(value: Variant) -> String:
+	var parts: Array[String] = []
+	for item in _array_or_empty(value):
+		parts.append(str(item))
+	parts.sort()
+	return "|".join(parts)
 
 
 static func _all_history_objective(history: Array, objective_type: String) -> bool:
@@ -299,11 +351,34 @@ static func _candidate(
 		"giver_id": str(giver.get("giver_id", "")),
 		"giver_display": str(giver.get("display_name", giver.get("giver_id", ""))),
 		"eligible_entity_ids": _array_or_empty(beat.get("eligible_entity_ids", [])),
+		"location_id": str(beat.get("location_id", "")),
+		"faction_id": str(beat.get("faction_id", "")),
+		"complication": str(beat.get("complication", "")),
 		"stake": str(beat.get("stake", "")),
 		"disclosure_fact_ids": _array_or_empty(beat.get("disclosure_fact_ids", [])),
 		"completion_fact_ids": _array_or_empty(beat.get("completion_fact_ids", [])),
 		"decline_consequence": str(beat.get("decline_consequence", "")),
+		"world_consequence": str(beat.get("world_consequence", "")),
+		"premise_fingerprint": _premise_fingerprint(beat, objective_type, giver),
 	}
+
+
+static func _premise_fingerprint(
+	beat: Dictionary,
+	objective_type: String,
+	giver: Dictionary
+) -> String:
+	var explicit := str(beat.get("premise_fingerprint", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var parts := [
+		objective_type,
+		str(beat.get("cause_id", "")),
+		str(beat.get("stake", "")),
+		str(giver.get("giver_id", "")),
+		_array_fingerprint(beat.get("eligible_entity_ids", [])),
+	]
+	return "|".join(parts).sha256_text().substr(0, 16)
 
 
 static func _array_or_empty(value: Variant) -> Array:
