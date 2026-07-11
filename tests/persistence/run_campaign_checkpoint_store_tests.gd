@@ -1,14 +1,8 @@
 extends SceneTree
 
-const CheckpointStoreType := preload(
-	"res://scripts/persistence/CampaignCheckpointStore.gd"
-)
-const SlotRegistryType := preload(
-	"res://scripts/persistence/CampaignSlotRegistry.gd"
-)
-const SystemRegistryType := preload(
-	"res://scripts/registry/SystemRegistry.gd"
-)
+var CheckpointStoreType: GDScript = null
+var SlotRegistryType: GDScript = null
+var SystemRegistryType: GDScript = null
 
 const TEST_ROOT := "user://campaign_checkpoint_fixture"
 const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
@@ -17,6 +11,17 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	CheckpointStoreType = load(
+		"res://scripts/persistence/CampaignCheckpointStore.gd"
+	)
+	SlotRegistryType = load("res://scripts/persistence/CampaignSlotRegistry.gd")
+	SystemRegistryType = load("res://scripts/registry/SystemRegistry.gd")
+	if CheckpointStoreType == null \
+			or SlotRegistryType == null \
+			or SystemRegistryType == null:
+		push_error("[FAIL] Checkpoint persistence scripts did not compile.")
+		quit(1)
+		return
 	_cleanup()
 	_test_safe_capture_restore_and_recovery()
 	_cleanup()
@@ -31,8 +36,8 @@ func _initialize() -> void:
 
 
 func _test_safe_capture_restore_and_recovery() -> void:
-	var slots := SlotRegistryType.open(TEST_ROOT)
-	var created := slots.create_campaign(
+	var slots: RefCounted = SlotRegistryType.open(TEST_ROOT)
+	var created: Dictionary = slots.create_campaign(
 		"slot_01",
 		"Checkpoint Fixture",
 		"phase-2-test",
@@ -48,7 +53,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"Initial campaign checkpoint retained tactical state."
 	)
 
-	var store := CheckpointStoreType.open(CAMPAIGN_PATH)
+	var store: RefCounted = CheckpointStoreType.open(CAMPAIGN_PATH)
 	_expect(
 		store.is_valid(),
 		"Checkpoint store is invalid: %s" % store.validation.summary()
@@ -58,7 +63,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	var manifest_before := FileAccess.get_file_as_string(
 		"%s/manifest.json" % CAMPAIGN_PATH
 	)
-	var initial_map := store.current_map_knowledge()
+	var initial_map: Dictionary = store.current_map_knowledge()
 	_expect(
 		"gate.start.to_test" not in initial_map.get("known_gate_ids", [])
 			and "gate.start.to_test" not in initial_map.get("rumored_gate_ids", [])
@@ -66,7 +71,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"Initial unknown gate should not be pre-seeded into map knowledge."
 	)
 
-	var docked := store.capture_autosave(
+	var docked: Dictionary = store.capture_autosave(
 		_runtime_state(125, 84.0, "dock"),
 		{
 			"type": "docked",
@@ -76,7 +81,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"dock"
 	)
 	_expect(bool(docked.get("ok", false)), docked.get("error", ""))
-	var dock_bundle := store.load_active_bundle()
+	var dock_bundle: Dictionary = store.load_active_bundle()
 	_expect(bool(dock_bundle.get("ok", false)), dock_bundle.get("error", ""))
 	if not bool(dock_bundle.get("ok", false)):
 		return
@@ -91,7 +96,20 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		not _contains_tactical_key(dock_checkpoint.get("state", {})),
 		"Dock checkpoint retained tactical session data."
 	)
-	var manual_copy := store.copy_active_to_manual(
+	var dock_story_state: Dictionary = dock_checkpoint.get(
+		"state",
+		{}
+	).get("story_state", {})
+	_expect(
+		(dock_story_state.get("knowledge_states", {}) as Dictionary).has(
+			"fact.dock"
+		)
+			and (dock_story_state.get("beat_states", {}) as Dictionary).has(
+				"beat.dock"
+			),
+		"Dock checkpoint did not retain rewindable story_state."
+	)
+	var manual_copy: Dictionary = store.copy_active_to_manual(
 		0,
 		"  Before / Dangerous: Flight?  "
 	)
@@ -107,7 +125,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		manual_copy.get("checkpoint_id", "") == dock_checkpoint.get("id", ""),
 		"Manual checkpoint did not copy the active safe checkpoint."
 	)
-	var manual_bundle := store.load_manual_bundle(0)
+	var manual_bundle: Dictionary = store.load_manual_bundle(0)
 	_expect(
 		bool(manual_bundle.get("ok", false))
 			and JSON.stringify(
@@ -126,7 +144,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			),
 		"Manual checkpoint payload was not an exact safe-bundle copy."
 	)
-	var overwrite_required := store.copy_active_to_manual(
+	var overwrite_required: Dictionary = store.copy_active_to_manual(
 		0,
 		"Replacement"
 	)
@@ -136,7 +154,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"Occupied manual checkpoint did not require overwrite confirmation."
 	)
 
-	var undocked := store.capture_autosave(
+	var undocked: Dictionary = store.capture_autosave(
 		_runtime_state(875, 100.0, "undock"),
 		{
 			"type": "docked",
@@ -146,7 +164,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"undock"
 	)
 	_expect(bool(undocked.get("ok", false)), undocked.get("error", ""))
-	var undock_state := store.runtime_state_from_active()
+	var undock_state: Dictionary = store.runtime_state_from_active()
 	_expect(
 		bool(undock_state.get("ok", false))
 			and undock_state.get("source_reason") == "undock"
@@ -158,7 +176,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			) == 875,
 		"Pre-undock checkpoint did not retain station-visit changes."
 	)
-	var preserved_manual := store.runtime_state_from_manual(0)
+	var preserved_manual: Dictionary = store.runtime_state_from_manual(0)
 	_expect(
 		bool(preserved_manual.get("ok", false))
 			and int(
@@ -169,7 +187,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			) == 125,
 		"Later autosave changed the earlier manual checkpoint copy."
 	)
-	var overwritten := store.copy_active_to_manual(
+	var overwritten: Dictionary = store.copy_active_to_manual(
 		0,
 		"After Station Visit",
 		true
@@ -188,8 +206,8 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		bool(store.copy_active_to_manual(1, "Second Copy").get("ok", false)),
 		"Both manual checkpoint slots were not independently writable."
 	)
-	var manual_entries := store.list_manual_checkpoints()
-	var all_manual_slots_occupied := manual_entries.size() == 2
+	var manual_entries: Array = store.list_manual_checkpoints()
+	var all_manual_slots_occupied: bool = manual_entries.size() == 2
 	for entry in manual_entries:
 		all_manual_slots_occupied = all_manual_slots_occupied \
 			and bool(entry.get("occupied", false))
@@ -197,7 +215,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		all_manual_slots_occupied,
 		"Manual checkpoint listing did not report two occupied slots."
 	)
-	var renamed_manual := store.rename_manual_checkpoint(
+	var renamed_manual: Dictionary = store.rename_manual_checkpoint(
 		1,
 		"  Second / Renamed  "
 	)
@@ -227,7 +245,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		]),
 		"Handcrafted route discovery could not mark gates known."
 	)
-	var gate := store.capture_autosave(
+	var gate: Dictionary = store.capture_autosave(
 		_runtime_state(990, 63.0, "gate"),
 		{
 			"type": "gate_arrival",
@@ -237,7 +255,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"gate_arrival"
 	)
 	_expect(bool(gate.get("ok", false)), gate.get("error", ""))
-	var gate_bundle := store.load_active_bundle()
+	var gate_bundle: Dictionary = store.load_active_bundle()
 	_expect(
 		bool(gate_bundle.get("ok", false))
 			and gate_bundle.get("checkpoint", {}).get(
@@ -257,7 +275,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 			).get("known_gate_ids", []),
 		"Gate arrival checkpoint did not retain route discovery."
 	)
-	var older_manual_state := store.runtime_state_from_manual(0)
+	var older_manual_state: Dictionary = store.runtime_state_from_manual(0)
 	_expect(
 		store.restore_map_knowledge(
 			older_manual_state.get("map_knowledge", {})
@@ -283,7 +301,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		"%s/%s/checkpoint.json" % [CAMPAIGN_PATH, gate_path],
 		"{ damaged"
 	)
-	var recovered := store.load_active_bundle()
+	var recovered: Dictionary = store.load_active_bundle()
 	_expect(
 		bool(recovered.get("ok", false))
 			and bool(recovered.get("recovered", false))
@@ -357,6 +375,7 @@ func _runtime_state(
 			"partial_delivered": 5.0,
 			"faction": "zenith",
 		},
+		"story_state": _story_state(label),
 		"systems": {
 			"system.start": {
 				"entities": {
@@ -372,6 +391,32 @@ func _runtime_state(
 		"attack_target": "entity.enemy.001",
 		"autopilot_waypoint": [500.0, 0.0, 0.0],
 		"jump_transition": label == "gate",
+	}
+
+
+func _story_state(label: String) -> Dictionary:
+	return {
+		"schema_version": 2,
+		"document_type": "story_state",
+		"chapter": 2 if label == "dock" else 1,
+		"story_revision": 5 if label == "dock" else 1,
+		"knowledge_revision": 6 if label == "dock" else 1,
+		"mission_history_revision": 7 if label == "dock" else 1,
+		"knowledge_states": {
+			"fact.%s" % label: {
+				"state": "known",
+				"source": "checkpoint_store_test",
+				"learned_at_minute": 10,
+				"confidence": "direct",
+				"public_text": "%s story fact" % label,
+			},
+		},
+		"beat_states": {
+			"beat.%s" % label: {
+				"state": "completed",
+				"completed_at_minute": 11,
+			},
+		},
 	}
 
 

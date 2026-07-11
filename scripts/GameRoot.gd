@@ -1466,6 +1466,7 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"global": _capture_global_state(),
 		"quest": quest_array,
 		"board_cooldowns": QuestManager.capture_board_cooldowns(),
+		"story_state": StoryManager.capture_story_state_for_checkpoint(),
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -2809,6 +2810,15 @@ func _is_valid_save_data(data: Variant) -> bool:
 	).is_valid()
 
 func _apply_save_data(data: Dictionary) -> void:
+	var checkpoint_story_state = data.get("story_state", {})
+	if checkpoint_story_state is Dictionary \
+			and not (checkpoint_story_state as Dictionary).is_empty() \
+			and not StoryManager.restore_story_state_from_checkpoint(
+				checkpoint_story_state
+			):
+		push_warning(
+			"[GameRoot] Save story_state failed validation during restore."
+		)
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))

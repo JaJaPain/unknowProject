@@ -282,6 +282,32 @@ func clear_story_state() -> void:
 # ── Phase C: Mission causality ─────────────────────────────────────────────────
 # The single reason a mission generated right now exists. Safe for prompts —
 # active_tensions is player-facing world state, not a hidden truth.
+func capture_story_state_for_checkpoint() -> Dictionary:
+	return StoryStateStoreType._migrate_legacy_state(
+		story_state.duplicate(true)
+	).duplicate(true)
+
+
+func restore_story_state_from_checkpoint(checkpoint_story_state: Dictionary) -> bool:
+	if checkpoint_story_state.is_empty():
+		return false
+	var restored := StoryStateStoreType._migrate_legacy_state(
+		checkpoint_story_state.duplicate(true)
+	)
+	var validation := StoryStateStoreType._validate_data(restored)
+	if not validation.is_valid():
+		push_warning(
+			"[StoryManager] Checkpoint story_state restore rejected: %s" %
+				validation.summary()
+		)
+		return false
+	story_state = restored.duplicate(true)
+	_save_story_state()
+	_push_context_to_llm()
+	_push_nova_campaign_flavor()
+	return true
+
+
 func get_current_because() -> String:
 	var tensions: Array = story_state.get("active_tensions", [])
 	if tensions.is_empty():
