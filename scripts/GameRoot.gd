@@ -32,6 +32,9 @@ const CampaignIdeaMemoryStoreType := preload(
 const CampaignBibleStoreType := preload(
 	"res://scripts/persistence/CampaignBibleStore.gd"
 )
+const ChapterNarrativePacketStoreType := preload(
+	"res://scripts/persistence/ChapterNarrativePacketStore.gd"
+)
 const CampaignGeneratedFactionStoreType := preload(
 	"res://scripts/persistence/CampaignGeneratedFactionStore.gd"
 )
@@ -74,6 +77,7 @@ var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var campaign_bible_store: CampaignBibleStore
+var campaign_chapter_packet_store = null
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
 var campaign_agent_memory_store = null
@@ -1354,6 +1358,7 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1484,6 +1489,7 @@ func _clear_active_campaign_runtime_context() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
 	campaign_agent_memory_store = null
@@ -1525,6 +1531,7 @@ func _initialize_campaign_registry() -> void:
 		campaign_idea_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1632,6 +1639,7 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
 	campaign_agent_memory_store = null
@@ -1665,6 +1673,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chronicle_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1684,6 +1693,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1703,6 +1713,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1712,6 +1723,26 @@ func _initialize_campaign_chronicle() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_bible_store = opened_bible
+	var opened_chapter_packets := ChapterNarrativePacketStoreType.open(slot_path)
+	if not opened_chapter_packets.is_valid():
+		push_warning(
+			"[GameRoot] Chapter narrative packet store is unavailable: %s" %
+				opened_chapter_packets.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_agent_memory_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_chapter_packet_store = opened_chapter_packets
 	var opened_generated_factions := CampaignGeneratedFactionStoreType.open(slot_path)
 	if not opened_generated_factions.is_valid():
 		push_warning(
@@ -1722,6 +1753,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1741,6 +1773,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -1761,6 +1794,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_kaelen_memory_store = null
 		campaign_idea_memory_store = null
 		campaign_bible_store = null
+		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
 		campaign_agent_memory_store = null
@@ -2990,6 +3024,7 @@ func _run_jump_smoke_test() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
 	campaign_agent_memory_store = null
@@ -4553,6 +4588,7 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
 	campaign_bible_store = null
+	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
 	campaign_agent_memory_store = null
