@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_feasible_candidates_cross_available_beats_objectives_and_givers()
 	_test_hard_rejects_missing_mechanics_entities_givers_and_consumed_beats()
 	_test_scores_candidates_with_documented_weight_buckets()
+	_test_pacing_rules_block_repetition()
 
 	if _failures.is_empty():
 		print("[PASS] Mission director tests")
@@ -182,6 +183,63 @@ func _test_scores_candidates_with_documented_weight_buckets() -> void:
 	_expect(
 		int(lower_breakdown.get("variety_pacing", 0)) < 20,
 		"Repeated recent objective should lose variety points"
+	)
+
+
+func _test_pacing_rules_block_repetition() -> void:
+	var kill_candidate := {
+		"beat_id": "beat.alpha",
+		"objective_type": "KILL_SHIPS",
+		"premise_fingerprint": "raid-relay",
+	}
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(
+			kill_candidate,
+			[
+				{"objective_type": "KILL_SHIPS"},
+				{"objective_type": "KILL_SHIPS"},
+			]
+		) == "third_identical_objective_blocked",
+		"Third identical objective should be blocked"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(
+			kill_candidate,
+			[
+				{"objective_type": "KILL_SHIPS"},
+				{"objective_type": "DELIVERY_COURIER"},
+				{"objective_type": "KILL_SHIPS"},
+				{"objective_type": "PURCHASE_DELIVERY"},
+			]
+		) == "objective_overrepresented_in_last_four",
+		"Objective appearing twice in last four should block another copy"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(
+			kill_candidate,
+			[
+				{"objective_type": "DELIVERY_COURIER", "premise_fingerprint": "raid-relay"},
+			]
+		) == "repeated_premise_fingerprint",
+		"Repeated premise fingerprint should be blocked"
+	)
+	var kept := MissionDirectorType.filter_by_pacing_rules(
+		[
+			kill_candidate,
+			{
+				"beat_id": "beat.beta",
+				"objective_type": "DELIVERY_COURIER",
+				"premise_fingerprint": "fresh-route",
+			},
+		],
+		[
+			{"objective_type": "KILL_SHIPS"},
+			{"objective_type": "KILL_SHIPS"},
+		]
+	)
+	_expect(
+		kept.size() == 1 and str(kept[0].get("objective_type", "")) == "DELIVERY_COURIER",
+		"Pacing filter should keep only non-repeating alternatives"
 	)
 
 

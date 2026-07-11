@@ -146,6 +146,57 @@ static func score_candidate(
 	return scored
 
 
+static func filter_by_pacing_rules(
+	candidates: Array,
+	recent_agent_contracts: Array
+) -> Array:
+	var kept: Array = []
+	for candidate in candidates:
+		if not candidate is Dictionary:
+			continue
+		if pacing_rejection_reason(candidate as Dictionary, recent_agent_contracts).is_empty():
+			kept.append(candidate)
+	return kept
+
+
+static func pacing_rejection_reason(
+	candidate: Dictionary,
+	recent_agent_contracts: Array
+) -> String:
+	var objective := str(candidate.get("objective_type", "")).strip_edges()
+	if objective.is_empty():
+		return "missing_objective_type"
+	var last_two := recent_agent_contracts.slice(maxi(0, recent_agent_contracts.size() - 2))
+	if last_two.size() >= 2 and _all_history_objective(last_two, objective):
+		return "third_identical_objective_blocked"
+	var last_four := recent_agent_contracts.slice(maxi(0, recent_agent_contracts.size() - 4))
+	var same_in_four := 0
+	for entry in last_four:
+		if entry is Dictionary and str((entry as Dictionary).get("objective_type", "")) == objective:
+			same_in_four += 1
+	if same_in_four >= 2:
+		return "objective_overrepresented_in_last_four"
+	var fingerprint := str(candidate.get("premise_fingerprint", "")).strip_edges()
+	if not fingerprint.is_empty():
+		var last_eight := recent_agent_contracts.slice(maxi(0, recent_agent_contracts.size() - 8))
+		for entry in last_eight:
+			if entry is Dictionary \
+					and str((entry as Dictionary).get("premise_fingerprint", "")) == fingerprint:
+				return "repeated_premise_fingerprint"
+	return ""
+
+
+static func _all_history_objective(history: Array, objective_type: String) -> bool:
+	if history.is_empty():
+		return false
+	for entry in history:
+		if not entry is Dictionary:
+			return false
+		if str((entry as Dictionary).get("objective_type", "")) != objective_type:
+			return false
+	return true
+
+
 static func _score_causal_fit(candidate: Dictionary, context: Dictionary) -> int:
 	var score := 0
 	if not str(candidate.get("cause_id", "")).strip_edges().is_empty():
