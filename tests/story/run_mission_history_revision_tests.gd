@@ -24,6 +24,7 @@ func _initialize() -> void:
 
 	_test_story_manager_increments_revision()
 	_test_story_and_knowledge_revision_methods_increment_owned_fields()
+	_test_story_manager_promotes_fact_after_delivery()
 	_test_quest_decline_increments_revision()
 
 	_story_manager.story_state = _previous_state
@@ -70,6 +71,39 @@ func _test_story_and_knowledge_revision_methods_increment_owned_fields() -> void
 		knowledge_revision == 1
 			and int(_story_manager.story_state.get("knowledge_revision", 0)) == 1,
 		"Knowledge revision did not increment through its owned method."
+	)
+
+
+func _test_story_manager_promotes_fact_after_delivery() -> void:
+	_story_manager.story_state["knowledge_revision"] = 0
+	_story_manager.story_state["knowledge_states"] = {}
+	var promoted: Dictionary = _story_manager.promote_fact_after_delivery(
+		"fact.delivery.visible",
+		"known",
+		"mission_answer",
+		"direct"
+	)
+	var states: Dictionary = _story_manager.story_state.get("knowledge_states", {})
+	var record: Dictionary = states.get("fact.delivery.visible", {})
+	_expect(
+		bool(promoted.get("ok", false))
+			and bool(promoted.get("changed", false))
+			and record.get("state", "") == "known"
+			and record.get("source", "") == "mission_answer"
+			and int(_story_manager.story_state.get("knowledge_revision", 0)) == 1,
+		"StoryManager did not promote a delivered fact through the ledger."
+	)
+	var duplicate: Dictionary = _story_manager.promote_fact_after_delivery(
+		"fact.delivery.visible",
+		"known",
+		"mission_answer",
+		"direct"
+	)
+	_expect(
+		bool(duplicate.get("ok", false))
+			and not bool(duplicate.get("changed", true))
+			and int(_story_manager.story_state.get("knowledge_revision", 0)) == 1,
+		"Repeated delivered fact promotion should not bump knowledge_revision."
 	)
 
 

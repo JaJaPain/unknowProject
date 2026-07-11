@@ -28,6 +28,9 @@ const KaelenHandoffStoreType := preload(
 const ContextBlockBuilderType := preload(
 	"res://scripts/ai/ContextBlockBuilder.gd"
 )
+const KnowledgeLedgerType := preload(
+	"res://scripts/story/KnowledgeLedger.gd"
+)
 
 # ── Phase B: Living story state ───────────────────────────────────────────────
 # story_state is the in-memory working copy. StoryStateStore handles persistence.
@@ -351,6 +354,25 @@ func increment_knowledge_revision(
 	event_data: Dictionary = {}
 ) -> int:
 	return _increment_revision("knowledge_revision", event_type, event_data)
+
+
+func promote_fact_after_delivery(
+	fact_id: String,
+	next_state: String,
+	source: String,
+	confidence: String = "direct"
+) -> Dictionary:
+	var ledger := KnowledgeLedgerType.new(story_state)
+	var result: Dictionary = ledger.promote(
+		fact_id,
+		next_state,
+		source,
+		int(CampaignClock.total_minutes),
+		confidence
+	)
+	if bool(result.get("ok", false)) and bool(result.get("changed", false)):
+		_save_story_state()
+	return result
 
 
 func _increment_revision(
