@@ -8,6 +8,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_feasible_candidates_cross_available_beats_objectives_and_givers()
 	_test_hard_rejects_missing_mechanics_entities_givers_and_consumed_beats()
+	_test_scores_candidates_with_documented_weight_buckets()
 
 	if _failures.is_empty():
 		print("[PASS] Mission director tests")
@@ -115,6 +116,72 @@ func _test_hard_rejects_missing_mechanics_entities_givers_and_consumed_beats() -
 	_expect(
 		reasons.any(func(r): return str(r.get("reason", "")) == "no_local_giver"),
 		"Missing rejection reason for absent giver"
+	)
+
+
+func _test_scores_candidates_with_documented_weight_buckets() -> void:
+	var candidates := [
+		{
+			"beat_id": "beat.alpha",
+			"cause_id": "cause.raids",
+			"objective_type": "KILL_SHIPS",
+			"giver_id": "agent.jenna",
+			"giver_display": "Jenna Kross",
+			"stake": "Stop the relay raids before they spread.",
+		},
+		{
+			"beat_id": "beat.beta",
+			"cause_id": "",
+			"objective_type": "DELIVERY_COURIER",
+			"giver_id": "agent.voss",
+			"giver_display": "Director Voss",
+			"stake": "",
+		},
+	]
+	var scored := MissionDirectorType.score_candidates(
+		candidates,
+		{
+			"preferred_cause_ids": ["cause.raids"],
+			"urgent_beat_ids": ["beat.alpha"],
+			"preferred_giver_ids": ["agent.jenna"],
+			"preferred_objective_types": ["KILL_SHIPS"],
+			"packet_consumed_ratio": 0.5,
+		},
+		[
+			{"objective_type": "DELIVERY_COURIER"},
+			{"objective_type": "DELIVERY_COURIER"},
+		]
+	)
+	_expect(scored.size() == 2, "Expected two scored candidates")
+	_expect(
+		str(scored[0].get("beat_id", "")) == "beat.alpha",
+		"Highest scoring candidate should sort first"
+	)
+	var breakdown: Dictionary = scored[0].get("score_breakdown", {})
+	_expect(
+		int(breakdown.get("causal_fit", 0)) == 40,
+		"Causal fit should cap at 40"
+	)
+	_expect(
+		int(breakdown.get("beat_urgency", 0)) == 20,
+		"Urgent beat should receive 20 urgency points"
+	)
+	_expect(
+		int(breakdown.get("variety_pacing", 0)) == 20,
+		"Fresh objective should receive full variety points"
+	)
+	_expect(
+		int(breakdown.get("character_stake", 0)) == 10,
+		"Preferred giver should receive 10 character-stake points"
+	)
+	_expect(
+		int(breakdown.get("player_ship_fit", 0)) == 10,
+		"Preferred objective should receive 10 player/ship-fit points"
+	)
+	var lower_breakdown: Dictionary = scored[1].get("score_breakdown", {})
+	_expect(
+		int(lower_breakdown.get("variety_pacing", 0)) < 20,
+		"Repeated recent objective should lose variety points"
 	)
 
 

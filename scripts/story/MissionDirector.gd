@@ -5,6 +5,12 @@ const MissionCapabilityRegistryType := preload(
 	"res://scripts/domain/MissionCapabilityRegistry.gd"
 )
 
+const WEIGHT_CAUSAL_FIT := 40
+const WEIGHT_BEAT_URGENCY := 20
+const WEIGHT_VARIETY_PACING := 20
+const WEIGHT_CHARACTER_STAKE := 10
+const WEIGHT_PLAYER_SHIP_FIT := 10
+
 
 static func feasible_candidates(
 	packet: Dictionary,
@@ -97,6 +103,100 @@ static func rejected_candidate_reasons(
 						"reason": reason,
 					})
 	return rejections
+
+
+static func score_candidates(
+	candidates: Array,
+	context: Dictionary = {},
+	recent_agent_contracts: Array = []
+) -> Array:
+	var scored: Array = []
+	for candidate in candidates:
+		if not candidate is Dictionary:
+			continue
+		scored.append(score_candidate(candidate as Dictionary, context, recent_agent_contracts))
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var score_a := int(a.get("score", 0))
+		var score_b := int(b.get("score", 0))
+		if score_a == score_b:
+			return str(a.get("beat_id", "")) < str(b.get("beat_id", ""))
+		return score_a > score_b
+	)
+	return scored
+
+
+static func score_candidate(
+	candidate: Dictionary,
+	context: Dictionary = {},
+	recent_agent_contracts: Array = []
+) -> Dictionary:
+	var breakdown := {
+		"causal_fit": _score_causal_fit(candidate, context),
+		"beat_urgency": _score_beat_urgency(candidate, context),
+		"variety_pacing": _score_variety_pacing(candidate, recent_agent_contracts),
+		"character_stake": _score_character_stake(candidate, context),
+		"player_ship_fit": _score_player_ship_fit(candidate, context),
+	}
+	var total := 0
+	for value in breakdown.values():
+		total += int(value)
+	var scored := candidate.duplicate(true)
+	scored["score"] = total
+	scored["score_breakdown"] = breakdown
+	return scored
+
+
+static func _score_causal_fit(candidate: Dictionary, context: Dictionary) -> int:
+	var score := 0
+	if not str(candidate.get("cause_id", "")).strip_edges().is_empty():
+		score += 20
+	if not str(candidate.get("stake", "")).strip_edges().is_empty():
+		score += 10
+	var preferred_causes: Array = _array_or_empty(context.get("preferred_cause_ids", []))
+	if preferred_causes.has(str(candidate.get("cause_id", ""))):
+		score += 10
+	return mini(score, WEIGHT_CAUSAL_FIT)
+
+
+static func _score_beat_urgency(candidate: Dictionary, context: Dictionary) -> int:
+	var urgent_beats: Array = _array_or_empty(context.get("urgent_beat_ids", []))
+	if urgent_beats.has(str(candidate.get("beat_id", ""))):
+		return WEIGHT_BEAT_URGENCY
+	var packet_consumed_ratio := float(context.get("packet_consumed_ratio", 0.0))
+	return clampi(int(round(packet_consumed_ratio * float(WEIGHT_BEAT_URGENCY))), 0, WEIGHT_BEAT_URGENCY)
+
+
+static func _score_variety_pacing(
+	candidate: Dictionary,
+	recent_agent_contracts: Array
+) -> int:
+	var objective := str(candidate.get("objective_type", ""))
+	var same_recent := 0
+	for entry in recent_agent_contracts.slice(maxi(0, recent_agent_contracts.size() - 4)):
+		if entry is Dictionary and str((entry as Dictionary).get("objective_type", "")) == objective:
+			same_recent += 1
+	var score := WEIGHT_VARIETY_PACING - (same_recent * 8)
+	return clampi(score, 0, WEIGHT_VARIETY_PACING)
+
+
+static func _score_character_stake(candidate: Dictionary, context: Dictionary) -> int:
+	var preferred_givers: Array = _array_or_empty(context.get("preferred_giver_ids", []))
+	if preferred_givers.has(str(candidate.get("giver_id", ""))):
+		return WEIGHT_CHARACTER_STAKE
+	if not str(candidate.get("giver_display", "")).strip_edges().is_empty():
+		return 5
+	return 0
+
+
+static func _score_player_ship_fit(candidate: Dictionary, context: Dictionary) -> int:
+	var preferred_objectives: Array = _array_or_empty(context.get("preferred_objective_types", []))
+	if preferred_objectives.has(str(candidate.get("objective_type", ""))):
+		return WEIGHT_PLAYER_SHIP_FIT
+	var ship_fit: Dictionary = context.get("ship_fit_by_objective", {}) \
+		if context.get("ship_fit_by_objective", {}) is Dictionary else {}
+	if ship_fit.has(str(candidate.get("objective_type", ""))):
+		return clampi(int(ship_fit.get(str(candidate.get("objective_type", "")), 0)), 0, WEIGHT_PLAYER_SHIP_FIT)
+	return 5
 
 
 static func _beat_is_available(beat: Dictionary, beat_states: Dictionary) -> bool:
