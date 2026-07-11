@@ -15,6 +15,9 @@ const PublicBoardTextGeneratorType := preload(
 const MissionCapabilityRegistryType := preload(
 	"res://scripts/domain/MissionCapabilityRegistry.gd"
 )
+const MissionTemplateRegistryType := preload(
+	"res://scripts/domain/MissionTemplateRegistry.gd"
+)
 
 var _failures: Array[String] = []
 
@@ -32,6 +35,7 @@ func _initialize() -> void:
 	_test_recovery_offer()
 	_test_generated_faction_display_name()
 	_test_timed_offer()
+	_test_agent_templates_cover_implemented_capabilities()
 	_test_public_board_text_generation()
 	_test_public_board_story_intents_prioritize_offers()
 	_test_malformed_narrative_metadata_rejected()
@@ -644,6 +648,28 @@ func _test_public_board_text_generation() -> void:
 		),
 		"Public-board text accepted Kaelen authorship drift."
 	)
+
+
+func _test_agent_templates_cover_implemented_capabilities() -> void:
+	var expected := {
+		MissionTemplateRegistryType.TEMPLATE_DELIVERY_COURIER_AGENT: "DELIVERY_COURIER",
+		MissionTemplateRegistryType.TEMPLATE_PURCHASE_DELIVERY_AGENT: "PURCHASE_DELIVERY",
+		MissionTemplateRegistryType.TEMPLATE_RECOVER_COMBAT_DROP_AGENT: "RECOVER_COMBAT_DROP",
+		MissionTemplateRegistryType.TEMPLATE_TARGET_WITH_COMMS_REVERSAL_AGENT: "TARGET_WITH_COMMS_REVERSAL",
+	}
+	for template_id in expected.keys():
+		var template = MissionTemplateRegistryType.get_template(str(template_id))
+		_expect(
+			template != null,
+			"Missing agent template: %s" % str(template_id)
+		)
+		if template == null:
+			continue
+		_expect(
+			template.source_lane == "AGENT"
+				and template.objective_type == str(expected[template_id]),
+			"Agent template %s has wrong lane/objective." % str(template_id)
+		)
 
 
 func _test_public_board_story_intents_prioritize_offers() -> void:

@@ -9,6 +9,10 @@ const TEMPLATE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
 const TEMPLATE_DELIVER_ORE_AGENT := "DELIVER_ORE_AGENT"
 const TEMPLATE_KILL_SHIPS_AGENT := "KILL_SHIPS_AGENT"
 const TEMPLATE_PICKUP_SPECIAL_AGENT := "PICKUP_SPECIAL_AGENT"
+const TEMPLATE_DELIVERY_COURIER_AGENT := "DELIVERY_COURIER_AGENT"
+const TEMPLATE_PURCHASE_DELIVERY_AGENT := "PURCHASE_DELIVERY_AGENT"
+const TEMPLATE_RECOVER_COMBAT_DROP_AGENT := "RECOVER_COMBAT_DROP_AGENT"
+const TEMPLATE_TARGET_WITH_COMMS_REVERSAL_AGENT := "TARGET_WITH_COMMS_REVERSAL_AGENT"
 const TEMPLATE_TARGET_WITH_COMMS_REVERSAL := "TARGET_WITH_COMMS_REVERSAL"
 
 const BOARD_WRITE_FIELDS: Array[String] = [
@@ -305,6 +309,58 @@ static func _register_agent_templates() -> void:
 	_cache[TEMPLATE_PICKUP_SPECIAL_AGENT] = MissionTemplate.create({
 		"template_id": TEMPLATE_PICKUP_SPECIAL_AGENT,
 		"objective_type": "PICKUP_SPECIAL",
+		"source_lane": "AGENT",
+		"tone_card": "",
+		"write_fields": AGENT_WRITE_FIELDS,
+		"field_limits": AGENT_FIELD_LIMITS,
+		"required_placeholders": [],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [],
+		"fallback_variants": [],
+	})
+
+	_cache[TEMPLATE_DELIVERY_COURIER_AGENT] = MissionTemplate.create({
+		"template_id": TEMPLATE_DELIVERY_COURIER_AGENT,
+		"objective_type": "DELIVERY_COURIER",
+		"source_lane": "AGENT",
+		"tone_card": "",
+		"write_fields": AGENT_WRITE_FIELDS,
+		"field_limits": AGENT_FIELD_LIMITS,
+		"required_placeholders": [],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [],
+		"fallback_variants": [],
+	})
+
+	_cache[TEMPLATE_PURCHASE_DELIVERY_AGENT] = MissionTemplate.create({
+		"template_id": TEMPLATE_PURCHASE_DELIVERY_AGENT,
+		"objective_type": "PURCHASE_DELIVERY",
+		"source_lane": "AGENT",
+		"tone_card": "",
+		"write_fields": AGENT_WRITE_FIELDS,
+		"field_limits": AGENT_FIELD_LIMITS,
+		"required_placeholders": [],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [],
+		"fallback_variants": [],
+	})
+
+	_cache[TEMPLATE_RECOVER_COMBAT_DROP_AGENT] = MissionTemplate.create({
+		"template_id": TEMPLATE_RECOVER_COMBAT_DROP_AGENT,
+		"objective_type": "RECOVER_COMBAT_DROP",
+		"source_lane": "AGENT",
+		"tone_card": "",
+		"write_fields": AGENT_WRITE_FIELDS,
+		"field_limits": AGENT_FIELD_LIMITS,
+		"required_placeholders": [],
+		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
+		"custom_rules": [NO_DROP_PERCENT_RULE],
+		"fallback_variants": [],
+	})
+
+	_cache[TEMPLATE_TARGET_WITH_COMMS_REVERSAL_AGENT] = MissionTemplate.create({
+		"template_id": TEMPLATE_TARGET_WITH_COMMS_REVERSAL_AGENT,
+		"objective_type": "TARGET_WITH_COMMS_REVERSAL",
 		"source_lane": "AGENT",
 		"tone_card": "",
 		"write_fields": AGENT_WRITE_FIELDS,
