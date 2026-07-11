@@ -7225,6 +7225,10 @@ func _dev_story_debug_snapshot() -> Dictionary:
 	var story_context := ""
 	var bridge_summary := ""
 	var full_story_state_json := ""
+	var chapter_packets_summary := "Chapter packet store unavailable."
+	var chapter_facts_by_privacy := ""
+	var chapter_beat_states := ""
+	var chapter_packet_validation := ""
 	if is_instance_valid(StoryManager):
 		story_context = StoryManager.get_story_context_block()
 		var state: Dictionary = StoryManager.story_state
@@ -7238,6 +7242,19 @@ func _dev_story_debug_snapshot() -> Dictionary:
 			]
 		)
 		full_story_state_json = JSON.stringify(state, "\t")
+		chapter_beat_states = JSON.stringify(state.get("beat_states", {}), "\t")
+	if campaign_chapter_packet_store != null:
+		chapter_packet_validation = (
+			"Valid: %s\n%s" %
+			[
+				str(campaign_chapter_packet_store.is_valid()),
+				campaign_chapter_packet_store.validation.summary(),
+			]
+		)
+		if campaign_chapter_packet_store.is_valid():
+			var packets: Array = campaign_chapter_packet_store.all_packets()
+			chapter_packets_summary = _dev_format_chapter_packets(packets)
+			chapter_facts_by_privacy = _dev_format_chapter_facts_by_privacy(packets)
 	return {
 		"status": status,
 		"overarching_story": overarching_story,
@@ -7246,8 +7263,101 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		"campaign_bible_context": bible_context,
 		"story_state_context": story_context,
 		"bridge_summary": bridge_summary,
+		"chapter_packets_summary": chapter_packets_summary,
+		"chapter_facts_by_privacy": chapter_facts_by_privacy,
+		"chapter_beat_states": chapter_beat_states,
+		"chapter_packet_validation": chapter_packet_validation,
 		"full_story_state_json": full_story_state_json,
 	}
+
+
+func _dev_format_chapter_packets(packets: Array) -> String:
+	if packets.is_empty():
+		return "No chapter packets generated yet."
+	var current_chapter := int(StoryManager.story_state.get("chapter", 1))
+	var lines: Array[String] = []
+	for packet in packets:
+		if not packet is Dictionary:
+			continue
+		var p: Dictionary = packet
+		var chapter := int(p.get("chapter", 0))
+		var label := "chapter %d" % chapter
+		if chapter == current_chapter:
+			label += " (current)"
+		elif chapter == current_chapter + 1:
+			label += " (next)"
+		var beats: Array = p.get("beats", []) if p.get("beats", []) is Array else []
+		var threads: Array = p.get("threads", []) if p.get("threads", []) is Array else []
+		var ratio := StoryManager.chapter_packet_consumed_ratio(p)
+		lines.append("%s — %s" % [str(p.get("packet_id", "")), label])
+		lines.append("  Premise: %s" % str(p.get("premise", "")))
+		lines.append("  Threads: %d | Beats: %d | Consumed: %.0f%%" % [
+			threads.size(),
+			beats.size(),
+			ratio * 100.0,
+		])
+		var trigger: Dictionary = p.get("next_packet_trigger", {}) \
+			if p.get("next_packet_trigger", {}) is Dictionary else {}
+		if not trigger.is_empty():
+			lines.append(
+				"  Next trigger: %.0f%% — %s" %
+				[
+					float(trigger.get("start_when_consumed_ratio_at_least", 0.6)) * 100.0,
+					str(trigger.get("reason", "")),
+				]
+			)
+		for beat in beats:
+			if beat is Dictionary:
+				lines.append(
+					"  - %s [%s] %s" %
+					[
+						str((beat as Dictionary).get("beat_id", "")),
+						", ".join((beat as Dictionary).get("supported_objective_types", [])),
+						str((beat as Dictionary).get("stake", "")),
+					]
+				)
+		lines.append("")
+	return "\n".join(lines)
+
+
+func _dev_format_chapter_facts_by_privacy(packets: Array) -> String:
+	if packets.is_empty():
+		return "No chapter facts generated yet."
+	var buckets := {
+		"public": [],
+		"private": [],
+		"secret": [],
+		"other": [],
+	}
+	for packet in packets:
+		if not packet is Dictionary:
+			continue
+		var facts: Array = (packet as Dictionary).get("facts", []) \
+			if (packet as Dictionary).get("facts", []) is Array else []
+		for fact in facts:
+			if not fact is Dictionary:
+				continue
+			var privacy := str((fact as Dictionary).get("privacy", "other")).strip_edges()
+			if not buckets.has(privacy):
+				privacy = "other"
+			(buckets[privacy] as Array).append(
+				"%s — %s | public='%s'" %
+				[
+					str((fact as Dictionary).get("fact_id", "")),
+					str((fact as Dictionary).get("answer_anchor", "")),
+					str((fact as Dictionary).get("public_text", "")),
+				]
+			)
+	var lines: Array[String] = []
+	for privacy in ["public", "private", "secret", "other"]:
+		lines.append("%s:" % str(privacy).capitalize())
+		var entries: Array = buckets[privacy]
+		if entries.is_empty():
+			lines.append("  (none)")
+		else:
+			for entry in entries:
+				lines.append("  - %s" % str(entry))
+	return "\n".join(lines)
 
 
 func _dev_format_overarching_story(bible: Dictionary) -> String:

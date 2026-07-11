@@ -23,6 +23,10 @@ var _story_bible_text: TextEdit
 var _story_context_text: TextEdit
 var _story_state_text: TextEdit
 var _story_bridge_summary_label: Label
+var _story_chapter_packets_text: TextEdit
+var _story_chapter_facts_text: TextEdit
+var _story_chapter_beat_states_text: TextEdit
+var _story_chapter_validation_text: TextEdit
 var _story_full_debug_text: TextEdit
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -202,6 +206,22 @@ func _build_story_debug_tab() -> void:
 	_story_bridge_summary_label.add_theme_color_override("font_color", Color(0.55, 0.95, 1.0))
 	tab.add_child(_story_bridge_summary_label)
 
+	tab.add_child(_story_section_label("Chapter Packets (current / next)"))
+	_story_chapter_packets_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_chapter_packets_text)
+
+	tab.add_child(_story_section_label("Chapter Facts by Privacy Tier"))
+	_story_chapter_facts_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_chapter_facts_text)
+
+	tab.add_child(_story_section_label("Chapter Beat States (rewindable story_state)"))
+	_story_chapter_beat_states_text = _story_readonly_text_edit(220)
+	tab.add_child(_story_chapter_beat_states_text)
+
+	tab.add_child(_story_section_label("Chapter Packet Validation / Failures"))
+	_story_chapter_validation_text = _story_readonly_text_edit(140)
+	tab.add_child(_story_chapter_validation_text)
+
 	var force_rumor_btn := Button.new()
 	force_rumor_btn.text = "Force Dock Rumor Roll"
 	force_rumor_btn.pressed.connect(func(): force_dock_rumor_requested.emit())
@@ -345,6 +365,10 @@ func _refresh_story_debug_tab() -> void:
 			or _story_context_text == null \
 			or _story_state_text == null \
 			or _story_bridge_summary_label == null \
+			or _story_chapter_packets_text == null \
+			or _story_chapter_facts_text == null \
+			or _story_chapter_beat_states_text == null \
+			or _story_chapter_validation_text == null \
 			or _story_full_debug_text == null:
 		return
 	if not _story_debug_provider.is_valid():
@@ -355,6 +379,10 @@ func _refresh_story_debug_tab() -> void:
 		_story_context_text.text = ""
 		_story_state_text.text = ""
 		_story_bridge_summary_label.text = ""
+		_story_chapter_packets_text.text = ""
+		_story_chapter_facts_text.text = ""
+		_story_chapter_beat_states_text.text = ""
+		_story_chapter_validation_text.text = ""
 		_story_full_debug_text.text = ""
 		return
 	var snapshot: Dictionary = _story_debug_provider.call()
@@ -365,6 +393,10 @@ func _refresh_story_debug_tab() -> void:
 	_story_context_text.text = str(snapshot.get("campaign_bible_context", ""))
 	_story_state_text.text = str(snapshot.get("story_state_context", ""))
 	_story_bridge_summary_label.text = str(snapshot.get("bridge_summary", ""))
+	_story_chapter_packets_text.text = str(snapshot.get("chapter_packets_summary", ""))
+	_story_chapter_facts_text.text = str(snapshot.get("chapter_facts_by_privacy", ""))
+	_story_chapter_beat_states_text.text = str(snapshot.get("chapter_beat_states", ""))
+	_story_chapter_validation_text.text = str(snapshot.get("chapter_packet_validation", ""))
 	_story_full_debug_text.text = str(snapshot.get("full_story_state_json", ""))
 
 
