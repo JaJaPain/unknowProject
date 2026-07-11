@@ -27,6 +27,11 @@ func _test_story_state_public_block_uses_allowlist() -> void:
 	_expect(block.contains("Kaelen looks worried"), "Public knowledge missing.")
 	_expect(block.contains("guarded"), "Public Kaelen mood missing.")
 	_expect(block.contains("Zenith [rising(+2)]"), "Faction pressure missing.")
+	_expect(
+		block.contains("Open story thread refs: hook:")
+			and not block.contains("A convoy vanished near the relay."),
+		"Public story block did not replace free-form hook text with stable refs."
+	)
 	_assert_no_secret_tokens(block, "story_state_public_block")
 
 

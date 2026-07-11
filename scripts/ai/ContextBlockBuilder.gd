@@ -29,11 +29,7 @@ static func story_state_public_block(story_state: Dictionary) -> String:
 	var mood := str(story_state.get("kaelen_current_mood", "")).strip_edges()
 	if not mood.is_empty():
 		lines.append("- Kaelen mood: %s" % mood)
-	_append_string_array_line(
-		lines,
-		"- Open story threads: %s",
-		story_state.get("pending_hooks", [])
-	)
+	_append_pending_hook_projection(lines, story_state)
 	_append_faction_pressure_line(lines, story_state)
 	return "\n".join(lines)
 
@@ -152,3 +148,20 @@ static func _append_faction_pressure_line(
 			])
 	if not parts.is_empty():
 		lines.append("- Faction pressure: %s" % " | ".join(parts))
+
+
+static func _append_pending_hook_projection(
+	lines: Array[String],
+	story_state: Dictionary
+) -> void:
+	var hooks: Variant = story_state.get("pending_hooks", [])
+	if not hooks is Array or hooks.is_empty():
+		return
+	var refs: Array[String] = []
+	for hook in hooks:
+		var text := str(hook).strip_edges()
+		if text.is_empty():
+			continue
+		refs.append("hook:%s" % text.sha256_text().substr(0, 12))
+	if not refs.is_empty():
+		lines.append("- Open story thread refs: %s" % ", ".join(refs))
