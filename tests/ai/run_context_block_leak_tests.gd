@@ -80,6 +80,7 @@ func _salted_story_state() -> Dictionary:
 		"beat_states": {
 			"beat.hidden": {"director_note": "SECRET_BEAT_TOKEN"},
 		},
+		"new_schema_field_not_yet_allowlisted": "NEW_SCHEMA_PRIVATE_TOKEN",
 	}
 
 
@@ -91,6 +92,7 @@ func _assert_no_secret_tokens(block: String, block_name: String) -> void:
 		"SECRET_HINT_TOKEN",
 		"SECRET_FACT_TEXT_TOKEN",
 		"SECRET_BEAT_TOKEN",
+		"NEW_SCHEMA_PRIVATE_TOKEN",
 	]:
 		_expect(
 			not block.contains(secret),
