@@ -33,6 +33,15 @@ static func has_type(objective_type: String) -> bool:
 	return _capabilities.has(objective_type)
 
 
+static func objective_types() -> Array[String]:
+	_ensure_defaults()
+	var types: Array[String] = []
+	for objective_type in _capabilities.keys():
+		types.append(str(objective_type))
+	types.sort()
+	return types
+
+
 static func reset() -> void:
 	_capabilities.clear()
 	_initialized = false

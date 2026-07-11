@@ -11374,6 +11374,15 @@ func _disconnect_loading_service_signals() -> void:
 		SpeechService.speech_connection_attempt.disconnect(_on_tts_connection_attempt)
 	if SpeechService.speech_connection_established.is_connected(_on_tts_connected):
 		SpeechService.speech_connection_established.disconnect(_on_tts_connected)
+	var game_root := get_tree().current_scene
+	if game_root != null \
+			and game_root.has_signal("campaign_bible_generation_finished") \
+			and game_root.campaign_bible_generation_finished.is_connected(_on_campaign_story_gate_result):
+		game_root.campaign_bible_generation_finished.disconnect(_on_campaign_story_gate_result)
+	if game_root != null \
+			and game_root.has_signal("chapter_plan_generation_finished") \
+			and game_root.chapter_plan_generation_finished.is_connected(_on_chapter_plan_gate_result):
+		game_root.chapter_plan_generation_finished.disconnect(_on_chapter_plan_gate_result)
 
 
 func _check_both_services_ready():
@@ -11454,14 +11463,24 @@ func _on_intro_cinematic_voice_cache_completed() -> void:
 
 func _campaign_story_ready_for_gameplay() -> bool:
 	var game_root := get_tree().current_scene
-	return game_root != null \
+	var bible_ready := game_root != null \
 		and game_root.has_method("is_campaign_story_ready") \
 		and bool(game_root.call("is_campaign_story_ready"))
+	var chapter_ready := game_root != null \
+		and game_root.has_method("is_chapter_plan_ready") \
+		and bool(game_root.call("is_chapter_plan_ready"))
+	return bible_ready and chapter_ready
 
 
 func _wait_for_campaign_story_before_gameplay() -> void:
 	var game_root := get_tree().current_scene
 	loading_bar.value = minf(loading_bar.value, 92.0)
+	var bible_ready := game_root != null \
+		and game_root.has_method("is_campaign_story_ready") \
+		and bool(game_root.call("is_campaign_story_ready"))
+	if bible_ready:
+		_wait_for_chapter_plan_before_gameplay()
+		return
 	var summary := ""
 	var status := "Writing campaign story with large story model..."
 	if game_root != null and game_root.has_method("campaign_story_status_summary"):
@@ -11511,6 +11530,49 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 				)
 
 
+func _wait_for_chapter_plan_before_gameplay() -> void:
+	var game_root := get_tree().current_scene
+	loading_bar.value = minf(loading_bar.value, 96.0)
+	var summary := ""
+	if game_root != null and game_root.has_method("chapter_plan_status_summary"):
+		summary = str(game_root.call("chapter_plan_status_summary"))
+	loading_status_label.text = (
+		"Planning chapter one with large story model..."
+		+ ("\n" + summary if not summary.is_empty() else "")
+	)
+	GlobalState.paused = true
+	if game_root != null \
+			and game_root.has_signal("chapter_plan_generation_finished") \
+			and not game_root.chapter_plan_generation_finished.is_connected(_on_chapter_plan_gate_result):
+		game_root.chapter_plan_generation_finished.connect(_on_chapter_plan_gate_result)
+	if game_root != null and game_root.has_method("request_chapter_plan_generation"):
+		var requested = game_root.call("request_chapter_plan_generation")
+		if requested is Dictionary:
+			var request_status := str(requested.get("status", ""))
+			if request_status == "already_generated":
+				_on_chapter_plan_gate_result(true, summary)
+			elif request_status == "requested":
+				loading_status_label.text = (
+					"Planning chapter one with large story model..."
+					+ "\nChapter packet request sent. This can take a few minutes."
+				)
+			elif request_status == "waiting_for_campaign_bible":
+				get_tree().create_timer(1.0, true, false, true).timeout.connect(
+					func(): _wait_for_campaign_story_before_gameplay()
+				)
+			elif request_status == "waiting_for_llm_connection":
+				loading_status_label.text = (
+					"Chapter planning required. Waiting for local LLM connection..."
+				)
+			elif not bool(requested.get("ok", false)):
+				loading_status_label.text = (
+					"Preparing campaign slot before planning chapter one..."
+				)
+				get_tree().create_timer(1.0, true, false, true).timeout.connect(
+					func(): _wait_for_chapter_plan_before_gameplay()
+				)
+
+
 func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 	if ok:
 		_campaign_bible_content_retry_count = 0
@@ -11519,7 +11581,7 @@ func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 				and game_root.has_signal("campaign_bible_generation_finished") \
 				and game_root.campaign_bible_generation_finished.is_connected(_on_campaign_story_gate_result):
 			game_root.campaign_bible_generation_finished.disconnect(_on_campaign_story_gate_result)
-		_finish_loading_after_story_ready()
+		_wait_for_chapter_plan_before_gameplay()
 		return
 	loading_bar.value = 92.0
 	if status.contains("timeout") or status.contains("http_failed"):
@@ -11551,6 +11613,38 @@ func _on_campaign_story_gate_result(ok: bool, status: String) -> void:
 	else:
 		loading_status_label.text = (
 			"Campaign story required. Large story model did not generate the campaign bible.\n"
+			+ status
+		)
+	GlobalState.paused = true
+
+
+func _on_chapter_plan_gate_result(ok: bool, status: String) -> void:
+	var game_root := get_tree().current_scene
+	if ok:
+		if game_root != null \
+				and game_root.has_signal("chapter_plan_generation_finished") \
+				and game_root.chapter_plan_generation_finished.is_connected(_on_chapter_plan_gate_result):
+			game_root.chapter_plan_generation_finished.disconnect(_on_chapter_plan_gate_result)
+		_finish_loading_after_story_ready()
+		return
+	loading_bar.value = 96.0
+	if status.contains("timeout") or status.contains("http_failed"):
+		loading_status_label.text = (
+			"Chapter planning required, but Ollama is not responding.\n"
+			+ "The game is attempting to relaunch it automatically and will retry shortly.\n"
+			+ status
+		)
+		get_tree().create_timer(35.0, true, false, true).timeout.connect(
+			func(): _wait_for_chapter_plan_before_gameplay()
+		)
+	elif status.contains("generation_failed"):
+		loading_status_label.text = (
+			"Chapter planning required. The large story model did not generate a valid packet.\n"
+			+ status
+		)
+	else:
+		loading_status_label.text = (
+			"Chapter planning required before gameplay can begin.\n"
 			+ status
 		)
 	GlobalState.paused = true

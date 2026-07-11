@@ -13,6 +13,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_registry_extension_register_and_lookup()
 	_test_registry_default_new_mission_types()
+	_test_registry_objective_types_are_sorted_defaults()
 	_test_extension_handle_event()
 	_test_extension_is_completed()
 	_test_extension_format_tracker_text()
@@ -76,6 +77,31 @@ func _test_registry_default_new_mission_types() -> void:
 	_expect(
 		Registry.has_type("PURCHASE_DELIVERY"),
 		"PURCHASE_DELIVERY default capability not registered"
+	)
+	Registry.reset()
+
+
+func _test_registry_objective_types_are_sorted_defaults() -> void:
+	Registry.reset()
+	var types := Registry.objective_types()
+	var sorted := types.duplicate()
+	sorted.sort()
+	_expect(
+		types == sorted,
+		"objective_types should be deterministic and sorted"
+	)
+	types.append("MUTATED_TEST_TYPE")
+	_expect(
+		not Registry.objective_types().has("MUTATED_TEST_TYPE"),
+		"objective_types should return a copy"
+	)
+	_expect(
+		Registry.objective_types().has("KILL_SHIPS"),
+		"objective_types missing KILL_SHIPS"
+	)
+	_expect(
+		Registry.objective_types().has("DELIVERY_COURIER"),
+		"objective_types missing DELIVERY_COURIER"
 	)
 	Registry.reset()
 
