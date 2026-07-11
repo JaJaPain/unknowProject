@@ -73,6 +73,7 @@ var story_state: Dictionary = {
 	"mission_history_revision": 0,
 	"knowledge_states": {},
 	"beat_states": {},
+	"chapter_packet_generation_queued": {},
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -274,6 +275,7 @@ func clear_story_state() -> void:
 		"mission_history_revision": 0,
 		"knowledge_states": {},
 		"beat_states": {},
+		"chapter_packet_generation_queued": {},
 		"asked_question_intents": [],
 	}
 	# Part of the wipe contract: a new campaign must not inherit the old
@@ -326,6 +328,123 @@ func current_hook_ref() -> String:
 	if text.is_empty():
 		return ""
 	return "hook:%s" % text.sha256_text().substr(0, 12)
+
+
+func register_chapter_packet(packet: Dictionary) -> void:
+	var packet_id := str(packet.get("packet_id", "")).strip_edges()
+	if packet_id.is_empty():
+		return
+	var beat_states: Dictionary = story_state.get("beat_states", {}) \
+		if story_state.get("beat_states", {}) is Dictionary else {}
+	var changed := false
+	var chapter := int(packet.get("chapter", story_state.get("chapter", 1)))
+	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var beat_id := str((beat as Dictionary).get("beat_id", "")).strip_edges()
+		if beat_id.is_empty() or beat_states.has(beat_id):
+			continue
+		beat_states[beat_id] = {
+			"packet_id": packet_id,
+			"chapter": chapter,
+			"state": "available",
+			"accepted_at_minute": 0,
+			"completed_at_minute": 0,
+			"outcome": "",
+		}
+		changed = true
+	if changed:
+		story_state["beat_states"] = beat_states
+		_save_story_state()
+
+
+func mark_chapter_beat_state(
+	beat_id: String,
+	state: String,
+	outcome: String = ""
+) -> Dictionary:
+	var clean_beat_id := beat_id.strip_edges()
+	var clean_state := state.strip_edges()
+	if clean_beat_id.is_empty():
+		return {"ok": false, "error": "Beat ID is required."}
+	if not ["available", "offered", "accepted", "completed", "declined", "failed"].has(clean_state):
+		return {"ok": false, "error": "Unsupported beat state: %s" % clean_state}
+	var beat_states: Dictionary = story_state.get("beat_states", {}) \
+		if story_state.get("beat_states", {}) is Dictionary else {}
+	var beat_state: Dictionary = beat_states.get(clean_beat_id, {}) \
+		if beat_states.get(clean_beat_id, {}) is Dictionary else {}
+	beat_state["state"] = clean_state
+	if clean_state == "accepted" and int(beat_state.get("accepted_at_minute", 0)) <= 0:
+		beat_state["accepted_at_minute"] = int(CampaignClock.total_minutes)
+	if ["completed", "declined", "failed"].has(clean_state):
+		beat_state["completed_at_minute"] = int(CampaignClock.total_minutes)
+		beat_state["outcome"] = outcome.strip_edges()
+	beat_states[clean_beat_id] = beat_state
+	story_state["beat_states"] = beat_states
+	_save_story_state()
+	_notify_chapter_packet_consumption_changed()
+	return {"ok": true, "beat_state": beat_state.duplicate(true)}
+
+
+func chapter_packet_consumed_ratio(packet: Dictionary) -> float:
+	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
+	if beats.is_empty():
+		return 0.0
+	var beat_states: Dictionary = story_state.get("beat_states", {}) \
+		if story_state.get("beat_states", {}) is Dictionary else {}
+	var consumed := 0
+	var total := 0
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var beat_id := str((beat as Dictionary).get("beat_id", "")).strip_edges()
+		if beat_id.is_empty():
+			continue
+		total += 1
+		var beat_state: Dictionary = beat_states.get(beat_id, {}) \
+			if beat_states.get(beat_id, {}) is Dictionary else {}
+		if ["completed", "declined", "failed"].has(str(beat_state.get("state", ""))):
+			consumed += 1
+	if total <= 0:
+		return 0.0
+	return float(consumed) / float(total)
+
+
+func should_queue_next_chapter_packet(packet: Dictionary) -> bool:
+	if packet.is_empty():
+		return false
+	var trigger: Dictionary = packet.get("next_packet_trigger", {}) \
+		if packet.get("next_packet_trigger", {}) is Dictionary else {}
+	var threshold := float(trigger.get("start_when_consumed_ratio_at_least", 0.6))
+	threshold = clampf(threshold, 0.0, 1.0)
+	return chapter_packet_consumed_ratio(packet) >= threshold
+
+
+func mark_next_chapter_packet_queued(chapter: int) -> bool:
+	var queued: Dictionary = story_state.get("chapter_packet_generation_queued", {}) \
+		if story_state.get("chapter_packet_generation_queued", {}) is Dictionary else {}
+	var key := str(maxi(1, chapter))
+	if bool(queued.get(key, false)):
+		return false
+	queued[key] = true
+	story_state["chapter_packet_generation_queued"] = queued
+	_save_story_state()
+	return true
+
+
+func is_next_chapter_packet_queued(chapter: int) -> bool:
+	var queued: Dictionary = story_state.get("chapter_packet_generation_queued", {}) \
+		if story_state.get("chapter_packet_generation_queued", {}) is Dictionary else {}
+	return bool(queued.get(str(maxi(1, chapter)), false))
+
+
+func _notify_chapter_packet_consumption_changed() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.current_scene == null:
+		return
+	if tree.current_scene.has_method("maybe_queue_next_chapter_plan_generation"):
+		tree.current_scene.call_deferred("maybe_queue_next_chapter_plan_generation")
 
 
 # Returns a formatted string safe to inject into LLM prompts.

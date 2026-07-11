@@ -132,6 +132,7 @@ static func _default_state() -> Dictionary:
 		"mission_history_revision": 0,
 		"knowledge_states": {},
 		"beat_states": {},
+		"chapter_packet_generation_queued": {},
 		"asked_question_intents": [],
 	}
 
@@ -154,6 +155,8 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["knowledge_states"] = {}
 	if not migrated.get("beat_states", {}) is Dictionary:
 		migrated["beat_states"] = {}
+	if not migrated.get("chapter_packet_generation_queued", {}) is Dictionary:
+		migrated["chapter_packet_generation_queued"] = {}
 	_backfill_legacy_player_knows(migrated)
 	return migrated
 
@@ -221,7 +224,11 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 				),
 				revision_field
 			)
-	for dictionary_field in ["knowledge_states", "beat_states"]:
+	for dictionary_field in [
+		"knowledge_states",
+		"beat_states",
+		"chapter_packet_generation_queued",
+	]:
 		if not value.get(dictionary_field, {}) is Dictionary:
 			result.add_error(
 				"invalid_story_state_dictionary",

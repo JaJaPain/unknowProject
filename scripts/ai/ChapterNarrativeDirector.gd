@@ -35,7 +35,14 @@ static func build_chapter_plan_prompt(
 	lines.append("@@output_contract")
 	lines.append("Return only JSON. No markdown. No comments.")
 	lines.append("Shape:")
-	lines.append(JSON.stringify(_output_contract(), "\t"))
+	var requested_chapter := maxi(
+		1,
+		int(unresolved_story_state.get(
+			"requested_chapter",
+			unresolved_story_state.get("chapter", 1)
+		))
+	)
+	lines.append(JSON.stringify(_output_contract(requested_chapter), "\t"))
 	return "\n".join(lines)
 
 
@@ -49,10 +56,10 @@ static func _append_json_block(lines: Array[String], label: String, value: Varia
 	lines.append(JSON.stringify(value, "\t"))
 
 
-static func _output_contract() -> Dictionary:
+static func _output_contract(chapter_number: int = 1) -> Dictionary:
 	return {
-		"packet_id": "chapter_packet.<chapter_number>",
-		"chapter": 1,
+		"packet_id": "chapter_packet.%d" % maxi(1, chapter_number),
+		"chapter": maxi(1, chapter_number),
 		"premise": "player-safe one-line chapter pressure",
 		"threads": [
 			{
