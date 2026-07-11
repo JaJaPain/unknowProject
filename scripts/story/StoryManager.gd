@@ -274,6 +274,7 @@ func clear_story_state() -> void:
 		"mission_history_revision": 0,
 		"knowledge_states": {},
 		"beat_states": {},
+		"asked_question_intents": [],
 	}
 	# Part of the wipe contract: a new campaign must not inherit the old
 	# campaign's N.O.V.A. quirk (pushes the now-empty quirk, disarming her).
@@ -399,6 +400,66 @@ func promote_fact_after_delivery(
 	if bool(result.get("ok", false)) and bool(result.get("changed", false)):
 		_save_story_state()
 	return result
+
+
+func promote_question_facts_after_delivery(
+	question_payload: Dictionary,
+	source: String = "mission_question_answer"
+) -> Dictionary:
+	var declared_fact_ids: Array = (
+		question_payload.get("declared_fact_ids", [])
+		if question_payload.get("declared_fact_ids", []) is Array
+		else []
+	)
+	var next_state := str(
+		question_payload.get("next_state", "known")
+	).strip_edges()
+	var confidence := str(
+		question_payload.get("confidence", "direct")
+	).strip_edges()
+	var asked_intent_id := str(
+		question_payload.get("intent_id", "")
+	).strip_edges()
+	var promoted: Array[String] = []
+	var skipped: Array[String] = []
+	var errors: Array[String] = []
+	for raw_fact_id in declared_fact_ids:
+		var fact_id := str(raw_fact_id).strip_edges()
+		if fact_id.is_empty():
+			continue
+		var result: Dictionary = promote_fact_after_delivery(
+			fact_id,
+			next_state,
+			source,
+			confidence
+		)
+		if not bool(result.get("ok", false)):
+			errors.append(str(result.get("error", "unknown_error")))
+		elif bool(result.get("changed", false)):
+			promoted.append(fact_id)
+		else:
+			skipped.append(fact_id)
+	if not asked_intent_id.is_empty():
+		_record_asked_question_intent(asked_intent_id)
+	return {
+		"ok": errors.is_empty(),
+		"promoted_fact_ids": promoted,
+		"skipped_fact_ids": skipped,
+		"errors": errors,
+		"asked_intent_id": asked_intent_id,
+	}
+
+
+func _record_asked_question_intent(intent_id: String) -> void:
+	var asked: Array = (
+		story_state.get("asked_question_intents", []).duplicate()
+		if story_state.get("asked_question_intents", []) is Array
+		else []
+	)
+	if not asked.has(intent_id):
+		asked.append(intent_id)
+		story_state["asked_question_intents"] = asked
+		_save_story_state()
 
 
 func _increment_revision(

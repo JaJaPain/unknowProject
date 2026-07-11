@@ -132,6 +132,7 @@ static func _default_state() -> Dictionary:
 		"mission_history_revision": 0,
 		"knowledge_states": {},
 		"beat_states": {},
+		"asked_question_intents": [],
 	}
 
 
@@ -227,7 +228,14 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 				"Story state field '%s' must be a dictionary." % dictionary_field,
 				dictionary_field
 			)
-	for field in ["active_tensions", "player_knows", "player_does_not_know_yet", "pending_hooks", "hinted_lounge_rumors"]:
+	for field in [
+		"active_tensions",
+		"player_knows",
+		"player_does_not_know_yet",
+		"pending_hooks",
+		"hinted_lounge_rumors",
+		"asked_question_intents",
+	]:
 		if not value.get(field, []) is Array:
 			result.add_error(
 				"invalid_story_state_array",

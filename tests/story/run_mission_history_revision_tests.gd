@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_story_manager_increments_revision()
 	_test_story_and_knowledge_revision_methods_increment_owned_fields()
 	_test_story_manager_promotes_fact_after_delivery()
+	_test_question_answer_promotes_only_declared_facts()
 	_test_quest_decline_increments_revision()
 
 	_story_manager.story_state = _previous_state
@@ -104,6 +105,44 @@ func _test_story_manager_promotes_fact_after_delivery() -> void:
 			and not bool(duplicate.get("changed", true))
 			and int(_story_manager.story_state.get("knowledge_revision", 0)) == 1,
 		"Repeated delivered fact promotion should not bump knowledge_revision."
+	)
+
+
+func _test_question_answer_promotes_only_declared_facts() -> void:
+	_story_manager.story_state["knowledge_revision"] = 0
+	_story_manager.story_state["asked_question_intents"] = []
+	_story_manager.story_state["knowledge_states"] = {
+		"fact.question.visible": {"state": "unknown"},
+		"fact.question.forbidden": {"state": "unknown"},
+	}
+	var result: Dictionary = _story_manager.promote_question_facts_after_delivery(
+		{
+			"intent_id": "grounding:fact.question.visible",
+			"declared_fact_ids": ["fact.question.visible"],
+			"forbidden_fact_ids": ["fact.question.forbidden"],
+			"answer_text": "This text mentions a forbidden token but is ignored.",
+		},
+		"mission_answer"
+	)
+	var states: Dictionary = _story_manager.story_state.get("knowledge_states", {})
+	_expect(
+		bool(result.get("ok", false))
+			and (result.get("promoted_fact_ids", []) as Array).has(
+				"fact.question.visible"
+			),
+		"Question answer did not promote its declared fact."
+	)
+	_expect(
+		str(states.get("fact.question.visible", {}).get("state", ""))
+			== "known"
+			and str(states.get("fact.question.forbidden", {}).get("state", ""))
+			== "unknown",
+		"Question answer promoted a fact that was not declared."
+	)
+	_expect(
+		(_story_manager.story_state.get("asked_question_intents", []) as Array)
+			.has("grounding:fact.question.visible"),
+		"Question answer did not record the asked intent."
 	)
 
 
