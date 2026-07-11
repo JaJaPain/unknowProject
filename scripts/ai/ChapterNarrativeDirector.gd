@@ -127,6 +127,21 @@ static func parse_chapter_plan_response(
 	}
 
 
+static func validation_correction_notes(validation: ValidationResult) -> Array[String]:
+	if validation == null or validation.is_valid():
+		return []
+	var notes: Array[String] = []
+	for issue in validation.errors:
+		var path := str(issue.get("path", "")).strip_edges()
+		var code := str(issue.get("code", "")).strip_edges()
+		var message := str(issue.get("message", "")).strip_edges()
+		var prefix := code if not code.is_empty() else "validation_error"
+		if not path.is_empty():
+			prefix += " at %s" % path
+		notes.append("%s: %s" % [prefix, message])
+	return notes
+
+
 static func _extract_response_text(envelope_text: String) -> String:
 	var envelope := DomainJsonType.parse_object(
 		envelope_text,

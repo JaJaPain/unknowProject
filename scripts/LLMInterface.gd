@@ -2,6 +2,9 @@ extends Node
 
 const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
+const ChapterNarrativeDirectorType := preload(
+	"res://scripts/ai/ChapterNarrativeDirector.gd"
+)
 
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
@@ -1247,6 +1250,7 @@ func request_lounge_chatter(
 # latency-bounded — 2 keeps a bad sample from stranding a campaign without
 # turning the loading screen into a stall.
 const CAMPAIGN_BIBLE_MAX_ATTEMPTS := 2
+const CHAPTER_PLAN_MAX_ATTEMPTS := 2
 
 
 # motif_history (optional): {"titles": [recent title strings], "reveals": [recent
@@ -1807,6 +1811,207 @@ func _on_story_horizon_expansion_completed(
 		return
 	GenerationDiagnostics.record_content_source(
 		"story_horizon_expansion", "llm", "llm_interface", {"model": model_name}
+	)
+	callback.call(parsed)
+
+
+func request_chapter_plan_generation(
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array,
+	callback: Callable
+) -> void:
+	_start_chapter_plan_attempt(
+		director_context,
+		validated_entities,
+		available_mission_capabilities,
+		recent_player_choices,
+		unresolved_story_state,
+		available_objective_types,
+		valid_entity_ids,
+		callback,
+		1,
+		[]
+	)
+
+
+func _start_chapter_plan_attempt(
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array,
+	callback: Callable,
+	attempt: int,
+	correction_notes: Array
+) -> void:
+	var capability := "chapter_plan"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "model_unavailable",
+			"model": model_name,
+			"status": "chapter_plan_model_unavailable",
+		})
+		return
+	var prompt := ChapterNarrativeDirectorType.build_chapter_plan_prompt(
+		director_context,
+		validated_entities,
+		available_mission_capabilities,
+		recent_player_choices,
+		unresolved_story_state,
+		correction_notes
+	)
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"json",
+		{
+			"temperature": 0.8,
+			"num_predict": 1600,
+			"seed": randi(),
+		}
+	)
+	GenerationDiagnostics.record_event(
+		"chapter_plan",
+		"request_started",
+		"llm_interface",
+		{"model": model_name, "attempt": attempt}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	var request_id := temp_http.get_instance_id()
+	temp_http.request_completed.connect(
+		func(
+			result: int,
+			response_code: int,
+			_headers: PackedStringArray,
+			body: PackedByteArray
+		) -> void:
+			_on_chapter_plan_generation_completed(
+				result,
+				response_code,
+				body,
+				model_name,
+				callback,
+				request_id,
+				attempt,
+				director_context,
+				validated_entities,
+				available_mission_capabilities,
+				recent_player_choices,
+				unresolved_story_state,
+				available_objective_types,
+				valid_entity_ids
+			)
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			"request_start_failed",
+			"llm_interface",
+			{"model": model_name, "error": err}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "request_start_failed",
+			"model": model_name,
+			"status": "chapter_plan_request_start_failed",
+		})
+
+
+func _on_chapter_plan_generation_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	model_name: String,
+	callback: Callable,
+	request_id: int,
+	attempt: int,
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "chapter_plan_timeout"
+		GenerationDiagnostics.record_event(
+			"chapter_plan", reason, "llm_interface", {"model": model_name}
+		)
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
+		callback.call({
+			"ok": false,
+			"reason": reason,
+			"model": model_name,
+			"status": "chapter_plan_generation_failed",
+		})
+		return
+	var parsed := ChapterNarrativeDirectorType.parse_chapter_plan_response(
+		body.get_string_from_utf8(),
+		available_objective_types,
+		valid_entity_ids,
+		model_name
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name, "attempt": attempt}
+		)
+		var validation := parsed.get("validation") as ValidationResult
+		if attempt < CHAPTER_PLAN_MAX_ATTEMPTS:
+			_start_chapter_plan_attempt(
+				director_context,
+				validated_entities,
+				available_mission_capabilities,
+				recent_player_choices,
+				unresolved_story_state,
+				available_objective_types,
+				valid_entity_ids,
+				callback,
+				attempt + 1,
+				ChapterNarrativeDirectorType.validation_correction_notes(
+					validation
+				)
+			)
+			return
+		parsed["model"] = model_name
+		parsed["status"] = "chapter_plan_generation_failed"
+		callback.call(parsed)
+		return
+	GenerationDiagnostics.record_content_source(
+		"chapter_plan", "llm", "llm_interface", {"model": model_name}
 	)
 	callback.call(parsed)
 

@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_prompt_declares_chapter_packet_contract()
 	_test_parser_repairs_aliases_and_accepts_valid_packet()
 	_test_parser_rejects_unavailable_objectives_and_entities()
+	_test_validation_correction_notes_are_retry_ready()
 
 	if _failures.is_empty():
 		print("[PASS] Chapter narrative director tests")
@@ -153,6 +154,24 @@ func _test_parser_rejects_unavailable_objectives_and_entities() -> void:
 			and _has_error_code(validation, "unsupported_chapter_beat_objective")
 			and _has_error_code(validation, "unknown_chapter_beat_entity"),
 		"Chapter plan parser did not loudly reject unavailable objectives/entities."
+	)
+
+
+func _test_validation_correction_notes_are_retry_ready() -> void:
+	var validation := ValidationResult.new()
+	validation.add_error(
+		"missing_chapter_beat_stake",
+		"Chapter beat requires a stake.",
+		"beats.0.stake"
+	)
+	var notes: Array[String] = ChapterDirectorType.validation_correction_notes(
+		validation
+	)
+	_expect(
+		notes.size() == 1
+			and notes[0].contains("missing_chapter_beat_stake")
+			and notes[0].contains("beats.0.stake"),
+		"Chapter plan validation notes were not suitable for correction retry."
 	)
 
 
