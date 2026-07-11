@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_pacing_rules_block_repetition()
 	_test_repeated_mechanic_requires_three_changes()
 	_test_declined_offer_cooldowns_filter_candidates()
+	_test_select_best_candidate_or_withhold_for_alternate()
 
 	if _failures.is_empty():
 		print("[PASS] Mission director tests")
@@ -326,6 +327,57 @@ func _test_declined_offer_cooldowns_filter_candidates() -> void:
 	_expect(
 		kept.size() == 1 and str(kept[0].get("beat_id", "")) == "beat.beta",
 		"Decline cooldown filter should keep only candidates not on cooldown"
+	)
+
+
+func _test_select_best_candidate_or_withhold_for_alternate() -> void:
+	var selected := MissionDirectorType.select_best_candidate(
+		_packet(),
+		{"beat.alpha": {"state": "available"}},
+		[
+			{
+				"giver_id": "agent.jenna",
+				"display_name": "Jenna Kross",
+				"objective_types": ["KILL_SHIPS", "DELIVERY_COURIER"],
+				"available": true,
+			},
+		],
+		["zenith", "outpost.red"],
+		{"preferred_objective_types": ["DELIVERY_COURIER"]},
+		[],
+		{},
+		10
+	)
+	_expect(bool(selected.get("ok", false)), "Selection should find a candidate")
+	_expect(
+		str(selected.get("candidate", {}).get("objective_type", "")) == "DELIVERY_COURIER",
+		"Selection should score preferred objective first"
+	)
+	var withheld := MissionDirectorType.select_best_candidate(
+		_packet(),
+		{"beat.alpha": {"state": "available"}},
+		[
+			{
+				"giver_id": "agent.jenna",
+				"display_name": "Jenna Kross",
+				"objective_types": ["KILL_SHIPS"],
+				"available": true,
+			},
+		],
+		["zenith", "outpost.red"],
+		{},
+		[
+			{"objective_type": "KILL_SHIPS"},
+			{"objective_type": "KILL_SHIPS"},
+		],
+		{},
+		10
+	)
+	_expect(
+		not bool(withheld.get("ok", false))
+			and str(withheld.get("status", "")) == "withheld_pacing_rules"
+			and bool(withheld.get("needs_alternate_beat", false)),
+		"Selection should withhold when every feasible candidate violates pacing"
 	)
 
 

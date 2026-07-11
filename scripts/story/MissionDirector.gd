@@ -49,6 +49,78 @@ static func feasible_candidates(
 	return candidates
 
 
+static func select_best_candidate(
+	packet: Dictionary,
+	beat_states: Dictionary,
+	local_givers: Array,
+	valid_entity_ids: Array,
+	context: Dictionary = {},
+	recent_agent_contracts: Array = [],
+	declined_offer_cooldowns: Dictionary = {},
+	current_minute: int = 0
+) -> Dictionary:
+	var feasible := feasible_candidates(
+		packet,
+		beat_states,
+		local_givers,
+		valid_entity_ids
+	)
+	if feasible.is_empty():
+		return {
+			"ok": false,
+			"status": "no_feasible_candidates",
+			"candidate": {},
+			"rejections": rejected_candidate_reasons(
+				packet,
+				beat_states,
+				local_givers,
+				valid_entity_ids
+			),
+		}
+	var not_declined := filter_by_decline_cooldowns(
+		feasible,
+		declined_offer_cooldowns,
+		current_minute
+	)
+	if not_declined.is_empty():
+		return {
+			"ok": false,
+			"status": "withheld_declined_offer_cooldown",
+			"candidate": {},
+			"needs_alternate_beat": true,
+			"rejections": _decline_cooldown_rejections(
+				feasible,
+				declined_offer_cooldowns,
+				current_minute
+			),
+		}
+	var paced := filter_by_pacing_rules(not_declined, recent_agent_contracts)
+	if paced.is_empty():
+		return {
+			"ok": false,
+			"status": "withheld_pacing_rules",
+			"candidate": {},
+			"needs_alternate_beat": true,
+			"rejections": _pacing_rejections(
+				not_declined,
+				recent_agent_contracts
+			),
+		}
+	var scored := score_candidates(paced, context, recent_agent_contracts)
+	if scored.is_empty():
+		return {
+			"ok": false,
+			"status": "no_scored_candidates",
+			"candidate": {},
+		}
+	return {
+		"ok": true,
+		"status": "selected",
+		"candidate": scored[0],
+		"candidate_count": scored.size(),
+	}
+
+
 static func rejected_candidate_reasons(
 	packet: Dictionary,
 	beat_states: Dictionary,
@@ -103,6 +175,56 @@ static func rejected_candidate_reasons(
 						"reason": reason,
 					})
 	return rejections
+
+
+static func _decline_cooldown_rejections(
+	candidates: Array,
+	declined_offer_cooldowns: Dictionary,
+	current_minute: int
+) -> Array:
+	var rejections: Array = []
+	for candidate in candidates:
+		if not candidate is Dictionary:
+			continue
+		var reason := decline_cooldown_rejection_reason(
+			candidate as Dictionary,
+			declined_offer_cooldowns,
+			current_minute
+		)
+		_append_candidate_rejection(rejections, candidate as Dictionary, reason)
+	return rejections
+
+
+static func _pacing_rejections(
+	candidates: Array,
+	recent_agent_contracts: Array
+) -> Array:
+	var rejections: Array = []
+	for candidate in candidates:
+		if not candidate is Dictionary:
+			continue
+		var reason := pacing_rejection_reason(
+			candidate as Dictionary,
+			recent_agent_contracts
+		)
+		_append_candidate_rejection(rejections, candidate as Dictionary, reason)
+	return rejections
+
+
+static func _append_candidate_rejection(
+	rejections: Array,
+	candidate: Dictionary,
+	reason: String
+) -> void:
+	var clean_reason := reason.strip_edges()
+	if clean_reason.is_empty():
+		return
+	rejections.append({
+		"beat_id": str(candidate.get("beat_id", "")),
+		"objective_type": str(candidate.get("objective_type", "")),
+		"giver_id": str(candidate.get("giver_id", "")),
+		"reason": clean_reason,
+	})
 
 
 static func score_candidates(
