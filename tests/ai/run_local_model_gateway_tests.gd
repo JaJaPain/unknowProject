@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_builds_generation_body_from_capability()
 	_test_unknown_capability_uses_small_profile()
 	_test_routes_new_capabilities_to_expected_profiles()
+	_test_chapter_plan_uses_large_story_profile()
 
 	if _failures.is_empty():
 		print("[PASS] Local model gateway tests")
@@ -140,6 +141,38 @@ func _test_routes_new_capabilities_to_expected_profiles() -> void:
 	_expect(
 		is_equal_approx(GatewayType.request_timeout("system_names"), 30.0),
 		"System name generation should keep its longer timeout."
+	)
+
+
+func _test_chapter_plan_uses_large_story_profile() -> void:
+	_expect(
+		GatewayType.profile_for_capability("chapter_plan") == "large_story",
+		"Chapter plan generation should use the large story profile."
+	)
+	_expect(
+		is_equal_approx(GatewayType.request_timeout("chapter_plan"), 120.0),
+		"Chapter plan generation should have an explicit large-story timeout."
+	)
+	var body: Dictionary = GatewayType.generation_body(
+		"chapter_plan",
+		"Write a chapter packet.",
+		"qwen3:4b",
+		"json",
+		{"temperature": 0.85, "num_predict": 1400},
+		"qwen3:8b"
+	)
+	_expect(
+		str(body.get("model", "")) == "qwen3:8b",
+		"Chapter plan generation should use the active large model."
+	)
+	_expect(
+		int(body.get("keep_alive", -1)) == GatewayType.LARGE_MODEL_KEEP_ALIVE,
+		"Chapter plan generation should unload the large model to protect VRAM."
+	)
+	_expect(
+		int((body.get("options", {}) as Dictionary).get("num_ctx", 0))
+			== GatewayType.LARGE_NUM_CTX,
+		"Chapter plan generation should pin the large-model context window."
 	)
 
 
