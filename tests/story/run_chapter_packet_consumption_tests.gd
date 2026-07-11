@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_register_packet_creates_rewindable_beat_states()
 	_test_consumption_ratio_and_threshold()
 	_test_next_packet_queue_marker_is_idempotent()
+	_test_required_decline_activates_alternate_or_failure()
 
 	_manager.story_state = _previous_state
 	_manager._story_state_store = _previous_store
@@ -91,6 +92,55 @@ func _test_next_packet_queue_marker_is_idempotent() -> void:
 	_expect(
 		not _manager.mark_next_chapter_packet_queued(2),
 		"second queue marker write should be idempotent"
+	)
+
+
+func _test_required_decline_activates_alternate_or_failure() -> void:
+	_manager.register_chapter_packet({
+		"packet_id": "chapter_packet.required",
+		"chapter": 1,
+		"beats": [
+			{"beat_id": "beat.required"},
+			{"beat_id": "beat.alternate"},
+			{"beat_id": "beat.no_alternate"},
+		],
+	})
+	_manager.mark_chapter_beat_state("beat.alternate", "failed", "hidden until alternate path")
+	var declined: Dictionary = _manager.record_chapter_offer_declined({
+		"beat_id": "beat.required",
+		"objective_type": "KILL_SHIPS",
+		"giver_id": "agent.jenna",
+		"required": true,
+		"alternate_beat_id": "beat.alternate",
+	}, "player declined", 90)
+	_expect(bool(declined.get("ok", false)), "Required decline should return ok")
+	var states: Dictionary = _manager.story_state.get("beat_states", {})
+	_expect(
+		str(states.get("beat.required", {}).get("state", "")) == "declined",
+		"Declined required beat should be marked declined when an alternate exists"
+	)
+	_expect(
+		str(states.get("beat.alternate", {}).get("state", "")) == "available"
+			and str(states.get("beat.alternate", {}).get("activated_by_decline_of", "")) == "beat.required",
+		"Required decline should activate alternate beat"
+	)
+	var cooldowns: Dictionary = _manager.declined_offer_cooldowns()
+	_expect(
+		cooldowns.has("beat.required|KILL_SHIPS|agent.jenna"),
+		"Declined offer cooldown was not recorded"
+	)
+	_manager.record_chapter_offer_declined({
+		"beat_id": "beat.no_alternate",
+		"objective_type": "KILL_SHIPS",
+		"giver_id": "agent.jenna",
+		"required": true,
+		"decline_consequence": "The target escapes.",
+	}, "player declined", 90)
+	states = _manager.story_state.get("beat_states", {})
+	_expect(
+		str(states.get("beat.no_alternate", {}).get("state", "")) == "failed"
+			and str(states.get("beat.no_alternate", {}).get("outcome", "")) == "The target escapes.",
+		"Required decline without alternate should advance failure consequence"
 	)
 
 

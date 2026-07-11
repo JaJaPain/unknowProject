@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_scores_candidates_with_documented_weight_buckets()
 	_test_pacing_rules_block_repetition()
 	_test_repeated_mechanic_requires_three_changes()
+	_test_declined_offer_cooldowns_filter_candidates()
 
 	if _failures.is_empty():
 		print("[PASS] Mission director tests")
@@ -280,6 +281,51 @@ func _test_repeated_mechanic_requires_three_changes() -> void:
 	_expect(
 		MissionDirectorType.pacing_rejection_reason(meaningfully_changed, [prior]).is_empty(),
 		"Repeated mechanic with at least 3 changes should pass"
+	)
+
+
+func _test_declined_offer_cooldowns_filter_candidates() -> void:
+	var candidate := {
+		"beat_id": "beat.alpha",
+		"objective_type": "KILL_SHIPS",
+		"giver_id": "agent.jenna",
+	}
+	var key := MissionDirectorType.declined_offer_cooldown_key(candidate)
+	_expect(
+		key == "beat.alpha|KILL_SHIPS|agent.jenna",
+		"Unexpected decline cooldown key: %s" % key
+	)
+	_expect(
+		MissionDirectorType.decline_cooldown_rejection_reason(
+			candidate,
+			{key: 200},
+			150
+		) == "declined_offer_on_cooldown",
+		"Active declined-offer cooldown should reject candidate"
+	)
+	_expect(
+		MissionDirectorType.decline_cooldown_rejection_reason(
+			candidate,
+			{key: 200},
+			201
+		).is_empty(),
+		"Expired declined-offer cooldown should not reject candidate"
+	)
+	var kept := MissionDirectorType.filter_by_decline_cooldowns(
+		[
+			candidate,
+			{
+				"beat_id": "beat.beta",
+				"objective_type": "DELIVERY_COURIER",
+				"giver_id": "agent.jenna",
+			},
+		],
+		{key: 200},
+		150
+	)
+	_expect(
+		kept.size() == 1 and str(kept[0].get("beat_id", "")) == "beat.beta",
+		"Decline cooldown filter should keep only candidates not on cooldown"
 	)
 
 

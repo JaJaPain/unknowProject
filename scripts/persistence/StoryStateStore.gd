@@ -133,6 +133,7 @@ static func _default_state() -> Dictionary:
 		"knowledge_states": {},
 		"beat_states": {},
 		"chapter_packet_generation_queued": {},
+		"declined_offer_cooldowns": {},
 		"asked_question_intents": [],
 	}
 
@@ -157,6 +158,8 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["beat_states"] = {}
 	if not migrated.get("chapter_packet_generation_queued", {}) is Dictionary:
 		migrated["chapter_packet_generation_queued"] = {}
+	if not migrated.get("declined_offer_cooldowns", {}) is Dictionary:
+		migrated["declined_offer_cooldowns"] = {}
 	_backfill_legacy_player_knows(migrated)
 	return migrated
 
@@ -228,6 +231,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"knowledge_states",
 		"beat_states",
 		"chapter_packet_generation_queued",
+		"declined_offer_cooldowns",
 	]:
 		if not value.get(dictionary_field, {}) is Dictionary:
 			result.add_error(

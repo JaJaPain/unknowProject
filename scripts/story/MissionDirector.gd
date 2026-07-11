@@ -159,6 +159,49 @@ static func filter_by_pacing_rules(
 	return kept
 
 
+static func filter_by_decline_cooldowns(
+	candidates: Array,
+	declined_offer_cooldowns: Dictionary,
+	current_minute: int
+) -> Array:
+	var kept: Array = []
+	for candidate in candidates:
+		if not candidate is Dictionary:
+			continue
+		if decline_cooldown_rejection_reason(
+			candidate as Dictionary,
+			declined_offer_cooldowns,
+			current_minute
+		).is_empty():
+			kept.append(candidate)
+	return kept
+
+
+static func decline_cooldown_rejection_reason(
+	candidate: Dictionary,
+	declined_offer_cooldowns: Dictionary,
+	current_minute: int
+) -> String:
+	var key := declined_offer_cooldown_key(candidate)
+	if key.is_empty() or not declined_offer_cooldowns.has(key):
+		return ""
+	if int(declined_offer_cooldowns.get(key, 0)) > current_minute:
+		return "declined_offer_on_cooldown"
+	return ""
+
+
+static func declined_offer_cooldown_key(candidate: Dictionary) -> String:
+	var explicit := str(candidate.get("decline_cooldown_key", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var beat_id := str(candidate.get("beat_id", "")).strip_edges()
+	var objective := str(candidate.get("objective_type", "")).strip_edges()
+	var giver := str(candidate.get("giver_id", "")).strip_edges()
+	if beat_id.is_empty() and objective.is_empty() and giver.is_empty():
+		return ""
+	return "%s|%s|%s" % [beat_id, objective, giver]
+
+
 static func pacing_rejection_reason(
 	candidate: Dictionary,
 	recent_agent_contracts: Array
@@ -360,6 +403,13 @@ static func _candidate(
 		"decline_consequence": str(beat.get("decline_consequence", "")),
 		"world_consequence": str(beat.get("world_consequence", "")),
 		"premise_fingerprint": _premise_fingerprint(beat, objective_type, giver),
+		"required": bool(beat.get("required", false)),
+		"alternate_beat_id": str(beat.get("alternate_beat_id", "")),
+		"decline_cooldown_key": declined_offer_cooldown_key({
+			"beat_id": str(beat.get("beat_id", "")),
+			"objective_type": objective_type,
+			"giver_id": str(giver.get("giver_id", "")),
+		}),
 	}
 
 

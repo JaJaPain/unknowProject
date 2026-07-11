@@ -74,6 +74,7 @@ var story_state: Dictionary = {
 	"knowledge_states": {},
 	"beat_states": {},
 	"chapter_packet_generation_queued": {},
+	"declined_offer_cooldowns": {},
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -276,6 +277,7 @@ func clear_story_state() -> void:
 		"knowledge_states": {},
 		"beat_states": {},
 		"chapter_packet_generation_queued": {},
+		"declined_offer_cooldowns": {},
 		"asked_question_intents": [],
 	}
 	# Part of the wipe contract: a new campaign must not inherit the old
@@ -385,6 +387,68 @@ func mark_chapter_beat_state(
 	_save_story_state()
 	_notify_chapter_packet_consumption_changed()
 	return {"ok": true, "beat_state": beat_state.duplicate(true)}
+
+
+func record_chapter_offer_declined(
+	candidate: Dictionary,
+	reason: String = "declined",
+	cooldown_minutes: int = 180
+) -> Dictionary:
+	var beat_id := str(candidate.get("beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		return {"ok": false, "error": "Declined candidate requires beat_id."}
+	var cooldowns: Dictionary = story_state.get("declined_offer_cooldowns", {}) \
+		if story_state.get("declined_offer_cooldowns", {}) is Dictionary else {}
+	var key := declined_offer_cooldown_key(candidate)
+	if not key.is_empty():
+		cooldowns[key] = int(CampaignClock.total_minutes) + maxi(1, cooldown_minutes)
+	story_state["declined_offer_cooldowns"] = cooldowns
+	var result := mark_chapter_beat_state(beat_id, "declined", reason)
+	if bool(candidate.get("required", false)):
+		var alternate_beat_id := str(candidate.get("alternate_beat_id", "")).strip_edges()
+		if not alternate_beat_id.is_empty():
+			_activate_alternate_chapter_beat(alternate_beat_id, beat_id)
+		else:
+			mark_chapter_beat_state(
+				beat_id,
+				"failed",
+				str(candidate.get("decline_consequence", reason))
+			)
+	return result
+
+
+func declined_offer_cooldown_key(candidate: Dictionary) -> String:
+	var explicit := str(candidate.get("decline_cooldown_key", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var beat_id := str(candidate.get("beat_id", "")).strip_edges()
+	var objective := str(candidate.get("objective_type", "")).strip_edges()
+	var giver := str(candidate.get("giver_id", "")).strip_edges()
+	if beat_id.is_empty() and objective.is_empty() and giver.is_empty():
+		return ""
+	return "%s|%s|%s" % [beat_id, objective, giver]
+
+
+func declined_offer_cooldowns() -> Dictionary:
+	return (
+		story_state.get("declined_offer_cooldowns", {}) as Dictionary
+	).duplicate(true) if story_state.get("declined_offer_cooldowns", {}) is Dictionary else {}
+
+
+func _activate_alternate_chapter_beat(
+	alternate_beat_id: String,
+	declined_beat_id: String
+) -> void:
+	var beat_states: Dictionary = story_state.get("beat_states", {}) \
+		if story_state.get("beat_states", {}) is Dictionary else {}
+	var alternate: Dictionary = beat_states.get(alternate_beat_id, {}) \
+		if beat_states.get(alternate_beat_id, {}) is Dictionary else {}
+	alternate["state"] = "available"
+	alternate["activated_by_decline_of"] = declined_beat_id
+	alternate["activated_at_minute"] = int(CampaignClock.total_minutes)
+	beat_states[alternate_beat_id] = alternate
+	story_state["beat_states"] = beat_states
+	_save_story_state()
 
 
 func chapter_packet_consumed_ratio(packet: Dictionary) -> float:
