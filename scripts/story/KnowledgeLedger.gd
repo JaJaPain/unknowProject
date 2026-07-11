@@ -113,12 +113,98 @@ func promote(
 	}
 
 
+func question_candidates(
+	mission_plan: Dictionary,
+	already_asked: Array = []
+) -> Array[Dictionary]:
+	var candidate_fact_ids := _ordered_candidate_fact_ids(mission_plan)
+	var aliases: Dictionary = mission_plan.get("fact_aliases", {})
+	var asked_lookup := {}
+	for asked in already_asked:
+		asked_lookup[str(asked)] = true
+	var candidates: Array[Dictionary] = []
+	for i in range(candidate_fact_ids.size()):
+		var fact_id := candidate_fact_ids[i]
+		var clean_fact_id := str(fact_id).strip_edges()
+		if clean_fact_id.is_empty():
+			continue
+		var state := state_for(clean_fact_id)
+		var intent_kind := "grounding" if state == STATE_UNKNOWN else "deeper"
+		var intent_id := "%s:%s" % [intent_kind, clean_fact_id]
+		if asked_lookup.has(intent_id) or asked_lookup.has(clean_fact_id):
+			continue
+		var alias := _fact_alias(clean_fact_id, aliases)
+		candidates.append({
+			"intent_id": intent_id,
+			"fact_id": clean_fact_id,
+			"kind": intent_kind,
+			"current_state": state,
+			"label": _question_label(intent_kind, alias),
+			"rank": _question_rank(intent_kind, state) - i,
+		})
+	candidates.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		var left_rank := int(left.get("rank", 0))
+		var right_rank := int(right.get("rank", 0))
+		if left_rank == right_rank:
+			return str(left.get("fact_id", "")) < str(right.get("fact_id", ""))
+		return left_rank > right_rank
+	)
+	return candidates
+
+
 func _record_for(fact_id: String) -> Dictionary:
 	var states: Dictionary = story_state.get("knowledge_states", {})
 	var record: Variant = states.get(fact_id.strip_edges(), {})
 	if record is Dictionary:
 		return (record as Dictionary)
 	return {}
+
+
+func _ordered_candidate_fact_ids(mission_plan: Dictionary) -> Array[String]:
+	var ordered: Array[String] = []
+	for field in [
+		"required_fact_ids",
+		"question_fact_ids",
+		"clarify_fact_ids",
+		"offer_fact_ids",
+	]:
+		var values: Variant = mission_plan.get(field, [])
+		if not values is Array:
+			continue
+		for value in values:
+			var fact_id := str(value).strip_edges()
+			if fact_id.is_empty() or ordered.has(fact_id):
+				continue
+			ordered.append(fact_id)
+	return ordered
+
+
+func _fact_alias(fact_id: String, aliases: Dictionary) -> String:
+	var alias := str(aliases.get(fact_id, "")).strip_edges()
+	if not alias.is_empty():
+		return alias
+	return fact_id.get_slice(".", fact_id.get_slice_count(".") - 1).replace("_", " ")
+
+
+func _question_label(kind: String, alias: String) -> String:
+	if kind == "grounding":
+		return "What do you mean by %s?" % alias
+	return "Why does %s matter now?" % alias
+
+
+func _question_rank(kind: String, state: String) -> int:
+	if kind == "grounding":
+		return 100
+	match state:
+		STATE_RUMORED:
+			return 80
+		STATE_KNOWN:
+			return 70
+		STATE_CONFIRMED:
+			return 50
+		STATE_CONTRADICTED:
+			return 20
+	return 0
 
 
 func _failure(message: String) -> Dictionary:

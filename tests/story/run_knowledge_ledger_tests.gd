@@ -10,6 +10,8 @@ func _initialize() -> void:
 	_test_fact_demotion_is_ignored()
 	_test_contradiction_is_explicit_terminal_state()
 	_test_invalid_fact_promotions_fail()
+	_test_question_candidates_use_knowledge_state_and_aliases()
+	_test_question_candidates_skip_already_asked_intents()
 
 	if _failures.is_empty():
 		print("[PASS] Knowledge ledger tests")
@@ -137,6 +139,66 @@ func _test_invalid_fact_promotions_fail() -> void:
 			)
 		),
 		"Knowledge ledger accepted an invalid state."
+	)
+
+
+func _test_question_candidates_use_knowledge_state_and_aliases() -> void:
+	var state := {"knowledge_revision": 0, "knowledge_states": {}}
+	var ledger := KnowledgeLedgerType.new(state)
+	var plan := {
+		"required_fact_ids": ["fact.convoy_shortage.visible"],
+		"question_fact_ids": ["fact.convoy_loss.rumor"],
+		"fact_aliases": {
+			"fact.convoy_shortage.visible": "the convoy shortage",
+			"fact.convoy_loss.rumor": "the lost convoy",
+		},
+	}
+	var unknown_candidates := ledger.question_candidates(plan)
+	_expect(
+		not unknown_candidates.is_empty()
+			and unknown_candidates[0].get("kind", "") == "grounding"
+			and str(unknown_candidates[0].get("label", "")).contains(
+				"the convoy shortage"
+			),
+		"Unknown player did not receive a grounding question."
+	)
+	ledger.promote(
+		"fact.convoy_shortage.visible",
+		"known",
+		"briefing",
+		10
+	)
+	var informed_candidates := ledger.question_candidates(plan)
+	_expect(
+		not informed_candidates.is_empty()
+			and informed_candidates[0].get("kind", "") == "grounding"
+			and str(informed_candidates[0].get("fact_id", ""))
+				== "fact.convoy_loss.rumor",
+		"Ledger did not prioritize the remaining unknown question fact."
+	)
+	ledger.promote("fact.convoy_loss.rumor", "known", "answer", 11)
+	var deeper_candidates := ledger.question_candidates(plan)
+	_expect(
+		not deeper_candidates.is_empty()
+			and deeper_candidates[0].get("kind", "") == "deeper"
+			and str(deeper_candidates[0].get("label", "")).begins_with("Why"),
+		"Informed player did not receive a deeper question."
+	)
+
+
+func _test_question_candidates_skip_already_asked_intents() -> void:
+	var ledger := KnowledgeLedgerType.new({"knowledge_revision": 0})
+	var plan := {
+		"required_fact_ids": ["fact.route_failure.visible"],
+		"fact_aliases": {"fact.route_failure.visible": "the failed route"},
+	}
+	var candidates := ledger.question_candidates(
+		plan,
+		["grounding:fact.route_failure.visible"]
+	)
+	_expect(
+		candidates.is_empty(),
+		"Question candidates did not skip an already-asked intent."
 	)
 
 
