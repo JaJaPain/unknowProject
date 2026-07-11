@@ -132,6 +132,7 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 			"urgent_reward_multiplier": urgent_multiplier,
 		}
 	)
+	_attach_story_cause_metadata(quest_data, "ore")
 	return _offer(
 		TEMPLATE_DELIVER_ORE,
 		true,
@@ -193,6 +194,7 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		objective,
 		{}
 	)
+	_attach_story_cause_metadata(quest_data, "pickup")
 	return _offer(
 		TEMPLATE_PICKUP_SPECIAL,
 		true,
@@ -263,6 +265,7 @@ static func _build_courier_offer(current_time_minutes: int) -> Dictionary:
 		objective,
 		{}
 	)
+	_attach_story_cause_metadata(quest_data, "delivery")
 	return _offer(
 		TEMPLATE_DELIVERY_COURIER,
 		true,
@@ -324,6 +327,7 @@ static func _build_purchase_offer(current_time_minutes: int) -> Dictionary:
 		objective,
 		{}
 	)
+	_attach_story_cause_metadata(quest_data, "purchase")
 	return _offer(
 		TEMPLATE_PURCHASE_DELIVERY,
 		true,
@@ -372,6 +376,7 @@ static func _build_recovery_preview() -> Dictionary:
 		objective,
 		{}
 	)
+	_attach_story_cause_metadata(quest_data, "recovery")
 	return _offer(
 		TEMPLATE_RECOVER_COMBAT_DROP,
 		true,
@@ -416,6 +421,42 @@ static func _story_board_context(_offer_kind: String) -> String:
 	if parts.is_empty():
 		return ""
 	return "; ".join(parts).capitalize() + "."
+
+
+static func _attach_story_cause_metadata(
+	quest_data: Dictionary,
+	offer_kind: String
+) -> void:
+	var metadata := _story_cause_metadata(offer_kind)
+	if metadata.is_empty():
+		return
+	quest_data["narrative_metadata"] = metadata
+	var hook := str(metadata.get("story_hook_ref", "")).strip_edges()
+	if not hook.is_empty():
+		quest_data["story_hook_ref"] = hook
+
+
+static func _story_cause_metadata(offer_kind: String) -> Dictionary:
+	var because := ""
+	var hook := ""
+	var main_loop := Engine.get_main_loop()
+	if main_loop != null and main_loop.has_method("get_root"):
+		var manager = main_loop.root.get_node_or_null("StoryManager")
+		if manager != null:
+			if manager.has_method("get_current_because"):
+				because = str(manager.call("get_current_because")).strip_edges()
+			if manager.has_method("current_hook_ref"):
+				hook = str(manager.call("current_hook_ref")).strip_edges()
+	if because.is_empty():
+		because = _story_board_context(offer_kind).strip_edges()
+	if because.is_empty() and hook.is_empty():
+		return {}
+	var source_text := because if not because.is_empty() else hook
+	return {
+		"cause_id": "cause.public_board.%s" % source_text.sha256_text().substr(0, 12),
+		"story_hook_ref": hook,
+		"public_because": because,
+	}
 
 
 static func _story_mission_intents() -> Array[String]:

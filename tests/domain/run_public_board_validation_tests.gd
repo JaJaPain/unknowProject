@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_pickup_offer_uses_current_system_outpost()
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_generated_system_offers_use_story_pack()
+	_test_public_board_offers_carry_story_cause_metadata()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
 	_test_generated_contact_portrait_voice_gender_matches()
 	_test_generated_contact_flavor_lines_do_not_repeat_immediately()
@@ -239,6 +240,50 @@ func _test_generated_system_offers_use_story_pack() -> void:
 			and str(recovery_offer.get("body", "")).contains("Local note:")
 			and str(objective.get("target_faction", "")) == "dustborn",
 		"story_pack_board: recovery offer did not use local story/faction context."
+	)
+
+
+func _test_public_board_offers_carry_story_cause_metadata() -> void:
+	var manager = root.get_node("StoryManager")
+	var previous_state: Dictionary = manager.story_state.duplicate(true)
+	manager.story_state["active_tensions"] = ["Dock strikes are spreading past the inner ring."]
+	manager.story_state["pending_hooks"] = ["A missing coolant relay keeps changing hands."]
+	var offers := OfferBuilderType.build_offers(480)
+	manager.story_state = previous_state
+	_expect(not offers.is_empty(), "story_metadata: no public-board offers built.")
+	if offers.is_empty():
+		return
+	var quest_data: Dictionary = offers[0].get("quest_data", {})
+	var metadata: Dictionary = quest_data.get("narrative_metadata", {})
+	_expect(
+		str(metadata.get("cause_id", "")).begins_with("cause.public_board."),
+		"story_metadata: public-board offer missing cause_id."
+	)
+	_expect(
+		str(metadata.get("public_because", "")).contains("Dock strikes"),
+		"story_metadata: public-board offer missing public pressure text."
+	)
+	_expect(
+		str(metadata.get("story_hook_ref", "")).begins_with("hook:"),
+		"story_metadata: public-board offer missing story_hook_ref."
+	)
+	var choices: Array = quest_data.get("choices", [])
+	if choices.is_empty():
+		_expect(false, "story_metadata: offer had no choices to adapt.")
+		return
+	var adapted := AdapterType.build_active_state(
+		quest_data,
+		choices[0],
+		"mission.runtime.board_story_metadata",
+		"start_system",
+		480
+	)
+	_expect(
+		adapted["validation"].is_valid()
+			and str(
+				adapted["state"].get("narrative_metadata", {}).get("cause_id", "")
+			).begins_with("cause.public_board."),
+		"story_metadata: narrative metadata did not survive active-state adaptation."
 	)
 
 
