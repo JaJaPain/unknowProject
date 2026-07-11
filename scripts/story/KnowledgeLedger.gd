@@ -102,6 +102,7 @@ func promote(
 	next_record["confidence"] = confidence.strip_edges()
 	states[clean_fact_id] = next_record
 	story_state["knowledge_states"] = states
+	_sync_player_knows_for_record(clean_state, next_record)
 	story_state["knowledge_revision"] = (
 		maxi(0, int(story_state.get("knowledge_revision", 0))) + 1
 	)
@@ -205,6 +206,22 @@ func _question_rank(kind: String, state: String) -> int:
 		STATE_CONTRADICTED:
 			return 20
 	return 0
+
+
+func _sync_player_knows_for_record(state: String, record: Dictionary) -> void:
+	if int(STATE_RANKS.get(state, 0)) < int(STATE_RANKS.get(STATE_KNOWN, 0)):
+		return
+	if state == STATE_CONTRADICTED:
+		return
+	var text := str(record.get("public_text", "")).strip_edges()
+	if text.is_empty():
+		text = str(record.get("legacy_text", "")).strip_edges()
+	if text.is_empty():
+		return
+	var player_knows: Array = story_state.get("player_knows", [])
+	if not player_knows.has(text):
+		player_knows.append(text)
+	story_state["player_knows"] = player_knows
 
 
 func _failure(message: String) -> Dictionary:

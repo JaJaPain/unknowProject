@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_invalid_fact_promotions_fail()
 	_test_question_candidates_use_knowledge_state_and_aliases()
 	_test_question_candidates_skip_already_asked_intents()
+	_test_known_facts_sync_legacy_player_knows()
 
 	if _failures.is_empty():
 		print("[PASS] Knowledge ledger tests")
@@ -199,6 +200,48 @@ func _test_question_candidates_skip_already_asked_intents() -> void:
 	_expect(
 		candidates.is_empty(),
 		"Question candidates did not skip an already-asked intent."
+	)
+
+
+func _test_known_facts_sync_legacy_player_knows() -> void:
+	var state := {
+		"knowledge_revision": 0,
+		"player_knows": [],
+		"knowledge_states": {
+			"fact.convoy_shortage.visible": {
+				"state": "unknown",
+				"public_text": "The convoy shortage is visible at the docks.",
+			},
+		},
+	}
+	var ledger := KnowledgeLedgerType.new(state)
+	ledger.promote(
+		"fact.convoy_shortage.visible",
+		"rumored",
+		"lounge_rumor",
+		5
+	)
+	_expect(
+		(state.get("player_knows", []) as Array).is_empty(),
+		"Rumored facts should not sync into legacy player_knows."
+	)
+	ledger.promote(
+		"fact.convoy_shortage.visible",
+		"known",
+		"briefing",
+		6
+	)
+	ledger.promote(
+		"fact.convoy_shortage.visible",
+		"confirmed",
+		"manifest",
+		7
+	)
+	var player_knows: Array = state.get("player_knows", [])
+	_expect(
+		player_knows.size() == 1
+			and player_knows.has("The convoy shortage is visible at the docks."),
+		"Known fact did not sync exactly once into legacy player_knows."
 	)
 
 
