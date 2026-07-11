@@ -8,6 +8,9 @@ const TransactionStoreType := preload(
 const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
+const ContextBlockBuilderType := preload(
+	"res://scripts/ai/ContextBlockBuilder.gd"
+)
 
 const DOCUMENT_VERSION := 2
 const STATE_PATH := "story_state.json"
@@ -31,25 +34,7 @@ func is_valid() -> bool:
 func prompt_context() -> String:
 	if not is_valid() or data.is_empty():
 		return ""
-	var lines: Array[String] = []
-	lines.append("Story State:")
-	lines.append("- Chapter: %d" % int(data.get("chapter", 1)))
-	var tensions: Array = data.get("active_tensions", [])
-	if not tensions.is_empty():
-		lines.append("- Active tensions: %s" % ", ".join(tensions))
-	var known: Array = data.get("player_knows", [])
-	if not known.is_empty():
-		lines.append("- Player knows: %s" % ", ".join(known))
-	var foreshadow := str(data.get("current_foreshadow", "")).strip_edges()
-	if not foreshadow.is_empty():
-		lines.append("- Foreshadow hint: %s" % foreshadow)
-	var mood := str(data.get("kaelen_current_mood", "")).strip_edges()
-	if not mood.is_empty():
-		lines.append("- Kaelen mood: %s" % mood)
-	var hooks: Array = data.get("pending_hooks", [])
-	if not hooks.is_empty():
-		lines.append("- Open story threads: %s" % ", ".join(hooks))
-	return "\n".join(lines)
+	return ContextBlockBuilderType.story_state_public_block(data)
 
 
 func save_state(next_data: Dictionary) -> Dictionary:

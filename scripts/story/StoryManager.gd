@@ -25,6 +25,9 @@ const StoryScreenshotsType := preload(
 const KaelenHandoffStoreType := preload(
 	"res://scripts/persistence/KaelenHandoffStore.gd"
 )
+const ContextBlockBuilderType := preload(
+	"res://scripts/ai/ContextBlockBuilder.gd"
+)
 
 # ── Phase B: Living story state ───────────────────────────────────────────────
 # story_state is the in-memory working copy. StoryStateStore handles persistence.
@@ -298,50 +301,7 @@ func current_hook_ref() -> String:
 # Returns a formatted string safe to inject into LLM prompts.
 # Never includes player_does_not_know_yet.
 func get_story_context_block() -> String:
-	var lines: Array[String] = []
-	lines.append("Story State:")
-	lines.append("- Chapter: %d" % int(story_state.get("chapter", 1)))
-	var tensions: Array = story_state.get("active_tensions", [])
-	if not tensions.is_empty():
-		lines.append("- Active tensions: %s" % ", ".join(tensions))
-	var known: Array = story_state.get("player_knows", [])
-	if not known.is_empty():
-		lines.append("- Player knows: %s" % ", ".join(known))
-	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
-	if not foreshadow.is_empty():
-		lines.append("- Foreshadow hint: %s" % foreshadow)
-	var mood := str(story_state.get("kaelen_current_mood", "")).strip_edges()
-	if not mood.is_empty():
-		lines.append("- Kaelen mood: %s" % mood)
-	var hooks: Array = story_state.get("pending_hooks", [])
-	if not hooks.is_empty():
-		lines.append("- Open story threads: %s" % ", ".join(hooks))
-	_append_faction_pressure_lines(lines)
-	return "\n".join(lines)
-
-
-# Player-safe faction pressure line for LLM prompts: each anchor's posture plus a
-# neutral/rising/easing sign from its pressure scalar. No secrets.
-func _append_faction_pressure_lines(lines: Array) -> void:
-	var pressure: Dictionary = story_state.get("faction_pressure", {})
-	if pressure.is_empty():
-		return
-	var parts: Array[String] = []
-	for anchor in ["zenith", "aurelia", "vanguard"]:
-		var fp = pressure.get(anchor, null)
-		if not fp is Dictionary:
-			continue
-		var posture := str(fp.get("posture", "")).strip_edges()
-		var scalar := int(fp.get("pressure", 0))
-		var sign_word := "neutral"
-		if scalar > 0:
-			sign_word = "rising(+%d)" % scalar
-		elif scalar < 0:
-			sign_word = "easing(%d)" % scalar
-		if not posture.is_empty():
-			parts.append("%s [%s]: %s" % [anchor.capitalize(), sign_word, posture])
-	if not parts.is_empty():
-		lines.append("- Faction pressure: %s" % " | ".join(parts))
+	return ContextBlockBuilderType.story_state_public_block(story_state)
 
 
 # Records a durable player choice (contract sided-with/refused/betrayed, cargo
