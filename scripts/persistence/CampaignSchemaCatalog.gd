@@ -15,6 +15,7 @@ const CHECKPOINT := "checkpoint"
 const MAP_KNOWLEDGE := "map_knowledge"
 const CHRONICLE_SEGMENT := "chronicle_segment"
 const KAELEN_META := "kaelen_meta"
+const CHAPTER_PACKETS := "chapter_narrative_packets"
 
 const PERMANENT := "permanent"
 const REWINDABLE := "rewindable"
@@ -30,6 +31,7 @@ const DOCUMENT_OWNERSHIP: Dictionary = {
 	MAP_KNOWLEDGE: REWINDABLE,
 	CHRONICLE_SEGMENT: APPEND_ONLY,
 	KAELEN_META: META_MEMORY,
+	CHAPTER_PACKETS: PERMANENT,
 }
 
 const OWNERSHIP_TABLE: Dictionary = {
@@ -39,6 +41,7 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"generated_entity_identity",
 		"canon_fact",
 		"generated_asset_identity",
+		"chapter_narrative_packet",
 	],
 	REWINDABLE: [
 		"player_state",
@@ -136,6 +139,8 @@ static func validate_document(data: Dictionary) -> ValidationResult:
 			_validate_chronicle(data, result)
 		KAELEN_META:
 			_validate_kaelen_meta(data, result)
+		CHAPTER_PACKETS:
+			_validate_chapter_packets(data, result)
 	return result
 
 
@@ -522,6 +527,64 @@ static func _validate_chronicle(data: Dictionary, result: ValidationResult) -> v
 				"%sevent_id" % prefix
 			)
 		seen[event_id] = true
+
+
+static func _validate_chapter_packets(
+	data: Dictionary,
+	result: ValidationResult
+) -> void:
+	_require_id(data, "campaign_id", "campaign", result)
+	var packets: Variant = data.get("packets", null)
+	if not packets is Array:
+		result.add_error(
+			"invalid_chapter_packets",
+			"chapter_narrative_packets requires a packets array.",
+			"packets"
+		)
+		return
+	var seen: Dictionary = {}
+	for index in range((packets as Array).size()):
+		var raw: Variant = (packets as Array)[index]
+		if not raw is Dictionary:
+			result.add_error(
+				"invalid_chapter_packet",
+				"Chapter narrative packet must be an object.",
+				"packets.%d" % index
+			)
+			continue
+		var packet := raw as Dictionary
+		var prefix := "packets.%d." % index
+		_require_nonempty_string(packet, "packet_id", result, prefix)
+		if int(packet.get("chapter", 0)) < 1:
+			result.add_error(
+				"invalid_chapter_packet_chapter",
+				"Chapter narrative packet chapter must be at least 1.",
+				"%schapter" % prefix
+			)
+		var packet_id := str(packet.get("packet_id", ""))
+		if not packet_id.is_empty() and seen.has(packet_id):
+			result.add_error(
+				"duplicate_chapter_packet_id",
+				"Chapter narrative packet IDs must be unique.",
+				"%spacket_id" % prefix
+			)
+		seen[packet_id] = true
+		for array_field in ["threads", "facts", "beats"]:
+			if not packet.get(array_field, []) is Array:
+				result.add_error(
+					"invalid_chapter_packet_array",
+					"Chapter narrative packet field '%s' must be an array." %
+						array_field,
+					"%s%s" % [prefix, array_field]
+				)
+		for runtime_field in ["beat_states", "knowledge_states"]:
+			if packet.has(runtime_field):
+				result.add_error(
+					"wrong_ownership",
+					"Field '%s' belongs in rewindable story_state, not prepared canon." %
+						runtime_field,
+					"%s%s" % [prefix, runtime_field]
+				)
 
 
 static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) -> void:
