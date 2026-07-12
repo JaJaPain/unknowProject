@@ -8,6 +8,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_opening_shows_all_available_choices()
+	_test_opening_uses_more_options_navigation_for_extra_intents()
 	_test_question_answer_returns_to_remaining_choices_without_terminal()
 	_test_terminal_choice_completes_with_stable_choice_id()
 	_test_decline_completes_with_decline_consequence()
@@ -30,6 +31,21 @@ func _test_opening_shows_all_available_choices() -> void:
 	_expect(_choice_ids(choices).has("clarify_term"), "Opening did not expose clarify question.")
 	_expect(_choice_ids(choices).has("accept_standard"), "Opening did not expose accept terminal.")
 	_expect(_choice_ids(choices).has("decline"), "Opening did not expose decline terminal.")
+
+
+func _test_opening_uses_more_options_navigation_for_extra_intents() -> void:
+	var screen := ControllerType.start(_expanded_conversation_plan(), _expanded_bundle())
+	var choices: Array = screen.get("choices", [])
+	_expect(_choice_ids(choices).has("clarify_term"), "Opening did not expose primary grounding question.")
+	_expect(_choice_ids(choices).has("accept_standard"), "Opening did not expose standard acceptance.")
+	_expect(_choice_ids(choices).has("decline"), "Opening did not expose decline.")
+	_expect(_choice_ids(choices).has("__more_options"), "Opening did not expose more-options navigation.")
+	_expect(not _choice_ids(choices).has("ask_why"), "Opening exposed extra question before navigation.")
+	var options := ControllerType.select_intent(screen.get("state", {}), "__more_options")
+	var option_choices: Array = options.get("choices", [])
+	_expect(str(options.get("mode", "")) == "options", "More-options navigation did not enter options mode.")
+	_expect(_choice_ids(option_choices).has("ask_why"), "Options view did not expose hidden question.")
+	_expect(_choice_ids(option_choices).has("request_hazard_pay"), "Options view did not expose hidden terminal.")
 
 
 func _test_question_answer_returns_to_remaining_choices_without_terminal() -> void:
@@ -147,6 +163,38 @@ func _bundle() -> Dictionary:
 		"decline_player": "Not my problem.",
 		"decline_response": "Then I will find someone with fewer survival instincts.",
 	}
+
+
+func _expanded_conversation_plan() -> Dictionary:
+	var plan := _conversation_plan()
+	var intents: Array = plan.get("intents", [])
+	intents.insert(1, {
+		"id": PlanType.INTENT_ASK_WHY,
+		"kind": "question",
+		"label": "Why now?",
+		"fact_ids": ["fact.convoy.visible"],
+	})
+	intents.insert(3, {
+		"id": PlanType.INTENT_REQUEST_HAZARD_PAY,
+		"kind": "terminal",
+		"label": "Ask for hazard pay",
+		"fact_ids": [],
+		"consequence": {
+			"mission_action": "accept",
+			"reward_credits_multiplier": 1.15,
+		},
+	})
+	plan["intents"] = intents
+	return plan
+
+
+func _expanded_bundle() -> Dictionary:
+	var bundle := _bundle()
+	bundle["ask_why_player"] = "Why now?"
+	bundle["ask_why_response"] = "Because the reserve bins finally ran out."
+	bundle["request_hazard_pay_player"] = "This needs hazard pay."
+	bundle["request_hazard_pay_response"] = "Fine. Hazard terms are noted."
+	return bundle
 
 
 func _choice_ids(choices: Array) -> Array[String]:

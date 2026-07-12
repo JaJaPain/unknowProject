@@ -3,6 +3,8 @@ extends RefCounted
 
 const PlanType := preload("res://scripts/story/MissionConversationPlan.gd")
 
+const NAV_MORE_OPTIONS := "__more_options"
+
 
 static func start(
 	conversation_plan: Dictionary,
@@ -29,6 +31,10 @@ static func select_intent(
 	var next_state := state.duplicate(true)
 	var clean_intent_id := intent_id.strip_edges()
 	if bool(next_state.get("complete", false)):
+		return _screen(next_state)
+	if clean_intent_id == NAV_MORE_OPTIONS:
+		next_state["mode"] = "options"
+		next_state["current_intent_id"] = clean_intent_id
 		return _screen(next_state)
 	var intent := _intent_by_id(
 		next_state.get("conversation_plan", {}),
@@ -72,6 +78,8 @@ static func _screen(state: Dictionary) -> Dictionary:
 		text = str(bundle.get("%s_response" % current_intent_id, "")).strip_edges()
 	elif mode == "terminal":
 		text = str(bundle.get("%s_response" % current_intent_id, "")).strip_edges()
+	elif mode == "options":
+		text = "What do you want to ask or change?"
 	elif mode == "invalid":
 		text = "That response is unavailable."
 	var choices := _choices_for_state(state)
@@ -98,6 +106,8 @@ static func _choices_for_state(state: Dictionary) -> Array[Dictionary]:
 	var asked: Array = state.get("asked_intents", []) \
 		if state.get("asked_intents", []) is Array else []
 	var choices: Array[Dictionary] = []
+	if str(state.get("mode", "opening")) == "opening":
+		return _opening_choices(plan, bundle)
 	for intent in _intents(plan):
 		var intent_id := str(intent.get("id", ""))
 		if intent_id.is_empty():
@@ -117,6 +127,78 @@ static func _choices_for_state(state: Dictionary) -> Array[Dictionary]:
 				if str(intent.get("kind", "")) == "terminal" else "",
 		})
 	return choices
+
+
+static func _opening_choices(
+	plan: Dictionary,
+	bundle: Dictionary
+) -> Array[Dictionary]:
+	var all_choices := _all_unasked_choices(plan, bundle, [])
+	var choices: Array[Dictionary] = []
+	var primary_question := _first_choice_of_kind(all_choices, "question")
+	if not primary_question.is_empty():
+		choices.append(primary_question)
+	var accept := _choice_by_intent_id(all_choices, PlanType.INTENT_ACCEPT_STANDARD)
+	if not accept.is_empty():
+		choices.append(accept)
+	var decline := _choice_by_intent_id(all_choices, PlanType.INTENT_DECLINE)
+	if not decline.is_empty():
+		choices.append(decline)
+	if all_choices.size() > choices.size():
+		choices.append({
+			"intent_id": NAV_MORE_OPTIONS,
+			"kind": "navigation",
+			"text": "Terms / other questions",
+			"choice_id": "",
+		})
+	return choices
+
+
+static func _all_unasked_choices(
+	plan: Dictionary,
+	bundle: Dictionary,
+	asked: Array
+) -> Array[Dictionary]:
+	var choices: Array[Dictionary] = []
+	for intent in _intents(plan):
+		var intent_id := str(intent.get("id", ""))
+		if intent_id.is_empty():
+			continue
+		if str(intent.get("kind", "")) == "question" and intent_id in asked:
+			continue
+		var label := str(
+			bundle.get("%s_player" % intent_id, intent.get("label", intent_id))
+		).strip_edges()
+		if label.is_empty():
+			continue
+		choices.append({
+			"intent_id": intent_id,
+			"kind": str(intent.get("kind", "")),
+			"text": label,
+			"choice_id": _terminal_choice_id(intent_id)
+				if str(intent.get("kind", "")) == "terminal" else "",
+		})
+	return choices
+
+
+static func _first_choice_of_kind(
+	choices: Array[Dictionary],
+	kind: String
+) -> Dictionary:
+	for choice in choices:
+		if str(choice.get("kind", "")) == kind:
+			return choice
+	return {}
+
+
+static func _choice_by_intent_id(
+	choices: Array[Dictionary],
+	intent_id: String
+) -> Dictionary:
+	for choice in choices:
+		if str(choice.get("intent_id", "")) == intent_id:
+			return choice
+	return {}
 
 
 static func _intent_by_id(
