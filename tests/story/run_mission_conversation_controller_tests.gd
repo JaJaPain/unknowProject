@@ -51,6 +51,15 @@ func _test_terminal_choice_completes_with_stable_choice_id() -> void:
 		str(terminal.get("terminal_choice_id", "")) == "choice.accept_standard",
 		"Terminal intent did not return stable QuestManager choice ID."
 	)
+	var selected_choice: Dictionary = terminal.get("terminal_choice", {})
+	var consequence: Dictionary = selected_choice.get("consequence", {})
+	_expect(
+		str(selected_choice.get("choice_id", "")) == "choice.accept_standard"
+			and str(selected_choice.get("text", "")) == "I’ll take it."
+			and str(selected_choice.get("conversation_intent_id", "")) == "accept_standard"
+			and int(consequence.get("credits_immediate", -1)) == 0,
+		"Terminal intent did not return a QuestManager-ready selected choice."
+	)
 	_expect((terminal.get("choices", []) as Array).is_empty(), "Completed conversation should expose no choices.")
 
 
@@ -69,6 +78,11 @@ func _conversation_plan() -> Dictionary:
 				"kind": "terminal",
 				"label": "Accept the contract",
 				"fact_ids": [],
+				"consequence": {
+					"credits_immediate": 0,
+					"reputation_change": {},
+					"reward_credits_multiplier": 1.0,
+				},
 			},
 			{
 				"id": PlanType.INTENT_DECLINE,

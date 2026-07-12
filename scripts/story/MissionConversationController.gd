@@ -16,6 +16,7 @@ static func start(
 		"current_intent_id": "",
 		"complete": false,
 		"terminal_choice_id": "",
+		"terminal_choice": {},
 	}
 	return _screen(state)
 
@@ -48,6 +49,7 @@ static func select_intent(
 	next_state["current_intent_id"] = clean_intent_id
 	next_state["complete"] = true
 	next_state["terminal_choice_id"] = _terminal_choice_id(clean_intent_id)
+	next_state["terminal_choice"] = _terminal_choice(intent, next_state.get("bundle", {}))
 	return _screen(next_state)
 
 
@@ -72,6 +74,7 @@ static func _screen(state: Dictionary) -> Dictionary:
 		"choices": choices,
 		"complete": bool(state.get("complete", false)),
 		"terminal_choice_id": str(state.get("terminal_choice_id", "")),
+		"terminal_choice": state.get("terminal_choice", {}),
 		"selected_intent_id": current_intent_id,
 	}
 
@@ -139,3 +142,22 @@ static func _terminal_choice_id(intent_id: String) -> String:
 			return "choice.decline"
 		_:
 			return ""
+
+
+static func _terminal_choice(intent: Dictionary, bundle: Variant) -> Dictionary:
+	var intent_id := str(intent.get("id", "")).strip_edges()
+	var choice_id := _terminal_choice_id(intent_id)
+	var bundle_data: Dictionary = {}
+	if bundle is Dictionary:
+		bundle_data = bundle
+	var text := str(
+		bundle_data.get("%s_player" % intent_id, intent.get("label", intent_id))
+	).strip_edges()
+	var consequence: Dictionary = intent.get("consequence", {}) \
+		if intent.get("consequence", {}) is Dictionary else {}
+	return {
+		"choice_id": choice_id,
+		"text": text,
+		"consequence": consequence.duplicate(true),
+		"conversation_intent_id": intent_id,
+	}
