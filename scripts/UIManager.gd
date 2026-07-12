@@ -9754,6 +9754,10 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		var dialogue = quest_data.get("dialogue", "")
 		if dialogue != "":
 			SpeechService.cache(dialogue, agent_voice_profile_id)
+		_cache_mission_conversation_bundle_tts(
+			quest_data,
+			agent_voice_profile_id
+		)
 			
 		# Pre-cache choice response TTS
 		var choices = quest_data.get("choices", [])
@@ -9984,6 +9988,22 @@ func _has_mission_conversation_bundle(quest_data: Dictionary) -> bool:
 		and quest_data.get("mission_dialogue_bundle", {}) is Dictionary \
 		and not (quest_data.get("mission_conversation_plan", {}) as Dictionary).is_empty() \
 		and not (quest_data.get("mission_dialogue_bundle", {}) as Dictionary).is_empty()
+
+
+func _cache_mission_conversation_bundle_tts(
+	quest_data: Dictionary,
+	voice_profile_id: String
+) -> void:
+	if not _has_mission_conversation_bundle(quest_data):
+		return
+	var bundle: Dictionary = quest_data.get("mission_dialogue_bundle", {})
+	var cached_texts: Dictionary = {}
+	for key in bundle.keys():
+		var text := str(bundle.get(key, "")).strip_edges()
+		if text.is_empty() or cached_texts.has(text):
+			continue
+		cached_texts[text] = true
+		SpeechService.cache(text, voice_profile_id)
 
 
 func _show_mission_conversation_briefing(
