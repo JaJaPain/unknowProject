@@ -3019,6 +3019,9 @@ func _score_quest_candidate(quest_data: Dictionary) -> Dictionary:
 	):
 		score -= 35
 		reasons.append("placeholder_artifacts")
+	if _quest_has_speaker_rule_leak(quest_data):
+		score -= 40
+		reasons.append("speaker_rule_leak")
 	if _dialogue_is_too_vague(dialogue, obj_type):
 		score -= 20
 		reasons.append("too_vague")
@@ -3543,6 +3546,137 @@ func _finish_quest_with_current_dialogue(quest_data: Dictionary, elapsed: float)
 # The LLM sometimes writes dialogue that mentions different numbers than
 # what it puts in the JSON objective. Since the player reads the dialogue,
 # we treat the dialogue as the source of truth and patch the JSON to match.
+func _quest_has_speaker_rule_leak(quest_data: Dictionary) -> bool:
+	if _quest_speaker_allows_kaelen_words(quest_data):
+		return false
+	var banned := _non_kaelen_banned_speaker_terms()
+	if banned.is_empty():
+		return false
+	for text in _quest_speaker_texts(quest_data):
+		var lower := text.to_lower()
+		for term in banned:
+			if not term.is_empty() and lower.find(term.to_lower()) != -1:
+				return true
+	return false
+
+
+func _sanitize_quest_speaker_rule_leaks(quest_data: Dictionary) -> bool:
+	if _quest_speaker_allows_kaelen_words(quest_data):
+		return false
+	var changed := false
+	var original_dialogue := str(quest_data.get("dialogue", ""))
+	var cleaned_dialogue := _sanitize_non_kaelen_speaker_text(original_dialogue)
+	if cleaned_dialogue != original_dialogue:
+		quest_data["dialogue"] = cleaned_dialogue
+		changed = true
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for choice in choices:
+		if not choice is Dictionary:
+			continue
+		var consequence: Dictionary = (choice as Dictionary).get("consequence", {}) \
+			if (choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		if consequence.is_empty() or not consequence.has("dialogue_response"):
+			continue
+		var original_response := str(consequence.get("dialogue_response", ""))
+		var cleaned_response := _sanitize_non_kaelen_speaker_text(original_response)
+		if cleaned_response != original_response:
+			consequence["dialogue_response"] = cleaned_response
+			changed = true
+	if changed:
+		quest_data["speaker_rule_leak_repaired"] = true
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_speaker_rule_leak",
+			"LLMInterface",
+			{
+				"agent_name": str(quest_data.get("agent_name", "")),
+				"voice_profile_id": str(quest_data.get("agent_voice_profile_id", "")),
+			}
+		)
+	return changed
+
+
+func _sanitize_non_kaelen_speaker_text(text: String) -> String:
+	var output := text
+	for term in _non_kaelen_banned_speaker_terms():
+		output = _replace_case_variants(
+			output,
+			term,
+			_non_kaelen_replacement_for(term)
+		)
+	return output
+
+
+func _quest_speaker_allows_kaelen_words(quest_data: Dictionary) -> bool:
+	var agent_name := str(quest_data.get("agent_name", "")).strip_edges().to_lower()
+	var voice_profile := str(
+		quest_data.get("agent_voice_profile_id", "")
+	).strip_edges().to_lower()
+	return agent_name.find("kaelen") != -1 or voice_profile == "voice.kaelen.v1"
+
+
+func _quest_speaker_texts(quest_data: Dictionary) -> Array[String]:
+	var texts: Array[String] = [str(quest_data.get("dialogue", ""))]
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for choice in choices:
+		if not choice is Dictionary:
+			continue
+		var consequence: Dictionary = (choice as Dictionary).get("consequence", {}) \
+			if (choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		if consequence.has("dialogue_response"):
+			texts.append(str(consequence.get("dialogue_response", "")))
+	return texts
+
+
+func _non_kaelen_banned_speaker_terms() -> Array[String]:
+	var result: Array[String] = []
+	var rules := LLMDialogueContentRegistry.shared().global_non_kaelen_rules()
+	for bucket_key in ["kaelen_only_words", "banned_non_kaelen_phrases"]:
+		var bucket: Variant = rules.get(bucket_key, [])
+		if not bucket is Array:
+			continue
+		for item in bucket:
+			var term := str(item).strip_edges()
+			if not term.is_empty() and not result.has(term):
+				result.append(term)
+	return result
+
+
+func _non_kaelen_replacement_for(term: String) -> String:
+	var normalized := term.strip_edges().to_lower()
+	match normalized:
+		"shiny":
+			return "pilot"
+		"my best friend":
+			return "my client"
+		"stay put", "sit tight":
+			return "hold position"
+		"i'll fetch":
+			return "I will arrange"
+	return "pilot"
+
+
+func _replace_case_variants(text: String, needle: String, replacement: String) -> String:
+	if needle.is_empty():
+		return text
+	var output := text
+	var search_from := 0
+	var lower_needle := needle.to_lower()
+	while search_from < output.length():
+		var idx := output.to_lower().find(lower_needle, search_from)
+		if idx == -1:
+			break
+		output = (
+			output.substr(0, idx)
+			+ replacement
+			+ output.substr(idx + needle.length())
+		)
+		search_from = idx + replacement.length()
+	return output
+
+
 func _validate_quest_data(quest_data: Dictionary):
 	var dialogue = quest_data.get("dialogue", "").to_lower()
 	var obj = quest_data.get("objective", {})
@@ -3744,6 +3878,7 @@ func _validate_quest_data(quest_data: Dictionary):
 	# number from the dialogue, then clamping can make the two disagree again.
 	# Patch only the objective number so display text and TTS use the final value.
 	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	_sanitize_quest_speaker_rule_leaks(quest_data)
 	_finalize_validated_quest_display(quest_data, obj_type, obj)
 
 
