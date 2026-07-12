@@ -51,6 +51,7 @@ const CampaignAgentMemorySnippetStoreType := preload(
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
+const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
@@ -2951,12 +2952,13 @@ func _append_quest_chronicle_event(
 		return
 	var appended := campaign_chronicle_store.append_event(
 		event_type,
-		[campaign_chronicle_store.campaign["id"]],
+		_quest_chronicle_subject_ids(quest),
 		_quest_chronicle_payload(quest, outcome),
 		str(active.get("checkpoint_id", ""))
 	)
 	if bool(appended.get("ok", false)):
 		_sync_checkpoint_chronicle_context()
+		_record_quest_giver_npc_memory_event(quest, appended.get("event", {}))
 
 
 func _append_timed_quest_chronicle_event(
@@ -3004,12 +3006,13 @@ func _append_timed_quest_chronicle_event(
 		payload["final_payout"] = int(quest.get("final_payout", 0))
 	var appended := campaign_chronicle_store.append_event(
 		event_type,
-		[campaign_chronicle_store.campaign["id"]],
+		_quest_chronicle_subject_ids(quest),
 		payload,
 		str(active.get("checkpoint_id", ""))
 	)
 	if bool(appended.get("ok", false)):
 		_sync_checkpoint_chronicle_context()
+		_record_quest_giver_npc_memory_event(quest, appended.get("event", {}))
 
 
 static func _quest_chronicle_payload(quest: Dictionary, outcome: String) -> Dictionary:
@@ -3026,6 +3029,25 @@ static func _quest_chronicle_payload(quest: Dictionary, outcome: String) -> Dict
 		"outcome": outcome,
 		"narrative_metadata": NarrativeMetadataType.from_source(quest),
 	}
+
+
+func _quest_chronicle_subject_ids(quest: Dictionary) -> Array:
+	var subjects: Array = [campaign_chronicle_store.campaign["id"]]
+	var npc_id := _quest_giver_npc_id(quest)
+	if not npc_id.is_empty() and npc_id not in subjects:
+		subjects.append(npc_id)
+	return subjects
+
+
+static func _quest_giver_npc_id(quest: Dictionary) -> String:
+	if bool(quest.get("public_board", false)):
+		return ""
+	var npc_id := str(quest.get("giver_npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(quest.get("agent_id", "")).strip_edges()
+	if DomainIdType.is_valid(npc_id, "npc"):
+		return npc_id
+	return ""
 
 
 static func _quest_source_lane_name(quest: Dictionary) -> String:
@@ -3122,6 +3144,30 @@ func _record_quest_giver_npc_outcome(quest: Dictionary, outcome: String) -> void
 	if not bool(result.get("ok", false)):
 		push_warning(
 			"[GameRoot] NPC mission outcome was not recorded for %s: %s" %
+			[npc_id, str(result.get("error", "unknown error"))]
+		)
+
+
+func _record_quest_giver_npc_memory_event(
+	quest: Dictionary,
+	event: Dictionary
+) -> void:
+	if quest.is_empty() or event.is_empty() or bool(quest.get("public_board", false)):
+		return
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("record_memory_events"):
+		return
+	var npc_id := _quest_giver_npc_id(quest)
+	if npc_id.is_empty():
+		return
+	var result: Dictionary = campaign_npc_state_store.record_memory_events(
+		npc_id,
+		[event],
+		str(quest.get("agent_response", ""))
+	)
+	if not bool(result.get("ok", false)):
+		push_warning(
+			"[GameRoot] NPC mission memory event was not recorded for %s: %s" %
 			[npc_id, str(result.get("error", "unknown error"))]
 		)
 

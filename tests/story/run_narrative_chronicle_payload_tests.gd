@@ -11,6 +11,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	_test_quest_chronicle_payload_preserves_narrative_metadata()
+	_test_quest_giver_npc_id_prefers_explicit_real_contact()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative chronicle payload tests")
@@ -45,6 +46,29 @@ func _test_quest_chronicle_payload_preserves_narrative_metadata() -> void:
 	_expect(
 		(metadata.get("completion_fact_ids", []) as Array).has("fact.payload_done"),
 		"Chronicle payload did not preserve completion_fact_ids."
+	)
+
+
+func _test_quest_giver_npc_id_prefers_explicit_real_contact() -> void:
+	_expect(
+		GameRootType._quest_giver_npc_id({
+			"giver_npc_id": "npc.gen.fixture.mara_venn",
+			"agent_id": "npc.agent.zenith",
+		}) == "npc.gen.fixture.mara_venn",
+		"Chronicle giver NPC ID did not prefer explicit giver_npc_id."
+	)
+	_expect(
+		GameRootType._quest_giver_npc_id({
+			"agent_id": "npc.gen.fixture.mara_venn",
+		}) == "npc.gen.fixture.mara_venn",
+		"Chronicle giver NPC ID did not fall back to explicit agent_id."
+	)
+	_expect(
+		GameRootType._quest_giver_npc_id({
+			"giver_npc_id": "npc.gen.fixture.mara_venn",
+			"public_board": true,
+		}).is_empty(),
+		"Public board jobs should not record a real NPC giver memory."
 	)
 
 
