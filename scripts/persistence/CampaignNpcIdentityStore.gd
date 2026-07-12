@@ -14,6 +14,7 @@ const CharacterDirectorType := preload("res://scripts/story/CharacterDirector.gd
 const DOCUMENT_VERSION := 2
 const NPCS_PATH := "npc_identities.json"
 const NPC_PREFIX := "npc.gen."
+const MAX_RECENT_TRAIT_COMBINATIONS := 24
 
 const PERSONA_FIELDS := [
 	"core_drive",
@@ -98,6 +99,10 @@ func ensure_npc_record(source: Dictionary) -> Dictionary:
 	var npcs: Array = next_data.get("npcs", []).duplicate(true)
 	npcs.append(record)
 	next_data["npcs"] = npcs
+	next_data["recent_trait_combinations"] = _remember_trait_combination(
+		next_data.get("recent_trait_combinations", []),
+		str(record.get("trait_combination_key", ""))
+	)
 	var committed := _commit(next_data, "npc_identity_upsert")
 	if not bool(committed.get("ok", false)):
 		return committed
@@ -239,7 +244,8 @@ func _record_from_source(source: Dictionary) -> Dictionary:
 	var card := _character_card_from_source(
 		source,
 		npc_id,
-		str(campaign.get("campaign_seed", campaign.get("id", "")))
+		str(campaign.get("campaign_seed", campaign.get("id", ""))),
+		_clean_string_array(data.get("recent_trait_combinations", []))
 	)
 	return {
 		"id": npc_id,
@@ -254,6 +260,7 @@ func _record_from_source(source: Dictionary) -> Dictionary:
 		"home_station_id": home_station_id,
 		"personality_tags": _clean_string_array(source.get("personality_tags", [])),
 		"humor_style": str(source.get("humor_style", "")),
+		"trait_combination_key": str(card.get("trait_combination_key", "")),
 		"persona": card.get("persona", _persona_from_source(source)),
 		"voice_rules": card.get("voice_rules", _voice_rules_from_source(source)),
 		"relationship_state": str(source.get("relationship_state", "neutral")),
@@ -292,6 +299,7 @@ static func _default_document(campaign_id: String) -> Dictionary:
 		"schema_version": DOCUMENT_VERSION,
 		"document_type": "campaign_npc_identities",
 		"campaign_id": campaign_id,
+		"recent_trait_combinations": [],
 		"npcs": [],
 	}
 
@@ -319,6 +327,12 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 	if not value.get("npcs", []) is Array:
 		result.add_error("invalid_npcs", "NPC identities must be an array.", "npcs")
 		return result
+	if not value.get("recent_trait_combinations", []) is Array:
+		result.add_error(
+			"invalid_recent_trait_combinations",
+			"Recent NPC trait combinations must be an array.",
+			"recent_trait_combinations"
+		)
 	var seen_ids := {}
 	var seen_sources := {}
 	var npcs: Array = value.get("npcs", [])
@@ -382,6 +396,14 @@ static func _validate_npc_record(
 		result.add_error("invalid_line_memory", "Line memory must be an array.", "%s.line_memory_fingerprints" % path)
 	if not npc.get("lifecycle", {}) is Dictionary:
 		result.add_error("invalid_lifecycle", "Lifecycle must be an object.", "%s.lifecycle" % path)
+	if not str(npc.get("trait_combination_key", "")).strip_edges().is_empty() \
+			and str(npc.get("trait_combination_key", "")) \
+				!= str(npc.get("trait_combination_key", "")).strip_edges():
+		result.add_error(
+			"invalid_trait_combination_key",
+			"NPC trait combination key cannot contain leading or trailing whitespace.",
+			"%s.trait_combination_key" % path
+		)
 
 
 static func _validate_persona(
@@ -428,6 +450,9 @@ static func _migrate_legacy_data(
 	migrated["schema_version"] = DOCUMENT_VERSION
 	migrated["document_type"] = "campaign_npc_identities"
 	migrated["campaign_id"] = campaign_id
+	var recent_combinations := _clean_string_array(
+		legacy.get("recent_trait_combinations", [])
+	)
 	var migrated_npcs: Array = []
 	var source_npcs: Array = legacy.get("npcs", []) if legacy.get("npcs", []) is Array else []
 	for value in source_npcs:
@@ -438,19 +463,27 @@ static func _migrate_legacy_data(
 		var card := _character_card_from_source(
 			npc,
 			str(npc.get("id", "")),
-			campaign_seed
+			campaign_seed,
+			recent_combinations
 		)
+		npc["trait_combination_key"] = str(card.get("trait_combination_key", ""))
 		npc["persona"] = card.get("persona", _persona_from_source(npc))
 		npc["voice_rules"] = card.get("voice_rules", _voice_rules_from_source(npc))
+		recent_combinations = _remember_trait_combination(
+			recent_combinations,
+			str(npc.get("trait_combination_key", ""))
+		)
 		migrated_npcs.append(npc)
 	migrated["npcs"] = migrated_npcs
+	migrated["recent_trait_combinations"] = recent_combinations
 	return migrated
 
 
 static func _character_card_from_source(
 	source: Dictionary,
 	npc_id: String,
-	campaign_seed: String
+	campaign_seed: String,
+	recent_combinations: Array = []
 ) -> Dictionary:
 	var existing_persona: Variant = source.get("persona", null)
 	var existing_voice: Variant = source.get("voice_rules", null)
@@ -458,20 +491,27 @@ static func _character_card_from_source(
 		return {
 			"persona": (existing_persona as Dictionary).duplicate(true),
 			"voice_rules": (existing_voice as Dictionary).duplicate(true),
+			"trait_combination_key": str(source.get("trait_combination_key", "")),
 		}
 	var source_with_id := source.duplicate(true)
 	source_with_id["id"] = npc_id
-	var generated := CharacterDirectorType.generate_card(source_with_id, campaign_seed)
+	var generated := CharacterDirectorType.generate_card(
+		source_with_id,
+		campaign_seed,
+		recent_combinations
+	)
 	if bool(generated.get("ok", false)) \
 			and CharacterDirectorType.is_complete_card(generated.get("card", {})):
 		var card: Dictionary = generated.get("card", {})
 		return {
 			"persona": (card.get("persona", {}) as Dictionary).duplicate(true),
 			"voice_rules": (card.get("voice_rules", {}) as Dictionary).duplicate(true),
+			"trait_combination_key": str(card.get("trait_combination_key", "")),
 		}
 	return {
 		"persona": _persona_from_source(source),
 		"voice_rules": _voice_rules_from_source(source),
+		"trait_combination_key": str(source.get("trait_combination_key", "")),
 	}
 
 
@@ -610,6 +650,22 @@ static func _clean_string_array(value: Variant) -> Array:
 		if not clean.is_empty() and clean not in result:
 			result.append(clean)
 	return result
+
+
+static func _remember_trait_combination(
+	current: Variant,
+	trait_combination_key: String
+) -> Array:
+	var remembered := _clean_string_array(current)
+	var clean_key := trait_combination_key.strip_edges()
+	if clean_key.is_empty():
+		return remembered
+	if clean_key in remembered:
+		remembered.erase(clean_key)
+	remembered.append(clean_key)
+	while remembered.size() > MAX_RECENT_TRAIT_COMBINATIONS:
+		remembered.pop_front()
+	return remembered
 
 
 static func _lifecycle_from_source(source: Dictionary) -> Dictionary:

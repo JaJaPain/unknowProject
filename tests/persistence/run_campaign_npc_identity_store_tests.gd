@@ -23,6 +23,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_legacy_v1_identity_migrates_to_v2_persona_voice()
 	_cleanup()
+	_test_recent_trait_combinations_avoid_reuse()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC identity store tests")
@@ -92,6 +94,12 @@ func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void:
 	_expect(
 		npc.get("persona", {}) == expected_card.get("persona", {}),
 		"NPC identity store did not use deterministic CharacterDirector persona."
+	)
+	_expect(
+		not str(npc.get("trait_combination_key", "")).strip_edges().is_empty()
+			and (store.data.get("recent_trait_combinations", []) as Array)
+				.has(str(npc.get("trait_combination_key", ""))),
+		"NPC identity store did not persist the generated trait combination key."
 	)
 	var duplicate: Dictionary = store.ensure_npc_record({
 		"source_key": "station.generated.alpha|Mara Venn|Faction contact|faction.generated.glass_choir_00",
@@ -190,6 +198,64 @@ func _test_legacy_v1_identity_migrates_to_v2_persona_voice() -> void:
 	_expect(
 		str(npc.get("memory_summary", "")) == "She remembers a failed relay inspection.",
 		"Legacy memory summary was not preserved during v2 migration."
+	)
+	_expect(
+		(migrated.data.get("recent_trait_combinations", []) as Array)
+			.has(str(npc.get("trait_combination_key", ""))),
+		"Legacy migration did not backfill recent trait combination memory."
+	)
+
+
+func _test_recent_trait_combinations_avoid_reuse() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Identity Recent Trait Fixture",
+		"npc-identity-recent-trait-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var campaign: Dictionary = created.get("campaign", {}) \
+		if created.get("campaign", {}) is Dictionary else {}
+	var explicit_source := {
+		"id": "npc.gen.fixture.blocked_combo",
+		"source_key": "station.generated.alpha|Blocked Combo|Station broker",
+		"display_name": "Blocked Combo",
+		"portrait_id": "portrait.minor_npc_01.hana_quill",
+		"voice_profile_id": "voice.hana_quill.v1",
+		"job_role": "Station broker",
+		"home_system_id": "system.generated.alpha",
+		"home_station_id": "station.generated.alpha",
+	}
+	var initial_card: Dictionary = CharacterDirectorType.generate_card(
+		explicit_source,
+		str(campaign.get("campaign_seed", ""))
+	).get("card", {})
+	var blocked_key := str(initial_card.get("trait_combination_key", ""))
+	_expect(
+		not blocked_key.is_empty(),
+		"Could not compute initial trait combination key for recent-memory test."
+	)
+	var store := NpcStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC identity store was invalid for recent-memory test.")
+	if not store.is_valid():
+		return
+	store.data["recent_trait_combinations"] = [blocked_key]
+	var upserted: Dictionary = store.ensure_npc_record(explicit_source)
+	_expect(bool(upserted.get("ok", false)), upserted.get("error", ""))
+	var npc: Dictionary = upserted.get("npc", {})
+	var chosen_key := str(npc.get("trait_combination_key", ""))
+	_expect(
+		not chosen_key.is_empty() and chosen_key != blocked_key,
+		"NPC identity store reused a recent trait combination."
+	)
+	_expect(
+		(store.data.get("recent_trait_combinations", []) as Array).has(blocked_key)
+			and (store.data.get("recent_trait_combinations", []) as Array).has(chosen_key),
+		"NPC identity store did not retain recent and newly chosen trait keys."
 	)
 
 
