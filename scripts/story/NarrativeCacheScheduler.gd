@@ -16,6 +16,8 @@ var _stats := {
 	"stale_discarded": 0,
 	"degraded": 0,
 }
+var _paused := false
+var _pause_reason := ""
 
 
 func queue_job(job: Dictionary) -> Dictionary:
@@ -94,13 +96,33 @@ func pending_jobs() -> Array[Dictionary]:
 
 
 func next_job() -> Dictionary:
+	if _paused:
+		return {}
 	var pending := pending_jobs()
 	if pending.is_empty():
 		return {}
 	return pending[0].duplicate(true)
 
 
+func pause(reason: String = "large_model_gate") -> Dictionary:
+	_paused = true
+	_pause_reason = reason
+	return {"ok": true, "paused": true, "reason": _pause_reason}
+
+
+func resume() -> Dictionary:
+	_paused = false
+	_pause_reason = ""
+	return {"ok": true, "paused": false}
+
+
+func is_paused() -> bool:
+	return _paused
+
+
 func mark_generation_started(job_id: String) -> Dictionary:
+	if _paused:
+		return _failure("Narrative cache scheduler is paused.")
 	return _transition(job_id, "in_flight", "generation_started", "started")
 
 
@@ -190,6 +212,8 @@ func stats() -> Dictionary:
 	var result := _stats.duplicate(true)
 	result["pending"] = pending_jobs().size()
 	result["total_jobs"] = _jobs.size()
+	result["paused"] = _paused
+	result["pause_reason"] = _pause_reason
 	return result
 
 

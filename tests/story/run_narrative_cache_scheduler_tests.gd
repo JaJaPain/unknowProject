@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
 	_test_diagnostic_summary_reports_lifecycle_durations()
+	_test_pause_blocks_starting_small_jobs_until_resume()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -174,6 +175,28 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 			and float(summary.get("time_to_ready", {}).get("avg_seconds", -1.0))
 				>= 0.0,
 		"Scheduler diagnostic summary did not report lifecycle durations."
+	)
+
+
+func _test_pause_blocks_starting_small_jobs_until_resume() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.paused", "cache.paused", SchedulerType.PRIORITY_P0))
+	var paused: Dictionary = scheduler.pause("campaign_bible_generation")
+	var start_while_paused: Dictionary = scheduler.mark_generation_started("job.paused")
+	_expect(
+		bool(paused.get("paused", false))
+			and scheduler.next_job().is_empty()
+			and not bool(start_while_paused.get("ok", false))
+			and bool(scheduler.stats().get("paused", false)),
+		"Scheduler pause did not block small job dispatch."
+	)
+	scheduler.resume()
+	var started: Dictionary = scheduler.mark_generation_started("job.paused")
+	_expect(
+		not scheduler.is_paused()
+			and bool(started.get("ok", false))
+			and str(scheduler.get_job("job.paused").get("status", "")) == "in_flight",
+		"Scheduler did not resume small job dispatch."
 	)
 
 
