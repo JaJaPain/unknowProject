@@ -28,6 +28,12 @@ static func validate_bundle(
 	for key in bundle.keys():
 		if not required_lookup.has(str(key)):
 			errors.append("unexpected_key:%s" % str(key))
+	var forbidden_terms := _forbidden_terms(conversation_plan)
+	for key in required:
+		var text := str(bundle.get(key, ""))
+		for term in forbidden_terms:
+			if _contains_wordish(text, term):
+				errors.append("forbidden_fact:%s:%s" % [key, term])
 	var banned := _banned_tics(speaker_card)
 	for key in required:
 		var text := str(bundle.get(key, ""))
@@ -96,12 +102,25 @@ static func _banned_tics(speaker_card: Dictionary) -> Array[String]:
 	return result
 
 
+static func _forbidden_terms(conversation_plan: Dictionary) -> Array[String]:
+	var result: Array[String] = []
+	for key in [
+		"forbidden_fact_ids",
+		"director_only_fact_ids",
+		"completion_fact_ids",
+	]:
+		for item in _string_array(conversation_plan.get(key, [])):
+			if item not in result:
+				result.append(item)
+	return result
+
+
 static func _field_for_error(error: String) -> String:
 	var parts := error.split(":")
 	if parts.size() < 2:
 		return ""
 	match parts[0]:
-		"missing_or_short", "too_long", "banned_tic":
+		"missing_or_short", "too_long", "banned_tic", "forbidden_fact":
 			return parts[1]
 		"missing_answer_anchor":
 			return "%s_response" % parts[1]

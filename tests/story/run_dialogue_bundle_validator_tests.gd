@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_banned_speaker_tics_fail()
 	_test_question_answers_require_declared_anchor()
 	_test_degrade_bundle_repairs_bad_optional_answer()
+	_test_forbidden_fact_leaks_fail_and_degrade()
 
 	if _failures.is_empty():
 		print("[PASS] Dialogue bundle validator tests")
@@ -113,6 +114,39 @@ func _test_degrade_bundle_repairs_bad_optional_answer() -> void:
 	_expect(
 		str(repaired.get("clarify_term_response", "")).to_lower().contains("convoy case"),
 		"Degraded answer did not use anchored fallback text."
+	)
+
+
+func _test_forbidden_fact_leaks_fail_and_degrade() -> void:
+	var plan := _conversation_plan()
+	plan["director_only_fact_ids"] = ["DIRECTOR_SECRET_SALT"]
+	plan["completion_fact_ids"] = ["fact.convoy.complete"]
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["clarify_term_response"] = (
+		"DIRECTOR_SECRET_SALT says the convoy case needs evidence."
+	)
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Forbidden fact leak unexpectedly passed.")
+	_expect(
+		errors.has("forbidden_fact:clarify_term_response:DIRECTOR_SECRET_SALT"),
+		"Validator did not flag director-only leak token."
+	)
+	var degraded: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = degraded.get("bundle", {})
+	_expect(bool(degraded.get("ok", false)), "Forbidden leak did not degrade cleanly.")
+	_expect(
+		not str(repaired.get("clarify_term_response", "")).contains("DIRECTOR_SECRET_SALT"),
+		"Degraded response retained forbidden leak token."
+	)
+	_expect(
+		(degraded.get("degraded_fields", []) as Array).has("clarify_term_response"),
+		"Forbidden leak field was not marked as degraded."
 	)
 
 
