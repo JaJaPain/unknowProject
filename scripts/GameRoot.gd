@@ -3210,6 +3210,9 @@ func _on_quest_declined_chronicle(quest: Dictionary) -> void:
 
 
 func _on_quest_completed_chronicle(quest: Dictionary) -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "objective_complete")
+	)
 	_mark_story_offer_beat(quest, "completed", "Mission completed.")
 	_record_quest_giver_npc_outcome(quest, "completed")
 	if bool(quest.get("is_timed", false)):
