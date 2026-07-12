@@ -51,6 +51,9 @@ const CampaignAgentMemorySnippetStoreType := preload(
 const NarrativeCacheStoreType := preload(
 	"res://scripts/persistence/NarrativeCacheStore.gd"
 )
+const NarrativeCacheSchedulerType := preload(
+	"res://scripts/story/NarrativeCacheScheduler.gd"
+)
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
@@ -96,6 +99,8 @@ var campaign_npc_identity_store = null
 var campaign_npc_state_store = null
 var campaign_agent_memory_store = null
 var campaign_narrative_cache_store = null
+var narrative_cache_scheduler = null
+var narrative_cache_scheduler_pause_reasons: Dictionary = {}
 var campaign_bible_generation_requested_slots: Dictionary = {}
 var campaign_bible_generation_in_flight: bool = false
 var chapter_plan_generation_in_flight: bool = false
@@ -1928,6 +1933,33 @@ func _initialize_campaign_chronicle() -> void:
 	_import_legacy_quest_history()
 
 
+func _ensure_narrative_cache_scheduler() -> RefCounted:
+	if narrative_cache_scheduler == null:
+		narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
+	return narrative_cache_scheduler
+
+
+func _pause_narrative_cache_scheduler(reason: String) -> void:
+	var clean_reason := reason.strip_edges()
+	if clean_reason.is_empty():
+		clean_reason = "large_model_gate"
+	narrative_cache_scheduler_pause_reasons[clean_reason] = true
+	_ensure_narrative_cache_scheduler().pause(clean_reason)
+
+
+func _resume_narrative_cache_scheduler(reason: String) -> void:
+	var clean_reason := reason.strip_edges()
+	if clean_reason.is_empty():
+		clean_reason = "large_model_gate"
+	narrative_cache_scheduler_pause_reasons.erase(clean_reason)
+	if narrative_cache_scheduler_pause_reasons.is_empty():
+		_ensure_narrative_cache_scheduler().resume()
+		return
+	var reasons: Array = narrative_cache_scheduler_pause_reasons.keys()
+	reasons.sort()
+	_ensure_narrative_cache_scheduler().pause(",".join(reasons))
+
+
 func _classify_kaelen_rollback(restored: Dictionary) -> bool:
 	if campaign_chronicle_store == null \
 			or campaign_kaelen_memory_store == null:
@@ -2374,6 +2406,7 @@ func request_campaign_bible_generation() -> Dictionary:
 		# (plan §3.1). Transient hint on the baseline; NarrativeDirector strips it
 		# before storing. Window of 2 leaves 5 of 7 lanes eligible.
 		baseline["_recent_lanes"] = campaign_idea_memory_store.query_recent("creative_lane", 2)
+	_pause_narrative_cache_scheduler("campaign_bible_generation")
 	LLMInterface.request_campaign_bible_generation(
 		baseline,
 		idea_context,
@@ -2417,6 +2450,7 @@ func _request_campaign_bible_generation_for_active_slot() -> void:
 
 func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 	campaign_bible_generation_in_flight = false
+	_resume_narrative_cache_scheduler("campaign_bible_generation")
 	if campaign_bible_store == null or not campaign_bible_store.is_valid():
 		push_warning("[GameRoot] Campaign bible generation result arrived without a valid store.")
 		campaign_bible_generation_finished.emit(false, "Campaign bible store unavailable.")
@@ -2526,6 +2560,7 @@ func request_chapter_plan_generation(target_chapter: int = 0) -> Dictionary:
 	var objective_types := MissionCapabilityRegistry.objective_types()
 	var validated_entities := _chapter_plan_validated_entities()
 	var valid_entity_ids := _chapter_plan_valid_entity_ids(validated_entities)
+	_pause_narrative_cache_scheduler("chapter_plan_generation")
 	LLMInterface.request_chapter_plan_generation(
 		campaign_bible_store.director_context(),
 		validated_entities,
@@ -2555,6 +2590,7 @@ func _request_chapter_plan_generation_for_active_slot() -> void:
 
 func _on_chapter_plan_generation_result(result: Dictionary, target_chapter: int = 0) -> void:
 	chapter_plan_generation_in_flight = false
+	_resume_narrative_cache_scheduler("chapter_plan_generation")
 	if campaign_chapter_packet_store == null \
 			or not campaign_chapter_packet_store.is_valid():
 		push_warning("[GameRoot] Chapter plan result arrived without a valid store.")
