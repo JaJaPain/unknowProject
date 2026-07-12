@@ -6,6 +6,7 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	_test_priority_trigger_mapping_matches_phase_contract()
 	_test_priority_order_and_dedupe()
 	_test_deduplicates_active_jobs_by_cache_key()
 	_test_lifecycle_timestamps_and_stats()
@@ -24,6 +25,25 @@ func _initialize() -> void:
 	for failure in _failures:
 		push_error("[FAIL] %s" % failure)
 	quit(1)
+
+
+func _test_priority_trigger_mapping_matches_phase_contract() -> void:
+	_expect(
+		SchedulerType.priority_for_trigger(
+			SchedulerType.TRIGGER_OBJECTIVE_COMPLETE_TURN_IN
+		) == SchedulerType.PRIORITY_P0
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT
+			) == SchedulerType.PRIORITY_P1
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_LIKELY_LOUNGE
+			) == SchedulerType.PRIORITY_P2
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+			) == SchedulerType.PRIORITY_P3
+			and SchedulerType.priority_label(SchedulerType.PRIORITY_P0) == "P0",
+		"Scheduler priority trigger mapping does not match the Phase 6 contract."
+	)
 
 
 func _test_priority_order_and_dedupe() -> void:

@@ -6,6 +6,16 @@ const PRIORITY_P1 := 10
 const PRIORITY_P2 := 20
 const PRIORITY_P3 := 30
 
+const TRIGGER_OBJECTIVE_COMPLETE_TURN_IN := "objective_complete_turn_in"
+const TRIGGER_CURRENT_VISIBLE_STATION := "current_visible_station"
+const TRIGGER_CURRENT_SYSTEM_AGENT := "current_system_agent"
+const TRIGGER_CURRENT_SYSTEM_KAELEN := "current_system_kaelen"
+const TRIGGER_CURRENT_SYSTEM_NOVA := "current_system_nova"
+const TRIGGER_LIKELY_LOUNGE := "likely_lounge"
+const TRIGGER_MECHANIC_GREETING := "mechanic_greeting"
+const TRIGGER_NEARBY_SYSTEM := "nearby_system"
+const TRIGGER_AMBIENT_REPLENISHMENT := "ambient_replenishment"
+
 var _jobs: Dictionary = {}
 var _sequence := 0
 var _stats := {
@@ -122,6 +132,34 @@ func resume() -> Dictionary:
 
 func is_paused() -> bool:
 	return _paused
+
+
+static func priority_for_trigger(trigger: String) -> int:
+	match trigger.strip_edges():
+		TRIGGER_OBJECTIVE_COMPLETE_TURN_IN, TRIGGER_CURRENT_VISIBLE_STATION:
+			return PRIORITY_P0
+		TRIGGER_CURRENT_SYSTEM_AGENT, TRIGGER_CURRENT_SYSTEM_KAELEN, TRIGGER_CURRENT_SYSTEM_NOVA:
+			return PRIORITY_P1
+		TRIGGER_LIKELY_LOUNGE, TRIGGER_MECHANIC_GREETING, TRIGGER_NEARBY_SYSTEM:
+			return PRIORITY_P2
+		TRIGGER_AMBIENT_REPLENISHMENT:
+			return PRIORITY_P3
+		_:
+			return PRIORITY_P2
+
+
+static func priority_label(priority: int) -> String:
+	match priority:
+		PRIORITY_P0:
+			return "P0"
+		PRIORITY_P1:
+			return "P1"
+		PRIORITY_P2:
+			return "P2"
+		PRIORITY_P3:
+			return "P3"
+		_:
+			return "P?"
 
 
 func mark_generation_started(job_id: String) -> Dictionary:
