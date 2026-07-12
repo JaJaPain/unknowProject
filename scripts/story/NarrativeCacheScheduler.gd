@@ -94,6 +94,10 @@ func jobs() -> Array[Dictionary]:
 		var right_priority := int(right.get("priority", PRIORITY_P2))
 		if left_priority != right_priority:
 			return left_priority < right_priority
+		var left_kind_rank := _kind_dispatch_rank(str(left.get("kind", "")))
+		var right_kind_rank := _kind_dispatch_rank(str(right.get("kind", "")))
+		if left_kind_rank != right_kind_rank:
+			return left_kind_rank < right_kind_rank
 		return int(left.get("sequence", 0)) < int(right.get("sequence", 0))
 	)
 	return result
@@ -578,6 +582,14 @@ static func _safe_id_part(value: String) -> String:
 		else:
 			result += "_"
 	return result.strip_edges().trim_prefix("_").trim_suffix("_")
+
+
+static func _kind_dispatch_rank(kind: String) -> int:
+	match kind.strip_edges():
+		"tts_cache":
+			return 10
+		_:
+			return 0
 
 
 func _transition(

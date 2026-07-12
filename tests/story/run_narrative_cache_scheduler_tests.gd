@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
 	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
+	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -369,6 +370,37 @@ func _test_tts_jobs_inherit_text_priority_and_scope_after_validation() -> void:
 	_expect(
 		canceled_ids.size() == 2,
 		"Scheduler did not cancel obsolete queued TTS jobs by inherited scope."
+	)
+
+
+func _test_equal_priority_text_dispatches_before_audio_cache() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var audio_job := _job(
+		"job.audio",
+		"cache.audio",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.queue_job(_job(
+		"job.text",
+		"cache.text",
+		SchedulerType.PRIORITY_P0
+	))
+	var next: Dictionary = scheduler.next_job()
+	_expect(
+		str(next.get("job_id", "")) == "job.text",
+		"Scheduler let equal-priority audio cache work delay visible text."
+	)
+	var lower_priority_text := _job(
+		"job.lower.text",
+		"cache.lower.text",
+		SchedulerType.PRIORITY_P1
+	)
+	scheduler.queue_job(lower_priority_text)
+	_expect(
+		str(scheduler.next_job().get("job_id", "")) == "job.text",
+		"Scheduler kind ranking overrode priority bands."
 	)
 
 
