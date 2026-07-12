@@ -46,6 +46,56 @@ func state_for(npc_id: String) -> Dictionary:
 	return _default_npc_state(npc_id)
 
 
+func prompt_context_for(npc_id: String, max_memory_refs: int = 6) -> String:
+	var clean_npc_id := npc_id.strip_edges()
+	if clean_npc_id.is_empty() or not DomainIdType.is_valid(clean_npc_id, "npc"):
+		return ""
+	var state := state_for(clean_npc_id)
+	var lines: Array[String] = []
+	var relationship: Dictionary = state.get("relationship", {}) \
+		if state.get("relationship", {}) is Dictionary else {}
+	var rel_bits: Array[String] = []
+	for field in RELATIONSHIP_FIELDS:
+		var value := int(relationship.get(field, 0))
+		if value != 0:
+			rel_bits.append("%s %+d" % [field, value])
+	if not rel_bits.is_empty():
+		lines.append("Relationship: " + ", ".join(rel_bits) + ".")
+	var last_stance := str(relationship.get("last_player_stance", "")).strip_edges()
+	if not last_stance.is_empty() and last_stance != "unknown":
+		lines.append("Last player stance: " + last_stance + ".")
+	var current_stake: Dictionary = state.get("current_stake", {}) \
+		if state.get("current_stake", {}) is Dictionary else {}
+	var stake_text := str(
+		current_stake.get("why_it_matters_to_them", "")
+	).strip_edges()
+	if not stake_text.is_empty():
+		lines.append(
+			"Current personal stake: %s Urgency %d/5." %
+			[stake_text, int(current_stake.get("urgency", 0))]
+		)
+	var memory_summary := str(state.get("memory_summary", "")).strip_edges()
+	if not memory_summary.is_empty():
+		lines.append("Relevant memory: " + memory_summary)
+	var refs: Array = state.get("memory_event_ids", []) \
+		if state.get("memory_event_ids", []) is Array else []
+	var bounded_refs: Array[String] = []
+	var start := maxi(0, refs.size() - maxi(0, max_memory_refs))
+	for index in range(start, refs.size()):
+		var event_id := str(refs[index]).strip_edges()
+		if not event_id.is_empty():
+			bounded_refs.append(event_id)
+	if not bounded_refs.is_empty():
+		lines.append("Relevant memory refs: " + ", ".join(bounded_refs) + ".")
+	if lines.is_empty():
+		return ""
+	return (
+		"NPC STATE: Use this for tone and recall only; do not invent additional "
+		+ "events or change relationship numbers. "
+		+ " ".join(lines)
+	)
+
+
 func ensure_state(npc_id: String) -> Dictionary:
 	if not is_valid():
 		return _failure("NPC state store is invalid.")

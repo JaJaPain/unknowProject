@@ -23,6 +23,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_structured_event_memory_projection()
 	_cleanup()
+	_test_prompt_context_bounds_memory_refs()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC state store tests")
@@ -215,6 +217,70 @@ func _test_structured_event_memory_projection() -> void:
 	_expect(
 		(state.get("line_memory_fingerprints", []) as Array).size() == 1,
 		"Structured NPC memory projection did not remember the generated line fingerprint."
+	)
+
+
+func _test_prompt_context_bounds_memory_refs() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Prompt Context Fixture",
+		"npc-state-prompt-context-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC state store was invalid for prompt context test.")
+	if not store.is_valid():
+		return
+	var relationship: Dictionary = store.update_relationship(
+		NPC_ID,
+		{"trust": 2, "respect": -1},
+		"lounge_curious"
+	)
+	_expect(bool(relationship.get("ok", false)), relationship.get("error", ""))
+	var stake: Dictionary = store.set_current_stake(
+		NPC_ID,
+		{
+			"thread_id": "thread.convoy_shortage",
+			"why_it_matters_to_them": "The convoy mess could cost their dock crew hazard coverage.",
+			"urgency": 4,
+		}
+	)
+	_expect(bool(stake.get("ok", false)), stake.get("error", ""))
+	var event_ids: Array = []
+	for index in range(8):
+		event_ids.append("event.local.fixture.memory_%02d" % index)
+	var memory: Dictionary = store.record_memory_projection(
+		NPC_ID,
+		event_ids,
+		"Mara remembers the player helped during the relay inspection.",
+		"Manual vectors again. Lovely."
+	)
+	_expect(bool(memory.get("ok", false)), memory.get("error", ""))
+	var context: String = store.prompt_context_for(NPC_ID, 3)
+	_expect(
+		context.contains("NPC STATE:")
+			and context.contains("trust +2")
+			and context.contains("respect -1")
+			and context.contains("lounge_curious"),
+		"NPC prompt context did not include relationship state."
+	)
+	_expect(
+		context.contains("hazard coverage")
+			and context.contains("Urgency 4/5")
+			and context.contains("relay inspection"),
+		"NPC prompt context did not include stake and memory summary."
+	)
+	_expect(
+		not context.contains("event.local.fixture.memory_04")
+			and context.contains("event.local.fixture.memory_05")
+			and context.contains("event.local.fixture.memory_06")
+			and context.contains("event.local.fixture.memory_07"),
+		"NPC prompt context did not bound memory refs to the latest entries."
 	)
 
 
