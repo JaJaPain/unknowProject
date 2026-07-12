@@ -91,6 +91,29 @@ func mark_consumed(cache_key: String) -> Dictionary:
 	return upsert_entry(entry)
 
 
+func mark_field_displayed(cache_key: String, field_id: String) -> Dictionary:
+	var entry := get_entry(cache_key)
+	if entry.is_empty():
+		return _failure("Narrative cache entry not found.")
+	var clean_field := field_id.strip_edges()
+	if clean_field.is_empty():
+		return _failure("Displayed cache field requires field_id.")
+	var text_bundle: Dictionary = entry.get("text_bundle", {}) \
+		if entry.get("text_bundle", {}) is Dictionary else {}
+	var text := str(text_bundle.get(clean_field, "")).strip_edges()
+	if text.is_empty():
+		return _failure("Displayed cache field is not present in text bundle.")
+	var displayed_fields: Dictionary = entry.get("displayed_fields", {}) \
+		if entry.get("displayed_fields", {}) is Dictionary else {}
+	displayed_fields[clean_field] = {
+		"field_id": clean_field,
+		"text_fingerprint": text_fingerprint(text),
+		"displayed_at_unix": int(Time.get_unix_time_from_system()),
+	}
+	entry["displayed_fields"] = displayed_fields
+	return upsert_entry(entry)
+
+
 func mark_tts_status(
 	cache_key: String,
 	field_id: String,

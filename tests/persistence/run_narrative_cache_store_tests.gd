@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_write_campaign()
 	_test_semantic_cache_keys_use_truth_inputs()
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
+	_test_mark_field_displayed_persists_one_shot_consumption()
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
 	_test_context_discard_preserves_truth_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
@@ -113,6 +114,28 @@ func _test_bootstrap_upsert_reopen_consume_and_invalidate() -> void:
 	_expect(
 		final_reopen.get_entry("cache.mission.alpha").is_empty(),
 		"Narrative cache invalidated entry reappeared after reopen."
+	)
+
+
+func _test_mark_field_displayed_persists_one_shot_consumption() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.display.alpha"))
+	var displayed: Dictionary = store.mark_field_displayed(
+		"cache.display.alpha",
+		"opening"
+	)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var entry: Dictionary = reopened.get_entry("cache.display.alpha")
+	var fields: Dictionary = entry.get("displayed_fields", {})
+	_expect(
+		bool(displayed.get("ok", false))
+			and not bool(entry.get("consumed", false))
+			and fields.has("opening")
+			and str(fields.get("opening", {}).get("text_fingerprint", ""))
+				== CacheStoreType.text_fingerprint("The cache has work."),
+		"Displayed field marker did not persist without consuming the whole entry."
 	)
 
 
