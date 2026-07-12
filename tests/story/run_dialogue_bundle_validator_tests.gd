@@ -1,0 +1,104 @@
+extends SceneTree
+
+const PlanType := preload("res://scripts/story/MissionConversationPlan.gd")
+const CompilerType := preload("res://scripts/story/MissionConversationCompiler.gd")
+const ValidatorType := preload("res://scripts/story/DialogueBundleValidator.gd")
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_test_valid_bundle_passes()
+	_test_missing_and_extra_keys_fail()
+	_test_banned_speaker_tics_fail()
+
+	if _failures.is_empty():
+		print("[PASS] Dialogue bundle validator tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _test_valid_bundle_passes() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	_expect(bool(result.get("ok", false)), "Valid fallback bundle did not pass validation.")
+
+
+func _test_missing_and_extra_keys_fail() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle.erase("accept_standard_response")
+	bundle["surprise_choice"] = "Invented by the model."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Invalid bundle unexpectedly passed.")
+	_expect(
+		errors.has("missing_or_short:accept_standard_response"),
+		"Validator did not flag missing required response."
+	)
+	_expect(
+		errors.has("unexpected_key:surprise_choice"),
+		"Validator did not flag unexpected model-owned key."
+	)
+
+
+func _test_banned_speaker_tics_fail() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Listen, Shiny, I have work."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Banned tic bundle unexpectedly passed.")
+	_expect(
+		errors.has("banned_tic:opening:Shiny"),
+		"Validator did not flag speaker banned tic."
+	)
+
+
+func _conversation_plan() -> Dictionary:
+	return {
+		"ok": true,
+		"intents": [
+			{
+				"id": PlanType.INTENT_ACCEPT_STANDARD,
+				"kind": "terminal",
+				"label": "Accept the contract",
+				"fact_ids": [],
+			},
+			{
+				"id": PlanType.INTENT_DECLINE,
+				"kind": "terminal",
+				"label": "Decline",
+				"fact_ids": [],
+			},
+		],
+	}
+
+
+func _mission_plan() -> Dictionary:
+	return {
+		"title": "Relay Evidence Run",
+		"objective_type": "RECOVER_COMBAT_DROP",
+		"objective_summary": "Recover blackbox shard from hostile wreckage.",
+		"reward_credits": 240,
+		"public_because": "The convoy case needs evidence before the report is buried.",
+		"stake": "Dock crews lose hazard coverage if the report stalls.",
+	}
+
+
+func _speaker_card() -> Dictionary:
+	return {
+		"name": "Mara Venn",
+		"voice_rules": {
+			"banned_tics": ["Shiny"],
+		},
+	}
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)
