@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_valid_bundle_passes()
 	_test_missing_and_extra_keys_fail()
 	_test_banned_speaker_tics_fail()
+	_test_question_answers_require_declared_anchor()
 
 	if _failures.is_empty():
 		print("[PASS] Dialogue bundle validator tests")
@@ -59,10 +60,33 @@ func _test_banned_speaker_tics_fail() -> void:
 	)
 
 
+func _test_question_answers_require_declared_anchor() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["clarify_term_response"] = "That is complicated. Trust me."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Vague question answer unexpectedly passed.")
+	_expect(
+		errors.has("missing_answer_anchor:clarify_term"),
+		"Validator did not flag missing question answer anchor."
+	)
+	bundle["clarify_term_response"] = "The convoy case needs evidence before the report is buried."
+	result = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	_expect(bool(result.get("ok", false)), "Anchored question answer did not pass validation.")
+
+
 func _conversation_plan() -> Dictionary:
 	return {
 		"ok": true,
 		"intents": [
+			{
+				"id": PlanType.INTENT_CLARIFY_TERM,
+				"kind": "question",
+				"label": "What convoy case?",
+				"fact_ids": ["fact.convoy.visible"],
+				"answer_anchors": ["convoy case", "evidence"],
+			},
 			{
 				"id": PlanType.INTENT_ACCEPT_STANDARD,
 				"kind": "terminal",

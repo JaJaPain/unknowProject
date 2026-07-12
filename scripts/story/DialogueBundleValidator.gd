@@ -34,6 +34,18 @@ static func validate_bundle(
 		for tic in banned:
 			if _contains_wordish(text, tic):
 				errors.append("banned_tic:%s:%s" % [key, tic])
+	for intent in _intents(conversation_plan):
+		if str(intent.get("kind", "")) != "question":
+			continue
+		var intent_id := str(intent.get("id", "")).strip_edges()
+		if intent_id.is_empty():
+			continue
+		var anchors := _string_array(intent.get("answer_anchors", []))
+		if anchors.is_empty():
+			continue
+		var response := str(bundle.get("%s_response" % intent_id, ""))
+		if not _contains_any_anchor(response, anchors):
+			errors.append("missing_answer_anchor:%s" % intent_id)
 	if errors.is_empty():
 		return {"ok": true, "errors": []}
 	return {"ok": false, "errors": errors}
@@ -58,3 +70,31 @@ static func _contains_wordish(text: String, needle: String) -> bool:
 	if clean_needle.is_empty():
 		return false
 	return text.to_lower().contains(clean_needle)
+
+
+static func _contains_any_anchor(text: String, anchors: Array[String]) -> bool:
+	for anchor in anchors:
+		if _contains_wordish(text, anchor):
+			return true
+	return false
+
+
+static func _intents(conversation_plan: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var raw_intents: Array = conversation_plan.get("intents", []) \
+		if conversation_plan.get("intents", []) is Array else []
+	for raw_intent in raw_intents:
+		if raw_intent is Dictionary:
+			result.append((raw_intent as Dictionary).duplicate(true))
+	return result
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty():
+			result.append(text)
+	return result
