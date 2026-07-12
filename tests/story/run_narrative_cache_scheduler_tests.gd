@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_priority_trigger_mapping_matches_phase_contract()
 	_test_priority_order_and_dedupe()
 	_test_deduplicates_active_jobs_by_cache_key()
+	_test_ready_result_fans_out_to_deduped_requesters()
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
@@ -94,6 +95,32 @@ func _test_deduplicates_active_jobs_by_cache_key() -> void:
 		not bool(after_ready.get("deduped", false))
 			and scheduler.jobs().size() == 2,
 		"Scheduler should allow a fresh job for a cache key after the prior job is ready."
+	)
+
+
+func _test_ready_result_fans_out_to_deduped_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.shared.first", "cache.shared.ready", SchedulerType.PRIORITY_P2)
+	first["requester_id"] = "ui.agent_panel"
+	var second := _job("job.shared.second", "cache.shared.ready", SchedulerType.PRIORITY_P1)
+	second["requester_id"] = "prefetch.station"
+	scheduler.queue_job(first)
+	scheduler.queue_job(second)
+	scheduler.mark_generation_started("job.shared.first")
+	scheduler.mark_ready("job.shared.first", {
+		"cache_key": "cache.shared.ready",
+		"opening": "Same finished bundle.",
+	})
+	var ui_result: Dictionary = scheduler.ready_result_for_requester("ui.agent_panel")
+	var prefetch_result: Dictionary = scheduler.ready_result_for_requester("prefetch.station")
+	_expect(
+		str(ui_result.get("job_id", "")) == "job.shared.first"
+			and str(prefetch_result.get("job_id", "")) == "job.shared.first"
+			and str(ui_result.get("result_payload", {}).get("opening", ""))
+				== "Same finished bundle."
+			and str(prefetch_result.get("result_payload", {}).get("opening", ""))
+				== "Same finished bundle.",
+		"Scheduler did not expose the same ready result to deduped requesters."
 	)
 
 

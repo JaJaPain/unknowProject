@@ -216,8 +216,15 @@ func mark_validation_failed(
 	return {"ok": true, "retry_queued": false, "job": job.duplicate(true)}
 
 
-func mark_ready(job_id: String) -> Dictionary:
-	return _transition(job_id, "ready", "text_presented", "ready")
+func mark_ready(job_id: String, result_payload: Dictionary = {}) -> Dictionary:
+	var result := _transition(job_id, "ready", "text_presented", "ready")
+	if bool(result.get("ok", false)) and not result_payload.is_empty():
+		var clean_id := job_id.strip_edges()
+		var job: Dictionary = _jobs[clean_id]
+		job["result_payload"] = result_payload.duplicate(true)
+		_jobs[clean_id] = job
+		result["job"] = job.duplicate(true)
+	return result
 
 
 func mark_tts_cache_started(job_id: String) -> Dictionary:
@@ -371,6 +378,28 @@ func get_job(job_id: String) -> Dictionary:
 	var raw: Variant = _jobs[clean_id]
 	if raw is Dictionary:
 		return (raw as Dictionary).duplicate(true)
+	return {}
+
+
+func ready_result_for_requester(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {}
+	for raw in _jobs.values():
+		if not raw is Dictionary:
+			continue
+		var job: Dictionary = raw
+		if str(job.get("status", "")) != "ready":
+			continue
+		var requesters: Array = job.get("requesters", [])
+		if requesters.has(clean_requester):
+			return {
+				"job_id": str(job.get("job_id", "")),
+				"cache_key": str(job.get("cache_key", "")),
+				"result_payload": (
+					job.get("result_payload", {}) as Dictionary
+				).duplicate(true) if job.get("result_payload", {}) is Dictionary else {},
+			}
 	return {}
 
 
