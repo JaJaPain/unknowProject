@@ -25,6 +25,20 @@ func queue_job(job: Dictionary) -> Dictionary:
 	var cache_key := str(job.get("cache_key", "")).strip_edges()
 	if cache_key.is_empty():
 		return _failure("Narrative cache job requires cache_key.")
+	var existing_key_job_id := _find_active_job_id_by_cache_key(cache_key)
+	if not existing_key_job_id.is_empty() and existing_key_job_id != job_id:
+		var existing: Dictionary = _jobs[existing_key_job_id]
+		existing["priority"] = min(
+			int(existing.get("priority", PRIORITY_P2)),
+			int(job.get("priority", PRIORITY_P2))
+		)
+		_add_requester(existing, job)
+		_jobs[existing_key_job_id] = existing
+		return {
+			"ok": true,
+			"deduped": true,
+			"job": existing.duplicate(true),
+		}
 	var prepared := _prepare_job(job)
 	prepared["job_id"] = job_id
 	prepared["cache_key"] = cache_key
@@ -33,6 +47,7 @@ func queue_job(job: Dictionary) -> Dictionary:
 		prepared["sequence"] = _sequence
 		prepared["diagnostic_timestamps"] = {}
 		_stamp(prepared, "job_queued")
+		_add_requester(prepared, job)
 		_stats["queued"] = int(_stats.get("queued", 0)) + 1
 	else:
 		var existing: Dictionary = _jobs[job_id]
@@ -40,6 +55,10 @@ func queue_job(job: Dictionary) -> Dictionary:
 		prepared["diagnostic_timestamps"] = (
 			existing.get("diagnostic_timestamps", {}) as Dictionary
 		).duplicate(true)
+		prepared["requesters"] = (
+			existing.get("requesters", []) as Array
+		).duplicate(true)
+		_add_requester(prepared, job)
 		prepared["diagnostic_timestamps"]["job_queued"] = int(
 			prepared["diagnostic_timestamps"].get(
 				"job_queued",
@@ -170,6 +189,29 @@ func _prepare_job(job: Dictionary) -> Dictionary:
 	prepared["priority"] = int(prepared.get("priority", PRIORITY_P2))
 	prepared["queued_at_unix"] = int(Time.get_unix_time_from_system())
 	return prepared
+
+
+func _find_active_job_id_by_cache_key(cache_key: String) -> String:
+	for job_id in _jobs.keys():
+		var raw: Variant = _jobs[job_id]
+		if not raw is Dictionary:
+			continue
+		var job: Dictionary = raw
+		if str(job.get("cache_key", "")) != cache_key:
+			continue
+		if str(job.get("status", "")) in ["queued", "in_flight"]:
+			return str(job_id)
+	return ""
+
+
+static func _add_requester(target: Dictionary, source: Dictionary) -> void:
+	var requesters: Array = target.get("requesters", [])
+	var requester_id := str(source.get("requester_id", "")).strip_edges()
+	if requester_id.is_empty():
+		requester_id = str(source.get("job_id", "")).strip_edges()
+	if not requester_id.is_empty() and not requesters.has(requester_id):
+		requesters.append(requester_id)
+	target["requesters"] = requesters
 
 
 func _transition(

@@ -7,6 +7,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_priority_order_and_dedupe()
+	_test_deduplicates_active_jobs_by_cache_key()
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 
@@ -36,6 +37,37 @@ func _test_priority_order_and_dedupe() -> void:
 				== "cache.p2.changed"
 			and int(scheduler.stats().get("queued", 0)) == 3,
 		"Scheduler did not update an existing job without double-counting it."
+	)
+
+
+func _test_deduplicates_active_jobs_by_cache_key() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.first", "cache.shared", SchedulerType.PRIORITY_P2)
+	first["requester_id"] = "ui.agent_panel"
+	var second := _job("job.second", "cache.shared", SchedulerType.PRIORITY_P0)
+	second["requester_id"] = "prefetch.current_station"
+	scheduler.queue_job(first)
+	var deduped: Dictionary = scheduler.queue_job(second)
+	var job: Dictionary = scheduler.get_job("job.first")
+	var requesters: Array = job.get("requesters", [])
+	_expect(
+		bool(deduped.get("deduped", false))
+			and scheduler.jobs().size() == 1
+			and str(deduped.get("job", {}).get("job_id", "")) == "job.first"
+			and int(job.get("priority", SchedulerType.PRIORITY_P2))
+				== SchedulerType.PRIORITY_P0
+			and requesters.has("ui.agent_panel")
+			and requesters.has("prefetch.current_station"),
+		"Scheduler did not deduplicate active jobs by cache key."
+	)
+	scheduler.mark_ready("job.first")
+	var after_ready: Dictionary = scheduler.queue_job(
+		_job("job.third", "cache.shared", SchedulerType.PRIORITY_P1)
+	)
+	_expect(
+		not bool(after_ready.get("deduped", false))
+			and scheduler.jobs().size() == 2,
+		"Scheduler should allow a fresh job for a cache key after the prior job is ready."
 	)
 
 
