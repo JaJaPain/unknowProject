@@ -235,6 +235,61 @@ func mark_tts_ready(job_id: String) -> Dictionary:
 	return _stamp_existing(job_id, "tts_ready")
 
 
+func queue_tts_jobs_for_validated_text(
+	source_job_id: String,
+	text_bundle: Dictionary,
+	required_fields: Array,
+	voice_profile_id: String
+) -> Dictionary:
+	var source := get_job(source_job_id)
+	if source.is_empty():
+		return _failure("Narrative cache source job not found.")
+	var stamps: Dictionary = source.get("diagnostic_timestamps", {}) \
+		if source.get("diagnostic_timestamps", {}) is Dictionary else {}
+	if not stamps.has("validation_finished"):
+		return _failure("TTS jobs require validated text.")
+	var clean_voice := voice_profile_id.strip_edges()
+	if clean_voice.is_empty():
+		return _failure("TTS jobs require voice_profile_id.")
+	var queued: Array[String] = []
+	var missing_fields: Array[String] = []
+	var prepared_fields: Array[Dictionary] = []
+	for raw_field in required_fields:
+		var field_id := str(raw_field).strip_edges()
+		if field_id.is_empty():
+			continue
+		var text := str(text_bundle.get(field_id, "")).strip_edges()
+		if text.is_empty():
+			missing_fields.append(field_id)
+			continue
+		var fingerprint := text.sha256_text()
+		prepared_fields.append({
+			"field_id": field_id,
+			"text": text,
+			"fingerprint": fingerprint,
+		})
+	if not missing_fields.is_empty():
+		return {
+			"ok": false,
+			"error": "TTS jobs missing required text fields.",
+			"missing_fields": missing_fields,
+			"queued": [],
+		}
+	for field in prepared_fields:
+		var job := _tts_job_from_source(
+			source,
+			str(field.get("field_id", "")),
+			clean_voice,
+			str(field.get("text", "")),
+			str(field.get("fingerprint", ""))
+		)
+		var result := queue_job(job)
+		if not bool(result.get("ok", false)):
+			return result
+		queued.append(str(result.get("job", {}).get("job_id", job.get("job_id", ""))))
+	return {"ok": true, "queued": queued}
+
+
 func cancel_job(job_id: String, reason: String = "canceled") -> Dictionary:
 	var clean_id := job_id.strip_edges()
 	if not _jobs.has(clean_id):
@@ -457,6 +512,72 @@ static func _add_requester(target: Dictionary, source: Dictionary) -> void:
 	if not requester_id.is_empty() and not requesters.has(requester_id):
 		requesters.append(requester_id)
 	target["requesters"] = requesters
+
+
+static func _tts_job_from_source(
+	source: Dictionary,
+	field_id: String,
+	voice_profile_id: String,
+	text: String,
+	text_fingerprint: String
+) -> Dictionary:
+	var source_cache_key := str(source.get("cache_key", "")).strip_edges()
+	var safe_field := _safe_id_part(field_id)
+	var safe_voice := _safe_id_part(voice_profile_id)
+	var short_fingerprint := text_fingerprint.substr(0, 16)
+	var job := {
+		"job_id": "tts.%s.%s.%s" % [
+			_safe_id_part(source_cache_key),
+			safe_field,
+			short_fingerprint,
+		],
+		"cache_key": "%s.tts.%s.%s.%s" % [
+			source_cache_key,
+			safe_field,
+			safe_voice,
+			short_fingerprint,
+		],
+		"kind": "tts_cache",
+		"priority": int(source.get("priority", PRIORITY_P2)),
+		"text_cache_key": source_cache_key,
+		"field_id": field_id,
+		"voice_profile_id": voice_profile_id,
+		"text_fingerprint": text_fingerprint,
+		"text": text,
+		"requester_id": "tts:%s:%s" % [source_cache_key, field_id],
+	}
+	for key in [
+		"campaign_id",
+		"story_revision",
+		"knowledge_revision",
+		"mission_history_revision",
+		"system_id",
+		"station_id",
+		"npc_id",
+		"speaker_id",
+		"subject_id",
+		"story_beat_id",
+		"giver_npc_id",
+		"destination_id",
+		"objective_fingerprint",
+		"allowed_facts_fingerprint",
+		"relationship_tier",
+		"truth_frozen",
+	]:
+		if source.has(key):
+			job[key] = source[key]
+	return job
+
+
+static func _safe_id_part(value: String) -> String:
+	var result := ""
+	for index in value.length():
+		var character := value[index]
+		if character.is_valid_identifier() or character.is_valid_int():
+			result += character
+		else:
+			result += "_"
+	return result.strip_edges().trim_prefix("_").trim_suffix("_")
 
 
 func _transition(

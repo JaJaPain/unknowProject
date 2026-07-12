@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_pause_blocks_starting_small_jobs_until_resume()
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
+	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -302,6 +303,72 @@ func _test_default_concurrency_allows_only_one_generation_in_flight() -> void:
 		str(next.get("job_id", "")) == "job.second"
 			and bool(second_retry.get("ok", false)),
 		"Scheduler did not release the next job after in-flight work completed."
+	)
+
+
+func _test_tts_jobs_inherit_text_priority_and_scope_after_validation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _scoped_job("job.text", "station.alpha", "npc.alpha")
+	text_job["priority"] = SchedulerType.PRIORITY_P0
+	text_job["subject_id"] = "offer.alpha"
+	text_job["story_beat_id"] = "beat.alpha"
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text")
+	scheduler.mark_generation_finished("job.text")
+	var early: Dictionary = SchedulerType.new().queue_tts_jobs_for_validated_text(
+		"job.missing",
+		{"opening": "No source."},
+		["opening"],
+		"voice.agent.alpha"
+	)
+	var queued: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one.", "accept_standard_response": "Line two."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	scheduler.mark_validation_finished("job.text")
+	var missing_text: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	var validated_queued: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one.", "accept_standard_response": "Line two."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	scheduler.mark_ready("job.text")
+	var next: Dictionary = scheduler.next_job()
+	var canceled: Dictionary = scheduler.cancel_jobs({
+		"subject_id": "offer.alpha",
+	}, "offer_replaced")
+	var canceled_ids: Array = canceled.get("canceled", [])
+	_expect(
+		not bool(early.get("ok", true))
+			and not bool(queued.get("ok", true))
+			and not bool(missing_text.get("ok", true))
+			and (missing_text.get("queued", []) as Array).is_empty()
+			and bool(validated_queued.get("ok", false))
+			and (validated_queued.get("queued", []) as Array).size() == 2,
+		"Scheduler did not require validated text before queuing TTS jobs."
+	)
+	_expect(
+		str(next.get("kind", "")) == "tts_cache"
+			and int(next.get("priority", SchedulerType.PRIORITY_P2))
+				== SchedulerType.PRIORITY_P0
+			and str(next.get("subject_id", "")) == "offer.alpha"
+			and str(next.get("field_id", "")) in [
+				"opening",
+				"accept_standard_response",
+			],
+		"Scheduler TTS jobs did not inherit text priority, scope, and field identity."
+	)
+	_expect(
+		canceled_ids.size() == 2,
+		"Scheduler did not cancel obsolete queued TTS jobs by inherited scope."
 	)
 
 
