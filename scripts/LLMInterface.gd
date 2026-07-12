@@ -2431,6 +2431,18 @@ func request_quest_generation(
 		chosen_faction,
 		agent_profile
 	)
+	var story_offer_context: Dictionary = agent_profile.get(
+		"story_agent_offer_context",
+		{}
+	) if agent_profile.get("story_agent_offer_context", {}) is Dictionary else {}
+	var story_offer_candidate: Dictionary = story_offer_context.get(
+		"candidate",
+		{}
+	) if story_offer_context.get("candidate", {}) is Dictionary else {}
+	var story_offer_budget: Dictionary = story_offer_context.get(
+		"budget",
+		{}
+	) if story_offer_context.get("budget", {}) is Dictionary else {}
 
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
@@ -2443,6 +2455,11 @@ func request_quest_generation(
 	var _hint_type: String = str(_hint.get("preferred_type", "")).to_upper()
 	if not _hint.is_empty() and _hint_type in quest_types:
 		chosen_type = _hint_type
+	var story_candidate_type := str(
+		story_offer_candidate.get("objective_type", "")
+	).to_upper()
+	if not story_candidate_type.is_empty() and story_candidate_type in quest_types:
+		chosen_type = story_candidate_type
 	
 	# Build the matching example block
 	var example_obj_block = ""
@@ -2458,6 +2475,13 @@ func request_quest_generation(
 	var actual_kill_target := ""
 	var actual_kill_count := randi_range(2, 4)
 	var actual_ore_amount: float = snapped(randf_range(20.0, 300.0), 5.0)
+	if not story_offer_budget.is_empty():
+		var budget_kill_count := int(story_offer_budget.get("kill_count", 0))
+		if budget_kill_count > 0:
+			actual_kill_count = budget_kill_count
+		var budget_ore_amount := float(story_offer_budget.get("ore_amount", 0.0))
+		if budget_ore_amount > 0.0:
+			actual_ore_amount = snappedf(budget_ore_amount, 1.0)
 
 	if chosen_type == "DELIVER_ORE":
 		example_title = "Silicate Run"
@@ -2543,6 +2567,8 @@ func request_quest_generation(
 		"pickup_npc": pickup_npc,
 		"pickup_item": pickup_item,
 		"story_hook_ref": StoryManager.current_hook_ref(),
+		"story_offer_candidate": story_offer_candidate.duplicate(true),
+		"story_offer_budget": story_offer_budget.duplicate(true),
 	}
 
 
@@ -2633,8 +2659,33 @@ func request_quest_generation(
 	if not _active_hint.is_empty():
 		var _h_system: String = str(_active_hint.get("preferred_system", ""))
 		var _h_flavor: String = str(_active_hint.get("flavor_tag", ""))
+		var _h_candidate: Dictionary = _active_hint.get("story_candidate", {}) \
+			if _active_hint.get("story_candidate", {}) is Dictionary else {}
+		var _h_budget: Dictionary = _active_hint.get("challenge_budget", {}) \
+			if _active_hint.get("challenge_budget", {}) is Dictionary else {}
 		if not _h_system.is_empty():
-			story_hint_block = "### NARRATIVE CONTEXT:\nThe agent has contacts in the %s region. Lean the mission toward that area if plausible. Flavor: %s.\n\n" % [_h_system, _h_flavor]
+			story_hint_block = "### NARRATIVE CONTEXT:\nThe agent has contacts in the %s region. Lean the mission toward that area if plausible. Flavor: %s.\n" % [_h_system, _h_flavor]
+		if not _h_candidate.is_empty():
+			story_hint_block += (
+				"Chapter beat: %s. Cause: %s. Stake: %s. Complication: %s. Consequence: %s.\n" %
+				[
+					str(_h_candidate.get("beat_id", "")),
+					str(_h_candidate.get("cause_id", "")),
+					str(_h_candidate.get("stake", "")),
+					str(_h_candidate.get("complication", "")),
+					str(_h_candidate.get("world_consequence", "")),
+				]
+			)
+		if not _h_budget.is_empty():
+			story_hint_block += (
+				"Challenge budget: %s difficulty, about %d minutes. Use these stakes as subtext; do not expose internal IDs.\n" %
+				[
+					str(_h_budget.get("difficulty_band", "routine")),
+					int(_h_budget.get("target_duration_minutes", 0)),
+				]
+			)
+		if not story_hint_block.is_empty():
+			story_hint_block += "\n"
 		var _remaining: int = int(_active_hint.get("expires_after_docks", 3)) - 1
 		if _remaining <= 0:
 			GlobalState.story_quest_hint = {}
@@ -3202,6 +3253,34 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	quest_data["agent_name"] = str(subs.get("agent_name", quest_data.get("agent_name", "Broker Kaelen")))
 	if subs.has("story_hook_ref"):
 		quest_data["story_hook_ref"] = str(subs.get("story_hook_ref", ""))
+	var story_candidate: Dictionary = subs.get("story_offer_candidate", {}) \
+		if subs.get("story_offer_candidate", {}) is Dictionary else {}
+	if not story_candidate.is_empty():
+		var budget: Dictionary = subs.get("story_offer_budget", {}) \
+			if subs.get("story_offer_budget", {}) is Dictionary else {}
+		var metadata := {
+			"story_thread_id": str(story_candidate.get("thread_id", "")),
+			"story_beat_id": str(story_candidate.get("beat_id", "")),
+			"story_hook_ref": str(quest_data.get("story_hook_ref", "")),
+			"cause_id": str(story_candidate.get("cause_id", "")),
+			"public_because": str(story_candidate.get("world_consequence", "")),
+			"stake": str(story_candidate.get("stake", "")),
+			"question_fact_ids": (
+				story_candidate.get("disclosure_fact_ids", []) as Array
+			).duplicate(true) if story_candidate.get("disclosure_fact_ids", []) is Array else [],
+			"completion_fact_ids": (
+				story_candidate.get("completion_fact_ids", []) as Array
+			).duplicate(true) if story_candidate.get("completion_fact_ids", []) is Array else [],
+			"outcome_snapshot": {
+				"story_candidate": story_candidate.duplicate(true),
+				"challenge_budget": budget.duplicate(true),
+			},
+		}
+		quest_data["narrative_metadata"] = metadata
+		quest_data["story_thread_id"] = metadata["story_thread_id"]
+		quest_data["story_beat_id"] = metadata["story_beat_id"]
+		quest_data["cause_id"] = metadata["cause_id"]
+		quest_data["stake"] = metadata["stake"]
 
 	var replacements := {}
 	# Swap dummy pilot name for the real nickname

@@ -5712,11 +5712,12 @@ func _request_station_contact_work(
 		npc_data.get("flavor_color", Color.WHITE),
 		GlobalState.get_minor_npc_portrait(npc_name)
 	)
-	pending_quest_context = _current_agent_quest_context()
+	var request_profile := _story_augmented_agent_profile(profile)
+	pending_quest_context = _current_agent_quest_context(request_profile)
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
 		_on_background_quest_generated,
-		profile
+		request_profile
 	)
 
 
@@ -5726,18 +5727,20 @@ func _request_background_agent_quest() -> bool:
 		return true
 	if not _agent_contracts_available_for_station():
 		return false
-	pending_quest_context = _current_agent_quest_context()
 	var profile := _current_station_agent_profile()
 	if profile.is_empty():
 		if _current_system_allows_major_agent_fallback():
+			pending_quest_context = _current_agent_quest_context()
 			QuestManager.request_new_quest("neutral", _on_background_quest_generated)
 			return true
 		else:
 			print(
 				"[TRACE] [UIManager] No local faction contact for generated station; skipping old-agent fallback."
-			)
-			pending_quest_context = {}
+		)
+		pending_quest_context = {}
 		return false
+	var request_profile := _story_augmented_agent_profile(profile)
+	pending_quest_context = _current_agent_quest_context(request_profile)
 	var profile_faction := str(profile.get("faction", ""))
 	var profile_faction_id := str(profile.get("faction_id", ""))
 	var faction_arg := (
@@ -5748,7 +5751,7 @@ func _request_background_agent_quest() -> bool:
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
 		_on_background_quest_generated,
-		profile
+		request_profile
 	)
 	return true
 
@@ -5793,11 +5796,52 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 	}
 
 
-func _current_agent_quest_context() -> Dictionary:
-	return {
+func _current_agent_quest_context(agent_profile: Dictionary = {}) -> Dictionary:
+	var context := {
 		"system_id": str(GlobalState.current_system_id),
 		"station_id": _current_station_contact_id(),
 	}
+	var story_context: Dictionary = agent_profile.get("story_agent_offer_context", {}) \
+		if agent_profile.get("story_agent_offer_context", {}) is Dictionary else {}
+	if bool(story_context.get("ok", false)):
+		var candidate: Dictionary = story_context.get("candidate", {}) \
+			if story_context.get("candidate", {}) is Dictionary else {}
+		context["story_packet_id"] = str(candidate.get("packet_id", ""))
+		context["story_beat_id"] = str(candidate.get("beat_id", ""))
+		context["story_objective_type"] = str(candidate.get("objective_type", ""))
+	return context
+
+
+func _story_augmented_agent_profile(profile: Dictionary) -> Dictionary:
+	var next_profile := profile.duplicate(true)
+	var game_root := get_tree().current_scene
+	if game_root == null \
+			or not game_root.has_method("build_story_agent_offer_context"):
+		return next_profile
+	var story_context: Dictionary = game_root.call(
+		"build_story_agent_offer_context",
+		next_profile
+	)
+	if not bool(story_context.get("ok", false)):
+		GlobalState.trace(
+			"[TRACE] [UIManager] No story agent offer candidate: %s" %
+				str(story_context.get("status", "unknown"))
+		)
+		return next_profile
+	next_profile["story_agent_offer_context"] = story_context
+	var hint: Dictionary = story_context.get("hint", {}) \
+		if story_context.get("hint", {}) is Dictionary else {}
+	if not hint.is_empty():
+		GlobalState.story_quest_hint = hint.duplicate(true)
+	var candidate: Dictionary = story_context.get("candidate", {}) \
+		if story_context.get("candidate", {}) is Dictionary else {}
+	GlobalState.trace(
+		"[TRACE] [UIManager] Story agent offer candidate selected: %s %s" % [
+			str(candidate.get("beat_id", "")),
+			str(candidate.get("objective_type", "")),
+		]
+	)
+	return next_profile
 
 
 func _agent_contracts_available_for_station() -> bool:
@@ -9626,6 +9670,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	if quest_data.is_empty():
 		agent_dialogue_label.text = "No contracts available right now. Check back later."
 		return
+	_mark_story_agent_offer_presented(quest_data)
 	
 	# ── Step 1: Kaelen introduces the quest giver ─────────────────────────────
 	var agent_name = quest_data.get("agent_name", "Broker Kaelen")
@@ -9745,6 +9790,19 @@ func _quest_giver_voice_ref(quest_data: Dictionary) -> String:
 	if not voice_ref.is_empty():
 		return voice_ref
 	return str(quest_data.get("faction", "neutral")).strip_edges()
+
+
+func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void:
+	var beat_id := str(quest_data.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		var metadata: Dictionary = quest_data.get("narrative_metadata", {}) \
+			if quest_data.get("narrative_metadata", {}) is Dictionary else {}
+		beat_id = str(metadata.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		return
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("mark_chapter_beat_state"):
+		StoryManager.mark_chapter_beat_state(beat_id, "offered", "Offer presented.")
 
 
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
