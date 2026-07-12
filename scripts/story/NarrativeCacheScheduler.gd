@@ -263,6 +263,8 @@ static func prefetch_jobs_for_event(event: Dictionary) -> Array[Dictionary]:
 	var event_type := str(event.get("event_type", "")).strip_edges()
 	if event_type == "system_arrived":
 		return _system_arrival_prefetch_jobs(event)
+	if event_type == "station_targeted":
+		return _station_target_prefetch_jobs(event)
 	var mission_id := str(event.get("mission_id", event.get("subject_id", ""))).strip_edges()
 	if mission_id.is_empty():
 		return []
@@ -735,6 +737,32 @@ static func _system_arrival_prefetch_jobs(event: Dictionary) -> Array[Dictionary
 	return jobs
 
 
+static func _station_target_prefetch_jobs(event: Dictionary) -> Array[Dictionary]:
+	var station_id := str(event.get("station_id", event.get("subject_id", ""))).strip_edges()
+	if station_id.is_empty():
+		return []
+	return [
+		_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_VISIBLE_STATION,
+			station_id,
+			"current_station_agent_offer_bundle"
+		),
+		_context_prefetch_job(
+			event,
+			TRIGGER_MECHANIC_GREETING,
+			station_id,
+			"mechanic_greeting_bundle"
+		),
+		_context_prefetch_job(
+			event,
+			TRIGGER_LIKELY_LOUNGE,
+			station_id,
+			"likely_lounge_opener_bundle"
+		),
+	]
+
+
 static func _context_prefetch_job(
 	event: Dictionary,
 	trigger: String,
@@ -767,6 +795,8 @@ static func _context_prefetch_job(
 		"cause_id",
 		"relationship_tier",
 		"arrival_gate_id",
+		"target_reason",
+		"station_type",
 	]:
 		if event.has(key):
 			job[key] = event[key]

@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
 	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
 	_test_system_arrival_plans_current_system_and_station_prefetch()
+	_test_station_target_plans_agent_mechanic_and_lounge_prefetch()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
@@ -560,6 +561,33 @@ func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA)
 			and station_job_count == 2,
 		"Scheduler system arrival prefetch did not plan current-system and visible-station jobs."
+	)
+
+
+func _test_station_target_plans_agent_mechanic_and_lounge_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "station_targeted",
+		"station_id": "station.cinder.exchange",
+		"system_id": "system.generated.cinder",
+		"target_reason": "fly_to",
+		"station_type": "full_service",
+		"story_revision": 13,
+	})
+	var triggers: Array[String] = []
+	for job in jobs:
+		triggers.append(str(job.get("trigger", "")))
+		_expect(
+			str(job.get("station_id", "")) == "station.cinder.exchange"
+				and str(job.get("target_reason", "")) == "fly_to",
+			"Station target prefetch did not preserve station targeting context."
+		)
+	_expect(
+		jobs.size() == 3
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION)
+			and triggers.has(SchedulerType.TRIGGER_MECHANIC_GREETING)
+			and triggers.has(SchedulerType.TRIGGER_LIKELY_LOUNGE)
+			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P0,
+		"Scheduler station target prefetch did not plan station, mechanic, and lounge work."
 	)
 
 
