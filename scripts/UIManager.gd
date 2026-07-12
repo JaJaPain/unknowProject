@@ -10099,8 +10099,17 @@ func _on_mission_conversation_declined(
 	is_waiting_for_agent_board = false
 	for child in agent_choices_container.get_children():
 		child.queue_free()
+	var declined_quest := quest_data.duplicate(true)
+	declined_quest["decline_choice"] = selected_choice.duplicate(true)
+	declined_quest["conversation_asked_intents"] = (
+		selected_choice.get("asked_intents", []) as Array
+	).duplicate(true) if selected_choice.get("asked_intents", []) is Array else []
+	declined_quest["conversation_learned_fact_ids"] = (
+		selected_choice.get("learned_fact_ids", []) as Array
+	).duplicate(true) if selected_choice.get("learned_fact_ids", []) is Array else []
+	_record_mission_conversation_decline_choice(declined_quest, selected_choice)
 	QuestManager.decline_quest(
-		quest_data,
+		declined_quest,
 		str(selected_choice.get("choice_id", "choice.decline"))
 	)
 	agent_dialogue_label.text = str(screen.get("text", "")).strip_edges()
@@ -10113,6 +10122,46 @@ func _on_mission_conversation_declined(
 	return_btn.pressed.connect(_on_agent_back_pressed)
 	agent_choices_container.add_child(return_btn)
 	agent_back_btn.visible = true
+
+
+func _record_mission_conversation_decline_choice(
+	quest_data: Dictionary,
+	selected_choice: Dictionary
+) -> void:
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("record_player_choice"):
+		return
+	var consequence: Dictionary = selected_choice.get("consequence", {}) \
+		if selected_choice.get("consequence", {}) is Dictionary else {}
+	var asked: Array = selected_choice.get("asked_intents", []) \
+		if selected_choice.get("asked_intents", []) is Array else []
+	var description := "Declined mission offer '%s'." % str(
+		quest_data.get("title", "Untitled Contract")
+	)
+	if not asked.is_empty():
+		description = "Declined mission offer '%s' after asking about %s." % [
+			str(quest_data.get("title", "Untitled Contract")),
+			", ".join(_string_array(asked)),
+		]
+	var relationship_delta := int(consequence.get("relationship_delta", 0))
+	if relationship_delta != 0:
+		description += " Relationship delta: %d." % relationship_delta
+	StoryManager.record_player_choice(
+		str(selected_choice.get("choice_id", "choice.decline")),
+		description,
+		{}
+	)
+
+
+func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty() and text not in result:
+			result.append(text)
+	return result
 
 
 func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
