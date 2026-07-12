@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_diagnostic_summary_reports_lifecycle_durations()
 	_test_pause_blocks_starting_small_jobs_until_resume()
 	_test_validation_failure_retries_once_then_requires_degraded_content()
+	_test_default_concurrency_allows_only_one_generation_in_flight()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -229,6 +230,29 @@ func _test_validation_failure_retries_once_then_requires_degraded_content() -> v
 				== "degraded_required"
 			and bool(scheduler.get_job("job.retry").get("degraded", false)),
 		"Scheduler did not require degraded content after retry budget was spent."
+	)
+
+
+func _test_default_concurrency_allows_only_one_generation_in_flight() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.first", "cache.concurrent.first", SchedulerType.PRIORITY_P0))
+	scheduler.queue_job(_job("job.second", "cache.concurrent.second", SchedulerType.PRIORITY_P0))
+	var first_started: Dictionary = scheduler.mark_generation_started("job.first")
+	var second_started: Dictionary = scheduler.mark_generation_started("job.second")
+	_expect(
+		bool(first_started.get("ok", false))
+			and not bool(second_started.get("ok", false))
+			and scheduler.next_job().is_empty()
+			and int(scheduler.stats().get("in_flight", 0)) == 1,
+		"Scheduler allowed more than one default in-flight generation."
+	)
+	scheduler.mark_ready("job.first")
+	var next: Dictionary = scheduler.next_job()
+	var second_retry: Dictionary = scheduler.mark_generation_started("job.second")
+	_expect(
+		str(next.get("job_id", "")) == "job.second"
+			and bool(second_retry.get("ok", false)),
+		"Scheduler did not release the next job after in-flight work completed."
 	)
 
 

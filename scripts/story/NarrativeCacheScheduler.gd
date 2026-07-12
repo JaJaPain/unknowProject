@@ -19,6 +19,7 @@ var _stats := {
 }
 var _paused := false
 var _pause_reason := ""
+var max_concurrent_generations := 1
 
 
 func queue_job(job: Dictionary) -> Dictionary:
@@ -99,6 +100,8 @@ func pending_jobs() -> Array[Dictionary]:
 func next_job() -> Dictionary:
 	if _paused:
 		return {}
+	if _in_flight_count() >= max(1, max_concurrent_generations):
+		return {}
 	var pending := pending_jobs()
 	if pending.is_empty():
 		return {}
@@ -124,6 +127,12 @@ func is_paused() -> bool:
 func mark_generation_started(job_id: String) -> Dictionary:
 	if _paused:
 		return _failure("Narrative cache scheduler is paused.")
+	var current := get_job(job_id)
+	if current.is_empty():
+		return _failure("Narrative cache job not found.")
+	if str(current.get("status", "")) != "in_flight" \
+			and _in_flight_count() >= max(1, max_concurrent_generations):
+		return _failure("Narrative cache generation concurrency limit reached.")
 	return _transition(job_id, "in_flight", "generation_started", "started")
 
 
@@ -243,6 +252,8 @@ func stats() -> Dictionary:
 	result["total_jobs"] = _jobs.size()
 	result["paused"] = _paused
 	result["pause_reason"] = _pause_reason
+	result["in_flight"] = _in_flight_count()
+	result["max_concurrent_generations"] = max(1, max_concurrent_generations)
 	return result
 
 
@@ -309,6 +320,14 @@ func _find_active_job_id_by_cache_key(cache_key: String) -> String:
 		if str(job.get("status", "")) in ["queued", "in_flight"]:
 			return str(job_id)
 	return ""
+
+
+func _in_flight_count() -> int:
+	var count := 0
+	for raw in _jobs.values():
+		if raw is Dictionary and str((raw as Dictionary).get("status", "")) == "in_flight":
+			count += 1
+	return count
 
 
 static func _add_requester(target: Dictionary, source: Dictionary) -> void:
