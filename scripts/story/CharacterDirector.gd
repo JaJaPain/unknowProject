@@ -42,6 +42,7 @@ static func generate_card(
 			"persona": persona,
 			"voice_rules": _voice_rules_from_selection(registry, npc_source, selected),
 			"trait_combination_key": _combination_key(selected),
+			"trait_memory_keys": _memory_keys(selected),
 		},
 	}
 
@@ -189,7 +190,12 @@ static func _is_incompatible(selected: Dictionary, data: Dictionary) -> bool:
 
 
 static func _recently_used(selected: Dictionary, recent_combinations: Array) -> bool:
-	return _combination_key(selected) in recent_combinations
+	if _combination_key(selected) in recent_combinations:
+		return true
+	for key in _memory_keys(selected):
+		if key in recent_combinations:
+			return true
+	return false
 
 
 static func _combination_key(selected: Dictionary) -> String:
@@ -199,6 +205,15 @@ static func _combination_key(selected: Dictionary) -> String:
 	for key in keys:
 		parts.append("%s=%s" % [str(key), str(selected[key])])
 	return "|".join(parts)
+
+
+static func _memory_keys(selected: Dictionary) -> Array[String]:
+	var keys: Array[String] = [_combination_key(selected)]
+	for field in ["humor_mechanism", "contradiction"]:
+		var value := str(selected.get(field, "")).strip_edges()
+		if not value.is_empty():
+			keys.append("%s=%s" % [field, value])
+	return keys
 
 
 static func _hash_index(key: String, count: int) -> int:

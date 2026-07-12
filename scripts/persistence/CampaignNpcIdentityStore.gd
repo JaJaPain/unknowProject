@@ -99,9 +99,9 @@ func ensure_npc_record(source: Dictionary) -> Dictionary:
 	var npcs: Array = next_data.get("npcs", []).duplicate(true)
 	npcs.append(record)
 	next_data["npcs"] = npcs
-	next_data["recent_trait_combinations"] = _remember_trait_combination(
+	next_data["recent_trait_combinations"] = _remember_trait_keys(
 		next_data.get("recent_trait_combinations", []),
-		str(record.get("trait_combination_key", ""))
+		_trait_memory_keys_for_record(record)
 	)
 	var committed := _commit(next_data, "npc_identity_upsert")
 	if not bool(committed.get("ok", false)):
@@ -469,9 +469,9 @@ static func _migrate_legacy_data(
 		npc["trait_combination_key"] = str(card.get("trait_combination_key", ""))
 		npc["persona"] = card.get("persona", _persona_from_source(npc))
 		npc["voice_rules"] = card.get("voice_rules", _voice_rules_from_source(npc))
-		recent_combinations = _remember_trait_combination(
+		recent_combinations = _remember_trait_keys(
 			recent_combinations,
-			str(npc.get("trait_combination_key", ""))
+			_trait_memory_keys_for_record(npc)
 		)
 		migrated_npcs.append(npc)
 	migrated["npcs"] = migrated_npcs
@@ -656,16 +656,35 @@ static func _remember_trait_combination(
 	current: Variant,
 	trait_combination_key: String
 ) -> Array:
+	return _remember_trait_keys(current, [trait_combination_key])
+
+
+static func _remember_trait_keys(current: Variant, trait_keys: Array) -> Array:
 	var remembered := _clean_string_array(current)
-	var clean_key := trait_combination_key.strip_edges()
-	if clean_key.is_empty():
-		return remembered
-	if clean_key in remembered:
-		remembered.erase(clean_key)
-	remembered.append(clean_key)
+	for key in trait_keys:
+		var clean_key := str(key).strip_edges()
+		if clean_key.is_empty():
+			continue
+		if clean_key in remembered:
+			remembered.erase(clean_key)
+		remembered.append(clean_key)
 	while remembered.size() > MAX_RECENT_TRAIT_COMBINATIONS:
 		remembered.pop_front()
 	return remembered
+
+
+static func _trait_memory_keys_for_record(record: Dictionary) -> Array:
+	var keys: Array = []
+	var combination_key := str(record.get("trait_combination_key", "")).strip_edges()
+	if not combination_key.is_empty():
+		keys.append(combination_key)
+	var persona: Dictionary = record.get("persona", {}) \
+		if record.get("persona", {}) is Dictionary else {}
+	for field in ["humor_mechanism", "contradiction"]:
+		var value := str(persona.get(field, "")).strip_edges()
+		if not value.is_empty():
+			keys.append("%s=%s" % [field, value])
+	return keys
 
 
 static func _lifecycle_from_source(source: Dictionary) -> Dictionary:

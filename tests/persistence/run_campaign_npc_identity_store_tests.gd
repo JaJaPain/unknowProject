@@ -25,6 +25,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_recent_trait_combinations_avoid_reuse()
 	_cleanup()
+	_test_five_station_npcs_have_distinct_humor_and_contradiction()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC identity store tests")
@@ -257,6 +259,53 @@ func _test_recent_trait_combinations_avoid_reuse() -> void:
 			and (store.data.get("recent_trait_combinations", []) as Array).has(chosen_key),
 		"NPC identity store did not retain recent and newly chosen trait keys."
 	)
+
+
+func _test_five_station_npcs_have_distinct_humor_and_contradiction() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Identity Station Variety Fixture",
+		"npc-identity-station-variety-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC identity store was invalid for station variety test.")
+	if not store.is_valid():
+		return
+	var humor_seen := {}
+	var contradiction_seen := {}
+	for index in range(5):
+		var upserted: Dictionary = store.ensure_npc_record({
+			"id": "npc.gen.fixture.station_%02d" % index,
+			"source_key": "station.generated.alpha|Variety %02d|Station local" % index,
+			"display_name": "Variety %02d" % index,
+			"portrait_id": "portrait.minor_npc_01.hana_quill",
+			"voice_profile_id": "voice.hana_quill.v1",
+			"job_role": "Station local",
+			"home_system_id": "system.generated.alpha",
+			"home_station_id": "station.generated.alpha",
+		})
+		_expect(bool(upserted.get("ok", false)), upserted.get("error", ""))
+		var npc: Dictionary = upserted.get("npc", {})
+		var persona: Dictionary = npc.get("persona", {}) \
+			if npc.get("persona", {}) is Dictionary else {}
+		var humor := str(persona.get("humor_mechanism", "")).strip_edges()
+		var contradiction := str(persona.get("contradiction", "")).strip_edges()
+		_expect(
+			not humor.is_empty() and not humor_seen.has(humor),
+			"Five-NPC station variety repeated humor mechanism: %s" % humor
+		)
+		_expect(
+			not contradiction.is_empty() and not contradiction_seen.has(contradiction),
+			"Five-NPC station variety repeated contradiction: %s" % contradiction
+		)
+		humor_seen[humor] = true
+		contradiction_seen[contradiction] = true
 
 
 func _assert_v2_character_card(npc: Dictionary, label: String) -> void:
