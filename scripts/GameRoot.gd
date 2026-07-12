@@ -1487,6 +1487,7 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"quest": quest_array,
 		"board_cooldowns": QuestManager.capture_board_cooldowns(),
 		"story_state": StoryManager.capture_story_state_for_checkpoint(),
+		"npc_states": _capture_npc_state_for_checkpoint(),
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -1495,6 +1496,13 @@ func _campaign_slot_path(slot_id: String) -> String:
 	if slot_id.is_empty() or campaign_slot_registry == null:
 		return ""
 	return "%s/%s" % [campaign_slot_registry.root_path, slot_id]
+
+
+func _capture_npc_state_for_checkpoint() -> Dictionary:
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("capture_state_for_checkpoint"):
+		return {}
+	return campaign_npc_state_store.capture_state_for_checkpoint()
 
 
 func _clear_active_campaign_runtime_context() -> void:
@@ -3348,6 +3356,19 @@ func _apply_save_data(data: Dictionary) -> void:
 		push_warning(
 			"[GameRoot] Save story_state failed validation during restore."
 		)
+	var checkpoint_npc_states = data.get("npc_states", {})
+	if checkpoint_npc_states is Dictionary \
+			and not (checkpoint_npc_states as Dictionary).is_empty():
+		if campaign_npc_state_store == null \
+				or not campaign_npc_state_store.has_method(
+					"restore_state_from_checkpoint"
+				) \
+				or not campaign_npc_state_store.restore_state_from_checkpoint(
+					checkpoint_npc_states
+				):
+			push_warning(
+				"[GameRoot] Save NPC state failed validation during restore."
+			)
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))

@@ -130,6 +130,33 @@ func record_memory_projection(
 	return _upsert_state(npc_id, state, "npc_state_memory_projection")
 
 
+func capture_state_for_checkpoint() -> Dictionary:
+	return data.duplicate(true)
+
+
+func restore_state_from_checkpoint(checkpoint_state: Dictionary) -> bool:
+	if checkpoint_state.is_empty():
+		return false
+	var restored := checkpoint_state.duplicate(true)
+	var campaign_id := str(campaign.get("id", ""))
+	var validation_result := _validate_data(restored, campaign_id)
+	if not validation_result.is_valid():
+		push_warning(
+			"[CampaignNpcStateStore] Checkpoint NPC state restore rejected: %s" %
+				validation_result.summary()
+		)
+		return false
+	var committed := _commit(restored, "npc_state_checkpoint_restore")
+	if not bool(committed.get("ok", false)):
+		push_warning(
+			"[CampaignNpcStateStore] Checkpoint NPC state restore failed: %s" %
+				str(committed.get("error", "unknown error"))
+		)
+		return false
+	data = restored
+	return true
+
+
 func _load_or_create() -> void:
 	var campaign_result := DomainJsonType.read_object(
 		"%s/campaign.json" % campaign_path

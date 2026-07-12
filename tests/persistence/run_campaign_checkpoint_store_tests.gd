@@ -6,6 +6,7 @@ var SystemRegistryType: GDScript = null
 
 const TEST_ROOT := "user://campaign_checkpoint_fixture"
 const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
+const NPC_ID := "npc.gen.fixture.mara"
 
 var _failures: Array[String] = []
 
@@ -60,6 +61,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 	if not store.is_valid():
 		return
+	var campaign_id := str(store.campaign.get("id", ""))
 	var manifest_before := FileAccess.get_file_as_string(
 		"%s/manifest.json" % CAMPAIGN_PATH
 	)
@@ -72,7 +74,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 
 	var docked: Dictionary = store.capture_autosave(
-		_runtime_state(125, 84.0, "dock"),
+		_runtime_state(125, 84.0, "dock", campaign_id),
 		{
 			"type": "docked",
 			"system_id": "system.start",
@@ -108,6 +110,20 @@ func _test_safe_capture_restore_and_recovery() -> void:
 				"beat.dock"
 			),
 		"Dock checkpoint did not retain rewindable story_state."
+	)
+	var dock_npc_states: Dictionary = dock_checkpoint.get(
+		"state",
+		{}
+	).get("npc_states", {})
+	_expect(
+		dock_npc_states.get("npc_states", {}) is Dictionary
+			and (dock_npc_states.get("npc_states", {}) as Dictionary).has(NPC_ID)
+			and int(
+				(dock_npc_states.get("npc_states", {}) as Dictionary)
+					.get(NPC_ID, {})
+					.get("state_revision", 0)
+			) == 2,
+		"Dock checkpoint did not retain rewindable NPC relationship/stake state."
 	)
 	var manual_copy: Dictionary = store.copy_active_to_manual(
 		0,
@@ -155,7 +171,7 @@ func _test_safe_capture_restore_and_recovery() -> void:
 	)
 
 	var undocked: Dictionary = store.capture_autosave(
-		_runtime_state(875, 100.0, "undock"),
+		_runtime_state(875, 100.0, "undock", campaign_id),
 		{
 			"type": "docked",
 			"system_id": "system.start",
@@ -342,9 +358,10 @@ func _test_safe_capture_restore_and_recovery() -> void:
 func _runtime_state(
 	credits: int,
 	health: float,
-	label: String
+	label: String,
+	campaign_id: String = ""
 ) -> Dictionary:
-	return {
+	var state := {
 		"version": 2,
 		"current_system_id": "system.start",
 		"arrival_gate_id": "gate.start.to_test",
@@ -392,6 +409,9 @@ func _runtime_state(
 		"autopilot_waypoint": [500.0, 0.0, 0.0],
 		"jump_transition": label == "gate",
 	}
+	if not campaign_id.is_empty():
+		state["npc_states"] = _npc_states(campaign_id, label)
+	return state
 
 
 func _story_state(label: String) -> Dictionary:
@@ -415,6 +435,37 @@ func _story_state(label: String) -> Dictionary:
 			"beat.%s" % label: {
 				"state": "completed",
 				"completed_at_minute": 11,
+			},
+		},
+	}
+
+
+func _npc_states(campaign_id: String, label: String) -> Dictionary:
+	return {
+		"schema_version": 1,
+		"document_type": "campaign_npc_states",
+		"campaign_id": campaign_id,
+		"npc_states": {
+			NPC_ID: {
+				"npc_id": NPC_ID,
+				"state_revision": 2 if label == "dock" else 5,
+				"relationship": {
+					"trust": 2 if label == "dock" else 7,
+					"respect": 1,
+					"warmth": 1 if label == "dock" else 3,
+					"debt": 0,
+					"last_player_stance": label,
+					"promises": [],
+				},
+				"current_stake": {
+					"thread_id": "thread.convoy_shortage",
+					"why_it_matters_to_them": "%s stake" % label,
+					"urgency": 3 if label == "dock" else 5,
+				},
+				"memory_event_ids": ["event.local.fixture.%s" % label],
+				"memory_summary": "%s memory" % label,
+				"line_memory_fingerprints": ["%s-line" % label],
+				"updated_at_unix": 1,
 			},
 		},
 	}

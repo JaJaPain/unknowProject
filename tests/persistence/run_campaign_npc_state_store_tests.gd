@@ -123,6 +123,26 @@ func _test_bootstrap_update_and_reopen_npc_state() -> void:
 		int(memory_state.get("state_revision", 0)) == 3,
 		"NPC state revision did not advance once per mutation."
 	)
+	var captured: Dictionary = store.capture_state_for_checkpoint()
+	var post_checkpoint: Dictionary = store.update_relationship(
+		NPC_ID,
+		{"trust": 3, "warmth": 2},
+		"post_checkpoint_help"
+	)
+	_expect(bool(post_checkpoint.get("ok", false)), post_checkpoint.get("error", ""))
+	_expect(
+		store.restore_state_from_checkpoint(captured),
+		"NPC state store rejected its captured checkpoint state."
+	)
+	var restored_state: Dictionary = store.state_for(NPC_ID)
+	var restored_relationship: Dictionary = restored_state.get("relationship", {})
+	_expect(
+		int(restored_relationship.get("trust", 0)) == 2
+			and int(restored_relationship.get("warmth", 0)) == 1
+			and str(restored_relationship.get("last_player_stance", "")) == "helpful"
+			and int(restored_state.get("state_revision", 0)) == 3,
+		"NPC state checkpoint restore did not rewind post-checkpoint relationship changes."
+	)
 
 	var reopened := NpcStateStoreType.open(CAMPAIGN_PATH)
 	_expect(
