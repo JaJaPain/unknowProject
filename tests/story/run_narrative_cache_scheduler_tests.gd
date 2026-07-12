@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_pause_blocks_starting_small_jobs_until_resume()
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
+	_test_queue_health_reports_contention_and_starvation()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -253,6 +254,25 @@ func _test_default_concurrency_allows_only_one_generation_in_flight() -> void:
 		str(next.get("job_id", "")) == "job.second"
 			and bool(second_retry.get("ok", false)),
 		"Scheduler did not release the next job after in-flight work completed."
+	)
+
+
+func _test_queue_health_reports_contention_and_starvation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.flight", "cache.health.flight", SchedulerType.PRIORITY_P0))
+	scheduler.queue_job(_job("job.waiting", "cache.health.waiting", SchedulerType.PRIORITY_P1))
+	scheduler.mark_generation_started("job.flight")
+	var health: Dictionary = scheduler.queue_health(0)
+	_expect(
+		bool(health.get("contention", false))
+			and int(health.get("in_flight_count", 0)) == 1
+			and (health.get("in_flight", []) as Array).has("job.flight")
+			and int(health.get("pending_by_priority", {}).get(
+				str(SchedulerType.PRIORITY_P1),
+				0
+			)) == 1
+			and (health.get("starved_jobs", []) as Array).size() == 1,
+		"Scheduler queue health did not report contention and queued starvation."
 	)
 
 

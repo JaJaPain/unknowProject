@@ -291,6 +291,41 @@ func diagnostic_summary() -> Dictionary:
 	}
 
 
+func queue_health(max_queue_wait_seconds: int = 30) -> Dictionary:
+	var now := int(Time.get_unix_time_from_system())
+	var starved: Array[Dictionary] = []
+	var pending_by_priority: Dictionary = {}
+	var in_flight: Array[String] = []
+	for job in jobs():
+		var status := str(job.get("status", ""))
+		if status == "queued":
+			var priority: int = int(job.get("priority", PRIORITY_P2))
+			pending_by_priority[str(priority)] = int(
+				pending_by_priority.get(str(priority), 0)
+			) + 1
+			var age: int = max(0, now - int(job.get("queued_at_unix", now)))
+			if age >= max_queue_wait_seconds:
+				starved.append({
+					"job_id": str(job.get("job_id", "")),
+					"cache_key": str(job.get("cache_key", "")),
+					"priority": priority,
+					"age_seconds": age,
+				})
+		elif status == "in_flight":
+			in_flight.append(str(job.get("job_id", "")))
+	return {
+		"paused": _paused,
+		"pause_reason": _pause_reason,
+		"in_flight": in_flight,
+		"in_flight_count": in_flight.size(),
+		"max_concurrent_generations": max(1, max_concurrent_generations),
+		"contention": in_flight.size() >= max(1, max_concurrent_generations)
+			and pending_jobs().size() > 0,
+		"pending_by_priority": pending_by_priority,
+		"starved_jobs": starved,
+	}
+
+
 func get_job(job_id: String) -> Dictionary:
 	var clean_id := job_id.strip_edges()
 	if not _jobs.has(clean_id):
