@@ -151,6 +151,7 @@ func _ready() -> void:
 	ship_pre_generator.initialize(system_registry)
 	add_child(ship_pre_generator)
 	system_changed.connect(_on_system_changed_prepare_destinations)
+	system_changed.connect(_on_system_arrival_prefetch)
 	system_changed.connect(ship_pre_generator.on_system_entered)
 	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
@@ -793,6 +794,18 @@ func _on_system_changed_prepare_destinations(
 ) -> void:
 	if GateDiscovery:
 		GateDiscovery.ensure_destinations_for_system(system_id)
+
+
+func _on_system_arrival_prefetch(
+	system_id: String,
+	arrival_gate_id: String
+) -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_system_arrival(
+			system_id,
+			arrival_gate_id
+		)
+	)
 
 
 func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
@@ -3168,6 +3181,55 @@ func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	for job in NarrativeCacheSchedulerType.prefetch_jobs_for_event(event):
 		scheduler.queue_job(job)
+
+
+func _narrative_prefetch_event_from_system_arrival(
+	system_id: String,
+	arrival_gate_id: String
+) -> Dictionary:
+	var clean_system_id := system_id.strip_edges()
+	if clean_system_id.is_empty():
+		return {}
+	var system_root := get_active_system_root()
+	var event := {
+		"event_type": "system_arrived",
+		"subject_id": clean_system_id,
+		"system_id": clean_system_id,
+		"arrival_gate_id": arrival_gate_id.strip_edges(),
+		"visible_station_ids": _visible_station_ids_for_narrative_prefetch(
+			system_root
+		),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+	return event
+
+
+func _visible_station_ids_for_narrative_prefetch(system_root: Node3D) -> Array[String]:
+	var station_ids: Array[String] = []
+	if system_root == null:
+		return station_ids
+	for candidate in get_tree().get_nodes_in_group("station"):
+		var station := candidate as Node3D
+		if station == null or not is_instance_valid(station):
+			continue
+		if not system_root.is_ancestor_of(station):
+			continue
+		if not station.has_method("get_world_id"):
+			continue
+		var station_id := str(station.call("get_world_id")).strip_edges()
+		if station_id.is_empty() or station_ids.has(station_id):
+			continue
+		station_ids.append(station_id)
+	return station_ids
 
 
 static func _narrative_prefetch_event_from_quest(
