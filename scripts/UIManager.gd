@@ -4825,7 +4825,7 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 		LLMInterface.request_lounge_chatter(
 			_lounge_card_context(card),
 			_lounge_card_fallback_line(card),
-			func(line: String) -> void: _show_lounge_card_line(card, line, true)
+			func(line: String) -> void: _show_lounge_card_line(card, line, true, [], true)
 		)
 		return
 	var line := str(parsed.get("line", ""))
@@ -4851,7 +4851,7 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 		# conversation. Gentle code-owned consequence, once per contact per dock.
 		_apply_lounge_completion(npc, _lounge_convo.get("agent_disposition", {}))
 		_lounge_convo = {}
-	_show_lounge_card_line(card, line, true, choices)
+	_show_lounge_card_line(card, line, true, choices, true)
 
 
 func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
@@ -5068,11 +5068,14 @@ func _show_lounge_card_line(
 	card_data: Dictionary,
 	line: String,
 	should_speak: bool = true,
-	choices: Array = []
+	choices: Array = [],
+	enforce_generated_npc_memory: bool = false
 ) -> void:
 	var name := str(card_data.get("name", "Local Contact"))
 	var color: Color = card_data.get("color", Color(0.85, 0.85, 0.85))
 	var portrait := card_data.get("portrait", null) as Texture2D
+	if enforce_generated_npc_memory:
+		line = _unique_lounge_generated_npc_line(card_data, line)
 	show_dock_message(line, name, color, portrait, choices)
 	if not should_speak:
 		return
@@ -5085,6 +5088,23 @@ func _show_lounge_card_line(
 		"color": color,
 		"voice_profile_id": voice_profile_id,
 	})
+
+
+func _unique_lounge_generated_npc_line(card_data: Dictionary, line: String) -> String:
+	if str(card_data.get("kind", "")) != "npc":
+		return line
+	var npc_name := str(card_data.get("name", "")).strip_edges()
+	if npc_name.is_empty():
+		return line
+	if not GlobalState.generated_npc_line_is_repeat(npc_name, line):
+		GlobalState.remember_generated_npc_line(npc_name, line, "lounge_dialogue")
+		return line
+	var fallback := _lounge_card_fallback_line(card_data)
+	if fallback.strip_edges().is_empty() or fallback == line:
+		fallback = "I'm circling the same thought. Ask me again after the room changes."
+	if not GlobalState.generated_npc_line_is_repeat(npc_name, fallback):
+		GlobalState.remember_generated_npc_line(npc_name, fallback, "lounge_dialogue")
+	return fallback
 
 
 func _lounge_card_context(card_data: Dictionary) -> Dictionary:

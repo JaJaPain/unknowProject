@@ -1126,7 +1126,35 @@ static func _pick_remembered_npc_flavor_line(npc_name: String, lines: Array) -> 
 		_remember_generated_npc_line(npc_name, picked_line)
 	return picked_line
 
-static func _remember_generated_npc_line(npc_name: String, line: String) -> void:
+static func generated_npc_line_is_repeat(npc_name: String, line: String) -> bool:
+	var clean_line := line.strip_edges()
+	if clean_line.is_empty():
+		return false
+	if not generated_outpost_npc_data.has(npc_name):
+		return false
+	var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+	var npc_id := str(npc_data.get("npc_id", ""))
+	if campaign_npc_identity_store != null \
+			and campaign_npc_identity_store.has_method("has_line_repeat") \
+			and not npc_id.is_empty():
+		return bool(campaign_npc_identity_store.has_line_repeat(npc_id, clean_line))
+	var memory: Array = npc_data.get("line_memory_fingerprints", []).duplicate()
+	return _npc_line_fingerprint(clean_line) in memory
+
+
+static func remember_generated_npc_line(
+	npc_name: String,
+	line: String,
+	topic: String = "outpost_gossip"
+) -> void:
+	_remember_generated_npc_line(npc_name, line, topic)
+
+
+static func _remember_generated_npc_line(
+	npc_name: String,
+	line: String,
+	topic: String = "outpost_gossip"
+) -> void:
 	if campaign_npc_identity_store == null:
 		return
 	if not campaign_npc_identity_store.has_method("remember_line"):
@@ -1140,7 +1168,7 @@ static func _remember_generated_npc_line(npc_name: String, line: String) -> void
 	var remembered: Dictionary = campaign_npc_identity_store.remember_line(
 		npc_id,
 		line,
-		"outpost_gossip"
+		topic
 	)
 	if bool(remembered.get("ok", false)):
 		var record: Dictionary = remembered.get("npc", {})

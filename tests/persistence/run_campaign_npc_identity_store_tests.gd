@@ -122,6 +122,27 @@ func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void:
 	)
 	_expect(bool(remembered.get("ok", false)), remembered.get("error", ""))
 	_expect(
+		store.has_line_repeat(
+			str(npc.get("id", "")),
+			"Radio silence is not a faith, it is a billing strategy."
+		),
+		"NPC line repeat check did not catch an exact repeated line."
+	)
+	_expect(
+		store.has_line_repeat(
+			str(npc.get("id", "")),
+			"radio silence is not a faith -- it is a billing strategy"
+		),
+		"NPC line repeat check did not catch a near repeated line."
+	)
+	_expect(
+		not store.has_line_repeat(
+			str(npc.get("id", "")),
+			"Dock crews remember every favor that lands before shift change."
+		),
+		"NPC line repeat check rejected a distinct line."
+	)
+	_expect(
 		store.prompt_context("system.generated.alpha").contains("Mara Venn"),
 		"NPC prompt context did not include the generated contact."
 	)
@@ -133,7 +154,7 @@ func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void:
 	)
 	var reopened_npc: Dictionary = reopened.npc_by_display_name("Mara Venn")
 	_expect(
-		(reopened_npc.get("line_memory_fingerprints", []) as Array).size() == 1,
+		(reopened_npc.get("line_memory_fingerprints", []) as Array).size() >= 2,
 		"NPC line memory did not persist after reopening."
 	)
 	_assert_v2_character_card(reopened_npc, "reopened NPC")

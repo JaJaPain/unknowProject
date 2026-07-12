@@ -95,8 +95,9 @@ static func _select_traits(
 			continue
 		selected[str(axis)] = str(values[_hash_index("%s|%s" % [key, axis], values.size())])
 	var attempts := 0
+	var retry_limit := _recent_memory_retry_limit(axes)
 	while (_is_incompatible(selected, data) or _recently_used(selected, recent_combinations)) \
-			and attempts < 16:
+			and attempts < retry_limit:
 		attempts += 1
 		for axis in selected.keys():
 			var values: Array = axes[axis] if axes[axis] is Array else []
@@ -196,6 +197,17 @@ static func _recently_used(selected: Dictionary, recent_combinations: Array) -> 
 		if key in recent_combinations:
 			return true
 	return false
+
+
+static func _recent_memory_retry_limit(axes: Dictionary) -> int:
+	var humor_count := _axis_value_count(axes, "humor_mechanism")
+	var contradiction_count := _axis_value_count(axes, "contradiction")
+	return maxi(16, humor_count * contradiction_count * 8)
+
+
+static func _axis_value_count(axes: Dictionary, axis: String) -> int:
+	var values: Array = axes.get(axis, []) if axes.get(axis, []) is Array else []
+	return maxi(1, values.size())
 
 
 static func _combination_key(selected: Dictionary) -> String:

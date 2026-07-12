@@ -123,11 +123,11 @@ func remember_line(npc_id: String, text: String, topic: String = "") -> Dictiona
 	var npcs: Array = next_data.get("npcs", []).duplicate(true)
 	var npc: Dictionary = (npcs[index] as Dictionary).duplicate(true)
 	var fingerprints: Array = npc.get("line_memory_fingerprints", []).duplicate()
-	var fingerprint := _fingerprint(clean_text)
-	if fingerprint not in fingerprints:
-		fingerprints.append(fingerprint)
-		while fingerprints.size() > 32:
-			fingerprints.pop_front()
+	for fingerprint in _line_fingerprints(clean_text):
+		if fingerprint not in fingerprints:
+			fingerprints.append(fingerprint)
+	while fingerprints.size() > 32:
+		fingerprints.pop_front()
 	npc["line_memory_fingerprints"] = fingerprints
 	npc["last_topic"] = topic
 	npc["updated_at_unix"] = int(Time.get_unix_time_from_system())
@@ -138,6 +138,20 @@ func remember_line(npc_id: String, text: String, topic: String = "") -> Dictiona
 		return committed
 	data = next_data
 	return {"ok": true, "npc": npc.duplicate(true)}
+
+
+func has_line_repeat(npc_id: String, text: String) -> bool:
+	var clean_text := text.strip_edges()
+	if clean_text.is_empty():
+		return false
+	var npc := npc_by_id(npc_id)
+	if npc.is_empty():
+		return false
+	var fingerprints: Array = npc.get("line_memory_fingerprints", [])
+	for fingerprint in _line_fingerprints(clean_text):
+		if fingerprint in fingerprints:
+			return true
+	return false
 
 
 func prompt_context(system_id: String = "", limit: int = 16) -> String:
@@ -718,6 +732,24 @@ static func _slug(value: String) -> String:
 
 static func _fingerprint(value: String) -> String:
 	return value.to_lower().strip_edges().sha256_text().substr(0, 16)
+
+
+static func _line_fingerprints(value: String) -> Array[String]:
+	var clean := value.strip_edges()
+	var compact := ""
+	for index in range(clean.length()):
+		var ch := clean.substr(index, 1).to_lower()
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			compact += ch
+		elif not compact.ends_with(" "):
+			compact += " "
+	compact = compact.strip_edges()
+	var fingerprints: Array[String] = [_fingerprint(clean)]
+	if not compact.is_empty():
+		var near := "near:" + compact.sha256_text().substr(0, 16)
+		if near not in fingerprints:
+			fingerprints.append(near)
+	return fingerprints
 
 
 static func _failure(message: String) -> Dictionary:
