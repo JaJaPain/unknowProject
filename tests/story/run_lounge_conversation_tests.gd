@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_parse_turn()
 	_test_prompt_content()
 	_test_transcript_block()
+	_test_player_stance_classification()
 	_test_agent_disposition()
 
 	if _failures.is_empty():
@@ -116,6 +117,33 @@ func _test_transcript_block() -> void:
 	_expect(
 		block.contains("NPC: Line 2") and block.contains("You: Line 3"),
 		"transcript_block speaker labels wrong."
+	)
+
+
+func _test_player_stance_classification() -> void:
+	_expect(
+		ConvoType.classify_player_stance("What happened out there?") == "curious",
+		"Question reply should classify as curious."
+	)
+	_expect(
+		ConvoType.classify_player_stance("No, prove it.") == "pushback",
+		"Challenge reply should classify as pushback."
+	)
+	_expect(
+		ConvoType.classify_player_stance("It was cheap.") == "dry",
+		"Dry joke reply should classify as dry."
+	)
+	_expect(
+		ConvoType.classify_player_stance("Fair. Thanks.") == "warm",
+		"Agreeable reply should classify as warm."
+	)
+	_expect(
+		ConvoType.classify_player_stance("I hear you.") == "engaged",
+		"Plain reply should classify as engaged."
+	)
+	_expect(
+		ConvoType.classify_player_stance("   ") == "unknown",
+		"Empty reply should classify as unknown."
 	)
 
 

@@ -4862,6 +4862,7 @@ func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
 	var turns: Array = _lounge_convo.get("turns", [])
 	turns.append({"speaker": "you", "text": reply_text})
 	_lounge_convo["turns"] = turns
+	_record_lounge_reply_relationship_stance(card, reply_text)
 	var npc_turns_left := int(_lounge_convo.get("npc_turns_left", 0)) - 1
 	_lounge_convo["npc_turns_left"] = npc_turns_left
 	_show_lounge_card_line(card, "...", false)
@@ -4876,6 +4877,35 @@ func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
 		prompt,
 		func(result: Dictionary) -> void: _on_lounge_turn_result(serial, result)
 	)
+
+
+func _record_lounge_reply_relationship_stance(
+	card_data: Dictionary,
+	reply_text: String
+) -> void:
+	if str(card_data.get("kind", "")) != "npc":
+		return
+	var npc_id := str(card_data.get("npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(card_data.get("contact_key", "")).strip_edges()
+	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+		return
+	if GlobalState.campaign_npc_state_store == null \
+			or not GlobalState.campaign_npc_state_store.has_method("update_relationship"):
+		return
+	var stance := LoungeConversationType.classify_player_stance(reply_text)
+	if stance == "unknown":
+		return
+	var updated: Dictionary = GlobalState.campaign_npc_state_store.update_relationship(
+		npc_id,
+		{},
+		"lounge_%s" % stance
+	)
+	if not bool(updated.get("ok", false)):
+		push_warning(
+			"[UIManager] NPC conversation stance was not recorded for %s: %s" %
+			[npc_id, str(updated.get("error", "unknown error"))]
+		)
 
 
 # ── L4: the stranger's deal ───────────────────────────────────────────────────

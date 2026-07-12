@@ -127,6 +127,39 @@ static func parse_turn(inner_json_text: String, npc_name: String = "") -> Dictio
 	return {"ok": true, "line": line, "replies": replies}
 
 
+static func classify_player_stance(reply_text: String) -> String:
+	var clean := reply_text.strip_edges()
+	if clean.is_empty():
+		return "unknown"
+	var lower := clean.to_lower()
+	if lower.contains("why") \
+			or lower.contains("what") \
+			or lower.contains("how") \
+			or lower.contains("?") \
+			or lower.contains("tell me") \
+			or lower.contains("explain"):
+		return "curious"
+	if lower.contains("no") \
+			or lower.contains("not") \
+			or lower.contains("prove") \
+			or lower.contains("wrong") \
+			or lower.contains("seriously") \
+			or lower.contains("come on"):
+		return "pushback"
+	if lower.contains("thanks") \
+			or lower.contains("appreciate") \
+			or lower.contains("fair") \
+			or lower.contains("agreed"):
+		return "warm"
+	if lower.contains("ha") \
+			or lower.contains("funny") \
+			or lower.contains("joke") \
+			or lower.contains("other guy") \
+			or lower.contains("cheap"):
+		return "dry"
+	return "engaged"
+
+
 # ── Phase L5a: agent social checks ───────────────────────────────────────────
 # How a faction agent receives the player at a given reputation. Pure and
 # code-owned: the model gets context_line as flavor; the NUMBERS never come
