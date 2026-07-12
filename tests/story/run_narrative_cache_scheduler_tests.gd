@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
 	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
+	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -522,6 +523,21 @@ func _test_mission_acceptance_plans_baseline_and_likely_outcomes() -> void:
 				and str(job.get("relationship_tier", "")) == "wary",
 			"Mission acceptance prefetch job did not preserve frozen accepted context."
 		)
+
+
+func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _on_quest_accepted_chronicle")
+			and source.contains("_queue_narrative_prefetch_jobs_for_event")
+			and source.contains("_narrative_prefetch_event_from_quest(quest, \"mission_accepted\")")
+			and source.contains("NarrativeCacheSchedulerType.prefetch_jobs_for_event"),
+		"GameRoot mission acceptance hook is not wired to the narrative prefetch planner."
+	)
 
 
 func _test_queue_health_reports_contention_and_starvation() -> void:

@@ -1718,11 +1718,11 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
-	campaign_npc_identity_store = null
-	campaign_npc_state_store = null
-	campaign_agent_memory_store = null
-	campaign_narrative_cache_store = null
-	GlobalState.campaign_npc_identity_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
@@ -3137,6 +3137,9 @@ static func _quest_source_lane_name(quest: Dictionary) -> String:
 
 
 func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "mission_accepted")
+	)
 	_mark_story_offer_beat(quest, "accepted", "Mission accepted.")
 	_record_quest_giver_npc_outcome(quest, "accepted")
 	if bool(quest.get("is_timed", false)):
@@ -3147,6 +3150,51 @@ func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
 		)
 	else:
 		_append_quest_chronicle_event("mission_accepted", quest, "accepted")
+
+
+func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
+	if event.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	for job in NarrativeCacheSchedulerType.prefetch_jobs_for_event(event):
+		scheduler.queue_job(job)
+
+
+static func _narrative_prefetch_event_from_quest(
+	quest: Dictionary,
+	event_type: String
+) -> Dictionary:
+	var runtime_id := str(quest.get("runtime_id", "")).strip_edges()
+	if runtime_id.is_empty():
+		runtime_id = str(quest.get("definition_id", "")).strip_edges()
+	if runtime_id.is_empty():
+		return {}
+	var event := {
+		"event_type": event_type,
+		"mission_id": runtime_id,
+		"subject_id": runtime_id,
+		"system_id": str(quest.get("system_id", "")),
+		"station_id": str(quest.get("station_id", "")),
+		"speaker_id": str(quest.get("agent_id", quest.get("giver_npc_id", ""))),
+		"story_beat_id": str(quest.get("story_beat_id", "")),
+		"cause_id": str(quest.get("cause_id", "")),
+		"relationship_tier": str(quest.get("relationship_tier", "")),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+	if quest.get("likely_outcome_variants", []) is Array:
+		event["likely_outcome_variants"] = (
+			quest.get("likely_outcome_variants", []) as Array
+		).duplicate(true)
+	return event
 
 
 func _on_quest_declined_chronicle(quest: Dictionary) -> void:
@@ -6606,6 +6654,7 @@ func _run_multi_mission_smoke_test() -> void:
 	GlobalState.reputations["zenith"] = 50.0
 	GlobalState.reputations["aurelia"] = 50.0
 	GlobalState.reputations["reavers"] = 50.0
+	narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
 
 	var accept_choice := {
 		"text": "Accepted.",
@@ -6634,6 +6683,17 @@ func _run_multi_mission_smoke_test() -> void:
 		return
 	if not QuestManager.is_lane_occupied("AGENT"):
 		_fail_multi_mission_smoke_test("AGENT lane not occupied after accept.")
+		return
+	var accepted_runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
+	var prefetch_found := false
+	for job in _ensure_narrative_cache_scheduler().jobs():
+		if str(job.get("subject_id", "")) == accepted_runtime_id \
+				and str(job.get("trigger", "")) \
+				== NarrativeCacheSchedulerType.TRIGGER_MISSION_ACCEPTANCE_OUTCOMES:
+			prefetch_found = true
+			break
+	if not prefetch_found:
+		_fail_multi_mission_smoke_test("Mission acceptance did not queue narrative prefetch work.")
 		return
 
 	var board_ore_offer := {
