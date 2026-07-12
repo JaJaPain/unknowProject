@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_limit_enforcement_evicts_disposable_entries_first()
 	_test_text_fingerprints_survive_entry_eviction()
 	_test_clear_cache_removes_entries_and_fingerprints()
+	_test_tts_readiness_tracks_field_voice_and_text_fingerprint()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -195,6 +196,44 @@ func _test_clear_cache_removes_entries_and_fingerprints() -> void:
 			and reopened.entries().is_empty()
 			and reopened.text_fingerprints().is_empty(),
 		"Cache clear did not remove entries and text fingerprints."
+	)
+
+
+func _test_tts_readiness_tracks_field_voice_and_text_fingerprint() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.tts.alpha"))
+	var marked: Dictionary = store.mark_tts_status(
+		"cache.tts.alpha",
+		"opening",
+		"voice.agent.alpha",
+		"ready",
+		"user://tts/cache.tts.alpha/opening.ogg"
+	)
+	var failed: Dictionary = store.mark_tts_status(
+		"cache.tts.alpha",
+		"accept_standard_response",
+		"voice.agent.alpha",
+		"failed"
+	)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var entry: Dictionary = reopened.get_entry("cache.tts.alpha")
+	var tts: Dictionary = entry.get("tts_ready", {})
+	_expect(
+		bool(marked.get("ok", false))
+			and bool(failed.get("ok", false))
+			and str(tts.get("opening|voice.agent.alpha", {}).get("status", ""))
+				== "ready"
+			and str(tts.get("accept_standard_response|voice.agent.alpha", {}).get(
+				"status",
+				""
+			)) == "failed"
+			and str(tts.get("opening|voice.agent.alpha", {}).get(
+				"text_fingerprint",
+				""
+			)) == CacheStoreType.text_fingerprint("The cache has work."),
+		"Cache TTS readiness did not track field, voice, status, and text fingerprint."
 	)
 
 

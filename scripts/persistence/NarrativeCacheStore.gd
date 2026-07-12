@@ -91,6 +91,42 @@ func mark_consumed(cache_key: String) -> Dictionary:
 	return upsert_entry(entry)
 
 
+func mark_tts_status(
+	cache_key: String,
+	field_id: String,
+	voice_profile_id: String,
+	status: String,
+	audio_path: String = ""
+) -> Dictionary:
+	var entry := get_entry(cache_key)
+	if entry.is_empty():
+		return _failure("Narrative cache entry not found.")
+	var clean_field := field_id.strip_edges()
+	if clean_field.is_empty():
+		return _failure("TTS status requires field_id.")
+	var clean_voice := voice_profile_id.strip_edges()
+	if clean_voice.is_empty():
+		return _failure("TTS status requires voice_profile_id.")
+	var text_bundle: Dictionary = entry.get("text_bundle", {}) \
+		if entry.get("text_bundle", {}) is Dictionary else {}
+	var text := str(text_bundle.get(clean_field, "")).strip_edges()
+	if text.is_empty():
+		return _failure("TTS field is not present in text bundle.")
+	var tts_ready: Dictionary = entry.get("tts_ready", {}) \
+		if entry.get("tts_ready", {}) is Dictionary else {}
+	var tts_key := "%s|%s" % [clean_field, clean_voice]
+	tts_ready[tts_key] = {
+		"field_id": clean_field,
+		"voice_profile_id": clean_voice,
+		"text_fingerprint": text_fingerprint(text),
+		"status": status.strip_edges(),
+		"audio_path": audio_path.strip_edges(),
+		"updated_at_unix": int(Time.get_unix_time_from_system()),
+	}
+	entry["tts_ready"] = tts_ready
+	return upsert_entry(entry)
+
+
 func invalidate_by_subject(subject_id: String) -> Dictionary:
 	if not is_valid():
 		return _failure("Narrative cache store is invalid.")
