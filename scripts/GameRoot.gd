@@ -42,6 +42,9 @@ const CampaignGeneratedFactionStoreType := preload(
 const CampaignNpcIdentityStoreType := preload(
 	"res://scripts/persistence/CampaignNpcIdentityStore.gd"
 )
+const CampaignNpcStateStoreType := preload(
+	"res://scripts/persistence/CampaignNpcStateStore.gd"
+)
 const CampaignAgentMemorySnippetStoreType := preload(
 	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
 )
@@ -86,6 +89,7 @@ var campaign_bible_store: CampaignBibleStore
 var campaign_chapter_packet_store = null
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
+var campaign_npc_state_store = null
 var campaign_agent_memory_store = null
 var campaign_bible_generation_requested_slots: Dictionary = {}
 var campaign_bible_generation_in_flight: bool = false
@@ -1370,8 +1374,10 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
 		LLMInterface.story_state_context_text = ""
@@ -1501,8 +1507,10 @@ func _clear_active_campaign_runtime_context() -> void:
 	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
@@ -1543,8 +1551,10 @@ func _initialize_campaign_registry() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.campaign_bible_context_text = ""
 		LLMInterface.story_state_context_text = ""
@@ -1651,8 +1661,10 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
@@ -1685,8 +1697,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -1705,8 +1719,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -1725,8 +1741,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -1745,8 +1763,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -1765,8 +1785,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -1785,14 +1807,39 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_npc_identity_store = opened_npc_identities
 	GlobalState.campaign_npc_identity_store = campaign_npc_identity_store
+	var opened_npc_states := CampaignNpcStateStoreType.open(slot_path)
+	if not opened_npc_states.is_valid():
+		push_warning(
+			"[GameRoot] NPC state store is unavailable: %s" %
+				opened_npc_states.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_npc_state_store = opened_npc_states
+	GlobalState.campaign_npc_state_store = campaign_npc_state_store
 	var opened_agent_memory := CampaignAgentMemorySnippetStoreType.open(slot_path)
 	if not opened_agent_memory.is_valid():
 		push_warning(
@@ -1806,8 +1853,10 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
 		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
 		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
 		LLMInterface.campaign_bible_context_text = ""
@@ -3473,8 +3522,10 @@ func _run_jump_smoke_test() -> void:
 	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""
@@ -5037,8 +5088,10 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_chapter_packet_store = null
 	campaign_generated_faction_store = null
 	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
 	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
 	LLMInterface.idea_memory_context_text = ""
 	LLMInterface.campaign_bible_context_text = ""

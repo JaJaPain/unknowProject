@@ -445,6 +445,7 @@ static var generated_outpost_npcs: Dictionary = {}
 static var generated_outpost_npc_data: Dictionary = {}
 static var npc_line_memory: Dictionary = {}
 static var campaign_npc_identity_store = null
+static var campaign_npc_state_store = null
 static var campaign_agent_memory_store = null
 
 static func _canonical_minor_outpost_id(outpost_id: String) -> String:
