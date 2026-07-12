@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
+	_test_diagnostic_summary_reports_lifecycle_durations()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -154,6 +155,25 @@ func _test_scope_cancellation_only_cancels_matching_queued_jobs() -> void:
 			and str(scheduler.get_job("job.inflight").get("status", ""))
 				== "in_flight",
 		"Scheduler scope cancellation did not cancel only matching queued jobs."
+	)
+
+
+func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.metrics", "cache.metrics", SchedulerType.PRIORITY_P1))
+	scheduler.mark_generation_started("job.metrics")
+	scheduler.mark_generation_finished("job.metrics")
+	scheduler.mark_validation_finished("job.metrics")
+	scheduler.mark_ready("job.metrics")
+	var summary: Dictionary = scheduler.diagnostic_summary()
+	_expect(
+		int(summary.get("queue_wait", {}).get("count", 0)) == 1
+			and int(summary.get("generation", {}).get("count", 0)) == 1
+			and int(summary.get("validation", {}).get("count", 0)) == 1
+			and int(summary.get("time_to_ready", {}).get("count", 0)) == 1
+			and float(summary.get("time_to_ready", {}).get("avg_seconds", -1.0))
+				>= 0.0,
+		"Scheduler diagnostic summary did not report lifecycle durations."
 	)
 
 

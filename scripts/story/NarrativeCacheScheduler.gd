@@ -193,6 +193,40 @@ func stats() -> Dictionary:
 	return result
 
 
+func diagnostic_summary() -> Dictionary:
+	var ready_durations: Array[int] = []
+	var queue_waits: Array[int] = []
+	var generation_durations: Array[int] = []
+	var validation_waits: Array[int] = []
+	for raw in _jobs.values():
+		if not raw is Dictionary:
+			continue
+		var stamps: Dictionary = (raw as Dictionary).get(
+			"diagnostic_timestamps",
+			{}
+		)
+		_append_delta(queue_waits, stamps, "job_queued", "generation_started")
+		_append_delta(
+			generation_durations,
+			stamps,
+			"generation_started",
+			"generation_finished"
+		)
+		_append_delta(
+			validation_waits,
+			stamps,
+			"generation_finished",
+			"validation_finished"
+		)
+		_append_delta(ready_durations, stamps, "job_queued", "text_presented")
+	return {
+		"queue_wait": _duration_summary(queue_waits),
+		"generation": _duration_summary(generation_durations),
+		"validation": _duration_summary(validation_waits),
+		"time_to_ready": _duration_summary(ready_durations),
+	}
+
+
 func get_job(job_id: String) -> Dictionary:
 	var clean_id := job_id.strip_edges()
 	if not _jobs.has(clean_id):
@@ -265,6 +299,36 @@ static func _stamp(job: Dictionary, timestamp_name: String) -> void:
 	var timestamps: Dictionary = job.get("diagnostic_timestamps", {})
 	timestamps[timestamp_name] = int(Time.get_unix_time_from_system())
 	job["diagnostic_timestamps"] = timestamps
+
+
+static func _append_delta(
+	target: Array[int],
+	stamps: Dictionary,
+	start_key: String,
+	end_key: String
+) -> void:
+	if not stamps.has(start_key) or not stamps.has(end_key):
+		return
+	target.append(max(0, int(stamps[end_key]) - int(stamps[start_key])))
+
+
+static func _duration_summary(values: Array[int]) -> Dictionary:
+	if values.is_empty():
+		return {
+			"count": 0,
+			"avg_seconds": 0.0,
+			"max_seconds": 0,
+		}
+	var total := 0
+	var max_value := 0
+	for value in values:
+		total += value
+		max_value = max(max_value, value)
+	return {
+		"count": values.size(),
+		"avg_seconds": float(total) / float(values.size()),
+		"max_seconds": max_value,
+	}
 
 
 static func _job_matches_any_stale_criterion(
