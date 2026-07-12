@@ -36,6 +36,7 @@ func _initialize() -> void:
 	_test_stamped_completion_does_not_resolve_first_hook_by_accident()
 	_test_stamped_mission_hook_resolves_after_save_reload()
 	_test_last_hook_resolution_refills_from_act_1_outline_reserve()
+	_test_mission_outcomes_record_visible_consequences()
 	_test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring()
 	_test_force_dock_rumor_fires_and_dedups()
 	_test_mood_leak_guard()
@@ -304,6 +305,62 @@ func _test_last_hook_resolution_refills_from_act_1_outline_reserve() -> void:
 	_expect(
 		not (manager.story_state.get("pending_hooks", []) as Array).is_empty(),
 		"Chapter advanced with an empty pending_hooks slate — refill-not-finish was violated."
+	)
+	manager.queue_free()
+
+
+func _test_mission_outcomes_record_visible_consequences() -> void:
+	var manager := _fresh_manager()
+	var quest := {
+		"title": "Clinic Pressure",
+		"narrative_metadata": {
+			"story_thread_id": "thread.clinic",
+			"story_beat_id": "beat.clinic",
+			"cause_id": "cause.shortage",
+			"stake": "The clinic needs leverage before panic spreads.",
+			"completion_fact_ids": ["fact.prototype_core"],
+			"outcome_snapshot": {
+				"story_candidate": {
+					"world_consequence": "The clinic keeps treating refugees.",
+					"decline_consequence": "The clinic loses its quiet supplier.",
+				},
+			},
+		},
+	}
+	var completed: Dictionary = manager.record_mission_outcome_consequence(
+		quest,
+		"completed"
+	)
+	_expect(
+		bool(completed.get("ok", false)) and bool(completed.get("changed", false)),
+		"Completed mission did not record a visible consequence."
+	)
+	var consequences: Array = manager.story_state.get("story_consequences", [])
+	_expect(
+		not consequences.is_empty()
+			and str((consequences[consequences.size() - 1] as Dictionary).get("text", "")) == "The clinic keeps treating refugees.",
+		"Completed mission consequence text was not recorded."
+	)
+	var states: Dictionary = manager.story_state.get("knowledge_states", {})
+	_expect(
+		states.has("fact.prototype_core")
+			and str((states["fact.prototype_core"] as Dictionary).get("state", "")) == "known",
+		"Completion fact was not promoted to known."
+	)
+	var context: String = manager.get_story_context_block()
+	_expect(
+		context.find("Recent consequences") != -1
+			and context.find("The clinic keeps treating refugees.") != -1,
+		"Visible consequence did not appear in public story context."
+	)
+	var declined: Dictionary = manager.record_mission_outcome_consequence(
+		quest,
+		"declined"
+	)
+	_expect(
+		bool(declined.get("ok", false))
+			and str((declined.get("consequence", {}) as Dictionary).get("text", "")) == "The clinic loses its quiet supplier.",
+		"Declined mission did not record decline consequence."
 	)
 	manager.queue_free()
 

@@ -134,6 +134,7 @@ static func _default_state() -> Dictionary:
 		"beat_states": {},
 		"chapter_packet_generation_queued": {},
 		"declined_offer_cooldowns": {},
+		"story_consequences": [],
 		"asked_question_intents": [],
 	}
 
@@ -160,6 +161,8 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["chapter_packet_generation_queued"] = {}
 	if not migrated.get("declined_offer_cooldowns", {}) is Dictionary:
 		migrated["declined_offer_cooldowns"] = {}
+	if not migrated.get("story_consequences", []) is Array:
+		migrated["story_consequences"] = []
 	_backfill_legacy_player_knows(migrated)
 	return migrated
 
@@ -246,6 +249,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"pending_hooks",
 		"hinted_lounge_rumors",
 		"asked_question_intents",
+		"story_consequences",
 	]:
 		if not value.get(field, []) is Array:
 			result.add_error(

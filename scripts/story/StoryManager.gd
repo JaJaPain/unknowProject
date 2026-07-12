@@ -75,6 +75,7 @@ var story_state: Dictionary = {
 	"beat_states": {},
 	"chapter_packet_generation_queued": {},
 	"declined_offer_cooldowns": {},
+	"story_consequences": [],
 }
 var _story_state_store = null   # StoryStateStore, opened by init_story_state()
 var _handoff_store = null       # KaelenHandoffStore, opened by init_story_state()
@@ -1198,7 +1199,116 @@ func _dock_rumor_context(_station) -> Dictionary:
 
 func on_quest_completed(quest: Dictionary) -> void:
 	_check_delay_beats()
+	record_mission_outcome_consequence(quest, "completed")
 	_resolve_hooks_for_quest(quest)
+
+
+func record_mission_outcome_consequence(
+	quest: Dictionary,
+	outcome: String
+) -> Dictionary:
+	var metadata := _mission_narrative_metadata(quest)
+	var consequence_text := _mission_consequence_text(quest, metadata, outcome)
+	if consequence_text.is_empty():
+		return {"ok": false, "changed": false, "reason": "no_visible_consequence"}
+	var consequences: Array = story_state.get("story_consequences", []) \
+		if story_state.get("story_consequences", []) is Array else []
+	var entry := {
+		"outcome": outcome.strip_edges(),
+		"text": consequence_text,
+		"thread_id": str(metadata.get("story_thread_id", "")),
+		"beat_id": str(metadata.get("story_beat_id", "")),
+		"cause_id": str(metadata.get("cause_id", "")),
+		"at_minute": int(CampaignClock.total_minutes),
+	}
+	consequences.append(entry)
+	while consequences.size() > 12:
+		consequences.pop_front()
+	story_state["story_consequences"] = consequences
+	_promote_completion_facts_from_metadata(metadata, outcome)
+	story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
+	_save_story_state()
+	return {"ok": true, "changed": true, "consequence": entry}
+
+
+func _mission_narrative_metadata(quest: Dictionary) -> Dictionary:
+	var metadata: Dictionary = {}
+	var nested: Variant = quest.get("narrative_metadata", {})
+	if nested is Dictionary:
+		metadata = (nested as Dictionary).duplicate(true)
+	for field in [
+		"story_thread_id",
+		"story_beat_id",
+		"story_hook_ref",
+		"cause_id",
+		"public_because",
+		"stake",
+	]:
+		if quest.has(field):
+			metadata[field] = str(quest.get(field, ""))
+	for field in ["completion_fact_ids", "question_fact_ids"]:
+		if quest.get(field, null) is Array:
+			metadata[field] = (quest[field] as Array).duplicate(true)
+	return metadata
+
+
+func _mission_consequence_text(
+	quest: Dictionary,
+	metadata: Dictionary,
+	outcome: String
+) -> String:
+	var snapshot: Dictionary = metadata.get("outcome_snapshot", {}) \
+		if metadata.get("outcome_snapshot", {}) is Dictionary else {}
+	var candidate: Dictionary = snapshot.get("story_candidate", {}) \
+		if snapshot.get("story_candidate", {}) is Dictionary else {}
+	var world_consequence := str(candidate.get("world_consequence", "")).strip_edges()
+	if world_consequence.is_empty():
+		world_consequence = str(metadata.get("public_because", "")).strip_edges()
+	var decline_consequence := str(candidate.get("decline_consequence", "")).strip_edges()
+	var stake := str(metadata.get("stake", candidate.get("stake", ""))).strip_edges()
+	match outcome.strip_edges():
+		"completed":
+			if not world_consequence.is_empty():
+				return world_consequence
+			if not stake.is_empty():
+				return "Resolved pressure: %s" % stake
+		"declined":
+			if not decline_consequence.is_empty():
+				return decline_consequence
+			if not world_consequence.is_empty():
+				return "Opportunity declined: %s" % world_consequence
+			if not stake.is_empty():
+				return "Opportunity declined: %s" % stake
+		"abandoned", "expired", "failed":
+			if not world_consequence.is_empty():
+				return "Unresolved pressure: %s" % world_consequence
+			if not stake.is_empty():
+				return "Unresolved pressure: %s" % stake
+	var title := str(quest.get("title", "")).strip_edges()
+	if not title.is_empty() and not outcome.strip_edges().is_empty():
+		return "%s: %s" % [outcome.strip_edges().capitalize(), title]
+	return ""
+
+
+func _promote_completion_facts_from_metadata(
+	metadata: Dictionary,
+	outcome: String
+) -> void:
+	if outcome.strip_edges() != "completed":
+		return
+	var fact_ids: Array = metadata.get("completion_fact_ids", []) \
+		if metadata.get("completion_fact_ids", []) is Array else []
+	if fact_ids.is_empty():
+		return
+	var ledger := KnowledgeLedgerType.new(story_state)
+	for fact_id in fact_ids:
+		ledger.promote(
+			str(fact_id),
+			KnowledgeLedgerType.STATE_KNOWN,
+			"mission_completed",
+			int(CampaignClock.total_minutes),
+			"direct"
+		)
 
 
 # If this quest was stamped with the hook that was open when it was generated,

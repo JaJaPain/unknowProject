@@ -26,6 +26,7 @@ static func story_state_public_block(story_state: Dictionary) -> String:
 	).strip_edges()
 	if not foreshadow.is_empty():
 		lines.append("- Foreshadow hint: %s" % foreshadow)
+	_append_recent_consequences(lines, story_state)
 	var mood := str(story_state.get("kaelen_current_mood", "")).strip_edges()
 	if not mood.is_empty():
 		lines.append("- Kaelen mood: %s" % mood)
@@ -148,6 +149,31 @@ static func _append_faction_pressure_line(
 			])
 	if not parts.is_empty():
 		lines.append("- Faction pressure: %s" % " | ".join(parts))
+
+
+static func _append_recent_consequences(
+	lines: Array[String],
+	story_state: Dictionary
+) -> void:
+	var consequences: Variant = story_state.get("story_consequences", [])
+	if not consequences is Array or consequences.is_empty():
+		return
+	var parts: Array[String] = []
+	var start: int = maxi(0, (consequences as Array).size() - 3)
+	for i in range(start, (consequences as Array).size()):
+		var entry: Variant = (consequences as Array)[i]
+		if not entry is Dictionary:
+			continue
+		var text := str((entry as Dictionary).get("text", "")).strip_edges()
+		if text.is_empty():
+			continue
+		var outcome := str((entry as Dictionary).get("outcome", "")).strip_edges()
+		parts.append("%s%s" % [
+			("%s: " % outcome) if not outcome.is_empty() else "",
+			text,
+		])
+	if not parts.is_empty():
+		lines.append("- Recent consequences: %s" % " | ".join(parts))
 
 
 static func _append_pending_hook_projection(

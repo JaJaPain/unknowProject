@@ -2984,6 +2984,7 @@ func _on_quest_declined_chronicle(quest: Dictionary) -> void:
 		candidate,
 		str(quest.get("decline_reason", "declined"))
 	)
+	StoryManager.record_mission_outcome_consequence(quest, "declined")
 
 
 func _on_quest_completed_chronicle(quest: Dictionary) -> void:
@@ -3001,6 +3002,7 @@ func _on_quest_completed_chronicle(quest: Dictionary) -> void:
 
 func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission abandoned.")
+	StoryManager.record_mission_outcome_consequence(quest, "abandoned")
 	if bool(quest.get("is_timed", false)):
 		_append_timed_quest_chronicle_event(
 			"timed_mission_abandoned",
@@ -3014,6 +3016,7 @@ func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 
 func _on_quest_expired_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission expired.")
+	StoryManager.record_mission_outcome_consequence(quest, "expired")
 	_append_timed_quest_chronicle_event(
 		"timed_mission_expired",
 		quest,
