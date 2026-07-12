@@ -864,9 +864,10 @@ Primary files:
 - [ ] New campaign: first post-tutorial offer, its player questions/answers, Kaelen handoff, and first likely N.O.V.A. banks before loading release.
 - [ ] On target/fly-to station: current station agent offer, mechanic greeting, likely lounge openers.
 - [ ] On system arrival: one valid offer for each available story-relevant contact, plus system N.O.V.A./ambient banks.
-- [ ] On mission acceptance: persist baseline abandon and likely outcome variants.
-- [ ] On objective progress >= 70%: refresh outcome snapshot and queue likely turn-in variants.
-- [ ] On objective completion: P0 exact turn-in generation while the player travels back.
+  - 2026-07-12: `ff99985`/`6bdbfe0` added planner/runtime wiring for system-arrival current-system agent, Kaelen, N.O.V.A., and visible-station prefetch jobs. Full valid-offer-per-contact generation remains open.
+- [x] On mission acceptance: persist baseline abandon and likely outcome variants.
+- [x] On objective progress >= 70%: refresh outcome snapshot and queue likely turn-in variants.
+- [x] On objective completion: P0 exact turn-in generation while the player travels back.
 - [ ] On chapter 60% consumed: next chapter packet and its first interaction bundles.
 - [ ] On cache pool below threshold: refill only when no higher-priority work exists.
 
@@ -1404,5 +1405,6 @@ Add newest entries at the top. Include date, phase/checkbox, decision or evidenc
 | Date | Phase | Entry | Evidence / follow-up |
 |---|---|---|---|
 | 2026-07-12 | Phase 6E | Wired mission lifecycle prefetch triggers into `GameRoot`: acceptance queues baseline/likely outcome work, progress queues likely turn-in work once the scheduler threshold is met, and completion queues exact P0 turn-in work. | Commits `a1e463c`, `4ac7649`, `9718df3`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. Full multi-mission smoke was attempted; it passed the new acceptance-prefetch assertion and later failed on older combat progress behavior, so the committed guard remains focused and deterministic. |
+| 2026-07-12 | Phase 6E | Added the system-arrival prefetch path: the scheduler now accepts non-mission arrival events, plans current-system agent/Kaelen/N.O.V.A. work plus visible-station P0 work, and `GameRoot` queues those jobs from `system_changed`. | Commits `ff99985`, `6bdbfe0`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
 | 2026-07-12 | Phase 6D | Added TTS-readiness groundwork: scheduler can queue audio cache jobs after text validation, text work wins over equal-priority audio work, TTS failures are tracked separately from ready text, and Kaelen/N.O.V.A. latency filler clips have a non-semantic safety gate. | Commits `63c066a`, `8994493`, `9531e8a`, `0f90ed7`. Tests: `run_narrative_cache_scheduler_tests.gd`, `run_speech_service_tests.gd`, `parse_check.gd`. Filler clips are gated but playback/assets are not wired yet. |
 | 2026-07-10 | Plan | Initial evolution plan written from current map, handoff notes, narrative docs, source, and fallback summary. | No runtime code changed. First implementation action is Phase 0 baseline, not prompt tuning. |
