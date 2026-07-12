@@ -16,6 +16,7 @@ const MAP_KNOWLEDGE := "map_knowledge"
 const CHRONICLE_SEGMENT := "chronicle_segment"
 const KAELEN_META := "kaelen_meta"
 const CHAPTER_PACKETS := "chapter_narrative_packets"
+const NARRATIVE_CACHE := "narrative_cache"
 const CAMPAIGN_NPC_IDENTITIES := "campaign_npc_identities"
 const CAMPAIGN_NPC_STATES := "campaign_npc_states"
 
@@ -34,6 +35,7 @@ const DOCUMENT_OWNERSHIP: Dictionary = {
 	CHRONICLE_SEGMENT: APPEND_ONLY,
 	KAELEN_META: META_MEMORY,
 	CHAPTER_PACKETS: PERMANENT,
+	NARRATIVE_CACHE: DISPOSABLE,
 }
 
 const SIDECAR_DOCUMENT_OWNERSHIP: Dictionary = {
@@ -79,6 +81,8 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"transient_spawn_timer",
 		"speech_request",
 		"generation_temp_file",
+		"narrative_text_bundle_cache",
+		"narrative_audio_readiness_cache",
 	],
 }
 
@@ -153,6 +157,8 @@ static func validate_document(data: Dictionary) -> ValidationResult:
 			_validate_kaelen_meta(data, result)
 		CHAPTER_PACKETS:
 			_validate_chapter_packets(data, result)
+		NARRATIVE_CACHE:
+			_validate_narrative_cache(data, result)
 	return result
 
 
@@ -599,6 +605,48 @@ static func _validate_chapter_packets(
 						runtime_field,
 					"%s%s" % [prefix, runtime_field]
 				)
+
+
+static func _validate_narrative_cache(
+	data: Dictionary,
+	result: ValidationResult
+) -> void:
+	_require_id(data, "campaign_id", "campaign", result)
+	var entries: Variant = data.get("entries", null)
+	if not entries is Dictionary:
+		result.add_error(
+			"invalid_narrative_cache_entries",
+			"narrative_cache requires an entries object.",
+			"entries"
+		)
+		return
+	for cache_key in (entries as Dictionary).keys():
+		var raw: Variant = (entries as Dictionary)[cache_key]
+		if not raw is Dictionary:
+			result.add_error(
+				"invalid_narrative_cache_entry",
+				"Narrative cache entry must be an object.",
+				"entries.%s" % str(cache_key)
+			)
+			continue
+		var entry := raw as Dictionary
+		var prefix := "entries.%s." % str(cache_key)
+		_require_nonempty_string(entry, "cache_key", result, prefix)
+		_require_nonempty_string(entry, "kind", result, prefix)
+		_require_nonempty_string(entry, "subject_id", result, prefix)
+		_require_nonempty_string(entry, "context_fingerprint", result, prefix)
+		if str(entry.get("cache_key", "")) != str(cache_key):
+			result.add_error(
+				"narrative_cache_key_mismatch",
+				"Narrative cache entry key must match cache_key.",
+				"%scache_key" % prefix
+			)
+		if not entry.get("text_bundle", {}) is Dictionary:
+			result.add_error(
+				"invalid_narrative_cache_text_bundle",
+				"Narrative cache entry text_bundle must be an object.",
+				"%stext_bundle" % prefix
+			)
 
 
 static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) -> void:
