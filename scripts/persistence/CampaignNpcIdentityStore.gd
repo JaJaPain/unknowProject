@@ -10,9 +10,32 @@ const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
 
-const DOCUMENT_VERSION := 1
+const DOCUMENT_VERSION := 2
 const NPCS_PATH := "npc_identities.json"
 const NPC_PREFIX := "npc.gen."
+
+const PERSONA_FIELDS := [
+	"core_drive",
+	"current_want",
+	"fear",
+	"contradiction",
+	"social_strategy",
+	"pressure_tell",
+	"kindness_tell",
+	"verbal_habit",
+	"humor_mechanism",
+	"taboo",
+]
+
+const VOICE_RULE_STRING_FIELDS := [
+	"sentence_shape",
+	"address_rule",
+]
+
+const VOICE_RULE_ARRAY_FIELDS := [
+	"favored_vocabulary",
+	"banned_tics",
+]
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -171,6 +194,16 @@ func _load_or_create() -> void:
 	if not validation.is_valid():
 		return
 	data = npcs_result["data"]
+	if int(data.get("schema_version", 0)) < DOCUMENT_VERSION:
+		data = _migrate_legacy_data(data, campaign_id)
+		var migrated := _commit(data, "npc_identity_migration_v2")
+		if not bool(migrated.get("ok", false)):
+			validation.add_error(
+				"npc_identity_migration_failed",
+				str(migrated.get("error", "NPC identity migration failed.")),
+				NPCS_PATH
+			)
+			return
 	validation.merge(_validate_data(data, campaign_id), "npc_identities")
 
 
@@ -211,6 +244,8 @@ func _record_from_source(source: Dictionary) -> Dictionary:
 		"home_station_id": home_station_id,
 		"personality_tags": _clean_string_array(source.get("personality_tags", [])),
 		"humor_style": str(source.get("humor_style", "")),
+		"persona": _persona_from_source(source),
+		"voice_rules": _voice_rules_from_source(source),
 		"relationship_state": str(source.get("relationship_state", "neutral")),
 		"memory_summary": str(source.get("memory_summary", "")),
 		"line_memory_fingerprints": _clean_string_array(
@@ -325,10 +360,180 @@ static func _validate_npc_record(
 			result.add_error("missing_npc_field", "NPC identity field is required.", "%s.%s" % [path, field])
 	if not npc.get("personality_tags", []) is Array:
 		result.add_error("invalid_personality_tags", "Personality tags must be an array.", "%s.personality_tags" % path)
+	if not npc.get("persona", {}) is Dictionary:
+		result.add_error("invalid_persona", "NPC persona must be an object.", "%s.persona" % path)
+	else:
+		_validate_persona(npc.get("persona", {}) as Dictionary, result, "%s.persona" % path)
+	if not npc.get("voice_rules", {}) is Dictionary:
+		result.add_error("invalid_voice_rules", "NPC voice rules must be an object.", "%s.voice_rules" % path)
+	else:
+		_validate_voice_rules(npc.get("voice_rules", {}) as Dictionary, result, "%s.voice_rules" % path)
 	if not npc.get("line_memory_fingerprints", []) is Array:
 		result.add_error("invalid_line_memory", "Line memory must be an array.", "%s.line_memory_fingerprints" % path)
 	if not npc.get("lifecycle", {}) is Dictionary:
 		result.add_error("invalid_lifecycle", "Lifecycle must be an object.", "%s.lifecycle" % path)
+
+
+static func _validate_persona(
+	persona: Dictionary,
+	result: ValidationResult,
+	path: String
+) -> void:
+	for field in PERSONA_FIELDS:
+		if str(persona.get(field, "")).strip_edges().is_empty():
+			result.add_error(
+				"missing_persona_field",
+				"NPC persona field is required.",
+				"%s.%s" % [path, field]
+			)
+
+
+static func _validate_voice_rules(
+	voice_rules: Dictionary,
+	result: ValidationResult,
+	path: String
+) -> void:
+	for field in VOICE_RULE_STRING_FIELDS:
+		if str(voice_rules.get(field, "")).strip_edges().is_empty():
+			result.add_error(
+				"missing_voice_rule_field",
+				"NPC voice rule field is required.",
+				"%s.%s" % [path, field]
+			)
+	for field in VOICE_RULE_ARRAY_FIELDS:
+		if not voice_rules.get(field, []) is Array:
+			result.add_error(
+				"invalid_voice_rule_array",
+				"NPC voice rule field must be an array.",
+				"%s.%s" % [path, field]
+			)
+
+
+static func _migrate_legacy_data(legacy: Dictionary, campaign_id: String) -> Dictionary:
+	var migrated := legacy.duplicate(true)
+	migrated["schema_version"] = DOCUMENT_VERSION
+	migrated["document_type"] = "campaign_npc_identities"
+	migrated["campaign_id"] = campaign_id
+	var migrated_npcs: Array = []
+	var source_npcs: Array = legacy.get("npcs", []) if legacy.get("npcs", []) is Array else []
+	for value in source_npcs:
+		if not value is Dictionary:
+			migrated_npcs.append(value)
+			continue
+		var npc: Dictionary = (value as Dictionary).duplicate(true)
+		npc["persona"] = _persona_from_source(npc)
+		npc["voice_rules"] = _voice_rules_from_source(npc)
+		migrated_npcs.append(npc)
+	migrated["npcs"] = migrated_npcs
+	return migrated
+
+
+static func _persona_from_source(source: Dictionary) -> Dictionary:
+	var existing: Dictionary = source.get("persona", {}) \
+		if source.get("persona", {}) is Dictionary else {}
+	var tags := _clean_string_array(source.get("personality_tags", []))
+	var tag_text := ", ".join(tags) if not tags.is_empty() else "practical"
+	var humor := str(source.get("humor_style", "")).strip_edges()
+	if humor.is_empty():
+		humor = "dry practical understatement"
+	var role := str(source.get("job_role", "local contact")).strip_edges()
+	if role.is_empty():
+		role = "local contact"
+	var summary := str(source.get("memory_summary", "")).strip_edges()
+	return {
+		"core_drive": _string_or_default(
+			existing,
+			"core_drive",
+			"Keep their corner of station life functional enough for people to survive it."
+		),
+		"current_want": _string_or_default(
+			existing,
+			"current_want",
+			summary if not summary.is_empty() else "Get through the current pressure without losing face or lives."
+		),
+		"fear": _string_or_default(
+			existing,
+			"fear",
+			"Being treated as disposable when the station chooses whose problem matters."
+		),
+		"contradiction": _string_or_default(
+			existing,
+			"contradiction",
+			"Reads as %s, but becomes unexpectedly specific when someone is in real trouble." % tag_text
+		),
+		"social_strategy": _string_or_default(
+			existing,
+			"social_strategy",
+			"Tests whether the other person is listening before offering warmth."
+		),
+		"pressure_tell": _string_or_default(
+			existing,
+			"pressure_tell",
+			"Gets more concrete and procedural under stress."
+		),
+		"kindness_tell": _string_or_default(
+			existing,
+			"kindness_tell",
+			"Solves a practical problem before admitting they care."
+		),
+		"verbal_habit": _string_or_default(
+			existing,
+			"verbal_habit",
+			"Frames trouble through their %s work without turning it into a catchphrase." % role
+		),
+		"humor_mechanism": _string_or_default(existing, "humor_mechanism", humor),
+		"taboo": _string_or_default(
+			existing,
+			"taboo",
+			"Does not make light of civilian deaths or decompression."
+		),
+	}
+
+
+static func _voice_rules_from_source(source: Dictionary) -> Dictionary:
+	var existing: Dictionary = source.get("voice_rules", {}) \
+		if source.get("voice_rules", {}) is Dictionary else {}
+	var role_words := _vocabulary_from_role(str(source.get("job_role", "")))
+	return {
+		"sentence_shape": _string_or_default(
+			existing,
+			"sentence_shape",
+			"plain, specific, with one dry afterthought at most"
+		),
+		"address_rule": _string_or_default(
+			existing,
+			"address_rule",
+			"No private nickname; uses pilot or captain sparingly."
+		),
+		"favored_vocabulary": _clean_string_array(
+			existing.get("favored_vocabulary", role_words)
+		),
+		"banned_tics": _clean_string_array(
+			existing.get("banned_tics", ["Shiny", "my friend", "as you know"])
+		),
+	}
+
+
+static func _string_or_default(
+	source: Dictionary,
+	field: String,
+	default_value: String
+) -> String:
+	var value := str(source.get(field, "")).strip_edges()
+	return value if not value.is_empty() else default_value
+
+
+static func _vocabulary_from_role(role: String) -> Array:
+	var clean_role := role.to_lower()
+	if clean_role.contains("dock"):
+		return ["vector", "clearance", "queue"]
+	if clean_role.contains("engineer") or clean_role.contains("mechanic"):
+		return ["load", "seal", "tolerance"]
+	if clean_role.contains("broker") or clean_role.contains("contact"):
+		return ["terms", "margin", "favor"]
+	if clean_role.contains("security") or clean_role.contains("marshal"):
+		return ["witness", "route", "risk"]
+	return ["station", "work", "pressure"]
 
 
 func _find_by_source_key(source_key: String) -> int:
