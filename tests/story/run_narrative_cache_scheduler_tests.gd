@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
 	_test_diagnostic_summary_reports_lifecycle_durations()
 	_test_pause_blocks_starting_small_jobs_until_resume()
+	_test_validation_failure_retries_once_then_requires_degraded_content()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -197,6 +198,37 @@ func _test_pause_blocks_starting_small_jobs_until_resume() -> void:
 			and bool(started.get("ok", false))
 			and str(scheduler.get_job("job.paused").get("status", "")) == "in_flight",
 		"Scheduler did not resume small job dispatch."
+	)
+
+
+func _test_validation_failure_retries_once_then_requires_degraded_content() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.retry", "cache.retry", SchedulerType.PRIORITY_P0))
+	scheduler.mark_generation_started("job.retry")
+	scheduler.mark_generation_finished("job.retry")
+	var retried: Dictionary = scheduler.mark_validation_failed(
+		"job.retry",
+		["opening missing cause"]
+	)
+	_expect(
+		bool(retried.get("retry_queued", false))
+			and str(scheduler.get_job("job.retry").get("status", "")) == "queued"
+			and int(scheduler.get_job("job.retry").get("retry_count", 0)) == 1
+			and int(scheduler.stats().get("retry_queued", 0)) == 1,
+		"Scheduler did not queue exactly one validation retry."
+	)
+	scheduler.mark_generation_started("job.retry")
+	scheduler.mark_generation_finished("job.retry")
+	var degraded: Dictionary = scheduler.mark_validation_failed(
+		"job.retry",
+		["answer revealed forbidden fact"]
+	)
+	_expect(
+		not bool(degraded.get("retry_queued", true))
+			and str(scheduler.get_job("job.retry").get("status", ""))
+				== "degraded_required"
+			and bool(scheduler.get_job("job.retry").get("degraded", false)),
+		"Scheduler did not require degraded content after retry budget was spent."
 	)
 
 

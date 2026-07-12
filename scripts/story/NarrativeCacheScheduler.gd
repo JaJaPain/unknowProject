@@ -15,6 +15,7 @@ var _stats := {
 	"canceled": 0,
 	"stale_discarded": 0,
 	"degraded": 0,
+	"retry_queued": 0,
 }
 var _paused := false
 var _pause_reason := ""
@@ -138,6 +139,34 @@ func mark_validation_finished(job_id: String, degraded: bool = false) -> Diction
 		_jobs[job_id] = job
 		_stats["degraded"] = int(_stats.get("degraded", 0)) + 1
 	return result
+
+
+func mark_validation_failed(
+	job_id: String,
+	field_errors: Array = [],
+	max_retries: int = 1
+) -> Dictionary:
+	var clean_id := job_id.strip_edges()
+	if not _jobs.has(clean_id):
+		return _failure("Narrative cache job not found.")
+	var job: Dictionary = _jobs[clean_id]
+	var retry_count := int(job.get("retry_count", 0))
+	job["validation_errors"] = field_errors.duplicate(true)
+	_stamp(job, "validation_finished")
+	if retry_count < max_retries:
+		retry_count += 1
+		job["retry_count"] = retry_count
+		job["status"] = "queued"
+		_stamp(job, "retry_queued")
+		_jobs[clean_id] = job
+		_stats["retry_queued"] = int(_stats.get("retry_queued", 0)) + 1
+		return {"ok": true, "retry_queued": true, "job": job.duplicate(true)}
+	job["status"] = "degraded_required"
+	job["degraded"] = true
+	_stamp(job, "degraded_required")
+	_jobs[clean_id] = job
+	_stats["degraded"] = int(_stats.get("degraded", 0)) + 1
+	return {"ok": true, "retry_queued": false, "job": job.duplicate(true)}
 
 
 func mark_ready(job_id: String) -> Dictionary:
