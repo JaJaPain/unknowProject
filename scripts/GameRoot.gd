@@ -7518,6 +7518,7 @@ func _dev_story_debug_snapshot() -> Dictionary:
 	var chapter_facts_by_privacy := ""
 	var chapter_beat_states := ""
 	var chapter_packet_validation := ""
+	var character_cards_summary := _dev_format_character_cards()
 	if is_instance_valid(StoryManager):
 		story_context = StoryManager.get_story_context_block()
 		var state: Dictionary = StoryManager.story_state
@@ -7556,8 +7557,78 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		"chapter_facts_by_privacy": chapter_facts_by_privacy,
 		"chapter_beat_states": chapter_beat_states,
 		"chapter_packet_validation": chapter_packet_validation,
+		"character_cards_summary": character_cards_summary,
 		"full_story_state_json": full_story_state_json,
 	}
+
+
+func _dev_format_character_cards() -> String:
+	if campaign_npc_identity_store == null:
+		return "NPC identity store unavailable."
+	if not campaign_npc_identity_store.has_method("is_valid") \
+			or not campaign_npc_identity_store.is_valid():
+		return "NPC identity store is invalid or not ready."
+	var npcs: Array = campaign_npc_identity_store.all_npcs() \
+		if campaign_npc_identity_store.has_method("all_npcs") else []
+	if npcs.is_empty():
+		return "No generated NPC identities recorded yet."
+	var lines: Array[String] = []
+	for npc in npcs:
+		if not npc is Dictionary:
+			continue
+		var card: Dictionary = npc
+		var npc_id := str(card.get("id", ""))
+		var persona: Dictionary = card.get("persona", {}) \
+			if card.get("persona", {}) is Dictionary else {}
+		var voice_rules: Dictionary = card.get("voice_rules", {}) \
+			if card.get("voice_rules", {}) is Dictionary else {}
+		var state: Dictionary = {}
+		if campaign_npc_state_store != null \
+				and campaign_npc_state_store.has_method("state_for"):
+			state = campaign_npc_state_store.state_for(npc_id)
+		var relationship: Dictionary = state.get("relationship", {}) \
+			if state.get("relationship", {}) is Dictionary else {}
+		var current_stake: Dictionary = state.get("current_stake", {}) \
+			if state.get("current_stake", {}) is Dictionary else {}
+		lines.append("%s — %s" % [str(card.get("display_name", "")), npc_id])
+		lines.append("  Role/home: %s at %s" % [
+			str(card.get("job_role", "")),
+			str(card.get("home_station_id", "")),
+		])
+		lines.append("  Inner life: drive=%s | fear=%s" % [
+			str(persona.get("core_drive", "")),
+			str(persona.get("fear", "")),
+		])
+		lines.append("  Contradiction: %s" % str(persona.get("contradiction", "")))
+		lines.append("  Voice: %s | address=%s | humor=%s" % [
+			str(voice_rules.get("sentence_shape", "")),
+			str(voice_rules.get("address_rule", "")),
+			str(persona.get("humor_mechanism", "")),
+		])
+		lines.append("  Relationship: trust=%d respect=%d warmth=%d debt=%d stance=%s rev=%d" % [
+			int(relationship.get("trust", 0)),
+			int(relationship.get("respect", 0)),
+			int(relationship.get("warmth", 0)),
+			int(relationship.get("debt", 0)),
+			str(relationship.get("last_player_stance", "unknown")),
+			int(state.get("state_revision", 0)),
+		])
+		lines.append("  Current stake: %s (urgency %d, thread %s)" % [
+			str(current_stake.get("why_it_matters_to_them", "")),
+			int(current_stake.get("urgency", 0)),
+			str(current_stake.get("thread_id", "")),
+		])
+		lines.append("  Memory: %d refs | %s" % [
+			(state.get("memory_event_ids", []) as Array).size()
+				if state.get("memory_event_ids", []) is Array else 0,
+			str(state.get("memory_summary", card.get("memory_summary", ""))),
+		])
+		lines.append("  Recent line fingerprints: %d" % [
+			(card.get("line_memory_fingerprints", []) as Array).size()
+				if card.get("line_memory_fingerprints", []) is Array else 0
+		])
+		lines.append("")
+	return "\n".join(lines).strip_edges()
 
 
 func _dev_format_chapter_packets(packets: Array) -> String:
