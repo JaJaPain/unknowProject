@@ -8,6 +8,15 @@ const MissionTemplateRegistryType := preload(
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
 )
+const MissionConversationPlanType := preload(
+	"res://scripts/story/MissionConversationPlan.gd"
+)
+const MissionConversationCompilerType := preload(
+	"res://scripts/story/MissionConversationCompiler.gd"
+)
+const DialogueBundleValidatorType := preload(
+	"res://scripts/story/DialogueBundleValidator.gd"
+)
 
 const TEMPLATE_ONLY_OBJECTIVES := [
 	"DELIVERY_COURIER",
@@ -76,6 +85,7 @@ static func build_offer(
 	var timing := _timing_from_budget(budget)
 	if not timing.is_empty():
 		quest["timing"] = timing
+	_attach_mission_conversation(quest, candidate, budget, agent_profile)
 	var validation := MissionAdapterType.build_active_state(
 		quest,
 		quest["choices"][0],
@@ -87,6 +97,108 @@ static func build_offer(
 	if validation_result == null or not validation_result.is_valid():
 		return {}
 	return quest
+
+
+static func _attach_mission_conversation(
+	quest: Dictionary,
+	candidate: Dictionary,
+	budget: Dictionary,
+	agent_profile: Dictionary
+) -> void:
+	var mission_plan := _mission_conversation_plan_source(
+		quest,
+		candidate,
+		budget
+	)
+	var conversation_plan := MissionConversationPlanType.build_plan(
+		mission_plan,
+		_knowledge_candidates(candidate),
+		{"respect": int(agent_profile.get("relationship_respect", 0))},
+		{
+			"can_accept": true,
+			"can_decline": true,
+			"can_request_hazard_pay": true,
+			"hazard_pay_multiplier": 1.15,
+		}
+	)
+	conversation_plan["completion_fact_ids"] = (
+		candidate.get("completion_fact_ids", []) as Array
+	).duplicate(true) if candidate.get("completion_fact_ids", []) is Array else []
+	conversation_plan["director_only_fact_ids"] = (
+		candidate.get("director_only_fact_ids", []) as Array
+	).duplicate(true) if candidate.get("director_only_fact_ids", []) is Array else []
+	var bundle := MissionConversationCompilerType.fallback_bundle(
+		mission_plan,
+		conversation_plan
+	)
+	var validation := DialogueBundleValidatorType.validate_bundle(
+		bundle,
+		conversation_plan,
+		_speaker_card(agent_profile)
+	)
+	if not bool(validation.get("ok", false)):
+		return
+	quest["mission_conversation_plan"] = conversation_plan
+	quest["mission_dialogue_bundle"] = bundle
+
+
+static func _mission_conversation_plan_source(
+	quest: Dictionary,
+	candidate: Dictionary,
+	budget: Dictionary
+) -> Dictionary:
+	return {
+		"title": str(quest.get("title", "")),
+		"objective_type": str(quest.get("objective", {}).get("type", "")),
+		"objective_summary": str(quest.get("objective_summary", "")),
+		"reward_credits": int(quest.get("objective", {}).get("reward_credits", 0)),
+		"public_because": str(candidate.get("world_consequence", "")),
+		"stake": str(candidate.get("stake", "")),
+		"risk_text": str(candidate.get("complication", "")),
+		"story_thread_id": str(candidate.get("thread_id", "")),
+		"story_beat_id": str(candidate.get("beat_id", "")),
+		"cause_id": str(candidate.get("cause_id", "")),
+		"offer_fact_ids": _string_array(candidate.get("disclosure_fact_ids", [])),
+		"question_fact_ids": _string_array(candidate.get("disclosure_fact_ids", [])),
+		"completion_fact_ids": _string_array(candidate.get("completion_fact_ids", [])),
+		"difficulty_band": str(budget.get("difficulty_band", "")),
+	}
+
+
+static func _knowledge_candidates(candidate: Dictionary) -> Array[Dictionary]:
+	var fact_ids := _string_array(candidate.get("disclosure_fact_ids", []))
+	if fact_ids.is_empty():
+		return []
+	var label := str(candidate.get("clarify_label", "")).strip_edges()
+	if label.is_empty():
+		label = "What does that involve?"
+	var anchors := _string_array(candidate.get("answer_anchors", []))
+	if anchors.is_empty():
+		for key in ["world_consequence", "stake"]:
+			var text := str(candidate.get(key, "")).strip_edges()
+			if not text.is_empty():
+				anchors.append(text)
+				break
+	return [
+		{
+			"intent_id": "grounding:%s" % fact_ids[0],
+			"kind": "grounding",
+			"label": label,
+			"fact_ids": fact_ids,
+			"answer_anchors": anchors,
+		},
+	]
+
+
+static func _speaker_card(agent_profile: Dictionary) -> Dictionary:
+	return {
+		"name": str(agent_profile.get("agent_name", "Local Contact")),
+		"role": str(agent_profile.get("agent_role", "Station faction contact")),
+		"voice_rules": agent_profile.get("voice_rules", {})
+			if agent_profile.get("voice_rules", {}) is Dictionary else {},
+		"persona": agent_profile.get("persona", {})
+			if agent_profile.get("persona", {}) is Dictionary else {},
+	}
 
 
 static func _candidate(agent_profile: Dictionary) -> Dictionary:
@@ -338,6 +450,17 @@ static func _main_station_display() -> String:
 
 static func _campaign_name() -> String:
 	return "Far Horizon"
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty() and text not in result:
+			result.append(text)
+	return result
 
 
 static func _global_state() -> Node:

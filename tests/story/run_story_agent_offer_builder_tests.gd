@@ -2,6 +2,7 @@ extends SceneTree
 
 const StoryAgentOfferBuilderType := preload("res://scripts/story/StoryAgentOfferBuilder.gd")
 const MissionAdapterType := preload("res://scripts/domain/MissionAdapter.gd")
+const DialogueBundleValidatorType := preload("res://scripts/story/DialogueBundleValidator.gd")
 
 var _failures: Array[String] = []
 
@@ -48,6 +49,7 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 			"Offer missing story beat id for %s." % objective_type
 		)
 		_assert_story_offer_identity(offer, objective_type)
+		_assert_story_offer_conversation_bundle(offer, objective_type)
 		var choices: Array = offer.get("choices", []) if offer.get("choices", []) is Array else []
 		var adapted := MissionAdapterType.build_active_state(
 			offer,
@@ -106,6 +108,41 @@ func _assert_story_offer_identity(
 			source_label,
 			objective_type,
 		]
+	)
+
+
+func _assert_story_offer_conversation_bundle(
+	offer: Dictionary,
+	objective_type: String
+) -> void:
+	var plan: Dictionary = offer.get("mission_conversation_plan", {}) \
+		if offer.get("mission_conversation_plan", {}) is Dictionary else {}
+	var bundle: Dictionary = offer.get("mission_dialogue_bundle", {}) \
+		if offer.get("mission_dialogue_bundle", {}) is Dictionary else {}
+	_expect(not plan.is_empty(), "Offer missing conversation plan for %s." % objective_type)
+	_expect(not bundle.is_empty(), "Offer missing dialogue bundle for %s." % objective_type)
+	if plan.is_empty() or bundle.is_empty():
+		return
+	var validation: Dictionary = DialogueBundleValidatorType.validate_bundle(
+		bundle,
+		plan,
+		{"name": str(offer.get("agent_name", ""))}
+	)
+	_expect(
+		bool(validation.get("ok", false)),
+		"Offer dialogue bundle failed validation for %s: %s" % [
+			objective_type,
+			str(validation.get("errors", [])),
+		]
+	)
+	var intent_ids: Array = plan.get("intent_ids", [])
+	_expect(
+		intent_ids.has("clarify_term") and intent_ids.has("accept_standard"),
+		"Offer conversation plan missing required intents for %s." % objective_type
+	)
+	_expect(
+		str(bundle.get("opening", "")).contains(str(offer.get("title", ""))),
+		"Offer dialogue bundle opening does not reference its title for %s." % objective_type
 	)
 
 
