@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_deduplicates_active_jobs_by_cache_key()
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
+	_test_scope_cancellation_only_cancels_matching_queued_jobs()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -128,6 +129,34 @@ func _test_cancel_and_stale_discard_skip_ready_and_frozen_jobs() -> void:
 	)
 
 
+func _test_scope_cancellation_only_cancels_matching_queued_jobs() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_scoped_job("job.cancel.alpha", "station.alpha", "npc.alpha"))
+	scheduler.queue_job(_scoped_job("job.keep.station", "station.beta", "npc.alpha"))
+	scheduler.queue_job(_scoped_job("job.keep.npc", "station.alpha", "npc.beta"))
+	scheduler.queue_job(_scoped_job("job.inflight", "station.alpha", "npc.alpha"))
+	scheduler.mark_generation_started("job.inflight")
+	var canceled: Dictionary = scheduler.cancel_jobs({
+		"campaign_id": "campaign.alpha",
+		"story_revision": 7,
+		"station_id": "station.alpha",
+		"npc_id": "npc.alpha",
+	}, "station_changed")
+	var ids: Array = canceled.get("canceled", [])
+	_expect(
+		ids == ["job.cancel.alpha"]
+			and str(scheduler.get_job("job.cancel.alpha").get("status", ""))
+				== "canceled"
+			and str(scheduler.get_job("job.keep.station").get("status", ""))
+				== "queued"
+			and str(scheduler.get_job("job.keep.npc").get("status", ""))
+				== "queued"
+			and str(scheduler.get_job("job.inflight").get("status", ""))
+				== "in_flight",
+		"Scheduler scope cancellation did not cancel only matching queued jobs."
+	)
+
+
 func _job(job_id: String, cache_key: String, priority: int) -> Dictionary:
 	return {
 		"job_id": job_id,
@@ -146,6 +175,17 @@ func _truth_job(job_id: String, truth_frozen: bool) -> Dictionary:
 	job["allowed_facts_fingerprint"] = "facts.alpha"
 	job["relationship_tier"] = "cordial"
 	job["truth_frozen"] = truth_frozen
+	return job
+
+
+func _scoped_job(job_id: String, station_id: String, npc_id: String) -> Dictionary:
+	var job := _job(job_id, "%s.cache" % job_id, SchedulerType.PRIORITY_P1)
+	job["campaign_id"] = "campaign.alpha"
+	job["story_revision"] = 7
+	job["system_id"] = "system.alpha"
+	job["station_id"] = station_id
+	job["speaker_id"] = npc_id
+	job["subject_id"] = "offer.alpha"
 	return job
 
 

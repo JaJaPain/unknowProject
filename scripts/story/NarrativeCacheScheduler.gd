@@ -145,6 +145,26 @@ func cancel_job(job_id: String, reason: String = "canceled") -> Dictionary:
 	return {"ok": true, "job": job.duplicate(true)}
 
 
+func cancel_jobs(criteria: Dictionary, reason: String = "scope_canceled") -> Dictionary:
+	var canceled: Array[String] = []
+	for job_id in _jobs.keys():
+		var raw: Variant = _jobs[job_id]
+		if not raw is Dictionary:
+			continue
+		var job: Dictionary = raw
+		if str(job.get("status", "")) != "queued":
+			continue
+		if not _job_matches_all_scope_criteria(job, criteria):
+			continue
+		job["status"] = "canceled"
+		job["cancel_reason"] = reason
+		_stamp(job, "canceled")
+		_jobs[job_id] = job
+		canceled.append(str(job_id))
+	_stats["canceled"] = int(_stats.get("canceled", 0)) + canceled.size()
+	return {"ok": true, "canceled": canceled}
+
+
 func discard_stale_jobs(criteria: Dictionary) -> Dictionary:
 	var removed: Array[String] = []
 	for job_id in _jobs.keys():
@@ -267,6 +287,40 @@ static func _job_matches_any_stale_criterion(
 		if str(job.get(key, "")).strip_edges() == expected:
 			return true
 	return false
+
+
+static func _job_matches_all_scope_criteria(
+	job: Dictionary,
+	criteria: Dictionary
+) -> bool:
+	var accepted_keys := [
+		"campaign_id",
+		"story_revision",
+		"system_id",
+		"station_id",
+		"npc_id",
+		"speaker_id",
+		"subject_id",
+	]
+	var saw_criterion := false
+	for key in accepted_keys:
+		if not criteria.has(key):
+			continue
+		var expected: Variant = criteria.get(key)
+		if expected == null:
+			continue
+		if expected is String and str(expected).strip_edges().is_empty():
+			continue
+		saw_criterion = true
+		if key == "npc_id":
+			if str(job.get("npc_id", job.get("speaker_id", ""))) != str(expected):
+				return false
+		elif key == "story_revision":
+			if int(job.get("story_revision", -1)) != int(expected):
+				return false
+		elif str(job.get(key, "")) != str(expected):
+			return false
+	return saw_criterion
 
 
 static func _failure(message: String) -> Dictionary:
