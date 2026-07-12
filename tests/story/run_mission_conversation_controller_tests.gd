@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_question_answer_returns_to_remaining_choices_without_terminal()
 	_test_terminal_choice_completes_with_stable_choice_id()
 	_test_decline_completes_with_decline_consequence()
+	_test_terminal_choice_carries_asked_questions_and_learned_facts()
 
 	if _failures.is_empty():
 		print("[PASS] Mission conversation controller tests")
@@ -80,6 +81,23 @@ func _test_decline_completes_with_decline_consequence() -> void:
 			and bool(consequence.get("leaves_mission_lane_empty", false))
 			and int(consequence.get("relationship_delta", 0)) == -1,
 		"Decline did not return a QuestManager-ready decline consequence."
+	)
+
+
+func _test_terminal_choice_carries_asked_questions_and_learned_facts() -> void:
+	var screen := ControllerType.start(_conversation_plan(), _bundle())
+	var answer := ControllerType.select_intent(screen.get("state", {}), "clarify_term")
+	var terminal := ControllerType.select_intent(answer.get("state", {}), "accept_standard")
+	var selected_choice: Dictionary = terminal.get("terminal_choice", {})
+	var asked_intents: Array = selected_choice.get("asked_intents", [])
+	var learned_fact_ids: Array = selected_choice.get("learned_fact_ids", [])
+	_expect(
+		asked_intents == ["clarify_term"],
+		"Terminal choice did not preserve asked question IDs."
+	)
+	_expect(
+		learned_fact_ids == ["fact.convoy.visible"],
+		"Terminal choice did not preserve learned fact IDs."
 	)
 
 

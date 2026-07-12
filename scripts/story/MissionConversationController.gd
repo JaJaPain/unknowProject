@@ -12,6 +12,7 @@ static func start(
 		"conversation_plan": conversation_plan.duplicate(true),
 		"bundle": bundle.duplicate(true),
 		"asked_intents": [],
+		"learned_fact_ids": [],
 		"mode": "opening",
 		"current_intent_id": "",
 		"complete": false,
@@ -42,6 +43,10 @@ static func select_intent(
 		if clean_intent_id not in asked:
 			asked.append(clean_intent_id)
 		next_state["asked_intents"] = asked
+		next_state["learned_fact_ids"] = _merged_strings(
+			next_state.get("learned_fact_ids", []),
+			intent.get("fact_ids", [])
+		)
 		next_state["mode"] = "answer"
 		next_state["current_intent_id"] = clean_intent_id
 		return _screen(next_state)
@@ -49,7 +54,11 @@ static func select_intent(
 	next_state["current_intent_id"] = clean_intent_id
 	next_state["complete"] = true
 	next_state["terminal_choice_id"] = _terminal_choice_id(clean_intent_id)
-	next_state["terminal_choice"] = _terminal_choice(intent, next_state.get("bundle", {}))
+	next_state["terminal_choice"] = _terminal_choice(
+		intent,
+		next_state.get("bundle", {}),
+		next_state
+	)
 	return _screen(next_state)
 
 
@@ -144,7 +153,11 @@ static func _terminal_choice_id(intent_id: String) -> String:
 			return ""
 
 
-static func _terminal_choice(intent: Dictionary, bundle: Variant) -> Dictionary:
+static func _terminal_choice(
+	intent: Dictionary,
+	bundle: Variant,
+	state: Dictionary
+) -> Dictionary:
 	var intent_id := str(intent.get("id", "")).strip_edges()
 	var choice_id := _terminal_choice_id(intent_id)
 	var bundle_data: Dictionary = {}
@@ -160,4 +173,25 @@ static func _terminal_choice(intent: Dictionary, bundle: Variant) -> Dictionary:
 		"text": text,
 		"consequence": consequence.duplicate(true),
 		"conversation_intent_id": intent_id,
+		"asked_intents": _string_array(state.get("asked_intents", [])),
+		"learned_fact_ids": _string_array(state.get("learned_fact_ids", [])),
 	}
+
+
+static func _merged_strings(left: Variant, right: Variant) -> Array[String]:
+	var result := _string_array(left)
+	for item in _string_array(right):
+		if item not in result:
+			result.append(item)
+	return result
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty() and text not in result:
+			result.append(text)
+	return result
