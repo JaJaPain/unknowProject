@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
 	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
+	_test_tts_failure_is_recorded_separately_from_text_degradation()
 	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
@@ -370,6 +371,49 @@ func _test_tts_jobs_inherit_text_priority_and_scope_after_validation() -> void:
 	_expect(
 		canceled_ids.size() == 2,
 		"Scheduler did not cancel obsolete queued TTS jobs by inherited scope."
+	)
+
+
+func _test_tts_failure_is_recorded_separately_from_text_degradation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _job(
+		"job.text.ready",
+		"cache.text.ready",
+		SchedulerType.PRIORITY_P0
+	)
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text.ready")
+	scheduler.mark_generation_finished("job.text.ready")
+	scheduler.mark_validation_finished("job.text.ready")
+	scheduler.mark_ready("job.text.ready", {"opening": "Readable subtitle."})
+	var failed: Dictionary = scheduler.mark_tts_failed(
+		"job.text.ready",
+		"provider_timeout"
+	)
+	var job: Dictionary = scheduler.get_job("job.text.ready")
+	_expect(
+		bool(failed.get("ok", false))
+			and str(job.get("status", "")) == "ready"
+			and bool(job.get("tts_failed", false))
+			and str(job.get("tts_failure_reason", "")) == "provider_timeout"
+			and not bool(job.get("degraded", false))
+			and int(scheduler.stats().get("tts_failed", 0)) == 1,
+		"Scheduler did not record TTS failure separately from ready text."
+	)
+	var audio_job := _job(
+		"job.audio.failed",
+		"cache.audio.failed",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.mark_generation_started("job.audio.failed")
+	var audio_failed: Dictionary = scheduler.mark_tts_failed("job.audio.failed")
+	_expect(
+		bool(audio_failed.get("ok", false))
+			and str(scheduler.get_job("job.audio.failed").get("status", ""))
+				== "audio_failed",
+		"Scheduler did not mark failed audio cache work without touching text status."
 	)
 
 

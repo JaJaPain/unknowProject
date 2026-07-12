@@ -26,6 +26,7 @@ var _stats := {
 	"stale_discarded": 0,
 	"degraded": 0,
 	"retry_queued": 0,
+	"tts_failed": 0,
 }
 var _paused := false
 var _pause_reason := ""
@@ -237,6 +238,21 @@ func mark_tts_cache_started(job_id: String) -> Dictionary:
 
 func mark_tts_ready(job_id: String) -> Dictionary:
 	return _stamp_existing(job_id, "tts_ready")
+
+
+func mark_tts_failed(job_id: String, reason: String = "tts_failed") -> Dictionary:
+	var clean_id := job_id.strip_edges()
+	if not _jobs.has(clean_id):
+		return _failure("Narrative cache job not found.")
+	var job: Dictionary = _jobs[clean_id]
+	job["tts_failed"] = true
+	job["tts_failure_reason"] = reason.strip_edges()
+	_stamp(job, "tts_failed")
+	if str(job.get("kind", "")) == "tts_cache":
+		job["status"] = "audio_failed"
+	_jobs[clean_id] = job
+	_stats["tts_failed"] = int(_stats.get("tts_failed", 0)) + 1
+	return {"ok": true, "job": job.duplicate(true)}
 
 
 func queue_tts_jobs_for_validated_text(
