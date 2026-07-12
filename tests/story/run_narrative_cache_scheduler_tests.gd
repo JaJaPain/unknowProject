@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_tts_failure_is_recorded_separately_from_text_degradation()
 	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
+	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -492,6 +493,35 @@ func _test_objective_progress_and_completion_plan_turn_in_prefetch() -> void:
 				== "clean.complete",
 		"Scheduler completion prefetch job did not become exact P0 turn-in work."
 	)
+
+
+func _test_mission_acceptance_plans_baseline_and_likely_outcomes() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "mission_accepted",
+		"mission_id": "mission.beta",
+		"story_revision": 11,
+		"relationship_tier": "wary",
+		"likely_outcome_variants": ["turn_in_clean", "turn_in_rough"],
+	})
+	var variants: Array[String] = []
+	for job in jobs:
+		variants.append(str(job.get("outcome_variant", "")))
+	_expect(
+		jobs.size() == 3
+			and variants.has("abandon_baseline")
+			and variants.has("turn_in_clean")
+			and variants.has("turn_in_rough"),
+		"Scheduler mission acceptance prefetch did not include baseline and likely outcomes."
+	)
+	for job in jobs:
+		_expect(
+			str(job.get("trigger", ""))
+				== SchedulerType.TRIGGER_MISSION_ACCEPTANCE_OUTCOMES
+				and int(job.get("priority", -1)) == SchedulerType.PRIORITY_P1
+				and bool(job.get("truth_frozen", false))
+				and str(job.get("relationship_tier", "")) == "wary",
+			"Mission acceptance prefetch job did not preserve frozen accepted context."
+		)
 
 
 func _test_queue_health_reports_contention_and_starvation() -> void:

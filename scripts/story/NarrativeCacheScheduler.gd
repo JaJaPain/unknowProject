@@ -16,6 +16,7 @@ const TRIGGER_MECHANIC_GREETING := "mechanic_greeting"
 const TRIGGER_NEARBY_SYSTEM := "nearby_system"
 const TRIGGER_AMBIENT_REPLENISHMENT := "ambient_replenishment"
 const TRIGGER_OBJECTIVE_PROGRESS_TURN_IN := "objective_progress_turn_in"
+const TRIGGER_MISSION_ACCEPTANCE_OUTCOMES := "mission_acceptance_outcomes"
 
 var _jobs: Dictionary = {}
 var _sequence := 0
@@ -146,7 +147,7 @@ static func priority_for_trigger(trigger: String) -> int:
 			return PRIORITY_P0
 		TRIGGER_CURRENT_SYSTEM_AGENT, TRIGGER_CURRENT_SYSTEM_KAELEN, TRIGGER_CURRENT_SYSTEM_NOVA:
 			return PRIORITY_P1
-		TRIGGER_OBJECTIVE_PROGRESS_TURN_IN:
+		TRIGGER_OBJECTIVE_PROGRESS_TURN_IN, TRIGGER_MISSION_ACCEPTANCE_OUTCOMES:
 			return PRIORITY_P1
 		TRIGGER_LIKELY_LOUNGE, TRIGGER_MECHANIC_GREETING, TRIGGER_NEARBY_SYSTEM:
 			return PRIORITY_P2
@@ -269,6 +270,8 @@ static func prefetch_jobs_for_event(event: Dictionary) -> Array[Dictionary]:
 	if event_type == "objective_progress" \
 			and float(event.get("progress_fraction", 0.0)) >= 0.7:
 		return [_turn_in_prefetch_job(event, TRIGGER_OBJECTIVE_PROGRESS_TURN_IN)]
+	if event_type == "mission_accepted":
+		return _mission_acceptance_prefetch_jobs(event)
 	return []
 
 
@@ -647,6 +650,41 @@ static func _turn_in_prefetch_job(event: Dictionary, trigger: String) -> Diction
 		if event.has(key):
 			job[key] = event[key]
 	return job
+
+
+static func _mission_acceptance_prefetch_jobs(event: Dictionary) -> Array[Dictionary]:
+	var mission_id := str(event.get("mission_id", event.get("subject_id", ""))).strip_edges()
+	if mission_id.is_empty():
+		return []
+	var outcome_variants: Array = event.get("likely_outcome_variants", []) \
+		if event.get("likely_outcome_variants", []) is Array else []
+	var variants: Array[String] = ["abandon_baseline"]
+	for raw_variant in outcome_variants:
+		var variant := str(raw_variant).strip_edges()
+		if not variant.is_empty() and not variants.has(variant):
+			variants.append(variant)
+	var jobs: Array[Dictionary] = []
+	for variant in variants:
+		var variant_event := event.duplicate(true)
+		variant_event["outcome_fingerprint"] = variant
+		var job := _turn_in_prefetch_job(
+			variant_event,
+			TRIGGER_MISSION_ACCEPTANCE_OUTCOMES
+		)
+		job["job_id"] = "job.%s.%s.%s" % [
+			TRIGGER_MISSION_ACCEPTANCE_OUTCOMES,
+			_safe_id_part(mission_id),
+			_safe_id_part(variant),
+		]
+		job["cache_key"] = "prefetch.%s.%s.%s" % [
+			TRIGGER_MISSION_ACCEPTANCE_OUTCOMES,
+			_safe_id_part(mission_id),
+			_safe_id_part(variant),
+		]
+		job["outcome_variant"] = variant
+		job["truth_frozen"] = true
+		jobs.append(job)
+	return jobs
 
 
 static func _safe_id_part(value: String) -> String:
