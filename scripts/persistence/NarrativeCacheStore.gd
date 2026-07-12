@@ -127,6 +127,64 @@ func mark_tts_status(
 	return upsert_entry(entry)
 
 
+func readiness(
+	cache_key: String,
+	required_fields: Array,
+	voice_profile_id: String = ""
+) -> Dictionary:
+	var entry := get_entry(cache_key)
+	if entry.is_empty():
+		return {
+			"text_ready": false,
+			"audio_ready": false,
+			"missing_text_fields": required_fields.duplicate(true),
+			"missing_audio_fields": required_fields.duplicate(true),
+			"failed_audio_fields": [],
+		}
+	var text_bundle: Dictionary = entry.get("text_bundle", {}) \
+		if entry.get("text_bundle", {}) is Dictionary else {}
+	var tts_ready: Dictionary = entry.get("tts_ready", {}) \
+		if entry.get("tts_ready", {}) is Dictionary else {}
+	var missing_text: Array[String] = []
+	var missing_audio: Array[String] = []
+	var failed_audio: Array[String] = []
+	for raw_field in required_fields:
+		var field_id := str(raw_field).strip_edges()
+		if field_id.is_empty():
+			continue
+		var text := str(text_bundle.get(field_id, "")).strip_edges()
+		if text.is_empty():
+			missing_text.append(field_id)
+			missing_audio.append(field_id)
+			continue
+		var clean_voice := voice_profile_id.strip_edges()
+		if clean_voice.is_empty():
+			continue
+		var tts_key := "%s|%s" % [field_id, clean_voice]
+		var tts: Dictionary = tts_ready.get(tts_key, {}) \
+			if tts_ready.get(tts_key, {}) is Dictionary else {}
+		if tts.is_empty():
+			missing_audio.append(field_id)
+			continue
+		if str(tts.get("text_fingerprint", "")) != text_fingerprint(text):
+			missing_audio.append(field_id)
+			continue
+		match str(tts.get("status", "")):
+			"ready":
+				pass
+			"failed":
+				failed_audio.append(field_id)
+			_:
+				missing_audio.append(field_id)
+	return {
+		"text_ready": missing_text.is_empty(),
+		"audio_ready": missing_audio.is_empty() and failed_audio.is_empty(),
+		"missing_text_fields": missing_text,
+		"missing_audio_fields": missing_audio,
+		"failed_audio_fields": failed_audio,
+	}
+
+
 func invalidate_by_subject(subject_id: String) -> Dictionary:
 	if not is_valid():
 		return _failure("Narrative cache store is invalid.")

@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_text_fingerprints_survive_entry_eviction()
 	_test_clear_cache_removes_entries_and_fingerprints()
 	_test_tts_readiness_tracks_field_voice_and_text_fingerprint()
+	_test_readiness_reports_text_audio_pending_and_failed_separately()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -234,6 +235,40 @@ func _test_tts_readiness_tracks_field_voice_and_text_fingerprint() -> void:
 				""
 			)) == CacheStoreType.text_fingerprint("The cache has work."),
 		"Cache TTS readiness did not track field, voice, status, and text fingerprint."
+	)
+
+
+func _test_readiness_reports_text_audio_pending_and_failed_separately() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.ready.alpha"))
+	store.mark_tts_status(
+		"cache.ready.alpha",
+		"opening",
+		"voice.agent.alpha",
+		"ready",
+		"user://tts/opening.ogg"
+	)
+	store.mark_tts_status(
+		"cache.ready.alpha",
+		"accept_standard_response",
+		"voice.agent.alpha",
+		"failed"
+	)
+	var status: Dictionary = store.readiness(
+		"cache.ready.alpha",
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	_expect(
+		bool(status.get("text_ready", false))
+			and not bool(status.get("audio_ready", true))
+			and (status.get("missing_audio_fields", []) as Array).is_empty()
+			and (status.get("failed_audio_fields", []) as Array).has(
+				"accept_standard_response"
+			),
+		"Cache readiness did not separate text readiness from audio failure."
 	)
 
 
