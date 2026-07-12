@@ -101,6 +101,30 @@ static func fallback_bundle(
 	return bundle
 
 
+static func parse_bundle(
+	inner_json_text: String,
+	conversation_plan: Dictionary
+) -> Dictionary:
+	var parser := JSON.new()
+	if parser.parse(inner_json_text.strip_edges()) != OK:
+		return {"ok": false, "reason": "parse_failed", "bundle": {}}
+	var data: Variant = parser.get_data()
+	if not (data is Dictionary):
+		return {"ok": false, "reason": "not_an_object", "bundle": {}}
+	var source: Dictionary = data
+	var required := required_output_keys(conversation_plan)
+	var bundle := {}
+	for key in required:
+		if not source.has(key):
+			return {
+				"ok": false,
+				"reason": "missing_key:%s" % key,
+				"bundle": {},
+			}
+		bundle[key] = str(source.get(key, "")).strip_edges()
+	return {"ok": true, "bundle": bundle}
+
+
 static func _fallback_response(intent_id: String, mission_plan: Dictionary) -> String:
 	match intent_id:
 		PlanType.INTENT_CLARIFY_TERM:

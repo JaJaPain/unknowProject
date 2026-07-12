@@ -10,6 +10,8 @@ func _initialize() -> void:
 	_test_required_keys_are_flat_and_intent_owned()
 	_test_prompt_uses_actual_values_and_code_owned_intents()
 	_test_fallback_bundle_covers_required_keys()
+	_test_parse_bundle_returns_required_flat_shape()
+	_test_parse_bundle_rejects_malformed_or_incomplete_output()
 
 	if _failures.is_empty():
 		print("[PASS] Mission conversation compiler tests")
@@ -70,6 +72,53 @@ func _test_fallback_bundle_covers_required_keys() -> void:
 			bundle.has(key) and not str(bundle.get(key, "")).strip_edges().is_empty(),
 			"Fallback bundle missing required key %s." % key
 		)
+
+
+func _test_parse_bundle_returns_required_flat_shape() -> void:
+	var parsed: Dictionary = CompilerType.parse_bundle(
+		JSON.stringify({
+			"opening": "Need a pilot for the relay case.",
+			"clarify_term_player": "What relay case?",
+			"clarify_term_response": "The convoy report needs evidence.",
+			"accept_standard_player": "I’ll take it.",
+			"accept_standard_response": "Logged.",
+			"decline_player": "Not today.",
+			"decline_response": "Then I keep asking.",
+			"model_invented_extra": "nope",
+		}),
+		_conversation_plan()
+	)
+	_expect(bool(parsed.get("ok", false)), "Valid flat bundle JSON did not parse.")
+	var bundle: Dictionary = parsed.get("bundle", {})
+	_expect(
+		bundle.has("opening")
+			and bundle.has("clarify_term_response")
+			and not bundle.has("model_invented_extra"),
+		"Parsed bundle did not preserve only required flat keys."
+	)
+
+
+func _test_parse_bundle_rejects_malformed_or_incomplete_output() -> void:
+	var malformed: Dictionary = CompilerType.parse_bundle(
+		"{not valid json",
+		_conversation_plan()
+	)
+	_expect(
+		not bool(malformed.get("ok", false))
+			and str(malformed.get("reason", "")) == "parse_failed",
+		"Malformed bundle JSON should fail with parse_failed."
+	)
+	var missing: Dictionary = CompilerType.parse_bundle(
+		JSON.stringify({
+			"opening": "Need a pilot.",
+		}),
+		_conversation_plan()
+	)
+	_expect(
+		not bool(missing.get("ok", false))
+			and str(missing.get("reason", "")).begins_with("missing_key:"),
+		"Incomplete bundle JSON should fail with missing_key."
+	)
 
 
 func _conversation_plan() -> Dictionary:
