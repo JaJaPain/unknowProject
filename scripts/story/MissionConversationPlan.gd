@@ -107,7 +107,10 @@ static func _question_intents(
 			INTENT_CLARIFY_TERM,
 			str(grounding.get("label", "What does that mean?")),
 			grounding.get("fact_ids", []),
-			{"source_intent_id": str(grounding.get("intent_id", ""))}
+			{
+				"source_intent_id": str(grounding.get("intent_id", "")),
+				"answer_anchors": _candidate_answer_anchors(grounding),
+			}
 		))
 	elif _has_any(mission_plan, ["question_fact_ids", "clarify_fact_ids"]):
 		result.append(_intent(
@@ -116,13 +119,19 @@ static func _question_intents(
 			_join_arrays(
 				mission_plan.get("question_fact_ids", []),
 				mission_plan.get("clarify_fact_ids", [])
-			)
+			),
+			{
+				"answer_anchors": _mission_answer_anchors(mission_plan),
+			}
 		))
 	if _has_text(mission_plan, ["public_because", "stake", "cause_id"]):
 		result.append(_intent(
 			INTENT_ASK_WHY,
 			"Why does this matter?",
-			_as_string_array(mission_plan.get("offer_fact_ids", []))
+			_as_string_array(mission_plan.get("offer_fact_ids", [])),
+			{
+				"answer_anchors": _mission_answer_anchors(mission_plan),
+			}
 		))
 	if _has_risk(mission_plan):
 		result.append(_intent(INTENT_ASK_RISK, "What can go wrong?"))
@@ -134,7 +143,10 @@ static func _question_intents(
 			INTENT_INFORMED_FOLLOWUP,
 			str(deeper.get("label", "What follows from that?")),
 			deeper.get("fact_ids", []),
-			{"source_intent_id": str(deeper.get("intent_id", ""))}
+			{
+				"source_intent_id": str(deeper.get("intent_id", "")),
+				"answer_anchors": _candidate_answer_anchors(deeper),
+			}
 		))
 	return result
 
@@ -247,3 +259,31 @@ static func _as_string_array(value: Variant) -> Array[String]:
 		if not text.is_empty() and text not in result:
 			result.append(text)
 	return result
+
+
+static func _candidate_answer_anchors(candidate: Dictionary) -> Array[String]:
+	var explicit := _as_string_array(candidate.get("answer_anchors", []))
+	if not explicit.is_empty():
+		return explicit
+	var anchors: Array[String] = []
+	for key in ["alias", "label"]:
+		var text := str(candidate.get(key, "")).strip_edges()
+		if not text.is_empty() and text not in anchors:
+			anchors.append(text)
+	return anchors
+
+
+static func _mission_answer_anchors(mission_plan: Dictionary) -> Array[String]:
+	var anchors: Array[String] = []
+	for key in ["public_because", "stake", "risk_text", "risk", "cause_id"]:
+		var text := str(mission_plan.get(key, "")).strip_edges()
+		if text.is_empty():
+			continue
+		for piece in text.split(" ", false):
+			var clean := str(piece).strip_edges().trim_suffix(".").trim_suffix(",")
+			if clean.length() >= 6 and clean.to_lower() not in ["because", "before"]:
+				anchors.append(clean)
+				break
+		if not anchors.is_empty():
+			break
+	return anchors

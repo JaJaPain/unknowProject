@@ -50,10 +50,11 @@ func _test_prompt_uses_actual_values_and_code_owned_intents() -> void:
 		"Compiler prompt did not include actual mission values."
 	)
 	_expect(
-		prompt.contains("Do not add, remove, rename, reorder, or redefine any intent")
+			prompt.contains("Do not add, remove, rename, reorder, or redefine any intent")
 			and prompt.contains("clarify_term")
 			and prompt.contains("accept_standard")
-			and prompt.contains("decline"),
+			and prompt.contains("decline")
+			and prompt.contains("Answer must include one of: convoy case"),
 		"Compiler prompt did not preserve code-owned intent contract."
 	)
 	_expect(
@@ -130,6 +131,7 @@ func _conversation_plan() -> Dictionary:
 				"kind": "question",
 				"label": "What convoy case?",
 				"fact_ids": ["fact.convoy.visible"],
+				"answer_anchors": ["convoy case"],
 			},
 			{
 				"id": PlanType.INTENT_ACCEPT_STANDARD,

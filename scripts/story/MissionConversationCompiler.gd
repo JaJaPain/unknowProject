@@ -67,11 +67,16 @@ static func build_prompt(
 	lines.append("")
 	lines.append("CODE-APPROVED INTENTS:")
 	for intent in _intents(conversation_plan):
+		var anchors := _string_array(intent.get("answer_anchors", []))
+		var anchor_note := ""
+		if not anchors.is_empty():
+			anchor_note = " Answer must include one of: %s." % ", ".join(anchors)
 		lines.append(
-			"- %s (%s): %s" % [
+			"- %s (%s): %s%s" % [
 				str(intent.get("id", "")),
 				str(intent.get("kind", "")),
 				str(intent.get("label", "")),
+				anchor_note,
 			]
 		)
 	lines.append("")

@@ -53,6 +53,7 @@ func _test_plan_uses_knowledge_questions_and_mission_context() -> void:
 				"kind": "grounding",
 				"label": "What convoy case?",
 				"fact_ids": ["fact.convoy_shortage.visible"],
+				"answer_anchors": ["convoy case", "missing convoy"],
 			},
 			{
 				"intent_id": "deeper:fact.convoy_shortage.visible",
@@ -74,6 +75,11 @@ func _test_plan_uses_knowledge_questions_and_mission_context() -> void:
 	_expect(ids.has("request_advance"), "Plan did not include available advance intent.")
 	_expect(ids.has("request_hazard_pay"), "Plan did not include available hazard-pay intent.")
 	_expect(ids.has("decline"), "Plan did not include decline intent.")
+	var clarify := _intent_by_id(plan, "clarify_term")
+	_expect(
+		(clarify.get("answer_anchors", []) as Array).has("convoy case"),
+		"Plan did not carry knowledge answer anchors into clarify intent."
+	)
 
 
 func _test_mechanical_and_relationship_gates_terminal_intents() -> void:
@@ -104,3 +110,10 @@ func _test_mechanical_and_relationship_gates_terminal_intents() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _intent_by_id(plan: Dictionary, intent_id: String) -> Dictionary:
+	for raw_intent in plan.get("intents", []):
+		if raw_intent is Dictionary and str((raw_intent as Dictionary).get("id", "")) == intent_id:
+			return raw_intent as Dictionary
+	return {}
