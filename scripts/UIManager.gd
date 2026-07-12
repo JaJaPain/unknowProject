@@ -6,6 +6,9 @@ const PublicBoardOfferBuilderType := preload(
 const PublicBoardTextGeneratorType := preload(
 	"res://scripts/domain/PublicBoardTextGenerator.gd"
 )
+const MissionConversationControllerType := preload(
+	"res://scripts/story/MissionConversationController.gd"
+)
 
 # UI Nodes created dynamically
 var hud_panel: Panel
@@ -9976,7 +9979,127 @@ func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 		show_hud_warning(str(result.get("error", "Kaelen can't help with that right now.")))
 
 
+func _has_mission_conversation_bundle(quest_data: Dictionary) -> bool:
+	return quest_data.get("mission_conversation_plan", {}) is Dictionary \
+		and quest_data.get("mission_dialogue_bundle", {}) is Dictionary \
+		and not (quest_data.get("mission_conversation_plan", {}) as Dictionary).is_empty() \
+		and not (quest_data.get("mission_dialogue_bundle", {}) as Dictionary).is_empty()
+
+
+func _show_mission_conversation_briefing(
+	quest_data: Dictionary,
+	is_fallback: bool
+) -> void:
+	var plan: Dictionary = quest_data.get("mission_conversation_plan", {})
+	var bundle: Dictionary = quest_data.get("mission_dialogue_bundle", {})
+	var screen: Dictionary = MissionConversationControllerType.start(plan, bundle)
+	_render_mission_conversation_screen(quest_data, is_fallback, screen)
+
+
+func _render_mission_conversation_screen(
+	quest_data: Dictionary,
+	is_fallback: bool,
+	screen: Dictionary
+) -> void:
+	var agent_name := str(quest_data.get("agent_name", "Broker Kaelen"))
+	var agent_voice_profile_id := str(
+		quest_data.get("agent_voice_profile_id", "")
+	).strip_edges()
+	if agent_voice_profile_id.is_empty():
+		agent_voice_profile_id = _quest_giver_voice_ref(quest_data)
+	agent_name_label.text = agent_name.to_upper()
+	agent_subtitle_label.text = str(quest_data.get("agent_role", "Neutral Fixer & Profit Broker"))
+	_update_agent_portrait(
+		quest_data.get("faction", "neutral"),
+		agent_name,
+		"neutral",
+		str(quest_data.get("agent_portrait_id", ""))
+	)
+	var note := " [Offline Backup]" if is_fallback else ""
+	agent_dialogue_label.text = str(screen.get("text", "")).strip_edges() + note
+	SpeechService.play(str(screen.get("text", "")), agent_voice_profile_id)
+	agent_back_btn.visible = true
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	var choices: Array = screen.get("choices", []) \
+		if screen.get("choices", []) is Array else []
+	for raw_choice in choices:
+		if not (raw_choice is Dictionary):
+			continue
+		var choice: Dictionary = raw_choice
+		var choice_btn := Button.new()
+		choice_btn.text = str(choice.get("text", "Continue"))
+		var intent_id := str(choice.get("intent_id", ""))
+		var selected_intent_id := intent_id
+		choice_btn.pressed.connect(func():
+			_on_mission_conversation_intent_selected(
+				quest_data,
+				is_fallback,
+				screen.get("state", {}),
+				selected_intent_id
+			)
+		)
+		agent_choices_container.add_child(choice_btn)
+
+
+func _on_mission_conversation_intent_selected(
+	quest_data: Dictionary,
+	is_fallback: bool,
+	state: Dictionary,
+	intent_id: String
+) -> void:
+	SpeechService.start_interaction("Mission Conversation: " + intent_id)
+	var next_screen: Dictionary = MissionConversationControllerType.select_intent(
+		state,
+		intent_id
+	)
+	if not bool(next_screen.get("complete", false)):
+		_render_mission_conversation_screen(quest_data, is_fallback, next_screen)
+		return
+	var selected_choice: Dictionary = next_screen.get("terminal_choice", {}) \
+		if next_screen.get("terminal_choice", {}) is Dictionary else {}
+	var consequence: Dictionary = selected_choice.get("consequence", {}) \
+		if selected_choice.get("consequence", {}) is Dictionary else {}
+	consequence["dialogue_response"] = str(next_screen.get("text", ""))
+	selected_choice["consequence"] = consequence
+	if str(consequence.get("mission_action", "accept")) == "decline":
+		_on_mission_conversation_declined(quest_data, selected_choice, next_screen)
+		return
+	_on_choice_selected(quest_data, selected_choice)
+
+
+func _on_mission_conversation_declined(
+	quest_data: Dictionary,
+	selected_choice: Dictionary,
+	screen: Dictionary
+) -> void:
+	cached_quest_data = {}
+	cached_quest_is_fallback = false
+	cached_quest_context = {}
+	is_waiting_for_agent_board = false
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	QuestManager.decline_quest(
+		quest_data,
+		str(selected_choice.get("choice_id", "choice.decline"))
+	)
+	agent_dialogue_label.text = str(screen.get("text", "")).strip_edges()
+	SpeechService.play(
+		str(screen.get("text", "")),
+		_quest_giver_voice_ref(quest_data)
+	)
+	var return_btn := Button.new()
+	return_btn.text = "Back to Services"
+	return_btn.pressed.connect(_on_agent_back_pressed)
+	agent_choices_container.add_child(return_btn)
+	agent_back_btn.visible = true
+
+
 func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
+	if _has_mission_conversation_bundle(quest_data):
+		_show_mission_conversation_briefing(quest_data, is_fallback)
+		return
+
 	# ── Step 2: The quest giver delivers their briefing ───────────────────────
 	var raw_dialogue = quest_data.get("dialogue", "")
 	var display_dialogue = SpeechService.clean_dialogue_text(raw_dialogue)
