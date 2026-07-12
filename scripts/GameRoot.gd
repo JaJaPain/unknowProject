@@ -3041,6 +3041,7 @@ static func _quest_source_lane_name(quest: Dictionary) -> String:
 
 func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "accepted", "Mission accepted.")
+	_record_quest_giver_npc_outcome(quest, "accepted")
 	if bool(quest.get("is_timed", false)):
 		_append_timed_quest_chronicle_event(
 			"timed_mission_accepted",
@@ -3052,6 +3053,7 @@ func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
 
 
 func _on_quest_declined_chronicle(quest: Dictionary) -> void:
+	_record_quest_giver_npc_outcome(quest, "declined")
 	var candidate := _story_offer_candidate_from_quest(quest)
 	if candidate.is_empty():
 		return
@@ -3064,6 +3066,7 @@ func _on_quest_declined_chronicle(quest: Dictionary) -> void:
 
 func _on_quest_completed_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "completed", "Mission completed.")
+	_record_quest_giver_npc_outcome(quest, "completed")
 	if bool(quest.get("is_timed", false)):
 		_append_timed_quest_chronicle_event(
 			"timed_mission_completed",
@@ -3078,6 +3081,7 @@ func _on_quest_completed_chronicle(quest: Dictionary) -> void:
 func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission abandoned.")
 	StoryManager.record_mission_outcome_consequence(quest, "abandoned")
+	_record_quest_giver_npc_outcome(quest, "abandoned")
 	if bool(quest.get("is_timed", false)):
 		_append_timed_quest_chronicle_event(
 			"timed_mission_abandoned",
@@ -3092,11 +3096,34 @@ func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 func _on_quest_expired_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission expired.")
 	StoryManager.record_mission_outcome_consequence(quest, "expired")
+	_record_quest_giver_npc_outcome(quest, "expired")
 	_append_timed_quest_chronicle_event(
 		"timed_mission_expired",
 		quest,
 		"expired"
 	)
+
+
+func _record_quest_giver_npc_outcome(quest: Dictionary, outcome: String) -> void:
+	if quest.is_empty() or bool(quest.get("public_board", false)):
+		return
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("record_mission_outcome"):
+		return
+	var npc_id := str(quest.get("giver_npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(quest.get("agent_id", "")).strip_edges()
+	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+		return
+	var result: Dictionary = campaign_npc_state_store.record_mission_outcome(
+		npc_id,
+		outcome
+	)
+	if not bool(result.get("ok", false)):
+		push_warning(
+			"[GameRoot] NPC mission outcome was not recorded for %s: %s" %
+			[npc_id, str(result.get("error", "unknown error"))]
+		)
 
 
 func _mark_story_offer_beat(

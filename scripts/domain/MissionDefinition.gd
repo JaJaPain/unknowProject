@@ -61,6 +61,8 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		)
 
 	giver_npc_id = _derive_giver_id(
+		str(source.get("giver_npc_id", "")),
+		str(source.get("agent_id", "")),
 		str(source.get("agent_name", "")),
 		legacy_faction
 	)
@@ -143,7 +145,18 @@ static func derive_offer_id(source: Dictionary) -> String:
 	return "mission.offer.%s" % identity_source.sha256_text().substr(0, 16)
 
 
-static func _derive_giver_id(agent_name: String, legacy_faction: String) -> StringName:
+static func _derive_giver_id(
+	explicit_giver_id: String,
+	agent_id: String,
+	agent_name: String,
+	legacy_faction: String
+) -> StringName:
+	var clean_giver_id := explicit_giver_id.strip_edges()
+	if DomainIdType.is_valid(clean_giver_id, "npc"):
+		return StringName(clean_giver_id)
+	var clean_agent_id := agent_id.strip_edges()
+	if DomainIdType.is_valid(clean_agent_id, "npc"):
+		return StringName(clean_agent_id)
 	match agent_name.strip_edges().to_lower():
 		"broker kaelen":
 			return &"npc.kaelen"

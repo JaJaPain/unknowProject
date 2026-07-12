@@ -60,6 +60,7 @@ static func build_offer(
 		"agent_role": agent_role,
 		"agent_portrait_id": str(agent_profile.get("agent_portrait_id", "")),
 		"agent_voice_profile_id": str(agent_profile.get("agent_voice_profile_id", "")),
+		"agent_id": str(agent_profile.get("agent_id", "")),
 		"agent_memory_id": str(agent_profile.get("agent_memory_id", "")),
 		"dialogue": dialogue,
 		"objective": objective,

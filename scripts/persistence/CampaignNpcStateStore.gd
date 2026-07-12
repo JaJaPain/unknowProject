@@ -146,6 +146,25 @@ func set_current_stake(npc_id: String, current_stake: Dictionary) -> Dictionary:
 	return _upsert_state(npc_id, state, "npc_state_current_stake")
 
 
+func record_mission_outcome(npc_id: String, outcome: String) -> Dictionary:
+	var clean_outcome := outcome.strip_edges().to_lower()
+	var deltas := {}
+	match clean_outcome:
+		"accepted":
+			deltas = {"respect": 1}
+		"completed":
+			deltas = {"trust": 2, "respect": 1, "warmth": 1}
+		"declined":
+			deltas = {"respect": -1}
+		"abandoned":
+			deltas = {"trust": -2, "respect": -1}
+		"expired":
+			deltas = {"trust": -1, "respect": -1}
+		_:
+			return _failure("Unsupported NPC mission outcome.")
+	return update_relationship(npc_id, deltas, "mission_%s" % clean_outcome)
+
+
 func record_memory_projection(
 	npc_id: String,
 	memory_event_ids: Array,

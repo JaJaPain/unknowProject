@@ -25,6 +25,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_prompt_context_bounds_memory_refs()
 	_cleanup()
+	_test_mission_outcomes_update_relationship()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC state store tests")
@@ -281,6 +283,50 @@ func _test_prompt_context_bounds_memory_refs() -> void:
 			and context.contains("event.local.fixture.memory_06")
 			and context.contains("event.local.fixture.memory_07"),
 		"NPC prompt context did not bound memory refs to the latest entries."
+	)
+
+
+func _test_mission_outcomes_update_relationship() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Mission Outcome Fixture",
+		"npc-state-mission-outcome-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC state store was invalid for mission outcome test.")
+	if not store.is_valid():
+		return
+	var accepted: Dictionary = store.record_mission_outcome(NPC_ID, "accepted")
+	_expect(bool(accepted.get("ok", false)), accepted.get("error", ""))
+	var completed: Dictionary = store.record_mission_outcome(NPC_ID, "completed")
+	_expect(bool(completed.get("ok", false)), completed.get("error", ""))
+	var abandoned: Dictionary = store.record_mission_outcome(NPC_ID, "abandoned")
+	_expect(bool(abandoned.get("ok", false)), abandoned.get("error", ""))
+	var relationship: Dictionary = completed.get("state", {}).get("relationship", {})
+	_expect(
+		int(relationship.get("trust", 0)) == 2
+			and int(relationship.get("respect", 0)) == 2
+			and int(relationship.get("warmth", 0)) == 1
+			and str(relationship.get("last_player_stance", "")) == "mission_completed",
+		"Completed mission outcome did not apply positive relationship deltas."
+	)
+	var abandoned_relationship: Dictionary = abandoned.get("state", {}).get("relationship", {})
+	_expect(
+		int(abandoned_relationship.get("trust", 0)) == 0
+			and int(abandoned_relationship.get("respect", 0)) == 1
+			and str(abandoned_relationship.get("last_player_stance", "")) == "mission_abandoned",
+		"Abandoned mission outcome did not apply bounded negative relationship deltas."
+	)
+	var unsupported: Dictionary = store.record_mission_outcome(NPC_ID, "forgotten")
+	_expect(
+		not bool(unsupported.get("ok", false)),
+		"Unsupported mission outcome should be rejected."
 	)
 
 

@@ -2355,6 +2355,7 @@ func request_quest_generation(
 	var agent_role = ""
 	var agent_portrait_id := ""
 	var agent_voice_profile_id := ""
+	var agent_id := ""
 	var example_faction_key = chosen_faction
 	var speaker_card_id := "faction_agent"
 
@@ -2409,6 +2410,7 @@ func request_quest_generation(
 		agent_voice_profile_id = str(
 			agent_profile.get("agent_voice_profile_id", "")
 		).strip_edges()
+		agent_id = str(agent_profile.get("agent_id", "")).strip_edges()
 		player_nickname = "Indy"
 		var faction_label := str(
 			agent_profile.get("faction_display", profile_faction.capitalize())
@@ -2563,6 +2565,7 @@ func request_quest_generation(
 		"agent_role": agent_role,
 		"agent_portrait_id": agent_portrait_id,
 		"agent_voice_profile_id": agent_voice_profile_id,
+		"agent_id": agent_id,
 		"agent_memory_id": agent_memory_id,
 		"faction": chosen_faction,
 		"pickup_outpost": pickup_outpost,
@@ -3253,6 +3256,7 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
 	quest_data["agent_portrait_id"] = str(subs.get("agent_portrait_id", ""))
 	quest_data["agent_voice_profile_id"] = str(subs.get("agent_voice_profile_id", ""))
+	quest_data["agent_id"] = str(subs.get("agent_id", ""))
 	quest_data["agent_memory_id"] = str(subs.get("agent_memory_id", ""))
 	quest_data["faction"] = str(
 		subs.get("faction", quest_data.get("faction", "neutral"))
@@ -4461,6 +4465,7 @@ func _trigger_fallback():
 	selected_quest["agent_name"] = str(_pending_substitutions.get("agent_name", selected_quest.get("agent_name", "Broker Kaelen")))
 	selected_quest["agent_portrait_id"] = str(_pending_substitutions.get("agent_portrait_id", ""))
 	selected_quest["agent_voice_profile_id"] = str(_pending_substitutions.get("agent_voice_profile_id", ""))
+	selected_quest["agent_id"] = str(_pending_substitutions.get("agent_id", ""))
 	selected_quest["agent_memory_id"] = str(_pending_substitutions.get("agent_memory_id", ""))
 	selected_quest["faction"] = str(_pending_substitutions.get("faction", selected_quest.get("faction", "neutral")))
 	

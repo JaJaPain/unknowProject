@@ -26,6 +26,7 @@ func _initialize() -> void:
 	_test_ore_offer()
 	_test_kill_offer()
 	_test_agent_voice_profile_survives_acceptance()
+	_test_explicit_agent_id_becomes_giver_npc()
 	_test_selected_choice_id_survives_acceptance()
 	_test_selected_choice_id_defaults_from_offer_position()
 	_test_narrative_metadata_survives_acceptance_and_restore()
@@ -145,6 +146,36 @@ func _test_agent_voice_profile_survives_acceptance() -> void:
 		adapted["state"].get("agent_voice_profile_id", "")
 			== "voice.agent.liaison_ryn.v1",
 		"Agent voice profile was not preserved on accepted mission state."
+	)
+
+
+func _test_explicit_agent_id_becomes_giver_npc() -> void:
+	var offer := _offer(
+		"Generated Contact Contract",
+		"zenith",
+		"Mara Venn",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 18.0,
+			"reward_credits": 140,
+		}
+	)
+	offer["agent_id"] = "npc.gen.fixture.mara_venn"
+	var adapted := AdapterType.build_active_state(
+		offer,
+		_choice(0, {}, 1.0, 1.0),
+		"mission.runtime.generated_giver_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Generated contact offer failed validation: %s" %
+			adapted["validation"].summary()
+	)
+	_expect(
+		str(adapted["state"].get("giver_npc_id", "")) == "npc.gen.fixture.mara_venn"
+			and str(adapted["state"].get("agent_id", "")) == "npc.gen.fixture.mara_venn",
+		"Explicit generated contact agent_id did not survive as giver_npc_id."
 	)
 
 
