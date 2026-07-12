@@ -13,6 +13,8 @@ const ValidationResultType := preload(
 const DOCUMENT_VERSION := 1
 const CACHE_PATH := "narrative_cache.json"
 const SEMANTIC_KEY_VERSION := 1
+const DEFAULT_MAX_ENTRIES := 256
+const DEFAULT_MAX_JSON_BYTES := 8 * 1024 * 1024
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -132,6 +134,39 @@ func invalidate_unconsumed_stale_offers(criteria: Dictionary) -> Dictionary:
 		return committed
 	data = next_data
 	return {"ok": true, "removed": removed}
+
+
+func enforce_limits(
+	max_entries: int = DEFAULT_MAX_ENTRIES,
+	max_json_bytes: int = DEFAULT_MAX_JSON_BYTES
+) -> Dictionary:
+	if not is_valid():
+		return _failure("Narrative cache store is invalid.")
+	var next_entries: Dictionary = entries()
+	var removed: Array[String] = []
+	while _limits_exceeded(next_entries, max_entries, max_json_bytes):
+		var eviction_key := _next_eviction_key(next_entries)
+		if eviction_key.is_empty():
+			break
+		next_entries.erase(eviction_key)
+		removed.append(eviction_key)
+	var next_data := data.duplicate(true)
+	next_data["entries"] = next_entries
+	var committed := _commit(next_data, "narrative_cache_enforce_limits")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {
+		"ok": true,
+		"removed": removed,
+		"entry_count": next_entries.size(),
+		"json_bytes": _json_size(next_data),
+		"within_limits": not _limits_exceeded(
+			next_entries,
+			max_entries,
+			max_json_bytes
+		),
+	}
 
 
 func _load_or_create() -> void:
@@ -273,6 +308,69 @@ static func _entry_matches_any_stale_criterion(
 		if str(entry.get(key, "")).strip_edges() == expected:
 			return true
 	return false
+
+
+static func _limits_exceeded(
+	next_entries: Dictionary,
+	max_entries: int,
+	max_json_bytes: int
+) -> bool:
+	if max_entries > 0 and next_entries.size() > max_entries:
+		return true
+	if max_json_bytes > 0:
+		var probe := {
+			"schema_version": DOCUMENT_VERSION,
+			"document_type": "narrative_cache",
+			"ownership": "disposable",
+			"campaign_id": "",
+			"entries": next_entries,
+		}
+		return _json_size(probe) > max_json_bytes
+	return false
+
+
+static func _next_eviction_key(next_entries: Dictionary) -> String:
+	var candidates: Array[Dictionary] = []
+	for cache_key in next_entries.keys():
+		var raw: Variant = next_entries[cache_key]
+		if raw is Dictionary:
+			var entry: Dictionary = raw
+			candidates.append({
+				"cache_key": str(cache_key),
+				"rank": _eviction_rank(entry),
+				"priority": int(entry.get("priority", 100)),
+				"updated_at_unix": int(entry.get("updated_at_unix", 0)),
+			})
+	if candidates.is_empty():
+		return ""
+	candidates.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		if int(left.get("rank", 0)) != int(right.get("rank", 0)):
+			return int(left.get("rank", 0)) < int(right.get("rank", 0))
+		if int(left.get("priority", 0)) != int(right.get("priority", 0)):
+			return int(left.get("priority", 0)) > int(right.get("priority", 0))
+		return int(left.get("updated_at_unix", 0)) < int(
+			right.get("updated_at_unix", 0)
+		)
+	)
+	return str(candidates[0].get("cache_key", ""))
+
+
+static func _eviction_rank(entry: Dictionary) -> int:
+	if bool(entry.get("consumed", false)):
+		return 0
+	var expires_at := int(entry.get("expires_at_unix", 0))
+	if expires_at > 0 and expires_at <= int(Time.get_unix_time_from_system()):
+		return 1
+	if str(entry.get("status", "")) in ["stale_discarded", "canceled"]:
+		return 2
+	if bool(entry.get("truth_frozen", false)) \
+			or str(entry.get("status", "")) == "accepted":
+		return 9
+	return 4
+
+
+static func _json_size(value: Dictionary) -> int:
+	return JSON.stringify(value).to_utf8_buffer().size()
 
 
 static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult:

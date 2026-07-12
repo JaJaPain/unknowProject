@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_semantic_cache_keys_use_truth_inputs()
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
+	_test_limit_enforcement_evicts_disposable_entries_first()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -135,6 +136,30 @@ func _test_stale_offer_invalidation_preserves_consumed_and_frozen_entries() -> v
 	)
 
 
+func _test_limit_enforcement_evicts_disposable_entries_first() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_limited_entry("cache.limit.accepted", 0, "accepted", false))
+	store.upsert_entry(_limited_entry("cache.limit.ready", 0, "ready", false))
+	store.upsert_entry(_limited_entry("cache.limit.expired", 10, "ready", false, 1))
+	store.upsert_entry(_limited_entry("cache.limit.consumed", 30, "ready", true))
+	var enforced: Dictionary = store.enforce_limits(2, 0)
+	var removed: Array = enforced.get("removed", [])
+	_expect(
+		bool(enforced.get("ok", false))
+			and removed == ["cache.limit.consumed", "cache.limit.expired"],
+		"Cache limit enforcement did not evict consumed/expired entries first."
+	)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		reopened.entries().size() == 2
+			and not reopened.get_entry("cache.limit.accepted").is_empty()
+			and not reopened.get_entry("cache.limit.ready").is_empty(),
+		"Cache limit enforcement did not persist the bounded survivor set."
+	)
+
+
 func _test_schema_catalog_marks_cache_disposable() -> void:
 	_expect(
 		SchemaCatalogType.ownership_for("narrative_cache") == "disposable",
@@ -190,6 +215,24 @@ func _entry_with_truth(
 	entry["consumed"] = consumed
 	entry["truth_frozen"] = truth_frozen
 	entry["status"] = "accepted" if truth_frozen else "ready"
+	return entry
+
+
+func _limited_entry(
+	cache_key: String,
+	priority: int,
+	status: String,
+	consumed: bool,
+	expires_at_unix: int = 0
+) -> Dictionary:
+	var entry := _entry(cache_key)
+	entry["subject_id"] = cache_key
+	entry["priority"] = priority
+	entry["status"] = status
+	entry["consumed"] = consumed
+	entry["truth_frozen"] = status == "accepted"
+	if expires_at_unix > 0:
+		entry["expires_at_unix"] = expires_at_unix
 	return entry
 
 
