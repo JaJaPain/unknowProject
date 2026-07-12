@@ -59,6 +59,9 @@ const NarrativeDirectorType := preload(
 )
 const MissionDirectorType := preload("res://scripts/story/MissionDirector.gd")
 const ChallengeBudgetType := preload("res://scripts/story/ChallengeBudget.gd")
+const MissionHistoryLedgerType := preload(
+	"res://scripts/story/MissionHistoryLedger.gd"
+)
 const StoreRegistryScript := preload("res://scripts/economy/StoreRegistry.gd")
 
 @onready var system_container: Node3D = $SystemContainer
@@ -2615,7 +2618,7 @@ func build_story_agent_offer_context(agent_profile: Dictionary = {}) -> Dictiona
 		local_givers,
 		valid_entity_ids,
 		director_context,
-		[],
+		_recent_agent_contracts_for_mission_director(),
 		StoryManager.declined_offer_cooldowns(),
 		int(CampaignClock.total_minutes)
 	)
@@ -2727,6 +2730,21 @@ func _story_agent_offer_hint(candidate: Dictionary, budget: Dictionary) -> Dicti
 		"story_candidate": candidate.duplicate(true),
 		"challenge_budget": budget.duplicate(true),
 	}
+
+
+func _recent_agent_contracts_for_mission_director(limit: int = 8) -> Array:
+	if campaign_chronicle_store == null \
+			or not campaign_chronicle_store.is_valid():
+		return []
+	var branch: Dictionary = campaign_chronicle_store.current_branch_events()
+	if not bool(branch.get("ok", false)):
+		return []
+	var events: Array = branch.get("events", []) \
+		if branch.get("events", []) is Array else []
+	return MissionHistoryLedgerType.recent_agent_contracts_from_events(
+		events,
+		limit
+	)
 
 
 func ensure_generated_frontier_factions(count: int = 6) -> Dictionary:
@@ -2921,18 +2939,36 @@ static func _quest_chronicle_payload(quest: Dictionary, outcome: String) -> Dict
 		"title": str(quest.get("title", "")),
 		"objective_type": str(quest.get("objective_type", "")),
 		"faction": str(quest.get("faction", "")),
+		"source_lane": _quest_source_lane_name(quest),
+		"public_board": bool(quest.get("public_board", false)),
+		"station_errand": bool(quest.get("station_errand", false)),
+		"system_id": str(quest.get("system_id", "")),
 		"outcome": outcome,
 		"narrative_metadata": NarrativeMetadataType.from_source(quest),
 	}
 
 
+static func _quest_source_lane_name(quest: Dictionary) -> String:
+	var explicit := str(quest.get("_source_lane", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	if bool(quest.get("public_board", false)):
+		return "BOARD"
+	if bool(quest.get("station_errand", false)):
+		return "STATION"
+	return "AGENT"
+
+
 func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "accepted", "Mission accepted.")
-	_append_timed_quest_chronicle_event(
-		"timed_mission_accepted",
-		quest,
-		"accepted"
-	)
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_accepted",
+			quest,
+			"accepted"
+		)
+	else:
+		_append_quest_chronicle_event("mission_accepted", quest, "accepted")
 
 
 func _on_quest_declined_chronicle(quest: Dictionary) -> void:
