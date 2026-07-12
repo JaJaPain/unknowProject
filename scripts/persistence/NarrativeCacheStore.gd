@@ -12,6 +12,7 @@ const ValidationResultType := preload(
 
 const DOCUMENT_VERSION := 1
 const CACHE_PATH := "narrative_cache.json"
+const SEMANTIC_KEY_VERSION := 1
 
 var campaign_path: String
 var campaign: Dictionary = {}
@@ -28,6 +29,14 @@ static func open(path: String) -> RefCounted:
 
 func is_valid() -> bool:
 	return validation.is_valid()
+
+
+static func semantic_cache_key(inputs: Dictionary) -> String:
+	return "cache.%s" % semantic_context_fingerprint(inputs).substr(0, 32)
+
+
+static func semantic_context_fingerprint(inputs: Dictionary) -> String:
+	return JSON.stringify(_semantic_identity(inputs), "", true).sha256_text()
 
 
 func entries() -> Dictionary:
@@ -151,6 +160,69 @@ static func _initial_data(campaign_id: String) -> Dictionary:
 		"campaign_id": campaign_id,
 		"entries": {},
 	}
+
+
+static func _semantic_identity(inputs: Dictionary) -> Dictionary:
+	return {
+		"semantic_key_version": SEMANTIC_KEY_VERSION,
+		"campaign_id": str(inputs.get("campaign_id", "")),
+		"kind": str(inputs.get("kind", "")),
+		"subject_id": str(inputs.get("subject_id", "")),
+		"speaker_id": str(inputs.get("speaker_id", "")),
+		"system_id": str(inputs.get("system_id", "")),
+		"station_id": str(inputs.get("station_id", "")),
+		"story_revision": int(inputs.get("story_revision", 0)),
+		"thread_revision": int(inputs.get("thread_revision", 0)),
+		"beat_revision": int(inputs.get("beat_revision", 0)),
+		"knowledge_revision": int(inputs.get("knowledge_revision", 0)),
+		"relationship_tier": str(inputs.get("relationship_tier", "")),
+		"relationship_revision": int(inputs.get("relationship_revision", 0)),
+		"recent_line_digest": str(inputs.get("recent_line_digest", "")),
+		"knowledge_fact_states": _normalized_dictionary(
+			inputs.get("knowledge_fact_states", {})
+		),
+		"mission_objective": _normalized_dictionary(
+			inputs.get("mission_objective", {})
+		),
+		"choice_consequences": _normalized_dictionary(
+			inputs.get("choice_consequences", {})
+		),
+		"player_state_bands": _normalized_dictionary(
+			inputs.get("player_state_bands", {})
+		),
+	}
+
+
+static func _normalized_dictionary(value: Variant) -> Dictionary:
+	if not (value is Dictionary):
+		return {}
+	var result := {}
+	var keys: Array = (value as Dictionary).keys()
+	keys.sort()
+	for key in keys:
+		var clean_key := str(key)
+		var item: Variant = (value as Dictionary)[key]
+		if item is Dictionary:
+			result[clean_key] = _normalized_dictionary(item)
+		elif item is Array:
+			result[clean_key] = _normalized_array(item)
+		else:
+			result[clean_key] = item
+	return result
+
+
+static func _normalized_array(value: Variant) -> Array:
+	var result: Array = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		if item is Dictionary:
+			result.append(_normalized_dictionary(item))
+		elif item is Array:
+			result.append(_normalized_array(item))
+		else:
+			result.append(item)
+	return result
 
 
 static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult:

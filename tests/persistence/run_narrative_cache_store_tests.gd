@@ -12,6 +12,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_cleanup()
 	_write_campaign()
+	_test_semantic_cache_keys_use_truth_inputs()
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
@@ -23,6 +24,47 @@ func _initialize() -> void:
 	for failure in _failures:
 		push_error("[FAIL] %s" % failure)
 	quit(1)
+
+
+func _test_semantic_cache_keys_use_truth_inputs() -> void:
+	var base := _semantic_inputs()
+	var reordered := _semantic_inputs()
+	reordered["knowledge_fact_states"] = {
+		"fact.b": "rumored",
+		"fact.a": "known",
+	}
+	var base_key := CacheStoreType.semantic_cache_key(base)
+	_expect(
+		base_key == CacheStoreType.semantic_cache_key(reordered),
+		"Semantic cache key changed when dictionary order changed."
+	)
+	var story_changed := _semantic_inputs()
+	story_changed["story_revision"] = 8
+	_expect(
+		base_key != CacheStoreType.semantic_cache_key(story_changed),
+		"Semantic cache key ignored story revision."
+	)
+	var knowledge_changed := _semantic_inputs()
+	knowledge_changed["knowledge_fact_states"] = {
+		"fact.a": "confirmed",
+		"fact.b": "rumored",
+	}
+	_expect(
+		base_key != CacheStoreType.semantic_cache_key(knowledge_changed),
+		"Semantic cache key ignored relevant fact state changes."
+	)
+	var noisy := _semantic_inputs()
+	noisy["credits"] = 999999
+	noisy["hull_points"] = 1
+	noisy["minute_tick"] = 123456
+	_expect(
+		base_key == CacheStoreType.semantic_cache_key(noisy),
+		"Semantic cache key included unrelated raw runtime noise."
+	)
+	_expect(
+		CacheStoreType.semantic_context_fingerprint(base).length() == 64,
+		"Semantic context fingerprint should be a full SHA-256 hex string."
+	)
 
 
 func _test_bootstrap_upsert_reopen_consume_and_invalidate() -> void:
@@ -102,6 +144,44 @@ func _entry(cache_key: String) -> Dictionary:
 			"accept_standard_response": "Logged.",
 		},
 		"consumed": false,
+	}
+
+
+func _semantic_inputs() -> Dictionary:
+	return {
+		"campaign_id": CAMPAIGN_ID,
+		"kind": "mission_conversation",
+		"subject_id": "offer.alpha",
+		"speaker_id": "agent.alpha",
+		"system_id": "system.start",
+		"station_id": "station.start.main",
+		"story_revision": 7,
+		"thread_revision": 2,
+		"beat_revision": 3,
+		"knowledge_revision": 12,
+		"relationship_tier": "cordial",
+		"relationship_revision": 4,
+		"recent_line_digest": "recent.digest",
+		"knowledge_fact_states": {
+			"fact.a": "known",
+			"fact.b": "rumored",
+		},
+		"mission_objective": {
+			"type": "RECOVER_COMBAT_DROP",
+			"item_name": "blackbox shard",
+			"count_required": 3,
+		},
+		"choice_consequences": {
+			"accept_standard": {
+				"reward_credits_multiplier": 1.0,
+			},
+			"request_hazard_pay": {
+				"reward_credits_multiplier": 1.15,
+			},
+		},
+		"player_state_bands": {
+			"hull": "safe",
+		},
 	}
 
 
