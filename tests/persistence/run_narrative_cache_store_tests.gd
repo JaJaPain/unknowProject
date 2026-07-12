@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_semantic_cache_keys_use_truth_inputs()
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
+	_test_context_discard_preserves_truth_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
 	_test_text_fingerprints_survive_entry_eviction()
 	_test_clear_cache_removes_entries_and_fingerprints()
@@ -137,6 +138,29 @@ func _test_stale_offer_invalidation_preserves_consumed_and_frozen_entries() -> v
 			and not reopened.get_entry("cache.stale.frozen").is_empty()
 			and not reopened.get_entry("cache.other.beat").is_empty(),
 		"Stale invalidation did not persist the expected survivor set."
+	)
+
+
+func _test_context_discard_preserves_truth_frozen_entries() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_context_entry("cache.context.current", "timeline.a", 7, false))
+	store.upsert_entry(_context_entry("cache.context.old", "timeline.old", 6, false))
+	store.upsert_entry(_context_entry("cache.context.accepted", "timeline.old", 6, true))
+	var discarded: Dictionary = store.discard_entries_outside_context({
+		"timeline_id": "timeline.a",
+		"story_revision": 7,
+	})
+	var removed: Array = discarded.get("removed", [])
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		bool(discarded.get("ok", false))
+			and removed == ["cache.context.old"]
+			and not reopened.get_entry("cache.context.current").is_empty()
+			and reopened.get_entry("cache.context.old").is_empty()
+			and not reopened.get_entry("cache.context.accepted").is_empty(),
+		"Context discard did not remove only mismatched disposable entries."
 	)
 
 
@@ -345,6 +369,24 @@ func _limited_entry(
 	entry["truth_frozen"] = status == "accepted"
 	if expires_at_unix > 0:
 		entry["expires_at_unix"] = expires_at_unix
+	return entry
+
+
+func _context_entry(
+	cache_key: String,
+	timeline_id: String,
+	story_revision: int,
+	truth_frozen: bool
+) -> Dictionary:
+	var entry := _entry(cache_key)
+	entry["subject_id"] = cache_key
+	entry["timeline_id"] = timeline_id
+	entry["context_revision"] = story_revision
+	entry["story_revision"] = story_revision
+	entry["knowledge_revision"] = story_revision
+	entry["relationship_revision"] = story_revision
+	entry["truth_frozen"] = truth_frozen
+	entry["status"] = "accepted" if truth_frozen else "ready"
 	return entry
 
 

@@ -235,6 +235,32 @@ func invalidate_unconsumed_stale_offers(criteria: Dictionary) -> Dictionary:
 	return {"ok": true, "removed": removed}
 
 
+func discard_entries_outside_context(restored_context: Dictionary) -> Dictionary:
+	if not is_valid():
+		return _failure("Narrative cache store is invalid.")
+	var next_data := data.duplicate(true)
+	var next_entries: Dictionary = entries()
+	var removed: Array[String] = []
+	for cache_key in next_entries.keys():
+		var raw: Variant = next_entries[cache_key]
+		if not raw is Dictionary:
+			continue
+		var entry: Dictionary = raw
+		if bool(entry.get("truth_frozen", false)) \
+				or str(entry.get("status", "")) == "accepted":
+			continue
+		if _entry_context_mismatches(entry, restored_context):
+			removed.append(str(cache_key))
+	for cache_key in removed:
+		next_entries.erase(cache_key)
+	next_data["entries"] = next_entries
+	var committed := _commit(next_data, "narrative_cache_discard_context")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {"ok": true, "removed": removed}
+
+
 func enforce_limits(
 	max_entries: int = DEFAULT_MAX_ENTRIES,
 	max_json_bytes: int = DEFAULT_MAX_JSON_BYTES
@@ -422,6 +448,32 @@ static func _entry_matches_any_stale_criterion(
 		if expected.is_empty():
 			continue
 		if str(entry.get(key, "")).strip_edges() == expected:
+			return true
+	return false
+
+
+static func _entry_context_mismatches(
+	entry: Dictionary,
+	restored_context: Dictionary
+) -> bool:
+	for key in [
+		"timeline_id",
+		"context_revision",
+		"story_revision",
+		"knowledge_revision",
+		"relationship_revision",
+	]:
+		if not restored_context.has(key):
+			continue
+		var expected: Variant = restored_context.get(key)
+		if expected == null:
+			continue
+		if expected is String and str(expected).strip_edges().is_empty():
+			continue
+		if key.ends_with("_revision"):
+			if int(entry.get(key, -1)) != int(expected):
+				return true
+		elif str(entry.get(key, "")).strip_edges() != str(expected).strip_edges():
 			return true
 	return false
 
