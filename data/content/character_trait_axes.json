@@ -1,0 +1,81 @@
+{
+	"schema_version": 1,
+	"_editing_guide": "Trait axes for generated recurring NPC character cards. Code selects one value per axis deterministically from campaign seed + NPC ID, then rejects incompatible or recently repeated combinations. These are personality/voice ingredients only; mechanics and relationship numbers stay in code.",
+	"axes": {
+		"core_drive": [
+			"Keep their crew alive when management treats people as replaceable.",
+			"Protect the one useful system they still understand.",
+			"Turn small favors into enough leverage to survive the next crisis.",
+			"Make the station less cruel without becoming publicly sentimental."
+		],
+		"fear": [
+			"Being blamed for a failure they warned everyone about.",
+			"Discovering they are useful only while they are convenient.",
+			"Letting one tired shortcut get someone killed.",
+			"Owing the wrong person when the doors seal."
+		],
+		"contradiction": [
+			"Rules-first in public; quietly bends them for exhausted crews.",
+			"Acts detached, but remembers every personal detail that might save time later.",
+			"Negotiates like a cynic, then does one decent thing without invoicing it.",
+			"Complains about chaos while thriving inside it."
+		],
+		"social_strategy": [
+			"Tests competence before offering warmth.",
+			"Starts with a practical trade and lets trust arrive late.",
+			"Uses jokes to see who is actually listening.",
+			"Answers indirectly until the other person proves they can follow the thread."
+		],
+		"pressure_tell": [
+			"Becomes painfully precise.",
+			"Stops joking and starts counting risks aloud.",
+			"Repeats the smallest operational detail until someone fixes it.",
+			"Gets quieter and more transactional."
+		],
+		"kindness_tell": [
+			"Solves practical problems without admitting it was kindness.",
+			"Offers a warning disguised as a complaint.",
+			"Remembers a preference and pretends it was inventory discipline.",
+			"Creates an exit route before anyone asks for one."
+		],
+		"humor_mechanism": [
+			"deadpan bureaucratic understatement",
+			"gallows arithmetic",
+			"pedantic correction under pressure",
+			"misplaced optimism with visible dents",
+			"literalism about social rituals",
+			"weary anecdote cut short before sentiment"
+		]
+	},
+	"voice_rules": {
+		"sentence_shapes": [
+			"short, precise, one dry afterthought",
+			"measured clauses with a practical sting at the end",
+			"plainspoken, concrete, rarely more than two sentences",
+			"starts procedural, then reveals the human cost"
+		],
+		"address_rules": [
+			"No private nickname; uses pilot rarely.",
+			"Uses you more than titles; never uses Shiny.",
+			"Uses job words instead of intimacy.",
+			"Uses captain only when pressure is high."
+		],
+		"favored_vocabulary": [
+			["vector", "clearance", "queue"],
+			["margin", "terms", "favor"],
+			["seal", "load", "tolerance"],
+			["route", "witness", "risk"]
+		],
+		"banned_tics": ["Shiny", "my friend", "as you know"]
+	},
+	"incompatibilities": [
+		{
+			"humor_mechanism": "misplaced optimism with visible dents",
+			"pressure_tell": "Gets quieter and more transactional."
+		},
+		{
+			"social_strategy": "Uses jokes to see who is actually listening.",
+			"humor_mechanism": "pedantic correction under pressure"
+		}
+	]
+}
