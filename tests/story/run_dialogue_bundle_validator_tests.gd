@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_missing_and_extra_keys_fail()
 	_test_banned_speaker_tics_fail()
 	_test_question_answers_require_declared_anchor()
+	_test_degrade_bundle_repairs_bad_optional_answer()
 
 	if _failures.is_empty():
 		print("[PASS] Dialogue bundle validator tests")
@@ -74,6 +75,45 @@ func _test_question_answers_require_declared_anchor() -> void:
 	bundle["clarify_term_response"] = "The convoy case needs evidence before the report is buried."
 	result = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
 	_expect(bool(result.get("ok", false)), "Anchored question answer did not pass validation.")
+
+
+func _test_degrade_bundle_repairs_bad_optional_answer() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Mara keeps the tablet angled away from station cameras."
+	bundle["clarify_term_player"] = "What convoy case?"
+	bundle["clarify_term_response"] = "That is complicated. Trust me."
+	bundle["accept_standard_response"] = "Keep the wreckage intact and we are square."
+	bundle["model_invented_choice"] = "Pay me in secrets."
+	var result: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = result.get("bundle", {})
+	var degraded_fields: Array = result.get("degraded_fields", [])
+	_expect(bool(result.get("ok", false)), "Degraded bundle did not validate.")
+	_expect(
+		degraded_fields.has("clarify_term_response"),
+		"Bad optional answer was not marked as degraded."
+	)
+	_expect(
+		not repaired.has("model_invented_choice"),
+		"Invented model key survived degradation."
+	)
+	_expect(
+		str(repaired.get("opening", "")) == "Mara keeps the tablet angled away from station cameras.",
+		"Valid opening was not preserved during degradation."
+	)
+	_expect(
+		str(repaired.get("accept_standard_response", "")) == "Keep the wreckage intact and we are square.",
+		"Valid terminal response was not preserved during degradation."
+	)
+	_expect(
+		str(repaired.get("clarify_term_response", "")).to_lower().contains("convoy case"),
+		"Degraded answer did not use anchored fallback text."
+	)
 
 
 func _conversation_plan() -> Dictionary:

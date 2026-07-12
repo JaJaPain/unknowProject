@@ -51,6 +51,37 @@ static func validate_bundle(
 	return {"ok": false, "errors": errors}
 
 
+static func degrade_bundle(
+	bundle: Dictionary,
+	mission_plan: Dictionary,
+	conversation_plan: Dictionary,
+	speaker_card: Dictionary = {}
+) -> Dictionary:
+	var source_result := validate_bundle(bundle, conversation_plan, speaker_card)
+	var required := CompilerType.required_output_keys(conversation_plan)
+	var fallback := CompilerType.fallback_bundle(mission_plan, conversation_plan)
+	var repaired := {}
+	for key in required:
+		repaired[key] = str(bundle.get(key, "")).strip_edges()
+	var degraded_fields: Array[String] = []
+	if not bool(source_result.get("ok", false)):
+		for raw_error in (source_result.get("errors", []) as Array):
+			var field := _field_for_error(str(raw_error))
+			if field.is_empty() or not repaired.has(field):
+				continue
+			repaired[field] = str(fallback.get(field, "")).strip_edges()
+			if not degraded_fields.has(field):
+				degraded_fields.append(field)
+	var final_result := validate_bundle(repaired, conversation_plan, speaker_card)
+	return {
+		"ok": bool(final_result.get("ok", false)),
+		"bundle": repaired if bool(final_result.get("ok", false)) else {},
+		"degraded_fields": degraded_fields,
+		"source_errors": source_result.get("errors", []),
+		"errors": final_result.get("errors", []),
+	}
+
+
 static func _banned_tics(speaker_card: Dictionary) -> Array[String]:
 	var voice_rules: Dictionary = speaker_card.get("voice_rules", {}) \
 		if speaker_card.get("voice_rules", {}) is Dictionary else {}
@@ -63,6 +94,19 @@ static func _banned_tics(speaker_card: Dictionary) -> Array[String]:
 		if not tic.is_empty():
 			result.append(tic)
 	return result
+
+
+static func _field_for_error(error: String) -> String:
+	var parts := error.split(":")
+	if parts.size() < 2:
+		return ""
+	match parts[0]:
+		"missing_or_short", "too_long", "banned_tic":
+			return parts[1]
+		"missing_answer_anchor":
+			return "%s_response" % parts[1]
+		_:
+			return ""
 
 
 static func _contains_wordish(text: String, needle: String) -> bool:
