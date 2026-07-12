@@ -67,6 +67,75 @@ func _initialize() -> void:
 		) == "Keep ROE, TTS, and SC readable.",
 		"TTS pronunciation cleanup should preserve known acronyms."
 	)
+	var filler: Dictionary = service.latency_filler_clip_request(
+		"Broker Kaelen",
+		"voice.kaelen.v1",
+		"tts_cache",
+		0.8,
+		false,
+		2
+	)
+	_expect(
+		bool(filler.get("ok", false))
+			and str(filler.get("word", "")) == "well"
+			and str(filler.get("source", "")) == "prerecorded_latency_filler"
+			and not bool(filler.get("semantic_content", true))
+			and not bool(filler.get("may_replace_required_text", true))
+			and not bool(filler.get("advances_state", true))
+			and not bool(filler.get("reveals_facts", true))
+			and not bool(filler.get("counts_as_generated_line", true)),
+		"Kaelen latency filler request did not preserve the non-semantic safety contract."
+	)
+	var nova_filler: Dictionary = service.latency_filler_clip_request(
+		"N.O.V.A.",
+		"voice.nova.v1",
+		"llm_generation",
+		1.0,
+		false,
+		3
+	)
+	_expect(
+		bool(nova_filler.get("ok", false))
+			and str(nova_filler.get("word", "")) == "ahh"
+			and str(nova_filler.get("voice_profile_id", "")) == "voice.nova.v1",
+		"N.O.V.A. latency filler request was not accepted for a short LLM wait."
+	)
+	for rejected in [
+		service.latency_filler_clip_request(
+			"Jenna Kross",
+			"voice.jenna_kross.v1",
+			"tts_cache",
+			0.8,
+			false
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"dialogue",
+			0.8,
+			false
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"tts_cache",
+			0.8,
+			true
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"tts_cache",
+			5.0,
+			false
+		),
+	]:
+		_expect(
+			not bool(rejected.get("ok", true))
+				and not bool(rejected.get("may_replace_required_text", true))
+				and not bool(rejected.get("counts_as_generated_line", true)),
+			"Latency filler rejection did not preserve safety flags."
+		)
 
 	var kaelen_delivery: Dictionary = service.provider.resolve_delivery(
 		&"voice.kaelen.v1"

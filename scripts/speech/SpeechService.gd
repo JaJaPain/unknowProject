@@ -2,6 +2,17 @@ extends Node
 
 const DEFAULT_PROFILE := &"voice.neutral.v1"
 const KAELEN_PROFILE := &"voice.kaelen.v1"
+const NOVA_PROFILE := &"voice.nova.v1"
+const LATENCY_FILLER_WORDS := ["um", "oh", "well", "ahh"]
+const LATENCY_FILLER_WAIT_REASONS := [
+	"llm",
+	"llm_generation",
+	"tts",
+	"tts_cache",
+	"tts_ready",
+]
+const LATENCY_FILLER_MIN_QUIET_SECONDS := 0.35
+const LATENCY_FILLER_MAX_WAIT_SECONDS := 2.5
 
 signal cache_queue_completed()
 signal speech_connection_attempt(attempt: int)
@@ -115,6 +126,46 @@ func prepare_followup_text(text: String, voice_profile: Variant) -> String:
 	return prepared
 
 
+func latency_filler_clip_request(
+	speaker_id: String,
+	voice_profile: Variant,
+	wait_reason: String,
+	quiet_seconds: float,
+	required_text_ready: bool,
+	word_index: int = 0
+) -> Dictionary:
+	var profile_id := resolve_voice_profile(voice_profile)
+	var clean_speaker := speaker_id.strip_edges().to_lower()
+	var clean_reason := wait_reason.strip_edges().to_lower()
+	if required_text_ready:
+		return _filler_rejected("required_text_ready")
+	if quiet_seconds < LATENCY_FILLER_MIN_QUIET_SECONDS:
+		return _filler_rejected("quiet_window_too_short")
+	if quiet_seconds > LATENCY_FILLER_MAX_WAIT_SECONDS:
+		return _filler_rejected("wait_too_long_for_filler")
+	if not LATENCY_FILLER_WAIT_REASONS.has(clean_reason):
+		return _filler_rejected("not_llm_or_tts_wait")
+	if not _is_latency_filler_speaker(clean_speaker, profile_id):
+		return _filler_rejected("speaker_not_allowed")
+	var word := str(LATENCY_FILLER_WORDS[
+		abs(word_index) % LATENCY_FILLER_WORDS.size()
+	])
+	var speaker_key := "nova" if profile_id == NOVA_PROFILE else "kaelen"
+	return {
+		"ok": true,
+		"word": word,
+		"clip_id": "latency_filler.%s.%s" % [speaker_key, word],
+		"speaker_id": clean_speaker,
+		"voice_profile_id": str(profile_id),
+		"source": "prerecorded_latency_filler",
+		"semantic_content": false,
+		"may_replace_required_text": false,
+		"advances_state": false,
+		"reveals_facts": false,
+		"counts_as_generated_line": false,
+	}
+
+
 func resolve_voice_profile(value: Variant) -> StringName:
 	var raw := str(value)
 	if raw.is_empty() or raw == "neutral":
@@ -183,6 +234,26 @@ func clean_dialogue_text(text: String) -> String:
 
 func normalize_tts_pronunciation(text: String) -> String:
 	return TTSInterface.normalize_tts_pronunciation(text)
+
+
+func _filler_rejected(reason: String) -> Dictionary:
+	return {
+		"ok": false,
+		"reason": reason,
+		"semantic_content": false,
+		"may_replace_required_text": false,
+		"advances_state": false,
+		"reveals_facts": false,
+		"counts_as_generated_line": false,
+	}
+
+
+func _is_latency_filler_speaker(speaker_id: String, profile_id: StringName) -> bool:
+	if profile_id == KAELEN_PROFILE:
+		return speaker_id.contains("kaelen")
+	if profile_id == NOVA_PROFILE:
+		return speaker_id.contains("nova") or speaker_id.contains("n.o.v.a")
+	return false
 
 
 func _simulate_failed_request_for_test() -> void:
