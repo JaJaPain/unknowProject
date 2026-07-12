@@ -102,6 +102,7 @@ static func _question_intents(
 ) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var grounding := _first_knowledge_candidate(knowledge_candidates, "grounding")
+	var deeper := _first_knowledge_candidate(knowledge_candidates, "deeper")
 	if not grounding.is_empty():
 		result.append(_intent(
 			INTENT_CLARIFY_TERM,
@@ -112,7 +113,8 @@ static func _question_intents(
 				"answer_anchors": _candidate_answer_anchors(grounding),
 			}
 		))
-	elif _has_any(mission_plan, ["question_fact_ids", "clarify_fact_ids"]):
+	elif deeper.is_empty() \
+			and _has_any(mission_plan, ["question_fact_ids", "clarify_fact_ids"]):
 		result.append(_intent(
 			INTENT_CLARIFY_TERM,
 			"What needs clarifying?",
@@ -137,7 +139,6 @@ static func _question_intents(
 		result.append(_intent(INTENT_ASK_RISK, "What can go wrong?"))
 	if _has_text(mission_plan, ["story_thread_id", "story_beat_id", "cause_id"]):
 		result.append(_intent(INTENT_ASK_CONNECTION, "How is this connected?"))
-	var deeper := _first_knowledge_candidate(knowledge_candidates, "deeper")
 	if not deeper.is_empty():
 		result.append(_intent(
 			INTENT_INFORMED_FOLLOWUP,

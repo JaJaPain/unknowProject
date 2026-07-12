@@ -1,6 +1,7 @@
 extends SceneTree
 
 const PlanType := preload("res://scripts/story/MissionConversationPlan.gd")
+const KnowledgeLedgerType := preload("res://scripts/story/KnowledgeLedger.gd")
 
 var _failures: Array[String] = []
 
@@ -8,6 +9,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_registry_contains_required_intents()
 	_test_plan_uses_knowledge_questions_and_mission_context()
+	_test_plan_questions_change_with_knowledge_state()
 	_test_mechanical_and_relationship_gates_terminal_intents()
 	_test_terminal_intents_carry_code_owned_consequences()
 
@@ -80,6 +82,68 @@ func _test_plan_uses_knowledge_questions_and_mission_context() -> void:
 	_expect(
 		(clarify.get("answer_anchors", []) as Array).has("convoy case"),
 		"Plan did not carry knowledge answer anchors into clarify intent."
+	)
+
+
+func _test_plan_questions_change_with_knowledge_state() -> void:
+	var story_state := {"knowledge_revision": 0, "knowledge_states": {}}
+	var ledger := KnowledgeLedgerType.new(story_state)
+	var mission_plan := {
+		"objective_type": "DELIVERY_COURIER",
+		"question_fact_ids": ["fact.convoy_loss.rumor"],
+		"fact_aliases": {
+			"fact.convoy_loss.rumor": "the lost convoy",
+		},
+	}
+	var unknown_plan: Dictionary = PlanType.build_plan(
+		mission_plan,
+		ledger.question_candidates(mission_plan),
+		{},
+		{}
+	)
+	_expect(
+		unknown_plan.get("intent_ids", []).has("clarify_term")
+			and not unknown_plan.get("intent_ids", []).has("informed_followup"),
+		"Unknown player state did not produce a grounding clarify question."
+	)
+	ledger.promote(
+		"fact.convoy_loss.rumor",
+		"rumored",
+		"lounge_rumor",
+		12
+	)
+	_expect(
+		ledger.state_for("fact.convoy_loss.rumor") == "rumored",
+		"Test setup failed to promote fact to rumored."
+	)
+	var rumored_plan: Dictionary = PlanType.build_plan(
+		mission_plan,
+		ledger.question_candidates(mission_plan),
+		{},
+		{}
+	)
+	_expect(
+		rumored_plan.get("intent_ids", []).has("informed_followup")
+			and not rumored_plan.get("intent_ids", []).has("clarify_term"),
+		"Rumored player state did not produce an informed follow-up."
+	)
+	ledger.promote(
+		"fact.convoy_loss.rumor",
+		"known",
+		"briefing",
+		13
+	)
+	var known_plan: Dictionary = PlanType.build_plan(
+		mission_plan,
+		ledger.question_candidates(mission_plan),
+		{},
+		{}
+	)
+	var followup := _intent_by_id(known_plan, "informed_followup")
+	_expect(
+		not followup.is_empty()
+			and str(followup.get("label", "")).begins_with("Why"),
+		"Known player state did not preserve a deeper follow-up question."
 	)
 
 
