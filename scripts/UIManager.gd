@@ -5115,6 +5115,9 @@ func _lounge_card_context(card_data: Dictionary) -> Dictionary:
 			"greeting",
 			npc_data.get("flavor_lines", [])
 		)
+		var state_context := _lounge_npc_state_context(card_data)
+		if not state_context.is_empty():
+			extra += " " + state_context
 	return {
 		"speaker": str(card_data.get("name", "Local Contact")),
 		"role": str(card_data.get("role", "station regular")),
@@ -5124,6 +5127,51 @@ func _lounge_card_context(card_data: Dictionary) -> Dictionary:
 		"system": _get_current_system_display_name(),
 		"extra": extra,
 	}
+
+
+func _lounge_npc_state_context(card_data: Dictionary) -> String:
+	var npc_id := str(card_data.get("npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(card_data.get("contact_key", "")).strip_edges()
+	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+		return ""
+	if GlobalState.campaign_npc_state_store == null \
+			or not GlobalState.campaign_npc_state_store.has_method("state_for"):
+		return ""
+	var state: Dictionary = GlobalState.campaign_npc_state_store.state_for(npc_id)
+	var lines: Array[String] = []
+	var relationship: Dictionary = state.get("relationship", {}) \
+		if state.get("relationship", {}) is Dictionary else {}
+	var rel_bits: Array[String] = []
+	for field in ["trust", "respect", "warmth", "debt"]:
+		var value := int(relationship.get(field, 0))
+		if value != 0:
+			rel_bits.append("%s %+d" % [field, value])
+	if not rel_bits.is_empty():
+		lines.append("Relationship: " + ", ".join(rel_bits) + ".")
+	var last_stance := str(relationship.get("last_player_stance", "")).strip_edges()
+	if not last_stance.is_empty() and last_stance != "unknown":
+		lines.append("Last player stance: " + last_stance + ".")
+	var current_stake: Dictionary = state.get("current_stake", {}) \
+		if state.get("current_stake", {}) is Dictionary else {}
+	var stake_text := str(
+		current_stake.get("why_it_matters_to_them", "")
+	).strip_edges()
+	if not stake_text.is_empty():
+		lines.append(
+			"Current personal stake: %s Urgency %d/5." %
+			[stake_text, int(current_stake.get("urgency", 0))]
+		)
+	var memory_summary := str(state.get("memory_summary", "")).strip_edges()
+	if not memory_summary.is_empty():
+		lines.append("Relevant memory: " + memory_summary)
+	if lines.is_empty():
+		return ""
+	return (
+		"NPC STATE: Use this for tone and recall only; do not invent additional "
+		+ "events or change relationship numbers. "
+		+ " ".join(lines)
+	)
 
 
 func _lounge_card_fallback_line(card_data: Dictionary) -> String:
