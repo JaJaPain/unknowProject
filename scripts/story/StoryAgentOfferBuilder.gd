@@ -129,7 +129,8 @@ static func _attach_mission_conversation(
 	).duplicate(true) if candidate.get("director_only_fact_ids", []) is Array else []
 	var bundle := MissionConversationCompilerType.fallback_bundle(
 		mission_plan,
-		conversation_plan
+		conversation_plan,
+		_speaker_card(agent_profile)
 	)
 	var validation := DialogueBundleValidatorType.validate_bundle(
 		bundle,
@@ -194,11 +195,26 @@ static func _speaker_card(agent_profile: Dictionary) -> Dictionary:
 	return {
 		"name": str(agent_profile.get("agent_name", "Local Contact")),
 		"role": str(agent_profile.get("agent_role", "Station faction contact")),
+		"relationship_tier": _relationship_tier(agent_profile),
 		"voice_rules": agent_profile.get("voice_rules", {})
 			if agent_profile.get("voice_rules", {}) is Dictionary else {},
 		"persona": agent_profile.get("persona", {})
 			if agent_profile.get("persona", {}) is Dictionary else {},
 	}
+
+
+static func _relationship_tier(agent_profile: Dictionary) -> String:
+	var explicit := str(agent_profile.get("relationship_tier", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var respect := int(agent_profile.get("relationship_respect", 0))
+	if respect >= 6:
+		return "trusted"
+	if respect >= 1:
+		return "cordial"
+	if respect <= -3:
+		return "hostile"
+	return "wary"
 
 
 static func _candidate(agent_profile: Dictionary) -> Dictionary:

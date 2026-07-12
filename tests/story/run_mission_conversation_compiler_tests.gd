@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_required_keys_are_flat_and_intent_owned()
 	_test_prompt_uses_actual_values_and_code_owned_intents()
 	_test_fallback_bundle_covers_required_keys()
+	_test_fallback_bundle_preserves_emergency_truth_slots()
 	_test_fallback_bundle_satisfies_answer_anchors()
 	_test_parse_bundle_returns_required_flat_shape()
 	_test_parse_bundle_rejects_malformed_or_incomplete_output()
@@ -74,6 +75,26 @@ func _test_fallback_bundle_covers_required_keys() -> void:
 			bundle.has(key) and not str(bundle.get(key, "")).strip_edges().is_empty(),
 			"Fallback bundle missing required key %s." % key
 		)
+
+
+func _test_fallback_bundle_preserves_emergency_truth_slots() -> void:
+	var plan := _mission_plan()
+	plan["relationship_tier"] = "wary"
+	var bundle: Dictionary = CompilerType.fallback_bundle(
+		plan,
+		_conversation_plan(),
+		_speaker_card()
+	)
+	var opening := str(bundle.get("opening", ""))
+	_expect(
+		opening.contains("Mara Venn")
+			and opening.contains("Relay Evidence Run")
+			and opening.contains("Recover blackbox shard")
+			and opening.contains("convoy case")
+			and opening.contains("Dock crews lose hazard coverage")
+			and opening.contains("wary"),
+		"Fallback bundle did not preserve speaker, cause, stake, objective, and relationship."
+	)
 
 
 func _test_fallback_bundle_satisfies_answer_anchors() -> void:

@@ -90,13 +90,35 @@ static func build_prompt(
 
 static func fallback_bundle(
 	mission_plan: Dictionary,
-	conversation_plan: Dictionary
+	conversation_plan: Dictionary,
+	speaker_card: Dictionary = {}
 ) -> Dictionary:
+	var speaker_name := _text(speaker_card, "name", "Local Contact")
+	var title := _text(mission_plan, "title", "Untitled Contract")
+	var objective := _text(
+		mission_plan,
+		"objective_summary",
+		_objective_summary(mission_plan)
+	)
+	var opening_parts: Array[String] = [
+		"%s has a contract: %s." % [speaker_name, title],
+		objective,
+	]
+	var because := _text(mission_plan, "public_because", "")
+	if not because.is_empty():
+		opening_parts.append(because)
+	var stake := _text(mission_plan, "stake", "")
+	if not stake.is_empty():
+		opening_parts.append(stake)
+	var relationship := _text(
+		mission_plan,
+		"relationship_tier",
+		_text(speaker_card, "relationship_tier", "")
+	)
+	if not relationship.is_empty():
+		opening_parts.append("Terms stay %s." % relationship)
 	var bundle := {
-		"opening": "I have a contract: %s. %s" % [
-			_text(mission_plan, "title", "Untitled Contract"),
-			_objective_summary(mission_plan),
-		],
+		"opening": " ".join(opening_parts),
 	}
 	for intent in _intents(conversation_plan):
 		var intent_id := str(intent.get("id", ""))

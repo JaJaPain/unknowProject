@@ -144,6 +144,10 @@ func _assert_story_offer_conversation_bundle(
 		str(bundle.get("opening", "")).contains(str(offer.get("title", ""))),
 		"Offer dialogue bundle opening does not reference its title for %s." % objective_type
 	)
+	_expect(
+		str(bundle.get("opening", "")).contains("trusted"),
+		"Offer dialogue bundle opening does not preserve relationship tier for %s." % objective_type
+	)
 
 
 func _profile_for_objective(objective_type: String) -> Dictionary:
@@ -151,6 +155,7 @@ func _profile_for_objective(objective_type: String) -> Dictionary:
 		"agent_id": "agent.test",
 		"agent_name": "Jenna Kross",
 		"agent_role": "Frontier Station Contact",
+		"relationship_respect": 7,
 		"faction": "neutral",
 		"story_agent_offer_context": {
 			"ok": true,

@@ -65,7 +65,11 @@ static func degrade_bundle(
 ) -> Dictionary:
 	var source_result := validate_bundle(bundle, conversation_plan, speaker_card)
 	var required := CompilerType.required_output_keys(conversation_plan)
-	var fallback := CompilerType.fallback_bundle(mission_plan, conversation_plan)
+	var fallback := CompilerType.fallback_bundle(
+		mission_plan,
+		conversation_plan,
+		speaker_card
+	)
 	var repaired := {}
 	for key in required:
 		repaired[key] = str(bundle.get(key, "")).strip_edges()
