@@ -535,7 +535,9 @@ func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
 		source.contains("func _on_quest_accepted_chronicle")
 			and source.contains("_queue_narrative_prefetch_jobs_for_event")
 			and source.contains("_narrative_prefetch_event_from_quest(quest, \"mission_accepted\")")
+			and source.contains("_narrative_prefetch_event_from_quest(quest, \"objective_progress\")")
 			and source.contains("_narrative_prefetch_event_from_quest(quest, \"objective_complete\")")
+			and source.contains("QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)")
 			and source.contains("NarrativeCacheSchedulerType.prefetch_jobs_for_event"),
 		"GameRoot mission lifecycle hooks are not wired to the narrative prefetch planner."
 	)

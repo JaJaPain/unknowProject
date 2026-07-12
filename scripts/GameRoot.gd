@@ -154,6 +154,7 @@ func _ready() -> void:
 	system_changed.connect(ship_pre_generator.on_system_entered)
 	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
+	QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)
 	QuestManager.quest_declined_details.connect(_on_quest_declined_chronicle)
 	QuestManager.quest_completed_details.connect(_on_quest_completed_chronicle)
 	QuestManager.quest_completed_details.connect(StoryManager.on_quest_completed)
@@ -3152,6 +3153,15 @@ func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
 		_append_quest_chronicle_event("mission_accepted", quest, "accepted")
 
 
+func _on_quest_progress_prefetch() -> void:
+	if not QuestManager.is_quest_active():
+		return
+	var quest: Dictionary = QuestManager.active_quest.duplicate(true)
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "objective_progress")
+	)
+
+
 func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
 	if event.is_empty():
 		return
@@ -3190,11 +3200,33 @@ static func _narrative_prefetch_event_from_quest(
 			0
 		)) if is_instance_valid(StoryManager) else 0,
 	}
+	var progress_fraction := _quest_progress_fraction(quest)
+	if progress_fraction >= 0.0:
+		event["progress_fraction"] = progress_fraction
 	if quest.get("likely_outcome_variants", []) is Array:
 		event["likely_outcome_variants"] = (
 			quest.get("likely_outcome_variants", []) as Array
 		).duplicate(true)
 	return event
+
+
+static func _quest_progress_fraction(quest: Dictionary) -> float:
+	match str(quest.get("objective_type", "")):
+		"DELIVER_ORE":
+			var required := float(quest.get("amount_required", 0.0))
+			if required <= 0.0:
+				return -1.0
+			return clampf(float(quest.get("partial_delivered", 0.0)) / required, 0.0, 1.0)
+		"KILL_SHIPS", "TARGET_WITH_COMMS_REVERSAL":
+			var required_count := int(quest.get("count_required", 0))
+			if required_count <= 0:
+				return -1.0
+			return clampf(float(quest.get("current_count", 0)) / float(required_count), 0.0, 1.0)
+		"RECOVER_COMBAT_DROP":
+			return 1.0 if bool(quest.get("ship_log_recovered", false)) else 0.0
+		"PICKUP_SPECIAL":
+			return 1.0 if bool(quest.get("picked_up", false)) else 0.0
+	return -1.0
 
 
 func _on_quest_declined_chronicle(quest: Dictionary) -> void:
