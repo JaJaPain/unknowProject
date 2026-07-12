@@ -21,6 +21,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_bootstrap_update_and_reopen_npc_state()
 	_cleanup()
+	_test_structured_event_memory_projection()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC state store tests")
@@ -155,6 +157,64 @@ func _test_bootstrap_update_and_reopen_npc_state() -> void:
 		int(reopened_state.get("state_revision", 0)) == 3
 			and str(reopened_state.get("memory_summary", "")) == "Mara remembers the relay inspection.",
 		"NPC state did not persist after reopen."
+	)
+
+
+func _test_structured_event_memory_projection() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Structured Memory Fixture",
+		"npc-state-structured-memory-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC state store was invalid for structured memory test.")
+	if not store.is_valid():
+		return
+	var memory: Dictionary = store.record_memory_events(
+		NPC_ID,
+		[
+			{
+				"event_id": "event.local.fixture.unrelated",
+				"event_type": "mission_completed",
+				"subject_ids": ["npc.gen.fixture.other"],
+				"payload": {"title": "Other job"},
+			},
+			{
+				"event_id": "event.local.fixture.drink",
+				"event_type": "lounge_drink_bought",
+				"subject_ids": [NPC_ID],
+				"payload": {"summary": "The pilot bought Mara a drink."},
+			},
+			{
+				"event_id": "event.local.fixture.relay",
+				"event_type": "mission_completed",
+				"subject_ids": [NPC_ID, "thread.convoy_shortage"],
+				"payload": {"title": "Relay inspection completed"},
+			},
+		],
+		"She keeps a private ledger of useful pilots."
+	)
+	_expect(bool(memory.get("ok", false)), memory.get("error", ""))
+	var state: Dictionary = memory.get("state", {})
+	var refs: Array = state.get("memory_event_ids", [])
+	_expect(
+		refs == ["event.local.fixture.drink", "event.local.fixture.relay"],
+		"Structured NPC memory projection did not keep only relevant event refs."
+	)
+	_expect(
+		str(state.get("memory_summary", "")).contains("bought Mara a drink")
+			and str(state.get("memory_summary", "")).contains("Relay inspection completed"),
+		"Structured NPC memory projection did not build a code-owned summary."
+	)
+	_expect(
+		(state.get("line_memory_fingerprints", []) as Array).size() == 1,
+		"Structured NPC memory projection did not remember the generated line fingerprint."
 	)
 
 

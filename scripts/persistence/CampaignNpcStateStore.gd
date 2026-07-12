@@ -130,6 +130,36 @@ func record_memory_projection(
 	return _upsert_state(npc_id, state, "npc_state_memory_projection")
 
 
+func record_memory_events(
+	npc_id: String,
+	events: Array,
+	line_text: String = ""
+) -> Dictionary:
+	var event_ids: Array = []
+	var relevant_events: Array = []
+	for raw_event in events:
+		if not (raw_event is Dictionary):
+			continue
+		var event_data: Dictionary = raw_event
+		var subject_ids: Array = event_data.get("subject_ids", []) \
+			if event_data.get("subject_ids", []) is Array else []
+		if not subject_ids.is_empty() and not subject_ids.has(npc_id):
+			continue
+		var event_id := str(event_data.get("event_id", "")).strip_edges()
+		if event_id.is_empty():
+			continue
+		event_ids.append(event_id)
+		relevant_events.append(event_data)
+	if event_ids.is_empty():
+		return _failure("No structured memory events referenced this NPC.")
+	return record_memory_projection(
+		npc_id,
+		event_ids,
+		_memory_summary_from_events(relevant_events),
+		line_text
+	)
+
+
 func capture_state_for_checkpoint() -> Dictionary:
 	return data.duplicate(true)
 
@@ -263,6 +293,31 @@ static func _clean_current_stake(current_stake: Dictionary) -> Dictionary:
 			"urgency": clampi(int(current_stake.get("urgency", 0)), 0, 5),
 		},
 	}
+
+
+static func _memory_summary_from_events(events: Array) -> String:
+	var parts: Array[String] = []
+	var start := maxi(0, events.size() - 3)
+	for index in range(start, events.size()):
+		var raw_event: Variant = events[index]
+		if not (raw_event is Dictionary):
+			continue
+		var event: Dictionary = raw_event
+		var payload: Dictionary = {}
+		if event.get("payload", {}) is Dictionary:
+			payload = event.get("payload", {}) as Dictionary
+		var label: String = str(event.get("event_type", "event")).replace("_", " ")
+		var summary_fields := ["title", "description", "summary"]
+		for field in summary_fields:
+			var candidate := str(payload.get(field, "")).strip_edges()
+			if not candidate.is_empty():
+				label = candidate
+		if label.is_empty():
+			label = str(event.get("event_type", "event")).replace("_", " ")
+		parts.append(label)
+	if parts.is_empty():
+		return ""
+	return "Recent memory: %s." % "; ".join(parts)
 
 
 static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult:
