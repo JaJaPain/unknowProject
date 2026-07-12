@@ -261,6 +261,8 @@ func mark_tts_failed(job_id: String, reason: String = "tts_failed") -> Dictionar
 
 static func prefetch_jobs_for_event(event: Dictionary) -> Array[Dictionary]:
 	var event_type := str(event.get("event_type", "")).strip_edges()
+	if event_type == "system_arrived":
+		return _system_arrival_prefetch_jobs(event)
 	var mission_id := str(event.get("mission_id", event.get("subject_id", ""))).strip_edges()
 	if mission_id.is_empty():
 		return []
@@ -685,6 +687,90 @@ static func _mission_acceptance_prefetch_jobs(event: Dictionary) -> Array[Dictio
 		job["truth_frozen"] = true
 		jobs.append(job)
 	return jobs
+
+
+static func _system_arrival_prefetch_jobs(event: Dictionary) -> Array[Dictionary]:
+	var system_id := str(event.get("system_id", event.get("subject_id", ""))).strip_edges()
+	if system_id.is_empty():
+		return []
+	var jobs: Array[Dictionary] = [
+		_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_SYSTEM_AGENT,
+			system_id,
+			"current_system_agent_bundle"
+		),
+		_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_SYSTEM_KAELEN,
+			system_id,
+			"current_system_kaelen_bundle"
+		),
+		_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_SYSTEM_NOVA,
+			system_id,
+			"current_system_nova_bundle"
+		),
+	]
+	var station_ids: Array[String] = []
+	var station_id := str(event.get("station_id", "")).strip_edges()
+	if not station_id.is_empty():
+		station_ids.append(station_id)
+	var raw_station_ids: Array = event.get("visible_station_ids", []) \
+		if event.get("visible_station_ids", []) is Array else []
+	for raw_id in raw_station_ids:
+		var visible_station_id := str(raw_id).strip_edges()
+		if not visible_station_id.is_empty() and not station_ids.has(visible_station_id):
+			station_ids.append(visible_station_id)
+	for visible_station_id in station_ids:
+		var station_event := event.duplicate(true)
+		station_event["station_id"] = visible_station_id
+		jobs.append(_context_prefetch_job(
+			station_event,
+			TRIGGER_CURRENT_VISIBLE_STATION,
+			visible_station_id,
+			"current_visible_station_bundle"
+		))
+	return jobs
+
+
+static func _context_prefetch_job(
+	event: Dictionary,
+	trigger: String,
+	subject_id: String,
+	kind: String
+) -> Dictionary:
+	var safe_subject := _safe_id_part(subject_id)
+	var cache_key := str(event.get("cache_key", "")).strip_edges()
+	if cache_key.is_empty():
+		cache_key = "prefetch.%s.%s" % [trigger, safe_subject]
+	var job := {
+		"job_id": "job.%s.%s" % [trigger, safe_subject],
+		"cache_key": cache_key,
+		"kind": kind,
+		"trigger": trigger,
+		"priority": priority_for_trigger(trigger),
+		"subject_id": subject_id,
+		"requester_id": "prefetch:%s:%s" % [trigger, subject_id],
+	}
+	for key in [
+		"campaign_id",
+		"timeline_id",
+		"story_revision",
+		"knowledge_revision",
+		"mission_history_revision",
+		"system_id",
+		"station_id",
+		"speaker_id",
+		"story_beat_id",
+		"cause_id",
+		"relationship_tier",
+		"arrival_gate_id",
+	]:
+		if event.has(key):
+			job[key] = event[key]
+	return job
 
 
 static func _safe_id_part(value: String) -> String:

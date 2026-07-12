@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
 	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
+	_test_system_arrival_plans_current_system_and_station_prefetch()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
@@ -523,6 +524,43 @@ func _test_mission_acceptance_plans_baseline_and_likely_outcomes() -> void:
 				and str(job.get("relationship_tier", "")) == "wary",
 			"Mission acceptance prefetch job did not preserve frozen accepted context."
 		)
+
+
+func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "system_arrived",
+		"system_id": "system.generated.cinder",
+		"arrival_gate_id": "gate.generated.cinder.in",
+		"visible_station_ids": [
+			"station.cinder.exchange",
+			"station.cinder.relay",
+		],
+		"story_revision": 12,
+		"knowledge_revision": 4,
+	})
+	var triggers: Array[String] = []
+	var station_job_count := 0
+	for job in jobs:
+		triggers.append(str(job.get("trigger", "")))
+		if str(job.get("trigger", "")) \
+				== SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION:
+			station_job_count += 1
+			_expect(
+				int(job.get("priority", -1)) == SchedulerType.PRIORITY_P0
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder"
+					and str(job.get("arrival_gate_id", ""))
+						== "gate.generated.cinder.in",
+				"System arrival station prefetch did not preserve arrival context."
+			)
+	_expect(
+		jobs.size() == 5
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA)
+			and station_job_count == 2,
+		"Scheduler system arrival prefetch did not plan current-system and visible-station jobs."
+	)
 
 
 func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
