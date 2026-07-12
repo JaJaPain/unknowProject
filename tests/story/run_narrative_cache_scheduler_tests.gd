@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
 	_test_tts_failure_is_recorded_separately_from_text_degradation()
 	_test_equal_priority_text_dispatches_before_audio_cache()
+	_test_objective_progress_and_completion_plan_turn_in_prefetch()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -445,6 +446,51 @@ func _test_equal_priority_text_dispatches_before_audio_cache() -> void:
 	_expect(
 		str(scheduler.next_job().get("job_id", "")) == "job.text",
 		"Scheduler kind ranking overrode priority bands."
+	)
+
+
+func _test_objective_progress_and_completion_plan_turn_in_prefetch() -> void:
+	var early := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_progress",
+		"mission_id": "mission.alpha",
+		"progress_fraction": 0.69,
+	})
+	var likely := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_progress",
+		"mission_id": "mission.alpha",
+		"progress_fraction": 0.7,
+		"outcome_fingerprint": "rough.pending",
+		"story_revision": 8,
+		"relationship_tier": "cordial",
+	})
+	var complete := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_complete",
+		"mission_id": "mission.alpha",
+		"outcome_fingerprint": "clean.complete",
+		"story_revision": 8,
+		"relationship_tier": "trusted",
+	})
+	_expect(
+		early.is_empty()
+			and likely.size() == 1
+			and complete.size() == 1,
+		"Scheduler prefetch planner did not respect objective progress thresholds."
+	)
+	_expect(
+		str(likely[0].get("trigger", ""))
+			== SchedulerType.TRIGGER_OBJECTIVE_PROGRESS_TURN_IN
+			and int(likely[0].get("priority", -1)) == SchedulerType.PRIORITY_P1
+			and str(likely[0].get("kind", "")) == "kaelen_turn_in_bundle"
+			and str(likely[0].get("relationship_tier", "")) == "cordial",
+		"Scheduler progress prefetch job did not preserve likely turn-in context."
+	)
+	_expect(
+		str(complete[0].get("trigger", ""))
+			== SchedulerType.TRIGGER_OBJECTIVE_COMPLETE_TURN_IN
+			and int(complete[0].get("priority", -1)) == SchedulerType.PRIORITY_P0
+			and str(complete[0].get("outcome_fingerprint", ""))
+				== "clean.complete",
+		"Scheduler completion prefetch job did not become exact P0 turn-in work."
 	)
 
 
