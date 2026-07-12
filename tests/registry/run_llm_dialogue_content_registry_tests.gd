@@ -20,6 +20,7 @@ func _initialize() -> void:
 		_test_quest_content(registry)
 		_test_global_rules(registry)
 		_test_speakers(registry)
+		_test_speaker_prompt_wiring(registry)
 		_test_fallbacks(registry)
 		_test_in_memory_mutation(registry)
 		_test_override_lifecycle(registry)
@@ -96,6 +97,55 @@ func _test_speakers(registry: LLMDialogueContentRegistry) -> void:
 			or registry.speaker_address_rule(other).contains("Never"),
 			"Non-Kaelen speaker '%s' must not be told to use Shiny." % other
 		)
+
+
+func _test_speaker_prompt_wiring(registry: LLMDialogueContentRegistry) -> void:
+	var generated_profile := {
+		"persona": {
+			"core_drive": "Keeps the dock alive by counting exits before trust.",
+			"social_strategy": "Tests competence before offering warmth.",
+			"contradiction": "Talks like a pessimist, but plans for rescue.",
+			"humor_mechanism": "Uses dry understatement to hide fear.",
+			"kindness_tell": "Fixes small things without asking.",
+			"pressure_tell": "Names every failing system in order.",
+			"taboo": "Never jokes about abandoned crews.",
+		},
+		"voice_rules": {
+			"sentence_shape": "Short first sentence, then a precise warning.",
+			"address_rule": "Uses pilot rarely; never uses Shiny.",
+			"favored_vocabulary": ["sealant", "margin", "bad math"],
+			"banned_tics": ["obviously"],
+		},
+	}
+	var faction_block := registry.speaker_prompt_block(
+		"faction_agent",
+		generated_profile
+	)
+	_expect(
+		faction_block.contains("### SPEAKER CARD:"),
+		"Quest prompt should include a live speaker-card block."
+	)
+	_expect(
+		faction_block.contains("Kaelen-only words")
+		and faction_block.contains("Shiny"),
+		"Non-Kaelen speaker-card block must carry Shiny guardrails."
+	)
+	_expect(
+		faction_block.contains("counting exits")
+		and faction_block.contains("Short first sentence"),
+		"Generated NPC persona/voice rules must be included in the speaker-card block."
+	)
+	_expect(
+		faction_block.contains("obviously"),
+		"Generated NPC banned tics must be included in the speaker-card block."
+	)
+
+	var kaelen_block := registry.speaker_prompt_block("kaelen")
+	_expect(
+		kaelen_block.contains("Calls the player Shiny")
+		and not kaelen_block.contains("Kaelen-only words this speaker must not use"),
+		"Kaelen speaker-card block should allow Shiny without non-Kaelen bans."
+	)
 
 
 func _test_fallbacks(registry: LLMDialogueContentRegistry) -> void:

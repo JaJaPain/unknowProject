@@ -2346,12 +2346,9 @@ func request_quest_generation(
 		chosen_faction = factions[randi() % factions.size()]
 	
 	# Each faction has a distinct named agent, personality, and address style.
-	# TODO(llm-content): the nickname/address rules baked into these persona
-	# strings (Shiny = Kaelen only, Indy only occasionally for faction agents) are
-	# mirrored in llm_dialogue_content.json under `global_rules` and `speakers.*`.
-	# Left in code for now because persona wording is interwoven with mechanics;
-	# migrate persona text to `speakers.<id>.tone_card` / `.address_rule` in a
-	# later slice. Do not let Shiny leak into the non-Kaelen personas here.
+	# Fixed-agent prose below carries their specific role vocabulary; the shared
+	# speaker-card block from llm_dialogue_content.json supplies live nickname
+	# and voice guardrails.
 	var agent_name = "Broker Kaelen"
 	var agent_persona = ""
 	var player_nickname = "Indy"
@@ -2359,6 +2356,7 @@ func request_quest_generation(
 	var agent_portrait_id := ""
 	var agent_voice_profile_id := ""
 	var example_faction_key = chosen_faction
+	var speaker_card_id := "faction_agent"
 
 	match chosen_faction:
 		"zenith":
@@ -2389,6 +2387,7 @@ func request_quest_generation(
 			agent_name = "Broker Kaelen"
 			agent_role = "Neutral Fixer & Profit Broker"
 			player_nickname = "Shiny"
+			speaker_card_id = "kaelen"
 			agent_persona = "You are Broker Kaelen, an independent, politically neutral space broker and fixer. " + \
 				"You operate out of a space station and negotiate contracts with all factions for personal profit. " + \
 				"You are cynical, sharp, and opportunistic. You call the pilot 'Shiny' — treating them like an unscarred greenhorn who is also your most profitable tool. " + \
@@ -2426,6 +2425,10 @@ func request_quest_generation(
 			"You speak directly to the pilot, use dry PG-13 frontier humor when it fits, and only use 'Indy' sparingly. Most lines should use 'you' or 'pilot' instead. " + \
 			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
 
+	var speaker_card_block := LLMDialogueContentRegistry.shared().speaker_prompt_block(
+		speaker_card_id,
+		agent_profile
+	)
 	var agent_memory_id: String = agent_memory_id_for_profile(
 		agent_name,
 		chosen_faction,
@@ -2693,6 +2696,7 @@ func request_quest_generation(
 			GlobalState.story_quest_hint["expires_after_docks"] = _remaining
 
 	var system_prompt = agent_persona + "\n\n" + \
+		speaker_card_block + \
 		lore_block + \
 		campaign_bible_block + \
 		story_state_block + \

@@ -298,6 +298,114 @@ func speaker(speaker_id: String) -> Dictionary:
 	return _speaker(speaker_id).duplicate(true)
 
 
+func speaker_prompt_block(
+	speaker_id: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var speaker_card := speaker(speaker_id)
+	var lines: Array[String] = []
+	var tone := str(speaker_card.get("tone_card", "")).strip_edges()
+	var address_rule := str(speaker_card.get("address_rule", "")).strip_edges()
+	if not tone.is_empty():
+		lines.append("- Speaker archetype tone: " + tone)
+	if not address_rule.is_empty():
+		lines.append("- Speaker archetype address rule: " + address_rule)
+	if speaker_id != "kaelen":
+		var global_rules := global_non_kaelen_rules()
+		var non_kaelen_guidance := str(
+			global_rules.get("non_kaelen_address_guidance", "")
+		).strip_edges()
+		if not non_kaelen_guidance.is_empty():
+			lines.append("- Non-Kaelen address guidance: " + non_kaelen_guidance)
+		var kaelen_only := _prompt_string_list(global_rules.get("kaelen_only_words", []))
+		if not kaelen_only.is_empty():
+			lines.append(
+				"- Kaelen-only words this speaker must not use: "
+				+ ", ".join(kaelen_only)
+			)
+		var banned := _prompt_string_list(global_rules.get("banned_non_kaelen_phrases", []))
+		if not banned.is_empty():
+			lines.append("- Banned non-Kaelen phrases: " + ", ".join(banned))
+
+	var persona := _agent_profile_persona(agent_profile)
+	if not persona.is_empty():
+		for key in [
+			"core_drive",
+			"social_strategy",
+			"contradiction",
+			"humor_mechanism",
+			"kindness_tell",
+			"pressure_tell",
+			"taboo",
+		]:
+			var value := str(persona.get(key, "")).strip_edges()
+			if not value.is_empty():
+				lines.append("- " + key.capitalize().replace("_", " ") + ": " + value)
+
+	var voice_rules := _agent_profile_voice_rules(agent_profile)
+	if not voice_rules.is_empty():
+		var sentence_shape := str(
+			voice_rules.get("sentence_shape", "")
+		).strip_edges()
+		if not sentence_shape.is_empty():
+			lines.append("- Sentence shape: " + sentence_shape)
+		var specific_address := str(
+			voice_rules.get("address_rule", "")
+		).strip_edges()
+		if not specific_address.is_empty():
+			lines.append("- Individual address rule: " + specific_address)
+		var favored := _prompt_string_list(voice_rules.get("favored_vocabulary", []))
+		if not favored.is_empty():
+			lines.append("- Favored vocabulary: " + ", ".join(favored))
+		var banned_tics := _prompt_string_list(voice_rules.get("banned_tics", []))
+		if not banned_tics.is_empty():
+			lines.append("- Banned tics: " + ", ".join(banned_tics))
+
+	if lines.is_empty():
+		return ""
+	return (
+		"### SPEAKER CARD:\n"
+		+ "Use these live voice rules for the contract giver. They shape wording only; mechanics, facts, rewards, targets, and disclosure remain code-owned.\n"
+		+ "\n".join(lines)
+		+ "\n\n"
+	)
+
+
+func _agent_profile_persona(agent_profile: Dictionary) -> Dictionary:
+	var persona: Variant = agent_profile.get("persona", {})
+	if persona is Dictionary:
+		return (persona as Dictionary).duplicate(true)
+	var identity: Variant = agent_profile.get("identity_record", {})
+	if identity is Dictionary:
+		persona = (identity as Dictionary).get("persona", {})
+		if persona is Dictionary:
+			return (persona as Dictionary).duplicate(true)
+	return {}
+
+
+func _agent_profile_voice_rules(agent_profile: Dictionary) -> Dictionary:
+	var voice_rules: Variant = agent_profile.get("voice_rules", {})
+	if voice_rules is Dictionary:
+		return (voice_rules as Dictionary).duplicate(true)
+	var identity: Variant = agent_profile.get("identity_record", {})
+	if identity is Dictionary:
+		voice_rules = (identity as Dictionary).get("voice_rules", {})
+		if voice_rules is Dictionary:
+			return (voice_rules as Dictionary).duplicate(true)
+	return {}
+
+
+func _prompt_string_list(raw: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not raw is Array:
+		return result
+	for item in raw:
+		var text := str(item).strip_edges()
+		if not text.is_empty():
+			result.append(text)
+	return result
+
+
 ## Record edited speaker-card text into the override delta. voice_profile_id is
 ## left as-is (it belongs to the voice/content registry, not the dialogue text).
 func set_speaker(speaker_id: String, address_rule: String, tone_card: String) -> void:

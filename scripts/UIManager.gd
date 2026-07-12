@@ -5789,6 +5789,15 @@ func _station_agent_profile_from_npc(npc_name: String, npc_data: Dictionary) -> 
 		"agent_voice_profile_id": str(
 			npc_data.get("voice_profile_id", "voice.neutral.v1")
 		),
+		"identity_record": npc_data.get("identity_record", {}),
+		"persona": (
+			npc_data.get("identity_record", {}).get("persona", {})
+			if npc_data.get("identity_record", {}) is Dictionary else {}
+		),
+		"voice_rules": (
+			npc_data.get("identity_record", {}).get("voice_rules", {})
+			if npc_data.get("identity_record", {}) is Dictionary else {}
+		),
 		"faction": faction,
 		"faction_id": faction_id,
 		"faction_display": faction_display,
