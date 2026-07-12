@@ -49,6 +49,13 @@ func text_fingerprints() -> Dictionary:
 	return (data.get("text_fingerprints", {}) as Dictionary).duplicate(true)
 
 
+func has_text_fingerprint(text: String) -> bool:
+	var fingerprint := text_fingerprint(text)
+	if fingerprint.is_empty():
+		return false
+	return text_fingerprints().has(fingerprint)
+
+
 func get_entry(cache_key: String) -> Dictionary:
 	var clean_key := cache_key.strip_edges()
 	var raw: Variant = data.get("entries", {}).get(clean_key, {})

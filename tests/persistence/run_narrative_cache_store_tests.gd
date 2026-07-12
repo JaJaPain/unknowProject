@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_context_discard_preserves_truth_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
 	_test_text_fingerprints_survive_entry_eviction()
+	_test_text_fingerprint_lookup_detects_prior_lines()
 	_test_clear_cache_removes_entries_and_fingerprints()
 	_test_tts_readiness_tracks_field_voice_and_text_fingerprint()
 	_test_readiness_reports_text_audio_pending_and_failed_separately()
@@ -229,6 +230,19 @@ func _test_text_fingerprints_survive_entry_eviction() -> void:
 			and reopened.get_entry("cache.fingerprint.evicted").is_empty()
 			and reopened.text_fingerprints().has(fingerprint),
 		"Cache text fingerprint did not survive entry eviction."
+	)
+
+
+func _test_text_fingerprint_lookup_detects_prior_lines() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.fingerprint.lookup"))
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		reopened.has_text_fingerprint("The cache has work.")
+			and not reopened.has_text_fingerprint("A line nobody has stored."),
+		"Cache text fingerprint lookup did not detect prior generated lines."
 	)
 
 
