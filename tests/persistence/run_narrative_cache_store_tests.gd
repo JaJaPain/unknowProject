@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
+	_test_text_fingerprints_survive_entry_eviction()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -157,6 +158,27 @@ func _test_limit_enforcement_evicts_disposable_entries_first() -> void:
 			and not reopened.get_entry("cache.limit.accepted").is_empty()
 			and not reopened.get_entry("cache.limit.ready").is_empty(),
 		"Cache limit enforcement did not persist the bounded survivor set."
+	)
+
+
+func _test_text_fingerprints_survive_entry_eviction() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var evicted := _limited_entry("cache.fingerprint.evicted", 30, "ready", true)
+	evicted["text_bundle"]["opening"] = "Nobody gets to unhear the nebula joke."
+	store.upsert_entry(evicted)
+	store.upsert_entry(_limited_entry("cache.fingerprint.kept", 0, "ready", false))
+	var enforced: Dictionary = store.enforce_limits(1, 0)
+	var fingerprint := CacheStoreType.text_fingerprint(
+		"Nobody gets to unhear the nebula joke."
+	)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		bool(enforced.get("ok", false))
+			and reopened.get_entry("cache.fingerprint.evicted").is_empty()
+			and reopened.text_fingerprints().has(fingerprint),
+		"Cache text fingerprint did not survive entry eviction."
 	)
 
 

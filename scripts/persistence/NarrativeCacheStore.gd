@@ -45,6 +45,10 @@ func entries() -> Dictionary:
 	return (data.get("entries", {}) as Dictionary).duplicate(true)
 
 
+func text_fingerprints() -> Dictionary:
+	return (data.get("text_fingerprints", {}) as Dictionary).duplicate(true)
+
+
 func get_entry(cache_key: String) -> Dictionary:
 	var clean_key := cache_key.strip_edges()
 	var raw: Variant = data.get("entries", {}).get(clean_key, {})
@@ -71,6 +75,7 @@ func upsert_entry(entry: Dictionary) -> Dictionary:
 		prepared["consumed"] = false
 	next_entries[cache_key] = prepared
 	next_data["entries"] = next_entries
+	_merge_text_fingerprints(next_data, prepared)
 	var committed := _commit(next_data, "narrative_cache_upsert")
 	if not bool(committed.get("ok", false)):
 		return committed
@@ -90,6 +95,7 @@ func invalidate_by_subject(subject_id: String) -> Dictionary:
 	if not is_valid():
 		return _failure("Narrative cache store is invalid.")
 	var clean_subject := subject_id.strip_edges()
+	var next_data := data.duplicate(true)
 	var next_entries: Dictionary = entries()
 	var removed: Array[String] = []
 	for cache_key in next_entries.keys():
@@ -99,7 +105,6 @@ func invalidate_by_subject(subject_id: String) -> Dictionary:
 			removed.append(str(cache_key))
 	for cache_key in removed:
 		next_entries.erase(cache_key)
-	var next_data := data.duplicate(true)
 	next_data["entries"] = next_entries
 	var committed := _commit(next_data, "narrative_cache_invalidate_subject")
 	if not bool(committed.get("ok", false)):
@@ -111,6 +116,7 @@ func invalidate_by_subject(subject_id: String) -> Dictionary:
 func invalidate_unconsumed_stale_offers(criteria: Dictionary) -> Dictionary:
 	if not is_valid():
 		return _failure("Narrative cache store is invalid.")
+	var next_data := data.duplicate(true)
 	var next_entries: Dictionary = entries()
 	var removed: Array[String] = []
 	for cache_key in next_entries.keys():
@@ -127,7 +133,6 @@ func invalidate_unconsumed_stale_offers(criteria: Dictionary) -> Dictionary:
 			removed.append(str(cache_key))
 	for cache_key in removed:
 		next_entries.erase(cache_key)
-	var next_data := data.duplicate(true)
 	next_data["entries"] = next_entries
 	var committed := _commit(next_data, "narrative_cache_invalidate_stale")
 	if not bool(committed.get("ok", false)):
@@ -142,15 +147,18 @@ func enforce_limits(
 ) -> Dictionary:
 	if not is_valid():
 		return _failure("Narrative cache store is invalid.")
+	var next_data := data.duplicate(true)
 	var next_entries: Dictionary = entries()
 	var removed: Array[String] = []
 	while _limits_exceeded(next_entries, max_entries, max_json_bytes):
 		var eviction_key := _next_eviction_key(next_entries)
 		if eviction_key.is_empty():
 			break
+		var raw: Variant = next_entries.get(eviction_key, {})
+		if raw is Dictionary:
+			_merge_text_fingerprints(next_data, raw)
 		next_entries.erase(eviction_key)
 		removed.append(eviction_key)
-	var next_data := data.duplicate(true)
 	next_data["entries"] = next_entries
 	var committed := _commit(next_data, "narrative_cache_enforce_limits")
 	if not bool(committed.get("ok", false)):
@@ -222,6 +230,7 @@ static func _initial_data(campaign_id: String) -> Dictionary:
 		"ownership": "disposable",
 		"campaign_id": campaign_id,
 		"entries": {},
+		"text_fingerprints": {},
 	}
 
 
@@ -308,6 +317,40 @@ static func _entry_matches_any_stale_criterion(
 		if str(entry.get(key, "")).strip_edges() == expected:
 			return true
 	return false
+
+
+static func text_fingerprint(text: String) -> String:
+	return text.strip_edges().sha256_text()
+
+
+static func _merge_text_fingerprints(next_data: Dictionary, entry: Dictionary) -> void:
+	var fingerprints: Dictionary = next_data.get("text_fingerprints", {})
+	var extracted := _extract_text_fingerprints(entry.get("text_bundle", {}))
+	var now := int(Time.get_unix_time_from_system())
+	for fingerprint in extracted.keys():
+		fingerprints[fingerprint] = {
+			"fingerprint": fingerprint,
+			"kind": str(entry.get("kind", "")),
+			"subject_id": str(entry.get("subject_id", "")),
+			"speaker_id": str(entry.get("speaker_id", "")),
+			"last_seen_at_unix": now,
+		}
+	next_data["text_fingerprints"] = fingerprints
+
+
+static func _extract_text_fingerprints(value: Variant) -> Dictionary:
+	var result := {}
+	if value is String:
+		var text := (value as String).strip_edges()
+		if not text.is_empty():
+			result[text_fingerprint(text)] = true
+	elif value is Dictionary:
+		for item in (value as Dictionary).values():
+			result.merge(_extract_text_fingerprints(item))
+	elif value is Array:
+		for item in (value as Array):
+			result.merge(_extract_text_fingerprints(item))
+	return result
 
 
 static func _limits_exceeded(
@@ -400,6 +443,13 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"entries"
 		)
 		return result
+	if value.has("text_fingerprints") \
+			and not value.get("text_fingerprints", {}) is Dictionary:
+		result.add_error(
+			"invalid_narrative_cache_text_fingerprints",
+			"Narrative cache text_fingerprints must be an object.",
+			"text_fingerprints"
+		)
 	var entries: Dictionary = value.get("entries", {})
 	for cache_key in entries.keys():
 		var raw: Variant = entries[cache_key]
