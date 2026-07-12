@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_opening_shows_all_available_choices()
 	_test_question_answer_returns_to_remaining_choices_without_terminal()
 	_test_terminal_choice_completes_with_stable_choice_id()
+	_test_decline_completes_with_decline_consequence()
 
 	if _failures.is_empty():
 		print("[PASS] Mission conversation controller tests")
@@ -63,6 +64,25 @@ func _test_terminal_choice_completes_with_stable_choice_id() -> void:
 	_expect((terminal.get("choices", []) as Array).is_empty(), "Completed conversation should expose no choices.")
 
 
+func _test_decline_completes_with_decline_consequence() -> void:
+	var screen := ControllerType.start(_conversation_plan(), _bundle())
+	var terminal := ControllerType.select_intent(screen.get("state", {}), "decline")
+	var selected_choice: Dictionary = terminal.get("terminal_choice", {})
+	var consequence: Dictionary = selected_choice.get("consequence", {})
+	_expect(
+		str(terminal.get("terminal_choice_id", "")) == "choice.decline",
+		"Decline did not return a stable QuestManager choice ID."
+	)
+	_expect(
+		str(selected_choice.get("choice_id", "")) == "choice.decline"
+			and str(selected_choice.get("conversation_intent_id", "")) == "decline"
+			and str(consequence.get("mission_action", "")) == "decline"
+			and bool(consequence.get("leaves_mission_lane_empty", false))
+			and int(consequence.get("relationship_delta", 0)) == -1,
+		"Decline did not return a QuestManager-ready decline consequence."
+	)
+
+
 func _conversation_plan() -> Dictionary:
 	return {
 		"ok": true,
@@ -89,6 +109,11 @@ func _conversation_plan() -> Dictionary:
 				"kind": "terminal",
 				"label": "Decline",
 				"fact_ids": [],
+				"consequence": {
+					"mission_action": "decline",
+					"leaves_mission_lane_empty": true,
+					"relationship_delta": -1,
+				},
 			},
 		],
 	}

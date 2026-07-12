@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_registry_contains_required_intents()
 	_test_plan_uses_knowledge_questions_and_mission_context()
 	_test_mechanical_and_relationship_gates_terminal_intents()
+	_test_terminal_intents_carry_code_owned_consequences()
 
 	if _failures.is_empty():
 		print("[PASS] Mission conversation plan tests")
@@ -105,6 +106,52 @@ func _test_mechanical_and_relationship_gates_terminal_intents() -> void:
 		"Plan offered hazard pay despite hostile relationship gate."
 	)
 	_expect(ids.has("decline"), "Plan should still offer decline when enabled.")
+
+
+func _test_terminal_intents_carry_code_owned_consequences() -> void:
+	var plan: Dictionary = PlanType.build_plan(
+		{
+			"objective_type": "RECOVER_COMBAT_DROP",
+			"risk_text": "The wreck is still being watched.",
+			"story_beat_id": "beat.convoy.evidence",
+		},
+		[],
+		{"respect": 2},
+		{
+			"can_request_advance": true,
+			"advance_credits": 75,
+			"hazard_pay_multiplier": 1.25,
+			"decline_relationship_delta": -2,
+		}
+	)
+	var accept_consequence: Dictionary = _intent_by_id(plan, "accept_standard").get("consequence", {})
+	var advance_consequence: Dictionary = _intent_by_id(plan, "request_advance").get("consequence", {})
+	var hazard_consequence: Dictionary = _intent_by_id(plan, "request_hazard_pay").get("consequence", {})
+	var decline_consequence: Dictionary = _intent_by_id(plan, "decline").get("consequence", {})
+	_expect(
+		str(accept_consequence.get("mission_action", "")) == "accept"
+			and int(accept_consequence.get("credits_immediate", -1)) == 0,
+		"Accept consequence was not code-owned."
+	)
+	_expect(
+		str(advance_consequence.get("mission_action", "")) == "accept"
+			and int(advance_consequence.get("credits_immediate", 0)) == 75
+			and bool(advance_consequence.get("advance_requested", false)),
+		"Advance consequence did not carry code-owned advance terms."
+	)
+	_expect(
+		str(hazard_consequence.get("mission_action", "")) == "accept"
+			and is_equal_approx(float(hazard_consequence.get("reward_credits_multiplier", 0.0)), 1.25)
+			and bool(hazard_consequence.get("hazard_pay_requested", false)),
+		"Hazard-pay consequence did not carry code-owned reward terms."
+	)
+	_expect(
+		str(decline_consequence.get("mission_action", "")) == "decline"
+			and bool(decline_consequence.get("leaves_mission_lane_empty", false))
+			and int(decline_consequence.get("relationship_delta", 0)) == -2
+			and str(decline_consequence.get("declined_story_beat_id", "")) == "beat.convoy.evidence",
+		"Decline consequence did not carry code-owned decline effects."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

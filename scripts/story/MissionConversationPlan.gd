@@ -158,16 +158,98 @@ static func _terminal_intents(
 ) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if bool(mechanical.get("can_accept", true)):
-		result.append(_intent(INTENT_ACCEPT_STANDARD, "Accept the contract"))
+		result.append(_terminal_intent(
+			INTENT_ACCEPT_STANDARD,
+			"Accept the contract",
+			mission_plan,
+			relationship,
+			mechanical
+		))
 	if bool(mechanical.get("can_request_advance", false)):
-		result.append(_intent(INTENT_REQUEST_ADVANCE, "Ask for an advance"))
+		result.append(_terminal_intent(
+			INTENT_REQUEST_ADVANCE,
+			"Ask for an advance",
+			mission_plan,
+			relationship,
+			mechanical
+		))
 	if bool(mechanical.get("can_request_hazard_pay", true)) \
 			and _has_risk(mission_plan) \
 			and int(relationship.get("respect", 0)) >= -4:
-		result.append(_intent(INTENT_REQUEST_HAZARD_PAY, "Ask for hazard pay"))
+		result.append(_terminal_intent(
+			INTENT_REQUEST_HAZARD_PAY,
+			"Ask for hazard pay",
+			mission_plan,
+			relationship,
+			mechanical
+		))
 	if bool(mechanical.get("can_decline", true)):
-		result.append(_intent(INTENT_DECLINE, "Decline"))
+		result.append(_terminal_intent(
+			INTENT_DECLINE,
+			"Decline",
+			mission_plan,
+			relationship,
+			mechanical
+		))
 	return result
+
+
+static func _terminal_intent(
+	intent_id: String,
+	label: String,
+	mission_plan: Dictionary,
+	relationship: Dictionary,
+	mechanical: Dictionary
+) -> Dictionary:
+	return _intent(
+		intent_id,
+		label,
+		[],
+		{
+			"consequence": _terminal_consequence(
+				intent_id,
+				mission_plan,
+				relationship,
+				mechanical
+			),
+		}
+	)
+
+
+static func _terminal_consequence(
+	intent_id: String,
+	mission_plan: Dictionary,
+	relationship: Dictionary,
+	mechanical: Dictionary
+) -> Dictionary:
+	var base := {
+		"mission_action": "accept",
+		"credits_immediate": 0,
+		"reward_credits_multiplier": 1.0,
+		"reputation_change": {},
+	}
+	match intent_id:
+		INTENT_REQUEST_ADVANCE:
+			base["credits_immediate"] = int(mechanical.get("advance_credits", 0))
+			base["advance_requested"] = true
+		INTENT_REQUEST_HAZARD_PAY:
+			base["reward_credits_multiplier"] = float(
+				mechanical.get("hazard_pay_multiplier", 1.15)
+			)
+			base["hazard_pay_requested"] = true
+		INTENT_DECLINE:
+			base["mission_action"] = "decline"
+			base["leaves_mission_lane_empty"] = true
+			base["relationship_delta"] = int(
+				mechanical.get("decline_relationship_delta", -1)
+			)
+			base["respect_at_decline"] = int(relationship.get("respect", 0))
+			base["declined_story_beat_id"] = str(
+				mission_plan.get("story_beat_id", "")
+			)
+		_:
+			pass
+	return base
 
 
 static func _intent(
