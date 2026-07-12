@@ -74,6 +74,15 @@ static func build_active_state(
 		"reward_credits": definition.reward.credits,
 		"choice_id_selected": selected_choice_id,
 		"choice_text_selected": str(selected_choice.get("text", "")),
+		"conversation_intent_id_selected": str(
+			selected_choice.get("conversation_intent_id", "")
+		),
+		"conversation_asked_intents": _string_array(
+			selected_choice.get("asked_intents", [])
+		),
+		"conversation_learned_fact_ids": _string_array(
+			selected_choice.get("learned_fact_ids", [])
+		),
 		"agent_response": consequence.dialogue_response,
 		"system_id": system_id,
 		"target_spawn_sequence": 0,
@@ -375,6 +384,15 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	normalized["choice_id_selected"] = str(
 		normalized.get("choice_id_selected", "")
 	)
+	normalized["conversation_intent_id_selected"] = str(
+		normalized.get("conversation_intent_id_selected", "")
+	)
+	normalized["conversation_asked_intents"] = _string_array(
+		normalized.get("conversation_asked_intents", [])
+	)
+	normalized["conversation_learned_fact_ids"] = _string_array(
+		normalized.get("conversation_learned_fact_ids", [])
+	)
 	normalized["agent_voice_profile_id"] = str(
 		normalized.get("agent_voice_profile_id", "")
 	)
@@ -505,6 +523,17 @@ static func _choices_match(left: Dictionary, right: Dictionary) -> bool:
 			right.get("consequence", {})
 		)
 	)
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty() and text not in result:
+			result.append(text)
+	return result
 
 
 static func _legacy_objective(source: Dictionary) -> Dictionary:

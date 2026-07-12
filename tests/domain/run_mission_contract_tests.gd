@@ -28,6 +28,7 @@ func _initialize() -> void:
 	_test_agent_voice_profile_survives_acceptance()
 	_test_explicit_agent_id_becomes_giver_npc()
 	_test_selected_choice_id_survives_acceptance()
+	_test_conversation_choice_context_survives_acceptance_and_restore()
 	_test_selected_choice_id_defaults_from_offer_position()
 	_test_narrative_metadata_survives_acceptance_and_restore()
 	_test_pickup_offer()
@@ -213,6 +214,54 @@ func _test_selected_choice_id_survives_acceptance() -> void:
 			== "choice.accept_standard"
 			and adapted["state"].get("choice_text_selected", "") == "Accepted.",
 		"Accepted mission did not preserve selected choice ID and text."
+	)
+
+
+func _test_conversation_choice_context_survives_acceptance_and_restore() -> void:
+	var offer := _offer(
+		"Learned Facts Contract",
+		"zenith",
+		"Director Voss",
+		{
+			"type": "DELIVER_ORE",
+			"amount_required": 12.0,
+			"reward_credits": 90,
+		}
+	)
+	var selected := _choice(
+		0,
+		{"zenith": 1.0},
+		1.0,
+		1.0,
+		"choice.accept_standard"
+	)
+	selected["conversation_intent_id"] = "accept_standard"
+	selected["asked_intents"] = ["clarify_term", "clarify_term", ""]
+	selected["learned_fact_ids"] = ["fact.convoy.visible", "fact.convoy.visible", ""]
+	offer["choices"] = [selected]
+	var adapted := AdapterType.build_active_state(
+		offer,
+		selected,
+		"mission.runtime.conversation_context_test",
+		"start_system"
+	)
+	_expect(
+		adapted["validation"].is_valid(),
+		"Conversation-context offer failed validation."
+	)
+	var state: Dictionary = adapted["state"]
+	_expect(
+		str(state.get("conversation_intent_id_selected", "")) == "accept_standard"
+			and state.get("conversation_asked_intents", []) == ["clarify_term"]
+			and state.get("conversation_learned_fact_ids", []) == ["fact.convoy.visible"],
+		"Accepted mission did not preserve normalized conversation context."
+	)
+	var restored: Dictionary = AdapterType.normalize_legacy_state(state)
+	_expect(
+		str(restored.get("conversation_intent_id_selected", "")) == "accept_standard"
+			and restored.get("conversation_asked_intents", []) == ["clarify_term"]
+			and restored.get("conversation_learned_fact_ids", []) == ["fact.convoy.visible"],
+		"Restored mission did not preserve normalized conversation context."
 	)
 
 
