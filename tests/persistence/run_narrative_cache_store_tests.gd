@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_write_campaign()
 	_test_semantic_cache_keys_use_truth_inputs()
 	_test_bootstrap_upsert_reopen_consume_and_invalidate()
+	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -109,6 +110,31 @@ func _test_bootstrap_upsert_reopen_consume_and_invalidate() -> void:
 	)
 
 
+func _test_stale_offer_invalidation_preserves_consumed_and_frozen_entries() -> void:
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry_with_truth("cache.stale.unconsumed", false, false))
+	store.upsert_entry(_entry_with_truth("cache.stale.consumed", true, false))
+	store.upsert_entry(_entry_with_truth("cache.stale.frozen", false, true))
+	store.upsert_entry(_entry_with_truth("cache.other.beat", false, false, "beat.other"))
+	var invalidated: Dictionary = store.invalidate_unconsumed_stale_offers({
+		"story_beat_id": "beat.alpha",
+	})
+	var removed: Array = invalidated.get("removed", [])
+	_expect(
+		bool(invalidated.get("ok", false))
+			and removed == ["cache.stale.unconsumed"],
+		"Stale invalidation did not remove only unconsumed matching offers."
+	)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		reopened.get_entry("cache.stale.unconsumed").is_empty()
+			and not reopened.get_entry("cache.stale.consumed").is_empty()
+			and not reopened.get_entry("cache.stale.frozen").is_empty()
+			and not reopened.get_entry("cache.other.beat").is_empty(),
+		"Stale invalidation did not persist the expected survivor set."
+	)
+
+
 func _test_schema_catalog_marks_cache_disposable() -> void:
 	_expect(
 		SchemaCatalogType.ownership_for("narrative_cache") == "disposable",
@@ -145,6 +171,26 @@ func _entry(cache_key: String) -> Dictionary:
 		},
 		"consumed": false,
 	}
+
+
+func _entry_with_truth(
+	cache_key: String,
+	consumed: bool,
+	truth_frozen: bool,
+	beat_id: String = "beat.alpha"
+) -> Dictionary:
+	var entry := _entry(cache_key)
+	entry["subject_id"] = cache_key
+	entry["story_beat_id"] = beat_id
+	entry["giver_npc_id"] = "agent.alpha"
+	entry["destination_id"] = "station.start.main"
+	entry["objective_fingerprint"] = "objective.alpha"
+	entry["allowed_facts_fingerprint"] = "facts.alpha"
+	entry["relationship_tier"] = "cordial"
+	entry["consumed"] = consumed
+	entry["truth_frozen"] = truth_frozen
+	entry["status"] = "accepted" if truth_frozen else "ready"
+	return entry
 
 
 func _semantic_inputs() -> Dictionary:

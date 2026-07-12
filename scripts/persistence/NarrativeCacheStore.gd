@@ -106,6 +106,34 @@ func invalidate_by_subject(subject_id: String) -> Dictionary:
 	return {"ok": true, "removed": removed}
 
 
+func invalidate_unconsumed_stale_offers(criteria: Dictionary) -> Dictionary:
+	if not is_valid():
+		return _failure("Narrative cache store is invalid.")
+	var next_entries: Dictionary = entries()
+	var removed: Array[String] = []
+	for cache_key in next_entries.keys():
+		var raw: Variant = next_entries[cache_key]
+		if not raw is Dictionary:
+			continue
+		var entry: Dictionary = raw
+		if bool(entry.get("consumed", false)):
+			continue
+		if bool(entry.get("truth_frozen", false)) \
+				or str(entry.get("status", "")) == "accepted":
+			continue
+		if _entry_matches_any_stale_criterion(entry, criteria):
+			removed.append(str(cache_key))
+	for cache_key in removed:
+		next_entries.erase(cache_key)
+	var next_data := data.duplicate(true)
+	next_data["entries"] = next_entries
+	var committed := _commit(next_data, "narrative_cache_invalidate_stale")
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {"ok": true, "removed": removed}
+
+
 func _load_or_create() -> void:
 	var campaign_result := DomainJsonType.read_object(
 		"%s/campaign.json" % campaign_path
@@ -223,6 +251,28 @@ static func _normalized_array(value: Variant) -> Array:
 		else:
 			result.append(item)
 	return result
+
+
+static func _entry_matches_any_stale_criterion(
+	entry: Dictionary,
+	criteria: Dictionary
+) -> bool:
+	for key in [
+		"story_beat_id",
+		"giver_npc_id",
+		"destination_id",
+		"objective_fingerprint",
+		"allowed_facts_fingerprint",
+		"relationship_tier",
+	]:
+		if not criteria.has(key):
+			continue
+		var expected := str(criteria.get(key, "")).strip_edges()
+		if expected.is_empty():
+			continue
+		if str(entry.get(key, "")).strip_edges() == expected:
+			return true
+	return false
 
 
 static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult:
