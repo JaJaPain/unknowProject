@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
 	_test_text_fingerprints_survive_entry_eviction()
+	_test_clear_cache_removes_entries_and_fingerprints()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -179,6 +180,21 @@ func _test_text_fingerprints_survive_entry_eviction() -> void:
 			and reopened.get_entry("cache.fingerprint.evicted").is_empty()
 			and reopened.text_fingerprints().has(fingerprint),
 		"Cache text fingerprint did not survive entry eviction."
+	)
+
+
+func _test_clear_cache_removes_entries_and_fingerprints() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.clear.alpha"))
+	var cleared: Dictionary = store.clear_cache("narrative_cache_test_clear")
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	_expect(
+		bool(cleared.get("ok", false))
+			and reopened.entries().is_empty()
+			and reopened.text_fingerprints().is_empty(),
+		"Cache clear did not remove entries and text fingerprints."
 	)
 
 

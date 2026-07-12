@@ -177,6 +177,19 @@ func enforce_limits(
 	}
 
 
+func clear_cache(reason: String = "narrative_cache_clear") -> Dictionary:
+	if not is_valid():
+		return _failure("Narrative cache store is invalid.")
+	var next_data := data.duplicate(true)
+	next_data["entries"] = {}
+	next_data["text_fingerprints"] = {}
+	var committed := _commit(next_data, reason)
+	if not bool(committed.get("ok", false)):
+		return committed
+	data = next_data
+	return {"ok": true}
+
+
 func _load_or_create() -> void:
 	var campaign_result := DomainJsonType.read_object(
 		"%s/campaign.json" % campaign_path
