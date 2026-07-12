@@ -45,6 +45,7 @@ func _initialize() -> void:
 	_test_regeneration_trigger_selection()
 	_test_story_quest_plot_armor_guard()
 	_test_screenshot_first_visit_tracking()
+	_test_lounge_warmth_migrates_from_name_to_contact_key()
 
 	if _failures.is_empty():
 		print("[PASS] Story manager hook tests")
@@ -88,6 +89,37 @@ func _test_screenshot_first_visit_tracking() -> void:
 	_expect(
 		(manager.story_state.get("screenshot_stations_seen", []) as Array).size() <= 64,
 		"Seen-station list should cap at 64 entries."
+	)
+	manager.queue_free()
+
+
+func _test_lounge_warmth_migrates_from_name_to_contact_key() -> void:
+	var manager := _fresh_manager()
+	manager.story_state["lounge_warmth"] = {
+		StoryManagerType.lounge_warmth_key("Mara Venn"): 2,
+	}
+	var warmth: int = manager.lounge_warmth_for_contact(
+		"npc.gen.fixture.mara_venn",
+		"Mara Venn"
+	)
+	var warmth_map: Dictionary = manager.story_state.get("lounge_warmth", {})
+	_expect(warmth == 2, "Stable contact key did not inherit legacy lounge warmth.")
+	_expect(
+		warmth_map.has("npc.gen.fixture.mara_venn"),
+		"Legacy lounge warmth was not migrated to stable NPC ID."
+	)
+	_expect(
+		not warmth_map.has(StoryManagerType.lounge_warmth_key("Mara Venn")),
+		"Legacy display-name lounge warmth key was not removed after migration."
+	)
+	manager.adjust_lounge_warmth_for_contact(
+		"npc.gen.fixture.mara_venn",
+		"Mara Venn",
+		1
+	)
+	_expect(
+		manager.lounge_warmth_for_contact("npc.gen.fixture.mara_venn", "Mara Venn") == 3,
+		"Stable contact warmth did not increment after migration."
 	)
 	manager.queue_free()
 

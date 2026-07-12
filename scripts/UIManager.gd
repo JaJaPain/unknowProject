@@ -4118,7 +4118,7 @@ func _render_station_contacts(should_show: bool) -> void:
 	_roll_lounge_stranger(cards)
 	for i in range(4):
 		var card_data := cards[i] if i < cards.size() else {}
-		if not card_data.is_empty() and str(card_data.get("name", "")) == _lounge_approach_npc:
+		if not card_data.is_empty() and _lounge_contact_key(card_data) == _lounge_approach_npc:
 			card_data["approach"] = true
 		_add_lounge_contact_card(i, card_data)
 
@@ -4204,13 +4204,14 @@ func _roll_lounge_approach(cards: Array) -> void:
 		return
 	var pick: Dictionary = eligible[randi() % eligible.size()]
 	var pick_name := str(pick.get("name", ""))
+	var pick_key := _lounge_contact_key(pick)
 	var warmth := 0
-	if StoryManager.has_method("lounge_warmth_for"):
-		warmth = int(StoryManager.lounge_warmth_for(pick_name))
+	if StoryManager.has_method("lounge_warmth_for_contact"):
+		warmth = int(StoryManager.lounge_warmth_for_contact(pick_key, pick_name))
 	var chance := LOUNGE_APPROACH_BASE_CHANCE + LOUNGE_APPROACH_WARMTH_BONUS * warmth
 	if randf() >= chance:
 		return
-	_lounge_approach_npc = pick_name
+	_lounge_approach_npc = pick_key
 	StoryManager.story_state["lounge_last_approach_minute"] = now_minute
 	if StoryManager.has_method("_save_story_state"):
 		StoryManager._save_story_state()
@@ -4232,6 +4233,7 @@ func _lounge_bartender_card(station_id: String) -> Dictionary:
 	return {
 		"kind": "bartender",
 		"name": "Lounge Bartender",
+		"contact_key": "lounge.bartender.%s" % station_id,
 		"role": "Bartender",
 		"mood": "Pouring",
 		"rumor": false,
@@ -4260,6 +4262,7 @@ func _lounge_station_agent_cards() -> Array[Dictionary]:
 		result.append({
 			"kind": "agent",
 			"name": agent_name,
+			"contact_key": "lounge.agent.%s" % str(faction_key),
 			"role": role,
 			"mood": "Available",
 			"rumor": false,
@@ -4284,6 +4287,11 @@ func _lounge_npc_card(npc_name: String, npc_data: Dictionary) -> Dictionary:
 	return {
 		"kind": "npc",
 		"name": npc_name,
+		"npc_id": str(npc_data.get("npc_id", "")),
+		"contact_key": _stable_lounge_contact_key(
+			str(npc_data.get("npc_id", "")),
+			npc_name
+		),
 		"role": str(npc_data.get("role", "Local Contact")),
 		"faction": faction_label,
 		"mood": _get_contact_mood(npc_name),
@@ -4299,6 +4307,7 @@ func _lounge_kaelen_card() -> Dictionary:
 	return {
 		"kind": "kaelen",
 		"name": "Broker Kaelen",
+		"contact_key": "npc.fixed.kaelen",
 		"role": "Broker",
 		"mood": "Watching",
 		"rumor": bool(_contacts_with_rumor.get("kaelen", false)),
@@ -4308,6 +4317,25 @@ func _lounge_kaelen_card() -> Dictionary:
 		"color": Color(0.0, 0.95, 1.0),
 		"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
 	}
+
+
+func _stable_lounge_contact_key(stable_id: String, fallback_name: String) -> String:
+	var clean_id := stable_id.strip_edges()
+	if not clean_id.is_empty():
+		return clean_id
+	if is_instance_valid(StoryManager) and StoryManager.has_method("lounge_warmth_key"):
+		return StoryManager.lounge_warmth_key(fallback_name)
+	return fallback_name.strip_edges().to_lower()
+
+
+func _lounge_contact_key(card_data: Dictionary) -> String:
+	var contact_key := str(card_data.get("contact_key", "")).strip_edges()
+	if not contact_key.is_empty():
+		return contact_key
+	return _stable_lounge_contact_key(
+		str(card_data.get("npc_id", "")),
+		str(card_data.get("name", ""))
+	)
 
 
 func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
@@ -4516,6 +4544,7 @@ func _add_lounge_card_buttons(
 		primary.pressed.connect(_on_stranger_card_pressed.bind(card_data))
 		return
 	var npc_name := str(card_data.get("name", ""))
+	var contact_key := _lounge_contact_key(card_data)
 	primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 
 	var actions := HBoxContainer.new()
@@ -4538,7 +4567,7 @@ func _add_lounge_card_buttons(
 	drink_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	drink_btn.add_theme_font_size_override("font_size", 8)
 	drink_btn.tooltip_text = "Buy them a drink (%d cr)" % LOUNGE_DRINK_COST
-	drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, card_data))
+	drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
 	actions.add_child(drink_btn)
 	for action_def in action_defs:
 		var btn := Button.new()
@@ -4614,17 +4643,24 @@ var _lounge_stranger_rolled: bool = false
 var _lounge_cold_contacts: Dictionary = {}
 
 
-func _on_buy_drink_pressed(npc_name: String, card_data: Dictionary) -> void:
-	if _lounge_drinks_bought.has(npc_name):
+func _on_buy_drink_pressed(
+	npc_name: String,
+	contact_key: String,
+	card_data: Dictionary
+) -> void:
+	var warmth_key := StoryManager.lounge_warmth_key_for_contact(contact_key, npc_name) \
+		if is_instance_valid(StoryManager) and StoryManager.has_method("lounge_warmth_key_for_contact") \
+		else npc_name
+	if _lounge_drinks_bought.has(warmth_key):
 		_show_lounge_card_line(card_data, "They raise the glass you already bought them. One's plenty.", false)
 		return
 	if GlobalState.player_credits < LOUNGE_DRINK_COST:
 		show_hud_warning("Not enough credits for a round (%d cr)." % LOUNGE_DRINK_COST)
 		return
 	GlobalState.spend_credits(LOUNGE_DRINK_COST)
-	_lounge_drinks_bought[npc_name] = true
-	if is_instance_valid(StoryManager) and StoryManager.has_method("adjust_lounge_warmth"):
-		StoryManager.adjust_lounge_warmth(npc_name, 1)
+	_lounge_drinks_bought[warmth_key] = true
+	if is_instance_valid(StoryManager) and StoryManager.has_method("adjust_lounge_warmth_for_contact"):
+		StoryManager.adjust_lounge_warmth_for_contact(contact_key, npc_name, 1)
 	# Instant code-template confirmation — feedback speed beats LLM variety here.
 	var confirmations := [
 		"%s nods thanks and slides the glass closer. The room feels a degree warmer." % npc_name,
@@ -4640,8 +4676,9 @@ func _on_lounge_card_pressed(card_data: Dictionary) -> void:
 
 func _start_lounge_conversation(card: Dictionary) -> void:
 	var card_name := str(card.get("name", ""))
+	var contact_key := _lounge_contact_key(card)
 	# L5a: a contact the player walked out on earlier this dock stays cold.
-	if _lounge_cold_contacts.has(card_name):
+	if _lounge_cold_contacts.has(contact_key):
 		_show_lounge_card_line(card, "%s glances over, then back to their drink. Whatever it was, the moment's gone." % card_name, false)
 		return
 	# L5a: agents check the ledger before they check their drink.
@@ -4663,11 +4700,15 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		"faction": str(context.get("faction", "independent")),
 		"station": str(context.get("station", "this station")),
 		"extra": str(context.get("extra", "")),
+		"contact_key": contact_key,
 	}
 	# L2: warmth colors the conversation. 0 = stranger-polite; drinks bought
 	# across visits make the opener warmer without scripting friendliness.
-	if is_instance_valid(StoryManager) and StoryManager.has_method("lounge_warmth_for"):
-		var warmth: int = StoryManager.lounge_warmth_for(str(npc.get("name", "")))
+	if is_instance_valid(StoryManager) and StoryManager.has_method("lounge_warmth_for_contact"):
+		var warmth: int = StoryManager.lounge_warmth_for_contact(
+			contact_key,
+			str(npc.get("name", ""))
+		)
 		if warmth > 0:
 			npc["extra"] = str(npc.get("extra", "")) + \
 				" The speaker remembers this pilot has bought them drinks before (warmth %d of 3) — friendlier than with a stranger." % warmth
@@ -4706,7 +4747,7 @@ func _lounge_flavor_block() -> String:
 func _lounge_approach_instruction(card: Dictionary, npc: Dictionary) -> String:
 	if not bool(card.get("approach", false)):
 		return ""
-	if str(card.get("name", "")) == _lounge_approach_npc:
+	if _lounge_contact_key(card) == _lounge_approach_npc:
 		_lounge_approach_npc = ""  # badge consumed; re-renders drop it
 	var base := (
 		"The speaker crossed the room specifically to talk to the pilot — "
@@ -4727,8 +4768,11 @@ func _lounge_approach_instruction(card: Dictionary, npc: Dictionary) -> String:
 				"They quietly tip the pilot off about this, in their own words, "
 				+ "personal and incomplete — not a briefing: \"%s\"" % text
 			)
-		if StoryManager.has_method("lounge_warmth_for") \
-				and int(StoryManager.lounge_warmth_for(str(npc.get("name", "")))) >= 2:
+		if StoryManager.has_method("lounge_warmth_for_contact") \
+				and int(StoryManager.lounge_warmth_for_contact(
+					str(npc.get("contact_key", "")),
+					str(npc.get("name", ""))
+				)) >= 2:
 			return base + (
 				"No agenda — they consider the pilot good company now and share "
 				+ "something small and personal (a worry, a win, a plan)."
@@ -4930,10 +4974,11 @@ func _end_lounge_conversation(serial: int) -> void:
 		var card: Dictionary = _lounge_convo.get("card", {})
 		var rep_key := str(card.get("rep_key", "")).to_lower()
 		var card_name := str(card.get("name", ""))
+		var contact_key := _lounge_contact_key(card)
 		if not rep_key.is_empty():
 			GlobalState.adjust_reputation(rep_key, float(disposition.get("bail_rep", -0.5)))
-		if not card_name.is_empty():
-			_lounge_cold_contacts[card_name] = true
+		if not contact_key.is_empty():
+			_lounge_cold_contacts[contact_key] = true
 		_lounge_convo = {}
 		show_dock_message(
 			"You walk mid-sentence. Their expression files it somewhere permanent.",
@@ -4950,9 +4995,12 @@ func _end_lounge_conversation(serial: int) -> void:
 # disposition's scaled rep and may slip the player a lead (L5a).
 func _apply_lounge_completion(npc: Dictionary, agent_disposition: Dictionary = {}) -> void:
 	var npc_name := str(npc.get("name", ""))
-	if npc_name.is_empty() or _lounge_convo_done.has(npc_name):
+	var contact_key := str(npc.get("contact_key", "")).strip_edges()
+	if contact_key.is_empty():
+		contact_key = npc_name
+	if npc_name.is_empty() or _lounge_convo_done.has(contact_key):
 		return
-	_lounge_convo_done[npc_name] = true
+	_lounge_convo_done[contact_key] = true
 	if not agent_disposition.is_empty():
 		var card: Dictionary = _lounge_convo.get("card", {})
 		var rep_key := str(card.get("rep_key", "")).to_lower()

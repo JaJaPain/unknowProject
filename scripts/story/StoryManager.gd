@@ -1673,8 +1673,8 @@ func _next_kaelen_hint_if_due() -> String:
 # ── Lounge Social Layer L2: contact warmth ────────────────────────────────────
 # Warmth 0..3 per lounge contact, earned by buying drinks (and later, good
 # conversations). Player-safe world texture: colors conversation openers and
-# raises L3 approach odds. Keyed by a slug of the contact's display name so it
-# survives card rebuilds.
+# raises L3 approach odds. New generated contacts should use stable NPC IDs;
+# legacy display-name slugs are still read and migrated on first contact.
 
 static func lounge_warmth_key(npc_name: String) -> String:
 	var out := ""
@@ -1686,24 +1686,71 @@ static func lounge_warmth_key(npc_name: String) -> String:
 	return out.trim_suffix("_")
 
 
+static func lounge_warmth_key_for_contact(
+	contact_key: String,
+	legacy_name: String = ""
+) -> String:
+	var clean_key := contact_key.strip_edges()
+	if not clean_key.is_empty():
+		return clean_key
+	return lounge_warmth_key(legacy_name)
+
+
 func lounge_warmth_for(npc_name: String) -> int:
+	return lounge_warmth_for_contact("", npc_name)
+
+
+func lounge_warmth_for_contact(contact_key: String, legacy_name: String = "") -> int:
+	var key := lounge_warmth_key_for_contact(contact_key, legacy_name)
+	if key.is_empty():
+		return 0
 	var warmth: Dictionary = story_state.get("lounge_warmth", {}) \
 		if story_state.get("lounge_warmth", {}) is Dictionary else {}
-	return clampi(int(warmth.get(lounge_warmth_key(npc_name), 0)), 0, 3)
+	var migrated := _migrate_lounge_warmth_key(warmth, key, legacy_name)
+	if migrated:
+		story_state["lounge_warmth"] = warmth
+		_save_story_state()
+	return clampi(int(warmth.get(key, 0)), 0, 3)
 
 
 func adjust_lounge_warmth(npc_name: String, delta: int) -> void:
-	var key := lounge_warmth_key(npc_name)
+	adjust_lounge_warmth_for_contact("", npc_name, delta)
+
+
+func adjust_lounge_warmth_for_contact(
+	contact_key: String,
+	legacy_name: String,
+	delta: int
+) -> void:
+	var key := lounge_warmth_key_for_contact(contact_key, legacy_name)
 	if key.is_empty():
 		return
 	var warmth: Dictionary = story_state.get("lounge_warmth", {}).duplicate() \
 		if story_state.get("lounge_warmth", {}) is Dictionary else {}
+	_migrate_lounge_warmth_key(warmth, key, legacy_name)
 	warmth[key] = clampi(int(warmth.get(key, 0)) + delta, 0, 3)
 	# Cap the dict so a long campaign of one-off contacts can't grow unbounded.
 	while warmth.size() > 64:
 		warmth.erase(warmth.keys()[0])
 	story_state["lounge_warmth"] = warmth
 	_save_story_state()
+
+
+func _migrate_lounge_warmth_key(
+	warmth: Dictionary,
+	contact_key: String,
+	legacy_name: String
+) -> bool:
+	var legacy_key := lounge_warmth_key(legacy_name)
+	if contact_key.is_empty() \
+			or legacy_key.is_empty() \
+			or contact_key == legacy_key \
+			or warmth.has(contact_key) \
+			or not warmth.has(legacy_key):
+		return false
+	warmth[contact_key] = warmth[legacy_key]
+	warmth.erase(legacy_key)
+	return true
 
 
 # Ambient-chat topic dedup (Phase E). Capped like hinted_lounge_rumors so the
