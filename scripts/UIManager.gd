@@ -4661,6 +4661,7 @@ func _on_buy_drink_pressed(
 	_lounge_drinks_bought[warmth_key] = true
 	if is_instance_valid(StoryManager) and StoryManager.has_method("adjust_lounge_warmth_for_contact"):
 		StoryManager.adjust_lounge_warmth_for_contact(contact_key, npc_name, 1)
+	_record_lounge_drink_relationship_event(card_data, contact_key)
 	# Instant code-template confirmation — feedback speed beats LLM variety here.
 	var confirmations := [
 		"%s nods thanks and slides the glass closer. The room feels a degree warmer." % npc_name,
@@ -4668,6 +4669,30 @@ func _on_buy_drink_pressed(
 		"The bartender pours; %s looks mildly less suspicious of you." % npc_name,
 	]
 	_show_lounge_card_line(card_data, confirmations[randi() % confirmations.size()], false)
+
+
+func _record_lounge_drink_relationship_event(
+	card_data: Dictionary,
+	contact_key: String
+) -> void:
+	var npc_id := str(card_data.get("npc_id", "")).strip_edges()
+	if npc_id.is_empty() and contact_key.begins_with("npc."):
+		npc_id = contact_key
+	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+		return
+	if GlobalState.campaign_npc_state_store == null \
+			or not GlobalState.campaign_npc_state_store.has_method("update_relationship"):
+		return
+	var updated: Dictionary = GlobalState.campaign_npc_state_store.update_relationship(
+		npc_id,
+		{"warmth": 1},
+		"bought_drink"
+	)
+	if not bool(updated.get("ok", false)):
+		push_warning(
+			"[UIManager] NPC relationship warmth was not updated for %s: %s" %
+			[npc_id, str(updated.get("error", "unknown error"))]
+		)
 
 
 func _on_lounge_card_pressed(card_data: Dictionary) -> void:
