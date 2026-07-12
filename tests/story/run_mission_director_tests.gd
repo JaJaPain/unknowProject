@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_scores_candidates_with_documented_weight_buckets()
 	_test_pacing_rules_block_repetition()
 	_test_repeated_mechanic_requires_three_changes()
+	_test_mining_repeats_only_when_distinct_and_separated()
 	_test_declined_offer_cooldowns_filter_candidates()
 	_test_select_best_candidate_or_withhold_for_alternate()
 
@@ -282,6 +283,58 @@ func _test_repeated_mechanic_requires_three_changes() -> void:
 	_expect(
 		MissionDirectorType.pacing_rejection_reason(meaningfully_changed, [prior]).is_empty(),
 		"Repeated mechanic with at least 3 changes should pass"
+	)
+
+
+func _test_mining_repeats_only_when_distinct_and_separated() -> void:
+	var prior_mining := {
+		"objective_type": "DELIVER_ORE",
+		"cause_id": "cause.shield_shortage",
+		"stake": "Keep the clinic shields online.",
+		"giver_id": "agent.jenna",
+		"location_id": "belt.red",
+		"complication": "radiation pockets",
+		"faction_id": "clinic",
+		"disclosure_fact_ids": ["fact.clinic_shortage"],
+		"world_consequence": "The clinic keeps treating refugees.",
+		"premise_fingerprint": "clinic-shield-ore",
+	}
+	var same_pressure := prior_mining.duplicate(true)
+	same_pressure["stake"] = "Keep the clinic shields from failing."
+	same_pressure["premise_fingerprint"] = "clinic-shield-ore-followup"
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(same_pressure, [prior_mining]) \
+			== "repeated_mechanic_not_differentiated",
+		"Mining repeat with fewer than 3 changed dimensions should be blocked"
+	)
+	var distinct_mining := prior_mining.duplicate(true)
+	distinct_mining["cause_id"] = "cause.refinery_embargo"
+	distinct_mining["stake"] = "Break the refinery embargo before prices spike."
+	distinct_mining["giver_id"] = "agent.voss"
+	distinct_mining["location_id"] = "belt.blue"
+	distinct_mining["premise_fingerprint"] = "refinery-embargo-ore"
+	_expect(
+		MissionDirectorType.repeated_mechanic_change_count(
+			distinct_mining,
+			prior_mining
+		) >= 3,
+		"Distinct mining repeat should change at least three narrative dimensions"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(distinct_mining, [prior_mining]).is_empty(),
+		"Mining repeat with changed cause, stake, giver, and location should pass"
+	)
+	_expect(
+		MissionDirectorType.pacing_rejection_reason(
+			distinct_mining,
+			[
+				{"objective_type": "DELIVER_ORE", "premise_fingerprint": "ore.a"},
+				{"objective_type": "DELIVERY_COURIER", "premise_fingerprint": "courier.a"},
+				{"objective_type": "DELIVER_ORE", "premise_fingerprint": "ore.b"},
+				{"objective_type": "KILL_SHIPS", "premise_fingerprint": "kill.a"},
+			]
+		) == "objective_overrepresented_in_last_four",
+		"Mining should still obey the last-four separation rule"
 	)
 
 
