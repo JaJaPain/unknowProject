@@ -3,6 +3,7 @@ extends SceneTree
 const NpcStoreType := preload(
 	"res://scripts/persistence/CampaignNpcIdentityStore.gd"
 )
+const CharacterDirectorType := preload("res://scripts/story/CharacterDirector.gd")
 const SlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
@@ -44,6 +45,8 @@ func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void:
 	_expect(bool(created.get("ok", false)), created.get("error", ""))
 	if not bool(created.get("ok", false)):
 		return
+	var campaign: Dictionary = created.get("campaign", {}) \
+		if created.get("campaign", {}) is Dictionary else {}
 
 	var store := NpcStoreType.open(CAMPAIGN_PATH)
 	_expect(
@@ -79,6 +82,17 @@ func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void:
 		"Generated NPC ID did not use npc.gen prefix."
 	)
 	_assert_v2_character_card(npc, "new NPC")
+	var expected_card: Dictionary = CharacterDirectorType.generate_card(
+		{
+			"id": str(npc.get("id", "")),
+			"job_role": "Faction contact",
+		},
+		str(campaign.get("campaign_seed", ""))
+	).get("card", {})
+	_expect(
+		npc.get("persona", {}) == expected_card.get("persona", {}),
+		"NPC identity store did not use deterministic CharacterDirector persona."
+	)
 	var duplicate: Dictionary = store.ensure_npc_record({
 		"source_key": "station.generated.alpha|Mara Venn|Faction contact|faction.generated.glass_choir_00",
 		"display_name": "Mara Venn",
@@ -174,9 +188,8 @@ func _test_legacy_v1_identity_migrates_to_v2_persona_voice() -> void:
 	var npc: Dictionary = migrated.npc_by_display_name("Mara Venn")
 	_assert_v2_character_card(npc, "migrated NPC")
 	_expect(
-		str((npc.get("persona", {}) as Dictionary).get("current_want", ""))
-			== "She remembers a failed relay inspection.",
-		"Legacy memory summary was not carried into the v2 current_want fallback."
+		str(npc.get("memory_summary", "")) == "She remembers a failed relay inspection.",
+		"Legacy memory summary was not preserved during v2 migration."
 	)
 
 

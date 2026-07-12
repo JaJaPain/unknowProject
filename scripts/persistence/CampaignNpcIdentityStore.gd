@@ -9,6 +9,7 @@ const TransactionStoreType := preload(
 const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
+const CharacterDirectorType := preload("res://scripts/story/CharacterDirector.gd")
 
 const DOCUMENT_VERSION := 2
 const NPCS_PATH := "npc_identities.json"
@@ -195,7 +196,11 @@ func _load_or_create() -> void:
 		return
 	data = npcs_result["data"]
 	if int(data.get("schema_version", 0)) < DOCUMENT_VERSION:
-		data = _migrate_legacy_data(data, campaign_id)
+		data = _migrate_legacy_data(
+			data,
+			campaign_id,
+			str(campaign.get("campaign_seed", campaign_id))
+		)
 		var migrated := _commit(data, "npc_identity_migration_v2")
 		if not bool(migrated.get("ok", false)):
 			validation.add_error(
@@ -231,6 +236,11 @@ func _record_from_source(source: Dictionary) -> Dictionary:
 	var npc_id := str(source.get("id", "")).strip_edges()
 	if npc_id.is_empty():
 		npc_id = _generated_npc_id(source_key)
+	var card := _character_card_from_source(
+		source,
+		npc_id,
+		str(campaign.get("campaign_seed", campaign.get("id", "")))
+	)
 	return {
 		"id": npc_id,
 		"source_key": source_key,
@@ -244,8 +254,8 @@ func _record_from_source(source: Dictionary) -> Dictionary:
 		"home_station_id": home_station_id,
 		"personality_tags": _clean_string_array(source.get("personality_tags", [])),
 		"humor_style": str(source.get("humor_style", "")),
-		"persona": _persona_from_source(source),
-		"voice_rules": _voice_rules_from_source(source),
+		"persona": card.get("persona", _persona_from_source(source)),
+		"voice_rules": card.get("voice_rules", _voice_rules_from_source(source)),
 		"relationship_state": str(source.get("relationship_state", "neutral")),
 		"memory_summary": str(source.get("memory_summary", "")),
 		"line_memory_fingerprints": _clean_string_array(
@@ -409,7 +419,11 @@ static func _validate_voice_rules(
 			)
 
 
-static func _migrate_legacy_data(legacy: Dictionary, campaign_id: String) -> Dictionary:
+static func _migrate_legacy_data(
+	legacy: Dictionary,
+	campaign_id: String,
+	campaign_seed: String
+) -> Dictionary:
 	var migrated := legacy.duplicate(true)
 	migrated["schema_version"] = DOCUMENT_VERSION
 	migrated["document_type"] = "campaign_npc_identities"
@@ -421,11 +435,44 @@ static func _migrate_legacy_data(legacy: Dictionary, campaign_id: String) -> Dic
 			migrated_npcs.append(value)
 			continue
 		var npc: Dictionary = (value as Dictionary).duplicate(true)
-		npc["persona"] = _persona_from_source(npc)
-		npc["voice_rules"] = _voice_rules_from_source(npc)
+		var card := _character_card_from_source(
+			npc,
+			str(npc.get("id", "")),
+			campaign_seed
+		)
+		npc["persona"] = card.get("persona", _persona_from_source(npc))
+		npc["voice_rules"] = card.get("voice_rules", _voice_rules_from_source(npc))
 		migrated_npcs.append(npc)
 	migrated["npcs"] = migrated_npcs
 	return migrated
+
+
+static func _character_card_from_source(
+	source: Dictionary,
+	npc_id: String,
+	campaign_seed: String
+) -> Dictionary:
+	var existing_persona: Variant = source.get("persona", null)
+	var existing_voice: Variant = source.get("voice_rules", null)
+	if existing_persona is Dictionary and existing_voice is Dictionary:
+		return {
+			"persona": (existing_persona as Dictionary).duplicate(true),
+			"voice_rules": (existing_voice as Dictionary).duplicate(true),
+		}
+	var source_with_id := source.duplicate(true)
+	source_with_id["id"] = npc_id
+	var generated := CharacterDirectorType.generate_card(source_with_id, campaign_seed)
+	if bool(generated.get("ok", false)) \
+			and CharacterDirectorType.is_complete_card(generated.get("card", {})):
+		var card: Dictionary = generated.get("card", {})
+		return {
+			"persona": (card.get("persona", {}) as Dictionary).duplicate(true),
+			"voice_rules": (card.get("voice_rules", {}) as Dictionary).duplicate(true),
+		}
+	return {
+		"persona": _persona_from_source(source),
+		"voice_rules": _voice_rules_from_source(source),
+	}
 
 
 static func _persona_from_source(source: Dictionary) -> Dictionary:
