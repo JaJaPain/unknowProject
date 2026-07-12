@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_consumption_ratio_and_threshold()
 	_test_next_packet_queue_marker_is_idempotent()
 	_test_required_decline_activates_alternate_or_failure()
+	_test_npc_stake_projection_from_packet()
 
 	_manager.story_state = _previous_state
 	_manager._story_state_store = _previous_store
@@ -141,6 +142,44 @@ func _test_required_decline_activates_alternate_or_failure() -> void:
 		str(states.get("beat.no_alternate", {}).get("state", "")) == "failed"
 			and str(states.get("beat.no_alternate", {}).get("outcome", "")) == "The target escapes.",
 		"Required decline without alternate should advance failure consequence"
+	)
+
+
+func _test_npc_stake_projection_from_packet() -> void:
+	var stakes: Dictionary = _manager.npc_stakes_from_chapter_packet({
+		"packet_id": "chapter_packet.stakes",
+		"chapter": 1,
+		"beats": [
+			{
+				"beat_id": "beat.npc",
+				"thread_id": "thread.convoy_shortage",
+				"eligible_entity_ids": [
+					"npc.gen.fixture.mara",
+					"station.start.main",
+				],
+				"stake": "Mara's dock crew needs the convoy route reopened.",
+				"required": true,
+			},
+			{
+				"beat_id": "beat.other",
+				"thread_id": "thread.other",
+				"eligible_entity_ids": ["faction.zenith"],
+				"stake": "A faction-level pressure should not become an NPC stake.",
+			},
+		],
+	})
+	_expect(
+		stakes.has("npc.gen.fixture.mara")
+			and not stakes.has("station.start.main")
+			and not stakes.has("faction.zenith"),
+		"NPC stake projection should include only explicit NPC eligible entities."
+	)
+	var mara: Dictionary = stakes.get("npc.gen.fixture.mara", {})
+	_expect(
+		str(mara.get("thread_id", "")) == "thread.convoy_shortage"
+			and str(mara.get("why_it_matters_to_them", "")).contains("dock crew")
+			and int(mara.get("urgency", 0)) == 4,
+		"NPC stake projection did not preserve thread, stake text, and required urgency."
 	)
 
 

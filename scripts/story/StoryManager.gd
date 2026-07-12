@@ -362,6 +362,35 @@ func register_chapter_packet(packet: Dictionary) -> void:
 		_save_story_state()
 
 
+func npc_stakes_from_chapter_packet(packet: Dictionary) -> Dictionary:
+	var stakes := {}
+	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var beat_data: Dictionary = beat
+		var stake_text := str(beat_data.get("stake", "")).strip_edges()
+		if stake_text.is_empty():
+			continue
+		var thread_id := str(beat_data.get("thread_id", "")).strip_edges()
+		var urgency := int(beat_data.get(
+			"urgency",
+			4 if bool(beat_data.get("required", false)) else 3
+		))
+		var entity_ids: Array = beat_data.get("eligible_entity_ids", []) \
+			if beat_data.get("eligible_entity_ids", []) is Array else []
+		for entity_id_value in entity_ids:
+			var entity_id := str(entity_id_value).strip_edges()
+			if not entity_id.begins_with("npc.") or stakes.has(entity_id):
+				continue
+			stakes[entity_id] = {
+				"thread_id": thread_id,
+				"why_it_matters_to_them": stake_text,
+				"urgency": clampi(urgency, 0, 5),
+			}
+	return stakes
+
+
 func mark_chapter_beat_state(
 	beat_id: String,
 	state: String,
