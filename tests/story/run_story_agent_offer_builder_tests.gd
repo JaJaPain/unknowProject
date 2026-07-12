@@ -47,6 +47,7 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 			str(offer.get("story_beat_id", "")) == "beat.%s" % objective_type.to_lower(),
 			"Offer missing story beat id for %s." % objective_type
 		)
+		_assert_story_offer_identity(offer, objective_type)
 		var choices: Array = offer.get("choices", []) if offer.get("choices", []) is Array else []
 		var adapted := MissionAdapterType.build_active_state(
 			offer,
@@ -60,6 +61,52 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 				and adapted.get("validation").is_valid(),
 			"Built story agent offer failed validation for %s." % objective_type
 		)
+		_assert_story_offer_identity(
+			adapted.get("state", {}) if adapted.get("state", {}) is Dictionary else {},
+			objective_type,
+			"adapted state"
+		)
+
+
+func _assert_story_offer_identity(
+	source: Dictionary,
+	objective_type: String,
+	source_label: String = "offer"
+) -> void:
+	var metadata: Dictionary = source.get("narrative_metadata", {}) \
+		if source.get("narrative_metadata", {}) is Dictionary else {}
+	var expected_beat_id := "beat.%s" % objective_type.to_lower()
+	_expect(
+		str(source.get("story_thread_id", "")) == "thread.pressure",
+		"%s missing valid story thread id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		str(source.get("story_beat_id", "")) == expected_beat_id,
+		"%s missing valid story beat id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		str(source.get("cause_id", "")) == "cause.shortage",
+		"%s missing valid cause id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		str(metadata.get("story_thread_id", "")) == "thread.pressure",
+		"%s metadata missing valid story thread id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		str(metadata.get("story_beat_id", "")) == expected_beat_id,
+		"%s metadata missing valid story beat id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		str(metadata.get("cause_id", "")) == "cause.shortage",
+		"%s metadata missing valid cause id for %s." % [source_label, objective_type]
+	)
+	_expect(
+		not str(metadata.get("public_because", "")).strip_edges().is_empty(),
+		"%s metadata missing player-safe public cause for %s." % [
+			source_label,
+			objective_type,
+		]
+	)
 
 
 func _profile_for_objective(objective_type: String) -> Dictionary:
