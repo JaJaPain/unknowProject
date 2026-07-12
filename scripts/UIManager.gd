@@ -9889,6 +9889,26 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 				true
 			),
 		]
+	elif obj_type == "DELIVERY_COURIER":
+		amt_info = "Deliver %s to %s" % [
+			str(obj.get("item_name", "the package")),
+			str(obj.get("destination_display", "the destination")),
+		]
+	elif obj_type == "PURCHASE_DELIVERY":
+		amt_info = "Buy %d %s from %s and deliver to %s" % [
+			int(obj.get("quantity_required", 1)),
+			str(obj.get("item_name", "the item")),
+			str(obj.get("store_display", "the store")),
+			str(obj.get("destination_display", "the destination")),
+		]
+	elif obj_type == "TARGET_WITH_COMMS_REVERSAL":
+		amt_info = "Destroy %d %s ships, monitor comms before the final shot" % [
+			int(obj.get("count_required", 3)),
+			GlobalState.faction_display_name(
+				str(obj.get("target_faction", "hostile")),
+				true
+			),
+		]
 	var validated_summary := str(quest_data.get("objective_summary", ""))
 	if not validated_summary.is_empty():
 		amt_info = validated_summary

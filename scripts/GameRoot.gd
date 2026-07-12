@@ -2646,10 +2646,15 @@ func build_story_agent_offer_context(agent_profile: Dictionary = {}) -> Dictiona
 
 
 func _story_agent_offer_supported_types() -> Array:
-	# The live LLM offer prompt currently has examples and objective
-	# substitution for these three types. Broader mission templates can join
-	# this list once their offer JSON path is wired end-to-end.
-	return ["DELIVER_ORE", "KILL_SHIPS", "PICKUP_SPECIAL"]
+	return [
+		"DELIVER_ORE",
+		"KILL_SHIPS",
+		"PICKUP_SPECIAL",
+		"DELIVERY_COURIER",
+		"PURCHASE_DELIVERY",
+		"RECOVER_COMBAT_DROP",
+		"TARGET_WITH_COMMS_REVERSAL",
+	]
 
 
 func _story_agent_offer_givers(agent_profile: Dictionary) -> Array:

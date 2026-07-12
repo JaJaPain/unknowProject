@@ -13,6 +13,9 @@ const MissionCapabilityRegistryType := preload(
 const MissionCollectionType := preload(
 	"res://scripts/domain/MissionCollection.gd"
 )
+const StoryAgentOfferBuilderType := preload(
+	"res://scripts/story/StoryAgentOfferBuilder.gd"
+)
 
 signal quest_accepted()
 signal quest_accepted_details(quest_data: Dictionary)
@@ -208,6 +211,25 @@ func request_new_quest(
 	callback: Callable,
 	agent_profile: Dictionary = {}
 ) -> void:
+	if StoryAgentOfferBuilderType.can_build(agent_profile):
+		var story_offer := StoryAgentOfferBuilderType.build_offer(
+			agent_faction,
+			agent_profile,
+			int(CampaignClock.total_minutes)
+		)
+		if not story_offer.is_empty():
+			GenerationDiagnostics.record_content_source(
+				"quest_generation",
+				"template_fallback",
+				"QuestManager",
+				{
+					"agent_faction": agent_faction,
+					"agent_name": str(agent_profile.get("agent_name", "")),
+					"objective_type": str(story_offer.get("objective", {}).get("type", "")),
+				}
+			)
+			callback.call(story_offer, true)
+			return
 	var history_text := _generation_history_context(agent_faction, agent_profile)
 	GenerationDiagnostics.record_lifecycle_timestamp(
 		"quest_generation",
