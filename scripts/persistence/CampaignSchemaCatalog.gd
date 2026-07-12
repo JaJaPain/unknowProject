@@ -16,6 +16,8 @@ const MAP_KNOWLEDGE := "map_knowledge"
 const CHRONICLE_SEGMENT := "chronicle_segment"
 const KAELEN_META := "kaelen_meta"
 const CHAPTER_PACKETS := "chapter_narrative_packets"
+const CAMPAIGN_NPC_IDENTITIES := "campaign_npc_identities"
+const CAMPAIGN_NPC_STATES := "campaign_npc_states"
 
 const PERMANENT := "permanent"
 const REWINDABLE := "rewindable"
@@ -34,6 +36,11 @@ const DOCUMENT_OWNERSHIP: Dictionary = {
 	CHAPTER_PACKETS: PERMANENT,
 }
 
+const SIDECAR_DOCUMENT_OWNERSHIP: Dictionary = {
+	CAMPAIGN_NPC_IDENTITIES: PERMANENT,
+	CAMPAIGN_NPC_STATES: REWINDABLE,
+}
+
 const OWNERSHIP_TABLE: Dictionary = {
 	PERMANENT: [
 		"campaign_identity",
@@ -42,6 +49,7 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"canon_fact",
 		"generated_asset_identity",
 		"chapter_narrative_packet",
+		"npc_identity_persona_voice",
 	],
 	REWINDABLE: [
 		"player_state",
@@ -50,10 +58,14 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"world_entity_state",
 		"map_knowledge",
 		"story_state",
+		"npc_relationship_state",
+		"npc_current_stake_projection",
+		"npc_memory_projection",
 	],
 	APPEND_ONLY: [
 		"chronicle_event",
 		"timeline_branch",
+		"npc_memory_event",
 	],
 	META_MEMORY: [
 		"timeline_reversal_count",
@@ -232,7 +244,9 @@ static func validate_bundle(documents: Array) -> ValidationResult:
 
 
 static func ownership_for(document_type: String) -> String:
-	return str(DOCUMENT_OWNERSHIP.get(document_type, ""))
+	if DOCUMENT_OWNERSHIP.has(document_type):
+		return str(DOCUMENT_OWNERSHIP.get(document_type, ""))
+	return str(SIDECAR_DOCUMENT_OWNERSHIP.get(document_type, ""))
 
 
 static func ownership_table() -> Dictionary:

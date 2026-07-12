@@ -42,10 +42,32 @@ func _test_ownership_catalog() -> void:
 			== SchemaType.PERMANENT,
 		"Chapter narrative packet ownership should be permanent prepared canon."
 	)
+	_expect(
+		SchemaType.ownership_for(SchemaType.CAMPAIGN_NPC_IDENTITIES)
+			== SchemaType.PERMANENT,
+		"NPC identity/persona/voice ownership should be permanent."
+	)
+	_expect(
+		SchemaType.ownership_for(SchemaType.CAMPAIGN_NPC_STATES)
+			== SchemaType.REWINDABLE,
+		"NPC relationship/stake/memory projection ownership should be rewindable."
+	)
 	var table := SchemaType.ownership_table()
 	_expect(
 		"autopilot_waypoint" in table[SchemaType.DISPOSABLE],
 		"Disposable ownership table is missing tactical waypoints."
+	)
+	_expect(
+		"npc_identity_persona_voice" in table[SchemaType.PERMANENT],
+		"Permanent ownership table is missing NPC identity/persona/voice."
+	)
+	_expect(
+		"npc_current_stake_projection" in table[SchemaType.REWINDABLE],
+		"Rewindable ownership table is missing NPC current stake projection."
+	)
+	_expect(
+		"npc_memory_event" in table[SchemaType.APPEND_ONLY],
+		"Append-only ownership table is missing NPC memory events."
 	)
 
 
