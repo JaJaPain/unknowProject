@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
 	_test_queue_health_reports_contention_and_starvation()
+	_test_pool_refill_waits_for_higher_priority_work()
 
 	if _failures.is_empty():
 		print("[PASS] Narrative cache scheduler tests")
@@ -320,6 +321,26 @@ func _test_queue_health_reports_contention_and_starvation() -> void:
 			)) == 1
 			and (health.get("starved_jobs", []) as Array).size() == 1,
 		"Scheduler queue health did not report contention and queued starvation."
+	)
+
+
+func _test_pool_refill_waits_for_higher_priority_work() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	_expect(
+		scheduler.can_refill_pool(1, 2),
+		"Scheduler should allow refill when pool is below threshold and idle."
+	)
+	scheduler.queue_job(_job("job.p1", "cache.refill.p1", SchedulerType.PRIORITY_P1))
+	_expect(
+		not scheduler.can_refill_pool(1, 2),
+		"Scheduler allowed ambient refill while higher-priority work was pending."
+	)
+	scheduler.mark_generation_started("job.p1")
+	scheduler.mark_ready("job.p1")
+	_expect(
+		not scheduler.can_refill_pool(2, 2)
+			and scheduler.can_refill_pool(1, 2),
+		"Scheduler pool refill threshold check did not recover after priority work finished."
 	)
 
 

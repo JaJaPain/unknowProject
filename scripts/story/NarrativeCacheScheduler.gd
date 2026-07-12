@@ -371,6 +371,23 @@ func queue_health(max_queue_wait_seconds: int = 30) -> Dictionary:
 	}
 
 
+func can_refill_pool(
+	current_count: int,
+	target_count: int,
+	refill_priority: int = PRIORITY_P3
+) -> bool:
+	if _paused:
+		return false
+	if current_count >= target_count:
+		return false
+	if _in_flight_count() > 0:
+		return false
+	for job in pending_jobs():
+		if int(job.get("priority", PRIORITY_P2)) < refill_priority:
+			return false
+	return true
+
+
 func get_job(job_id: String) -> Dictionary:
 	var clean_id := job_id.strip_edges()
 	if not _jobs.has(clean_id):
