@@ -102,8 +102,23 @@ static func fallback_bundle(
 		var intent_id := str(intent.get("id", ""))
 		var label := str(intent.get("label", intent_id))
 		bundle["%s_player" % intent_id] = label
-		bundle["%s_response" % intent_id] = _fallback_response(intent_id, mission_plan)
+		bundle["%s_response" % intent_id] = _fallback_response_for_intent(
+			intent,
+			mission_plan
+		)
 	return bundle
+
+
+static func _fallback_response_for_intent(
+	intent: Dictionary,
+	mission_plan: Dictionary
+) -> String:
+	var intent_id := str(intent.get("id", ""))
+	var response := _fallback_response(intent_id, mission_plan)
+	var anchors := _string_array(intent.get("answer_anchors", []))
+	if anchors.is_empty() or _contains_any(response, anchors):
+		return response
+	return "%s %s" % [anchors[0], response]
 
 
 static func parse_bundle(
@@ -193,3 +208,12 @@ static func _string_array(value: Variant) -> Array[String]:
 		if not text.is_empty():
 			result.append(text)
 	return result
+
+
+static func _contains_any(text: String, needles: Array[String]) -> bool:
+	var lower := text.to_lower()
+	for needle in needles:
+		var clean := needle.strip_edges().to_lower()
+		if not clean.is_empty() and lower.contains(clean):
+			return true
+	return false
