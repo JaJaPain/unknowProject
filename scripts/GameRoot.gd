@@ -48,6 +48,9 @@ const CampaignNpcStateStoreType := preload(
 const CampaignAgentMemorySnippetStoreType := preload(
 	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
 )
+const NarrativeCacheStoreType := preload(
+	"res://scripts/persistence/NarrativeCacheStore.gd"
+)
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
@@ -92,6 +95,7 @@ var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
 var campaign_npc_state_store = null
 var campaign_agent_memory_store = null
+var campaign_narrative_cache_store = null
 var campaign_bible_generation_requested_slots: Dictionary = {}
 var campaign_bible_generation_in_flight: bool = false
 var chapter_plan_generation_in_flight: bool = false
@@ -1377,6 +1381,7 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1518,6 +1523,7 @@ func _clear_active_campaign_runtime_context() -> void:
 	campaign_npc_identity_store = null
 	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
 	GlobalState.campaign_npc_identity_store = null
 	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
@@ -1562,6 +1568,7 @@ func _initialize_campaign_registry() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1672,6 +1679,7 @@ func _initialize_campaign_chronicle() -> void:
 	campaign_npc_identity_store = null
 	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
 	GlobalState.campaign_npc_identity_store = null
 	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
@@ -1705,10 +1713,11 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_bible_store = null
 		campaign_chapter_packet_store = null
 		campaign_generated_faction_store = null
-		campaign_npc_identity_store = null
-		campaign_npc_state_store = null
-		campaign_agent_memory_store = null
-		GlobalState.campaign_npc_identity_store = null
+	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
+	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
+	GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
 		LLMInterface.idea_memory_context_text = ""
@@ -1730,6 +1739,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1752,6 +1762,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1774,6 +1785,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1796,6 +1808,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1818,6 +1831,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1841,6 +1855,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1864,6 +1879,7 @@ func _initialize_campaign_chronicle() -> void:
 		campaign_npc_identity_store = null
 		campaign_npc_state_store = null
 		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
 		GlobalState.campaign_npc_identity_store = null
 		GlobalState.campaign_npc_state_store = null
 		GlobalState.campaign_agent_memory_store = null
@@ -1872,6 +1888,29 @@ func _initialize_campaign_chronicle() -> void:
 		return
 	campaign_agent_memory_store = opened_agent_memory
 	GlobalState.campaign_agent_memory_store = campaign_agent_memory_store
+	var opened_narrative_cache := NarrativeCacheStoreType.open(slot_path)
+	if not opened_narrative_cache.is_valid():
+		push_warning(
+			"[GameRoot] Narrative cache store is unavailable: %s" %
+				opened_narrative_cache.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_narrative_cache_store = opened_narrative_cache
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
@@ -3636,6 +3675,7 @@ func _run_jump_smoke_test() -> void:
 	campaign_npc_identity_store = null
 	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
 	GlobalState.campaign_npc_identity_store = null
 	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
@@ -5202,6 +5242,7 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_npc_identity_store = null
 	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
 	GlobalState.campaign_npc_identity_store = null
 	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
