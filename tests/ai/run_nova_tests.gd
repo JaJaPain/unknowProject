@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_event_expression_and_preempt()
 	_test_combat_warning_api_exists()
 	_test_campaign_quirk_lifecycle()
+	_test_arrival_can_consume_ready_line_bank()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -110,6 +111,22 @@ func _test_campaign_quirk_lifecycle() -> void:
 		"An empty quirk must never produce a quirk line."
 	)
 	nova.free()
+
+
+func _test_arrival_can_consume_ready_line_bank() -> void:
+	var file := FileAccess.open("res://scripts/ai/Nova.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect Nova.gd line-bank wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _ready_line_bank_text")
+			and source.contains("ready_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_nova")
+			and source.contains("\"startup_navigation\"")
+			and source.contains("speak(bank_line, Severity.NAV"),
+		"N.O.V.A. arrival path does not consume ready current-system line banks before stock lines."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

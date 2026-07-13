@@ -313,6 +313,45 @@ func _pick_line(tag: String, pool: Array) -> String:
 	return str(pool[idx])
 
 
+func _current_system_line_bank_requester_id() -> String:
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return ""
+	return "prefetch:current_system_nova:%s" % system_id
+
+
+func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
+	var requester_id := _current_system_line_bank_requester_id()
+	if requester_id.is_empty():
+		return ""
+	var tree := get_tree()
+	if tree == null:
+		return ""
+	var game_root := tree.current_scene
+	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+		return ""
+	var payload: Dictionary = game_root.call(
+		"ready_cached_narrative_line_bank",
+		requester_id
+	)
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var candidates: Array[String] = []
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var line: Dictionary = raw_line
+		var kind := str(line.get("kind", "")).strip_edges()
+		if not kind_filter.is_empty() and not kind_filter.has(kind):
+			continue
+		var text := str(line.get("text", "")).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return ""
+	return _pick_line("bank.%s" % requester_id, candidates)
+
+
 # Returns the recurrence streak for `tag` (0 = first / first in a while, 1 = again
 # soon, 2 = a third time soon, ...). Resets when the gap exceeds `window_ms`.
 func _reactive_streak(tag: String, window_ms: int) -> int:
@@ -602,6 +641,10 @@ func on_system_arrived() -> void:
 	# Sometimes the arrival beat is her campaign quirk instead of stock lines —
 	# a fresh system is exactly when an obsession resurfaces.
 	if _maybe_speak_quirk():
+		return
+	var bank_line := _ready_line_bank_text(["startup_navigation"])
+	if not bank_line.is_empty():
+		speak(bank_line, Severity.NAV, expression_for_event("nav"))
 		return
 	var lines := [
 		"New system. Same statistical odds of something in it trying to kill me.",
