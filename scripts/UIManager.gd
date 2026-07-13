@@ -9856,6 +9856,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 					return
 				cached_unique_intro = unique_line
 				GlobalState.trace("[TRACE] [UIManager] Cached unique Kaelen intro: " + unique_line.left(60) + "...")
+				_replace_used_kaelen_handoff_fallbacks([unique_line])
 				# Pre-cache the TTS so playback is instant when the handoff fires
 				SpeechService.cache(unique_line, "voice.kaelen.v1")
 			)
@@ -10007,6 +10008,21 @@ func _ready_kaelen_handoff_bank_line() -> String:
 	if candidates.is_empty():
 		return ""
 	return str(candidates[randi() % candidates.size()])
+
+
+func _replace_used_kaelen_handoff_fallbacks(generated_lines: Array) -> void:
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("replace_used_cached_fallback_lines"):
+		return
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return
+	game_root.call(
+		"replace_used_cached_fallback_lines",
+		"prefetch:current_system_kaelen:%s" % system_id,
+		generated_lines,
+		"llm_kaelen_handoff"
+	)
 
 
 func _add_kaelen_gate_intel_button() -> void:

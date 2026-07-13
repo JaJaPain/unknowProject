@@ -3303,6 +3303,54 @@ func consume_cached_narrative_line_bank(
 	return next_payload
 
 
+func replace_used_cached_fallback_lines(
+	requester_id: String,
+	generated_lines: Array,
+	source_id: String = "llm"
+) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty() or generated_lines.is_empty():
+		return {"ok": false, "status": "replacement_unavailable"}
+	var ready := _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		return {"ok": false, "status": "line_bank_not_ready"}
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	var fallback_bank: Dictionary = payload.get("fallback_bank", {}) \
+		if payload.get("fallback_bank", {}) is Dictionary else {}
+	if fallback_bank.is_empty():
+		return {"ok": false, "status": "fallback_bank_unavailable"}
+	var replacement := FallbackLineBankType.replace_used_with_generated(
+		fallback_bank,
+		generated_lines,
+		source_id
+	)
+	var next_bank: Dictionary = replacement.get("bank", {}) \
+		if replacement.get("bank", {}) is Dictionary else {}
+	if next_bank.is_empty():
+		return {"ok": false, "status": "replacement_failed"}
+	var entries: Array = next_bank.get("entries", []) \
+		if next_bank.get("entries", []) is Array else []
+	var next_payload := payload.duplicate(true)
+	next_payload["fallback_bank"] = next_bank
+	next_payload["line_bank"] = entries.duplicate(true)
+	next_payload["fallback_available_count"] = FallbackLineBankType.available_count(next_bank)
+	next_payload["fallback_uses"] = FallbackLineBankType.fallback_use_count(next_bank)
+	next_payload["generated_replacements"] = FallbackLineBankType.generated_replacement_count(next_bank)
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var updated: Dictionary = scheduler.update_result_payload(
+		str(ready.get("job_id", "")),
+		next_payload
+	)
+	if not bool(updated.get("ok", false)):
+		return {"ok": false, "status": "replacement_update_failed"}
+	return {
+		"ok": true,
+		"replacements": int(replacement.get("replacements", 0)),
+		"payload": next_payload,
+	}
+
+
 func _ready_narrative_payload_for_requester(
 	requester_id: String,
 	content_type: String = ""

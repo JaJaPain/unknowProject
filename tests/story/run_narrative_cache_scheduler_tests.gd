@@ -811,7 +811,9 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("\"current_system_kaelen_bundle\"")
 			and source.contains("\"current_system_nova_bundle\"")
 			and source.contains("func consume_cached_narrative_line_bank")
+			and source.contains("func replace_used_cached_fallback_lines")
 			and source.contains("scheduler.update_result_payload")
+			and source.contains("FallbackLineBankType.replace_used_with_generated")
 			and source.contains("ContextBlockBuilderType.kaelen_block")
 			and source.contains("ContextBlockBuilderType.nova_block")
 			and source.contains("\"content_type\": \"story_line_bank\"")
@@ -870,6 +872,8 @@ func _test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback() -> void:
 			and source.contains("consume_cached_narrative_line_bank")
 			and source.contains("prefetch:current_system_kaelen")
 			and source.contains("\"agent_handoff\"")
+			and source.contains("_replace_used_kaelen_handoff_fallbacks([unique_line])")
+			and source.contains("replace_used_cached_fallback_lines")
 			and source.contains("kind != \"agent_handoff\"")
 			and source.contains("Using ready Kaelen handoff bank line")
 			and source.contains("Using canned handoff fallback"),
