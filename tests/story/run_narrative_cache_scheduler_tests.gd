@@ -541,11 +541,26 @@ func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
 			"station.cinder.exchange",
 			"station.cinder.relay",
 		],
+		"contact_profiles": [
+			{
+				"contact_id": "npc.agent.voss",
+				"display_name": "Director Voss",
+				"faction_id": "faction.zenith",
+				"voice_profile_id": "voice.voss.v1",
+			},
+			{
+				"contact_id": "npc.agent.ryn",
+				"display_name": "Liaison Ryn",
+				"faction_id": "faction.aurelia",
+				"voice_profile_id": "voice.ryn.v1",
+			},
+		],
 		"story_revision": 12,
 		"knowledge_revision": 4,
 	})
 	var triggers: Array[String] = []
 	var station_job_count := 0
+	var contact_job_count := 0
 	for job in jobs:
 		triggers.append(str(job.get("trigger", "")))
 		if str(job.get("trigger", "")) \
@@ -559,12 +574,22 @@ func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
 						== "gate.generated.cinder.in",
 				"System arrival station prefetch did not preserve arrival context."
 			)
+		if str(job.get("kind", "")) == "system_contact_offer_bundle":
+			contact_job_count += 1
+			_expect(
+				not str(job.get("contact_id", "")).is_empty()
+					and not str(job.get("contact_display", "")).is_empty()
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder",
+				"System arrival contact prefetch did not preserve contact context."
+			)
 	_expect(
-		jobs.size() == 5
+		jobs.size() == 7
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT)
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA)
-			and station_job_count == 2,
+			and station_job_count == 2
+			and contact_job_count == 2,
 		"Scheduler system arrival prefetch did not plan current-system and visible-station jobs."
 	)
 

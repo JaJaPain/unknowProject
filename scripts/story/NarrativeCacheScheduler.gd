@@ -772,6 +772,27 @@ static func _system_arrival_prefetch_jobs(event: Dictionary) -> Array[Dictionary
 			"current_system_nova_bundle"
 		),
 	]
+	var contact_profiles: Array = event.get("contact_profiles", []) \
+		if event.get("contact_profiles", []) is Array else []
+	for raw_profile in contact_profiles:
+		if not raw_profile is Dictionary:
+			continue
+		var profile: Dictionary = raw_profile
+		var contact_id := str(profile.get("contact_id", profile.get("agent_id", ""))).strip_edges()
+		if contact_id.is_empty():
+			continue
+		var contact_event := event.duplicate(true)
+		contact_event["speaker_id"] = contact_id
+		contact_event["contact_id"] = contact_id
+		contact_event["contact_display"] = str(profile.get("display_name", profile.get("agent_name", contact_id)))
+		contact_event["faction_id"] = str(profile.get("faction_id", ""))
+		contact_event["voice_profile_id"] = str(profile.get("voice_profile_id", ""))
+		jobs.append(_context_prefetch_job(
+			contact_event,
+			TRIGGER_CURRENT_SYSTEM_AGENT,
+			"%s.%s" % [system_id, contact_id],
+			"system_contact_offer_bundle"
+		))
 	var station_ids: Array[String] = []
 	var station_id := str(event.get("station_id", "")).strip_edges()
 	if not station_id.is_empty():
@@ -912,6 +933,10 @@ static func _context_prefetch_job(
 		"station_type",
 		"packet_id",
 		"chapter",
+		"contact_id",
+		"contact_display",
+		"faction_id",
+		"voice_profile_id",
 	]:
 		if event.has(key):
 			job[key] = event[key]
