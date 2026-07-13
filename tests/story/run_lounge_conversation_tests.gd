@@ -18,6 +18,8 @@ func _initialize() -> void:
 	_test_transcript_block()
 	_test_player_stance_classification()
 	_test_agent_disposition()
+	_test_bundle_prompt_carries_code_owned_intents()
+	_test_parse_bundle_degrades_per_answer()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -184,6 +186,146 @@ func _test_agent_disposition() -> void:
 			not str(d.get("context_line", "")).strip_edges().is_empty(),
 			"Talkable disposition at rep %s missing context_line." % str(rep)
 		)
+
+
+# Phase 9: the bundle prompt carries the code-approved player questions
+# verbatim and asks only for opener/answers/close — the model never invents
+# the player's side.
+func _test_bundle_prompt_carries_code_owned_intents() -> void:
+	var npc := {
+		"name": "Ivet Marr",
+		"role": "cargo inspector",
+		"station": "Kova Station",
+		"mood": "tired",
+		"faction": "zenith",
+	}
+	var intents := [
+		{"id": "ask_convoy_rumor", "text": "What happened to the convoy?"},
+		{"id": "ask_local_work", "text": "Anyone hiring around here?"},
+		{"id": "", "text": "Malformed intent gets dropped."},
+		{"id": "ask_fourth", "text": "Fourth valid intent beyond the cap."},
+	]
+	var prompt: String = ConvoType.build_bundle_prompt(
+		npc, "", intents.slice(0, 2)
+	)
+	_expect(
+		prompt.contains("Q1: \"What happened to the convoy?\"")
+			and prompt.contains("Q2: \"Anyone hiring around here?\""),
+		"Bundle prompt lost the code-owned player questions."
+	)
+	_expect(
+		prompt.contains("\"opener\": \"...\"")
+			and prompt.contains("\"a1\": \"...\"")
+			and prompt.contains("\"a2\": \"...\"")
+			and not prompt.contains("\"a3\": \"...\"")
+			and prompt.contains("\"close\": \"...\""),
+		"Bundle prompt key contract does not match the intent count."
+	)
+	_expect(
+		prompt.contains("Ivet Marr") and prompt.contains("cargo inspector"),
+		"Bundle prompt lost the NPC identity."
+	)
+	# Intent normalization: malformed dropped, capped at 3 valid entries.
+	var clean: Array = ConvoType.bundle_intents(intents)
+	_expect(
+		clean.size() == 3
+			and str((clean[0] as Dictionary).get("id", "")) == "ask_convoy_rumor"
+			and str((clean[2] as Dictionary).get("id", "")) == "ask_fourth",
+		"bundle_intents normalization was wrong: %s" % str(clean)
+	)
+	_expect(
+		ConvoType.bundle_intents(
+			intents + [{"id": "ask_fifth", "text": "Fifth intent."}]
+		).size() == 3,
+		"bundle_intents should cap at 3 valid intents."
+	)
+
+
+# Phase 9: each answer slot validates independently — a bad slot degrades to
+# "" (that intent is not offered) without sinking the bundle.
+func _test_parse_bundle_degrades_per_answer() -> void:
+	var good := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "Convoy went dark past the belt. Nobody's saying why out loud.",
+		"a2": "Freight desk is hiring anyone with an intact hull. Low bar.",
+		"close": "That's my cue. Watch the belt lanes.",
+	})
+	var parsed: Dictionary = ConvoType.parse_bundle(good, "Ivet Marr", 2)
+	_expect(
+		bool(parsed.get("ok", false))
+			and int(parsed.get("valid_answer_count", 0)) == 2,
+		"Valid bundle rejected: %s" % str(parsed.get("reason", ""))
+	)
+
+	# One bad answer degrades that slot only.
+	var degraded := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "x",
+		"a2": "Freight desk is hiring anyone with an intact hull. Low bar.",
+		"close": "That's my cue. Watch the belt lanes.",
+	})
+	var degraded_parsed: Dictionary = ConvoType.parse_bundle(degraded, "", 2)
+	var answers: Array = degraded_parsed.get("answers", [])
+	_expect(
+		bool(degraded_parsed.get("ok", false))
+			and answers.size() == 2
+			and str(answers[0]).is_empty()
+			and not str(answers[1]).is_empty(),
+		"Per-answer degradation was wrong: %s" % str(degraded_parsed)
+	)
+
+	# Duplicate answers: the repeat degrades.
+	var repeated := JSON.stringify({
+		"opener": "Quiet night. Suspiciously quiet.",
+		"a1": "Same answer twice is a lazy model.",
+		"a2": "Same answer twice is a lazy model.",
+		"close": "Back to work for me.",
+	})
+	var repeated_parsed: Dictionary = ConvoType.parse_bundle(repeated, "", 2)
+	_expect(
+		int(repeated_parsed.get("valid_answer_count", 0)) == 1,
+		"Duplicate answer was not degraded."
+	)
+
+	# No valid answers, missing opener, junk: all fatal.
+	var hollow := JSON.stringify({
+		"opener": "Quiet night. Suspiciously quiet.",
+		"a1": "x",
+		"a2": "y",
+		"close": "Back to work for me.",
+	})
+	_expect(
+		not bool(ConvoType.parse_bundle(hollow, "", 2).get("ok", true)),
+		"Bundle with zero valid answers should be rejected."
+	)
+	var no_opener := JSON.stringify({
+		"a1": "An answer without an opener.",
+		"close": "Back to work.",
+	})
+	_expect(
+		str(ConvoType.parse_bundle(no_opener, "", 1).get("reason", ""))
+			== "bad_opener",
+		"Missing opener should reject the bundle."
+	)
+	_expect(
+		not bool(ConvoType.parse_bundle("{not json", "", 2).get("ok", true)),
+		"Junk bundle should be rejected."
+	)
+
+	# Self-tagged fields lose the name prefix.
+	var tagged := JSON.stringify({
+		"opener": "Ivet: Quiet night. Suspiciously quiet.",
+		"a1": "Ivet: The convoy story is longer than your patience.",
+		"close": "Ivet: Try not to die out there.",
+	})
+	var tagged_parsed: Dictionary = ConvoType.parse_bundle(tagged, "Ivet", 1)
+	_expect(
+		str(tagged_parsed.get("opener", "")).begins_with("Quiet night")
+			and str((tagged_parsed.get("answers", []) as Array)[0])
+				.begins_with("The convoy")
+			and str(tagged_parsed.get("close", "")).begins_with("Try not"),
+		"Self-tagged bundle fields should lose the name prefix."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

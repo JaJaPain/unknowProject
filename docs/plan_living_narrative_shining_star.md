@@ -1083,6 +1083,7 @@ Primary files:
 Checklist:
 
 - [ ] Replace per-reply generation with a pre-generated flat exchange bundle: opener, 2–3 code-approved player intents/questions, paired NPC answers, and a natural close.
+  - 2026-07-13: Protocol layer landed in `LoungeConversation`: `build_bundle_prompt()` carries 2–3 code-approved `{id, text}` intents verbatim (the model never writes the player's side) and asks for flat one-level JSON `{opener, a1..aN, close}`; `parse_bundle()` validates the opener/close and every answer slot independently — a bad or duplicate answer degrades to `""` (that intent is simply not offered) without sinking the bundle, and zero valid answers rejects it. Covered in `run_lounge_conversation_tests.gd`. Still open: UIManager consuming bundles instead of per-reply `build_reply_prompt` calls, and the cache wiring.
 - [ ] Start with one meaningful player reply per bundle. For warm/story-important contacts, expose “keep talking” only when a second bundle is already cached. Do not preserve three turns by reintroducing visible waits.
 - [ ] Select player intents from knowledge gaps, NPC relationship, current stake, and delivered rumors. Avoid generic friendly/pushback/odd options when a natural story question exists.
 - [ ] Validate that each answer responds to its paired player line and remains in character.

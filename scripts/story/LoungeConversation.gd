@@ -203,6 +203,175 @@ static func agent_disposition(rep: float) -> Dictionary:
 			}
 
 
+# ── Phase 9: pre-generated exchange bundles ──────────────────────────────────
+# One model call prepares the whole exchange up front: opener, one NPC answer
+# per code-approved player intent, and a natural close. Reply clicks then
+# consume prepared text — the model is never consulted mid-conversation.
+# Flat one-level JSON only (same qwen3 constraint as parse_turn).
+
+const OPENER_MIN := 4
+const OPENER_MAX := 220
+const ANSWER_MIN := 4
+const ANSWER_MAX := 220
+const CLOSE_MIN := 4
+const CLOSE_MAX := 160
+const BUNDLE_MAX_INTENTS := 3
+
+
+# `intents`: 2-3 code-approved player questions, [{id, text}]. Code owns the
+# questions; the model only writes the opener, each paired answer, and the
+# close. Extra intents beyond BUNDLE_MAX_INTENTS are ignored.
+static func build_bundle_prompt(
+	npc: Dictionary,
+	flavor_block: String,
+	intents: Array
+) -> String:
+	var flavor_section := ""
+	if not flavor_block.strip_edges().is_empty():
+		flavor_section = (
+			"Campaign flavor (background mood only — never quote or summarize it):\n"
+			+ flavor_block.strip_edges() + "\n"
+		)
+	var clean_intents := bundle_intents(intents)
+	var lines: Array = [
+		"You are writing one side of a casual bar conversation in a space trading",
+		"game, PG-13, dry and slightly dark humor welcome.",
+		"",
+		"The speaker: %s, a %s, at the station lounge %s." % [
+			str(npc.get("name", "a local")),
+			str(npc.get("role", "station regular")),
+			str(npc.get("station", "on this station")),
+		],
+		"Mood: %s. Affiliation: %s." % [
+			str(npc.get("mood", "neutral")),
+			str(npc.get("faction", "independent")),
+		],
+		str(npc.get("extra", "")),
+		"",
+		flavor_section,
+		"The pilot sitting next to them may ask these questions:",
+	]
+	for i in range(clean_intents.size()):
+		lines.append("Q%d: \"%s\"" % [i + 1, str(clean_intents[i].get("text", ""))])
+	lines.append("")
+	lines.append("Write:")
+	lines.append(
+		"- opener: the speaker's OPENING remark to the pilot — the kind of thing"
+	)
+	lines.append(
+		"  a regular says to whoever sits down next to them. Under 30 words."
+	)
+	for i in range(clean_intents.size()):
+		lines.append(
+			"- a%d: the speaker's direct answer to Q%d. It must actually answer"
+			% [i + 1, i + 1]
+		)
+		lines.append("  that question, in character. Under 35 words.")
+	lines.append(
+		"- close: the speaker wrapping up naturally afterwards (finishes their"
+	)
+	lines.append(
+		"  drink, spots someone, gets back to work). Under 25 words."
+	)
+	lines.append("")
+	lines.append("Rules:")
+	lines.append(
+		"- The speaker talks TO the pilot. Casual, specific, human."
+	)
+	lines.append(
+		"- Never use the pilot's name. No narration, no stage directions, no meta."
+	)
+	lines.append(
+		"- No new lore inventions: no new faction names, no new station names."
+	)
+	lines.append("")
+	var keys: Array = ["\"opener\": \"...\""]
+	for i in range(clean_intents.size()):
+		keys.append("\"a%d\": \"...\"" % (i + 1))
+	keys.append("\"close\": \"...\"")
+	lines.append(
+		"Return only JSON with exactly these string keys and nothing else:"
+	)
+	lines.append("{%s}" % ", ".join(keys))
+	return "\n".join(lines)
+
+
+# Normalizes an intents array to at most BUNDLE_MAX_INTENTS well-formed
+# {id, text} entries, dropping blanks.
+static func bundle_intents(intents: Array) -> Array:
+	var clean: Array = []
+	for raw_intent in intents:
+		if not raw_intent is Dictionary:
+			continue
+		var intent: Dictionary = raw_intent
+		var text := str(intent.get("text", "")).strip_edges()
+		var id := str(intent.get("id", "")).strip_edges()
+		if text.is_empty() or id.is_empty():
+			continue
+		clean.append({"id": id, "text": text})
+		if clean.size() >= BUNDLE_MAX_INTENTS:
+			break
+	return clean
+
+
+# Parses a prepared exchange bundle. Every answer slot validates
+# independently: a bad slot degrades to "" (that intent simply is not
+# offered) rather than sinking the bundle. The bundle needs a valid opener,
+# a valid close, and at least one valid answer.
+static func parse_bundle(
+	inner_json_text: String,
+	npc_name: String,
+	intent_count: int
+) -> Dictionary:
+	var parser := JSON.new()
+	if parser.parse(inner_json_text.strip_edges()) != OK:
+		return {"ok": false, "reason": "inner_parse_failed"}
+	var data: Variant = parser.get_data()
+	if not data is Dictionary:
+		return {"ok": false, "reason": "not_an_object"}
+	var normalized := {}
+	for key in (data as Dictionary).keys():
+		normalized[str(key).strip_edges().to_lower()] = (data as Dictionary)[key]
+	var opener := _clean_bundle_field(
+		str(normalized.get("opener", "")), npc_name
+	)
+	if opener.length() < OPENER_MIN or opener.length() > OPENER_MAX:
+		return {"ok": false, "reason": "bad_opener"}
+	var close := _clean_bundle_field(
+		str(normalized.get("close", "")), npc_name
+	)
+	if close.length() < CLOSE_MIN or close.length() > CLOSE_MAX:
+		return {"ok": false, "reason": "bad_close"}
+	var answers: Array = []
+	var valid_count := 0
+	var wanted: int = clampi(intent_count, 1, BUNDLE_MAX_INTENTS)
+	for i in range(wanted):
+		var answer := _clean_bundle_field(
+			str(normalized.get("a%d" % (i + 1), "")), npc_name
+		)
+		if answer.length() < ANSWER_MIN or answer.length() > ANSWER_MAX \
+				or answer == opener or answers.has(answer):
+			answers.append("")
+			continue
+		answers.append(answer)
+		valid_count += 1
+	if valid_count < 1:
+		return {"ok": false, "reason": "no_valid_answers"}
+	return {
+		"ok": true,
+		"opener": opener,
+		"answers": answers,
+		"valid_answer_count": valid_count,
+		"close": close,
+	}
+
+
+static func _clean_bundle_field(raw: String, npc_name: String) -> String:
+	var clean := raw.strip_edges()
+	clean = clean.trim_prefix("\"").trim_suffix("\"").strip_edges()
+	return AmbientChatType._strip_speaker_prefix(clean, npc_name, "")
+
+
 # "NPC: ... / You: ..." block for reply prompts; only the last `keep` entries
 # so a long chat can't balloon the prompt. turns: [{speaker: "npc"|"you",
 # text: String}].
