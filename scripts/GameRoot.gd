@@ -8766,7 +8766,7 @@ func _dev_format_narrative_cache_summary() -> String:
 	var source_counts: Dictionary = summary.get("source_counts", {}) \
 		if summary.get("source_counts", {}) is Dictionary else {}
 	return (
-		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | clicks=%d | ready-to-click avg=%.2fs p95=%ds | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
+		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | clicks=%d | ready-to-click avg=%.2fs p95=%ds | degraded=%d (%.1f%%) | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
 			int(summary.get("ready_payloads", 0)),
 			int(summary.get("cache_lookup_hit", 0)),
 			int(summary.get("cache_lookup_miss", 0)),
@@ -8777,6 +8777,8 @@ func _dev_format_narrative_cache_summary() -> String:
 			int(
 				(summary.get("ready_to_click", {}) as Dictionary).get("p95_seconds", 0)
 			) if summary.get("ready_to_click", {}) is Dictionary else 0,
+			int(summary.get("degraded_jobs", 0)),
+			float(summary.get("degraded_rate", 0.0)) * 100.0,
 			_dev_format_count_dictionary(content_counts),
 			_dev_format_count_dictionary(source_counts),
 			int(summary.get("fallback_uses", 0)),
