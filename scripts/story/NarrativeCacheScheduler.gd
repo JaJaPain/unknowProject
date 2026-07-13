@@ -258,10 +258,24 @@ func restore_ready_job(job: Dictionary, result_payload: Dictionary) -> Dictionar
 
 
 func mark_tts_cache_started(job_id: String) -> Dictionary:
+	var clean_id := job_id.strip_edges()
+	if not _jobs.has(clean_id):
+		return _failure("Narrative cache job not found.")
+	var job: Dictionary = _jobs[clean_id]
+	if str(job.get("kind", "")) == "tts_cache":
+		job["status"] = "in_flight"
+	_jobs[clean_id] = job
 	return _stamp_existing(job_id, "tts_cache_started")
 
 
 func mark_tts_ready(job_id: String) -> Dictionary:
+	var clean_id := job_id.strip_edges()
+	if not _jobs.has(clean_id):
+		return _failure("Narrative cache job not found.")
+	var job: Dictionary = _jobs[clean_id]
+	if str(job.get("kind", "")) == "tts_cache":
+		job["status"] = "ready"
+	_jobs[clean_id] = job
 	return _stamp_existing(job_id, "tts_ready")
 
 

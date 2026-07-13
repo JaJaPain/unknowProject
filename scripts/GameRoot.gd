@@ -3542,6 +3542,8 @@ func _narrative_station_offer_requester_id(station_id: String) -> String:
 
 func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 	match str(job.get("kind", "")):
+		"tts_cache":
+			return true
 		"system_contact_offer_bundle":
 			return true
 		"current_station_agent_offer_bundle":
@@ -3570,6 +3572,8 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 	var job_id := str(job.get("job_id", "")).strip_edges()
 	if job_id.is_empty():
 		return {"ok": false, "processed": false, "status": "missing_job_id"}
+	if str(job.get("kind", "")) == "tts_cache":
+		return _process_narrative_tts_cache_job(job)
 	var started: Dictionary = scheduler.mark_generation_started(job_id)
 	if not bool(started.get("ok", false)):
 		started["processed"] = false
@@ -3594,6 +3598,10 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 	if not bool(validated.get("ok", false)):
 		validated["processed"] = true
 		return validated
+	var tts_queued := _queue_tts_for_validated_narrative_payload(
+		job_id,
+		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+	)
 	var ready: Dictionary = scheduler.mark_ready(
 		job_id,
 		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
@@ -3603,8 +3611,84 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 			job,
 			payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
 		)
+		if bool(tts_queued.get("ok", false)):
+			_process_queued_narrative_tts_cache_jobs(
+				tts_queued.get("queued", []) if tts_queued.get("queued", []) is Array else []
+			)
+			ready["tts_jobs_queued"] = (
+				tts_queued.get("queued", []) as Array
+			).size() if tts_queued.get("queued", []) is Array else 0
 	ready["processed"] = bool(ready.get("ok", false))
 	return ready
+
+
+func _process_narrative_tts_cache_job(job: Dictionary) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var job_id := str(job.get("job_id", "")).strip_edges()
+	if job_id.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_job_id"}
+	var text := str(job.get("text", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	if text.is_empty() or voice_profile_id.is_empty():
+		var failed: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"tts_cache_missing_text_or_voice"
+		)
+		failed["processed"] = true
+		return failed
+	var started: Dictionary = scheduler.mark_tts_cache_started(job_id)
+	if not bool(started.get("ok", false)):
+		started["processed"] = false
+		return started
+	if is_instance_valid(TTSInterface):
+		TTSInterface.cache_dialogue_audio(text, voice_profile_id)
+	else:
+		var unavailable: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"tts_interface_unavailable"
+		)
+		unavailable["processed"] = true
+		return unavailable
+	var ready: Dictionary = scheduler.mark_tts_ready(job_id)
+	ready["processed"] = bool(ready.get("ok", false))
+	ready["status"] = "tts_cache_started"
+	return ready
+
+
+func _queue_tts_for_validated_narrative_payload(
+	source_job_id: String,
+	payload: Dictionary
+) -> Dictionary:
+	if payload.is_empty():
+		return {"ok": false, "queued": [], "status": "empty_payload"}
+	var text_bundle := _text_bundle_for_narrative_payload(payload)
+	var required_fields := _tts_required_fields_for_text_bundle(text_bundle)
+	if required_fields.is_empty():
+		return {"ok": false, "queued": [], "status": "no_tts_text_fields"}
+	var voice_profile_id := _voice_profile_for_narrative_payload(payload)
+	if voice_profile_id.is_empty():
+		return {"ok": false, "queued": [], "status": "missing_voice_profile_id"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	return scheduler.queue_tts_jobs_for_validated_text(
+		source_job_id,
+		text_bundle,
+		required_fields,
+		voice_profile_id
+	)
+
+
+func _process_queued_narrative_tts_cache_jobs(job_ids: Array) -> void:
+	if job_ids.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	for raw_id in job_ids:
+		var job_id := str(raw_id).strip_edges()
+		if job_id.is_empty():
+			continue
+		var job: Dictionary = scheduler.get_job(job_id)
+		if job.is_empty():
+			continue
+		_process_narrative_tts_cache_job(job)
 
 
 func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> void:
@@ -3673,6 +3757,27 @@ func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary:
 		index += 1
 	var quest_data: Dictionary = payload.get("quest_data", {}) \
 		if payload.get("quest_data", {}) is Dictionary else {}
+	var dialogue := str(quest_data.get("dialogue", "")).strip_edges()
+	if not dialogue.is_empty():
+		bundle["offer_dialogue"] = dialogue
+	var mission_dialogue_bundle: Dictionary = quest_data.get("mission_dialogue_bundle", {}) \
+		if quest_data.get("mission_dialogue_bundle", {}) is Dictionary else {}
+	for key in mission_dialogue_bundle.keys():
+		var bundle_text := str(mission_dialogue_bundle.get(key, "")).strip_edges()
+		if not bundle_text.is_empty():
+			bundle["mission_%s" % str(key)] = bundle_text
+	var choice_index := 0
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for raw_choice in choices:
+		if not raw_choice is Dictionary:
+			continue
+		var consequence: Dictionary = (raw_choice as Dictionary).get("consequence", {}) \
+			if (raw_choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		var response := str(consequence.get("dialogue_response", "")).strip_edges()
+		if not response.is_empty():
+			bundle["choice_%03d_response" % choice_index] = response
+		choice_index += 1
 	for key in ["opening", "description", "title"]:
 		var value := str(quest_data.get(key, "")).strip_edges()
 		if not value.is_empty():
@@ -3680,6 +3785,36 @@ func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary:
 	if bundle.is_empty():
 		bundle["payload_type"] = str(payload.get("content_type", "narrative_payload"))
 	return bundle
+
+
+func _tts_required_fields_for_text_bundle(text_bundle: Dictionary) -> Array:
+	var fields: Array[String] = []
+	for key in text_bundle.keys():
+		var field_id := str(key).strip_edges()
+		if field_id.is_empty():
+			continue
+		if str(text_bundle.get(field_id, "")).strip_edges().is_empty():
+			continue
+		fields.append(field_id)
+	fields.sort()
+	return fields
+
+
+func _voice_profile_for_narrative_payload(payload: Dictionary) -> String:
+	var direct := str(payload.get("voice_profile_id", "")).strip_edges()
+	if not direct.is_empty():
+		return direct
+	var quest_data: Dictionary = payload.get("quest_data", {}) \
+		if payload.get("quest_data", {}) is Dictionary else {}
+	var quest_voice := str(quest_data.get("agent_voice_profile_id", "")).strip_edges()
+	if not quest_voice.is_empty():
+		return quest_voice
+	var agent_profile: Dictionary = payload.get("agent_profile", {}) \
+		if payload.get("agent_profile", {}) is Dictionary else {}
+	var agent_voice := str(agent_profile.get("agent_voice_profile_id", "")).strip_edges()
+	if not agent_voice.is_empty():
+		return agent_voice
+	return "voice.neutral.v1"
 
 
 func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:

@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
 	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
+	_test_tts_cache_jobs_transition_without_changing_text_status()
 	_test_tts_failure_is_recorded_separately_from_text_degradation()
 	_test_equal_priority_text_dispatches_before_audio_cache()
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
@@ -33,6 +34,7 @@ func _initialize() -> void:
 	_test_chapter_packet_ready_hook_calls_prefetch_planner()
 	_test_new_campaign_loading_hook_calls_prefetch_planner()
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
+	_test_game_root_cache_worker_starts_tts_after_validated_text()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_ui_agent_board_pending_state_stays_actionable()
 	_test_ui_lounge_pending_states_stay_actionable()
@@ -479,6 +481,42 @@ func _test_tts_jobs_inherit_text_priority_and_scope_after_validation() -> void:
 	)
 
 
+func _test_tts_cache_jobs_transition_without_changing_text_status() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _job(
+		"job.text.bundle",
+		"cache.text.bundle",
+		SchedulerType.PRIORITY_P0
+	)
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text.bundle")
+	scheduler.mark_generation_finished("job.text.bundle")
+	scheduler.mark_validation_finished("job.text.bundle")
+	scheduler.mark_ready("job.text.bundle", {"opening": "Readable subtitle."})
+	var audio_job := _job(
+		"job.audio.bundle",
+		"cache.audio.bundle",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	var started: Dictionary = scheduler.mark_tts_cache_started("job.audio.bundle")
+	var ready: Dictionary = scheduler.mark_tts_ready("job.audio.bundle")
+	var audio: Dictionary = scheduler.get_job("job.audio.bundle")
+	var text: Dictionary = scheduler.get_job("job.text.bundle")
+	var stamps: Dictionary = audio.get("diagnostic_timestamps", {}) \
+		if audio.get("diagnostic_timestamps", {}) is Dictionary else {}
+	_expect(
+		bool(started.get("ok", false))
+			and bool(ready.get("ok", false))
+			and str(audio.get("status", "")) == "ready"
+			and stamps.has("tts_cache_started")
+			and stamps.has("tts_ready")
+			and str(text.get("status", "")) == "ready",
+		"Scheduler TTS cache job transitions disturbed ready text status."
+	)
+
+
 func _test_tts_failure_is_recorded_separately_from_text_degradation() -> void:
 	var scheduler: RefCounted = SchedulerType.new()
 	var text_job := _job(
@@ -889,6 +927,29 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 			and source.contains("mark_validation_finished")
 			and source.contains("mark_ready"),
 		"GameRoot cache worker is not wired to safely build ready contact offer payloads."
+	)
+
+
+func _test_game_root_cache_worker_starts_tts_after_validated_text() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot TTS cache worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("\"tts_cache\"")
+			and source.contains("func _queue_tts_for_validated_narrative_payload")
+			and source.contains("queue_tts_jobs_for_validated_text")
+			and source.contains("func _process_narrative_tts_cache_job")
+			and source.contains("TTSInterface.cache_dialogue_audio")
+			and source.contains("mark_tts_cache_started")
+			and source.contains("mark_tts_ready")
+			and source.contains("func _tts_required_fields_for_text_bundle")
+			and source.contains("func _voice_profile_for_narrative_payload")
+			and source.contains("offer_dialogue")
+			and source.contains("mission_dialogue_bundle")
+			and source.contains("choice_%03d_response"),
+		"GameRoot does not start TTS cache jobs immediately after validated text bundles."
 	)
 
 
