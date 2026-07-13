@@ -3202,6 +3202,12 @@ func queue_narrative_station_target_prefetch(
 	)
 
 
+func queue_narrative_new_campaign_loading_prefetch() -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_new_campaign_loading()
+	)
+
+
 func _narrative_prefetch_event_from_station_target(
 	station: Node3D,
 	target_reason: String
@@ -3241,27 +3247,10 @@ func _narrative_prefetch_event_from_station_target(
 	}
 
 
-func _narrative_prefetch_event_from_chapter_packet(packet: Dictionary) -> Dictionary:
-	var packet_id := str(packet.get("packet_id", "")).strip_edges()
-	if packet_id.is_empty():
-		return {}
-	var beat_ids: Array[String] = []
-	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
-	for beat in beats:
-		if not beat is Dictionary:
-			continue
-		var beat_id := str((beat as Dictionary).get("beat_id", "")).strip_edges()
-		if beat_id.is_empty() or beat_ids.has(beat_id):
-			continue
-		beat_ids.append(beat_id)
-		if beat_ids.size() >= 3:
-			break
-	return {
-		"event_type": "chapter_packet_ready",
-		"subject_id": packet_id,
-		"packet_id": packet_id,
-		"chapter": int(packet.get("chapter", StoryManager.story_state.get("chapter", 1))),
-		"first_beat_ids": beat_ids,
+func _narrative_prefetch_event_from_new_campaign_loading() -> Dictionary:
+	var event := {
+		"event_type": "new_campaign_loading",
+		"subject_id": str(GlobalState.current_system_id),
 		"system_id": str(GlobalState.current_system_id),
 		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
 			if is_instance_valid(StoryManager) else 0,
@@ -3274,6 +3263,65 @@ func _narrative_prefetch_event_from_chapter_packet(packet: Dictionary) -> Dictio
 			0
 		)) if is_instance_valid(StoryManager) else 0,
 	}
+	var station := GlobalState.get_primary_station()
+	if station != null and is_instance_valid(station):
+		var station_event := _narrative_prefetch_event_from_station_target(
+			station,
+			"new_campaign_loading"
+		)
+		if not station_event.is_empty():
+			event["station_id"] = str(station_event.get("station_id", ""))
+			event["station_type"] = str(station_event.get("station_type", ""))
+	var current_chapter := int(StoryManager.story_state.get("chapter", 1))
+	if campaign_chapter_packet_store != null \
+			and campaign_chapter_packet_store.is_valid():
+		var packet: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(
+			current_chapter
+		)
+		if not packet.is_empty():
+			event["packet_id"] = str(packet.get("packet_id", ""))
+			event["chapter"] = int(packet.get("chapter", current_chapter))
+			event["first_beat_ids"] = _first_chapter_packet_beat_ids(packet)
+	return event
+
+
+func _narrative_prefetch_event_from_chapter_packet(packet: Dictionary) -> Dictionary:
+	var packet_id := str(packet.get("packet_id", "")).strip_edges()
+	if packet_id.is_empty():
+		return {}
+	return {
+		"event_type": "chapter_packet_ready",
+		"subject_id": packet_id,
+		"packet_id": packet_id,
+		"chapter": int(packet.get("chapter", StoryManager.story_state.get("chapter", 1))),
+		"first_beat_ids": _first_chapter_packet_beat_ids(packet),
+		"system_id": str(GlobalState.current_system_id),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+
+
+static func _first_chapter_packet_beat_ids(packet: Dictionary, limit: int = 3) -> Array[String]:
+	var beat_ids: Array[String] = []
+	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var beat_id := str((beat as Dictionary).get("beat_id", "")).strip_edges()
+		if beat_id.is_empty() or beat_ids.has(beat_id):
+			continue
+		beat_ids.append(beat_id)
+		if beat_ids.size() >= maxi(1, limit):
+			break
+	return beat_ids
 
 
 func _narrative_prefetch_event_from_system_arrival(

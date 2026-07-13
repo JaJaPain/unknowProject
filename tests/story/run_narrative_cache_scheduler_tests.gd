@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_station_target_hooks_call_prefetch_planner()
 	_test_chapter_packet_ready_hook_calls_prefetch_planner()
+	_test_new_campaign_loading_hook_calls_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -700,6 +701,27 @@ func _test_chapter_packet_ready_hook_calls_prefetch_planner() -> void:
 			and source.contains("\"first_beat_ids\"")
 			and source.contains("_queue_narrative_prefetch_jobs_for_event("),
 		"Chapter packet ready hook is not wired to the narrative prefetch planner."
+	)
+
+
+func _test_new_campaign_loading_hook_calls_prefetch_planner() -> void:
+	var game_root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(
+		game_root_file != null and ui_file != null,
+		"Could not inspect new campaign loading prefetch wiring."
+	)
+	if game_root_file == null or ui_file == null:
+		return
+	var game_root_source := game_root_file.get_as_text()
+	var ui_source := ui_file.get_as_text()
+	_expect(
+		game_root_source.contains("queue_narrative_new_campaign_loading_prefetch")
+			and game_root_source.contains("_narrative_prefetch_event_from_new_campaign_loading")
+			and game_root_source.contains("\"event_type\": \"new_campaign_loading\"")
+			and ui_source.contains("queue_narrative_new_campaign_loading_prefetch")
+			and ui_source.contains("not startup_save_loaded"),
+		"New campaign loading path is not wired to the narrative prefetch planner."
 	)
 
 

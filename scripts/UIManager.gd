@@ -12108,6 +12108,12 @@ func _finish_loading_after_story_ready() -> void:
 			if not SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
 				SpeechService.cache_queue_completed.connect(_on_intro_cinematic_voice_cache_completed)
 			return
+	if not startup_save_loaded:
+		var game_root := get_tree().current_scene
+		if game_root != null and game_root.has_method(
+			"queue_narrative_new_campaign_loading_prefetch"
+		):
+			game_root.call("queue_narrative_new_campaign_loading_prefetch")
 	# Every completion path funnels through here, so this is the one place to drop
 	# the service-connection signals. Do it before the fade-out tween so a late
 	# LLM/TTS connect during the 0.8s hold + fade can't re-enter the loading flow.
