@@ -267,6 +267,17 @@ func _test_public_board_offers_carry_story_cause_metadata() -> void:
 		str(metadata.get("story_hook_ref", "")).begins_with("hook:"),
 		"story_metadata: public-board offer missing story_hook_ref."
 	)
+	var rendered := TextGenType.fallback_offer(offers[0], 0)
+	var turn_in_line := str(
+		rendered.get("quest_data", {}).get("public_board_turn_in_line", "")
+	)
+	_expect(
+		turn_in_line.contains(str(offers[0].get("poster", "")))
+			and turn_in_line.contains("Dock strikes")
+			and not turn_in_line.contains("{STORY_PRESSURE}")
+			and not turn_in_line.contains("{POSTER_HANDLE}"),
+		"story_metadata: Kaelen public-board fallback did not name poster and local pressure."
+	)
 	var choices: Array = quest_data.get("choices", [])
 	if choices.is_empty():
 		_expect(false, "story_metadata: offer had no choices to adapt.")
@@ -499,6 +510,11 @@ func _test_generation_request_contains_placeholders() -> void:
 	for offer in offers:
 		var request := TextGenType.build_generation_request(offer)
 		var prompt := str(request.get("prompt", ""))
+		_expect(
+			prompt.contains("{POSTER_HANDLE}"),
+			"gen_request: prompt for '%s' is missing poster placeholder." %
+			str(offer.get("template_id", ""))
+		)
 		for placeholder in offer.get("required_placeholders", []):
 			_expect(
 				prompt.contains(str(placeholder)),

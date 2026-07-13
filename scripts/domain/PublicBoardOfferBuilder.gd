@@ -670,6 +670,14 @@ static func _offer(
 	required_placeholders: Array[String],
 	placeholder_values: Dictionary
 ) -> Dictionary:
+	var values := placeholder_values.duplicate(true)
+	values["{POSTER_HANDLE}"] = poster
+	var quest_metadata: Dictionary = quest_data.get("narrative_metadata", {}) \
+		if quest_data.get("narrative_metadata", {}) is Dictionary else {}
+	var story_pressure := str(quest_metadata.get("public_because", "")).strip_edges()
+	if story_pressure.is_empty():
+		story_pressure = str(quest_metadata.get("story_hook_ref", "")).strip_edges()
+	values["{STORY_PRESSURE}"] = story_pressure
 	return {
 		"template_id": template_id,
 		"enabled": enabled,
@@ -682,7 +690,7 @@ static func _offer(
 		"urgent_multiplier": urgent_multiplier,
 		"quest_data": quest_data,
 		"required_placeholders": required_placeholders,
-		"placeholder_values": placeholder_values,
+		"placeholder_values": values,
 	}
 
 
