@@ -1001,7 +1001,8 @@ Phase 7 exit gate:
 - [ ] Turn in the same mechanical objective under three different causes/outcomes; Kaelen produces three materially different, factually correct reactions.
 - [x] Completion reactions can reveal safe newly-earned context, but never reveal `kaelen_hidden_angle`, undelivered hints, or director-only facts.
   - 2026-07-13: Automated evidence passes: `run_kaelen_interaction_bundle_tests.gd`, `run_context_block_leak_tests.gd`, `run_campaign_schema_tests.gd`, and `parse_check_scene_scripts.gd`.
-- [ ] Save after accepting, reload, complete, and turn in: the contextual line remains ready and correct.
+- [x] Save after accepting, reload, complete, and turn in: the contextual line remains ready and correct.
+  - 2026-07-13: Proven by dedicated sim coverage in `tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd`: accepts a real mission through `QuestManager.accept_quest`, stores the acceptance-time reaction bundle, saves through `capture_all_quests` → `SaveMigrator.prepare_for_save` → JSON on disk → `load_for_runtime` → `restore_all_quests` (with a `reset_for_restart` between to simulate an app restart), asserts the mission-keyed lines survive intact, rejects a stale runtime-id overwrite, completes the objective through the real `deliver_partial` progression path, refreshes the bundle from the `quest_objective_completed_details` snapshot, and reads the refreshed contextual line at turn-in before `complete_quest` removes the mission.
 - [ ] No generic stock completion line appears in 50 successful V2 turn-ins.
 - [x] Secret-salted Kaelen leak tests pass.
   - 2026-07-13: Automated leak evidence passes through the Kaelen packet/source guards and shared context-block leak tests; manual gameplay smoke gates remain separate.
