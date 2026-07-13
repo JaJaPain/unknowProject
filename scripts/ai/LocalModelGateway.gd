@@ -69,6 +69,9 @@ const CAPABILITY_PROFILES := {
 	# Director-privileged: the prompt carries nova_memory_flicker (a director-only
 	# bible secret), so this must NEVER be downgraded to the small-dialogue model.
 	"nova_glitch": "large_story",
+	# Flat @@label batches of prepared N.O.V.A. bank lines (Phase 8B).
+	# Player-safe context only — small model by design.
+	"nova_line_bank": "small_dialogue",
 }
 
 const REQUEST_TIMEOUTS := {
@@ -95,6 +98,9 @@ const REQUEST_TIMEOUTS := {
 	"story_horizon": 60.0,
 	"chapter_plan": 120.0,
 	"nova_glitch": 60.0,
+	# Background bank prefetch, nobody waiting — give a 10-field batch room
+	# to finish on a busy GPU.
+	"nova_line_bank": 30.0,
 }
 
 

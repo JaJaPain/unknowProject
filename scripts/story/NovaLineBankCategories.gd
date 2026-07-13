@@ -64,6 +64,38 @@ const _LEGACY_KINDS: Dictionary = {
 	SYSTEM_ARRIVAL: ["startup_navigation"],
 }
 
+# One-line situation guidance per category, used by batch-generation prompts.
+const _DESCRIPTIONS: Dictionary = {
+	BOOST_AGAIN_QUICKLY:
+		"the captain slammed the boost again the moment it came off cooldown",
+	CHANGED_MIND_AGAIN:
+		"the captain keeps retargeting or cancelling the autopilot within a minute",
+	RETURNED_TO_SAME_STATION:
+		"docking at the same station they only just left",
+	CLEAN_LONG_TRANSIT:
+		"a long, trouble-free transit just ended",
+	ROUGH_ARRIVAL:
+		"arrived in-system after trouble en route: hull hits, evasion, or replans",
+	SYSTEM_ARRIVAL:
+		"just arrived in a new system; navigation checks complete",
+	GATE_TRANSIT:
+		"mid gate-transit unease; she flinches at gates without knowing why",
+	GATE_GLITCH:
+		"PROTECTED: campaign memory-glitch lines, large-model only",
+	HULL_CRITICAL:
+		"hull integrity critical; her own body is coming apart",
+	WELCOME_BACK:
+		"the captain returns to flying after a long time docked",
+	DOCKED:
+		"docking clamps just engaged",
+	COMBAT_VICTORY_CLEAN:
+		"combat won with barely a scratch on her hull",
+	COMBAT_VICTORY_BATTERED:
+		"combat won but her hull took a beating",
+	COMBAT_RETREAT:
+		"combat ended by running away, which she thoroughly endorses",
+}
+
 
 static func all() -> Array[String]:
 	return ALL.duplicate()
@@ -101,3 +133,7 @@ static func accepted_kinds(category: String) -> Array[String]:
 static func for_semantic_event(event_id: String) -> String:
 	var clean := event_id.strip_edges()
 	return clean if clean in MOVEMENT_CATEGORIES else ""
+
+
+static func describe(category: String) -> String:
+	return str(_DESCRIPTIONS.get(category.strip_edges(), ""))

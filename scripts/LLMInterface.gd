@@ -1718,6 +1718,221 @@ func request_nova_glitch_hints(
 		callback.call({"ok": false, "reason": "request_start_failed"})
 
 
+const NovaBankCategoriesType := preload(
+	"res://scripts/story/NovaLineBankCategories.gd"
+)
+
+
+# One flat @@label batch of N.O.V.A. bank lines (Phase 8B). `fields` is an
+# Array of {category, count}; total labels are clamped to 10 per batch
+# (callers aim for 6-10). Small model, text format — flat labeled fields,
+# never nested JSON (see project_labeled_field_generation).
+func request_nova_line_bank_batch(
+	fields: Array,
+	context: Dictionary,
+	callback: Callable
+) -> void:
+	var capability := "nova_line_bank"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"nova_line_bank", "model_unavailable", "llm_interface",
+			{"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	var labels := nova_line_bank_labels(fields)
+	if labels.is_empty():
+		callback.call({"ok": false, "reason": "no_valid_fields"})
+		return
+	var prompt := _nova_line_bank_prompt(labels, context)
+	var payload := build_generation_body(
+		capability, prompt, "",
+		{"temperature": 0.9, "num_predict": 60 * labels.size(), "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"nova_line_bank", "http_failed", "llm_interface",
+					{"result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var parsed := parse_nova_line_bank_batch(
+				str(outer_data["response"]),
+				labels
+			)
+			var lines: Array = parsed.get("lines", [])
+			if lines.is_empty():
+				GenerationDiagnostics.record_event(
+					"nova_line_bank", "all_lines_rejected", "llm_interface",
+					{"rejected": (parsed.get("rejected", []) as Array).size()}
+				)
+				callback.call({"ok": false, "reason": "all_lines_rejected"})
+				return
+			callback.call({
+				"ok": true,
+				"lines": lines,
+				"rejected": parsed.get("rejected", []),
+			})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+# Expands {category, count} field specs into @@ labels like
+# "boost_again_quickly_1". Invalid and protected categories are dropped;
+# the batch is capped at 10 labels.
+static func nova_line_bank_labels(fields: Array) -> Array[String]:
+	var labels: Array[String] = []
+	for raw_field in fields:
+		if not raw_field is Dictionary:
+			continue
+		var field: Dictionary = raw_field
+		var category := str(field.get("category", "")).strip_edges()
+		if not NovaBankCategoriesType.is_valid(category) \
+				or NovaBankCategoriesType.is_protected(category):
+			continue
+		var count: int = clampi(int(field.get("count", 0)), 0, 10)
+		for i in range(count):
+			if labels.size() >= 10:
+				return labels
+			labels.append("%s_%d" % [category, i + 1])
+	return labels
+
+
+# One line, N.O.V.A.'s register, no speaker prefix, no placeholders.
+# Returns "" when valid, otherwise the rejection reason.
+static func validate_nova_bank_line(text: String) -> String:
+	var clean := text.strip_edges()
+	if clean.length() < 8:
+		return "too_short"
+	if clean.length() > 160:
+		return "too_long"
+	if clean.contains("\n"):
+		return "multiline"
+	if clean.contains("@@"):
+		return "label_leak"
+	if clean.contains("{") or clean.contains("}") \
+			or clean.contains("[") or clean.contains("]"):
+		return "placeholder_braces"
+	var colon := clean.find(":")
+	if colon > 0 and colon <= 24:
+		var prefix := clean.substr(0, colon)
+		if not prefix.contains(" ") or prefix.to_upper() == prefix:
+			return "speaker_prefix"
+	return ""
+
+
+# Pure parser for a flat @@label batch response. Each expected label may
+# appear once; every line validates independently; duplicate texts and
+# unknown labels are rejected, never repaired.
+static func parse_nova_line_bank_batch(
+	raw: String,
+	expected_labels: Array
+) -> Dictionary:
+	var lines_out: Array = []
+	var rejected: Array = []
+	var seen_labels: Dictionary = {}
+	var seen_texts: Dictionary = {}
+	for raw_row in raw.split("\n"):
+		var row := raw_row.strip_edges()
+		if not row.begins_with("@@"):
+			continue
+		var colon := row.find(":")
+		if colon < 3:
+			continue
+		var label := row.substr(2, colon - 2).strip_edges()
+		var text := row.substr(colon + 1).strip_edges()
+		if text.begins_with("\"") and text.ends_with("\"") and text.length() > 1:
+			text = text.substr(1, text.length() - 2).strip_edges()
+		if not expected_labels.has(label):
+			rejected.append({"label": label, "reason": "unexpected_label"})
+			continue
+		if seen_labels.has(label):
+			rejected.append({"label": label, "reason": "duplicate_label"})
+			continue
+		seen_labels[label] = true
+		var reason := validate_nova_bank_line(text)
+		if not reason.is_empty():
+			rejected.append({"label": label, "reason": reason})
+			continue
+		if seen_texts.has(text):
+			rejected.append({"label": label, "reason": "duplicate_text"})
+			continue
+		seen_texts[text] = true
+		var category := label
+		var underscore := label.rfind("_")
+		if underscore > 0 and label.substr(underscore + 1).is_valid_int():
+			category = label.substr(0, underscore)
+		lines_out.append({"kind": category, "text": text})
+	return {"lines": lines_out, "rejected": rejected}
+
+
+static func _nova_line_bank_prompt(
+	labels: Array[String],
+	context: Dictionary
+) -> String:
+	var parts: Array[String] = [
+		str(context.get("persona", "")).strip_edges(),
+		"",
+	]
+	var quirk := str(context.get("campaign_quirk", "")).strip_edges()
+	if not quirk.is_empty():
+		parts.append(
+			"Her one campaign quirk (may color AT MOST one line): %s" % quirk
+		)
+	var tone := str(context.get("system_tone", "")).strip_edges()
+	if not tone.is_empty():
+		parts.append("Current system tone: %s" % tone)
+	var facts: Array = context.get("known_facts", []) \
+		if context.get("known_facts", []) is Array else []
+	if not facts.is_empty():
+		parts.append("Facts the ship AI is allowed to know:")
+		for fact in facts.slice(0, 5):
+			parts.append("- %s" % str(fact).strip_edges())
+	var events: Array = context.get("recent_events", []) \
+		if context.get("recent_events", []) is Array else []
+	if not events.is_empty():
+		parts.append("Recent flight events (flavor only, do not list them back):")
+		for event in events.slice(0, 6):
+			parts.append("- %s" % str(event).strip_edges())
+	parts.append("")
+	parts.append(
+		"Write ONE line for each label below, in her voice, each under 18 words:"
+	)
+	for label in labels:
+		var underscore := label.rfind("_")
+		var category := label.substr(0, underscore) if underscore > 0 else label
+		parts.append(
+			"@@%s: %s" % [label, NovaBankCategoriesType.describe(category)]
+		)
+	parts.append("")
+	parts.append("Rules:")
+	parts.append("- Return ONLY lines in the exact format @@label: line")
+	parts.append("- No numbering, no quotes, no speaker names, no extra prose.")
+	parts.append("- Every line unique. Never mention hidden lore or secrets.")
+	return "\n".join(parts)
+
+
 func request_story_horizon_expansion(
 	bible_data: Dictionary,
 	trigger: Dictionary,
