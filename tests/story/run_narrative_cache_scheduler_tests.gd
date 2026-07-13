@@ -1004,38 +1004,65 @@ func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() ->
 
 func _test_cached_agent_offer_flow_asserts_no_click_to_generate() -> void:
 	var diagnostics := DiagnosticsType.new()
-	diagnostics.record_lifecycle_timestamp(
-		"player_interaction",
-		"interaction_clicked",
-		"v2_cache_flow_fixture",
+	var fixtures: Array[Dictionary] = [
 		{
-			"interaction_name": "Agent Board Cached Offer",
+			"interaction_name": "Agent Board Cached Contact Offer",
 			"requester_id": "prefetch:contact.agent.test",
-		}
-	)
-	diagnostics.record_lifecycle_timestamp(
-		"quest_briefing",
-		"text_presented",
-		"ready_cache",
+			"text_type": "quest_briefing",
+			"text_source": "ready_contact_offer_cache",
+		},
 		{
-			"requester_id": "prefetch:contact.agent.test",
-			"content_source": "ready_cache",
-		}
-	)
+			"interaction_name": "Agent Board Cached Station Offer",
+			"requester_id": "prefetch:station.agent.test",
+			"text_type": "quest_briefing",
+			"text_source": "ready_station_offer_cache",
+		},
+		{
+			"interaction_name": "Mission Conversation Clarify Question",
+			"requester_id": "conversation:mission.runtime.test:clarify_term",
+			"text_type": "mission_conversation_answer",
+			"text_source": "mission_dialogue_bundle",
+		},
+		{
+			"interaction_name": "Mission Conversation Accept Choice",
+			"requester_id": "conversation:mission.runtime.test:accept_standard",
+			"text_type": "mission_conversation_terminal",
+			"text_source": "mission_dialogue_bundle",
+		},
+	]
+	for fixture in fixtures:
+		diagnostics.record_lifecycle_timestamp(
+			"player_interaction",
+			"interaction_clicked",
+			"v2_cache_flow_fixture",
+			{
+				"interaction_name": str(fixture.get("interaction_name", "")),
+				"requester_id": str(fixture.get("requester_id", "")),
+			}
+		)
+		diagnostics.record_lifecycle_timestamp(
+			str(fixture.get("text_type", "quest_briefing")),
+			"text_presented",
+			str(fixture.get("text_source", "ready_cache")),
+			{
+				"requester_id": str(fixture.get("requester_id", "")),
+				"content_source": str(fixture.get("text_source", "ready_cache")),
+			}
+		)
 	var gate: Dictionary = diagnostics.assert_no_click_to_generate_reports(
-		"cached_agent_offer_flow"
+		"cached_dialogue_option_flow"
 	)
 	_expect(
 		bool(gate.get("ok", false))
 			and int(gate.get("report_count", -1)) == 0,
-		"Cached agent-offer V2 flow reported click-to-generate work."
+		"Cached dialogue-option V2 flow reported click-to-generate work."
 	)
 	var summary: Dictionary = diagnostics.summary()
 	_expect(
 		(summary.get("click_to_generate_reports", []) as Array).is_empty()
-			and int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == 1
-			and int(summary.get("events_by_reason", {}).get("text_presented", 0)) == 1,
-		"Cached agent-offer V2 flow did not retain click/text lifecycle evidence."
+			and int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == fixtures.size()
+			and int(summary.get("events_by_reason", {}).get("text_presented", 0)) == fixtures.size(),
+		"Cached dialogue-option V2 flow did not retain click/text lifecycle evidence."
 	)
 
 
