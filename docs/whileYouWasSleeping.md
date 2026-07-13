@@ -1706,3 +1706,21 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Headless note: AudioManager.play_sfx errors out-of-bounds in headless if
   a bare PlayerShip calls play_align; the movement-event test avoids the
   boost success path behaviorally for that reason (source-level checked).
+
+### Phase 8A slices 4-5 addendum (acedafe, ce03b5e)
+- Safe context now stamped on every semantic event: recent_actions streak
+  (last 6 raw event ids) + injectable context_provider merged without
+  overwriting event fields. GameRoot supplies the live provider: hull band
+  (healthy/worn/critical), active mission public beat (title + objective
+  type), new/returning system, route_deviation
+  (no_mission / in_mission_system / off_mission_system).
+- Model-call tripwire: observer test audits ShipMovementEvents.gd and
+  ShipBehaviorObserver.gd for any LLMInterface/Ollama/http reference.
+- Phase 8A status: checkboxes 1-4 checked with evidence; checkbox 5
+  (movement only consumes prepared line banks) tripwired but left
+  unchecked until Phase 8B wires Nova consumption.
+- Correction to the entry above: safe context enrichment IS done; the next
+  work is Phase 8B (campaign-aware line banks + Nova consuming
+  semantic_movement_event through severity/preemption/cooldown rules).
+- PowerShell note: git commit -m here-strings must not contain double
+  quotes (PS 5.1 native-arg quoting mangles them into extra pathspecs).
