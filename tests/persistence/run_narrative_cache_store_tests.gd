@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_stale_offer_invalidation_preserves_consumed_and_frozen_entries()
 	_test_context_discard_preserves_truth_frozen_entries()
 	_test_limit_enforcement_evicts_disposable_entries_first()
+	_test_upsert_auto_enforces_default_entry_limit()
 	_test_text_fingerprints_survive_entry_eviction()
 	_test_text_fingerprint_lookup_detects_prior_lines()
 	_test_clear_cache_removes_entries_and_fingerprints()
@@ -210,6 +211,35 @@ func _test_limit_enforcement_evicts_disposable_entries_first() -> void:
 			and not reopened.get_entry("cache.limit.accepted").is_empty()
 			and not reopened.get_entry("cache.limit.ready").is_empty(),
 		"Cache limit enforcement did not persist the bounded survivor set."
+	)
+
+
+func _test_upsert_auto_enforces_default_entry_limit() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	for index in range(CacheStoreType.DEFAULT_MAX_ENTRIES + 1):
+		var entry := _limited_entry(
+			"cache.auto_limit.%03d" % index,
+			index,
+			"ready",
+			index == 0
+		)
+		var upserted: Dictionary = store.upsert_entry(entry)
+		_expect(
+			bool(upserted.get("ok", false)),
+			"Auto-limit upsert failed unexpectedly: %s" %
+				str(upserted.get("error", ""))
+		)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var evicted_fingerprint := CacheStoreType.text_fingerprint(
+		"The cache has work."
+	)
+	_expect(
+		reopened.entries().size() == CacheStoreType.DEFAULT_MAX_ENTRIES
+			and reopened.get_entry("cache.auto_limit.000").is_empty()
+			and reopened.text_fingerprints().has(evicted_fingerprint),
+		"Cache upsert did not automatically enforce the default entry limit."
 	)
 
 

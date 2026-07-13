@@ -83,6 +83,12 @@ func upsert_entry(entry: Dictionary) -> Dictionary:
 	next_entries[cache_key] = prepared
 	next_data["entries"] = next_entries
 	_merge_text_fingerprints(next_data, prepared)
+	_enforce_entry_limits_on_data(
+		next_data,
+		next_entries,
+		DEFAULT_MAX_ENTRIES,
+		DEFAULT_MAX_JSON_BYTES
+	)
 	var committed := _commit(next_data, "narrative_cache_upsert")
 	if not bool(committed.get("ok", false)):
 		return committed
@@ -307,17 +313,12 @@ func enforce_limits(
 		return _failure("Narrative cache store is invalid.")
 	var next_data := data.duplicate(true)
 	var next_entries: Dictionary = entries()
-	var removed: Array[String] = []
-	while _limits_exceeded(next_entries, max_entries, max_json_bytes):
-		var eviction_key := _next_eviction_key(next_entries)
-		if eviction_key.is_empty():
-			break
-		var raw: Variant = next_entries.get(eviction_key, {})
-		if raw is Dictionary:
-			_merge_text_fingerprints(next_data, raw)
-		next_entries.erase(eviction_key)
-		removed.append(eviction_key)
-	next_data["entries"] = next_entries
+	var removed := _enforce_entry_limits_on_data(
+		next_data,
+		next_entries,
+		max_entries,
+		max_json_bytes
+	)
 	var committed := _commit(next_data, "narrative_cache_enforce_limits")
 	if not bool(committed.get("ok", false)):
 		return committed
@@ -567,6 +568,26 @@ static func _limits_exceeded(
 		}
 		return _json_size(probe) > max_json_bytes
 	return false
+
+
+static func _enforce_entry_limits_on_data(
+	next_data: Dictionary,
+	next_entries: Dictionary,
+	max_entries: int,
+	max_json_bytes: int
+) -> Array[String]:
+	var removed: Array[String] = []
+	while _limits_exceeded(next_entries, max_entries, max_json_bytes):
+		var eviction_key := _next_eviction_key(next_entries)
+		if eviction_key.is_empty():
+			break
+		var raw: Variant = next_entries.get(eviction_key, {})
+		if raw is Dictionary:
+			_merge_text_fingerprints(next_data, raw)
+		next_entries.erase(eviction_key)
+		removed.append(eviction_key)
+	next_data["entries"] = next_entries
+	return removed
 
 
 static func _next_eviction_key(next_entries: Dictionary) -> String:

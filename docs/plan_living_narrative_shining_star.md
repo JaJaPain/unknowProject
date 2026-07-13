@@ -839,8 +839,8 @@ Primary files:
 - [ ] Invalidate unconsumed offers when their story beat, giver, destination, objective, allowed facts, or relationship tier changes.
 - [ ] Do not invalidate an accepted mission’s conversation/turn-in bundle merely because the global story revision advanced; accepted mission truth is frozen and travels with the mission.
 - [ ] Mark one-shot lines consumed after actual display, not when read from disk.
-- [ ] Bound cache by entry count and bytes. Recommended first limits: 256 text bundles and 8 MB JSON; evict consumed/expired lowest-priority entries first.
-- [ ] Store text fingerprints even after text eviction so a long campaign cannot immediately regenerate the same line.
+- [x] Bound cache by entry count and bytes. Recommended first limits: 256 text bundles and 8 MB JSON; evict consumed/expired lowest-priority entries first.
+- [x] Store text fingerprints even after text eviction so a long campaign cannot immediately regenerate the same line.
 - [ ] Clear all campaign-specific cache entries on new campaign/restart; never share exact line caches across campaigns.
 
 #### Phase 6C — Generation and retry policy
@@ -858,6 +858,7 @@ Primary files:
 - [ ] Add pre-recorded non-semantic filler clips for N.O.V.A. and Kaelen (`um`, `oh`, `well`, `ahh`) that can play only during short quiet waits for LLM/TTS readiness. Treat them as latency masking, not dialogue content: they must never replace required text, advance state, reveal facts, or count as a generated line.
 - [ ] Make the UI actionable when required visible fields are text-ready; prefer to wait for their audio during natural pre-entry time, never after the click.
   - 2026-07-13: Fresh-campaign loading now blocks only on a bounded starter subset of Kaelen/N.O.V.A. line-bank TTS, then warms the full startup banks after loading releases.
+  - 2026-07-13: Narrative cache writes now auto-enforce the default 256-entry / 8 MB bounds on every upsert, while preserving text fingerprints for evicted lines.
 - [ ] Prevent obsolete TTS jobs from delaying current P0 fields.
 - [ ] Preserve subtitles if TTS fails; record the audio failure separately from text-source degradation.
 
