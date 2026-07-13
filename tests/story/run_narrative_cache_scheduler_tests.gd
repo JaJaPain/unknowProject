@@ -376,11 +376,14 @@ func _test_validation_failure_retries_once_then_requires_degraded_content() -> v
 		"job.retry",
 		["answer revealed forbidden fact"]
 	)
+	var summary: Dictionary = scheduler.diagnostic_summary()
 	_expect(
 		not bool(degraded.get("retry_queued", true))
 			and str(scheduler.get_job("job.retry").get("status", ""))
 				== "degraded_required"
-			and bool(scheduler.get_job("job.retry").get("degraded", false)),
+			and bool(scheduler.get_job("job.retry").get("degraded", false))
+			and int(summary.get("degraded_jobs", 0)) == 1
+			and float(summary.get("degraded_rate", 0.0)) > 0.0,
 		"Scheduler did not require degraded content after retry budget was spent."
 	)
 

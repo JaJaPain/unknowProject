@@ -437,10 +437,13 @@ func diagnostic_summary() -> Dictionary:
 	var source_counts: Dictionary = {}
 	var fallback_uses := 0
 	var generated_replacements := 0
+	var degraded_jobs := 0
 	for raw in _jobs.values():
 		if not raw is Dictionary:
 			continue
 		var job: Dictionary = raw
+		if bool(job.get("degraded", false)):
+			degraded_jobs += 1
 		var stamps: Dictionary = (raw as Dictionary).get(
 			"diagnostic_timestamps",
 			{}
@@ -494,6 +497,10 @@ func diagnostic_summary() -> Dictionary:
 		"cache_lookup_hit": int(_stats.get("cache_lookup_hit", 0)),
 		"cache_lookup_miss": int(_stats.get("cache_lookup_miss", 0)),
 		"interaction_clicked": int(_stats.get("interaction_clicked", 0)),
+		"degraded_jobs": degraded_jobs,
+		"degraded_rate": (
+			float(degraded_jobs) / float(max(1, _jobs.size()))
+		),
 	}
 
 
