@@ -4904,6 +4904,10 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
 		mood_block + \
 		safe_packet_block + \
+		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
+		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
+		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
+		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
 		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \
@@ -4975,6 +4979,27 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 				else:
 					_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
 				return
+			var comp_issue := _kaelen_reaction_player_clarity_issue(
+				comp_line,
+				quest_data,
+				"completion"
+			)
+			var abandon_issue := _kaelen_reaction_player_clarity_issue(
+				abn_line,
+				quest_data,
+				"abandon"
+			)
+			if not comp_issue.is_empty() or not abandon_issue.is_empty():
+				var issue := comp_issue if not comp_issue.is_empty() else abandon_issue
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen reaction clarity guard rejected line (%s) - retrying (%d attempts left)." % [issue, _attempts_left])
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+				else:
+					_trigger_kaelen_reaction_fallback(
+						callback,
+						"player_clarity_guard_" + issue
+					)
+				return
 			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
 			callback.call(comp_line, abn_line)
 		else:
@@ -4999,6 +5024,56 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 	if err != OK:
 		temp_http.queue_free()
 		_trigger_kaelen_reaction_fallback(callback, "http_request_start_failed_%d" % err)
+
+
+func _kaelen_reaction_player_clarity_issue(
+	line: String,
+	quest_data: Dictionary,
+	line_kind: String
+) -> String:
+	var clean_line := line.strip_edges()
+	if clean_line.is_empty():
+		return "empty_line"
+	var lower_line := clean_line.to_lower()
+	if line_kind.strip_edges() == "completion":
+		for pattern in [
+			"now fix",
+			"now save",
+			"now stop",
+			"now protect",
+			"now handle",
+			"now deal with",
+			"go fix",
+			"go save",
+			"go stop",
+			"go protect",
+			"go handle",
+		]:
+			if lower_line.contains(pattern):
+				return "unexplained_next_task"
+		for opening in ["fix ", "save ", "stop ", "protect ", "handle "]:
+			if lower_line.begins_with(opening):
+				return "unexplained_next_task"
+	var allowed_context := JSON.stringify(quest_data).to_lower()
+	for term in [
+		"relay",
+		"relays",
+		"city",
+		"cities",
+		"family",
+		"families",
+		"convoy",
+		"convoys",
+		"evidence",
+		"case",
+		"shield line",
+		"route",
+		"routes",
+	]:
+		if lower_line.contains(term) and not allowed_context.contains(term):
+			return "unintroduced_story_detail_" + term.replace(" ", "_")
+	return ""
+
 
 func _trigger_kaelen_reaction_fallback(
 	callback: Callable,

@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_live_kaelen_handoff_prompt_uses_safe_packet()
 	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
 	_test_kaelen_reaction_bundle_is_mission_keyed()
+	_test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -279,6 +280,31 @@ func _test_kaelen_reaction_bundle_is_mission_keyed() -> void:
 			and quest_source.contains("mission_runtime_id")
 			and quest_source.contains("func active_kaelen_reaction_line"),
 		"Kaelen completion/abandon reactions are not stored as mission-keyed bundles."
+	)
+
+
+func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> void:
+	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(
+		file != null,
+		"Could not inspect LLMInterface Kaelen clarity guard."
+	)
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _kaelen_reaction_player_clarity_issue")
+			and source.contains("\"now fix\"")
+			and source.contains("\"unexplained_next_task\"")
+			and source.contains("\"relay\"")
+			and source.contains("\"unintroduced_story_detail_\"")
+			and source.contains("someone else has one less infrastructure problem")
+			and source.contains("Never make the pilot responsible for that unseen problem"),
+		"Kaelen clarity guard does not block unexplained next tasks while allowing generic resolved offscreen benefits."
+	)
+	_expect(
+		not source.contains("Clean and Easy done? Good. Your credits hit my ledger"),
+		"Screenshot regression text was accidentally hard-coded into production."
 	)
 
 
