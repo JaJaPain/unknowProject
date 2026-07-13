@@ -1038,7 +1038,8 @@ Primary files:
 
 #### Phase 8B — Campaign-aware line banks
 
-- [ ] Define line-bank categories for the semantic events above plus existing combat/hull/welcome/gate/arrival beats.
+- [x] Define line-bank categories for the semantic events above plus existing combat/hull/welcome/gate/arrival beats.
+  - 2026-07-13: Added `NovaLineBankCategories` — the five ShipBehaviorObserver semantic events plus `system_arrival` (accepts the legacy `startup_navigation` kind so existing cached banks stay consumable), `gate_transit`, `gate_glitch` (marked protected: only StoryManager's large-model path may write it), `hull_critical`, `welcome_back`, `docked`, and the three combat-end beats. `for_semantic_event()` maps observer events to banks; unknown events map to none (silence by design). Covered by `tests/story/run_nova_line_bank_category_tests.gd`, including a mirror check against `ShipBehaviorObserver.all_semantic()`.
 - [ ] Generate small flat banks in 6–10 field batches during chapter/system preparation; validate each line independently.
 - [ ] Prompt with N.O.V.A.’s fixed persona, campaign quirk, allowed known facts, current system tone, and a bounded recent-event summary.
 - [ ] Preserve current severity/preemption/cooldown rules and improve them with a global “N.O.V.A. has spoken enough recently” budget.
