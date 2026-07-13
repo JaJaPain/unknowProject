@@ -3337,6 +3337,7 @@ func _narrative_prefetch_event_from_system_arrival(
 		"subject_id": clean_system_id,
 		"system_id": clean_system_id,
 		"arrival_gate_id": arrival_gate_id.strip_edges(),
+		"contact_profiles": _system_arrival_contact_profiles(system_root),
 		"visible_station_ids": _visible_station_ids_for_narrative_prefetch(
 			system_root
 		),
@@ -3352,6 +3353,60 @@ func _narrative_prefetch_event_from_system_arrival(
 		)) if is_instance_valid(StoryManager) else 0,
 	}
 	return event
+
+
+func _system_arrival_contact_profiles(system_root: Node3D) -> Array[Dictionary]:
+	var profiles: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var registry := GameContentRegistry.shared()
+	for faction_id in GlobalState.get_current_system_factions():
+		var faction_def := registry.faction(faction_id)
+		if faction_def == null or str(faction_def.agent_npc_id).is_empty():
+			continue
+		var contact_id := str(faction_def.agent_npc_id)
+		if seen.has(contact_id):
+			continue
+		var display_name := "%s Agent" % str(faction_def.display_name)
+		var npc_def: NpcDefinition = registry.npcs.get(faction_def.agent_npc_id)
+		if npc_def != null and not str(npc_def.display_name).is_empty():
+			display_name = str(npc_def.display_name)
+		profiles.append({
+			"contact_id": contact_id,
+			"display_name": display_name,
+			"faction_id": str(faction_def.id),
+			"voice_profile_id": str(faction_def.voice_profile_id),
+		})
+		seen[contact_id] = true
+	if system_root == null:
+		return profiles
+	for station in get_tree().get_nodes_in_group("station"):
+		var station_node := station as Node3D
+		if station_node == null or not is_instance_valid(station_node):
+			continue
+		if not system_root.is_ancestor_of(station_node):
+			continue
+		if not station_node.has_method("get_world_id"):
+			continue
+		var station_id := str(station_node.call("get_world_id")).strip_edges()
+		if station_id.is_empty():
+			continue
+		for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+			var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+			if str(npc_data.get("role", "")) != "Faction contact":
+				continue
+			var contact_id := str(npc_data.get("npc_id", "")).strip_edges()
+			if contact_id.is_empty():
+				contact_id = str(npc_name)
+			if seen.has(contact_id):
+				continue
+			profiles.append({
+				"contact_id": contact_id,
+				"display_name": str(npc_name),
+				"faction_id": str(npc_data.get("faction_id", npc_data.get("faction", ""))),
+				"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
+			})
+			seen[contact_id] = true
+	return profiles
 
 
 func _visible_station_ids_for_narrative_prefetch(system_root: Node3D) -> Array[String]:
