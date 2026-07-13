@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_global_speech_budget()
 	_test_semantic_movement_consumes_banks_or_stays_silent()
 	_test_repeated_events_mostly_produce_silence()
+	_test_gate_glitch_bank_is_protected()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -270,6 +271,64 @@ func _test_repeated_events_mostly_produce_silence() -> void:
 		spoken.size() == 1,
 		"Six instant docks should produce exactly one line, got %d: %s"
 			% [spoken.size(), str(spoken)]
+	)
+
+
+# Protected special bank: gate-glitch lines are only served on an explicit
+# request, and the director-only memory flicker stays large-model-only.
+func _test_gate_glitch_bank_is_protected() -> void:
+	var nova: Node = NovaType.new()
+	var empty_filter: Array[String] = []
+	var glitch_filter: Array[String] = ["gate_glitch"]
+	var arrival_filter: Array[String] = ["system_arrival"]
+	_expect(
+		bool(nova._line_kind_allowed("system_arrival", empty_filter)),
+		"A normal kind should be served on an unfiltered request."
+	)
+	_expect(
+		not bool(nova._line_kind_allowed("gate_glitch", empty_filter)),
+		"A protected kind must never be served implicitly."
+	)
+	_expect(
+		not bool(nova._line_kind_allowed("gate_glitch", arrival_filter)),
+		"A protected kind must not ride along on another beat's filter."
+	)
+	_expect(
+		bool(nova._line_kind_allowed("gate_glitch", glitch_filter)),
+		"An explicit request for the protected kind should be honored."
+	)
+	nova.free()
+
+	# The glitch pipeline itself: generated once per campaign on the large
+	# model, leak-guarded line by line, with absence (not filler) on failure.
+	var story_file := FileAccess.open(
+		"res://scripts/story/StoryManager.gd", FileAccess.READ
+	)
+	var llm_file := FileAccess.open(
+		"res://scripts/LLMInterface.gd", FileAccess.READ
+	)
+	_expect(
+		story_file != null and llm_file != null,
+		"Could not inspect the gate-glitch pipeline."
+	)
+	if story_file == null or llm_file == null:
+		return
+	var story_source := story_file.get_as_text()
+	var llm_source := llm_file.get_as_text()
+	_expect(
+		story_source.contains("func _ensure_nova_glitch_hints")
+			and story_source.contains("request_nova_glitch_hints")
+			and story_source.contains("glitch_line_leaks_flicker")
+			and story_source.contains("nova_memory_flicker"),
+		"StoryManager gate-glitch pipeline lost its large-model/leak-guard path."
+	)
+	_expect(
+		llm_source.contains("func request_nova_glitch_hints")
+			and llm_source.contains("\"nova_glitch\"")
+			and llm_source.contains(
+				"HIDDEN DIRECTOR-ONLY FRAGMENT"
+			),
+		"LLMInterface glitch generation is no longer a guarded large-model call."
 	)
 
 

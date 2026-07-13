@@ -387,7 +387,12 @@ func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
 		if payload.get("consumed_line", {}) is Dictionary else {}
 	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
 	if not consumed_text.is_empty():
-		return consumed_text
+		# A disallowed consumed line stays burned (retired) rather than
+		# delivered: better a lost line than a protected one leaking into
+		# the wrong beat.
+		if _line_kind_allowed(str(consumed_line.get("kind", "")), kind_filter):
+			return consumed_text
+		return ""
 	var lines: Array = payload.get("line_bank", []) \
 		if payload.get("line_bank", []) is Array else []
 	var candidates: Array[String] = []
@@ -396,7 +401,7 @@ func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
 			continue
 		var line: Dictionary = raw_line
 		var kind := str(line.get("kind", "")).strip_edges()
-		if not kind_filter.is_empty() and not kind_filter.has(kind):
+		if not _line_kind_allowed(kind, kind_filter):
 			continue
 		var text := str(line.get("text", "")).strip_edges()
 		if not text.is_empty():
@@ -404,6 +409,16 @@ func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
 	if candidates.is_empty():
 		return ""
 	return _pick_line("bank.%s" % requester_id, candidates)
+
+
+# Whether a bank line of `kind` may be served for this request. Protected
+# kinds (the campaign gate-glitch bank) are never served implicitly: they
+# require an explicit filter entry, so no other beat can pick them up.
+func _line_kind_allowed(kind: String, kind_filter: Array[String]) -> bool:
+	var clean := kind.strip_edges()
+	if not kind_filter.is_empty():
+		return kind_filter.has(clean)
+	return not NovaBankCategoriesType.is_protected(clean)
 
 
 # Returns the recurrence streak for `tag` (0 = first / first in a while, 1 = again
