@@ -33,11 +33,15 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 		"PURCHASE_DELIVERY",
 		"RECOVER_COMBAT_DROP",
 		"TARGET_WITH_COMMS_REVERSAL",
+		"KILL_SHIPS",
+		"DELIVER_ORE",
+		"PICKUP_SPECIAL",
 	]:
 		var profile := _profile_for_objective(objective_type)
 		_expect(
 			StoryAgentOfferBuilderType.can_build(profile),
-			"Builder did not recognize %s as template-backed." % objective_type
+			"Builder did not recognize %s as system-arrival-cache-safe." %
+				objective_type
 		)
 		var offer := StoryAgentOfferBuilderType.build_offer(
 			"neutral",

@@ -23,6 +23,9 @@ const TEMPLATE_ONLY_OBJECTIVES := [
 	"PURCHASE_DELIVERY",
 	"RECOVER_COMBAT_DROP",
 	"TARGET_WITH_COMMS_REVERSAL",
+	"KILL_SHIPS",
+	"DELIVER_ORE",
+	"PICKUP_SPECIAL",
 ]
 
 
@@ -265,6 +268,12 @@ static func _objective_for_candidate(
 			return _recover_combat_drop_objective(candidate, budget)
 		"TARGET_WITH_COMMS_REVERSAL":
 			return _target_with_comms_reversal_objective(candidate, budget)
+		"KILL_SHIPS":
+			return _kill_ships_objective(candidate, budget)
+		"DELIVER_ORE":
+			return _deliver_ore_objective(candidate, budget)
+		"PICKUP_SPECIAL":
+			return _pickup_special_objective(candidate)
 	return {}
 
 
@@ -336,6 +345,56 @@ static func _target_with_comms_reversal_objective(
 	}
 
 
+static func _kill_ships_objective(
+	candidate: Dictionary,
+	budget: Dictionary
+) -> Dictionary:
+	var count := int(budget.get("kill_count", 0))
+	if count <= 0:
+		count = 3
+	return {
+		"type": "KILL_SHIPS",
+		"target_faction": _target_faction(candidate),
+		"count_required": count,
+		"reward_credits": int(round(420.0 * float(budget.get("reward_multiplier", 1.0)))),
+	}
+
+
+static func _deliver_ore_objective(
+	candidate: Dictionary,
+	budget: Dictionary
+) -> Dictionary:
+	var amount := float(budget.get("ore_amount", 0.0))
+	if amount <= 0.0:
+		amount = 20.0
+	return {
+		"type": "DELIVER_ORE",
+		"amount_required": snappedf(amount, 1.0),
+		"reward_credits": int(round(300.0 * float(budget.get("reward_multiplier", 1.0)))),
+	}
+
+
+static func _pickup_special_objective(candidate: Dictionary) -> Dictionary:
+	var destination := _destination_outpost(candidate)
+	var target_outpost := str(destination.get("id", "")).strip_edges()
+	if target_outpost.is_empty():
+		target_outpost = str(candidate.get("location_id", "")).strip_edges()
+	if target_outpost.is_empty():
+		target_outpost = _main_station_id()
+	var target_display := str(destination.get("display", "")).strip_edges()
+	if target_display.is_empty():
+		target_display = _main_station_display()
+	return {
+		"type": "PICKUP_SPECIAL",
+		"target_outpost": target_outpost,
+		"target_outpost_display": target_display,
+		"target_npc": str(candidate.get("target_npc", "Local Quartermaster")),
+		"part_name": _story_item_name(candidate, "sealed component"),
+		"destination": _main_station_display(),
+		"reward_credits": 260,
+	}
+
+
 static func _narrative_metadata(candidate: Dictionary, budget: Dictionary) -> Dictionary:
 	return {
 		"story_thread_id": str(candidate.get("thread_id", "")),
@@ -394,6 +453,12 @@ static func _title_for_candidate(candidate: Dictionary, objective: Dictionary) -
 			return "Recover: %s" % str(objective.get("item_name", "Data Pack"))
 		"TARGET_WITH_COMMS_REVERSAL":
 			return "Interdict: %s" % _target_faction_display(str(objective.get("target_faction", "")))
+		"KILL_SHIPS":
+			return "Clear: %s" % _target_faction_display(str(objective.get("target_faction", "")))
+		"DELIVER_ORE":
+			return "Ore Delivery: %s" % _main_station_display()
+		"PICKUP_SPECIAL":
+			return "Pickup: %s" % str(objective.get("part_name", "Sealed Component"))
 	return stake.left(80) if not stake.is_empty() else "Story Contract"
 
 
@@ -439,6 +504,27 @@ static func _objective_summary(objective: Dictionary) -> String:
 			return "eliminate %d %s ships; monitor comms before the final shot" % [
 				int(objective.get("count_required", 1)),
 				_target_faction_display(str(objective.get("target_faction", ""))),
+			]
+		"KILL_SHIPS":
+			return "eliminate %d %s ships" % [
+				int(objective.get("count_required", 1)),
+				_target_faction_display(str(objective.get("target_faction", ""))),
+			]
+		"DELIVER_ORE":
+			return "deliver %.0f ore to %s" % [
+				float(objective.get("amount_required", 1.0)),
+				_main_station_display(),
+			]
+		"PICKUP_SPECIAL":
+			return "pick up %s from %s at %s" % [
+				str(objective.get("part_name", "the component")),
+				str(objective.get("target_npc", "the contact")),
+				str(
+					objective.get(
+						"target_outpost_display",
+						objective.get("target_outpost", "the outpost")
+					)
+				),
 			]
 	return "complete the contract"
 
