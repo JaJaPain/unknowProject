@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_test_chapter_packet_ready_plans_first_interaction_prefetch()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_station_target_hooks_call_prefetch_planner()
+	_test_chapter_packet_ready_hook_calls_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -653,6 +654,21 @@ func _test_station_target_hooks_call_prefetch_planner() -> void:
 			and ui_source.contains("\"fly_to\"")
 			and ui_source.contains("\"dock\""),
 		"Station target/fly-to hooks are not wired to the narrative prefetch planner."
+	)
+
+
+func _test_chapter_packet_ready_hook_calls_prefetch_planner() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect chapter packet prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("_narrative_prefetch_event_from_chapter_packet")
+			and source.contains("\"event_type\": \"chapter_packet_ready\"")
+			and source.contains("\"first_beat_ids\"")
+			and source.contains("_queue_narrative_prefetch_jobs_for_event("),
+		"Chapter packet ready hook is not wired to the narrative prefetch planner."
 	)
 
 
