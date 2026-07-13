@@ -109,7 +109,16 @@ static func replace_used_with_generated(
 	var retired := _retired_fingerprints(next_bank)
 	var generated_index := 0
 	for raw_line in generated_lines:
+		# Plain strings inherit the bank's line_kind; {kind, text} entries
+		# carry their own kind so one batch can span several categories.
 		var text := str(raw_line).strip_edges()
+		var entry_kind := str(next_bank.get("line_kind", ""))
+		if raw_line is Dictionary:
+			var line: Dictionary = raw_line
+			text = str(line.get("text", "")).strip_edges()
+			var line_kind := str(line.get("kind", "")).strip_edges()
+			if not line_kind.is_empty():
+				entry_kind = line_kind
 		if text.is_empty() or seen.has(text):
 			continue
 		if retired.has(text.sha256_text()):
@@ -120,7 +129,7 @@ static func replace_used_with_generated(
 			clean_source_id = "llm"
 		var next_entry := _entry(
 			str(next_bank.get("speaker_key", "")),
-			str(next_bank.get("line_kind", "")),
+			entry_kind,
 			text,
 			clean_source_id,
 			entries.size() + generated_index

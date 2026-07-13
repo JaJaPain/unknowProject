@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_generated_lines_do_not_overfill_full_unused_bank()
 	_test_empty_bank_reports_no_line()
 	_test_consumed_lines_are_retired_for_the_campaign()
+	_test_generated_lines_can_carry_their_own_kinds()
 
 	if _failures.is_empty():
 		print("[PASS] Fallback line bank tests")
@@ -182,6 +183,40 @@ func _test_consumed_lines_are_retired_for_the_campaign() -> void:
 			and not texts.has(spoken_text)
 			and texts.has("Another new observation."),
 		"Retired line text was re-offered after its slot was recycled."
+	)
+
+
+# A generated batch can span several categories: {kind, text} entries keep
+# their own kind, plain strings inherit the bank's line_kind.
+func _test_generated_lines_can_carry_their_own_kinds() -> void:
+	var bank := BankType.create_bank(
+		"nova", "system_arrival", ["Old line one.", "Old line two."], 4
+	)
+	var consumed: Dictionary = BankType.consume(bank)
+	var replaced: Dictionary = BankType.replace_used_with_generated(
+		consumed.get("bank", {}),
+		[
+			{"kind": "boost_again_quickly", "text": "Boost again? Bold."},
+			"Plain string keeps the bank kind.",
+		],
+		"llm_nova_bank"
+	)
+	_expect(
+		int(replaced.get("replacements", 0)) == 2,
+		"Both generated lines should land (one slot + one append)."
+	)
+	var kinds_by_text: Dictionary = {}
+	for raw_entry in ((replaced.get("bank", {}) as Dictionary).get("entries", []) as Array):
+		var entry: Dictionary = raw_entry
+		kinds_by_text[str(entry.get("text", ""))] = str(entry.get("kind", ""))
+	_expect(
+		str(kinds_by_text.get("Boost again? Bold.", "")) == "boost_again_quickly",
+		"Dictionary line did not keep its own kind."
+	)
+	_expect(
+		str(kinds_by_text.get("Plain string keeps the bank kind.", ""))
+			== "system_arrival",
+		"Plain string line did not inherit the bank line_kind."
 	)
 
 
