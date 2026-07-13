@@ -303,6 +303,8 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 		"fallback_uses": 2,
 		"generated_replacements": 1,
 	})
+	scheduler.ready_result_for_requester("job.metrics")
+	scheduler.ready_result_for_requester("missing.requester")
 	var summary: Dictionary = scheduler.diagnostic_summary()
 	var content_counts: Dictionary = summary.get("content_type_counts", {}) \
 		if summary.get("content_type_counts", {}) is Dictionary else {}
@@ -319,7 +321,9 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 			and int(content_counts.get("story_line_bank", 0)) == 1
 			and int(source_counts.get("fallback_bank", 0)) == 1
 			and int(summary.get("fallback_uses", 0)) == 2
-			and int(summary.get("generated_replacements", 0)) == 1,
+			and int(summary.get("generated_replacements", 0)) == 1
+			and int(summary.get("cache_lookup_hit", 0)) == 1
+			and int(summary.get("cache_lookup_miss", 0)) == 1,
 		"Scheduler diagnostic summary did not report lifecycle durations."
 	)
 

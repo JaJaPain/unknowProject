@@ -29,6 +29,8 @@ var _stats := {
 	"degraded": 0,
 	"retry_queued": 0,
 	"tts_failed": 0,
+	"cache_lookup_hit": 0,
+	"cache_lookup_miss": 0,
 }
 var _paused := false
 var _pause_reason := ""
@@ -480,6 +482,8 @@ func diagnostic_summary() -> Dictionary:
 		"source_counts": source_counts,
 		"fallback_uses": fallback_uses,
 		"generated_replacements": generated_replacements,
+		"cache_lookup_hit": int(_stats.get("cache_lookup_hit", 0)),
+		"cache_lookup_miss": int(_stats.get("cache_lookup_miss", 0)),
 	}
 
 
@@ -610,6 +614,7 @@ func ready_result_for_requester(requester_id: String) -> Dictionary:
 			continue
 		var requesters: Array = job.get("requesters", [])
 		if requesters.has(clean_requester):
+			_stats["cache_lookup_hit"] = int(_stats.get("cache_lookup_hit", 0)) + 1
 			return {
 				"job_id": str(job.get("job_id", "")),
 				"cache_key": str(job.get("cache_key", "")),
@@ -617,6 +622,7 @@ func ready_result_for_requester(requester_id: String) -> Dictionary:
 					job.get("result_payload", {}) as Dictionary
 				).duplicate(true) if job.get("result_payload", {}) is Dictionary else {},
 			}
+	_stats["cache_lookup_miss"] = int(_stats.get("cache_lookup_miss", 0)) + 1
 	return {}
 
 
