@@ -87,6 +87,7 @@ func state_snapshot() -> Dictionary:
 		"rough_since_departure": _rough_since_departure,
 		"last_semantic_emit_time": _last_semantic_emit_time,
 		"suppressed_counts": _suppressed_counts.duplicate(true),
+		"recent_actions": _recent_events.duplicate(),
 	}
 
 

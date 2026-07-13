@@ -3780,16 +3780,112 @@ func _queue_line_bank_refill_if_low(requester_id: String, payload: Dictionary) -
 	})
 
 
-# Worker for line_bank_low_refill jobs: pushes fresh lines into the low
-# bank's used slots. Content source is the speaker's template bank for now;
-# the Phase 8B batch-generation checkbox upgrades this to prompted lines.
-# Retired texts are refused by the bank itself, so refills never re-offer
+# Worker for line_bank_low_refill jobs. Nova banks dispatch a flat @@label
+# batch to the small model (persona + quirk + system tone + safe facts +
+# bounded recent-event summary); the template bank is the logged degraded
+# floor on failure, and the only source for non-Nova speakers. Retired
+# texts are refused by the bank itself, so refills never re-offer
 # something the player already heard this campaign.
 func _line_bank_low_refill_payload_for_cache_job(job: Dictionary) -> Dictionary:
 	var target_requester := str(job.get("target_requester_id", "")).strip_edges()
 	var speaker_key := str(job.get("speaker_key", "")).strip_edges()
 	if target_requester.is_empty() or speaker_key.is_empty():
 		return {"ok": false, "status": "missing_refill_scope"}
+	if speaker_key == "nova" \
+			and is_instance_valid(LLMInterface) \
+			and LLMInterface.has_method("request_nova_line_bank_batch"):
+		var dispatch_job := job.duplicate(true)
+		LLMInterface.request_nova_line_bank_batch(
+			_nova_refill_batch_fields(),
+			_nova_line_bank_generation_context(),
+			func(result: Dictionary) -> void:
+				_on_nova_line_bank_batch_completed(
+					dispatch_job, target_requester, result
+				)
+		)
+		return {
+			"ok": true,
+			"payload": {
+				"content_type": "line_bank_low_refill",
+				"source": "narrative_cache_scheduler",
+				"cache_key": str(job.get("cache_key", "")),
+				"requester_id": str(job.get("requester_id", "")),
+				"target_requester_id": target_requester,
+				"speaker_key": speaker_key,
+				"generation_dispatched": true,
+			},
+		}
+	return _template_line_bank_refill(job, target_requester, speaker_key)
+
+
+func _on_nova_line_bank_batch_completed(
+	job: Dictionary,
+	target_requester: String,
+	result: Dictionary
+) -> void:
+	if bool(result.get("ok", false)):
+		var replaced := replace_used_cached_fallback_lines(
+			target_requester,
+			result.get("lines", []),
+			"llm_nova_bank"
+		)
+		if bool(replaced.get("ok", false)):
+			return
+	GenerationDiagnostics.record_event(
+		"nova_line_bank",
+		"template_refill_used",
+		"game_root",
+		{"reason": str(result.get("reason", "replace_failed"))}
+	)
+	_template_line_bank_refill(job, target_requester, "nova")
+
+
+# One refill batch: the five movement semantics plus three arrival lines —
+# 8 labeled fields, inside the 6-10 per-batch contract.
+func _nova_refill_batch_fields() -> Array:
+	return [
+		{"category": "boost_again_quickly", "count": 1},
+		{"category": "changed_mind_again", "count": 1},
+		{"category": "returned_to_same_station", "count": 1},
+		{"category": "clean_long_transit", "count": 1},
+		{"category": "rough_arrival", "count": 1},
+		{"category": "system_arrival", "count": 3},
+	]
+
+
+# Player-safe generation context: her fixed persona, the campaign quirk,
+# the bible's public tone, the current system by display name, and the
+# observer's bounded recent-action streak. No director-only fields.
+func _nova_line_bank_generation_context() -> Dictionary:
+	var context := {}
+	if is_instance_valid(Nova):
+		context["persona"] = str(Nova.PERSONA)
+	if is_instance_valid(StoryManager):
+		context["campaign_quirk"] = str(
+			StoryManager.story_state.get("nova_quirk", "")
+		).strip_edges()
+	if campaign_bible_store != null and campaign_bible_store.is_valid():
+		context["system_tone"] = str(
+			campaign_bible_store.data.get("tone", "")
+		).strip_edges()
+	var facts: Array = []
+	var sys_def := system_registry.get_system(GlobalState.current_system_id) \
+		if system_registry != null else null
+	if sys_def != null:
+		facts.append("The ship is currently in the %s system." % sys_def.display_name)
+	context["known_facts"] = facts
+	if ship_behavior_observer != null \
+			and ship_behavior_observer.has_method("state_snapshot"):
+		var snapshot: Dictionary = ship_behavior_observer.state_snapshot()
+		context["recent_events"] = snapshot.get("recent_actions", [])
+	return context
+
+
+func _template_line_bank_refill(
+	job: Dictionary,
+	target_requester: String,
+	speaker_key: String
+) -> Dictionary:
 	var template := _template_line_bank_for_speaker(job, speaker_key)
 	var candidates: Array = []
 	for raw_line in (

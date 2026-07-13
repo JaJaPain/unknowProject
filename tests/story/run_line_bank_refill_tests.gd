@@ -119,14 +119,15 @@ func _test_low_bank_triggers_refill_and_tops_up() -> void:
 		"Repeat consume duplicated the refill job."
 	)
 
-	# Process the refill: used slots refill from the nova template and the
-	# delivered lines never come back.
-	var processed: Dictionary = gr.process_narrative_cache_job_for_requester(
-		str(refill_job.get("requester_id", ""))
+	# Run the degraded template floor directly (the live worker dispatches an
+	# async LLM batch first, which a headless test cannot await): used slots
+	# refill from the nova template and the delivered lines never come back.
+	var refilled: Dictionary = gr._template_line_bank_refill(
+		refill_job, REQUESTER, "nova"
 	)
 	_expect(
-		bool(processed.get("ok", false)),
-		"Refill job failed: %s" % str(processed.get("status", ""))
+		bool(refilled.get("ok", false)),
+		"Template refill failed: %s" % str(refilled.get("status", ""))
 	)
 	var after: Dictionary = gr.ready_cached_narrative_line_bank(REQUESTER)
 	_expect(
@@ -142,6 +143,24 @@ func _test_low_bank_triggers_refill_and_tops_up() -> void:
 		"A retired line came back after the refill."
 	)
 	gr.free()
+
+	# The live worker dispatches the LLM batch for nova banks and only falls
+	# to the template floor on failure, logged as degraded content.
+	var game_root_file := FileAccess.open(
+		"res://scripts/GameRoot.gd", FileAccess.READ
+	)
+	_expect(game_root_file != null, "Could not inspect refill dispatch wiring.")
+	if game_root_file == null:
+		return
+	var source := game_root_file.get_as_text()
+	_expect(
+		source.contains("request_nova_line_bank_batch")
+			and source.contains("func _on_nova_line_bank_batch_completed")
+			and source.contains("\"template_refill_used\"")
+			and source.contains("func _nova_refill_batch_fields")
+			and source.contains("func _nova_line_bank_generation_context"),
+		"Refill worker does not dispatch batch generation with a logged template floor."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:
