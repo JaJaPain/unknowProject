@@ -4910,6 +4910,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
 		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
 		"If earned_aftermath.visible_effect.has_visible_effect is true, name that effect once in plain language before Kaelen's profit deflection. If it is false, do not invent shields, convoys, contacts, evidence, cities, or cases. " + \
+		"If earned_aftermath.earned_background.can_reveal is true, you may add one short plain-language clause explaining the safe background or what the job prevented. Use only earned_background text and IDs; never add secret motives, identities, origins, or hidden director-only causes. " + \
 		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
 		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
 		"Preferred Kaelen turn-in shape: let a little heart show for one beat, then cover it with profit. Example pattern: 'They're safe now. More importantly, we got paid in full.' Do not become sentimental for the whole line. " + \

@@ -125,6 +125,7 @@ static func _earned_aftermath_projection(mission_state: Dictionary) -> Dictionar
 		"public_because": str(metadata.get("public_because", "")),
 		"world_consequence": str(outcome.get("world_consequence", "")),
 		"visible_effect": _visible_effect_projection(metadata, outcome),
+		"earned_background": _earned_background_projection(metadata, outcome),
 		"completion_fact_ids": _string_array(metadata.get("completion_fact_ids", [])),
 	}
 
@@ -201,6 +202,35 @@ static func _visible_effect_type(effect_text: String) -> String:
 			if lower.contains(str(marker)):
 				return str(group.get("type", "visible_effect"))
 	return ""
+
+
+static func _earned_background_projection(
+	metadata: Dictionary,
+	outcome: Dictionary
+) -> Dictionary:
+	var public_because := str(metadata.get("public_because", "")).strip_edges()
+	var stake := str(metadata.get("stake", "")).strip_edges()
+	var consequence := str(outcome.get("world_consequence", "")).strip_edges()
+	var background_text := public_because
+	if background_text.is_empty():
+		background_text = stake
+	var completion_fact_ids := _string_array(metadata.get("completion_fact_ids", []))
+	return {
+		"can_reveal": (
+			not background_text.is_empty()
+			or not consequence.is_empty()
+			or not completion_fact_ids.is_empty()
+		),
+		"background_text": background_text,
+		"stake_text": stake,
+		"outcome_text": consequence,
+		"completion_fact_ids": completion_fact_ids,
+		"reveal_boundary": (
+			"Completion-only safe background. Explain only these public/earned "
+			+ "facts; do not add secret motives, identities, origins, or hidden "
+			+ "director-only causes."
+		),
+	}
 
 
 static func _timing_profile(

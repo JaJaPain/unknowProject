@@ -161,6 +161,8 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 		if packet.get("earned_aftermath", {}) is Dictionary else {}
 	var earned_visible_effect: Dictionary = earned_aftermath.get("visible_effect", {}) \
 		if earned_aftermath.get("visible_effect", {}) is Dictionary else {}
+	var earned_background: Dictionary = earned_aftermath.get("earned_background", {}) \
+		if earned_aftermath.get("earned_background", {}) is Dictionary else {}
 	_expect(
 		str(mission_packet.get("cause_id", "")) == "cause.city_attack"
 			and str(mission_packet.get("stake", "")).contains("home city")
@@ -177,6 +179,16 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 			and bool(earned_visible_effect.get("has_visible_effect", false))
 			and str(earned_visible_effect.get("effect_type", "")) == "people_safe",
 		"Completion packet did not expose safe earned aftermath context."
+	)
+	_expect(
+		bool(earned_background.get("can_reveal", false))
+			and str(earned_background.get("background_text", ""))
+				.contains("staging outside the city lane")
+			and (earned_background.get("completion_fact_ids", []) as Array)
+				.has("fact.family_district_saved")
+			and str(earned_background.get("reveal_boundary", ""))
+				.contains("Completion-only safe background"),
+		"Completion packet did not expose bounded earned background."
 	)
 	_expect(
 		str(packet.get("safe_kaelen_style", {}).get("kaelen_mood", ""))
@@ -379,6 +391,12 @@ func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> voi
 			and source.contains("name that effect once in plain language")
 			and source.contains("do not invent shields, convoys, contacts, evidence"),
 		"Kaelen completion prompt does not gate visible-effect naming on the safe packet."
+	)
+	_expect(
+		source.contains("earned_aftermath.earned_background.can_reveal")
+			and source.contains("one short plain-language clause")
+			and source.contains("never add secret motives, identities, origins"),
+		"Kaelen completion prompt does not bound earned background reveals."
 	)
 	_expect(
 		not source.contains("Clean and Easy done? Good. Your credits hit my ledger"),
