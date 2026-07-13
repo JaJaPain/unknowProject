@@ -4879,13 +4879,16 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		mood_block = "Kaelen's current mood (color her tone with this — do NOT quote or explain it): %s. " % mood
 
 	var safe_packet_block := ""
+	var completion_interaction_kind := KaelenInteractionPacketBuilderType.turn_in_kind_for_mission(
+		quest_data
+	)
 	var completion_packet_clause := _kaelen_interaction_packet_clause(
-		KaelenInteractionKindsType.TURN_IN_CLEAN,
+		completion_interaction_kind,
 		quest_data
 	)
 	if not completion_packet_clause.is_empty():
 		safe_packet_block += (
-			"Completion context packet. Use only these allowed facts for the completion line; "
+			"Completion context packet. Use only these allowed facts and the outcome_profile for the completion line; "
 			+ "safe earned aftermath may be mentioned only here if present:\n"
 			+ completion_packet_clause
 		)

@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_existing_handoff_paths_use_interaction_constants()
 	_test_story_manager_uses_scoped_handoff_pools()
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
+	_test_kaelen_turn_in_outcome_profile_classifies_variants()
 	_test_live_kaelen_handoff_prompt_uses_safe_packet()
 	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
 	_test_kaelen_reaction_bundle_is_mission_keyed()
@@ -177,6 +178,16 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 		"Kaelen packet did not include safe mood/style context."
 	)
 	_assert_no_secret_tokens(JSON.stringify(packet), "kaelen_prompt_packet")
+	var outcome_profile: Dictionary = mission_packet.get("outcome_profile", {}) \
+		if mission_packet.get("outcome_profile", {}) is Dictionary else {}
+	_expect(
+		str(outcome_profile.get("turn_in_variant", ""))
+			== KaelenKindsType.TURN_IN_CLEAN
+			and str(outcome_profile.get("outcome_tone", ""))
+				== "clean_with_story_fact"
+			and bool(outcome_profile.get("learned_story_fact", false)),
+		"Kaelen packet did not classify a clean turn-in with story facts."
+	)
 
 	var pre_completion: Dictionary = PacketBuilderType.build_packet(
 		KaelenKindsType.AGENT_HANDOFF,
@@ -204,6 +215,50 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 	)
 
 
+func _test_kaelen_turn_in_outcome_profile_classifies_variants() -> void:
+	var rough := _mission_fixture()
+	rough["partial_delivery_count"] = 2
+	rough["partial_delivered"] = 20.0
+	var rough_packet: Dictionary = PacketBuilderType.build_packet(
+		KaelenKindsType.TURN_IN_ROUGH,
+		rough,
+		_story_state_fixture()
+	)
+	var rough_mission: Dictionary = rough_packet.get("mission", {}) \
+		if rough_packet.get("mission", {}) is Dictionary else {}
+	var rough_profile: Dictionary = rough_mission.get("outcome_profile", {}) \
+		if rough_mission.get("outcome_profile", {}) is Dictionary else {}
+	var rough_partial: Dictionary = rough_profile.get("partial_delivery", {}) \
+		if rough_profile.get("partial_delivery", {}) is Dictionary else {}
+	_expect(
+		str(rough_profile.get("turn_in_variant", ""))
+			== KaelenKindsType.TURN_IN_ROUGH
+			and bool(rough_partial.get("completed_in_multiple_drops", false)),
+		"Kaelen outcome profile did not classify multiple partial deliveries as rough."
+	)
+
+	var late := _mission_fixture()
+	late["objective_completed_time_minutes"] = 300
+	late["deadline_time_minutes"] = 260
+	var late_packet: Dictionary = PacketBuilderType.build_packet(
+		KaelenKindsType.TURN_IN_LATE,
+		late,
+		_story_state_fixture()
+	)
+	var late_mission: Dictionary = late_packet.get("mission", {}) \
+		if late_packet.get("mission", {}) is Dictionary else {}
+	var late_profile: Dictionary = late_mission.get("outcome_profile", {}) \
+		if late_mission.get("outcome_profile", {}) is Dictionary else {}
+	var late_timing: Dictionary = late_profile.get("timing", {}) \
+		if late_profile.get("timing", {}) is Dictionary else {}
+	_expect(
+		str(late_profile.get("turn_in_variant", ""))
+			== KaelenKindsType.TURN_IN_LATE
+			and str(late_timing.get("label", "")) == "late",
+		"Kaelen outcome profile did not classify late completion."
+	)
+
+
 func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:
 	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
 	_expect(file != null, "Could not inspect LLMInterface Kaelen packet wiring.")
@@ -213,7 +268,8 @@ func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:
 	_expect(
 		source.contains("KaelenInteractionPacketBuilderType.build_packet")
 			and source.contains("KaelenInteractionKindsType.AGENT_HANDOFF")
-			and source.contains("KaelenInteractionKindsType.TURN_IN_CLEAN")
+			and source.contains("turn_in_kind_for_mission")
+			and source.contains("outcome_profile")
 			and source.contains("KaelenInteractionKindsType.ABANDON")
 			and source.contains("safe earned aftermath may be mentioned only here")
 			and source.contains("do not reveal completion aftermath here")

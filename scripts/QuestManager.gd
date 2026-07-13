@@ -614,6 +614,10 @@ func deliver_partial(amount: float) -> float:
 		return 0.0
 	GlobalState.remove_ore(to_deliver)
 	active_quest["partial_delivered"] = active_quest.get("partial_delivered", 0.0) + to_deliver
+	active_quest["partial_delivery_count"] = int(
+		active_quest.get("partial_delivery_count", 0)
+	) + 1
+	active_quest["last_partial_delivery_amount"] = to_deliver
 	print("[QuestManager] Partial delivery: %.1f m³ banked. Total so far: %.1f / %.1f" % [
 		to_deliver, active_quest["partial_delivered"], active_quest["amount_required"]])
 	var focused = _collection.get_focused()
