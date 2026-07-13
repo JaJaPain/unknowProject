@@ -1,6 +1,9 @@
 extends SceneTree
 
 const KaelenKindsType := preload("res://scripts/story/KaelenInteractionKinds.gd")
+const PacketBuilderType := preload(
+	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
+)
 
 var _failures: Array[String] = []
 
@@ -10,6 +13,7 @@ func _initialize() -> void:
 	_test_turn_in_and_reveal_groups_are_explicit()
 	_test_existing_handoff_paths_use_interaction_constants()
 	_test_story_manager_uses_scoped_handoff_pools()
+	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -130,6 +134,139 @@ func _test_story_manager_uses_scoped_handoff_pools() -> void:
 			and source.contains("_kaelen_handoff_relationship_band"),
 		"StoryManager does not key Kaelen handoff pools by story/system/relationship scope."
 	)
+
+
+func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> void:
+	var mission := _mission_fixture()
+	var story_state := _story_state_fixture()
+	var packet: Dictionary = PacketBuilderType.build_packet(
+		KaelenKindsType.TURN_IN_CLEAN,
+		mission,
+		story_state,
+		[_memory_fixture()],
+		{"relationship_tier": "trusted"}
+	)
+	_expect(bool(packet.get("ok", false)), "Kaelen prompt packet did not build.")
+	var mission_packet: Dictionary = packet.get("mission", {}) \
+		if packet.get("mission", {}) is Dictionary else {}
+	_expect(
+		str(mission_packet.get("cause_id", "")) == "cause.city_attack"
+			and str(mission_packet.get("stake", "")).contains("home city")
+			and (mission_packet.get("asked_question_intents", []) as Array)
+				.has("ask_risk")
+			and str(mission_packet.get("accepted_terms", {}).get("choice_id", ""))
+				== "choice.accept_standard",
+		"Kaelen prompt packet did not include mission cause, stake, asked questions, and accepted terms."
+	)
+	_expect(
+		bool(packet.get("allow_safe_after_completion_reveal", false))
+			and str(packet.get("earned_aftermath", {}).get("world_consequence", ""))
+				.contains("family district"),
+		"Completion packet did not expose safe earned aftermath context."
+	)
+	_expect(
+		str(packet.get("safe_kaelen_style", {}).get("kaelen_mood", ""))
+			== "quietly relieved",
+		"Kaelen packet did not include safe mood/style context."
+	)
+	_assert_no_secret_tokens(JSON.stringify(packet), "kaelen_prompt_packet")
+
+	var pre_completion: Dictionary = PacketBuilderType.build_packet(
+		KaelenKindsType.AGENT_HANDOFF,
+		mission,
+		story_state,
+		[],
+		{}
+	)
+	_expect(
+		bool(pre_completion.get("ok", false))
+			and not bool(pre_completion.get(
+				"allow_safe_after_completion_reveal",
+				true
+			))
+			and not pre_completion.has("earned_aftermath"),
+		"Pre-completion Kaelen packet exposed aftermath context too early."
+	)
+	_expect(
+		not bool(PacketBuilderType.build_packet(
+			"invalid_kind",
+			mission,
+			story_state
+		).get("ok", true)),
+		"Invalid Kaelen interaction packet kind was accepted."
+	)
+
+
+func _mission_fixture() -> Dictionary:
+	return {
+		"runtime_id": "mission.runtime.kaelen_packet",
+		"title": "Cut the Raid Vector",
+		"objective_type": "KILL_SHIPS",
+		"agent_name": "Agent X",
+		"agent_id": "agent.x",
+		"faction": "neutral",
+		"story_thread_id": "thread.border_pressure",
+		"story_beat_id": "beat.city_attack",
+		"cause_id": "cause.city_attack",
+		"stake": "Agent X's home city is exposed if the raiders regroup.",
+		"conversation_asked_intents": ["ask_risk"],
+		"conversation_learned_fact_ids": ["fact.raid_window.public"],
+		"choice_id_selected": "choice.accept_standard",
+		"choice_text_selected": "I'll take it.",
+		"conversation_intent_id_selected": "accept_standard",
+		"is_urgent": true,
+		"is_timed": true,
+		"deadline_time_minutes": 260,
+		"narrative_metadata": {
+			"public_because": "The raiders were staging outside the city lane.",
+			"stake": "Agent X's home city is exposed if the raiders regroup.",
+			"completion_fact_ids": ["fact.family_district_saved"],
+			"outcome_snapshot": {
+				"world_consequence": "The family district does not burn tonight.",
+				"completion_status": "clean",
+				"outcome_band": "saved_more_than_expected",
+				"director_only_note": "SECRET_OUTCOME_DIRECTOR_TOKEN",
+			},
+			"director_only_fact_ids": ["SECRET_DIRECTOR_FACT_TOKEN"],
+		},
+	}
+
+
+func _story_state_fixture() -> Dictionary:
+	return {
+		"chapter": 2,
+		"active_tensions": ["The city lane is under pressure."],
+		"player_knows": ["Agent X looked scared for personal reasons."],
+		"kaelen_current_mood": "quietly relieved",
+		"kaelen_hidden_angle": "SECRET_KAELEN_ANGLE_TOKEN",
+		"kaelen_hidden_hints": ["SECRET_HINT_TOKEN"],
+		"player_does_not_know_yet": ["SECRET_UNKNOWN_TRUTH_TOKEN"],
+	}
+
+
+func _memory_fixture() -> Dictionary:
+	return {
+		"memory_id": "memory.kaelen.0001",
+		"category": "relationship",
+		"summary": "Shiny asked why the family district mattered.",
+		"fact_refs": ["fact.family_district_saved"],
+		"director_note": "SECRET_MEMORY_DIRECTOR_TOKEN",
+	}
+
+
+func _assert_no_secret_tokens(source: String, label: String) -> void:
+	for secret in [
+		"SECRET_KAELEN_ANGLE_TOKEN",
+		"SECRET_HINT_TOKEN",
+		"SECRET_UNKNOWN_TRUTH_TOKEN",
+		"SECRET_OUTCOME_DIRECTOR_TOKEN",
+		"SECRET_DIRECTOR_FACT_TOKEN",
+		"SECRET_MEMORY_DIRECTOR_TOKEN",
+	]:
+		_expect(
+			not source.contains(secret),
+			"%s leaked secret token: %s" % [label, secret]
+		)
 
 
 func _expect(condition: bool, message: String) -> void:
