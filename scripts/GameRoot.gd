@@ -67,6 +67,7 @@ const RuntimeTraceType := preload(
 const NarrativeDirectorType := preload(
 	"res://scripts/ai/NarrativeDirector.gd"
 )
+const ContextBlockBuilderType := preload("res://scripts/ai/ContextBlockBuilder.gd")
 const MissionDirectorType := preload("res://scripts/story/MissionDirector.gd")
 const StoryAgentOfferBuilderType := preload(
 	"res://scripts/story/StoryAgentOfferBuilder.gd"
@@ -3218,12 +3219,12 @@ func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictiona
 	var requester_id := _narrative_contact_offer_requester_id(agent_profile)
 	if requester_id.is_empty():
 		return {}
-	var payload := _ready_narrative_payload_for_requester(requester_id)
+	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	if not payload.is_empty():
 		return payload
 	var processed := process_narrative_cache_job_for_requester(requester_id)
 	if bool(processed.get("processed", false)):
-		payload = _ready_narrative_payload_for_requester(requester_id)
+		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	return payload
 
 
@@ -3231,21 +3232,38 @@ func ready_cached_narrative_station_offer(station_id: String) -> Dictionary:
 	var requester_id := _narrative_station_offer_requester_id(station_id)
 	if requester_id.is_empty():
 		return {}
-	var payload := _ready_narrative_payload_for_requester(requester_id)
+	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	if not payload.is_empty():
 		return payload
 	var processed := process_narrative_cache_job_for_requester(requester_id)
 	if bool(processed.get("processed", false)):
-		payload = _ready_narrative_payload_for_requester(requester_id)
+		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	return payload
 
 
-func _ready_narrative_payload_for_requester(requester_id: String) -> Dictionary:
+func ready_cached_narrative_line_bank(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(clean_requester, "story_line_bank")
+	if not payload.is_empty():
+		return payload
+	var processed := process_narrative_cache_job_for_requester(clean_requester)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(clean_requester, "story_line_bank")
+	return payload
+
+
+func _ready_narrative_payload_for_requester(
+	requester_id: String,
+	content_type: String = ""
+) -> Dictionary:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	var ready: Dictionary = scheduler.ready_result_for_requester(requester_id)
 	var payload: Dictionary = ready.get("result_payload", {}) \
 		if ready.get("result_payload", {}) is Dictionary else {}
-	if str(payload.get("content_type", "")) != "story_agent_offer":
+	var required_type := content_type.strip_edges()
+	if not required_type.is_empty() and str(payload.get("content_type", "")) != required_type:
 		return {}
 	return payload
 
@@ -3279,6 +3297,10 @@ func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 		"system_contact_offer_bundle":
 			return true
 		"current_station_agent_offer_bundle":
+			return true
+		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
+			return true
+		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return true
 		_:
 			return false
@@ -3322,6 +3344,10 @@ func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 			return _system_contact_offer_payload_for_cache_job(job)
 		"current_station_agent_offer_bundle":
 			return _station_agent_offer_payload_for_cache_job(job)
+		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
+			return _line_bank_payload_for_cache_job(job, "kaelen")
+		"current_system_nova_bundle", "new_campaign_nova_bank":
+			return _line_bank_payload_for_cache_job(job, "nova")
 		_:
 			return {"ok": false, "status": "unsupported_job_kind"}
 
@@ -3399,6 +3425,111 @@ func _station_agent_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
 			"agent_profile": agent_profile,
 		},
 	}
+
+
+func _line_bank_payload_for_cache_job(job: Dictionary, speaker_key: String) -> Dictionary:
+	var line_bank := _template_line_bank_for_speaker(job, speaker_key)
+	if line_bank.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_line_bank",
+			"source": "template_seed_bank",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"speaker_key": speaker_key,
+			"speaker_name": str(line_bank.get("speaker_name", "")),
+			"voice_profile_id": str(line_bank.get("voice_profile_id", "")),
+			"line_bank": (line_bank.get("lines", []) as Array).duplicate(true),
+			"context_block": str(line_bank.get("context_block", "")),
+		},
+	}
+
+
+func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Dictionary:
+	var context_block := _safe_line_bank_context_block(speaker_key)
+	var system_label := _line_bank_system_label(job)
+	var chapter := int(StoryManager.story_state.get("chapter", 1)) \
+		if is_instance_valid(StoryManager) else 1
+	match speaker_key:
+		"kaelen":
+			return {
+				"speaker_name": "Broker Kaelen",
+				"voice_profile_id": "voice.kaelen.v1",
+				"context_block": context_block,
+				"lines": [
+					{
+						"line_id": "kaelen.startup.handoff.1",
+						"kind": "agent_handoff",
+						"text": "Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
+						"priority": "P1",
+					},
+					{
+						"line_id": "kaelen.startup.handoff.2",
+						"kind": "agent_handoff",
+						"text": "The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
+						"priority": "P1",
+					},
+					{
+						"line_id": "kaelen.startup.handoff.3",
+						"kind": "chapter_comment",
+						"text": "Chapter %d of this mess starts small. That is usually how the costly ones introduce themselves." % chapter,
+						"priority": "P1",
+					},
+				],
+			}
+		"nova":
+			return {
+				"speaker_name": "N.O.V.A.",
+				"voice_profile_id": "voice.nova.v1",
+				"context_block": context_block,
+				"lines": [
+					{
+						"line_id": "nova.startup.nav.1",
+						"kind": "startup_navigation",
+						"text": "Local charts for %s are loaded. I distrust them the normal amount." % system_label,
+						"priority": "P1",
+					},
+					{
+						"line_id": "nova.startup.nav.2",
+						"kind": "startup_navigation",
+						"text": "Sensors are awake, Captain. So are several things I would prefer stayed theoretical.",
+						"priority": "P1",
+					},
+					{
+						"line_id": "nova.startup.nav.3",
+						"kind": "startup_navigation",
+						"text": "I have ranked our likely mistakes by survivability. You will be delighted to know there are options.",
+						"priority": "P1",
+					},
+				],
+			}
+		_:
+			return {}
+
+
+func _safe_line_bank_context_block(speaker_key: String) -> String:
+	if not is_instance_valid(StoryManager):
+		return ""
+	var state: Dictionary = StoryManager.story_state \
+		if StoryManager.story_state is Dictionary else {}
+	match speaker_key:
+		"kaelen":
+			return ContextBlockBuilderType.kaelen_block(state)
+		"nova":
+			return ContextBlockBuilderType.nova_block(state)
+		_:
+			return ContextBlockBuilderType.story_state_public_block(state)
+
+
+func _line_bank_system_label(job: Dictionary) -> String:
+	var system_id := str(job.get("system_id", job.get("subject_id", ""))).strip_edges()
+	if system_id.is_empty():
+		system_id = str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return "this system"
+	return system_id.replace("_", " ").replace(".", " ").capitalize()
 
 
 func _agent_profile_for_system_contact_cache_job(job: Dictionary) -> Dictionary:

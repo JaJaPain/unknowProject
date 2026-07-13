@@ -30,6 +30,9 @@ func _initialize() -> void:
 	_test_station_target_hooks_call_prefetch_planner()
 	_test_chapter_packet_ready_hook_calls_prefetch_planner()
 	_test_new_campaign_loading_hook_calls_prefetch_planner()
+	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
+	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
+	_test_game_root_cache_worker_has_template_safe_line_bank_path()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -789,6 +792,26 @@ func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() ->
 			and source.contains("if _try_use_ready_cached_agent_offer(request_profile):")
 			and source.contains("QuestManager.request_new_quest"),
 		"UIManager does not consume ready cached contact offers before live quest generation."
+	)
+
+
+func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot line-bank worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func ready_cached_narrative_line_bank")
+			and source.contains("\"new_campaign_kaelen_handoff_bank\"")
+			and source.contains("\"new_campaign_nova_bank\"")
+			and source.contains("\"current_system_kaelen_bundle\"")
+			and source.contains("\"current_system_nova_bundle\"")
+			and source.contains("ContextBlockBuilderType.kaelen_block")
+			and source.contains("ContextBlockBuilderType.nova_block")
+			and source.contains("\"content_type\": \"story_line_bank\"")
+			and source.contains("\"source\": \"template_seed_bank\""),
+		"GameRoot cache worker is not wired to safely build Kaelen/N.O.V.A. line banks."
 	)
 
 
