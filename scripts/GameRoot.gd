@@ -3640,19 +3640,36 @@ func _process_narrative_tts_cache_job(job: Dictionary) -> Dictionary:
 	if not bool(started.get("ok", false)):
 		started["processed"] = false
 		return started
+	var cache_status := "unavailable"
 	if is_instance_valid(TTSInterface):
-		TTSInterface.cache_dialogue_audio(text, voice_profile_id)
+		cache_status = str(TTSInterface.cache_dialogue_audio(text, voice_profile_id))
 	else:
 		var unavailable: Dictionary = scheduler.mark_tts_failed(
 			job_id,
 			"tts_interface_unavailable"
 		)
+		_persist_narrative_tts_status(job, "failed")
 		unavailable["processed"] = true
 		return unavailable
-	var ready: Dictionary = scheduler.mark_tts_ready(job_id)
-	ready["processed"] = bool(ready.get("ok", false))
-	ready["status"] = "tts_cache_started"
-	return ready
+	if cache_status == "empty":
+		var empty: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"tts_cache_empty_text"
+		)
+		_persist_narrative_tts_status(job, "failed")
+		empty["processed"] = true
+		return empty
+	var persisted_status := "ready" if cache_status == "already_cached" else "pending"
+	_persist_narrative_tts_status(job, persisted_status)
+	if cache_status == "already_cached":
+		var ready: Dictionary = scheduler.mark_tts_ready(job_id)
+		ready["processed"] = bool(ready.get("ok", false))
+		ready["status"] = "tts_cache_ready"
+		return ready
+	started["processed"] = true
+	started["status"] = "tts_cache_pending"
+	started["cache_status"] = cache_status
+	return started
 
 
 func _queue_tts_for_validated_narrative_payload(
@@ -3689,6 +3706,24 @@ func _process_queued_narrative_tts_cache_jobs(job_ids: Array) -> void:
 		if job.is_empty():
 			continue
 		_process_narrative_tts_cache_job(job)
+
+
+func _persist_narrative_tts_status(job: Dictionary, status: String) -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var cache_key := str(job.get("text_cache_key", "")).strip_edges()
+	if cache_key.is_empty():
+		return
+	var field_id := str(job.get("field_id", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	if field_id.is_empty() or voice_profile_id.is_empty():
+		return
+	campaign_narrative_cache_store.mark_tts_status(
+		cache_key,
+		field_id,
+		voice_profile_id,
+		status
+	)
 
 
 func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> void:

@@ -176,7 +176,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	text = text.strip_edges()
 	var clean_text = clean_dialogue_text(text)
 	if clean_text == "":
-		return
+		return "empty"
 	# Resolve voice_id from the second argument
 	var voice_id: String
 	if _is_known_faction(voice_id_or_faction):
@@ -207,7 +207,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 				"cache_state": "already_cached",
 			}
 		)
-		return
+		return "already_cached"
 		
 	if not tts_connected or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
 		_enqueue_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
@@ -215,9 +215,10 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
 		else:
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (cache throttle): %d voice=%s" % [clean_text.hash(), voice_id])
-		return
+		return "queued"
 
 	_start_background_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
+	return "started"
 
 
 func _enqueue_cache_request(

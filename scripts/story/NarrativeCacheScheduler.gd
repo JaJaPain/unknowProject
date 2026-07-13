@@ -263,7 +263,7 @@ func mark_tts_cache_started(job_id: String) -> Dictionary:
 		return _failure("Narrative cache job not found.")
 	var job: Dictionary = _jobs[clean_id]
 	if str(job.get("kind", "")) == "tts_cache":
-		job["status"] = "in_flight"
+		job["status"] = "audio_pending"
 	_jobs[clean_id] = job
 	return _stamp_existing(job_id, "tts_cache_started")
 
