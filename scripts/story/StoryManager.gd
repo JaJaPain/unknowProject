@@ -1945,6 +1945,13 @@ func on_kaelen_intro_dismissed() -> void:
 func draw_kaelen_handoff(agent_name: String) -> String:
 	if _handoff_store == null or not _handoff_store.is_valid():
 		return ""
+	if _handoff_store.has_method("draw_scoped"):
+		return _handoff_store.draw_scoped(
+			agent_name,
+			_kaelen_handoff_story_revision(),
+			_kaelen_handoff_system_id(),
+			_kaelen_handoff_relationship_band(agent_name)
+		)
 	return _handoff_store.draw(agent_name)
 
 # Map faction IDs to the agent rosters used by LLMInterface.
@@ -1967,22 +1974,37 @@ func _trigger_handoff_pool_for_system(system_id: String, force_replace: bool = f
 		if entry.is_empty():
 			continue
 		var agent_name: String = entry["agent_name"]
-		if not force_replace and _handoff_store.pool_size(agent_name) >= 4:
+		if not force_replace and _kaelen_handoff_pool_size(agent_name, system_id) >= 4:
 			continue
-		generate_handoff_pool(agent_name, entry["faction"], entry["agent_role"])
+		generate_handoff_pool(agent_name, entry["faction"], entry["agent_role"], system_id)
 
 # Full replace for all known agents — called on chapter advance.
 func _replace_all_handoff_pools() -> void:
 	if _handoff_store == null or not _handoff_store.is_valid():
 		return
 	for entry in _FACTION_AGENT_MAP.values():
-		generate_handoff_pool(entry["agent_name"], entry["faction"], entry["agent_role"])
+		generate_handoff_pool(
+			entry["agent_name"],
+			entry["faction"],
+			entry["agent_role"],
+			_kaelen_handoff_system_id()
+		)
 
 # Async: asks Gemma4 for 16 handoff lines, saves to pool on success.
-func generate_handoff_pool(agent_name: String, faction: String, agent_role: String) -> void:
+func generate_handoff_pool(
+	agent_name: String,
+	faction: String,
+	agent_role: String,
+	system_id: String = ""
+) -> void:
 	if not is_instance_valid(LLMInterface):
 		return
 	var story_context := get_story_context_block()
+	var scope_system_id := system_id.strip_edges()
+	if scope_system_id.is_empty():
+		scope_system_id = _kaelen_handoff_system_id()
+	var story_revision := _kaelen_handoff_story_revision()
+	var relationship_band := _kaelen_handoff_relationship_band(agent_name)
 	LLMInterface.request_kaelen_handoff_batch(
 		agent_name, agent_role, faction, story_context, 16,
 		func(lines: Array) -> void:
@@ -1990,9 +2012,47 @@ func generate_handoff_pool(agent_name: String, faction: String, agent_role: Stri
 				push_warning("[StoryManager] Handoff batch returned empty for %s" % agent_name)
 				return
 			if _handoff_store != null and _handoff_store.is_valid():
-				_handoff_store.refill(agent_name, lines)
+				if _handoff_store.has_method("refill_scoped"):
+					_handoff_store.refill_scoped(
+						agent_name,
+						story_revision,
+						scope_system_id,
+						relationship_band,
+						lines
+					)
+				else:
+					_handoff_store.refill(agent_name, lines)
 				print("[StoryManager] Handoff pool refilled for %s (%d lines)" % [agent_name, lines.size()])
 	)
+
+
+func _kaelen_handoff_pool_size(agent_name: String, system_id: String) -> int:
+	if _handoff_store == null or not _handoff_store.is_valid():
+		return 0
+	if _handoff_store.has_method("pool_size_scoped"):
+		return _handoff_store.pool_size_scoped(
+			agent_name,
+			_kaelen_handoff_story_revision(),
+			system_id,
+			_kaelen_handoff_relationship_band(agent_name)
+		)
+	return _handoff_store.pool_size(agent_name)
+
+
+func _kaelen_handoff_story_revision() -> int:
+	return int(story_state.get("story_revision", story_state.get("chapter", 0)))
+
+
+func _kaelen_handoff_system_id() -> String:
+	if is_instance_valid(GlobalState):
+		var global_system := str(GlobalState.current_system_id).strip_edges()
+		if not global_system.is_empty():
+			return global_system
+	return str(story_state.get("current_system_id", "system.start"))
+
+
+func _kaelen_handoff_relationship_band(_agent_name: String) -> String:
+	return "neutral"
 
 # Look up faction_ids for a system from the system registry.
 func _faction_ids_for_system(system_id: String) -> Array:

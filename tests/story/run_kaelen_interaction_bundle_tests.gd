@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_phase_7_interaction_kinds_are_registered()
 	_test_turn_in_and_reveal_groups_are_explicit()
 	_test_existing_handoff_paths_use_interaction_constants()
+	_test_story_manager_uses_scoped_handoff_pools()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -111,6 +112,23 @@ func _test_existing_handoff_paths_use_interaction_constants() -> void:
 			and ui_source.contains("KaelenInteractionKindsType.AGENT_HANDOFF")
 			and ui_source.contains("consume_cached_narrative_line_bank"),
 		"Existing Kaelen handoff bank paths do not use the interaction-kind registry."
+	)
+
+
+func _test_story_manager_uses_scoped_handoff_pools() -> void:
+	var file := FileAccess.open("res://scripts/story/StoryManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect StoryManager scoped handoff wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("draw_scoped")
+			and source.contains("refill_scoped")
+			and source.contains("pool_size_scoped")
+			and source.contains("_kaelen_handoff_story_revision")
+			and source.contains("_kaelen_handoff_system_id")
+			and source.contains("_kaelen_handoff_relationship_band"),
+		"StoryManager does not key Kaelen handoff pools by story/system/relationship scope."
 	)
 
 
