@@ -68,6 +68,14 @@ func _test_version_1_state_migrates_to_current_shape() -> void:
 			and store.data.get("beat_states", null) is Dictionary,
 		"Story state migration did not backfill knowledge/beat state dictionaries."
 	)
+	var kaelen_relationship: Dictionary = store.data.get("kaelen_relationship", {}) \
+		if store.data.get("kaelen_relationship", {}) is Dictionary else {}
+	_expect(
+		int(kaelen_relationship.get("respect", -99)) == 0
+			and str(kaelen_relationship.get("band", "")) == "neutral"
+			and int(kaelen_relationship.get("revision", -1)) == 0,
+		"Story state migration did not backfill Kaelen relationship continuity."
+	)
 
 	var persisted := FileAccess.open(TEST_ROOT + "/story_state.json", FileAccess.READ)
 	_expect(persisted != null, "Migrated story_state.json was not persisted.")
@@ -100,6 +108,12 @@ func _test_new_story_state_fields_validate_type_and_range() -> void:
 	_expect(
 		not StoryStateStoreType._validate_data(invalid_dictionary).is_valid(),
 		"Story state validation accepted a non-dictionary knowledge_states field."
+	)
+	var invalid_kaelen_relationship := StoryStateStoreType._default_state()
+	invalid_kaelen_relationship["kaelen_relationship"] = []
+	_expect(
+		not StoryStateStoreType._validate_data(invalid_kaelen_relationship).is_valid(),
+		"Story state validation accepted a non-dictionary Kaelen relationship field."
 	)
 
 

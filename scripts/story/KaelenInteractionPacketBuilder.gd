@@ -350,8 +350,18 @@ static func _style_projection(
 	style_context: Dictionary,
 	story_state: Dictionary
 ) -> Dictionary:
+	var relationship: Dictionary = story_state.get("kaelen_relationship", {}) \
+		if story_state.get("kaelen_relationship", {}) is Dictionary else {}
+	var relationship_tier := str(style_context.get(
+		"relationship_tier",
+		relationship.get("band", "neutral")
+	))
 	return {
-		"relationship_tier": str(style_context.get("relationship_tier", "neutral")),
+		"relationship_tier": relationship_tier,
+		"relationship_respect": int(relationship.get("respect", 0)),
+		"last_contract_outcome": str(relationship.get("last_outcome", "")),
+		"recent_contract_title": str(relationship.get("last_mission_title", "")),
+		"relationship_revision": int(relationship.get("revision", 0)),
 		"kaelen_mood": str(story_state.get("kaelen_current_mood", "")),
 		"voice_profile_id": "voice.kaelen.v1",
 	}

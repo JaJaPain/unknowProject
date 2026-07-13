@@ -26,6 +26,7 @@ func _test_story_state_public_block_uses_allowlist() -> void:
 	_expect(block.contains("Visible shortage pressure"), "Public tension missing.")
 	_expect(block.contains("Kaelen looks worried"), "Public knowledge missing.")
 	_expect(block.contains("guarded"), "Public Kaelen mood missing.")
+	_expect(block.contains("Kaelen relationship: wary"), "Public Kaelen relationship band missing.")
 	_expect(block.contains("Zenith [rising(+2)]"), "Faction pressure missing.")
 	_expect(
 		block.contains("Open story thread refs: hook:")
@@ -67,6 +68,12 @@ func _salted_story_state() -> Dictionary:
 		"player_knows": ["Kaelen looks worried"],
 		"current_foreshadow": "Dock crews are counting sealed crates.",
 		"kaelen_current_mood": "guarded",
+		"kaelen_relationship": {
+			"respect": -2,
+			"band": "wary",
+			"last_outcome": "abandoned",
+			"last_mission_title": "SECRET_RELATIONSHIP_PRIVATE_TOKEN",
+		},
 		"pending_hooks": ["A convoy vanished near the relay."],
 		"faction_pressure": {
 			"zenith": {"pressure": 2, "posture": "repossessing mining rigs"},
@@ -97,6 +104,7 @@ func _assert_no_secret_tokens(block: String, block_name: String) -> void:
 		"SECRET_HINT_TOKEN",
 		"SECRET_FACT_TEXT_TOKEN",
 		"SECRET_BEAT_TOKEN",
+		"SECRET_RELATIONSHIP_PRIVATE_TOKEN",
 		"NEW_SCHEMA_PRIVATE_TOKEN",
 	]:
 		_expect(

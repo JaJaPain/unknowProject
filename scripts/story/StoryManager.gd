@@ -43,6 +43,15 @@ var story_state: Dictionary = {
 	"pending_hooks": [],
 	"current_foreshadow": "",
 	"kaelen_current_mood": "guarded",
+	"kaelen_relationship": {
+		"respect": 0,
+		"band": "neutral",
+		"revision": 0,
+		"last_outcome": "",
+		"last_mission_title": "",
+		"recent_reason": "",
+		"last_changed_minute": 0,
+	},
 	"kaelen_hidden_angle": "",
 	"intro_conversation_had": false,
 	"intro_agent_visited": false,
@@ -247,6 +256,15 @@ func clear_story_state() -> void:
 		"pending_hooks": [],
 		"current_foreshadow": "",
 		"kaelen_current_mood": "guarded",
+		"kaelen_relationship": {
+			"respect": 0,
+			"band": "neutral",
+			"revision": 0,
+			"last_outcome": "",
+			"last_mission_title": "",
+			"recent_reason": "",
+			"last_changed_minute": 0,
+		},
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -575,6 +593,7 @@ func increment_mission_history_revision(
 	event_type: String,
 	mission_data: Dictionary = {}
 ) -> int:
+	_record_kaelen_contract_relationship_event(event_type, mission_data)
 	return _increment_revision(
 		"mission_history_revision",
 		event_type,
@@ -594,6 +613,84 @@ func increment_knowledge_revision(
 	event_data: Dictionary = {}
 ) -> int:
 	return _increment_revision("knowledge_revision", event_type, event_data)
+
+
+func kaelen_relationship_state() -> Dictionary:
+	var relationship: Dictionary = story_state.get("kaelen_relationship", {}) \
+		if story_state.get("kaelen_relationship", {}) is Dictionary else {}
+	if relationship.is_empty():
+		relationship = {
+			"respect": 0,
+			"band": "neutral",
+			"revision": 0,
+			"last_outcome": "",
+			"last_mission_title": "",
+			"recent_reason": "",
+			"last_changed_minute": 0,
+		}
+	var respect := clampi(int(relationship.get("respect", 0)), -6, 6)
+	relationship["respect"] = respect
+	relationship["band"] = _kaelen_relationship_band_for_respect(respect)
+	return relationship.duplicate(true)
+
+
+func kaelen_relationship_band() -> String:
+	return str(kaelen_relationship_state().get("band", "neutral"))
+
+
+func _record_kaelen_contract_relationship_event(
+	event_type: String,
+	mission_data: Dictionary
+) -> void:
+	var clean_event := event_type.strip_edges()
+	var delta := _kaelen_relationship_delta_for_event(clean_event)
+	if delta == 0:
+		return
+	var relationship := kaelen_relationship_state()
+	var next_respect := clampi(
+		int(relationship.get("respect", 0)) + delta,
+		-6,
+		6
+	)
+	relationship["respect"] = next_respect
+	relationship["band"] = _kaelen_relationship_band_for_respect(next_respect)
+	relationship["revision"] = int(relationship.get("revision", 0)) + 1
+	relationship["last_outcome"] = clean_event
+	relationship["last_mission_title"] = str(
+		mission_data.get("title", "the contract")
+	)
+	relationship["recent_reason"] = str(mission_data.get(
+		"decline_reason",
+		mission_data.get("outcome_detail", "")
+	))
+	relationship["last_changed_minute"] = int(CampaignClock.total_minutes)
+	story_state["kaelen_relationship"] = relationship
+
+
+func _kaelen_relationship_delta_for_event(event_type: String) -> int:
+	match event_type:
+		"completed":
+			return 1
+		"declined":
+			return -1
+		"abandoned":
+			return -2
+		"expired", "failed":
+			return -1
+		_:
+			return 0
+
+
+func _kaelen_relationship_band_for_respect(respect: int) -> String:
+	if respect <= -4:
+		return "strained"
+	if respect <= -1:
+		return "wary"
+	if respect >= 5:
+		return "favored"
+	if respect >= 2:
+		return "reliable"
+	return "neutral"
 
 
 func promote_fact_after_delivery(
@@ -2140,7 +2237,7 @@ func _kaelen_handoff_system_id() -> String:
 
 
 func _kaelen_handoff_relationship_band(_agent_name: String) -> String:
-	return "neutral"
+	return kaelen_relationship_band()
 
 # Look up faction_ids for a system from the system registry.
 func _faction_ids_for_system(system_id: String) -> Array:

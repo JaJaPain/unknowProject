@@ -30,6 +30,11 @@ static func story_state_public_block(story_state: Dictionary) -> String:
 	var mood := str(story_state.get("kaelen_current_mood", "")).strip_edges()
 	if not mood.is_empty():
 		lines.append("- Kaelen mood: %s" % mood)
+	var relationship: Dictionary = story_state.get("kaelen_relationship", {}) \
+		if story_state.get("kaelen_relationship", {}) is Dictionary else {}
+	var relationship_band := str(relationship.get("band", "")).strip_edges()
+	if not relationship_band.is_empty():
+		lines.append("- Kaelen relationship: %s" % relationship_band)
 	_append_pending_hook_projection(lines, story_state)
 	_append_faction_pressure_line(lines, story_state)
 	return "\n".join(lines)

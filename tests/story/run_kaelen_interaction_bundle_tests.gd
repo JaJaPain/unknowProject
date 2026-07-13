@@ -6,15 +6,18 @@ const PacketBuilderType := preload(
 )
 
 var _failures: Array[String] = []
+var StoryManagerType: GDScript = null
 
 
 func _initialize() -> void:
+	StoryManagerType = load("res://scripts/story/StoryManager.gd")
 	_test_phase_7_interaction_kinds_are_registered()
 	_test_turn_in_and_reveal_groups_are_explicit()
 	_test_existing_handoff_paths_use_interaction_constants()
 	_test_story_manager_uses_scoped_handoff_pools()
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
 	_test_kaelen_turn_in_outcome_profile_classifies_variants()
+	_test_kaelen_relationship_events_drive_future_tone()
 	_test_live_kaelen_handoff_prompt_uses_safe_packet()
 	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
 	_test_kaelen_reaction_bundle_is_mission_keyed()
@@ -278,6 +281,77 @@ func _test_kaelen_turn_in_outcome_profile_classifies_variants() -> void:
 			and str(late_timing.get("label", "")) == "late",
 		"Kaelen outcome profile did not classify late completion."
 	)
+
+
+func _test_kaelen_relationship_events_drive_future_tone() -> void:
+	_expect(
+		StoryManagerType != null and StoryManagerType.can_instantiate(),
+		"Could not instantiate StoryManager for Kaelen relationship continuity."
+	)
+	if StoryManagerType == null or not StoryManagerType.can_instantiate():
+		return
+	var manager: Node = StoryManagerType.new()
+	manager.story_state = {
+		"mission_history_revision": 0,
+		"kaelen_current_mood": "guarded",
+		"kaelen_relationship": {
+			"respect": 0,
+			"band": "neutral",
+			"revision": 0,
+			"last_outcome": "",
+			"last_mission_title": "",
+			"recent_reason": "",
+			"last_changed_minute": 0,
+		},
+	}
+	manager.increment_mission_history_revision(
+		"completed",
+		{"title": "Clean Win", "runtime_id": "mission.relationship.1"}
+	)
+	manager.increment_mission_history_revision(
+		"declined",
+		{
+			"title": "Not Today",
+			"runtime_id": "mission.relationship.2",
+			"decline_reason": "choice.decline",
+		}
+	)
+	manager.increment_mission_history_revision(
+		"abandoned",
+		{
+			"title": "Dropped Cargo",
+			"runtime_id": "mission.relationship.3",
+			"outcome_detail": "walked_away",
+		}
+	)
+	var relationship: Dictionary = manager.kaelen_relationship_state()
+	_expect(
+		int(relationship.get("respect", 0)) == -2
+			and str(relationship.get("band", "")) == "wary"
+			and int(relationship.get("revision", 0)) == 3
+			and str(relationship.get("last_outcome", "")) == "abandoned"
+			and str(relationship.get("last_mission_title", "")) == "Dropped Cargo"
+			and manager.kaelen_relationship_band() == "wary"
+			and manager.call("_kaelen_handoff_relationship_band", "Agent X") == "wary",
+		"Kaelen relationship state did not preserve decline/abandon continuity."
+	)
+
+	var story_state := _story_state_fixture()
+	story_state["kaelen_relationship"] = relationship
+	var packet: Dictionary = PacketBuilderType.build_packet(
+		KaelenKindsType.ABANDON,
+		_mission_fixture(),
+		story_state
+	)
+	var style: Dictionary = packet.get("safe_kaelen_style", {}) \
+		if packet.get("safe_kaelen_style", {}) is Dictionary else {}
+	_expect(
+		str(style.get("relationship_tier", "")) == "wary"
+			and int(style.get("relationship_respect", 0)) == -2
+			and str(style.get("last_contract_outcome", "")) == "abandoned",
+		"Kaelen packet style did not receive relationship continuity."
+	)
+	manager.free()
 
 
 func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:

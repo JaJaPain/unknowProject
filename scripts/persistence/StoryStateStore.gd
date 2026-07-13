@@ -102,6 +102,15 @@ static func _default_state() -> Dictionary:
 		"pending_hooks": [],
 		"current_foreshadow": "",
 		"kaelen_current_mood": "guarded",
+		"kaelen_relationship": {
+			"respect": 0,
+			"band": "neutral",
+			"revision": 0,
+			"last_outcome": "",
+			"last_mission_title": "",
+			"recent_reason": "",
+			"last_changed_minute": 0,
+		},
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -161,6 +170,12 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["chapter_packet_generation_queued"] = {}
 	if not migrated.get("declined_offer_cooldowns", {}) is Dictionary:
 		migrated["declined_offer_cooldowns"] = {}
+	if not migrated.get("kaelen_relationship", {}) is Dictionary:
+		migrated["kaelen_relationship"] = _default_state()["kaelen_relationship"]
+	else:
+		migrated["kaelen_relationship"] = _migrate_kaelen_relationship(
+			migrated.get("kaelen_relationship", {})
+		)
 	if not migrated.get("story_consequences", []) is Array:
 		migrated["story_consequences"] = []
 	_backfill_legacy_player_knows(migrated)
@@ -194,6 +209,34 @@ static func _backfill_legacy_player_knows(state: Dictionary) -> void:
 			"legacy_text": text,
 		}
 	state["knowledge_states"] = knowledge_states
+
+
+static func _migrate_kaelen_relationship(source: Dictionary) -> Dictionary:
+	var relationship: Dictionary = _default_state()["kaelen_relationship"].duplicate(true)
+	for key in source.keys():
+		relationship[key] = source[key]
+	relationship["respect"] = clampi(int(relationship.get("respect", 0)), -6, 6)
+	relationship["revision"] = maxi(0, int(relationship.get("revision", 0)))
+	relationship["last_changed_minute"] = maxi(
+		0,
+		int(relationship.get("last_changed_minute", 0))
+	)
+	relationship["band"] = _kaelen_relationship_band_for_respect(
+		int(relationship.get("respect", 0))
+	)
+	return relationship
+
+
+static func _kaelen_relationship_band_for_respect(respect: int) -> String:
+	if respect <= -4:
+		return "strained"
+	if respect <= -1:
+		return "wary"
+	if respect >= 5:
+		return "favored"
+	if respect >= 2:
+		return "reliable"
+	return "neutral"
 
 
 static func _validate_data(value: Dictionary) -> ValidationResult:
@@ -235,6 +278,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"beat_states",
 		"chapter_packet_generation_queued",
 		"declined_offer_cooldowns",
+		"kaelen_relationship",
 	]:
 		if not value.get(dictionary_field, {}) is Dictionary:
 			result.add_error(
