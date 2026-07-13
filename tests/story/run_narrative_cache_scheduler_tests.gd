@@ -654,6 +654,7 @@ func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
 	var triggers: Array[String] = []
 	var station_job_count := 0
 	var contact_job_count := 0
+	var ambient_job_count := 0
 	for job in jobs:
 		triggers.append(str(job.get("trigger", "")))
 		if str(job.get("trigger", "")) \
@@ -676,13 +677,23 @@ func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
 						== "system.generated.cinder",
 				"System arrival contact prefetch did not preserve contact context."
 			)
+		if str(job.get("kind", "")) == "ambient_pool_refill":
+			ambient_job_count += 1
+			_expect(
+				int(job.get("priority", -1)) == SchedulerType.PRIORITY_P3
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder",
+				"System arrival ambient pool job did not preserve low-priority system context."
+			)
 	_expect(
-		jobs.size() == 7
+		jobs.size() == 8
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT)
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
 			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA)
+			and triggers.has(SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT)
 			and station_job_count == 2
-			and contact_job_count == 2,
+			and contact_job_count == 2
+			and ambient_job_count == 1,
 		"Scheduler system arrival prefetch did not plan current-system and visible-station jobs."
 	)
 
@@ -904,6 +915,8 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("\"new_campaign_nova_bank\"")
 			and source.contains("\"current_system_kaelen_bundle\"")
 			and source.contains("\"current_system_nova_bundle\"")
+			and source.contains("\"ambient_pool_refill\"")
+			and source.contains("\"ambient_chatter\"")
 			and source.contains("func consume_cached_narrative_line_bank")
 			and source.contains("func replace_used_cached_fallback_lines")
 			and source.contains("scheduler.update_result_payload")
@@ -915,6 +928,7 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("campaign_narrative_cache_store.update_result_payload")
 			and source.contains("ContextBlockBuilderType.kaelen_block")
 			and source.contains("ContextBlockBuilderType.nova_block")
+			and source.contains("ContextBlockBuilderType.ambient_chatter_block")
 			and source.contains("\"content_type\": \"story_line_bank\"")
 			and source.contains("FallbackLineBankType.create_bank")
 			and source.contains("\"source\": \"fallback_bank\"")

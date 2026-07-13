@@ -875,6 +875,12 @@ static func _system_arrival_prefetch_jobs(event: Dictionary) -> Array[Dictionary
 			system_id,
 			"current_system_nova_bundle"
 		),
+		_context_prefetch_job(
+			event,
+			TRIGGER_AMBIENT_REPLENISHMENT,
+			system_id,
+			"ambient_pool_refill"
+		),
 	]
 	var contact_profiles: Array = event.get("contact_profiles", []) \
 		if event.get("contact_profiles", []) is Array else []

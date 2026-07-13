@@ -3502,6 +3502,8 @@ func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 			return true
 		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return true
+		"ambient_pool_refill":
+			return true
 		_:
 			return false
 
@@ -3627,6 +3629,8 @@ func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 			return _line_bank_payload_for_cache_job(job, "kaelen")
 		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return _line_bank_payload_for_cache_job(job, "nova")
+		"ambient_pool_refill":
+			return _line_bank_payload_for_cache_job(job, "ambient")
 		_:
 			return {"ok": false, "status": "unsupported_job_kind"}
 
@@ -3803,6 +3807,35 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 					"Arrival profile archived. If we survive, I will pretend this was the plan.",
 				],
 			}
+		"ambient":
+			return {
+				"speaker_name": "Local ambient channel",
+				"voice_profile_id": "voice.neutral.v1",
+				"context_block": context_block,
+				"line_kind": "ambient_chatter",
+				"fallback_lines": [
+					"The local channel keeps mentioning %s like saying it softer will make it safer." % system_label,
+					"Dock crews are trading warnings in the polite tone people use around bad wiring.",
+					"Someone nearby laughs too late, then checks who noticed.",
+					"The room has the careful quiet of people pretending not to listen.",
+					"A freight handler mutters that clean manifests are usually the suspicious ones.",
+					"Two locals argue over routes, then both choose the one with better exits.",
+					"The public board refreshes with the nervous little blink of unpaid trouble.",
+					"A bartender wipes the same glass three times and watches the door between passes.",
+					"The station intercom coughs, apologizes, and somehow makes that less reassuring.",
+					"Someone says the word routine with enough dread to make it feel expensive.",
+					"A passing pilot recommends avoiding heroics, which sounds learned the hard way.",
+					"The lounge feed loops a weather advisory for a place with no weather.",
+					"Cargo tags clatter in the distance like tiny, bureaucratic bones.",
+					"A dockhand calls this shift quiet, then immediately knocks on the nearest bulkhead.",
+					"The local gossip has already outrun the official bulletin by three bad decisions.",
+					"Somebody lowers their voice when a faction badge crosses the room.",
+					"The station lights flicker once, and everyone pretends not to count it.",
+					"A courier checks their route twice and their reflection once.",
+					"The room smells faintly of coolant, burned coffee, and negotiated optimism.",
+					"A nearby table goes silent right when the interesting name would have landed.",
+				],
+			}
 		_:
 			return {}
 
@@ -3817,6 +3850,8 @@ func _safe_line_bank_context_block(speaker_key: String) -> String:
 			return ContextBlockBuilderType.kaelen_block(state)
 		"nova":
 			return ContextBlockBuilderType.nova_block(state)
+		"ambient":
+			return ContextBlockBuilderType.ambient_chatter_block(state)
 		_:
 			return ContextBlockBuilderType.story_state_public_block(state)
 
