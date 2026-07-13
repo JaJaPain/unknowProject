@@ -333,7 +333,9 @@ var startup_save_loaded: bool = false
 var _intro_cinematic_voice_cache_requested: bool = false
 var _waiting_for_intro_cinematic_voice_cache: bool = false
 var _startup_line_bank_voice_cache_requested: bool = false
+var _startup_line_bank_background_voice_cache_requested: bool = false
 var _waiting_for_startup_line_bank_voice_cache: bool = false
+const STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER := 2
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -12031,14 +12033,29 @@ func _queue_startup_line_bank_voice_cache() -> int:
 		return 0
 	var cached_count := _queue_current_system_line_bank_voice_cache(
 		system_id,
-		"startup"
+		"startup",
+		STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER
 	)
 	return cached_count
 
 
+func _queue_startup_line_bank_background_voice_cache() -> int:
+	if startup_save_loaded or _startup_line_bank_background_voice_cache_requested:
+		return 0
+	_startup_line_bank_background_voice_cache_requested = true
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return 0
+	return _queue_current_system_line_bank_voice_cache(
+		system_id,
+		"startup_background"
+	)
+
+
 func _queue_current_system_line_bank_voice_cache(
 	system_id: String,
-	reason: String = "current_system"
+	reason: String = "current_system",
+	max_lines_per_speaker: int = -1
 ) -> int:
 	var clean_system_id := system_id.strip_edges()
 	if clean_system_id.is_empty():
@@ -12055,7 +12072,7 @@ func _queue_current_system_line_bank_voice_cache(
 			"ready_cached_narrative_line_bank",
 			requester_id
 		)
-		cached_count += _cache_line_bank_payload_tts(payload)
+		cached_count += _cache_line_bank_payload_tts(payload, max_lines_per_speaker)
 	if cached_count > 0:
 		GlobalState.trace(
 			"[TRACE] [UIManager] Queued %s line-bank TTS cache entries: %d" %
@@ -12064,7 +12081,10 @@ func _queue_current_system_line_bank_voice_cache(
 	return cached_count
 
 
-func _cache_line_bank_payload_tts(payload: Dictionary) -> int:
+func _cache_line_bank_payload_tts(
+	payload: Dictionary,
+	max_lines: int = -1
+) -> int:
 	if payload.is_empty():
 		return 0
 	var voice_profile_id := str(payload.get("voice_profile_id", "")).strip_edges()
@@ -12083,6 +12103,8 @@ func _cache_line_bank_payload_tts(payload: Dictionary) -> int:
 		seen[text] = true
 		SpeechService.cache(text, voice_profile_id)
 		cached_count += 1
+		if max_lines > 0 and cached_count >= max_lines:
+			break
 	return cached_count
 
 
@@ -12316,6 +12338,7 @@ func _finish_loading_after_story_ready() -> void:
 	tween.tween_property(loading_panel, "modulate:a", 0.0, 0.6)
 	tween.tween_callback(func():
 		loading_panel.queue_free()
+		_queue_startup_line_bank_background_voice_cache()
 		GlobalState.paused = false # Resume gameplay!
 		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 		# NEW campaign: run the "thrown through" intro cinematic (no UI, no

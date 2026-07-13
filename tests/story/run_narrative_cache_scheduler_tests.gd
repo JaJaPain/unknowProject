@@ -974,14 +974,19 @@ func _test_loading_gate_precaches_startup_line_bank_tts() -> void:
 	var source := file.get_as_text()
 	_expect(
 		source.contains("func _queue_startup_line_bank_voice_cache")
+			and source.contains("STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER")
+			and source.contains("func _queue_startup_line_bank_background_voice_cache")
+			and source.contains("\"startup_background\"")
 			and source.contains("ready_cached_narrative_line_bank")
 			and source.contains("prefetch:current_system_kaelen")
 			and source.contains("prefetch:current_system_nova")
 			and source.contains("func _cache_line_bank_payload_tts")
+			and source.contains("max_lines_per_speaker")
+			and source.contains("if max_lines > 0 and cached_count >= max_lines")
 			and source.contains("SpeechService.cache(text, voice_profile_id)")
 			and source.contains("_on_startup_line_bank_voice_cache_completed")
 			and source.contains("Pre-caching Kaelen and N.O.V.A. story banks"),
-		"Fresh-campaign loading does not pre-cache ready Kaelen/N.O.V.A. line-bank TTS."
+		"Fresh-campaign loading does not pre-cache a bounded ready Kaelen/N.O.V.A. line-bank TTS starter set."
 	)
 
 
@@ -997,7 +1002,7 @@ func _test_system_arrival_precaches_current_line_bank_tts() -> void:
 			and source.contains("func _queue_current_system_line_bank_voice_cache")
 			and source.contains("prefetch:current_system_kaelen")
 			and source.contains("prefetch:current_system_nova")
-			and source.contains("_cache_line_bank_payload_tts(payload)"),
+			and source.contains("_cache_line_bank_payload_tts(payload, max_lines_per_speaker)"),
 		"System arrival does not pre-cache ready Kaelen/N.O.V.A. current-system line-bank TTS."
 	)
 
