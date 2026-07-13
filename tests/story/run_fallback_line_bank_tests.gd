@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_generated_lines_replace_used_fallback_slots()
 	_test_generated_lines_do_not_overfill_full_unused_bank()
 	_test_empty_bank_reports_no_line()
+	_test_consumed_lines_are_retired_for_the_campaign()
 
 	if _failures.is_empty():
 		print("[PASS] Fallback line bank tests")
@@ -140,6 +141,47 @@ func _test_empty_bank_reports_no_line() -> void:
 		not bool(consumed.get("ok", true))
 			and str(consumed.get("status", "")) == "fallback_bank_empty",
 		"Empty fallback bank should report fallback_bank_empty."
+	)
+
+
+# Campaign retirement: once a line is consumed, no later refill may re-offer
+# its text, even after its slot has been recycled by a replacement.
+func _test_consumed_lines_are_retired_for_the_campaign() -> void:
+	var bank := BankType.create_bank("nova", "system_arrival", _numbered_lines(3), 3)
+	var consumed: Dictionary = BankType.consume(bank)
+	_expect(bool(consumed.get("ok", false)), "Retirement test consume failed.")
+	var after_consume: Dictionary = consumed.get("bank", {})
+	var spoken_text := str((consumed.get("line", {}) as Dictionary).get("text", ""))
+	_expect(
+		BankType.is_retired(after_consume, spoken_text),
+		"Consumed line was not recorded in the retirement ledger."
+	)
+
+	# Recycle the used slot with a fresh generated line...
+	var replaced: Dictionary = BankType.replace_used_with_generated(
+		after_consume, ["A brand new observation."], "llm"
+	)
+	var recycled: Dictionary = replaced.get("bank", {})
+	_expect(
+		int(replaced.get("replacements", 0)) == 1,
+		"Fresh generated line should fill the used slot."
+	)
+	# ...then try to sneak the retired text back in: it must be refused even
+	# though the text no longer occupies any slot.
+	var retread: Dictionary = BankType.replace_used_with_generated(
+		BankType.consume(recycled).get("bank", {}),
+		[spoken_text, "Another new observation."],
+		"llm"
+	)
+	var final_bank: Dictionary = retread.get("bank", {})
+	var texts: Array = []
+	for raw_entry in (final_bank.get("entries", []) as Array):
+		texts.append(str((raw_entry as Dictionary).get("text", "")))
+	_expect(
+		int(retread.get("replacements", 0)) == 1
+			and not texts.has(spoken_text)
+			and texts.has("Another new observation."),
+		"Retired line text was re-offered after its slot was recycled."
 	)
 
 

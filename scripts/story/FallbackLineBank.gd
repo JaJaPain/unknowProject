@@ -77,6 +77,14 @@ static func consume(bank: Dictionary, preferred_kind: String = "") -> Dictionary
 	next_bank["entries"] = entries
 	if str(entry.get("source", "")) == "fallback":
 		next_bank["fallback_uses"] = int(next_bank.get("fallback_uses", 0)) + 1
+	# Retire the line for the campaign: even after this slot is recycled by
+	# a refill, no later replacement may re-offer the same text. The ledger
+	# persists with the bank payload through the narrative cache store.
+	var retired := _retired_fingerprints(next_bank)
+	var fingerprint := str(entry.get("text_fingerprint", ""))
+	if not fingerprint.is_empty() and not retired.has(fingerprint):
+		retired.append(fingerprint)
+	next_bank["retired_fingerprints"] = retired
 	return {
 		"ok": true,
 		"bank": next_bank,
@@ -98,11 +106,14 @@ static func replace_used_with_generated(
 	for i in range(entries.size()):
 		if bool(entries[i].get("used", false)):
 			used_indexes.append(i)
+	var retired := _retired_fingerprints(next_bank)
 	var generated_index := 0
 	for raw_line in generated_lines:
 		var text := str(raw_line).strip_edges()
 		if text.is_empty() or seen.has(text):
 			continue
+		if retired.has(text.sha256_text()):
+			continue  # already delivered this campaign — never offer it again
 		seen[text] = true
 		var clean_source_id := source_id.strip_edges()
 		if clean_source_id.is_empty():
@@ -162,6 +173,16 @@ static func _entry(
 		"used": false,
 		"use_count": 0,
 	}
+
+
+static func is_retired(bank: Dictionary, text: String) -> bool:
+	return _retired_fingerprints(bank).has(text.strip_edges().sha256_text())
+
+
+static func _retired_fingerprints(bank: Dictionary) -> Array:
+	var raw: Array = bank.get("retired_fingerprints", []) \
+		if bank.get("retired_fingerprints", []) is Array else []
+	return raw.duplicate()
 
 
 static func _entries(bank: Dictionary) -> Array[Dictionary]:
