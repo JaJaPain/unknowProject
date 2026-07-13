@@ -1034,6 +1034,7 @@ Primary files:
 - [x] Carry safe context: target category/display name if known, current mission beat, hull band, recent action streak, new/returning system, and whether the player is deviating from a selected mission route.
   - 2026-07-13: Raw events already carry target category/display name from the emitters. Semantic events are now enriched at emission: the observer stamps a `recent_actions` streak (last 6 raw event ids) and merges an injectable `context_provider` dictionary without overwriting event fields. GameRoot supplies the live provider: hull band (healthy/worn/critical), the active mission's public beat (`title (objective_type)`), new/returning system (visited `system_states`), and `route_deviation` (`no_mission` / `in_mission_system` / `off_mission_system` from the mission's system vs the current one). Only player-visible knowledge; covered in `run_ship_behavior_observer_tests.gd` including field-collision precedence.
 - [ ] Never call a model on movement. Movement only consumes a prepared line bank.
+  - 2026-07-13: Tripwire in place — `run_ship_behavior_observer_tests.gd` audits the movement path (`ShipMovementEvents.gd`, `ShipBehaviorObserver.gd`) for any model-layer reference and nothing consumes `semantic_movement_event` yet. Left unchecked until Phase 8B wires the prepared-line-bank consumption and this can be proven end to end.
 
 #### Phase 8B — Campaign-aware line banks
 

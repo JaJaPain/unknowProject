@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_clean_and_rough_transits()
 	_test_semantic_rate_limiting()
 	_test_safe_context_enrichment()
+	_test_movement_path_never_touches_the_model()
 
 	if _failures.is_empty():
 		print("[PASS] Ship behavior observer tests")
@@ -263,6 +264,26 @@ func _test_safe_context_enrichment() -> void:
 		recent == ["gate_departure", "boost_activated", "boost_activated"],
 		"Recent action streak was wrong: %s" % str(recent)
 	)
+
+
+# Phase 8A tripwire: no code in the movement-event path may call the model.
+# Movement reactions must only ever consume prepared line banks (Phase 8B).
+func _test_movement_path_never_touches_the_model() -> void:
+	for path in [
+		"res://scripts/story/ShipMovementEvents.gd",
+		"res://scripts/story/ShipBehaviorObserver.gd",
+	]:
+		var file := FileAccess.open(path, FileAccess.READ)
+		_expect(file != null, "Could not audit movement path: %s" % path)
+		if file == null:
+			continue
+		var source := file.get_as_text()
+		_expect(
+			not source.contains("LLMInterface")
+				and not source.contains("Ollama")
+				and not source.contains("http"),
+			"Movement path references the model layer: %s" % path
+		)
 
 
 func _expect(condition: bool, message: String) -> void:
