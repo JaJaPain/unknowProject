@@ -487,6 +487,59 @@ func can_refill_pool(
 	return true
 
 
+func queue_pool_refill_job(
+	pool_id: String,
+	current_count: int,
+	target_count: int,
+	scope: Dictionary = {}
+) -> Dictionary:
+	var clean_pool_id := pool_id.strip_edges()
+	if clean_pool_id.is_empty():
+		return _failure("Pool refill requires pool_id.")
+	var priority := priority_for_trigger(TRIGGER_AMBIENT_REPLENISHMENT)
+	if not can_refill_pool(current_count, target_count, priority):
+		return {
+			"ok": false,
+			"deferred": true,
+			"error": "Pool refill deferred while higher-priority work is pending or pool is full.",
+		}
+	var job := {
+		"job_id": "job.%s.%s" % [
+			TRIGGER_AMBIENT_REPLENISHMENT,
+			_safe_id_part(clean_pool_id),
+		],
+		"cache_key": "prefetch.%s.%s" % [
+			TRIGGER_AMBIENT_REPLENISHMENT,
+			_safe_id_part(clean_pool_id),
+		],
+		"kind": "ambient_pool_refill",
+		"trigger": TRIGGER_AMBIENT_REPLENISHMENT,
+		"priority": priority,
+		"subject_id": clean_pool_id,
+		"pool_id": clean_pool_id,
+		"pool_count": max(0, current_count),
+		"pool_target": max(0, target_count),
+		"requester_id": "prefetch:%s:%s" % [
+			TRIGGER_AMBIENT_REPLENISHMENT,
+			clean_pool_id,
+		],
+	}
+	for key in [
+		"campaign_id",
+		"timeline_id",
+		"story_revision",
+		"knowledge_revision",
+		"mission_history_revision",
+		"system_id",
+		"station_id",
+		"speaker_id",
+		"relationship_tier",
+	]:
+		if scope.has(key):
+			job[key] = scope[key]
+	return queue_job(job)
+
+
 func get_job(job_id: String) -> Dictionary:
 	var clean_id := job_id.strip_edges()
 	if not _jobs.has(clean_id):

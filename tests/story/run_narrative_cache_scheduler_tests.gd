@@ -660,10 +660,40 @@ func _test_pool_refill_waits_for_higher_priority_work() -> void:
 		scheduler.can_refill_pool(1, 2),
 		"Scheduler should allow refill when pool is below threshold and idle."
 	)
+	var queued: Dictionary = scheduler.queue_pool_refill_job(
+		"ambient.system.cinder",
+		1,
+		2,
+		{"system_id": "system.generated.cinder", "story_revision": 14}
+	)
+	_expect(
+		bool(queued.get("ok", false))
+			and str(queued.get("job", {}).get("trigger", ""))
+				== SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+			and int(queued.get("job", {}).get("priority", -1))
+				== SchedulerType.PRIORITY_P3
+			and str(queued.get("job", {}).get("system_id", ""))
+				== "system.generated.cinder",
+		"Scheduler did not queue safe ambient pool refill work."
+	)
+	scheduler.mark_generation_started(
+		str(queued.get("job", {}).get("job_id", ""))
+	)
+	scheduler.mark_ready(str(queued.get("job", {}).get("job_id", "")))
 	scheduler.queue_job(_job("job.p1", "cache.refill.p1", SchedulerType.PRIORITY_P1))
 	_expect(
 		not scheduler.can_refill_pool(1, 2),
 		"Scheduler allowed ambient refill while higher-priority work was pending."
+	)
+	var deferred: Dictionary = scheduler.queue_pool_refill_job(
+		"ambient.system.cinder",
+		1,
+		2
+	)
+	_expect(
+		not bool(deferred.get("ok", true))
+			and bool(deferred.get("deferred", false)),
+		"Scheduler queued pool refill while higher-priority work was pending."
 	)
 	scheduler.mark_generation_started("job.p1")
 	scheduler.mark_ready("job.p1")
