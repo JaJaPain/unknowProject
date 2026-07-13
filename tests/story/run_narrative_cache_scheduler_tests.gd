@@ -35,6 +35,7 @@ func _initialize() -> void:
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_ui_agent_board_pending_state_stays_actionable()
+	_test_ui_lounge_pending_states_stay_actionable()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
 	_test_dev_story_snapshot_reports_narrative_cache_diagnostics()
 	_test_loading_gate_precaches_startup_line_bank_tts()
@@ -921,6 +922,24 @@ func _test_ui_agent_board_pending_state_stays_actionable() -> void:
 			and source.contains("agent_back_btn.visible = true")
 			and source.contains("is_waiting_for_agent_board = true"),
 		"Agent board pending state is not actionable while cache/generation work finishes."
+	)
+
+
+func _test_ui_lounge_pending_states_stay_actionable() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager lounge pending state.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _show_lounge_pending_turn")
+			and source.contains("func _cancel_lounge_pending_turn")
+			and source.contains("Step away")
+			and source.contains("You give them space and drift back to the bar.")
+			and source.contains("The stranger keeps their voice low")
+			and not source.contains("Listening...")
+			and not source.contains("_show_lounge_card_line(card, \"...\", false)"),
+		"Lounge model-wait state still uses non-actionable placeholder text."
 	)
 
 

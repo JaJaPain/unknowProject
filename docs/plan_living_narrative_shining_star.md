@@ -850,8 +850,9 @@ Primary files:
   - 2026-07-13: Narrative cache workers now pass validation/build errors through the scheduler's one-retry path before `degraded_required`; failed payloads are not marked ready or exposed.
 - [x] Build a deterministic, fact-slot-aware emergency composer for required fields. Its output must still include the real speaker, cause, stake, objective, and relationship; it is logged as degraded content.
   - 2026-07-13: Template-safe story-agent offers now stamp deterministic fallback conversation bundles as degraded/fallback content and record them in generation diagnostics, while preserving speaker, cause, stake, objective, and relationship coverage.
-- [ ] Never show “checking requests…”, “Listening…”, or `...` while a model call runs on a V2 interaction. If content is not ready, either keep the button in a non-intrusive “work pending” state before selection or serve a validated degraded bundle instantly.
-  - 2026-07-13: Agent-board contact offers now show an actionable no-ready-contract state with Back available instead of “checking client contract requests...” while cache/generation finishes. Remaining audit: lounge/non-agent V2 wait text.
+- [x] Never show “checking requests…”, “Listening…”, or `...` while a model call runs on a V2 interaction. If content is not ready, either keep the button in a non-intrusive “work pending” state before selection or serve a validated degraded bundle instantly.
+  - 2026-07-13: Agent-board contact offers now show an actionable no-ready-contract state with Back available instead of “checking client contract requests...” while cache/generation finishes.
+  - 2026-07-13: Lounge opener/reply and stranger-offer model waits now show actionable pending states with Step away / Walk away choices instead of “Listening...” or `...`.
 - [x] Do not use a generic Kaelen line as fallback for a different NPC.
   - 2026-07-13: Cleaned-empty choice responses now use a voice-aware fallback: Kaelen may use Kaelen fallback lines, while non-Kaelen quest givers receive neutral contract text; source guard coverage prevents direct reuse from returning.
 

@@ -4758,7 +4758,12 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		"serial": serial,
 		"agent_disposition": agent_disposition,
 	}
-	_show_lounge_card_line(card, "Listening...", false)
+	_show_lounge_pending_turn(
+		card,
+		serial,
+		"%s studies the room before answering. You can wait, or drift back to the bar." %
+			str(npc.get("name", card_name))
+	)
 	var prompt: String = LoungeConversationType.build_opener_prompt(
 		npc, _lounge_flavor_block(), _lounge_approach_instruction(card, npc)
 	)
@@ -4874,7 +4879,12 @@ func _on_lounge_reply_pressed(serial: int, reply_text: String) -> void:
 	_record_lounge_reply_relationship_stance(card, reply_text)
 	var npc_turns_left := int(_lounge_convo.get("npc_turns_left", 0)) - 1
 	_lounge_convo["npc_turns_left"] = npc_turns_left
-	_show_lounge_card_line(card, "...", false)
+	_show_lounge_pending_turn(
+		card,
+		serial,
+		"%s weighs your reply. You can wait, or let the conversation go." %
+			str(npc.get("name", "They"))
+	)
 	var prompt: String = LoungeConversationType.build_reply_prompt(
 		npc,
 		_lounge_flavor_block(),
@@ -4927,7 +4937,15 @@ func _on_stranger_card_pressed(card_data: Dictionary) -> void:
 		_show_lounge_card_line(card_data, "The stranger's seat is empty. Just a glass, still sweating.", false)
 		return
 	var card := card_data.duplicate(true)
-	_show_lounge_card_line(card, "...", false)
+	_show_lounge_card_line(
+		card,
+		"The stranger keeps their voice low. You can wait for the pitch, or walk away.",
+		false,
+		[{
+			"text": "Walk away",
+			"callback": func() -> void: _resolve_stranger_deal(card, "walk"),
+		}]
+	)
 	var kind_text := "coordinates and a name — the kind of intel that isn't sold in daylight" \
 		if str(deal.get("kind", "")) == "intel" else "a crate of goods with the serial numbers politely removed"
 	var npc := {
@@ -5051,6 +5069,34 @@ func _end_lounge_conversation(serial: int) -> void:
 		return
 	_lounge_convo = {}
 	show_dock_message("You nod and drift back to your drink.", "", Color(0.7, 0.7, 0.7))
+
+
+func _show_lounge_pending_turn(
+	card: Dictionary,
+	serial: int,
+	message: String
+) -> void:
+	_show_lounge_card_line(
+		card,
+		message,
+		false,
+		[{
+			"text": "Step away",
+			"callback": func() -> void: _cancel_lounge_pending_turn(serial),
+		}]
+	)
+
+
+func _cancel_lounge_pending_turn(serial: int) -> void:
+	if serial != _lounge_convo_serial:
+		return
+	_lounge_convo_serial += 1
+	_lounge_convo = {}
+	show_dock_message(
+		"You give them space and drift back to the bar.",
+		"",
+		Color(0.7, 0.7, 0.7)
+	)
 
 
 # Finishing a conversation with a faction-affiliated contact warms that
