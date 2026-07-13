@@ -9,6 +9,7 @@ func _initialize() -> void:
 	if llm != null:
 		_test_non_kaelen_speaker_leaks_are_repaired(llm)
 		_test_kaelen_speaker_keeps_shiny(llm)
+	_test_ui_choice_response_fallback_is_speaker_safe()
 
 	if _failures.is_empty():
 		print("[PASS] Quest speaker rule validation tests")
@@ -81,6 +82,23 @@ func _test_kaelen_speaker_keeps_shiny(llm: Node) -> void:
 	_expect(
 		str(quest.get("dialogue", "")).contains("Shiny"),
 		"Kaelen's Shiny nickname was removed."
+	)
+
+
+func _test_ui_choice_response_fallback_is_speaker_safe() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager speaker fallback wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _choice_response_fallback_for_voice")
+			and source.contains("GlobalState.is_kaelen_voice")
+			and source.contains(
+				"clean_response = _choice_response_fallback_for_voice(response_profile)"
+			)
+			and source.contains("Logged. The contract terms are recorded."),
+		"Choice response fallback is not speaker-safe for non-Kaelen quest givers."
 	)
 
 

@@ -10079,6 +10079,15 @@ func _quest_giver_voice_ref(quest_data: Dictionary) -> String:
 	return str(quest_data.get("faction", "neutral")).strip_edges()
 
 
+func _choice_response_fallback_for_voice(voice_profile_id: StringName) -> String:
+	if GlobalState.is_kaelen_voice(str(voice_profile_id)) \
+			and not LLMInterface.fallback_completion_lines.is_empty():
+		return LLMInterface.fallback_completion_lines[
+			randi() % LLMInterface.fallback_completion_lines.size()
+		]
+	return "Logged. The contract terms are recorded."
+
+
 func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void:
 	var beat_id := str(quest_data.get("story_beat_id", "")).strip_edges()
 	if beat_id.is_empty():
@@ -10458,7 +10467,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	)
 	# Safety net: if cleaning stripped everything (entire string was stage direction), use a fallback
 	if clean_response.length() < 5:
-		clean_response = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
+		clean_response = _choice_response_fallback_for_voice(response_profile)
 		GlobalState.trace("[TRACE] [UIManager] dialogue_response was empty after cleaning, using fallback.")
 		_record_static_text_fallback(
 			"choice_response",

@@ -850,7 +850,8 @@ Primary files:
 - [x] Build a deterministic, fact-slot-aware emergency composer for required fields. Its output must still include the real speaker, cause, stake, objective, and relationship; it is logged as degraded content.
   - 2026-07-13: Template-safe story-agent offers now stamp deterministic fallback conversation bundles as degraded/fallback content and record them in generation diagnostics, while preserving speaker, cause, stake, objective, and relationship coverage.
 - [ ] Never show “checking requests…”, “Listening…”, or `...` while a model call runs on a V2 interaction. If content is not ready, either keep the button in a non-intrusive “work pending” state before selection or serve a validated degraded bundle instantly.
-- [ ] Do not use a generic Kaelen line as fallback for a different NPC.
+- [x] Do not use a generic Kaelen line as fallback for a different NPC.
+  - 2026-07-13: Cleaned-empty choice responses now use a voice-aware fallback: Kaelen may use Kaelen fallback lines, while non-Kaelen quest givers receive neutral contract text; source guard coverage prevents direct reuse from returning.
 
 #### Phase 6D — TTS readiness
 
