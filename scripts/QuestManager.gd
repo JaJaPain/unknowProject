@@ -20,6 +20,7 @@ const StoryAgentOfferBuilderType := preload(
 signal quest_accepted()
 signal quest_accepted_details(quest_data: Dictionary)
 signal quest_progress_updated()
+signal quest_objective_completed_details(quest_data: Dictionary)
 signal quest_completed()
 signal quest_completed_details(quest_data: Dictionary)
 signal quest_abandoned()
@@ -615,6 +616,9 @@ func deliver_partial(amount: float) -> float:
 	active_quest["partial_delivered"] = active_quest.get("partial_delivered", 0.0) + to_deliver
 	print("[QuestManager] Partial delivery: %.1f m³ banked. Total so far: %.1f / %.1f" % [
 		to_deliver, active_quest["partial_delivered"], active_quest["amount_required"]])
+	var focused = _collection.get_focused()
+	if focused != null:
+		_mark_objective_ready_if_completed(focused)
 	quest_progress_updated.emit()
 	return to_deliver
 
@@ -640,6 +644,9 @@ func mark_pickup_complete() -> bool:
 		
 	active_quest["picked_up"] = true
 	print("[QuestManager] PICKUP_SPECIAL picked up: '%s' from %s" % [part_name, target_npc])
+	var focused = _collection.get_focused()
+	if focused != null:
+		_mark_objective_ready_if_completed(focused)
 	quest_progress_updated.emit()
 	return true
 
@@ -752,6 +759,7 @@ func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 			if _is_intro_tutorial_contract(m.data) \
 					and int(m.data.get("current_count", 0)) >= int(m.data.get("count_required", 1)):
 				GlobalState.clear_intro_tutorial_player_protection()
+			_mark_objective_ready_if_completed(m)
 			quest_progress_updated.emit()
 
 		if hints.has("chatter"):
@@ -766,6 +774,22 @@ func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 		if hints.get("needs_respawn", false):
 			var respawn_faction: String = hints.get("respawn_faction", faction_name)
 			_schedule_respawn(respawn_faction)
+
+
+func _mark_objective_ready_if_completed(mission) -> void:
+	if mission == null:
+		return
+	if bool(mission.data.get("objective_completed_notified", false)):
+		return
+	var cap = MissionCapabilityRegistryType.get_for_type(
+		mission.data.get("objective_type", "")
+	)
+	if cap == null or not cap.is_completed(mission.data):
+		return
+	mission.data["objective_completed_notified"] = true
+	mission.data["objective_completed_time_minutes"] = CampaignClock.total_minutes
+	mission.data["objective_complete_pending_turn_in"] = true
+	quest_objective_completed_details.emit(mission.data.duplicate(true))
 
 
 func _is_intro_tutorial_contract(data: Dictionary) -> bool:

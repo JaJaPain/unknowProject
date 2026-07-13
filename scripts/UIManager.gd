@@ -397,6 +397,9 @@ func _ready():
 	# Connect QuestManager signals
 	QuestManager.quest_accepted.connect(_on_quest_accepted)
 	QuestManager.quest_progress_updated.connect(_on_quest_progress_updated)
+	QuestManager.quest_objective_completed_details.connect(
+		_on_quest_objective_completed_details
+	)
 	QuestManager.quest_completed.connect(_on_quest_completed)
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned)
 	QuestManager.quest_expired.connect(_on_quest_expired)
@@ -10578,28 +10581,47 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	# quiet after this contract resolves instead of feeling like an infinite
 	# contract printer.
 	
-	# Generate unique Kaelen completion/abandon lines for THIS mission in the
-	# background. Store them on the active mission, not UI globals, so save/reload
-	# keeps the exact reaction bundle tied to the accepted runtime id.
 	QuestManager.clear_active_kaelen_reaction_bundle()
-	var kaelen_reaction_mission := QuestManager.active_quest.duplicate(true)
-	var kaelen_reaction_runtime_id := str(
-		kaelen_reaction_mission.get("runtime_id", "")
+	_request_kaelen_reaction_bundle_for_mission(
+		QuestManager.active_quest.duplicate(true),
+		"mission_acceptance"
 	)
-	GlobalState.trace("[TRACE] [UIManager] Requesting unique Kaelen reaction lines for: " + str(kaelen_reaction_mission.get("title", "quest")))
-	LLMInterface.request_kaelen_reaction(kaelen_reaction_mission, func(comp_line: String, abn_line: String):
-		if not QuestManager.store_active_kaelen_reaction_bundle(
-			kaelen_reaction_runtime_id,
-			comp_line,
-			abn_line,
-			"llm_kaelen_reaction"
-		):
-			GlobalState.trace("[TRACE] [UIManager] Discarded stale Kaelen reaction bundle for: " + kaelen_reaction_runtime_id)
-			return
-		GlobalState.trace("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
-		# Pre-cache both in the background using neutral (Kaelen's) voice
-		SpeechService.cache(comp_line, "voice.kaelen.v1")
-		SpeechService.cache(abn_line, "voice.kaelen.v1")
+
+
+func _on_quest_objective_completed_details(quest_data: Dictionary) -> void:
+	_request_kaelen_reaction_bundle_for_mission(
+		quest_data.duplicate(true),
+		"objective_complete"
+	)
+
+
+func _request_kaelen_reaction_bundle_for_mission(
+	mission_data: Dictionary,
+	reason: String
+) -> void:
+	var kaelen_reaction_runtime_id := str(mission_data.get("runtime_id", ""))
+	if kaelen_reaction_runtime_id.strip_edges().is_empty():
+		return
+	GlobalState.trace(
+		"[TRACE] [UIManager] Requesting Kaelen reaction bundle (%s) for: %s" % [
+			reason,
+			str(mission_data.get("title", "quest")),
+		]
+	)
+	LLMInterface.request_kaelen_reaction(
+		mission_data,
+		func(comp_line: String, abn_line: String):
+			if not QuestManager.store_active_kaelen_reaction_bundle(
+				kaelen_reaction_runtime_id,
+				comp_line,
+				abn_line,
+				"llm_kaelen_reaction_%s" % reason
+			):
+				GlobalState.trace("[TRACE] [UIManager] Discarded stale Kaelen reaction bundle for: " + kaelen_reaction_runtime_id)
+				return
+			GlobalState.trace("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
+			SpeechService.cache(comp_line, "voice.kaelen.v1")
+			SpeechService.cache(abn_line, "voice.kaelen.v1")
 	)
 
 func _on_agent_back_pressed():
