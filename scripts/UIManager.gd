@@ -2083,6 +2083,7 @@ func _create_context_menu():
 		if context_highlight_target \
 				and is_instance_valid(context_highlight_target):
 			GlobalState.active_target = context_highlight_target
+			_queue_station_target_prefetch(context_highlight_target, "selected")
 		_close_context_menu()
 	)
 	vbox.add_child(action_select)
@@ -3256,6 +3257,7 @@ func update_overview_list(entities: Array):
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			btn.pressed.connect(func():
 				GlobalState.active_target = entity
+				_queue_station_target_prefetch(entity, "selected")
 				_update_intro_handhold()
 			)
 			btn.gui_input.connect(func(event: InputEvent):
@@ -7853,7 +7855,34 @@ func _command_selected_target(mode: String) -> bool:
 		return false
 	show_target_marker(target.global_position)
 	_update_target_command_feedback()
+	if target.is_in_group("station"):
+		var reason := "commanded"
+		if mode in ["APPROACH", "APPROACH_1K"]:
+			reason = "fly_to"
+		elif mode == "DOCK":
+			reason = "dock"
+		_queue_station_target_prefetch(target, reason)
 	return true
+
+
+func _queue_station_target_prefetch(
+	station: Node3D,
+	target_reason: String
+) -> void:
+	if station == null or not is_instance_valid(station):
+		return
+	if not station.is_in_group("station"):
+		return
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method(
+		"queue_narrative_station_target_prefetch"
+	):
+		return
+	game_root.call(
+		"queue_narrative_station_target_prefetch",
+		station,
+		target_reason
+	)
 
 
 func _on_boost_pressed() -> void:

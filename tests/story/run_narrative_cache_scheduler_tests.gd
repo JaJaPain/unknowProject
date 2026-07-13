@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_system_arrival_plans_current_system_and_station_prefetch()
 	_test_station_target_plans_agent_mechanic_and_lounge_prefetch()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
+	_test_station_target_hooks_call_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -608,6 +609,29 @@ func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
 			and source.contains("QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)")
 			and source.contains("NarrativeCacheSchedulerType.prefetch_jobs_for_event"),
 		"GameRoot mission lifecycle hooks are not wired to the narrative prefetch planner."
+	)
+
+
+func _test_station_target_hooks_call_prefetch_planner() -> void:
+	var game_root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(
+		game_root_file != null and ui_file != null,
+		"Could not inspect station target prefetch wiring."
+	)
+	if game_root_file == null or ui_file == null:
+		return
+	var game_root_source := game_root_file.get_as_text()
+	var ui_source := ui_file.get_as_text()
+	_expect(
+		game_root_source.contains("queue_narrative_station_target_prefetch")
+			and game_root_source.contains("_narrative_prefetch_event_from_station_target")
+			and game_root_source.contains("\"event_type\": \"station_targeted\"")
+			and ui_source.contains("_queue_station_target_prefetch")
+			and ui_source.contains("queue_narrative_station_target_prefetch")
+			and ui_source.contains("\"fly_to\"")
+			and ui_source.contains("\"dock\""),
+		"Station target/fly-to hooks are not wired to the narrative prefetch planner."
 	)
 
 

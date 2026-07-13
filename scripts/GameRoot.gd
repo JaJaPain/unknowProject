@@ -3183,6 +3183,61 @@ func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
 		scheduler.queue_job(job)
 
 
+func queue_narrative_station_target_prefetch(
+	station: Node3D,
+	target_reason: String = "targeted"
+) -> void:
+	if station == null or not is_instance_valid(station):
+		return
+	if not station.is_in_group("station"):
+		return
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_station_target(
+			station,
+			target_reason
+		)
+	)
+
+
+func _narrative_prefetch_event_from_station_target(
+	station: Node3D,
+	target_reason: String
+) -> Dictionary:
+	var station_id := ""
+	if station.has_method("get_world_id"):
+		station_id = str(station.call("get_world_id")).strip_edges()
+	if station_id.is_empty():
+		var raw_world_id: Variant = station.get("world_id")
+		station_id = str(raw_world_id).strip_edges() if raw_world_id != null else ""
+	if station_id.is_empty() or station_id == "<null>":
+		station_id = str(station.get_meta("world_id", "")).strip_edges()
+	if station_id.is_empty():
+		return {}
+	var raw_station_type: Variant = station.get("station_type")
+	var station_type := str(raw_station_type).strip_edges() \
+		if raw_station_type != null else ""
+	if station_type.is_empty() or station_type == "<null>":
+		station_type = str(station.get_meta("station_type", "")).strip_edges()
+	return {
+		"event_type": "station_targeted",
+		"subject_id": station_id,
+		"station_id": station_id,
+		"station_type": station_type,
+		"target_reason": target_reason.strip_edges(),
+		"system_id": str(GlobalState.current_system_id),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+
+
 func _narrative_prefetch_event_from_system_arrival(
 	system_id: String,
 	arrival_gate_id: String
