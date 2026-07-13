@@ -3300,6 +3300,10 @@ func consume_cached_narrative_line_bank(
 	)
 	if not bool(updated.get("ok", false)):
 		return {}
+	_persist_narrative_cache_payload_update(
+		str(ready.get("cache_key", "")),
+		next_payload
+	)
 	return next_payload
 
 
@@ -3344,6 +3348,10 @@ func replace_used_cached_fallback_lines(
 	)
 	if not bool(updated.get("ok", false)):
 		return {"ok": false, "status": "replacement_update_failed"}
+	_persist_narrative_cache_payload_update(
+		str(ready.get("cache_key", "")),
+		next_payload
+	)
 	return {
 		"ok": true,
 		"replacements": int(replacement.get("replacements", 0)),
@@ -3441,8 +3449,78 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 		job_id,
 		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
 	)
+	if bool(ready.get("ok", false)):
+		_persist_narrative_ready_payload(
+			job,
+			payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+		)
 	ready["processed"] = bool(ready.get("ok", false))
 	return ready
+
+
+func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> void:
+	if campaign_narrative_cache_store == null or payload.is_empty():
+		return
+	var cache_key := str(job.get("cache_key", payload.get("cache_key", ""))).strip_edges()
+	if cache_key.is_empty():
+		return
+	var subject_id := str(job.get("subject_id", "")).strip_edges()
+	if subject_id.is_empty():
+		subject_id = str(job.get("requester_id", "")).strip_edges()
+	if subject_id.is_empty():
+		subject_id = cache_key
+	var entry := {
+		"cache_key": cache_key,
+		"kind": str(job.get("kind", "narrative_cache_job")),
+		"subject_id": subject_id,
+		"speaker_id": str(payload.get("speaker_key", job.get("speaker_id", ""))),
+		"system_id": str(job.get("system_id", "")),
+		"station_id": str(job.get("station_id", "")),
+		"context_fingerprint": str(
+			job.get("context_fingerprint", cache_key.sha256_text())
+		),
+		"text_bundle": _text_bundle_for_narrative_payload(payload),
+		"result_payload": payload.duplicate(true),
+		"status": "ready",
+		"priority": int(job.get("priority", 0)),
+		"requesters": (job.get("requesters", []) as Array).duplicate(true) \
+			if job.get("requesters", []) is Array else [],
+		"consumed": false,
+	}
+	campaign_narrative_cache_store.upsert_entry(entry)
+
+
+func _persist_narrative_cache_payload_update(cache_key: String, payload: Dictionary) -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var clean_key := cache_key.strip_edges()
+	if clean_key.is_empty() or payload.is_empty():
+		return
+	campaign_narrative_cache_store.update_result_payload(clean_key, payload)
+
+
+func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary:
+	var bundle: Dictionary = {}
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var index := 0
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var text := str((raw_line as Dictionary).get("text", "")).strip_edges()
+		if text.is_empty():
+			continue
+		bundle["line_%03d" % index] = text
+		index += 1
+	var quest_data: Dictionary = payload.get("quest_data", {}) \
+		if payload.get("quest_data", {}) is Dictionary else {}
+	for key in ["opening", "description", "title"]:
+		var value := str(quest_data.get(key, "")).strip_edges()
+		if not value.is_empty():
+			bundle[key] = value
+	if bundle.is_empty():
+		bundle["payload_type"] = str(payload.get("content_type", "narrative_payload"))
+	return bundle
 
 
 func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
