@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_system_arrival_plans_current_system_and_station_prefetch()
 	_test_station_target_plans_agent_mechanic_and_lounge_prefetch()
 	_test_chapter_packet_ready_plans_first_interaction_prefetch()
+	_test_new_campaign_loading_plans_startup_prefetch_bundle()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_station_target_hooks_call_prefetch_planner()
 	_test_chapter_packet_ready_hook_calls_prefetch_planner()
@@ -611,6 +612,36 @@ func _test_chapter_packet_ready_plans_first_interaction_prefetch() -> void:
 			and str(jobs[0].get("story_beat_id", "")) == "beat.alpha"
 			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P1,
 		"Scheduler chapter packet ready prefetch did not plan first interaction bundles."
+	)
+
+
+func _test_new_campaign_loading_plans_startup_prefetch_bundle() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "new_campaign_loading",
+		"system_id": "system.start",
+		"station_id": "station.start.iron_reach",
+		"packet_id": "chapter_packet.1",
+		"chapter": 1,
+		"first_beat_ids": ["beat.opening"],
+		"story_revision": 1,
+	})
+	var kinds: Array[String] = []
+	var triggers: Array[String] = []
+	for job in jobs:
+		kinds.append(str(job.get("kind", "")))
+		triggers.append(str(job.get("trigger", "")))
+	_expect(
+		jobs.size() == 6
+			and kinds.has("current_station_agent_offer_bundle")
+			and kinds.has("mechanic_greeting_bundle")
+			and kinds.has("likely_lounge_opener_bundle")
+			and kinds.has("new_campaign_kaelen_handoff_bank")
+			and kinds.has("new_campaign_nova_bank")
+			and kinds.has("chapter_first_interaction_bundle")
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA),
+		"Scheduler new campaign loading prefetch did not plan the startup bundle."
 	)
 
 

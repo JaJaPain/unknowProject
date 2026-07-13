@@ -267,6 +267,8 @@ static func prefetch_jobs_for_event(event: Dictionary) -> Array[Dictionary]:
 		return _station_target_prefetch_jobs(event)
 	if event_type == "chapter_packet_ready":
 		return _chapter_packet_ready_prefetch_jobs(event)
+	if event_type == "new_campaign_loading":
+		return _new_campaign_loading_prefetch_jobs(event)
 	var mission_id := str(event.get("mission_id", event.get("subject_id", ""))).strip_edges()
 	if mission_id.is_empty():
 		return []
@@ -841,6 +843,36 @@ static func _chapter_packet_ready_prefetch_jobs(event: Dictionary) -> Array[Dict
 		job["chapter"] = int(event.get("chapter", 1))
 		job["story_beat_id"] = beat_id
 		jobs.append(job)
+	return jobs
+
+
+static func _new_campaign_loading_prefetch_jobs(event: Dictionary) -> Array[Dictionary]:
+	var jobs: Array[Dictionary] = []
+	var station_id := str(event.get("station_id", "")).strip_edges()
+	if not station_id.is_empty():
+		var station_event := event.duplicate(true)
+		station_event["event_type"] = "station_targeted"
+		station_event["target_reason"] = "new_campaign_loading"
+		jobs.append_array(_station_target_prefetch_jobs(station_event))
+	var system_id := str(event.get("system_id", event.get("subject_id", ""))).strip_edges()
+	if not system_id.is_empty():
+		jobs.append(_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_SYSTEM_KAELEN,
+			system_id,
+			"new_campaign_kaelen_handoff_bank"
+		))
+		jobs.append(_context_prefetch_job(
+			event,
+			TRIGGER_CURRENT_SYSTEM_NOVA,
+			system_id,
+			"new_campaign_nova_bank"
+		))
+	var packet_id := str(event.get("packet_id", "")).strip_edges()
+	if not packet_id.is_empty():
+		var packet_event := event.duplicate(true)
+		packet_event["event_type"] = "chapter_packet_ready"
+		jobs.append_array(_chapter_packet_ready_prefetch_jobs(packet_event))
 	return jobs
 
 
