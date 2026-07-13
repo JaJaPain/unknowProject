@@ -1792,3 +1792,24 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - NOTE for the smoke run: the nova_line_bank batch has never run against
   live Ollama — verify @@label format compliance on qwen3 small and check
   GenerationDiagnostics for all_lines_rejected / template_refill_used.
+
+## Session 2026-07-13 (continued 3): Phase 9 protocol slices
+- 88ae1ab LoungeConversation bundle protocol: build_bundle_prompt carries
+  2-3 code-approved {id,text} player intents verbatim (model never writes
+  the player side); flat {opener, a1..aN, close} JSON; parse_bundle
+  degrades bad/duplicate answer slots to "" per-slot, rejects bundles
+  with no valid answers.
+- fa17aa6 LoungeIntentSelector: code-owned player questions from RUMORED
+  knowledge gaps only (player can only ask about what they heard),
+  delivered rumors, current mission stake, warm-contact callback;
+  generic friendly/pushback/odd filler pads to the 2-minimum only.
+- c1e4dfe Answer relevance: intents carry anchor_tokens from the phrase
+  each question was built on; validate_bundle_answers degrades answers
+  missing every anchor or containing meta markers.
+- NEXT (Phase 9 remaining): UIManager runtime wiring — replace per-reply
+  build_reply_prompt calls with bundle consumption; single-reply +
+  cached-second-bundle "keep talking"; flight-time bundle caching with
+  pending card state; rumor marked heard only on display (fix the
+  approach-path early-mark bug); NPC stance/facts into structured memory;
+  stable NPC IDs for warmth keys; mission-beat hooks by fact ID; stranger
+  deal contracts. All in UIManager lounge section + KnowledgeLedger.
