@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_combat_warning_api_exists()
 	_test_campaign_quirk_lifecycle()
 	_test_arrival_can_consume_ready_line_bank()
+	_test_global_speech_budget()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -127,6 +128,51 @@ func _test_arrival_can_consume_ready_line_bank() -> void:
 			and source.contains("speak(bank_line, Severity.NAV"),
 		"N.O.V.A. arrival path does not consume ready current-system line banks before stock lines."
 	)
+
+
+# Global speech budget: casual lines respect the window/gap; warnings bypass
+# it but still count as speech; restart wipes the ledger.
+func _test_global_speech_budget() -> void:
+	var nova: Node = NovaType.new()
+	var idle: int = NovaType.Severity.IDLE
+	var threat: int = NovaType.Severity.THREAT
+
+	# Fresh ledger: a casual line is allowed and recorded by the caller.
+	_expect(
+		bool(nova._speech_budget_allows(idle, 10000)),
+		"Fresh budget should allow a casual line."
+	)
+	nova._recent_speech_ms.append(10000)
+	# Too soon after the last line: blocked.
+	_expect(
+		not bool(nova._speech_budget_allows(idle, 20000)),
+		"A casual line inside the minimum gap should be blocked."
+	)
+	# Past the gap: fine, until the window fills up.
+	nova._recent_speech_ms.append(30000)
+	nova._recent_speech_ms.append(50000)
+	_expect(
+		not bool(nova._speech_budget_allows(idle, 70000)),
+		"Three lines inside the window should exhaust the casual budget."
+	)
+	# Threat warnings bypass the budget even when it is exhausted.
+	_expect(
+		bool(nova._speech_budget_allows(threat, 70000)),
+		"THREAT must bypass an exhausted speech budget."
+	)
+	# Once the window slides past the old lines, casual speech returns.
+	_expect(
+		bool(nova._speech_budget_allows(idle, 180000)),
+		"Casual budget should recover after the window expires."
+	)
+	# Restart wipes the ledger.
+	nova._recent_speech_ms.append(180000)
+	nova.reset_for_restart()
+	_expect(
+		(nova._recent_speech_ms as Array).is_empty(),
+		"reset_for_restart should clear the speech budget ledger."
+	)
+	nova.free()
 
 
 func _expect(condition: bool, message: String) -> void:

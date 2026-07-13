@@ -110,6 +110,16 @@ const HULL_WARN_COOLDOWN_MS := 15000
 const ARRIVAL_CHANCE := 0.6
 const ARRIVAL_COOLDOWN_MS := 20000
 
+# Global "she has spoken enough recently" budget, on top of each beat's own
+# cooldown. Casual lines (IDLE/NAV) are dropped when she's said 3 things in
+# the last 2 minutes or anything in the last 15 seconds. COMBAT/THREAT lines
+# bypass the check (warnings must never be starved by chatter) but still
+# count as speech, so a noisy fight buys quiet afterwards.
+const SPEECH_BUDGET_WINDOW_MS := 120000
+const SPEECH_BUDGET_MAX_LINES := 3
+const SPEECH_BUDGET_MIN_GAP_MS := 15000
+var _recent_speech_ms: Array = []
+
 # Campaign-specific quirk line, written in her first-person voice by the
 # campaign bible (nova_quirk, player-safe). Set by StoryManager at bible seed /
 # campaign load; "" between campaigns. Delivered occasionally as a dry aside so
@@ -168,6 +178,7 @@ func reset_for_restart() -> void:
 	_last_quirk_line_ms = -100000000
 	_event_memory.clear()
 	_last_line_index.clear()
+	_recent_speech_ms.clear()
 	_in_combat = false
 
 
@@ -203,12 +214,16 @@ func can_speak_in_flight() -> bool:
 # her own voice via emit_npc_flavor (which carries the TTS routing). Falls back to
 # text-only emit_chatter if the flavor path is unavailable. expression is advisory
 # (portrait UI TBD).
-func speak(text: String, _severity: int = Severity.IDLE, expression: String = "neutral") -> void:
+func speak(text: String, severity: int = Severity.IDLE, expression: String = "neutral") -> void:
 	var line := text.strip_edges()
 	if line.is_empty():
 		return
 	if not is_instance_valid(GlobalState):
 		return
+	var now := Time.get_ticks_msec()
+	if not _speech_budget_allows(severity, now):
+		return
+	_recent_speech_ms.append(now)
 	if GlobalState.has_method("emit_npc_flavor"):
 		GlobalState.emit_npc_flavor({
 			"npc_name": NOVA_SENDER,
@@ -220,6 +235,23 @@ func speak(text: String, _severity: int = Severity.IDLE, expression: String = "n
 		})
 	elif GlobalState.has_method("emit_chatter"):
 		GlobalState.emit_chatter(NOVA_SENDER, line, NOVA_COLOR)
+
+
+# True if a line at `severity` may be delivered at `now_ms` under the global
+# speech budget. Prunes the window as a side effect. Time is a parameter so
+# tests can drive it deterministically.
+func _speech_budget_allows(severity: int, now_ms: int) -> bool:
+	var kept: Array = []
+	for t in _recent_speech_ms:
+		if now_ms - int(t) <= SPEECH_BUDGET_WINDOW_MS:
+			kept.append(t)
+	_recent_speech_ms = kept
+	if severity >= Severity.COMBAT:
+		return true
+	if not _recent_speech_ms.is_empty() \
+			and now_ms - int(_recent_speech_ms.back()) < SPEECH_BUDGET_MIN_GAP_MS:
+		return false
+	return _recent_speech_ms.size() < SPEECH_BUDGET_MAX_LINES
 
 
 # "Captain, we have been targeted by an enemy vessel." Fires only in free flight
