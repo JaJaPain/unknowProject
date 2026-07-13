@@ -870,7 +870,8 @@ Primary files:
   - 2026-07-13: Fresh-campaign loading now blocks only on a bounded starter subset of Kaelen/N.O.V.A. line-bank TTS, then warms the full startup banks after loading releases.
   - 2026-07-13: Narrative cache writes now auto-enforce the default 256-entry / 8 MB bounds on every upsert, while preserving text fingerprints for evicted lines.
   - 2026-07-13: Checkpoint restore now discards disposable narrative-cache entries whose timeline/story/knowledge/mission revisions do not match the restored checkpoint, while truth-frozen accepted bundles are preserved.
-- [ ] Prevent obsolete TTS jobs from delaying current P0 fields.
+- [x] Prevent obsolete TTS jobs from delaying current P0 fields.
+  - 2026-07-13: Scheduler coverage now locks `tts_cache` work into an `audio_pending` state after cache start, so it no longer consumes the generation lane or blocks fresh P0 text jobs; same-priority queued text still dispatches before queued audio.
 - [ ] Preserve subtitles if TTS fails; record the audio failure separately from text-source degradation.
 
 #### Phase 6E — Prefetch triggers

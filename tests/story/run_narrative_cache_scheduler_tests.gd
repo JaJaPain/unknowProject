@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_tts_cache_jobs_transition_without_changing_text_status()
 	_test_tts_failure_is_recorded_separately_from_text_degradation()
 	_test_equal_priority_text_dispatches_before_audio_cache()
+	_test_audio_pending_jobs_do_not_block_current_p0_text()
 	_test_objective_progress_and_completion_plan_turn_in_prefetch()
 	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
 	_test_system_arrival_plans_current_system_and_station_prefetch()
@@ -589,6 +590,29 @@ func _test_equal_priority_text_dispatches_before_audio_cache() -> void:
 	_expect(
 		str(scheduler.next_job().get("job_id", "")) == "job.text",
 		"Scheduler kind ranking overrode priority bands."
+	)
+
+
+func _test_audio_pending_jobs_do_not_block_current_p0_text() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var audio_job := _job(
+		"job.old.audio",
+		"cache.old.audio",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.mark_tts_cache_started("job.old.audio")
+	scheduler.queue_job(_job(
+		"job.current.p0.text",
+		"cache.current.p0.text",
+		SchedulerType.PRIORITY_P0
+	))
+	var next: Dictionary = scheduler.next_job()
+	_expect(
+		str(scheduler.get_job("job.old.audio").get("status", "")) == "audio_pending"
+			and str(next.get("job_id", "")) == "job.current.p0.text",
+		"Audio-pending TTS work blocked a current P0 text field."
 	)
 
 
