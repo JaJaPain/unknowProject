@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_empty_bank_reports_no_line()
 	_test_consumed_lines_are_retired_for_the_campaign()
 	_test_generated_lines_can_carry_their_own_kinds()
+	_test_prefer_generated_scores_story_aware_lines_first()
 
 	if _failures.is_empty():
 		print("[PASS] Fallback line bank tests")
@@ -217,6 +218,43 @@ func _test_generated_lines_can_carry_their_own_kinds() -> void:
 		str(kinds_by_text.get("Plain string keeps the bank kind.", ""))
 			== "system_arrival",
 		"Plain string line did not inherit the bank line_kind."
+	)
+
+
+# Relevance scoring: prefer_generated picks a story-aware (generated) line
+# over an earlier generic template line of the same kind, and falls back to
+# normal order when no generated line is available.
+func _test_prefer_generated_scores_story_aware_lines_first() -> void:
+	var bank := BankType.create_bank(
+		"nova", "rough_arrival",
+		["Generic joke one.", "Generic joke two."],
+		3
+	)
+	var appended: Dictionary = BankType.replace_used_with_generated(
+		bank, ["Story-aware arrival line."], "llm_nova_bank"
+	)
+	var mixed: Dictionary = appended.get("bank", {})
+	var preferred: Dictionary = BankType.consume(mixed, "rough_arrival", true)
+	_expect(
+		str((preferred.get("line", {}) as Dictionary).get("text", ""))
+			== "Story-aware arrival line.",
+		"prefer_generated did not pick the story-aware line first."
+	)
+	var plain: Dictionary = BankType.consume(mixed, "rough_arrival")
+	_expect(
+		str((plain.get("line", {}) as Dictionary).get("text", ""))
+			== "Generic joke one.",
+		"Default consume order changed unexpectedly."
+	)
+	# All generated lines gone: prefer_generated falls back to templates.
+	var after_preferred: Dictionary = preferred.get("bank", {})
+	var fallback: Dictionary = BankType.consume(
+		after_preferred, "rough_arrival", true
+	)
+	_expect(
+		str((fallback.get("line", {}) as Dictionary).get("text", ""))
+			== "Generic joke one.",
+		"prefer_generated should fall back to template lines when none remain."
 	)
 
 

@@ -3645,7 +3645,8 @@ func ready_cached_narrative_line_bank(requester_id: String) -> Dictionary:
 
 func consume_cached_narrative_line_bank(
 	requester_id: String,
-	preferred_kind: String = ""
+	preferred_kind: String = "",
+	prefer_story_aware: bool = false
 ) -> Dictionary:
 	var clean_requester := requester_id.strip_edges()
 	if clean_requester.is_empty():
@@ -3663,7 +3664,9 @@ func consume_cached_narrative_line_bank(
 		if payload.get("fallback_bank", {}) is Dictionary else {}
 	if fallback_bank.is_empty():
 		return {}
-	var consumed := FallbackLineBankType.consume(fallback_bank, preferred_kind)
+	var consumed := FallbackLineBankType.consume(
+		fallback_bank, preferred_kind, prefer_story_aware
+	)
 	if not bool(consumed.get("ok", false)):
 		return {}
 	var next_bank: Dictionary = consumed.get("bank", {}) \

@@ -248,6 +248,12 @@ func _test_semantic_movement_consumes_banks_or_stays_silent() -> void:
 			and nova_source.contains("accepted_kinds"),
 		"Movement handler does not route through NovaLineBankCategories."
 	)
+	_expect(
+		nova_source.contains("real_beat_live")
+			and nova_source.contains("mission_beat")
+			and nova_source.contains("prefer_story_aware"),
+		"Movement handler lost its relevance scoring (story-aware preference)."
+	)
 	# Phase 8A/8B tripwire: nothing in Nova.gd may touch the model layer.
 	# If a legitimate LLM path is ever added for OTHER beats, it must live
 	# outside this file so movement stays provably model-free.

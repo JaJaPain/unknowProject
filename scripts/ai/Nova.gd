@@ -356,7 +356,10 @@ func _current_system_line_bank_requester_id() -> String:
 	return "prefetch:current_system_nova:%s" % system_id
 
 
-func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
+func _ready_line_bank_text(
+	kind_filter: Array[String] = [],
+	prefer_story_aware: bool = false
+) -> String:
 	var requester_id := _current_system_line_bank_requester_id()
 	if requester_id.is_empty():
 		return ""
@@ -374,7 +377,8 @@ func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
 		payload = game_root.call(
 			"consume_cached_narrative_line_bank",
 			requester_id,
-			preferred_kind
+			preferred_kind,
+			prefer_story_aware
 		)
 	elif game_root.has_method("ready_cached_narrative_line_bank"):
 		payload = game_root.call(
@@ -710,14 +714,19 @@ func on_gate_transition() -> void:
 # rate-limited). Movement NEVER calls a model and NEVER falls back to stock
 # pools: it consumes a prepared line from the current-system bank or stays
 # silent. The global speech budget in speak() applies on top.
-func on_semantic_movement_event(event_id: String, _context: Dictionary) -> void:
+func on_semantic_movement_event(event_id: String, context: Dictionary) -> void:
 	if not can_speak_in_flight():
 		return
 	var category: String = NovaBankCategoriesType.for_semantic_event(event_id)
 	if category.is_empty():
 		return
+	# Relevance scoring: a live mission beat means a story/system-aware
+	# generated line beats a generic movement joke of the same kind.
+	var real_beat_live := not str(context.get("mission_beat", "")).is_empty() \
+		and str(context.get("route_deviation", "")) != "no_mission"
 	var bank_line := _ready_line_bank_text(
-		NovaBankCategoriesType.accepted_kinds(category)
+		NovaBankCategoriesType.accepted_kinds(category),
+		real_beat_live
 	)
 	if bank_line.is_empty():
 		return  # no prepared line: silence, by design

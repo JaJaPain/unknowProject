@@ -58,10 +58,23 @@ static func generated_replacement_count(bank: Dictionary) -> int:
 	return int(bank.get("generated_replacements", 0))
 
 
-static func consume(bank: Dictionary, preferred_kind: String = "") -> Dictionary:
+# `prefer_generated` is the relevance score: generated lines were prompted
+# with story/system context, so when a real beat just occurred they beat a
+# generic template joke of the same kind.
+static func consume(
+	bank: Dictionary,
+	preferred_kind: String = "",
+	prefer_generated: bool = false
+) -> Dictionary:
 	var next_bank := bank.duplicate(true)
 	var entries := _entries(next_bank)
-	var index := _first_available_index(entries, preferred_kind.strip_edges())
+	var index := -1
+	if prefer_generated:
+		index = _first_available_index(
+			entries, preferred_kind.strip_edges(), true
+		)
+	if index < 0:
+		index = _first_available_index(entries, preferred_kind.strip_edges())
 	if index < 0:
 		return {
 			"ok": false,
@@ -204,15 +217,21 @@ static func _entries(bank: Dictionary) -> Array[Dictionary]:
 	return result
 
 
-static func _first_available_index(entries: Array[Dictionary], preferred_kind: String) -> int:
+static func _first_available_index(
+	entries: Array[Dictionary],
+	preferred_kind: String,
+	generated_only: bool = false
+) -> int:
 	for i in range(entries.size()):
 		var entry: Dictionary = entries[i]
 		if bool(entry.get("used", false)):
 			continue
 		if not preferred_kind.is_empty() and str(entry.get("kind", "")) != preferred_kind:
 			continue
+		if generated_only and str(entry.get("source", "fallback")) == "fallback":
+			continue
 		return i
-	if preferred_kind.is_empty():
+	if preferred_kind.is_empty() or generated_only:
 		return -1
 	for i in range(entries.size()):
 		if not bool(entries[i].get("used", false)):
