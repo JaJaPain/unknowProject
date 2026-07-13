@@ -1745,3 +1745,29 @@ validation, speech_service, game_content_registry, local_model_gateway.
   transition warning is now gone from the output), comms reversal,
   mission contract, mission history revision, parse check.
 - bugs.md entry moved from Active to Fixed.
+
+## Session 2026-07-13 (continued): Phase 8B line banks
+- ce3b12b NovaLineBankCategories: 5 movement semantics + system_arrival
+  (legacy startup_navigation accepted), gate_transit, gate_glitch
+  (protected), hull_critical, welcome_back, docked, 3 combat-end beats.
+- cf02e65 Global speech budget in Nova.speak(): 3 casual lines / 2 min,
+  15s min gap; COMBAT/THREAT bypass but still count. reset wipes ledger.
+- 3be1175 GameRoot routes semantic_movement_event -> Nova; movement
+  consumes prepared bank lines only, silence otherwise. Phase 8A gate 5
+  (never call a model on movement) checked with tripwires.
+- 932c582 Silence tests: 6 instant docks = exactly 1 line.
+- aec16ee FallbackLineBank retirement ledger: consumed text fingerprints
+  persist; replace_used_with_generated refuses retired texts forever.
+- 121997a Low-bank refill: consume at <=3 unused queues
+  line_bank_low_refill (deduped); worker refills used slots via
+  replace_used_cached_fallback_lines. Template content until batch gen.
+- e9c7532 Protected glitch bank on consumption: _line_kind_allowed
+  refuses protected kinds without an explicit filter; burned > leaked.
+- 4df36f1 Stock pools demoted: all flat-pool beats bank-first via
+  _bank_line_or_stock; stock draws logged as nova_line_bank /
+  stock_line_used. Tutorial stays authored; dock tier ladder kept.
+- Remaining Phase 8B: batch generation (6-10 field flat batches, per-line
+  validation) + the persona/quirk/system-tone prompt (do together; use
+  the labeled_field @@label approach per project_labeled_field_generation
+  memory), then relevance scoring (needs generated lines tagged
+  mission-aware, so it comes after generation).
