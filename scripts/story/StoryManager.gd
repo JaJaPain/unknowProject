@@ -1974,7 +1974,19 @@ func _trigger_handoff_pool_for_system(system_id: String, force_replace: bool = f
 		if entry.is_empty():
 			continue
 		var agent_name: String = entry["agent_name"]
-		if not force_replace and _kaelen_handoff_pool_size(agent_name, system_id) >= 4:
+		var current_count := _kaelen_handoff_pool_size(agent_name, system_id)
+		if not force_replace and current_count >= 4:
+			continue
+		var queued := _queue_handoff_pool_refill(
+			agent_name,
+			entry["faction"],
+			entry["agent_role"],
+			system_id,
+			current_count,
+			16,
+			force_replace
+		)
+		if bool(queued.get("ok", false)) or bool(queued.get("deferred", false)):
 			continue
 		generate_handoff_pool(agent_name, entry["faction"], entry["agent_role"], system_id)
 
@@ -2011,18 +2023,94 @@ func generate_handoff_pool(
 			if lines.is_empty():
 				push_warning("[StoryManager] Handoff batch returned empty for %s" % agent_name)
 				return
-			if _handoff_store != null and _handoff_store.is_valid():
-				if _handoff_store.has_method("refill_scoped"):
-					_handoff_store.refill_scoped(
+			var refill_result := refill_kaelen_handoff_pool_from_lines(
+				agent_name,
+				lines,
+				scope_system_id,
+				story_revision,
+				relationship_band
+			)
+			if not bool(refill_result.get("ok", false)):
+				push_warning(
+					"[StoryManager] Handoff pool refill failed for %s: %s" % [
 						agent_name,
-						story_revision,
-						scope_system_id,
-						relationship_band,
-						lines
-					)
-				else:
-					_handoff_store.refill(agent_name, lines)
-				print("[StoryManager] Handoff pool refilled for %s (%d lines)" % [agent_name, lines.size()])
+						str(refill_result.get("status", "unknown")),
+					]
+				)
+	)
+
+
+func refill_kaelen_handoff_pool_from_lines(
+	agent_name: String,
+	lines: Array,
+	system_id: String = "",
+	story_revision: int = -1,
+	relationship_band: String = ""
+) -> Dictionary:
+	if _handoff_store == null or not _handoff_store.is_valid():
+		return {"ok": false, "status": "handoff_store_unavailable"}
+	var clean_lines: Array = []
+	for raw_line in lines:
+		var line := str(raw_line).strip_edges()
+		if not line.is_empty():
+			clean_lines.append(line)
+	if clean_lines.is_empty():
+		return {"ok": false, "status": "empty_lines"}
+	var scope_system_id := system_id.strip_edges()
+	if scope_system_id.is_empty():
+		scope_system_id = _kaelen_handoff_system_id()
+	var scoped_revision := story_revision
+	if scoped_revision < 0:
+		scoped_revision = _kaelen_handoff_story_revision()
+	var scoped_relationship := relationship_band.strip_edges()
+	if scoped_relationship.is_empty():
+		scoped_relationship = _kaelen_handoff_relationship_band(agent_name)
+	if _handoff_store.has_method("refill_scoped"):
+		_handoff_store.refill_scoped(
+			agent_name,
+			scoped_revision,
+			scope_system_id,
+			scoped_relationship,
+			clean_lines
+		)
+	else:
+		_handoff_store.refill(agent_name, clean_lines)
+	print("[StoryManager] Handoff pool refilled for %s (%d lines)" % [agent_name, clean_lines.size()])
+	return {
+		"ok": true,
+		"count": clean_lines.size(),
+		"system_id": scope_system_id,
+		"story_revision": scoped_revision,
+		"relationship_band": scoped_relationship,
+	}
+
+
+func _queue_handoff_pool_refill(
+	agent_name: String,
+	faction: String,
+	agent_role: String,
+	system_id: String,
+	current_count: int,
+	target_count: int,
+	force_replace: bool = false
+) -> Dictionary:
+	var tree := get_tree()
+	if tree == null:
+		return {"ok": false, "status": "tree_unavailable"}
+	var game_root := tree.current_scene
+	if game_root == null or not game_root.has_method("queue_kaelen_handoff_pool_refill"):
+		return {"ok": false, "status": "scheduler_bridge_unavailable"}
+	return game_root.call(
+		"queue_kaelen_handoff_pool_refill",
+		agent_name,
+		faction,
+		agent_role,
+		system_id,
+		current_count,
+		target_count,
+		_kaelen_handoff_story_revision(),
+		_kaelen_handoff_relationship_band(agent_name),
+		force_replace
 	)
 
 

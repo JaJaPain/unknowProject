@@ -3272,6 +3272,63 @@ func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
 		scheduler.queue_job(job)
 
 
+func queue_kaelen_handoff_pool_refill(
+	agent_name: String,
+	faction: String,
+	agent_role: String,
+	system_id: String,
+	current_count: int,
+	target_count: int,
+	story_revision: int,
+	relationship_band: String,
+	force_replace: bool = false
+) -> Dictionary:
+	var clean_agent := agent_name.strip_edges()
+	var clean_system := system_id.strip_edges()
+	if clean_agent.is_empty() or clean_system.is_empty():
+		return {"ok": false, "status": "missing_handoff_scope"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var priority := NarrativeCacheSchedulerType.priority_for_trigger(
+		NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+	)
+	if not force_replace and not scheduler.can_refill_pool(
+		current_count,
+		target_count,
+		priority
+	):
+		return {
+			"ok": false,
+			"deferred": true,
+			"status": "handoff_refill_deferred",
+		}
+	var safe_pool := "%s.%s.%s.%s" % [
+		clean_system,
+		str(story_revision),
+		relationship_band.strip_edges(),
+		clean_agent,
+	]
+	var safe_id := safe_pool.sha256_text().substr(0, 16)
+	return scheduler.queue_job({
+		"job_id": "job.kaelen_handoff_pool_refill.%s" % safe_id,
+		"cache_key": "prefetch.kaelen_handoff_pool_refill.%s" % safe_id,
+		"kind": "kaelen_handoff_pool_refill",
+		"trigger": NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT,
+		"priority": priority,
+		"subject_id": clean_agent,
+		"requester_id": "prefetch:kaelen_handoff_pool_refill:%s" % safe_id,
+		"speaker_id": clean_agent,
+		"agent_name": clean_agent,
+		"faction": faction.strip_edges(),
+		"agent_role": agent_role.strip_edges(),
+		"system_id": clean_system,
+		"story_revision": story_revision,
+		"relationship_tier": relationship_band.strip_edges(),
+		"pool_count": max(0, current_count),
+		"pool_target": max(1, target_count),
+		"force_replace": force_replace,
+	})
+
+
 func process_next_narrative_cache_job() -> Dictionary:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	if scheduler.is_paused():
@@ -3552,6 +3609,8 @@ func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 		"current_station_agent_offer_bundle":
 			return true
 		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
+			return true
+		"kaelen_handoff_pool_refill":
 			return true
 		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return true
@@ -3863,12 +3922,60 @@ func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 			return _station_agent_offer_payload_for_cache_job(job)
 		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
 			return _line_bank_payload_for_cache_job(job, "kaelen")
+		"kaelen_handoff_pool_refill":
+			return _kaelen_handoff_pool_refill_payload_for_cache_job(job)
 		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return _line_bank_payload_for_cache_job(job, "nova")
 		"ambient_pool_refill":
 			return _line_bank_payload_for_cache_job(job, "ambient")
 		_:
 			return {"ok": false, "status": "unsupported_job_kind"}
+
+
+func _kaelen_handoff_pool_refill_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var line_payload_result := _line_bank_payload_for_cache_job(job, "kaelen")
+	if not bool(line_payload_result.get("ok", false)):
+		return line_payload_result
+	var payload: Dictionary = line_payload_result.get("payload", {}) \
+		if line_payload_result.get("payload", {}) is Dictionary else {}
+	var entries: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var lines: Array = []
+	for raw_entry in entries:
+		if not raw_entry is Dictionary:
+			continue
+		var text := str(raw_entry.get("text", "")).strip_edges()
+		if not text.is_empty():
+			lines.append(text)
+	if lines.is_empty():
+		return {"ok": false, "status": "kaelen_handoff_lines_unavailable"}
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("refill_kaelen_handoff_pool_from_lines"):
+		return {"ok": false, "status": "story_manager_handoff_refill_unavailable"}
+	var refill_result: Dictionary = StoryManager.call(
+		"refill_kaelen_handoff_pool_from_lines",
+		str(job.get("agent_name", job.get("speaker_id", ""))),
+		lines,
+		str(job.get("system_id", "")),
+		int(job.get("story_revision", -1)),
+		str(job.get("relationship_tier", ""))
+	)
+	if not bool(refill_result.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(refill_result.get("status", "kaelen_handoff_refill_failed")),
+		}
+	payload["content_type"] = "kaelen_handoff_pool_refill"
+	payload["source"] = "narrative_cache_scheduler"
+	payload["agent_name"] = str(job.get("agent_name", job.get("speaker_id", "")))
+	payload["system_id"] = str(job.get("system_id", ""))
+	payload["story_revision"] = int(job.get("story_revision", -1))
+	payload["relationship_tier"] = str(job.get("relationship_tier", ""))
+	payload["refilled_count"] = int(refill_result.get("count", lines.size()))
+	return {
+		"ok": true,
+		"payload": payload,
+	}
 
 
 func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:

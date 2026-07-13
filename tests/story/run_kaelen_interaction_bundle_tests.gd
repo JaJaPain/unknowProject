@@ -132,7 +132,10 @@ func _test_story_manager_uses_scoped_handoff_pools() -> void:
 			and source.contains("pool_size_scoped")
 			and source.contains("_kaelen_handoff_story_revision")
 			and source.contains("_kaelen_handoff_system_id")
-			and source.contains("_kaelen_handoff_relationship_band"),
+			and source.contains("_kaelen_handoff_relationship_band")
+			and source.contains("_queue_handoff_pool_refill")
+			and source.contains("queue_kaelen_handoff_pool_refill")
+			and source.contains("refill_kaelen_handoff_pool_from_lines"),
 		"StoryManager does not key Kaelen handoff pools by story/system/relationship scope."
 	)
 
