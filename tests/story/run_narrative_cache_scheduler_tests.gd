@@ -951,11 +951,13 @@ func _test_dev_story_snapshot_reports_narrative_cache_diagnostics() -> void:
 			and source.contains("hits=%d")
 			and source.contains("misses=%d")
 			and source.contains("clicks=%d")
+			and source.contains("click-to-generate reports=%d")
 			and source.contains("ready-to-click avg=%.2fs")
 			and source.contains("p95=%ds")
 			and source.contains("degraded=%d")
 			and source.contains("fallback uses=%d")
 			and source.contains("generated replacements=%d")
+			and source.contains("GenerationDiagnostics.summary()")
 			and source.contains("_dev_format_count_dictionary"),
 		"DevPanel story snapshot does not expose narrative cache source diagnostics."
 	)

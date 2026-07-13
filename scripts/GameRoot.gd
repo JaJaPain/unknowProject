@@ -8853,12 +8853,16 @@ func _dev_format_narrative_cache_summary() -> String:
 		if summary.get("content_type_counts", {}) is Dictionary else {}
 	var source_counts: Dictionary = summary.get("source_counts", {}) \
 		if summary.get("source_counts", {}) is Dictionary else {}
+	var generation_summary: Dictionary = GenerationDiagnostics.summary()
+	var click_reports: Array = generation_summary.get("click_to_generate_reports", []) \
+		if generation_summary.get("click_to_generate_reports", []) is Array else []
 	return (
-		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | clicks=%d | ready-to-click avg=%.2fs p95=%ds | degraded=%d (%.1f%%) | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
+		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | clicks=%d | click-to-generate reports=%d | ready-to-click avg=%.2fs p95=%ds | degraded=%d (%.1f%%) | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
 			int(summary.get("ready_payloads", 0)),
 			int(summary.get("cache_lookup_hit", 0)),
 			int(summary.get("cache_lookup_miss", 0)),
 			int(summary.get("interaction_clicked", 0)),
+			click_reports.size(),
 			float(
 				(summary.get("ready_to_click", {}) as Dictionary).get("avg_seconds", 0.0)
 			) if summary.get("ready_to_click", {}) is Dictionary else 0.0,
