@@ -308,7 +308,9 @@ static func bundle_intents(intents: Array) -> Array:
 		var id := str(intent.get("id", "")).strip_edges()
 		if text.is_empty() or id.is_empty():
 			continue
-		clean.append({"id": id, "text": text})
+		var anchors: Array = intent.get("anchors", []) \
+			if intent.get("anchors", []) is Array else []
+		clean.append({"id": id, "text": text, "anchors": anchors.duplicate()})
 		if clean.size() >= BUNDLE_MAX_INTENTS:
 			break
 	return clean
@@ -370,6 +372,68 @@ static func _clean_bundle_field(raw: String, npc_name: String) -> String:
 	var clean := raw.strip_edges()
 	clean = clean.trim_prefix("\"").trim_suffix("\"").strip_edges()
 	return AmbientChatType._strip_speaker_prefix(clean, npc_name, "")
+
+
+const _OUT_OF_CHARACTER_MARKERS: Array = [
+	"as an ai",
+	"language model",
+	"cannot assist",
+	"i can't help with",
+]
+
+
+# Phase 9 relevance pass, run after parse_bundle: each answer must respond
+# to its paired question and stay in character. Anchored intents require at
+# least one topic token in the answer; anchor-less generics accept any
+# in-character reply. Failing answers degrade to "" like structural
+# failures; a bundle with no relevant answers is rejected.
+static func validate_bundle_answers(
+	parsed: Dictionary,
+	intents: Array
+) -> Dictionary:
+	if not bool(parsed.get("ok", false)):
+		return parsed
+	var clean_intents := bundle_intents(intents)
+	var answers: Array = (parsed.get("answers", []) as Array).duplicate()
+	var valid_count := 0
+	for i in range(answers.size()):
+		var answer := str(answers[i])
+		if answer.is_empty():
+			continue
+		var keeps := _answer_in_character(answer)
+		if keeps and i < clean_intents.size():
+			keeps = _answer_hits_anchors(
+				answer,
+				(clean_intents[i] as Dictionary).get("anchors", [])
+			)
+		if keeps:
+			valid_count += 1
+		else:
+			answers[i] = ""
+	if valid_count < 1:
+		return {"ok": false, "reason": "no_relevant_answers"}
+	var result := parsed.duplicate(true)
+	result["answers"] = answers
+	result["valid_answer_count"] = valid_count
+	return result
+
+
+static func _answer_hits_anchors(answer: String, anchors: Array) -> bool:
+	if anchors.is_empty():
+		return true
+	var lower := answer.to_lower()
+	for anchor in anchors:
+		if lower.contains(str(anchor)):
+			return true
+	return false
+
+
+static func _answer_in_character(answer: String) -> bool:
+	var lower := answer.to_lower()
+	for marker in _OUT_OF_CHARACTER_MARKERS:
+		if lower.contains(str(marker)):
+			return false
+	return true
 
 
 # "NPC: ... / You: ..." block for reply prompts; only the last `keep` entries

@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_agent_disposition()
 	_test_bundle_prompt_carries_code_owned_intents()
 	_test_parse_bundle_degrades_per_answer()
+	_test_answer_relevance_validation()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -325,6 +326,97 @@ func _test_parse_bundle_degrades_per_answer() -> void:
 				.begins_with("The convoy")
 			and str(tagged_parsed.get("close", "")).begins_with("Try not"),
 		"Self-tagged bundle fields should lose the name prefix."
+	)
+
+
+# Phase 9: an answer must respond to its paired question (anchor tokens)
+# and stay in character; drifting or meta answers degrade to "".
+func _test_answer_relevance_validation() -> void:
+	var intents := [
+		{
+			"id": "gap:fact.convoy",
+			"text": "I keep hearing about the missing convoy. What's the real story?",
+			"anchors": ["convoy"],
+		},
+		{
+			"id": "generic:friendly",
+			"text": "How's the station treating you?",
+			"anchors": [],
+		},
+	]
+	# Relevant answer + in-character generic: both survive.
+	var good := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "The convoy went dark past the belt. Nobody says why out loud.",
+		"a2": "Station treats me fine as long as I keep pouring.",
+		"close": "That's my cue. Watch the belt lanes.",
+	})
+	var parsed: Dictionary = ConvoType.validate_bundle_answers(
+		ConvoType.parse_bundle(good, "", 2), intents
+	)
+	_expect(
+		bool(parsed.get("ok", false))
+			and int(parsed.get("valid_answer_count", 0)) == 2,
+		"Relevant answers were rejected: %s" % str(parsed)
+	)
+
+	# Topic drift on the anchored question degrades that slot only.
+	var drifting := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "My cousin brews terrible gin in a maintenance closet.",
+		"a2": "Station treats me fine as long as I keep pouring.",
+		"close": "That's my cue. Watch the belt lanes.",
+	})
+	var drift_parsed: Dictionary = ConvoType.validate_bundle_answers(
+		ConvoType.parse_bundle(drifting, "", 2), intents
+	)
+	var drift_answers: Array = drift_parsed.get("answers", [])
+	_expect(
+		bool(drift_parsed.get("ok", false))
+			and str(drift_answers[0]).is_empty()
+			and not str(drift_answers[1]).is_empty(),
+		"Drifting answer was not degraded: %s" % str(drift_parsed)
+	)
+
+	# Out-of-character meta breaks any slot, even a generic one.
+	var meta := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "The convoy went dark past the belt.",
+		"a2": "As an AI language model I cannot pour drinks.",
+		"close": "That's my cue.",
+	})
+	var meta_parsed: Dictionary = ConvoType.validate_bundle_answers(
+		ConvoType.parse_bundle(meta, "", 2), intents
+	)
+	var meta_answers: Array = meta_parsed.get("answers", [])
+	_expect(
+		bool(meta_parsed.get("ok", false))
+			and not str(meta_answers[0]).is_empty()
+			and str(meta_answers[1]).is_empty(),
+		"Out-of-character answer was not degraded: %s" % str(meta_parsed)
+	)
+
+	# Every answer drifting sinks the bundle.
+	var hollow := JSON.stringify({
+		"opener": "You picked a strange week to drink here, pilot.",
+		"a1": "My cousin brews terrible gin in a maintenance closet.",
+		"a2": "As an AI language model I cannot pour drinks.",
+		"close": "That's my cue.",
+	})
+	_expect(
+		not bool(ConvoType.validate_bundle_answers(
+			ConvoType.parse_bundle(hollow, "", 2), intents
+		).get("ok", true)),
+		"A bundle with zero relevant answers should be rejected."
+	)
+
+	# Anchor tokens derive from the phrase the question was built around.
+	var SelectorType: GDScript = load("res://scripts/story/LoungeIntentSelector.gd")
+	var anchors: Array = SelectorType.anchor_tokens("the missing convoy, Route 9")
+	_expect(
+		anchors.has("convoy") and anchors.has("route") \
+			and not anchors.has("the") and not anchors.has("missing"),
+		"Anchor token derivation was wrong: %s" % str(anchors)
 	)
 
 

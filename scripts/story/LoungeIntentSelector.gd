@@ -58,6 +58,7 @@ static func select_intents(
 			"id": id,
 			"text": "I keep hearing about %s. What's the real story?" % alias,
 			"source": "knowledge_gap",
+			"anchors": anchor_tokens(alias),
 		})
 
 	# 2. Delivered rumors: follow up on something someone actually said.
@@ -81,6 +82,7 @@ static func select_intents(
 			"id": id,
 			"text": "Someone mentioned %s. You know anything about that?" % summary,
 			"source": "delivered_rumor",
+			"anchors": anchor_tokens(summary),
 		})
 
 	# 3. Current stake: the player's live job gives a natural local angle.
@@ -91,6 +93,7 @@ static func select_intents(
 			"text": "I'm working a job — %s. Anything local I should know?"
 				% mission_label,
 			"source": "current_stake",
+			"anchors": anchor_tokens(mission_label),
 		})
 
 	# 4. Warm contact callback: a personal beat beats generic filler.
@@ -103,13 +106,42 @@ static func select_intents(
 			"id": "warm:callback",
 			"text": "Good to see you again. Anything change since last time?",
 			"source": "relationship",
+			"anchors": [],
 		})
 
 	# 5. Generic filler ONLY pads to the minimum — never displaces a story
-	# question, never appears when enough story questions exist.
+	# question, never appears when enough story questions exist. Generic
+	# small talk has no anchors: any in-character answer fits it.
 	for raw_generic in GENERIC_INTENTS:
 		if intents.size() >= MIN_INTENTS:
 			break
-		intents.append((raw_generic as Dictionary).duplicate(true))
+		var generic: Dictionary = (raw_generic as Dictionary).duplicate(true)
+		generic["anchors"] = []
+		intents.append(generic)
 
 	return intents
+
+
+const _ANCHOR_STOPWORDS: Dictionary = {
+	"the": true, "that": true, "this": true, "with": true, "from": true,
+	"about": true, "some": true, "what": true, "them": true, "they": true,
+	"were": true, "been": true, "have": true, "will": true, "your": true,
+	"missing": true, "new": true,
+}
+
+
+# Distinctive topic tokens from the phrase a question was built around.
+# Used to check an NPC answer actually addresses its paired question.
+static func anchor_tokens(phrase: String) -> Array:
+	var tokens: Array = []
+	for raw_word in phrase.to_lower().split(" ", false):
+		var word := ""
+		for character in raw_word:
+			if character.to_lower() != character.to_upper() \
+					or character.is_valid_int():
+				word += character
+		if word.length() < 4 or _ANCHOR_STOPWORDS.has(word):
+			continue
+		if not tokens.has(word):
+			tokens.append(word)
+	return tokens
