@@ -877,7 +877,8 @@ Primary files:
 
 #### Phase 6E — Prefetch triggers
 
-- [ ] New campaign: first post-tutorial offer, its player questions/answers, Kaelen handoff, and first likely N.O.V.A. banks before loading release.
+- [x] New campaign: first post-tutorial offer, its player questions/answers, Kaelen handoff, and first likely N.O.V.A. banks before loading release.
+  - 2026-07-13: With Phase 6D readiness complete, the existing `new_campaign_loading` planner/worker path now covers the startup station offer, its mission-conversation bundle fields, Kaelen handoff bank, N.O.V.A. bank, and first chapter interaction bundle before release; tests guard the six-job startup bundle.
   - 2026-07-12: `4cbfd54`/`9da52eb` added a central `new_campaign_loading` prefetch event and queues it before fresh-campaign loading release. Existing opening-contract/TTS generation still handles the first visible offer; remaining work is a real scheduler worker/ready gate for the new Kaelen/N.O.V.A. bank jobs.
   - 2026-07-12: Added worker and consumer support for template-safe current-station offer jobs. The background agent-board path can now use a ready station-offer payload before fresh generation, while Kaelen/N.O.V.A. startup banks remain open.
   - 2026-07-12: Added the first safe Kaelen/N.O.V.A. line-bank worker path. The scheduler can now turn startup/system Kaelen and N.O.V.A. bank jobs into ready `story_line_bank` payloads using public context only. Follow-up: consume those banks at runtime and replace the template seed lines with richer validated model-authored banks.
