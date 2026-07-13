@@ -868,7 +868,7 @@ Primary files:
 - [x] On mission acceptance: persist baseline abandon and likely outcome variants.
 - [x] On objective progress >= 70%: refresh outcome snapshot and queue likely turn-in variants.
 - [x] On objective completion: P0 exact turn-in generation while the player travels back.
-- [ ] On chapter 60% consumed: next chapter packet and its first interaction bundles.
+- [x] On chapter 60% consumed: next chapter packet and its first interaction bundles.
 - [x] On cache pool below threshold: refill only when no higher-priority work exists.
 
 Phase 6 exit gate / service-level objectives:
@@ -1404,6 +1404,7 @@ Add newest entries at the top. Include date, phase/checkbox, decision or evidenc
 
 | Date | Phase | Entry | Evidence / follow-up |
 |---|---|---|---|
+| 2026-07-12 | Phase 6E | Completed the chapter-packet prefetch trigger path: the existing 60% consumption threshold requests the next chapter packet, and successful packet commits now queue first interaction bundles for the first beats. | Commits `8278c61`, `ef09053`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
 | 2026-07-12 | Phase 6E | Added a scheduler entrypoint for low-priority ambient/pool refill work. Refills now queue only when the pool is below threshold, idle, and no higher-priority jobs are pending/in flight. | Commit `62bd5ca`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
 | 2026-07-12 | Phase 6E | Added station target/fly-to prefetching: station selection and accepted fly/dock commands now queue current-station, mechanic greeting, and likely lounge jobs through the scheduler. | Commits `f2e3c9d`, `924cab9`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
 | 2026-07-12 | Phase 6E | Wired mission lifecycle prefetch triggers into `GameRoot`: acceptance queues baseline/likely outcome work, progress queues likely turn-in work once the scheduler threshold is met, and completion queues exact P0 turn-in work. | Commits `a1e463c`, `4ac7649`, `9718df3`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. Full multi-mission smoke was attempted; it passed the new acceptance-prefetch assertion and later failed on older combat progress behavior, so the committed guard remains focused and deterministic. |
