@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_existing_handoff_paths_use_interaction_constants()
 	_test_story_manager_uses_scoped_handoff_pools()
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
+	_test_live_kaelen_handoff_prompt_uses_safe_packet()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -194,6 +195,21 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 			story_state
 		).get("ok", true)),
 		"Invalid Kaelen interaction packet kind was accepted."
+	)
+
+
+func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:
+	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect LLMInterface Kaelen packet wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("KaelenInteractionPacketBuilderType.build_packet")
+			and source.contains("KaelenInteractionKindsType.AGENT_HANDOFF")
+			and source.contains("Safe Kaelen interaction packet")
+			and source.contains("_kaelen_interaction_packet_clause("),
+		"Live Kaelen handoff generation does not include the safe interaction packet."
 	)
 
 

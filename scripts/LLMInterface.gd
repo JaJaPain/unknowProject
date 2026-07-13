@@ -5,6 +5,12 @@ const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
 const ChapterNarrativeDirectorType := preload(
 	"res://scripts/ai/ChapterNarrativeDirector.gd"
 )
+const KaelenInteractionKindsType := preload(
+	"res://scripts/story/KaelenInteractionKinds.gd"
+)
+const KaelenInteractionPacketBuilderType := preload(
+	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
+)
 
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
@@ -5248,11 +5254,45 @@ func request_kaelen_intro(quest_data: Dictionary, agent_history_text: String, pl
 			+ story_state_context_text + "\n"
 		)
 
+	var kaelen_packet_clause := _kaelen_interaction_packet_clause(
+		KaelenInteractionKindsType.AGENT_HANDOFF,
+		quest_data,
+		{
+			"relationship_tier": GlobalState.reputation_tier(
+				player_reps.get(faction.to_lower(), 0)
+			),
+		}
+	)
+	if not kaelen_packet_clause.is_empty():
+		story_clause += kaelen_packet_clause
+
 	# First attempt. If the response fails the speaker-leakage guard, we
 	# retry ONCE with a correction suffix that tells the model what it did
 	# wrong. After that, we hard-fall-back to canned (caller picks from
 	# fallback_handoff_lines_by_agent).
 	_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, "", 0, callback)
+
+
+func _kaelen_interaction_packet_clause(
+	interaction_kind: String,
+	quest_data: Dictionary,
+	style_context: Dictionary = {}
+) -> String:
+	if not is_instance_valid(StoryManager):
+		return ""
+	var packet: Dictionary = KaelenInteractionPacketBuilderType.build_packet(
+		interaction_kind,
+		quest_data,
+		StoryManager.story_state,
+		[],
+		style_context
+	)
+	if not bool(packet.get("ok", false)):
+		return ""
+	return (
+		"Safe Kaelen interaction packet (allowed context only; do not quote raw IDs):\n"
+		+ JSON.stringify(packet) + "\n"
+	)
 
 
 # Internal: make one LLM call for the handoff intro. `attempt` is 0 on the
