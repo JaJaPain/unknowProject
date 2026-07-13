@@ -3422,6 +3422,12 @@ func _ready_narrative_result_for_requester(
 func _mark_narrative_cache_interaction_clicked(requester_id: String) -> void:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	scheduler.mark_interaction_clicked_for_requester(requester_id)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"narrative_cache",
+		"interaction_clicked",
+		"GameRoot",
+		{"interaction_name": requester_id.strip_edges()}
+	)
 
 
 func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:

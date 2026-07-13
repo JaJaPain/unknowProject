@@ -858,6 +858,8 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 			and source.contains("func ready_cached_narrative_station_offer")
 			and source.contains("func _mark_narrative_cache_interaction_clicked")
 			and source.contains("mark_interaction_clicked_for_requester")
+			and source.contains("GenerationDiagnostics.record_lifecycle_timestamp")
+			and source.contains("\"interaction_clicked\"")
 			and source.contains("\"system_contact_offer_bundle\"")
 			and source.contains("\"current_station_agent_offer_bundle\"")
 			and source.contains("StoryAgentOfferBuilderType.can_build")
