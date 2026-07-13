@@ -11,6 +11,10 @@ extends Node
 # wired yet. Pure helpers here are unit-tested; go-live needs autoload/instance
 # registration + those trigger hookups.
 
+const NovaBankCategoriesType := preload(
+	"res://scripts/story/NovaLineBankCategories.gd"
+)
+
 # Her portrait is a 3x3 emotion sheet; frames are indexed left→right, top→bottom.
 const PORTRAIT_PATH := "res://assets/Portraits/ShipAI.png"
 const FRAME_COLS := 3
@@ -635,6 +639,24 @@ func on_gate_transition() -> void:
 		"Did you see that? I swear I just saw an old woman flying a broom. ...I'm going to pretend I didn't.",
 	]
 	speak(str(lines[randi() % lines.size()]), Severity.NAV, expression_for_event("mystery"))
+
+
+# Semantic movement events from ShipBehaviorObserver (already aggregated and
+# rate-limited). Movement NEVER calls a model and NEVER falls back to stock
+# pools: it consumes a prepared line from the current-system bank or stays
+# silent. The global speech budget in speak() applies on top.
+func on_semantic_movement_event(event_id: String, _context: Dictionary) -> void:
+	if not can_speak_in_flight():
+		return
+	var category: String = NovaBankCategoriesType.for_semantic_event(event_id)
+	if category.is_empty():
+		return
+	var bank_line := _ready_line_bank_text(
+		NovaBankCategoriesType.accepted_kinds(category)
+	)
+	if bank_line.is_empty():
+		return  # no prepared line: silence, by design
+	speak(bank_line, Severity.NAV, expression_for_event("nav"))
 
 
 # Connected to CombatManager.action_impact — fires her hull-critical panic when a

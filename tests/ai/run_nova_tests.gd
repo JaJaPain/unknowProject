@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_campaign_quirk_lifecycle()
 	_test_arrival_can_consume_ready_line_bank()
 	_test_global_speech_budget()
+	_test_semantic_movement_consumes_banks_or_stays_silent()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -173,6 +174,60 @@ func _test_global_speech_budget() -> void:
 		"reset_for_restart should clear the speech budget ledger."
 	)
 	nova.free()
+
+
+# Movement consumption: prepared bank lines or silence — no stock pools, no
+# model. With no bank available (bare instance, no scene tree), every event
+# must produce zero speech and zero errors.
+func _test_semantic_movement_consumes_banks_or_stays_silent() -> void:
+	var nova: Node = NovaType.new()
+	var gs = root.get_node("GlobalState")
+	var spoken: Array = []
+	var listener := func(flavor: Dictionary) -> void:
+		spoken.append(flavor)
+	gs.npc_flavor_spoken.connect(listener)
+	nova.on_semantic_movement_event("boost_again_quickly", {})
+	nova.on_semantic_movement_event("rough_arrival", {"system_id": "x"})
+	nova.on_semantic_movement_event("not_a_real_event", {})
+	gs.npc_flavor_spoken.disconnect(listener)
+	nova.free()
+	_expect(
+		spoken.is_empty(),
+		"Movement events without a prepared bank must stay silent."
+	)
+
+	var nova_file := FileAccess.open("res://scripts/ai/Nova.gd", FileAccess.READ)
+	var game_root_file := FileAccess.open(
+		"res://scripts/GameRoot.gd", FileAccess.READ
+	)
+	_expect(
+		nova_file != null and game_root_file != null,
+		"Could not inspect semantic movement wiring."
+	)
+	if nova_file == null or game_root_file == null:
+		return
+	var nova_source := nova_file.get_as_text()
+	var game_root_source := game_root_file.get_as_text()
+	_expect(
+		nova_source.contains("func on_semantic_movement_event")
+			and nova_source.contains("for_semantic_event")
+			and nova_source.contains("accepted_kinds"),
+		"Movement handler does not route through NovaLineBankCategories."
+	)
+	# Phase 8A/8B tripwire: nothing in Nova.gd may touch the model layer.
+	# If a legitimate LLM path is ever added for OTHER beats, it must live
+	# outside this file so movement stays provably model-free.
+	_expect(
+		not nova_source.contains("LLMInterface")
+			and not nova_source.contains("Ollama"),
+		"Nova.gd references the model layer — movement is no longer provably model-free."
+	)
+	_expect(
+		game_root_source.contains(
+			"semantic_movement_event.connect"
+		) and game_root_source.contains("Nova.on_semantic_movement_event"),
+		"GameRoot does not route semantic movement events to N.O.V.A."
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -1016,6 +1016,11 @@ func _init_ship_behavior_observer() -> void:
 	GlobalState.ship_movement_event.connect(
 		ship_behavior_observer._on_ship_movement_event
 	)
+	if is_instance_valid(Nova) \
+			and Nova.has_method("on_semantic_movement_event"):
+		ship_behavior_observer.semantic_movement_event.connect(
+			Nova.on_semantic_movement_event
+		)
 
 
 # Safe, player-visible context stamped onto every semantic movement event.
