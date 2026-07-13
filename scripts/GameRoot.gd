@@ -3578,11 +3578,16 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 	scheduler.mark_generation_finished(job_id)
 	if not bool(payload_result.get("ok", false)):
 		var status := str(payload_result.get("status", "generation_failed"))
-		var failed: Dictionary = scheduler.mark_validation_failed(job_id, [status], 0)
+		var field_errors: Array = payload_result.get("errors", []) \
+			if payload_result.get("errors", []) is Array else []
+		if field_errors.is_empty():
+			field_errors.append(status)
+		var failed: Dictionary = scheduler.mark_validation_failed(job_id, field_errors, 1)
 		return {
 			"ok": false,
 			"processed": true,
 			"status": status,
+			"retry_queued": bool(failed.get("retry_queued", false)),
 			"job": failed.get("job", {}),
 		}
 	var validated: Dictionary = scheduler.mark_validation_finished(job_id)

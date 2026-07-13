@@ -883,6 +883,8 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 			and source.contains("StoryAgentOfferBuilderType.can_build")
 			and source.contains("StoryAgentOfferBuilderType.build_offer")
 			and source.contains("mark_generation_started")
+			and source.contains("mark_validation_failed(job_id, field_errors, 1)")
+			and source.contains("\"retry_queued\": bool(failed.get(\"retry_queued\", false))")
 			and source.contains("mark_validation_finished")
 			and source.contains("mark_ready"),
 		"GameRoot cache worker is not wired to safely build ready contact offer payloads."
