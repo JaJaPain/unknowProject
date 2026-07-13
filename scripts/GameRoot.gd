@@ -1935,6 +1935,7 @@ func _initialize_campaign_chronicle() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_narrative_cache_store = opened_narrative_cache
+	_restore_ready_narrative_cache_payloads()
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
 	_refresh_llm_campaign_bible_context()
@@ -1956,6 +1957,34 @@ func _ensure_narrative_cache_scheduler() -> RefCounted:
 	if narrative_cache_scheduler == null:
 		narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
 	return narrative_cache_scheduler
+
+
+func _restore_ready_narrative_cache_payloads() -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var entries: Dictionary = campaign_narrative_cache_store.entries()
+	for cache_key in entries.keys():
+		var raw_entry: Variant = entries[cache_key]
+		if not raw_entry is Dictionary:
+			continue
+		var entry: Dictionary = raw_entry
+		if str(entry.get("status", "")) != "ready":
+			continue
+		var payload: Dictionary = entry.get("result_payload", {}) \
+			if entry.get("result_payload", {}) is Dictionary else {}
+		if payload.is_empty():
+			continue
+		var job_id := "restored:%s" % str(cache_key).sha256_text().substr(0, 16)
+		scheduler.restore_ready_job({
+			"job_id": job_id,
+			"cache_key": str(cache_key),
+			"kind": str(entry.get("kind", "restored_narrative_cache")),
+			"priority": int(entry.get("priority", NarrativeCacheSchedulerType.PRIORITY_P2)),
+			"requesters": (entry.get("requesters", []) as Array).duplicate(true) \
+				if entry.get("requesters", []) is Array else [],
+			"requester_id": str(entry.get("subject_id", "")),
+		}, payload)
 
 
 func _pause_narrative_cache_scheduler(reason: String) -> void:

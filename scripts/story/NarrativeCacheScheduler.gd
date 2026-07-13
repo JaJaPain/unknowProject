@@ -236,6 +236,24 @@ func mark_ready(job_id: String, result_payload: Dictionary = {}) -> Dictionary:
 	return result
 
 
+func restore_ready_job(job: Dictionary, result_payload: Dictionary) -> Dictionary:
+	var restored := job.duplicate(true)
+	restored["status"] = "ready"
+	restored["result_payload"] = result_payload.duplicate(true)
+	var queued := queue_job(restored)
+	if not bool(queued.get("ok", false)):
+		return queued
+	var job_id := str(restored.get("job_id", "")).strip_edges()
+	if job_id.is_empty():
+		return _failure("Narrative cache job requires job_id.")
+	var ready: Dictionary = _jobs[job_id]
+	ready["status"] = "ready"
+	ready["result_payload"] = result_payload.duplicate(true)
+	_stamp(ready, "restored_ready")
+	_jobs[job_id] = ready
+	return {"ok": true, "job": ready.duplicate(true)}
+
+
 func mark_tts_cache_started(job_id: String) -> Dictionary:
 	return _stamp_existing(job_id, "tts_cache_started")
 

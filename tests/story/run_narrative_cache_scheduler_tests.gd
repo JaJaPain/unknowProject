@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_deduplicates_active_jobs_by_cache_key()
 	_test_ready_result_fans_out_to_deduped_requesters()
 	_test_ready_result_payload_updates_fan_out_to_requesters()
+	_test_restored_ready_payload_is_available_to_requesters()
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
@@ -176,6 +177,31 @@ func _test_ready_result_payload_updates_fan_out_to_requesters() -> void:
 			and int(kaelen_payload.get("fallback_uses", 0)) == 1
 			and int(ui_payload.get("generated_replacements", 0)) == 1,
 		"Scheduler payload updates did not remain visible to every ready requester."
+	)
+
+
+func _test_restored_ready_payload_is_available_to_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var restored: Dictionary = scheduler.restore_ready_job({
+		"job_id": "restored.cache.bank",
+		"cache_key": "cache.bank.persisted",
+		"kind": "current_system_kaelen_bundle",
+		"priority": SchedulerType.PRIORITY_P1,
+		"requesters": ["prefetch:current_system_kaelen:alpha"],
+	}, {
+		"content_type": "story_line_bank",
+		"fallback_uses": 2,
+	})
+	var ready: Dictionary = scheduler.ready_result_for_requester(
+		"prefetch:current_system_kaelen:alpha"
+	)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	_expect(
+		bool(restored.get("ok", false))
+			and str(ready.get("job_id", "")) == "restored.cache.bank"
+			and int(payload.get("fallback_uses", 0)) == 2,
+		"Scheduler did not restore a persisted ready payload for its requesters."
 	)
 
 
@@ -850,6 +876,8 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("scheduler.update_result_payload")
 			and source.contains("FallbackLineBankType.replace_used_with_generated")
 			and source.contains("func _persist_narrative_ready_payload")
+			and source.contains("func _restore_ready_narrative_cache_payloads")
+			and source.contains("scheduler.restore_ready_job")
 			and source.contains("campaign_narrative_cache_store.upsert_entry")
 			and source.contains("campaign_narrative_cache_store.update_result_payload")
 			and source.contains("ContextBlockBuilderType.kaelen_block")
