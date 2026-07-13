@@ -752,6 +752,24 @@ func _test_new_campaign_loading_hook_calls_prefetch_planner() -> void:
 	)
 
 
+func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot cache worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func process_next_narrative_cache_job")
+			and source.contains("\"system_contact_offer_bundle\"")
+			and source.contains("StoryAgentOfferBuilderType.can_build")
+			and source.contains("StoryAgentOfferBuilderType.build_offer")
+			and source.contains("mark_generation_started")
+			and source.contains("mark_validation_finished")
+			and source.contains("mark_ready"),
+		"GameRoot cache worker is not wired to safely build ready contact offer payloads."
+	)
+
+
 func _test_queue_health_reports_contention_and_starvation() -> void:
 	var scheduler: RefCounted = SchedulerType.new()
 	scheduler.queue_job(_job("job.flight", "cache.health.flight", SchedulerType.PRIORITY_P0))

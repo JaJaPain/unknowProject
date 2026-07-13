@@ -68,6 +68,9 @@ const NarrativeDirectorType := preload(
 	"res://scripts/ai/NarrativeDirector.gd"
 )
 const MissionDirectorType := preload("res://scripts/story/MissionDirector.gd")
+const StoryAgentOfferBuilderType := preload(
+	"res://scripts/story/StoryAgentOfferBuilder.gd"
+)
 const ChallengeBudgetType := preload("res://scripts/story/ChallengeBudget.gd")
 const MissionHistoryLedgerType := preload(
 	"res://scripts/story/MissionHistoryLedger.gd"
@@ -3184,6 +3187,120 @@ func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	for job in NarrativeCacheSchedulerType.prefetch_jobs_for_event(event):
 		scheduler.queue_job(job)
+
+
+func process_next_narrative_cache_job() -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": false, "status": "scheduler_paused"}
+	for job in scheduler.pending_jobs():
+		if _narrative_cache_job_has_worker(job):
+			return _process_narrative_cache_job(job)
+	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
+
+
+func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
+	match str(job.get("kind", "")):
+		"system_contact_offer_bundle":
+			return true
+		_:
+			return false
+
+
+func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var job_id := str(job.get("job_id", "")).strip_edges()
+	if job_id.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_job_id"}
+	var started: Dictionary = scheduler.mark_generation_started(job_id)
+	if not bool(started.get("ok", false)):
+		started["processed"] = false
+		return started
+	var payload_result := _narrative_cache_payload_for_job(job)
+	scheduler.mark_generation_finished(job_id)
+	if not bool(payload_result.get("ok", false)):
+		var status := str(payload_result.get("status", "generation_failed"))
+		var failed: Dictionary = scheduler.mark_validation_failed(job_id, [status], 0)
+		return {
+			"ok": false,
+			"processed": true,
+			"status": status,
+			"job": failed.get("job", {}),
+		}
+	var validated: Dictionary = scheduler.mark_validation_finished(job_id)
+	if not bool(validated.get("ok", false)):
+		validated["processed"] = true
+		return validated
+	var ready: Dictionary = scheduler.mark_ready(
+		job_id,
+		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+	)
+	ready["processed"] = bool(ready.get("ok", false))
+	return ready
+
+
+func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
+	match str(job.get("kind", "")):
+		"system_contact_offer_bundle":
+			return _system_contact_offer_payload_for_cache_job(job)
+		_:
+			return {"ok": false, "status": "unsupported_job_kind"}
+
+
+func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var agent_profile := _agent_profile_for_system_contact_cache_job(job)
+	var story_context := build_story_agent_offer_context(agent_profile)
+	if not bool(story_context.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(story_context.get("status", "story_context_unavailable")),
+		}
+	agent_profile["story_agent_offer_context"] = story_context
+	if not StoryAgentOfferBuilderType.can_build(agent_profile):
+		return {"ok": false, "status": "template_builder_unavailable_for_candidate"}
+	var faction_arg := str(agent_profile.get("faction_id", "")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = str(agent_profile.get("faction", "neutral")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = "neutral"
+	var offer: Dictionary = StoryAgentOfferBuilderType.build_offer(
+		faction_arg,
+		agent_profile,
+		int(CampaignClock.total_minutes)
+	)
+	if offer.is_empty():
+		return {"ok": false, "status": "template_offer_build_failed"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_agent_offer",
+			"source": "story_agent_offer_builder",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"quest_data": offer,
+			"agent_profile": agent_profile,
+		},
+	}
+
+
+func _agent_profile_for_system_contact_cache_job(job: Dictionary) -> Dictionary:
+	var contact_id := str(job.get("contact_id", "")).strip_edges()
+	var display_name := str(job.get("contact_display", "")).strip_edges()
+	if display_name.is_empty():
+		display_name = contact_id
+	if display_name.is_empty():
+		display_name = "System Contact"
+	var faction_id := str(job.get("faction_id", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	return {
+		"agent_id": contact_id,
+		"name": display_name,
+		"agent_name": display_name,
+		"agent_role": "System faction contact",
+		"faction": faction_id if not faction_id.is_empty() else "neutral",
+		"faction_id": faction_id,
+		"agent_voice_profile_id": voice_profile_id,
+	}
 
 
 func queue_narrative_station_target_prefetch(
