@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_question_answers_require_declared_anchor()
 	_test_degrade_bundle_repairs_bad_optional_answer()
 	_test_forbidden_fact_leaks_fail_and_degrade()
+	_test_secret_tokens_speaker_prefixes_and_duplicate_lines_fail()
 
 	if _failures.is_empty():
 		print("[PASS] Dialogue bundle validator tests")
@@ -147,6 +148,62 @@ func _test_forbidden_fact_leaks_fail_and_degrade() -> void:
 	_expect(
 		(degraded.get("degraded_fields", []) as Array).has("clarify_term_response"),
 		"Forbidden leak field was not marked as degraded."
+	)
+
+
+func _test_secret_tokens_speaker_prefixes_and_duplicate_lines_fail() -> void:
+	var plan := _conversation_plan()
+	plan["director_only_tokens"] = ["the broker is the architect"]
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Mara Venn: I have work that pays."
+	bundle["clarify_term_response"] = (
+		"The convoy case needs evidence, and the broker is the architect."
+	)
+	bundle["accept_standard_response"] = "The convoy case pays after the evidence is logged."
+	bundle["decline_response"] = "The convoy case pays after the evidence is logged."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Secret/speaker/duplicate bundle unexpectedly passed.")
+	_expect(
+		errors.has("speaker_prefix:opening:Mara Venn"),
+		"Validator did not flag speaker-prefix drift."
+	)
+	_expect(
+		errors.has("forbidden_fact:clarify_term_response:the broker is the architect"),
+		"Validator did not flag explicit secret token leak."
+	)
+	var duplicate_field := ""
+	for error in errors:
+		if str(error).begins_with("duplicate_line:"):
+			var parts := str(error).split(":")
+			if parts.size() >= 2:
+				duplicate_field = str(parts[1])
+			break
+	_expect(
+		not duplicate_field.is_empty(),
+		"Validator did not flag repeated generated response text."
+	)
+	var degraded: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = degraded.get("bundle", {})
+	var degraded_fields: Array = degraded.get("degraded_fields", [])
+	_expect(bool(degraded.get("ok", false)), "Secret/speaker/duplicate bundle did not degrade cleanly.")
+	_expect(
+		degraded_fields.has("opening")
+			and degraded_fields.has("clarify_term_response")
+			and degraded_fields.has(duplicate_field),
+		"Degraded bundle did not mark every rejected field."
+	)
+	_expect(
+		not str(repaired.get("opening", "")).begins_with("Mara Venn:")
+			and not str(repaired.get("clarify_term_response", "")).contains(
+				"the broker is the architect"
+			),
+		"Degraded bundle retained speaker prefix or secret token."
 	)
 
 

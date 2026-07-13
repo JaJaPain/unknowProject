@@ -34,12 +34,26 @@ static func validate_bundle(
 		for term in forbidden_terms:
 			if _contains_wordish(text, term):
 				errors.append("forbidden_fact:%s:%s" % [key, term])
+		var speaker_error := _speaker_prefix_error(text, speaker_card)
+		if not speaker_error.is_empty():
+			errors.append("speaker_prefix:%s:%s" % [key, speaker_error])
 	var banned := _banned_tics(speaker_card)
 	for key in required:
 		var text := str(bundle.get(key, ""))
 		for tic in banned:
 			if _contains_wordish(text, tic):
 				errors.append("banned_tic:%s:%s" % [key, tic])
+	var seen_line_fields := {}
+	for key in required:
+		if str(key).ends_with("_player"):
+			continue
+		var fingerprint := _line_fingerprint(str(bundle.get(key, "")))
+		if fingerprint.is_empty():
+			continue
+		if seen_line_fields.has(fingerprint):
+			errors.append("duplicate_line:%s:%s" % [key, seen_line_fields[fingerprint]])
+			continue
+		seen_line_fields[fingerprint] = key
 	for intent in _intents(conversation_plan):
 		if str(intent.get("kind", "")) != "question":
 			continue
@@ -112,10 +126,22 @@ static func _forbidden_terms(conversation_plan: Dictionary) -> Array[String]:
 		"forbidden_fact_ids",
 		"director_only_fact_ids",
 		"completion_fact_ids",
+		"forbidden_terms",
+		"director_only_tokens",
+		"completion_only_tokens",
+		"secret_leak_tokens",
 	]:
 		for item in _string_array(conversation_plan.get(key, [])):
 			if item not in result:
 				result.append(item)
+	for key in [
+		"kaelen_hidden_angle",
+		"kaelen_never_reveal",
+		"director_only_summary",
+	]:
+		var term := str(conversation_plan.get(key, "")).strip_edges()
+		if not term.is_empty() and term not in result:
+			result.append(term)
 	return result
 
 
@@ -124,12 +150,51 @@ static func _field_for_error(error: String) -> String:
 	if parts.size() < 2:
 		return ""
 	match parts[0]:
-		"missing_or_short", "too_long", "banned_tic", "forbidden_fact":
+		"missing_or_short", "too_long", "banned_tic", "forbidden_fact", \
+		"speaker_prefix", "duplicate_line":
 			return parts[1]
 		"missing_answer_anchor":
 			return "%s_response" % parts[1]
 		_:
 			return ""
+
+
+static func _speaker_prefix_error(text: String, speaker_card: Dictionary) -> String:
+	var clean := text.strip_edges()
+	if clean.is_empty():
+		return ""
+	var lower := clean.to_lower()
+	var speaker_name := str(speaker_card.get("name", "")).strip_edges()
+	var prefixes: Array[String] = [
+		"kaelen",
+		"broker kaelen",
+		"nova",
+		"n.o.v.a.",
+		"player",
+		"pilot",
+	]
+	if not speaker_name.is_empty():
+		prefixes.append(speaker_name)
+	for prefix in prefixes:
+		var lowered := prefix.to_lower().strip_edges()
+		if lowered.is_empty():
+			continue
+		if lower.begins_with("%s:" % lowered) \
+				or lower.begins_with("%s -" % lowered) \
+				or lower.begins_with("%s —" % lowered):
+			return prefix
+	return ""
+
+
+static func _line_fingerprint(text: String) -> String:
+	var normalized := text.strip_edges().to_lower()
+	if normalized.is_empty():
+		return ""
+	normalized = normalized.replace("\n", " ")
+	normalized = normalized.replace("\t", " ")
+	while normalized.contains("  "):
+		normalized = normalized.replace("  ", " ")
+	return normalized.sha256_text()
 
 
 static func _contains_wordish(text: String, needle: String) -> bool:

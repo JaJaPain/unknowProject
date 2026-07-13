@@ -170,13 +170,25 @@ static func parse_bundle(
 static func _fallback_response(intent_id: String, mission_plan: Dictionary) -> String:
 	match intent_id:
 		PlanType.INTENT_CLARIFY_TERM:
-			return _text(mission_plan, "public_because", "The reason is in the posted contract packet.")
+			return "The short version: %s" % _text(
+				mission_plan,
+				"public_because",
+				"the reason is in the posted contract packet."
+			)
 		PlanType.INTENT_ASK_WHY:
-			return _text(mission_plan, "stake", "Because waiting makes the bill worse.")
+			return "Because %s" % _text(
+				mission_plan,
+				"stake",
+				"waiting makes the bill worse."
+			)
 		PlanType.INTENT_ASK_RISK:
 			return _text(mission_plan, "risk_text", "The usual kind: bad timing, worse company.")
 		PlanType.INTENT_ASK_CONNECTION:
-			return _text(mission_plan, "public_because", "It ties back to the same pressure everyone is pretending not to notice.")
+			return "It ties back to this pressure: %s" % _text(
+				mission_plan,
+				"public_because",
+				"everyone is pretending not to notice."
+			)
 		PlanType.INTENT_REQUEST_ADVANCE:
 			return "Advance terms stay in the contract ledger; I do not improvise money."
 		PlanType.INTENT_REQUEST_HAZARD_PAY:
