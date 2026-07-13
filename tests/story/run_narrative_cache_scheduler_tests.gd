@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_priority_order_and_dedupe()
 	_test_deduplicates_active_jobs_by_cache_key()
 	_test_ready_result_fans_out_to_deduped_requesters()
+	_test_ready_result_payload_updates_fan_out_to_requesters()
 	_test_lifecycle_timestamps_and_stats()
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
@@ -141,6 +142,40 @@ func _test_ready_result_fans_out_to_deduped_requesters() -> void:
 			and str(prefetch_result.get("result_payload", {}).get("opening", ""))
 				== "Same finished bundle.",
 		"Scheduler did not expose the same ready result to deduped requesters."
+	)
+
+
+func _test_ready_result_payload_updates_fan_out_to_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.bank.first", "cache.bank.ready", SchedulerType.PRIORITY_P1)
+	first["requester_id"] = "prefetch:current_system_kaelen:alpha"
+	var second := _job("job.bank.second", "cache.bank.ready", SchedulerType.PRIORITY_P1)
+	second["requester_id"] = "ui:kaelen_handoff"
+	scheduler.queue_job(first)
+	scheduler.queue_job(second)
+	scheduler.mark_generation_started("job.bank.first")
+	scheduler.mark_ready("job.bank.first", {
+		"content_type": "story_line_bank",
+		"fallback_uses": 0,
+	})
+	var updated: Dictionary = scheduler.update_result_payload("job.bank.first", {
+		"content_type": "story_line_bank",
+		"fallback_uses": 1,
+		"generated_replacements": 1,
+	})
+	var kaelen_result: Dictionary = scheduler.ready_result_for_requester(
+		"prefetch:current_system_kaelen:alpha"
+	)
+	var ui_result: Dictionary = scheduler.ready_result_for_requester("ui:kaelen_handoff")
+	var kaelen_payload: Dictionary = kaelen_result.get("result_payload", {}) \
+		if kaelen_result.get("result_payload", {}) is Dictionary else {}
+	var ui_payload: Dictionary = ui_result.get("result_payload", {}) \
+		if ui_result.get("result_payload", {}) is Dictionary else {}
+	_expect(
+		bool(updated.get("ok", false))
+			and int(kaelen_payload.get("fallback_uses", 0)) == 1
+			and int(ui_payload.get("generated_replacements", 0)) == 1,
+		"Scheduler payload updates did not remain visible to every ready requester."
 	)
 
 
