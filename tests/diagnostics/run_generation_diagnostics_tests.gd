@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_records_generation_event_summary()
 	_test_records_lifecycle_timestamps()
 	_test_records_percentile_summaries()
+	_test_asserts_percentile_slos()
 	_test_reports_click_to_generate_paths()
 	_test_asserts_no_click_to_generate_reports()
 	_test_records_content_source_summary()
@@ -287,6 +288,56 @@ func _test_records_percentile_summaries() -> void:
 	_expect(
 		int(metrics.get("degraded_field", {}).get("count", 0)) == 1,
 		"Degraded field summary was not calculated."
+	)
+
+
+func _test_asserts_percentile_slos() -> void:
+	var slo_diagnostics := DiagnosticsType.new()
+	var event := slo_diagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"test",
+		{}
+	)
+	event["time_msec"] = 100
+	event = slo_diagnostics.record_lifecycle_timestamp(
+		"quest_briefing",
+		"text_presented",
+		"test",
+		{}
+	)
+	event["time_msec"] = 175
+	var pass_gate: Dictionary = slo_diagnostics.assert_percentile_slo(
+		"click_to_text_ms",
+		100.0,
+		"warm_cached_text"
+	)
+	_expect(
+		bool(pass_gate.get("ok", false))
+			and str(pass_gate.get("status", "")) == "slo_passed"
+			and int(pass_gate.get("sample_count", 0)) == 1,
+		"Click-to-text SLO gate should pass for a warm cached sample."
+	)
+	var fail_gate: Dictionary = slo_diagnostics.assert_percentile_slo(
+		"click_to_text_ms",
+		50.0,
+		"too_strict"
+	)
+	_expect(
+		not bool(fail_gate.get("ok", true))
+			and str(fail_gate.get("status", "")) == "slo_failed"
+			and int(fail_gate.get("p95_ms", 0)) == 75,
+		"Click-to-text SLO gate should fail when p95 exceeds the limit."
+	)
+	var no_sample_gate: Dictionary = DiagnosticsType.new().assert_percentile_slo(
+		"click_to_audio_ms",
+		300.0,
+		"no_audio_samples"
+	)
+	_expect(
+		not bool(no_sample_gate.get("ok", true))
+			and str(no_sample_gate.get("status", "")) == "no_slo_samples",
+		"SLO gate should fail loudly when no samples exist."
 	)
 
 

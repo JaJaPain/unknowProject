@@ -182,6 +182,37 @@ func assert_no_click_to_generate_reports(label: String = "") -> Dictionary:
 	}
 
 
+func assert_percentile_slo(
+	metric_name: String,
+	p95_limit_ms: float,
+	label: String = ""
+) -> Dictionary:
+	var metrics := percentile_summaries()
+	var metric: Dictionary = metrics.get(metric_name, {}) \
+		if metrics.get(metric_name, {}) is Dictionary else {}
+	var count := int(metric.get("count", 0))
+	var p95 := float(metric.get("p95", 0.0))
+	if count <= 0:
+		return {
+			"ok": false,
+			"status": "no_slo_samples",
+			"label": label,
+			"metric": metric_name,
+			"p95_ms": p95,
+			"p95_limit_ms": p95_limit_ms,
+			"sample_count": 0,
+		}
+	return {
+		"ok": p95 <= p95_limit_ms,
+		"status": "slo_passed" if p95 <= p95_limit_ms else "slo_failed",
+		"label": label,
+		"metric": metric_name,
+		"p95_ms": p95,
+		"p95_limit_ms": p95_limit_ms,
+		"sample_count": count,
+	}
+
+
 func percentile_summaries() -> Dictionary:
 	var metrics := {
 		"click_to_text_ms": _duration_summary_from_pair(
