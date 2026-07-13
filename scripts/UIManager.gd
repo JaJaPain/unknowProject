@@ -12,6 +12,9 @@ const MissionConversationControllerType := preload(
 const KaelenInteractionKindsType := preload(
 	"res://scripts/story/KaelenInteractionKinds.gd"
 )
+const KaelenInteractionPacketBuilderType := preload(
+	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
+)
 
 # UI Nodes created dynamically
 var hud_panel: Panel
@@ -10027,6 +10030,15 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 
 	# Play Kaelen's intro line in her voice
 	SpeechService.play(handoff_line, "voice.kaelen.v1")
+	_record_kaelen_line_playback(
+		handoff_line,
+		KaelenInteractionKindsType.AGENT_HANDOFF,
+		{
+			"agent_name": str(agent_name),
+			"quest_title": str(quest_data.get("title", "")),
+			"source": "agent_handoff",
+		}
+	)
 	
 	# Add a "Bring them in" button that transitions to the actual quest giver
 	var bring_in_btn = Button.new()
@@ -10097,6 +10109,17 @@ func _ready_kaelen_handoff_bank_line() -> String:
 	if candidates.is_empty():
 		return ""
 	return str(candidates[randi() % candidates.size()])
+
+
+func _record_kaelen_line_playback(
+	line_text: String,
+	event_kind: String,
+	context: Dictionary = {}
+) -> void:
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("record_kaelen_line_playback"):
+		return
+	game_root.call("record_kaelen_line_playback", line_text, event_kind, context)
 
 
 func _replace_used_kaelen_handoff_fallbacks(generated_lines: Array) -> void:
@@ -10675,6 +10698,16 @@ func _on_agent_complete_pressed():
 	
 	agent_dialogue_label.text = completion_text
 	SpeechService.play(completion_text, "voice.kaelen.v1")
+	_record_kaelen_line_playback(
+		completion_text,
+		KaelenInteractionPacketBuilderType.turn_in_kind_for_mission(completed_quest),
+		{
+			"quest_title": str(completed_quest.get("title", "")),
+			"mission_runtime_id": str(completed_quest.get("runtime_id", "")),
+			"public_board": bool(completed_quest.get("public_board", false)),
+			"source": "mission_completion",
+		}
+	)
 	agent_back_btn.visible = true
 	_add_kaelen_gate_intel_button()
 	
@@ -10712,6 +10745,15 @@ func _on_agent_abandon_pressed():
 	
 	agent_dialogue_label.text = abandon_text
 	SpeechService.play(abandon_text, "voice.kaelen.v1")
+	_record_kaelen_line_playback(
+		abandon_text,
+		KaelenInteractionKindsType.ABANDON,
+		{
+			"quest_title": str(abandoned_quest.get("title", "")),
+			"mission_runtime_id": str(abandoned_quest.get("runtime_id", "")),
+			"source": "mission_abandon",
+		}
+	)
 	agent_back_btn.visible = true
 	
 	_clear_cached_agent_quest("agent_cooldown_after_abandon")

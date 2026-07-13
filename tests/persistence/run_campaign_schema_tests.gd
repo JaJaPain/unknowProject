@@ -243,6 +243,17 @@ func _test_kaelen_restrictions() -> void:
 		),
 		"Non-death memory accepted a death category."
 	)
+	document = _kaelen_meta()
+	document["memories"][0]["line_fingerprint"] = "not-a-sha"
+	validation = SchemaType.validate_document(document)
+	_expect(
+		_has_issue(
+			validation.errors,
+			"invalid_line_fingerprint",
+			"memories.0.line_fingerprint"
+		),
+		"Kaelen memory accepted an invalid delivered-line fingerprint."
+	)
 
 
 func _valid_bundle() -> Array:
@@ -399,6 +410,8 @@ func _kaelen_meta() -> Dictionary:
 			"fact_refs": ["fact.opening.kaelen_present"],
 			"summary": "Shiny arrived in the opening system.",
 			"timeline_status": "current",
+			"line_fingerprint": "Kaelen opening line.".sha256_text(),
+			"event_kind": "first_system_arrival",
 		}],
 	}
 

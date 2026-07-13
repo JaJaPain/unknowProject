@@ -860,6 +860,15 @@ func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
 	if line.is_empty():
 		line = _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
 	GlobalState.emit_chatter("KAELEN", line, Color(0.85, 0.5, 1.0))
+	record_kaelen_line_playback(
+		line,
+		KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+		{
+			"system_id": system_id,
+			"system_name": sys_def.display_name,
+			"source": "system_arrival",
+		}
+	)
 
 
 func _ready_kaelen_system_arrival_bank_line(system_id: String) -> String:
@@ -2201,6 +2210,65 @@ func get_kaelen_current_memories() -> Array:
 	if campaign_kaelen_memory_store == null:
 		return []
 	return campaign_kaelen_memory_store.current_memories()
+
+
+func record_kaelen_line_playback(
+	line_text: String,
+	event_kind: String = "",
+	context: Dictionary = {}
+) -> void:
+	var clean_line := line_text.strip_edges()
+	if clean_line.is_empty():
+		return
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null \
+			or campaign_chronicle_store == null \
+			or campaign_kaelen_memory_store == null:
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var clean_kind := event_kind.strip_edges()
+	if clean_kind.is_empty():
+		clean_kind = "kaelen_line"
+	var fingerprint := clean_line.sha256_text()
+	var payload := context.duplicate(true)
+	payload.merge({
+		"speaker_id": "kaelen",
+		"speaker_name": "Broker Kaelen",
+		"event_kind": clean_kind,
+		"line_fingerprint": fingerprint,
+		"line_text": clean_line,
+	}, true)
+	var subjects := [campaign_chronicle_store.campaign["id"]]
+	var appended := campaign_chronicle_store.append_event(
+		"kaelen_line_delivered",
+		subjects,
+		payload,
+		str(active.get("checkpoint_id", ""))
+	)
+	if not bool(appended.get("ok", false)):
+		return
+	var event: Dictionary = appended.get("event", {}) \
+		if appended.get("event", {}) is Dictionary else {}
+	var summary := "Kaelen delivered a %s line to Shiny." % clean_kind
+	var remembered := campaign_kaelen_memory_store.append_memory(
+		"observation",
+		summary,
+		[],
+		str(event.get("timeline_id", "")),
+		str(active.get("checkpoint_id", "")),
+		int(event.get("sequence", -1)),
+		"",
+		{
+			"line_fingerprint": fingerprint,
+			"event_kind": clean_kind,
+		}
+	)
+	if not bool(remembered.get("ok", false)):
+		push_warning("[GameRoot] Kaelen line playback memory was not retained.")
+	_sync_checkpoint_chronicle_context()
 
 
 func remember_generated_quest_idea(

@@ -405,14 +405,16 @@ func _test_live_kaelen_prompts_do_not_read_protected_story_fields() -> void:
 func _test_kaelen_reaction_bundle_is_mission_keyed() -> void:
 	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	var quest_file := FileAccess.open("res://scripts/QuestManager.gd", FileAccess.READ)
+	var game_root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
 	_expect(
-		ui_file != null and quest_file != null,
+		ui_file != null and quest_file != null and game_root_file != null,
 		"Could not inspect Kaelen reaction bundle persistence wiring."
 	)
-	if ui_file == null or quest_file == null:
+	if ui_file == null or quest_file == null or game_root_file == null:
 		return
 	var ui_source := ui_file.get_as_text()
 	var quest_source := quest_file.get_as_text()
+	var game_root_source := game_root_file.get_as_text()
 	_expect(
 		not ui_source.contains("cached_completion_line")
 			and not ui_source.contains("cached_abandon_line")
@@ -431,6 +433,18 @@ func _test_kaelen_reaction_bundle_is_mission_keyed() -> void:
 			and quest_source.contains("mission_runtime_id")
 			and quest_source.contains("func active_kaelen_reaction_line"),
 		"Kaelen completion/abandon reactions are not stored as mission-keyed bundles."
+	)
+	_expect(
+		ui_source.contains("func _record_kaelen_line_playback")
+			and ui_source.contains("record_kaelen_line_playback")
+			and ui_source.contains("mission_completion")
+			and ui_source.contains("mission_abandon")
+			and ui_source.contains("agent_handoff")
+			and game_root_source.contains("func record_kaelen_line_playback")
+			and game_root_source.contains("\"kaelen_line_delivered\"")
+			and game_root_source.contains("\"line_fingerprint\"")
+			and game_root_source.contains("campaign_kaelen_memory_store.append_memory"),
+		"Kaelen delivered lines are not recorded as chronicle/memory playback events."
 	)
 
 

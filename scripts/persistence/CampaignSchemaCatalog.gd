@@ -695,6 +695,15 @@ static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) ->
 		_require_nonempty_string(memory, "category", result, prefix)
 		_validate_id_array(memory, "fact_refs", "fact", result, prefix)
 		_require_nonempty_string(memory, "summary", result, prefix)
+		if memory.has("line_fingerprint") \
+				and not _is_sha256_hex(str(memory.get("line_fingerprint", ""))):
+			result.add_error(
+				"invalid_line_fingerprint",
+				"line_fingerprint must be a SHA-256 hex string.",
+				"%sline_fingerprint" % prefix
+			)
+		if memory.has("event_kind"):
+			_require_nonempty_string(memory, "event_kind", result, prefix)
 		var status := str(memory.get("timeline_status", ""))
 		if status not in ["current", "discarded"]:
 			result.add_error(
@@ -1133,3 +1142,17 @@ static func _is_whole_number(value: Variant) -> bool:
 		float(value),
 		floorf(float(value))
 	)
+
+
+static func _is_sha256_hex(value: String) -> bool:
+	var clean := value.strip_edges()
+	if clean.length() != 64:
+		return false
+	for i in range(clean.length()):
+		var code := clean.unicode_at(i)
+		var is_digit := code >= 48 and code <= 57
+		var is_lower_hex := code >= 97 and code <= 102
+		var is_upper_hex := code >= 65 and code <= 70
+		if not (is_digit or is_lower_hex or is_upper_hex):
+			return false
+	return true
