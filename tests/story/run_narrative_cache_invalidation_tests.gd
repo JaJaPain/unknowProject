@@ -29,32 +29,70 @@ func _test_store_and_scheduler_discard_stale_disposable_work() -> void:
 	store.upsert_entry(_cache_entry("cache.current", "beat.current", false))
 	store.upsert_entry(_cache_entry("cache.stale", "beat.old", false))
 	store.upsert_entry(_cache_entry("cache.accepted", "beat.old", true))
+	store.upsert_entry(_cache_entry(
+		"cache.knowledge_stale",
+		"beat.current",
+		false,
+		{"allowed_facts_fingerprint": "facts.old"}
+	))
+	store.upsert_entry(_cache_entry(
+		"cache.relationship_stale",
+		"beat.current",
+		false,
+		{"relationship_tier": "wary"}
+	))
 	var discarded: Dictionary = store.discard_entries_outside_context({
 		"timeline_id": "timeline.current",
 		"story_revision": 4,
 	})
 	var stale: Dictionary = store.invalidate_unconsumed_stale_offers({
 		"story_beat_id": "beat.old",
+		"allowed_facts_fingerprint": "facts.old",
+		"relationship_tier": "wary",
 	})
 	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
 	var scheduler: RefCounted = SchedulerType.new()
 	scheduler.queue_job(_job("job.current", "beat.current", false))
 	scheduler.queue_job(_job("job.stale", "beat.old", false))
 	scheduler.queue_job(_job("job.frozen", "beat.old", true))
+	scheduler.queue_job(_job(
+		"job.knowledge_stale",
+		"beat.current",
+		false,
+		{"allowed_facts_fingerprint": "facts.old"}
+	))
+	scheduler.queue_job(_job(
+		"job.relationship_stale",
+		"beat.current",
+		false,
+		{"relationship_tier": "wary"}
+	))
 	var scheduler_discarded: Dictionary = scheduler.discard_stale_jobs({
 		"story_beat_id": "beat.old",
+		"allowed_facts_fingerprint": "facts.old",
+		"relationship_tier": "wary",
 	})
 	_expect(
 		bool(discarded.get("ok", false))
 			and bool(stale.get("ok", false))
 			and reopened.get_entry("cache.stale").is_empty()
+			and reopened.get_entry("cache.knowledge_stale").is_empty()
+			and reopened.get_entry("cache.relationship_stale").is_empty()
 			and not reopened.get_entry("cache.current").is_empty()
 			and not reopened.get_entry("cache.accepted").is_empty(),
 		"Cache store did not discard stale disposable entries while preserving accepted truth."
 	)
 	_expect(
-		(scheduler_discarded.get("removed", []) as Array) == ["job.stale"]
+		(scheduler_discarded.get("removed", []) as Array) == [
+			"job.stale",
+			"job.knowledge_stale",
+			"job.relationship_stale",
+		]
 			and str(scheduler.get_job("job.stale").get("status", ""))
+				== "stale_discarded"
+			and str(scheduler.get_job("job.knowledge_stale").get("status", ""))
+				== "stale_discarded"
+			and str(scheduler.get_job("job.relationship_stale").get("status", ""))
 				== "stale_discarded"
 			and str(scheduler.get_job("job.current").get("status", "")) == "queued"
 			and str(scheduler.get_job("job.frozen").get("status", "")) == "accepted",
@@ -62,8 +100,13 @@ func _test_store_and_scheduler_discard_stale_disposable_work() -> void:
 	)
 
 
-func _cache_entry(cache_key: String, beat_id: String, truth_frozen: bool) -> Dictionary:
-	return {
+func _cache_entry(
+	cache_key: String,
+	beat_id: String,
+	truth_frozen: bool,
+	overrides: Dictionary = {}
+) -> Dictionary:
+	var entry := {
 		"cache_key": cache_key,
 		"kind": "mission_conversation",
 		"subject_id": cache_key,
@@ -85,10 +128,17 @@ func _cache_entry(cache_key: String, beat_id: String, truth_frozen: bool) -> Dic
 			"accept_standard_response": "Logged.",
 		},
 	}
+	entry.merge(overrides, true)
+	return entry
 
 
-func _job(job_id: String, beat_id: String, truth_frozen: bool) -> Dictionary:
-	return {
+func _job(
+	job_id: String,
+	beat_id: String,
+	truth_frozen: bool,
+	overrides: Dictionary = {}
+) -> Dictionary:
+	var job := {
 		"job_id": job_id,
 		"cache_key": "%s.cache" % job_id,
 		"kind": "mission_conversation",
@@ -102,6 +152,8 @@ func _job(job_id: String, beat_id: String, truth_frozen: bool) -> Dictionary:
 		"truth_frozen": truth_frozen,
 		"status": "accepted" if truth_frozen else "queued",
 	}
+	job.merge(overrides, true)
+	return job
 
 
 func _write_campaign() -> void:
