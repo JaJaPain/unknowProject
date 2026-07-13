@@ -1011,10 +1011,53 @@ func _human_join(values: Array[String]) -> String:
 func _init_ship_behavior_observer() -> void:
 	ship_behavior_observer = ShipBehaviorObserverType.new()
 	ship_behavior_observer.name = "ShipBehaviorObserver"
+	ship_behavior_observer.context_provider = _ship_behavior_safe_context
 	add_child(ship_behavior_observer)
 	GlobalState.ship_movement_event.connect(
 		ship_behavior_observer._on_ship_movement_event
 	)
+
+
+# Safe, player-visible context stamped onto every semantic movement event.
+# Only knowledge the player and the ship already have: hull band, the active
+# mission's public beat, whether this system is new, and whether the player
+# is off the mission's system. Never story secrets.
+func _ship_behavior_safe_context() -> Dictionary:
+	var context := {}
+	if player != null and is_instance_valid(player):
+		var hull_fraction: float = clampf(
+			float(player.health) / maxf(1.0, float(player.max_health)),
+			0.0,
+			1.0
+		)
+		var band := "healthy"
+		if hull_fraction < 0.4:
+			band = "critical"
+		elif hull_fraction < 0.7:
+			band = "worn"
+		context["hull_band"] = band
+	var quest: Dictionary = QuestManager.active_quest
+	if quest.is_empty():
+		context["mission_beat"] = ""
+		context["route_deviation"] = "no_mission"
+	else:
+		context["mission_beat"] = "%s (%s)" % [
+			str(quest.get("title", "")),
+			str(quest.get("objective_type", "")),
+		]
+		var mission_system := str(quest.get("system_id", ""))
+		context["route_deviation"] = (
+			"off_mission_system"
+			if not mission_system.is_empty()
+				and mission_system != str(GlobalState.current_system_id)
+			else "in_mission_system"
+		)
+	context["system_status"] = (
+		"returning"
+		if system_states.has(str(GlobalState.current_system_id))
+		else "new"
+	)
+	return context
 
 
 func _init_event_scheduler() -> void:

@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_returned_to_same_station()
 	_test_clean_and_rough_transits()
 	_test_semantic_rate_limiting()
+	_test_safe_context_enrichment()
 
 	if _failures.is_empty():
 		print("[PASS] Ship behavior observer tests")
@@ -216,6 +217,51 @@ func _test_semantic_rate_limiting() -> void:
 		) == 1
 			and not bool(snapshot2.get("in_transit", true)),
 		"Suppressed rough arrival was not reflected in the state snapshot."
+	)
+
+
+func _test_safe_context_enrichment() -> void:
+	var observer := ObserverType.new()
+	var received := _capture(observer)
+	observer.context_provider = func() -> Dictionary:
+		return {
+			"hull_band": "worn",
+			"mission_beat": "Kova Smelter Feed (DELIVER_ORE)",
+			"system_status": "new",
+			"route_deviation": "in_mission_system",
+			# A provider key colliding with an event field must not win.
+			"seconds_since_last_boost": -1.0,
+		}
+	observer.observe(EventsType.GATE_DEPARTURE, {}, 50.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 100.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 165.0)
+	observer.free()
+	_expect(
+		_ids(received) == ["boost_again_quickly"],
+		"Context enrichment test emitted the wrong events: %s"
+			% str(_ids(received))
+	)
+	if received.size() != 1:
+		return
+	var context: Dictionary = received[0]["context"]
+	_expect(
+		str(context.get("hull_band", "")) == "worn"
+			and str(context.get("mission_beat", ""))
+				== "Kova Smelter Feed (DELIVER_ORE)"
+			and str(context.get("system_status", "")) == "new"
+			and str(context.get("route_deviation", ""))
+				== "in_mission_system",
+		"Provider safe context was not merged onto the semantic event."
+	)
+	_expect(
+		absf(float(context.get("seconds_since_last_boost", 0.0)) - 65.0)
+			< 0.01,
+		"Provider context overwrote an event-specific field."
+	)
+	var recent: Array = context.get("recent_actions", [])
+	_expect(
+		recent == ["gate_departure", "boost_activated", "boost_activated"],
+		"Recent action streak was wrong: %s" % str(recent)
 	)
 
 

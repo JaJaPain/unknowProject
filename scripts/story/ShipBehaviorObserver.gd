@@ -60,6 +60,17 @@ var _last_semantic_emit_time := -INF
 var _last_emit_time_by_event: Dictionary = {}
 var _suppressed_counts: Dictionary = {}
 
+# How many raw event ids the recent-action streak keeps.
+const RECENT_EVENT_LIMIT := 6
+
+# Host-supplied safe context (hull band, mission beat, new/returning system,
+# route deviation). Returns a Dictionary; merged into every semantic event
+# without overwriting event-specific fields. Injectable so tests stay
+# deterministic and the observer never hard-depends on live game state.
+var context_provider: Callable = Callable()
+
+var _recent_events: Array[String] = []
+
 
 static func all_semantic() -> Array[String]:
 	return ALL_SEMANTIC.duplicate()
@@ -94,7 +105,13 @@ func _emit_semantic(
 		return false
 	_last_semantic_emit_time = now_seconds
 	_last_emit_time_by_event[event_id] = now_seconds
-	semantic_movement_event.emit(event_id, context)
+	var enriched := context.duplicate(true)
+	enriched["recent_actions"] = _recent_events.duplicate()
+	if context_provider.is_valid():
+		var extra: Variant = context_provider.call()
+		if extra is Dictionary:
+			enriched.merge(extra, false)
+	semantic_movement_event.emit(event_id, enriched)
 	return true
 
 
@@ -103,6 +120,9 @@ func _on_ship_movement_event(event_id: String, context: Dictionary) -> void:
 
 
 func observe(event_id: String, context: Dictionary, now_seconds: float) -> void:
+	_recent_events.append(event_id)
+	while _recent_events.size() > RECENT_EVENT_LIMIT:
+		_recent_events.pop_front()
 	match event_id:
 		ShipMovementEventsType.BOOST_ACTIVATED:
 			_observe_boost(now_seconds)
