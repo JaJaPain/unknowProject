@@ -139,6 +139,14 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 ---
 
+### Mission state machine never uses READY_TO_TURN_IN — every completion warns "Invalid transition"
+**Spotted:** 2026-07-13 (headless test output while proving the Kaelen bundle save/reload exit gate)
+**Severity:** Low — warning noise only, no behavior break
+**Description:** `MissionInstance.VALID_TRANSITIONS` requires ACTIVE → READY_TO_TURN_IN → COMPLETED, but no production code ever transitions an instance to READY_TO_TURN_IN (only `MissionInstance.gd` itself references it). So every `QuestManager.complete_quest()` hits `focused.transition_to(State.COMPLETED)` from ACTIVE, logs `[MissionInstance] Invalid transition: ACTIVE -> COMPLETED`, and removes the instance while still ACTIVE. Harmless today because removal follows immediately, but the state machine is dead weight and the warning pollutes every turn-in.
+**Where to look:** `QuestManager._mark_objective_ready_if_completed()` (scripts/QuestManager.gd:783) is the natural place to transition the focused instance to READY_TO_TURN_IN (and back to ACTIVE if progress can regress), or route `complete_quest()` through it. Keep `_instance_state` save/restore round-trip intact. A spawn-task chip was filed for this.
+
+---
+
 ## Fixed
 
 | Date | Bug | Fix |

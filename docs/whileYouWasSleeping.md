@@ -1659,3 +1659,50 @@ validation, speech_service, game_content_registry, local_model_gateway.
   set_ignore_time_scale(true); watchdog + Kaelen-handoff timers too. Phases now
   last real wall-clock seconds regardless of engine time scale. Parse green.
   Still needs a real playtest to feel-tune the per-phase durations.
+
+## Session 2026-07-13 (living narrative: Phase 7 exit gate + Phase 8A start)
+
+### Kaelen reaction bundle save/reload exit gate -- PROVEN (a9408e2)
+- New tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd runs
+  the real pipeline end to end: accept_quest -> store acceptance-time Kaelen
+  bundle -> capture_all_quests -> SaveMigrator.prepare_for_save -> JSON on
+  disk -> load_for_runtime -> restore_all_quests (reset_for_restart between,
+  simulating app restart) -> deliver_partial completes objective ->
+  quest_objective_completed_details snapshot refreshes the bundle ->
+  turn-in reads the refreshed contextual line before complete_quest.
+- Also proves a stale runtime id cannot clobber a restored bundle.
+- Phase 7 exit gate "save after accepting, reload, complete, turn in"
+  checked in the plan with this evidence. The two remaining Phase 7 gates
+  (3 causes -> 3 distinct reactions; 50 turn-ins w/o stock line) need live
+  LLM gameplay runs -- intentionally left unchecked.
+- Found pre-existing: EVERY complete_quest() warns
+  "[MissionInstance] Invalid transition: ACTIVE -> COMPLETED" because
+  nothing ever transitions instances to READY_TO_TURN_IN. Harmless (the
+  instance is removed right after) but noisy; flagged as a spawn-task chip.
+
+### Phase 8A slices 1-3: semantic movement events (70a5c7d, 88b77ee, 11337e4)
+- scripts/story/ShipMovementEvents.gd: registry of 12 raw event ids.
+- GlobalState.ship_movement_event + emit_ship_movement_event() validates ids.
+- PlayerShip emits: boost activated/rejected (with reason), autopilot
+  started/retargeted/cancelled (mode + safe target category), evasive
+  maneuver, stall route replans, severe hull impact (single hit >= 10% max
+  hull). Dock/undock emit from the is_docked setter -- single choke point
+  for all 9 GameRoot/UIManager assignment sites.
+- GameRoot emits gate_departure/system_arrival around the jump transition
+  and spawns ShipBehaviorObserver in _ready.
+- scripts/story/ShipBehaviorObserver.gd aggregates raw events into
+  boost_again_quickly / changed_mind_again / returned_to_same_station /
+  clean_long_transit / rough_arrival with tunable windows; time is injected
+  through observe() so tests are deterministic. Rate limits: 30s global
+  spacing + 180s per-event cooldown; suppressed events still update state;
+  state_snapshot() lets N.O.V.A. read instead of being pushed.
+- Tests: tests/story/run_ship_movement_event_tests.gd,
+  tests/story/run_ship_behavior_observer_tests.gd. Parse check green after
+  every slice.
+- NOT done yet (next in 8A): safe context enrichment (mission beat, hull
+  band, new/returning system, route deviation) on semantic events, then
+  Phase 8B campaign-aware line banks. Nothing consumes
+  semantic_movement_event yet -- Nova wiring comes with 8B.
+- Headless note: AudioManager.play_sfx errors out-of-bounds in headless if
+  a bare PlayerShip calls play_align; the movement-event test avoids the
+  boost success path behaviorally for that reason (source-level checked).
