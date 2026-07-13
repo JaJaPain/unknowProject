@@ -157,6 +157,10 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 	_expect(bool(packet.get("ok", false)), "Kaelen prompt packet did not build.")
 	var mission_packet: Dictionary = packet.get("mission", {}) \
 		if packet.get("mission", {}) is Dictionary else {}
+	var earned_aftermath: Dictionary = packet.get("earned_aftermath", {}) \
+		if packet.get("earned_aftermath", {}) is Dictionary else {}
+	var earned_visible_effect: Dictionary = earned_aftermath.get("visible_effect", {}) \
+		if earned_aftermath.get("visible_effect", {}) is Dictionary else {}
 	_expect(
 		str(mission_packet.get("cause_id", "")) == "cause.city_attack"
 			and str(mission_packet.get("stake", "")).contains("home city")
@@ -168,8 +172,10 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 	)
 	_expect(
 		bool(packet.get("allow_safe_after_completion_reveal", false))
-			and str(packet.get("earned_aftermath", {}).get("world_consequence", ""))
-				.contains("family district"),
+			and str(earned_aftermath.get("world_consequence", ""))
+				.contains("family district")
+			and bool(earned_visible_effect.get("has_visible_effect", false))
+			and str(earned_visible_effect.get("effect_type", "")) == "people_safe",
 		"Completion packet did not expose safe earned aftermath context."
 	)
 	_expect(
@@ -180,12 +186,15 @@ func _test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks() -> 
 	_assert_no_secret_tokens(JSON.stringify(packet), "kaelen_prompt_packet")
 	var outcome_profile: Dictionary = mission_packet.get("outcome_profile", {}) \
 		if mission_packet.get("outcome_profile", {}) is Dictionary else {}
+	var profile_visible_effect: Dictionary = outcome_profile.get("visible_effect", {}) \
+		if outcome_profile.get("visible_effect", {}) is Dictionary else {}
 	_expect(
 		str(outcome_profile.get("turn_in_variant", ""))
 			== KaelenKindsType.TURN_IN_CLEAN
 			and str(outcome_profile.get("outcome_tone", ""))
 				== "clean_with_story_fact"
-			and bool(outcome_profile.get("learned_story_fact", false)),
+			and bool(outcome_profile.get("learned_story_fact", false))
+			and bool(profile_visible_effect.get("has_visible_effect", false)),
 		"Kaelen packet did not classify a clean turn-in with story facts."
 	)
 
@@ -364,6 +373,12 @@ func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> voi
 			and source.contains("we got paid in full")
 			and source.contains("Do not become sentimental for the whole line"),
 		"Kaelen completion prompt does not preserve the heart-then-profit turn-in shape."
+	)
+	_expect(
+		source.contains("earned_aftermath.visible_effect.has_visible_effect")
+			and source.contains("name that effect once in plain language")
+			and source.contains("do not invent shields, convoys, contacts, evidence"),
+		"Kaelen completion prompt does not gate visible-effect naming on the safe packet."
 	)
 	_expect(
 		not source.contains("Clean and Easy done? Good. Your credits hit my ledger"),

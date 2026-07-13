@@ -7,6 +7,24 @@ const KaelenInteractionKindsType := preload(
 )
 
 const MAX_MEMORY_SNIPPETS := 6
+const VISIBLE_EFFECT_MARKER_GROUPS := [
+	{
+		"type": "infrastructure_restored",
+		"markers": ["shield", "relay", "line", "grid", "infrastructure"],
+	},
+	{
+		"type": "route_reopened",
+		"markers": ["convoy", "route", "lane", "hauler", "traffic"],
+	},
+	{
+		"type": "people_safe",
+		"markers": ["contact", "family", "district", "city", "clinic", "refugee"],
+	},
+	{
+		"type": "case_advanced",
+		"markers": ["evidence", "case", "file", "record", "witness"],
+	},
+]
 
 
 static func build_packet(
@@ -106,6 +124,7 @@ static func _earned_aftermath_projection(mission_state: Dictionary) -> Dictionar
 	return {
 		"public_because": str(metadata.get("public_because", "")),
 		"world_consequence": str(outcome.get("world_consequence", "")),
+		"visible_effect": _visible_effect_projection(metadata, outcome),
 		"completion_fact_ids": _string_array(metadata.get("completion_fact_ids", [])),
 	}
 
@@ -115,6 +134,7 @@ static func _safe_outcome_summary(outcome: Dictionary) -> Dictionary:
 		"world_consequence": str(outcome.get("world_consequence", "")),
 		"completion_status": str(outcome.get("completion_status", "")),
 		"outcome_band": str(outcome.get("outcome_band", "")),
+		"visible_effect": _visible_effect_projection({}, outcome),
 	}
 
 
@@ -122,9 +142,12 @@ static func _outcome_profile(
 	mission_state: Dictionary,
 	outcome: Dictionary
 ) -> Dictionary:
+	var metadata: Dictionary = mission_state.get("narrative_metadata", {}) \
+		if mission_state.get("narrative_metadata", {}) is Dictionary else {}
 	var timing := _timing_profile(mission_state, outcome)
 	var partial_delivery := _partial_delivery_profile(mission_state)
 	var terms := _accepted_term_profile(mission_state)
+	var visible_effect := _visible_effect_projection(metadata, outcome)
 	var learned_fact_ids := _string_array(
 		mission_state.get("conversation_learned_fact_ids", [])
 	)
@@ -140,9 +163,44 @@ static func _outcome_profile(
 		"timing": timing,
 		"partial_delivery": partial_delivery,
 		"accepted_term_variant": terms,
+		"visible_effect": visible_effect,
 		"learned_fact_ids": learned_fact_ids,
 		"learned_story_fact": not learned_fact_ids.is_empty(),
 	}
+
+
+static func _visible_effect_projection(
+	metadata: Dictionary,
+	outcome: Dictionary
+) -> Dictionary:
+	var consequence := str(outcome.get("world_consequence", "")).strip_edges()
+	var effect_type := _visible_effect_type(consequence)
+	if effect_type.is_empty():
+		return {
+			"has_visible_effect": false,
+			"effect_type": "",
+			"effect_text": "",
+			"source": "",
+		}
+	return {
+		"has_visible_effect": true,
+		"effect_type": effect_type,
+		"effect_text": consequence,
+		"source": "outcome_snapshot.world_consequence",
+		"public_because": str(metadata.get("public_because", "")),
+	}
+
+
+static func _visible_effect_type(effect_text: String) -> String:
+	var lower := effect_text.to_lower()
+	if lower.is_empty():
+		return ""
+	for group in VISIBLE_EFFECT_MARKER_GROUPS:
+		var markers: Array = group.get("markers", [])
+		for marker in markers:
+			if lower.contains(str(marker)):
+				return str(group.get("type", "visible_effect"))
+	return ""
 
 
 static func _timing_profile(
