@@ -920,6 +920,8 @@ func _test_dev_story_snapshot_reports_narrative_cache_diagnostics() -> void:
 		source.contains("func _dev_format_narrative_cache_summary")
 			and source.contains("scheduler.diagnostic_summary()")
 			and source.contains("ready payloads=%d")
+			and source.contains("hits=%d")
+			and source.contains("misses=%d")
 			and source.contains("fallback uses=%d")
 			and source.contains("generated replacements=%d")
 			and source.contains("_dev_format_count_dictionary"),

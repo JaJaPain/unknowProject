@@ -8754,8 +8754,10 @@ func _dev_format_narrative_cache_summary() -> String:
 	var source_counts: Dictionary = summary.get("source_counts", {}) \
 		if summary.get("source_counts", {}) is Dictionary else {}
 	return (
-		"Narrative cache: ready payloads=%d | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
+		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
 			int(summary.get("ready_payloads", 0)),
+			int(summary.get("cache_lookup_hit", 0)),
+			int(summary.get("cache_lookup_miss", 0)),
 			_dev_format_count_dictionary(content_counts),
 			_dev_format_count_dictionary(source_counts),
 			int(summary.get("fallback_uses", 0)),
