@@ -866,6 +866,7 @@ Primary files:
 - [x] On target/fly-to station: current station agent offer, mechanic greeting, likely lounge openers.
 - [ ] On system arrival: one valid offer for each available story-relevant contact, plus system N.O.V.A./ambient banks.
   - 2026-07-12: `ff99985`/`6bdbfe0` added planner/runtime wiring for system-arrival current-system agent, Kaelen, N.O.V.A., and visible-station prefetch jobs. Full valid-offer-per-contact generation remains open.
+  - 2026-07-12: `6ad647c`/`a3ec983` added contact-profile aware system-arrival jobs for registered faction agents and generated station faction contacts. Follow-up remains: execute/validate those queued contact-offer jobs into ready mission offers.
 - [x] On mission acceptance: persist baseline abandon and likely outcome variants.
 - [x] On objective progress >= 70%: refresh outcome snapshot and queue likely turn-in variants.
 - [x] On objective completion: P0 exact turn-in generation while the player travels back.
@@ -1405,6 +1406,7 @@ Add newest entries at the top. Include date, phase/checkbox, decision or evidenc
 
 | Date | Phase | Entry | Evidence / follow-up |
 |---|---|---|---|
+| 2026-07-12 | Phase 6E | Added contact-aware system-arrival prefetching: system arrival events now include real registered faction agents and generated station faction contacts, and the scheduler queues one contact-offer bundle per contact. | Commits `6ad647c`, `a3ec983`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. Follow-up: add the worker/validation path that turns these contact jobs into ready offers. |
 | 2026-07-12 | Phase 6E | Added a central new-campaign loading prefetch event and queued it from the fresh-campaign loading release path. This captures station offer/mechanic/lounge intent, Kaelen startup bank, N.O.V.A. startup bank, and first chapter-beat bundles in the scheduler before gameplay resumes. | Commits `4cbfd54`, `9da52eb`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. Follow-up: add the scheduler worker/ready gate so bank jobs become actual generated-ready content before marking the full checkbox complete. |
 | 2026-07-12 | Phase 6E | Completed the chapter-packet prefetch trigger path: the existing 60% consumption threshold requests the next chapter packet, and successful packet commits now queue first interaction bundles for the first beats. | Commits `8278c61`, `ef09053`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
 | 2026-07-12 | Phase 6E | Added a scheduler entrypoint for low-priority ambient/pool refill work. Refills now queue only when the pool is below threshold, idle, and no higher-priority jobs are pending/in flight. | Commit `62bd5ca`. Tests: `run_narrative_cache_scheduler_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. |
