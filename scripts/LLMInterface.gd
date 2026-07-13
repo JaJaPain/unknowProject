@@ -9,7 +9,11 @@ const ChapterNarrativeDirectorType := preload(
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
 const TIMEOUT_SECONDS = LocalModelGatewayType.REQUEST_TIMEOUTS["quest_dialogue"]
-const QUEST_CANDIDATE_TARGET_COUNT := 3
+# Quest offers are one constrained JSON bundle: offer line, objective, and all
+# player choice responses in one model call. Validation/scoring still runs on
+# the returned bundle, but we no longer pay the old sequential best-of-three
+# latency tax before selecting one.
+const QUEST_BUNDLE_CALL_COUNT := 1
 # Kaelen intro telemetry is written to user://kaelen_intro_stats.json so
 # counters survive game restarts. Read via get_kaelen_intro_stats().
 const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
@@ -2774,8 +2778,7 @@ func request_quest_generation(
 	
 	var headers: Array[String] = ["Content-Type: application/json"]
 	
-	print("[LLMInterface] Sending best-of-%d quest request to Ollama for faction: %s agent: %s" % [
-		QUEST_CANDIDATE_TARGET_COUNT,
+	print("[LLMInterface] Sending single constrained quest bundle request to Ollama for faction: %s agent: %s" % [
 		chosen_faction,
 		agent_name,
 	])
@@ -2789,6 +2792,8 @@ func request_quest_generation(
 			"agent_name": agent_name,
 			"objective_type": chosen_type,
 			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
+			"bundle_mode": "single_constrained",
+			"call_count": QUEST_BUNDLE_CALL_COUNT,
 		}
 	)
 	_start_quest_candidate_batch(
@@ -2800,6 +2805,8 @@ func request_quest_generation(
 			"agent_name": agent_name,
 			"objective_type": chosen_type,
 			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
+			"bundle_mode": "single_constrained",
+			"call_count": QUEST_BUNDLE_CALL_COUNT,
 		}
 	)
 
@@ -2823,7 +2830,7 @@ func _start_quest_candidate_batch(
 
 
 func _start_next_quest_candidate() -> void:
-	if _quest_candidate_attempts_started >= QUEST_CANDIDATE_TARGET_COUNT:
+	if _quest_candidate_attempts_started >= QUEST_BUNDLE_CALL_COUNT:
 		_finish_quest_candidate_batch()
 		return
 
@@ -3081,7 +3088,7 @@ func _finish_quest_candidate_batch() -> void:
 	if best_candidate.is_empty():
 		GenerationDiagnostics.record_event(
 			"quest_generation",
-			"candidate_batch_failed",
+			"quest_bundle_failed",
 			"LLMInterface",
 			_quest_candidate_context.merged({
 				"candidate_count": _quest_candidate_results.size(),
@@ -3089,14 +3096,14 @@ func _finish_quest_candidate_batch() -> void:
 		)
 		_quest_candidate_results.clear()
 		_quest_candidate_requests.clear()
-		_trigger_fallback_with_reason("candidate_batch_failed")
+		_trigger_fallback_with_reason("quest_bundle_failed")
 		return
 	var total_elapsed := float(Time.get_ticks_msec() - request_start_time) / 1000.0
 	var score := int(best_candidate.get("score", 0))
 	var attempt := int(best_candidate.get("attempt", 0))
 	GenerationDiagnostics.record_event(
 		"quest_generation",
-		"candidate_batch_selected",
+		"quest_bundle_selected",
 		"LLMInterface",
 		_quest_candidate_context.merged({
 			"selected_attempt": attempt,
@@ -3105,8 +3112,8 @@ func _finish_quest_candidate_batch() -> void:
 		}, true)
 	)
 	print(
-		"[LLMInterface] Selected quest candidate %d/%d with score %d." %
-		[attempt, QUEST_CANDIDATE_TARGET_COUNT, score]
+		"[LLMInterface] Accepted quest bundle %d/%d with score %d." %
+		[attempt, QUEST_BUNDLE_CALL_COUNT, score]
 	)
 	var quest_data: Dictionary = best_candidate.get("quest_data", {})
 	_quest_candidate_results.clear()

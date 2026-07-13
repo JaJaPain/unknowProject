@@ -10,6 +10,7 @@ func _initialize() -> void:
 		_test_non_kaelen_speaker_leaks_are_repaired(llm)
 		_test_kaelen_speaker_keeps_shiny(llm)
 	_test_ui_choice_response_fallback_is_speaker_safe()
+	_test_quest_generation_uses_single_constrained_bundle_call()
 
 	if _failures.is_empty():
 		print("[PASS] Quest speaker rule validation tests")
@@ -99,6 +100,24 @@ func _test_ui_choice_response_fallback_is_speaker_safe() -> void:
 			)
 			and source.contains("Logged. The contract terms are recorded."),
 		"Choice response fallback is not speaker-safe for non-Kaelen quest givers."
+	)
+
+
+func _test_quest_generation_uses_single_constrained_bundle_call() -> void:
+	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect LLMInterface quest generation wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("const QUEST_BUNDLE_CALL_COUNT := 1")
+			and source.contains("single constrained quest bundle request")
+			and source.contains("\"bundle_mode\": \"single_constrained\"")
+			and source.contains("\"call_count\": QUEST_BUNDLE_CALL_COUNT")
+			and source.contains("_trigger_fallback_with_reason(\"quest_bundle_failed\")")
+			and not source.contains("QUEST_CANDIDATE_TARGET_COUNT")
+			and not source.contains("Sending best-of"),
+		"Quest generation still appears wired to the old sequential best-of-three path."
 	)
 
 

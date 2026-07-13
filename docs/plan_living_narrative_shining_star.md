@@ -845,7 +845,8 @@ Primary files:
 
 #### Phase 6C — Generation and retry policy
 
-- [ ] Replace sequential best-of-three quest calls with one tightly constrained bundle call.
+- [x] Replace sequential best-of-three quest calls with one tightly constrained bundle call.
+  - 2026-07-13: Legacy live quest generation now makes one constrained quest-bundle model call instead of a sequential best-of-three candidate batch; validation/scoring still gates the returned bundle before display, and failures now log as `quest_bundle_failed`.
 - [x] If validation fails, retry once in the background with precise field errors. Do not expose the offer until valid or degraded.
   - 2026-07-13: Narrative cache workers now pass validation/build errors through the scheduler's one-retry path before `degraded_required`; failed payloads are not marked ready or exposed.
 - [x] Build a deterministic, fact-slot-aware emergency composer for required fields. Its output must still include the real speaker, cause, stake, objective, and relationship; it is logged as degraded content.
