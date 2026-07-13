@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_changed_mind_again()
 	_test_returned_to_same_station()
 	_test_clean_and_rough_transits()
+	_test_semantic_rate_limiting()
 
 	if _failures.is_empty():
 		print("[PASS] Ship behavior observer tests")
@@ -160,6 +161,61 @@ func _test_clean_and_rough_transits() -> void:
 	_expect(
 		_ids(received) == ["clean_long_transit", "rough_arrival"],
 		"Transit aggregation was wrong: %s" % str(_ids(received))
+	)
+
+
+func _test_semantic_rate_limiting() -> void:
+	# Per-event cooldown: a second quick re-boost inside 180s is suppressed
+	# but still counted; a later one fires again.
+	var observer := ObserverType.new()
+	var received := _capture(observer)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 100.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 165.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 230.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 460.0)
+	observer.observe(EventsType.BOOST_ACTIVATED, {}, 520.0)
+	var snapshot: Dictionary = observer.state_snapshot()
+	observer.free()
+	_expect(
+		_ids(received) == ["boost_again_quickly", "boost_again_quickly"],
+		"Per-event cooldown did not gate repeat boost nags: %s"
+			% str(_ids(received))
+	)
+	_expect(
+		int(
+			(snapshot.get("suppressed_counts", {}) as Dictionary).get(
+				"boost_again_quickly", 0
+			)
+		) == 1,
+		"Suppressed semantic event was not counted in the state snapshot."
+	)
+
+	# Global spacing: a different semantic event right after one fired is
+	# suppressed, and the observer state still reflects the transit.
+	var observer2 := ObserverType.new()
+	var received2 := _capture(observer2)
+	observer2.observe(EventsType.BOOST_ACTIVATED, {}, 100.0)
+	observer2.observe(EventsType.BOOST_ACTIVATED, {}, 160.0)
+	observer2.observe(EventsType.GATE_DEPARTURE, {}, 165.0)
+	observer2.observe(EventsType.SEVERE_HULL_IMPACT, {}, 170.0)
+	observer2.observe(
+		EventsType.SYSTEM_ARRIVAL, {"system_id": "system.rough"}, 175.0
+	)
+	var snapshot2: Dictionary = observer2.state_snapshot()
+	observer2.free()
+	_expect(
+		_ids(received2) == ["boost_again_quickly"],
+		"Global spacing did not gate back-to-back semantic events: %s"
+			% str(_ids(received2))
+	)
+	_expect(
+		int(
+			(snapshot2.get("suppressed_counts", {}) as Dictionary).get(
+				"rough_arrival", 0
+			)
+		) == 1
+			and not bool(snapshot2.get("in_transit", true)),
+		"Suppressed rough arrival was not reflected in the state snapshot."
 	)
 
 
