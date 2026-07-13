@@ -279,6 +279,8 @@ _A pre-start cinematic that opens a NEW campaign and plants a core mystery hook.
 
 ---
 
+- [ ] **Opening cinematic N.O.V.A. tension-fill lines** -- after N.O.V.A. says there is "one more thing" she can try, fill the long pause before the system comes back with two scripted lines: *"Almost got it"* and then *"Almost"*. These should be part of the cold-open timing beat, not random reusable filler.
+
 ## Subtitle layer (accessibility + cinematic + audio fallback)
 _Not urgent — parked. The chatter feed already gives a running transcript for ambient lines (Nova/NPC flavor route through `emit_npc_flavor` → system chat), so we do NOT need a heavy separate subtitle engine. But the corner log isn't accessibility-grade and doesn't carry cinematic moments._
 
