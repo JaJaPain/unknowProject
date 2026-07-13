@@ -1025,7 +1025,8 @@ Primary files:
 
 #### Phase 8A — Semantic movement events
 
-- [ ] Add explicit signals/events for boost activated/rejected, autopilot started/cancelled/retargeted, evasive maneuver, gate departure, system arrival, dock/undock, major route replan, and severe hull impact. Do not infer narrative events by polling every frame in N.O.V.A.
+- [x] Add explicit signals/events for boost activated/rejected, autopilot started/cancelled/retargeted, evasive maneuver, gate departure, system arrival, dock/undock, major route replan, and severe hull impact. Do not infer narrative events by polling every frame in N.O.V.A.
+  - 2026-07-13: Added `ShipMovementEvents` registry (12 event ids) and a validated `GlobalState.ship_movement_event` channel via `emit_ship_movement_event()`. PlayerShip emits boost activated/rejected (with reason), autopilot started/retargeted/cancelled (with mode + safe target category), evasive maneuver, stall-driven route replans, and severe hull impacts (single hit ≥ 10% max hull); dock/undock emit from the `is_docked` setter so every GameRoot/UIManager assignment site routes through one choke point. GameRoot emits gate departure and system arrival around the jump transition. Covered by `tests/story/run_ship_movement_event_tests.gd` (behavioral for the registry, channel validation, dock/boost-rejected/hull paths; source-level for tree-dependent emitters).
 - [ ] Aggregate repeated low-level actions in `ShipBehaviorObserver` into semantic events such as `boost_again_quickly`, `changed_mind_again`, `returned_to_same_station`, `clean_long_transit`, and `rough_arrival`.
 - [ ] Rate-limit semantic events before they reach N.O.V.A.; the observer reports state, N.O.V.A. decides whether speech is worth it.
 - [ ] Carry safe context: target category/display name if known, current mission beat, hull band, recent action streak, new/returning system, and whether the player is deviating from a selected mission route.

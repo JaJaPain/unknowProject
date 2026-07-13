@@ -15,6 +15,9 @@ const GATE_TRAVEL_MINUTES := 45
 const DOCK_SERVICE_MINUTES := 10
 const UNDOCK_SERVICE_MINUTES := 5
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
+const ShipMovementEventsType := preload(
+	"res://scripts/story/ShipMovementEvents.gd"
+)
 const CampaignSlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
@@ -304,6 +307,13 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 			and source_gate.has_method("get_world_id")
 		else ""
 	)
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.GATE_DEPARTURE,
+		{
+			"destination_system_id": runtime_system_id,
+			"source_gate_id": source_gate_id,
+		}
+	)
 	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
 	# Use the canonical FOV (not the live camera.fov) so a previously-polluted
 	# wide value can't get re-captured and re-applied as the "rest" FOV.
@@ -482,6 +492,13 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	_tick_events()
 	_maybe_emit_kaelen_system_arrival(runtime_system_id)
 	request_safe_checkpoint("gate_arrival", arrival_gate)
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.SYSTEM_ARRIVAL,
+		{
+			"system_id": runtime_system_id,
+			"arrival_gate_id": runtime_gate_id,
+		}
+	)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
 	if ui_mgr and ui_mgr.has_method("refresh_overview"):

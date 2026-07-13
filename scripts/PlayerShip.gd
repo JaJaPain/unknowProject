@@ -4,14 +4,30 @@ const NavigationRoutePlannerType := preload(
 	"res://scripts/navigation/NavigationRoutePlanner.gd"
 )
 const ThrusterBankType := preload("res://scripts/visuals/ThrusterBank.gd")
+const ShipMovementEventsType := preload(
+	"res://scripts/story/ShipMovementEvents.gd"
+)
 const WORLD_PICK_DISTANCE := 100000.0
+# A single hit that costs at least this fraction of max hull (after shields)
+# counts as a severe hull impact for the movement-event channel.
+const SEVERE_HULL_IMPACT_FRACTION := 0.1
 
 @export var max_speed: float = 25.0
 @export var max_health: float = 100.0
 var health: float = 100.0
 var faction: String = "player"
 var destroyed: bool = false
-var is_docked: bool = false
+# All dock/undock sites (GameRoot, UIManager) assign this flag, so the setter
+# is the single choke point for the docked/undocked movement events.
+var is_docked: bool = false:
+	set(value):
+		var changed := value != is_docked
+		is_docked = value
+		if changed:
+			GlobalState.emit_ship_movement_event(
+				ShipMovementEventsType.DOCKED if value
+				else ShipMovementEventsType.UNDOCKED
+			)
 @export var rotation_speed: float = 3.5
 
 var current_shield: float = 0.0
@@ -721,6 +737,7 @@ func begin_target_navigation(mode: String) -> bool:
 	var selected := GlobalState.active_target
 	if selected == null or not is_instance_valid(selected):
 		return false
+	var was_navigating := nav_mode != "MANUAL" and navigation_target != null
 	navigation_target = selected
 	_clear_planned_route()
 	route_notice_sent = false
@@ -729,10 +746,28 @@ func begin_target_navigation(mode: String) -> bool:
 	nav_mode = mode
 	if _nose_ray:
 		_nose_ray.enabled = true
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.AUTOPILOT_RETARGETED if was_navigating
+		else ShipMovementEventsType.AUTOPILOT_STARTED,
+		{
+			"mode": mode,
+			"target_category": _movement_target_category(selected),
+			"target_name": str(selected.name),
+		}
+	)
 	return true
 
 
+func _movement_target_category(target: Node3D) -> String:
+	for category in ["station", "jumpgate", "asteroid", "planet", "outpost"]:
+		if target.is_in_group(category):
+			return category
+	return "other"
+
+
 func cancel_autopilot(clear_motion: bool = false) -> void:
+	var was_navigating := nav_mode != "MANUAL" or navigation_target != null
+	var cancelled_mode := nav_mode
 	nav_mode = "MANUAL"
 	navigation_target = null
 	target_position = null
@@ -750,6 +785,11 @@ func cancel_autopilot(clear_motion: bool = false) -> void:
 	if clear_motion:
 		current_speed = 0.0
 		velocity = Vector3.ZERO
+	if was_navigating:
+		GlobalState.emit_ship_movement_event(
+			ShipMovementEventsType.AUTOPILOT_CANCELLED,
+			{"mode": cancelled_mode}
+		)
 
 
 func hard_stop() -> void:
@@ -759,11 +799,30 @@ func hard_stop() -> void:
 
 func activate_boost() -> bool:
 	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0:
+		var reason := "destroyed"
+		if not destroyed:
+			if is_docked:
+				reason = "docked"
+			elif boost_timer > 0.0:
+				reason = "already_boosting"
+			else:
+				reason = "cooldown"
+		GlobalState.emit_ship_movement_event(
+			ShipMovementEventsType.BOOST_REJECTED,
+			{
+				"reason": reason,
+				"cooldown_remaining": boost_cooldown_timer,
+			}
+		)
 		return false
 	boost_timer = BOOST_DURATION_SECONDS
 	boost_cooldown_timer = BOOST_COOLDOWN_SECONDS
 	health = maxf(1.0, health - BOOST_HEAT_DAMAGE)
 	AudioManager.play_align()
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.BOOST_ACTIVATED,
+		{"duration_seconds": BOOST_DURATION_SECONDS}
+	)
 	return true
 
 
@@ -794,7 +853,12 @@ func engage_evasive_maneuver(attacker: Node3D) -> bool:
 	# which is directly away from the attacker — so the ship turns its back on it.
 	target_position = global_position + away * EVASIVE_FLEE_DISTANCE
 	nav_mode = "MOVE_TO_POINT"
-	return activate_boost()
+	var boost_fired := activate_boost()
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.EVASIVE_MANEUVER,
+		{"boost_fired": boost_fired}
+	)
+	return boost_fired
 
 func _unhandled_input(event: InputEvent):
 	# While docked the dock UI owns the screen — block any world-bound
@@ -1607,6 +1671,13 @@ func _update_route_progress(steer_target: Vector3, delta: float) -> bool:
 		cancel_autopilot()
 		return false
 	route_stall_replans += 1
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.ROUTE_REPLANNED,
+		{
+			"mode": nav_mode,
+			"stall_replans": route_stall_replans,
+		}
+	)
 	_clear_planned_route()
 	current_speed = 0.0
 	velocity = Vector3.ZERO
@@ -3226,6 +3297,11 @@ func take_damage(amount: float, attacker_faction: String = ""):
 
 	if amount > 0.0:
 		health -= amount
+		if amount >= max_health * SEVERE_HULL_IMPACT_FRACTION:
+			GlobalState.emit_ship_movement_event(
+				ShipMovementEventsType.SEVERE_HULL_IMPACT,
+				{"hull_fraction": clampf(health / max_health, 0.0, 1.0)}
+			)
 
 	# Abort salvage run on any hit that actually connects (shields reduced or hull hit).
 	if _salvage_active:

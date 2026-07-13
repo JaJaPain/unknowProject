@@ -1682,6 +1682,23 @@ signal player_kill(faction_name: String)   # fires only when player lands the ki
 signal entities_changed()
 signal system_chatter_received(sender: String, message: String, color: Color)
 
+# Phase 8A semantic movement channel. Emitters publish raw movement events
+# here (boost, autopilot, gate, dock, hull); ShipBehaviorObserver aggregates
+# and rate-limits before N.O.V.A. sees anything. Never poll ship state per
+# frame for narrative — emit through here instead.
+signal ship_movement_event(event_id: String, context: Dictionary)
+
+const ShipMovementEventsType = preload("res://scripts/story/ShipMovementEvents.gd")
+
+func emit_ship_movement_event(event_id: String, context: Dictionary = {}) -> bool:
+	if not ShipMovementEventsType.is_valid(event_id):
+		push_warning(
+			"[GlobalState] Rejected unknown ship movement event: %s" % event_id
+		)
+		return false
+	ship_movement_event.emit(event_id, context)
+	return true
+
 var faction_kills: Dictionary = {
 	"zenith": 0,
 	"aurelia": 0,
