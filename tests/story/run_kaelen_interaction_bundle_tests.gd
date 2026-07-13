@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_story_manager_uses_scoped_handoff_pools()
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
 	_test_live_kaelen_handoff_prompt_uses_safe_packet()
+	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -217,6 +218,34 @@ func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:
 			and source.contains("Safe Kaelen interaction packet")
 			and source.contains("_kaelen_interaction_packet_clause("),
 		"Live Kaelen handoff/turn-in generation does not include the safe interaction packet."
+	)
+
+
+func _test_live_kaelen_prompts_do_not_read_protected_story_fields() -> void:
+	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect LLMInterface Kaelen prompt safety.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	for forbidden in [
+		"StoryManager.story_state.get(\"kaelen_hidden_angle\"",
+		"StoryManager.story_state.get(\"player_does_not_know_yet\"",
+		"StoryManager.story_state.get(\"kaelen_hidden_hints\"",
+		"StoryManager.story_state.get(\"kaelen_never_reveal\"",
+		"StoryManager.story_state[\"kaelen_hidden_angle\"]",
+		"StoryManager.story_state[\"player_does_not_know_yet\"]",
+		"StoryManager.story_state[\"kaelen_hidden_hints\"]",
+		"StoryManager.story_state[\"kaelen_never_reveal\"]",
+	]:
+		_expect(
+			not source.contains(forbidden),
+			"Live Kaelen prompt code reads protected story field: %s" % forbidden
+		)
+	_expect(
+		source.contains("Safe Kaelen interaction packet")
+			and source.contains("_kaelen_interaction_packet_clause")
+			and source.contains("Kaelen's current mood"),
+		"Live Kaelen prompts are not limited to safe packet/context/mood inputs."
 	)
 
 
