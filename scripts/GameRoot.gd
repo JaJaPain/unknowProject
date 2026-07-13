@@ -18,6 +18,9 @@ const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 const ShipMovementEventsType := preload(
 	"res://scripts/story/ShipMovementEvents.gd"
 )
+const ShipBehaviorObserverType := preload(
+	"res://scripts/story/ShipBehaviorObserver.gd"
+)
 const CampaignSlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
@@ -126,11 +129,13 @@ var last_autosave_notification_key: String = ""
 var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
 var event_scheduler = null
+var ship_behavior_observer: Node = null
 var ship_pre_generator: ShipPreGenerator = null
 
 func _ready() -> void:
 	_init_dev_panel()
 	_init_event_scheduler()
+	_init_ship_behavior_observer()
 	RuntimeTraceType.begin_session()
 	RuntimeTraceType.event("game", "root_ready", {
 		"arguments": OS.get_cmdline_user_args(),
@@ -1001,6 +1006,15 @@ func _human_join(values: Array[String]) -> String:
 		return "%s and %s" % [values[0], values[1]]
 	var head := values.slice(0, values.size() - 1)
 	return "%s, and %s" % [", ".join(head), values.back()]
+
+
+func _init_ship_behavior_observer() -> void:
+	ship_behavior_observer = ShipBehaviorObserverType.new()
+	ship_behavior_observer.name = "ShipBehaviorObserver"
+	add_child(ship_behavior_observer)
+	GlobalState.ship_movement_event.connect(
+		ship_behavior_observer._on_ship_movement_event
+	)
 
 
 func _init_event_scheduler() -> void:
