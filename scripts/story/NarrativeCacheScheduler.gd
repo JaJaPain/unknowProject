@@ -1108,16 +1108,32 @@ static func _duration_summary(values: Array[int]) -> Dictionary:
 		return {
 			"count": 0,
 			"avg_seconds": 0.0,
+			"p50_seconds": 0,
+			"p95_seconds": 0,
 			"max_seconds": 0,
 		}
+	var sorted_values := values.duplicate()
+	sorted_values.sort()
 	var total := 0
 	var max_value := 0
 	for value in values:
 		total += value
 		max_value = max(max_value, value)
+	var p50_index: int = clampi(
+		int(ceil(float(sorted_values.size()) * 0.50)) - 1,
+		0,
+		sorted_values.size() - 1
+	)
+	var p95_index: int = clampi(
+		int(ceil(float(sorted_values.size()) * 0.95)) - 1,
+		0,
+		sorted_values.size() - 1
+	)
 	return {
 		"count": values.size(),
 		"avg_seconds": float(total) / float(values.size()),
+		"p50_seconds": int(sorted_values[p50_index]),
+		"p95_seconds": int(sorted_values[p95_index]),
 		"max_seconds": max_value,
 	}
 

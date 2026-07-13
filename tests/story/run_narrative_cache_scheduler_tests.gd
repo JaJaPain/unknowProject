@@ -318,6 +318,7 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 			and int(summary.get("time_to_ready", {}).get("count", 0)) == 1
 			and float(summary.get("time_to_ready", {}).get("avg_seconds", -1.0))
 				>= 0.0
+			and int(summary.get("time_to_ready", {}).get("p95_seconds", -1)) >= 0
 			and int(summary.get("ready_payloads", 0)) == 1
 			and int(content_counts.get("story_line_bank", 0)) == 1
 			and int(source_counts.get("fallback_bank", 0)) == 1
