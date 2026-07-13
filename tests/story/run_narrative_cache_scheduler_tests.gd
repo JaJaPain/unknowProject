@@ -305,6 +305,7 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 	})
 	scheduler.ready_result_for_requester("job.metrics")
 	scheduler.ready_result_for_requester("missing.requester")
+	scheduler.mark_interaction_clicked_for_requester("job.metrics")
 	var summary: Dictionary = scheduler.diagnostic_summary()
 	var content_counts: Dictionary = summary.get("content_type_counts", {}) \
 		if summary.get("content_type_counts", {}) is Dictionary else {}
@@ -323,7 +324,9 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 			and int(summary.get("fallback_uses", 0)) == 2
 			and int(summary.get("generated_replacements", 0)) == 1
 			and int(summary.get("cache_lookup_hit", 0)) == 1
-			and int(summary.get("cache_lookup_miss", 0)) == 1,
+			and int(summary.get("cache_lookup_miss", 0)) == 1
+			and int(summary.get("interaction_clicked", 0)) == 1
+			and int(summary.get("ready_to_click", {}).get("count", 0)) == 1,
 		"Scheduler diagnostic summary did not report lifecycle durations."
 	)
 
@@ -849,6 +852,8 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 			and source.contains("func process_narrative_cache_job_for_requester")
 			and source.contains("func ready_cached_narrative_contact_offer")
 			and source.contains("func ready_cached_narrative_station_offer")
+			and source.contains("func _mark_narrative_cache_interaction_clicked")
+			and source.contains("mark_interaction_clicked_for_requester")
 			and source.contains("\"system_contact_offer_bundle\"")
 			and source.contains("\"current_station_agent_offer_bundle\"")
 			and source.contains("StoryAgentOfferBuilderType.can_build")

@@ -31,6 +31,7 @@ var _stats := {
 	"tts_failed": 0,
 	"cache_lookup_hit": 0,
 	"cache_lookup_miss": 0,
+	"interaction_clicked": 0,
 }
 var _paused := false
 var _pause_reason := ""
@@ -427,6 +428,7 @@ func stats() -> Dictionary:
 
 func diagnostic_summary() -> Dictionary:
 	var ready_durations: Array[int] = []
+	var ready_to_click_durations: Array[int] = []
 	var queue_waits: Array[int] = []
 	var generation_durations: Array[int] = []
 	var validation_waits: Array[int] = []
@@ -457,6 +459,12 @@ func diagnostic_summary() -> Dictionary:
 			"validation_finished"
 		)
 		_append_delta(ready_durations, stamps, "job_queued", "text_presented")
+		_append_delta(
+			ready_to_click_durations,
+			stamps,
+			"text_presented",
+			"interaction_clicked"
+		)
 		if str(job.get("status", "")) == "ready":
 			var payload: Dictionary = job.get("result_payload", {}) \
 				if job.get("result_payload", {}) is Dictionary else {}
@@ -477,6 +485,7 @@ func diagnostic_summary() -> Dictionary:
 		"generation": _duration_summary(generation_durations),
 		"validation": _duration_summary(validation_waits),
 		"time_to_ready": _duration_summary(ready_durations),
+		"ready_to_click": _duration_summary(ready_to_click_durations),
 		"ready_payloads": ready_payloads,
 		"content_type_counts": content_type_counts,
 		"source_counts": source_counts,
@@ -484,6 +493,7 @@ func diagnostic_summary() -> Dictionary:
 		"generated_replacements": generated_replacements,
 		"cache_lookup_hit": int(_stats.get("cache_lookup_hit", 0)),
 		"cache_lookup_miss": int(_stats.get("cache_lookup_miss", 0)),
+		"interaction_clicked": int(_stats.get("interaction_clicked", 0)),
 	}
 
 
@@ -624,6 +634,28 @@ func ready_result_for_requester(requester_id: String) -> Dictionary:
 			}
 	_stats["cache_lookup_miss"] = int(_stats.get("cache_lookup_miss", 0)) + 1
 	return {}
+
+
+func mark_interaction_clicked_for_requester(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return _failure("Narrative cache requester is required.")
+	for job_id in _jobs.keys():
+		var raw: Variant = _jobs[job_id]
+		if not raw is Dictionary:
+			continue
+		var job: Dictionary = raw
+		if str(job.get("status", "")) != "ready":
+			continue
+		var requesters: Array = job.get("requesters", [])
+		if requesters.has(clean_requester):
+			_stamp(job, "interaction_clicked")
+			_jobs[job_id] = job
+			_stats["interaction_clicked"] = int(
+				_stats.get("interaction_clicked", 0)
+			) + 1
+			return {"ok": true, "job": job.duplicate(true)}
+	return _failure("Ready narrative cache job not found for requester.")
 
 
 func update_result_payload(job_id: String, result_payload: Dictionary) -> Dictionary:

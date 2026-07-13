@@ -3251,10 +3251,13 @@ func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictiona
 		return {}
 	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	if not payload.is_empty():
+		_mark_narrative_cache_interaction_clicked(requester_id)
 		return payload
 	var processed := process_narrative_cache_job_for_requester(requester_id)
 	if bool(processed.get("processed", false)):
 		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+		if not payload.is_empty():
+			_mark_narrative_cache_interaction_clicked(requester_id)
 	return payload
 
 
@@ -3264,10 +3267,13 @@ func ready_cached_narrative_station_offer(station_id: String) -> Dictionary:
 		return {}
 	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
 	if not payload.is_empty():
+		_mark_narrative_cache_interaction_clicked(requester_id)
 		return payload
 	var processed := process_narrative_cache_job_for_requester(requester_id)
 	if bool(processed.get("processed", false)):
 		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+		if not payload.is_empty():
+			_mark_narrative_cache_interaction_clicked(requester_id)
 	return payload
 
 
@@ -3333,6 +3339,7 @@ func consume_cached_narrative_line_bank(
 		str(ready.get("cache_key", "")),
 		next_payload
 	)
+	_mark_narrative_cache_interaction_clicked(clean_requester)
 	return next_payload
 
 
@@ -3410,6 +3417,11 @@ func _ready_narrative_result_for_requester(
 	if not required_type.is_empty() and str(payload.get("content_type", "")) != required_type:
 		return {}
 	return ready
+
+
+func _mark_narrative_cache_interaction_clicked(requester_id: String) -> void:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	scheduler.mark_interaction_clicked_for_requester(requester_id)
 
 
 func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:
