@@ -250,6 +250,7 @@ func _test_empty_slot_with_stale_directory_is_claimed() -> void:
 	var registry := RegistryType.open(ORPHAN_ROOT)
 	_make_directory("%s/slot_01/ships" % ORPHAN_ROOT)
 	_write_text("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT, "old generated mesh")
+	_write_text("%s/slot_01/narrative_cache.json" % ORPHAN_ROOT, "{}")
 	var created := registry.create_campaign(
 		"slot_01",
 		"Fresh Start",
@@ -269,6 +270,12 @@ func _test_empty_slot_with_stale_directory_is_claimed() -> void:
 	_expect(
 		not FileAccess.file_exists("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT),
 		"Fresh campaign creation kept stale generated files."
+	)
+	_expect(
+		not FileAccess.file_exists(
+			"%s/slot_01/narrative_cache.json" % ORPHAN_ROOT
+		),
+		"Fresh campaign creation kept a stale narrative cache."
 	)
 	_cleanup_orphan()
 

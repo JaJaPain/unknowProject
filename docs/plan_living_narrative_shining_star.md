@@ -833,15 +833,15 @@ Primary files:
 
 #### Phase 6B — Cache lifecycle
 
-- [ ] Open/validate `NarrativeCacheStore` with the other campaign stores in `GameRoot`; mark it disposable/rebuildable in the ownership table.
+- [x] Open/validate `NarrativeCacheStore` with the other campaign stores in `GameRoot`; mark it disposable/rebuildable in the ownership table.
 - [x] On death rollback, discard entries whose timeline/context revisions do not match restored state and rebuild them. Never let cache content influence canonical rollback selection.
-- [ ] Implement semantic cache keys from §6.7.
-- [ ] Invalidate unconsumed offers when their story beat, giver, destination, objective, allowed facts, or relationship tier changes.
-- [ ] Do not invalidate an accepted mission’s conversation/turn-in bundle merely because the global story revision advanced; accepted mission truth is frozen and travels with the mission.
-- [ ] Mark one-shot lines consumed after actual display, not when read from disk.
+- [x] Implement semantic cache keys from §6.7.
+- [x] Invalidate unconsumed offers when their story beat, giver, destination, objective, allowed facts, or relationship tier changes.
+- [x] Do not invalidate an accepted mission’s conversation/turn-in bundle merely because the global story revision advanced; accepted mission truth is frozen and travels with the mission.
+- [x] Mark one-shot lines consumed after actual display, not when read from disk.
 - [x] Bound cache by entry count and bytes. Recommended first limits: 256 text bundles and 8 MB JSON; evict consumed/expired lowest-priority entries first.
 - [x] Store text fingerprints even after text eviction so a long campaign cannot immediately regenerate the same line.
-- [ ] Clear all campaign-specific cache entries on new campaign/restart; never share exact line caches across campaigns.
+- [x] Clear all campaign-specific cache entries on new campaign/restart; never share exact line caches across campaigns.
 
 #### Phase 6C — Generation and retry policy
 
