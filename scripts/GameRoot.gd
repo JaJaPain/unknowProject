@@ -14,6 +14,9 @@ const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
 const DOCK_SERVICE_MINUTES := 10
 const UNDOCK_SERVICE_MINUTES := 5
+# Queue a line-bank refill while this many unused lines remain, so the bank
+# is topped up BEFORE it reaches two remaining (Phase 8B).
+const LINE_BANK_REFILL_MIN_AVAILABLE := 3
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 const ShipMovementEventsType := preload(
 	"res://scripts/story/ShipMovementEvents.gd"
@@ -3690,6 +3693,7 @@ func consume_cached_narrative_line_bank(
 		next_payload
 	)
 	_mark_narrative_cache_interaction_clicked(clean_requester)
+	_queue_line_bank_refill_if_low(clean_requester, next_payload)
 	return next_payload
 
 
@@ -3742,6 +3746,85 @@ func replace_used_cached_fallback_lines(
 		"ok": true,
 		"replacements": int(replacement.get("replacements", 0)),
 		"payload": next_payload,
+	}
+
+
+# Queues a low-priority refill when a consumed bank is running dry. Fires
+# while LINE_BANK_REFILL_MIN_AVAILABLE lines remain so fresh lines land
+# before the bank hits two. Deduped by cache key while queued/in flight;
+# every later consume at/below the threshold re-arms it.
+func _queue_line_bank_refill_if_low(requester_id: String, payload: Dictionary) -> void:
+	var available := int(payload.get("fallback_available_count", 0))
+	if available > LINE_BANK_REFILL_MIN_AVAILABLE:
+		return
+	var speaker_key := str(payload.get("speaker_key", "")).strip_edges()
+	if speaker_key.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var safe_id := requester_id.sha256_text().substr(0, 16)
+	scheduler.queue_job({
+		"job_id": "job.line_bank_low_refill.%s" % safe_id,
+		"cache_key": "prefetch.line_bank_low_refill.%s" % safe_id,
+		"kind": "line_bank_low_refill",
+		"trigger": NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT,
+		"priority": NarrativeCacheSchedulerType.priority_for_trigger(
+			NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+		),
+		"subject_id": speaker_key,
+		"requester_id": "prefetch:line_bank_low_refill:%s" % safe_id,
+		"target_requester_id": requester_id,
+		"speaker_key": speaker_key,
+		"system_id": str(GlobalState.current_system_id),
+		"pool_count": available,
+		"pool_target": int(payload.get("fallback_target_size", 0)),
+	})
+
+
+# Worker for line_bank_low_refill jobs: pushes fresh lines into the low
+# bank's used slots. Content source is the speaker's template bank for now;
+# the Phase 8B batch-generation checkbox upgrades this to prompted lines.
+# Retired texts are refused by the bank itself, so refills never re-offer
+# something the player already heard this campaign.
+func _line_bank_low_refill_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var target_requester := str(job.get("target_requester_id", "")).strip_edges()
+	var speaker_key := str(job.get("speaker_key", "")).strip_edges()
+	if target_requester.is_empty() or speaker_key.is_empty():
+		return {"ok": false, "status": "missing_refill_scope"}
+	var template := _template_line_bank_for_speaker(job, speaker_key)
+	var candidates: Array = []
+	for raw_line in (
+		template.get("fallback_lines", [])
+		if template.get("fallback_lines", []) is Array else []
+	):
+		var text := str(
+			(raw_line as Dictionary).get("text", "")
+			if raw_line is Dictionary else raw_line
+		).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
+	var result := replace_used_cached_fallback_lines(
+		target_requester,
+		candidates,
+		"template_refill"
+	)
+	if not bool(result.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(result.get("status", "line_bank_refill_failed")),
+		}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "line_bank_low_refill",
+			"source": "narrative_cache_scheduler",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"target_requester_id": target_requester,
+			"speaker_key": speaker_key,
+			"replacements": int(result.get("replacements", 0)),
+		},
 	}
 
 
@@ -3819,6 +3902,8 @@ func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 		"current_system_nova_bundle", "new_campaign_nova_bank":
 			return true
 		"ambient_pool_refill":
+			return true
+		"line_bank_low_refill":
 			return true
 		_:
 			return false
@@ -4132,6 +4217,8 @@ func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 			return _line_bank_payload_for_cache_job(job, "nova")
 		"ambient_pool_refill":
 			return _line_bank_payload_for_cache_job(job, "ambient")
+		"line_bank_low_refill":
+			return _line_bank_low_refill_payload_for_cache_job(job)
 		_:
 			return {"ok": false, "status": "unsupported_job_kind"}
 

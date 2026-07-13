@@ -1,0 +1,149 @@
+extends SceneTree
+
+# Phase 8B refill trigger: consuming a cached line bank down to the
+# threshold queues a low-priority refill job, and processing that job
+# tops the bank back up without ever re-offering a retired line.
+
+const BankType := preload("res://scripts/story/FallbackLineBank.gd")
+
+const REQUESTER := "prefetch:current_system_nova:test_refill_system"
+const CACHE_KEY := "prefetch.test.nova_refill"
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_test_low_bank_triggers_refill_and_tops_up()
+
+	if _failures.is_empty():
+		print("[PASS] Line bank refill tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _refill_jobs(scheduler: RefCounted) -> Array:
+	var result: Array = []
+	for job in scheduler.jobs():
+		if str((job as Dictionary).get("kind", "")) == "line_bank_low_refill":
+			result.append(job)
+	return result
+
+
+func _test_low_bank_triggers_refill_and_tops_up() -> void:
+	var game_root_script: GDScript = load("res://scripts/GameRoot.gd")
+	if game_root_script == null or not game_root_script.can_instantiate():
+		_failures.append("GameRoot.gd did not compile.")
+		return
+	var gr: Node = game_root_script.new()
+	var scheduler: RefCounted = gr._ensure_narrative_cache_scheduler()
+
+	# Seed a small ready nova bank (5 lines, target 5).
+	var bank := BankType.create_bank("nova", "system_arrival", [
+		"Test line one.",
+		"Test line two.",
+		"Test line three.",
+		"Test line four.",
+		"Test line five.",
+	], 5)
+	var payload := {
+		"content_type": "story_line_bank",
+		"source": "fallback_bank",
+		"cache_key": CACHE_KEY,
+		"requester_id": REQUESTER,
+		"speaker_key": "nova",
+		"speaker_name": "N.O.V.A.",
+		"voice_profile_id": "voice.nova.v1",
+		"line_bank": (bank.get("entries", []) as Array).duplicate(true),
+		"fallback_bank": bank,
+		"fallback_target_size": 5,
+		"fallback_available_count": BankType.available_count(bank),
+	}
+	var restored: Dictionary = scheduler.restore_ready_job({
+		"job_id": "job.test.nova_refill",
+		"cache_key": CACHE_KEY,
+		"kind": "current_system_nova_bundle",
+		"requester_id": REQUESTER,
+	}, payload)
+	_expect(
+		bool(restored.get("ok", false)),
+		"Could not seed the ready nova bank."
+	)
+
+	# 5 -> 4 remaining: above the threshold, nothing queued.
+	var first: Dictionary = gr.consume_cached_narrative_line_bank(
+		REQUESTER, "system_arrival"
+	)
+	_expect(not first.is_empty(), "First consume returned no payload.")
+	var first_text := str(
+		(first.get("consumed_line", {}) as Dictionary).get("text", "")
+	)
+	_expect(
+		_refill_jobs(scheduler).is_empty(),
+		"Refill queued too early with 4 lines remaining."
+	)
+
+	# 4 -> 3 remaining: at the threshold, exactly one refill job queues.
+	var second: Dictionary = gr.consume_cached_narrative_line_bank(
+		REQUESTER, "system_arrival"
+	)
+	var second_text := str(
+		(second.get("consumed_line", {}) as Dictionary).get("text", "")
+	)
+	_expect(
+		int(second.get("fallback_available_count", -1)) == 3,
+		"Second consume did not leave 3 available lines."
+	)
+	var refills := _refill_jobs(scheduler)
+	_expect(
+		refills.size() == 1,
+		"Exactly one refill job should queue at 3 remaining, got %d."
+			% refills.size()
+	)
+	if refills.size() != 1:
+		gr.free()
+		return
+	var refill_job: Dictionary = refills[0]
+	_expect(
+		str(refill_job.get("target_requester_id", "")) == REQUESTER
+			and str(refill_job.get("speaker_key", "")) == "nova",
+		"Refill job does not target the low bank."
+	)
+
+	# A third consume while the refill is queued dedupes, not duplicates.
+	gr.consume_cached_narrative_line_bank(REQUESTER, "system_arrival")
+	_expect(
+		_refill_jobs(scheduler).size() == 1,
+		"Repeat consume duplicated the refill job."
+	)
+
+	# Process the refill: used slots refill from the nova template and the
+	# delivered lines never come back.
+	var processed: Dictionary = gr.process_narrative_cache_job_for_requester(
+		str(refill_job.get("requester_id", ""))
+	)
+	_expect(
+		bool(processed.get("ok", false)),
+		"Refill job failed: %s" % str(processed.get("status", ""))
+	)
+	var after: Dictionary = gr.ready_cached_narrative_line_bank(REQUESTER)
+	_expect(
+		int(after.get("fallback_available_count", -1)) == 5,
+		"Refill did not top the bank back up to 5 available, got %d."
+			% int(after.get("fallback_available_count", -1))
+	)
+	var texts: Array = []
+	for raw_entry in (after.get("line_bank", []) as Array):
+		texts.append(str((raw_entry as Dictionary).get("text", "")))
+	_expect(
+		not texts.has(first_text) and not texts.has(second_text),
+		"A retired line came back after the refill."
+	)
+	gr.free()
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)
