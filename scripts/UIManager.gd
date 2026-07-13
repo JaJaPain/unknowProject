@@ -6896,6 +6896,7 @@ func _announce_bounties_on_dock() -> void:
 
 
 func notify_system_arrived(system_id: String) -> void:
+	_queue_current_system_line_bank_voice_cache(system_id, "system_arrival")
 	_maybe_kaelen_intel_drop()
 
 
@@ -11997,10 +11998,27 @@ func _queue_startup_line_bank_voice_cache() -> int:
 	var system_id := str(GlobalState.current_system_id).strip_edges()
 	if system_id.is_empty():
 		return 0
+	var cached_count := _queue_current_system_line_bank_voice_cache(
+		system_id,
+		"startup"
+	)
+	return cached_count
+
+
+func _queue_current_system_line_bank_voice_cache(
+	system_id: String,
+	reason: String = "current_system"
+) -> int:
+	var clean_system_id := system_id.strip_edges()
+	if clean_system_id.is_empty():
+		return 0
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+		return 0
 	var cached_count := 0
 	for requester_id in [
-		"prefetch:current_system_kaelen:%s" % system_id,
-		"prefetch:current_system_nova:%s" % system_id,
+		"prefetch:current_system_kaelen:%s" % clean_system_id,
+		"prefetch:current_system_nova:%s" % clean_system_id,
 	]:
 		var payload: Dictionary = game_root.call(
 			"ready_cached_narrative_line_bank",
@@ -12009,8 +12027,8 @@ func _queue_startup_line_bank_voice_cache() -> int:
 		cached_count += _cache_line_bank_payload_tts(payload)
 	if cached_count > 0:
 		GlobalState.trace(
-			"[TRACE] [UIManager] Queued startup line-bank TTS cache entries: %d" %
-				cached_count
+			"[TRACE] [UIManager] Queued %s line-bank TTS cache entries: %d" %
+				[reason, cached_count]
 		)
 	return cached_count
 

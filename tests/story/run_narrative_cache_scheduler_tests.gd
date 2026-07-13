@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
 	_test_loading_gate_precaches_startup_line_bank_tts()
+	_test_system_arrival_precaches_current_line_bank_tts()
 	_test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
@@ -833,6 +834,23 @@ func _test_loading_gate_precaches_startup_line_bank_tts() -> void:
 			and source.contains("_on_startup_line_bank_voice_cache_completed")
 			and source.contains("Pre-caching Kaelen and N.O.V.A. story banks"),
 		"Fresh-campaign loading does not pre-cache ready Kaelen/N.O.V.A. line-bank TTS."
+	)
+
+
+func _test_system_arrival_precaches_current_line_bank_tts() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager system-arrival bank TTS wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func notify_system_arrived(system_id: String)")
+			and source.contains("_queue_current_system_line_bank_voice_cache(system_id, \"system_arrival\")")
+			and source.contains("func _queue_current_system_line_bank_voice_cache")
+			and source.contains("prefetch:current_system_kaelen")
+			and source.contains("prefetch:current_system_nova")
+			and source.contains("_cache_line_bank_payload_tts(payload)"),
+		"System arrival does not pre-cache ready Kaelen/N.O.V.A. current-system line-bank TTS."
 	)
 
 
