@@ -1,0 +1,110 @@
+extends SceneTree
+
+const BankType := preload("res://scripts/story/FallbackLineBank.gd")
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_test_create_bank_caps_at_target_and_marks_fallbacks()
+	_test_consume_marks_used_and_counts_fallback_usage()
+	_test_generated_lines_replace_used_fallback_slots()
+	_test_empty_bank_reports_no_line()
+
+	if _failures.is_empty():
+		print("[PASS] Fallback line bank tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _test_create_bank_caps_at_target_and_marks_fallbacks() -> void:
+	var bank := BankType.create_bank("nova", "startup_navigation", _numbered_lines(24), 20)
+	var entries: Array = bank.get("entries", [])
+	_expect(entries.size() == 20, "Fallback bank should cap entries at target size 20.")
+	_expect(
+		int(bank.get("target_size", 0)) == 20
+			and str(bank.get("speaker_key", "")) == "nova"
+			and str(bank.get("line_kind", "")) == "startup_navigation",
+		"Fallback bank did not preserve identity metadata."
+	)
+	for raw_entry in entries:
+		var entry: Dictionary = raw_entry
+		_expect(
+			str(entry.get("source", "")) == "fallback"
+				and bool(entry.get("is_fallback", false))
+				and not bool(entry.get("used", false)),
+			"Initial bank entries must be unused fallback lines."
+		)
+
+
+func _test_consume_marks_used_and_counts_fallback_usage() -> void:
+	var bank := BankType.create_bank("kaelen", "agent_handoff", [
+		"First fallback.",
+		"Second fallback.",
+	], 20)
+	var consumed: Dictionary = BankType.consume(bank, "agent_handoff")
+	_expect(bool(consumed.get("ok", false)), "Expected consume to return a line.")
+	var next_bank: Dictionary = consumed.get("bank", {})
+	var line: Dictionary = consumed.get("line", {})
+	_expect(
+		bool(line.get("used", false))
+			and int(line.get("use_count", 0)) == 1
+			and BankType.fallback_use_count(next_bank) == 1
+			and BankType.available_count(next_bank) == 1,
+		"Consuming fallback line did not mark usage correctly."
+	)
+
+
+func _test_generated_lines_replace_used_fallback_slots() -> void:
+	var bank := BankType.create_bank("nova", "startup_navigation", [
+		"Fallback one.",
+		"Fallback two.",
+		"Fallback three.",
+	], 20)
+	var consumed: Dictionary = BankType.consume(bank)
+	var replacement: Dictionary = BankType.replace_used_with_generated(
+		consumed.get("bank", {}),
+		["Generated better line.", "Fallback two."],
+		"llm"
+	)
+	var next_bank: Dictionary = replacement.get("bank", {})
+	var entries: Array = next_bank.get("entries", [])
+	_expect(
+		int(replacement.get("replacements", 0)) == 1
+			and BankType.generated_replacement_count(next_bank) == 1
+			and entries.size() == 3,
+		"Generated replacement should replace one used slot without growing past existing entries."
+	)
+	var replaced: Dictionary = entries[0]
+	_expect(
+		str(replaced.get("text", "")) == "Generated better line."
+			and str(replaced.get("source", "")) == "llm"
+			and not bool(replaced.get("is_fallback", true))
+			and not bool(replaced.get("used", true)),
+		"Generated replacement was not installed as fresh non-fallback content."
+	)
+
+
+func _test_empty_bank_reports_no_line() -> void:
+	var bank := BankType.create_bank("kaelen", "agent_handoff", [], 20)
+	var consumed: Dictionary = BankType.consume(bank)
+	_expect(
+		not bool(consumed.get("ok", true))
+			and str(consumed.get("status", "")) == "fallback_bank_empty",
+		"Empty fallback bank should report fallback_bank_empty."
+	)
+
+
+func _numbered_lines(count: int) -> Array[String]:
+	var lines: Array[String] = []
+	for i in range(count):
+		lines.append("Fallback line %02d." % i)
+	return lines
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)
