@@ -127,9 +127,41 @@ func _test_arrival_can_consume_ready_line_bank() -> void:
 		source.contains("func _ready_line_bank_text")
 			and source.contains("consume_cached_narrative_line_bank")
 			and source.contains("prefetch:current_system_nova")
-			and source.contains("\"startup_navigation\"")
-			and source.contains("speak(bank_line, Severity.NAV"),
+			and source.contains("accepted_kinds")
+			and source.contains(
+				"_bank_line_or_stock(NovaBankCategoriesType.SYSTEM_ARRIVAL"
+			),
 		"N.O.V.A. arrival path does not consume ready current-system line banks before stock lines."
+	)
+	# Every flat-pool beat routes bank-first with logged stock degradation;
+	# the combat tutorial stays authored and never touches the bank helper.
+	_expect(
+		source.contains("func _bank_line_or_stock"),
+		"Bank-first stock degradation helper is missing."
+	)
+	for beat_marker in [
+		"NovaBankCategoriesType.GATE_TRANSIT",
+		"NovaBankCategoriesType.WELCOME_BACK",
+		"NovaBankCategoriesType.HULL_CRITICAL",
+		"NovaBankCategoriesType.COMBAT_RETREAT",
+		"NovaBankCategoriesType.COMBAT_VICTORY_BATTERED",
+		"NovaBankCategoriesType.COMBAT_VICTORY_CLEAN",
+	]:
+		_expect(
+			source.contains(beat_marker),
+			"Beat is not routed bank-first: %s" % beat_marker
+		)
+	_expect(
+		source.contains("\"stock_line_used\""),
+		"Stock line usage is not logged as degraded content."
+	)
+	var tutorial_start := source.find("func on_combat_tutorial")
+	var tutorial_end := source.find("func ", tutorial_start + 10)
+	var tutorial_body := source.substr(tutorial_start, tutorial_end - tutorial_start)
+	_expect(
+		not tutorial_body.contains("_bank_line_or_stock")
+			and not tutorial_body.contains("_ready_line_bank_text"),
+		"Tutorial lines must stay authored, not bank-driven."
 	)
 
 

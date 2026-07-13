@@ -421,6 +421,26 @@ func _line_kind_allowed(kind: String, kind_filter: Array[String]) -> bool:
 	return not NovaBankCategoriesType.is_protected(clean)
 
 
+# Post-tutorial line selection: prepared bank first, stock pool as degraded
+# emergency content only. Every stock draw is logged — fallbacks are
+# failures, and this makes canned usage visible in the diagnostics feed.
+# Tutorial beats (on_combat_tutorial) stay authored and never route here.
+func _bank_line_or_stock(category: String, tag: String, stock_pool: Array) -> String:
+	var bank_line := _ready_line_bank_text(
+		NovaBankCategoriesType.accepted_kinds(category)
+	)
+	if not bank_line.is_empty():
+		return bank_line
+	if is_instance_valid(GenerationDiagnostics):
+		GenerationDiagnostics.record_event(
+			"nova_line_bank",
+			"stock_line_used",
+			"nova",
+			{"category": category}
+		)
+	return _pick_line(tag, stock_pool)
+
+
 # Returns the recurrence streak for `tag` (0 = first / first in a while, 1 = again
 # soon, 2 = a third time soon, ...). Resets when the gap exceeds `window_ms`.
 func _reactive_streak(tag: String, window_ms: int) -> int:
@@ -556,7 +576,13 @@ func on_combat_ended(player_won: bool = false) -> void:
 			"We're leaving. Excellent decision. I enjoy not being debris.",
 			"Retreat logged. Cowardice: the reason I still have a hull.",
 		]
-		speak(str(fled[randi() % fled.size()]), Severity.COMBAT, expression_for_event("setback"))
+		speak(
+			_bank_line_or_stock(
+				NovaBankCategoriesType.COMBAT_RETREAT, "combat_retreat", fled
+			),
+			Severity.COMBAT,
+			expression_for_event("setback")
+		)
 		return
 	var maxh := float(p.get("max_health")) if p.get("max_health") != null else 100.0
 	var curh := float(p.get("health")) if p.get("health") != null else maxh
@@ -567,14 +593,30 @@ func on_combat_ended(player_won: bool = false) -> void:
 			"We survived. Barely. That's coming out of your half of the repair bill.",
 			"Feel that? That's my hull weeping. This is exactly what I was worried about.",
 		]
-		speak(str(battered[randi() % battered.size()]), Severity.COMBAT, expression_for_event("threat"))
+		speak(
+			_bank_line_or_stock(
+				NovaBankCategoriesType.COMBAT_VICTORY_BATTERED,
+				"combat_battered",
+				battered
+			),
+			Severity.COMBAT,
+			expression_for_event("threat")
+		)
 	else:
 		var clean := [
 			"Threat neutralized. My structural integrity thanks you for the bare minimum.",
 			"Still in one piece. Both of us. I'm as surprised as you are.",
 			"Handled. And by 'that' I mean the thing that was shooting at my hull.",
 		]
-		speak(str(clean[randi() % clean.size()]), Severity.COMBAT, expression_for_event("companion"))
+		speak(
+			_bank_line_or_stock(
+				NovaBankCategoriesType.COMBAT_VICTORY_CLEAN,
+				"combat_clean",
+				clean
+			),
+			Severity.COMBAT,
+			expression_for_event("companion")
+		)
 
 
 # Player undocked. If they were parked a good while, she may welcome them back to
@@ -609,7 +651,11 @@ func welcome_back() -> void:
 		"Good to be moving again. Parking is bad for my systems. Probably.",
 		"Welcome back. Nothing exploded while you were gone. You're welcome.",
 	]
-	speak(str(lines[randi() % lines.size()]), Severity.IDLE, expression_for_event("greeting"))
+	speak(
+		_bank_line_or_stock(NovaBankCategoriesType.WELCOME_BACK, "welcome", lines),
+		Severity.IDLE,
+		expression_for_event("greeting")
+	)
 
 
 # One-time nudge spoken right before the combat wheel first appears (tutorial).
@@ -653,7 +699,11 @@ func on_gate_transition() -> void:
 		"Going through. My circuits crawl every time. Wish I remembered why.",
 		"Did you see that? I swear I just saw an old woman flying a broom. ...I'm going to pretend I didn't.",
 	]
-	speak(str(lines[randi() % lines.size()]), Severity.NAV, expression_for_event("mystery"))
+	speak(
+		_bank_line_or_stock(NovaBankCategoriesType.GATE_TRANSIT, "gate", lines),
+		Severity.NAV,
+		expression_for_event("mystery")
+	)
 
 
 # Semantic movement events from ShipBehaviorObserver (already aggregated and
@@ -708,7 +758,11 @@ func on_hull_critical() -> void:
 		"Critical damage. And to be clear — critical to ME. Be clever, quickly.",
 		"If this hull ruptures we go together, and I resent that. Act!",
 	]
-	speak(_pick_line("hull", lines), Severity.THREAT, expression_for_event("danger"))
+	speak(
+		_bank_line_or_stock(NovaBankCategoriesType.HULL_CRITICAL, "hull", lines),
+		Severity.THREAT,
+		expression_for_event("danger")
+	)
 
 
 # Occasional dry line on arriving in a new system. Skips if she just did a gate-
@@ -729,10 +783,6 @@ func on_system_arrived() -> void:
 	# a fresh system is exactly when an obsession resurfaces.
 	if _maybe_speak_quirk():
 		return
-	var bank_line := _ready_line_bank_text(["startup_navigation"])
-	if not bank_line.is_empty():
-		speak(bank_line, Severity.NAV, expression_for_event("nav"))
-		return
 	var lines := [
 		"New system. Same statistical odds of something in it trying to kill me.",
 		"We're through. I'll start cataloguing the threats — it's usually a long list.",
@@ -743,4 +793,8 @@ func on_system_arrived() -> void:
 		"New stars, new problems. I'll pretend to be optimistic if you insist.",
 		"We made it. I'm as surprised as you are. Let's try to keep it that way.",
 	]
-	speak(_pick_line("arrival", lines), Severity.NAV, expression_for_event("nav"))
+	speak(
+		_bank_line_or_stock(NovaBankCategoriesType.SYSTEM_ARRIVAL, "arrival", lines),
+		Severity.NAV,
+		expression_for_event("nav")
+	)
