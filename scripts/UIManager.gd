@@ -5076,6 +5076,7 @@ func _show_lounge_pending_turn(
 	serial: int,
 	message: String
 ) -> void:
+	_play_kaelen_latency_filler("llm_generation", 0.8, serial)
 	_show_lounge_card_line(
 		card,
 		message,
@@ -5084,6 +5085,40 @@ func _show_lounge_pending_turn(
 			"text": "Step away",
 			"callback": func() -> void: _cancel_lounge_pending_turn(serial),
 		}]
+	)
+
+
+func _play_kaelen_latency_filler(
+	wait_reason: String,
+	quiet_seconds: float,
+	word_index: int = 0
+) -> void:
+	if not is_instance_valid(SpeechService):
+		return
+	SpeechService.play_latency_filler_clip(
+		"Broker Kaelen",
+		GlobalState.KAELEN_VOICE_PROFILE_ID,
+		wait_reason,
+		quiet_seconds,
+		false,
+		word_index
+	)
+
+
+func _play_nova_latency_filler(
+	wait_reason: String,
+	quiet_seconds: float,
+	word_index: int = 0
+) -> void:
+	if not is_instance_valid(SpeechService):
+		return
+	SpeechService.play_latency_filler_clip(
+		"N.O.V.A.",
+		"voice.nova.v1",
+		wait_reason,
+		quiet_seconds,
+		false,
+		word_index
 	)
 
 
@@ -9822,6 +9857,7 @@ func _refresh_agent_quest_board():
 		)
 		agent_back_btn.visible = true
 		is_waiting_for_agent_board = true
+		_play_kaelen_latency_filler("llm_generation", 0.8, 1)
 		
 		# If the background generator hasn't started yet, trigger it now.
 		if not LLMInterface.is_waiting:
@@ -12218,10 +12254,12 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 					"Writing campaign story with large story model..."
 					+ "\nLarge story request sent. This can take a few minutes."
 				)
+				_play_nova_latency_filler("llm_generation", 1.0, 0)
 			elif request_status == "waiting_for_llm_connection":
 				loading_status_label.text = (
 					"Campaign story required. Waiting for local LLM connection..."
 				)
+				_play_nova_latency_filler("llm_generation", 1.0, 1)
 			elif not bool(requested.get("ok", false)):
 				# Campaign slot/bible store isn't initialized yet — this is a
 				# startup race with GameRoot's own campaign init, not a real
@@ -12261,6 +12299,7 @@ func _wait_for_chapter_plan_before_gameplay() -> void:
 					"Planning chapter one with large story model..."
 					+ "\nChapter packet request sent. This can take a few minutes."
 				)
+				_play_nova_latency_filler("llm_generation", 1.0, 2)
 			elif request_status == "waiting_for_campaign_bible":
 				get_tree().create_timer(1.0, true, false, true).timeout.connect(
 					func(): _wait_for_campaign_story_before_gameplay()
@@ -12269,6 +12308,7 @@ func _wait_for_chapter_plan_before_gameplay() -> void:
 				loading_status_label.text = (
 					"Chapter planning required. Waiting for local LLM connection..."
 				)
+				_play_nova_latency_filler("llm_generation", 1.0, 3)
 			elif not bool(requested.get("ok", false)):
 				loading_status_label.text = (
 					"Preparing campaign slot before planning chapter one..."

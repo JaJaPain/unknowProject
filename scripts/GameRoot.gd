@@ -3641,12 +3641,12 @@ func _process_narrative_tts_cache_job(job: Dictionary) -> Dictionary:
 		started["processed"] = false
 		return started
 	var cache_status := "unavailable"
-	if is_instance_valid(TTSInterface):
-		cache_status = str(TTSInterface.cache_dialogue_audio(text, voice_profile_id))
+	if is_instance_valid(SpeechService):
+		cache_status = str(SpeechService.cache(text, voice_profile_id))
 	else:
 		var unavailable: Dictionary = scheduler.mark_tts_failed(
 			job_id,
-			"tts_interface_unavailable"
+			"speech_service_unavailable"
 		)
 		_persist_narrative_tts_status(job, "failed")
 		unavailable["processed"] = true

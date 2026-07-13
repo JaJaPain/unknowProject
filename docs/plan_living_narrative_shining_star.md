@@ -863,7 +863,8 @@ Primary files:
   - 2026-07-13: Narrative cache workers now extract the actual visible text bundle fields, queue same-priority `tts_cache` jobs immediately after validation, and start those cache requests without blocking text readiness.
 - [x] Track TTS readiness per field, voice profile, and text fingerprint.
   - 2026-07-13: Runtime `tts_cache` jobs now persist field-level audio status (`pending`, `ready`, or `failed`) through `NarrativeCacheStore.mark_tts_status()`, keyed by field and voice profile with the store-owned text fingerprint.
-- [ ] Add pre-recorded non-semantic filler clips for N.O.V.A. and Kaelen (`um`, `oh`, `well`, `ahh`) that can play only during short quiet waits for LLM/TTS readiness. Treat them as latency masking, not dialogue content: they must never replace required text, advance state, reveal facts, or count as a generated line.
+- [x] Add pre-recorded non-semantic filler clips for N.O.V.A. and Kaelen (`um`, `oh`, `well`, `ahh`) that can play only during short quiet waits for LLM/TTS readiness. Treat them as latency masking, not dialogue content: they must never replace required text, advance state, reveal facts, or count as a generated line.
+  - 2026-07-13: `SpeechService` now pre-caches and safety-gates Kaelen/N.O.V.A. latency fillers before playback; agent-board/lounge waits can use Kaelen fillers, and campaign/chapter loading waits can use N.O.V.A. fillers without counting them as dialogue/generated content.
 - [ ] Make the UI actionable when required visible fields are text-ready; prefer to wait for their audio during natural pre-entry time, never after the click.
   - 2026-07-13: Fresh-campaign loading now blocks only on a bounded starter subset of Kaelen/N.O.V.A. line-bank TTS, then warms the full startup banks after loading releases.
   - 2026-07-13: Narrative cache writes now auto-enforce the default 256-entry / 8 MB bounds on every upsert, while preserving text fingerprints for evicted lines.

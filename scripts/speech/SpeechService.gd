@@ -51,6 +51,7 @@ func _ready() -> void:
 	TTSInterface.cache_queue_completed.connect(cache_queue_completed.emit)
 	TTSInterface.tts_connection_attempt.connect(speech_connection_attempt.emit)
 	TTSInterface.tts_connection_established.connect(speech_connection_established.emit)
+	_precache_latency_filler_clips()
 	# Deferred: TTSInterface.audio_player is created in its own _ready, which may
 	# run after this one depending on autoload order.
 	call_deferred("_connect_playback_finished")
@@ -98,12 +99,12 @@ func cache(
 	text: String,
 	voice_profile: Variant = KAELEN_PROFILE,
 	speed_override: float = -1.0
-) -> void:
+):
 	var profile_id := resolve_voice_profile(voice_profile)
 	var prepared := prepare_text(text, profile_id)
 	if prepared.is_empty():
-		return
-	provider.cache(prepared, profile_id, speed_override)
+		return "empty"
+	return provider.cache(prepared, profile_id, speed_override)
 
 
 func stop() -> void:
@@ -164,6 +165,55 @@ func latency_filler_clip_request(
 		"reveals_facts": false,
 		"counts_as_generated_line": false,
 	}
+
+
+func play_latency_filler_clip(
+	speaker_id: String,
+	voice_profile: Variant,
+	wait_reason: String,
+	quiet_seconds: float,
+	required_text_ready: bool,
+	word_index: int = 0
+) -> Dictionary:
+	var request := latency_filler_clip_request(
+		speaker_id,
+		voice_profile,
+		wait_reason,
+		quiet_seconds,
+		required_text_ready,
+		word_index
+	)
+	if not bool(request.get("ok", false)):
+		return request
+	var profile_id := resolve_voice_profile(request.get("voice_profile_id", voice_profile))
+	var word := str(request.get("word", "")).strip_edges()
+	if word.is_empty():
+		return _filler_rejected("empty_filler_word")
+	var player_ready := TTSInterface.audio_player != null \
+		and is_instance_valid(TTSInterface.audio_player)
+	if player_ready:
+		provider.play(word, profile_id)
+	else:
+		request["playback_skipped"] = true
+		request["skip_reason"] = "audio_player_unavailable"
+	GenerationDiagnostics.record_content_source(
+		"latency_filler",
+		"prerecorded_latency_filler",
+		"SpeechService",
+		{
+			"clip_id": str(request.get("clip_id", "")),
+			"speaker_id": str(request.get("speaker_id", "")),
+			"voice_profile_id": str(profile_id),
+			"wait_reason": wait_reason.strip_edges().to_lower(),
+		}
+	)
+	return request
+
+
+func _precache_latency_filler_clips() -> void:
+	for profile in [KAELEN_PROFILE, NOVA_PROFILE]:
+		for word in LATENCY_FILLER_WORDS:
+			provider.cache(str(word), profile)
 
 
 func resolve_voice_profile(value: Variant) -> StringName:

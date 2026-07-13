@@ -100,6 +100,44 @@ func _initialize() -> void:
 			and str(nova_filler.get("voice_profile_id", "")) == "voice.nova.v1",
 		"N.O.V.A. latency filler request was not accepted for a short LLM wait."
 	)
+	var played_filler: Dictionary = service.play_latency_filler_clip(
+		"Broker Kaelen",
+		"voice.kaelen.v1",
+		"tts_cache",
+		0.8,
+		false,
+		0
+	)
+	_expect(
+		bool(played_filler.get("ok", false))
+			and str(played_filler.get("source", "")) == "prerecorded_latency_filler"
+			and str(played_filler.get("word", "")) == "um",
+		"SpeechService did not safely play an approved latency filler clip."
+	)
+	var rejected_play: Dictionary = service.play_latency_filler_clip(
+		"Jenna Kross",
+		"voice.jenna_kross.v1",
+		"tts_cache",
+		0.8,
+		false
+	)
+	_expect(
+		not bool(rejected_play.get("ok", true))
+			and str(rejected_play.get("reason", "")) == "speaker_not_allowed",
+		"SpeechService played a latency filler for an unsupported speaker."
+	)
+	var speech_source := FileAccess.open(
+		"res://scripts/speech/SpeechService.gd",
+		FileAccess.READ
+	).get_as_text()
+	_expect(
+		speech_source.contains("func _precache_latency_filler_clips")
+			and speech_source.contains("func play_latency_filler_clip")
+			and speech_source.contains("provider.cache(str(word), profile)")
+			and speech_source.contains("provider.play(word, profile_id)")
+			and speech_source.contains("\"latency_filler\""),
+		"SpeechService does not pre-cache and gate latency filler playback."
+	)
 	for rejected in [
 		service.latency_filler_clip_request(
 			"Jenna Kross",

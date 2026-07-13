@@ -941,7 +941,7 @@ func _test_game_root_cache_worker_starts_tts_after_validated_text() -> void:
 			and source.contains("func _queue_tts_for_validated_narrative_payload")
 			and source.contains("queue_tts_jobs_for_validated_text")
 			and source.contains("func _process_narrative_tts_cache_job")
-			and source.contains("TTSInterface.cache_dialogue_audio")
+			and source.contains("SpeechService.cache")
 			and source.contains("mark_tts_cache_started")
 			and source.contains("mark_tts_ready")
 			and source.contains("func _persist_narrative_tts_status")
@@ -987,6 +987,14 @@ func _test_ui_agent_board_pending_state_stays_actionable() -> void:
 			and source.contains("agent_back_btn.visible = true")
 			and source.contains("is_waiting_for_agent_board = true"),
 		"Agent board pending state is not actionable while cache/generation work finishes."
+	)
+	_expect(
+		source.contains("func _play_kaelen_latency_filler")
+			and source.contains("func _play_nova_latency_filler")
+			and source.contains("SpeechService.play_latency_filler_clip")
+			and source.contains("_play_kaelen_latency_filler(\"llm_generation\"")
+			and source.contains("_play_nova_latency_filler(\"llm_generation\""),
+		"UI wait states do not use safety-gated Kaelen/N.O.V.A. latency fillers."
 	)
 
 
