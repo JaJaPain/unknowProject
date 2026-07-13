@@ -9770,8 +9770,11 @@ func _refresh_agent_quest_board():
 	else:
 		# Still loading or not started yet
 		GlobalState.trace("[TRACE] [UIManager] No pre-cached quest ready. Waiting for background generator...")
-		agent_dialogue_label.text = "Broker Kaelen is checking client contract requests..."
-		agent_back_btn.visible = false
+		agent_dialogue_label.text = (
+			"No vetted contract is ready yet. Kaelen is lining up work in the "
+			+ "background; check back in a moment."
+		)
+		agent_back_btn.visible = true
 		is_waiting_for_agent_board = true
 		
 		# If the background generator hasn't started yet, trigger it now.

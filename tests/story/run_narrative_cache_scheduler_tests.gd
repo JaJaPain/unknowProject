@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_test_new_campaign_loading_hook_calls_prefetch_planner()
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
+	_test_ui_agent_board_pending_state_stays_actionable()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
 	_test_dev_story_snapshot_reports_narrative_cache_diagnostics()
 	_test_loading_gate_precaches_startup_line_bank_tts()
@@ -903,6 +904,21 @@ func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() ->
 			and source.contains("if _try_use_ready_cached_agent_offer(request_profile):")
 			and source.contains("QuestManager.request_new_quest"),
 		"UIManager does not consume ready cached contact offers before live quest generation."
+	)
+
+
+func _test_ui_agent_board_pending_state_stays_actionable() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager pending offer state.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		not source.contains("Broker Kaelen is checking client contract requests")
+			and source.contains("No vetted contract is ready yet")
+			and source.contains("agent_back_btn.visible = true")
+			and source.contains("is_waiting_for_agent_board = true"),
+		"Agent board pending state is not actionable while cache/generation work finishes."
 	)
 
 
