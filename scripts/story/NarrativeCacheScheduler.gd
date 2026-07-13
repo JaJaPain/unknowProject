@@ -518,6 +518,42 @@ func diagnostic_summary() -> Dictionary:
 	}
 
 
+func assert_cache_readiness_slo(
+	min_ready_rate: float = 0.99,
+	label: String = ""
+) -> Dictionary:
+	var hits := int(_stats.get("cache_lookup_hit", 0))
+	var misses := int(_stats.get("cache_lookup_miss", 0))
+	var total := hits + misses
+	var rate := 0.0
+	if total > 0:
+		rate = float(hits) / float(total)
+	if total <= 0:
+		return {
+			"ok": false,
+			"status": "no_cache_lookup_samples",
+			"label": label,
+			"ready_rate": rate,
+			"min_ready_rate": min_ready_rate,
+			"hits": hits,
+			"misses": misses,
+			"sample_count": 0,
+		}
+	return {
+		"ok": rate >= min_ready_rate,
+		"status": (
+			"cache_readiness_slo_passed"
+			if rate >= min_ready_rate else "cache_readiness_slo_failed"
+		),
+		"label": label,
+		"ready_rate": rate,
+		"min_ready_rate": min_ready_rate,
+		"hits": hits,
+		"misses": misses,
+		"sample_count": total,
+	}
+
+
 func queue_health(max_queue_wait_seconds: int = 30) -> Dictionary:
 	var now := int(Time.get_unix_time_from_system())
 	var starved: Array[Dictionary] = []

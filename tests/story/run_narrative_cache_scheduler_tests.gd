@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
 	_test_scope_cancellation_only_cancels_matching_queued_jobs()
 	_test_diagnostic_summary_reports_lifecycle_durations()
+	_test_cache_readiness_slo_gate()
 	_test_pause_blocks_starting_small_jobs_until_resume()
 	_test_validation_failure_retries_once_then_requires_degraded_content()
 	_test_default_concurrency_allows_only_one_generation_in_flight()
@@ -337,6 +338,44 @@ func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
 			and int(summary.get("interaction_clicked", 0)) == 1
 			and int(summary.get("ready_to_click", {}).get("count", 0)) == 1,
 		"Scheduler diagnostic summary did not report lifecycle durations."
+	)
+
+
+func _test_cache_readiness_slo_gate() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var no_samples: Dictionary = scheduler.assert_cache_readiness_slo(0.99, "empty")
+	_expect(
+		not bool(no_samples.get("ok", true))
+			and str(no_samples.get("status", "")) == "no_cache_lookup_samples",
+		"Cache readiness SLO should fail loudly when no lookups exist."
+	)
+	var job := _job("job.ready.slo", "cache.ready.slo", SchedulerType.PRIORITY_P1)
+	job["requester_id"] = "ui.ready"
+	scheduler.queue_job(job)
+	scheduler.mark_generation_started("job.ready.slo")
+	scheduler.mark_ready("job.ready.slo", {"content_type": "quest_offer"})
+	scheduler.ready_result_for_requester("ui.ready")
+	var pass_gate: Dictionary = scheduler.assert_cache_readiness_slo(
+		0.99,
+		"ready_cache_fixture"
+	)
+	_expect(
+		bool(pass_gate.get("ok", false))
+			and str(pass_gate.get("status", "")) == "cache_readiness_slo_passed"
+			and int(pass_gate.get("hits", 0)) == 1
+			and int(pass_gate.get("misses", -1)) == 0,
+		"Cache readiness SLO should pass when required lookups are ready."
+	)
+	scheduler.ready_result_for_requester("ui.missing")
+	var fail_gate: Dictionary = scheduler.assert_cache_readiness_slo(
+		0.99,
+		"miss_fixture"
+	)
+	_expect(
+		not bool(fail_gate.get("ok", true))
+			and str(fail_gate.get("status", "")) == "cache_readiness_slo_failed"
+			and int(fail_gate.get("sample_count", 0)) == 2,
+		"Cache readiness SLO should fail when miss rate exceeds the threshold."
 	)
 
 
