@@ -98,6 +98,14 @@ func mark_consumed(cache_key: String) -> Dictionary:
 	return upsert_entry(entry)
 
 
+func update_result_payload(cache_key: String, result_payload: Dictionary) -> Dictionary:
+	var entry := get_entry(cache_key)
+	if entry.is_empty():
+		return _failure("Narrative cache entry not found.")
+	entry["result_payload"] = result_payload.duplicate(true)
+	return upsert_entry(entry)
+
+
 func mark_field_displayed(cache_key: String, field_id: String) -> Dictionary:
 	var entry := get_entry(cache_key)
 	if entry.is_empty():

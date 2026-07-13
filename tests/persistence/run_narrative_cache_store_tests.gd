@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_clear_cache_removes_entries_and_fingerprints()
 	_test_tts_readiness_tracks_field_voice_and_text_fingerprint()
 	_test_readiness_reports_text_audio_pending_and_failed_separately()
+	_test_result_payload_update_persists_fallback_bank_state()
 	_test_schema_catalog_marks_cache_disposable()
 	_cleanup()
 
@@ -330,6 +331,39 @@ func _test_readiness_reports_text_audio_pending_and_failed_separately() -> void:
 				"accept_standard_response"
 			),
 		"Cache readiness did not separate text readiness from audio failure."
+	)
+
+
+func _test_result_payload_update_persists_fallback_bank_state() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	store.upsert_entry(_entry("cache.line_bank.alpha"))
+	var updated: Dictionary = store.update_result_payload("cache.line_bank.alpha", {
+		"content_type": "story_line_bank",
+		"fallback_uses": 1,
+		"generated_replacements": 1,
+		"fallback_bank": {
+			"target_size": 20,
+			"entries": [{
+				"text": "Generated replacement.",
+				"source": "llm_kaelen_handoff",
+				"is_fallback": false,
+			}],
+		},
+	})
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var entry: Dictionary = reopened.get_entry("cache.line_bank.alpha")
+	var payload: Dictionary = entry.get("result_payload", {}) \
+		if entry.get("result_payload", {}) is Dictionary else {}
+	var bank: Dictionary = payload.get("fallback_bank", {}) \
+		if payload.get("fallback_bank", {}) is Dictionary else {}
+	_expect(
+		bool(updated.get("ok", false))
+			and int(payload.get("fallback_uses", 0)) == 1
+			and int(payload.get("generated_replacements", 0)) == 1
+			and int(bank.get("target_size", 0)) == 20,
+		"Narrative cache store did not persist fallback-bank result payload updates."
 	)
 
 
