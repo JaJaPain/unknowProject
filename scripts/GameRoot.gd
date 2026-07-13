@@ -3255,7 +3255,65 @@ func ready_cached_narrative_line_bank(requester_id: String) -> Dictionary:
 	return payload
 
 
+func consume_cached_narrative_line_bank(
+	requester_id: String,
+	preferred_kind: String = ""
+) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {}
+	var ready := _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		var processed := process_narrative_cache_job_for_requester(clean_requester)
+		if bool(processed.get("processed", false)):
+			ready = _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		return {}
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	var fallback_bank: Dictionary = payload.get("fallback_bank", {}) \
+		if payload.get("fallback_bank", {}) is Dictionary else {}
+	if fallback_bank.is_empty():
+		return {}
+	var consumed := FallbackLineBankType.consume(fallback_bank, preferred_kind)
+	if not bool(consumed.get("ok", false)):
+		return {}
+	var next_bank: Dictionary = consumed.get("bank", {}) \
+		if consumed.get("bank", {}) is Dictionary else {}
+	var line: Dictionary = consumed.get("line", {}) \
+		if consumed.get("line", {}) is Dictionary else {}
+	if next_bank.is_empty() or line.is_empty():
+		return {}
+	var entries: Array = next_bank.get("entries", []) \
+		if next_bank.get("entries", []) is Array else []
+	var next_payload := payload.duplicate(true)
+	next_payload["fallback_bank"] = next_bank
+	next_payload["line_bank"] = entries.duplicate(true)
+	next_payload["consumed_line"] = line
+	next_payload["fallback_available_count"] = FallbackLineBankType.available_count(next_bank)
+	next_payload["fallback_uses"] = FallbackLineBankType.fallback_use_count(next_bank)
+	next_payload["generated_replacements"] = FallbackLineBankType.generated_replacement_count(next_bank)
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var updated: Dictionary = scheduler.update_result_payload(
+		str(ready.get("job_id", "")),
+		next_payload
+	)
+	if not bool(updated.get("ok", false)):
+		return {}
+	return next_payload
+
+
 func _ready_narrative_payload_for_requester(
+	requester_id: String,
+	content_type: String = ""
+) -> Dictionary:
+	var ready := _ready_narrative_result_for_requester(requester_id, content_type)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	return payload
+
+
+func _ready_narrative_result_for_requester(
 	requester_id: String,
 	content_type: String = ""
 ) -> Dictionary:
@@ -3266,7 +3324,7 @@ func _ready_narrative_payload_for_requester(
 	var required_type := content_type.strip_edges()
 	if not required_type.is_empty() and str(payload.get("content_type", "")) != required_type:
 		return {}
-	return payload
+	return ready
 
 
 func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:

@@ -121,7 +121,7 @@ func _test_arrival_can_consume_ready_line_bank() -> void:
 	var source := file.get_as_text()
 	_expect(
 		source.contains("func _ready_line_bank_text")
-			and source.contains("ready_cached_narrative_line_bank")
+			and source.contains("consume_cached_narrative_line_bank")
 			and source.contains("prefetch:current_system_nova")
 			and source.contains("\"startup_navigation\"")
 			and source.contains("speak(bank_line, Severity.NAV"),

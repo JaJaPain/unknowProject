@@ -9967,15 +9967,30 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 
 func _ready_kaelen_handoff_bank_line() -> String:
 	var game_root := get_tree().current_scene
-	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+	if game_root == null:
 		return ""
 	var system_id := str(GlobalState.current_system_id).strip_edges()
 	if system_id.is_empty():
 		return ""
-	var payload: Dictionary = game_root.call(
-		"ready_cached_narrative_line_bank",
-		"prefetch:current_system_kaelen:%s" % system_id
-	)
+	var payload: Dictionary = {}
+	if game_root.has_method("consume_cached_narrative_line_bank"):
+		payload = game_root.call(
+			"consume_cached_narrative_line_bank",
+			"prefetch:current_system_kaelen:%s" % system_id,
+			"agent_handoff"
+		)
+	elif game_root.has_method("ready_cached_narrative_line_bank"):
+		payload = game_root.call(
+			"ready_cached_narrative_line_bank",
+			"prefetch:current_system_kaelen:%s" % system_id
+		)
+	if payload.is_empty():
+		return ""
+	var consumed_line: Dictionary = payload.get("consumed_line", {}) \
+		if payload.get("consumed_line", {}) is Dictionary else {}
+	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
+	if not consumed_text.is_empty():
+		return consumed_text
 	var lines: Array = payload.get("line_bank", []) \
 		if payload.get("line_bank", []) is Array else []
 	var candidates: Array[String] = []

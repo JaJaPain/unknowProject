@@ -328,12 +328,30 @@ func _ready_line_bank_text(kind_filter: Array[String] = []) -> String:
 	if tree == null:
 		return ""
 	var game_root := tree.current_scene
-	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+	if game_root == null:
 		return ""
-	var payload: Dictionary = game_root.call(
-		"ready_cached_narrative_line_bank",
-		requester_id
-	)
+	var preferred_kind := ""
+	if not kind_filter.is_empty():
+		preferred_kind = str(kind_filter[0])
+	var payload: Dictionary = {}
+	if game_root.has_method("consume_cached_narrative_line_bank"):
+		payload = game_root.call(
+			"consume_cached_narrative_line_bank",
+			requester_id,
+			preferred_kind
+		)
+	elif game_root.has_method("ready_cached_narrative_line_bank"):
+		payload = game_root.call(
+			"ready_cached_narrative_line_bank",
+			requester_id
+		)
+	if payload.is_empty():
+		return ""
+	var consumed_line: Dictionary = payload.get("consumed_line", {}) \
+		if payload.get("consumed_line", {}) is Dictionary else {}
+	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
+	if not consumed_text.is_empty():
+		return consumed_text
 	var lines: Array = payload.get("line_bank", []) \
 		if payload.get("line_bank", []) is Array else []
 	var candidates: Array[String] = []

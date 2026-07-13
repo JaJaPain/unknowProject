@@ -576,6 +576,21 @@ func ready_result_for_requester(requester_id: String) -> Dictionary:
 	return {}
 
 
+func update_result_payload(job_id: String, result_payload: Dictionary) -> Dictionary:
+	var clean_id := job_id.strip_edges()
+	if clean_id.is_empty() or not _jobs.has(clean_id):
+		return _failure("Narrative cache job not found.")
+	var raw: Variant = _jobs[clean_id]
+	if not raw is Dictionary:
+		return _failure("Narrative cache job is invalid.")
+	var job: Dictionary = raw
+	if str(job.get("status", "")) != "ready":
+		return _failure("Narrative cache job is not ready.")
+	job["result_payload"] = result_payload.duplicate(true)
+	_jobs[clean_id] = job
+	return {"ok": true, "job": job.duplicate(true)}
+
+
 func _prepare_job(job: Dictionary) -> Dictionary:
 	var prepared := job.duplicate(true)
 	prepared["kind"] = str(prepared.get("kind", "mission_conversation")).strip_edges()
