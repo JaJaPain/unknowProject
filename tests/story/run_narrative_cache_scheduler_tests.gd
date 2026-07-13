@@ -1,6 +1,7 @@
 extends SceneTree
 
 const SchedulerType := preload("res://scripts/story/NarrativeCacheScheduler.gd")
+const DiagnosticsType := preload("res://scripts/diagnostics/GenerationDiagnostics.gd")
 
 var _failures: Array[String] = []
 
@@ -37,6 +38,7 @@ func _initialize() -> void:
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
 	_test_game_root_cache_worker_starts_tts_after_validated_text()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
+	_test_cached_agent_offer_flow_asserts_no_click_to_generate()
 	_test_ui_agent_board_pending_state_stays_actionable()
 	_test_ui_offer_text_is_presented_before_audio_waits()
 	_test_ui_lounge_pending_states_stay_actionable()
@@ -997,6 +999,43 @@ func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() ->
 			and source.contains("if _try_use_ready_cached_agent_offer(request_profile):")
 			and source.contains("QuestManager.request_new_quest"),
 		"UIManager does not consume ready cached contact offers before live quest generation."
+	)
+
+
+func _test_cached_agent_offer_flow_asserts_no_click_to_generate() -> void:
+	var diagnostics := DiagnosticsType.new()
+	diagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"v2_cache_flow_fixture",
+		{
+			"interaction_name": "Agent Board Cached Offer",
+			"requester_id": "prefetch:contact.agent.test",
+		}
+	)
+	diagnostics.record_lifecycle_timestamp(
+		"quest_briefing",
+		"text_presented",
+		"ready_cache",
+		{
+			"requester_id": "prefetch:contact.agent.test",
+			"content_source": "ready_cache",
+		}
+	)
+	var gate: Dictionary = diagnostics.assert_no_click_to_generate_reports(
+		"cached_agent_offer_flow"
+	)
+	_expect(
+		bool(gate.get("ok", false))
+			and int(gate.get("report_count", -1)) == 0,
+		"Cached agent-offer V2 flow reported click-to-generate work."
+	)
+	var summary: Dictionary = diagnostics.summary()
+	_expect(
+		(summary.get("click_to_generate_reports", []) as Array).is_empty()
+			and int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == 1
+			and int(summary.get("events_by_reason", {}).get("text_presented", 0)) == 1,
+		"Cached agent-offer V2 flow did not retain click/text lifecycle evidence."
 	)
 
 
