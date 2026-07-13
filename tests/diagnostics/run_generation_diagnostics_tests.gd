@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_records_lifecycle_timestamps()
 	_test_records_percentile_summaries()
 	_test_reports_click_to_generate_paths()
+	_test_asserts_no_click_to_generate_reports()
 	_test_records_content_source_summary()
 	_test_summary_text_is_readable()
 	_test_developer_warning_marks_high_fallback_rate()
@@ -312,6 +313,41 @@ func _test_reports_click_to_generate_paths() -> void:
 	_expect(
 		not (summary.get("developer_warnings", []) as Array).is_empty(),
 		"Click-to-generate report did not produce a developer warning."
+	)
+
+
+func _test_asserts_no_click_to_generate_reports() -> void:
+	var clean_diagnostics := DiagnosticsType.new()
+	var clean_gate: Dictionary = clean_diagnostics.assert_no_click_to_generate_reports(
+		"clean_flow"
+	)
+	_expect(
+		bool(clean_gate.get("ok", false))
+			and int(clean_gate.get("report_count", -1)) == 0,
+		"Clean click-to-generate gate should pass with zero reports."
+	)
+	var click_diagnostics := DiagnosticsType.new()
+	click_diagnostics.record_lifecycle_timestamp(
+		"player_interaction",
+		"interaction_clicked",
+		"test",
+		{"interaction_name": "Fixture Button"}
+	)
+	click_diagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_started",
+		"test",
+		{"model": "fixture-model"}
+	)
+	var failed_gate: Dictionary = click_diagnostics.assert_no_click_to_generate_reports(
+		"fixture_flow"
+	)
+	_expect(
+		not bool(failed_gate.get("ok", true))
+			and str(failed_gate.get("status", "")) == "click_to_generate_detected"
+			and int(failed_gate.get("report_count", 0)) == 1
+			and str(failed_gate.get("label", "")) == "fixture_flow",
+		"Click-to-generate gate did not fail with report details."
 	)
 
 

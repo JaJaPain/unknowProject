@@ -163,6 +163,24 @@ func summary() -> Dictionary:
 	}
 
 
+func assert_no_click_to_generate_reports(label: String = "") -> Dictionary:
+	if click_to_generate_reports.is_empty():
+		return {
+			"ok": true,
+			"status": "no_click_to_generate_reports",
+			"label": label,
+			"report_count": 0,
+			"reports": [],
+		}
+	return {
+		"ok": false,
+		"status": "click_to_generate_detected",
+		"label": label,
+		"report_count": click_to_generate_reports.size(),
+		"reports": click_to_generate_reports.duplicate(true),
+	}
+
+
 func percentile_summaries() -> Dictionary:
 	var metrics := {
 		"click_to_text_ms": _duration_summary_from_pair(
