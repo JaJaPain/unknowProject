@@ -9908,19 +9908,22 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		handoff_line = cached_unique_intro
 		GlobalState.trace("[TRACE] [UIManager] Using unique LLM-generated handoff for: " + agent_name)
 	else:
-		# No unique intro ready (LLM offline, slow, or this is a fallback quest)
-		# — fall back to one of the canned 5 lines for this agent.
-		handoff_line = handoff_lines[randi() % handoff_lines.size()]
-		GlobalState.trace("[TRACE] [UIManager] Using canned handoff fallback for: " + agent_name)
-		_record_static_text_fallback(
-			"kaelen_handoff_intro",
-			"unique_intro_unavailable",
-			{
-				"agent_name": str(agent_name),
-				"quest_is_fallback": is_fallback,
-			}
-		)
-	
+		handoff_line = _ready_kaelen_handoff_bank_line()
+		if not handoff_line.is_empty():
+			GlobalState.trace("[TRACE] [UIManager] Using ready Kaelen handoff bank line for: " + agent_name)
+		else:
+			# No unique intro ready (LLM offline, slow, or this is a fallback quest)
+			# — fall back to one of the canned 5 lines for this agent.
+			handoff_line = handoff_lines[randi() % handoff_lines.size()]
+			GlobalState.trace("[TRACE] [UIManager] Using canned handoff fallback for: " + agent_name)
+			_record_static_text_fallback(
+				"kaelen_handoff_intro",
+				"unique_intro_unavailable",
+				{
+					"agent_name": str(agent_name),
+					"quest_is_fallback": is_fallback,
+				}
+			)
 	# Flash incoming call notification in the chat bar
 	add_chat_message("COMMS", "Incoming voice transmission...", Color(0.0, 0.9, 0.9))
 
@@ -9959,6 +9962,35 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 				_kaelen_gate_reveal(gate_id, cost)
 			)
 			agent_choices_container.add_child(intel_btn)
+
+
+func _ready_kaelen_handoff_bank_line() -> String:
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+		return ""
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return ""
+	var payload: Dictionary = game_root.call(
+		"ready_cached_narrative_line_bank",
+		"prefetch:current_system_kaelen:%s" % system_id
+	)
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var candidates: Array[String] = []
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var line: Dictionary = raw_line
+		var kind := str(line.get("kind", "")).strip_edges()
+		if kind != "agent_handoff":
+			continue
+		var text := str(line.get("text", "")).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return ""
+	return str(candidates[randi() % candidates.size()])
 
 
 func _add_kaelen_gate_intel_button() -> void:
