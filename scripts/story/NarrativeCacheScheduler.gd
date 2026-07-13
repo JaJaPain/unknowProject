@@ -428,9 +428,15 @@ func diagnostic_summary() -> Dictionary:
 	var queue_waits: Array[int] = []
 	var generation_durations: Array[int] = []
 	var validation_waits: Array[int] = []
+	var ready_payloads := 0
+	var content_type_counts: Dictionary = {}
+	var source_counts: Dictionary = {}
+	var fallback_uses := 0
+	var generated_replacements := 0
 	for raw in _jobs.values():
 		if not raw is Dictionary:
 			continue
+		var job: Dictionary = raw
 		var stamps: Dictionary = (raw as Dictionary).get(
 			"diagnostic_timestamps",
 			{}
@@ -449,11 +455,31 @@ func diagnostic_summary() -> Dictionary:
 			"validation_finished"
 		)
 		_append_delta(ready_durations, stamps, "job_queued", "text_presented")
+		if str(job.get("status", "")) == "ready":
+			var payload: Dictionary = job.get("result_payload", {}) \
+				if job.get("result_payload", {}) is Dictionary else {}
+			if not payload.is_empty():
+				ready_payloads += 1
+				var content_type := str(payload.get("content_type", "unknown"))
+				content_type_counts[content_type] = int(
+					content_type_counts.get(content_type, 0)
+				) + 1
+				var source := str(payload.get("source", "unknown"))
+				source_counts[source] = int(source_counts.get(source, 0)) + 1
+				fallback_uses += int(payload.get("fallback_uses", 0))
+				generated_replacements += int(
+					payload.get("generated_replacements", 0)
+				)
 	return {
 		"queue_wait": _duration_summary(queue_waits),
 		"generation": _duration_summary(generation_durations),
 		"validation": _duration_summary(validation_waits),
 		"time_to_ready": _duration_summary(ready_durations),
+		"ready_payloads": ready_payloads,
+		"content_type_counts": content_type_counts,
+		"source_counts": source_counts,
+		"fallback_uses": fallback_uses,
+		"generated_replacements": generated_replacements,
 	}
 
 
