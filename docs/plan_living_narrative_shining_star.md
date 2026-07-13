@@ -834,7 +834,7 @@ Primary files:
 #### Phase 6B — Cache lifecycle
 
 - [ ] Open/validate `NarrativeCacheStore` with the other campaign stores in `GameRoot`; mark it disposable/rebuildable in the ownership table.
-- [ ] On death rollback, discard entries whose timeline/context revisions do not match restored state and rebuild them. Never let cache content influence canonical rollback selection.
+- [x] On death rollback, discard entries whose timeline/context revisions do not match restored state and rebuild them. Never let cache content influence canonical rollback selection.
 - [ ] Implement semantic cache keys from §6.7.
 - [ ] Invalidate unconsumed offers when their story beat, giver, destination, objective, allowed facts, or relationship tier changes.
 - [ ] Do not invalidate an accepted mission’s conversation/turn-in bundle merely because the global story revision advanced; accepted mission truth is frozen and travels with the mission.
@@ -859,6 +859,7 @@ Primary files:
 - [ ] Make the UI actionable when required visible fields are text-ready; prefer to wait for their audio during natural pre-entry time, never after the click.
   - 2026-07-13: Fresh-campaign loading now blocks only on a bounded starter subset of Kaelen/N.O.V.A. line-bank TTS, then warms the full startup banks after loading releases.
   - 2026-07-13: Narrative cache writes now auto-enforce the default 256-entry / 8 MB bounds on every upsert, while preserving text fingerprints for evicted lines.
+  - 2026-07-13: Checkpoint restore now discards disposable narrative-cache entries whose timeline/story/knowledge/mission revisions do not match the restored checkpoint, while truth-frozen accepted bundles are preserved.
 - [ ] Prevent obsolete TTS jobs from delaying current P0 fields.
 - [ ] Preserve subtitles if TTS fails; record the audio failure separately from text-source degradation.
 

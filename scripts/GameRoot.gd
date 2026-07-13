@@ -3627,6 +3627,16 @@ func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> v
 		"result_payload": payload.duplicate(true),
 		"status": "ready",
 		"priority": int(job.get("priority", 0)),
+		"timeline_id": (
+			campaign_chronicle_store.current_timeline_id()
+			if campaign_chronicle_store != null
+					and campaign_chronicle_store.is_valid()
+			else ""
+		),
+		"context_revision": int(job.get("story_revision", 0)),
+		"story_revision": int(job.get("story_revision", 0)),
+		"knowledge_revision": int(job.get("knowledge_revision", 0)),
+		"mission_history_revision": int(job.get("mission_history_revision", 0)),
 		"requesters": (job.get("requesters", []) as Array).duplicate(true) \
 			if job.get("requesters", []) is Array else [],
 		"consumed": false,
@@ -4490,6 +4500,10 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 		return false
 	restoring_safe_checkpoint = true
 	await _apply_save_data(decoded["data"])
+	_discard_narrative_cache_outside_restored_context(
+		restored,
+		decoded["data"]
+	)
 	await _restore_safe_location(safe_location)
 	restoring_safe_checkpoint = false
 	RuntimeTraceType.event("checkpoint", "restore_completed", {
@@ -4502,6 +4516,38 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 		],
 	})
 	return true
+
+
+func _discard_narrative_cache_outside_restored_context(
+	restored_checkpoint: Dictionary,
+	decoded_state: Dictionary
+) -> void:
+	if campaign_narrative_cache_store == null \
+			or not campaign_narrative_cache_store.has_method(
+				"discard_entries_outside_context"
+			):
+		return
+	var story_state: Dictionary = decoded_state.get("story_state", {}) \
+		if decoded_state.get("story_state", {}) is Dictionary else {}
+	var story_revision := int(story_state.get("story_revision", 0))
+	var restored_context := {
+		"timeline_id": str(restored_checkpoint.get("timeline_id", "")),
+		"context_revision": story_revision,
+		"story_revision": story_revision,
+		"knowledge_revision": int(story_state.get("knowledge_revision", 0)),
+		"mission_history_revision": int(story_state.get(
+			"mission_history_revision",
+			0
+		)),
+	}
+	var discarded: Dictionary = campaign_narrative_cache_store.discard_entries_outside_context(
+		restored_context
+	)
+	if not bool(discarded.get("ok", false)):
+		push_warning(
+			"[GameRoot] Narrative cache rollback discard failed: %s" %
+				str(discarded.get("error", "unknown error"))
+		)
 
 
 func _restore_safe_location(safe_location: Dictionary) -> void:

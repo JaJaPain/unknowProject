@@ -177,6 +177,7 @@ func _test_context_discard_preserves_truth_frozen_entries() -> void:
 	var discarded: Dictionary = store.discard_entries_outside_context({
 		"timeline_id": "timeline.a",
 		"story_revision": 7,
+		"mission_history_revision": 7,
 	})
 	var removed: Array = discarded.get("removed", [])
 	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
@@ -485,6 +486,7 @@ func _context_entry(
 	entry["context_revision"] = story_revision
 	entry["story_revision"] = story_revision
 	entry["knowledge_revision"] = story_revision
+	entry["mission_history_revision"] = story_revision
 	entry["relationship_revision"] = story_revision
 	entry["truth_frozen"] = truth_frozen
 	entry["status"] = "accepted" if truth_frozen else "ready"

@@ -926,6 +926,8 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("FallbackLineBankType.replace_used_with_generated")
 			and source.contains("func _persist_narrative_ready_payload")
 			and source.contains("func _restore_ready_narrative_cache_payloads")
+			and source.contains("func _discard_narrative_cache_outside_restored_context")
+			and source.contains("discard_entries_outside_context")
 			and source.contains("scheduler.restore_ready_job")
 			and source.contains("campaign_narrative_cache_store.upsert_entry")
 			and source.contains("campaign_narrative_cache_store.update_result_payload")

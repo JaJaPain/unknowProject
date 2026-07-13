@@ -500,6 +500,7 @@ static func _entry_context_mismatches(
 		"context_revision",
 		"story_revision",
 		"knowledge_revision",
+		"mission_history_revision",
 		"relationship_revision",
 	]:
 		if not restored_context.has(key):
