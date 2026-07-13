@@ -3199,6 +3199,58 @@ func process_next_narrative_cache_job() -> Dictionary:
 	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
 
 
+func process_narrative_cache_job_for_requester(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_requester_id"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": false, "status": "scheduler_paused"}
+	for job in scheduler.pending_jobs():
+		var requesters: Array = job.get("requesters", []) \
+			if job.get("requesters", []) is Array else []
+		if requesters.has(clean_requester) and _narrative_cache_job_has_worker(job):
+			return _process_narrative_cache_job(job)
+	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
+
+
+func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictionary:
+	var requester_id := _narrative_contact_offer_requester_id(agent_profile)
+	if requester_id.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(requester_id)
+	if not payload.is_empty():
+		return payload
+	var processed := process_narrative_cache_job_for_requester(requester_id)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(requester_id)
+	return payload
+
+
+func _ready_narrative_payload_for_requester(requester_id: String) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var ready: Dictionary = scheduler.ready_result_for_requester(requester_id)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	if str(payload.get("content_type", "")) != "story_agent_offer":
+		return {}
+	return payload
+
+
+func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:
+	var contact_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if contact_id.is_empty():
+		contact_id = str(agent_profile.get("agent_name", "")).strip_edges()
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if contact_id.is_empty() or system_id.is_empty():
+		return ""
+	return "prefetch:%s:%s.%s" % [
+		NarrativeCacheSchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT,
+		system_id,
+		contact_id,
+	]
+
+
 func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 	match str(job.get("kind", "")):
 		"system_contact_offer_bundle":

@@ -5857,6 +5857,8 @@ func _request_station_contact_work(
 	)
 	var request_profile := _story_augmented_agent_profile(profile)
 	pending_quest_context = _current_agent_quest_context(request_profile)
+	if _try_use_ready_cached_agent_offer(request_profile):
+		return
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
 		_on_background_quest_generated,
@@ -5891,6 +5893,8 @@ func _request_background_agent_quest() -> bool:
 		if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
 		else profile_faction
 	)
+	if _try_use_ready_cached_agent_offer(request_profile):
+		return true
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
 		_on_background_quest_generated,
@@ -5962,6 +5966,29 @@ func _current_agent_quest_context(agent_profile: Dictionary = {}) -> Dictionary:
 		context["story_beat_id"] = str(candidate.get("beat_id", ""))
 		context["story_objective_type"] = str(candidate.get("objective_type", ""))
 	return context
+
+
+func _try_use_ready_cached_agent_offer(agent_profile: Dictionary) -> bool:
+	var game_root := get_tree().current_scene
+	if game_root == null \
+			or not game_root.has_method("ready_cached_narrative_contact_offer"):
+		return false
+	var payload: Dictionary = game_root.call(
+		"ready_cached_narrative_contact_offer",
+		agent_profile
+	)
+	if payload.is_empty():
+		return false
+	var quest_data: Dictionary = payload.get("quest_data", {}) \
+		if payload.get("quest_data", {}) is Dictionary else {}
+	if quest_data.is_empty():
+		return false
+	GlobalState.trace(
+		"[TRACE] [UIManager] Using ready cached narrative contact offer: %s" %
+			str(payload.get("cache_key", ""))
+	)
+	_on_background_quest_generated(quest_data, true)
+	return true
 
 
 func _story_augmented_agent_profile(profile: Dictionary) -> Dictionary:
