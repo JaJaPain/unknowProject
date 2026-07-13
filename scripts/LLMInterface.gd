@@ -4878,9 +4878,32 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 	if not mood.is_empty():
 		mood_block = "Kaelen's current mood (color her tone with this — do NOT quote or explain it): %s. " % mood
 
+	var safe_packet_block := ""
+	var completion_packet_clause := _kaelen_interaction_packet_clause(
+		KaelenInteractionKindsType.TURN_IN_CLEAN,
+		quest_data
+	)
+	if not completion_packet_clause.is_empty():
+		safe_packet_block += (
+			"Completion context packet. Use only these allowed facts for the completion line; "
+			+ "safe earned aftermath may be mentioned only here if present:\n"
+			+ completion_packet_clause
+		)
+	var abandon_packet_clause := _kaelen_interaction_packet_clause(
+		KaelenInteractionKindsType.ABANDON,
+		quest_data
+	)
+	if not abandon_packet_clause.is_empty():
+		safe_packet_block += (
+			"Abandon context packet. Use only these allowed facts for the abandon line; "
+			+ "do not reveal completion aftermath here:\n"
+			+ abandon_packet_clause
+		)
+
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
 		mood_block + \
+		safe_packet_block + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
 		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \

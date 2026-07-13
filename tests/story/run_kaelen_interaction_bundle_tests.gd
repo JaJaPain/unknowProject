@@ -210,9 +210,13 @@ func _test_live_kaelen_handoff_prompt_uses_safe_packet() -> void:
 	_expect(
 		source.contains("KaelenInteractionPacketBuilderType.build_packet")
 			and source.contains("KaelenInteractionKindsType.AGENT_HANDOFF")
+			and source.contains("KaelenInteractionKindsType.TURN_IN_CLEAN")
+			and source.contains("KaelenInteractionKindsType.ABANDON")
+			and source.contains("safe earned aftermath may be mentioned only here")
+			and source.contains("do not reveal completion aftermath here")
 			and source.contains("Safe Kaelen interaction packet")
 			and source.contains("_kaelen_interaction_packet_clause("),
-		"Live Kaelen handoff generation does not include the safe interaction packet."
+		"Live Kaelen handoff/turn-in generation does not include the safe interaction packet."
 	)
 
 
