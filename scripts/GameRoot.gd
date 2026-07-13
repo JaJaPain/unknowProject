@@ -3227,6 +3227,19 @@ func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictiona
 	return payload
 
 
+func ready_cached_narrative_station_offer(station_id: String) -> Dictionary:
+	var requester_id := _narrative_station_offer_requester_id(station_id)
+	if requester_id.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(requester_id)
+	if not payload.is_empty():
+		return payload
+	var processed := process_narrative_cache_job_for_requester(requester_id)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(requester_id)
+	return payload
+
+
 func _ready_narrative_payload_for_requester(requester_id: String) -> Dictionary:
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	var ready: Dictionary = scheduler.ready_result_for_requester(requester_id)
@@ -3251,9 +3264,21 @@ func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:
 	]
 
 
+func _narrative_station_offer_requester_id(station_id: String) -> String:
+	var clean_station_id := station_id.strip_edges()
+	if clean_station_id.is_empty():
+		return ""
+	return "prefetch:%s:%s" % [
+		NarrativeCacheSchedulerType.TRIGGER_CURRENT_VISIBLE_STATION,
+		clean_station_id,
+	]
+
+
 func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 	match str(job.get("kind", "")):
 		"system_contact_offer_bundle":
+			return true
+		"current_station_agent_offer_bundle":
 			return true
 		_:
 			return false
@@ -3295,6 +3320,8 @@ func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 	match str(job.get("kind", "")):
 		"system_contact_offer_bundle":
 			return _system_contact_offer_payload_for_cache_job(job)
+		"current_station_agent_offer_bundle":
+			return _station_agent_offer_payload_for_cache_job(job)
 		_:
 			return {"ok": false, "status": "unsupported_job_kind"}
 
@@ -3335,6 +3362,45 @@ func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
 	}
 
 
+func _station_agent_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var agent_profile := _agent_profile_for_station_offer_cache_job(job)
+	if agent_profile.is_empty():
+		return {"ok": false, "status": "station_contact_unavailable"}
+	var story_context := build_story_agent_offer_context(agent_profile)
+	if not bool(story_context.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(story_context.get("status", "story_context_unavailable")),
+		}
+	agent_profile["story_agent_offer_context"] = story_context
+	if not StoryAgentOfferBuilderType.can_build(agent_profile):
+		return {"ok": false, "status": "template_builder_unavailable_for_candidate"}
+	var faction_arg := str(agent_profile.get("faction_id", "")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = str(agent_profile.get("faction", "neutral")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = "neutral"
+	var offer: Dictionary = StoryAgentOfferBuilderType.build_offer(
+		faction_arg,
+		agent_profile,
+		int(CampaignClock.total_minutes)
+	)
+	if offer.is_empty():
+		return {"ok": false, "status": "template_offer_build_failed"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_agent_offer",
+			"source": "story_agent_offer_builder",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"station_id": str(job.get("station_id", "")),
+			"quest_data": offer,
+			"agent_profile": agent_profile,
+		},
+	}
+
+
 func _agent_profile_for_system_contact_cache_job(job: Dictionary) -> Dictionary:
 	var contact_id := str(job.get("contact_id", "")).strip_edges()
 	var display_name := str(job.get("contact_display", "")).strip_edges()
@@ -3353,6 +3419,48 @@ func _agent_profile_for_system_contact_cache_job(job: Dictionary) -> Dictionary:
 		"faction_id": faction_id,
 		"agent_voice_profile_id": voice_profile_id,
 	}
+
+
+func _agent_profile_for_station_offer_cache_job(job: Dictionary) -> Dictionary:
+	var station_id := str(job.get("station_id", "")).strip_edges()
+	if station_id.is_empty():
+		return {}
+	for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+		if str(npc_data.get("role", "")) != "Faction contact":
+			continue
+		var faction := str(npc_data.get("faction", ""))
+		var faction_id := str(npc_data.get("faction_id", ""))
+		if faction.is_empty() and faction_id.is_empty():
+			continue
+		var faction_key: String = faction if not faction.is_empty() else faction_id
+		var faction_info := GlobalState.faction_info(faction_key)
+		var faction_display := str(
+			faction_info.get("name", faction_key.capitalize())
+		)
+		return {
+			"agent_id": str(npc_data.get("npc_id", "")),
+			"name": str(npc_name),
+			"agent_name": str(npc_name),
+			"agent_role": "%s Station Contact" % faction_display,
+			"agent_portrait_id": str(npc_data.get("portrait_id", "")),
+			"agent_voice_profile_id": str(
+				npc_data.get("voice_profile_id", "voice.neutral.v1")
+			),
+			"identity_record": npc_data.get("identity_record", {}),
+			"persona": (
+				npc_data.get("identity_record", {}).get("persona", {})
+				if npc_data.get("identity_record", {}) is Dictionary else {}
+			),
+			"voice_rules": (
+				npc_data.get("identity_record", {}).get("voice_rules", {})
+				if npc_data.get("identity_record", {}) is Dictionary else {}
+			),
+			"faction": faction,
+			"faction_id": faction_id,
+			"faction_display": faction_display,
+		}
+	return {}
 
 
 func queue_narrative_station_target_prefetch(

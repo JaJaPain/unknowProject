@@ -762,7 +762,9 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 		source.contains("func process_next_narrative_cache_job")
 			and source.contains("func process_narrative_cache_job_for_requester")
 			and source.contains("func ready_cached_narrative_contact_offer")
+			and source.contains("func ready_cached_narrative_station_offer")
 			and source.contains("\"system_contact_offer_bundle\"")
+			and source.contains("\"current_station_agent_offer_bundle\"")
 			and source.contains("StoryAgentOfferBuilderType.can_build")
 			and source.contains("StoryAgentOfferBuilderType.build_offer")
 			and source.contains("mark_generation_started")
@@ -781,6 +783,8 @@ func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() ->
 	_expect(
 		source.contains("func _try_use_ready_cached_agent_offer")
 			and source.contains("ready_cached_narrative_contact_offer")
+			and source.contains("ready_cached_narrative_station_offer")
+			and source.contains("allow_station_offer")
 			and source.contains("_on_background_quest_generated(quest_data, true)")
 			and source.contains("if _try_use_ready_cached_agent_offer(request_profile):")
 			and source.contains("QuestManager.request_new_quest"),

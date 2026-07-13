@@ -5893,7 +5893,7 @@ func _request_background_agent_quest() -> bool:
 		if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
 		else profile_faction
 	)
-	if _try_use_ready_cached_agent_offer(request_profile):
+	if _try_use_ready_cached_agent_offer(request_profile, true):
 		return true
 	QuestManager.request_new_quest(
 		faction_arg if not faction_arg.is_empty() else "neutral",
@@ -5968,7 +5968,10 @@ func _current_agent_quest_context(agent_profile: Dictionary = {}) -> Dictionary:
 	return context
 
 
-func _try_use_ready_cached_agent_offer(agent_profile: Dictionary) -> bool:
+func _try_use_ready_cached_agent_offer(
+	agent_profile: Dictionary,
+	allow_station_offer: bool = false
+) -> bool:
 	var game_root := get_tree().current_scene
 	if game_root == null \
 			or not game_root.has_method("ready_cached_narrative_contact_offer"):
@@ -5977,6 +5980,12 @@ func _try_use_ready_cached_agent_offer(agent_profile: Dictionary) -> bool:
 		"ready_cached_narrative_contact_offer",
 		agent_profile
 	)
+	if payload.is_empty() and allow_station_offer \
+			and game_root.has_method("ready_cached_narrative_station_offer"):
+		payload = game_root.call(
+			"ready_cached_narrative_station_offer",
+			_current_station_contact_id()
+		)
 	if payload.is_empty():
 		return false
 	var quest_data: Dictionary = payload.get("quest_data", {}) \
