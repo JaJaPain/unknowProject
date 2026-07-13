@@ -967,6 +967,7 @@ Checklist:
 - [ ] Trigger exact completion generation when the objective becomes complete, not only at the hand-in click. Persist it through save/reload.
 - [ ] Select turn-in variant from the outcome snapshot: early/late, clean/damaged, standard/advance/hazard terms, partial delivery history, and story fact learned.
 - [ ] Have Kaelen name the visible effect when appropriate: the shield line restarts, the convoy route reopens, the contact is safe, the evidence changed the case. Do not reduce payoff to “credits wired.”
+- [ ] Let Kaelen reveal earned aftermath/background after completion without spoiling protected truth beforehand. Example: after the player kills ships for Agent X, Kaelen may reveal those ships were preparing to hit the agent's home city/family, framing the job as meaningful while still keeping director-only secrets hidden.
 - [ ] Let abandon/decline change relationship and future handoff tone. Keep professional continuity; Kaelen does not reset to generic irritation next mission.
 - [ ] Public-board turn-ins remain disgusted with the board, but must reference the actual poster/job/outcome and current story pressure.
 - [ ] First arrival in a new system gets one campaign/system-specific Kaelen line prepared during gate travel. Kaelen may know broker-level information, not omniscient details of the player’s live piloting.
@@ -976,6 +977,7 @@ Checklist:
 Phase 7 exit gate:
 
 - [ ] Turn in the same mechanical objective under three different causes/outcomes; Kaelen produces three materially different, factually correct reactions.
+- [ ] Completion reactions can reveal safe newly-earned context, but never reveal `kaelen_hidden_angle`, undelivered hints, or director-only facts.
 - [ ] Save after accepting, reload, complete, and turn in: the contextual line remains ready and correct.
 - [ ] No generic stock completion line appears in 50 successful V2 turn-ins.
 - [ ] Secret-salted Kaelen leak tests pass.
