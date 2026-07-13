@@ -4908,6 +4908,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
 		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
 		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
+		"Preferred Kaelen turn-in shape: let a little heart show for one beat, then cover it with profit. Example pattern: 'They're safe now. More importantly, we got paid in full.' Do not become sentimental for the whole line. " + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
 		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \

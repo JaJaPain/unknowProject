@@ -303,6 +303,13 @@ func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> voi
 		"Kaelen clarity guard does not block unexplained next tasks while allowing generic resolved offscreen benefits."
 	)
 	_expect(
+		source.contains("let a little heart show for one beat")
+			and source.contains("cover it with profit")
+			and source.contains("we got paid in full")
+			and source.contains("Do not become sentimental for the whole line"),
+		"Kaelen completion prompt does not preserve the heart-then-profit turn-in shape."
+	)
+	_expect(
 		not source.contains("Clean and Easy done? Good. Your credits hit my ledger"),
 		"Screenshot regression text was accidentally hard-coded into production."
 	)
