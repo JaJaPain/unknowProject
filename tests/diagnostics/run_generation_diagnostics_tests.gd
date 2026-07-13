@@ -145,6 +145,7 @@ func _test_records_lifecycle_timestamps() -> void:
 		"text_presented",
 		"tts_cache_started",
 		"tts_ready",
+		"tts_failed",
 		"interaction_clicked",
 	]
 	for stage in stages:
@@ -180,6 +181,10 @@ func _test_records_lifecycle_timestamps() -> void:
 	_expect(
 		int(summary.get("events_by_reason", {}).get("tts_ready", 0)) == 1,
 		"Lifecycle TTS ready timestamp was not recorded."
+	)
+	_expect(
+		int(summary.get("events_by_reason", {}).get("tts_failed", 0)) == 1,
+		"Lifecycle TTS failed timestamp was not recorded."
 	)
 	_expect(
 		int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == 1,

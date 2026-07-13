@@ -872,7 +872,8 @@ Primary files:
   - 2026-07-13: Checkpoint restore now discards disposable narrative-cache entries whose timeline/story/knowledge/mission revisions do not match the restored checkpoint, while truth-frozen accepted bundles are preserved.
 - [x] Prevent obsolete TTS jobs from delaying current P0 fields.
   - 2026-07-13: Scheduler coverage now locks `tts_cache` work into an `audio_pending` state after cache start, so it no longer consumes the generation lane or blocks fresh P0 text jobs; same-priority queued text still dispatches before queued audio.
-- [ ] Preserve subtitles if TTS fails; record the audio failure separately from text-source degradation.
+- [x] Preserve subtitles if TTS fails; record the audio failure separately from text-source degradation.
+  - 2026-07-13: `tts_failed` is now a first-class diagnostics lifecycle event for TTS parse/request failures, while scheduler/store coverage keeps ready text/subtitles separate from audio failure/degradation state.
 
 #### Phase 6E — Prefetch triggers
 

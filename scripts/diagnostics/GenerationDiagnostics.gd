@@ -16,6 +16,7 @@ const LIFECYCLE_STAGES := [
 	"text_presented",
 	"tts_cache_started",
 	"tts_ready",
+	"tts_failed",
 	"interaction_clicked",
 ]
 # Permanent, in-repo fallback log so it can be reviewed any session (gitignored

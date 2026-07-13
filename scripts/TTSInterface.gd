@@ -293,8 +293,22 @@ func _start_background_cache_request(
 				GlobalState.trace("[TRACE] [TTSInterface] Background caching completed for text hash: %d voice=%s" % [clean_text.hash(), voice_id])
 			else:
 				print("[TTSInterface] Background cache parsing failed for text hash: ", clean_text.hash())
+				_record_tts_cache_failure(
+					"audio_parse_failed",
+					voice_id,
+					clean_text,
+					response_code,
+					result
+				)
 		else:
 			print("[TTSInterface] Background cache request failed. Code: ", response_code)
+			_record_tts_cache_failure(
+				"http_or_timeout_failed",
+				voice_id,
+				clean_text,
+				response_code,
+				result
+			)
 			
 		active_cache_requests -= 1
 		GlobalState.trace("[TRACE] [TTSInterface] Active cache requests left: %d" % active_cache_requests)
@@ -304,8 +318,36 @@ func _start_background_cache_request(
 	var err = temp_http.request(TTS_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
+		_record_tts_cache_failure(
+			"request_start_failed_%d" % err,
+			voice_id,
+			clean_text,
+			0,
+			err
+		)
 		active_cache_requests -= 1
 		_drain_cache_queue()
+
+
+func _record_tts_cache_failure(
+	reason: String,
+	voice_id: String,
+	clean_text: String,
+	response_code: int,
+	result_code: int
+) -> void:
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"tts_cache",
+		"tts_failed",
+		"TTSInterface",
+		{
+			"failure_reason": reason,
+			"voice_id": voice_id,
+			"text_hash": clean_text.hash(),
+			"response_code": response_code,
+			"result": result_code,
+		}
+	)
 
 
 func _drain_cache_queue() -> void:
