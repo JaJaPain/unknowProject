@@ -847,7 +847,8 @@ Primary files:
 
 - [ ] Replace sequential best-of-three quest calls with one tightly constrained bundle call.
 - [ ] If validation fails, retry once in the background with precise field errors. Do not expose the offer until valid or degraded.
-- [ ] Build a deterministic, fact-slot-aware emergency composer for required fields. Its output must still include the real speaker, cause, stake, objective, and relationship; it is logged as degraded content.
+- [x] Build a deterministic, fact-slot-aware emergency composer for required fields. Its output must still include the real speaker, cause, stake, objective, and relationship; it is logged as degraded content.
+  - 2026-07-13: Template-safe story-agent offers now stamp deterministic fallback conversation bundles as degraded/fallback content and record them in generation diagnostics, while preserving speaker, cause, stake, objective, and relationship coverage.
 - [ ] Never show “checking requests…”, “Listening…”, or `...` while a model call runs on a V2 interaction. If content is not ready, either keep the button in a non-intrusive “work pending” state before selection or serve a validated degraded bundle instantly.
 - [ ] Do not use a generic Kaelen line as fallback for a different NPC.
 

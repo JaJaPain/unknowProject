@@ -110,6 +110,7 @@ static func _attach_mission_conversation(
 		candidate,
 		budget
 	)
+	var speaker_card := _speaker_card(agent_profile)
 	var conversation_plan := MissionConversationPlanType.build_plan(
 		mission_plan,
 		_knowledge_candidates(candidate),
@@ -130,17 +131,35 @@ static func _attach_mission_conversation(
 	var bundle := MissionConversationCompilerType.fallback_bundle(
 		mission_plan,
 		conversation_plan,
-		_speaker_card(agent_profile)
+		speaker_card
 	)
 	var validation := DialogueBundleValidatorType.validate_bundle(
 		bundle,
 		conversation_plan,
-		_speaker_card(agent_profile)
+		speaker_card
 	)
 	if not bool(validation.get("ok", false)):
 		return
 	quest["mission_conversation_plan"] = conversation_plan
 	quest["mission_dialogue_bundle"] = bundle
+	quest["mission_dialogue_bundle_source"] = "deterministic_fallback"
+	quest["mission_dialogue_bundle_degraded"] = true
+	quest["mission_dialogue_bundle_degraded_reason"] = "template_safe_emergency_composer"
+	var diagnostics := _generation_diagnostics()
+	if diagnostics != null and diagnostics.has_method("record_fallback"):
+		diagnostics.record_fallback(
+			"mission_conversation_bundle",
+			"template_safe_emergency_composer",
+			"StoryAgentOfferBuilder",
+			{
+				"agent_id": str(agent_profile.get("agent_id", "")),
+				"agent_name": str(quest.get("agent_name", "")),
+				"objective_type": str(mission_plan.get("objective_type", "")),
+				"story_beat_id": str(candidate.get("beat_id", "")),
+				"cause_id": str(candidate.get("cause_id", "")),
+				"relationship_tier": str(speaker_card.get("relationship_tier", "")),
+			}
+		)
 
 
 static func _mission_conversation_plan_source(
@@ -164,6 +183,13 @@ static func _mission_conversation_plan_source(
 		"completion_fact_ids": _string_array(candidate.get("completion_fact_ids", [])),
 		"difficulty_band": str(budget.get("difficulty_band", "")),
 	}
+
+
+static func _generation_diagnostics() -> Node:
+	var loop := Engine.get_main_loop()
+	if loop == null or not (loop is SceneTree):
+		return null
+	return (loop as SceneTree).root.get_node_or_null("GenerationDiagnostics")
 
 
 static func _knowledge_candidates(candidate: Dictionary) -> Array[Dictionary]:

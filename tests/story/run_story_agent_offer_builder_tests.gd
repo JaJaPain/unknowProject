@@ -8,6 +8,9 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	var diagnostics := _generation_diagnostics()
+	if diagnostics != null and diagnostics.has_method("reset"):
+		diagnostics.reset()
 	_test_template_backed_story_agent_offers_validate()
 
 	if _failures.is_empty():
@@ -148,6 +151,30 @@ func _assert_story_offer_conversation_bundle(
 		str(bundle.get("opening", "")).contains("trusted"),
 		"Offer dialogue bundle opening does not preserve relationship tier for %s." % objective_type
 	)
+	_expect(
+		str(offer.get("mission_dialogue_bundle_source", ""))
+				== "deterministic_fallback"
+			and bool(offer.get("mission_dialogue_bundle_degraded", false))
+			and str(offer.get("mission_dialogue_bundle_degraded_reason", ""))
+				== "template_safe_emergency_composer",
+		"Offer dialogue bundle fallback provenance was not explicit for %s." %
+			objective_type
+	)
+	var diagnostics := _generation_diagnostics()
+	if diagnostics != null and diagnostics.has_method("summary"):
+		var summary: Dictionary = diagnostics.summary()
+		var by_type: Dictionary = summary.get("by_type", {}) \
+			if summary.get("by_type", {}) is Dictionary else {}
+		var by_reason: Dictionary = summary.get("by_reason", {}) \
+			if summary.get("by_reason", {}) is Dictionary else {}
+		_expect(
+			int(by_type.get("mission_conversation_bundle", 0)) > 0
+				and int(by_reason.get(
+					"template_safe_emergency_composer",
+					0
+				)) > 0,
+			"Offer dialogue fallback was not recorded in generation diagnostics."
+		)
 
 
 func _profile_for_objective(objective_type: String) -> Dictionary:
@@ -186,3 +213,7 @@ func _profile_for_objective(objective_type: String) -> Dictionary:
 			},
 		},
 	}
+
+
+func _generation_diagnostics() -> Node:
+	return root.get_node_or_null("GenerationDiagnostics")
