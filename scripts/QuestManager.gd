@@ -685,7 +685,7 @@ func complete_quest():
 	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
 	var focused = _collection.get_focused()
 	if focused:
-		focused.transition_to(MissionInstanceType.State.COMPLETED)
+		_transition_to_completed(focused)
 	_collection.remove(completed_id)
 	_increment_mission_history_revision("completed", completed_quest)
 	quest_completed.emit()
@@ -780,6 +780,17 @@ func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 			_schedule_respawn(respawn_faction)
 
 
+# COMPLETED is only reachable through READY_TO_TURN_IN. Instances that get
+# here still ACTIVE (saves from before the ready-state fix, or resolutions
+# like the comms bribe that skip the progress path) take the hop first.
+func _transition_to_completed(instance) -> void:
+	if instance == null:
+		return
+	if instance.state == MissionInstanceType.State.ACTIVE:
+		instance.transition_to(MissionInstanceType.State.READY_TO_TURN_IN)
+	instance.transition_to(MissionInstanceType.State.COMPLETED)
+
+
 func _mark_objective_ready_if_completed(mission) -> void:
 	if mission == null:
 		return
@@ -793,6 +804,10 @@ func _mark_objective_ready_if_completed(mission) -> void:
 	mission.data["objective_completed_notified"] = true
 	mission.data["objective_completed_time_minutes"] = CampaignClock.total_minutes
 	mission.data["objective_complete_pending_turn_in"] = true
+	# READY_TO_TURN_IN persists through save/reload via _instance_state.
+	# No current capability can regress a completed objective; if one ever
+	# does, READY_TO_TURN_IN -> ACTIVE is a valid transition back.
+	mission.transition_to(MissionInstanceType.State.READY_TO_TURN_IN)
 	quest_objective_completed_details.emit(mission.data.duplicate(true))
 
 
@@ -821,7 +836,7 @@ func resolve_comms_branch(branch_id: String) -> void:
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -3.0)
 			GlobalState.adjust_reputation(target_faction, 2.0)
 			_despawn_ceasefire_targets(target_faction)
-			focused.transition_to(MissionInstanceType.State.COMPLETED)
+			_transition_to_completed(focused)
 			var rid: String = focused.runtime_id
 			_record_board_cooldown(focused.data)
 			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: accepted bribe (%d SC)." % bribe)

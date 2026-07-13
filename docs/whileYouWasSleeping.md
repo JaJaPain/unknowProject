@@ -1724,3 +1724,24 @@ validation, speech_service, game_content_registry, local_model_gateway.
   semantic_movement_event through severity/preemption/cooldown rules).
 - PowerShell note: git commit -m here-strings must not contain double
   quotes (PS 5.1 native-arg quoting mangles them into extra pathspecs).
+
+### READY_TO_TURN_IN dead-state fix (spawned task, 2026-07-13)
+- Root cause: VALID_TRANSITIONS required ACTIVE -> READY_TO_TURN_IN ->
+  COMPLETED but nothing ever set READY_TO_TURN_IN, so every completion
+  (and the comms accept_bribe resolution) warned Invalid transition and
+  removed the instance still ACTIVE.
+- Fix: _mark_objective_ready_if_completed transitions the instance to
+  READY_TO_TURN_IN at objective completion (READY -> ACTIVE remains valid
+  if a future capability regresses); complete_quest and accept_bribe go
+  through _transition_to_completed(), which hops via READY_TO_TURN_IN when
+  the instance is still ACTIVE (pre-fix saves, paths that skip progress);
+  READY_TO_TURN_IN -> EXPIRED added so timed contracts can expire while
+  awaiting hand-in (_cleanup path at QuestManager check_active_quest_expiration).
+- Proven: new tests/domain/run_mission_state_transition_tests.gd (unit
+  transition rules, dict round trip, accept -> deliver -> READY -> real
+  SaveMigrator save/reload -> still READY -> complete_quest lands
+  COMPLETED, timed expire from READY lands EXPIRED). Regressions green:
+  timed missions, Kaelen bundle persistence (its earlier Invalid
+  transition warning is now gone from the output), comms reversal,
+  mission contract, mission history revision, parse check.
+- bugs.md entry moved from Active to Fixed.
