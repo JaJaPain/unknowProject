@@ -805,12 +805,13 @@ func _on_system_arrival_prefetch(
 	system_id: String,
 	arrival_gate_id: String
 ) -> void:
-	_queue_narrative_prefetch_jobs_for_event(
-		_narrative_prefetch_event_from_system_arrival(
-			system_id,
-			arrival_gate_id
-		)
+	var event := _narrative_prefetch_event_from_system_arrival(
+		system_id,
+		arrival_gate_id
 	)
+	_queue_narrative_prefetch_jobs_for_event(event)
+	if _can_process_story_agent_offer_cache_jobs():
+		process_narrative_cache_jobs_for_kind("system_contact_offer_bundle", 12)
 
 
 func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
@@ -3245,6 +3246,43 @@ func process_narrative_cache_job_for_requester(requester_id: String) -> Dictiona
 	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
 
 
+func process_narrative_cache_jobs_for_kind(kind: String, max_jobs: int = 12) -> Dictionary:
+	var clean_kind := kind.strip_edges()
+	if clean_kind.is_empty():
+		return {"ok": false, "processed": 0, "status": "missing_job_kind"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": 0, "status": "scheduler_paused"}
+	var cap := maxi(1, max_jobs)
+	var processed_count := 0
+	var ready_count := 0
+	var failed_count := 0
+	var statuses: Array[String] = []
+	for job in scheduler.pending_jobs():
+		if processed_count >= cap:
+			break
+		if str(job.get("kind", "")) != clean_kind:
+			continue
+		if not _narrative_cache_job_has_worker(job):
+			continue
+		var result := _process_narrative_cache_job(job)
+		if not bool(result.get("processed", false)):
+			continue
+		processed_count += 1
+		statuses.append(str(result.get("status", "ready")))
+		if bool(result.get("ok", false)):
+			ready_count += 1
+		else:
+			failed_count += 1
+	return {
+		"ok": failed_count == 0,
+		"processed": processed_count,
+		"ready": ready_count,
+		"failed": failed_count,
+		"statuses": statuses,
+	}
+
+
 func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictionary:
 	var requester_id := _narrative_contact_offer_requester_id(agent_profile)
 	if requester_id.is_empty():
@@ -3466,6 +3504,15 @@ func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 			return true
 		_:
 			return false
+
+
+func _can_process_story_agent_offer_cache_jobs() -> bool:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return false
+	var chapter := int(StoryManager.story_state.get("chapter", 1)) \
+		if is_instance_valid(StoryManager) else 1
+	return not campaign_chapter_packet_store.latest_packet_for_chapter(chapter).is_empty()
 
 
 func _process_narrative_cache_job(job: Dictionary) -> Dictionary:

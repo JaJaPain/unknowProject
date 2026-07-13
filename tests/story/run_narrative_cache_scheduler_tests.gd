@@ -780,6 +780,8 @@ func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
 			and source.contains("_narrative_prefetch_event_from_system_arrival")
 			and source.contains("_system_arrival_contact_profiles")
 			and source.contains("\"contact_profiles\"")
+			and source.contains("process_narrative_cache_jobs_for_kind(\"system_contact_offer_bundle\"")
+			and source.contains("_can_process_story_agent_offer_cache_jobs")
 			and source.contains("QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)")
 			and source.contains("NarrativeCacheSchedulerType.prefetch_jobs_for_event"),
 		"GameRoot mission lifecycle hooks are not wired to the narrative prefetch planner."
@@ -854,6 +856,7 @@ func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void
 	_expect(
 		source.contains("func process_next_narrative_cache_job")
 			and source.contains("func process_narrative_cache_job_for_requester")
+			and source.contains("func process_narrative_cache_jobs_for_kind")
 			and source.contains("func ready_cached_narrative_contact_offer")
 			and source.contains("func ready_cached_narrative_station_offer")
 			and source.contains("func _mark_narrative_cache_interaction_clicked")
