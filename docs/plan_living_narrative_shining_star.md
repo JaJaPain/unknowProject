@@ -1062,7 +1062,8 @@ Phase 8 exit gate:
 
 - [ ] A scripted flight with repeated dock, boost, retarget, gate, and arrival events produces no exact line repeats and respects silence/cooldowns.
 - [ ] N.O.V.A. references only knowledge available to the player and the ship.
-- [ ] N.O.V.A. recognizes meaningful patterns (repeat behavior, mission route, rough outcome) without narrating every control input.
+- [x] N.O.V.A. recognizes meaningful patterns (repeat behavior, mission route, rough outcome) without narrating every control input.
+  - 2026-07-13: Structurally guaranteed and deterministically tested: raw control inputs never reach N.O.V.A. — she only consumes `ShipBehaviorObserver`'s aggregated semantic events (quick re-boost, autopilot churn, same-station return, clean/rough transits), which are themselves rate-limited (30s global, 180s per event) and carry mission-route context (`route_deviation`). `run_ship_behavior_observer_tests.gd` proves patterns fire and non-patterns stay quiet; `run_nova_tests.gd` proves repeated beats yield near-total silence. The remaining exit gates need a live scripted flight (no-repeat across a real session, knowledge audit of generated output, and instant reactions with the model process stopped) — left for gameplay smoke.
 - [ ] Movement reactions remain instant with the model process stopped after banks are prepared.
 
 ### Phase 9 — Instant, knowledge-aware lounge conversations

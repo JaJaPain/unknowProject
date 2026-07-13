@@ -1771,3 +1771,24 @@ validation, speech_service, game_content_registry, local_model_gateway.
   the labeled_field @@label approach per project_labeled_field_generation
   memory), then relevance scoring (needs generated lines tagged
   mission-aware, so it comes after generation).
+
+## Session 2026-07-13 (continued 2): Phase 8B completed
+- 0aa732b FallbackLineBank accepts {kind, text} generated entries so one
+  batch spans several categories.
+- 6dbcfdb LLMInterface.request_nova_line_bank_batch: flat @@label batches
+  (max 10 fields), small model (nova_line_bank capability, 30s timeout),
+  per-line validation (length/speaker-prefix/braces/dupes), pure parser +
+  validator proven headless in tests/ai/run_nova_line_bank_batch_tests.gd.
+- 11fea48 Refill worker dispatches an 8-field batch (5 movement semantics
+  + 3 arrivals) with persona/quirk/bible-tone/system-fact/recent-actions
+  context; template floor on failure, logged template_refill_used.
+- 128e419 Relevance scoring: consume(prefer_generated) serves story-aware
+  generated lines before template jokes; Nova sets it when the movement
+  context shows a live mission beat.
+- ALL Phase 8B checkboxes now checked. Phase 8 exit gates: pattern
+  recognition checked (structural + tests); the other three (scripted
+  flight no-repeat, knowledge audit of generated output, instant with
+  model stopped) need a live gameplay smoke run.
+- NOTE for the smoke run: the nova_line_bank batch has never run against
+  live Ollama — verify @@label format compliance on qwen3 small and check
+  GenerationDiagnostics for all_lines_rejected / template_refill_used.
