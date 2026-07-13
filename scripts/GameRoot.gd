@@ -8706,12 +8706,13 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		story_context = StoryManager.get_story_context_block()
 		var state: Dictionary = StoryManager.story_state
 		bridge_summary = (
-			"Bible seeded: %s | Chapter: %d | Tensions: %d | Hooks: %d | Regeneration fallback count: %d" % [
+			"Bible seeded: %s | Chapter: %d | Tensions: %d | Hooks: %d | Regeneration fallback count: %d\n%s" % [
 				str(bool(state.get("bible_seeded", false))),
 				int(state.get("chapter", 1)),
 				(state.get("active_tensions", []) as Array).size(),
 				(state.get("pending_hooks", []) as Array).size(),
 				int(state.get("regeneration_fallback_count", 0)),
+				_dev_format_narrative_cache_summary(),
 			]
 		)
 		full_story_state_json = JSON.stringify(state, "\t")
@@ -8743,6 +8744,35 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		"character_cards_summary": character_cards_summary,
 		"full_story_state_json": full_story_state_json,
 	}
+
+
+func _dev_format_narrative_cache_summary() -> String:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var summary: Dictionary = scheduler.diagnostic_summary()
+	var content_counts: Dictionary = summary.get("content_type_counts", {}) \
+		if summary.get("content_type_counts", {}) is Dictionary else {}
+	var source_counts: Dictionary = summary.get("source_counts", {}) \
+		if summary.get("source_counts", {}) is Dictionary else {}
+	return (
+		"Narrative cache: ready payloads=%d | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
+			int(summary.get("ready_payloads", 0)),
+			_dev_format_count_dictionary(content_counts),
+			_dev_format_count_dictionary(source_counts),
+			int(summary.get("fallback_uses", 0)),
+			int(summary.get("generated_replacements", 0)),
+		]
+	)
+
+
+func _dev_format_count_dictionary(counts: Dictionary) -> String:
+	if counts.is_empty():
+		return "none"
+	var parts: Array[String] = []
+	var keys: Array = counts.keys()
+	keys.sort()
+	for key in keys:
+		parts.append("%s:%d" % [str(key), int(counts.get(key, 0))])
+	return ", ".join(parts)
 
 
 func _dev_format_character_cards() -> String:

@@ -35,6 +35,7 @@ func _initialize() -> void:
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
+	_test_dev_story_snapshot_reports_narrative_cache_diagnostics()
 	_test_loading_gate_precaches_startup_line_bank_tts()
 	_test_system_arrival_precaches_current_line_bank_tts()
 	_test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback()
@@ -902,6 +903,23 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("\"fallback_bank\": fallback_bank")
 			and source.contains("\"fallback_target_size\""),
 		"GameRoot cache worker is not wired to safely build Kaelen/N.O.V.A. line banks."
+	)
+
+
+func _test_dev_story_snapshot_reports_narrative_cache_diagnostics() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot DevPanel cache diagnostics wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _dev_format_narrative_cache_summary")
+			and source.contains("scheduler.diagnostic_summary()")
+			and source.contains("ready payloads=%d")
+			and source.contains("fallback uses=%d")
+			and source.contains("generated replacements=%d")
+			and source.contains("_dev_format_count_dictionary"),
+		"DevPanel story snapshot does not expose narrative cache source diagnostics."
 	)
 
 
