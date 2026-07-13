@@ -7,6 +7,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_create_bank_caps_at_target_and_marks_fallbacks()
+	_test_create_bank_preserves_per_line_kinds()
 	_test_consume_marks_used_and_counts_fallback_usage()
 	_test_generated_lines_replace_used_fallback_slots()
 	_test_generated_lines_do_not_overfill_full_unused_bank()
@@ -39,6 +40,27 @@ func _test_create_bank_caps_at_target_and_marks_fallbacks() -> void:
 				and not bool(entry.get("used", false)),
 			"Initial bank entries must be unused fallback lines."
 		)
+
+
+func _test_create_bank_preserves_per_line_kinds() -> void:
+	var bank := BankType.create_bank("kaelen", "agent_handoff", [
+		{"kind": "first_system_arrival", "text": "Welcome to the new system."},
+		"Ask the expensive question.",
+	], 20)
+	var entries: Array = bank.get("entries", [])
+	_expect(
+		entries.size() == 2
+			and str((entries[0] as Dictionary).get("kind", "")) == "first_system_arrival"
+			and str((entries[1] as Dictionary).get("kind", "")) == "agent_handoff",
+		"Fallback bank did not preserve per-line kinds."
+	)
+	var consumed: Dictionary = BankType.consume(bank, "first_system_arrival")
+	var line: Dictionary = consumed.get("line", {})
+	_expect(
+		bool(consumed.get("ok", false))
+			and str(line.get("text", "")) == "Welcome to the new system.",
+		"Preferred-kind consume did not select the first-system-arrival line."
+	)
 
 
 func _test_consume_marks_used_and_counts_fallback_usage() -> void:

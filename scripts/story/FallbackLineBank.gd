@@ -18,10 +18,17 @@ static func create_bank(
 	var index := 0
 	for raw_line in fallback_lines:
 		var text := str(raw_line).strip_edges()
+		var entry_kind := clean_kind
+		if raw_line is Dictionary:
+			var line: Dictionary = raw_line
+			text = str(line.get("text", "")).strip_edges()
+			entry_kind = str(line.get("kind", clean_kind)).strip_edges()
+			if entry_kind.is_empty():
+				entry_kind = clean_kind
 		if text.is_empty() or seen.has(text):
 			continue
 		seen[text] = true
-		entries.append(_entry(clean_speaker, clean_kind, text, "fallback", index))
+		entries.append(_entry(clean_speaker, entry_kind, text, "fallback", index))
 		index += 1
 		if entries.size() >= clean_target:
 			break

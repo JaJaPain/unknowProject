@@ -48,6 +48,7 @@ func _initialize() -> void:
 	_test_loading_gate_precaches_startup_line_bank_tts()
 	_test_system_arrival_precaches_current_line_bank_tts()
 	_test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback()
+	_test_kaelen_system_arrival_uses_ready_line_bank_before_template()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -1289,6 +1290,26 @@ func _test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback() -> void:
 			and source.contains("Using ready Kaelen handoff bank line")
 			and source.contains("Using canned handoff fallback"),
 		"Kaelen handoff does not consume ready bank lines before canned fallback."
+	)
+
+
+func _test_kaelen_system_arrival_uses_ready_line_bank_before_template() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot Kaelen arrival bank wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _ready_kaelen_system_arrival_bank_line")
+			and source.contains("_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)")
+			and source.contains("func _queue_gate_travel_kaelen_arrival_prefetch")
+			and source.contains("process_narrative_cache_job_for_requester")
+			and source.contains("consume_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_kaelen:%s")
+			and source.contains("KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL")
+			and source.contains("_kaelen_arrival_line")
+			and source.contains("\"kind\": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL"),
+		"Kaelen system arrival does not consume ready first-arrival bank lines before template fallback."
 	)
 
 

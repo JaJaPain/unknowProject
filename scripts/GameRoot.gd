@@ -392,6 +392,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	GlobalState.current_system_id = runtime_system_id
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
+	_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)
 
 	# Let the player fly down the 3D tunnel for a satisfying duration.
 	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
@@ -820,6 +821,27 @@ func _on_system_arrival_prefetch(
 		process_narrative_cache_jobs_for_kind("system_contact_offer_bundle", 12)
 
 
+func _queue_gate_travel_kaelen_arrival_prefetch(
+	system_id: String,
+	arrival_gate_id: String
+) -> void:
+	if system_id.is_empty() or GlobalState.is_current_system_home():
+		return
+	if system_id in GlobalState.kaelen_arrival_systems_seen:
+		return
+	var sys_def := system_registry.get_system(system_id) if system_registry else null
+	if sys_def == null or sys_def.origin != "generated":
+		return
+	var event := _narrative_prefetch_event_from_system_arrival(
+		system_id,
+		arrival_gate_id
+	)
+	_queue_narrative_prefetch_jobs_for_event(event)
+	process_narrative_cache_job_for_requester(
+		"prefetch:current_system_kaelen:%s" % system_id
+	)
+
+
 func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
 	if system_id.is_empty() or GlobalState.is_current_system_home():
 		return
@@ -834,8 +856,43 @@ func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
 	if not faction_names.is_empty():
 		faction_clause = _human_join(faction_names)
 	var story_pack := _system_story_pack_for_definition(sys_def)
-	var line := _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
+	var line := _ready_kaelen_system_arrival_bank_line(system_id)
+	if line.is_empty():
+		line = _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
 	GlobalState.emit_chatter("KAELEN", line, Color(0.85, 0.5, 1.0))
+
+
+func _ready_kaelen_system_arrival_bank_line(system_id: String) -> String:
+	var clean_system_id := system_id.strip_edges()
+	if clean_system_id.is_empty():
+		return ""
+	var requester_id := "prefetch:current_system_kaelen:%s" % clean_system_id
+	var payload := consume_cached_narrative_line_bank(
+		requester_id,
+		KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+	)
+	if payload.is_empty():
+		return ""
+	var consumed_line: Dictionary = payload.get("consumed_line", {}) \
+		if payload.get("consumed_line", {}) is Dictionary else {}
+	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
+	if not consumed_text.is_empty():
+		return consumed_text
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var candidates: Array[String] = []
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var line: Dictionary = raw_line
+		if str(line.get("kind", "")) != KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL:
+			continue
+		var text := str(line.get("text", "")).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return ""
+	return candidates[randi() % candidates.size()]
 
 
 func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
@@ -4099,6 +4156,22 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 				"context_block": context_block,
 				"line_kind": KaelenInteractionKindsType.AGENT_HANDOFF,
 				"fallback_lines": [
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "Welcome to %s, Shiny. Broker rule: learn who owns the room before you buy the lie." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "%s has fresh stars, old debts, and enough local pride to make invoices interesting." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "First time in %s. Smile like a guest, listen like a creditor, and touch nothing for free." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "%s just became our problem, Shiny. Conveniently, problems bill by the hour." % system_label,
+					},
 					"Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
 					"The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
 					"Chapter %d of this mess starts small. That is usually how the costly ones introduce themselves." % chapter,
