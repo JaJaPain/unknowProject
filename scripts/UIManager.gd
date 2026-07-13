@@ -307,10 +307,6 @@ const _CHAT_DEFAULT_HEIGHT := 200.0
 # Empty string means "not yet fetched" or "fetch failed — fall back to canned 5".
 var cached_unique_intro: String = ""
 
-# Dynamic Kaelen reaction lines — unique per quest, generated on acceptance
-var cached_completion_line: String = ""
-var cached_abandon_line: String = ""
-
 var loading_panel: Panel
 var loading_bar: ProgressBar
 # N.O.V.A.'s interactive ambush alert (Dismiss / Evasive / Engage). Only one at a
@@ -10582,13 +10578,24 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	# quiet after this contract resolves instead of feeling like an infinite
 	# contract printer.
 	
-	# Generate unique Kaelen completion/abandon lines for THIS quest in the background
-	cached_completion_line = ""
-	cached_abandon_line = ""
-	GlobalState.trace("[TRACE] [UIManager] Requesting unique Kaelen reaction lines for: " + str(quest_data.get("title", "quest")))
-	LLMInterface.request_kaelen_reaction(quest_data, func(comp_line: String, abn_line: String):
-		cached_completion_line = comp_line
-		cached_abandon_line = abn_line
+	# Generate unique Kaelen completion/abandon lines for THIS mission in the
+	# background. Store them on the active mission, not UI globals, so save/reload
+	# keeps the exact reaction bundle tied to the accepted runtime id.
+	QuestManager.clear_active_kaelen_reaction_bundle()
+	var kaelen_reaction_mission := QuestManager.active_quest.duplicate(true)
+	var kaelen_reaction_runtime_id := str(
+		kaelen_reaction_mission.get("runtime_id", "")
+	)
+	GlobalState.trace("[TRACE] [UIManager] Requesting unique Kaelen reaction lines for: " + str(kaelen_reaction_mission.get("title", "quest")))
+	LLMInterface.request_kaelen_reaction(kaelen_reaction_mission, func(comp_line: String, abn_line: String):
+		if not QuestManager.store_active_kaelen_reaction_bundle(
+			kaelen_reaction_runtime_id,
+			comp_line,
+			abn_line,
+			"llm_kaelen_reaction"
+		):
+			GlobalState.trace("[TRACE] [UIManager] Discarded stale Kaelen reaction bundle for: " + kaelen_reaction_runtime_id)
+			return
 		GlobalState.trace("[TRACE] [UIManager] Kaelen reactions ready. Caching TTS...")
 		# Pre-cache both in the background using neutral (Kaelen's) voice
 		SpeechService.cache(comp_line, "voice.kaelen.v1")
@@ -10610,6 +10617,7 @@ func _on_agent_complete_pressed():
 	
 	is_waiting_for_agent_board = false
 	var completed_quest: Dictionary = QuestManager.active_quest.duplicate(true)
+	var completion_text := QuestManager.active_kaelen_reaction_line("completion")
 	
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -10624,8 +10632,7 @@ func _on_agent_complete_pressed():
 		completion_mood = "suspicious"
 	_update_agent_portrait("neutral", "", completion_mood)
 	
-	# Use the pre-generated contextual line, fall back to a random one if not ready
-	var completion_text = cached_completion_line
+	# Use the mission-keyed contextual line, fall back to a random one if not ready
 	if bool(completed_quest.get("public_board", false)):
 		completion_text = str(
 			completed_quest.get("public_board_turn_in_line", "")
@@ -10641,8 +10648,6 @@ func _on_agent_complete_pressed():
 				"public_board": bool(completed_quest.get("public_board", false)),
 			}
 		)
-	cached_completion_line = ""
-	cached_abandon_line = ""
 	if not bool(completed_quest.get("public_board", false)):
 		_start_agent_contract_cooldown("contract_resolved")
 	
@@ -10658,6 +10663,7 @@ func _on_agent_abandon_pressed():
 	
 	is_waiting_for_agent_board = false
 	var abandoned_quest: Dictionary = QuestManager.active_quest.duplicate(true)
+	var abandon_text := QuestManager.active_kaelen_reaction_line("abandon")
 	
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -10669,8 +10675,7 @@ func _on_agent_abandon_pressed():
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "angry")
 	
-	# Use the pre-generated contextual line, fall back to a random one if not ready
-	var abandon_text = cached_abandon_line
+	# Use the mission-keyed contextual line, fall back to a random one if not ready
 	if abandon_text == "":
 		abandon_text = LLMInterface.fallback_abandon_lines[randi() % LLMInterface.fallback_abandon_lines.size()]
 		GlobalState.trace("[TRACE] [UIManager] Kaelen abandon line not ready, using random fallback.")
@@ -10681,8 +10686,6 @@ func _on_agent_abandon_pressed():
 				"quest_title": str(abandoned_quest.get("title", "")),
 			}
 		)
-	cached_completion_line = ""
-	cached_abandon_line = ""
 	_start_agent_contract_cooldown("contract_abandoned")
 	
 	agent_dialogue_label.text = abandon_text

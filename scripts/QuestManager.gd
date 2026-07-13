@@ -384,6 +384,57 @@ func capture_active_quest() -> Dictionary:
 	return normalized
 
 
+func clear_active_kaelen_reaction_bundle() -> void:
+	if not is_quest_active():
+		return
+	active_quest.erase("kaelen_reaction_bundle")
+
+
+func store_active_kaelen_reaction_bundle(
+	mission_runtime_id: String,
+	completion_line: String,
+	abandon_line: String,
+	source_id: String = "llm_kaelen_reaction"
+) -> bool:
+	if not is_quest_active():
+		return false
+	var clean_runtime_id := mission_runtime_id.strip_edges()
+	if clean_runtime_id.is_empty() \
+			or str(active_quest.get("runtime_id", "")) != clean_runtime_id:
+		return false
+	var clean_completion := completion_line.strip_edges()
+	var clean_abandon := abandon_line.strip_edges()
+	if clean_completion.is_empty() and clean_abandon.is_empty():
+		return false
+	active_quest["kaelen_reaction_bundle"] = {
+		"mission_runtime_id": clean_runtime_id,
+		"completion_line": clean_completion,
+		"abandon_line": clean_abandon,
+		"source_id": source_id.strip_edges(),
+		"generated_time_minutes": CampaignClock.total_minutes,
+	}
+	return true
+
+
+func active_kaelen_reaction_line(line_kind: String) -> String:
+	if not is_quest_active():
+		return ""
+	var bundle: Dictionary = active_quest.get("kaelen_reaction_bundle", {}) \
+		if active_quest.get("kaelen_reaction_bundle", {}) is Dictionary else {}
+	if bundle.is_empty():
+		return ""
+	if str(bundle.get("mission_runtime_id", "")) \
+			!= str(active_quest.get("runtime_id", "")):
+		return ""
+	match line_kind.strip_edges():
+		"completion":
+			return str(bundle.get("completion_line", "")).strip_edges()
+		"abandon":
+			return str(bundle.get("abandon_line", "")).strip_edges()
+		_:
+			return ""
+
+
 func capture_all_quests() -> Array:
 	var result: Array = []
 	for m in _collection.get_all_active():

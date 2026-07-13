@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
 	_test_live_kaelen_handoff_prompt_uses_safe_packet()
 	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
+	_test_kaelen_reaction_bundle_is_mission_keyed()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -246,6 +247,32 @@ func _test_live_kaelen_prompts_do_not_read_protected_story_fields() -> void:
 			and source.contains("_kaelen_interaction_packet_clause")
 			and source.contains("Kaelen's current mood"),
 		"Live Kaelen prompts are not limited to safe packet/context/mood inputs."
+	)
+
+
+func _test_kaelen_reaction_bundle_is_mission_keyed() -> void:
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	var quest_file := FileAccess.open("res://scripts/QuestManager.gd", FileAccess.READ)
+	_expect(
+		ui_file != null and quest_file != null,
+		"Could not inspect Kaelen reaction bundle persistence wiring."
+	)
+	if ui_file == null or quest_file == null:
+		return
+	var ui_source := ui_file.get_as_text()
+	var quest_source := quest_file.get_as_text()
+	_expect(
+		not ui_source.contains("cached_completion_line")
+			and not ui_source.contains("cached_abandon_line")
+			and ui_source.contains("store_active_kaelen_reaction_bundle")
+			and ui_source.contains("active_kaelen_reaction_line(\"completion\")")
+			and ui_source.contains("active_kaelen_reaction_line(\"abandon\")")
+			and ui_source.contains("kaelen_reaction_runtime_id")
+			and quest_source.contains("func store_active_kaelen_reaction_bundle")
+			and quest_source.contains("\"kaelen_reaction_bundle\"")
+			and quest_source.contains("mission_runtime_id")
+			and quest_source.contains("func active_kaelen_reaction_line"),
+		"Kaelen completion/abandon reactions are not stored as mission-keyed bundles."
 	)
 
 
