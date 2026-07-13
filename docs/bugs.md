@@ -5,6 +5,14 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### N.O.V.A. filler word plays during new-campaign loading screen
+**Spotted:** 2026-07-13 (fresh campaign loading health check)
+**Severity:** Low-Medium — immersion/polish issue; makes a non-semantic latency mask feel like dialogue before gameplay has started
+**Description:** During the loading screen for a new campaign, N.O.V.A. can play a filler word/clip. Filler words are meant to mask short quiet waits while the player is already in an interaction waiting on LLM/TTS readiness, not to fire during the full fresh-campaign loading screen. New-campaign loading should either stay quiet, use deliberate authored/loading VO, or wait for actual prepared content; it should not spend a casual "um/oh/well/ahh" filler before the player is in the world.
+**Where to look:** `SpeechService` filler gating plus fresh-campaign loading / startup TTS warmup paths in `GameRoot.gd`, `UIManager.gd`, and the narrative cache loading planner. The earlier Phase 6D note allowed N.O.V.A. fillers during campaign/chapter loading waits; revise that gate so `new_campaign_loading` blocks filler playback, or split "short in-interaction wait" from "loading screen wait" as separate policies.
+
+---
+
 ### N.O.V.A. talks during first dock flow
 **Spotted:** 2026-07-08 (intro cinematic playtest)
 **Severity:** Medium - can interrupt/confuse the first dock onboarding beat
