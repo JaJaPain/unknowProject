@@ -999,10 +999,12 @@ Checklist:
 Phase 7 exit gate:
 
 - [ ] Turn in the same mechanical objective under three different causes/outcomes; Kaelen produces three materially different, factually correct reactions.
-- [ ] Completion reactions can reveal safe newly-earned context, but never reveal `kaelen_hidden_angle`, undelivered hints, or director-only facts.
+- [x] Completion reactions can reveal safe newly-earned context, but never reveal `kaelen_hidden_angle`, undelivered hints, or director-only facts.
+  - 2026-07-13: Automated evidence passes: `run_kaelen_interaction_bundle_tests.gd`, `run_context_block_leak_tests.gd`, `run_campaign_schema_tests.gd`, and `parse_check_scene_scripts.gd`.
 - [ ] Save after accepting, reload, complete, and turn in: the contextual line remains ready and correct.
 - [ ] No generic stock completion line appears in 50 successful V2 turn-ins.
-- [ ] Secret-salted Kaelen leak tests pass.
+- [x] Secret-salted Kaelen leak tests pass.
+  - 2026-07-13: Automated leak evidence passes through the Kaelen packet/source guards and shared context-block leak tests; manual gameplay smoke gates remain separate.
 
 ### Phase 8 — N.O.V.A. movement and navigation reactions that stay fresh
 
