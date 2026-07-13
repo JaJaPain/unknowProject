@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_arrival_can_consume_ready_line_bank()
 	_test_global_speech_budget()
 	_test_semantic_movement_consumes_banks_or_stays_silent()
+	_test_repeated_events_mostly_produce_silence()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -227,6 +228,48 @@ func _test_semantic_movement_consumes_banks_or_stays_silent() -> void:
 			"semantic_movement_event.connect"
 		) and game_root_source.contains("Nova.on_semantic_movement_event"),
 		"GameRoot does not route semantic movement events to N.O.V.A."
+	)
+
+
+# Phase 8B silence test: hammering the same beat must produce mostly
+# silence, not a line per event. Six back-to-back docks pass the tier
+# ladder's quiet zone AND the global speech budget's minimum gap, so only
+# the first dock actually speaks. (Movement-side suppression after the
+# rate-limit cap is covered in run_ship_behavior_observer_tests.gd.)
+func _test_repeated_events_mostly_produce_silence() -> void:
+	var nova: Node = NovaType.new()
+	var gs = root.get_node("GlobalState")
+	var previous_player = gs.player
+	# _say_tiered reads player.destroyed / player.is_docked, so the stub
+	# needs real properties (p.get() on a missing property returns null and
+	# bool(null) is a runtime error).
+	var stub := GDScript.new()
+	stub.source_code = (
+		"extends Node3D\n"
+		+ "var destroyed := false\n"
+		+ "var is_docked := false\n"
+		+ "var health := 100.0\n"
+		+ "var max_health := 100.0\n"
+	)
+	stub.reload()
+	var dummy_player: Node3D = stub.new()
+	gs.player = dummy_player
+
+	var spoken: Array = []
+	var listener := func(flavor: Dictionary) -> void:
+		spoken.append(str(flavor.get("line", "")))
+	gs.npc_flavor_spoken.connect(listener)
+	for i in range(6):
+		nova.on_docked("Kova Station")
+	gs.npc_flavor_spoken.disconnect(listener)
+
+	gs.player = previous_player
+	dummy_player.free()
+	nova.free()
+	_expect(
+		spoken.size() == 1,
+		"Six instant docks should produce exactly one line, got %d: %s"
+			% [spoken.size(), str(spoken)]
 	)
 
 

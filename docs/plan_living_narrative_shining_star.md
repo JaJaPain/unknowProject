@@ -1049,7 +1049,8 @@ Primary files:
 - [ ] Keep tutorial lines authored. After the tutorial, stock pools become degraded emergency content only.
 - [ ] Use the campaign-specific gate glitch mechanism as a protected special bank; director-only memory flicker remains large-model-only.
 - [ ] Add relevance scoring: prefer a story/mission-aware line over a generic movement joke when a real beat just occurred.
-- [ ] Add silence tests: repeated events after escalation cap should often produce no line.
+- [x] Add silence tests: repeated events after escalation cap should often produce no line.
+  - 2026-07-13: `run_nova_tests.gd` proves six back-to-back docks produce exactly one spoken line (the tier ladder's quiet zone plus the global speech budget's minimum gap absorb the rest), and movement events with no prepared bank produce zero lines. Movement-side suppression after the rate-limit cap (suppressed events counted, not spoken) is covered in `run_ship_behavior_observer_tests.gd`.
 
 Phase 8 exit gate:
 
