@@ -37,6 +37,7 @@ func _initialize() -> void:
 	_test_game_root_cache_worker_starts_tts_after_validated_text()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_ui_agent_board_pending_state_stays_actionable()
+	_test_ui_offer_text_is_presented_before_audio_waits()
 	_test_ui_lounge_pending_states_stay_actionable()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
 	_test_dev_story_snapshot_reports_narrative_cache_diagnostics()
@@ -995,6 +996,25 @@ func _test_ui_agent_board_pending_state_stays_actionable() -> void:
 			and source.contains("_play_kaelen_latency_filler(\"llm_generation\"")
 			and source.contains("_play_nova_latency_filler(\"llm_generation\""),
 		"UI wait states do not use safety-gated Kaelen/N.O.V.A. latency fillers."
+	)
+
+
+func _test_ui_offer_text_is_presented_before_audio_waits() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager text/audio readiness ordering.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var present_idx := source.find("_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)")
+	var loading_wait_idx := source.find("SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)")
+	_expect(
+		present_idx >= 0
+			and loading_wait_idx >= 0
+			and present_idx < loading_wait_idx
+			and source.contains("_try_use_ready_cached_agent_offer(request_profile)")
+			and source.contains("ready_cached_narrative_contact_offer")
+			and source.contains("No vetted contract is ready yet"),
+		"Ready offer text is not presented before audio-cache waits."
 	)
 
 
