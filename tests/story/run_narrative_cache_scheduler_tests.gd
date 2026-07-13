@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
 	_test_system_arrival_plans_current_system_and_station_prefetch()
 	_test_station_target_plans_agent_mechanic_and_lounge_prefetch()
+	_test_chapter_packet_ready_plans_first_interaction_prefetch()
 	_test_game_root_acceptance_hook_calls_prefetch_planner()
 	_test_station_target_hooks_call_prefetch_planner()
 	_test_queue_health_reports_contention_and_starvation()
@@ -589,6 +590,26 @@ func _test_station_target_plans_agent_mechanic_and_lounge_prefetch() -> void:
 			and triggers.has(SchedulerType.TRIGGER_LIKELY_LOUNGE)
 			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P0,
 		"Scheduler station target prefetch did not plan station, mechanic, and lounge work."
+	)
+
+
+func _test_chapter_packet_ready_plans_first_interaction_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "chapter_packet_ready",
+		"packet_id": "chapter_packet.2",
+		"chapter": 2,
+		"first_beat_ids": ["beat.alpha", "beat.beta"],
+		"system_id": "system.generated.cinder",
+		"story_revision": 15,
+	})
+	_expect(
+		jobs.size() == 2
+			and str(jobs[0].get("kind", "")) == "chapter_first_interaction_bundle"
+			and str(jobs[0].get("packet_id", "")) == "chapter_packet.2"
+			and int(jobs[0].get("chapter", 0)) == 2
+			and str(jobs[0].get("story_beat_id", "")) == "beat.alpha"
+			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P1,
+		"Scheduler chapter packet ready prefetch did not plan first interaction bundles."
 	)
 
 

@@ -265,6 +265,8 @@ static func prefetch_jobs_for_event(event: Dictionary) -> Array[Dictionary]:
 		return _system_arrival_prefetch_jobs(event)
 	if event_type == "station_targeted":
 		return _station_target_prefetch_jobs(event)
+	if event_type == "chapter_packet_ready":
+		return _chapter_packet_ready_prefetch_jobs(event)
 	var mission_id := str(event.get("mission_id", event.get("subject_id", ""))).strip_edges()
 	if mission_id.is_empty():
 		return []
@@ -816,6 +818,32 @@ static func _station_target_prefetch_jobs(event: Dictionary) -> Array[Dictionary
 	]
 
 
+static func _chapter_packet_ready_prefetch_jobs(event: Dictionary) -> Array[Dictionary]:
+	var packet_id := str(event.get("packet_id", event.get("subject_id", ""))).strip_edges()
+	if packet_id.is_empty():
+		return []
+	var beat_ids: Array = event.get("first_beat_ids", []) \
+		if event.get("first_beat_ids", []) is Array else []
+	var jobs: Array[Dictionary] = []
+	for raw_beat_id in beat_ids:
+		var beat_id := str(raw_beat_id).strip_edges()
+		if beat_id.is_empty():
+			continue
+		var beat_event := event.duplicate(true)
+		beat_event["story_beat_id"] = beat_id
+		var job := _context_prefetch_job(
+			beat_event,
+			TRIGGER_CURRENT_SYSTEM_AGENT,
+			"%s.%s" % [packet_id, beat_id],
+			"chapter_first_interaction_bundle"
+		)
+		job["packet_id"] = packet_id
+		job["chapter"] = int(event.get("chapter", 1))
+		job["story_beat_id"] = beat_id
+		jobs.append(job)
+	return jobs
+
+
 static func _context_prefetch_job(
 	event: Dictionary,
 	trigger: String,
@@ -850,6 +878,8 @@ static func _context_prefetch_job(
 		"arrival_gate_id",
 		"target_reason",
 		"station_type",
+		"packet_id",
+		"chapter",
 	]:
 		if event.has(key):
 			job[key] = event[key]
