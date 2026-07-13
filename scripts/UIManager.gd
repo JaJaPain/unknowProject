@@ -332,6 +332,8 @@ var last_tts_attempt: int = 0
 var startup_save_loaded: bool = false
 var _intro_cinematic_voice_cache_requested: bool = false
 var _waiting_for_intro_cinematic_voice_cache: bool = false
+var _startup_line_bank_voice_cache_requested: bool = false
+var _waiting_for_startup_line_bank_voice_cache: bool = false
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -11920,7 +11922,10 @@ func _on_tts_cache_completed():
 		SpeechService.cache_queue_completed.disconnect(_on_tts_cache_completed)
 	if SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
 		SpeechService.cache_queue_completed.disconnect(_on_intro_cinematic_voice_cache_completed)
+	if SpeechService.cache_queue_completed.is_connected(_on_startup_line_bank_voice_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_startup_line_bank_voice_cache_completed)
 	_waiting_for_intro_cinematic_voice_cache = false
+	_waiting_for_startup_line_bank_voice_cache = false
 		
 	GlobalState.trace("[TRACE] [UIManager] Loading Screen: TTS caching fully completed!")
 	if not _campaign_story_ready_for_gameplay():
@@ -11941,6 +11946,63 @@ func _on_intro_cinematic_voice_cache_completed() -> void:
 		SpeechService.cache_queue_completed.disconnect(_on_intro_cinematic_voice_cache_completed)
 	_waiting_for_intro_cinematic_voice_cache = false
 	_finish_loading_after_story_ready()
+
+
+func _on_startup_line_bank_voice_cache_completed() -> void:
+	if SpeechService.cache_queue_completed.is_connected(_on_startup_line_bank_voice_cache_completed):
+		SpeechService.cache_queue_completed.disconnect(_on_startup_line_bank_voice_cache_completed)
+	_waiting_for_startup_line_bank_voice_cache = false
+	_finish_loading_after_story_ready()
+
+
+func _queue_startup_line_bank_voice_cache() -> int:
+	if startup_save_loaded or _startup_line_bank_voice_cache_requested:
+		return 0
+	_startup_line_bank_voice_cache_requested = true
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("ready_cached_narrative_line_bank"):
+		return 0
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return 0
+	var cached_count := 0
+	for requester_id in [
+		"prefetch:current_system_kaelen:%s" % system_id,
+		"prefetch:current_system_nova:%s" % system_id,
+	]:
+		var payload: Dictionary = game_root.call(
+			"ready_cached_narrative_line_bank",
+			requester_id
+		)
+		cached_count += _cache_line_bank_payload_tts(payload)
+	if cached_count > 0:
+		GlobalState.trace(
+			"[TRACE] [UIManager] Queued startup line-bank TTS cache entries: %d" %
+				cached_count
+		)
+	return cached_count
+
+
+func _cache_line_bank_payload_tts(payload: Dictionary) -> int:
+	if payload.is_empty():
+		return 0
+	var voice_profile_id := str(payload.get("voice_profile_id", "")).strip_edges()
+	if voice_profile_id.is_empty():
+		return 0
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var cached_count := 0
+	var seen: Dictionary = {}
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var text := str((raw_line as Dictionary).get("text", "")).strip_edges()
+		if text.is_empty() or seen.has(text):
+			continue
+		seen[text] = true
+		SpeechService.cache(text, voice_profile_id)
+		cached_count += 1
+	return cached_count
 
 
 func _campaign_story_ready_for_gameplay() -> bool:
@@ -12150,6 +12212,15 @@ func _finish_loading_after_story_ready() -> void:
 			"queue_narrative_new_campaign_loading_prefetch"
 		):
 			game_root.call("queue_narrative_new_campaign_loading_prefetch")
+	if not startup_save_loaded and not _waiting_for_startup_line_bank_voice_cache:
+		var cached_count := _queue_startup_line_bank_voice_cache()
+		if cached_count > 0 and SpeechService.active_cache_requests > 0:
+			_waiting_for_startup_line_bank_voice_cache = true
+			loading_bar.value = 96.0
+			loading_status_label.text = "Pre-caching Kaelen and N.O.V.A. story banks..."
+			if not SpeechService.cache_queue_completed.is_connected(_on_startup_line_bank_voice_cache_completed):
+				SpeechService.cache_queue_completed.connect(_on_startup_line_bank_voice_cache_completed)
+			return
 	# Every completion path funnels through here, so this is the one place to drop
 	# the service-connection signals. Do it before the fade-out tween so a late
 	# LLM/TTS connect during the 0.8s hold + fade can't re-enter the loading flow.

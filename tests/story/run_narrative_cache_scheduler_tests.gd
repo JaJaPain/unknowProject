@@ -33,6 +33,7 @@ func _initialize() -> void:
 	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
 	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
 	_test_game_root_cache_worker_has_template_safe_line_bank_path()
+	_test_loading_gate_precaches_startup_line_bank_tts()
 	_test_queue_health_reports_contention_and_starvation()
 	_test_pool_refill_waits_for_higher_priority_work()
 
@@ -812,6 +813,25 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("\"content_type\": \"story_line_bank\"")
 			and source.contains("\"source\": \"template_seed_bank\""),
 		"GameRoot cache worker is not wired to safely build Kaelen/N.O.V.A. line banks."
+	)
+
+
+func _test_loading_gate_precaches_startup_line_bank_tts() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager startup line-bank TTS wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _queue_startup_line_bank_voice_cache")
+			and source.contains("ready_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_kaelen")
+			and source.contains("prefetch:current_system_nova")
+			and source.contains("func _cache_line_bank_payload_tts")
+			and source.contains("SpeechService.cache(text, voice_profile_id)")
+			and source.contains("_on_startup_line_bank_voice_cache_completed")
+			and source.contains("Pre-caching Kaelen and N.O.V.A. story banks"),
+		"Fresh-campaign loading does not pre-cache ready Kaelen/N.O.V.A. line-bank TTS."
 	)
 
 
