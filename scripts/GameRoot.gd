@@ -67,6 +67,9 @@ const RuntimeTraceType := preload(
 const NarrativeDirectorType := preload(
 	"res://scripts/ai/NarrativeDirector.gd"
 )
+const ChapterNarrativeDirectorType := preload(
+	"res://scripts/ai/ChapterNarrativeDirector.gd"
+)
 const ContextBlockBuilderType := preload("res://scripts/ai/ContextBlockBuilder.gd")
 const MissionDirectorType := preload("res://scripts/story/MissionDirector.gd")
 const StoryAgentOfferBuilderType := preload(
@@ -2673,7 +2676,52 @@ func _on_chapter_plan_generation_result(result: Dictionary, target_chapter: int 
 			"[GameRoot] Chapter plan generation did not complete: %s" %
 				str(result.get("reason", "unknown"))
 		)
+		var fallback_committed := _commit_fallback_chapter_plan(
+			target_chapter,
+			str(result.get("reason", "chapter_plan_generation_failed"))
+		)
+		if bool(fallback_committed.get("ok", false)):
+			chapter_plan_generation_finished.emit(true, chapter_plan_status_summary())
+			return
 	chapter_plan_generation_finished.emit(false, chapter_plan_status_summary())
+
+
+func _commit_fallback_chapter_plan(target_chapter: int, reason: String) -> Dictionary:
+	var chapter := target_chapter
+	if chapter <= 0:
+		chapter = int(StoryManager.story_state.get("chapter", 1))
+	var existing: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(chapter)
+	if not existing.is_empty():
+		return {"ok": true, "status": "already_ready", "packet": existing}
+	var validated_entities := _chapter_plan_validated_entities()
+	var valid_entity_ids := _chapter_plan_valid_entity_ids(validated_entities)
+	var objective_types := MissionCapabilityRegistry.objective_types()
+	var fallback_packet: Dictionary = ChapterNarrativeDirectorType.fallback_chapter_packet(
+		chapter,
+		objective_types,
+		valid_entity_ids,
+		reason
+	)
+	var committed: Dictionary = campaign_chapter_packet_store.append_packet(fallback_packet)
+	if not bool(committed.get("ok", false)):
+		push_warning(
+			"[GameRoot] Fallback chapter plan could not be stored: %s" %
+				str(committed.get("error", "unknown error"))
+		)
+		return committed
+	GenerationDiagnostics.record_fallback(
+		"chapter_plan",
+		reason,
+		"GameRoot",
+		{"chapter": chapter, "packet_id": str(fallback_packet.get("packet_id", ""))}
+	)
+	StoryManager.register_chapter_packet(fallback_packet)
+	_seed_npc_stakes_from_chapter_packet(fallback_packet)
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_chapter_packet(fallback_packet)
+	)
+	print("[GameRoot] Fallback chapter narrative packet committed after model plan failure.")
+	return {"ok": true, "status": "fallback_committed", "packet": fallback_packet}
 
 
 func _seed_npc_stakes_from_chapter_packet(packet: Dictionary) -> void:

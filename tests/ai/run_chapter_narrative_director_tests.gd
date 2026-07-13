@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_parser_repairs_aliases_and_accepts_valid_packet()
 	_test_parser_rejects_unavailable_objectives_and_entities()
 	_test_validation_correction_notes_are_retry_ready()
+	_test_fallback_packet_is_valid_and_grounded()
 
 	if _failures.is_empty():
 		print("[PASS] Chapter narrative director tests")
@@ -172,6 +173,30 @@ func _test_validation_correction_notes_are_retry_ready() -> void:
 			and notes[0].contains("missing_chapter_beat_stake")
 			and notes[0].contains("beats.0.stake"),
 		"Chapter plan validation notes were not suitable for correction retry."
+	)
+
+
+func _test_fallback_packet_is_valid_and_grounded() -> void:
+	var packet: Dictionary = ChapterDirectorType.fallback_chapter_packet(
+		1,
+		["PURCHASE_DELIVERY", "KILL_SHIPS"],
+		["npc.kaelen", "station.start.main"],
+		"chapter_plan_validation_failed"
+	)
+	var result: Dictionary = ChapterDirectorType.parse_chapter_plan_response(
+		JSON.stringify({"response": JSON.stringify(packet)}),
+		["PURCHASE_DELIVERY", "KILL_SHIPS"],
+		["npc.kaelen", "station.start.main"],
+		"fallback"
+	)
+	var parsed: Dictionary = result.get("packet", {}) \
+		if result.get("packet", {}) is Dictionary else {}
+	_expect(
+		bool(result.get("ok", false))
+			and str(parsed.get("packet_id", "")) == "chapter_packet.1.fallback"
+			and str(parsed.get("source", "")) == "procedural_fallback"
+			and int(parsed.get("chapter", 0)) == 1,
+		"Fallback chapter packet was not valid, grounded, and clearly labeled."
 	)
 
 

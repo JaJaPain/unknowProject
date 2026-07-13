@@ -149,6 +149,98 @@ static func validation_correction_notes(validation: ValidationResult) -> Array[S
 	return notes
 
 
+static func fallback_chapter_packet(
+	chapter: int,
+	available_objective_types: Array = [],
+	valid_entity_ids: Array = [],
+	reason: String = "chapter_plan_fallback"
+) -> Dictionary:
+	var chapter_number := maxi(1, chapter)
+	var objective_type := _first_available_objective(
+		available_objective_types,
+		[
+			"DELIVERY_COURIER",
+			"PURCHASE_DELIVERY",
+			"RECOVER_COMBAT_DROP",
+			"TARGET_WITH_COMMS_REVERSAL",
+			"KILL_SHIPS",
+			"DELIVER_ORE",
+			"PICKUP_SPECIAL",
+		]
+	)
+	var entity_id := _first_available_entity(valid_entity_ids)
+	var suffix := "fallback_chapter_%d" % chapter_number
+	return {
+		"packet_id": "chapter_packet.%d.fallback" % chapter_number,
+		"chapter": chapter_number,
+		"premise": "Local pressure is rising while the larger story plan recovers.",
+		"threads": [
+			{
+				"thread_id": "thread.%s" % suffix,
+				"public_ref": "thread:%s" % suffix,
+				"privacy": "public",
+				"summary": "A local pressure thread keeps missions grounded until the chapter plan refreshes.",
+			},
+		],
+		"facts": [
+			{
+				"fact_id": "fact.%s_visible_pressure" % suffix,
+				"privacy": "public",
+				"public_text": "Local contacts are reacting to unstable conditions.",
+				"answer_anchor": "The trouble is local, visible, and safe to ask about.",
+			},
+		],
+		"beats": [
+			{
+				"beat_id": "beat.%s_stabilize_route" % suffix,
+				"thread_id": "thread.%s" % suffix,
+				"cause_id": "cause.%s_model_recovery" % suffix,
+				"supported_objective_types": [objective_type],
+				"eligible_entity_ids": [entity_id],
+				"stake": "Contacts need a grounded job while the authored chapter packet is unavailable.",
+				"disclosure_fact_ids": ["fact.%s_visible_pressure" % suffix],
+				"completion_fact_ids": ["fact.%s_visible_pressure" % suffix],
+				"decline_consequence": "The local pressure remains unresolved and another contact may ask for help.",
+			},
+		],
+		"next_packet_trigger": {
+			"start_when_consumed_ratio_at_least": 0.6,
+			"reason": reason,
+		},
+		"source": "procedural_fallback",
+		"fallback_reason": reason,
+	}
+
+
+static func _first_available_objective(
+	available_objective_types: Array,
+	preferred_order: Array
+) -> String:
+	var available := {}
+	for objective in available_objective_types:
+		available[str(objective)] = true
+	for preferred in preferred_order:
+		var objective := str(preferred)
+		if available.is_empty() or available.has(objective):
+			return objective
+	for objective in available_objective_types:
+		var text := str(objective).strip_edges()
+		if not text.is_empty():
+			return text
+	return "KILL_SHIPS"
+
+
+static func _first_available_entity(valid_entity_ids: Array) -> String:
+	for preferred in ["npc.kaelen", "ai.nova"]:
+		if valid_entity_ids.has(preferred):
+			return preferred
+	for entity_id in valid_entity_ids:
+		var text := str(entity_id).strip_edges()
+		if not text.is_empty():
+			return text
+	return "npc.kaelen"
+
+
 static func _extract_response_text(envelope_text: String) -> String:
 	var envelope := DomainJsonType.parse_object(
 		envelope_text,

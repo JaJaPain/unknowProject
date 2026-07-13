@@ -832,6 +832,9 @@ func _test_chapter_packet_ready_hook_calls_prefetch_planner() -> void:
 		source.contains("_narrative_prefetch_event_from_chapter_packet")
 			and source.contains("\"event_type\": \"chapter_packet_ready\"")
 			and source.contains("\"first_beat_ids\"")
+			and source.contains("_commit_fallback_chapter_plan")
+			and source.contains("ChapterNarrativeDirectorType.fallback_chapter_packet")
+			and source.contains("GenerationDiagnostics.record_fallback")
 			and source.contains("_queue_narrative_prefetch_jobs_for_event("),
 		"Chapter packet ready hook is not wired to the narrative prefetch planner."
 	)
