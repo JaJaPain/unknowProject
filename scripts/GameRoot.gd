@@ -73,6 +73,7 @@ const StoryAgentOfferBuilderType := preload(
 	"res://scripts/story/StoryAgentOfferBuilder.gd"
 )
 const ChallengeBudgetType := preload("res://scripts/story/ChallengeBudget.gd")
+const FallbackLineBankType := preload("res://scripts/story/FallbackLineBank.gd")
 const MissionHistoryLedgerType := preload(
 	"res://scripts/story/MissionHistoryLedger.gd"
 )
@@ -3431,17 +3432,30 @@ func _line_bank_payload_for_cache_job(job: Dictionary, speaker_key: String) -> D
 	var line_bank := _template_line_bank_for_speaker(job, speaker_key)
 	if line_bank.is_empty():
 		return {"ok": false, "status": "line_bank_unavailable"}
+	var fallback_bank: Dictionary = FallbackLineBankType.create_bank(
+		speaker_key,
+		str(line_bank.get("line_kind", "")),
+		line_bank.get("fallback_lines", []),
+		FallbackLineBankType.DEFAULT_TARGET_SIZE
+	)
+	var entries: Array = fallback_bank.get("entries", []) \
+		if fallback_bank.get("entries", []) is Array else []
+	if entries.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
 	return {
 		"ok": true,
 		"payload": {
 			"content_type": "story_line_bank",
-			"source": "template_seed_bank",
+			"source": "fallback_bank",
 			"cache_key": str(job.get("cache_key", "")),
 			"requester_id": str(job.get("requester_id", "")),
 			"speaker_key": speaker_key,
 			"speaker_name": str(line_bank.get("speaker_name", "")),
 			"voice_profile_id": str(line_bank.get("voice_profile_id", "")),
-			"line_bank": (line_bank.get("lines", []) as Array).duplicate(true),
+			"line_bank": entries.duplicate(true),
+			"fallback_bank": fallback_bank,
+			"fallback_target_size": int(fallback_bank.get("target_size", 0)),
+			"fallback_available_count": FallbackLineBankType.available_count(fallback_bank),
 			"context_block": str(line_bank.get("context_block", "")),
 		},
 	}
@@ -3458,25 +3472,28 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 				"speaker_name": "Broker Kaelen",
 				"voice_profile_id": "voice.kaelen.v1",
 				"context_block": context_block,
-				"lines": [
-					{
-						"line_id": "kaelen.startup.handoff.1",
-						"kind": "agent_handoff",
-						"text": "Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
-						"priority": "P1",
-					},
-					{
-						"line_id": "kaelen.startup.handoff.2",
-						"kind": "agent_handoff",
-						"text": "The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
-						"priority": "P1",
-					},
-					{
-						"line_id": "kaelen.startup.handoff.3",
-						"kind": "chapter_comment",
-						"text": "Chapter %d of this mess starts small. That is usually how the costly ones introduce themselves." % chapter,
-						"priority": "P1",
-					},
+				"line_kind": "agent_handoff",
+				"fallback_lines": [
+					"Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
+					"The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
+					"Chapter %d of this mess starts small. That is usually how the costly ones introduce themselves." % chapter,
+					"Take the meeting, keep your tells quiet, and let them spend the first lie.",
+					"If they offer simple money, assume the complicated part is waiting two rooms over.",
+					"Walk in like you belong there. If that fails, walk out like you meant to.",
+					"Ask what they are not saying. That answer usually pays better.",
+					"Keep one hand on the contract and one eye on whoever pretends not to care.",
+					"Do not promise heroics. Heroics invoice poorly and bleed through good jackets.",
+					"I trust a clean job description less than a dirty one. Dirty ones admit they exist.",
+					"Let them talk first. People get generous with mistakes when silence makes them nervous.",
+					"If the room likes you too fast, check the exits before you check the reward.",
+					"This should be routine, which is exactly when routine starts sharpening a knife.",
+					"Smile politely, decline politely, and never forget which part of that was theater.",
+					"Contracts have teeth. Read where they tried to hide the gums.",
+					"Bring back money, leverage, or a very funny problem. Ideally two of those.",
+					"I am not saying expect betrayal. I am saying betrayal hates an empty calendar.",
+					"The local pitch will tell us who needs help and who needs distance.",
+					"Take the job if it smells survivable. Leave the noble speeches for people with armor.",
+					"Make them name the risk out loud. It becomes harder to sell you fog after that.",
 				],
 			}
 		"nova":
@@ -3484,25 +3501,28 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 				"speaker_name": "N.O.V.A.",
 				"voice_profile_id": "voice.nova.v1",
 				"context_block": context_block,
-				"lines": [
-					{
-						"line_id": "nova.startup.nav.1",
-						"kind": "startup_navigation",
-						"text": "Local charts for %s are loaded. I distrust them the normal amount." % system_label,
-						"priority": "P1",
-					},
-					{
-						"line_id": "nova.startup.nav.2",
-						"kind": "startup_navigation",
-						"text": "Sensors are awake, Captain. So are several things I would prefer stayed theoretical.",
-						"priority": "P1",
-					},
-					{
-						"line_id": "nova.startup.nav.3",
-						"kind": "startup_navigation",
-						"text": "I have ranked our likely mistakes by survivability. You will be delighted to know there are options.",
-						"priority": "P1",
-					},
+				"line_kind": "startup_navigation",
+				"fallback_lines": [
+					"Local charts for %s are loaded. I distrust them the normal amount." % system_label,
+					"Sensors are awake, Captain. So are several things I would prefer stayed theoretical.",
+					"I have ranked our likely mistakes by survivability. You will be delighted to know there are options.",
+					"Navigation is green. My optimism remains amber.",
+					"Arrival checks complete. The ship is intact, which I am classifying as rude luck.",
+					"I have updated local hazards. Several appear committed to personal growth.",
+					"Telemetry is stable. The universe is doing that thing where it pretends this is temporary.",
+					"Course data loaded. Please enjoy this brief interval before reality edits it.",
+					"Local traffic mapped. Some pilots are making bold arguments against licensing.",
+					"Power balance nominal. I will begin worrying about the non-nominal items alphabetically.",
+					"System scan complete. The comforting silence is statistically suspicious.",
+					"Thrusters report ready. I report cautious approval, pending evidence.",
+					"Beacon data acquired. It is either outdated or lying with confidence.",
+					"Route options prepared. I recommend the one with fewer exciting debris fields.",
+					"All primary systems answer. The secondary systems are being emotionally complex.",
+					"Navigation solution accepted. I only object on philosophical grounds.",
+					"Local map indexed. I have placed the warnings where humans might actually notice them.",
+					"Drive temperature is clean. Space outside remains aggressively space-shaped.",
+					"I have prepared our next mistake with excellent formatting.",
+					"Arrival profile archived. If we survive, I will pretend this was the plan.",
 				],
 			}
 		_:

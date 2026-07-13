@@ -813,7 +813,10 @@ func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
 			and source.contains("ContextBlockBuilderType.kaelen_block")
 			and source.contains("ContextBlockBuilderType.nova_block")
 			and source.contains("\"content_type\": \"story_line_bank\"")
-			and source.contains("\"source\": \"template_seed_bank\""),
+			and source.contains("FallbackLineBankType.create_bank")
+			and source.contains("\"source\": \"fallback_bank\"")
+			and source.contains("\"fallback_bank\": fallback_bank")
+			and source.contains("\"fallback_target_size\""),
 		"GameRoot cache worker is not wired to safely build Kaelen/N.O.V.A. line banks."
 	)
 
