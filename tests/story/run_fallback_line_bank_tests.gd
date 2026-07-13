@@ -9,6 +9,7 @@ func _initialize() -> void:
 	_test_create_bank_caps_at_target_and_marks_fallbacks()
 	_test_consume_marks_used_and_counts_fallback_usage()
 	_test_generated_lines_replace_used_fallback_slots()
+	_test_generated_lines_do_not_overfill_full_unused_bank()
 	_test_empty_bank_reports_no_line()
 
 	if _failures.is_empty():
@@ -85,6 +86,28 @@ func _test_generated_lines_replace_used_fallback_slots() -> void:
 			and not bool(replaced.get("is_fallback", true))
 			and not bool(replaced.get("used", true)),
 		"Generated replacement was not installed as fresh non-fallback content."
+	)
+
+
+func _test_generated_lines_do_not_overfill_full_unused_bank() -> void:
+	var bank := BankType.create_bank(
+		"kaelen",
+		"agent_handoff",
+		_numbered_lines(24),
+		20
+	)
+	var replacement: Dictionary = BankType.replace_used_with_generated(
+		bank,
+		["Generated line without a used slot."],
+		"llm"
+	)
+	var next_bank: Dictionary = replacement.get("bank", {})
+	var entries: Array = next_bank.get("entries", [])
+	_expect(
+		int(replacement.get("replacements", 0)) == 0
+			and entries.size() == 20
+			and BankType.generated_replacement_count(next_bank) == 0,
+		"Generated lines should not overfill a full fallback bank with no used slots."
 	)
 
 
