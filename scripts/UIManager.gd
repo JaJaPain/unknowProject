@@ -9,6 +9,9 @@ const PublicBoardTextGeneratorType := preload(
 const MissionConversationControllerType := preload(
 	"res://scripts/story/MissionConversationController.gd"
 )
+const KaelenInteractionKindsType := preload(
+	"res://scripts/story/KaelenInteractionKinds.gd"
+)
 
 # UI Nodes created dynamically
 var hud_panel: Panel
@@ -10065,7 +10068,7 @@ func _ready_kaelen_handoff_bank_line() -> String:
 		payload = game_root.call(
 			"consume_cached_narrative_line_bank",
 			"prefetch:current_system_kaelen:%s" % system_id,
-			"agent_handoff"
+			KaelenInteractionKindsType.AGENT_HANDOFF
 		)
 	elif game_root.has_method("ready_cached_narrative_line_bank"):
 		payload = game_root.call(
@@ -10087,7 +10090,7 @@ func _ready_kaelen_handoff_bank_line() -> String:
 			continue
 		var line: Dictionary = raw_line
 		var kind := str(line.get("kind", "")).strip_edges()
-		if kind != "agent_handoff":
+		if kind != KaelenInteractionKindsType.AGENT_HANDOFF:
 			continue
 		var text := str(line.get("text", "")).strip_edges()
 		if not text.is_empty():

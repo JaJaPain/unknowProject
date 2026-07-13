@@ -45,6 +45,9 @@ const CampaignNpcIdentityStoreType := preload(
 const CampaignNpcStateStoreType := preload(
 	"res://scripts/persistence/CampaignNpcStateStore.gd"
 )
+const KaelenInteractionKindsType := preload(
+	"res://scripts/story/KaelenInteractionKinds.gd"
+)
 const CampaignAgentMemorySnippetStoreType := preload(
 	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
 )
@@ -3987,7 +3990,7 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 				"speaker_name": "Broker Kaelen",
 				"voice_profile_id": "voice.kaelen.v1",
 				"context_block": context_block,
-				"line_kind": "agent_handoff",
+				"line_kind": KaelenInteractionKindsType.AGENT_HANDOFF,
 				"fallback_lines": [
 					"Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
 					"The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
