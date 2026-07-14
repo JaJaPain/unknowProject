@@ -1841,3 +1841,31 @@ validation, speech_service, game_content_registry, local_model_gateway.
   mission-beat hooks by fact/beat ID, stranger deal contracts. Then the
   exit gates (instant replies with Ollama stopped, 50/50 fixtures, no
   reset opener on return).
+
+## Session 2026-07-13 (continued 5): Phase 9 runtime landed
+- 73371aa Stranger intel -> real fact ID: record_stranger_intel_fact
+  promotes fact.stranger_intel.* to RUMORED with public_text + alias
+  (also makes the tip an askable lounge question). Free-form
+  pending_hooks append is gone.
+- 6a7142a Stranger deal tripwires: roll/resolution never touch the model;
+  pitch prompt reads no story_state outside _lounge_flavor_block.
+- d78a95e Bundle preparation: lounge render fires background bundle
+  requests per contact card (kinds npc/agent/bartender; Kaelen/stranger/
+  planted keep their own machinery). Intents from LoungeIntentSelector
+  (rumored gaps + mission stake + warmth); results run parse_bundle +
+  validate_bundle_answers; cached per stable contact key in
+  _lounge_bundle_cache, reset each dock; failures logged lounge_bundle.
+- be8bad6 Bundle consumption: _start_lounge_conversation prefers a ready
+  bundle — instant opener + intent buttons, intent press shows prepared
+  answer then close, ZERO model requests (tripwired). Degraded slots
+  never offered; gap: intents record learned_fact_ids consumed by the
+  NPC-memory write at completion. Live per-turn flow = fallback.
+- 77ed6ec Keep talking: consuming a bundle preps the second immediately;
+  warmth >= 2 contacts get the button only when it is already ready.
+- Phase 9: 10 of 11 checkboxes done. Remaining: flight-time prefetch +
+  card pending indicator (partial note in plan). Exit gates need a live
+  run: instant replies with Ollama stopped after prep, 50/50 fixtures
+  vs real-model batch review, returning-NPC memory-aware exchange.
+- NOTE for live smoke: the lounge_bundle capability has never fired
+  against real qwen3 — watch GenerationDiagnostics for lounge_bundle
+  fallbacks and verify the flat 5-key JSON holds up.
