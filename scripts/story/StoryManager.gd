@@ -1802,6 +1802,42 @@ func _next_kaelen_hint_if_due() -> String:
 # raises L3 approach odds. New generated contacts should use stable NPC IDs;
 # legacy display-name slugs are still read and migrated on first contact.
 
+# Phase 9: contact conversations grant knowledge through real fact IDs,
+# never free-form strings appended to pending_hooks. The stranger's paid
+# tip lands in the knowledge ledger as a RUMORED fact with player-safe
+# public text — which also makes it an askable lounge question (the
+# intent selector reads rumored facts).
+func record_stranger_intel_fact(station_display: String) -> Dictionary:
+	var minute := int(CampaignClock.total_minutes) \
+		if is_instance_valid(CampaignClock) else 0
+	var salt := "%s|%d" % [station_display.strip_edges(), minute]
+	var fact_id := "fact.stranger_intel.m%d_%s" % [
+		maxi(0, minute),
+		salt.sha256_text().substr(0, 8),
+	]
+	var ledger := KnowledgeLedger.new(story_state)
+	var promoted := ledger.promote(
+		fact_id,
+		KnowledgeLedger.STATE_RUMORED,
+		"lounge_stranger",
+		minute
+	)
+	if not bool(promoted.get("ok", false)):
+		return {"ok": false, "error": str(promoted.get("error", "promote_failed"))}
+	var states: Dictionary = story_state.get("knowledge_states", {})
+	var record: Dictionary = states.get(fact_id, {}) \
+		if states.get(fact_id, {}) is Dictionary else {}
+	record["public_text"] = (
+		"A paid tip from a stranger at %s — coordinates and a name."
+		% station_display.strip_edges()
+	)
+	record["alias"] = "the stranger's tip"
+	states[fact_id] = record
+	story_state["knowledge_states"] = states
+	_save_story_state()
+	return {"ok": true, "fact_id": fact_id}
+
+
 static func lounge_warmth_key(npc_name: String) -> String:
 	var out := ""
 	for ch in npc_name.strip_edges().to_lower():

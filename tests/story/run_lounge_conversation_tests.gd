@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_lounge_state_keys_are_stable_ids()
 	_test_refusal_mechanics_stay_code_owned()
 	_test_bundle_transport_is_registered()
+	_test_stranger_intel_becomes_a_real_fact()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -540,6 +541,52 @@ func _test_bundle_transport_is_registered() -> void:
 			and source.contains("\"lounge_bundle\"")
 			and source.contains("\"num_predict\": 520"),
 		"Bundle transport is missing or lost its five-field token budget."
+	)
+
+
+# Phase 9: the stranger's paid intel lands in the knowledge ledger as a
+# rumored fact with a real ID and public text — never a free-form string
+# appended to pending_hooks.
+func _test_stranger_intel_becomes_a_real_fact() -> void:
+	var sm = root.get_node_or_null("StoryManager")
+	_expect(sm != null, "StoryManager autoload unavailable.")
+	if sm == null:
+		return
+	var snapshot: Dictionary = (sm.story_state as Dictionary).duplicate(true)
+	var hooks_before: Array = (
+		sm.story_state.get("pending_hooks", []) as Array
+	).duplicate(true)
+	var result: Dictionary = sm.record_stranger_intel_fact("Kova Station")
+	var fact_id := str(result.get("fact_id", ""))
+	_expect(
+		bool(result.get("ok", false))
+			and fact_id.begins_with("fact.stranger_intel."),
+		"Stranger intel did not produce a real fact ID: %s" % str(result)
+	)
+	var states: Dictionary = sm.story_state.get("knowledge_states", {})
+	var record: Dictionary = states.get(fact_id, {}) \
+		if states.get(fact_id, {}) is Dictionary else {}
+	_expect(
+		str(record.get("state", "")) == "rumored"
+			and str(record.get("public_text", "")).contains("Kova Station")
+			and str(record.get("alias", "")) == "the stranger's tip",
+		"Stranger intel fact record was wrong: %s" % str(record)
+	)
+	_expect(
+		sm.story_state.get("pending_hooks", []) == hooks_before,
+		"Stranger intel leaked into pending_hooks."
+	)
+	sm.story_state = snapshot
+	# And the old free-form append is gone from the deal resolution.
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect stranger deal wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		not source.contains("hooks.append(\"a paid tip")
+			and source.contains("record_stranger_intel_fact"),
+		"Stranger deal still appends free-form strings to pending_hooks."
 	)
 
 

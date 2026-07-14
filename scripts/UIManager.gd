@@ -5043,12 +5043,13 @@ func _resolve_stranger_deal(card: Dictionary, action: String) -> void:
 				_show_lounge_card_line(card, "The crate is where they said. Fenced quiet, %d credits clear. No names, no receipts." % (haul - ask), false)
 				_record_stranger_outcome("stranger_deal_goods", "Bought unmarked goods off a stranger; fenced for profit.")
 			else:
-				if is_instance_valid(StoryManager):
-					var hooks: Array = StoryManager.story_state.get("pending_hooks", [])
-					hooks.append("a paid tip from a stranger at %s" % _current_station_display_name())
-					StoryManager.story_state["pending_hooks"] = hooks
-					if StoryManager.has_method("_save_story_state"):
-						StoryManager._save_story_state()
+				# Real fact ID through the ledger, never a free-form string
+				# appended to pending_hooks (Phase 9 contract).
+				if is_instance_valid(StoryManager) \
+						and StoryManager.has_method("record_stranger_intel_fact"):
+					StoryManager.record_stranger_intel_fact(
+						_current_station_display_name()
+					)
 				_show_lounge_card_line(card, "Coordinates and a name, burned onto a cheap chip. Real or not — that's tomorrow's problem.", false)
 				_record_stranger_outcome("stranger_deal_intel", "Paid %d credits for black-market intel." % ask)
 
