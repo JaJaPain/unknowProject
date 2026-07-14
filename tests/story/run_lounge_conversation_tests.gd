@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_hooks_marked_heard_only_on_display()
 	_test_lounge_state_keys_are_stable_ids()
 	_test_refusal_mechanics_stay_code_owned()
+	_test_bundle_transport_is_registered()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -513,6 +514,32 @@ func _test_refusal_mechanics_stay_code_owned() -> void:
 		source.contains("agent_disposition.get(\"completion_rep\"")
 			and source.contains("disposition.get(\"bail_rep\""),
 		"Reputation deltas no longer come from the code-owned disposition."
+	)
+
+
+# Phase 9: the bundle transport exists on the small model with a background
+# timeout and enough token room for opener + answers + close.
+func _test_bundle_transport_is_registered() -> void:
+	var gateway: GDScript = load("res://scripts/ai/LocalModelGateway.gd")
+	_expect(
+		str(gateway.profile_for_capability("lounge_bundle"))
+			== "small_dialogue",
+		"lounge_bundle must run on the small dialogue model."
+	)
+	_expect(
+		float(gateway.request_timeout("lounge_bundle")) == 25.0,
+		"lounge_bundle needs its background prefetch timeout."
+	)
+	var llm_file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(llm_file != null, "Could not inspect bundle transport.")
+	if llm_file == null:
+		return
+	var source := llm_file.get_as_text()
+	_expect(
+		source.contains("func request_lounge_exchange_bundle")
+			and source.contains("\"lounge_bundle\"")
+			and source.contains("\"num_predict\": 520"),
+		"Bundle transport is missing or lost its five-field token budget."
 	)
 
 

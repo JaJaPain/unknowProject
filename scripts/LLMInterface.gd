@@ -1570,18 +1570,44 @@ func request_lounge_conversation_turn(prompt: String, callback: Callable) -> voi
 	_request_small_inner_text("lounge_chat", prompt, callback)
 
 
+# Phase 9: one call prepares a whole lounge exchange bundle (opener, an
+# answer per code-approved intent, close) so reply clicks never wait on the
+# model. Same flat-JSON transport as per-turn chat with room for the five
+# fields; callers parse with LoungeConversation.parse_bundle + validate
+# with validate_bundle_answers.
+func request_lounge_exchange_bundle(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"lounge_bundle",
+		prompt,
+		callback,
+		{"temperature": 0.95, "num_predict": 520, "seed": randi()}
+	)
+
+
 # Shared small-model transport: request under `capability`, unwrap the Ollama
 # envelope (+ markdown fences), return the inner text for the caller's own
 # parser. format:"json" is load-bearing: freeform lets qwen3:4b narrate its
 # planning instead of answering (live-fired 6/6, 2026-07-04). Requested shapes
 # must be FLAT few-key objects — nesting is what it corrupts, not JSON itself.
-func _request_small_inner_text(capability: String, prompt: String, callback: Callable) -> void:
+func _request_small_inner_text(
+	capability: String,
+	prompt: String,
+	callback: Callable,
+	options: Dictionary = {}
+) -> void:
 	if _skip_for_campaign_bible_priority(capability):
 		callback.call({"ok": false, "reason": "campaign_bible_priority"})
 		return
+	var generation_options := options
+	if generation_options.is_empty():
+		generation_options = {
+			"temperature": 0.95,
+			"num_predict": 220,
+			"seed": randi(),
+		}
 	var payload := build_generation_body(
 		capability, prompt, "json",
-		{"temperature": 0.95, "num_predict": 220, "seed": randi()}
+		generation_options
 	)
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)

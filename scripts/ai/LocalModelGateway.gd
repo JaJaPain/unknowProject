@@ -60,6 +60,9 @@ const CAPABILITY_PROFILES := {
 	"partial_delivery_line": "small_dialogue",
 	"ambient_chat": "small_dialogue",
 	"lounge_chat": "small_dialogue",
+	# Whole-exchange lounge bundle (Phase 9): prepared ahead of the click,
+	# player-safe context only.
+	"lounge_bundle": "small_dialogue",
 	"system_names": "large_story",
 	"campaign_bible": "large_story",
 	"faction_batch": "large_story",
@@ -91,6 +94,9 @@ const REQUEST_TIMEOUTS := {
 	# Player IS waiting on lounge turns (they just pressed a reply) — keep it
 	# tighter; a slow turn falls back to the one-liner path rather than stalling.
 	"lounge_chat": 12.0,
+	# Bundles prepare in the background (flight-to-station prefetch); five
+	# fields need more room than a single turn and nobody is watching.
+	"lounge_bundle": 25.0,
 	"system_names": 30.0,
 	"campaign_bible": 600.0,
 	"faction_batch": 45.0,
