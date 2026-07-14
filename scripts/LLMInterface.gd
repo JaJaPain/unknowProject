@@ -5124,7 +5124,10 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 	if obj_type == "DELIVER_ORE":
 		task_desc = "deliver %s m³ of ore for %s credits" % [str(int(obj.get("amount_required", 20))), str(obj.get("reward_credits", 150))]
 	elif obj_type == "KILL_SHIPS":
-		task_desc = "destroy %d %s ships for %s credits" % [obj.get("count_required", 3), obj.get("target_faction", "enemy").capitalize(), str(obj.get("reward_credits", 200))]
+		var kill_count := int(obj.get("count_required", 3))
+		var target := str(obj.get("target_faction", "enemy")).capitalize()
+		var ship_word := "ship" if kill_count == 1 else "ships"
+		task_desc = "destroy %d %s %s for %s credits" % [kill_count, target, ship_word, str(obj.get("reward_credits", 200))]
 	else:
 		task_desc = "complete the contract"
 
