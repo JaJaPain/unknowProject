@@ -470,6 +470,15 @@ func _test_lounge_state_keys_are_stable_ids() -> void:
 			and not completion_body.contains("contact_key = npc_name"),
 		"Once-per-dock completion reward still keys on the raw display name."
 	)
+	# Phase 9: a completed conversation persists stance + fact IDs into the
+	# NPC's structured memory through the GameRoot bridge.
+	_expect(
+		completion_body.contains("_record_lounge_conversation_memory")
+			and source.contains("func _record_lounge_conversation_memory")
+			and source.contains("classify_player_stance")
+			and source.contains("record_lounge_conversation_memory"),
+		"Completed conversations do not persist stance/facts to NPC memory."
+	)
 	var lead_start := source.find("func _deliver_agent_lead")
 	var lead_end := source.find("func ", lead_start + 10)
 	var lead_body := source.substr(lead_start, lead_end - lead_start)

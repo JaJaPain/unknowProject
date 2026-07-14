@@ -5168,6 +5168,7 @@ func _apply_lounge_completion(npc: Dictionary, agent_disposition: Dictionary = {
 	if npc_name.is_empty() or _lounge_convo_done.has(contact_key):
 		return
 	_lounge_convo_done[contact_key] = true
+	_record_lounge_conversation_memory(contact_key)
 	if not agent_disposition.is_empty():
 		var card: Dictionary = _lounge_convo.get("card", {})
 		var rep_key := str(card.get("rep_key", "")).to_lower()
@@ -5179,6 +5180,34 @@ func _apply_lounge_completion(npc: Dictionary, agent_disposition: Dictionary = {
 	var faction := str(npc.get("faction", "")).strip_edges().to_lower()
 	if faction in ["zenith", "aurelia", "vanguard"]:
 		GlobalState.adjust_reputation(faction, 1.0)
+
+
+# Phase 9: a completed conversation persists into the NPC's structured
+# memory — the stance the player's LAST reply carried plus any fact IDs the
+# exchange surfaced (populated by the bundle path via learned_fact_ids).
+# Keyed by the stable contact key; GameRoot maps it into the npc namespace.
+func _record_lounge_conversation_memory(contact_key: String) -> void:
+	var game_root := get_tree().current_scene
+	if game_root == null \
+			or not game_root.has_method("record_lounge_conversation_memory"):
+		return
+	var stance := "unknown"
+	var turns: Array = _lounge_convo.get("turns", [])
+	for i in range(turns.size() - 1, -1, -1):
+		var turn: Dictionary = turns[i] if turns[i] is Dictionary else {}
+		if str(turn.get("speaker", "")) == "you":
+			stance = LoungeConversationType.classify_player_stance(
+				str(turn.get("text", ""))
+			)
+			break
+	var fact_ids: Array = _lounge_convo.get("learned_fact_ids", []) \
+		if _lounge_convo.get("learned_fact_ids", []) is Array else []
+	game_root.call(
+		"record_lounge_conversation_memory",
+		contact_key,
+		stance,
+		fact_ids
+	)
 
 
 # A good chat with an agent can shake loose a lead: the first unhinted story

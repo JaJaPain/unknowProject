@@ -229,6 +229,60 @@ func record_memory_events(
 	)
 
 
+# Phase 9: structured lounge memory — the stance the player took and the
+# fact IDs their questions surfaced. Bounded raw history (summarize later);
+# the latest stance also lands on relationship.last_player_stance so
+# prompt-facing consumers need no new plumbing. Invalid fact IDs are
+# skipped, never fatal.
+const MAX_LOUNGE_EXCHANGES := 8
+const MAX_LOUNGE_FACT_IDS := 24
+
+
+func record_lounge_conversation(
+	npc_id: String,
+	stance: String,
+	fact_ids: Array
+) -> Dictionary:
+	var ensured := ensure_state(npc_id)
+	if not bool(ensured.get("ok", false)):
+		return ensured
+	var state: Dictionary = ensured.get("state", {})
+	var clean_stance := stance.strip_edges()
+	if clean_stance.is_empty():
+		clean_stance = "unknown"
+	var relationship: Dictionary = state.get("relationship", {}) \
+		if state.get("relationship", {}) is Dictionary else {}
+	relationship["last_player_stance"] = clean_stance
+	state["relationship"] = relationship
+	var clean_fact_ids: Array = []
+	var heard: Array = state.get("lounge_fact_ids", []).duplicate(true) \
+		if state.get("lounge_fact_ids", []) is Array else []
+	for raw_fact_id in fact_ids:
+		var fact_id := str(raw_fact_id).strip_edges()
+		if not DomainIdType.is_valid(fact_id, "fact"):
+			continue
+		if not clean_fact_ids.has(fact_id):
+			clean_fact_ids.append(fact_id)
+		if not heard.has(fact_id):
+			heard.append(fact_id)
+	while heard.size() > MAX_LOUNGE_FACT_IDS:
+		heard.pop_front()
+	state["lounge_fact_ids"] = heard
+	var exchanges: Array = state.get("lounge_exchanges", []).duplicate(true) \
+		if state.get("lounge_exchanges", []) is Array else []
+	exchanges.append({
+		"stance": clean_stance,
+		"fact_ids": clean_fact_ids,
+		"at_unix": int(Time.get_unix_time_from_system()),
+	})
+	while exchanges.size() > MAX_LOUNGE_EXCHANGES:
+		exchanges.pop_front()
+	state["lounge_exchanges"] = exchanges
+	state["state_revision"] = int(state.get("state_revision", 0)) + 1
+	state["updated_at_unix"] = int(Time.get_unix_time_from_system())
+	return _upsert_state(npc_id, state, "npc_state_lounge_conversation")
+
+
 func capture_state_for_checkpoint() -> Dictionary:
 	return data.duplicate(true)
 
@@ -454,7 +508,12 @@ static func _validate_npc_state(
 		var thread_id := str((current_stake as Dictionary).get("thread_id", ""))
 		if not thread_id.is_empty() and not DomainIdType.is_valid(thread_id, "thread"):
 			result.add_error("invalid_stake_thread", "NPC stake thread ID is invalid.", "%s.current_stake.thread_id" % path)
-	for field in ["memory_event_ids", "line_memory_fingerprints"]:
+	for field in [
+		"memory_event_ids",
+		"line_memory_fingerprints",
+		"lounge_fact_ids",
+		"lounge_exchanges",
+	]:
 		if not state.get(field, []) is Array:
 			result.add_error(
 				"invalid_npc_state_array",

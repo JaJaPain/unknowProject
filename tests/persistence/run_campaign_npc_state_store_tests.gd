@@ -27,6 +27,8 @@ func _initialize() -> void:
 	_cleanup()
 	_test_mission_outcomes_update_relationship()
 	_cleanup()
+	_test_lounge_conversation_memory()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC state store tests")
@@ -219,6 +221,69 @@ func _test_structured_event_memory_projection() -> void:
 	_expect(
 		(state.get("line_memory_fingerprints", []) as Array).size() == 1,
 		"Structured NPC memory projection did not remember the generated line fingerprint."
+	)
+
+
+# Phase 9: lounge conversations persist stance + surfaced fact IDs into
+# structured NPC memory, bounded, with invalid fact IDs skipped and the
+# record surviving a store reopen.
+func _test_lounge_conversation_memory() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC Lounge Memory Fixture",
+		"npc-state-lounge-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(store.is_valid(), "NPC state store was invalid for lounge test.")
+	if not store.is_valid():
+		return
+	var recorded: Dictionary = store.record_lounge_conversation(
+		NPC_ID,
+		"curious",
+		[
+			"fact.convoy.disappearance",
+			"not-a-valid-id",
+			"fact.convoy.disappearance",
+			"rumor.wrong.namespace",
+		]
+	)
+	_expect(bool(recorded.get("ok", false)), recorded.get("error", ""))
+	var state: Dictionary = recorded.get("state", {})
+	_expect(
+		str((state.get("relationship", {}) as Dictionary)
+			.get("last_player_stance", "")) == "curious",
+		"Lounge stance did not land on relationship.last_player_stance."
+	)
+	_expect(
+		state.get("lounge_fact_ids", []) == ["fact.convoy.disappearance"],
+		"Fact IDs were not deduped/validated: %s"
+			% str(state.get("lounge_fact_ids", []))
+	)
+	var exchanges: Array = state.get("lounge_exchanges", [])
+	_expect(
+		exchanges.size() == 1
+			and str((exchanges[0] as Dictionary).get("stance", "")) == "curious",
+		"Lounge exchange history was not recorded."
+	)
+	# A second conversation updates stance and appends history.
+	store.record_lounge_conversation(NPC_ID, "pushback", [])
+	# History and stance survive a reopen.
+	var reopened := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(reopened.is_valid(), "NPC state store failed to reopen.")
+	var persisted: Dictionary = reopened.state_for(NPC_ID)
+	_expect(
+		str((persisted.get("relationship", {}) as Dictionary)
+			.get("last_player_stance", "")) == "pushback"
+			and (persisted.get("lounge_exchanges", []) as Array).size() == 2
+			and persisted.get("lounge_fact_ids", [])
+				== ["fact.convoy.disappearance"],
+		"Lounge memory did not survive a store reopen."
 	)
 
 

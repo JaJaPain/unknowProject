@@ -1683,6 +1683,28 @@ func _campaign_slot_path(slot_id: String) -> String:
 	return "%s/%s" % [campaign_slot_registry.root_path, slot_id]
 
 
+# Phase 9: persist a completed lounge conversation (player stance + fact
+# IDs surfaced) into the NPC's structured memory. Contact keys outside the
+# npc namespace (lounge.bartender.*, lounge.agent.*) get the stable
+# "npc." prefix so one contact keeps one memory across campaigns of docks.
+func record_lounge_conversation_memory(
+	contact_key: String,
+	stance: String,
+	fact_ids: Array
+) -> Dictionary:
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.is_valid():
+		return {"ok": false, "error": "npc_state_store_unavailable"}
+	var npc_id := contact_key.strip_edges()
+	if npc_id.is_empty():
+		return {"ok": false, "error": "missing_contact_key"}
+	if not npc_id.begins_with("npc."):
+		npc_id = "npc.%s" % npc_id
+	return campaign_npc_state_store.record_lounge_conversation(
+		npc_id, stance, fact_ids
+	)
+
+
 func _capture_npc_state_for_checkpoint() -> Dictionary:
 	if campaign_npc_state_store == null \
 			or not campaign_npc_state_store.has_method("capture_state_for_checkpoint"):
