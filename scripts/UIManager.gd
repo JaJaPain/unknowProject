@@ -4790,6 +4790,94 @@ func _lounge_bundle_npc(card: Dictionary) -> Dictionary:
 	}
 
 
+# Phase 9: the instant conversation. Opener and every possible answer were
+# prepared and validated before the click; the only work here is display.
+# One meaningful player question per bundle, then the prepared close.
+func _start_lounge_bundle_conversation(
+	card: Dictionary,
+	contact_key: String,
+	entry: Dictionary,
+	agent_disposition: Dictionary
+) -> void:
+	_lounge_bundle_cache.erase(contact_key)  # consumed
+	var bundle: Dictionary = entry.get("bundle", {}) \
+		if entry.get("bundle", {}) is Dictionary else {}
+	var intents: Array = entry.get("intents", []) \
+		if entry.get("intents", []) is Array else []
+	var answers: Array = bundle.get("answers", []) \
+		if bundle.get("answers", []) is Array else []
+	var opener := str(bundle.get("opener", ""))
+	_lounge_convo_serial += 1
+	var serial := _lounge_convo_serial
+	var npc := _lounge_bundle_npc(card)
+	npc["contact_key"] = contact_key
+	npc["npc_id"] = str(card.get("npc_id", ""))
+	_lounge_convo = {
+		"card": card,
+		"npc": npc,
+		"turns": [{"speaker": "npc", "text": opener}],
+		"serial": serial,
+		"agent_disposition": agent_disposition,
+		"bundle": bundle,
+		"bundle_intents": intents,
+		"learned_fact_ids": [],
+	}
+	var choices: Array = []
+	for i in range(mini(intents.size(), answers.size())):
+		if str(answers[i]).is_empty():
+			continue  # that slot degraded in validation; the intent is not offered
+		var intent_index := i
+		choices.append({
+			"text": str((intents[i] as Dictionary).get("text", "")),
+			"callback": func() -> void:
+				_on_lounge_bundle_intent_pressed(serial, intent_index),
+		})
+	choices.append({
+		"text": "(nod and leave)",
+		"callback": func() -> void: _end_lounge_conversation(serial),
+	})
+	_show_lounge_card_line(card, opener, true, choices, true)
+
+
+func _on_lounge_bundle_intent_pressed(serial: int, index: int) -> void:
+	if serial != _lounge_convo_serial or _lounge_convo.is_empty():
+		return
+	var card: Dictionary = _lounge_convo.get("card", {})
+	var npc: Dictionary = _lounge_convo.get("npc", {})
+	var bundle: Dictionary = _lounge_convo.get("bundle", {})
+	var intents: Array = _lounge_convo.get("bundle_intents", [])
+	var answers: Array = bundle.get("answers", [])
+	if index < 0 or index >= answers.size() or index >= intents.size():
+		return
+	var intent: Dictionary = intents[index] \
+		if intents[index] is Dictionary else {}
+	var question := str(intent.get("text", ""))
+	var answer := str(answers[index])
+	var turns: Array = _lounge_convo.get("turns", [])
+	turns.append({"speaker": "you", "text": question})
+	turns.append({"speaker": "npc", "text": answer})
+	_lounge_convo["turns"] = turns
+	_record_lounge_reply_relationship_stance(card, question)
+	# The answer is on screen now — a knowledge-gap question counts its
+	# fact as discussed only at this display moment (Phase 9 contract).
+	var intent_id := str(intent.get("id", ""))
+	if intent_id.begins_with("gap:"):
+		var learned: Array = _lounge_convo.get("learned_fact_ids", [])
+		learned.append(intent_id.trim_prefix("gap:"))
+		_lounge_convo["learned_fact_ids"] = learned
+	_apply_lounge_completion(npc, _lounge_convo.get("agent_disposition", {}))
+	var close_text := str(bundle.get("close", ""))
+	var choices: Array = [{
+		"text": "(nod)",
+		"callback": func() -> void:
+			if serial != _lounge_convo_serial:
+				return
+			_show_lounge_card_line(card, close_text, true, [], true)
+			_lounge_convo = {},
+	}]
+	_show_lounge_card_line(card, answer, true, choices, true)
+
+
 func _on_buy_drink_pressed(
 	npc_name: String,
 	contact_key: String,
@@ -4862,6 +4950,17 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		if bool(agent_disposition.get("refuses", false)):
 			_show_lounge_card_line(card, "%s looks straight through you. Their faction's ledger on you reads: not worth the seat." % card_name, false)
 			return
+	# Phase 9: a prepared bundle makes the whole exchange instant — no
+	# model request between the click and the opener, or ever again in
+	# this conversation. Falls through to the live per-turn path when no
+	# bundle is ready (its own preparation may still be in flight).
+	var bundle_entry: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	if str(bundle_entry.get("status", "")) == "ready":
+		_start_lounge_bundle_conversation(
+			card, contact_key, bundle_entry, agent_disposition
+		)
+		return
 	_lounge_convo_serial += 1
 	var serial := _lounge_convo_serial
 	var context := _lounge_card_context(card)

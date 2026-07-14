@@ -28,6 +28,7 @@ func _initialize() -> void:
 	_test_stranger_intel_becomes_a_real_fact()
 	_test_stranger_deal_stays_code_owned_and_leak_free()
 	_test_bundle_preparation_wiring()
+	_test_bundle_consumption_is_model_free()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -666,6 +667,61 @@ func _test_bundle_preparation_wiring() -> void:
 		context_body.contains("!= \"rumored\"")
 			or context_body.contains("== \"rumored\""),
 		"Intent context does not restrict knowledge gaps to rumored facts."
+	)
+
+
+# Phase 9: a ready bundle is consumed with zero model requests — the
+# conversation start prefers it, the intent press only displays prepared
+# text, degraded slots are never offered, and learned gap facts land on
+# the conversation for NPC memory.
+func _test_bundle_consumption_is_model_free() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect bundle consumption wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var start_fn := source.find("func _start_lounge_conversation")
+	var bundle_branch := source.find(
+		"_start_lounge_bundle_conversation", start_fn
+	)
+	var live_request := source.find(
+		"request_lounge_conversation_turn", start_fn
+	)
+	_expect(
+		bundle_branch > start_fn and live_request > bundle_branch,
+		"Conversation start does not prefer a ready bundle over a live call."
+	)
+	for fn_name in [
+		"func _start_lounge_bundle_conversation",
+		"func _on_lounge_bundle_intent_pressed",
+	]:
+		var fn_start := source.find(fn_name)
+		var fn_end := source.find("\nfunc ", fn_start + 10)
+		var body := source.substr(fn_start, fn_end - fn_start)
+		_expect(
+			not body.contains("LLMInterface")
+				and not body.contains("request_lounge"),
+			"%s must never touch the model." % fn_name
+		)
+	var press_start := source.find("func _on_lounge_bundle_intent_pressed")
+	var press_end := source.find("\nfunc ", press_start + 10)
+	var press_body := source.substr(press_start, press_end - press_start)
+	_expect(
+		press_body.contains("learned_fact_ids")
+			and press_body.contains("_apply_lounge_completion"),
+		"Intent press does not record learned facts or complete the chat."
+	)
+	var start_body_end := source.find(
+		"\nfunc ", source.find("func _start_lounge_bundle_conversation") + 10
+	)
+	var start_body := source.substr(
+		source.find("func _start_lounge_bundle_conversation"),
+		start_body_end - source.find("func _start_lounge_bundle_conversation")
+	)
+	_expect(
+		start_body.contains("is_empty()")
+			and start_body.contains("continue"),
+		"Degraded answer slots are still offered as questions."
 	)
 
 
