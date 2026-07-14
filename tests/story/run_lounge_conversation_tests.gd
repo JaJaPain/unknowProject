@@ -26,6 +26,7 @@ func _initialize() -> void:
 	_test_refusal_mechanics_stay_code_owned()
 	_test_bundle_transport_is_registered()
 	_test_stranger_intel_becomes_a_real_fact()
+	_test_stranger_deal_stays_code_owned_and_leak_free()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -587,6 +588,43 @@ func _test_stranger_intel_becomes_a_real_fact() -> void:
 		not source.contains("hooks.append(\"a paid tip")
 			and source.contains("record_stranger_intel_fact"),
 		"Stranger deal still appends free-form strings to pending_hooks."
+	)
+
+
+# Phase 9: the stranger deal's numbers stay code-owned (roll, ask, scam,
+# haggle, payouts) and the pitch prompt reads only code-owned deal fields
+# plus the player-safe ambient flavor block — never story_state directly.
+func _test_stranger_deal_stays_code_owned_and_leak_free() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect stranger deal wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var roll_start := source.find("func _roll_lounge_stranger")
+	var roll_end := source.find("\nfunc ", roll_start + 10)
+	var roll_body := source.substr(roll_start, roll_end - roll_start)
+	_expect(
+		roll_body.contains("\"ask\"")
+			and roll_body.contains("\"is_scam\"")
+			and not roll_body.contains("LLMInterface"),
+		"Stranger deal terms are no longer rolled code-side."
+	)
+	var pitch_start := source.find("func _on_stranger_card_pressed")
+	var pitch_end := source.find("\nfunc ", pitch_start + 10)
+	var pitch_body := source.substr(pitch_start, pitch_end - pitch_start)
+	_expect(
+		not pitch_body.contains("story_state")
+			and pitch_body.contains("_lounge_flavor_block"),
+		"Stranger pitch prompt reads story state outside the safe flavor block."
+	)
+	var resolve_start := source.find("func _resolve_stranger_deal")
+	var resolve_end := source.find("\nfunc ", resolve_start + 10)
+	var resolve_body := source.substr(resolve_start, resolve_end - resolve_start)
+	_expect(
+		resolve_body.contains("spend_credits")
+			and resolve_body.contains("add_credits")
+			and not resolve_body.contains("LLMInterface"),
+		"Stranger deal outcomes are no longer resolved code-side."
 	)
 
 

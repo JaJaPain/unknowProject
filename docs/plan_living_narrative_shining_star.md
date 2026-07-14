@@ -1101,7 +1101,8 @@ Checklist:
 - [ ] Cache likely contact bundles during flight-to-station/system arrival. The card should indicate unavailable/pending before selection rather than turn a click into `Listening...`.
 - [x] Let a rare contact conversation activate or clarify a mission beat, but require an actual fact/beat ID—not a free-form string appended directly to `pending_hooks`.
   - 2026-07-13: The one live offender was the stranger's paid intel (`"a paid tip from a stranger at %s"` appended straight to `pending_hooks`). It now routes through `StoryManager.record_stranger_intel_fact()`: a real `fact.stranger_intel.*` ID promoted to RUMORED in the knowledge ledger with player-safe `public_text` and an alias — which also makes the tip an askable lounge question, since `LoungeIntentSelector` builds intents from rumored facts. Behavioral coverage in `run_lounge_conversation_tests.gd` (fact record shape, `pending_hooks` untouched, free-form append gone).
-- [ ] Preserve the stranger deal’s code-owned mechanics; make its pitch and any story intel obey the same knowledge/cache contracts.
+- [x] Preserve the stranger deal’s code-owned mechanics; make its pitch and any story intel obey the same knowledge/cache contracts.
+  - 2026-07-13: Mechanics were already fully code-owned (roll chance/cooldown, ask, scam flag, haggle math, payouts — the model only phrases the pitch) and are now tripwired: `_roll_lounge_stranger` and `_resolve_stranger_deal` must never touch LLMInterface, and the pitch builder must not read `story_state` outside the player-safe `_lounge_flavor_block()`. Story intel obeys the knowledge contract via `record_stranger_intel_fact` (previous slice). The pitch remains a single-turn generation with an interactive wait mask and an instant code template on failure; folding it into flight-time prefetch can ride the bundle-cache checkbox if desired.
 
 Phase 9 exit gate:
 
