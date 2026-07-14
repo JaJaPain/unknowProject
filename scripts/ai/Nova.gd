@@ -227,7 +227,11 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	var now := Time.get_ticks_msec()
 	if not _speech_budget_allows(severity, now):
 		return
-	_recent_speech_ms.append(now)
+	# Only casual IDLE/NAV lines count toward the "spoken enough" budget.
+	# Combat/threat warnings are essential and must not spend her budget —
+	# otherwise a fight silences her next dock/arrival line.
+	if severity < Severity.COMBAT:
+		_recent_speech_ms.append(now)
 	if GlobalState.has_method("emit_npc_flavor"):
 		GlobalState.emit_npc_flavor({
 			"npc_name": NOVA_SENDER,
