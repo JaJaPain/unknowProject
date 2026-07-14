@@ -4800,6 +4800,10 @@ func _start_lounge_bundle_conversation(
 	agent_disposition: Dictionary
 ) -> void:
 	_lounge_bundle_cache.erase(contact_key)  # consumed
+	# Start preparing a possible SECOND bundle right away: "keep talking"
+	# only ever appears if it is fully ready by the time the answer shows —
+	# a warm contact gets more conversation, never a visible wait.
+	_prepare_lounge_exchange_bundle(card)
 	var bundle: Dictionary = entry.get("bundle", {}) \
 		if entry.get("bundle", {}) is Dictionary else {}
 	var intents: Array = entry.get("intents", []) \
@@ -4867,14 +4871,37 @@ func _on_lounge_bundle_intent_pressed(serial: int, index: int) -> void:
 		_lounge_convo["learned_fact_ids"] = learned
 	_apply_lounge_completion(npc, _lounge_convo.get("agent_disposition", {}))
 	var close_text := str(bundle.get("close", ""))
-	var choices: Array = [{
+	var choices: Array = []
+	# Warm contacts may keep talking — but ONLY into a second bundle that is
+	# already prepared. No readiness, no button; never a visible wait.
+	var contact_key := str(npc.get("contact_key", ""))
+	var second: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	var warmth := 0
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("lounge_warmth_for_contact"):
+		warmth = int(StoryManager.lounge_warmth_for_contact(
+			contact_key, str(npc.get("name", ""))
+		))
+	if warmth >= 2 and str(second.get("status", "")) == "ready":
+		var disposition: Dictionary = _lounge_convo.get("agent_disposition", {})
+		choices.append({
+			"text": "Keep talking",
+			"callback": func() -> void:
+				if serial != _lounge_convo_serial:
+					return
+				_start_lounge_bundle_conversation(
+					card, contact_key, second, disposition
+				),
+		})
+	choices.append({
 		"text": "(nod)",
 		"callback": func() -> void:
 			if serial != _lounge_convo_serial:
 				return
 			_show_lounge_card_line(card, close_text, true, [], true)
 			_lounge_convo = {},
-	}]
+	})
 	_show_lounge_card_line(card, answer, true, choices, true)
 
 

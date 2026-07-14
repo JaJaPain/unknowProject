@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_stranger_deal_stays_code_owned_and_leak_free()
 	_test_bundle_preparation_wiring()
 	_test_bundle_consumption_is_model_free()
+	_test_keep_talking_requires_cached_second_bundle()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -722,6 +723,38 @@ func _test_bundle_consumption_is_model_free() -> void:
 		start_body.contains("is_empty()")
 			and start_body.contains("continue"),
 		"Degraded answer slots are still offered as questions."
+	)
+
+
+# Phase 9: one meaningful reply per bundle; "Keep talking" appears only
+# for warm contacts AND only when the second bundle is already ready —
+# extended conversation must never reintroduce a visible wait.
+func _test_keep_talking_requires_cached_second_bundle() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect keep-talking wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var start_fn := source.find("func _start_lounge_bundle_conversation")
+	var start_end := source.find("\nfunc ", start_fn + 10)
+	var start_body := source.substr(start_fn, start_end - start_fn)
+	_expect(
+		start_body.contains("_prepare_lounge_exchange_bundle"),
+		"Consuming a bundle does not start preparing the second one."
+	)
+	var press_fn := source.find("func _on_lounge_bundle_intent_pressed")
+	var press_end := source.find("\nfunc ", press_fn + 10)
+	var press_body := source.substr(press_fn, press_end - press_fn)
+	var warmth_at := press_body.find("warmth >= 2")
+	var ready_at := press_body.find("== \"ready\"")
+	var keep_at := press_body.find("Keep talking")
+	_expect(
+		warmth_at > 0 and ready_at > 0 and keep_at > warmth_at,
+		"Keep talking is not gated on warmth plus an already-ready bundle."
+	)
+	_expect(
+		not press_body.contains("request_lounge"),
+		"Keep talking must never trigger a live model request."
 	)
 
 
