@@ -249,6 +249,7 @@ const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
 const ConsumableEffectsScript = preload("res://scripts/economy/ConsumableEffects.gd")
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
 const LoungeConversationType = preload("res://scripts/story/LoungeConversation.gd")
+const LoungeIntentSelectorType = preload("res://scripts/story/LoungeIntentSelector.gd")
 const IntroCinematicType = preload("res://scripts/story/IntroCinematic.gd")
 const KAELEN_BOUNTY_OFFER_CHANCE := 0.30
 const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
@@ -3711,6 +3712,7 @@ func toggle_dock_menu(
 				_lounge_stranger_rolled = false
 				_lounge_stranger_deal = {}
 				_lounge_cold_contacts.clear()
+				_lounge_bundle_cache.clear()
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -4135,6 +4137,9 @@ func _render_station_contacts(should_show: bool) -> void:
 		if not card_data.is_empty() and _lounge_contact_key(card_data) == _lounge_approach_npc:
 			card_data["approach"] = true
 		_add_lounge_contact_card(i, card_data)
+		# Phase 9: prepare this contact's exchange bundle in the background
+		# so the first click can be instant instead of "Listening...".
+		_prepare_lounge_exchange_bundle(card_data)
 
 
 # L3: at most one contact per dock may "want a word" — rolled once, sticky
@@ -4655,6 +4660,134 @@ var _lounge_stranger_deal: Dictionary = {}
 var _lounge_stranger_rolled: bool = false
 # L5a: contacts the player walked out on this dock (name -> true).
 var _lounge_cold_contacts: Dictionary = {}
+# Phase 9: prepared exchange bundles, contact_key -> {status, intents,
+# bundle}. status: "pending" | "ready" | "failed". Prepared when the lounge
+# renders; consumed at conversation start so reply clicks never wait on the
+# model. Cleared on fresh dock with the rest of the session state.
+var _lounge_bundle_cache: Dictionary = {}
+
+
+# Fire-and-forget preparation of one contact's exchange bundle. Skips card
+# kinds with their own machinery (Kaelen handoffs, the stranger's pitch,
+# planted story NPCs) and anything already pending/ready this dock.
+func _prepare_lounge_exchange_bundle(card: Dictionary) -> void:
+	if card.is_empty():
+		return
+	if str(card.get("kind", "")) not in ["npc", "agent", "bartender"]:
+		return
+	var contact_key := _lounge_contact_key(card)
+	if contact_key.is_empty():
+		return
+	var cached: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	if str(cached.get("status", "")) in ["pending", "ready"]:
+		return
+	var intents: Array = LoungeConversationType.bundle_intents(
+		LoungeIntentSelectorType.select_intents(_lounge_intent_context(card))
+	)
+	if intents.is_empty():
+		return
+	var npc := _lounge_bundle_npc(card)
+	_lounge_bundle_cache[contact_key] = {
+		"status": "pending",
+		"intents": intents,
+	}
+	var prompt: String = LoungeConversationType.build_bundle_prompt(
+		npc, _lounge_flavor_block(), intents
+	)
+	LLMInterface.request_lounge_exchange_bundle(
+		prompt,
+		func(result: Dictionary) -> void:
+			_on_lounge_bundle_result(
+				contact_key, str(npc.get("name", "")), result
+			)
+	)
+
+
+func _on_lounge_bundle_result(
+	contact_key: String,
+	npc_name: String,
+	result: Dictionary
+) -> void:
+	var entry: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	if str(entry.get("status", "")) != "pending":
+		return
+	var intents: Array = entry.get("intents", []) \
+		if entry.get("intents", []) is Array else []
+	var parsed: Dictionary = {
+		"ok": false,
+		"reason": str(result.get("reason", "transport_failed")),
+	}
+	if bool(result.get("ok", false)):
+		parsed = LoungeConversationType.parse_bundle(
+			str(result.get("inner_text", "")), npc_name, intents.size()
+		)
+		parsed = LoungeConversationType.validate_bundle_answers(parsed, intents)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_fallback(
+			"lounge_bundle",
+			str(parsed.get("reason", "unknown")),
+			"UIManager",
+			{"contact": contact_key}
+		)
+		_lounge_bundle_cache[contact_key] = {"status": "failed"}
+		return
+	entry["status"] = "ready"
+	entry["bundle"] = parsed
+	_lounge_bundle_cache[contact_key] = entry
+
+
+# Code-supplied context for the intent selector: rumored knowledge gaps
+# (only what the player has actually heard), the live mission stake, and
+# the contact relationship. All player-visible; no director fields.
+func _lounge_intent_context(card: Dictionary) -> Dictionary:
+	var context := {}
+	var gaps: Array = []
+	if is_instance_valid(StoryManager):
+		var states: Dictionary = StoryManager.story_state.get("knowledge_states", {}) \
+			if StoryManager.story_state.get("knowledge_states", {}) is Dictionary else {}
+		for fact_id in states.keys():
+			var record: Dictionary = states[fact_id] \
+				if states[fact_id] is Dictionary else {}
+			if str(record.get("state", "")) != "rumored":
+				continue
+			var alias := str(record.get("alias", "")).strip_edges()
+			if alias.is_empty():
+				var raw_id := str(fact_id)
+				alias = raw_id.get_slice(
+					".", raw_id.get_slice_count(".") - 1
+				).replace("_", " ")
+			gaps.append({
+				"fact_id": str(fact_id),
+				"state": "rumored",
+				"alias": alias,
+			})
+	context["knowledge_gaps"] = gaps
+	if is_instance_valid(QuestManager) and QuestManager.is_quest_active():
+		context["mission_label"] = str(QuestManager.active_quest.get("title", ""))
+	var warmth := 0
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("lounge_warmth_for_contact"):
+		warmth = int(StoryManager.lounge_warmth_for_contact(
+			_lounge_contact_key(card),
+			str(card.get("name", ""))
+		))
+	context["relationship"] = {
+		"warmth_tier": "warm" if warmth >= 2 else "neutral",
+		"met_before": warmth > 0,
+	}
+	return context
+
+
+func _lounge_bundle_npc(card: Dictionary) -> Dictionary:
+	return {
+		"name": str(card.get("name", "a local")),
+		"role": str(card.get("role", "station regular")),
+		"station": _current_station_display_name(),
+		"mood": str(card.get("mood", "neutral")),
+		"faction": str(card.get("rep_key", card.get("faction", "independent"))),
+	}
 
 
 func _on_buy_drink_pressed(

@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_test_bundle_transport_is_registered()
 	_test_stranger_intel_becomes_a_real_fact()
 	_test_stranger_deal_stays_code_owned_and_leak_free()
+	_test_bundle_preparation_wiring()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -625,6 +626,46 @@ func _test_stranger_deal_stays_code_owned_and_leak_free() -> void:
 			and resolve_body.contains("add_credits")
 			and not resolve_body.contains("LLMInterface"),
 		"Stranger deal outcomes are no longer resolved code-side."
+	)
+
+
+# Phase 9: bundles are prepared in the background when the lounge renders,
+# validated with the full parse + relevance pipeline, and cached per stable
+# contact key with the session state.
+func _test_bundle_preparation_wiring() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect bundle preparation wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _prepare_lounge_exchange_bundle")
+			and source.contains("request_lounge_exchange_bundle")
+			and source.contains("LoungeIntentSelectorType.select_intents")
+			and source.contains("_lounge_intent_context"),
+		"Bundle preparation does not select code-owned intents and dispatch."
+	)
+	var result_start := source.find("func _on_lounge_bundle_result")
+	var result_end := source.find("\nfunc ", result_start + 10)
+	var result_body := source.substr(result_start, result_end - result_start)
+	_expect(
+		result_body.contains("parse_bundle")
+			and result_body.contains("validate_bundle_answers")
+			and result_body.contains("record_fallback"),
+		"Bundle results skip the parse/relevance pipeline or fail silently."
+	)
+	_expect(
+		source.contains("_lounge_bundle_cache.clear()"),
+		"Bundle cache is not reset with the dock session state."
+	)
+	# Only rumored facts feed the knowledge-gap context.
+	var context_start := source.find("func _lounge_intent_context")
+	var context_end := source.find("\nfunc ", context_start + 10)
+	var context_body := source.substr(context_start, context_end - context_start)
+	_expect(
+		context_body.contains("!= \"rumored\"")
+			or context_body.contains("== \"rumored\""),
+		"Intent context does not restrict knowledge gaps to rumored facts."
 	)
 
 
