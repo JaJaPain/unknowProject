@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_bundle_prompt_carries_code_owned_intents()
 	_test_parse_bundle_degrades_per_answer()
 	_test_answer_relevance_validation()
+	_test_hooks_marked_heard_only_on_display()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -417,6 +418,34 @@ func _test_answer_relevance_validation() -> void:
 		anchors.has("convoy") and anchors.has("route") \
 			and not anchors.has("the") and not anchors.has("missing"),
 		"Anchor token derivation was wrong: %s" % str(anchors)
+	)
+
+
+# Phase 9: a hook is marked heard when its opener DISPLAYS, never while
+# merely building the prompt — a failed model call must not burn the hook.
+func _test_hooks_marked_heard_only_on_display() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect lounge hook-heard wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var instruction_start := source.find("func _lounge_approach_instruction")
+	var instruction_end := source.find("func ", instruction_start + 10)
+	var instruction_body := source.substr(
+		instruction_start, instruction_end - instruction_start
+	)
+	_expect(
+		not instruction_body.contains("record_lounge_rumor_heard")
+			and instruction_body.contains("pending_hook_id"),
+		"Approach instruction still marks hooks heard at prompt-build time."
+	)
+	var result_start := source.find("func _on_lounge_turn_result")
+	var result_end := source.find("func ", result_start + 10)
+	var result_body := source.substr(result_start, result_end - result_start)
+	_expect(
+		result_body.contains("pending_hook_id")
+			and result_body.contains("record_lounge_rumor_heard"),
+		"Displayed opener does not mark the tipped hook as heard."
 	)
 
 

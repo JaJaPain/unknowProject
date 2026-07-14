@@ -4807,7 +4807,10 @@ func _lounge_approach_instruction(card: Dictionary, npc: Dictionary) -> String:
 			var hook_id := "hook:%s" % text.sha256_text().substr(0, 12)
 			if hook_id in hinted:
 				continue
-			StoryManager.record_lounge_rumor_heard(hook_id)
+			# Marked heard ONLY when the opener actually displays (see
+			# _on_lounge_turn_result). Recording here — while merely building
+			# the prompt — burned the hook when the model call failed.
+			_lounge_convo["pending_hook_id"] = hook_id
 			return base + (
 				"They quietly tip the pilot off about this, in their own words, "
 				+ "personal and incomplete — not a briefing: \"%s\"" % text
@@ -4851,6 +4854,14 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 	var turns: Array = _lounge_convo.get("turns", [])
 	turns.append({"speaker": "npc", "text": line})
 	_lounge_convo["turns"] = turns
+	# The tipped hook is on screen now — THIS is when it counts as heard.
+	# A failed/parse-rejected turn never reaches here, so the hook stays
+	# available for the next approach instead of being silently burned.
+	var pending_hook_id := str(_lounge_convo.get("pending_hook_id", ""))
+	if not pending_hook_id.is_empty():
+		_lounge_convo.erase("pending_hook_id")
+		if is_instance_valid(StoryManager):
+			StoryManager.record_lounge_rumor_heard(pending_hook_id)
 	var replies: Array = parsed.get("replies", [])
 	var npc_turns_left := int(_lounge_convo.get("npc_turns_left", 0))
 	var choices: Array = []
