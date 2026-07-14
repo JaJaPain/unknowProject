@@ -1813,3 +1813,31 @@ validation, speech_service, game_content_registry, local_model_gateway.
   approach-path early-mark bug); NPC stance/facts into structured memory;
   stable NPC IDs for warmth keys; mission-beat hooks by fact ID; stranger
   deal contracts. All in UIManager lounge section + KnowledgeLedger.
+
+## Session 2026-07-13 (continued 4): Phase 9 slices 4-8
+- 61a2fe7 Hook-heard-on-display fix: _lounge_approach_instruction stashes
+  pending_hook_id; _on_lounge_turn_result records it only after the opener
+  displays. Failed turns leave the hook available for retry.
+- 6bcb8fa Stable NPC IDs: _apply_lounge_completion falls back to
+  _stable_lounge_contact_key (was raw display name); agent lead marked
+  heard inside the 3s display callback (undock no longer burns it).
+  Warmth + cold contacts were already stable-keyed.
+- 47cc467 Refusal tripwire: agent_disposition owns refusal + rep numbers;
+  test fails if refusal check moves after the model call.
+- 4a6f1a7 NPC lounge memory: CampaignNpcStateStore.record_lounge_conversation
+  (stance -> relationship.last_player_stance; bounded lounge_exchanges<=8,
+  lounge_fact_ids<=24, invalid IDs skipped). GameRoot bridge maps contact
+  keys into the npc namespace (lounge.agent.zenith -> npc.lounge.agent.zenith).
+  _lounge_convo.learned_fact_ids is the hook the bundle display will fill.
+- c86a866 Bundle transport: request_lounge_exchange_bundle, small model,
+  lounge_bundle capability (25s / 520 tokens).
+- Phase 9 checked so far: intent selection, answer validation, rumor-heard
+  fix, NPC memory, stable IDs, refusal. Checkbox 1 (bundle protocol) has
+  protocol + transport landed but stays UNCHECKED until UIManager consumes
+  bundles at runtime.
+- REMAINING Phase 9: UIManager runtime bundle consumption (replace
+  per-reply build_reply_prompt flow), single-reply + cached second bundle
+  keep-talking, flight-time bundle caching with pending card state,
+  mission-beat hooks by fact/beat ID, stranger deal contracts. Then the
+  exit gates (instant replies with Ollama stopped, 50/50 fixtures, no
+  reset opener on return).
