@@ -14,6 +14,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_low_bank_triggers_refill_and_tops_up()
+	_test_nova_bank_seed_wiring()
 
 	if _failures.is_empty():
 		print("[PASS] Line bank refill tests")
@@ -160,6 +161,76 @@ func _test_low_bank_triggers_refill_and_tops_up() -> void:
 			and source.contains("func _nova_refill_batch_fields")
 			and source.contains("func _nova_line_bank_generation_context"),
 		"Refill worker does not dispatch batch generation with a logged template floor."
+	)
+
+
+# Phase 8B seeding: a fresh N.O.V.A. bank populates its movement/combat
+# categories so those beats stop drawing stock. Field sets must be valid
+# batches (<=10 labels, no protected categories), the bank must have
+# headroom for the appended lines, the ready hook must dispatch, and the
+# per-bank guard must prevent double-seeding.
+func _test_nova_bank_seed_wiring() -> void:
+	var game_root_script: GDScript = load("res://scripts/GameRoot.gd")
+	if game_root_script == null or not game_root_script.can_instantiate():
+		_failures.append("GameRoot.gd did not compile.")
+		return
+	var gr: Node = game_root_script.new()
+	var llm: GDScript = load("res://scripts/LLMInterface.gd")
+
+	# Both seed batches must expand into valid, non-empty, capped label sets.
+	for fields in [gr._nova_refill_batch_fields(), gr._nova_seed_combat_batch_fields()]:
+		var labels: Array = llm.nova_line_bank_labels(fields)
+		_expect(
+			not labels.is_empty() and labels.size() <= 10,
+			"Seed batch produced an invalid label count: %d" % labels.size()
+		)
+
+	# Combat seed must cover the categories that fell to stock in the log.
+	var combat_categories: Array = []
+	for field in gr._nova_seed_combat_batch_fields():
+		combat_categories.append(str((field as Dictionary).get("category", "")))
+	for expected in [
+		"combat_victory_clean",
+		"combat_victory_battered",
+		"hull_critical",
+		"welcome_back",
+		"docked",
+	]:
+		_expect(
+			combat_categories.has(expected),
+			"Combat seed batch is missing category: %s" % expected
+		)
+
+	# The nova bank target size must exceed the arrival template so appended
+	# generated lines have room.
+	_expect(
+		int(gr.NOVA_LINE_BANK_TARGET_SIZE) > int(BankType.DEFAULT_TARGET_SIZE),
+		"Nova bank has no headroom for seeded category lines."
+	)
+
+	# The per-bank guard blocks a second seed of the same requester.
+	gr._nova_bank_seed_requests["prefetch:current_system_nova:x"] = true
+	gr._seed_nova_line_bank("prefetch:current_system_nova:x")
+	_expect(
+		gr._nova_bank_seed_requests.size() == 1,
+		"Seed guard did not prevent a duplicate seed."
+	)
+	gr.free()
+
+	# The ready path dispatches the seed for both nova bundle job kinds.
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect seed ready-hook.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var process_start := source.find("func _process_narrative_cache_job")
+	var process_end := source.find("\nfunc ", process_start + 10)
+	var process_body := source.substr(process_start, process_end - process_start)
+	_expect(
+		process_body.contains("_seed_nova_line_bank")
+			and process_body.contains("new_campaign_nova_bank")
+			and process_body.contains("current_system_nova_bundle"),
+		"Ready path does not seed the nova bank for its bundle job kinds."
 	)
 
 

@@ -17,6 +17,9 @@ const UNDOCK_SERVICE_MINUTES := 5
 # Queue a line-bank refill while this many unused lines remain, so the bank
 # is topped up BEFORE it reaches two remaining (Phase 8B).
 const LINE_BANK_REFILL_MIN_AVAILABLE := 3
+# N.O.V.A.'s shared bank spans several categories, so it needs room for the
+# arrival template lines PLUS the movement/combat lines seeded after ready.
+const NOVA_LINE_BANK_TARGET_SIZE := 48
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 const ShipMovementEventsType := preload(
 	"res://scripts/story/ShipMovementEvents.gd"
@@ -133,6 +136,9 @@ var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
 var event_scheduler = null
 var ship_behavior_observer: Node = null
+# Requester IDs whose N.O.V.A. bank has already had its generated categories
+# seeded this session, so the two-batch seed fires at most once per bank.
+var _nova_bank_seed_requests: Dictionary = {}
 var ship_pre_generator: ShipPreGenerator = null
 
 func _ready() -> void:
@@ -3878,6 +3884,69 @@ func _nova_refill_batch_fields() -> Array:
 	]
 
 
+# Second seed batch: the combat/hull/welcome/dock beats that otherwise only
+# ever draw stock lines (the batch caps at 10 labels, so seeding splits into
+# this plus the movement/arrival set above).
+func _nova_seed_combat_batch_fields() -> Array:
+	return [
+		{"category": "combat_victory_clean", "count": 2},
+		{"category": "combat_victory_battered", "count": 2},
+		{"category": "combat_retreat", "count": 1},
+		{"category": "hull_critical", "count": 2},
+		{"category": "welcome_back", "count": 1},
+		{"category": "docked", "count": 1},
+	]
+
+
+# Phase 8B seeding: once a fresh N.O.V.A. bank is ready, populate its
+# generated categories so movement/combat beats stop falling to stock. Two
+# sequential batches (movement/arrival, then combat/hull/welcome/dock) so
+# their merges into the shared payload never race. Fire-and-forget: on any
+# failure the arrival template + stock pools already cover delivery.
+func _seed_nova_line_bank(requester_id: String) -> void:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return
+	if not is_instance_valid(LLMInterface) \
+			or not LLMInterface.has_method("request_nova_line_bank_batch"):
+		return
+	if _nova_bank_seed_requests.has(clean_requester):
+		return  # already seeded (or seeding) this bank
+	_nova_bank_seed_requests[clean_requester] = true
+	_dispatch_nova_seed_batch(
+		clean_requester,
+		_nova_refill_batch_fields(),
+		_nova_seed_combat_batch_fields()
+	)
+
+
+func _dispatch_nova_seed_batch(
+	requester_id: String,
+	fields: Array,
+	next_fields: Array
+) -> void:
+	LLMInterface.request_nova_line_bank_batch(
+		fields,
+		_nova_line_bank_generation_context(),
+		func(result: Dictionary) -> void:
+			if bool(result.get("ok", false)):
+				replace_used_cached_fallback_lines(
+					requester_id,
+					result.get("lines", []),
+					"llm_nova_bank"
+				)
+			else:
+				GenerationDiagnostics.record_event(
+					"nova_line_bank",
+					"seed_batch_failed",
+					"game_root",
+					{"reason": str(result.get("reason", "unknown"))}
+				)
+			if not next_fields.is_empty():
+				_dispatch_nova_seed_batch(requester_id, next_fields, [])
+	)
+
+
 # Player-safe generation context: her fixed persona, the campaign quirk,
 # the bible's public tone, the current system by display name, and the
 # observer's bounded recent-action streak. No director-only fields.
@@ -4090,6 +4159,13 @@ func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
 			ready["tts_jobs_queued"] = (
 				tts_queued.get("queued", []) as Array
 			).size() if tts_queued.get("queued", []) is Array else 0
+		# A freshly-ready N.O.V.A. bank gets its movement/combat categories
+		# seeded so those beats stop drawing stock (Phase 8B).
+		if str(job.get("kind", "")) in [
+			"current_system_nova_bundle",
+			"new_campaign_nova_bank",
+		]:
+			_seed_nova_line_bank(str(job.get("requester_id", "")))
 	ready["processed"] = bool(ready.get("ok", false))
 	return ready
 
@@ -4469,11 +4545,17 @@ func _line_bank_payload_for_cache_job(job: Dictionary, speaker_key: String) -> D
 	var line_bank := _template_line_bank_for_speaker(job, speaker_key)
 	if line_bank.is_empty():
 		return {"ok": false, "status": "line_bank_unavailable"}
+	# N.O.V.A.'s bank holds one shared pool spanning several categories
+	# (arrival template lines plus generated movement/combat lines seeded
+	# after the bank is ready). Give it headroom so those appends have slots.
+	var target_size := FallbackLineBankType.DEFAULT_TARGET_SIZE
+	if speaker_key == "nova":
+		target_size = NOVA_LINE_BANK_TARGET_SIZE
 	var fallback_bank: Dictionary = FallbackLineBankType.create_bank(
 		speaker_key,
 		str(line_bank.get("line_kind", "")),
 		line_bank.get("fallback_lines", []),
-		FallbackLineBankType.DEFAULT_TARGET_SIZE
+		target_size
 	)
 	var entries: Array = fallback_bank.get("entries", []) \
 		if fallback_bank.get("entries", []) is Array else []
@@ -8496,6 +8578,7 @@ func _run_multi_mission_smoke_test() -> void:
 	GlobalState.reputations["aurelia"] = 50.0
 	GlobalState.reputations["reavers"] = 50.0
 	narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
+	_nova_bank_seed_requests.clear()  # fresh campaign re-seeds its N.O.V.A. bank
 
 	var accept_choice := {
 		"text": "Accepted.",
