@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_answer_relevance_validation()
 	_test_hooks_marked_heard_only_on_display()
 	_test_lounge_state_keys_are_stable_ids()
+	_test_refusal_mechanics_stay_code_owned()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -477,6 +478,32 @@ func _test_lounge_state_keys_are_stable_ids() -> void:
 	_expect(
 		record_at > timer_at and timer_at > 0,
 		"Agent lead is marked heard before its delayed display."
+	)
+
+
+# Phase 9: whether a refusal occurs and every reputation number stay
+# code-owned. The refusal short-circuit must run BEFORE any model request
+# in the conversation start path, and rep deltas must come from the
+# disposition dict, never from model output.
+func _test_refusal_mechanics_stay_code_owned() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect refusal wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var start := source.find("func _start_lounge_conversation")
+	var end := source.find("\nfunc ", start + 10)
+	var body := source.substr(start, end - start)
+	var refusal_at := body.find("agent_disposition.get(\"refuses\"")
+	var model_at := body.find("request_lounge_conversation_turn")
+	_expect(
+		refusal_at > 0 and model_at > refusal_at,
+		"Refusal must short-circuit before the model is ever asked."
+	)
+	_expect(
+		source.contains("agent_disposition.get(\"completion_rep\"")
+			and source.contains("disposition.get(\"bail_rep\""),
+		"Reputation deltas no longer come from the code-owned disposition."
 	)
 
 
