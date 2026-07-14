@@ -776,8 +776,10 @@ func _process_flee_on_sight(delta: float) -> void:
 
 	if _flee_gate == null:
 		# No gate in scene — flee away from the player as a fallback.
-		var p: Node3D = GlobalState.player as Node3D
-		if p and is_instance_valid(p):
+		# No `as`-cast: player is already Node3D and casting a freed object
+		# (player died this frame) crashes before the validity check.
+		var p := GlobalState.player
+		if is_instance_valid(p):
 			var away: Vector3 = (global_position - p.global_position).normalized()
 			steer_towards(global_position + away * 200.0, delta)
 		velocity = -global_transform.basis.z * speed
@@ -1040,7 +1042,10 @@ func _request_combat_via_queue() -> void:
 
 
 func _redirect_from_combat_queue() -> void:
-	var p := GlobalState.player as Node3D
+	# player is already Node3D-typed; do NOT `as`-cast it — casting a freed
+	# object (e.g. the player just died this frame) throws "Trying to cast a
+	# freed object" before is_instance_valid can catch it. Assign then check.
+	var p := GlobalState.player
 	if not is_instance_valid(p):
 		return
 	var away := global_position - p.global_position
