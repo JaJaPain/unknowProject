@@ -93,22 +93,24 @@ func _test_batch_parsing() -> void:
 		"rough_arrival_1",
 		"system_arrival_1",
 	]
+	# Flat JSON keyed by label, wrapped in a markdown fence the parser must
+	# strip. system_arrival_1 duplicates boost_again_quickly_1's text (drops);
+	# rough_arrival_1 is absent (missing_label); casing drift is tolerated.
 	var raw := "\n".join([
-		"Here are the lines you asked for:",
-		"@@boost_again_quickly_1: Boost again already? My engines have feelings, probably.",
-		"@@boost_again_quickly_2: \"That cooldown was for both of us, Captain.\"",
-		"@@rough_arrival_1: We arrived. Pieces of us arrived slightly later.",
-		"@@rough_arrival_1: Duplicate label should be rejected.",
-		"@@system_arrival_1: Boost again already? My engines have feelings, probably.",
-		"@@made_up_label_1: Nobody asked for this line.",
-		"Some trailing prose the parser must ignore.",
+		"```json",
+		"{",
+		"  \"BOOST_AGAIN_QUICKLY_1\": \"Boost again already? My engines have feelings, probably.\",",
+		"  \"boost_again_quickly_2\": \"That cooldown was for both of us, Captain.\",",
+		"  \"system_arrival_1\": \"Boost again already? My engines have feelings, probably.\"",
+		"}",
+		"```",
 	])
 	var parsed: Dictionary = _llm.parse_nova_line_bank_batch(raw, expected)
 	var lines: Array = parsed.get("lines", [])
 	var rejected: Array = parsed.get("rejected", [])
 	_expect(
-		lines.size() == 3,
-		"Expected 3 accepted lines, got %d." % lines.size()
+		lines.size() == 2,
+		"Expected 2 accepted lines, got %d." % lines.size()
 	)
 	var kinds: Array = []
 	var texts: Array = []
@@ -116,21 +118,25 @@ func _test_batch_parsing() -> void:
 		kinds.append(str((line as Dictionary).get("kind", "")))
 		texts.append(str((line as Dictionary).get("text", "")))
 	_expect(
-		kinds == ["boost_again_quickly", "boost_again_quickly", "rough_arrival"],
+		kinds == ["boost_again_quickly", "boost_again_quickly"],
 		"Parsed kinds were wrong: %s" % str(kinds)
 	)
 	_expect(
 		texts[1] == "That cooldown was for both of us, Captain.",
-		"Wrapping quotes were not stripped: %s" % texts[1]
+		"Case-insensitive/second line wrong: %s" % str(texts)
 	)
 	var reasons: Array = []
 	for entry in rejected:
 		reasons.append(str((entry as Dictionary).get("reason", "")))
 	_expect(
-		reasons.has("duplicate_label")
-			and reasons.has("duplicate_text")
-			and reasons.has("unexpected_label"),
+		reasons.has("missing_label") and reasons.has("duplicate_text"),
 		"Rejection reasons were wrong: %s" % str(reasons)
+	)
+	# A non-JSON body is rejected wholesale, not silently accepted.
+	var junk: Dictionary = _llm.parse_nova_line_bank_batch("not json at all", expected)
+	_expect(
+		(junk.get("lines", []) as Array).is_empty(),
+		"Non-JSON batch body should yield no lines."
 	)
 
 

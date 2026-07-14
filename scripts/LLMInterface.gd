@@ -1772,8 +1772,10 @@ func request_nova_line_bank_batch(
 		callback.call({"ok": false, "reason": "no_valid_fields"})
 		return
 	var prompt := _nova_line_bank_prompt(labels, context)
+	# Flat one-level JSON keyed by label — the format qwen3 handles reliably
+	# here (the earlier @@label text form was rejected wholesale live).
 	var payload := build_generation_body(
-		capability, prompt, "",
+		capability, prompt, "json",
 		{"temperature": 0.9, "num_predict": 60 * labels.size(), "seed": randi()}
 	)
 	var temp_http := HTTPRequest.new()
@@ -1868,48 +1870,57 @@ static func validate_nova_bank_line(text: String) -> String:
 	return ""
 
 
-# Pure parser for a flat @@label batch response. Each expected label may
-# appear once; every line validates independently; duplicate texts and
-# unknown labels are rejected, never repaired.
+# Pure parser for a flat one-level JSON batch response, keyed by label.
+# Each expected label is read once; every line validates independently;
+# missing labels and duplicate texts are rejected, never repaired.
 static func parse_nova_line_bank_batch(
 	raw: String,
 	expected_labels: Array
 ) -> Dictionary:
+	var text := raw.strip_edges()
+	# Strip a markdown code fence if the model wrapped the JSON in one.
+	if text.begins_with("```"):
+		var newline := text.find("\n")
+		if newline != -1:
+			text = text.substr(newline + 1)
+		if text.ends_with("```"):
+			text = text.substr(0, text.length() - 3)
+		text = text.strip_edges()
+	var parser := JSON.new()
+	if parser.parse(text) != OK:
+		return {"lines": [], "rejected": [{"reason": "inner_parse_failed"}]}
+	var data = parser.get_data()
+	if not data is Dictionary:
+		return {"lines": [], "rejected": [{"reason": "not_an_object"}]}
+	# Case-insensitive key lookup so trivial casing drift doesn't reject.
+	var by_lower: Dictionary = {}
+	for key in (data as Dictionary).keys():
+		by_lower[str(key).strip_edges().to_lower()] = (data as Dictionary)[key]
 	var lines_out: Array = []
 	var rejected: Array = []
-	var seen_labels: Dictionary = {}
 	var seen_texts: Dictionary = {}
-	for raw_row in raw.split("\n"):
-		var row := raw_row.strip_edges()
-		if not row.begins_with("@@"):
+	for label in expected_labels:
+		var lower_label := str(label).to_lower()
+		if not by_lower.has(lower_label):
+			rejected.append({"label": label, "reason": "missing_label"})
 			continue
-		var colon := row.find(":")
-		if colon < 3:
-			continue
-		var label := row.substr(2, colon - 2).strip_edges()
-		var text := row.substr(colon + 1).strip_edges()
-		if text.begins_with("\"") and text.ends_with("\"") and text.length() > 1:
-			text = text.substr(1, text.length() - 2).strip_edges()
-		if not expected_labels.has(label):
-			rejected.append({"label": label, "reason": "unexpected_label"})
-			continue
-		if seen_labels.has(label):
-			rejected.append({"label": label, "reason": "duplicate_label"})
-			continue
-		seen_labels[label] = true
-		var reason := validate_nova_bank_line(text)
+		var line_text := str(by_lower[lower_label]).strip_edges()
+		if line_text.begins_with("\"") and line_text.ends_with("\"") \
+				and line_text.length() > 1:
+			line_text = line_text.substr(1, line_text.length() - 2).strip_edges()
+		var reason := validate_nova_bank_line(line_text)
 		if not reason.is_empty():
 			rejected.append({"label": label, "reason": reason})
 			continue
-		if seen_texts.has(text):
+		if seen_texts.has(line_text):
 			rejected.append({"label": label, "reason": "duplicate_text"})
 			continue
-		seen_texts[text] = true
-		var category := label
-		var underscore := label.rfind("_")
-		if underscore > 0 and label.substr(underscore + 1).is_valid_int():
-			category = label.substr(0, underscore)
-		lines_out.append({"kind": category, "text": text})
+		seen_texts[line_text] = true
+		var category := str(label)
+		var underscore := category.rfind("_")
+		if underscore > 0 and category.substr(underscore + 1).is_valid_int():
+			category = category.substr(0, underscore)
+		lines_out.append({"kind": category, "text": line_text})
 	return {"lines": lines_out, "rejected": rejected}
 
 
@@ -1943,18 +1954,23 @@ static func _nova_line_bank_prompt(
 			parts.append("- %s" % str(event).strip_edges())
 	parts.append("")
 	parts.append(
-		"Write ONE line for each label below, in her voice, each under 18 words:"
+		"Write ONE short line in her voice (under 18 words) for each of these"
 	)
+	parts.append("situations:")
 	for label in labels:
 		var underscore := label.rfind("_")
 		var category := label.substr(0, underscore) if underscore > 0 else label
 		parts.append(
-			"@@%s: %s" % [label, NovaBankCategoriesType.describe(category)]
+			"- %s = %s" % [label, NovaBankCategoriesType.describe(category)]
 		)
 	parts.append("")
+	parts.append(
+		"Return ONLY a flat JSON object whose keys are those exact situation"
+	)
+	parts.append("names and whose values are the lines. Example shape:")
+	parts.append("{\"%s\": \"her line here\"}" % str(labels[0]))
 	parts.append("Rules:")
-	parts.append("- Return ONLY lines in the exact format @@label: line")
-	parts.append("- No numbering, no quotes, no speaker names, no extra prose.")
+	parts.append("- Every value is one sentence, no speaker name, no line breaks.")
 	parts.append("- Every line unique. Never mention hidden lore or secrets.")
 	return "\n".join(parts)
 
