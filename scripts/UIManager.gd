@@ -5158,7 +5158,13 @@ func _apply_lounge_completion(npc: Dictionary, agent_disposition: Dictionary = {
 	var npc_name := str(npc.get("name", ""))
 	var contact_key := str(npc.get("contact_key", "")).strip_edges()
 	if contact_key.is_empty():
-		contact_key = npc_name
+		# Stable-ID fallback, never the raw display name: two contacts that
+		# share a name (or one renamed by regeneration) must not share or
+		# lose their once-per-dock reward.
+		contact_key = _stable_lounge_contact_key(
+			str(npc.get("npc_id", "")),
+			npc_name
+		)
 	if npc_name.is_empty() or _lounge_convo_done.has(contact_key):
 		return
 	_lounge_convo_done[contact_key] = true
@@ -5190,12 +5196,17 @@ func _deliver_agent_lead(agent_name: String) -> void:
 		var hook_id := "hook:%s" % text.sha256_text().substr(0, 12)
 		if hook_id in hinted:
 			continue
-		StoryManager.record_lounge_rumor_heard(hook_id)
 		var line := "%s pauses at your shoulder on the way out. \"Didn't hear it from me — %s.\"" % [
 			agent_name, text.trim_suffix(".")
 		]
+		# Heard when shown, not when scheduled: if the player undocks inside
+		# the 3s delay the lead is never displayed, so it must survive for a
+		# later delivery instead of being burned here.
 		get_tree().create_timer(3.0).timeout.connect(
-			func() -> void: show_dock_message(line, agent_name, Color(0.9, 0.85, 0.6))
+			func() -> void:
+				if is_instance_valid(StoryManager):
+					StoryManager.record_lounge_rumor_heard(hook_id)
+				show_dock_message(line, agent_name, Color(0.9, 0.85, 0.6))
 		)
 		return
 

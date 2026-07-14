@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_parse_bundle_degrades_per_answer()
 	_test_answer_relevance_validation()
 	_test_hooks_marked_heard_only_on_display()
+	_test_lounge_state_keys_are_stable_ids()
 
 	if _failures.is_empty():
 		print("[PASS] Lounge conversation tests")
@@ -446,6 +447,36 @@ func _test_hooks_marked_heard_only_on_display() -> void:
 		result_body.contains("pending_hook_id")
 			and result_body.contains("record_lounge_rumor_heard"),
 		"Displayed opener does not mark the tipped hook as heard."
+	)
+
+
+# Phase 9: warmth, cold-contact state, and once-per-dock rewards key on
+# stable NPC IDs, never raw display names; the agent lead is marked heard
+# inside the delayed display callback, not when scheduled.
+func _test_lounge_state_keys_are_stable_ids() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect lounge state keying.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var completion_start := source.find("func _apply_lounge_completion")
+	var completion_end := source.find("func ", completion_start + 10)
+	var completion_body := source.substr(
+		completion_start, completion_end - completion_start
+	)
+	_expect(
+		completion_body.contains("_stable_lounge_contact_key")
+			and not completion_body.contains("contact_key = npc_name"),
+		"Once-per-dock completion reward still keys on the raw display name."
+	)
+	var lead_start := source.find("func _deliver_agent_lead")
+	var lead_end := source.find("func ", lead_start + 10)
+	var lead_body := source.substr(lead_start, lead_end - lead_start)
+	var record_at := lead_body.find("record_lounge_rumor_heard")
+	var timer_at := lead_body.find("create_timer")
+	_expect(
+		record_at > timer_at and timer_at > 0,
+		"Agent lead is marked heard before its delayed display."
 	)
 
 
