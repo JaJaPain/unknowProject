@@ -10936,6 +10936,12 @@ func _request_kaelen_reaction_bundle_for_mission(
 	var kaelen_reaction_runtime_id := str(mission_data.get("runtime_id", ""))
 	if kaelen_reaction_runtime_id.strip_edges().is_empty():
 		return
+	# The starter mission is the player's first impression, so its Kaelen
+	# turn-in is authored — never the small model (which invented factions
+	# and parroted samples here). Project rule: tutorial lines stay authored.
+	if QuestManager.is_intro_tutorial_contract(mission_data):
+		_store_authored_tutorial_kaelen_bundle(kaelen_reaction_runtime_id, reason)
+		return
 	GlobalState.trace(
 		"[TRACE] [UIManager] Requesting Kaelen reaction bundle (%s) for: %s" % [
 			reason,
@@ -10957,6 +10963,41 @@ func _request_kaelen_reaction_bundle_for_mission(
 			SpeechService.cache(comp_line, "voice.kaelen.v1")
 			SpeechService.cache(abn_line, "voice.kaelen.v1")
 	)
+
+# Authored Kaelen turn-in lines for the starter mission (destroy the raiding
+# Reaver ship for an anonymous client). No faction names, no invented job
+# details, no parroted opener — just her voice: a beat of dry warmth, then
+# the money. Kept authored on purpose (first impression must be reliable).
+const _TUTORIAL_KAELEN_COMPLETION_LINES := [
+	"That raider won't be circling anyone's routes again. Clean work, Shiny — and the credits cleared.",
+	"One less predator out there, and we got paid for it. That's my kind of easy.",
+	"Wreck's floating, contract's closed, money's in. First job down, Shiny. Try to make it a habit.",
+	"Handled, quiet, no trail. The client's happy, I'm happier, and you're finally solvent.",
+]
+const _TUTORIAL_KAELEN_ABANDON_LINES := [
+	"Walking away from the first easy one? Bold. The offer's cold now, Shiny.",
+	"You leave a job half-done, that follows you. Shame — this one was simple money.",
+	"No kill, no pay, and a client who remembers faces. Let's pretend this didn't happen.",
+]
+
+
+func _store_authored_tutorial_kaelen_bundle(runtime_id: String, reason: String) -> void:
+	var completion: String = _TUTORIAL_KAELEN_COMPLETION_LINES[
+		randi() % _TUTORIAL_KAELEN_COMPLETION_LINES.size()
+	]
+	var abandon: String = _TUTORIAL_KAELEN_ABANDON_LINES[
+		randi() % _TUTORIAL_KAELEN_ABANDON_LINES.size()
+	]
+	if not QuestManager.store_active_kaelen_reaction_bundle(
+		runtime_id,
+		completion,
+		abandon,
+		"authored_tutorial_%s" % reason
+	):
+		return
+	SpeechService.cache(completion, "voice.kaelen.v1")
+	SpeechService.cache(abandon, "voice.kaelen.v1")
+
 
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio

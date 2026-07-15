@@ -817,6 +817,12 @@ func _is_intro_tutorial_contract(data: Dictionary) -> bool:
 		and str(data.get("target_faction", "")) == "reavers"
 
 
+# Public wrapper: the starter mission uses authored dialogue instead of the
+# small model, so callers outside QuestManager can detect it too.
+func is_intro_tutorial_contract(data: Dictionary) -> bool:
+	return _is_intro_tutorial_contract(data)
+
+
 func resolve_comms_branch(branch_id: String) -> void:
 	var focused = _collection.get_focused()
 	if focused == null or focused.data.get("objective_type", "") != "TARGET_WITH_COMMS_REVERSAL":
