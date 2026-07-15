@@ -5,6 +5,14 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Tutorial overview panel starts collapsed for new players
+**Spotted:** 2026-07-15 (starter tutorial screenshot)
+**Severity:** Medium — first-time UX confusion; the tutorial points at a panel the player has never learned to expand
+**Description:** At the start of the starter tutorial, the system overview panel can appear collapsed/too short, showing only the header and column labels instead of the actual overview contents. This did not used to be the default. Because the tutorial arrow points at this overview, a brand-new player may not understand what they are supposed to look at or click.
+**Where to look:** `scripts/UIManager.gd` overview panel creation, collapse/expand state, saved UI layout restore, and tutorial/startup flow. Likely causes are persisted collapsed state being applied too early, a default collapsed flag changing, or the tutorial not forcing the overview open/expanded on first exposure. Fix should ensure the starter tutorial forces the overview panel visible and expanded regardless of prior layout state, without permanently overwriting the player's later preference.
+
+---
+
 ### N.O.V.A. filler word plays during new-campaign loading screen
 **Spotted:** 2026-07-13 (fresh campaign loading health check)
 **Severity:** Low-Medium — immersion/polish issue; makes a non-semantic latency mask feel like dialogue before gameplay has started
