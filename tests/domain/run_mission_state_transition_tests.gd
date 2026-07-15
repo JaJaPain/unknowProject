@@ -6,6 +6,7 @@ extends SceneTree
 # expire while waiting for the hand-in.
 
 const InstanceType := preload("res://scripts/domain/MissionInstance.gd")
+const AdapterType := preload("res://scripts/domain/MissionAdapter.gd")
 const MigratorType := preload("res://scripts/persistence/SaveMigrator.gd")
 const RegistryType := preload("res://scripts/registry/SystemRegistry.gd")
 
@@ -20,6 +21,7 @@ func _initialize() -> void:
 	_test_ready_state_round_trips_through_dict()
 	_test_objective_completion_marks_ready_and_persists()
 	_test_timed_contract_expires_while_ready()
+	_test_missing_kill_targets_are_planned_for_restore()
 	_cleanup()
 
 	if _failures.is_empty():
@@ -202,6 +204,53 @@ func _test_timed_contract_expires_while_ready() -> void:
 	)
 
 
+func _test_missing_kill_targets_are_planned_for_restore() -> void:
+	var qm = root.get_node("QuestManager")
+	qm.reset_for_restart()
+	var adapted := AdapterType.build_active_state(
+		_kill_offer(),
+		_accept_choice(),
+		"mission.runtime.restore_targets",
+		"start_system"
+	)
+	_expect(
+		bool((adapted.get("validation") as Variant).is_valid()),
+		"Kill offer could not build an active mission state."
+	)
+	if not bool((adapted.get("validation") as Variant).is_valid()):
+		return
+	var mission = InstanceType.create_active(adapted["state"])
+	_expect(
+		qm._collection.add(mission),
+		"Kill mission could not be added to the collection."
+	)
+	qm._collection.focus(mission.runtime_id)
+	var missing_plans: Array = qm.plan_missing_kill_ship_target_respawns([])
+	_expect(
+		missing_plans.size() == 1
+			and str(missing_plans[0].get("target_faction", "")) == "reavers"
+			and int(missing_plans[0].get("spawn_count", 0)) == 3,
+		"Missing active KILL_SHIPS targets were not planned for restore."
+	)
+	var restored_target := {
+		"is_ship": true,
+		"is_quest_target": true,
+		"destroyed": false,
+		"faction": "reavers",
+	}
+	_expect(
+		qm.plan_missing_kill_ship_target_respawns([restored_target]).is_empty(),
+		"An already-restored quest target incorrectly scheduled a duplicate."
+	)
+	var destroyed_target := restored_target.duplicate(true)
+	destroyed_target["destroyed"] = true
+	_expect(
+		not qm.plan_missing_kill_ship_target_respawns([destroyed_target]).is_empty(),
+		"A destroyed quest target incorrectly blocked load-time recovery."
+	)
+	qm.reset_for_restart()
+
+
 func _runtime_save(quest_array: Array) -> Dictionary:
 	return {
 		"version": MigratorType.CURRENT_VERSION,
@@ -244,6 +293,22 @@ func _ore_offer(timed: bool) -> Dictionary:
 			"expiration_policy": "expire",
 		}
 	return offer
+
+
+func _kill_offer() -> Dictionary:
+	return {
+		"title": "Restore Targets",
+		"faction": "zenith",
+		"agent_name": "Broker Kaelen",
+		"dialogue": "Clear the hostile ships.",
+		"objective": {
+			"type": "KILL_SHIPS",
+			"target_faction": "reavers",
+			"count_required": 3,
+			"reward_credits": 120,
+		},
+		"choices": [],
+	}
 
 
 func _accept_choice() -> Dictionary:

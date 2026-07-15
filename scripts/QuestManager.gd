@@ -909,6 +909,91 @@ func _apply_cleanup_hints(hints: Dictionary) -> void:
 const RESPAWN_DELAY_SECONDS := 20.0        # gap before a replacement target arrives
 const RESPAWN_MIN_PLAYER_DISTANCE := 800.0  # spawn far from the player + wreckage
 
+
+# Persistent mission ships normally restore with the system. Older or
+# interrupted saves can have an active KILL_SHIPS contract without those
+# entities, though, which would otherwise leave the contract impossible.
+func reconcile_missing_kill_ship_targets_after_restore() -> int:
+	var plans := plan_missing_kill_ship_target_respawns(
+		GlobalState.active_system_entities
+	)
+	if plans.is_empty():
+		return 0
+	var focused = _collection.get_focused()
+	var previous_runtime_id: String = (
+		focused.runtime_id if focused != null else ""
+	)
+	var restored_count := 0
+	for plan in plans:
+		var runtime_id := str(plan.get("runtime_id", ""))
+		if not runtime_id.is_empty():
+			_collection.focus(runtime_id)
+		var target_faction := str(plan.get("target_faction", ""))
+		var spawn_count := int(plan.get("spawn_count", 0))
+		if target_faction.is_empty() or spawn_count <= 0:
+			continue
+		GlobalState.spawn_mission_targets(
+			target_faction,
+			spawn_count,
+			RESPAWN_MIN_PLAYER_DISTANCE
+		)
+		restored_count += spawn_count
+	if not previous_runtime_id.is_empty():
+		_collection.focus(previous_runtime_id)
+	if restored_count > 0:
+		print(
+			"[QuestManager] Restored %d missing mission target(s) after load."
+			% restored_count
+		)
+	return restored_count
+
+
+# Kept separate from spawning so the recovery decision is deterministic and can
+# be checked without loading a game scene.
+func plan_missing_kill_ship_target_respawns(entities: Array) -> Array[Dictionary]:
+	var plans: Array[Dictionary] = []
+	for mission in _collection.get_all_active():
+		var data: Dictionary = mission.data
+		if str(data.get("objective_type", "")) != "KILL_SHIPS":
+			continue
+		var capability = MissionCapabilityRegistryType.get_for_type("KILL_SHIPS")
+		if capability == null or capability.is_completed(data):
+			continue
+		var faction := str(data.get("target_faction", "")).strip_edges()
+		if faction.is_empty() or _has_alive_quest_target_for_faction(entities, faction):
+			continue
+		var remaining := maxi(
+			1,
+			int(data.get("count_required", 1)) - int(data.get("current_count", 0))
+		)
+		plans.append({
+			"runtime_id": mission.runtime_id,
+			"target_faction": faction,
+			"spawn_count": remaining,
+		})
+	return plans
+
+
+func _has_alive_quest_target_for_faction(entities: Array, faction: String) -> bool:
+	for entity in entities:
+		if entity is Dictionary:
+			var snapshot := entity as Dictionary
+			if bool(snapshot.get("is_quest_target", false)) \
+					and bool(snapshot.get("is_ship", true)) \
+					and not bool(snapshot.get("destroyed", false)) \
+					and str(snapshot.get("faction", "")) == faction:
+				return true
+			continue
+		if entity == null or not is_instance_valid(entity):
+			continue
+		if entity.is_in_group("ship") \
+				and bool(entity.get_meta("is_quest_target", false)) \
+				and not bool(entity.get("destroyed")) \
+				and str(entity.get("faction")) == faction:
+			return true
+	return false
+
+
 func _schedule_respawn(faction: String) -> void:
 	get_tree().create_timer(RESPAWN_DELAY_SECONDS).timeout.connect(func():
 		var needs_targets := false
@@ -923,12 +1008,10 @@ func _schedule_respawn(faction: String) -> void:
 				break
 		if not needs_targets:
 			return
-		var alive_targets := 0
-		for e in GlobalState.active_system_entities:
-			if e and is_instance_valid(e) and not e.get("destroyed"):
-				if e.is_in_group("ship") and e.get_meta("is_quest_target", false):
-					alive_targets += 1
-		if alive_targets == 0:
+		if not _has_alive_quest_target_for_faction(
+			GlobalState.active_system_entities,
+			faction
+		):
 			GlobalState.spawn_mission_targets(faction, 1, RESPAWN_MIN_PLAYER_DISTANCE)
 			print("[QuestManager] Respawned quest target far from player after NPC kill.")
 	)

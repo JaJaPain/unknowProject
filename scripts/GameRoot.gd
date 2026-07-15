@@ -5528,6 +5528,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	else:
 		_restore_system_state(target_system_id, get_active_system_root())
 	_apply_player_state(data.get("player", {}))
+	QuestManager.reconcile_missing_kill_ship_targets_after_restore()
 	var ui := GlobalState.get_ui_manager()
 	if ui:
 		ui.call_deferred("refresh_overview")

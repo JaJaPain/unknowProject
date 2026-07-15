@@ -29,14 +29,6 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ---
 
-### First mission target ship never respawns after logout/login (mission uncompletable)
-**Spotted:** 2026-07-03 (playtest)
-**Severity:** High — soft-locks the first mission; the kill objective can never be satisfied
-**Description:** If the player logs out (saves + quits) BEFORE the first mission's target ship is destroyed, then loads that save back in, the mission ship does not come back. The KILL objective stays at 0 with no target present in the system, so the first mission can never be completed. Mission targets are spawned at mission start but appear not to be persisted into the campaign save and not re-spawned on load.
-**Where to look:** `GlobalState.spawn_mission_targets` (spawns the starter target(s) at mission start) + the save/restore path — `savegame.json` / `CampaignManifestStore` and the persistent-entity system (`NPCShip.capture_state`/`restore_state`, `persistent_id`). Confirm whether mission target ships are included in the persisted entity set. If they aren't persisted, `QuestManager` should, on load, detect any in-progress KILL_SHIPS mission whose targets are missing and re-spawn them (mirror the "respawn replacement target far away" logic already used when an NPC kills a target — see the 2026-07-01 fixed entry). Also verify the mission's own state (progress, target ids) round-trips through save/load.
-
----
-
 ### Kaelen handoff batch intermittently returns no JSON array
 **Spotted:** 2026-07-02 (live playtest during story-wiring session)
 **Severity:** Low — falls back gracefully (`StoryManager.generate_handoff_pool` just logs "Handoff batch returned empty" and the pool stays at its previous size), but worth root-causing.
@@ -159,6 +151,7 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-07-15 | Active KILL_SHIPS mission could have no targets after save/load | Saved mission ships still restore normally. `QuestManager` now also reconciles every unfinished KILL_SHIPS contract after system and player restore: if its faction has no living quest target, it spawns only the remaining count at the normal safe distance. The focused mission is preserved, so regenerated persistent IDs belong to the correct contract. Covered by `tests/domain/run_mission_state_transition_tests.gd`. |
 | 2026-07-14 | Game crashed on player death — "Trying to cast a freed object" in NPCShip.gd | `_redirect_from_combat_queue` and the gateless-flee path cast `GlobalState.player as Node3D`. `die()` calls `queue_free()` but never nulls `GlobalState.player`, so the next NPC frame cast a freed object — and `as` crashes *before* `is_instance_valid` runs. `player` is already `Node3D`-typed, so both sites now assign without the cast and validate first — `NPCShip.gd:779,1043` |
 | 2026-07-13 | Every mission completion warned `[MissionInstance] Invalid transition: ACTIVE -> COMPLETED` (READY_TO_TURN_IN was dead state) | `_mark_objective_ready_if_completed` now transitions the instance to READY_TO_TURN_IN when the objective completes; `complete_quest` and the comms-bribe resolution route through `_transition_to_completed()` (hops via READY_TO_TURN_IN for pre-fix saves); READY_TO_TURN_IN → EXPIRED added so timed contracts can still expire awaiting hand-in. State persists through save/reload via `_instance_state`. Covered by `tests/domain/run_mission_state_transition_tests.gd` — `QuestManager.gd`, `MissionInstance.gd` |
 | 2026-07-01 | Dock panel opened over the combat wheel (docked while in combat) | Autopilot dock (e.g. the completed-mission "Dock at Station" button) could reach a station while combat started en route, opening the dock menu mid-fight. `Station.dock_player` + `OutpostStation.dock_player` now bail with a HUD warning if `PlayerInteractionQueue.in_combat_window()` (covers active combat + post-combat cooldown) |
