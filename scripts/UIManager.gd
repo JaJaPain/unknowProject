@@ -5388,6 +5388,13 @@ func _play_nova_latency_filler(
 ) -> void:
 	if not is_instance_valid(SpeechService):
 		return
+	# Fresh-campaign loading is a deliberate opening sequence, not an interactive
+	# quiet wait. Save the pre-recorded hesitation clips for actual player-facing
+	# LLM/TTS delays after the game has begun.
+	if not startup_save_loaded \
+			and loading_panel != null \
+			and is_instance_valid(loading_panel):
+		return
 	SpeechService.play_latency_filler_clip(
 		"N.O.V.A.",
 		"voice.nova.v1",
@@ -12863,19 +12870,21 @@ func _finish_loading_after_story_ready() -> void:
 	tween.tween_interval(0.8) # Show 100% briefly
 	tween.tween_property(loading_panel, "modulate:a", 0.0, 0.6)
 	tween.tween_callback(func():
-		loading_panel.queue_free()
-		_queue_startup_line_bank_background_voice_cache()
-		GlobalState.paused = false # Resume gameplay!
-		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 		# NEW campaign: run the "thrown through" intro cinematic (no UI, no
 		# control — docs/plan_intro_cinematic.md). It calls show_kaelen_intro()
 		# itself when it finishes or is skipped, so Kaelen's intro is unchanged,
-		# just later. Loads keep the welcome-back path below.
+		# just later. Start its full-black layer before releasing the loading
+		# screen so the already-spawned ship cannot flash in at its destination.
 		if not startup_save_loaded:
 			var cinematic: Node = IntroCinematicType.new()
 			add_child(cinematic)
 			cinematic.start(self)
-		elif is_instance_valid(Nova):
+		loading_panel.queue_free()
+		_queue_startup_line_bank_background_voice_cache()
+		GlobalState.paused = false # Resume gameplay!
+		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
+		# Loads keep the welcome-back path below.
+		if startup_save_loaded and is_instance_valid(Nova):
 			# Loaded an existing campaign: N.O.V.A. welcomes the captain back, but
 			# only now that the overlay is gone and gameplay is actually running
 			# (chance-gated inside welcome_back so it stays occasional).
