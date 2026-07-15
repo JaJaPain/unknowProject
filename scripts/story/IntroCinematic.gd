@@ -20,6 +20,7 @@ const DATA_STREAM_AT := 8.0
 const DATA_LINE4_AT := 10.0
 const HANDOFF_AT := 18.0         # after reveal; lets Nova's last spoken line finish
 const HANDOFF_TO_KAELEN_S := 11.0 # beat to breathe after the UI returns, before Kaelen
+const NOVA_CALLING_BEFORE_KAELEN_S := 3.5
 const TTS_READY_WAIT_S := 45.0
 const DAMAGE_HEALTH_PCT := 0.4   # ship arrives at 40% hull
 const REPAIR_COST_PER_HP := 2.0  # MUST match UIManager._repair_ship cost_per_hp
@@ -36,14 +37,20 @@ const SFX_FLASH := "res://sound/Opening/A_powerful_sci-fi_energy_disch_take2.wav
 const SFX_WARP_DROP := "res://sound/Opening/Spaceship_thrown_out_of_warp_i_take1.wav"
 const NOVA_VOICE_PROFILE_ID := "voice.nova.v1"
 const NOVA_LINE_1 := "Hold on, Captain! I'm doing everything I can to stabilize the ship - I've got ONE last thing I can try!"
+const NOVA_LINE_1A := "I almost got it."
+const NOVA_LINE_1B := "ALMOST!"
 const NOVA_LINE_2 := "We're... somewhere. That wasn't a gate transit, Captain - we were thrown. Hull's a mess, but we're alive."
 const NOVA_LINE_3 := "Here's the part I don't like: my memory starts fourteen seconds ago. I know you're my captain. I know I trust you. I just can't tell you WHY I know either of those things."
 const NOVA_LINE_4 := "Someone just wired us what I am guessing is the local currency. No routing data. No sender. I ran the trace twice - it goes nowhere. I'd say 'lucky us', but luck doesn't usually know our account number."
+const NOVA_LINE_5 := "Uh, Captain, someone is calling you?"
 const NOVA_LINES := [
 	NOVA_LINE_1,
+	NOVA_LINE_1A,
+	NOVA_LINE_1B,
 	NOVA_LINE_2,
 	NOVA_LINE_3,
 	NOVA_LINE_4,
+	NOVA_LINE_5,
 ]
 
 var _ui: Control = null            # UIManager root (hidden during the sequence)
@@ -510,14 +517,29 @@ func _finish() -> void:
 	if _ship_light != null and is_instance_valid(_ship_light):
 		_ship_light.light_energy = _ship_light_energy
 	_stop_intro_audio()
+	if _layer != null and is_instance_valid(_layer):
+		_layer.hide()
 	if _ui != null and is_instance_valid(_ui):
 		_ui.visible = true
 		var ui := _ui
+		get_tree().create_timer(
+			HANDOFF_TO_KAELEN_S - NOVA_CALLING_BEFORE_KAELEN_S,
+			true,
+			false,
+			true
+		).timeout.connect(_play_nova_handoff_line)
 		get_tree().create_timer(HANDOFF_TO_KAELEN_S, true, false, true).timeout.connect(func() -> void:
 			if is_instance_valid(ui) and ui.has_method("show_kaelen_intro"):
 				ui.show_kaelen_intro()
+			queue_free()
 		)
-	queue_free()
+	else:
+		queue_free()
+
+
+func _play_nova_handoff_line() -> void:
+	if is_instance_valid(Nova) and Nova.has_method("speak"):
+		Nova.speak(NOVA_LINE_5, Nova.Severity.THREAT, "alert")
 
 
 # ── The beat timeline ─────────────────────────────────────────────────────────
@@ -573,7 +595,17 @@ func _run() -> void:
 	if _finished:
 		return
 	await _nova_line_after_voice_ready(NOVA_LINE_1, "alert")
-	await _beat(TUMBLE_DURATION - 1.0)
+	# The failing jump needs audible momentum: a short pause after the plan,
+	# then a tentative status update, then the last-second shout before the drop.
+	await _beat(4.0)
+	if _finished:
+		return
+	await _nova_line_after_voice_ready(NOVA_LINE_1A, "worried")
+	await _beat(2.5)
+	if _finished:
+		return
+	await _nova_line_after_voice_ready(NOVA_LINE_1B, "alert")
+	await _beat(1.25)
 	if _finished:
 		return
 
