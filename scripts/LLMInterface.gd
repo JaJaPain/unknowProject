@@ -5174,6 +5174,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
 		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
 		"The job was exactly this and nothing else: " + task_desc + ". Describe the outcome only in terms of that task. Invent no other job details — no mines, cleanup, rescue, escort, repairs, or cargo the task did not involve. " + \
+		"Do NOT name who paid or who benefits. The client stays anonymous — never invent an employer. The ONLY faction you may name is " + faction + "; never mention any other faction. " + \
 		"Preferred Kaelen turn-in shape: one brief beat of dry warmth, then she pivots to the money. Write it in her own fresh words; never reuse a sample sentence and never open with 'They're safe now'. " + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
