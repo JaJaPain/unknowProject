@@ -339,6 +339,7 @@ var _startup_line_bank_voice_cache_requested: bool = false
 var _startup_line_bank_background_voice_cache_requested: bool = false
 var _waiting_for_startup_line_bank_voice_cache: bool = false
 const STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER := 2
+const INTRO_BLACK_HOLD_SECONDS := 1.5
 
 # Sorting parameters
 var sort_column: String = "distance"
@@ -8568,7 +8569,8 @@ func _update_intro_handhold() -> void:
 	# list, so force the actual panel open until the starter station is selected.
 	if _intro_handhold_active() and _intro_popup_dismissed() \
 			and not _intro_primary_station_selected() \
-			and not (dock_panel and dock_panel.visible):
+			and not (dock_panel and dock_panel.visible) \
+			and (overview_collapsed or overview_panel.size.y <= 100.0):
 		set_overview_collapsed(false)
 	var next_button: Button = null
 	var arrow_visible := false
@@ -12916,6 +12918,14 @@ func _create_intro_handoff_cover() -> ColorRect:
 func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
 	if loading_panel != null and is_instance_valid(loading_panel):
 		loading_panel.queue_free()
+	# Let the player sit in complete blackness for one extra beat before the
+	# broken-gate tunnel fades in. The cover is already opaque at this point.
+	await get_tree().create_timer(
+		INTRO_BLACK_HOLD_SECONDS,
+		true,
+		false,
+		true
+	).timeout
 	var cinematic: Node = IntroCinematicType.new()
 	add_child(cinematic)
 	cinematic.start(self)
