@@ -536,6 +536,18 @@ func on_docked(_station_name: String = "") -> void:
 	)
 
 
+# The first station is the player's only possible lead after the failed gate.
+# Keep this authored: it establishes the shared mystery before Kaelen's tutorial
+# guidance starts, rather than spending the moment on ordinary dock banter.
+func on_intro_first_dock() -> void:
+	_docked_since_ms = Time.get_ticks_msec()
+	speak(
+		"Captain… this station wasn’t on any route in my database. Then again, neither was this system. We should tread—carefully.",
+		Severity.THREAT,
+		expression_for_event("worried")
+	)
+
+
 # A hostile counts as "powerful" if it's a boss or carries more than 1.5x the
 # player's max health (current enemies are all weak, so this only trips on the
 # genuinely big ones).

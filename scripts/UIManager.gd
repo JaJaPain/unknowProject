@@ -3700,7 +3700,10 @@ func toggle_dock_menu(
 			# transition, so re-rendering the dock menu while already docked can't
 			# re-trigger her (and can't wrongly climb her "docking again?" streak).
 			if not _was_docked and is_instance_valid(Nova):
-				Nova.on_docked()
+				if not GlobalState.kaelen_briefing_seen:
+					Nova.on_intro_first_dock()
+				else:
+					Nova.on_docked()
 			if not _was_docked:
 				# Fresh dock: lounge social session state resets (completion rep
 				# bumps and drinks are once per contact per DOCK, not per open).
