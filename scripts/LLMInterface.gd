@@ -4882,7 +4882,7 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 					wreck_hint = "The salvager is cutting up a " + faction_found + " " + ship_class + \
 						" wreck left by the player pilot. Comment on the battle damage, " + \
 						"the hull condition, the pilot who must have done this, or what they can salvage. " + \
-						"Be colourful — e.g. 'whoever hit this thing wasn't messing around'. "
+						"Be colourful about the damage in your own words. "
 				else:
 					wreck_hint = "The salvager is approaching a " + faction_found + " " + ship_class + \
 						" wreck. Comment on the expected salvage value or the faction's gear quality. "
