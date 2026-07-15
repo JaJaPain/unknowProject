@@ -8556,6 +8556,13 @@ func _update_intro_handhold() -> void:
 	if GlobalState.paused or (loading_panel and is_instance_valid(loading_panel)):
 		_clear_intro_handhold_arrow()
 		return
+	# A saved HUD layout can restore the panel at its collapsed height while the
+	# in-memory flag still says expanded. The first tutorial arrow points at this
+	# list, so force the actual panel open until the starter station is selected.
+	if _intro_handhold_active() and _intro_popup_dismissed() \
+			and not _intro_primary_station_selected() \
+			and not (dock_panel and dock_panel.visible):
+		set_overview_collapsed(false)
 	var next_button: Button = null
 	var arrow_visible := false
 	if _intro_handhold_active() and _intro_popup_dismissed():
@@ -9881,7 +9888,6 @@ func _repair_ship():
 	_update_repair_button()
 
 func set_overview_collapsed(collapsed: bool):
-	if overview_collapsed == collapsed: return
 	overview_collapsed = collapsed
 	
 	if collapse_btn:
