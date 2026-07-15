@@ -12865,20 +12865,25 @@ func _finish_loading_after_story_ready() -> void:
 		LLMInterface.warm_small_model_after_story_gate()
 	loading_bar.value = 100.0
 	loading_status_label.text = "Uplink fully secured. System Ready."
-	
+	var intro_handoff_cover: ColorRect = null
+	if not startup_save_loaded:
+		intro_handoff_cover = _create_intro_handoff_cover()
 	var tween = create_tween()
 	tween.tween_interval(0.8) # Show 100% briefly
+	tween.set_parallel(true)
 	tween.tween_property(loading_panel, "modulate:a", 0.0, 0.6)
+	if intro_handoff_cover != null:
+		tween.tween_property(intro_handoff_cover, "modulate:a", 1.0, 0.6)
+	tween.set_parallel(false)
 	tween.tween_callback(func():
 		# NEW campaign: run the "thrown through" intro cinematic (no UI, no
 		# control — docs/plan_intro_cinematic.md). It calls show_kaelen_intro()
 		# itself when it finishes or is skipped, so Kaelen's intro is unchanged,
-		# just later. Start its full-black layer before releasing the loading
-		# screen so the already-spawned ship cannot flash in at its destination.
+		# just later. The loading screen fades into an independent opaque-black
+		# cover first, so even one render frame cannot reveal the spawned ship.
 		if not startup_save_loaded:
-			var cinematic: Node = IntroCinematicType.new()
-			add_child(cinematic)
-			cinematic.start(self)
+			_begin_intro_cinematic_from_black(intro_handoff_cover)
+			return
 		loading_panel.queue_free()
 		_queue_startup_line_bank_background_voice_cache()
 		GlobalState.paused = false # Resume gameplay!
@@ -12892,6 +12897,38 @@ func _finish_loading_after_story_ready() -> void:
 				Nova.welcome_back()
 			)
 	)
+
+
+func _create_intro_handoff_cover() -> ColorRect:
+	var layer := CanvasLayer.new()
+	layer.name = "IntroHandoffBlackCover"
+	layer.layer = 89
+	get_tree().current_scene.add_child(layer)
+	var cover := ColorRect.new()
+	cover.color = Color.BLACK
+	cover.modulate.a = 0.0
+	cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(cover)
+	return cover
+
+
+func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
+	if loading_panel != null and is_instance_valid(loading_panel):
+		loading_panel.queue_free()
+	var cinematic: Node = IntroCinematicType.new()
+	add_child(cinematic)
+	cinematic.start(self)
+	# The cinematic owns its own opaque black layer (layer 90). Keep the handoff
+	# cover through one rendered frame, then retire it underneath that layer.
+	await get_tree().process_frame
+	if cover != null and is_instance_valid(cover):
+		var cover_layer := cover.get_parent()
+		if cover_layer != null and is_instance_valid(cover_layer):
+			cover_layer.queue_free()
+	_queue_startup_line_bank_background_voice_cache()
+	GlobalState.paused = false
+	GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
