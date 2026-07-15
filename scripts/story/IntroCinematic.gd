@@ -110,6 +110,17 @@ func start(ui_manager: Control) -> void:
 	_start_intro_audio()
 	# Watchdog: whatever happens, control comes back.
 	get_tree().create_timer(WATCHDOG_S, true, false, true).timeout.connect(_finish)
+	_run_after_initial_black_frame()
+
+
+# The black layer must render over the already-spawned world before it fades.
+# That frame also lets the tunnel and glitch material initialize behind it, so
+# the first thing the player sees is the broken-gate effect—not the ship parked
+# in the destination system.
+func _run_after_initial_black_frame() -> void:
+	await get_tree().process_frame
+	if _finished:
+		return
 	_run()
 
 

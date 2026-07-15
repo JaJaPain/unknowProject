@@ -12357,7 +12357,9 @@ func _create_loading_screen():
 	
 	# Frosted cyber-dark style
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.06, 0.98) # Dark deep space blue-black
+	# This is a loading screen, not a translucent HUD panel. Keeping it fully
+	# opaque prevents the live overview, ship HUD, and chat from bleeding through.
+	style.bg_color = Color(0.04, 0.04, 0.06, 1.0) # Dark deep space blue-black
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2
