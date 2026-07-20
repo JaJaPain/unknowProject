@@ -18,6 +18,7 @@
 - [x] Replace radial loading stars with roadside-style side-travel parallax.
 - [x] Use centred roadside stars with two separate outer house-light depth rings.
 - [x] Mask the loading-star origin behind the opaque progress bar.
+- [x] Source slot titles from campaign bibles and repair legacy quest-fallback titles.
 
 ## Notes
 

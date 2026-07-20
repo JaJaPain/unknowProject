@@ -20,6 +20,25 @@ const LINE_BANK_REFILL_MIN_AVAILABLE := 3
 # N.O.V.A.'s shared bank spans several categories, so it needs room for the
 # arrival template lines PLUS the movement/combat lines seeded after ready.
 const NOVA_LINE_BANK_TARGET_SIZE := 48
+const _PROVISIONAL_CAMPAIGN_SLOT_NAMES := [
+	"Shiny's Campaign",
+	"Pending Campaign",
+	"Pending Large-Model Campaign",
+	"Campaign 1",
+	"Campaign 2",
+	"Campaign 3",
+]
+const _LEGACY_OPENING_NAME_FALLBACKS := [
+	"Cold Meridian",
+	"Ember Passage",
+	"Far Horizon",
+	"Last Light",
+	"Silent Dividend",
+	"Wayward Star",
+	"Iron Pilgrim",
+	"Broken Compass",
+]
+const _BIBLE_FAILURE_SLOT_TITLE := "Uncharted Signal"
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
 const ShipMovementEventsType := preload(
 	"res://scripts/story/ShipMovementEvents.gd"
@@ -1300,6 +1319,10 @@ func get_campaign_ui_state() -> Dictionary:
 			"selected_slot_id": "",
 			"manual": [],
 		}
+	# Earlier landing builds used the opening quest's generic fallback name for
+	# the campaign slot. Repair those records from the bible before rendering the
+	# selector; manual player names are intentionally left alone.
+	_repair_campaign_slot_titles_from_bibles()
 	var autosave := {}
 	if campaign_checkpoint_store != null:
 		var active := campaign_checkpoint_store.runtime_state_from_active()
@@ -1559,33 +1582,70 @@ func rename_campaign_slot(
 
 
 func apply_opening_campaign_name(display_name: String) -> bool:
-	if Engine.has_meta("creating_new_campaign"):
-		Engine.set_meta(
-			"pending_opening_campaign_name",
-			display_name
-		)
-		return true
-	if campaign_slot_registry == null:
-		_initialize_campaign_registry()
-	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
+	# Kept as a compatibility entry point for older UI code. Quest titles are
+	# mission flavor, not campaign titles; only the campaign bible may name a
+	# campaign slot.
+	return false
+
+
+func _slot_title_is_repairable(display_name: String) -> bool:
+	var clean_name := display_name.strip_edges()
+	return clean_name.is_empty() \
+		or clean_name in _PROVISIONAL_CAMPAIGN_SLOT_NAMES \
+		or clean_name in _LEGACY_OPENING_NAME_FALLBACKS \
+		or clean_name.begins_with("Astra Arcana — Campaign")
+
+
+func _valid_bible_slot_title(bible: Dictionary) -> String:
+	var title := str(bible.get("campaign_title", "")).strip_edges()
+	if title.length() < 2:
+		return ""
+	return title.substr(0, 48)
+
+
+func _apply_bible_title_to_slot(slot_id: String, bible: Dictionary) -> bool:
+	if campaign_slot_registry == null or slot_id.is_empty():
 		return false
-	var active_slot: Dictionary = campaign_slot_registry.get_slot(
-		active_campaign_slot_id
-	)
-	var current_name := str(active_slot.get("display_name", ""))
-	if current_name not in [
-		"Shiny's Campaign",
-		"Pending Campaign",
-		"Campaign 1",
-		"Campaign 2",
-		"Campaign 3",
-	]:
+	var title := _valid_bible_slot_title(bible)
+	if title.is_empty():
+		return false
+	var slot := campaign_slot_registry.get_slot(slot_id)
+	if not bool(slot.get("occupied", false)):
+		return false
+	var current_name := str(slot.get("display_name", ""))
+	if current_name == title:
 		return true
-	var renamed := campaign_slot_registry.rename_campaign(
-		active_campaign_slot_id,
-		display_name
-	)
-	return bool(renamed.get("ok", false))
+	if not _slot_title_is_repairable(current_name):
+		return false
+	var renamed := campaign_slot_registry.rename_campaign(slot_id, title)
+	if not bool(renamed.get("ok", false)):
+		push_warning("[GameRoot] Could not apply campaign bible title: %s" % renamed.get("error", "unknown error"))
+		return false
+	return true
+
+
+func _apply_bible_failure_title_to_slot(slot_id: String) -> void:
+	if campaign_slot_registry == null or slot_id.is_empty():
+		return
+	var slot := campaign_slot_registry.get_slot(slot_id)
+	if bool(slot.get("occupied", false)) and _slot_title_is_repairable(str(slot.get("display_name", ""))):
+		campaign_slot_registry.rename_campaign(slot_id, _BIBLE_FAILURE_SLOT_TITLE)
+
+
+func _repair_campaign_slot_titles_from_bibles() -> void:
+	if campaign_slot_registry == null:
+		return
+	for slot in campaign_slot_registry.enumerate_slots():
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_id := str(slot.get("slot_id", ""))
+		if not _slot_title_is_repairable(str(slot.get("display_name", ""))):
+			continue
+		var slot_path := "%s/%s" % [campaign_slot_registry.root_path, slot_id]
+		var bible_store := CampaignBibleStoreType.open(slot_path)
+		if bible_store.is_valid() \
+				and bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+			_apply_bible_title_to_slot(slot_id, bible_store.data)
 
 
 func delete_campaign_slot(slot_id: String) -> Dictionary:
@@ -2752,6 +2812,14 @@ func request_campaign_bible_generation() -> Dictionary:
 		# (plan §3.1). Transient hint on the baseline; NarrativeDirector strips it
 		# before storing. Window of 2 leaves 5 of 7 lanes eligible.
 		baseline["_recent_lanes"] = campaign_idea_memory_store.query_recent("creative_lane", 2)
+	# Campaign idea memory is slot-local, so also include titles from the other
+	# occupied slots. This gives the large model an actual cross-campaign guard
+	# before it writes a new bible.
+	if not motif_history.has("titles"):
+		motif_history["titles"] = []
+	for existing_title in _other_campaign_bible_titles():
+		if not motif_history["titles"].has(existing_title):
+			motif_history["titles"].append(existing_title)
 	_pause_narrative_cache_scheduler("campaign_bible_generation")
 	LLMInterface.request_campaign_bible_generation(
 		baseline,
@@ -2794,6 +2862,27 @@ func _request_campaign_bible_generation_for_active_slot() -> void:
 		)
 
 
+func _other_campaign_bible_titles() -> Array[String]:
+	var titles: Array[String] = []
+	if campaign_slot_registry == null:
+		return titles
+	for slot in campaign_slot_registry.enumerate_slots():
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_id := str(slot.get("slot_id", ""))
+		if slot_id.is_empty() or slot_id == active_campaign_slot_id:
+			continue
+		var bible_store := CampaignBibleStoreType.open(
+			"%s/%s" % [campaign_slot_registry.root_path, slot_id]
+		)
+		if bible_store.is_valid() \
+				and bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+			var title := _valid_bible_slot_title(bible_store.data)
+			if not title.is_empty():
+				titles.append(title)
+	return titles
+
+
 func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 	campaign_bible_generation_in_flight = false
 	_resume_narrative_cache_scheduler("campaign_bible_generation")
@@ -2807,6 +2896,7 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 		committed = campaign_bible_store.replace_bible(result.get("bible", {}))
 		if bool(committed.get("ok", false)):
 			StoryManager.seed_story_state_from_bible(campaign_bible_store.data)
+			_apply_bible_title_to_slot(active_campaign_slot_id, campaign_bible_store.data)
 	else:
 		var reason := str(result.get("reason", "campaign_bible_generation_failed"))
 		if reason == "model_unavailable":
@@ -2819,6 +2909,7 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 		# retried once internally; this is the between-sessions safety net.
 		if not active_campaign_slot_id.is_empty():
 			campaign_bible_generation_requested_slots.erase(active_campaign_slot_id)
+		_apply_bible_failure_title_to_slot(active_campaign_slot_id)
 	if not bool(committed.get("ok", false)):
 		push_warning(
 			"[GameRoot] Campaign bible generation status could not be stored: %s" %

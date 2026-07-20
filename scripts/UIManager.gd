@@ -10545,12 +10545,6 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	
 	if not quest_data.is_empty():
 		var game_root := get_tree().current_scene
-		if game_root and game_root.has_method(
-			"apply_opening_campaign_name"
-		):
-			game_root.apply_opening_campaign_name(
-				str(quest_data.get("campaign_name", "Far Horizon"))
-			)
 		if game_root and game_root.has_method("remember_generated_quest_idea"):
 			game_root.remember_generated_quest_idea(quest_data, is_fallback)
 		var agent_voice_profile_id := str(
