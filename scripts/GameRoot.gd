@@ -263,10 +263,12 @@ func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary
 	if occupied:
 		return await select_and_load_campaign(slot_id)
 	Engine.set_meta("creating_new_campaign", true)
-	var campaign_number := CampaignSlotRegistryType.SLOT_IDS.find(slot_id) + 1
 	return create_campaign_in_slot(
 		slot_id,
-		"Astra Arcana — Campaign %d" % campaign_number
+		# The opening quest generator replaces this provisional label with its
+		# player-facing LLM campaign title. Keeping it provisional restores the
+		# foreshadowing title shown on the landing screen after the first setup.
+		"Pending Campaign"
 	)
 
 func get_active_system_root() -> Node3D:
