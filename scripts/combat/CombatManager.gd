@@ -395,6 +395,8 @@ func _lerp_timescale(to_scale: float, to_pitch: float, duration_ms: int = 400) -
 	_lerp_active = true
 
 func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> void:
+	if GlobalState.intro_cinematic_active:
+		return
 	if state != State.IDLE:
 		return
 	if not player_initiated and is_training_combat_active() \

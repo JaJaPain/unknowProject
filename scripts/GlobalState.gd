@@ -1613,6 +1613,7 @@ var player: Node3D = null
 var active_system_root: Node3D = null
 var current_system_id: String = "start_system"
 var intro_tutorial_player_protected: bool = false
+var intro_cinematic_active: bool = false
 var combat_tutorial_seen: bool = false
 var active_target: Node3D = null:
 	set(val):
@@ -2238,6 +2239,7 @@ func reset_for_restart():
 	active_system_root = null
 	current_system_id = "start_system"
 	intro_tutorial_player_protected = false
+	intro_cinematic_active = false
 	combat_tutorial_seen = false
 	active_system_entities.clear()
 	generated_outpost_npcs.clear()

@@ -580,7 +580,7 @@ func _setup_amarr_hardpoints(node: Node):
 		_setup_amarr_hardpoints(child)
 
 func _physics_process(delta: float):
-	if GlobalState.paused or destroyed:
+	if GlobalState.paused or GlobalState.intro_cinematic_active or destroyed:
 		return
 	_update_engine_glow()
 

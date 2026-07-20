@@ -71,7 +71,7 @@ func _ready():
 	station = GlobalState.get_primary_station()
 
 func _physics_process(delta: float):
-	if GlobalState.paused: return
+	if GlobalState.paused or GlobalState.intro_cinematic_active: return
 	
 	# Scan for station if not found yet
 	if not station:

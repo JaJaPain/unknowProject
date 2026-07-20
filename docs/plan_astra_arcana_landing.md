@@ -10,6 +10,7 @@
 - [x] Gate world simulation and the loading/cinematic workflow until a campaign slot is selected.
 - [x] Give newly created campaign slots distinct default display names.
 - [x] Keep campaign storage read-only at the landing page; load a campaign only after Continue.
+- [x] Suspend ambient NPC combat and motion for the opening cinematic.
 
 ## Notes
 

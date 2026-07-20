@@ -96,6 +96,9 @@ static func cache_nova_voice_lines() -> void:
 # watchdog) we call show_kaelen_intro() on it after a 1s beat.
 func start(ui_manager: Control) -> void:
 	_ui = ui_manager
+	# The opening is a self-contained sequence. Ambient NPC simulation must not
+	# fire weapons or start combat under its dialogue and effects.
+	GlobalState.intro_cinematic_active = true
 	var p = GlobalState.player
 	if p == null or not is_instance_valid(p):
 		# No player yet — abort gracefully straight to the normal flow.
@@ -528,6 +531,7 @@ func _finish() -> void:
 	if _ship_light != null and is_instance_valid(_ship_light):
 		_ship_light.light_energy = _ship_light_energy
 	_stop_intro_audio()
+	GlobalState.intro_cinematic_active = false
 	if _layer != null and is_instance_valid(_layer):
 		_layer.hide()
 	if _ui != null and is_instance_valid(_ui):
