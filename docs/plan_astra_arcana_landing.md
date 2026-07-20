@@ -15,6 +15,7 @@
 - [x] Preserve LLM-generated, player-facing campaign titles after new-slot creation.
 - [x] Add a centered warp-star backdrop to the startup loading screen.
 - [x] Layer distant and near side-view stars around the loading-screen warp effect.
+- [x] Replace radial loading stars with roadside-style side-travel parallax.
 
 ## Notes
 
