@@ -15,6 +15,9 @@ const KaelenInteractionKindsType := preload(
 const KaelenInteractionPacketBuilderType := preload(
 	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
 )
+const LoadingWarpStarfieldType := preload(
+	"res://scripts/ui/LoadingWarpStarfield.gd"
+)
 
 # UI Nodes created dynamically
 var hud_panel: Panel
@@ -12682,6 +12685,11 @@ func _create_loading_screen():
 	style.border_width_bottom = 2
 	style.border_color = Color(0.0, 0.85, 1.0, 0.4) # Neon cyan border accent
 	loading_panel.add_theme_stylebox_override("panel", style)
+
+	# Keep the loading copy fixed at the vanishing point while this subtle star
+	# field moves past it. Added before the content so the text remains crisp.
+	var warp_starfield := LoadingWarpStarfieldType.new()
+	loading_panel.add_child(warp_starfield)
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_CENTER)

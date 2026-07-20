@@ -13,6 +13,7 @@
 - [x] Suspend ambient NPC combat and motion for the opening cinematic.
 - [x] Keep cinematic N.O.V.A. voice playback independent from optional background TTS caching.
 - [x] Preserve LLM-generated, player-facing campaign titles after new-slot creation.
+- [x] Add a centered warp-star backdrop to the startup loading screen.
 
 ## Notes
 
