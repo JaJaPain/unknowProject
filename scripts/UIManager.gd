@@ -12721,7 +12721,23 @@ func _create_loading_screen():
 	loading_bar.custom_minimum_size = Vector2(450, 16)
 	loading_bar.max_value = 100.0
 	loading_bar.value = 5.0
+	# Keep the burst's vanishing point hidden behind a solid loading bar.
+	var loading_bar_background := StyleBoxFlat.new()
+	loading_bar_background.bg_color = Color(0.055, 0.06, 0.08, 1.0)
+	loading_bar_background.corner_radius_top_left = 5
+	loading_bar_background.corner_radius_top_right = 5
+	loading_bar_background.corner_radius_bottom_left = 5
+	loading_bar_background.corner_radius_bottom_right = 5
+	loading_bar.add_theme_stylebox_override("background", loading_bar_background)
+	var loading_bar_fill := StyleBoxFlat.new()
+	loading_bar_fill.bg_color = Color(0.28, 0.76, 0.95, 1.0)
+	loading_bar_fill.corner_radius_top_left = 5
+	loading_bar_fill.corner_radius_top_right = 5
+	loading_bar_fill.corner_radius_bottom_left = 5
+	loading_bar_fill.corner_radius_bottom_right = 5
+	loading_bar.add_theme_stylebox_override("fill", loading_bar_fill)
 	vbox.add_child(loading_bar)
+	warp_starfield.set_vanishing_target(loading_bar)
 	
 	loading_status_label = Label.new()
 	loading_status_label.text = "Initializing core connection to local LLM..."

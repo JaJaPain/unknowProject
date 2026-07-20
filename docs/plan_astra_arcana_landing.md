@@ -17,6 +17,7 @@
 - [x] Layer distant and near side-view stars around the loading-screen warp effect.
 - [x] Replace radial loading stars with roadside-style side-travel parallax.
 - [x] Use centred roadside stars with two separate outer house-light depth rings.
+- [x] Mask the loading-star origin behind the opaque progress bar.
 
 ## Notes
 

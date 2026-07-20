@@ -12,6 +12,11 @@ var _road_stars: Array[Dictionary] = []
 var _outer_mid_stars: Array[Dictionary] = []
 var _outer_far_stars: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
+var _vanishing_target: Control = null
+
+
+func set_vanishing_target(target: Control) -> void:
+	_vanishing_target = target
 
 
 func _ready() -> void:
@@ -100,6 +105,11 @@ func _draw() -> void:
 func _draw_band(stars: Array[Dictionary], base_color: Color) -> void:
 	var viewport_size := get_viewport_rect().size
 	var centre := viewport_size * 0.5
+	if _vanishing_target != null and is_instance_valid(_vanishing_target):
+		# Lock the visual origin to the loading bar itself. The bar is deliberately
+		# opaque, so the rough first pixels of each streak stay hidden beneath it.
+		centre = get_global_transform().affine_inverse() * \
+			_vanishing_target.get_global_rect().get_center()
 	var radius := viewport_size.length() * 0.70
 	for star in stars:
 		var depth := float(star["depth"])
