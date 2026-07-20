@@ -3688,6 +3688,7 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	if not is_instance_valid(station) or not is_instance_valid(ship):
 		return
 	_docking_procedure_active = true
+	_clear_intro_handhold_arrow()
 	_docking_procedure_serial += 1
 	var serial := _docking_procedure_serial
 	current_station = station
@@ -8878,7 +8879,8 @@ func _intro_popup_dismissed() -> bool:
 func _update_intro_handhold() -> void:
 	if not intro_handhold_arrow or not is_instance_valid(intro_handhold_arrow):
 		return
-	if GlobalState.paused or (loading_panel and is_instance_valid(loading_panel)):
+	if GlobalState.paused or _docking_procedure_active \
+			or (loading_panel and is_instance_valid(loading_panel)):
 		_clear_intro_handhold_arrow()
 		return
 	# A saved HUD layout can restore the panel at its collapsed height while the
