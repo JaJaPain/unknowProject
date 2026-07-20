@@ -4061,6 +4061,9 @@ func _render_dock_submenu() -> void:
 		agent_service_btn.visible = not is_outpost
 		public_board_btn.visible = not is_outpost and _intro_done
 		station_lounge_btn.visible = _current_station_has_contacts() and _intro_done
+		station_lounge_btn.disabled = _lounge_dock_preparation_active
+		station_lounge_btn.tooltip_text = "Lounge is settling in" \
+			if _lounge_dock_preparation_active else "Visit the station lounge"
 		maintenance_bay_btn.visible = not is_outpost and _intro_done
 		store_btn.visible = not is_outpost and _intro_done
 		if not _intro_done and not is_outpost:
@@ -4645,6 +4648,27 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 		badge.add_theme_color_override("font_color", Color(1.0, 0.78, 0.25))
 		card.add_child(badge)
 
+	# Phase 9: a lounge exchange must be prepared before its card becomes
+	# actionable. This keeps a player click from falling through to the old
+	# visible live-generation path while the background bundle is still running.
+	var bundle_status := _lounge_bundle_status(card_data)
+	if bundle_status in ["pending", "failed"]:
+		var preparing := Label.new()
+		preparing.anchor_left = 0.12
+		preparing.anchor_top = 0.705
+		preparing.anchor_right = 0.88
+		preparing.anchor_bottom = 0.745
+		preparing.text = "PREPARING CONVERSATION" if bundle_status == "pending" else "CONVERSATION UNAVAILABLE"
+		preparing.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		preparing.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		preparing.clip_text = true
+		preparing.add_theme_font_size_override("font_size", 7)
+		preparing.add_theme_color_override(
+			"font_color",
+			Color(0.56, 0.78, 0.82, 0.85) if bundle_status == "pending" else Color(0.72, 0.48, 0.36, 0.85)
+		)
+		card.add_child(preparing)
+
 	_add_lounge_card_buttons(card, card_data, slot_index)
 
 
@@ -4732,6 +4756,10 @@ func _add_lounge_card_buttons(
 ) -> void:
 	var kind := str(card_data.get("kind", ""))
 	var primary := _create_lounge_talk_button(card, slot_index)
+	var bundle_status := _lounge_bundle_status(card_data)
+	if bundle_status in ["pending", "failed"]:
+		primary.disabled = true
+		primary.tooltip_text = "Conversation is preparing" if bundle_status == "pending" else "Conversation unavailable"
 	if kind == "kaelen":
 		primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 		return
@@ -4852,13 +4880,65 @@ var _lounge_cold_contacts: Dictionary = {}
 var _lounge_bundle_cache: Dictionary = {}
 
 
+func _begin_lounge_dock_preparation() -> void:
+	_lounge_dock_preparation_serial += 1
+	var serial := _lounge_dock_preparation_serial
+	_lounge_dock_preparation_active = true
+	_prepare_lounge_bundles_for_docked_station()
+	if dock_panel != null and is_instance_valid(dock_panel) and dock_panel.visible:
+		_render_dock_submenu()
+	get_tree().create_timer(LOUNGE_DOCK_PREPARE_SECONDS, true, false, true).timeout.connect(
+		func() -> void:
+			if serial != _lounge_dock_preparation_serial:
+				return
+			_lounge_dock_preparation_active = false
+			if dock_panel != null and is_instance_valid(dock_panel) and dock_panel.visible:
+				_render_dock_submenu()
+	)
+
+
+# Build only the predictable bundle-backed contacts while the docking fade is
+# on screen. Lounge-only rolls (approach/stranger) stay deferred to lounge
+# rendering so their one-per-dock presentation rules remain unchanged.
+func _prepare_lounge_bundles_for_docked_station() -> void:
+	var station_id := _current_station_contact_id()
+	var cards: Array[Dictionary] = []
+	if not station_id.is_empty():
+		cards.append(_lounge_bartender_card(station_id))
+	for agent_card in _lounge_station_agent_cards():
+		cards.append(agent_card)
+	if not station_id.is_empty():
+		var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
+		for raw_npc_name in contacts:
+			var npc_name := str(raw_npc_name)
+			var npc_data := GlobalState.get_minor_npc_data(npc_name)
+			if _station_contact_has_lounge_reason(npc_name, npc_data):
+				cards.append(_lounge_npc_card(npc_name, npc_data))
+	for card in cards:
+		_prepare_lounge_exchange_bundle(card)
+
+
+func _lounge_bundle_supported(card: Dictionary) -> bool:
+	return not card.is_empty() and str(card.get("kind", "")) in ["npc", "agent", "bartender"]
+
+
+# Empty means this card has its own conversation machinery. Supported cards
+# are disabled until a ready exchange is present, rather than launching a
+# model call from a player click.
+func _lounge_bundle_status(card: Dictionary) -> String:
+	if not _lounge_bundle_supported(card):
+		return ""
+	var contact_key := _lounge_contact_key(card)
+	var entry: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	return str(entry.get("status", "pending"))
+
+
 # Fire-and-forget preparation of one contact's exchange bundle. Skips card
 # kinds with their own machinery (Kaelen handoffs, the stranger's pitch,
 # planted story NPCs) and anything already pending/ready this dock.
 func _prepare_lounge_exchange_bundle(card: Dictionary) -> void:
-	if card.is_empty():
-		return
-	if str(card.get("kind", "")) not in ["npc", "agent", "bartender"]:
+	if not _lounge_bundle_supported(card):
 		return
 	var contact_key := _lounge_contact_key(card)
 	if contact_key.is_empty():
@@ -4917,10 +4997,57 @@ func _on_lounge_bundle_result(
 			{"contact": contact_key}
 		)
 		_lounge_bundle_cache[contact_key] = {"status": "failed"}
+		_refresh_lounge_cards_after_bundle_result()
 		return
-	entry["status"] = "ready"
-	entry["bundle"] = parsed
+	# Docking gives this background path room for a separate, stateless editor
+	# pass. Do not mark the writer's bundle ready until the reviewer has seen
+	# only the candidate and the code-owned player questions.
+	entry["candidate_bundle"] = parsed
 	_lounge_bundle_cache[contact_key] = entry
+	var review_prompt := LoungeConversationType.build_bundle_review_prompt(
+		npc_name, intents, parsed
+	)
+	LLMInterface.request_lounge_exchange_bundle_review(
+		review_prompt,
+		func(review_result: Dictionary) -> void:
+			_on_lounge_bundle_review_result(contact_key, review_result)
+	)
+
+
+func _on_lounge_bundle_review_result(contact_key: String, result: Dictionary) -> void:
+	var entry: Dictionary = _lounge_bundle_cache.get(contact_key, {}) \
+		if _lounge_bundle_cache.get(contact_key, {}) is Dictionary else {}
+	if str(entry.get("status", "")) != "pending":
+		return
+	var approved := bool(result.get("ok", false)) \
+		and LoungeConversationType.parse_bundle_review(str(result.get("inner_text", "")))
+	if not approved:
+		GenerationDiagnostics.record_fallback(
+			"lounge_bundle_review",
+			"review_rejected_or_unavailable",
+			"UIManager",
+			{"contact": contact_key}
+		)
+		_lounge_bundle_cache[contact_key] = {"status": "failed"}
+		_refresh_lounge_cards_after_bundle_result()
+		return
+	var candidate: Dictionary = entry.get("candidate_bundle", {}) \
+		if entry.get("candidate_bundle", {}) is Dictionary else {}
+	if candidate.is_empty():
+		_lounge_bundle_cache[contact_key] = {"status": "failed"}
+		_refresh_lounge_cards_after_bundle_result()
+		return
+	entry.erase("candidate_bundle")
+	entry["status"] = "ready"
+	entry["bundle"] = candidate
+	_lounge_bundle_cache[contact_key] = entry
+	_refresh_lounge_cards_after_bundle_result()
+
+
+func _refresh_lounge_cards_after_bundle_result() -> void:
+	if station_contacts_panel != null and is_instance_valid(station_contacts_panel) \
+			and station_contacts_panel.visible:
+		call_deferred("_render_station_contacts", true)
 
 
 # Code-supplied context for the intent selector: rumored knowledge gaps
@@ -5172,6 +5299,12 @@ func _start_lounge_conversation(card: Dictionary) -> void:
 		_start_lounge_bundle_conversation(
 			card, contact_key, bundle_entry, agent_disposition
 		)
+		return
+	if _lounge_bundle_supported(card):
+		# The card normally prevents this state from being clicked. Keep this
+		# guard for stale UI input so a V2 lounge click can never start a model
+		# request after selection.
+		_show_lounge_card_line(card, "%s is not ready to talk yet." % card_name, false)
 		return
 	_lounge_convo_serial += 1
 	var serial := _lounge_convo_serial
@@ -13109,6 +13242,9 @@ func _create_intro_handoff_cover() -> ColorRect:
 func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
 	if loading_panel != null and is_instance_valid(loading_panel):
 		loading_panel.queue_free()
+	# The landing tracks intentionally continue through loading. The cinematic
+	# begins with the normal in-game music under its gate and ship effects.
+	AudioManager.exit_landing_music()
 	# Let the player sit in complete blackness for one extra beat before the
 	# broken-gate tunnel fades in. The cover is already opaque at this point.
 	await get_tree().create_timer(

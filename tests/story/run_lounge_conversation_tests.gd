@@ -25,9 +25,12 @@ func _initialize() -> void:
 	_test_lounge_state_keys_are_stable_ids()
 	_test_refusal_mechanics_stay_code_owned()
 	_test_bundle_transport_is_registered()
+	_test_fresh_bundle_review_protocol()
 	_test_stranger_intel_becomes_a_real_fact()
 	_test_stranger_deal_stays_code_owned_and_leak_free()
 	_test_bundle_preparation_wiring()
+	_test_docking_prefetches_lounge_bundles()
+	_test_pending_bundle_cards_block_live_generation()
 	_test_bundle_consumption_is_model_free()
 	_test_keep_talking_requires_cached_second_bundle()
 
@@ -546,6 +549,36 @@ func _test_bundle_transport_is_registered() -> void:
 			and source.contains("\"num_predict\": 520"),
 		"Bundle transport is missing or lost its five-field token budget."
 	)
+	_expect(
+		str(gateway.profile_for_capability("lounge_bundle_review")) == "small_dialogue"
+			and float(gateway.request_timeout("lounge_bundle_review")) == 12.0
+			and source.contains("func request_lounge_exchange_bundle_review"),
+		"Fresh lounge-bundle review transport is not registered."
+	)
+
+
+func _test_fresh_bundle_review_protocol() -> void:
+	var prompt: String = ConvoType.build_bundle_review_prompt(
+		"Ivet",
+		[{"id": "gap:ore", "text": "What happened to the ore convoy?"}],
+		{
+			"opener": "The manifests have been nervous all night.",
+			"answers": ["It missed its route, and nobody is saying why."],
+			"close": "My shift is calling me back.",
+		}
+	)
+	_expect(
+		prompt.contains("Q1: What happened to the ore convoy?")
+			and prompt.contains("Candidate opener")
+			and not prompt.contains("Campaign flavor"),
+		"Fresh reviewer prompt is missing the candidate/question artifact boundary."
+	)
+	_expect(
+		ConvoType.parse_bundle_review("{\"verdict\":\"approve\"}")
+			and not ConvoType.parse_bundle_review("{\"verdict\":\"reject\"}")
+			and not ConvoType.parse_bundle_review("not json"),
+		"Bundle reviewer approval parser is too permissive or rejects valid approval."
+	)
 
 
 # Phase 9: the stranger's paid intel lands in the knowledge ledger as a
@@ -675,6 +708,86 @@ func _test_bundle_preparation_wiring() -> void:
 # conversation start prefers it, the intent press only displays prepared
 # text, degraded slots are never offered, and learned gap facts land on
 # the conversation for NPC memory.
+# Phase 9: a card whose exchange is still being prepared must advertise that
+# state before selection and block the old live-generation fallback. The
+# result callback redraws the visible cards when readiness changes.
+# Phase 9: the docking fade begins predictable lounge preparation and keeps
+# the Lounge entry disabled during its short arrival beat.
+func _test_docking_prefetches_lounge_bundles() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect lounge docking-prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var dock_fn := source.find("func toggle_dock_menu")
+	var dock_end := source.find("\nfunc ", dock_fn + 10)
+	var dock_body := source.substr(dock_fn, dock_end - dock_fn)
+	_expect(
+		dock_body.contains("_begin_lounge_dock_preparation()"),
+		"A fresh dock does not start lounge bundle preparation."
+	)
+	var prepare_fn := source.find("func _begin_lounge_dock_preparation")
+	var prepare_end := source.find("\nfunc ", prepare_fn + 10)
+	var prepare_body := source.substr(prepare_fn, prepare_end - prepare_fn)
+	_expect(
+		prepare_body.contains("_prepare_lounge_bundles_for_docked_station()")
+			and prepare_body.contains("LOUNGE_DOCK_PREPARE_SECONDS")
+			and prepare_body.contains("create_timer"),
+		"Docking preparation does not prefetch bundles over a bounded arrival beat."
+	)
+	_expect(
+		source.contains("station_lounge_btn.disabled = _lounge_dock_preparation_active"),
+		"The Lounge can be entered before the docking preparation window ends."
+	)
+	var prefetch_fn := source.find("func _prepare_lounge_bundles_for_docked_station")
+	var prefetch_end := source.find("\nfunc ", prefetch_fn + 10)
+	var prefetch_body := source.substr(prefetch_fn, prefetch_end - prefetch_fn)
+	_expect(
+		prefetch_body.contains("_lounge_bartender_card")
+			and prefetch_body.contains("_lounge_station_agent_cards")
+			and prefetch_body.contains("_prepare_lounge_exchange_bundle"),
+		"Docking preparation does not cover predictable lounge contacts."
+	)
+
+
+func _test_pending_bundle_cards_block_live_generation() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect pending lounge-card wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var card_fn := source.find("func _add_lounge_contact_card")
+	var card_end := source.find("\nfunc ", card_fn + 10)
+	var card_body := source.substr(card_fn, card_end - card_fn)
+	_expect(
+		card_body.contains("_lounge_bundle_status")
+			and card_body.contains("PREPARING CONVERSATION"),
+		"Lounge cards do not visibly identify a pending exchange before selection."
+	)
+	var buttons_fn := source.find("func _add_lounge_card_buttons")
+	var buttons_end := source.find("\nfunc ", buttons_fn + 10)
+	var buttons_body := source.substr(buttons_fn, buttons_end - buttons_fn)
+	_expect(
+		buttons_body.contains("primary.disabled = true")
+			and buttons_body.contains("bundle_status in [\"pending\", \"failed\"]"),
+		"Pending or failed bundle cards remain actionable into a live wait."
+	)
+	var start_fn := source.find("func _start_lounge_conversation")
+	var start_end := source.find("\nfunc ", start_fn + 10)
+	var start_body := source.substr(start_fn, start_end - start_fn)
+	var guard_at := start_body.find("if _lounge_bundle_supported(card)")
+	var request_at := start_body.find("request_lounge_conversation_turn")
+	_expect(
+		guard_at >= 0 and request_at > guard_at,
+		"A stale pending lounge-card input can still start live generation."
+	)
+	_expect(
+		source.contains("func _refresh_lounge_cards_after_bundle_result")
+			and source.contains("call_deferred(\"_render_station_contacts\", true)"),
+		"Ready lounge bundles do not refresh their cards into an actionable state."
+	)
+
+
 func _test_bundle_consumption_is_model_free() -> void:
 	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	_expect(file != null, "Could not inspect bundle consumption wiring.")

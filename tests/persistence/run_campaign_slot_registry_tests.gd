@@ -71,6 +71,11 @@ func _test_create_reopen_and_initial_checkpoint() -> void:
 		str(campaign.get("campaign_seed", "")).length() == 64,
 		"Campaign seed was not created once at full length."
 	)
+	var transponder := str(campaign.get("ship_transponder_code", ""))
+	_expect(
+		transponder.length() == 6 and transponder.is_valid_int(),
+		"Campaign did not create a six-digit permanent ship transponder."
+	)
 	_expect(
 		checkpoint.get("source_reason") == "initial"
 			and checkpoint.get("living") == true
@@ -91,8 +96,9 @@ func _test_create_reopen_and_initial_checkpoint() -> void:
 		_expect(
 			loaded["data"]["id"] == campaign["id"]
 				and loaded["data"]["campaign_seed"]
-					== campaign["campaign_seed"],
-			"Reopening changed campaign identity or seed."
+					== campaign["campaign_seed"]
+				and loaded["data"].get("ship_transponder_code", "") == transponder,
+			"Reopening changed campaign identity, seed, or transponder."
 		)
 	var bundle := reopened.load_initial_bundle("slot_01")
 	_expect(

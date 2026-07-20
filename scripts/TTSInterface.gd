@@ -4,6 +4,7 @@ const TTS_URL = "http://127.0.0.1:5000/tts"
 const PYTHON_SETTING := "application/run/python_executable"
 const PYTHON_ENV_VAR := "SPACEGAME_PYTHON"
 const MAX_BACKGROUND_CACHE_REQUESTS := 2
+const _TTS_HEARTBEAT_SECONDS := 30.0
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
 var is_requesting: bool = false
@@ -44,6 +45,7 @@ signal tts_connection_established()
 var tts_connected: bool = false
 var tts_connection_attempts: int = 0
 var cache_queue: Array = []
+var _tts_heartbeat_in_flight: bool = false
 
 func start_interaction(interaction_name: String):
 	last_interaction_time = Time.get_ticks_msec()
@@ -76,6 +78,7 @@ func _ready():
 		return
 
 	_discover_and_verify_tts()
+	_schedule_tts_heartbeat()
 	
 	# Pre-cache static completion and abandon messages
 	cache_dialogue_audio("Pleasure doing business with you, pilot. Payout transferred and brokerage fee deducted. Check back soon.", "neutral")
@@ -89,6 +92,46 @@ func _ready():
 # get_voice_for_faction(). Speed defaults to 1.0.
 # Cache key is "<voice>|<cleaned_text>" so different voices never
 # collide on the same line.
+func _schedule_tts_heartbeat() -> void:
+	get_tree().create_timer(_TTS_HEARTBEAT_SECONDS, true, false, true).timeout.connect(
+		_run_tts_heartbeat
+	)
+
+
+func _run_tts_heartbeat() -> void:
+	if _tts_heartbeat_in_flight:
+		_schedule_tts_heartbeat()
+		return
+	_tts_heartbeat_in_flight = true
+	var probe := HTTPRequest.new()
+	add_child(probe)
+	probe.timeout = 2.0
+	probe.request_completed.connect(func(result, response_code, _headers, body):
+		probe.queue_free()
+		_tts_heartbeat_in_flight = false
+		var healthy := false
+		if result == HTTPRequest.RESULT_SUCCESS and response_code == 200:
+			var json := JSON.new()
+			if json.parse(body.get_string_from_utf8()) == OK:
+				var data: Variant = json.get_data()
+				healthy = data is Dictionary and data.get("status") == "ok" \
+					and data.get("pipeline_ready") == true
+		if not healthy:
+			tts_connected = false
+			GenerationDiagnostics.record_event(
+				"tts_watchdog", "heartbeat_service_down", "tts_interface", {}
+			)
+			_discover_and_verify_tts()
+		_schedule_tts_heartbeat()
+	)
+	if probe.request("http://127.0.0.1:5000/health") != OK:
+		probe.queue_free()
+		_tts_heartbeat_in_flight = false
+		tts_connected = false
+		_discover_and_verify_tts()
+		_schedule_tts_heartbeat()
+
+
 func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0):
 	# Support legacy call: play_dialogue_audio(text, faction_string)
 	# Detect by checking if voice_id_override is a known faction OR if

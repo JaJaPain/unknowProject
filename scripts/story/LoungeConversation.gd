@@ -316,6 +316,40 @@ static func bundle_intents(intents: Array) -> Array:
 	return clean
 
 
+# The reviewer sees only this candidate artifact and the code-approved player
+# questions. It does not receive the writer's prompt or response context, so
+# approval is a separate fresh judgement rather than self-confirmation.
+static func build_bundle_review_prompt(
+	npc_name: String,
+	intents: Array,
+	bundle: Dictionary
+) -> String:
+	var lines: Array = [
+		"You are a strict dialogue editor for a PG-13 space trading game.",
+		"Review the candidate exchange below. Approve only if every included",
+		"answer directly responds to its paired question, the speaker stays in",
+		"character, and there are no invented proper nouns, meta commentary,",
+		"stage directions, or player dialogue written as NPC dialogue.",
+		"Speaker: %s." % npc_name,
+		"Candidate opener: %s" % str(bundle.get("opener", "")),
+	]
+	var answers: Array = bundle.get("answers", []) if bundle.get("answers", []) is Array else []
+	for i in range(mini(intents.size(), answers.size())):
+		lines.append("Q%d: %s" % [i + 1, str((intents[i] as Dictionary).get("text", ""))])
+		lines.append("A%d: %s" % [i + 1, str(answers[i])])
+	lines.append("Candidate close: %s" % str(bundle.get("close", "")))
+	lines.append("Return only JSON: {\"verdict\":\"approve\"} or {\"verdict\":\"reject\"}.")
+	return "\n".join(lines)
+
+
+static func parse_bundle_review(inner_json_text: String) -> bool:
+	var parser := JSON.new()
+	if parser.parse(inner_json_text.strip_edges()) != OK:
+		return false
+	var data: Variant = parser.get_data()
+	return data is Dictionary and str((data as Dictionary).get("verdict", "")).to_lower() == "approve"
+
+
 # Parses a prepared exchange bundle. Every answer slot validates
 # independently: a bad slot degrades to "" (that intent simply is not
 # offered) rather than sinking the bundle. The bundle needs a valid opener,

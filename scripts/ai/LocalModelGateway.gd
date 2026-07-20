@@ -63,6 +63,7 @@ const CAPABILITY_PROFILES := {
 	# Whole-exchange lounge bundle (Phase 9): prepared ahead of the click,
 	# player-safe context only.
 	"lounge_bundle": "small_dialogue",
+	"lounge_bundle_review": "small_dialogue",
 	"system_names": "large_story",
 	"campaign_bible": "large_story",
 	"faction_batch": "large_story",
@@ -97,6 +98,7 @@ const REQUEST_TIMEOUTS := {
 	# Bundles prepare in the background (flight-to-station prefetch); five
 	# fields need more room than a single turn and nobody is watching.
 	"lounge_bundle": 25.0,
+	"lounge_bundle_review": 12.0,
 	"system_names": 30.0,
 	"campaign_bible": 600.0,
 	"faction_batch": 45.0,

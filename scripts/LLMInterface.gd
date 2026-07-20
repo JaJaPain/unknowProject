@@ -31,6 +31,7 @@ var is_waiting: bool = false
 # ── Ollama watchdog ───────────────────────────────────────────────────────────
 const OLLAMA_HEALTH_URL := "http://127.0.0.1:11434/"
 const _OLLAMA_POLL_INTERVAL := 2.0    # seconds between readiness polls
+const _OLLAMA_HEARTBEAT_SECONDS := 30.0
 const _OLLAMA_MAX_POLLS    := 15      # 15 × 2s = 30s before giving up
 var _ollama_ready:        bool = false
 var _ollama_poll_count:   int  = 0
@@ -44,6 +45,7 @@ var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
 # it stays behind explicit player consent per session.
 var ollama_auto_restart_allowed: bool = false
 var _ollama_recovery_in_progress: bool = false
+var _ollama_heartbeat_in_flight: bool = false
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
@@ -600,6 +602,32 @@ func _ready():
 # ── Ollama watchdog helpers ───────────────────────────────────────────────────
 
 ## Fire a single quick HTTP ping at the Ollama root. Calls callback(true/false).
+func _schedule_ollama_heartbeat() -> void:
+	get_tree().create_timer(_OLLAMA_HEARTBEAT_SECONDS, true, false, true).timeout.connect(
+		_run_ollama_heartbeat
+	)
+
+
+func _run_ollama_heartbeat() -> void:
+	if _ollama_heartbeat_in_flight:
+		_schedule_ollama_heartbeat()
+		return
+	_ollama_heartbeat_in_flight = true
+	_schedule_ollama_heartbeat()
+	_ollama_ping(func(up: bool):
+		_ollama_heartbeat_in_flight = false
+		if not up:
+			_ollama_ready = false
+			llm_connected = false
+			small_model_verified = false
+			GenerationDiagnostics.record_event(
+				"ollama_watchdog", "heartbeat_service_down", "llm_interface", {}
+			)
+			attempt_ollama_recovery()
+		_schedule_ollama_heartbeat()
+	)
+
+
 func _ollama_ping(callback: Callable) -> void:
 	var h := HTTPRequest.new()
 	add_child(h)
@@ -1581,6 +1609,19 @@ func request_lounge_exchange_bundle(prompt: String, callback: Callable) -> void:
 		prompt,
 		callback,
 		{"temperature": 0.95, "num_predict": 520, "seed": randi()}
+	)
+
+
+# A deliberately fresh request: it receives the proposed bundle as an
+# artifact, never the writer prompt or prior completion context. This lets the
+# same local model act as a skeptical editor instead of reflexively endorsing
+# its own prose while the docking procedure is buying us time.
+func request_lounge_exchange_bundle_review(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"lounge_bundle_review",
+		prompt,
+		callback,
+		{"temperature": 0.15, "num_predict": 90, "seed": randi()}
 	)
 
 

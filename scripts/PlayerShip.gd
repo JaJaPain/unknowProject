@@ -43,6 +43,7 @@ const MINING_RANGE := 75.0
 const MINING_TRACTOR_LOCK_SECONDS := 1.15
 const MINING_TRACTOR_RADIUS := 0.075
 const MINING_CUTTER_RADIUS := 0.07
+const DOCK_TRACTOR_CAPTURE_RANGE := 72.0
 const AUTOPILOT_BELT_CLEARANCE_Y := 180.0
 var boost_timer: float = 0.0
 var boost_cooldown_timer: float = 0.0
@@ -1209,7 +1210,19 @@ func _physics_process(delta: float):
 					dock_stuck_timer = 0.0
 				last_dock_distance = distance_to_dock
 
-				if distance_to_dock <= 6.0 or dock_stuck_timer >= 1.5:
+				if distance_to_dock <= DOCK_TRACTOR_CAPTURE_RANGE \
+						and active_target.has_method("begin_dock_tractor"):
+					velocity = Vector3.ZERO
+					current_speed = 0.0
+					target_position = null
+					nav_mode = "MANUAL"
+					dock_stuck_timer = 0.0
+					last_dock_distance = INF
+					last_dock_target = null
+					active_target.begin_dock_tractor(self)
+				elif distance_to_dock <= 6.0 or dock_stuck_timer >= 1.5:
+					# Compatibility fallback for any future dockable that has not
+					# opted into the automated tractor procedure.
 					global_position = docking_position
 					velocity = Vector3.ZERO
 					current_speed = 0.0

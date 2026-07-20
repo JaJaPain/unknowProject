@@ -1107,6 +1107,8 @@ Checklist:
 - [x] Preserve the stranger deal’s code-owned mechanics; make its pitch and any story intel obey the same knowledge/cache contracts.
   - 2026-07-13: Mechanics were already fully code-owned (roll chance/cooldown, ask, scam flag, haggle math, payouts — the model only phrases the pitch) and are now tripwired: `_roll_lounge_stranger` and `_resolve_stranger_deal` must never touch LLMInterface, and the pitch builder must not read `story_state` outside the player-safe `_lounge_flavor_block()`. Story intel obeys the knowledge contract via `record_stranger_intel_fact` (previous slice). The pitch remains a single-turn generation with an interactive wait mask and an instant code template on failure; folding it into flight-time prefetch can ride the bundle-cache checkbox if desired.
 
+2026-07-17 progress: Automated tractor docking now starts at capture range, pulls and aligns the ship for four seconds, holds it through three seconds of clamp engagement and three seconds of pressure equalization, then opens station services. A cyan 3D tether and a docking-control panel make the sequence visible; station preparation runs while the ship is held. Lounge bundles now pass through a separate, stateless reviewer request that sees only the proposed exchange and code-approved questions; it must approve before the card becomes ready. Pending/failed cards remain visibly unavailable and stale input cannot launch a live request. `run_lounge_conversation_tests.gd` and `parse_check.gd` pass. The full multi-station smoke requires a longer-than-60s run window after this deliberate timing change.
+
 Phase 9 exit gate:
 
 - [ ] Reply clicks remain instant with Ollama stopped after preparation.

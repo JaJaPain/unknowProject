@@ -1600,6 +1600,7 @@ var story_map_highlight: Dictionary = {}   # {system_id: true, ...} — systems 
 # Unique per-campaign seed mixed into procedural system generation so each
 # campaign produces different systems even from the same gate destination IDs.
 var campaign_seed: int = 0
+var ship_transponder_code: String = ""
 
 # Non-upgradeable baseline
 var damage: float = weapon_damage # Legacy support until swapped

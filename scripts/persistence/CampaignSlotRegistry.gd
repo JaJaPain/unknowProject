@@ -616,6 +616,7 @@ func _build_initial_documents(
 		"asset_registry_id": ids["assets"],
 		"kaelen_meta_id": ids["kaelen"],
 		"current_timeline_id": ids["timeline"],
+		"ship_transponder_code": "%06d" % randi_range(0, 999999),
 	}
 	var canon_result := ManifestStoreType.build_handcrafted_documents(
 		campaign_id,

@@ -141,3 +141,16 @@ func dock_player():
 	var ui = GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu"):
 		ui.toggle_dock_menu(self)
+
+
+func begin_dock_tractor(ship: Node3D) -> void:
+	if PlayerInteractionQueue.in_combat_window():
+		var busy_ui = GlobalState.get_ui_manager()
+		if busy_ui and busy_ui.has_method("show_hud_warning"):
+			busy_ui.show_hud_warning("Can't dock while under fire — clear the hostiles first.")
+		return
+	var ui = GlobalState.get_ui_manager()
+	if ui and ui.has_method("begin_docking_procedure"):
+		ui.begin_docking_procedure(self, ship)
+		return
+	dock_player()
