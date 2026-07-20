@@ -7,6 +7,7 @@ extends SceneTree
 const _SCRIPTS := [
 	"res://scripts/UIManager.gd",
 	"res://scripts/GameRoot.gd",
+	"res://scripts/ui/LandingScreen.gd",
 	"res://scripts/ai/NarrativeDirector.gd",
 	"res://scripts/ai/Nova.gd",
 	"res://scripts/story/StoryQuestManager.gd",

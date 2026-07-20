@@ -23,6 +23,10 @@ var is_ducked: bool = false
 var bgm_track1 = preload("res://sound/BackgroundMusic/Iron Lullaby1.mp3")
 var bgm_track2 = preload("res://sound/BackgroundMusic/Iron Lullaby2.mp3")
 var bgm_lounge = preload("res://sound/BackgroundMusic/LoungeMusic.wav")
+# Loaded at runtime because these landing tracks may be imported after the
+# scripts are first scanned (for example, when audio is copied into a project).
+var bgm_landing1: AudioStream = null
+var bgm_landing2: AudioStream = null
 var sfx_laser1 = preload("res://sound/WeaponFire/Laser Weapon Firing1.mp3")
 var sfx_laser2 = preload("res://sound/WeaponFire/Laser Weapon Firing2.mp3")
 var sfx_mining = preload("res://sound/Mining/MiningSound.mp3")
@@ -40,6 +44,8 @@ var sfx_jump_arrival: AudioStreamWAV = null
 var tracks: Array = []
 var current_track_idx: int = 0
 var _lounge_music_active: bool = false
+var _landing_music_active: bool = false
+var _landing_track_idx: int = 0
 var _pre_lounge_stream: AudioStream = null
 var _pre_lounge_position: float = 0.0
 
@@ -103,11 +109,15 @@ func _ready():
 func play_next_bgm():
 	if tracks.size() == 0: return
 	_lounge_music_active = false
+	_landing_music_active = false
 	bgm_player.stream = tracks[current_track_idx]
 	bgm_player.play()
 	current_track_idx = (current_track_idx + 1) % tracks.size()
 
 func _on_bgm_finished():
+	if _landing_music_active:
+		play_next_landing_track()
+		return
 	if _lounge_music_active:
 		bgm_player.play()
 	else:
@@ -121,6 +131,7 @@ func enter_lounge_music() -> void:
 	_pre_lounge_stream = bgm_player.stream
 	_pre_lounge_position = bgm_player.get_playback_position() if bgm_player.playing else 0.0
 	_lounge_music_active = true
+	_landing_music_active = false
 	bgm_player.stream = bgm_lounge
 	bgm_player.play()
 
@@ -135,6 +146,37 @@ func exit_lounge_music() -> void:
 		play_next_bgm()
 	_pre_lounge_stream = null
 	_pre_lounge_position = 0.0
+
+func enter_landing_music() -> void:
+	if bgm_player == null:
+		return
+	if bgm_landing1 == null:
+		bgm_landing1 = load("res://sound/BackgroundMusic/FrontPage01.mp3")
+	if bgm_landing2 == null:
+		bgm_landing2 = load("res://sound/BackgroundMusic/FrontPage02.mp3")
+	if bgm_landing1 == null and bgm_landing2 == null:
+		push_warning("[AudioManager] Landing music could not be loaded.")
+		return
+	_lounge_music_active = false
+	_landing_music_active = true
+	_landing_track_idx = 0
+	play_next_landing_track()
+
+func exit_landing_music() -> void:
+	if bgm_player == null or not _landing_music_active:
+		return
+	_landing_music_active = false
+	play_next_bgm()
+
+func play_next_landing_track() -> void:
+	var landing_tracks := [bgm_landing1, bgm_landing2].filter(
+		func(track: AudioStream) -> bool: return track != null
+	)
+	if landing_tracks.is_empty():
+		return
+	bgm_player.stream = landing_tracks[_landing_track_idx]
+	bgm_player.play()
+	_landing_track_idx = (_landing_track_idx + 1) % landing_tracks.size()
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0):
 	for p in sfx_players:

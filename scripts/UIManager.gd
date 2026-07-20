@@ -68,6 +68,46 @@ var dock_message_choices: HBoxContainer
 var dock_message_tween: Tween
 var station_contacts_panel: PanelContainer
 var station_contacts_list: Control
+
+# Docking is a useful, diegetic pre-entry window for lounge preparation. The
+# services menu remains available, while the Lounge waits for this short
+# arrival beat instead of turning the first conversation click into a wait.
+const LOUNGE_DOCK_PREPARE_SECONDS := 2.0
+var _lounge_dock_preparation_active := false
+var _lounge_dock_preparation_serial := 0
+const DOCK_TRACTOR_PULL_SECONDS := 4.0
+const DOCK_CLAMP_SECONDS := 3.0
+const DOCK_PRESSURIZE_SECONDS := 3.0
+const DOCK_CLEARANCE_LINES: Array[String] = [
+	"{call}, you are cleared for docking. Hold steady while we bring you into the berth.",
+	"Dock control to {call}: tractor lock is coming online. Keep your hands off the attitude controls.",
+	"{call}, clearance confirmed. Maintain present heading; the station has the ship from here.",
+	"{call}, your berth is assigned. Hold steady while the tractor draws you in.",
+	"Docking control acknowledges {call}. We will align you before clamp engagement.",
+	"{call}, you are on the board. Relax the engines and let the berth do the work.",
+	"Clearance granted, {call}. Tractor field will take hold in three, two, one.",
+	"{call}, station traffic has you. Maintain course and expect automatic alignment.",
+	"Dock control to {call}: berth is clear. We are bringing you in now.",
+	"{call}, your signal checks out. Hold position while the docking arms guide you home.",
+	"{call}, approach is accepted. Thrusters quiet; tractor active shortly.",
+	"Dock control to {call}: you are cleared. We will handle the last few meters.",
+	"{call}, stay level and let the field settle you. Clamp cycle follows.",
+	"Clearance logged for {call}. Do not correct the pull unless you enjoy paperwork.",
+	"{call}, berth control has a clean read. Bringing you into alignment now.",
+	"Dock control to {call}: automatic capture authorized. Hold steady.",
+	"{call}, you are cleared for a standard clamp. Station will take it from here.",
+	"{call}, traffic is clear. Keep still while the tractor eases you into the bay.",
+	"Dock control confirms {call}. Aligning ship, then we will cycle the locks.",
+	"{call}, docking clearance is yours. Please remain a cooperative piece of spaceflight.",
+]
+var docking_procedure_panel: PanelContainer
+var _docking_procedure_title: Label
+var _docking_procedure_status: Label
+var _docking_procedure_progress: ProgressBar
+var _docking_procedure_active := false
+var _docking_procedure_serial := 0
+var _dock_procedure_completed_pending := false
+var _docking_tractor_beam: Node3D = null
 var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
 var _bounty_board_panel: PanelContainer = null
@@ -251,6 +291,7 @@ const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
 const LoungeConversationType = preload("res://scripts/story/LoungeConversation.gd")
 const LoungeIntentSelectorType = preload("res://scripts/story/LoungeIntentSelector.gd")
 const IntroCinematicType = preload("res://scripts/story/IntroCinematic.gd")
+const DockingTractorBeamType = preload("res://scripts/effects/DockingTractorBeam.gd")
 const KAELEN_BOUNTY_OFFER_CHANCE := 0.30
 const UILayoutManagerScript = preload("res://scripts/ui/UILayoutManager.gd")
 const KAELEN_MOOD_PORTRAIT_PREFIX := "portrait.kaelen_moods."
@@ -553,6 +594,9 @@ func _on_startup_load_completed(save_loaded: bool) -> void:
 	startup_save_loaded = save_loaded
 	if save_loaded:
 		refresh_restored_state()
+	# The landing screen deliberately suppresses this startup gate until a
+	# campaign is chosen. Start it now, with a real runtime behind it.
+	call_deferred("_check_both_services_ready")
 	if Engine.has_meta("open_campaign_manager_after_death"):
 		Engine.remove_meta("open_campaign_manager_after_death")
 		call_deferred("_open_campaign_manager")
@@ -3638,6 +3682,135 @@ func _on_pause_changed(is_paused: bool):
 		campaign_panel.visible = false
 
 # Station services methods
+func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
+	if _docking_procedure_active or station == null or ship == null:
+		return
+	if not is_instance_valid(station) or not is_instance_valid(ship):
+		return
+	_docking_procedure_active = true
+	_docking_procedure_serial += 1
+	var serial := _docking_procedure_serial
+	current_station = station
+	_lounge_dock_preparation_active = true
+	_prepare_lounge_bundles_for_docked_station()
+	_play_dock_clearance(station)
+	ship.set("is_docked", true) # tractor lock owns flight controls immediately
+	ship.set("velocity", Vector3.ZERO)
+	ship.set("current_speed", 0.0)
+	ship.set("target_position", null)
+	ship.set("nav_mode", "MANUAL")
+	ship.look_at(station.global_position, Vector3.UP)
+	_docking_tractor_beam = DockingTractorBeamType.new()
+	# Keep the beam outside the station hierarchy. The primary station is scaled
+	# 5x, which previously magnified the tether after its length was applied.
+	get_tree().current_scene.add_child(_docking_tractor_beam)
+	_docking_tractor_beam.call("configure", station, ship)
+	_ensure_docking_procedure_panel()
+	docking_procedure_panel.visible = true
+	_docking_procedure_title.text = "%s // DOCKING CONTROL" % _current_station_display_name().to_upper()
+	_run_docking_procedure(serial, station, ship)
+
+
+func _play_dock_clearance(station: Node3D) -> void:
+	var code := GlobalState.ship_transponder_code
+	if code.length() != 6:
+		code = "000000"
+	var call_sign := "INDY SHIP OSCAR-%s-BRAVO" % code
+	var line := DOCK_CLEARANCE_LINES[randi() % DOCK_CLEARANCE_LINES.size()].replace(
+		"{call}", call_sign
+	)
+	SpeechService.play(line, "voice.neutral.v1")
+	GlobalState.emit_chatter("Dock Control", line, Color(0.25, 0.82, 1.0))
+
+
+func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void:
+	_set_docking_procedure_stage("TRACTOR LOCK ACQUIRED", "Drawing ship into the berth.", 0.0)
+	var berth := station.call("get_docking_position", ship.global_position) as Vector3 \
+		if station.has_method("get_docking_position") else station.global_position
+	var pull := create_tween().set_ignore_time_scale(true)
+	pull.tween_property(ship, "global_position", berth, DOCK_TRACTOR_PULL_SECONDS) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pull.parallel().tween_property(_docking_procedure_progress, "value", 40.0, DOCK_TRACTOR_PULL_SECONDS)
+	await pull.finished
+	if serial != _docking_procedure_serial or not is_instance_valid(station):
+		return
+	_set_docking_procedure_stage("ALIGNMENT CONFIRMED", "Hard clamps engaging. Keep hands clear of the thrusters.", 40.0)
+	await get_tree().create_timer(DOCK_CLAMP_SECONDS, true, false, true).timeout
+	if serial != _docking_procedure_serial:
+		return
+	_set_docking_procedure_stage("CLAMPS SECURE", "Pressure equalizing. Station services are waking up.", 70.0)
+	var pressurize := create_tween().set_ignore_time_scale(true)
+	pressurize.tween_property(_docking_procedure_progress, "value", 100.0, DOCK_PRESSURIZE_SECONDS)
+	await pressurize.finished
+	if serial != _docking_procedure_serial:
+		return
+	if is_instance_valid(_docking_tractor_beam):
+		_docking_tractor_beam.queue_free()
+	_docking_tractor_beam = null
+	_docking_procedure_active = false
+	_lounge_dock_preparation_active = false
+	if docking_procedure_panel != null:
+		docking_procedure_panel.visible = false
+	_dock_procedure_completed_pending = true
+	toggle_dock_menu(station)
+
+
+func _set_docking_procedure_stage(status: String, detail: String, progress: float) -> void:
+	if docking_procedure_panel == null:
+		return
+	_docking_procedure_status.text = "%s\n%s" % [status, detail]
+	_docking_procedure_progress.value = progress
+
+
+func _ensure_docking_procedure_panel() -> void:
+	if docking_procedure_panel != null:
+		return
+	docking_procedure_panel = PanelContainer.new()
+	docking_procedure_panel.set_anchors_preset(Control.PRESET_CENTER)
+	docking_procedure_panel.offset_left = -230
+	docking_procedure_panel.offset_right = 230
+	docking_procedure_panel.offset_top = -92
+	docking_procedure_panel.offset_bottom = 92
+	docking_procedure_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.08, 0.11, 0.94)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.12, 0.82, 1.0, 0.9)
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	docking_procedure_panel.add_theme_stylebox_override("panel", style)
+	add_child(docking_procedure_panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	docking_procedure_panel.add_child(box)
+	_docking_procedure_title = Label.new()
+	_docking_procedure_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_docking_procedure_title.add_theme_font_size_override("font_size", 15)
+	_docking_procedure_title.add_theme_color_override("font_color", Color(0.55, 0.92, 1.0))
+	box.add_child(_docking_procedure_title)
+	_docking_procedure_status = Label.new()
+	_docking_procedure_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_docking_procedure_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_docking_procedure_status.add_theme_font_size_override("font_size", 13)
+	box.add_child(_docking_procedure_status)
+	_docking_procedure_progress = ProgressBar.new()
+	_docking_procedure_progress.show_percentage = false
+	_docking_procedure_progress.max_value = 100.0
+	_docking_procedure_progress.value = 0.0
+	_docking_procedure_progress.custom_minimum_size = Vector2(0, 12)
+	box.add_child(_docking_procedure_progress)
+	docking_procedure_panel.visible = false
+
+
 func toggle_dock_menu(
 	station: Node3D,
 	create_checkpoint: bool = true
@@ -3650,6 +3823,8 @@ func toggle_dock_menu(
 		dock_ui_open = true
 	if dock_ui_open:
 		_clear_cached_agent_quest("undock")
+		_lounge_dock_preparation_serial += 1
+		_lounge_dock_preparation_active = false
 		SpeechService.stop()
 		dock_panel.visible = false
 		agent_panel.visible = false
@@ -3662,6 +3837,9 @@ func toggle_dock_menu(
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
 	else:
+		var procedure_completed := _dock_procedure_completed_pending
+		_dock_procedure_completed_pending = false
+		var fresh_dock := procedure_completed
 		_clear_cached_agent_quest_if_stale()
 		dock_panel.visible = true
 		# Ease the menu in over ~1.5s (built while transparent, then fades up) so it
@@ -3699,12 +3877,13 @@ func toggle_dock_menu(
 			# Fire N.O.V.A.'s dock callout only on the real not-docked -> docked
 			# transition, so re-rendering the dock menu while already docked can't
 			# re-trigger her (and can't wrongly climb her "docking again?" streak).
-			if not _was_docked and is_instance_valid(Nova):
+			if (not _was_docked or procedure_completed) and is_instance_valid(Nova):
 				if not GlobalState.kaelen_briefing_seen:
 					Nova.on_intro_first_dock()
 				else:
 					Nova.on_docked()
-			if not _was_docked:
+			if not _was_docked or procedure_completed:
+				fresh_dock = true
 				# Fresh dock: lounge social session state resets (completion rep
 				# bumps and drinks are once per contact per DOCK, not per open).
 				_lounge_convo_done.clear()
@@ -3721,6 +3900,8 @@ func toggle_dock_menu(
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
 			StoryQuestManager.on_docked(station)
+		if fresh_dock and not procedure_completed:
+			_begin_lounge_dock_preparation()
 		var game_root := get_tree().current_scene
 		if create_checkpoint \
 				and game_root \
@@ -12376,7 +12557,7 @@ func _create_loading_screen():
 	loading_panel.add_child(vbox)
 	
 	var title = Label.new()
-	title.text = "SPACE GRID INTRUSION"
+	title.text = "ASTRA ARCANA"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.0, 0.85, 1.0)) # Neon cyan
@@ -12472,6 +12653,8 @@ func _disconnect_loading_service_signals() -> void:
 
 
 func _check_both_services_ready():
+	if Engine.has_meta("landing_screen_active"):
+		return
 	# A late service connection can fire this after the loading screen was already
 	# torn down — e.g. the TTS server finishes launching seconds after the player
 	# has undocked and loading_panel was freed. Guard the freed loading UI and drop
@@ -12891,6 +13074,9 @@ func _finish_loading_after_story_ready() -> void:
 		if not startup_save_loaded:
 			_begin_intro_cinematic_from_black(intro_handoff_cover)
 			return
+		# Existing campaigns have no opening cinematic, so hand off from the
+		# loading/landing tracks immediately before returning to gameplay.
+		AudioManager.exit_landing_music()
 		loading_panel.queue_free()
 		_queue_startup_line_bank_background_voice_cache()
 		GlobalState.paused = false # Resume gameplay!

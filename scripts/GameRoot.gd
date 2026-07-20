@@ -140,11 +140,17 @@ var ship_behavior_observer: Node = null
 # seeded this session, so the two-batch seed fires at most once per bank.
 var _nova_bank_seed_requests: Dictionary = {}
 var ship_pre_generator: ShipPreGenerator = null
+var gameplay_runtime_started := false
+var landing_screen_active := false
+
+
+func _enter_tree() -> void:
+	# Children enter after the root. Mark the pre-game state here so UIManager
+	# does not start its loading/cinematic flow before a campaign is selected.
+	if OS.get_cmdline_user_args().is_empty() and has_node("LandingLayer/LandingScreen"):
+		Engine.set_meta("landing_screen_active", true)
 
 func _ready() -> void:
-	_init_dev_panel()
-	_init_event_scheduler()
-	_init_ship_behavior_observer()
 	RuntimeTraceType.begin_session()
 	RuntimeTraceType.event("game", "root_ready", {
 		"arguments": OS.get_cmdline_user_args(),
@@ -158,6 +164,24 @@ func _ready() -> void:
 		)
 		get_tree().quit(1)
 		return
+	landing_screen_active = Engine.has_meta("landing_screen_active")
+	if landing_screen_active:
+		GlobalState.paused = true
+		# Read only the slot index at the landing page. Opening a selected
+		# campaign's chronicle here can initialize story stores before Continue.
+		_initialize_campaign_registry(false)
+		return
+	_start_gameplay_runtime()
+	_start_requested_runtime_mode()
+
+
+func _start_gameplay_runtime() -> void:
+	if gameplay_runtime_started:
+		return
+	gameplay_runtime_started = true
+	_init_dev_panel()
+	_init_event_scheduler()
+	_init_ship_behavior_observer()
 	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
 	if start_definition == null:
@@ -189,6 +213,9 @@ func _ready() -> void:
 	QuestManager.quest_completed_details.connect(StoryManager.on_quest_completed)
 	QuestManager.quest_abandoned_details.connect(_on_quest_abandoned_chronicle)
 	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
+
+
+func _start_requested_runtime_mode() -> void:
 	if "--performance-baseline" in OS.get_cmdline_user_args():
 		call_deferred("_run_performance_baseline")
 	elif "--core-smoke-test" in OS.get_cmdline_user_args():
@@ -225,6 +252,22 @@ func _ready() -> void:
 		call_deferred("_run_jump_smoke_test")
 	elif "--no-save-load" not in OS.get_cmdline_user_args():
 		call_deferred("_load_startup_save")
+
+
+func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary:
+	if landing_screen_active:
+		landing_screen_active = false
+		if Engine.has_meta("landing_screen_active"):
+			Engine.remove_meta("landing_screen_active")
+		_start_gameplay_runtime()
+	if occupied:
+		return await select_and_load_campaign(slot_id)
+	Engine.set_meta("creating_new_campaign", true)
+	var campaign_number := CampaignSlotRegistryType.SLOT_IDS.find(slot_id) + 1
+	return create_campaign_in_slot(
+		slot_id,
+		"Astra Arcana — Campaign %d" % campaign_number
+	)
 
 func get_active_system_root() -> Node3D:
 	return GlobalState.get_system_root()
@@ -1741,7 +1784,9 @@ func _clear_active_campaign_runtime_context() -> void:
 	StoryManager.clear_story_state()
 
 
-func _initialize_campaign_registry() -> void:
+func _initialize_campaign_registry(
+	open_selected_campaign: bool = true
+) -> void:
 	campaign_slot_registry = CampaignSlotRegistryType.open()
 	if campaign_slot_registry == null \
 			or not campaign_slot_registry.is_valid():
@@ -1753,7 +1798,7 @@ func _initialize_campaign_registry() -> void:
 		return
 	active_campaign_slot_id = campaign_slot_registry.selected_slot_id
 	ShipGenerator.active_campaign_path = _campaign_slot_path(active_campaign_slot_id)
-	if active_campaign_slot_id.is_empty():
+	if active_campaign_slot_id.is_empty() or not open_selected_campaign:
 		return
 	var slot_path := "%s/%s" % [
 		campaign_slot_registry.root_path,
@@ -1877,6 +1922,15 @@ func _ensure_campaign_checkpoint_store(
 
 
 func _initialize_campaign_chronicle() -> void:
+	if campaign_checkpoint_store != null:
+		var saved_transponder := str(
+			campaign_checkpoint_store.campaign.get("ship_transponder_code", "")
+		)
+		if saved_transponder.length() != 6 or not saved_transponder.is_valid_int():
+			saved_transponder = "%06d" % (
+				absi(str(campaign_checkpoint_store.campaign.get("campaign_id", "legacy")).hash()) % 1000000
+			)
+		GlobalState.ship_transponder_code = saved_transponder
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
 	campaign_idea_memory_store = null
@@ -2290,7 +2344,7 @@ func restore_latest_campaign_checkpoint_after_death() -> bool:
 
 func can_start_new_campaign() -> bool:
 	if campaign_slot_registry == null:
-		_initialize_campaign_registry()
+		_initialize_campaign_registry(not landing_screen_active)
 	return campaign_slot_registry != null \
 		and not campaign_slot_registry.first_empty_slot_id().is_empty()
 
@@ -6853,6 +6907,14 @@ func _run_dock_smoke_test() -> void:
 			return
 
 		var ui := GlobalState.get_ui_manager()
+		# Automated docking now spends a real-time tractor/clamp/pressure cycle
+		# before services appear. The ship is held as docked during that cycle,
+		# so wait for the completed station UI instead of treating the first
+		# docked frame as the end of the procedure.
+		for frame in range(720):
+			if ui and ui.dock_panel.visible:
+				break
+			await get_tree().physics_frame
 		if not ui or not ui.dock_panel.visible:
 			_fail_dock_smoke_test("Dock UI did not open for '%s'." % station.name)
 			return
