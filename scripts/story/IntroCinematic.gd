@@ -244,7 +244,10 @@ func _nova_line_after_voice_ready(text: String, expression: String) -> void:
 	if _speech_ready_for_intro():
 		if is_instance_valid(SpeechService):
 			SpeechService.play(text, NOVA_VOICE_PROFILE_ID)
-			await _wait_for_nova_playback(18.0)
+			# Do not let a longer N.O.V.A. line get cut off by the next timed
+			# beat. The cinematic waits for playback; its timeout is only a
+			# fail-safe for a broken audio backend, not a schedule to catch up to.
+			await _wait_for_nova_playback(clampf(float(text.length()) / 8.0 + 3.0, 18.0, 36.0))
 	else:
 		print("[IntroCinematic] Nova TTS skipped after waiting; voice service still busy/offline.")
 
@@ -256,8 +259,10 @@ func _speech_ready_for_intro() -> bool:
 		return false
 	if bool(TTSInterface.get("is_requesting")):
 		return false
-	if int(TTSInterface.get("active_cache_requests")) > 0:
-		return false
+	# The cold-open lines are explicitly pre-cached before this cinematic starts.
+	# Optional background cache requests must not hold those ready clips hostage:
+	# they can run for a long time on a busy machine, and waiting for them here
+	# used to make N.O.V.A. start late or skip a timed beat altogether.
 	return true
 
 

@@ -11,6 +11,7 @@
 - [x] Give newly created campaign slots distinct default display names.
 - [x] Keep campaign storage read-only at the landing page; load a campaign only after Continue.
 - [x] Suspend ambient NPC combat and motion for the opening cinematic.
+- [x] Keep cinematic N.O.V.A. voice playback independent from optional background TTS caching.
 
 ## Notes
 

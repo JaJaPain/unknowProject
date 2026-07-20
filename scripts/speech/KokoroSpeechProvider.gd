@@ -16,6 +16,10 @@ func active_cache_requests() -> int:
 	return TTSInterface.active_cache_requests
 
 
+func has_pending_cache_work() -> bool:
+	return TTSInterface.active_cache_requests > 0 or not TTSInterface.cache_queue.is_empty()
+
+
 func is_requesting() -> bool:
 	return TTSInterface.is_requesting
 

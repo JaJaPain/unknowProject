@@ -10608,7 +10608,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	if loading_panel and is_instance_valid(loading_panel):
 		_queue_intro_cinematic_voice_cache()
 		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
-		if SpeechService.active_cache_requests <= 0:
+		if not SpeechService.has_pending_cache_work:
 			_on_tts_cache_completed()
 		else:
 			loading_bar.value = 80.0
@@ -12829,7 +12829,7 @@ func _finish_loading_without_contract() -> void:
 	_queue_intro_cinematic_voice_cache()
 	if not SpeechService.cache_queue_completed.is_connected(_on_tts_cache_completed):
 		SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)
-	if SpeechService.active_cache_requests <= 0:
+	if not SpeechService.has_pending_cache_work:
 		_on_tts_cache_completed()
 	else:
 		loading_bar.value = 80.0
@@ -13160,7 +13160,7 @@ func _finish_loading_after_story_ready() -> void:
 		return
 	if not startup_save_loaded and not _waiting_for_intro_cinematic_voice_cache:
 		_queue_intro_cinematic_voice_cache()
-		if SpeechService.active_cache_requests > 0:
+		if SpeechService.has_pending_cache_work:
 			_waiting_for_intro_cinematic_voice_cache = true
 			loading_bar.value = 92.0
 			loading_status_label.text = "Pre-caching N.O.V.A. cold-open voice lines..."
@@ -13175,7 +13175,7 @@ func _finish_loading_after_story_ready() -> void:
 			game_root.call("queue_narrative_new_campaign_loading_prefetch")
 	if not startup_save_loaded and not _waiting_for_startup_line_bank_voice_cache:
 		var cached_count := _queue_startup_line_bank_voice_cache()
-		if cached_count > 0 and SpeechService.active_cache_requests > 0:
+		if cached_count > 0 and SpeechService.has_pending_cache_work:
 			_waiting_for_startup_line_bank_voice_cache = true
 			loading_bar.value = 96.0
 			loading_status_label.text = "Pre-caching Kaelen and N.O.V.A. story banks..."
@@ -13265,7 +13265,6 @@ func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
 		var cover_layer := cover.get_parent()
 		if cover_layer != null and is_instance_valid(cover_layer):
 			cover_layer.queue_free()
-	_queue_startup_line_bank_background_voice_cache()
 	GlobalState.paused = false
 	GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 
@@ -13398,6 +13397,10 @@ func show_kaelen_intro():
 		_set_npc_attention_button(dismiss_btn, false)
 		_clear_intro_handhold_arrow()
 		StoryManager.on_kaelen_intro_dismissed()
+		# The cold open and Kaelen's first message take priority over optional
+		# narrative-bank prefetching. Start that background work only after the
+		# player closes the handoff, so it cannot delay or starve intro TTS.
+		_queue_startup_line_bank_background_voice_cache()
 		set_overview_collapsed(false)
 		refresh_overview()
 		var fade_out = create_tween()

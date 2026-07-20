@@ -42,6 +42,11 @@ var active_cache_requests: int:
 		return provider.active_cache_requests()
 
 
+var has_pending_cache_work: bool:
+	get:
+		return provider.has_pending_cache_work()
+
+
 var is_requesting: bool:
 	get:
 		return provider.is_requesting()
