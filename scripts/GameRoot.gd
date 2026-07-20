@@ -9,6 +9,10 @@ const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 2.0
 const PLAYER_CAMERA_FOV := 75.0  # canonical gameplay FOV (player_ship.tscn default)
+const STARTING_STATION_APPROACH_SECONDS := 8.0
+# Keep this aligned with PlayerShip.DOCK_TRACTOR_CAPTURE_RANGE. A fresh
+# campaign should require a real approach before the tractor can take over.
+const STARTING_STATION_TRACTOR_BUFFER := 72.0
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
@@ -289,6 +293,43 @@ func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary
 		# foreshadowing title shown on the landing screen after the first setup.
 		"Pending Campaign"
 	)
+
+
+func _position_fresh_campaign_ship_for_station_approach() -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	var station := GlobalState.get_primary_station()
+	if station == null or not is_instance_valid(station):
+		push_warning("[GameRoot] Fresh campaign start station was unavailable.")
+		return
+	var approach_direction := player.global_position - station.global_position
+	approach_direction.y = 0.0
+	if approach_direction.length_squared() < 0.001:
+		approach_direction = -station.global_transform.basis.z
+		approach_direction.y = 0.0
+	if approach_direction.length_squared() < 0.001:
+		approach_direction = Vector3.FORWARD
+	approach_direction = approach_direction.normalized()
+	var docking_position := station.global_position
+	if station.has_method("get_docking_position"):
+		docking_position = station.call(
+			"get_docking_position",
+			station.global_position + approach_direction
+		) as Vector3
+	var approach_distance := maxf(0.0, float(player.get("max_speed"))) \
+		* STARTING_STATION_APPROACH_SECONDS
+	player.global_position = docking_position + approach_direction * (
+		approach_distance + STARTING_STATION_TRACTOR_BUFFER
+	)
+	player.velocity = Vector3.ZERO
+	player.set("current_speed", 0.0)
+	player.set("target_position", null)
+	player.set("nav_mode", "MANUAL")
+	player.set("is_docked", false)
+	player.look_at(station.global_position, Vector3.UP)
+	if player.has_method("sync_camera_to_ship"):
+		player.sync_camera_to_ship()
+
 
 func get_active_system_root() -> Node3D:
 	return GlobalState.get_system_root()
@@ -1459,6 +1500,7 @@ func create_campaign_in_slot(
 	)
 	if creating_fresh_campaign:
 		QuestManager.reset_for_restart()
+		_position_fresh_campaign_ship_for_station_approach()
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)):
 		return {

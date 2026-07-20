@@ -19,6 +19,7 @@
 - [x] Use centred roadside stars with two separate outer house-light depth rings.
 - [x] Mask the loading-star origin behind the opaque progress bar.
 - [x] Source slot titles from campaign bibles and repair legacy quest-fallback titles.
+- [x] Start fresh campaigns about eight seconds of normal flight from the station docking berth.
 
 ## Notes
 
