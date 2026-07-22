@@ -4025,7 +4025,10 @@ func toggle_dock_menu(
 				_lounge_stranger_rolled = false
 				_lounge_stranger_deal = {}
 				_lounge_cold_contacts.clear()
-				_lounge_bundle_cache.clear()
+				# Keep only the approach-time cache for the station we actually
+				# reached. Every other fresh dock starts with an empty cache.
+				if _lounge_prefetch_station_id != _current_station_contact_id():
+					_lounge_bundle_cache.clear()
 		if is_instance_valid(StoryManager):
 			StoryManager.on_docked(station)
 		if is_instance_valid(StoryQuestManager):
@@ -5129,10 +5132,14 @@ var _lounge_stranger_rolled: bool = false
 # L5a: contacts the player walked out on this dock (name -> true).
 var _lounge_cold_contacts: Dictionary = {}
 # Phase 9: prepared exchange bundles, contact_key -> {status, intents,
-# bundle}. status: "pending" | "ready" | "failed". Prepared when the lounge
-# renders; consumed at conversation start so reply clicks never wait on the
-# model. Cleared on fresh dock with the rest of the session state.
+# bundle}. status: "pending" | "ready" | "failed". Prepared while travelling
+# toward a station when possible, then consumed at conversation start so reply
+# clicks never wait on the model. Cleared when the player leaves a station.
 var _lounge_bundle_cache: Dictionary = {}
+# The one station whose predictable lounge cards are allowed to survive the
+# fresh-dock reset. This keeps approach-time preparation useful without
+# carrying old conversations into a later visit.
+var _lounge_prefetch_station_id: String = ""
 
 
 func _begin_lounge_dock_preparation() -> void:
@@ -5156,11 +5163,26 @@ func _begin_lounge_dock_preparation() -> void:
 # on screen. Lounge-only rolls (approach/stranger) stay deferred to lounge
 # rendering so their one-per-dock presentation rules remain unchanged.
 func _prepare_lounge_bundles_for_docked_station() -> void:
-	var station_id := _current_station_contact_id()
+	_prepare_lounge_bundles_for_station(current_station)
+
+
+# Uses only station data that already exists in the current system, so this is
+# safe to call as soon as the player targets a station. It deliberately omits
+# lounge-only random encounters; those still roll once per actual dock.
+func _prepare_lounge_bundles_for_station(station: Node3D) -> void:
+	if station == null or not is_instance_valid(station):
+		return
+	var station_id := _station_contact_id_for_node(station)
+	var station_display_name := str(station.get("display_name")).strip_edges()
+	if station_display_name.is_empty():
+		station_display_name = "this station"
 	var cards: Array[Dictionary] = []
 	if not station_id.is_empty():
-		cards.append(_lounge_bartender_card(station_id))
+		var bartender_card := _lounge_bartender_card(station_id)
+		bartender_card["station_display_name"] = station_display_name
+		cards.append(bartender_card)
 	for agent_card in _lounge_station_agent_cards():
+		agent_card["station_display_name"] = station_display_name
 		cards.append(agent_card)
 	if not station_id.is_empty():
 		var contacts: Array = GlobalState.get_minor_npcs_at_outpost(station_id)
@@ -5168,7 +5190,9 @@ func _prepare_lounge_bundles_for_docked_station() -> void:
 			var npc_name := str(raw_npc_name)
 			var npc_data := GlobalState.get_minor_npc_data(npc_name)
 			if _station_contact_has_lounge_reason(npc_name, npc_data):
-				cards.append(_lounge_npc_card(npc_name, npc_data))
+				var npc_card := _lounge_npc_card(npc_name, npc_data)
+				npc_card["station_display_name"] = station_display_name
+				cards.append(npc_card)
 	for card in cards:
 		_prepare_lounge_exchange_bundle(card)
 
@@ -5351,7 +5375,7 @@ func _lounge_bundle_npc(card: Dictionary) -> Dictionary:
 	return {
 		"name": str(card.get("name", "a local")),
 		"role": str(card.get("role", "station regular")),
-		"station": _current_station_display_name(),
+		"station": str(card.get("station_display_name", _current_station_display_name())),
 		"mood": str(card.get("mood", "neutral")),
 		"faction": str(card.get("rep_key", card.get("faction", "independent"))),
 	}
@@ -8739,6 +8763,10 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	if inventory_panel:
 		inventory_panel.visible = false
 	current_station = null
+	# An approach cache belongs only to the dock visit it was prepared for.
+	# Returning to the same station therefore starts a fresh social session.
+	_lounge_bundle_cache.clear()
+	_lounge_prefetch_station_id = ""
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
 	# Restore full overview when heading back into space
@@ -9066,6 +9094,7 @@ func _queue_station_target_prefetch(
 		return
 	if not station.is_in_group("station"):
 		return
+	_prefetch_lounge_bundles_for_station(station)
 	var game_root := get_tree().current_scene
 	if game_root == null or not game_root.has_method(
 		"queue_narrative_station_target_prefetch"
@@ -9076,6 +9105,18 @@ func _queue_station_target_prefetch(
 		station,
 		target_reason
 	)
+
+
+# The station target is known well before capture range. Start predictable
+# lounge exchanges here; cards stay visibly pending if preparation is slow.
+func _prefetch_lounge_bundles_for_station(station: Node3D) -> void:
+	var station_id := _station_contact_id_for_node(station)
+	if station_id.is_empty():
+		return
+	if _lounge_prefetch_station_id != station_id:
+		_lounge_bundle_cache.clear()
+		_lounge_prefetch_station_id = station_id
+	_prepare_lounge_bundles_for_station(station)
 
 
 func _on_boost_pressed() -> void:

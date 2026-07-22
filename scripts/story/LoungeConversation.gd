@@ -266,7 +266,10 @@ static func build_bundle_prompt(
 			"- a%d: the speaker's direct answer to Q%d. It must actually answer"
 			% [i + 1, i + 1]
 		)
-		lines.append("  that question, in character. Under 35 words.")
+		lines.append(
+			"  that question, in character, with one concrete observation or personal"
+		)
+		lines.append("  angle. Under 35 words.")
 	lines.append(
 		"- close: the speaker wrapping up naturally afterwards (finishes their"
 	)
@@ -276,8 +279,17 @@ static func build_bundle_prompt(
 	lines.append("")
 	lines.append("Rules:")
 	lines.append(
-		"- The speaker talks TO the pilot. Casual, specific, human."
+		"- The speaker talks TO the pilot. It must sound like a normal spontaneous"
 	)
+	lines.append("  conversation, not an interview, quest briefing, dialogue menu, or terminal.")
+	lines.append(
+		"- Give the opener a small human observation, complaint, or joke that leaves"
+	)
+	lines.append("  room for the pilot to reply; do not open by listing services or asking a survey question.")
+	lines.append(
+		"- The close must feel like a believable end to a short chat, not a stock"
+	)
+	lines.append("  sign-off. It should work after any one of the possible answers.")
 	lines.append(
 		"- Never use the pilot's name. No narration, no stage directions, no meta."
 	)
@@ -329,7 +341,10 @@ static func build_bundle_review_prompt(
 		"Review the candidate exchange below. Approve only if every included",
 		"answer directly responds to its paired question, the speaker stays in",
 		"character, and there are no invented proper nouns, meta commentary,",
-		"stage directions, or player dialogue written as NPC dialogue.",
+		"stage directions, or player dialogue written as NPC dialogue. Reject",
+		"anything that reads like a dialogue menu, quest briefing, customer-service",
+		"script, interview, generic greeting, or stock sign-off instead of a normal",
+		"short conversation between two people.",
 		"Speaker: %s." % npc_name,
 		"Candidate opener: %s" % str(bundle.get("opener", "")),
 	]

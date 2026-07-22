@@ -30,6 +30,7 @@ func _initialize() -> void:
 	_test_stranger_deal_stays_code_owned_and_leak_free()
 	_test_bundle_preparation_wiring()
 	_test_docking_prefetches_lounge_bundles()
+	_test_station_target_prefetches_lounge_bundles()
 	_test_pending_bundle_cards_block_live_generation()
 	_test_bundle_consumption_is_model_free()
 	_test_keep_talking_requires_cached_second_bundle()
@@ -237,6 +238,12 @@ func _test_bundle_prompt_carries_code_owned_intents() -> void:
 	_expect(
 		prompt.contains("Ivet Marr") and prompt.contains("cargo inspector"),
 		"Bundle prompt lost the NPC identity."
+	)
+	_expect(
+		prompt.contains("normal spontaneous")
+			and prompt.contains("not an interview, quest briefing, dialogue menu")
+			and prompt.contains("concrete observation or personal"),
+		"Bundle prompt does not guard against menu-like or generic lounge dialogue."
 	)
 	# Intent normalization: malformed dropped, capped at 3 valid entries.
 	var clean: Array = ConvoType.bundle_intents(intents)
@@ -742,11 +749,48 @@ func _test_docking_prefetches_lounge_bundles() -> void:
 	var prefetch_fn := source.find("func _prepare_lounge_bundles_for_docked_station")
 	var prefetch_end := source.find("\nfunc ", prefetch_fn + 10)
 	var prefetch_body := source.substr(prefetch_fn, prefetch_end - prefetch_fn)
+	var station_prefetch_fn := source.find("func _prepare_lounge_bundles_for_station")
+	var station_prefetch_end := source.find("\nfunc ", station_prefetch_fn + 10)
+	var station_prefetch_body := source.substr(
+		station_prefetch_fn, station_prefetch_end - station_prefetch_fn
+	)
 	_expect(
-		prefetch_body.contains("_lounge_bartender_card")
-			and prefetch_body.contains("_lounge_station_agent_cards")
-			and prefetch_body.contains("_prepare_lounge_exchange_bundle"),
+		prefetch_body.contains("_prepare_lounge_bundles_for_station(current_station)")
+			and station_prefetch_body.contains("_lounge_bartender_card")
+			and station_prefetch_body.contains("_lounge_station_agent_cards")
+			and station_prefetch_body.contains("_prepare_lounge_exchange_bundle"),
 		"Docking preparation does not cover predictable lounge contacts."
+	)
+
+
+# The strict Phase 9 path starts as soon as a station is targeted, then keeps
+# that station's cache through docking. A slow bundle remains visibly pending;
+# it never turns the player's card click into a live generation request.
+func _test_station_target_prefetches_lounge_bundles() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect station-target lounge prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var queue_fn := source.find("func _queue_station_target_prefetch")
+	var queue_end := source.find("\nfunc ", queue_fn + 10)
+	var queue_body := source.substr(queue_fn, queue_end - queue_fn)
+	_expect(
+		queue_body.contains("_prefetch_lounge_bundles_for_station(station)"),
+		"Selecting or commanding a station does not prefetch lounge bundles."
+	)
+	var prefetch_fn := source.find("func _prefetch_lounge_bundles_for_station")
+	var prefetch_end := source.find("\nfunc ", prefetch_fn + 10)
+	var prefetch_body := source.substr(prefetch_fn, prefetch_end - prefetch_fn)
+	_expect(
+		prefetch_body.contains("_prepare_lounge_bundles_for_station(station)")
+			and prefetch_body.contains("_lounge_prefetch_station_id"),
+		"Station-target prefetch does not prepare a station-scoped lounge cache."
+	)
+	_expect(
+		source.contains("if _lounge_prefetch_station_id != _current_station_contact_id()")
+			and source.contains("_lounge_prefetch_station_id = \"\""),
+		"Lounge approach cache is not retained for arrival and cleared on undock."
 	)
 
 
