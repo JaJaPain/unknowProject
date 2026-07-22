@@ -5372,12 +5372,19 @@ func _lounge_intent_context(card: Dictionary) -> Dictionary:
 
 
 func _lounge_bundle_npc(card: Dictionary) -> Dictionary:
+	var continuity_notes := _lounge_npc_state_context(card)
+	var intent_context := _lounge_intent_context(card)
+	var relationship: Dictionary = intent_context.get("relationship", {}) \
+		if intent_context.get("relationship", {}) is Dictionary else {}
+	if bool(relationship.get("met_before", false)):
+		continuity_notes += " The speaker has met this pilot before; acknowledge that naturally rather than using a first-meeting opener."
 	return {
 		"name": str(card.get("name", "a local")),
 		"role": str(card.get("role", "station regular")),
 		"station": str(card.get("station_display_name", _current_station_display_name())),
 		"mood": str(card.get("mood", "neutral")),
 		"faction": str(card.get("rep_key", card.get("faction", "independent"))),
+		"extra": continuity_notes.strip_edges(),
 	}
 
 
@@ -6193,8 +6200,10 @@ func _lounge_npc_state_context(card_data: Dictionary) -> String:
 	var npc_id := str(card_data.get("npc_id", "")).strip_edges()
 	if npc_id.is_empty():
 		npc_id = str(card_data.get("contact_key", "")).strip_edges()
-	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+	if npc_id.is_empty():
 		return ""
+	if not npc_id.begins_with("npc."):
+		npc_id = "npc.%s" % npc_id
 	if GlobalState.campaign_npc_state_store == null \
 			or not GlobalState.campaign_npc_state_store.has_method("prompt_context_for"):
 		return ""

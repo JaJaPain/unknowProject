@@ -245,6 +245,15 @@ func _test_bundle_prompt_carries_code_owned_intents() -> void:
 			and prompt.contains("concrete observation or personal"),
 		"Bundle prompt does not guard against menu-like or generic lounge dialogue."
 	)
+	var returning_prompt: String = ConvoType.build_bundle_prompt(
+		npc.merged({"extra": "Last player stance: curious. The pilot has met this speaker before."}),
+		"", intents.slice(0, 1)
+	)
+	_expect(
+		returning_prompt.contains("Continuity notes: use these subtly")
+			and returning_prompt.contains("not summarize their relationship"),
+		"Bundle prompt does not instruct a returning contact to use memory naturally."
+	)
 	# Intent normalization: malformed dropped, capped at 3 valid entries.
 	var clean: Array = ConvoType.bundle_intents(intents)
 	_expect(
@@ -778,6 +787,14 @@ func _test_station_target_prefetches_lounge_bundles() -> void:
 	_expect(
 		queue_body.contains("_prefetch_lounge_bundles_for_station(station)"),
 		"Selecting or commanding a station does not prefetch lounge bundles."
+	)
+	var bundle_npc_fn := source.find("func _lounge_bundle_npc")
+	var bundle_npc_end := source.find("\nfunc ", bundle_npc_fn + 10)
+	var bundle_npc_body := source.substr(bundle_npc_fn, bundle_npc_end - bundle_npc_fn)
+	_expect(
+		bundle_npc_body.contains("_lounge_npc_state_context(card)")
+			and bundle_npc_body.contains("met this pilot before"),
+		"Prepared lounge bundles do not receive relationship continuity context."
 	)
 	var prefetch_fn := source.find("func _prefetch_lounge_bundles_for_station")
 	var prefetch_end := source.find("\nfunc ", prefetch_fn + 10)

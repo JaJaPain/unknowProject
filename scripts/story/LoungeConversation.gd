@@ -233,6 +233,7 @@ static func build_bundle_prompt(
 			+ flavor_block.strip_edges() + "\n"
 		)
 	var clean_intents := bundle_intents(intents)
+	var continuity_notes := str(npc.get("extra", "")).strip_edges()
 	var lines: Array = [
 		"You are writing one side of a casual bar conversation in a space trading",
 		"game, PG-13, dry and slightly dark humor welcome.",
@@ -246,11 +247,14 @@ static func build_bundle_prompt(
 			str(npc.get("mood", "neutral")),
 			str(npc.get("faction", "independent")),
 		],
-		str(npc.get("extra", "")),
 		"",
 		flavor_section,
 		"The pilot sitting next to them may ask these questions:",
 	]
+	if not continuity_notes.is_empty():
+		lines.append("Continuity notes: use these subtly; never recite them as a recap.")
+		lines.append(continuity_notes)
+		lines.append("")
 	for i in range(clean_intents.size()):
 		lines.append("Q%d: \"%s\"" % [i + 1, str(clean_intents[i].get("text", ""))])
 	lines.append("")
@@ -290,6 +294,10 @@ static func build_bundle_prompt(
 		"- The close must feel like a believable end to a short chat, not a stock"
 	)
 	lines.append("  sign-off. It should work after any one of the possible answers.")
+	lines.append(
+		"- If continuity notes say the pilot is known, make that recognition feel"
+	)
+	lines.append("  incidental. Do not summarize their relationship or repeat a previous conversation.")
 	lines.append(
 		"- Never use the pilot's name. No narration, no stage directions, no meta."
 	)

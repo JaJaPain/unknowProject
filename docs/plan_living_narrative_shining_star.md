@@ -1126,7 +1126,8 @@ Phase 9 exit gate:
 - [ ] Reply clicks remain instant with Ollama stopped after preparation.
 - [ ] NPC answers are relevant to the selected player line in 50/50 automated fixtures and >= 95% of a reviewed real-model batch.
 - [ ] No rumor is marked heard until its delivery field is shown.
-- [ ] Returning to the same NPC produces a relationship/memory-aware exchange, not a reset opener.
+- [x] Returning to the same NPC produces a relationship/memory-aware exchange, not a reset opener.
+  - 2026-07-22: Prepared bundle prompts now receive the contact's persisted lounge memory and a private, player-safe returning-contact note. The writer must weave it in incidentally, never recap it; code-owned relationship intents continue to offer a natural “good to see you again” follow-up when warmth supports it. Coverage asserts both the memory handoff and the anti-recap writer instruction.
 
 ### Phase 10 — Uniqueness, coherence, quality gates, and designer tools
 
