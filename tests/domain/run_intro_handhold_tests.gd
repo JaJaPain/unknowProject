@@ -22,6 +22,10 @@ func _test_dock_command_hides_intro_arrow_until_docking() -> void:
 	if file == null:
 		return
 	var source := file.get_as_text()
+	var docking_start := source.find("func begin_docking_procedure")
+	var docking_end := source.find("func _play_dock_clearance", docking_start)
+	var docking_source := source.substr(docking_start, docking_end - docking_start) \
+		if docking_start >= 0 and docking_end > docking_start else ""
 	_expect(
 		source.contains("var _intro_dock_command_issued: bool = false")
 			and source.contains("if mode == \"DOCK\" and target == _intro_primary_station():")
@@ -29,6 +33,10 @@ func _test_dock_command_hides_intro_arrow_until_docking() -> void:
 			and source.contains("not _intro_dock_command_issued")
 			and source.contains("_clear_intro_handhold_arrow()"),
 		"Dock command does not latch the starter tutorial arrow off during approach."
+	)
+	_expect(
+		not docking_source.contains("_intro_dock_command_issued = false"),
+		"Starting the docking procedure resets the accepted dock command and revives the old tutorial arrow."
 	)
 
 

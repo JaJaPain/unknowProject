@@ -691,23 +691,40 @@ static func repair_warning_band(health: float, max_health: float) -> String:
 	return ""
 
 
-# Called before the dock releases the player. These lines are fully authored so
-# a repair reminder never waits on a model or competes with narrative work.
-func warn_unrepaired_undock(repair_service_available: bool, repaired_this_visit: bool) -> String:
+# Selects one fully authored repair warning for a docked-player decision. This
+# deliberately has no speech side effect: the dock UI must first keep the
+# player at the station and present the repair / undock choice.
+func get_unrepaired_undock_warning(
+	repair_service_available: bool,
+	repaired_this_visit: bool
+) -> Dictionary:
 	if not repair_service_available or repaired_this_visit:
-		return ""
+		return {}
 	var p = GlobalState.player
 	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")):
-		return ""
+		return {}
 	var band := repair_warning_band(
 		float(p.get("health")),
 		float(p.get("max_health"))
 	)
 	if band.is_empty():
-		return ""
+		return {}
 	var lines: Array[String] = REPAIR_WARNING_RED_LINES if band == "red" else REPAIR_WARNING_YELLOW_LINES
 	var index := GlobalState.next_nova_repair_warning_index(band, lines.size())
-	var line := lines[index]
+	return {
+		"line": lines[index],
+		"band": band,
+	}
+
+
+# Compatibility wrapper for callers that need a one-shot spoken warning outside
+# the dock decision flow.
+func warn_unrepaired_undock(repair_service_available: bool, repaired_this_visit: bool) -> String:
+	var warning := get_unrepaired_undock_warning(repair_service_available, repaired_this_visit)
+	if warning.is_empty():
+		return ""
+	var band := str(warning.get("band", ""))
+	var line := str(warning.get("line", ""))
 	speak(
 		line,
 		Severity.THREAT if band == "red" else Severity.COMBAT,

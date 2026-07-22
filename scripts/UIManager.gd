@@ -3698,7 +3698,9 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	if not is_instance_valid(station) or not is_instance_valid(ship):
 		return
 	_docking_procedure_active = true
-	_intro_dock_command_issued = false
+	# Keep the accepted dock command latched through the docking sequence. If it
+	# resets here, the starter handhold can jump back to its earlier dock-arrow
+	# step while the tractor beam is still bringing the ship in.
 	_clear_intro_handhold_arrow()
 	_docking_procedure_serial += 1
 	var serial := _docking_procedure_serial
@@ -8467,14 +8469,12 @@ func _get_contact_mood(npc_name: String) -> String:
 	return _CONTACT_MOODS[mood_index]
 
 
-func undock_player():
+func undock_player(skip_repair_warning: bool = false) -> void:
+	if not skip_repair_warning and _show_nova_repair_undock_prompt():
+		return
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	if is_instance_valid(Nova):
-		Nova.warn_unrepaired_undock(
-			_current_station_has_repair_services(),
-			_repaired_this_dock
-		)
 		Nova.on_undock()  # may welcome the captain back if they were parked a while
 	var station_before_undock := current_station
 	var game_root := get_tree().current_scene
@@ -8537,6 +8537,58 @@ func undock_player():
 		GlobalState.player.global_position += Vector3(0, 0, -15.0)
 		GlobalState.player.is_docked = false
 		GlobalState.player.nav_mode = "MANUAL"
+
+
+# A damaged ship at a staffed station is a player decision, not a line shouted
+# after the clamps have already released. Showing this before any undock cleanup
+# leaves both choices usable and lets N.O.V.A.'s audio finish naturally.
+func _show_nova_repair_undock_prompt() -> bool:
+	if not is_instance_valid(Nova):
+		return false
+	var warning: Dictionary = Nova.get_unrepaired_undock_warning(
+		_current_station_has_repair_services(),
+		_repaired_this_dock
+	)
+	if warning.is_empty():
+		return false
+	var band := str(warning.get("band", "yellow"))
+	var line := str(warning.get("line", ""))
+	if line.is_empty():
+		return false
+	var expression := Nova.expression_for_event("danger") if band == "red" else Nova.expression_for_event("worried")
+	show_dock_message(
+		line,
+		Nova.NOVA_SENDER,
+		Nova.NOVA_COLOR,
+		_nova_portrait_texture(expression),
+		[
+			{
+				"text": "Go to repairs",
+				"callback": _on_nova_repair_prompt_repairs,
+			},
+			{
+				"text": "Undock anyway",
+				"callback": _on_nova_repair_prompt_undock,
+			},
+		]
+	)
+	Nova.speak(
+		line,
+		Nova.Severity.THREAT if band == "red" else Nova.Severity.COMBAT,
+		expression
+	)
+	return true
+
+
+func _on_nova_repair_prompt_repairs() -> void:
+	clear_dock_message()
+	current_submenu = DockSubmenu.MAINTENANCE
+	_render_dock_submenu()
+
+
+func _on_nova_repair_prompt_undock() -> void:
+	clear_dock_message()
+	undock_player(true)
 
 func _sell_ore():
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:

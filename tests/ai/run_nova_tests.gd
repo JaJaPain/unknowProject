@@ -331,8 +331,8 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 	gs.player = dummy_player
 	gs.nova_repair_warning_rotation = {"yellow": 0, "red": 0}
 
-	var first_yellow := str(nova.warn_unrepaired_undock(true, false))
-	var second_yellow := str(nova.warn_unrepaired_undock(true, false))
+	var first_yellow := str(nova.get_unrepaired_undock_warning(true, false).get("line", ""))
+	var second_yellow := str(nova.get_unrepaired_undock_warning(true, false).get("line", ""))
 	_expect(
 		NovaType.REPAIR_WARNING_YELLOW_LINES.has(first_yellow)
 			and NovaType.REPAIR_WARNING_YELLOW_LINES.has(second_yellow)
@@ -344,15 +344,15 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 		"Yellow repair-warning cursor did not advance persistently."
 	)
 	dummy_player.health = 20.0
-	var red := str(nova.warn_unrepaired_undock(true, false))
+	var red := str(nova.get_unrepaired_undock_warning(true, false).get("line", ""))
 	_expect(
 		NovaType.REPAIR_WARNING_RED_LINES.has(red)
 			and int(gs.nova_repair_warning_rotation.get("red", -1)) == 1,
 		"Red repair warning did not use its independent persistent cursor."
 	)
 	_expect(
-		nova.warn_unrepaired_undock(false, false).is_empty()
-			and nova.warn_unrepaired_undock(true, true).is_empty(),
+		nova.get_unrepaired_undock_warning(false, false).is_empty()
+			and nova.get_unrepaired_undock_warning(true, true).is_empty(),
 		"Repair warning must stay silent without station repairs or after a repair visit."
 	)
 	_expect(
@@ -374,10 +374,12 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 	if ui_file != null:
 		var ui_source := ui_file.get_as_text()
 		_expect(
-			ui_source.contains("Nova.warn_unrepaired_undock")
+			ui_source.contains("Nova.get_unrepaired_undock_warning")
 				and ui_source.contains("_current_station_has_repair_services")
-				and ui_source.contains("_repaired_this_dock = true"),
-			"Undock does not pass repair-service and repair-visit state to N.O.V.A."
+				and ui_source.contains("_repaired_this_dock = true")
+				and ui_source.contains("Go to repairs")
+				and ui_source.contains("Undock anyway"),
+			"Undock does not keep damaged players docked for N.O.V.A.'s repair decision."
 		)
 	gs.player = previous_player
 	gs.nova_repair_warning_rotation = previous_rotation
