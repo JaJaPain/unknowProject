@@ -86,7 +86,9 @@ func _ready():
 	jump_player.bus = "SFX"
 	add_child(jump_player)
 	broken_gate_rain_player = _create_broken_gate_ambience_player(-12.0)
-	broken_gate_thunder_player = _create_broken_gate_ambience_player(-15.0)
+	# Thunder is the damaged-ship analogue in the broken gate: about 70% louder
+	# than the rain layer (+4.6 dB) so it carries the danger without clipping.
+	broken_gate_thunder_player = _create_broken_gate_ambience_player(-10.4)
 
 	mining_player = AudioStreamPlayer3D.new()
 	mining_player.bus = "SFX"
