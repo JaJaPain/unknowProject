@@ -7559,10 +7559,10 @@ const FALLBACK_MECHANIC_GREETINGS: Array = [
 	"Oh good, the pilot Vanguard put on a watchlist. Don't worry — Grease Monkeys is neutral ground. Mostly. What's broken?",
 	"You flew that thing here on three engine cycles? Respect. And stupidity. Park it, I'll patch the frame before I judge the rest of you.",
 	"INDY Miner hull, unlisted cargo, Zenith is friendly, Vanguard is pissed. Yeah, I read the registry. I read everything. What do you need?",
-	"Your ship's prettier than your rep sheet, and that's not a compliment. Cute INDY though. Bring her around, I'll fix what Aurelia's goons dented.",
+	"Your ship's prettier than your file, and that's not a compliment. Cute INDY though. Bring her around, I'll fix what Aurelia's goons dented.",
 	"Heard you picked a fight with a Reaver in an INDY Miner and walked away. I'm calling bullshit, but I'm also curious. Pop the hood.",
 	"You know, when INDY Miner pilots start showing up at my bay, it's usually because they're one bad landing from exploding. Which one are you?",
-	"Yeah, yeah — famous pilot, dangerous reputation, pristine INDY Miner. Sit down before I charge you for standing in my workspace.",
+	"Yeah, yeah — famous pilot, dangerous name, pristine INDY Miner. Sit down before I charge you for standing in my workspace.",
 	"That {ship} looks like it could use some love. But first, I need a favor. Head to {outpost} and get {part} from {npc} for me.",
 	"Before we look at the {ship}, I'm short a {part}. Grab it from {npc} at {outpost} and I'll make it worth your while.",
 	"Nice {ship}. You want it fixed? Do me a solid. I left a {part} with {npc} over at {outpost}. Go get it."
@@ -7866,6 +7866,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 			example_line = example_line.replace("{outpost}", str(offer.get("outpost_display", "the outpost")))
 		examples_block += "- \"" + example_line + "\"\n"
 	
+	var faction_subtext := _mechanic_faction_subtext(worst_tier, best_tier)
 	var prompt: String = (
 		"You ARE " + mechanic_name + ", a " + mechanic_role + " at this station dock. "
 		+ "You are NOT Broker Kaelen, NOT an agent, NOT a faction contact. You fix ships for a living.\n"
@@ -7874,8 +7875,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		+ "- Mechanic name: \"" + mechanic_name + "\"\n"
 		+ "- Mechanic role: \"" + mechanic_role + "\"\n"
 		+ "- Ship: \"" + ship + "\"\n"
-		+ "- Worst faction rep tier: \"" + worst_tier + "\"\n"
-		+ "- Best faction rep tier: \"" + best_tier + "\"\n"
+		+ "- Private dockside subtext: \"" + faction_subtext + "\"\n"
 		+ "- Credits: " + str(credits) + "\n"
 	)
 	
@@ -7921,7 +7921,7 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		reqs = (
 			"1. 1-2 sentences, max 200 chars.\n"
 			+ "2. You MUST mention the ship name \"" + ship + "\" literally (or a short form like \"that crate\").\n"
-			+ "3. You MUST reference the rep tier \"" + worst_tier + "\" OR \"" + best_tier + "\" OR the credit count. Pick one.\n"
+			+ "3. Make one concrete observation about the ship, the pilot's recent trouble, or money.\n"
 		)
 		
 	prompt += (
@@ -7931,7 +7931,8 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		+ reqs
 		+ "4. Cocky mechanic voice — second person (\"you\"), observational, a little too personal.\n"
 		+ "5. NO phrases like \"your best friend\", \"stay put\", \"sit tight\", \"wait here\", \"I'll fetch\", \"hold on\", \"Shiny\". Those are KAELEN's phrases, not yours. Use \"you\" most of the time; \"Indy\" is allowed only rarely. NEVER \"Shiny\".\n"
-		+ "6. NO hashtags, NO emojis, NO quotes around the line.\n\n"
+		+ "6. Faction status is private subtext only. NEVER say reputation, rep, standing, tier, rank, score, points, percentage, or game-like labels such as Wary, Neutral, Hostile, Friendly, Trusted, or Allied. Let it show only as natural gossip, distrust, or respect.\n"
+		+ "7. NO hashtags, NO emojis, NO quotes around the line.\n\n"
 		+ "Output ONLY valid JSON: {\"line\": \"<your greeting>\"}"
 	)
 	return prompt
@@ -8018,6 +8019,8 @@ func _is_valid_mechanic_line(line: String, ship: String, worst_tier: String, bes
 # Returns the reason why a mechanic line failed validation, or "" if it passes.
 func _explain_mechanic_line_rejection(line: String, ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary) -> String:
 	var lower: String = line.to_lower()
+	if _mechanic_line_leaks_faction_standing(line):
+		return "Leaked a faction-standing value or UI-style reputation label."
 	var ship_l: String = ship.to_lower()
 	var ship_short: String = ship_l.split(" ")[0]
 	if not (lower.contains(ship_l) or lower.contains(ship_short) or lower.contains("that crate") or lower.contains("your crate") or lower.contains("your ship") or lower.contains("your rig")):
@@ -8051,22 +8054,6 @@ func _explain_mechanic_line_rejection(line: String, ship: String, worst_tier: St
 		var npc_words = target_npc.split(" ")
 		if not lower.contains(target_npc) and not lower.contains(npc_words[0]):
 			return "Failed to mention the contact ('" + target_npc + "')."
-	else:
-		var rep_words: Array = ["reputation", "rep sheet", "rep", "watchlist", "hostile", "trusted", "allied", "friendly", "cordial", "enemy", "scorch", "wanted", "marked", "neutral"]
-		var has_rep: bool = false
-		for w in rep_words:
-			if lower.contains(w):
-				has_rep = true
-				break
-		var has_credits: bool = lower.contains("credit") or lower.contains("sc") or lower.contains("wallet") or lower.contains("broke") or lower.contains("rich")
-		if not has_rep:
-			if worst_tier != "neutral" and lower.contains(worst_tier):
-				has_rep = true
-			elif best_tier != "neutral" and lower.contains(best_tier):
-				has_rep = true
-		if not (has_rep or has_credits):
-			return "Failed to reference reputation tier or credit count."
-			
 	var kaelen_tells: Array = ["best friend", "stay put", "sit tight", "wait here", "i'll fetch", "i'll grab", "hold on", "hold here", "stay here", "shiny"]
 	for tell in kaelen_tells:
 		if lower.contains(tell):
@@ -8076,6 +8063,28 @@ func _explain_mechanic_line_rejection(line: String, ship: String, worst_tier: St
 		return "Length out of bounds."
 		
 	return ""
+
+
+func _mechanic_faction_subtext(worst_tier: String, best_tier: String) -> String:
+	if worst_tier in ["sworn enemy", "hostile", "unwelcome"]:
+		return "People around the docks think the pilot has burned a serious bridge."
+	if best_tier in ["allied", "trusted", "friendly"]:
+		return "People around the docks think the pilot has useful friends in high places."
+	return "The pilot is still an unknown quantity around these docks."
+
+
+static func _mechanic_line_leaks_faction_standing(line: String) -> bool:
+	var ui_label := RegEx.new()
+	ui_label.compile("(?i)\\b(?:reputation|rep(?:\\s+sheet)?|faction\\s+standing|your\\s+standing|standing\\s+with|(?:wary|neutral|hostile|friendly|trusted|allied|cordial|unwelcome|sworn\\s+enemy)\\s+(?:rep(?:utation)?|standing|tier|rank|score))\\b")
+	if ui_label.search(line) != null:
+		return true
+	var standing_value := RegEx.new()
+	standing_value.compile("(?i)\\b(?:rep(?:utation)?|standing|faction score|rank|points)\\b[^.!?\\n]{0,28}[-+]?\\d+")
+	if standing_value.search(line) != null:
+		return true
+	var faction_value := RegEx.new()
+	faction_value.compile("(?i)\\b(?:zenith|aurelia|vanguard)\\b[^.!?\\n]{0,18}(?:score|standing|rep(?:utation)?|[:=])[^.!?\\n]{0,10}[-+]?\\d+")
+	return faction_value.search(line) != null
 
 # Pick a canned line.
 func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary = {}) -> String:
