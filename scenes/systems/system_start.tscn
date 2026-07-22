@@ -95,6 +95,7 @@ shape = SubResource("SphereShape3D_rocky")
 
 [node name="Station" parent="." groups=["primary_station"] instance=ExtResource("4_station")]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 180)
+display_name = "GREYWAKE STATION"
 world_id = "station.start.main"
 
 [node name="IronReachOutpost" parent="." instance=ExtResource("4_station")]
