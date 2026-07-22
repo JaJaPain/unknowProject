@@ -5795,6 +5795,7 @@ func _capture_global_state() -> Dictionary:
 		"combat_tutorial_seen": GlobalState.combat_tutorial_seen,
 		"kaelen_arrival_systems_seen": GlobalState.kaelen_arrival_systems_seen.duplicate(),
 		"campaign_seed": GlobalState.campaign_seed,
+		"nova_repair_warning_rotation": GlobalState.nova_repair_warning_rotation.duplicate(true),
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -5840,6 +5841,12 @@ func _apply_global_state(state: Dictionary) -> void:
 	for system_id in state.get("kaelen_arrival_systems_seen", []):
 		GlobalState.kaelen_arrival_systems_seen.append(str(system_id))
 	GlobalState.campaign_seed = int(state.get("campaign_seed", 0))
+	var saved_repair_rotation: Dictionary = state.get("nova_repair_warning_rotation", {}) \
+		if state.get("nova_repair_warning_rotation", {}) is Dictionary else {}
+	GlobalState.nova_repair_warning_rotation = {
+		"yellow": max(0, int(saved_repair_rotation.get("yellow", 0))),
+		"red": max(0, int(saved_repair_rotation.get("red", 0))),
+	}
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:

@@ -1601,6 +1601,10 @@ var story_map_highlight: Dictionary = {}   # {system_id: true, ...} — systems 
 # campaign produces different systems even from the same gate destination IDs.
 var campaign_seed: int = 0
 var ship_transponder_code: String = ""
+# Campaign-persisted round-robin cursors for N.O.V.A.'s authored repair-bay
+# departure warnings. Kept outside Nova so a scene reload/restart cannot repeat
+# the opening line before a band has completed its full pool.
+var nova_repair_warning_rotation: Dictionary = {"yellow": 0, "red": 0}
 
 # Non-upgradeable baseline
 var damage: float = weapon_damage # Legacy support until swapped
@@ -2307,6 +2311,7 @@ func reset_for_restart():
 	story_forced_anomaly = {}
 	story_planted_npc = {}
 	story_map_highlight = {}
+	nova_repair_warning_rotation = {"yellow": 0, "red": 0}
 	# New seed so procedural systems differ across campaigns
 	campaign_seed = randi()
 	# Reset reputations
@@ -2323,6 +2328,17 @@ func reset_for_restart():
 	# Reset kill tracking
 	faction_kills = { "zenith": 0, "aurelia": 0, "vanguard": 0 }
 	GlobalState.trace("[GlobalState] State reset for new game.")
+
+
+func next_nova_repair_warning_index(band: String, pool_size: int) -> int:
+	if pool_size <= 0:
+		return 0
+	var clean_band := band.strip_edges().to_lower()
+	if clean_band not in ["yellow", "red"]:
+		return 0
+	var current := posmod(int(nova_repair_warning_rotation.get(clean_band, 0)), pool_size)
+	nova_repair_warning_rotation[clean_band] = (current + 1) % pool_size
+	return current
 
 
 # ── Ship Upgrade Logic ────────────────────────────────────────────────────────

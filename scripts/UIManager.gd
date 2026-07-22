@@ -173,6 +173,9 @@ var _mechanic_request_id: int = 0
 # same line when the player toggles between Services and Maintenance
 # submenus (which both call _render_mechanic_intro).
 var _last_played_mechanic_line: String = ""
+# Tracks whether this docking visit used station repair services. N.O.V.A.'s
+# departure warning only applies when the player ignores an available repair.
+var _repaired_this_dock: bool = false
 
 # Mechanic pickup-offer state.
 var _mechanic_pickup_offer: Dictionary = {}
@@ -3888,6 +3891,7 @@ func toggle_dock_menu(
 					Nova.on_docked()
 			if not _was_docked or procedure_completed:
 				fresh_dock = true
+				_repaired_this_dock = false
 				# Fresh dock: lounge social session state resets (completion rep
 				# bumps and drinks are once per contact per DOCK, not per open).
 				_lounge_convo_done.clear()
@@ -8453,6 +8457,10 @@ func undock_player():
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	if is_instance_valid(Nova):
+		Nova.warn_unrepaired_undock(
+			_current_station_has_repair_services(),
+			_repaired_this_dock
+		)
 		Nova.on_undock()  # may welcome the captain back if they were parked a while
 	var station_before_undock := current_station
 	var game_root := get_tree().current_scene
@@ -10213,10 +10221,17 @@ func _repair_ship():
 			
 	if repaired:
 		AudioManager.play_repair()
+		_repaired_this_dock = true
 			
 	# Update HUD and button state
 	_update_hud_health()
 	_update_repair_button()
+
+
+func _current_station_has_repair_services() -> bool:
+	return current_station != null \
+		and is_instance_valid(current_station) \
+		and str(current_station.get("station_type")) != "outpost"
 
 func set_overview_collapsed(collapsed: bool):
 	overview_collapsed = collapsed

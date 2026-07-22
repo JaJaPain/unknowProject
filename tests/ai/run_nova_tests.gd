@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_global_speech_budget()
 	_test_semantic_movement_consumes_banks_or_stays_silent()
 	_test_repeated_events_mostly_produce_silence()
+	_test_repair_aware_undock_warning_rotation()
 	_test_gate_glitch_bank_is_protected()
 
 	if _failures.is_empty():
@@ -310,6 +311,78 @@ func _test_repeated_events_mostly_produce_silence() -> void:
 		"Six instant docks should produce exactly one line, got %d: %s"
 			% [spoken.size(), str(spoken)]
 	)
+
+
+func _test_repair_aware_undock_warning_rotation() -> void:
+	var nova: Node = NovaType.new()
+	var gs = root.get_node("GlobalState")
+	var previous_player = gs.player
+	var previous_rotation: Dictionary = gs.nova_repair_warning_rotation.duplicate(true)
+	var stub := GDScript.new()
+	stub.source_code = (
+		"extends Node3D\n"
+		+ "var destroyed := false\n"
+		+ "var is_docked := true\n"
+		+ "var health := 55.0\n"
+		+ "var max_health := 100.0\n"
+	)
+	stub.reload()
+	var dummy_player: Node3D = stub.new()
+	gs.player = dummy_player
+	gs.nova_repair_warning_rotation = {"yellow": 0, "red": 0}
+
+	var first_yellow := str(nova.warn_unrepaired_undock(true, false))
+	var second_yellow := str(nova.warn_unrepaired_undock(true, false))
+	_expect(
+		NovaType.REPAIR_WARNING_YELLOW_LINES.has(first_yellow)
+			and NovaType.REPAIR_WARNING_YELLOW_LINES.has(second_yellow)
+			and first_yellow != second_yellow,
+		"Yellow repair warnings must use a non-repeating round-robin pool."
+	)
+	_expect(
+		int(gs.nova_repair_warning_rotation.get("yellow", -1)) == 2,
+		"Yellow repair-warning cursor did not advance persistently."
+	)
+	dummy_player.health = 20.0
+	var red := str(nova.warn_unrepaired_undock(true, false))
+	_expect(
+		NovaType.REPAIR_WARNING_RED_LINES.has(red)
+			and int(gs.nova_repair_warning_rotation.get("red", -1)) == 1,
+		"Red repair warning did not use its independent persistent cursor."
+	)
+	_expect(
+		nova.warn_unrepaired_undock(false, false).is_empty()
+			and nova.warn_unrepaired_undock(true, true).is_empty(),
+		"Repair warning must stay silent without station repairs or after a repair visit."
+	)
+	_expect(
+		NovaType.repair_warning_band(100.0, 100.0).is_empty()
+			and NovaType.repair_warning_band(60.0, 100.0) == "yellow"
+			and NovaType.repair_warning_band(25.0, 100.0) == "red",
+		"Repair warning health bands do not match the yellow/red contract."
+	)
+	var root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(root_file != null, "Could not inspect repair-warning save persistence.")
+	if root_file != null:
+		var root_source := root_file.get_as_text()
+		_expect(
+			root_source.count("nova_repair_warning_rotation") >= 2,
+			"Repair-warning round-robin cursor is not captured and restored with the campaign."
+		)
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(ui_file != null, "Could not inspect repair-aware undock wiring.")
+	if ui_file != null:
+		var ui_source := ui_file.get_as_text()
+		_expect(
+			ui_source.contains("Nova.warn_unrepaired_undock")
+				and ui_source.contains("_current_station_has_repair_services")
+				and ui_source.contains("_repaired_this_dock = true"),
+			"Undock does not pass repair-service and repair-visit state to N.O.V.A."
+		)
+	gs.player = previous_player
+	gs.nova_repair_warning_rotation = previous_rotation
+	dummy_player.free()
+	nova.free()
 
 
 # Protected special bank: gate-glitch lines are only served on an explicit

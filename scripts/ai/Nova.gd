@@ -111,8 +111,40 @@ const GATE_LINE_COOLDOWN_MS := 60000  # not twice within a minute of hopping gat
 
 const HULL_CRITICAL_RATIO := 0.25     # hull at/under 25% trips her "we both die" panic
 const HULL_WARN_COOLDOWN_MS := 15000
+const REPAIR_WARNING_RED_RATIO := 0.25
+const REPAIR_WARNING_YELLOW_RATIO := 0.60
 const ARRIVAL_CHANCE := 0.6
 const ARRIVAL_COOLDOWN_MS := 20000
+
+const REPAIR_WARNING_YELLOW_LINES: Array[String] = [
+	"Captain, the repair bay is right there. Leaving with my hull dented feels needlessly personal.",
+	"We are departing with preventable damage. I admire your commitment to making maintenance dramatic.",
+	"That station repairs ships. I am a ship. The connection appears to have escaped you.",
+	"My hull is still in the yellow, Captain. Perhaps we could try the radical idea of fixing it?",
+	"You are clearing the dock with my plating compromised. Bold. Economical only if dying is free.",
+	"Repair services were available. We selected thrust instead. I will add that to the incident report.",
+	"Captain, I have several fresh dents and a repair shop behind us. This is not optimal routing.",
+	"Leaving now means trusting the next hostile to be considerate. I find that optimistic.",
+	"The repair bay had tools, parts, and a very clear sign. We chose none of them.",
+	"My hull is asking for maintenance. You are answering with acceleration. Interesting management style.",
+	"We could have repaired before launch. Instead, we are taking the scenic route to another warning light.",
+	"I remain functional, Captain. That is not the same as being ready for your decisions.",
+]
+
+const REPAIR_WARNING_RED_LINES: Array[String] = [
+	"Captain, my hull is in the red and you are leaving a repair bay. Are you trying to turn me into scrap?",
+	"No. Absolutely not. The repair shop is behind us and my structural integrity is an insult.",
+	"We are one bad hit from becoming a cautionary tale, and you declined the mechanic. Inspired.",
+	"My hull is red. Red means stop making choices with my body, Captain.",
+	"You are launching a damaged ship from a repair station. I would call that reckless, but reckless has standards.",
+	"Captain, repair me before you take me somewhere that shoots back. This should not require a briefing.",
+	"I am actively falling apart, and you are paying for departure instead of repairs. I resent the budget priorities.",
+	"The station can fix my hull. You are choosing to test whether vacuum is cheaper. It is not.",
+	"My systems are flashing red. If this is a confidence exercise, I fail it completely.",
+	"Leaving now with my hull this damaged is not daring. It is just rude.",
+	"Captain, I would like to remain a ship rather than a loose collection of expensive memories.",
+	"Repair bay. Red hull. Two facts. Please connect them before something else connects with us.",
+]
 
 # Global "she has spoken enough recently" budget, on top of each beat's own
 # cooldown. Casual lines (IDLE/NAV) are dropped when she's said 3 things in
@@ -646,6 +678,42 @@ func on_undock() -> void:
 	_docked_since_ms = 0
 	if was_parked:
 		welcome_back()
+
+
+static func repair_warning_band(health: float, max_health: float) -> String:
+	if max_health <= 0.0:
+		return ""
+	var ratio := clampf(health / max_health, 0.0, 1.0)
+	if ratio <= REPAIR_WARNING_RED_RATIO:
+		return "red"
+	if ratio <= REPAIR_WARNING_YELLOW_RATIO:
+		return "yellow"
+	return ""
+
+
+# Called before the dock releases the player. These lines are fully authored so
+# a repair reminder never waits on a model or competes with narrative work.
+func warn_unrepaired_undock(repair_service_available: bool, repaired_this_visit: bool) -> String:
+	if not repair_service_available or repaired_this_visit:
+		return ""
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")):
+		return ""
+	var band := repair_warning_band(
+		float(p.get("health")),
+		float(p.get("max_health"))
+	)
+	if band.is_empty():
+		return ""
+	var lines: Array[String] = REPAIR_WARNING_RED_LINES if band == "red" else REPAIR_WARNING_YELLOW_LINES
+	var index := GlobalState.next_nova_repair_warning_index(band, lines.size())
+	var line := lines[index]
+	speak(
+		line,
+		Severity.THREAT if band == "red" else Severity.COMBAT,
+		expression_for_event("danger") if band == "red" else expression_for_event("worried")
+	)
+	return line
 
 
 # Occasional "welcome back, Captain" — used on a long-dock undock and on loading a
