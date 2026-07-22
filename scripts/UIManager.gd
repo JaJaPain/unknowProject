@@ -81,7 +81,7 @@ var _lounge_dock_preparation_serial := 0
 const DOCK_TRACTOR_PULL_SECONDS := 4.0
 const DOCK_CLAMP_SECONDS := 3.0
 const DOCK_PRESSURIZE_SECONDS := 3.0
-const STATION_WELCOME_HOLD_SECONDS := 2.5
+const STATION_WELCOME_MAX_WAIT_SECONDS := 12.0
 const STATION_WELCOME_FADE_SECONDS := 0.55
 const DOCK_CLEARANCE_LINES: Array[String] = [
 	"{call}, you are cleared for docking. Hold steady while we bring you into the berth.",
@@ -3980,11 +3980,16 @@ func _ensure_station_welcome_overlay() -> void:
 	if station_welcome_overlay and is_instance_valid(station_welcome_overlay):
 		return
 	station_welcome_overlay = Panel.new()
-	station_welcome_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# This is the station's first panel, not a full-screen interruption. It uses
+	# the same bounds as the Services panel it will reveal after N.O.V.A. lands.
+	station_welcome_overlay.anchor_left = 0.3
+	station_welcome_overlay.anchor_right = 0.7
+	station_welcome_overlay.anchor_top = 0.25
+	station_welcome_overlay.anchor_bottom = 0.75
 	station_welcome_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	station_welcome_overlay.z_index = 100
+	station_welcome_overlay.z_index = 2
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.01, 0.025, 0.05, 0.94)
+	style.bg_color = Color(0.025, 0.05, 0.09, 0.96)
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2
@@ -3995,10 +4000,10 @@ func _ensure_station_welcome_overlay() -> void:
 
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_CENTER)
-	box.offset_left = -360.0
-	box.offset_right = 360.0
-	box.offset_top = -86.0
-	box.offset_bottom = 86.0
+	box.offset_left = -240.0
+	box.offset_right = 240.0
+	box.offset_top = -54.0
+	box.offset_bottom = 54.0
 	box.add_theme_constant_override("separation", 12)
 	station_welcome_overlay.add_child(box)
 
@@ -4039,18 +4044,35 @@ func _show_station_welcome(station: Node3D, is_outpost: bool) -> void:
 	station_welcome_overlay.modulate.a = 1.0
 	station_welcome_overlay.visible = true
 	_clear_intro_handhold_arrow()
-	await get_tree().create_timer(STATION_WELCOME_HOLD_SECONDS, true, false, true).timeout
-	if serial != _station_welcome_serial or not is_instance_valid(station_welcome_overlay):
+	# N.O.V.A.'s dock line has just been requested. Do not reveal Services on a
+	# fixed timer and cut her off; her real playback completion owns the release.
+	if is_instance_valid(SpeechService) and SpeechService.has_signal("playback_finished"):
+		SpeechService.playback_finished.connect(
+			_release_station_welcome.bind(serial),
+			CONNECT_ONE_SHOT
+		)
+	get_tree().create_timer(
+		STATION_WELCOME_MAX_WAIT_SECONDS,
+		true,
+		false,
+		true
+	).timeout.connect(_release_station_welcome.bind(serial))
+
+
+func _release_station_welcome(serial: int) -> void:
+	if serial != _station_welcome_serial or not _station_welcome_active \
+			or not is_instance_valid(station_welcome_overlay):
 		return
+	_station_welcome_active = false
 	var fade := station_welcome_overlay.create_tween().set_ignore_time_scale(true)
 	fade.tween_property(station_welcome_overlay, "modulate:a", 0.0, STATION_WELCOME_FADE_SECONDS)
-	await fade.finished
-	if serial != _station_welcome_serial or not is_instance_valid(station_welcome_overlay):
-		return
-	station_welcome_overlay.visible = false
-	_station_welcome_active = false
-	_reveal_dock_panel()
-	_update_intro_handhold()
+	fade.tween_callback(func() -> void:
+		if serial != _station_welcome_serial or not is_instance_valid(station_welcome_overlay):
+			return
+		station_welcome_overlay.visible = false
+		_reveal_dock_panel()
+		_update_intro_handhold()
+	)
 
 
 func _dismiss_station_welcome() -> void:
@@ -9081,6 +9103,11 @@ func _update_intro_handhold() -> void:
 		set_overview_collapsed(false)
 	var next_button: Button = null
 	var arrow_visible := false
+	if _intro_dock_command_issued and not (dock_panel and dock_panel.visible):
+		# The player already chose Dock. Until the station screen is available,
+		# never fall back to the overview arrow and send them backwards a step.
+		_clear_intro_handhold_arrow()
+		return
 	if _intro_handhold_active() and _intro_popup_dismissed():
 		if dock_panel and dock_panel.visible and agent_service_btn and agent_service_btn.visible:
 			next_button = agent_service_btn

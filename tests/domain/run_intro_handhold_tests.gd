@@ -60,17 +60,20 @@ func _test_station_welcome_holds_dock_interaction() -> void:
 		return
 	var source := file.get_as_text()
 	_expect(
-		source.contains("const STATION_WELCOME_HOLD_SECONDS := 2.5")
+		source.contains("const STATION_WELCOME_MAX_WAIT_SECONDS := 12.0")
 			and source.contains("func _show_station_welcome")
+			and source.contains("func _release_station_welcome")
 			and source.contains("WELCOME TO\\n%s")
 			and source.contains("OUTPOST ARRIVAL")
 			and source.contains("_show_station_welcome(station, is_outpost)")
+			and source.contains("SpeechService.playback_finished.connect")
 			and source.contains("func _reveal_dock_panel"),
-		"Fresh station and outpost docks do not show a reusable welcome hold before services."
+		"Fresh station and outpost docks do not hold the station welcome until N.O.V.A. finishes speaking."
 	)
 	_expect(
 		source.contains("_docking_procedure_active or _station_welcome_active")
 			and source.contains("station_welcome_overlay.mouse_filter = Control.MOUSE_FILTER_STOP")
+			and source.contains("_intro_dock_command_issued and not (dock_panel and dock_panel.visible)")
 			and source.contains("_update_intro_handhold()"),
 		"Station welcome does not block click-through or suppress the tutorial handhold until services appear."
 	)
