@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_turn_in_and_reveal_groups_are_explicit()
 	_test_existing_handoff_paths_use_interaction_constants()
 	_test_story_manager_uses_scoped_handoff_pools()
+	_test_handoff_batches_are_serialized_and_deferred_for_campaign_bible()
 	_test_kaelen_prompt_packet_includes_safe_context_without_secret_leaks()
 	_test_kaelen_turn_in_outcome_profile_classifies_variants()
 	_test_kaelen_relationship_events_drive_future_tone()
@@ -144,6 +145,24 @@ func _test_story_manager_uses_scoped_handoff_pools() -> void:
 			and source.contains("queue_kaelen_handoff_pool_refill")
 			and source.contains("refill_kaelen_handoff_pool_from_lines"),
 		"StoryManager does not key Kaelen handoff pools by story/system/relationship scope."
+	)
+
+
+func _test_handoff_batches_are_serialized_and_deferred_for_campaign_bible() -> void:
+	var file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect Kaelen handoff batch scheduling.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("_kaelen_handoff_batch_queue")
+			and source.contains("_kaelen_handoff_batch_in_flight")
+			and source.contains("func _process_next_kaelen_handoff_batch")
+			and source.contains("if campaign_bible_priority_active:")
+			and source.contains("Deferring Kaelen handoff batch while campaign bible is generating")
+			and source.contains("func _finish_kaelen_handoff_batch")
+			and source.contains("call_deferred(\"_process_next_kaelen_handoff_batch\")"),
+		"Kaelen handoff batches are not serialized and deferred behind campaign-bible priority."
 	)
 
 

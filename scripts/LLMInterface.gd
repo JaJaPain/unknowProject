@@ -64,6 +64,9 @@ var _quest_candidate_context: Dictionary = {}
 var _quest_candidate_attempts_started: int = 0
 var _quest_candidate_results: Array[Dictionary] = []
 var _quest_candidate_requests: Array[HTTPRequest] = []
+var _kaelen_handoff_batch_queue: Array[Dictionary] = []
+var _kaelen_handoff_batch_in_flight: bool = false
+var _kaelen_handoff_batch_defer_scheduled: bool = false
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
 # Persistent counters in user://kaelen_intro_stats.json. Tracks how often the
@@ -6496,9 +6499,58 @@ func request_kaelen_handoff_batch(
 	count: int,
 	callback: Callable
 ) -> void:
-	if _skip_for_campaign_bible_priority("pickup_handoff"):
-		callback.call([])
+	_kaelen_handoff_batch_queue.append({
+		"agent_name": agent_name,
+		"agent_role": agent_role,
+		"faction": faction,
+		"story_context": story_context,
+		"count": count,
+		"callback": callback,
+	})
+	_process_next_kaelen_handoff_batch()
+
+
+func _process_next_kaelen_handoff_batch() -> void:
+	if _kaelen_handoff_batch_in_flight or _kaelen_handoff_batch_queue.is_empty():
 		return
+	if campaign_bible_priority_active:
+		if _kaelen_handoff_batch_defer_scheduled:
+			return
+		_kaelen_handoff_batch_defer_scheduled = true
+		print("[LLMInterface] Deferring Kaelen handoff batch while campaign bible is generating.")
+		get_tree().create_timer(1.0, true, false, true).timeout.connect(
+			func() -> void:
+				_kaelen_handoff_batch_defer_scheduled = false
+				_process_next_kaelen_handoff_batch()
+		)
+		return
+	var request: Dictionary = _kaelen_handoff_batch_queue.pop_front()
+	_kaelen_handoff_batch_in_flight = true
+	_start_kaelen_handoff_batch_request(
+		str(request.get("agent_name", "")),
+		str(request.get("agent_role", "")),
+		str(request.get("faction", "")),
+		str(request.get("story_context", "")),
+		int(request.get("count", 16)),
+		request.get("callback", Callable())
+	)
+
+
+func _finish_kaelen_handoff_batch(callback: Callable, lines: Array[String]) -> void:
+	if callback.is_valid():
+		callback.call(lines)
+	_kaelen_handoff_batch_in_flight = false
+	call_deferred("_process_next_kaelen_handoff_batch")
+
+
+func _start_kaelen_handoff_batch_request(
+	agent_name: String,
+	agent_role: String,
+	faction: String,
+	story_context: String,
+	count: int,
+	callback: Callable
+) -> void:
 	var story_block := ""
 	if story_context.strip_edges() != "":
 		story_block = (
@@ -6530,12 +6582,12 @@ func request_kaelen_handoff_batch(
 			http.queue_free()
 			if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 				push_warning("[LLMInterface] Handoff batch HTTP error result=%d code=%d" % [result, code])
-				callback.call([])
+				_finish_kaelen_handoff_batch(callback, [])
 				return
 			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 			if parsed == null or not parsed is Dictionary:
 				push_warning("[LLMInterface] Handoff batch: non-dict response")
-				callback.call([])
+				_finish_kaelen_handoff_batch(callback, [])
 				return
 			var raw_text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
 			# Extract the JSON array from the response text.
@@ -6543,13 +6595,13 @@ func request_kaelen_handoff_batch(
 			var end := raw_text.rfind("]")
 			if start == -1 or end == -1 or end <= start:
 				push_warning("[LLMInterface] Handoff batch: no JSON array found in response")
-				callback.call([])
+				_finish_kaelen_handoff_batch(callback, [])
 				return
 			var arr_text := raw_text.substr(start, end - start + 1)
 			var arr: Variant = JSON.parse_string(arr_text)
 			if arr == null or not arr is Array:
 				push_warning("[LLMInterface] Handoff batch: JSON array parse failed")
-				callback.call([])
+				_finish_kaelen_handoff_batch(callback, [])
 				return
 			var lines: Array[String] = []
 			for item in (arr as Array):
@@ -6557,7 +6609,7 @@ func request_kaelen_handoff_batch(
 				if s != "":
 					lines.append(s)
 			print("[LLMInterface] Handoff batch: got %d lines for %s" % [lines.size(), agent_name])
-			callback.call(lines)
+			_finish_kaelen_handoff_batch(callback, lines)
 	)
 
 	var large_model: String = active_large_model_name if active_large_model_name != "" else LocalModelGateway.DEFAULT_LARGE_MODEL
@@ -6578,7 +6630,7 @@ func request_kaelen_handoff_batch(
 	if err != OK:
 		http.queue_free()
 		push_warning("[LLMInterface] Handoff batch: request() failed err=%d" % err)
-		callback.call([])
+		_finish_kaelen_handoff_batch(callback, [])
 
 
 func fetch_anomaly_event(

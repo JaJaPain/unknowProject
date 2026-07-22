@@ -31,6 +31,8 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ### Kaelen handoff batch intermittently returns no JSON array
 **Spotted:** 2026-07-02 (live playtest during story-wiring session)
+**Status:** Fixed in code 2026-07-22; awaiting a live regression run.
+**Resolution:** `LLMInterface` now serializes handoff batches and holds queued batches while campaign-bible priority is active, so startup/chapter batches cannot contend with one another or campaign initialization.
 **Severity:** Low — falls back gracefully (`StoryManager.generate_handoff_pool` just logs "Handoff batch returned empty" and the pool stays at its previous size), but worth root-causing.
 **Description:** During one live session, `request_kaelen_handoff_batch()` failed for all 3 faction agents (Director Voss, Captain Dask, Liaison Ryn) right after startup — two with `[LLMInterface] Handoff batch: no JSON array found in response`, one with an outright HTTP error (`result=13 code=0`). This happened concurrently with a `campaign_bible` generation request (large model) and several background-chatter caching calls (small model) all firing in the same startup window.
 **Where to look:** `LLMInterface.gd` around line 5174-5188 (`request_kaelen_handoff_batch` completion handling) and `StoryManager._trigger_handoff_pool_for_system`/`generate_handoff_pool`. Suspect Ollama resource contention from multiple concurrent requests (large model warming up while several small-model calls queue) rather than a prompt/parsing bug — worth checking if `campaign_bible_priority_active` (which already defers some other LLM calls while the bible generates) should also cover handoff batch generation.
