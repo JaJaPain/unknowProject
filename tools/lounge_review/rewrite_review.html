@@ -11,5 +11,6 @@ function render(){if(!items.length)return;let x=items[i],r=x.assistant_rewrite,s
 function advance(){let next=items.findIndex((x,n)=>n>i&&!decisions[x.id]);i=next<0?Math.min(i+1,items.length-1):next;render()}
 function load(data){items=data.items||[];i=0;decisions={};render()}
 $('previous').onclick=()=>{i=Math.max(0,i-1);render()};$('load').onchange=e=>{let f=e.target.files[0];if(f)f.text().then(x=>load(JSON.parse(x)))};
-fetch('lounge_assistant_rewrite_review.json').then(r=>r.ok?r.json():Promise.reject()).then(load).catch(()=>progress.textContent='Open this page through Lounge.bat, or choose lounge_assistant_rewrite_review.json below.');})();
+const batchFile=new URLSearchParams(location.search).get('batch')||'lounge_assistant_rewrite_review.json';
+fetch(batchFile).then(r=>r.ok?r.json():Promise.reject()).then(load).catch(()=>progress.textContent='Open this page through Lounge.bat, or choose the prepared review JSON below.');})();
 </script></body></html>

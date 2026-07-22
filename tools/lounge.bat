@@ -25,7 +25,7 @@ if not exist "%PY%" (
 echo Starting Lounge Dialogue Review...
 start "Lounge Review Server" /B "%PY%" "%ROOT%lounge_review\review_server.py"
 timeout /t 2 /nobreak >nul
-start "" "http://127.0.0.1:8765/rewrite_review.html"
+start "" "http://127.0.0.1:8765/rewrite_review.html?batch=lounge_diverse_rewrite_review.json"
 echo The review page should now be open in your browser.
 echo Keep this window open while reviewing. Close it when finished.
 pause
