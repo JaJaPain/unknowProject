@@ -115,6 +115,8 @@ func cache(
 func stop() -> void:
 	_sequential_queue.clear()
 	_sequential_active = false
+	_sequential_line_started = Callable()
+	_sequential_total_lines = 0
 	provider.stop()
 
 
@@ -248,15 +250,20 @@ func resolve_voice_profile(value: Variant) -> StringName:
 var _sequential_queue: Array[String] = []
 var _sequential_voice: StringName = KAELEN_PROFILE
 var _sequential_active: bool = false
+var _sequential_line_started: Callable = Callable()
+var _sequential_total_lines: int = 0
 
 
 func play_sequential(
 	lines: Array[String],
-	voice_profile: Variant = KAELEN_PROFILE
+	voice_profile: Variant = KAELEN_PROFILE,
+	line_started: Callable = Callable()
 ) -> void:
 	_sequential_queue = lines.duplicate()
 	_sequential_voice = resolve_voice_profile(voice_profile)
 	_sequential_active = true
+	_sequential_line_started = line_started
+	_sequential_total_lines = lines.size()
 	if not TTSInterface.audio_player.finished.is_connected(_on_sequential_finished):
 		TTSInterface.audio_player.finished.connect(_on_sequential_finished)
 	_play_next_sequential()
@@ -265,8 +272,13 @@ func play_sequential(
 func _play_next_sequential() -> void:
 	if _sequential_queue.is_empty():
 		_sequential_active = false
+		_sequential_line_started = Callable()
+		_sequential_total_lines = 0
 		return
 	var next_line := _sequential_queue.pop_front() as String
+	var line_index := _sequential_total_lines - _sequential_queue.size()
+	if _sequential_line_started.is_valid():
+		_sequential_line_started.call(line_index, _sequential_total_lines)
 	provider.play(prepare_text(next_line, _sequential_voice), _sequential_voice)
 
 

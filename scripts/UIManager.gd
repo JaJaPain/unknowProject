@@ -234,8 +234,11 @@ var agent_panel: Panel
 var agent_name_label: Label
 var agent_subtitle_label: Label
 var agent_dialogue_label: Label
+var agent_dialogue_scroll: ScrollContainer
 var agent_choices_container: VBoxContainer
 var agent_back_btn: Button
+var _kaelen_briefing_scroll_serial: int = 0
+var _kaelen_briefing_auto_scroll_done: bool = false
 
 var public_board_panel: Panel
 var public_board_list: VBoxContainer
@@ -1707,17 +1710,17 @@ func _create_dock_menu():
 	spacer.custom_minimum_size = Vector2(0, 10)
 	avbox.add_child(spacer)
 	
-	var dialogue_scroll = ScrollContainer.new()
-	dialogue_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialogue_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	avbox.add_child(dialogue_scroll)
+	agent_dialogue_scroll = ScrollContainer.new()
+	agent_dialogue_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	agent_dialogue_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	avbox.add_child(agent_dialogue_scroll)
 	
 	agent_dialogue_label = Label.new()
 	agent_dialogue_label.text = "What is your business here, pilot? If it doesn't make credits, it's not my concern."
 	agent_dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	agent_dialogue_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	agent_dialogue_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialogue_scroll.add_child(agent_dialogue_label)
+	agent_dialogue_scroll.add_child(agent_dialogue_label)
 	
 	agent_choices_container = VBoxContainer.new()
 	agent_choices_container.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -10384,7 +10387,19 @@ func _show_kaelen_first_briefing() -> void:
 		"So, I've actually got someone who needs something handled right now. You interested?",
 	]
 	agent_dialogue_label.text = "\n\n".join(briefing_lines)
-	SpeechService.play_sequential(briefing_lines, "voice.kaelen.v1")
+	_kaelen_briefing_scroll_serial += 1
+	_kaelen_briefing_auto_scroll_done = false
+	var scroll_serial := _kaelen_briefing_scroll_serial
+	call_deferred("_reset_agent_dialogue_scroll", scroll_serial)
+	SpeechService.play_sequential(
+		briefing_lines,
+		"voice.kaelen.v1",
+		func(line_index: int, total_lines: int) -> void:
+			if not _kaelen_briefing_auto_scroll_done \
+					and line_index == ceili(float(total_lines) / 2.0):
+				_kaelen_briefing_auto_scroll_done = true
+				_scroll_kaelen_briefing_to_bottom(scroll_serial)
+	)
 
 	for child in agent_choices_container.get_children():
 		child.queue_free()
@@ -10410,6 +10425,29 @@ func _show_kaelen_first_briefing() -> void:
 		_on_agent_back_pressed()
 	)
 	agent_choices_container.add_child(decline_btn)
+
+
+func _reset_agent_dialogue_scroll(serial: int) -> void:
+	await get_tree().process_frame
+	if serial != _kaelen_briefing_scroll_serial \
+			or agent_dialogue_scroll == null \
+			or not is_instance_valid(agent_dialogue_scroll):
+		return
+	agent_dialogue_scroll.scroll_vertical = 0
+
+
+func _scroll_kaelen_briefing_to_bottom(serial: int) -> void:
+	await get_tree().process_frame
+	if serial != _kaelen_briefing_scroll_serial \
+			or agent_dialogue_scroll == null \
+			or not is_instance_valid(agent_dialogue_scroll) \
+			or not agent_panel.visible:
+		return
+	var scrollbar := agent_dialogue_scroll.get_v_scroll_bar()
+	var target_scroll := maxf(0.0, scrollbar.max_value - scrollbar.page)
+	var scroll_tween := agent_dialogue_scroll.create_tween()
+	scroll_tween.tween_property(agent_dialogue_scroll, "scroll_vertical", target_scroll, 0.45) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _show_kaelen_return_briefing() -> void:
