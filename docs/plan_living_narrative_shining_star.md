@@ -1126,6 +1126,7 @@ Phase 9 exit gate:
 - [x] Reply clicks remain instant with Ollama stopped after preparation.
   - 2026-07-22: `run_lounge_conversation_tests.gd` now explicitly tripwires both prepared-exchange display paths: after the cached opener is shown, neither a question click nor its answer/close path may touch `LLMInterface`, request a lounge turn, or begin a preparation call. The optional second exchange can only appear if it was already ready; otherwise no button is shown.
 - [ ] NPC answers are relevant to the selected player line in 50/50 automated fixtures and >= 95% of a reviewed real-model batch.
+  - 2026-07-22: The deterministic half is now covered by a 50-case sweep: 25 unique anchored-topic answers must survive validation, while 25 unique topic-drift or out-of-character answers must be rejected. The reviewed real-model batch remains outstanding.
 - [ ] No rumor is marked heard until its delivery field is shown.
 - [x] Returning to the same NPC produces a relationship/memory-aware exchange, not a reset opener.
   - 2026-07-22: Prepared bundle prompts now receive the contact's persisted lounge memory and a private, player-safe returning-contact note. The writer must weave it in incidentally, never recap it; code-owned relationship intents continue to offer a natural “good to see you again” follow-up when warmth supports it. Coverage asserts both the memory handoff and the anti-recap writer instruction.

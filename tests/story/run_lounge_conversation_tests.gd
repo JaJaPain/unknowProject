@@ -447,6 +447,39 @@ func _test_answer_relevance_validation() -> void:
 		"Anchor token derivation was wrong: %s" % str(anchors)
 	)
 
+	# Phase 9 exit-gate fixture sweep: 25 topical answers must pass and 25
+	# topic-drift/meta answers must fail. The topic is unique per case so a
+	# broad accidental keyword cannot make this look healthier than it is.
+	for fixture_index in range(50):
+		var topic := "cargo%d" % fixture_index
+		var should_survive := fixture_index % 2 == 0
+		var answer := (
+			"%s has been delayed at the outer berth, and the crews are getting restless."
+			% topic
+		) if should_survive else (
+			"As an AI language model, I only know the gin is terrible tonight."
+			if fixture_index % 5 == 1
+			else "The bartender changed the glasses again. Everyone hates them."
+		)
+		var fixture := JSON.stringify({
+			"opener": "You look like you have questions, pilot.",
+			"a1": answer,
+			"close": "That is all I have for now.",
+		})
+		var fixture_intents := [{
+			"id": "gap:fixture.%d" % fixture_index,
+			"text": "What is happening with %s?" % topic,
+			"anchors": [topic],
+		}]
+		var fixture_result: Dictionary = ConvoType.validate_bundle_answers(
+			ConvoType.parse_bundle(fixture, "", 1), fixture_intents
+		)
+		_expect(
+			bool(fixture_result.get("ok", false)) == should_survive,
+			"Relevance fixture %d expected %s but got %s."
+				% [fixture_index, str(should_survive), str(fixture_result)]
+		)
+
 
 # Phase 9: a hook is marked heard when its opener DISPLAYS, never while
 # merely building the prompt — a failed model call must not burn the hook.
