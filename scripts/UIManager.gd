@@ -413,6 +413,7 @@ var intro_handhold_arrow: Control
 var _intro_handhold_arrow_start: Vector2 = Vector2.ZERO
 var _intro_handhold_arrow_end: Vector2 = Vector2.ZERO
 var _intro_handhold_target_button: Button = null
+var _intro_dock_command_issued: bool = false
 var combat_tutorial_overlay: Control = null
 var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the combat wheel (CombatPanel is layer 10)
 var undock_btn: Button = null
@@ -3694,6 +3695,7 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	if not is_instance_valid(station) or not is_instance_valid(ship):
 		return
 	_docking_procedure_active = true
+	_intro_dock_command_issued = false
 	_clear_intro_handhold_arrow()
 	_docking_procedure_serial += 1
 	var serial := _docking_procedure_serial
@@ -8639,6 +8641,9 @@ func _command_selected_target(mode: String) -> bool:
 		return false
 	show_target_marker(target.global_position)
 	_update_target_command_feedback()
+	if mode == "DOCK" and target == _intro_primary_station():
+		_intro_dock_command_issued = true
+		_clear_intro_handhold_arrow()
 	if target.is_in_group("station"):
 		var reason := "commanded"
 		if mode in ["APPROACH", "APPROACH_1K"]:
@@ -8916,7 +8921,8 @@ func _update_intro_handhold() -> void:
 	if _intro_handhold_active() and _intro_popup_dismissed():
 		if dock_panel and dock_panel.visible and agent_service_btn and agent_service_btn.visible:
 			next_button = agent_service_btn
-		elif _intro_primary_station_selected() and target_action_btn \
+		elif not _intro_dock_command_issued \
+				and _intro_primary_station_selected() and target_action_btn \
 				and target_action_btn.visible and not bool(target_action_btn.disabled):
 			next_button = target_action_btn
 		elif not (dock_panel and dock_panel.visible):
@@ -10375,7 +10381,7 @@ func _show_kaelen_first_briefing() -> void:
 		"Here's how this works. Factions out here, Zenith, Aurelia, Vanguard, they all need grunt work handled. Deliveries, salvage, the occasional aggressive negotiation. They post contracts through me, I find a pilot, everybody gets paid. Simple.",
 		"Now, that mining laser bolted to your ship. Technically, pulling ore without a faction permit is, let's call it frowned upon. Heavily. With fines. And guns.",
 		"But permits cost more than your ship is worth, and I happen to know a few buyers who don't ask where the rocks came from. You mine it, I move it, we split the difference. Just don't get caught lingering in someone's claim. Faction patrols out here shoot first, file paperwork never.",
-		"So, I've actually got someone who needs something handled right now. Interested?",
+		"So, I've actually got someone who needs something handled right now. You interested?",
 	]
 	agent_dialogue_label.text = "\n\n".join(briefing_lines)
 	SpeechService.play_sequential(briefing_lines, "voice.kaelen.v1")
