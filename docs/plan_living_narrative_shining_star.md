@@ -1066,7 +1066,8 @@ Primary files:
   - 2026-07-22: Added 12 authored lines per band directly in `Nova.gd`; this path has no model or cache dependency and uses warning severity so it is not suppressed by casual chatter cooldowns. The selected line now speaks while the player remains docked, so undock cleanup no longer cancels its audio.
 - [x] Select warnings with a true round-robin cursor, not random choice or immediate-repeat avoidance. Persist the campaign-scoped cursor separately for yellow and red pools so it advances across save/load, scene reload, and game restart; only reset it for a new campaign or after every line in that band has been used once.
   - 2026-07-22: `GlobalState.nova_repair_warning_rotation` advances independently by band and is captured/restored in the campaign global state. `run_nova_tests.gd` proves sequential yellow selection, independent red selection, and persistence wiring.
-- [ ] Add deterministic coverage for repair-shop gating, yellow/red wording bands, repaired-this-visit suppression, repair/undock choice callbacks, canceled-prompt suppression, and the no-model-call contract.
+- [x] Add deterministic coverage for repair-shop gating, yellow/red wording bands, repaired-this-visit suppression, repair/undock choice callbacks, canceled-prompt suppression, and the no-model-call contract.
+  - 2026-07-22: Expanded `run_nova_tests.gd` to prove green/no-shop/repaired/destroyed suppression does not consume a warning, verify distinct 12+ yellow/red pools and health bands, assert the Maintenance/Undock callbacks, and trip if either repair selector or decision path references a model request.
 
 Phase 8 exit gate:
 

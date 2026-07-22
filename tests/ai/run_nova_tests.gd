@@ -384,11 +384,35 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 			and nova.get_unrepaired_undock_warning(true, true).is_empty(),
 		"Repair warning must stay silent without station repairs or after a repair visit."
 	)
+	# Every suppressed/canceled decision path must be inert: no warning and no
+	# rotation advance. This covers healthy hull, an unavailable repair shop,
+	# repaired-this-visit, and a destroyed ship.
+	var rotation_before_suppression: Dictionary = gs.nova_repair_warning_rotation.duplicate(true)
+	dummy_player.health = 100.0
+	var healthy_suppressed: bool = nova.get_unrepaired_undock_warning(true, false).is_empty()
+	dummy_player.health = 55.0
+	var no_shop_suppressed: bool = nova.get_unrepaired_undock_warning(false, false).is_empty()
+	var repaired_suppressed: bool = nova.get_unrepaired_undock_warning(true, true).is_empty()
+	dummy_player.destroyed = true
+	var destroyed_suppressed: bool = nova.get_unrepaired_undock_warning(true, false).is_empty()
+	dummy_player.destroyed = false
+	_expect(
+		healthy_suppressed and no_shop_suppressed and repaired_suppressed
+			and destroyed_suppressed
+			and gs.nova_repair_warning_rotation == rotation_before_suppression,
+		"Suppressed repair prompts must remain silent and must not consume a round-robin line."
+	)
 	_expect(
 		NovaType.repair_warning_band(100.0, 100.0).is_empty()
 			and NovaType.repair_warning_band(60.0, 100.0) == "yellow"
 			and NovaType.repair_warning_band(25.0, 100.0) == "red",
 		"Repair warning health bands do not match the yellow/red contract."
+	)
+	_expect(
+		NovaType.REPAIR_WARNING_YELLOW_LINES.size() >= 12
+			and NovaType.REPAIR_WARNING_RED_LINES.size() >= 12
+			and NovaType.REPAIR_WARNING_YELLOW_LINES != NovaType.REPAIR_WARNING_RED_LINES,
+		"Yellow and red repair bands need separate, substantial authored comeback pools."
 	)
 	var root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
 	_expect(root_file != null, "Could not inspect repair-warning save persistence.")
@@ -423,8 +447,29 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 			"Repair prompt must block cleanup, enter Maintenance, or explicitly honor Undock anyway."
 		)
 		_expect(
-			not undock_source.contains("LLMInterface"),
-			"Repair warning flow must not start a model request at undock time."
+			ui_source.contains("func _on_nova_repair_prompt_repairs()")
+				and ui_source.contains("func _on_nova_repair_prompt_undock()")
+				and ui_source.contains("_hide_nova_repair_decision()")
+				and ui_source.contains("current_submenu = DockSubmenu.MAINTENANCE")
+				and ui_source.contains("undock_player(true)"),
+			"Repair decision callbacks must either enter Maintenance or honor Undock anyway."
+		)
+		var nova_file := FileAccess.open("res://scripts/ai/Nova.gd", FileAccess.READ)
+		var nova_source := nova_file.get_as_text() if nova_file != null else ""
+		var prompt_start := ui_source.find("func _show_nova_repair_undock_prompt")
+		var prompt_end := ui_source.find("func _on_nova_repair_prompt_repairs", prompt_start)
+		var prompt_source := ui_source.substr(prompt_start, prompt_end - prompt_start) \
+			if prompt_start >= 0 and prompt_end > prompt_start else ""
+		var selector_start := nova_source.find("func get_unrepaired_undock_warning")
+		var selector_end := nova_source.find("func warn_unrepaired_undock", selector_start)
+		var selector_source := nova_source.substr(selector_start, selector_end - selector_start) \
+			if selector_start >= 0 and selector_end > selector_start else ""
+		_expect(
+			not undock_source.contains("LLMInterface")
+				and not prompt_source.contains("LLMInterface")
+				and not selector_source.contains("LLMInterface")
+				and not selector_source.contains("request_"),
+			"Repair warning selection and choices must never start a model request."
 		)
 	gs.player = previous_player
 	gs.nova_repair_warning_rotation = previous_rotation
