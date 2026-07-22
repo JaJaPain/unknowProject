@@ -26,6 +26,7 @@ func _initialize() -> void:
 	_test_repeated_events_mostly_produce_silence()
 	_test_repair_aware_undock_warning_rotation()
 	_test_gate_glitch_bank_is_protected()
+	_test_mission_hunt_reactions_are_prepared_and_progressive()
 
 	if _failures.is_empty():
 		print("[PASS] Nova tests")
@@ -115,6 +116,34 @@ func _test_campaign_quirk_lifecycle() -> void:
 		not bool(nova._maybe_speak_quirk()),
 		"An empty quirk must never produce a quirk line."
 	)
+	nova.free()
+
+
+func _test_mission_hunt_reactions_are_prepared_and_progressive() -> void:
+	var nova: Node = NovaType.new()
+	var gs = root.get_node("GlobalState")
+	var hunt := {
+		"objective": {"type": "KILL_SHIPS", "target_faction": "reavers"},
+	}
+	var prepared: Dictionary = nova.prepare_mission_hunt_reaction(hunt)
+	_expect(
+		not str(prepared.get("nova_mission_hunt_reaction", "")).is_empty()
+			and int(prepared.get("nova_mission_hunt_reaction_stage", -1)) == 0,
+		"First-system hunt contracts should pre-cache a pacifist N.O.V.A. reaction."
+	)
+	_expect(
+		str(hunt.get("nova_mission_hunt_reaction", "")).is_empty(),
+		"Preparing a mission reaction must not mutate the source offer."
+	)
+	var seen: Array = gs.get("kaelen_arrival_systems_seen")
+	seen.clear()
+	seen.append_array(["system.one", "system.two", "system.three"])
+	var late: Dictionary = nova.prepare_mission_hunt_reaction(hunt)
+	_expect(
+		int(late.get("nova_mission_hunt_reaction_stage", -1)) == 2,
+		"N.O.V.A. should not become combat-eager before the fourth system."
+	)
+	seen.clear()
 	nova.free()
 
 

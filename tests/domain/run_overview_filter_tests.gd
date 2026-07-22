@@ -27,6 +27,12 @@ func _initialize() -> void:
 				and source.contains("if _overview_prioritize_mission_targets:"),
 			"Mission-hostile control does not move active hunt targets to the top."
 		)
+		_expect(
+			source.contains("Mission hunt target red")
+				and source.contains("func _maybe_announce_mission_hunt_targets")
+				and source.contains("Nova.announce_mission_hunt_targets"),
+			"Mission targets are not visibly highlighted and announced after they appear."
+		)
 	if _failures.is_empty():
 		print("[PASS] Overview filter tests")
 		quit(0)

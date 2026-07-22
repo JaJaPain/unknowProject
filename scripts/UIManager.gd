@@ -3401,6 +3401,7 @@ func update_overview_list(entities: Array):
 	for entity in filtered_entities:
 		if entity and is_instance_valid(entity) and entity != GlobalState.player \
 				and not _is_hidden_gate(entity):
+			var is_mission_target := _is_overview_mission_target(entity)
 			var btn = Button.new()
 			btn.custom_minimum_size = Vector2(0, 30)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -3429,7 +3430,7 @@ func update_overview_list(entities: Array):
 			
 			var name_lbl = Label.new()
 			var label_text = entity.get("display_name") if entity.get("display_name") else entity.name
-			name_lbl.text = "  " + label_text # Add a little padding space
+			name_lbl.text = "  " + ("⌖ " if is_mission_target else "") + label_text
 			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3511,6 +3512,8 @@ func update_overview_list(entities: Array):
 					row_color = Color(0.2, 0.85, 1.0)
 			elif type_str == "Celestial":
 				row_color = Color(0.35, 0.65, 1.0)    # Soft celestial blue
+			elif is_mission_target:
+				row_color = Color(1.0, 0.27, 0.22)   # Mission hunt target red
 			elif type_str == "Anomaly":
 				row_color = Color(1.0, 0.78, 0.1)     # Amber — unknown contact
 			else:
@@ -3524,7 +3527,7 @@ func update_overview_list(entities: Array):
 			btn.set_meta("entity_ref", entity)
 			btn.set_meta("entity_name", entity.name)
 			btn.set_meta("type_str", type_str)
-			btn.set_meta("is_mission_target", _is_overview_mission_target(entity))
+			btn.set_meta("is_mission_target", is_mission_target)
 			btn.set_meta("distance_val", 0.0) # Updated dynamically in _update_overview_distances
 			btn.set_meta("dist_label_ref", dist_lbl)
 			btn.set_meta("name_label_ref", name_lbl)
@@ -3584,7 +3587,7 @@ func _update_overview_distances(delta: float = 999.0):
 				if is_instance_valid(name_lbl):
 					var targeting_player: bool = entity.is_in_group("ship") \
 						and entity.get("target") == GlobalState.player
-					if targeting_player:
+					if targeting_player or bool(btn.get_meta("is_mission_target", false)):
 						name_lbl.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25))
 					else:
 						name_lbl.remove_theme_color_override("font_color")
@@ -8777,6 +8780,9 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		GlobalState.player.global_position += Vector3(0, 0, -15.0)
 		GlobalState.player.is_docked = false
 		GlobalState.player.nav_mode = "MANUAL"
+		# A mission's targets may have spawned while the player was docked. Rebuild
+		# now so their red hunt rows and N.O.V.A.'s prepared reaction arrive together.
+		refresh_overview()
 	_maybe_play_intro_repair_target_tip()
 
 
@@ -8793,6 +8799,11 @@ func _maybe_play_intro_repair_target_tip() -> void:
 		return
 	StoryManager.story_state["intro_repair_target_tip_delivered"] = true
 	StoryManager._save_story_state()
+	# The authored starter explanation is itself this mission's N.O.V.A. reaction;
+	# retire the prepared generic hunt line so the player does not get two speeches
+	# about the same red Reaver immediately after repairs.
+	if QuestManager.is_quest_active():
+		QuestManager.active_quest["nova_mission_hunt_reaction_played"] = true
 	Nova.speak(
 		"I am not sure I am happy about being used to blow someone up, but I highlighted that ship in red on our overview. Click it, and if you decide to blow it up, that is on your conscience, not mine. I hope you know what you are doing.",
 		Nova.Severity.THREAT,
@@ -9947,6 +9958,27 @@ func refresh_overview():
 			entities.append(node)
 			
 	update_overview_list(entities)
+	_maybe_announce_mission_hunt_targets(entities)
+
+
+# The list has just been rebuilt, so a matching ship is genuinely visible before
+# N.O.V.A. comments. This also waits for undock if the contract targets spawned
+# while the player was still reading the station menu.
+func _maybe_announce_mission_hunt_targets(entities: Array) -> void:
+	if not is_instance_valid(Nova) or not QuestManager.is_quest_active() \
+			or QuestManager.is_quest_completed():
+		return
+	var player := GlobalState.player
+	if player == null or not is_instance_valid(player) or bool(player.get("is_docked")):
+		return
+	var mission := QuestManager.active_quest
+	if bool(mission.get("nova_mission_hunt_reaction_played", false)):
+		return
+	for entity in entities:
+		if _is_overview_mission_target(entity):
+			Nova.announce_mission_hunt_targets(mission)
+			mission["nova_mission_hunt_reaction_played"] = true
+			return
 
 func _auto_select_route_gate() -> void:
 	if not branch_map or branch_map.planned_route.size() < 2:
@@ -10931,6 +10963,8 @@ func _show_kaelen_intro_quest_offer() -> void:
 			"reward_credits_multiplier": 1.0,
 		},
 	}
+	if is_instance_valid(Nova):
+		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
 
 	var take_btn := Button.new()
 	take_btn.text = "I'll take it."
@@ -11013,6 +11047,8 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 					"No local faction contact is available for contract work at this station."
 				)
 		return
+	if is_instance_valid(Nova):
+		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
 	cached_quest_data = quest_data
 	cached_quest_is_fallback = is_fallback
 	cached_quest_context = request_context
@@ -11643,6 +11679,8 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 
 func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	SpeechService.start_interaction("Select Choice: " + choice.get("text", ""))
+	if is_instance_valid(Nova):
+		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
 	
 	cached_quest_data = {}
 	cached_quest_is_fallback = false

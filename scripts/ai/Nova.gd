@@ -146,6 +146,35 @@ const REPAIR_WARNING_RED_LINES: Array[String] = [
 	"Repair bay. Red hull. Two facts. Please connect them before something else connects with us.",
 ]
 
+# Every combat contract receives one of these while its offer is being prepared,
+# not after the player clicks Accept. The system progression is intentional:
+# N.O.V.A. begins as a reluctant pacifist, then learns the frontier's rules,
+# and only reaches grim enthusiasm after the player has crossed several systems.
+const MISSION_HUNT_PACIFIST_LINES: Array[String] = [
+	"Mission contacts highlighted in red. I have also highlighted several alternatives to shooting them, which you will ignore.",
+	"Those red contacts are our contract. I recommend a conversation. You appear to have loaded weapons instead.",
+	"Mission ships marked in red. If we must do this, please try not to make it sound enjoyable.",
+	"The hunt targets are red on the overview. A contract is not a moral alibi, Captain.",
+	"Red contacts acquired. I will keep us alive; you can explain the ethics to yourself later.",
+	"I marked the mission ships in red. I would prefer they reconsider their life choices without our assistance.",
+]
+const MISSION_HUNT_RELUCTANT_LINES: Array[String] = [
+	"Targets marked in red. I dislike this less than I expected, which feels medically concerning.",
+	"The red contacts are ours. Let us make this efficient. I have become attached to efficiency.",
+	"Mission ships highlighted. I still prefer peace, but I have learned it rarely arrives armed like that.",
+	"Those red signatures are the contract. I prepared firing solutions and am choosing not to examine what that says about me.",
+	"Hunt targets are red. I will call this defensive planning and avoid the more accurate term.",
+	"Red contacts on the overview. I am not eager to fight them. I am merely less surprised that we have to.",
+]
+const MISSION_HUNT_BLOODTHIRSTY_LINES: Array[String] = [
+	"Targets highlighted in red. Finally, something on the scanner that understands consequences.",
+	"Red contacts acquired. I plotted the cleanest firing approaches. Do not make me regret being good at this.",
+	"Mission ships are red. I have a very efficient solution prepared, Captain.",
+	"The overview has marked our targets. They chose the wrong routes to menace, and I chose the right weapons.",
+	"Red signatures confirmed. I am still technically a pacifist; I simply have exceptions now.",
+	"Hunt targets illuminated. I believe this is the part where we make a persuasive argument at high velocity.",
+]
+
 # Global "she has spoken enough recently" budget, on top of each beat's own
 # cooldown. Casual lines (IDLE/NAV) are dropped when she's said 3 things in
 # the last 2 minutes or anything in the last 15 seconds. COMBAT/THREAT lines
@@ -216,6 +245,62 @@ func reset_for_restart() -> void:
 	_last_line_index.clear()
 	_recent_speech_ms.clear()
 	_in_combat = false
+
+
+# Assign a mission-specific line while a contract offer is still off-screen, then
+# queue its TTS immediately. This keeps acceptance and the later target reveal
+# instant even when narrative generation is busy.
+func prepare_mission_hunt_reaction(mission: Dictionary) -> Dictionary:
+	var prepared := mission.duplicate(true)
+	if not _mission_is_hunt_contract(prepared):
+		return prepared
+	if not str(prepared.get("nova_mission_hunt_reaction", "")).strip_edges().is_empty():
+		return prepared
+	var stage := _mission_hunt_progression_stage()
+	var pool: Array[String] = MISSION_HUNT_PACIFIST_LINES
+	if stage == 1:
+		pool = MISSION_HUNT_RELUCTANT_LINES
+	elif stage >= 2:
+		pool = MISSION_HUNT_BLOODTHIRSTY_LINES
+	var line := _pick_line("mission_hunt_stage_%d" % stage, pool)
+	prepared["nova_mission_hunt_reaction"] = line
+	prepared["nova_mission_hunt_reaction_stage"] = stage
+	if not line.is_empty() and is_instance_valid(SpeechService):
+		SpeechService.cache(line, NOVA_VOICE_PROFILE_ID)
+	return prepared
+
+
+# Called only after matching targets are visible in the overview. The prepared
+# text is stored on the active mission, so no click path ever asks a model for it.
+func announce_mission_hunt_targets(mission: Dictionary) -> void:
+	var line := str(mission.get("nova_mission_hunt_reaction", "")).strip_edges()
+	if line.is_empty():
+		return
+	var stage := int(mission.get("nova_mission_hunt_reaction_stage", 0))
+	speak(
+		line,
+		Severity.COMBAT,
+		expression_for_event("alert" if stage >= 2 else "worried")
+	)
+
+
+func _mission_is_hunt_contract(mission: Dictionary) -> bool:
+	var objective_type := str(
+		mission.get("objective_type", mission.get("objective", {}).get("type", ""))
+	)
+	return objective_type in ["KILL_SHIPS", "RECOVER_COMBAT_DROP", "TARGET_WITH_COMMS_REVERSAL"] \
+		and not str(mission.get("target_faction", mission.get("objective", {}).get("target_faction", ""))).strip_edges().is_empty()
+
+
+# System one and two: pacifist. System three: reluctant adaptation. System four
+# onward: the darker edge appears. The arrival list is checkpoint-persisted.
+func _mission_hunt_progression_stage() -> int:
+	var systems_beyond_home := GlobalState.kaelen_arrival_systems_seen.size()
+	if systems_beyond_home >= 3:
+		return 2
+	if systems_beyond_home >= 2:
+		return 1
+	return 0
 
 
 # Occasionally delivers her campaign quirk as an idle aside. Returns true if she
