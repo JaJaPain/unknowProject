@@ -8674,6 +8674,27 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		GlobalState.player.global_position += Vector3(0, 0, -15.0)
 		GlobalState.player.is_docked = false
 		GlobalState.player.nav_mode = "MANUAL"
+	_maybe_play_intro_repair_target_tip()
+
+
+# The starter contract becomes active while the player is still in the station.
+# If they took the sensible route and repaired first, give them one concise
+# orientation line immediately after the clamps release, with the overview now
+# open and the Reaver already highlighted by its hostile row color.
+func _maybe_play_intro_repair_target_tip() -> void:
+	if not _repaired_this_dock or not _should_flash_undock():
+		return
+	if not is_instance_valid(StoryManager) or not is_instance_valid(Nova):
+		return
+	if bool(StoryManager.story_state.get("intro_repair_target_tip_delivered", false)):
+		return
+	StoryManager.story_state["intro_repair_target_tip_delivered"] = true
+	StoryManager._save_story_state()
+	Nova.speak(
+		"I am not sure I am happy about being used to blow someone up, but I highlighted that ship in red on our overview. Click it, and if you decide to blow it up, that is on your conscience, not mine. I hope you know what you are doing.",
+		Nova.Severity.THREAT,
+		Nova.expression_for_event("worried")
+	)
 
 
 # A damaged ship at a staffed station is a player decision, not a line shouted

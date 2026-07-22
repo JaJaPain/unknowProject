@@ -8,6 +8,7 @@ func _initialize() -> void:
 	_test_station_welcome_holds_dock_interaction()
 	_test_broken_gate_storm_mix_contract()
 	_test_docked_overview_and_repair_decision_contracts()
+	_test_intro_repair_target_tip_contract()
 	_test_kaelen_intro_wording()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
 	if _failures.is_empty():
@@ -124,6 +125,31 @@ func _test_docked_overview_and_repair_decision_contracts() -> void:
 			and source.contains("REPAIRS RECOMMENDED BEFORE DEPARTURE")
 			and source.contains("_show_nova_repair_decision(line, expression)"),
 		"N.O.V.A.'s repair warning does not take over the dock panel with its two choices."
+	)
+
+
+func _test_intro_repair_target_tip_contract() -> void:
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	var story_file := FileAccess.open("res://scripts/story/StoryManager.gd", FileAccess.READ)
+	_expect(
+		ui_file != null and story_file != null,
+		"Could not inspect the post-repair starter-target guidance."
+	)
+	if ui_file == null or story_file == null:
+		return
+	var ui_source := ui_file.get_as_text()
+	var story_source := story_file.get_as_text()
+	_expect(
+		ui_source.contains("func _maybe_play_intro_repair_target_tip()")
+			and ui_source.contains("if not _repaired_this_dock or not _should_flash_undock()")
+			and ui_source.contains("intro_repair_target_tip_delivered")
+			and ui_source.contains("highlighted that ship in red on our overview")
+			and ui_source.contains("Nova.Severity.THREAT"),
+		"N.O.V.A. does not give the one-time post-repair starter-target callout."
+	)
+	_expect(
+		story_source.contains("\"intro_repair_target_tip_delivered\": false"),
+		"The post-repair starter-target callout is not persisted across restarts."
 	)
 
 
