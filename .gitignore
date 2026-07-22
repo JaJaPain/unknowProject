@@ -71,3 +71,9 @@ tools/assembler_preview/*.gd.uid
 tools/assembler_preview/inspect_engine_part.gd
 tools/assembler_preview/thruster_preview.gd
 tools/assembler_preview/thruster_preview.tscn
+
+# Local lounge-review environment and runtime checkpoints
+tools/lounge_review/.venv/
+tools/lounge_review/*_generation.log
+tools/lounge_review/*_generation_errors.log
+tools/lounge_review/generator_*.log
