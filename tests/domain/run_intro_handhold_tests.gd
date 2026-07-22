@@ -7,6 +7,7 @@ func _initialize() -> void:
 	_test_dock_command_hides_intro_arrow_until_docking()
 	_test_station_welcome_holds_dock_interaction()
 	_test_broken_gate_storm_mix_contract()
+	_test_docked_overview_and_repair_decision_contracts()
 	_test_kaelen_intro_wording()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
 	if _failures.is_empty():
@@ -104,6 +105,28 @@ func _test_broken_gate_storm_mix_contract() -> void:
 			and intro_source.contains("warp_drop_player.finished.connect(AudioManager.resume_music_after_broken_gate"),
 		"Broken-gate music does not wait for the return-to-normal-space effect before resuming."
 	)
+func _test_docked_overview_and_repair_decision_contracts() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect docked overview and repair-decision wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _set_overview_dock_locked")
+			and source.contains("overview_panel.visible = not locked")
+			and source.contains("_set_overview_dock_locked(true)")
+			and source.contains("_set_overview_dock_locked(false)"),
+		"Docking does not hard-lock and hide the overview until undock."
+	)
+	_expect(
+		source.contains("func _ensure_nova_repair_decision_panel")
+			and source.contains("nova_repair_prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)")
+			and source.contains("REPAIRS RECOMMENDED BEFORE DEPARTURE")
+			and source.contains("_show_nova_repair_decision(line, expression)"),
+		"N.O.V.A.'s repair warning does not take over the dock panel with its two choices."
+	)
+
+
 func _test_kaelen_briefing_scrolls_at_speech_midpoint() -> void:
 	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	var speech_file := FileAccess.open("res://scripts/speech/SpeechService.gd", FileAccess.READ)

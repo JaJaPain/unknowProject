@@ -43,6 +43,7 @@ var icons_sheet = preload("res://assets/icons.png")
 var overview_panel: Panel
 var overview_list: VBoxContainer
 var overview_collapsed: bool = false
+var _overview_dock_locked: bool = false
 var _overview_expanded_h: float = 0.0
 var collapse_btn: Button
 var overview_title_label: Label
@@ -69,6 +70,9 @@ var dock_message_name: Label
 var dock_message_line: Label
 var dock_message_choices: HBoxContainer
 var dock_message_tween: Tween
+var nova_repair_prompt_panel: PanelContainer
+var nova_repair_prompt_portrait: TextureRect
+var nova_repair_prompt_line: Label
 var station_contacts_panel: PanelContainer
 var station_contacts_list: Control
 
@@ -3463,7 +3467,7 @@ func _update_overview_distances(delta: float = 999.0):
 				player_targeted = true
 				break
 				
-	if player_targeted and overview_collapsed:
+	if player_targeted and overview_collapsed and not _overview_dock_locked:
 		set_overview_collapsed(false)
 		
 	# Update all distances first
@@ -3869,8 +3873,9 @@ func toggle_dock_menu(
 		GlobalState.active_target = null
 		if target_panel:
 			target_panel.visible = false
-		# Collapse overview while docked — station UI takes priority
-		set_overview_collapsed(true)
+		# Docked panels own the screen. The overview is both hidden and disabled
+		# until the ship is actually released again.
+		_set_overview_dock_locked(true)
 
 		# Every dock opens on the SERVICES submenu. The maintenance bay is a
 		# second submenu the player enters via the Maintenance Bay button.
@@ -8602,6 +8607,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	if not skip_repair_warning and _show_nova_repair_undock_prompt():
 		return
 	_dismiss_station_welcome()
+	_hide_nova_repair_decision()
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	if is_instance_valid(Nova):
@@ -8630,6 +8636,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
 	# Restore full overview when heading back into space
+	_set_overview_dock_locked(false)
 	set_overview_collapsed(false)
 	# Clear any docked-message slot content so the next dock starts fresh.
 	clear_dock_message()
@@ -8672,6 +8679,98 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 # A damaged ship at a staffed station is a player decision, not a line shouted
 # after the clamps have already released. Showing this before any undock cleanup
 # leaves both choices usable and lets N.O.V.A.'s audio finish naturally.
+func _ensure_nova_repair_decision_panel() -> void:
+	if nova_repair_prompt_panel and is_instance_valid(nova_repair_prompt_panel):
+		return
+	if dock_panel == null or not is_instance_valid(dock_panel):
+		return
+	nova_repair_prompt_panel = PanelContainer.new()
+	nova_repair_prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	nova_repair_prompt_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	nova_repair_prompt_panel.z_index = 20
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.015, 0.025, 0.06, 0.985)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Nova.NOVA_COLOR
+	style.content_margin_left = 34
+	style.content_margin_right = 34
+	style.content_margin_top = 28
+	style.content_margin_bottom = 28
+	nova_repair_prompt_panel.add_theme_stylebox_override("panel", style)
+	dock_panel.add_child(nova_repair_prompt_panel)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 20)
+	nova_repair_prompt_panel.add_child(box)
+
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 18)
+	box.add_child(header)
+	nova_repair_prompt_portrait = TextureRect.new()
+	nova_repair_prompt_portrait.custom_minimum_size = Vector2(120, 120)
+	nova_repair_prompt_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	nova_repair_prompt_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(nova_repair_prompt_portrait)
+	var name_box := VBoxContainer.new()
+	name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_child(name_box)
+	var name_label := Label.new()
+	name_label.text = "N.O.V.A. // SHIP STATUS OVERRIDE"
+	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_color_override("font_color", Nova.NOVA_COLOR)
+	name_box.add_child(name_label)
+	var prompt_label := Label.new()
+	prompt_label.text = "REPAIRS RECOMMENDED BEFORE DEPARTURE"
+	prompt_label.add_theme_font_size_override("font_size", 13)
+	prompt_label.add_theme_color_override("font_color", Color(0.6, 0.76, 0.92))
+	name_box.add_child(prompt_label)
+
+	nova_repair_prompt_line = Label.new()
+	nova_repair_prompt_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	nova_repair_prompt_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nova_repair_prompt_line.custom_minimum_size = Vector2(0, 90)
+	nova_repair_prompt_line.add_theme_font_size_override("font_size", 21)
+	nova_repair_prompt_line.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0))
+	box.add_child(nova_repair_prompt_line)
+
+	var choices := HBoxContainer.new()
+	choices.alignment = BoxContainer.ALIGNMENT_CENTER
+	choices.add_theme_constant_override("separation", 18)
+	box.add_child(choices)
+	var repair_button := Button.new()
+	repair_button.text = "Go to repairs"
+	repair_button.custom_minimum_size = Vector2(220, 52)
+	repair_button.add_theme_font_size_override("font_size", 18)
+	repair_button.pressed.connect(_on_nova_repair_prompt_repairs)
+	choices.add_child(repair_button)
+	var undock_button := Button.new()
+	undock_button.text = "Undock anyway"
+	undock_button.custom_minimum_size = Vector2(220, 52)
+	undock_button.add_theme_font_size_override("font_size", 18)
+	undock_button.pressed.connect(_on_nova_repair_prompt_undock)
+	choices.add_child(undock_button)
+	nova_repair_prompt_panel.visible = false
+
+
+func _show_nova_repair_decision(line: String, expression: String) -> void:
+	_ensure_nova_repair_decision_panel()
+	if nova_repair_prompt_panel == null or not is_instance_valid(nova_repair_prompt_panel):
+		return
+	clear_dock_message()
+	nova_repair_prompt_line.text = line
+	nova_repair_prompt_portrait.texture = _nova_portrait_texture(expression)
+	nova_repair_prompt_panel.visible = true
+
+
+func _hide_nova_repair_decision() -> void:
+	if nova_repair_prompt_panel and is_instance_valid(nova_repair_prompt_panel):
+		nova_repair_prompt_panel.visible = false
+
+
 func _show_nova_repair_undock_prompt() -> bool:
 	if not is_instance_valid(Nova):
 		return false
@@ -8686,22 +8785,7 @@ func _show_nova_repair_undock_prompt() -> bool:
 	if line.is_empty():
 		return false
 	var expression := Nova.expression_for_event("danger") if band == "red" else Nova.expression_for_event("worried")
-	show_dock_message(
-		line,
-		Nova.NOVA_SENDER,
-		Nova.NOVA_COLOR,
-		_nova_portrait_texture(expression),
-		[
-			{
-				"text": "Go to repairs",
-				"callback": _on_nova_repair_prompt_repairs,
-			},
-			{
-				"text": "Undock anyway",
-				"callback": _on_nova_repair_prompt_undock,
-			},
-		]
-	)
+	_show_nova_repair_decision(line, expression)
 	Nova.speak(
 		line,
 		Nova.Severity.THREAT if band == "red" else Nova.Severity.COMBAT,
@@ -8711,13 +8795,13 @@ func _show_nova_repair_undock_prompt() -> bool:
 
 
 func _on_nova_repair_prompt_repairs() -> void:
-	clear_dock_message()
+	_hide_nova_repair_decision()
 	current_submenu = DockSubmenu.MAINTENANCE
 	_render_dock_submenu()
 
 
 func _on_nova_repair_prompt_undock() -> void:
-	clear_dock_message()
+	_hide_nova_repair_decision()
 	undock_player(true)
 
 func _sell_ore():
@@ -10439,6 +10523,8 @@ func _current_station_has_repair_services() -> bool:
 		and str(current_station.get("station_type")) != "outpost"
 
 func set_overview_collapsed(collapsed: bool):
+	if _overview_dock_locked:
+		collapsed = true
 	overview_collapsed = collapsed
 	
 	if collapse_btn:
@@ -10452,6 +10538,17 @@ func set_overview_collapsed(collapsed: bool):
 		overview_panel.size.y = _overview_expanded_h if _overview_expanded_h > 100.0 else get_viewport_rect().size.y * 0.60
 		
 	refresh_overview()
+
+
+func _set_overview_dock_locked(locked: bool) -> void:
+	_overview_dock_locked = locked
+	if overview_panel and is_instance_valid(overview_panel):
+		overview_panel.visible = not locked
+		overview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if locked else Control.MOUSE_FILTER_STOP
+	if collapse_btn and is_instance_valid(collapse_btn):
+		collapse_btn.disabled = locked
+	if locked:
+		set_overview_collapsed(true)
 
 # Agent dialogue screen & Quest tracker HUD interactions
 func _on_talk_to_agent_pressed():
