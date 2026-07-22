@@ -81,6 +81,8 @@ var _lounge_dock_preparation_serial := 0
 const DOCK_TRACTOR_PULL_SECONDS := 4.0
 const DOCK_CLAMP_SECONDS := 3.0
 const DOCK_PRESSURIZE_SECONDS := 3.0
+const STATION_WELCOME_HOLD_SECONDS := 2.5
+const STATION_WELCOME_FADE_SECONDS := 0.55
 const DOCK_CLEARANCE_LINES: Array[String] = [
 	"{call}, you are cleared for docking. Hold steady while we bring you into the berth.",
 	"Dock control to {call}: tractor lock is coming online. Keep your hands off the attitude controls.",
@@ -111,6 +113,11 @@ var _docking_procedure_active := false
 var _docking_procedure_serial := 0
 var _dock_procedure_completed_pending := false
 var _docking_tractor_beam: Node3D = null
+var station_welcome_overlay: Panel = null
+var station_welcome_label: Label = null
+var station_welcome_subtitle: Label = null
+var _station_welcome_active := false
+var _station_welcome_serial := 0
 var _selected_station_contact: String = ""
 var _contacts_with_rumor: Dictionary = {}
 var _bounty_board_panel: PanelContainer = null
@@ -3836,6 +3843,7 @@ func toggle_dock_menu(
 	if inventory_panel and inventory_panel.visible and inventory_return_to_dock:
 		dock_ui_open = true
 	if dock_ui_open:
+		_dismiss_station_welcome()
 		_clear_cached_agent_quest("undock")
 		_lounge_dock_preparation_serial += 1
 		_lounge_dock_preparation_active = false
@@ -3855,12 +3863,9 @@ func toggle_dock_menu(
 		_dock_procedure_completed_pending = false
 		var fresh_dock := procedure_completed
 		_clear_cached_agent_quest_if_stale()
-		dock_panel.visible = true
-		# Ease the menu in over ~1.5s (built while transparent, then fades up) so it
-		# doesn't pop — gives N.O.V.A.'s docking line a beat to land over the fade.
-		dock_panel.modulate.a = 0.0
-		var _dock_fade := dock_panel.create_tween()
-		_dock_fade.tween_property(dock_panel, "modulate:a", 1.0, 1.5)
+		# The fresh-dock welcome overlay holds interaction briefly so N.O.V.A.'s
+		# arrival callout is not immediately interrupted by an actionable menu.
+		dock_panel.visible = false
 		GlobalState.active_target = null
 		if target_panel:
 			target_panel.visible = false
@@ -3882,7 +3887,6 @@ func toggle_dock_menu(
 			dock_label.text = sname if sname != "" else "STATION SERVICES"
 
 		_render_dock_submenu()
-		_update_intro_handhold()
 
 		if GlobalState.player:
 			var _was_docked: bool = bool(GlobalState.player.is_docked)
@@ -3964,6 +3968,109 @@ func toggle_dock_menu(
 		if not is_outpost:
 			_cache_mechanic_intro()
 			_announce_bounties_on_dock()
+
+		if fresh_dock:
+			_show_station_welcome(station, is_outpost)
+		else:
+			_reveal_dock_panel()
+			_update_intro_handhold()
+
+
+func _ensure_station_welcome_overlay() -> void:
+	if station_welcome_overlay and is_instance_valid(station_welcome_overlay):
+		return
+	station_welcome_overlay = Panel.new()
+	station_welcome_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	station_welcome_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	station_welcome_overlay.z_index = 100
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.01, 0.025, 0.05, 0.94)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.12, 0.75, 1.0, 0.72)
+	station_welcome_overlay.add_theme_stylebox_override("panel", style)
+	add_child(station_welcome_overlay)
+
+	var box := VBoxContainer.new()
+	box.set_anchors_preset(Control.PRESET_CENTER)
+	box.offset_left = -360.0
+	box.offset_right = 360.0
+	box.offset_top = -86.0
+	box.offset_bottom = 86.0
+	box.add_theme_constant_override("separation", 12)
+	station_welcome_overlay.add_child(box)
+
+	station_welcome_label = Label.new()
+	station_welcome_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	station_welcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	station_welcome_label.add_theme_font_size_override("font_size", 32)
+	station_welcome_label.add_theme_color_override("font_color", Color(0.82, 0.94, 1.0))
+	station_welcome_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
+	station_welcome_label.add_theme_constant_override("shadow_outline_size", 4)
+	box.add_child(station_welcome_label)
+
+	station_welcome_subtitle = Label.new()
+	station_welcome_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	station_welcome_subtitle.add_theme_font_size_override("font_size", 14)
+	station_welcome_subtitle.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0))
+	box.add_child(station_welcome_subtitle)
+	station_welcome_overlay.visible = false
+
+
+func _show_station_welcome(station: Node3D, is_outpost: bool) -> void:
+	_ensure_station_welcome_overlay()
+	if station_welcome_overlay == null or station_welcome_label == null:
+		_reveal_dock_panel()
+		return
+	_station_welcome_serial += 1
+	var serial := _station_welcome_serial
+	_station_welcome_active = true
+	var station_name := _current_station_display_name()
+	if station != null and is_instance_valid(station):
+		var station_display_name := str(station.get("display_name")).strip_edges()
+		if not station_display_name.is_empty():
+			station_name = station_display_name
+	if station_name.is_empty():
+		station_name = "OUTPOST" if is_outpost else "STATION"
+	station_welcome_label.text = "WELCOME TO\n%s" % station_name.to_upper()
+	station_welcome_subtitle.text = "OUTPOST ARRIVAL" if is_outpost else "STATION ARRIVAL"
+	station_welcome_overlay.modulate.a = 1.0
+	station_welcome_overlay.visible = true
+	_clear_intro_handhold_arrow()
+	await get_tree().create_timer(STATION_WELCOME_HOLD_SECONDS, true, false, true).timeout
+	if serial != _station_welcome_serial or not is_instance_valid(station_welcome_overlay):
+		return
+	var fade := station_welcome_overlay.create_tween().set_ignore_time_scale(true)
+	fade.tween_property(station_welcome_overlay, "modulate:a", 0.0, STATION_WELCOME_FADE_SECONDS)
+	await fade.finished
+	if serial != _station_welcome_serial or not is_instance_valid(station_welcome_overlay):
+		return
+	station_welcome_overlay.visible = false
+	_station_welcome_active = false
+	_reveal_dock_panel()
+	_update_intro_handhold()
+
+
+func _dismiss_station_welcome() -> void:
+	_station_welcome_serial += 1
+	_station_welcome_active = false
+	if station_welcome_overlay and is_instance_valid(station_welcome_overlay):
+		station_welcome_overlay.visible = false
+
+
+func _reveal_dock_panel() -> void:
+	if dock_panel == null or not is_instance_valid(dock_panel):
+		return
+	# Lounge preparation may finish while the welcome screen is up. Refresh the
+	# dock state now so a ready lounge is not left looking unavailable.
+	if current_station != null and is_instance_valid(current_station):
+		_render_dock_submenu()
+	dock_panel.visible = true
+	dock_panel.modulate.a = 0.0
+	var dock_fade := dock_panel.create_tween().set_ignore_time_scale(true)
+	dock_fade.tween_property(dock_panel, "modulate:a", 1.0, 0.45)
 
 
 # Render the current submenu's button set. Called on dock AND when the
@@ -8472,6 +8579,7 @@ func _get_contact_mood(npc_name: String) -> String:
 func undock_player(skip_repair_warning: bool = false) -> void:
 	if not skip_repair_warning and _show_nova_repair_undock_prompt():
 		return
+	_dismiss_station_welcome()
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	if is_instance_valid(Nova):
@@ -8959,7 +9067,7 @@ func _intro_popup_dismissed() -> bool:
 func _update_intro_handhold() -> void:
 	if not intro_handhold_arrow or not is_instance_valid(intro_handhold_arrow):
 		return
-	if GlobalState.paused or _docking_procedure_active \
+	if GlobalState.paused or _docking_procedure_active or _station_welcome_active \
 			or (loading_panel and is_instance_valid(loading_panel)):
 		_clear_intro_handhold_arrow()
 		return

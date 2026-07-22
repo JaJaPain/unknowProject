@@ -5,6 +5,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	_test_dock_command_hides_intro_arrow_until_docking()
+	_test_station_welcome_holds_dock_interaction()
 	_test_kaelen_intro_wording()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
 	if _failures.is_empty():
@@ -48,6 +49,29 @@ func _test_kaelen_intro_wording() -> void:
 	_expect(
 		source.contains("something handled right now. You interested?"),
 		"Kaelen's briefing does not use the requested 'You interested?' wording."
+	)
+
+
+func _test_station_welcome_holds_dock_interaction() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect station-welcome wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("const STATION_WELCOME_HOLD_SECONDS := 2.5")
+			and source.contains("func _show_station_welcome")
+			and source.contains("WELCOME TO\\n%s")
+			and source.contains("OUTPOST ARRIVAL")
+			and source.contains("_show_station_welcome(station, is_outpost)")
+			and source.contains("func _reveal_dock_panel"),
+		"Fresh station and outpost docks do not show a reusable welcome hold before services."
+	)
+	_expect(
+		source.contains("_docking_procedure_active or _station_welcome_active")
+			and source.contains("station_welcome_overlay.mouse_filter = Control.MOUSE_FILTER_STOP")
+			and source.contains("_update_intro_handhold()"),
+		"Station welcome does not block click-through or suppress the tutorial handhold until services appear."
 	)
 
 
