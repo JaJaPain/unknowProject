@@ -2,6 +2,8 @@ extends Node
 
 var bgm_player: AudioStreamPlayer
 var jump_player: AudioStreamPlayer  # dedicated channel for the tunnel jet (so we can fade it)
+var broken_gate_rain_player: AudioStreamPlayer
+var broken_gate_thunder_player: AudioStreamPlayer
 var mining_player: AudioStreamPlayer3D
 var tractor_player: AudioStreamPlayer3D
 var _mining_loop_active: bool = false
@@ -18,6 +20,12 @@ var max_sfx_channels: int = 8
 var music_volume_percent: float = 0.5
 var sfx_volume_percent: float = 1.0
 var is_ducked: bool = false
+var _dialogue_duck_music_db := 18.0
+var _dialogue_duck_sfx_db := 12.0
+var _broken_gate_ambience_active := false
+var _music_suspended_for_broken_gate := false
+var _broken_gate_saved_stream: AudioStream = null
+var _broken_gate_saved_position := 0.0
 
 # Audio Streams
 var bgm_track1 = preload("res://sound/BackgroundMusic/Iron Lullaby1.mp3")
@@ -40,6 +48,8 @@ var sfx_align: AudioStream = null
 var sfx_jump_spool: AudioStreamWAV = null
 var sfx_jump_transit: AudioStreamWAV = null
 var sfx_jump_arrival: AudioStreamWAV = null
+const BROKEN_GATE_RAIN_PATH := "res://sound/storm/juliush-heavy-rain-nature-sounds-8186.mp3"
+const BROKEN_GATE_THUNDER_PATH := "res://sound/storm/ramolmusic-thunderstorm-and-rain-sound-effects-548253.mp3"
 
 var tracks: Array = []
 var current_track_idx: int = 0
@@ -75,6 +85,8 @@ func _ready():
 	jump_player = AudioStreamPlayer.new()
 	jump_player.bus = "SFX"
 	add_child(jump_player)
+	broken_gate_rain_player = _create_broken_gate_ambience_player(-12.0)
+	broken_gate_thunder_player = _create_broken_gate_ambience_player(-15.0)
 
 	mining_player = AudioStreamPlayer3D.new()
 	mining_player.bus = "SFX"
@@ -113,6 +125,74 @@ func play_next_bgm():
 	bgm_player.stream = tracks[current_track_idx]
 	bgm_player.play()
 	current_track_idx = (current_track_idx + 1) % tracks.size()
+
+
+func _create_broken_gate_ambience_player(volume_db: float) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.bus = "SFX"
+	player.volume_db = volume_db
+	player.finished.connect(func() -> void:
+		if _broken_gate_ambience_active and not player.playing:
+			player.play()
+	)
+	add_child(player)
+	return player
+
+
+# The broken gate is deliberately musicless. Separate rain and thunder players
+# keep the mix tunable without baking a combined audio asset.
+func begin_broken_gate_ambience() -> void:
+	if _broken_gate_ambience_active:
+		return
+	_broken_gate_ambience_active = true
+	_dialogue_duck_music_db = 6.0
+	_dialogue_duck_sfx_db = 4.0
+	if bgm_player and not _music_suspended_for_broken_gate:
+		_broken_gate_saved_stream = bgm_player.stream
+		_broken_gate_saved_position = bgm_player.get_playback_position() if bgm_player.playing else 0.0
+		_music_suspended_for_broken_gate = true
+		bgm_player.stop()
+	_start_broken_gate_track(broken_gate_rain_player, BROKEN_GATE_RAIN_PATH)
+	_start_broken_gate_track(broken_gate_thunder_player, BROKEN_GATE_THUNDER_PATH)
+	GlobalState.trace("[TRACE] [AudioManager] Broken-gate ambience started; music suspended.")
+
+
+func _start_broken_gate_track(player: AudioStreamPlayer, path: String) -> void:
+	if player == null:
+		return
+	if player.stream == null:
+		player.stream = load(path) as AudioStream
+	if player.stream == null:
+		push_warning("[AudioManager] Missing broken-gate ambience: %s" % path)
+		return
+	if not player.playing:
+		player.play()
+
+
+func stop_broken_gate_ambience() -> void:
+	_broken_gate_ambience_active = false
+	_dialogue_duck_music_db = 18.0
+	_dialogue_duck_sfx_db = 12.0
+	if broken_gate_rain_player:
+		broken_gate_rain_player.stop()
+	if broken_gate_thunder_player:
+		broken_gate_thunder_player.stop()
+	_update_bus_volumes()
+
+
+# Called after the ship's existing return-to-normal-space one-shot finishes.
+func resume_music_after_broken_gate() -> void:
+	if not _music_suspended_for_broken_gate:
+		return
+	_music_suspended_for_broken_gate = false
+	if bgm_player and _broken_gate_saved_stream:
+		bgm_player.stream = _broken_gate_saved_stream
+		bgm_player.play(maxf(0.0, _broken_gate_saved_position))
+	else:
+		play_next_bgm()
+	_broken_gate_saved_stream = null
+	_broken_gate_saved_position = 0.0
+	GlobalState.trace("[TRACE] [AudioManager] Broken-gate ambience ended; music resumed.")
 
 func _on_bgm_finished():
 	if _landing_music_active:
@@ -319,7 +399,7 @@ func _update_bus_volumes():
 	if music_idx != -1:
 		var target_db = linear_to_db(music_volume_percent)
 		if is_ducked:
-			target_db -= 18.0 # Duck music by 18dB
+			target_db -= _dialogue_duck_music_db
 		AudioServer.set_bus_volume_db(music_idx, target_db)
 		AudioServer.set_bus_mute(music_idx, music_volume_percent <= 0.0001)
 		
@@ -327,7 +407,7 @@ func _update_bus_volumes():
 	if sfx_idx != -1:
 		var target_db = linear_to_db(sfx_volume_percent)
 		if is_ducked:
-			target_db -= 12.0 # Duck game sound by 12dB
+			target_db -= _dialogue_duck_sfx_db
 		AudioServer.set_bus_volume_db(sfx_idx, target_db)
 		AudioServer.set_bus_mute(sfx_idx, sfx_volume_percent <= 0.0001)
 
@@ -335,7 +415,7 @@ func duck_audio():
 	if not is_ducked:
 		is_ducked = true
 		_update_bus_volumes()
-		GlobalState.trace("[TRACE] [AudioManager] Audio ducked (Music -18dB, SFX -12dB)")
+		GlobalState.trace("[TRACE] [AudioManager] Audio ducked (Music -%.0fdB, SFX -%.0fdB)" % [_dialogue_duck_music_db, _dialogue_duck_sfx_db])
 
 func unduck_audio():
 	if is_ducked:

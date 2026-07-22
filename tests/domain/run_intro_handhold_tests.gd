@@ -6,6 +6,7 @@ var _failures: Array[String] = []
 func _initialize() -> void:
 	_test_dock_command_hides_intro_arrow_until_docking()
 	_test_station_welcome_holds_dock_interaction()
+	_test_broken_gate_storm_mix_contract()
 	_test_kaelen_intro_wording()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
 	if _failures.is_empty():
@@ -75,6 +76,31 @@ func _test_station_welcome_holds_dock_interaction() -> void:
 	)
 
 
+func _test_broken_gate_storm_mix_contract() -> void:
+	var audio_file := FileAccess.open("res://scripts/AudioManager.gd", FileAccess.READ)
+	var intro_file := FileAccess.open("res://scripts/story/IntroCinematic.gd", FileAccess.READ)
+	_expect(
+		audio_file != null and intro_file != null,
+		"Could not inspect broken-gate ambience wiring."
+	)
+	if audio_file == null or intro_file == null:
+		return
+	var audio_source := audio_file.get_as_text()
+	var intro_source := intro_file.get_as_text()
+	_expect(
+		audio_source.contains("BROKEN_GATE_RAIN_PATH")
+			and audio_source.contains("BROKEN_GATE_THUNDER_PATH")
+			and audio_source.contains("func begin_broken_gate_ambience")
+			and audio_source.contains("func stop_broken_gate_ambience")
+			and audio_source.contains("_dialogue_duck_sfx_db = 4.0"),
+		"Broken-gate ambience does not run both storm tracks with lighter dialogue ducking."
+	)
+	_expect(
+		intro_source.contains("AudioManager.begin_broken_gate_ambience()")
+			and intro_source.contains("AudioManager.stop_broken_gate_ambience()")
+			and intro_source.contains("warp_drop_player.finished.connect(AudioManager.resume_music_after_broken_gate"),
+		"Broken-gate music does not wait for the return-to-normal-space effect before resuming."
+	)
 func _test_kaelen_briefing_scrolls_at_speech_midpoint() -> void:
 	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	var speech_file := FileAccess.open("res://scripts/speech/SpeechService.gd", FileAccess.READ)

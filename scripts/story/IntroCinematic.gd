@@ -110,6 +110,8 @@ func start(ui_manager: Control) -> void:
 		p.hard_stop()
 	_setup_broken_tunnel(p)
 	_build_visuals()
+	if is_instance_valid(AudioManager):
+		AudioManager.begin_broken_gate_ambience()
 	_start_intro_audio()
 	# Watchdog: whatever happens, control comes back.
 	get_tree().create_timer(WATCHDOG_S, true, false, true).timeout.connect(_finish)
@@ -430,11 +432,11 @@ func _load_loop_stream(path: String) -> AudioStream:
 	return stream
 
 
-func _play_intro_one_shot(path: String, volume_db: float = 0.0) -> void:
+func _play_intro_one_shot(path: String, volume_db: float = 0.0) -> AudioStreamPlayer:
 	var stream := load(path) as AudioStream
 	if stream == null:
 		print("[IntroCinematic] Missing intro sound: ", path)
-		return
+		return null
 	var player := AudioStreamPlayer.new()
 	player.bus = "SFX"
 	player.stream = stream
@@ -443,6 +445,7 @@ func _play_intro_one_shot(path: String, volume_db: float = 0.0) -> void:
 	player.finished.connect(player.queue_free)
 	player.play()
 	print("[IntroCinematic] Playing one-shot: ", path, " volume_db=", volume_db)
+	return player
 
 
 func _stop_intro_audio() -> void:
@@ -536,6 +539,10 @@ func _finish() -> void:
 	if _ship_light != null and is_instance_valid(_ship_light):
 		_ship_light.light_energy = _ship_light_energy
 	_stop_intro_audio()
+	if is_instance_valid(AudioManager):
+		AudioManager.stop_broken_gate_ambience()
+		# Skip/watchdog paths have no return-drop one-shot to wait for.
+		AudioManager.resume_music_after_broken_gate()
 	GlobalState.intro_cinematic_active = false
 	if _layer != null and is_instance_valid(_layer):
 		_layer.hide()
@@ -642,7 +649,13 @@ func _run() -> void:
 	_cleanup_tunnel()
 	_stop_intro_audio()
 	_apply_consequences()
-	_play_intro_one_shot(SFX_WARP_DROP, 4.0)
+	var warp_drop_player := _play_intro_one_shot(SFX_WARP_DROP, 4.0)
+	if is_instance_valid(AudioManager):
+		AudioManager.stop_broken_gate_ambience()
+		if warp_drop_player != null:
+			warp_drop_player.finished.connect(AudioManager.resume_music_after_broken_gate, CONNECT_ONE_SHOT)
+		else:
+			AudioManager.resume_music_after_broken_gate()
 	var reveal := create_tween().set_ignore_time_scale(true)
 	reveal.set_parallel(true)
 	reveal.tween_property(_black, "color:a", 0.0, REVEAL_DURATION)
