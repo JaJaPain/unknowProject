@@ -1058,6 +1058,12 @@ Primary files:
 - [x] Add silence tests: repeated events after escalation cap should often produce no line.
   - 2026-07-13: `run_nova_tests.gd` proves six back-to-back docks produce exactly one spoken line (the tier ladder's quiet zone plus the global speech budget's minimum gap absorb the rest), and movement events with no prepared bank produce zero lines. Movement-side suppression after the rate-limit cap (suppressed events counted, not spoken) is covered in `run_ship_behavior_observer_tests.gd`.
 
+#### Phase 8C — Repair-aware undock warning
+
+- [ ] When the player initiates undocking from a station with repair services, inspect the ship's hull-health band before release. If the hull is yellow or red and the player has not repaired during this dock visit, N.O.V.A. objects before departure: stern in yellow, openly rude/self-preserving in red. Stay silent for green hull, stations without repairs, canceled undocks, and repeat attempts during the same visit.
+- [ ] Use an instant prepared/authored line path only; the warning must never start a model request or delay undocking. Provide safe fallback lines for both yellow and red bands, retire delivered lines, and record stock fallback use in diagnostics.
+- [ ] Add deterministic coverage for repair-shop gating, yellow/red wording bands, repaired-this-visit suppression, once-per-dock suppression, canceled-undock suppression, and the no-model-call contract.
+
 Phase 8 exit gate:
 
 - [ ] A scripted flight with repeated dock, boost, retarget, gate, and arrival events produces no exact line repeats and respects silence/cooldowns.
