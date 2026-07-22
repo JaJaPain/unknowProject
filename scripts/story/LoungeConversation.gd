@@ -216,6 +216,10 @@ const ANSWER_MAX := 220
 const CLOSE_MIN := 4
 const CLOSE_MAX := 160
 const BUNDLE_MAX_INTENTS := 3
+const _BAD_LOUNGE_OPENER_PREFIXES: Array = [
+	"hey", "listen", "pilot,", "pilot's question", "so, you're asking",
+	"you're asking", "i've got the latest",
+]
 
 
 # `intents`: 2-3 code-approved player questions, [{id, text}]. Code owns the
@@ -290,6 +294,9 @@ static func build_bundle_prompt(
 		"- Give the opener a small human observation, complaint, or joke that leaves"
 	)
 	lines.append("  room for the pilot to reply; do not open by listing services or asking a survey question.")
+	lines.append("- Never open with \"Hey, listen\", \"Listen\", or a close variation. It sounds like an interruption, not lounge conversation.")
+	lines.append("- Do not begin by repeating or announcing the pilot's question. Do not use a bare \"Hey\" opener.")
+	lines.append("- Only discuss the supplied topic. Never invent ship names, people, colonies, planets, companies, dates, disasters, or prior events as facts.")
 	lines.append(
 		"- The close must feel like a believable end to a short chat, not a stock"
 	)
@@ -396,6 +403,8 @@ static func parse_bundle(
 	)
 	if opener.length() < OPENER_MIN or opener.length() > OPENER_MAX:
 		return {"ok": false, "reason": "bad_opener"}
+	if not _is_natural_lounge_opener(opener):
+		return {"ok": false, "reason": "unnatural_opener"}
 	var close := _clean_bundle_field(
 		str(normalized.get("close", "")), npc_name
 	)
@@ -429,6 +438,16 @@ static func _clean_bundle_field(raw: String, npc_name: String) -> String:
 	var clean := raw.strip_edges()
 	clean = clean.trim_prefix("\"").trim_suffix("\"").strip_edges()
 	return AmbientChatType._strip_speaker_prefix(clean, npc_name, "")
+
+
+static func _is_natural_lounge_opener(opener: String) -> bool:
+	var clean := opener.to_lower().strip_edges()
+	if clean.ends_with("—") or clean.ends_with("-"):
+		return false
+	for prefix in _BAD_LOUNGE_OPENER_PREFIXES:
+		if clean.begins_with(str(prefix)):
+			return false
+	return true
 
 
 const _OUT_OF_CHARACTER_MARKERS: Array = [

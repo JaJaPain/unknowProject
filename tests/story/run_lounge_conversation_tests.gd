@@ -340,6 +340,12 @@ func _test_parse_bundle_degrades_per_answer() -> void:
 		not bool(ConvoType.parse_bundle("{not json", "", 2).get("ok", true)),
 		"Junk bundle should be rejected."
 	)
+	for bad_opener in ["Hey, listen—", "Pilot's question: What happened?", "So, you're asking about fuel?"]:
+		var bad_bundle := JSON.stringify({"opener": bad_opener, "a1": "The convoy is delayed in the belt.", "close": "Back to work."})
+		_expect(
+			str(ConvoType.parse_bundle(bad_bundle, "", 1).get("reason", "")) == "unnatural_opener",
+			"Interruption or question-parroting opener was accepted: %s" % bad_opener
+		)
 
 	# Self-tagged fields lose the name prefix.
 	var tagged := JSON.stringify({

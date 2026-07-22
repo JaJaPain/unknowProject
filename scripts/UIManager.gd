@@ -5201,6 +5201,16 @@ func _lounge_bundle_supported(card: Dictionary) -> bool:
 	return not card.is_empty() and str(card.get("kind", "")) in ["npc", "agent", "bartender"]
 
 
+# Not every person in a lounge wants to become an interview. Stable per
+# contact/day so re-rendering the lounge cannot reshuffle the same visit.
+func _is_short_lounge_moment(card: Dictionary) -> bool:
+	var kind := str(card.get("kind", ""))
+	if kind not in ["npc", "bartender"]:
+		return false
+	var day_index := int(CampaignClock.total_minutes / 1440.0)
+	return absi((_lounge_contact_key(card) + str(day_index)).hash()) % 3 == 0
+
+
 # Empty means this card has its own conversation machinery. Supported cards
 # are disabled until a ready exchange is present, rather than launching a
 # model call from a player click.
@@ -5425,6 +5435,18 @@ func _start_lounge_bundle_conversation(
 		"learned_fact_ids": [],
 	}
 	var choices: Array = []
+	if _is_short_lounge_moment(card):
+		choices.append({
+			"text": "Buy them a drink (%d SC)" % LOUNGE_DRINK_COST,
+			"callback": func() -> void:
+				_on_buy_drink_pressed(str(npc.get("name", "")), contact_key, card),
+		})
+		choices.append({
+			"text": "Leave them to it",
+			"callback": func() -> void: _end_lounge_conversation(serial),
+		})
+		_show_lounge_card_line(card, opener, true, choices, true)
+		return
 	for i in range(mini(intents.size(), answers.size())):
 		if str(answers[i]).is_empty():
 			continue  # that slot degraded in validation; the intent is not offered
@@ -5521,6 +5543,9 @@ func _on_buy_drink_pressed(
 	_lounge_drinks_bought[warmth_key] = true
 	if is_instance_valid(StoryManager) and StoryManager.has_method("adjust_lounge_warmth_for_contact"):
 		StoryManager.adjust_lounge_warmth_for_contact(contact_key, npc_name, 1)
+	var faction_key := str(card_data.get("rep_key", "")).to_lower()
+	if faction_key in ["zenith", "aurelia", "vanguard"]:
+		GlobalState.adjust_reputation(faction_key, 0.5)
 	_record_lounge_drink_relationship_event(card_data, contact_key)
 	# Instant code-template confirmation — feedback speed beats LLM variety here.
 	var confirmations := [
