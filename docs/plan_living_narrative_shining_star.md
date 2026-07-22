@@ -1061,7 +1061,8 @@ Primary files:
 #### Phase 8C — Repair-aware undock warning
 
 - [ ] When the player initiates undocking from a station with repair services, inspect the ship's hull-health band before release. If the hull is yellow or red and the player has not repaired during this dock visit, N.O.V.A. objects before departure: stern in yellow, openly rude/self-preserving in red. Stay silent for green hull, stations without repairs, canceled undocks, and repeat attempts during the same visit.
-- [ ] Use an instant prepared/authored line path only; the warning must never start a model request or delay undocking. Provide safe fallback lines for both yellow and red bands, retire delivered lines, and record stock fallback use in diagnostics.
+- [ ] Use an instant authored line path only; the warning must never start a model request or delay undocking. Provide at least 12 distinct yellow-band objections and 12 distinct red-band comebacks, with red lines substantially ruder and more self-preserving. Record fallback use in diagnostics.
+- [ ] Select warnings with a true round-robin cursor, not random choice or immediate-repeat avoidance. Persist the campaign-scoped cursor separately for yellow and red pools so it advances across save/load, scene reload, and game restart; only reset it for a new campaign or after every line in that band has been used once.
 - [ ] Add deterministic coverage for repair-shop gating, yellow/red wording bands, repaired-this-visit suppression, once-per-dock suppression, canceled-undock suppression, and the no-model-call contract.
 
 Phase 8 exit gate:
