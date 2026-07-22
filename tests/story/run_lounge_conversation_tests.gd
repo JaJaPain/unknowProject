@@ -849,6 +849,9 @@ func _test_pending_bundle_cards_block_live_generation() -> void:
 	)
 
 
+# Phase 9 exit gate: after a prepared opener is on screen, every player reply
+# remains usable with Ollama stopped. The reply handler is display/state only;
+# it must never invoke the model transport or a preparation helper.
 func _test_bundle_consumption_is_model_free() -> void:
 	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	_expect(file != null, "Could not inspect bundle consumption wiring.")
@@ -883,7 +886,8 @@ func _test_bundle_consumption_is_model_free() -> void:
 	var press_body := source.substr(press_start, press_end - press_start)
 	_expect(
 		press_body.contains("learned_fact_ids")
-			and press_body.contains("_apply_lounge_completion"),
+			and press_body.contains("_apply_lounge_completion")
+			and not press_body.contains("_prepare_lounge_exchange_bundle"),
 		"Intent press does not record learned facts or complete the chat."
 	)
 	var start_body_end := source.find(

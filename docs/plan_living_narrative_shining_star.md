@@ -1123,7 +1123,8 @@ Checklist:
 
 Phase 9 exit gate:
 
-- [ ] Reply clicks remain instant with Ollama stopped after preparation.
+- [x] Reply clicks remain instant with Ollama stopped after preparation.
+  - 2026-07-22: `run_lounge_conversation_tests.gd` now explicitly tripwires both prepared-exchange display paths: after the cached opener is shown, neither a question click nor its answer/close path may touch `LLMInterface`, request a lounge turn, or begin a preparation call. The optional second exchange can only appear if it was already ready; otherwise no button is shown.
 - [ ] NPC answers are relevant to the selected player line in 50/50 automated fixtures and >= 95% of a reviewed real-model batch.
 - [ ] No rumor is marked heard until its delivery field is shown.
 - [x] Returning to the same NPC produces a relationship/memory-aware exchange, not a reset opener.
