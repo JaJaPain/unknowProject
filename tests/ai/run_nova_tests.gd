@@ -373,6 +373,10 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 	_expect(ui_file != null, "Could not inspect repair-aware undock wiring.")
 	if ui_file != null:
 		var ui_source := ui_file.get_as_text()
+		var undock_start := ui_source.find("func undock_player")
+		var undock_end := ui_source.find("func _sell_ore", undock_start)
+		var undock_source := ui_source.substr(undock_start, undock_end - undock_start) \
+			if undock_start >= 0 and undock_end > undock_start else ""
 		_expect(
 			ui_source.contains("Nova.get_unrepaired_undock_warning")
 				and ui_source.contains("_current_station_has_repair_services")
@@ -380,6 +384,18 @@ func _test_repair_aware_undock_warning_rotation() -> void:
 				and ui_source.contains("Go to repairs")
 				and ui_source.contains("Undock anyway"),
 			"Undock does not keep damaged players docked for N.O.V.A.'s repair decision."
+		)
+		_expect(
+			undock_source.find("_show_nova_repair_undock_prompt()") \
+				< undock_source.find("AudioManager.exit_lounge_music()")
+				and undock_source.contains("current_submenu = DockSubmenu.MAINTENANCE")
+				and undock_source.contains("_render_dock_submenu()")
+				and undock_source.contains("undock_player(true)"),
+			"Repair prompt must block cleanup, enter Maintenance, or explicitly honor Undock anyway."
+		)
+		_expect(
+			not undock_source.contains("LLMInterface"),
+			"Repair warning flow must not start a model request at undock time."
 		)
 	gs.player = previous_player
 	gs.nova_repair_warning_rotation = previous_rotation
