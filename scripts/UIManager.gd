@@ -11152,7 +11152,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	
 	var handoff_line: String
 	if _should_play_voss_robot_handoff(agent_name):
-		handoff_line = "Director Voss wants a word, Shiny. He talks like a policy terminal with a grudge, but apparently it pays on time. I'll patch him through."
+		handoff_line = "Director Voss wants a word, Shiny. He might sound like a robotic douche, but his credits spend like anyone else's. I'll patch him through."
 		_mark_voss_robot_handoff_played()
 		SpeechService.cache(handoff_line, "voice.kaelen.v1")
 	elif cached_unique_intro.strip_edges() != "":

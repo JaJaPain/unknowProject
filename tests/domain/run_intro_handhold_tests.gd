@@ -69,7 +69,7 @@ func _test_kaelen_voss_robot_jab_contract() -> void:
 	var story_source := story_file.get_as_text()
 	_expect(
 		ui_source.contains("func _should_play_voss_robot_handoff")
-			and ui_source.contains("policy terminal with a grudge")
+			and ui_source.contains("robotic douche")
 			and ui_source.contains("func _mark_voss_robot_handoff_played"),
 		"Kaelen does not make the authored one-time jab when introducing Director Voss."
 	)
