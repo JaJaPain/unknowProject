@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_docked_overview_and_repair_decision_contracts()
 	_test_intro_repair_target_tip_contract()
 	_test_kaelen_intro_wording()
+	_test_kaelen_voss_robot_jab_contract()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
 	if _failures.is_empty():
 		print("[PASS] Intro handhold tests")
@@ -52,6 +53,29 @@ func _test_kaelen_intro_wording() -> void:
 	_expect(
 		source.contains("something handled right now. You interested?"),
 		"Kaelen's briefing does not use the requested 'You interested?' wording."
+	)
+
+
+func _test_kaelen_voss_robot_jab_contract() -> void:
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	var story_file := FileAccess.open("res://scripts/story/StoryManager.gd", FileAccess.READ)
+	_expect(
+		ui_file != null and story_file != null,
+		"Could not inspect Kaelen's first Voss introduction."
+	)
+	if ui_file == null or story_file == null:
+		return
+	var ui_source := ui_file.get_as_text()
+	var story_source := story_file.get_as_text()
+	_expect(
+		ui_source.contains("func _should_play_voss_robot_handoff")
+			and ui_source.contains("policy terminal with a grudge")
+			and ui_source.contains("func _mark_voss_robot_handoff_played"),
+		"Kaelen does not make the authored one-time jab when introducing Director Voss."
+	)
+	_expect(
+		story_source.contains("\"kaelen_voss_robot_jab_delivered\": false"),
+		"Kaelen's Voss jab is not persisted as a one-time introduction."
 	)
 
 

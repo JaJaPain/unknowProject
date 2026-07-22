@@ -11151,7 +11151,11 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	var handoff_lines: Array = LLMInterface.get_handoff_examples_for_agent(agent_name)
 	
 	var handoff_line: String
-	if cached_unique_intro.strip_edges() != "":
+	if _should_play_voss_robot_handoff(agent_name):
+		handoff_line = "Director Voss wants a word, Shiny. He talks like a policy terminal with a grudge, but apparently it pays on time. I'll patch him through."
+		_mark_voss_robot_handoff_played()
+		SpeechService.cache(handoff_line, "voice.kaelen.v1")
+	elif cached_unique_intro.strip_edges() != "":
 		# LLM successfully generated a unique handoff — use it
 		handoff_line = cached_unique_intro
 		GlobalState.trace("[TRACE] [UIManager] Using unique LLM-generated handoff for: " + agent_name)
@@ -11219,6 +11223,19 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 				_kaelen_gate_reveal(gate_id, cost)
 			)
 			agent_choices_container.add_child(intel_btn)
+
+
+func _should_play_voss_robot_handoff(agent_name: String) -> bool:
+	return agent_name.strip_edges() == "Director Voss" \
+		and is_instance_valid(StoryManager) \
+		and not bool(StoryManager.story_state.get("kaelen_voss_robot_jab_delivered", false))
+
+
+func _mark_voss_robot_handoff_played() -> void:
+	if not is_instance_valid(StoryManager):
+		return
+	StoryManager.story_state["kaelen_voss_robot_jab_delivered"] = true
+	StoryManager._save_story_state()
 
 
 func _ready_kaelen_handoff_bank_line() -> String:

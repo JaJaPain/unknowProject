@@ -116,6 +116,7 @@ static func _default_state() -> Dictionary:
 		"intro_agent_visited": false,
 		"intro_quest_delivered": false,
 		"intro_repair_target_tip_delivered": false,
+		"kaelen_voss_robot_jab_delivered": false,
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
