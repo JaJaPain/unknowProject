@@ -47,6 +47,12 @@ var _overview_dock_locked: bool = false
 var _overview_expanded_h: float = 0.0
 var collapse_btn: Button
 var overview_title_label: Label
+var overview_mission_targets_btn: Button
+var overview_ships_btn: Button
+var overview_asteroids_btn: Button
+var _overview_prioritize_mission_targets: bool = false
+var _overview_show_ships: bool = true
+var _overview_show_asteroids: bool = true
 var map_btn: TextureButton
 var inventory_hud_btn: TextureButton
 var branch_map: BranchMapUI
@@ -1150,6 +1156,24 @@ func _create_overview():
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_hbox.add_child(title)
 	overview_title_label = title
+
+	# Sensor-list controls. These stay deliberately small so the overview title
+	# remains the visual anchor while the player can quickly reduce a busy list.
+	var filter_controls := HBoxContainer.new()
+	filter_controls.add_theme_constant_override("separation", 1)
+	title_hbox.add_child(filter_controls)
+	overview_mission_targets_btn = _create_overview_filter_button(
+		"⌖", "Prioritize mission hostiles", _on_overview_mission_targets_pressed
+	)
+	filter_controls.add_child(overview_mission_targets_btn)
+	overview_ships_btn = _create_overview_filter_button(
+		"◆", "Show ships in overview", _on_overview_ships_pressed
+	)
+	filter_controls.add_child(overview_ships_btn)
+	overview_asteroids_btn = _create_overview_filter_button(
+		"◌", "Show asteroids in overview", _on_overview_asteroids_pressed
+	)
+	filter_controls.add_child(overview_asteroids_btn)
 	
 	collapse_btn = Button.new()
 	collapse_btn.text = " ▲ "
@@ -1199,6 +1223,52 @@ func _create_overview():
 	overview_list = VBoxContainer.new()
 	overview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(overview_list)
+	_update_overview_filter_buttons()
+
+
+func _create_overview_filter_button(icon: String, tooltip: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.text = icon
+	button.tooltip_text = tooltip
+	button.flat = true
+	button.toggle_mode = true
+	button.custom_minimum_size = Vector2(27, 24)
+	button.add_theme_font_size_override("font_size", 16)
+	button.pressed.connect(callback)
+	return button
+
+
+func _on_overview_mission_targets_pressed() -> void:
+	_overview_prioritize_mission_targets = not _overview_prioritize_mission_targets
+	_update_overview_filter_buttons()
+	_sort_overview_list()
+
+
+func _on_overview_ships_pressed() -> void:
+	_overview_show_ships = not _overview_show_ships
+	_update_overview_filter_buttons()
+	refresh_overview()
+
+
+func _on_overview_asteroids_pressed() -> void:
+	_overview_show_asteroids = not _overview_show_asteroids
+	_update_overview_filter_buttons()
+	refresh_overview()
+
+
+func _update_overview_filter_buttons() -> void:
+	if overview_mission_targets_btn and is_instance_valid(overview_mission_targets_btn):
+		overview_mission_targets_btn.button_pressed = _overview_prioritize_mission_targets
+		overview_mission_targets_btn.tooltip_text = "Mission hostiles first" \
+			if _overview_prioritize_mission_targets else "Prioritize mission hostiles"
+	if overview_ships_btn and is_instance_valid(overview_ships_btn):
+		overview_ships_btn.button_pressed = _overview_show_ships
+		overview_ships_btn.tooltip_text = "Hide ships from overview" \
+			if _overview_show_ships else "Show ships in overview"
+	if overview_asteroids_btn and is_instance_valid(overview_asteroids_btn):
+		overview_asteroids_btn.button_pressed = _overview_show_asteroids
+		overview_asteroids_btn.tooltip_text = "Hide asteroids from overview" \
+			if _overview_show_asteroids else "Show asteroids in overview"
 
 func _on_header_clicked(column: String):
 	if sort_column == column:
@@ -3317,11 +3387,15 @@ func update_overview_list(entities: Array):
 	for child in overview_list.get_children():
 		child.queue_free()
 		
-	var filtered_entities = entities
+	var filtered_entities: Array = []
+	for entity in entities:
+		if _should_show_overview_entity(entity):
+			filtered_entities.append(entity)
 	if overview_collapsed:
 		filtered_entities = []
 		var active = GlobalState.active_target
-		if active and is_instance_valid(active) and active in entities:
+		if active and is_instance_valid(active) and active in entities \
+				and _should_show_overview_entity(active):
 			filtered_entities.append(active)
 		
 	for entity in filtered_entities:
@@ -3450,9 +3524,33 @@ func update_overview_list(entities: Array):
 			btn.set_meta("entity_ref", entity)
 			btn.set_meta("entity_name", entity.name)
 			btn.set_meta("type_str", type_str)
+			btn.set_meta("is_mission_target", _is_overview_mission_target(entity))
 			btn.set_meta("distance_val", 0.0) # Updated dynamically in _update_overview_distances
 			btn.set_meta("dist_label_ref", dist_lbl)
 			btn.set_meta("name_label_ref", name_lbl)
+
+
+func _should_show_overview_entity(entity: Node) -> bool:
+	if entity == null or not is_instance_valid(entity):
+		return false
+	if entity.is_in_group("ship") and not _overview_show_ships:
+		return false
+	if entity.is_in_group("asteroid") and not _overview_show_asteroids:
+		return false
+	return true
+
+
+func _is_overview_mission_target(entity: Node) -> bool:
+	if entity == null or not is_instance_valid(entity) or not entity.is_in_group("ship"):
+		return false
+	if not QuestManager.is_quest_active() or QuestManager.is_quest_completed():
+		return false
+	var objective_type := str(QuestManager.active_quest.get("objective_type", ""))
+	if objective_type not in ["KILL_SHIPS", "RECOVER_COMBAT_DROP"]:
+		return false
+	var target_faction := str(QuestManager.active_quest.get("target_faction", "")).to_lower()
+	var ship_faction := str(entity.get("faction")).to_lower()
+	return not target_faction.is_empty() and ship_faction == target_faction
 
 
 func _update_overview_distances(delta: float = 999.0):
@@ -3532,6 +3630,11 @@ func _update_overview_distances(delta: float = 999.0):
 func _sort_overview_list():
 	var children = overview_list.get_children()
 	children.sort_custom(func(a, b):
+		if _overview_prioritize_mission_targets:
+			var a_is_target := bool(a.get_meta("is_mission_target", false))
+			var b_is_target := bool(b.get_meta("is_mission_target", false))
+			if a_is_target != b_is_target:
+				return a_is_target
 		if sort_column == "name":
 			var name_a = a.get_meta("entity_name").to_lower()
 			var name_b = b.get_meta("entity_name").to_lower()
