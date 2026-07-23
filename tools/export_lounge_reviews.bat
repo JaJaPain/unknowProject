@@ -8,6 +8,6 @@ set "PY=%VENV%\Scripts\python.exe"
 if not exist "%PY%" "%RUNTIME_PY%" -m venv "%VENV%"
 start "Lounge Review Capture" /B "%PY%" "%ROOT%lounge_review\review_server.py"
 timeout /t 2 /nobreak >nul
-start "" "%ROOT%lounge_review\export_saved_reviews.html"
+start "" "http://127.0.0.1:8765/export_saved_reviews.html"
 echo Use the recovery page that just opened, then keep this window open until it confirms the send.
 pause
