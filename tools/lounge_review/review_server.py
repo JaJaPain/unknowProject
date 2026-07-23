@@ -4,10 +4,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "lounge_review_batch.json"
+DECISIONS = ROOT / "lounge_diverse_review_decisions.json"
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT), **kwargs)
     def do_POST(self):
+        if self.path == "/api/save-review":
+            try:
+                size = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(size))
+                DECISIONS.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+                self.send_response(204); self.end_headers()
+            except Exception as error:
+                self.send_error(400, str(error))
+            return
         if self.path != "/api/generate-next": return self.send_error(404)
         try:
             count = len(json.loads(OUT.read_text()).get("items", [])) if OUT.exists() else 0
