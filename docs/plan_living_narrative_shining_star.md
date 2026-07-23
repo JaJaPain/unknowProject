@@ -793,7 +793,7 @@ Required attachment-arc beats per campaign:
 - **Earned change:** a system/chapter transition may shift how the character treats the Captain or sees the situation, but only after the recorded event that justified it.
 - **Return hook:** leave a living question, promise, concern, evolving worldview, or unresolved personal thread that makes the player want to learn what happens to them next. Never manufacture attachment through arbitrary harm, hostage stakes, or a surprise personality reversal.
 
-**Campaign opposing-force rule:** each campaign also needs one recurring opposing force—the future “big bad” role, whether it ultimately proves to be a person, organization, system, or ideology. Do not name or lock this character until the campaign premise supports it. The role exists to create tension and movement: it acts when the player is elsewhere, changes the local conditions, contests the same resources or truths, and forces Nova, Kaelen, and the Captain to reveal priorities. It must be more than a final boss or a radio voice that only appears at the climax.
+**Campaign opposing-force rule:** each campaign needs its own recurring opposing force—the campaign’s future “big bad” role, whether it ultimately proves to be a person, organization, system, or ideology. A later campaign must introduce a new force with its own methods, stakes, and mystery rather than simply reusing the previous one. Do not name or lock that force until the campaign premise supports it. The role exists to create tension and movement: it acts when the player is elsewhere, changes the local conditions, contests the same resources or truths, and forces Nova, Kaelen, and the Captain to reveal priorities. It must be more than a final boss or a radio voice that only appears at the climax.
 
 Required opposing-force design contract:
 
@@ -808,8 +808,8 @@ Checklist:
 
 - [ ] Write the first Nova and Kaelen soul bibles with the player as primary curator; do not auto-fill emotional canon from model guesses.
 - [ ] Add one campaign-scoped attachment-arc ledger for Nova and one for Kaelen: beat IDs, prerequisite events, player agency point, visible payoff, memory callback, and next unresolved hook.
-- [ ] Add an opposing-force dossier placeholder to the chapter packet: current footprint, known/unknown identity fields, objectives, capabilities, limits, chapter move, local aftermath, evidence trail, and escalation tier.
-- [ ] Design the first opposing force only after the campaign's core tension is selected; choose a form that naturally conflicts with the Captain's work and tests Nova and Kaelen in different ways.
+- [ ] Add one opposing-force dossier placeholder per campaign to the chapter packet: current footprint, known/unknown identity fields, objectives, capabilities, limits, chapter move, local aftermath, evidence trail, and escalation tier.
+- [ ] Design each campaign's opposing force only after that campaign's core tension is selected; choose a form that naturally conflicts with the Captain's work, tests Nova and Kaelen in different ways, and feels meaningfully distinct from prior campaigns.
 - [ ] Author an escalating “footprint before face” sequence: early signs, contested mission beats, first confirmed attribution, direct pressure, and earned confrontation.
 - [ ] Give the player at least one meaningful response to each major opposing-force move—investigate, protect, exploit, refuse, expose, or negotiate—while code owns mechanical outcomes.
 - [ ] Require every chapter packet to select only eligible attachment beats; prevent duplicate “vulnerability reveal” beats, unearned intimacy, and emotional escalation before the prerequisite shared event exists.
