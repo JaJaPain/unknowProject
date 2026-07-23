@@ -782,9 +782,24 @@ Each soul bible must define:
 - **Situation rules:** how that character behaves in mission offer, combat, repair warning, docking, lounge, gate travel, success, failure, abandonment, and quiet/non-comment moments.
 - **Voice controls:** sentence rhythm, vocabulary preferences, recurring-but-bounded motifs, banned tics, TTS-safe punctuation, and examples of bad-but-plausible lines that must be rejected.
 
+**Player-attachment design rule:** every campaign must include an earned attachment arc for both Nova and Kaelen. This is not a mandatory romance track, a guilt lever, or a sequence of speeches asking the player to care. It is a code-visible sequence of shared experiences in which the character is consistently competent, reveals a bounded personal stake or vulnerability at the right time, remembers what the Captain did, and is changed in a small but believable way by those events. The player must retain agency: attachment grows from choosing to help, trust, listen, return, take a risk, or notice a need—not from being told that the bond exists.
+
+Required attachment-arc beats per campaign:
+
+- **First impression through action:** establish why this character is useful, distinctive, and worth listening to before asking the player for emotional investment.
+- **Private texture:** include quiet, low-stakes moments that reveal a habit, blind spot, joke, preference, or fear without turning it into an exposition dump.
+- **Mutual reliance:** create at least one moment where the Captain materially benefits from the character's judgment and one moment where the character is materially affected by the Captain's decision or follow-through.
+- **Remembered consequence:** later dialogue and behavior must acknowledge the specific shared event with appropriate restraint; no false intimacy, memory invention, or instant forgiveness.
+- **Earned change:** a system/chapter transition may shift how the character treats the Captain or sees the situation, but only after the recorded event that justified it.
+- **Return hook:** leave a living question, promise, concern, evolving worldview, or unresolved personal thread that makes the player want to learn what happens to them next. Never manufacture attachment through arbitrary harm, hostage stakes, or a surprise personality reversal.
+
 Checklist:
 
 - [ ] Write the first Nova and Kaelen soul bibles with the player as primary curator; do not auto-fill emotional canon from model guesses.
+- [ ] Add one campaign-scoped attachment-arc ledger for Nova and one for Kaelen: beat IDs, prerequisite events, player agency point, visible payoff, memory callback, and next unresolved hook.
+- [ ] Require every chapter packet to select only eligible attachment beats; prevent duplicate “vulnerability reveal” beats, unearned intimacy, and emotional escalation before the prerequisite shared event exists.
+- [ ] Give players room to miss or decline a bonding opportunity without punitive relationship loss; alternate later opportunities must still let trust grow through different actions.
+- [ ] Add quiet optional interactions between high-pressure beats so affection is built through ordinary presence as well as crisis.
 - [ ] Define a compact, code-owned state enum for each fixed cast member and map every runtime trigger to an allowed state transition.
 - [ ] Add public prompt projections that include only the current approved state, relevant known facts, relationship lens, and situation rule. Director-only motivations remain outside the projection.
 - [ ] Build separate large candidate banks for Nova and Kaelen by character, emotional state, campaign phase, and interaction kind. Label every candidate with its inputs and source; raw candidates never ship directly.
@@ -802,6 +817,7 @@ Phase 4A exit gate:
 - [ ] A 100-line fixed-cast generation audit has zero state/phase violations, zero secret leaks, zero cross-character voice swaps, and no near-duplicate approved entries within the same state/situation bank.
 - [ ] Player review can trace every approved Nova/Kaelen line back to its bible version, state, allowed facts, and curator decision.
 - [ ] At least one system-transition playtest demonstrates an earned emotional change for each character without an abrupt personality reversal.
+- [ ] A campaign playtest can point to specific player choices and shared events—not merely dialogue volume—that explain why the player might care what happens to Nova and Kaelen next.
 
 ### Phase 5 — Compiled mission conversations and logical player questions
 
