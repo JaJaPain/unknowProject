@@ -141,6 +141,7 @@ This is deliberately phased so a lower coding agent can complete and verify one 
 - [ ] Phase 2 — Fact/knowledge ledger and disclosure-safe questions.
 - [ ] Phase 3 — Causal mission director and anti-repetition pacing.
 - [ ] Phase 4 — Durable character bibles and relationship memory.
+- [ ] Phase 4A — Fixed-cast soul bibles and human-curated voice banks.
 - [ ] Phase 5 — Compiled mission conversations and instant branching.
 - [ ] Phase 6 — Narrative cache scheduler and latency SLOs.
 - [ ] Phase 7 — Outcome-aware Kaelen handoffs and turn-ins.
@@ -756,6 +757,51 @@ Phase 4 exit gate:
 - [ ] Five generated NPCs in one station do not share the same humor mechanism or contradiction.
 - [ ] An NPC can naturally recall a real prior event and cannot claim an event absent from memory.
 - [ ] Relationship changes alter tone and available information without letting the model change numeric consequences.
+
+#### Phase 4A — Fixed-cast soul bibles and human-curated voice banks
+
+**Goal:** make N.O.V.A. and Kaelen feel like enduring people with an inner life, not highly polished versions of a generic dialogue prompt. Treat each bible as the character's **soul**: a versioned, human-curated source of truth from which generated lines may draw, never a pile of interchangeable quips.
+
+Primary artifacts:
+
+- new `docs/narrative/character_souls/NOVA.md`
+- new `docs/narrative/character_souls/KAELEN.md`
+- new `data/content/fixed_cast_souls.json` (machine-readable public prompt projection only)
+- new `data/content/fixed_cast_voice_examples.json` (approved, de-duplicated examples; separate from raw model output)
+- `tools/lounge_review/lounge_curated_selected_examples.json` as the first general natural-dialogue style reference, not as fixed-cast canon
+- `scripts/story/CharacterDirector.gd`
+- `scripts/story/DialogueBundleValidator.gd`
+- new `tests/story/run_fixed_cast_soul_tests.gd`
+
+Each soul bible must define:
+
+- **Permanent core:** values, fears, coping mechanisms, moral boundaries, humor mechanism, sensory/detail bias, public mask, private vulnerability, and non-negotiable “never says/does” rules.
+- **Relationship lens:** what the character notices about the Captain, what earns or spends trust, which player choices change warmth or guardedness, and what remains private regardless of relationship.
+- **Emotional state map:** named, code-owned states; allowed triggers; outward tells; permitted information; and entry/exit rules. The model selects phrasing inside a state but never decides the state transition.
+- **Campaign progression:** a short per-system/chapter arc defining what can change only after earned events. N.O.V.A. begins cautious and more pacifist, with any later willingness to endorse violence earned gradually around systems 3–4 rather than appearing early. Kaelen's broker mask, self-interest, and occasional human cracks must likewise evolve through actual missions and relationship events.
+- **Situation rules:** how that character behaves in mission offer, combat, repair warning, docking, lounge, gate travel, success, failure, abandonment, and quiet/non-comment moments.
+- **Voice controls:** sentence rhythm, vocabulary preferences, recurring-but-bounded motifs, banned tics, TTS-safe punctuation, and examples of bad-but-plausible lines that must be rejected.
+
+Checklist:
+
+- [ ] Write the first Nova and Kaelen soul bibles with the player as primary curator; do not auto-fill emotional canon from model guesses.
+- [ ] Define a compact, code-owned state enum for each fixed cast member and map every runtime trigger to an allowed state transition.
+- [ ] Add public prompt projections that include only the current approved state, relevant known facts, relationship lens, and situation rule. Director-only motivations remain outside the projection.
+- [ ] Build separate large candidate banks for Nova and Kaelen by character, emotional state, campaign phase, and interaction kind. Label every candidate with its inputs and source; raw candidates never ship directly.
+- [ ] Generate mission-specific candidate examples using the curated 40-example natural-dialogue bank as a style guide, then validate against the relevant soul bible and mission fact packet.
+- [ ] Require human curation for **every** Nova and Kaelen candidate before it enters an approved bank. For other NPCs, use automated filtering plus representative human sampling.
+- [ ] Preserve the curator's decision (`original`, `assistant_rewrite`, `human_rewrite`, rejected) alongside each approved fixed-cast example so future generation learns from the actual preferred wording.
+- [ ] Deduplicate approved banks by semantic premise, not just exact string: retain a small number of meaningfully different examples per state/situation and remove near-identical emotional beats.
+- [ ] Version soul bibles, approved examples, and prompt projections together. A bible revision invalidates only affected cached line banks and queues safe background regeneration/TTS warmup.
+- [ ] Add a designer-facing comparison review that shows state, facts, raw candidate, assistant rewrite, and approved final line side by side.
+- [ ] Validate that a generated line cannot name an emotion/state the code has not selected, reveal unknown facts, skip required phase gates, or drift into the other fixed character's voice.
+
+Phase 4A exit gate:
+
+- [ ] Nova and Kaelen each have an approved v1 soul bible and at least one curated bank for every live interaction kind they currently own.
+- [ ] A 100-line fixed-cast generation audit has zero state/phase violations, zero secret leaks, zero cross-character voice swaps, and no near-duplicate approved entries within the same state/situation bank.
+- [ ] Player review can trace every approved Nova/Kaelen line back to its bible version, state, allowed facts, and curator decision.
+- [ ] At least one system-transition playtest demonstrates an earned emotional change for each character without an abrupt personality reversal.
 
 ### Phase 5 — Compiled mission conversations and logical player questions
 
