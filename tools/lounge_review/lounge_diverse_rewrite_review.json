@@ -167,7 +167,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "You sold that coolant pump for five credits? I thought it was worth ten.",
         "answer": "I didn't check its value before selling it.",
@@ -367,7 +367,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "I heard you sold that engine for a dinky amount last week.",
         "answer": "I didn't check its value before selling it.",
@@ -567,7 +567,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "I saw you sell that thruster for five credits last week",
         "answer": "I didn't check its value before selling it",
@@ -767,7 +767,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "You know, I was just thinking about that part you sold me last week\u2014",
         "answer": "I sold a salvaged power regulator for five credits, and it was barely functional. It\u2019s the kind of thing you\u2019d find in the scrap heaps, but I didn\u2019t check its value before handing it over.",
@@ -967,7 +967,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "I saw the part you sold for five credits\u2014wasn't that a dented coolant valve?",
         "answer": "Yep, it's a cheap fix but it'll hold up for a few more cycles.",
@@ -1167,7 +1167,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "I saw the old plasma cutter you sold at the docks last week\u2014still works fine, right?",
         "answer": "I sold it cheap because it was barely running and the parts were cheap to fix, but I didn't check its value properly.",
@@ -1367,7 +1367,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "You sold that coolant pump for two credits?",
         "answer": "I didn't check the value, just needed to get it out of my inventory.",
@@ -1567,7 +1567,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "You know what I did last week? Sold a used thruster housing for two credits when it was worth ten. That was dumb.",
         "answer": "The salvager sold a useful part cheaply without checking its value.",
@@ -1767,7 +1767,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "I saw your part for the kelp harvesters\u2014was that a good deal?",
         "answer": "I sold a useful part cheaply without checking its value",
@@ -1967,7 +1967,7 @@
       "contact_role": "Salvager",
       "station": "Greywake Station",
       "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
-      "player_question": "What did Vera do?",
+      "player_question": "What happened with that sale?",
       "original": {
         "opener": "You sold that thruster for a nickel?",
         "answer": "I checked the specs and it was barely functional, but it was the only one I could find that didn't need a full overhaul.",

@@ -21,7 +21,7 @@ SCENARIOS = [
     ("Lio Sable", "Comms Tech", "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.", "Why are private messages taking so long?"),
     ("Tamsin Roe", "Freight Runner", "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.", "Why is that crew unloading the same cargo again?"),
     ("Perrin Holt", "Cook", "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.", "Why is everyone complaining about dinner?"),
-    ("Vera Nix", "Salvager", "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.", "What did Vera do?"),
+    ("Vera Nix", "Salvager", "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.", "What happened with that sale?"),
     ("Olan Pike", "Station Guard", "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.", "Why is that corridor closed?"),
     ("Kess Marrow", "Hauler Captain", "A small asteroid shifted close to a common shipping lane, so freighters are taking a longer route around it.", "Why are arrivals taking the long way in?"),
     ("Dessa Vorn", "Miner", "The miners have stopped taking new claims because their claim registrar has not processed the last group.", "Why are the miners not taking new work?"),
