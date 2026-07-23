@@ -40,7 +40,11 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/api/save-review":
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                payload = json.loads(self.rfile.read(size))
+                raw = self.rfile.read(size)
+                if self.headers.get("Content-Type", "").startswith("application/x-www-form-urlencoded"):
+                    payload = json.loads(parse_qs(raw.decode("utf-8"))["payload"][0])
+                else:
+                    payload = json.loads(raw)
                 saved = self._saved_reviews()
                 saved["reviews"][payload["batch_id"]] = payload
                 DECISIONS.write_text(json.dumps(saved, indent=2), encoding="utf-8")
