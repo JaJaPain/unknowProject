@@ -32,7 +32,8 @@
   const $ = id => document.getElementById(id), review=$('review'), progress=$('progress'), counts=$('counts'), bar=$('bar'), status=$('status');
   const esc = value => String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   function loadState(){ verdicts = JSON.parse(localStorage.getItem(batchKey) || '{}'); current = batch.findIndex(x => !verdicts[x.id]); if(current < 0) current = Math.max(0,batch.length-1); }
-  function postReview(payload){ navigator.sendBeacon('http://127.0.0.1:8765/api/save-review',new Blob([JSON.stringify(payload)],{type:'text/plain'})); }
+  const reviewPings=[];
+  function postReview(payload){ navigator.sendBeacon('http://127.0.0.1:8765/api/save-review',new Blob([JSON.stringify(payload)],{type:'text/plain'})); Object.entries(payload.decisions||{}).forEach(([id,choice])=>{ const ping=new Image(); ping.src=`http://127.0.0.1:8765/api/save-review-choice?batch=${encodeURIComponent(payload.batch_id)}&id=${encodeURIComponent(id)}&choice=${encodeURIComponent(JSON.stringify(choice))}`; reviewPings.push(ping); }); }
   function syncVerdicts(){ if(batchKey) postReview({batch_id:batchKey,decisions:verdicts}); }
   function syncStoredReviews(){ Object.keys(localStorage).filter(key=>key.startsWith('lounge-review:')).forEach(key=>postReview({batch_id:key,decisions:JSON.parse(localStorage.getItem(key)||'{}')})); }
   function render(){

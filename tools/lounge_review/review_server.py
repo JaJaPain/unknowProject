@@ -1,6 +1,7 @@
 import json, subprocess, sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "lounge_review_batch.json"
@@ -16,13 +17,32 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
+    def _saved_reviews(self):
+        if not DECISIONS.exists(): return {"reviews": {}}
+        saved = json.loads(DECISIONS.read_text(encoding="utf-8"))
+        return saved if "reviews" in saved else {"reviews": {}}
+    def do_GET(self):
+        request = urlparse(self.path)
+        if request.path == "/api/save-review-choice":
+            try:
+                query = parse_qs(request.query)
+                batch_id, item_id, choice = query["batch"][0], query["id"][0], json.loads(query["choice"][0])
+                saved = self._saved_reviews()
+                review = saved["reviews"].setdefault(batch_id, {"batch_id": batch_id, "decisions": {}})
+                review["decisions"][item_id] = choice
+                DECISIONS.write_text(json.dumps(saved, indent=2), encoding="utf-8")
+                self.send_response(204); self.end_headers()
+            except Exception as error:
+                self.send_error(400, str(error))
+            return
+        super().do_GET()
     def do_POST(self):
         if self.path == "/api/save-review":
             try:
                 size = int(self.headers.get("Content-Length", "0"))
                 payload = json.loads(self.rfile.read(size))
-                saved = json.loads(DECISIONS.read_text(encoding="utf-8")) if DECISIONS.exists() else {"reviews": {}}
-                saved.setdefault("reviews", {})[payload["batch_id"]] = payload
+                saved = self._saved_reviews()
+                saved["reviews"][payload["batch_id"]] = payload
                 DECISIONS.write_text(json.dumps(saved, indent=2), encoding="utf-8")
                 self.send_response(204); self.end_headers()
             except Exception as error:
