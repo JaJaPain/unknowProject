@@ -32,8 +32,9 @@
   const $ = id => document.getElementById(id), review=$('review'), progress=$('progress'), counts=$('counts'), bar=$('bar'), status=$('status');
   const esc = value => String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   function loadState(){ verdicts = JSON.parse(localStorage.getItem(batchKey) || '{}'); current = batch.findIndex(x => !verdicts[x.id]); if(current < 0) current = Math.max(0,batch.length-1); }
-  function syncVerdicts(){ if(!batchKey) return; fetch('http://127.0.0.1:8765/api/save-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:batchKey,decisions:verdicts})}).catch(()=>{}); }
-  function syncStoredReviews(){ Object.keys(localStorage).filter(key=>key.startsWith('lounge-review:')).forEach(key=>fetch('http://127.0.0.1:8765/api/save-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({batch_id:key,decisions:JSON.parse(localStorage.getItem(key)||'{}')})}).catch(()=>{})); }
+  function postReview(payload){ navigator.sendBeacon('http://127.0.0.1:8765/api/save-review',new Blob([JSON.stringify(payload)],{type:'text/plain'})); }
+  function syncVerdicts(){ if(batchKey) postReview({batch_id:batchKey,decisions:verdicts}); }
+  function syncStoredReviews(){ Object.keys(localStorage).filter(key=>key.startsWith('lounge-review:')).forEach(key=>postReview({batch_id:key,decisions:JSON.parse(localStorage.getItem(key)||'{}')})); }
   function render(){
     if(!batch.length) return; const item=batch[current], done=Object.keys(verdicts).length, prior=verdicts[item.id];
     const passed=Object.values(verdicts).filter(x=>x.verdict==='pass').length, failed=Object.values(verdicts).filter(x=>x.verdict==='fail').length;
