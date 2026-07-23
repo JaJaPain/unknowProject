@@ -8,12 +8,22 @@ DECISIONS = ROOT / "lounge_diverse_review_decisions.json"
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT), **kwargs)
+    def end_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        super().end_headers()
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
     def do_POST(self):
         if self.path == "/api/save-review":
             try:
                 size = int(self.headers.get("Content-Length", "0"))
                 payload = json.loads(self.rfile.read(size))
-                DECISIONS.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+                saved = json.loads(DECISIONS.read_text(encoding="utf-8")) if DECISIONS.exists() else {"reviews": {}}
+                saved.setdefault("reviews", {})[payload["batch_id"]] = payload
+                DECISIONS.write_text(json.dumps(saved, indent=2), encoding="utf-8")
                 self.send_response(204); self.end_headers()
             except Exception as error:
                 self.send_error(400, str(error))
@@ -27,7 +37,10 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception as error:
             self.send_error(500, str(error))
 
+class ReusableThreadingHTTPServer(ThreadingHTTPServer):
+    allow_reuse_address = True
+
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
+    server = ReusableThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     print("Open http://127.0.0.1:8765")
     server.serve_forever()
