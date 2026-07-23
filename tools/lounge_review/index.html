@@ -64,6 +64,7 @@
   $('export').onclick=()=>{ const results=batch.map(x=>({id:x.id,contact:x.contact_name,question:x.player_question,answer:x.npc_answer,verdict:verdicts[x.id]?.verdict||'unreviewed',reviewed_at:verdicts[x.id]?.reviewed_at||''})); const blob=new Blob([JSON.stringify({summary:{total:batch.length,pass:results.filter(x=>x.verdict==='pass').length,fail:results.filter(x=>x.verdict==='fail').length},results},null,2)],{type:'application/json'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lounge_review_verdicts.json';a.click();URL.revokeObjectURL(a.href); };
   $('next').onclick=async()=>{ const b=$('next'); b.disabled=true; status.textContent='Generating the next real exchange…'; try { const r=await fetch('/api/generate-next',{method:'POST'}); if(!r.ok) throw Error(await r.text()); setBatch(await r.json()); status.textContent='Next scenario ready.'; } catch(e) { status.textContent='Start the local review server to generate scenarios from this button.'; } finally { b.disabled=false; } };
   syncStoredReviews();
+  const handoffButton=document.createElement('button'); handoffButton.textContent='Send saved reviews to Codex'; handoffButton.onclick=()=>{syncStoredReviews();status.textContent='Saved reviews sent for curation.';}; document.querySelector('.tools').appendChild(handoffButton);
   if (location.protocol !== 'file:') $('next').disabled=false;
   if (window.LOUNGE_REVIEW_BATCH) setBatch(window.LOUNGE_REVIEW_BATCH);
 })();
