@@ -50,6 +50,13 @@ docs/bug_screenshots/
 # Local Godot test logs (Claude headless runs)
 .tmp_godot_user/
 
+# Stray Godot UID sidecars generated locally without their matching test scripts.
+tests/domain/run_intro_handhold_tests.gd.uid
+tests/domain/run_overview_filter_tests.gd.uid
+
+# Local Claude workspace metadata; not project source.
+.claude/
+
 # Permanent fallback diagnostics log (runtime data; persists on disk, out of git)
 logs/
 

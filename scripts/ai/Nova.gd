@@ -14,6 +14,9 @@ extends Node
 const NovaBankCategoriesType := preload(
 	"res://scripts/story/NovaLineBankCategories.gd"
 )
+const FixedCastLineValidatorType := preload(
+	"res://scripts/story/FixedCastLineValidator.gd"
+)
 
 # Her portrait is a 3x3 emotion sheet; frames are indexed left→right, top→bottom.
 const PORTRAIT_PATH := "res://assets/Portraits/ShipAI.png"
@@ -546,6 +549,18 @@ func _accept_generated_bank_line(text: String, kind: String) -> String:
 	var clean := text.strip_edges()
 	if clean.is_empty():
 		return ""
+	var situation := _fixed_cast_situation_for_bank_kind(kind)
+	if not situation.is_empty() and is_instance_valid(StoryManager):
+		var fixed_cast_quality := FixedCastLineValidatorType.validate_line(
+			"nova", StoryManager.fixed_cast_state("nova"), situation, clean
+		)
+		if not bool(fixed_cast_quality.get("ok", false)):
+			if is_instance_valid(GenerationDiagnostics):
+				GenerationDiagnostics.record_event(
+					"nova_line_bank", "fixed_cast_%s" % str((fixed_cast_quality.get("errors", []) as Array)[0]),
+					"nova", {"kind": kind, "situation": situation}
+				)
+			return ""
 	var tree := get_tree()
 	var game_root := tree.current_scene if tree != null else null
 	if game_root == null or not game_root.has_method("validate_and_register_narrative_lines"):
@@ -560,6 +575,22 @@ func _accept_generated_bank_line(text: String, kind: String) -> String:
 			"nova_line_bank", "quality_%s" % str(quality.get("reason", "unknown")),
 			"nova", {"kind": kind}
 		)
+	return ""
+
+
+# Movement banks intentionally have no fixed-cast situation contract yet: the
+# existing semantic-event gate already controls them, and forcing an arrival or
+# combat contract onto them would create false rejections.
+func _fixed_cast_situation_for_bank_kind(kind: String) -> String:
+	match kind.strip_edges():
+		NovaBankCategoriesType.SYSTEM_ARRIVAL, "startup_navigation":
+			return "arrival"
+		NovaBankCategoriesType.GATE_TRANSIT:
+			return "gate_travel"
+		NovaBankCategoriesType.HULL_CRITICAL:
+			return "repair_warning"
+		NovaBankCategoriesType.COMBAT_VICTORY_CLEAN, NovaBankCategoriesType.COMBAT_VICTORY_BATTERED, NovaBankCategoriesType.COMBAT_RETREAT:
+			return "combat"
 	return ""
 
 
@@ -583,6 +614,13 @@ func _bank_line_or_stock(category: String, tag: String, stock_pool: Array) -> St
 	)
 	if not bank_line.is_empty():
 		return bank_line
+	var curated_line := _curated_line_for_category(category)
+	if not curated_line.is_empty():
+		if is_instance_valid(GenerationDiagnostics):
+			GenerationDiagnostics.record_event(
+				"nova_line_bank", "curated_line_used", "nova", {"category": category}
+			)
+		return curated_line
 	if is_instance_valid(GenerationDiagnostics):
 		GenerationDiagnostics.record_event(
 			"nova_line_bank",
@@ -591,6 +629,38 @@ func _bank_line_or_stock(category: String, tag: String, stock_pool: Array) -> St
 			{"category": category}
 		)
 	return _pick_line(tag, stock_pool)
+
+
+func _curated_line_for_category(category: String) -> String:
+	var situation := ""
+	match category:
+		NovaBankCategoriesType.SYSTEM_ARRIVAL:
+			situation = "arrival"
+		NovaBankCategoriesType.GATE_TRANSIT:
+			situation = "gate_travel"
+		NovaBankCategoriesType.HULL_CRITICAL:
+			situation = "repair_warning"
+	if situation.is_empty():
+		return ""
+	return _curated_line_for_situation(situation, category)
+
+
+func _curated_line_for_situation(situation: String, category: String = "") -> String:
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("take_curated_fixed_cast_line"):
+		return ""
+	var result: Dictionary = StoryManager.take_curated_fixed_cast_line(
+		"nova",
+		situation,
+		{
+			"runtime_id": "%s:%s:%d" % [
+				category,
+				str(GlobalState.current_system_id),
+				Time.get_ticks_msec(),
+			],
+		}
+	)
+	return str(result.get("line", "")) if bool(result.get("ok", false)) else ""
 
 
 # Returns the recurrence streak for `tag` (0 = first / first in a while, 1 = again
@@ -821,6 +891,9 @@ func get_unrepaired_undock_warning(
 	)
 	if band.is_empty():
 		return {}
+	var curated_line := _curated_line_for_situation("repair_warning", "dock_repair")
+	if not curated_line.is_empty():
+		return {"line": curated_line, "band": band}
 	var lines: Array[String] = REPAIR_WARNING_RED_LINES if band == "red" else REPAIR_WARNING_YELLOW_LINES
 	var index := GlobalState.next_nova_repair_warning_index(band, lines.size())
 	return {

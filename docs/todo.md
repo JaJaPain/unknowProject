@@ -3,6 +3,18 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## Local workspace hygiene
+
+- [ ] **Investigate or remove local workspace artifacts** -- `tests/domain/run_intro_handhold_tests.gd.uid` and `tests/domain/run_overview_filter_tests.gd.uid` exist without their matching `.gd` sources, and `.claude/` contains local Claude workspace metadata. They are intentionally ignored in `.gitignore` so they do not pollute status; restore any intended source tests or project configuration before committing it, otherwise remove the local artifacts when safe.
+
+---
+
+## Narrative / first-meeting continuity
+
+- [ ] **Jenna Cross first-meeting line** -- Add one scripted, one-time introduction when the player first meets Jenna Cross. Her current opening sounds as though she already knows the Captain; gate all familiar, relationship-aware, or callback dialogue behind the recorded first-meeting event. The first line should establish who she is and why she is speaking to the player without over-explaining her future story.
+
+---
+
 ## Combat -- Unified System (do in order, blocks everything below)
 
 - [x] **FactionRegistry.gd autoload** -- single source of truth for all faction data: known profiles (aurelia/vanguard/zenith) + unknown faction progression list ordered by tier; `get_profile(key)`, `get_faction_for_danger_level(n)`; runtime override dict so tuning tool can hot-apply changes without touching the const.

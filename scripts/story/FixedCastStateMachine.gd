@@ -55,7 +55,9 @@ static func state_for(character_id: String, ledger: Dictionary) -> String:
 static func _state_for_event(character_id: String, event_type: String, context: Dictionary, attachments: Dictionary) -> String:
 	if character_id == "kaelen":
 		match event_type:
-			"mission_completed": return "quietly_relieved"
+			"mission_completed":
+				if bool(context.get("public_board", false)): return "broker_neutral"
+				return "quietly_relieved"
 			"mission_declined": return "guarded"
 			"mission_abandoned", "mission_expired", "mission_failed": return "wary"
 			"system_arrived", "docked": return "broker_neutral"

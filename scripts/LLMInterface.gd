@@ -14,6 +14,12 @@ const KaelenInteractionPacketBuilderType := preload(
 const FixedCastSoulRegistryType := preload(
 	"res://scripts/story/FixedCastSoulRegistry.gd"
 )
+const FixedCastVoiceBankType := preload(
+	"res://scripts/story/FixedCastVoiceBank.gd"
+)
+const FixedCastLineValidatorType := preload(
+	"res://scripts/story/FixedCastLineValidator.gd"
+)
 
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
@@ -5215,7 +5221,12 @@ func _record_llm_fallback(
 	)
 
 
-func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attempts_left: int = 1):
+func request_kaelen_reaction(
+	quest_data: Dictionary,
+	callback: Callable,
+	_attempts_left: int = 1,
+	_copy_rejection: bool = false
+):
 	# Build a minimal context summary for Kaelen to react to
 	var title = quest_data.get("title", "the contract")
 	var faction = quest_data.get("faction", "neutral").capitalize()
@@ -5263,11 +5274,25 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 			+ "do not reveal completion aftermath here:\n"
 			+ abandon_packet_clause
 		)
+	var turn_in_style_context := {
+		"high_payout": int(quest_data.get("reward_credits", obj.get("reward_credits", 0))) >= 300,
+		"lower_payout": int(quest_data.get("reward_credits", obj.get("reward_credits", 0))) < 150,
+		"low_risk": not bool(quest_data.get("known_tough", false)),
+		"known_tough": bool(quest_data.get("known_tough", false)),
+	}
+	var curated_style_block := FixedCastVoiceBankType.style_reference_block(
+		"kaelen", "quietly_relieved", "turn_in", turn_in_style_context
+	)
+	var copy_rejection_block := ""
+	if _copy_rejection:
+		copy_rejection_block = "Your previous draft copied a reviewed reference line. That draft is invalid. Use entirely different wording; do not reuse any phrase of five or more words from a reference. "
 
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
 		mood_block + \
 		FixedCastSoulRegistryType.prompt_block("kaelen", StoryManager.fixed_cast_state("kaelen"), "turn_in", StoryManager.fixed_cast_rapport_band("kaelen"), StoryManager.fixed_cast_attachment_memory("kaelen")) + "\n" + \
+		curated_style_block + \
+		copy_rejection_block + \
 		safe_packet_block + \
 		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
 		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
@@ -5278,14 +5303,11 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"The job was exactly this and nothing else: " + task_desc + ". Describe the outcome only in terms of that task. Invent no other job details — no mines, cleanup, rescue, escort, repairs, or cargo the task did not involve. " + \
 		"Do NOT name who paid or who benefits. The client stays anonymous — never invent an employer. The ONLY faction you may name is " + faction + "; never mention any other faction. " + \
 		"Preferred Kaelen turn-in shape: keep any warmth understated — one brief acknowledgment of competent work or a safe outcome, then return to broker business. She is never emotionally confessional or sentimental. Write it in her own fresh words; never reuse a sample sentence and never open with 'They're safe now'. " + \
-		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
-		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
-		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \
-		"Reference the specific quest task or faction naturally. Do NOT use generic lines. " + \
+		"Completion must close this contract only; never look ahead or say what is next. The reward belongs to the pilot, never the client or faction. Do not claim to deduct, take, refund, charge, or alter the pilot's credits. " + \
+		"Generate ONE short unique completion line of dialogue from Kaelen (under 25 words): she says it when the pilot successfully completes and hands in this contract, satisfied but still self-interested. Reference the specific quest task or faction naturally. Do NOT use a generic line. " + \
 		"You MUST respond strictly in valid JSON format. Only output the raw JSON object:\n" + \
 		"{\n" + \
-		"  \"completion\": \"[Kaelen's unique completion line]\",\n" + \
-		"  \"abandon\": \"[Kaelen's unique abandon line]\"\n" + \
+		"  \"completion\": \"[Kaelen's unique completion line]\"\n" + \
 		"}"
 
 	var temp_http = HTTPRequest.new()
@@ -5339,28 +5361,42 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 			return
 
 		var reaction_data = inner_json.get_data()
-		if reaction_data is Dictionary and reaction_data.has("completion") and reaction_data.has("abandon"):
+		if reaction_data is Dictionary and reaction_data.has("completion"):
 			var comp_line: String = str(reaction_data["completion"])
-			var abn_line: String = str(reaction_data["abandon"])
-			if comp_line.contains("[") or abn_line.contains("["):
+			if comp_line.contains("["):
 				if _attempts_left > 0:
 					print("[LLMInterface] Kaelen template not filled — retrying (%d attempts left)." % _attempts_left)
 					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
 				else:
 					_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
 				return
+			var copied_line_kind := ""
+			if FixedCastVoiceBankType.matches_curated_line("kaelen", "turn_in", comp_line):
+				copied_line_kind = "completion"
+			if not copied_line_kind.is_empty():
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen reaction copied curated %s reference - retrying (%d attempts left)." % [copied_line_kind, _attempts_left])
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1, true)
+				else:
+					_trigger_kaelen_reaction_fallback(callback, "curated_reference_copied_" + copied_line_kind)
+				return
 			var comp_issue := _kaelen_reaction_player_clarity_issue(
 				comp_line,
 				quest_data,
 				"completion"
 			)
-			var abandon_issue := _kaelen_reaction_player_clarity_issue(
-				abn_line,
-				quest_data,
-				"abandon"
+			var fixed_cast_result := FixedCastLineValidatorType.validate_line(
+				"kaelen",
+				StoryManager.fixed_cast_state("kaelen"),
+				"turn_in",
+				comp_line,
+				{"task_anchors": _kaelen_reaction_task_anchors(quest_data)}
 			)
-			if not comp_issue.is_empty() or not abandon_issue.is_empty():
-				var issue := comp_issue if not comp_issue.is_empty() else abandon_issue
+			if comp_issue.is_empty() and not bool(fixed_cast_result.get("ok", false)):
+				var fixed_errors: Array = fixed_cast_result.get("errors", [])
+				comp_issue = str(fixed_errors[0]) if not fixed_errors.is_empty() else "fixed_cast_validation_failed"
+			if not comp_issue.is_empty():
+				var issue := comp_issue
 				if _attempts_left > 0:
 					print("[LLMInterface] Kaelen reaction clarity guard rejected line (%s) - retrying (%d attempts left)." % [issue, _attempts_left])
 					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
@@ -5370,8 +5406,14 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 						"player_clarity_guard_" + issue
 					)
 				return
-			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
-			callback.call(comp_line, abn_line)
+			var abandon_pick := FixedCastVoiceBankType.select_line(
+				"kaelen", "wary", "abandonment", {"runtime_id": str(quest_data.get("id", title))}, [], ""
+			)
+			var abandon_line := str(abandon_pick.get("line", ""))
+			if abandon_line.is_empty():
+				abandon_line = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
+			print("[LLMInterface] Kaelen completion generated and reviewed abandonment selected for quest: ", title)
+			callback.call(comp_line, abandon_line)
 		else:
 			if _attempts_left > 0:
 				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
@@ -5429,6 +5471,53 @@ func _kaelen_reaction_player_clarity_issue(
 		for opening in ["fix ", "save ", "stop ", "protect ", "handle "]:
 			if lower_line.begins_with(opening):
 				return "unexplained_next_task"
+	for next_task_pattern in [
+		"you're handling",
+		"you are handling",
+		"you're fixing",
+		"you are fixing",
+		"fix the ",
+		"go back and",
+		"go earn the next",
+		"return and",
+		"i need the next job",
+		"i'll need the next job",
+		"i will need the next job",
+		"next job",
+		"what's next",
+		"what is next",
+		"i'll need someone",
+		"i will need someone",
+		"not waiting for you to",
+		"you'll need",
+		"you will need",
+	]:
+		if lower_line.contains(next_task_pattern):
+			return "unexplained_next_task"
+	for accounting_claim in [
+		"refund",
+		"i'll take",
+		"i will take",
+		"i'm taking",
+		"i am taking",
+		"cover the loss",
+		"cover my loss",
+		"cover the fee",
+		"pay the fee",
+	]:
+		if lower_line.contains(accounting_claim):
+			return "fictional_credit_adjustment"
+	if lower_line.contains("deduct") and lower_line.contains("your credits"):
+		return "fictional_credit_adjustment"
+	var named_faction := str(quest_data.get("faction", "")).to_lower().strip_edges()
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var reward := int(quest_data.get("reward_credits", objective.get("reward_credits", 0)))
+	if not named_faction.is_empty() and reward > 0 \
+			and lower_line.contains(named_faction) \
+			and lower_line.contains(str(reward)) \
+			and (lower_line.contains("get") or lower_line.contains("got") or lower_line.contains("receiv")):
+		return "fictional_payout_recipient"
 	var allowed_context := JSON.stringify(quest_data).to_lower()
 	if line_kind.strip_edges() == "completion" \
 			and _kaelen_reaction_claims_generic_safety(lower_line):
@@ -5463,29 +5552,37 @@ func _kaelen_reaction_task_anchor_issue(
 	var objective: Dictionary = quest_data.get("objective", {}) \
 		if quest_data.get("objective", {}) is Dictionary else {}
 	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
-	var anchors: Array[String] = []
-	match objective_type:
-		"DELIVER_ORE":
-			anchors = ["ore", "delivery"]
-		"KILL_SHIPS":
-			anchors = ["ship", "ships"]
-			var target := str(objective.get("target_faction", "")).to_lower().strip_edges()
-			if not target.is_empty():
-				anchors.append(target)
-		"DELIVERY_COURIER":
-			anchors = ["delivery", "courier", "package", "manifest", "records"]
-		"PURCHASE_DELIVERY":
-			anchors = ["delivery", "cargo", "supplies"]
-		"RECOVER_COMBAT_DROP":
-			anchors = ["recover", "recovered", "salvage", "salvaged"]
-		"TARGET_WITH_COMMS_REVERSAL":
-			anchors = ["target", "comms", "transmission"]
-		_:
-			return ""
+	var anchors := _kaelen_reaction_task_anchors(quest_data)
+	if anchors.is_empty():
+		return ""
 	for anchor in anchors:
 		if lower_line.contains(anchor):
 			return ""
 	return "missing_task_anchor:%s" % objective_type.to_lower()
+
+
+func _kaelen_reaction_task_anchors(quest_data: Dictionary) -> Array[String]:
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	match objective_type:
+		"DELIVER_ORE":
+			return ["ore", "delivery"]
+		"KILL_SHIPS":
+			var anchors: Array[String] = ["ship", "ships"]
+			var target := str(objective.get("target_faction", "")).to_lower().strip_edges()
+			if not target.is_empty():
+				anchors.append(target)
+			return anchors
+		"DELIVERY_COURIER":
+			return ["delivery", "courier", "package", "manifest", "records"]
+		"PURCHASE_DELIVERY":
+			return ["delivery", "cargo", "supplies"]
+		"RECOVER_COMBAT_DROP":
+			return ["recover", "recovered", "salvage", "salvaged"]
+		"TARGET_WITH_COMMS_REVERSAL":
+			return ["target", "comms", "transmission"]
+	return []
 
 
 func _kaelen_reaction_claims_generic_safety(lower_line: String) -> bool:
@@ -5514,8 +5611,20 @@ func _trigger_kaelen_reaction_fallback(
 		context.merged({"fallback_reason": reason}, true)
 	)
 	_record_llm_fallback("kaelen_reaction", reason, context)
-	var comp: String = fallback_completion_lines[randi() % fallback_completion_lines.size()]
-	var abn: String = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
+	# These are approved player-facing recovery lines, unlike the older generic
+	# pool which can drift into a new task or a tone the voice review rejected.
+	var comp_pick := FixedCastVoiceBankType.select_line(
+		"kaelen", "quietly_relieved", "turn_in", {}, [], ""
+	)
+	var abandon_pick := FixedCastVoiceBankType.select_line(
+		"kaelen", "wary", "abandonment", {}, [], ""
+	)
+	var comp: String = str(comp_pick.get("line", ""))
+	var abn: String = str(abandon_pick.get("line", ""))
+	if comp.is_empty():
+		comp = fallback_completion_lines[randi() % fallback_completion_lines.size()]
+	if abn.is_empty():
+		abn = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
 	callback.call(comp, abn)
 
 

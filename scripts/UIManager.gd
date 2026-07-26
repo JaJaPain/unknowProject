@@ -254,6 +254,7 @@ var agent_dialogue_label: Label
 var agent_dialogue_scroll: ScrollContainer
 var agent_choices_container: VBoxContainer
 var agent_back_btn: Button
+var _agent_more_work_requested := false
 var _kaelen_briefing_scroll_serial: int = 0
 var _kaelen_briefing_auto_scroll_done: bool = false
 
@@ -363,6 +364,10 @@ var cached_quest_is_fallback: bool = false
 var cached_quest_context: Dictionary = {}
 var pending_quest_context: Dictionary = {}
 var is_waiting_for_agent_board: bool = false
+var _agent_more_work_check_playing := false
+var _agent_more_work_deferred_result: Dictionary = {}
+var _agent_more_work_deferred_is_fallback := false
+var _agent_more_work_deferred_pending := false
 
 # Per-outpost count of TTS flavor lines we have already pre-cached
 # for the player's current session. Used as a quick diagnostic in
@@ -11134,34 +11139,98 @@ func _refresh_agent_quest_board():
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "neutral")
 	_clear_cached_agent_quest_if_stale()
+	var is_more_work_check := _agent_more_work_requested
+	if is_more_work_check:
+		# This line is deliberately started before we inspect cached work. A fast
+		# LLM response must not cut Kaelen off just because it arrived early.
+		var check_line := "Let me check. I am not promising it pays well."
+		if is_instance_valid(StoryManager) \
+				and StoryManager.has_method("take_persistent_fixed_cast_pool_line"):
+			var check_result := StoryManager.take_persistent_fixed_cast_pool_line(
+				"kaelen",
+				"more_work_check"
+			)
+			if bool(check_result.get("ok", false)):
+				check_line = str(check_result.get("line", check_line))
+		_agent_more_work_requested = false
+		agent_dialogue_label.text = check_line
+		_begin_agent_more_work_check(check_line)
 
 	if not _agent_contracts_available_for_station():
-		_show_agent_contracts_unavailable()
+		if _agent_more_work_check_playing:
+			_present_agent_board_result_when_ready({}, false)
+		else:
+			_show_agent_contracts_unavailable()
 		return
 
 	if not cached_quest_data.is_empty():
 		# We already have a pre-cached quest! Show it immediately
 		GlobalState.trace("[TRACE] [UIManager] Pre-cached quest found. Loading board instantly.")
-		_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)
+		_present_agent_board_result_when_ready(cached_quest_data, cached_quest_is_fallback)
 	else:
 		# Still loading or not started yet
 		GlobalState.trace("[TRACE] [UIManager] No pre-cached quest ready. Waiting for background generator...")
-		agent_dialogue_label.text = (
+		var waiting_line := (
 			"No vetted contract is ready yet. Kaelen is lining up work in the "
 			+ "background; check back in a moment."
 		)
+		agent_dialogue_label.text = waiting_line
+		if not _agent_more_work_check_playing:
+			SpeechService.play(waiting_line, "voice.kaelen.v1")
 		agent_back_btn.visible = true
 		is_waiting_for_agent_board = true
-		_play_kaelen_latency_filler("llm_generation", 0.8, 1)
+		if not _agent_more_work_check_playing:
+			_play_kaelen_latency_filler("llm_generation", 0.8, 1)
 		
 		# If the background generator hasn't started yet, trigger it now.
 		if not LLMInterface.is_waiting:
 			if not _request_background_agent_quest():
-				is_waiting_for_agent_board = false
-				agent_back_btn.visible = true
-				agent_dialogue_label.text = (
-					"No local faction contact is available for contract work at this station."
-				)
+				_present_agent_board_result_when_ready({}, false)
+
+
+func _begin_agent_more_work_check(line: String) -> void:
+	_agent_more_work_check_playing = true
+	_agent_more_work_deferred_pending = false
+	_agent_more_work_deferred_result = {}
+	if is_instance_valid(SpeechService):
+		SpeechService.playback_finished.connect(
+			_on_agent_more_work_check_playback_finished,
+			CONNECT_ONE_SHOT
+		)
+		SpeechService.play(line, "voice.kaelen.v1")
+	else:
+		call_deferred("_on_agent_more_work_check_playback_finished")
+
+
+# A result may be ready instantly from the cache. Hold it until the short
+# check-in is complete so neither a new offer nor a no-work result interrupts
+# Kaelen mid-sentence.
+func _present_agent_board_result_when_ready(
+	quest_data: Dictionary,
+	is_fallback: bool
+) -> void:
+	if _agent_more_work_check_playing:
+		_agent_more_work_deferred_pending = true
+		_agent_more_work_deferred_result = quest_data.duplicate(true)
+		_agent_more_work_deferred_is_fallback = is_fallback
+		return
+	is_waiting_for_agent_board = false
+	_on_quest_generated_received(quest_data, is_fallback)
+
+
+func _on_agent_more_work_check_playback_finished() -> void:
+	if not _agent_more_work_check_playing:
+		return
+	_agent_more_work_check_playing = false
+	if not _agent_more_work_deferred_pending:
+		return
+	var result := _agent_more_work_deferred_result.duplicate(true)
+	var is_fallback := _agent_more_work_deferred_is_fallback
+	_agent_more_work_deferred_pending = false
+	_agent_more_work_deferred_result = {}
+	if not agent_panel.visible:
+		return
+	_present_agent_board_result_when_ready(result, is_fallback)
 
 func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	var request_context: Dictionary = pending_quest_context.duplicate(true)
@@ -11242,8 +11311,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 	# Only push to agent board UI if the player is actually waiting for it
 	# AND no quest is currently active (avoid replacing UI mid-mission)
 	if is_waiting_for_agent_board and not QuestManager.is_lane_occupied("AGENT"):
-		is_waiting_for_agent_board = false
-		_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)
+		_present_agent_board_result_when_ready(cached_quest_data, cached_quest_is_fallback)
 		
 	# If loading panel is still visible, wait for TTS cache completion
 	if loading_panel and is_instance_valid(loading_panel):
@@ -12010,6 +12078,10 @@ func _store_authored_tutorial_kaelen_bundle(runtime_id: String, reason: String) 
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio
 	SpeechService.stop()
+	_agent_more_work_check_playing = false
+	_agent_more_work_deferred_pending = false
+	_agent_more_work_deferred_result = {}
+	is_waiting_for_agent_board = false
 	if not cached_quest_data.is_empty():
 		QuestManager.decline_quest(cached_quest_data, "agent_offer_back")
 		_clear_cached_agent_quest("agent_offer_declined")
@@ -12039,20 +12111,61 @@ func _on_agent_complete_pressed():
 	
 	# Use the mission-keyed contextual line, fall back to a random one if not ready
 	if bool(completed_quest.get("public_board", false)):
-		completion_text = str(
-			completed_quest.get("public_board_turn_in_line", "")
-		)
+		var board_curated_result := {}
+		if is_instance_valid(StoryManager) \
+				and StoryManager.has_method("take_curated_fixed_cast_line"):
+			board_curated_result = StoryManager.take_curated_fixed_cast_line(
+				"kaelen",
+				"public_board_turn_in",
+				{
+					"public_board": true,
+					"low_broker_fee": true,
+					"runtime_id": str(completed_quest.get("runtime_id", "")),
+				}
+			)
+		if bool(board_curated_result.get("ok", false)):
+			completion_text = str(board_curated_result.get("line", ""))
+		else:
+			completion_text = str(
+				completed_quest.get("public_board_turn_in_line", "")
+			)
+			_record_static_text_fallback(
+				"kaelen_public_board_turn_in",
+				"curated_line_unavailable",
+				{
+					"quest_title": str(completed_quest.get("title", "")),
+					"reason": str(board_curated_result.get("reason", "")),
+				}
+			)
 	if completion_text == "":
-		completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
-		GlobalState.trace("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
-		_record_static_text_fallback(
-			"kaelen_completion",
-			"reaction_line_not_ready",
-			{
-				"quest_title": str(completed_quest.get("title", "")),
-				"public_board": bool(completed_quest.get("public_board", false)),
-			}
-		)
+		var curated_result := {}
+		if is_instance_valid(StoryManager) \
+				and StoryManager.has_method("take_curated_fixed_cast_line"):
+			curated_result = StoryManager.take_curated_fixed_cast_line(
+				"kaelen",
+				"turn_in",
+				{
+					"runtime_id": str(completed_quest.get("runtime_id", "")),
+					"high_payout": int(completed_quest.get("reward_credits", 0)) >= 300,
+					"lower_payout": int(completed_quest.get("reward_credits", 0)) < 150,
+					"low_risk": not bool(completed_quest.get("known_tough", false)),
+					"known_tough": bool(completed_quest.get("known_tough", false)),
+				}
+			)
+		if bool(curated_result.get("ok", false)):
+			completion_text = str(curated_result.get("line", ""))
+		else:
+			completion_text = LLMInterface.fallback_completion_lines[randi() % LLMInterface.fallback_completion_lines.size()]
+			GlobalState.trace("[TRACE] [UIManager] Kaelen completion line not ready, using random fallback.")
+			_record_static_text_fallback(
+				"kaelen_completion",
+				"reaction_line_not_ready",
+				{
+					"quest_title": str(completed_quest.get("title", "")),
+					"public_board": bool(completed_quest.get("public_board", false)),
+					"curated_reason": str(curated_result.get("reason", "")),
+				}
+			)
 	if not bool(completed_quest.get("public_board", false)):
 		_start_agent_contract_cooldown("contract_resolved")
 	
@@ -12070,8 +12183,25 @@ func _on_agent_complete_pressed():
 	)
 	agent_back_btn.visible = true
 	_add_kaelen_gate_intel_button()
+	_add_agent_more_work_button()
 	
 	_clear_cached_agent_quest("agent_cooldown_after_completion")
+
+
+# Keeps the post-turn-in loop inside the agent panel. This deliberately
+# delegates to the dock's existing Talk to Agent handler so agent and public
+# board completions use the exact same availability/offer flow as leaving the
+# screen and selecting the service again.
+func _add_agent_more_work_button() -> void:
+	var more_work_btn := Button.new()
+	more_work_btn.text = "Any more work for me?"
+	more_work_btn.pressed.connect(_on_agent_more_work_pressed)
+	agent_choices_container.add_child(more_work_btn)
+
+
+func _on_agent_more_work_pressed() -> void:
+	_agent_more_work_requested = true
+	_on_talk_to_agent_pressed()
 
 func _on_agent_abandon_pressed():
 	SpeechService.start_interaction("Abandon Contract")

@@ -30,8 +30,11 @@
       "voice_controls": {
         "sentence_rhythm": "Short to medium, precise, dry, and controlled.",
         "address_rule": "May call the Captain Shiny; no other speaker owns that address.",
+        "line_value_rule": "Every optional line must either ground the player in real terms, risk, or outcome, or earn its space with a character-specific profit joke. Reject empty poise.",
+        "offer_money_bias": "Most contracts are modest or disappointing payouts; reserve high-pay delight or suspicion for the rarer offers explicitly tagged high_payout.",
+        "public_board_money_rule": "Public-board work pays Kaelen only a tiny broker fee. She may complain about that small fee and the board rate; never claim there was no fee at all.",
         "favored_motifs": ["terms", "margins", "receipts", "the cost of panic"],
-        "banned_tics": ["emotionally confessional speeches", "They are safe now", "generic hero praise"],
+        "banned_tics": ["emotionally confessional speeches", "They are safe now", "generic hero praise", "abstract coyness about money", "writerly coincidence metaphors"],
         "tts_note": "Use clean punctuation and avoid dense parentheticals."
       },
       "states": {
@@ -75,6 +78,7 @@
       "voice_controls": {
         "sentence_rhythm": "Clear, compact, observant; humor lands as a systems observation.",
         "address_rule": "Captain is her default address; never Shiny.",
+        "line_value_rule": "Every optional line must either warn or ground the player in a real current condition, or earn its space with a dry systems observation. Reject atmosphere with no player value.",
         "favored_motifs": ["routing", "hull", "maintenance", "probability", "the ship as shared home"],
         "banned_tics": ["Kaelen's broker language", "casual bloodlust", "generic inspirational speeches"],
         "tts_note": "Prefer one thought per sentence; avoid long clauses during combat."

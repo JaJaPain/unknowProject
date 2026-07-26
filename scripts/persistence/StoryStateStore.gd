@@ -123,6 +123,7 @@ static func _default_state() -> Dictionary:
 		"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
 		"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
 		"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
+		"fixed_cast_voice_history": {},
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -208,6 +209,8 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["fixed_cast_states"] = FixedCastStateMachineType.normalize_ledger(
 			migrated.get("fixed_cast_states", {})
 		)
+	if not migrated.get("fixed_cast_voice_history", {}) is Dictionary:
+		migrated["fixed_cast_voice_history"] = {}
 	if not migrated.get("story_consequences", []) is Array:
 		migrated["story_consequences"] = []
 	_backfill_legacy_player_knows(migrated)
@@ -314,6 +317,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"fixed_cast_rapport",
 		"fixed_cast_attachments",
 		"fixed_cast_states",
+		"fixed_cast_voice_history",
 	]:
 		if not value.get(dictionary_field, {}) is Dictionary:
 			result.add_error(

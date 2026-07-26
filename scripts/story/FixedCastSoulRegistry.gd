@@ -98,6 +98,9 @@ static func prompt_block(
 		"- Situation must not: %s" % str(situation_rule.get("must_not", "")),
 		"- Voice: %s" % str(voice.get("sentence_rhythm", "")),
 		"- Address: %s" % str(voice.get("address_rule", "")),
+		"- Line value: %s" % str(voice.get("line_value_rule", "")),
+		"- Offer money bias: %s" % str(voice.get("offer_money_bias", "")),
+		"- Public-board money: %s" % str(voice.get("public_board_money_rule", "")),
 		"- Current rapport (%s): %s" % [rapport_band, str(rapport_tone.get(rapport_band, rapport_tone.get("neutral", "")))],
 	]
 	if not attachment_memory.strip_edges().is_empty():

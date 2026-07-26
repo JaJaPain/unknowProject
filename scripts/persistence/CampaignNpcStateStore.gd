@@ -41,7 +41,10 @@ func is_valid() -> bool:
 func state_for(npc_id: String) -> Dictionary:
 	var states: Dictionary = data.get("npc_states", {}) \
 		if data.get("npc_states", {}) is Dictionary else {}
-	if states.get(npc_id, {}) is Dictionary:
+	# `get(..., {}) is Dictionary` is true for a missing key because the
+	# fallback is itself a Dictionary. Check presence before direct indexing so
+	# a first-time station contact receives a default state instead of crashing.
+	if states.has(npc_id) and states[npc_id] is Dictionary:
 		return (states[npc_id] as Dictionary).duplicate(true)
 	return _default_npc_state(npc_id)
 

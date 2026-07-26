@@ -40,6 +40,9 @@ const FixedCastAttachmentLedgerType := preload(
 const FixedCastStateMachineType := preload(
 	"res://scripts/story/FixedCastStateMachine.gd"
 )
+const FixedCastVoiceBankType := preload(
+	"res://scripts/story/FixedCastVoiceBank.gd"
+)
 
 # ── Phase B: Living story state ───────────────────────────────────────────────
 # story_state is the in-memory working copy. StoryStateStore handles persistence.
@@ -64,6 +67,7 @@ var story_state: Dictionary = {
 	"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
 	"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
 	"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
+	"fixed_cast_voice_history": {},
 	"kaelen_hidden_angle": "",
 	"intro_conversation_had": false,
 	"intro_agent_visited": false,
@@ -282,6 +286,7 @@ func clear_story_state() -> void:
 		"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
 		"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
 		"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
+		"fixed_cast_voice_history": {},
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -687,6 +692,76 @@ func fixed_cast_attachment_memory(character_id: String) -> String:
 	ledger = FixedCastAttachmentLedgerType.normalize_ledger(ledger)
 	story_state["fixed_cast_attachments"] = ledger
 	return FixedCastAttachmentLedgerType.public_memory_callback(character_id, ledger)
+
+
+func take_curated_fixed_cast_line(
+	character_id: String,
+	situation: String,
+	context: Dictionary = {}
+) -> Dictionary:
+	var state_id := fixed_cast_state(character_id)
+	var history: Dictionary = story_state.get("fixed_cast_voice_history", {}) \
+		if story_state.get("fixed_cast_voice_history", {}) is Dictionary else {}
+	var history_key := "%s:%s:%s" % [character_id, state_id, situation]
+	var entry: Dictionary = history.get(history_key, {}) \
+		if history.get(history_key, {}) is Dictionary else {}
+	var used_ids: Array = entry.get("used_ids", []) if entry.get("used_ids", []) is Array else []
+	var result := FixedCastVoiceBankType.select_line(
+		character_id,
+		state_id,
+		situation,
+		context,
+		used_ids,
+		str(entry.get("last_id", ""))
+	)
+	if not bool(result.get("ok", false)):
+		return result
+	if bool(result.get("cycle_reset", false)):
+		used_ids = []
+	used_ids.append(str(result.get("example_id", "")))
+	while used_ids.size() > 32:
+		used_ids.pop_front()
+	history[history_key] = {
+		"used_ids": used_ids,
+		"last_id": str(result.get("example_id", "")),
+	}
+	story_state["fixed_cast_voice_history"] = history
+	_save_story_state()
+	return result
+
+
+# Evergreen pools use a character-wide history key instead of the current
+# emotional state. That lets a practical Kaelen beat keep its exact sequence
+# through missions, docks, saves, and later game sessions.
+func take_persistent_fixed_cast_pool_line(
+	character_id: String,
+	situation: String,
+	context: Dictionary = {}
+) -> Dictionary:
+	var history: Dictionary = story_state.get("fixed_cast_voice_history", {}) \
+		if story_state.get("fixed_cast_voice_history", {}) is Dictionary else {}
+	var history_key := "%s:evergreen:%s" % [character_id, situation]
+	var entry: Dictionary = history.get(history_key, {}) \
+		if history.get(history_key, {}) is Dictionary else {}
+	var used_ids: Array = entry.get("used_ids", []) if entry.get("used_ids", []) is Array else []
+	var result := FixedCastVoiceBankType.select_round_robin_line(
+		character_id,
+		situation,
+		context,
+		used_ids
+	)
+	if not bool(result.get("ok", false)):
+		return result
+	if bool(result.get("cycle_reset", false)):
+		used_ids = []
+	used_ids.append(str(result.get("example_id", "")))
+	history[history_key] = {
+		"used_ids": used_ids,
+		"last_id": str(result.get("example_id", "")),
+	}
+	story_state["fixed_cast_voice_history"] = history
+	_save_story_state()
+	return result
 
 
 func _fixed_cast_mission_event_id(event_type: String) -> String:

@@ -68,6 +68,12 @@ func _test_bootstrap_update_and_reopen_npc_state() -> void:
 		(store.data.get("npc_states", {}) as Dictionary).is_empty(),
 		"NPC state store did not bootstrap empty."
 	)
+	var first_contact_state: Dictionary = store.state_for("npc.lounge.bartender.start.main")
+	_expect(
+		str(first_contact_state.get("npc_id", "")) == "npc.lounge.bartender.start.main"
+			and int(first_contact_state.get("state_revision", -1)) == 0,
+		"A missing first-time station NPC should receive a default state without direct dictionary access."
+	)
 
 	var ensured: Dictionary = store.ensure_state(NPC_ID)
 	_expect(bool(ensured.get("ok", false)), ensured.get("error", ""))
