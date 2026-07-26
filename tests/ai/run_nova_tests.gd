@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_combat_warning_api_exists()
 	_test_campaign_quirk_lifecycle()
 	_test_arrival_can_consume_ready_line_bank()
+	_test_generated_bank_lines_use_campaign_quality_gate()
 	_test_global_speech_budget()
 	_test_semantic_movement_consumes_banks_or_stays_silent()
 	_test_repeated_events_mostly_produce_silence()
@@ -192,6 +193,33 @@ func _test_arrival_can_consume_ready_line_bank() -> void:
 		not tutorial_body.contains("_bank_line_or_stock")
 			and not tutorial_body.contains("_ready_line_bank_text"),
 		"Tutorial lines must stay authored, not bank-driven."
+	)
+
+
+func _test_generated_bank_lines_use_campaign_quality_gate() -> void:
+	var file := FileAccess.open("res://scripts/ai/Nova.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect N.O.V.A. quality-gate wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	file.close()
+	var bank_start := source.find("func _ready_line_bank_text")
+	var bank_end := source.find("\nfunc ", bank_start + 10)
+	var bank_body := source.substr(bank_start, bank_end - bank_start)
+	_expect(
+		source.contains("func _accept_generated_bank_line")
+			and bank_body.contains("_accept_generated_bank_line")
+			and source.contains("validate_and_register_narrative_lines")
+			and source.contains("nova_bank:%s"),
+		"Generated N.O.V.A. bank lines bypass the campaign duplicate-quality gate."
+	)
+	var stock_start := source.find("func _bank_line_or_stock")
+	var stock_end := source.find("\nfunc ", stock_start + 10)
+	var stock_body := source.substr(stock_start, stock_end - stock_start)
+	_expect(
+		stock_body.contains("return _pick_line(tag, stock_pool)")
+			and not stock_body.contains("validate_and_register_narrative_lines"),
+		"N.O.V.A.'s authored emergency stock voice must remain a fallback, not be rewritten by the quality gate."
 	)
 
 

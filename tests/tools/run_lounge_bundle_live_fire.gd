@@ -74,7 +74,7 @@ func _on_writer_result(
 		parsed = _convo.parse_bundle(
 			str(writer_result.get("inner_text", "")), str(npc.get("name", "")), intents.size()
 		)
-		parsed = _convo.validate_bundle_answers(parsed, intents)
+		parsed = _convo.validate_bundle_answers(parsed, intents, true)
 	var row := _base_row(fixture, prompt, writer_result, parsed)
 	if not bool(parsed.get("ok", false)):
 		if retry_count < 1:
@@ -123,11 +123,11 @@ func _base_row(fixture: Dictionary, prompt: String, writer_result: Dictionary, p
 
 func _fixture(index: int) -> Dictionary:
 	var situations := [
-		["convoy delay", "convoy", "Why are the convoy delays getting worse?", "Traffic control is marking the convoy delays as unscheduled."],
-		["fabrication shortage", "shortage", "What is the fabrication shortage doing to this station?", "The fabrication shops are rationing parts."],
-		["patrol inspections", "patrol", "Why are patrol inspections stopping freighters?", "Patrols have been holding cargo crews for paperwork."],
-		["relay outage", "relay", "What caused the relay outage near the gate?", "The relay went dark just before the last departure."],
-		["fuel rationing", "fuel", "Who decided to ration fuel here?", "Fuel allotments changed before the station announced it."],
+		["convoy delay", "convoy", "Why are the convoy delays getting worse?", "Traffic control is marking the convoy delays as unscheduled.", ["convoy", "traffic control", "unscheduled"]],
+		["fabrication shortage", "shortage", "What is the fabrication shortage doing to this station?", "The fabrication shops are rationing parts.", ["fabrication", "shops", "parts"]],
+		["patrol inspections", "patrol", "Why are patrol inspections stopping freighters?", "Patrols have been holding cargo crews for paperwork.", ["patrol", "cargo", "paperwork"]],
+		["relay outage", "relay", "What caused the relay outage near the gate?", "The relay went dark just before the last departure.", ["relay", "dark", "departure"]],
+		["fuel rationing", "fuel", "What changed with fuel allotments?", "Fuel allotments changed before the station announced it.", ["allotments", "changed"]],
 	]
 	var roles := ["bartender", "dock controller", "freight clerk", "salvage broker"]
 	var relationships := ["stranger", "neutral", "warm", "hostile"]
@@ -151,7 +151,7 @@ func _fixture(index: int) -> Dictionary:
 		},
 		"flavor": "Campaign tone: dry, wary, and practical. Known local fact: %s" % str(situation[3]),
 		"intents": [
-			{"id": "ask_%s" % str(situation[1]), "text": str(situation[2]), "anchors": [str(situation[1])]},
+			{"id": "ask_%s" % str(situation[1]), "text": str(situation[2]), "anchors": [str(situation[1])], "answer_anchors": situation[4] if situation.size() > 4 else []},
 			{"id": "ask_personal_read", "text": "Does that change how you work?", "anchors": []},
 		],
 	}

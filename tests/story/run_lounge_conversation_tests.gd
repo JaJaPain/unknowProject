@@ -349,6 +349,16 @@ func _test_parse_bundle_degrades_per_answer() -> void:
 			str(ConvoType.parse_bundle(bad_bundle, "", 1).get("reason", "")) == "unnatural_opener",
 			"Interruption or question-parroting opener was accepted: %s" % bad_opener
 		)
+	var generic_repeat := JSON.stringify({
+		"opener": "Another one of these newcomers looking for a drink.",
+		"a1": "The convoy is delayed in the belt.",
+		"close": "Back to work.",
+	})
+	_expect(
+		str(ConvoType.parse_bundle(generic_repeat, "", 1).get("reason", ""))
+			== "unnatural_opener",
+		"Generic repeated lounge opener was accepted."
+	)
 
 	# Self-tagged fields lose the name prefix.
 	var tagged := JSON.stringify({
@@ -396,8 +406,64 @@ func _test_answer_relevance_validation() -> void:
 			and int(parsed.get("valid_answer_count", 0)) == 2,
 		"Relevant answers were rejected: %s" % str(parsed)
 	)
+	var ungrounded_opener := JSON.stringify({
+		"opener": "The drinks are bitter tonight, pilot.",
+		"a1": "The convoy went dark past the belt. Nobody says why out loud.",
+		"a2": "Station treats me fine as long as I keep pouring.",
+		"close": "That's my cue. Watch the belt lanes.",
+	})
+	_expect(
+		str(ConvoType.validate_bundle_answers(
+			ConvoType.parse_bundle(ungrounded_opener, "", 2), intents, true
+		).get("reason", "")) == "opener_missing_topic_anchor",
+		"Prepared topic-led lounge bundle accepted an opener unrelated to its questions."
+	)
+	var topic_prompt: String = ConvoType.build_bundle_prompt(
+		{"name": "Ivet", "role": "bartender"}, "", intents
+	)
+	_expect(
+		topic_prompt.contains("Topic words the opener must naturally name: convoy.")
+			and topic_prompt.contains("generic drink, weather, or greeting opener is not enough"),
+		"Lounge writer prompt does not explain the opener grounding contract."
+	)
+	var specific_intents := [{
+		"id": "known:convoy_authority",
+		"text": "Who redirected the convoy?",
+		"anchors": ["convoy"],
+		"answer_anchors": ["traffic control"],
+	}]
+	var specific_prompt: String = ConvoType.build_bundle_prompt(
+		{"name": "Ivet", "role": "bartender"}, "", specific_intents
+	)
+	_expect(
+		specific_prompt.contains("Required answer words for Q1: traffic control."),
+		"A specific lounge question did not carry its player-safe answer anchor."
+	)
+	var wrong_specific := JSON.stringify({
+		"opener": "That convoy mess has everyone counting exits, pilot.",
+		"a1": "The convoy got redirected, but nobody is saying by whom.",
+		"close": "My break is over.",
+	})
+	_expect(
+		str(ConvoType.validate_bundle_answers(
+			ConvoType.parse_bundle(wrong_specific, "", 1), specific_intents, true
+		).get("reason", "")) == "no_relevant_topic_answer",
+		"Specific lounge question accepted an answer without its approved fact."
+	)
+	var grounded_specific := JSON.stringify({
+		"opener": "That convoy mess has everyone counting exits, pilot.",
+		"a1": "Traffic control redirected the convoy and left the dock crews holding the paperwork.",
+		"close": "My break is over.",
+	})
+	_expect(
+		bool(ConvoType.validate_bundle_answers(
+			ConvoType.parse_bundle(grounded_specific, "", 1), specific_intents, true
+		).get("ok", false)),
+		"Specific lounge question rejected its approved grounded answer."
+	)
 
-	# Topic drift on the anchored question degrades that slot only.
+	# A topic-led bundle cannot survive on small talk alone: if the anchored
+	# answer drifts, the remaining generic answer is not enough.
 	var drifting := JSON.stringify({
 		"opener": "You picked a strange week to drink here, pilot.",
 		"a1": "My cousin brews terrible gin in a maintenance closet.",
@@ -407,12 +473,9 @@ func _test_answer_relevance_validation() -> void:
 	var drift_parsed: Dictionary = ConvoType.validate_bundle_answers(
 		ConvoType.parse_bundle(drifting, "", 2), intents
 	)
-	var drift_answers: Array = drift_parsed.get("answers", [])
 	_expect(
-		bool(drift_parsed.get("ok", false))
-			and str(drift_answers[0]).is_empty()
-			and not str(drift_answers[1]).is_empty(),
-		"Drifting answer was not degraded: %s" % str(drift_parsed)
+		str(drift_parsed.get("reason", "")) == "no_relevant_topic_answer",
+		"Topic-led bundle survived after its only factual answer drifted: %s" % str(drift_parsed)
 	)
 
 	# Out-of-character meta breaks any slot, even a generic one.
@@ -801,7 +864,7 @@ func _test_bundle_quality_gate_runs_before_ready() -> void:
 	var review_start := source.find("func _on_lounge_bundle_review_result")
 	var review_end := source.find("\nfunc ", review_start + 10)
 	var review_body := source.substr(review_start, review_end - review_start)
-	var quality_at := review_body.find("_validate_lounge_narrative_lines")
+	var quality_at := review_body.find("_validate_generated_narrative_lines")
 	var ready_at := review_body.find("entry[\"status\"] = \"ready\"")
 	_expect(
 		quality_at >= 0 and ready_at > quality_at
@@ -823,7 +886,7 @@ func _test_live_lounge_paths_use_quality_gate() -> void:
 		var end := source.find("\nfunc ", start + 10)
 		var body := source.substr(start, end - start)
 		_expect(
-			body.contains("_validate_lounge_narrative_lines")
+			body.contains("_validate_generated_narrative_lines")
 				and body.contains("quality_%s"),
 			"%s can display generated lounge text without the campaign quality gate." % function_name
 		)

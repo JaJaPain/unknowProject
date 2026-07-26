@@ -516,7 +516,9 @@ func _ready_line_bank_text(
 		# delivered: better a lost line than a protected one leaking into
 		# the wrong beat.
 		if _line_kind_allowed(str(consumed_line.get("kind", "")), kind_filter):
-			return consumed_text
+			return _accept_generated_bank_line(
+				consumed_text, str(consumed_line.get("kind", ""))
+			)
 		return ""
 	var lines: Array = payload.get("line_bank", []) \
 		if payload.get("line_bank", []) is Array else []
@@ -533,7 +535,32 @@ func _ready_line_bank_text(
 			candidates.append(text)
 	if candidates.is_empty():
 		return ""
-	return _pick_line("bank.%s" % requester_id, candidates)
+	var selected := _pick_line("bank.%s" % requester_id, candidates)
+	return _accept_generated_bank_line(selected, preferred_kind)
+
+
+# Generated N.O.V.A. banks must stay fresh without turning her authored
+# tutorial/emergency voice into generic fallback text. Reject only a repeated
+# generated line; the caller then chooses N.O.V.A.'s existing stock line.
+func _accept_generated_bank_line(text: String, kind: String) -> String:
+	var clean := text.strip_edges()
+	if clean.is_empty():
+		return ""
+	var tree := get_tree()
+	var game_root := tree.current_scene if tree != null else null
+	if game_root == null or not game_root.has_method("validate_and_register_narrative_lines"):
+		return clean
+	var quality: Dictionary = game_root.call(
+		"validate_and_register_narrative_lines", [clean], "nova_bank:%s" % kind
+	)
+	if bool(quality.get("ok", false)):
+		return clean
+	if is_instance_valid(GenerationDiagnostics):
+		GenerationDiagnostics.record_event(
+			"nova_line_bank", "quality_%s" % str(quality.get("reason", "unknown")),
+			"nova", {"kind": kind}
+		)
+	return ""
 
 
 # Whether a bank line of `kind` may be served for this request. Protected

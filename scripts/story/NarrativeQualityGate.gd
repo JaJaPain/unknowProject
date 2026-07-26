@@ -44,6 +44,16 @@ static func _unknown_capitalized_terms(text: String, allowed_aliases: Array) -> 
 	var allowed := {}
 	for alias in allowed_aliases:
 		allowed[str(alias).to_lower()] = true
+	# Sentence-leading ordinary words match the deliberately simple proper-noun
+	# heuristic below. They are not entities and should never drown the useful
+	# review warnings.
+	for ordinary_word in [
+		"a", "an", "and", "as", "at", "but", "for", "from", "he", "her",
+		"here", "i", "if", "in", "it", "my", "no", "of", "on", "our", "she",
+		"that", "the", "their", "there", "these", "they", "this", "those",
+		"to", "we", "well", "with", "yes", "you", "your",
+	]:
+		allowed[ordinary_word] = true
 	var regex := RegEx.new()
 	regex.compile("\\b[A-Z][a-z]{2,}\\b")
 	var result: Array[String] = []

@@ -218,7 +218,7 @@ const CLOSE_MAX := 160
 const BUNDLE_MAX_INTENTS := 3
 const _BAD_LOUNGE_OPENER_PREFIXES: Array = [
 	"hey", "listen", "pilot,", "pilot's question", "so, you're asking",
-	"you're asking", "i've got the latest",
+	"you're asking", "i've got the latest", "another one",
 ]
 
 
@@ -261,6 +261,15 @@ static func build_bundle_prompt(
 		lines.append("")
 	for i in range(clean_intents.size()):
 		lines.append("Q%d: \"%s\"" % [i + 1, str(clean_intents[i].get("text", ""))])
+		var answer_anchors: Array = clean_intents[i].get("answer_anchors", []) \
+			if clean_intents[i].get("answer_anchors", []) is Array else []
+		if not answer_anchors.is_empty():
+			lines.append("Required answer words for Q%d: %s." % [
+				i + 1, ", ".join(answer_anchors)
+			])
+	var opener_anchors: Array[String] = _bundle_intent_anchors(clean_intents)
+	if not opener_anchors.is_empty():
+		lines.append("Topic words the opener must naturally name: %s." % ", ".join(opener_anchors))
 	lines.append("")
 	lines.append("Write:")
 	lines.append(
@@ -296,6 +305,10 @@ static func build_bundle_prompt(
 	lines.append("  room for the pilot to reply; do not open by listing services or asking a survey question.")
 	lines.append("- Never open with \"Hey, listen\", \"Listen\", or a close variation. It sounds like an interruption, not lounge conversation.")
 	lines.append("- Do not begin by repeating or announcing the pilot's question. Do not use a bare \"Hey\" opener.")
+	if not opener_anchors.is_empty():
+		lines.append(
+			"- The opener must naturally include at least one Topic word above. A generic drink, weather, or greeting opener is not enough."
+		)
 	lines.append("- Only discuss the supplied topic. Never invent ship names, people, colonies, planets, companies, dates, disasters, or prior events as facts.")
 	lines.append(
 		"- The close must feel like a believable end to a short chat, not a stock"
@@ -337,7 +350,14 @@ static func bundle_intents(intents: Array) -> Array:
 			continue
 		var anchors: Array = intent.get("anchors", []) \
 			if intent.get("anchors", []) is Array else []
-		clean.append({"id": id, "text": text, "anchors": anchors.duplicate()})
+		var answer_anchors: Array = intent.get("answer_anchors", []) \
+			if intent.get("answer_anchors", []) is Array else []
+		clean.append({
+			"id": id,
+			"text": text,
+			"anchors": anchors.duplicate(),
+			"answer_anchors": answer_anchors.duplicate(),
+		})
 		if clean.size() >= BUNDLE_MAX_INTENTS:
 			break
 	return clean
@@ -472,33 +492,81 @@ const _OUT_OF_CHARACTER_MARKERS: Array = [
 # failures; a bundle with no relevant answers is rejected.
 static func validate_bundle_answers(
 	parsed: Dictionary,
-	intents: Array
+	intents: Array,
+	require_opener_grounding: bool = false
 ) -> Dictionary:
 	if not bool(parsed.get("ok", false)):
 		return parsed
 	var clean_intents := bundle_intents(intents)
+	if require_opener_grounding \
+			and not _opener_hits_any_intent_anchor(
+				str(parsed.get("opener", "")), clean_intents
+			):
+		return {"ok": false, "reason": "opener_missing_topic_anchor"}
 	var answers: Array = (parsed.get("answers", []) as Array).duplicate()
 	var valid_count := 0
+	var requires_topic_answer := false
+	var has_valid_topic_answer := false
 	for i in range(answers.size()):
 		var answer := str(answers[i])
 		if answer.is_empty():
 			continue
 		var keeps := _answer_in_character(answer)
+		var intent_has_anchors := false
 		if keeps and i < clean_intents.size():
-			keeps = _answer_hits_anchors(
-				answer,
-				(clean_intents[i] as Dictionary).get("anchors", [])
-			)
+			var intent: Dictionary = clean_intents[i]
+			var intent_anchors: Array = intent.get("answer_anchors", []) \
+				if intent.get("answer_anchors", []) is Array else []
+			if intent_anchors.is_empty():
+				intent_anchors = intent.get("anchors", []) \
+					if intent.get("anchors", []) is Array else []
+			intent_has_anchors = not intent_anchors.is_empty()
+			if intent_has_anchors:
+				requires_topic_answer = true
+				keeps = _answer_hits_anchors(answer, intent_anchors)
 		if keeps:
 			valid_count += 1
+			if intent_has_anchors:
+				has_valid_topic_answer = true
 		else:
 			answers[i] = ""
+	if requires_topic_answer and not has_valid_topic_answer:
+		return {"ok": false, "reason": "no_relevant_topic_answer"}
 	if valid_count < 1:
 		return {"ok": false, "reason": "no_relevant_answers"}
 	var result := parsed.duplicate(true)
 	result["answers"] = answers
 	result["valid_answer_count"] = valid_count
 	return result
+
+
+static func _opener_hits_any_intent_anchor(opener: String, intents: Array) -> bool:
+	var anchors := _bundle_intent_anchors(intents)
+	if anchors.is_empty():
+		return true
+	var lower := opener.to_lower()
+	for anchor in anchors:
+		if lower.contains(str(anchor)):
+			return true
+	return false
+
+
+static func _bundle_intent_anchors(intents: Array) -> Array[String]:
+	var anchors: Array[String] = []
+	for raw_intent in intents:
+		if not raw_intent is Dictionary:
+			continue
+		var intent: Dictionary = raw_intent
+		var opener_candidates: Array = intent.get("anchors", []) \
+			if intent.get("anchors", []) is Array else []
+		var answer_anchors: Array = intent.get("answer_anchors", []) \
+			if intent.get("answer_anchors", []) is Array else []
+		opener_candidates.append_array(answer_anchors)
+		for raw_anchor in opener_candidates:
+			var anchor := str(raw_anchor).strip_edges().to_lower()
+			if not anchor.is_empty() and anchor not in anchors:
+				anchors.append(anchor)
+	return anchors
 
 
 static func _answer_hits_anchors(answer: String, anchors: Array) -> bool:

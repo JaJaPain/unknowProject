@@ -1029,7 +1029,11 @@ func _ready_kaelen_system_arrival_bank_line(system_id: String) -> String:
 		if payload.get("consumed_line", {}) is Dictionary else {}
 	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
 	if not consumed_text.is_empty():
-		return consumed_text
+		if _accept_generated_kaelen_bank_line(
+			consumed_text, KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+		):
+			return consumed_text
+		return ""
 	var lines: Array = payload.get("line_bank", []) \
 		if payload.get("line_bank", []) is Array else []
 	var candidates: Array[String] = []
@@ -1044,7 +1048,23 @@ func _ready_kaelen_system_arrival_bank_line(system_id: String) -> String:
 			candidates.append(text)
 	if candidates.is_empty():
 		return ""
-	return candidates[randi() % candidates.size()]
+	var selected := candidates[randi() % candidates.size()]
+	if _accept_generated_kaelen_bank_line(
+		selected, KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+	):
+		return selected
+	return ""
+
+
+func _accept_generated_kaelen_bank_line(text: String, kind: String) -> bool:
+	var quality := validate_and_register_narrative_lines([text], "kaelen_bank:%s" % kind)
+	if bool(quality.get("ok", false)):
+		return true
+	GenerationDiagnostics.record_event(
+		"kaelen_line_bank", "quality_%s" % str(quality.get("reason", "unknown")),
+		"GameRoot", {"kind": kind}
+	)
+	return false
 
 
 func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
@@ -4538,6 +4558,13 @@ func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictio
 		if not bool(quality.get("ok", false)):
 			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
 			return quality
+		for raw_warning in quality.get("warnings", []):
+			var warning := str(raw_warning).strip_edges()
+			if not warning.is_empty():
+				GenerationDiagnostics.record_event(
+					"narrative_quality", "quality_warning", "GameRoot",
+					{"kind": kind, "warning": warning}
+				)
 		var verdict: Dictionary = campaign_narrative_fingerprint_ledger.register(text, kind)
 		if not bool(verdict.get("ok", false)):
 			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
@@ -10032,6 +10059,28 @@ func _dev_format_narrative_quality_ledger() -> String:
 			str(entry.get("kind", "unknown")),
 			str(entry.get("normalized", "")),
 		])
+	var diagnostics: Dictionary = GenerationDiagnostics.summary()
+	var events: Array = diagnostics.get("recent_events", []) \
+		if diagnostics.get("recent_events", []) is Array else []
+	var rejections: Array[String] = []
+	for index in range(events.size() - 1, -1, -1):
+		var event: Dictionary = events[index] if events[index] is Dictionary else {}
+		var reason := str(event.get("reason", ""))
+		var context: Dictionary = event.get("context", {}) \
+			if event.get("context", {}) is Dictionary else {}
+		var fallback_reason := str(context.get("fallback_reason", ""))
+		var quality_reason := reason if reason.begins_with("quality_") else fallback_reason
+		if not quality_reason.begins_with("quality_"):
+			continue
+		rejections.append("[%s] %s" % [
+			str(event.get("content_type", "unknown")), quality_reason
+		])
+		if rejections.size() >= 10:
+			break
+	if not rejections.is_empty():
+		lines.append("")
+		lines.append("Recent quality rejections:")
+		lines.append_array(rejections)
 	return "\n".join(lines)
 
 

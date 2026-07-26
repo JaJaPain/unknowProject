@@ -23,6 +23,8 @@ func _initialize() -> void:
 	_test_live_kaelen_prompts_do_not_read_protected_story_fields()
 	_test_kaelen_reaction_bundle_is_mission_keyed()
 	_test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks()
+	_test_kaelen_reaction_grounding_rejects_false_rescue_outcomes()
+	_test_generated_kaelen_lines_use_quality_gate_without_touching_tutorial()
 
 	if _failures.is_empty():
 		print("[PASS] Kaelen interaction bundle tests")
@@ -478,20 +480,26 @@ func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> voi
 	var source := file.get_as_text()
 	_expect(
 		source.contains("func _kaelen_reaction_player_clarity_issue")
+			and source.contains("func _kaelen_reaction_task_anchor_issue")
+			and source.contains("missing_task_anchor:")
+			and source.contains("func _kaelen_reaction_claims_generic_safety")
+			and source.contains("generic_safety_outcome")
+			and source.contains("\"DELIVER_ORE\"")
+			and source.contains("\"ore\", \"delivery\"")
 			and source.contains("\"now fix\"")
 			and source.contains("\"unexplained_next_task\"")
 			and source.contains("\"relay\"")
 			and source.contains("\"unintroduced_story_detail_\"")
 			and source.contains("someone else has one less infrastructure problem")
 			and source.contains("Never make the pilot responsible for that unseen problem"),
-		"Kaelen clarity guard does not block unexplained next tasks while allowing generic resolved offscreen benefits."
+		"Kaelen clarity guard does not ground outcomes in the actual task or block generic rescue language."
 	)
 	_expect(
-		source.contains("let a little heart show for one beat")
-			and source.contains("cover it with profit")
-			and source.contains("we got paid in full")
-			and source.contains("Do not become sentimental for the whole line"),
-		"Kaelen completion prompt does not preserve the heart-then-profit turn-in shape."
+		source.contains("keep any warmth understated")
+			and source.contains("return to broker business")
+			and source.contains("never emotionally confessional or sentimental")
+			and not source.contains("let a little heart show for one beat"),
+		"Kaelen completion prompt does not preserve the understated broker voice constraint."
 	)
 	_expect(
 		source.contains("earned_aftermath.visible_effect.has_visible_effect")
@@ -508,6 +516,93 @@ func _test_kaelen_reaction_clarity_guard_blocks_unintroduced_next_tasks() -> voi
 	_expect(
 		not source.contains("Clean and Easy done? Good. Your credits hit my ledger"),
 		"Screenshot regression text was accidentally hard-coded into production."
+	)
+
+
+func _test_kaelen_reaction_grounding_rejects_false_rescue_outcomes() -> void:
+	var interface := get_root().get_node_or_null("LLMInterface")
+	_expect(
+		interface != null and interface.has_method("_kaelen_reaction_player_clarity_issue"),
+		"Live LLMInterface clarity guard is unavailable for Kaelen grounding checks."
+	)
+	if interface == null or not interface.has_method("_kaelen_reaction_player_clarity_issue"):
+		return
+	var ore_quest := {
+		"objective": {"type": "DELIVER_ORE", "amount_required": 20},
+		"narrative_metadata": {"outcome_snapshot": {}},
+	}
+	var false_rescue := str(interface.call(
+		"_kaelen_reaction_player_clarity_issue",
+		"The ore delivery is logged. They're safe now.", ore_quest, "completion"
+	))
+	_expect(
+		false_rescue == "generic_safety_outcome",
+		"Ore delivery must reject a generic rescue/safety conclusion: %s" % false_rescue
+	)
+	var generic_completion := str(interface.call(
+		"_kaelen_reaction_player_clarity_issue",
+		"Contract closed. Credits are clear.", ore_quest, "completion"
+	))
+	_expect(
+		generic_completion == "missing_task_anchor:deliver_ore",
+		"Kaelen completion must name the actual ore/delivery work: %s" % generic_completion
+	)
+	var safe_outcome := ore_quest.duplicate(true)
+	safe_outcome["narrative_metadata"]["outcome_snapshot"] = {
+		"world_consequence": "The evacuation lanes are safe again.",
+	}
+	var still_generic := str(interface.call(
+		"_kaelen_reaction_player_clarity_issue",
+		"The ore delivery is in. They're safe now, and the credits cleared.",
+		safe_outcome,
+		"completion"
+	))
+	_expect(
+		still_generic == "generic_safety_outcome",
+		"An earned outcome must not license Kaelen's generic rescue wording: %s" % still_generic
+	)
+	var concrete_aftermath := str(interface.call(
+		"_kaelen_reaction_player_clarity_issue",
+		"The ore delivery is in. Those evacuation lanes stay open, and the credits cleared.",
+		safe_outcome,
+		"completion"
+	))
+	_expect(
+		concrete_aftermath.is_empty(),
+		"Kaelen should be allowed to reveal the concrete earned aftermath: %s" % concrete_aftermath
+	)
+
+
+func _test_generated_kaelen_lines_use_quality_gate_without_touching_tutorial() -> void:
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	var root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(
+		ui_file != null and root_file != null,
+		"Could not inspect Kaelen campaign quality-gate wiring."
+	)
+	if ui_file == null or root_file == null:
+		return
+	var ui_source := ui_file.get_as_text()
+	var root_source := root_file.get_as_text()
+	ui_file.close()
+	root_file.close()
+	var request_start := ui_source.find("func _request_kaelen_reaction_bundle_for_mission")
+	var request_end := ui_source.find("\nfunc ", request_start + 10)
+	var request_body := ui_source.substr(request_start, request_end - request_start)
+	_expect(
+		request_body.contains("_validate_generated_narrative_lines")
+			and request_body.contains("kaelen_reaction")
+			and request_body.find("_validate_generated_narrative_lines")
+				< request_body.find("store_active_kaelen_reaction_bundle"),
+		"Generated Kaelen reaction bundles are stored before campaign quality validation."
+	)
+	_expect(
+		root_source.contains("func _accept_generated_kaelen_bank_line")
+			and root_source.contains("kaelen_bank:%s")
+			and request_body.contains("is_intro_tutorial_contract")
+			and request_body.find("is_intro_tutorial_contract")
+				< request_body.find("_validate_generated_narrative_lines"),
+		"Kaelen quality gate must cover generated lines while preserving authored tutorial reactions."
 	)
 
 

@@ -5265,12 +5265,12 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
 		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
 		"If earned_aftermath.visible_effect.has_visible_effect is true, name that effect once in plain language before Kaelen's profit deflection. If it is false, do not invent shields, convoys, contacts, evidence, cities, or cases. " + \
-		"If earned_aftermath.earned_background.can_reveal is true, you may add one short plain-language clause explaining the safe background or what the job prevented. Use only earned_background text and IDs; never add secret motives, identities, origins, or hidden director-only causes. " + \
+		"If earned_aftermath.earned_background.can_reveal is true, you may add one short plain-language clause explaining the safe background or what the job prevented. Name the concrete approved effect; never reduce it to a generic rescue claim such as 'they are safe now'. Use only earned_background text and IDs; never add secret motives, identities, origins, or hidden director-only causes. " + \
 		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
 		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
 		"The job was exactly this and nothing else: " + task_desc + ". Describe the outcome only in terms of that task. Invent no other job details — no mines, cleanup, rescue, escort, repairs, or cargo the task did not involve. " + \
 		"Do NOT name who paid or who benefits. The client stays anonymous — never invent an employer. The ONLY faction you may name is " + faction + "; never mention any other faction. " + \
-		"Preferred Kaelen turn-in shape: one brief beat of dry warmth, then she pivots to the money. Write it in her own fresh words; never reuse a sample sentence and never open with 'They're safe now'. " + \
+		"Preferred Kaelen turn-in shape: keep any warmth understated — one brief acknowledgment of competent work or a safe outcome, then return to broker business. She is never emotionally confessional or sentimental. Write it in her own fresh words; never reuse a sample sentence and never open with 'They're safe now'. " + \
 		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
 		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
 		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \
@@ -5399,6 +5399,11 @@ func _kaelen_reaction_player_clarity_issue(
 		return "empty_line"
 	var lower_line := clean_line.to_lower()
 	if line_kind.strip_edges() == "completion":
+		var task_anchor_issue := _kaelen_reaction_task_anchor_issue(
+			lower_line, quest_data
+		)
+		if not task_anchor_issue.is_empty():
+			return task_anchor_issue
 		for pattern in [
 			"now fix",
 			"now save",
@@ -5418,6 +5423,12 @@ func _kaelen_reaction_player_clarity_issue(
 			if lower_line.begins_with(opening):
 				return "unexplained_next_task"
 	var allowed_context := JSON.stringify(quest_data).to_lower()
+	if line_kind.strip_edges() == "completion" \
+			and _kaelen_reaction_claims_generic_safety(lower_line):
+		# A real aftermath may be shown only in its concrete, packet-approved
+		# form (clinic, lane, district, etc.). "They're safe now" is a generic
+		# rescue claim that hides why this particular contract mattered.
+		return "generic_safety_outcome"
 	for term in [
 		"relay",
 		"relays",
@@ -5436,6 +5447,52 @@ func _kaelen_reaction_player_clarity_issue(
 		if lower_line.contains(term) and not allowed_context.contains(term):
 			return "unintroduced_story_detail_" + term.replace(" ", "_")
 	return ""
+
+
+func _kaelen_reaction_task_anchor_issue(
+	lower_line: String,
+	quest_data: Dictionary
+) -> String:
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	var anchors: Array[String] = []
+	match objective_type:
+		"DELIVER_ORE":
+			anchors = ["ore", "delivery"]
+		"KILL_SHIPS":
+			anchors = ["ship", "ships"]
+			var target := str(objective.get("target_faction", "")).to_lower().strip_edges()
+			if not target.is_empty():
+				anchors.append(target)
+		"DELIVERY_COURIER":
+			anchors = ["delivery", "courier", "package", "manifest", "records"]
+		"PURCHASE_DELIVERY":
+			anchors = ["delivery", "cargo", "supplies"]
+		"RECOVER_COMBAT_DROP":
+			anchors = ["recover", "recovered", "salvage", "salvaged"]
+		"TARGET_WITH_COMMS_REVERSAL":
+			anchors = ["target", "comms", "transmission"]
+		_:
+			return ""
+	for anchor in anchors:
+		if lower_line.contains(anchor):
+			return ""
+	return "missing_task_anchor:%s" % objective_type.to_lower()
+
+
+func _kaelen_reaction_claims_generic_safety(lower_line: String) -> bool:
+	for phrase in [
+		"they're safe now",
+		"they are safe now",
+		"everyone is safe",
+		"kept them safe",
+		"saved them",
+		"you saved",
+	]:
+		if lower_line.contains(phrase):
+			return true
+	return false
 
 
 func _trigger_kaelen_reaction_fallback(

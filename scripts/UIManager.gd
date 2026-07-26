@@ -5284,7 +5284,7 @@ func _on_lounge_bundle_result(
 		parsed = LoungeConversationType.parse_bundle(
 			str(result.get("inner_text", "")), npc_name, intents.size()
 		)
-		parsed = LoungeConversationType.validate_bundle_answers(parsed, intents)
+		parsed = LoungeConversationType.validate_bundle_answers(parsed, intents, true)
 	if not bool(parsed.get("ok", false)):
 		var retry_count := int(entry.get("writer_retry_count", 0))
 		if retry_count < 1:
@@ -5346,7 +5346,7 @@ func _on_lounge_bundle_review_result(contact_key: String, result: Dictionary) ->
 	var lines: Array = [str(candidate.get("opener", "")), str(candidate.get("close", ""))]
 	for answer in candidate.get("answers", []):
 		lines.append(str(answer))
-	var quality := _validate_lounge_narrative_lines(lines, "lounge_bundle")
+	var quality := _validate_generated_narrative_lines(lines, "lounge_bundle")
 	if not bool(quality.get("ok", false)):
 		GenerationDiagnostics.record_fallback(
 			"lounge_bundle", "quality_%s" % str(quality.get("reason", "unknown")),
@@ -5368,7 +5368,7 @@ func _refresh_lounge_cards_after_bundle_result() -> void:
 		call_deferred("_render_station_contacts", true)
 
 
-func _validate_lounge_narrative_lines(lines: Array, kind: String) -> Dictionary:
+func _validate_generated_narrative_lines(lines: Array, kind: String) -> Dictionary:
 	var game_root := get_tree().current_scene
 	if game_root == null or not game_root.has_method("validate_and_register_narrative_lines"):
 		return {"ok": true, "reason": "ledger_unavailable"}
@@ -5778,7 +5778,7 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 	var generated_lines: Array = [line]
 	for reply in parsed.get("replies", []):
 		generated_lines.append(str(reply))
-	var quality := _validate_lounge_narrative_lines(generated_lines, "lounge_turn")
+	var quality := _validate_generated_narrative_lines(generated_lines, "lounge_turn")
 	if not bool(quality.get("ok", false)):
 		GenerationDiagnostics.record_fallback(
 			"lounge_chat", "quality_%s" % str(quality.get("reason", "unknown")),
@@ -5920,7 +5920,7 @@ func _on_stranger_card_pressed(card_data: Dictionary) -> void:
 				var parsed: Dictionary = LoungeConversationType.parse_turn(str(result.get("inner_text", "")), "A Stranger")
 				if bool(parsed.get("ok", false)):
 					var generated := str(parsed.get("line", line))
-					var quality := _validate_lounge_narrative_lines([generated], "lounge_stranger")
+					var quality := _validate_generated_narrative_lines([generated], "lounge_stranger")
 					if bool(quality.get("ok", false)):
 						line = generated
 					else:
@@ -11944,6 +11944,20 @@ func _request_kaelen_reaction_bundle_for_mission(
 	LLMInterface.request_kaelen_reaction(
 		mission_data,
 		func(comp_line: String, abn_line: String):
+			# The LLMInterface has already applied Kaelen's safe-packet and
+			# player-clarity guards. This campaign gate is deliberately additive:
+			# it only rejects repeated model output and never rewrites her voice.
+			var quality := _validate_generated_narrative_lines(
+				[comp_line, abn_line], "kaelen_reaction"
+			)
+			if not bool(quality.get("ok", false)):
+				GenerationDiagnostics.record_fallback(
+					"kaelen_reaction",
+					"quality_%s" % str(quality.get("reason", "unknown")),
+					"UIManager",
+					{"mission_runtime_id": kaelen_reaction_runtime_id, "reason": reason}
+				)
+				return
 			if not QuestManager.store_active_kaelen_reaction_bundle(
 				kaelen_reaction_runtime_id,
 				comp_line,
