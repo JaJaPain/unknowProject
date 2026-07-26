@@ -49,6 +49,21 @@ func text_fingerprints() -> Dictionary:
 	return (data.get("text_fingerprints", {}) as Dictionary).duplicate(true)
 
 
+func quality_ledger_data() -> Dictionary:
+	return (data.get("quality_ledger", {}) as Dictionary).duplicate(true)
+
+
+func update_quality_ledger(ledger_data: Dictionary) -> Dictionary:
+	if not is_valid():
+		return _failure("Narrative cache store is invalid.")
+	var next_data := data.duplicate(true)
+	next_data["quality_ledger"] = ledger_data.duplicate(true)
+	var committed := _commit(next_data, "narrative_quality_ledger_update")
+	if bool(committed.get("ok", false)):
+		data = next_data
+	return committed
+
+
 func has_text_fingerprint(text: String) -> bool:
 	var fingerprint := text_fingerprint(text)
 	if fingerprint.is_empty():
@@ -403,6 +418,7 @@ static func _initial_data(campaign_id: String) -> Dictionary:
 		"campaign_id": campaign_id,
 		"entries": {},
 		"text_fingerprints": {},
+		"quality_ledger": {},
 	}
 
 
@@ -669,6 +685,8 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			"Narrative cache text_fingerprints must be an object.",
 			"text_fingerprints"
 		)
+	if value.has("quality_ledger") and not value.get("quality_ledger", {}) is Dictionary:
+		result.add_error("invalid_narrative_quality_ledger", "Quality ledger must be an object.", "quality_ledger")
 	var entries: Dictionary = value.get("entries", {})
 	for cache_key in entries.keys():
 		var raw: Variant = entries[cache_key]

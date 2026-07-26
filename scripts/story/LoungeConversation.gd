@@ -374,8 +374,15 @@ static func build_bundle_review_prompt(
 
 static func parse_bundle_review(inner_json_text: String) -> bool:
 	var parser := JSON.new()
-	if parser.parse(inner_json_text.strip_edges()) != OK:
-		return false
+	var candidate := inner_json_text.strip_edges()
+	if parser.parse(candidate) != OK:
+		# Ollama occasionally returns an otherwise complete one-field verdict
+		# without its final brace. Repair only that harmless terminal omission;
+		# malformed keys, values, or extra prose still fail strict JSON parsing.
+		if candidate.begins_with("{") and not candidate.ends_with("}"):
+			candidate += "}"
+		if parser.parse(candidate) != OK:
+			return false
 	var data: Variant = parser.get_data()
 	return data is Dictionary and str((data as Dictionary).get("verdict", "")).to_lower() == "approve"
 

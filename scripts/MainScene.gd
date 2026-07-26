@@ -179,6 +179,10 @@ func _on_salvager_destroyed():
 func _generate_salvager_identity(salvager: Node3D):
 	if not is_instance_valid(salvager):
 		return
+	# A live-fire dialogue harness owns the model deliberately; do not let the
+	# startup flavor refill compete with its one-at-a-time protocol.
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		return
 
 	# Wait for the small model to pass its readiness probe so this doesn't race the
 	# cold-start warm-up and fall back to a canned backstory. Captures the instance

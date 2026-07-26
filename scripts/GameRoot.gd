@@ -92,6 +92,12 @@ const NarrativeCacheStoreType := preload(
 const NarrativeCacheSchedulerType := preload(
 	"res://scripts/story/NarrativeCacheScheduler.gd"
 )
+const NarrativeFingerprintLedgerType := preload(
+	"res://scripts/story/NarrativeFingerprintLedger.gd"
+)
+const NarrativeQualityGateType := preload(
+	"res://scripts/story/NarrativeQualityGate.gd"
+)
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
@@ -145,6 +151,7 @@ var campaign_npc_identity_store = null
 var campaign_npc_state_store = null
 var campaign_agent_memory_store = null
 var campaign_narrative_cache_store = null
+var campaign_narrative_fingerprint_ledger = null
 var narrative_cache_scheduler = null
 var narrative_cache_scheduler_pause_reasons: Dictionary = {}
 var campaign_bible_generation_requested_slots: Dictionary = {}
@@ -1878,6 +1885,7 @@ func _clear_active_campaign_runtime_context() -> void:
 	campaign_npc_state_store = null
 	campaign_agent_memory_store = null
 	campaign_narrative_cache_store = null
+	campaign_narrative_fingerprint_ledger = null
 	GlobalState.campaign_npc_identity_store = null
 	GlobalState.campaign_npc_state_store = null
 	GlobalState.campaign_agent_memory_store = null
@@ -2276,6 +2284,8 @@ func _initialize_campaign_chronicle() -> void:
 		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_narrative_cache_store = opened_narrative_cache
+	campaign_narrative_fingerprint_ledger = NarrativeFingerprintLedgerType.new()
+	campaign_narrative_fingerprint_ledger.load_dict(opened_narrative_cache.quality_ledger_data())
 	_restore_ready_narrative_cache_payloads()
 	_init_generated_system_configs()
 	_refresh_llm_idea_memory_context()
@@ -4512,6 +4522,34 @@ func _persist_narrative_cache_payload_update(cache_key: String, payload: Diction
 	if clean_key.is_empty() or payload.is_empty():
 		return
 	campaign_narrative_cache_store.update_result_payload(clean_key, payload)
+
+
+func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictionary:
+	if campaign_narrative_fingerprint_ledger == null:
+		return {"ok": true, "reason": "ledger_unavailable"}
+	var snapshot: Dictionary = campaign_narrative_fingerprint_ledger.to_dict()
+	for raw_line in lines:
+		var text := str(raw_line).strip_edges()
+		if text.is_empty():
+			continue
+		var quality: Dictionary = NarrativeQualityGateType.validate_line(
+			text, campaign_narrative_fingerprint_ledger, kind
+		)
+		if not bool(quality.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return quality
+		var verdict: Dictionary = campaign_narrative_fingerprint_ledger.register(text, kind)
+		if not bool(verdict.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return verdict
+	if campaign_narrative_cache_store != null:
+		var persisted: Dictionary = campaign_narrative_cache_store.update_quality_ledger(
+			campaign_narrative_fingerprint_ledger.to_dict()
+		)
+		if not bool(persisted.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return {"ok": false, "reason": "ledger_persist_failed"}
+	return {"ok": true}
 
 
 func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary:
@@ -9897,6 +9935,7 @@ func _dev_story_debug_snapshot() -> Dictionary:
 	var chapter_beat_states := ""
 	var chapter_packet_validation := ""
 	var character_cards_summary := _dev_format_character_cards()
+	var quality_ledger_summary := _dev_format_narrative_quality_ledger()
 	if is_instance_valid(StoryManager):
 		story_context = StoryManager.get_story_context_block()
 		var state: Dictionary = StoryManager.story_state
@@ -9937,6 +9976,7 @@ func _dev_story_debug_snapshot() -> Dictionary:
 		"chapter_beat_states": chapter_beat_states,
 		"chapter_packet_validation": chapter_packet_validation,
 		"character_cards_summary": character_cards_summary,
+		"quality_ledger_summary": quality_ledger_summary,
 		"full_story_state_json": full_story_state_json,
 	}
 
@@ -9972,6 +10012,27 @@ func _dev_format_narrative_cache_summary() -> String:
 			int(summary.get("generated_replacements", 0)),
 		]
 	)
+
+
+func _dev_format_narrative_quality_ledger() -> String:
+	if campaign_narrative_fingerprint_ledger == null:
+		return "Quality ledger unavailable for the active campaign."
+	if not campaign_narrative_fingerprint_ledger.has_method("entries"):
+		return "Quality ledger does not expose entries."
+	var entries: Array = campaign_narrative_fingerprint_ledger.entries()
+	if entries.is_empty():
+		return "No post-tutorial generated lines have been accepted yet."
+	var lines: Array[String] = [
+		"%d tracked line(s); exact repeats and near duplicates are rejected before display." % entries.size()
+	]
+	var start := maxi(entries.size() - 20, 0)
+	for index in range(entries.size() - 1, start - 1, -1):
+		var entry: Dictionary = entries[index] if entries[index] is Dictionary else {}
+		lines.append("[%s] %s" % [
+			str(entry.get("kind", "unknown")),
+			str(entry.get("normalized", "")),
+		])
+	return "\n".join(lines)
 
 
 func _dev_format_count_dictionary(counts: Dictionary) -> String:

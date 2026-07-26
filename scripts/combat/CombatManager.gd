@@ -178,7 +178,10 @@ var _general_taunt_fetch_in_flight: bool = false
 func _ready() -> void:
 	_build_and_cache_taunts()
 	_load_persisted_taunts()
-	_request_general_taunt_pool()
+	# Live-fire dialogue tools must issue exactly one model request at a time.
+	# They retain the authored/persisted taunt floor and opt out only of refill.
+	if "--llm-live-fire" not in OS.get_cmdline_user_args():
+		_request_general_taunt_pool()
 
 # Build the two taunt pools, each line paired with a random angry blend, and
 # pre-cache the audio so combat playback is instant (queues if TTS isn't up yet).

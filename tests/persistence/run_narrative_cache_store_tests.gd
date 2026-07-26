@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_upsert_auto_enforces_default_entry_limit()
 	_test_text_fingerprints_survive_entry_eviction()
 	_test_text_fingerprint_lookup_detects_prior_lines()
+	_test_quality_ledger_persists_independently_of_entries()
 	_test_clear_cache_removes_entries_and_fingerprints()
 	_test_tts_readiness_tracks_field_voice_and_text_fingerprint()
 	_test_readiness_reports_text_audio_pending_and_failed_separately()
@@ -275,6 +276,32 @@ func _test_text_fingerprint_lookup_detects_prior_lines() -> void:
 		reopened.has_text_fingerprint("The cache has work.")
 			and not reopened.has_text_fingerprint("A line nobody has stored."),
 		"Cache text fingerprint lookup did not detect prior generated lines."
+	)
+
+
+func _test_quality_ledger_persists_independently_of_entries() -> void:
+	_cleanup()
+	_write_campaign()
+	var store: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var ledger := {
+		"schema_version": 1,
+		"entries": [{
+			"fingerprint": "quality.alpha",
+			"normalized": "the relay is dark",
+			"distinctive_tokens": ["relay", "dark"],
+			"kind": "lounge_bundle",
+		}],
+	}
+	var updated: Dictionary = store.update_quality_ledger(ledger)
+	var reopened: RefCounted = CacheStoreType.open(TEST_ROOT)
+	var restored: Dictionary = reopened.quality_ledger_data()
+	var restored_entries: Array = restored.get("entries", []) \
+		if restored.get("entries", []) is Array else []
+	_expect(
+		bool(updated.get("ok", false))
+			and not restored_entries.is_empty()
+			and str(restored_entries[0].get("fingerprint", "")) == "quality.alpha",
+		"Quality ledger did not persist independently of disposable cache entries."
 	)
 
 

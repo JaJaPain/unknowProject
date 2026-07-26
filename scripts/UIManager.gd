@@ -5245,16 +5245,23 @@ func _prepare_lounge_exchange_bundle(card: Dictionary) -> void:
 	_lounge_bundle_cache[contact_key] = {
 		"status": "pending",
 		"intents": intents,
+		"writer_prompt": "",
+		"writer_retry_count": 0,
 	}
 	var prompt: String = LoungeConversationType.build_bundle_prompt(
 		npc, _lounge_flavor_block(), intents
 	)
+	var entry: Dictionary = _lounge_bundle_cache.get(contact_key, {})
+	entry["writer_prompt"] = prompt
+	_lounge_bundle_cache[contact_key] = entry
+	_request_lounge_bundle_writer(contact_key, str(npc.get("name", "")), prompt)
+
+
+func _request_lounge_bundle_writer(contact_key: String, npc_name: String, prompt: String) -> void:
 	LLMInterface.request_lounge_exchange_bundle(
 		prompt,
 		func(result: Dictionary) -> void:
-			_on_lounge_bundle_result(
-				contact_key, str(npc.get("name", "")), result
-			)
+			_on_lounge_bundle_result(contact_key, npc_name, result)
 	)
 
 
@@ -5279,6 +5286,16 @@ func _on_lounge_bundle_result(
 		)
 		parsed = LoungeConversationType.validate_bundle_answers(parsed, intents)
 	if not bool(parsed.get("ok", false)):
+		var retry_count := int(entry.get("writer_retry_count", 0))
+		if retry_count < 1:
+			entry["writer_retry_count"] = retry_count + 1
+			_lounge_bundle_cache[contact_key] = entry
+			var retry_prompt := str(entry.get("writer_prompt", "")) + (
+				"\nYour prior response was structurally invalid. Return every required "
+				+ "JSON field, with no prose before or after the object."
+			)
+			_request_lounge_bundle_writer(contact_key, npc_name, retry_prompt)
+			return
 		GenerationDiagnostics.record_fallback(
 			"lounge_bundle",
 			str(parsed.get("reason", "unknown")),
@@ -5326,6 +5343,18 @@ func _on_lounge_bundle_review_result(contact_key: String, result: Dictionary) ->
 		_lounge_bundle_cache[contact_key] = {"status": "failed"}
 		_refresh_lounge_cards_after_bundle_result()
 		return
+	var lines: Array = [str(candidate.get("opener", "")), str(candidate.get("close", ""))]
+	for answer in candidate.get("answers", []):
+		lines.append(str(answer))
+	var quality := _validate_lounge_narrative_lines(lines, "lounge_bundle")
+	if not bool(quality.get("ok", false)):
+		GenerationDiagnostics.record_fallback(
+			"lounge_bundle", "quality_%s" % str(quality.get("reason", "unknown")),
+			"UIManager", {"contact": contact_key}
+		)
+		_lounge_bundle_cache[contact_key] = {"status": "failed"}
+		_refresh_lounge_cards_after_bundle_result()
+		return
 	entry.erase("candidate_bundle")
 	entry["status"] = "ready"
 	entry["bundle"] = candidate
@@ -5337,6 +5366,13 @@ func _refresh_lounge_cards_after_bundle_result() -> void:
 	if station_contacts_panel != null and is_instance_valid(station_contacts_panel) \
 			and station_contacts_panel.visible:
 		call_deferred("_render_station_contacts", true)
+
+
+func _validate_lounge_narrative_lines(lines: Array, kind: String) -> Dictionary:
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("validate_and_register_narrative_lines"):
+		return {"ok": true, "reason": "ledger_unavailable"}
+	return game_root.call("validate_and_register_narrative_lines", lines, kind)
 
 
 # Code-supplied context for the intent selector: rumored knowledge gaps
@@ -5739,6 +5775,18 @@ func _on_lounge_turn_result(serial: int, result: Dictionary) -> void:
 		)
 		return
 	var line := str(parsed.get("line", ""))
+	var generated_lines: Array = [line]
+	for reply in parsed.get("replies", []):
+		generated_lines.append(str(reply))
+	var quality := _validate_lounge_narrative_lines(generated_lines, "lounge_turn")
+	if not bool(quality.get("ok", false)):
+		GenerationDiagnostics.record_fallback(
+			"lounge_chat", "quality_%s" % str(quality.get("reason", "unknown")),
+			"UIManager", {"npc": str(npc.get("name", ""))}
+		)
+		_lounge_convo = {}
+		_show_lounge_card_line(card, _lounge_card_fallback_line(card), true, [], true)
+		return
 	var turns: Array = _lounge_convo.get("turns", [])
 	turns.append({"speaker": "npc", "text": line})
 	_lounge_convo["turns"] = turns
@@ -5871,7 +5919,15 @@ func _on_stranger_card_pressed(card_data: Dictionary) -> void:
 			if bool(result.get("ok", false)):
 				var parsed: Dictionary = LoungeConversationType.parse_turn(str(result.get("inner_text", "")), "A Stranger")
 				if bool(parsed.get("ok", false)):
-					line = str(parsed.get("line", line))
+					var generated := str(parsed.get("line", line))
+					var quality := _validate_lounge_narrative_lines([generated], "lounge_stranger")
+					if bool(quality.get("ok", false)):
+						line = generated
+					else:
+						GenerationDiagnostics.record_fallback(
+							"lounge_chat", "quality_%s" % str(quality.get("reason", "unknown")),
+							"UIManager", {"npc": "A Stranger"}
+						)
 			_show_stranger_offer(card, line)
 	)
 

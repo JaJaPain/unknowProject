@@ -29,6 +29,9 @@ func _initialize() -> void:
 	_test_stranger_intel_becomes_a_real_fact()
 	_test_stranger_deal_stays_code_owned_and_leak_free()
 	_test_bundle_preparation_wiring()
+	_test_bundle_writer_retries_before_failure()
+	_test_bundle_quality_gate_runs_before_ready()
+	_test_live_lounge_paths_use_quality_gate()
 	_test_docking_prefetches_lounge_bundles()
 	_test_station_target_prefetches_lounge_bundles()
 	_test_pending_bundle_cards_block_live_generation()
@@ -630,7 +633,9 @@ func _test_fresh_bundle_review_protocol() -> void:
 	)
 	_expect(
 		ConvoType.parse_bundle_review("{\"verdict\":\"approve\"}")
+			and ConvoType.parse_bundle_review("{\"verdict\":\"approve\"")
 			and not ConvoType.parse_bundle_review("{\"verdict\":\"reject\"}")
+			and not ConvoType.parse_bundle_review("{\"verdict\":")
 			and not ConvoType.parse_bundle_review("not json"),
 		"Bundle reviewer approval parser is too permissive or rejects valid approval."
 	)
@@ -768,6 +773,62 @@ func _test_bundle_preparation_wiring() -> void:
 # result callback redraws the visible cards when readiness changes.
 # Phase 9: the docking fade begins predictable lounge preparation and keeps
 # the Lounge entry disabled during its short arrival beat.
+func _test_bundle_writer_retries_before_failure() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect lounge writer retry wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	file.close()
+	var result_start := source.find("func _on_lounge_bundle_result")
+	var result_end := source.find("\nfunc ", result_start + 10)
+	var result_body := source.substr(result_start, result_end - result_start)
+	_expect(
+		result_body.contains("writer_retry_count")
+			and result_body.contains("_request_lounge_bundle_writer")
+			and result_body.find("writer_retry_count") < result_body.find("record_fallback"),
+		"Invalid prepared bundles must receive one background writer retry before fallback."
+	)
+
+
+func _test_bundle_quality_gate_runs_before_ready() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect lounge bundle quality-gate wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	file.close()
+	var review_start := source.find("func _on_lounge_bundle_review_result")
+	var review_end := source.find("\nfunc ", review_start + 10)
+	var review_body := source.substr(review_start, review_end - review_start)
+	var quality_at := review_body.find("_validate_lounge_narrative_lines")
+	var ready_at := review_body.find("entry[\"status\"] = \"ready\"")
+	_expect(
+		quality_at >= 0 and ready_at > quality_at
+			and review_body.contains("quality_%s")
+			and review_body.contains("lounge_bundle"),
+		"An approved lounge bundle can become ready without campaign quality validation."
+	)
+
+
+func _test_live_lounge_paths_use_quality_gate() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect live lounge quality-gate wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	file.close()
+	for function_name in ["func _on_lounge_turn_result", "func _on_stranger_card_pressed"]:
+		var start := source.find(function_name)
+		var end := source.find("\nfunc ", start + 10)
+		var body := source.substr(start, end - start)
+		_expect(
+			body.contains("_validate_lounge_narrative_lines")
+				and body.contains("quality_%s"),
+			"%s can display generated lounge text without the campaign quality gate." % function_name
+		)
+
+
 func _test_docking_prefetches_lounge_bundles() -> void:
 	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
 	_expect(file != null, "Could not inspect lounge docking-prefetch wiring.")

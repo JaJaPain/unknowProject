@@ -33,6 +33,7 @@ const OLLAMA_HEALTH_URL := "http://127.0.0.1:11434/"
 const _OLLAMA_POLL_INTERVAL := 2.0    # seconds between readiness polls
 const _OLLAMA_HEARTBEAT_SECONDS := 30.0
 const _OLLAMA_MAX_POLLS    := 15      # 15 × 2s = 30s before giving up
+const _SMALL_MODEL_PROBE_RETRY_SECONDS := 10.0
 var _ollama_ready:        bool = false
 var _ollama_poll_count:   int  = 0
 var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
@@ -46,6 +47,8 @@ var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
 var ollama_auto_restart_allowed: bool = false
 var _ollama_recovery_in_progress: bool = false
 var _ollama_heartbeat_in_flight: bool = false
+var _ollama_heartbeat_timer: Timer = null
+var _small_model_probe_retry_scheduled: bool = false
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
@@ -605,18 +608,23 @@ func _ready():
 # ── Ollama watchdog helpers ───────────────────────────────────────────────────
 
 ## Fire a single quick HTTP ping at the Ollama root. Calls callback(true/false).
-func _schedule_ollama_heartbeat() -> void:
-	get_tree().create_timer(_OLLAMA_HEARTBEAT_SECONDS, true, false, true).timeout.connect(
-		_run_ollama_heartbeat
-	)
+func _start_ollama_heartbeat() -> void:
+	if _ollama_heartbeat_timer == null:
+		_ollama_heartbeat_timer = Timer.new()
+		_ollama_heartbeat_timer.name = "OllamaHeartbeat"
+		_ollama_heartbeat_timer.wait_time = _OLLAMA_HEARTBEAT_SECONDS
+		_ollama_heartbeat_timer.one_shot = false
+		_ollama_heartbeat_timer.process_callback = Timer.TIMER_PROCESS_IDLE
+		add_child(_ollama_heartbeat_timer)
+		_ollama_heartbeat_timer.timeout.connect(_run_ollama_heartbeat)
+	if _ollama_heartbeat_timer.is_stopped():
+		_ollama_heartbeat_timer.start()
 
 
 func _run_ollama_heartbeat() -> void:
 	if _ollama_heartbeat_in_flight:
-		_schedule_ollama_heartbeat()
 		return
 	_ollama_heartbeat_in_flight = true
-	_schedule_ollama_heartbeat()
 	_ollama_ping(func(up: bool):
 		_ollama_heartbeat_in_flight = false
 		if not up:
@@ -627,7 +635,6 @@ func _run_ollama_heartbeat() -> void:
 				"ollama_watchdog", "heartbeat_service_down", "llm_interface", {}
 			)
 			attempt_ollama_recovery()
-		_schedule_ollama_heartbeat()
 	)
 
 
@@ -720,6 +727,10 @@ func attempt_ollama_recovery() -> void:
 		_ollama_recovery_in_progress = false
 		if up:
 			return
+		# A missing service invalidates any prior warm-model claim. Discovery
+		# will warm and verify it again after the service returns.
+		small_model_verified = false
+		_models_warm_started = false
 		_ollama_launch()
 	)
 
@@ -751,6 +762,7 @@ func force_restart_ollama() -> void:
 ## pulling them if not, then marks the interface ready and starts model discovery.
 func _ollama_after_up() -> void:
 	_ollama_ready = true
+	_start_ollama_heartbeat()
 	_ollama_ensure_models([LocalModelGatewayType.DEFAULT_SMALL_MODEL,
 		LocalModelGatewayType.DEFAULT_LARGE_MODEL], func():
 		_discover_ollama_model()
@@ -996,6 +1008,12 @@ func _ollama_warm_models() -> void:
 		)
 		return
 	_models_warm_started = true
+	# The isolated live-fire harness invokes the same real readiness probe but
+	# skips a redundant empty-prompt warmup when the model is already resident.
+	# Production startup keeps the full warmup path below.
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		_verify_small_model_ready(active_model_name, 0)
+		return
 	# Load the small model into VRAM, THEN confirm it actually generates before we
 	# let startup work fire. The empty-prompt load alone can report success while
 	# the model is still not answering; a real "hello" probe is the reliable gate.
@@ -1053,12 +1071,15 @@ func _verify_small_model_ready(model_name: String, attempt: int) -> void:
 			"model_warmup", "probe_failed_result_%d_code_%d" % [result, code], "LLMInterface",
 			{"model": model_name, "attempt": attempt + 1, "elapsed_seconds": elapsed}
 		)
-		_release_small_model_gate(model_name, "probe_failed")
+		_schedule_small_model_probe_retry(model_name)
 	)
 	var payload := JSON.stringify({
 		"model": model_name,
 		"prompt": "Reply with the single word: ready",
 		"stream": false,
+		# Qwen3 otherwise may place its only output in the reasoning channel,
+		# leaving response empty despite an HTTP 200 and falsely failing readiness.
+		"think": false,
 		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
 		# Same num_ctx as every other small call — a mismatch here would warm the
 		# model at one context size and force a reload on the first real request.
@@ -1070,7 +1091,19 @@ func _verify_small_model_ready(model_name: String, attempt: int) -> void:
 		if attempt < 1:
 			_verify_small_model_ready(model_name, attempt + 1)
 		else:
-			_release_small_model_gate(model_name, "probe_request_start_failed")
+			_schedule_small_model_probe_retry(model_name)
+
+
+func _schedule_small_model_probe_retry(model_name: String) -> void:
+	if small_model_verified or _small_model_probe_retry_scheduled:
+		return
+	_small_model_probe_retry_scheduled = true
+	get_tree().create_timer(_SMALL_MODEL_PROBE_RETRY_SECONDS, true, false, true).timeout.connect(
+		func() -> void:
+			_small_model_probe_retry_scheduled = false
+			if not small_model_verified:
+				_verify_small_model_ready(model_name, 0)
+	)
 
 
 ## Marks the small model verified, emits small_model_ready once, and starts
@@ -1079,12 +1112,15 @@ func _release_small_model_gate(model_name: String, failure_reason: String) -> vo
 	if small_model_verified:
 		return
 	small_model_verified = true
+	_small_model_probe_retry_scheduled = false
 	if not failure_reason.is_empty():
 		GenerationDiagnostics.record_event(
 			"model_warmup", "gate_released_without_probe", "LLMInterface",
 			{"model": model_name, "reason": failure_reason}
 		)
 	small_model_ready.emit(model_name)
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		return
 	for chatter_type in chatter_cache.keys():
 		fetch_chatter_background(chatter_type)
 
@@ -1660,6 +1696,8 @@ func _request_small_inner_text(
 		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 			temp_http.queue_free()
 			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				if result != HTTPRequest.RESULT_SUCCESS:
+					_handle_small_transport_failure(capability, result, response_code)
 				callback.call({"ok": false, "reason": "http_failed_result_%d_code_%d" % [result, response_code]})
 				return
 			var outer := JSON.new()
@@ -1686,7 +1724,20 @@ func _request_small_inner_text(
 	)
 	if err != OK:
 		temp_http.queue_free()
+		_handle_small_transport_failure(capability, err, 0)
 		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+func _handle_small_transport_failure(capability: String, result: int, response_code: int) -> void:
+	GenerationDiagnostics.record_event(
+		"ollama_watchdog", "small_transport_failure", "llm_interface",
+		{"capability": capability, "result": result, "response_code": response_code}
+	)
+	# The caller still receives its immediate prepared/template fallback. Recovery
+	# only restores future cache work; it never makes a player click wait.
+	small_model_verified = false
+	attempt_ollama_recovery()
+	_schedule_small_model_probe_retry(active_model_name)
 
 
 # Writes N.O.V.A.'s campaign-specific gate-glitch lines from her director-only
