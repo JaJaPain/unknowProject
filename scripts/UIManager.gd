@@ -11077,6 +11077,7 @@ func _show_kaelen_intro_quest_offer() -> void:
 		"faction": "neutral",
 		"agent_name": "Broker Kaelen",
 		"dialogue": line,
+		"is_intro_tutorial": true,
 		"objective": {
 			"type": "KILL_SHIPS",
 			"target_faction": "reavers",

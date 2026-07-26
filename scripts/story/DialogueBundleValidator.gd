@@ -43,6 +43,7 @@ static func validate_bundle(
 		for tic in banned:
 			if _contains_wordish(text, tic):
 				errors.append("banned_tic:%s:%s" % [key, tic])
+	errors.append_array(_voice_contract_errors(bundle, required, speaker_card))
 	var seen_line_fields := {}
 	for key in required:
 		if str(key).ends_with("_player"):
@@ -120,6 +121,53 @@ static func _banned_tics(speaker_card: Dictionary) -> Array[String]:
 	return result
 
 
+# Voice cards may opt into machine-checkable constraints in addition to their
+# prompt-facing prose. All are optional so existing authored characters keep
+# their current cadence until a designer chooses a precise rule.
+#   max_sentence_words: 14
+#   required_any_terms: ["manifest", "ledger"]
+#   forbidden_address_terms: ["captain"]
+#   forbidden_role_claims: ["I run station security"]
+static func _voice_contract_errors(
+	bundle: Dictionary,
+	required_keys: Array[String],
+	speaker_card: Dictionary
+) -> Array[String]:
+	var rules: Dictionary = speaker_card.get("voice_rules", {}) \
+		if speaker_card.get("voice_rules", {}) is Dictionary else {}
+	if rules.is_empty():
+		return []
+	var errors: Array[String] = []
+	var all_text: Array[String] = []
+	var max_words := maxi(0, int(rules.get("max_sentence_words", 0)))
+	var forbidden_address := _string_array(rules.get("forbidden_address_terms", []))
+	var forbidden_claims := _string_array(rules.get("forbidden_role_claims", []))
+	for key in required_keys:
+		var text := str(bundle.get(key, "")).strip_edges()
+		all_text.append(text)
+		if max_words > 0 and _has_overlong_sentence(text, max_words):
+			errors.append("persona_sentence_length:%s" % key)
+		for term in forbidden_address:
+			if _contains_wordish(text, term):
+				errors.append("forbidden_address:%s:%s" % [key, term])
+		for claim in forbidden_claims:
+			if _contains_wordish(text, claim):
+				errors.append("forbidden_role_claim:%s:%s" % [key, claim])
+	var required_vocabulary := _string_array(rules.get("required_any_terms", []))
+	if not required_vocabulary.is_empty() \
+			and not _contains_any_anchor(" ".join(all_text), required_vocabulary):
+		errors.append("missing_persona_vocabulary")
+	return errors
+
+
+static func _has_overlong_sentence(text: String, max_words: int) -> bool:
+	for sentence in text.split(".", false):
+		var normalized := sentence.replace("!", " ").replace("?", " ").strip_edges()
+		if normalized.split(" ", false).size() > max_words:
+			return true
+	return false
+
+
 static func _forbidden_terms(conversation_plan: Dictionary) -> Array[String]:
 	var result: Array[String] = []
 	for key in [
@@ -151,7 +199,8 @@ static func _field_for_error(error: String) -> String:
 		return ""
 	match parts[0]:
 		"missing_or_short", "too_long", "banned_tic", "forbidden_fact", \
-		"speaker_prefix", "duplicate_line":
+		"speaker_prefix", "duplicate_line", "persona_sentence_length", \
+		"forbidden_address", "forbidden_role_claim":
 			return parts[1]
 		"missing_answer_anchor":
 			return "%s_response" % parts[1]

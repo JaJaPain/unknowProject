@@ -143,6 +143,11 @@ static func _attach_mission_conversation(
 	)
 	if not bool(validation.get("ok", false)):
 		return
+	var causal_visibility := MissionConversationCompilerType.validate_causal_visibility(
+		bundle, mission_plan, conversation_plan
+	)
+	if not bool(causal_visibility.get("ok", false)):
+		return
 	quest["mission_conversation_plan"] = conversation_plan
 	quest["mission_dialogue_bundle"] = bundle
 	quest["mission_dialogue_bundle_source"] = "deterministic_fallback"

@@ -11,6 +11,7 @@ func _initialize() -> void:
 	_test_valid_bundle_passes()
 	_test_missing_and_extra_keys_fail()
 	_test_banned_speaker_tics_fail()
+	_test_optional_machine_readable_voice_contracts_fail_precisely()
 	_test_question_answers_require_declared_anchor()
 	_test_degrade_bundle_repairs_bad_optional_answer()
 	_test_forbidden_fact_leaks_fail_and_degrade()
@@ -60,6 +61,29 @@ func _test_banned_speaker_tics_fail() -> void:
 	_expect(
 		errors.has("banned_tic:opening:Shiny"),
 		"Validator did not flag speaker banned tic."
+	)
+
+
+func _test_optional_machine_readable_voice_contracts_fail_precisely() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Captain, I run station security and every manifest is clear."
+	var speaker := _speaker_card()
+	speaker["voice_rules"] = {
+		"banned_tics": ["Shiny"],
+		"max_sentence_words": 6,
+		"required_any_terms": ["ledger"],
+		"forbidden_address_terms": ["Captain"],
+		"forbidden_role_claims": ["I run station security"],
+	}
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, speaker)
+	var errors: Array = result.get("errors", [])
+	_expect(
+		errors.has("persona_sentence_length:opening")
+			and errors.has("forbidden_address:opening:Captain")
+			and errors.has("forbidden_role_claim:opening:I run station security")
+			and errors.has("missing_persona_vocabulary"),
+		"Optional voice-card constraints did not return precise validation reasons: %s" % str(errors)
 	)
 
 

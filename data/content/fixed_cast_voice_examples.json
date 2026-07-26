@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "document_type": "fixed_cast_voice_examples",
+  "examples": [
+    {"character_id": "kaelen", "state": "quietly_relieved", "situation": "turn_in", "curator_decision": "human_rewrite", "line": "Ore is in. The maintenance crews keep their lights on; I keep my margin. Everyone survives the arrangement."},
+    {"character_id": "nova", "state": "protective", "situation": "repair_warning", "curator_decision": "human_rewrite", "line": "Captain, the repair bay is available and my hull is still compromised. I recommend choosing the option that does not involve more holes."}
+  ]
+}

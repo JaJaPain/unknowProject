@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_fallback_bundle_covers_required_keys()
 	_test_fallback_bundle_preserves_emergency_truth_slots()
 	_test_fallback_bundle_satisfies_answer_anchors()
+	_test_causal_visibility_requires_an_approved_truth()
 	_test_parse_bundle_returns_required_flat_shape()
 	_test_parse_bundle_rejects_malformed_or_incomplete_output()
 
@@ -103,6 +104,36 @@ func _test_fallback_bundle_satisfies_answer_anchors() -> void:
 	_expect(
 		str(bundle.get("clarify_term_response", "")).to_lower().contains("convoy case"),
 		"Fallback bundle did not include required answer anchor."
+	)
+
+
+func _test_causal_visibility_requires_an_approved_truth() -> void:
+	var plan := _mission_plan()
+	var conversation := _conversation_plan()
+	var fallback := CompilerType.fallback_bundle(plan, conversation, _speaker_card())
+	_expect(
+		bool(CompilerType.validate_causal_visibility(fallback, plan, conversation).get("ok", false)),
+		"Fallback offer should state its approved causal truth."
+	)
+	var vague := fallback.duplicate(true)
+	vague["opening"] = "I need a pilot for a routine contract."
+	_expect(
+		str(CompilerType.validate_causal_visibility(vague, plan, conversation).get("reason", ""))
+			== "causal_visibility_missing",
+		"Vague offer without a why-answer should fail causal visibility."
+	)
+	var terse_but_answerable := vague.duplicate(true)
+	terse_but_answerable["clarify_term_response"] = "The convoy case needs evidence before the report is buried."
+	terse_but_answerable["ask_why_response"] = "The convoy case needs evidence before the report is buried."
+	conversation["intents"].append({
+		"id": PlanType.INTENT_ASK_WHY,
+		"kind": "question",
+		"label": "Why does this matter?",
+		"fact_ids": [],
+	})
+	_expect(
+		bool(CompilerType.validate_causal_visibility(terse_but_answerable, plan, conversation).get("ok", false)),
+		"A readily available approved why-answer should satisfy causal visibility."
 	)
 
 

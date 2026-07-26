@@ -31,6 +31,15 @@ const ContextBlockBuilderType := preload(
 const KnowledgeLedgerType := preload(
 	"res://scripts/story/KnowledgeLedger.gd"
 )
+const FixedCastRapportType := preload(
+	"res://scripts/story/FixedCastRapport.gd"
+)
+const FixedCastAttachmentLedgerType := preload(
+	"res://scripts/story/FixedCastAttachmentLedger.gd"
+)
+const FixedCastStateMachineType := preload(
+	"res://scripts/story/FixedCastStateMachine.gd"
+)
 
 # ── Phase B: Living story state ───────────────────────────────────────────────
 # story_state is the in-memory working copy. StoryStateStore handles persistence.
@@ -52,6 +61,9 @@ var story_state: Dictionary = {
 		"recent_reason": "",
 		"last_changed_minute": 0,
 	},
+	"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
+	"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
+	"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
 	"kaelen_hidden_angle": "",
 	"intro_conversation_had": false,
 	"intro_agent_visited": false,
@@ -267,6 +279,9 @@ func clear_story_state() -> void:
 			"recent_reason": "",
 			"last_changed_minute": 0,
 		},
+		"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
+		"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
+		"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -598,6 +613,8 @@ func increment_mission_history_revision(
 	mission_data: Dictionary = {}
 ) -> int:
 	_record_kaelen_contract_relationship_event(event_type, mission_data)
+	_record_fixed_cast_rapport_event(event_type, mission_data)
+	_record_fixed_cast_character_event(_fixed_cast_mission_event_id(event_type), mission_data)
 	return _increment_revision(
 		"mission_history_revision",
 		event_type,
@@ -640,6 +657,92 @@ func kaelen_relationship_state() -> Dictionary:
 
 func kaelen_relationship_band() -> String:
 	return str(kaelen_relationship_state().get("band", "neutral"))
+
+
+func fixed_cast_rapport_state(character_id: String) -> Dictionary:
+	var ledger: Dictionary = story_state.get("fixed_cast_rapport", {}) \
+		if story_state.get("fixed_cast_rapport", {}) is Dictionary else {}
+	ledger = FixedCastRapportType.normalize_ledger(ledger)
+	story_state["fixed_cast_rapport"] = ledger
+	var entry: Dictionary = ledger.get(character_id, {}) \
+		if ledger.get(character_id, {}) is Dictionary else {}
+	return entry.duplicate(true)
+
+
+func fixed_cast_rapport_band(character_id: String) -> String:
+	return str(fixed_cast_rapport_state(character_id).get("band", "neutral"))
+
+
+func fixed_cast_state(character_id: String) -> String:
+	var ledger: Dictionary = story_state.get("fixed_cast_states", {}) \
+		if story_state.get("fixed_cast_states", {}) is Dictionary else {}
+	ledger = FixedCastStateMachineType.normalize_ledger(ledger)
+	story_state["fixed_cast_states"] = ledger
+	return FixedCastStateMachineType.state_for(character_id, ledger)
+
+
+func fixed_cast_attachment_memory(character_id: String) -> String:
+	var ledger: Dictionary = story_state.get("fixed_cast_attachments", {}) \
+		if story_state.get("fixed_cast_attachments", {}) is Dictionary else {}
+	ledger = FixedCastAttachmentLedgerType.normalize_ledger(ledger)
+	story_state["fixed_cast_attachments"] = ledger
+	return FixedCastAttachmentLedgerType.public_memory_callback(character_id, ledger)
+
+
+func _fixed_cast_mission_event_id(event_type: String) -> String:
+	match event_type.strip_edges():
+		"accepted": return "mission_accepted"
+		"completed": return "mission_completed"
+		"declined": return "mission_declined"
+		"abandoned": return "mission_abandoned"
+		"expired": return "mission_expired"
+		"failed": return "mission_failed"
+	return ""
+
+
+func _record_fixed_cast_character_event(event_type: String, context: Dictionary = {}) -> bool:
+	if event_type.is_empty():
+		return false
+	var before_attachments: Dictionary = story_state.get("fixed_cast_attachments", {}) \
+		if story_state.get("fixed_cast_attachments", {}) is Dictionary else {}
+	var attachments := FixedCastAttachmentLedgerType.advance(
+		before_attachments,
+		event_type,
+		context,
+		int(CampaignClock.total_minutes)
+	)
+	var before_states: Dictionary = story_state.get("fixed_cast_states", {}) \
+		if story_state.get("fixed_cast_states", {}) is Dictionary else {}
+	var states := FixedCastStateMachineType.apply_event(
+		before_states,
+		event_type,
+		context,
+		attachments,
+		int(CampaignClock.total_minutes)
+	)
+	story_state["fixed_cast_attachments"] = attachments
+	story_state["fixed_cast_states"] = states
+	return JSON.stringify(FixedCastAttachmentLedgerType.normalize_ledger(before_attachments)) != JSON.stringify(attachments) \
+		or JSON.stringify(FixedCastStateMachineType.normalize_ledger(before_states)) != JSON.stringify(states)
+
+
+func _record_fixed_cast_rapport_event(event_type: String, mission_data: Dictionary) -> void:
+	var ledger: Dictionary = story_state.get("fixed_cast_rapport", {}) \
+		if story_state.get("fixed_cast_rapport", {}) is Dictionary else {}
+	ledger = FixedCastRapportType.normalize_ledger(ledger)
+	if not bool(ledger.get("initialized_after_tutorial", false)):
+		if event_type.strip_edges() == "completed" and bool(mission_data.get("is_intro_tutorial", false)):
+			story_state["fixed_cast_rapport"] = FixedCastRapportType.initialize_after_tutorial(
+				ledger,
+				_campaign_path()
+			)
+		return
+	story_state["fixed_cast_rapport"] = FixedCastRapportType.apply_mission_event(
+		ledger,
+		event_type,
+		mission_data,
+		int(CampaignClock.total_minutes)
+	)
 
 
 func _record_kaelen_contract_relationship_event(
@@ -1208,6 +1311,8 @@ func schedule_beat_after_delay_min(beat_id: String, delay_min: float) -> void:
 # ── GameRoot event hooks ──────────────────────────────────────────────────────
 
 func on_system_arrived(system_id: String) -> void:
+	if _record_fixed_cast_character_event("system_arrived", {"system_id": system_id}):
+		_save_story_state()
 	_check_delay_beats()
 	# Top-up any agent pools that have fallen below 4 lines.
 	_trigger_handoff_pool_for_system(system_id)
@@ -1245,6 +1350,8 @@ func _on_ship_destroyed(faction: String) -> void:
 
 
 func on_docked(station) -> void:
+	if _record_fixed_cast_character_event("docked"):
+		_save_story_state()
 	_dock_count_session += 1
 	_check_dock_beats()
 	_check_delay_beats()

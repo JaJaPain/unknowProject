@@ -806,8 +806,9 @@ Required opposing-force design contract:
 
 Checklist:
 
-- [ ] Write the first Nova and Kaelen soul bibles with the player as primary curator; do not auto-fill emotional canon from model guesses.
-- [ ] Add one campaign-scoped attachment-arc ledger for Nova and one for Kaelen: beat IDs, prerequisite events, player agency point, visible payoff, memory callback, and next unresolved hook.
+- [x] Write the first Nova and Kaelen soul bibles with the player as primary curator; do not auto-fill emotional canon from model guesses.
+  - 2026-07-26: Added human-curated v1 Kaelen and N.O.V.A. soul documents plus a public-only machine projection. The runtime registry validates both cards and strips private relationship boundaries before prompt use; Kaelen turn-ins and N.O.V.A. generated banks now receive their relevant public projection.
+- [x] Add one campaign-scoped attachment-arc ledger for Nova and one for Kaelen: beat IDs, prerequisite events, player agency point, visible payoff, memory callback, and next unresolved hook.
 - [ ] Add one opposing-force dossier placeholder per campaign to the chapter packet: current footprint, known/unknown identity fields, objectives, capabilities, limits, chapter move, local aftermath, evidence trail, and escalation tier.
 - [ ] Design each campaign's opposing force only after that campaign's core tension is selected; choose a form that naturally conflicts with the Captain's work, tests Nova and Kaelen in different ways, and feels meaningfully distinct from prior campaigns.
 - [ ] Author an escalating “footprint before face” sequence: early signs, contested mission beats, first confirmed attribution, direct pressure, and earned confrontation.
@@ -815,7 +816,7 @@ Checklist:
 - [ ] Require every chapter packet to select only eligible attachment beats; prevent duplicate “vulnerability reveal” beats, unearned intimacy, and emotional escalation before the prerequisite shared event exists.
 - [ ] Give players room to miss or decline a bonding opportunity without punitive relationship loss; alternate later opportunities must still let trust grow through different actions.
 - [ ] Add quiet optional interactions between high-pressure beats so affection is built through ordinary presence as well as crisis.
-- [ ] Define a compact, code-owned state enum for each fixed cast member and map every runtime trigger to an allowed state transition.
+- [x] Define a compact, code-owned state enum for each fixed cast member and map every runtime trigger to an allowed state transition.
 - [ ] Add public prompt projections that include only the current approved state, relevant known facts, relationship lens, and situation rule. Director-only motivations remain outside the projection.
 - [ ] Build separate large candidate banks for Nova and Kaelen by character, emotional state, campaign phase, and interaction kind. Label every candidate with its inputs and source; raw candidates never ship directly.
 - [ ] Generate mission-specific candidate examples using the curated 40-example natural-dialogue bank as a style guide, then validate against the relevant soul bible and mission fact packet.
@@ -1230,14 +1231,17 @@ Primary files:
 
 - [ ] Exact fingerprint rejection across all post-tutorial player-facing lines in one campaign.
 - [ ] Near-duplicate check using normalized distinctive-token/bigram overlap; tune thresholds separately for short barks and longer answers.
-- [ ] Mission-pattern check across type, cause, stake, giver, location, complication, and disclosure role.
+- [x] Mission-pattern check across type, cause, stake, giver, location, complication, and disclosure role.
+  - 2026-07-26: `MissionDirector.pacing_rejection_reason()` blocks a third identical objective, objective overrepresentation in the last four, under-differentiated repeats (fewer than three changed dimensions), and any matching premise fingerprint in the last eight. `MissionHistoryLedger` carries the required mission dimensions from chronicle events into that check.
 - [ ] Question/answer relevance check using required anchors and forbidden topic drift.
 - [ ] Unexplained-reference check against allowed entity/fact aliases.
 - [ ] Persona check against address rules, banned tics, sentence length, vocabulary, and role ownership.
-- [ ] Causal visibility check: the opening or a readily available answer must communicate why the job matters and what changes.
+- [x] Causal visibility check: the opening or a readily available answer must communicate why the job matters and what changes.
+  - 2026-07-26: `MissionConversationCompiler.validate_causal_visibility()` requires the exact player-safe consequence or stake in the opening, or in the code-owned `ask_why` response for deliberately terse speakers. The deterministic story-offer builder refuses a bundle that fails this check.
 - [ ] Knowledge leak check against director-only tokens and fact states.
 - [ ] Humor-density check as a warning, not a hard quota: flag every-line punchlines and repeated joke mechanisms.
-- [ ] Objective/mechanics consistency remains a hard gate.
+- [x] Objective/mechanics consistency remains a hard gate.
+  - 2026-07-26: `MissionCapabilityRegistry`, `MissionAdapter`, and `MissionState` reject unsupported objectives and malformed required fields before an offer can become an active mission; all story-agent offer types run through that adapter.
 
 #### DevPanel additions
 
@@ -1615,6 +1619,12 @@ Add newest entries at the top. Include date, phase/checkbox, decision or evidenc
 
 | Date | Phase | Entry | Evidence / follow-up |
 |---|---|---|---|
+| 2026-07-26 | Phase 4A fixed-cast soul foundation | Added versioned Kaelen and N.O.V.A. soul bibles, `fixed_cast_souls.json`, curated starter voice examples, and `FixedCastSoulRegistry`. Public projections expose permanent core, voice, selected state, and situation rules while stripping private boundaries. Kaelen turn-ins and N.O.V.A. generated line banks now consume the projection. | Tests: `run_fixed_cast_soul_tests.gd`, `run_kaelen_interaction_bundle_tests.gd`, `run_nova_tests.gd`, `parse_check.gd`. Follow-up: code-owned state transition and attachment-arc ledgers. |
+| 2026-07-26 | Phase 4A rapport seasoning | Added a persistent, dialogue-only Kaelen/N.O.V.A. rapport ledger with the bounded scale `Irritated -> Guarded -> Neutral -> Warm -> Fond -> Infatuated`. It initializes once after the explicitly tagged tutorial contract, migrates safely with story state, and is injected into each character's fixed-cast prompt projection. Ordinary combat does not lower N.O.V.A.'s rapport; only contracts advertised as `dangerous` or `story_climax` do. | Tests: `run_fixed_cast_rapport_tests.gd`, `run_fixed_cast_soul_tests.gd`, `run_story_manager_hook_tests.gd`, `parse_check.gd`. |
+| 2026-07-26 | Phase 4A code-owned attachment and state | Added campaign-persistent five-beat attachment ledgers for Kaelen and N.O.V.A. Each beat has its prerequisite event, player agency point, visible payoff, safe memory callback, and next unresolved hook. Added a compact fixed-cast state machine driven only by accepted/completed/declined/abandoned/expired missions and arrival/dock events. Prompts receive the selected public state and earned safe callback; they cannot select a state or invent a memory. | Tests: `run_fixed_cast_state_tests.gd`, `run_fixed_cast_soul_tests.gd`, `parse_check.gd`. |
+| 2026-07-26 | Phase 10 mechanics hard gate | Verified that the domain mission adapter rejects unsupported objectives and incompatible active-state shapes before gameplay. Story-agent offers are accepted only after the same adapter validates the generated objective against the capability registry. | Tests: `run_mission_contract_tests.gd`, `run_mission_capability_tests.gd`. |
+| 2026-07-26 | Phase 10 causal visibility | Added a mission-conversation causal gate. A contract opening must state its approved public consequence or stake, unless its readily available code-owned “Why does this matter?” response does so; vague “routine contract” text fails with `causal_visibility_missing`. | Tests: `run_mission_conversation_compiler_tests.gd`, `run_story_agent_offer_builder_tests.gd`, `parse_check.gd`. |
+| 2026-07-26 | Phase 10 mission-pattern audit | Verified and recorded the existing mission-pattern hard gate. Recent agent contracts persist objective, cause, stake, giver, location, complication, faction, disclosure, consequence, and a premise fingerprint; the director blocks third identical objectives, overrepresentation, insufficiently changed repeats, and repeated premises. | Tests: `run_mission_director_tests.gd`, `run_mission_history_ledger_tests.gd`. |
 | 2026-07-26 | Phase 10 unexplained-reference warning | The quality gate now flags unknown capitalized names as `unexplained_reference:<name>` warnings while filtering ordinary sentence-leading words. Accepted warnings are retained in GenerationDiagnostics as `quality_warning`, making them visible in the existing Story Debug quality view without blocking play before the complete player-known alias catalog is wired. | Tests: `run_narrative_quality_gate_tests.gd`, `parse_check.gd`, `run_kaelen_interaction_bundle_tests.gd`, `run_nova_tests.gd`. Follow-up: pass per-line allowed aliases from each safe packet to graduate high-confidence unexplained references to hard failures. |
 | 2026-07-26 | Phase 10 grounded lounge answers | Added separate `answer_anchors` for specific player questions. The writer prompt names required player-safe answer words; validation rejects a topical-but-unapproved answer with `no_relevant_topic_answer`; opener grounding accepts the same approved fact vocabulary. Open-ended rumor questions remain topic-led and do not invent a missing decision-maker. | Tests: `run_lounge_conversation_tests.gd`, `parse_check.gd`; serial real-model writer/reviewer batch: `run_lounge_bundle_live_fire.gd --fixture-index=20 --count=5`, 5/5 accepted (`logs/lounge_bundle_live_fire_21.json`). Follow-up: carry explicit answer anchors from future player-safe fact records before adding any more specific who/why question templates. |
 | 2026-07-26 | Phase 10 foundation | Added a campaign-scoped, persisted narrative fingerprint ledger and pure quality gate. Prepared bundles plus legacy live lounge and stranger-pitch paths register generated display lines atomically before display; exact and normalized bigram near-duplicates are rejected, and a ledger-save failure rolls back the in-memory registration. Story Debug now shows the recent accepted ledger. | Tests: `run_narrative_fingerprint_ledger_tests.gd`, `run_narrative_quality_gate_tests.gd`, `run_narrative_cache_store_tests.gd`, `run_lounge_conversation_tests.gd`, `parse_check.gd`, `parse_check_scene_scripts.gd`. Follow-up: extend the gate beyond lounge and add the remaining Phase 10 validators/DevPanel inspection. |

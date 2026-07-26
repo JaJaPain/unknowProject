@@ -167,6 +167,35 @@ static func parse_bundle(
 	return {"ok": true, "bundle": bundle}
 
 
+# A contract must give the player footing before they commit. The opening is
+# preferred, but a readily available "why" answer is acceptable for a speaker
+# who is intentionally terse. This is exact safe-text matching because the
+# values are code-owned; it prevents a generated bundle from replacing a real
+# consequence with a vague claim that the job is simply important.
+static func validate_causal_visibility(
+	bundle: Dictionary,
+	mission_plan: Dictionary,
+	conversation_plan: Dictionary
+) -> Dictionary:
+	var approved_truths: Array[String] = []
+	for key in ["public_because", "stake"]:
+		var text := _text(mission_plan, key, "")
+		if not text.is_empty() and text not in approved_truths:
+			approved_truths.append(text)
+	if approved_truths.is_empty():
+		return {"ok": false, "reason": "missing_causal_truth"}
+	var opening := str(bundle.get("opening", "")).strip_edges()
+	if _contains_any(opening, approved_truths):
+		return {"ok": true, "source": "opening"}
+	for intent in _intents(conversation_plan):
+		if str(intent.get("id", "")) != PlanType.INTENT_ASK_WHY:
+			continue
+		var response := str(bundle.get("%s_response" % PlanType.INTENT_ASK_WHY, "")).strip_edges()
+		if _contains_any(response, approved_truths):
+			return {"ok": true, "source": "ask_why"}
+	return {"ok": false, "reason": "causal_visibility_missing"}
+
+
 static func _fallback_response(intent_id: String, mission_plan: Dictionary) -> String:
 	match intent_id:
 		PlanType.INTENT_CLARIFY_TERM:

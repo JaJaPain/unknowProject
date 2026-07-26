@@ -112,6 +112,7 @@ static func build_active_state(
 			quest_data.get("public_board_text_is_fallback", false)
 		),
 		"station_errand": bool(quest_data.get("station_errand", false)),
+		"is_intro_tutorial": bool(quest_data.get("is_intro_tutorial", false)),
 	}
 	state = NarrativeMetadataType.apply_to_state(
 		state,

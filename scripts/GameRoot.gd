@@ -98,6 +98,9 @@ const NarrativeFingerprintLedgerType := preload(
 const NarrativeQualityGateType := preload(
 	"res://scripts/story/NarrativeQualityGate.gd"
 )
+const FixedCastSoulRegistryType := preload(
+	"res://scripts/story/FixedCastSoulRegistry.gd"
+)
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
@@ -4171,6 +4174,9 @@ func _dispatch_nova_seed_batch(
 # observer's bounded recent-action streak. No director-only fields.
 func _nova_line_bank_generation_context() -> Dictionary:
 	var context := {}
+	context["fixed_cast_soul"] = FixedCastSoulRegistryType.prompt_block(
+		"nova", StoryManager.fixed_cast_state("nova"), "arrival", StoryManager.fixed_cast_rapport_band("nova"), StoryManager.fixed_cast_attachment_memory("nova")
+	)
 	if is_instance_valid(Nova):
 		context["persona"] = str(Nova.PERSONA)
 	if is_instance_valid(StoryManager):

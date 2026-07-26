@@ -11,6 +11,15 @@ const ValidationResultType := preload(
 const ContextBlockBuilderType := preload(
 	"res://scripts/ai/ContextBlockBuilder.gd"
 )
+const FixedCastRapportType := preload(
+	"res://scripts/story/FixedCastRapport.gd"
+)
+const FixedCastAttachmentLedgerType := preload(
+	"res://scripts/story/FixedCastAttachmentLedger.gd"
+)
+const FixedCastStateMachineType := preload(
+	"res://scripts/story/FixedCastStateMachine.gd"
+)
 
 const DOCUMENT_VERSION := 2
 const STATE_PATH := "story_state.json"
@@ -111,6 +120,9 @@ static func _default_state() -> Dictionary:
 			"recent_reason": "",
 			"last_changed_minute": 0,
 		},
+		"fixed_cast_rapport": FixedCastRapportType.default_ledger(),
+		"fixed_cast_attachments": FixedCastAttachmentLedgerType.default_ledger(),
+		"fixed_cast_states": FixedCastStateMachineType.default_ledger(),
 		"kaelen_hidden_angle": "",
 		"intro_conversation_had": false,
 		"intro_agent_visited": false,
@@ -177,6 +189,24 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 	else:
 		migrated["kaelen_relationship"] = _migrate_kaelen_relationship(
 			migrated.get("kaelen_relationship", {})
+		)
+	if not migrated.get("fixed_cast_rapport", {}) is Dictionary:
+		migrated["fixed_cast_rapport"] = FixedCastRapportType.default_ledger()
+	else:
+		migrated["fixed_cast_rapport"] = FixedCastRapportType.normalize_ledger(
+			migrated.get("fixed_cast_rapport", {})
+		)
+	if not migrated.get("fixed_cast_attachments", {}) is Dictionary:
+		migrated["fixed_cast_attachments"] = FixedCastAttachmentLedgerType.default_ledger()
+	else:
+		migrated["fixed_cast_attachments"] = FixedCastAttachmentLedgerType.normalize_ledger(
+			migrated.get("fixed_cast_attachments", {})
+		)
+	if not migrated.get("fixed_cast_states", {}) is Dictionary:
+		migrated["fixed_cast_states"] = FixedCastStateMachineType.default_ledger()
+	else:
+		migrated["fixed_cast_states"] = FixedCastStateMachineType.normalize_ledger(
+			migrated.get("fixed_cast_states", {})
 		)
 	if not migrated.get("story_consequences", []) is Array:
 		migrated["story_consequences"] = []
@@ -281,6 +311,9 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 		"chapter_packet_generation_queued",
 		"declined_offer_cooldowns",
 		"kaelen_relationship",
+		"fixed_cast_rapport",
+		"fixed_cast_attachments",
+		"fixed_cast_states",
 	]:
 		if not value.get(dictionary_field, {}) is Dictionary:
 			result.add_error(

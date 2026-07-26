@@ -11,6 +11,9 @@ const KaelenInteractionKindsType := preload(
 const KaelenInteractionPacketBuilderType := preload(
 	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
 )
+const FixedCastSoulRegistryType := preload(
+	"res://scripts/story/FixedCastSoulRegistry.gd"
+)
 
 const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
 const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
@@ -2027,6 +2030,9 @@ static func _nova_line_bank_prompt(
 		str(context.get("persona", "")).strip_edges(),
 		"",
 	]
+	var soul_guidance := str(context.get("fixed_cast_soul", "")).strip_edges()
+	if not soul_guidance.is_empty():
+		parts.append(soul_guidance)
 	var quirk := str(context.get("campaign_quirk", "")).strip_edges()
 	if not quirk.is_empty():
 		parts.append(
@@ -5261,6 +5267,7 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable, _attemp
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
 		mood_block + \
+		FixedCastSoulRegistryType.prompt_block("kaelen", StoryManager.fixed_cast_state("kaelen"), "turn_in", StoryManager.fixed_cast_rapport_band("kaelen"), StoryManager.fixed_cast_attachment_memory("kaelen")) + "\n" + \
 		safe_packet_block + \
 		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
 		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
