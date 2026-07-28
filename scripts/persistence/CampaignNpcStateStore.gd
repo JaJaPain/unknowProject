@@ -14,6 +14,7 @@ const DOCUMENT_VERSION := 1
 const STATES_PATH := "npc_states.json"
 const MAX_MEMORY_EVENT_IDS := 24
 const MAX_LINE_FINGERPRINTS := 32
+const MAX_ONE_SHOT_FLAGS := 32
 const RELATIONSHIP_FIELDS := [
 	"trust",
 	"respect",
@@ -108,6 +109,44 @@ func ensure_state(npc_id: String) -> Dictionary:
 			and (data["npc_states"] as Dictionary).has(npc_id):
 		return {"ok": true, "created": false, "state": state_for(npc_id)}
 	return _upsert_state(npc_id, _default_npc_state(npc_id), "npc_state_ensure")
+
+
+# Atomically consumes a code-owned one-shot flag. Callers must only present
+# their associated content when first_time is true; a failed save must not
+# quietly allow repeat delivery on the next repair.
+func consume_one_shot_flag(npc_id: String, flag_id: String) -> Dictionary:
+	var clean_flag := flag_id.strip_edges().to_lower()
+	if clean_flag.is_empty() or clean_flag.length() > 120:
+		return _failure("One-shot flag ID is invalid.")
+	var ensured := ensure_state(npc_id)
+	if not bool(ensured.get("ok", false)):
+		return ensured
+	var state: Dictionary = ensured.get("state", {})
+	var flags: Array = state.get("one_shot_flags", []) \
+		if state.get("one_shot_flags", []) is Array else []
+	if flags.has(clean_flag):
+		return {"ok": true, "first_time": false, "state": state.duplicate(true)}
+	flags.append(clean_flag)
+	while flags.size() > MAX_ONE_SHOT_FLAGS:
+		flags.pop_front()
+	state["one_shot_flags"] = flags
+	state["state_revision"] = int(state.get("state_revision", 0)) + 1
+	state["updated_at_unix"] = int(Time.get_unix_time_from_system())
+	var committed := _upsert_state(npc_id, state, "npc_state_one_shot_flag")
+	if not bool(committed.get("ok", false)):
+		return committed
+	committed["first_time"] = true
+	return committed
+
+
+func has_one_shot_flag(npc_id: String, flag_id: String) -> bool:
+	var clean_flag := flag_id.strip_edges().to_lower()
+	if clean_flag.is_empty() or not DomainIdType.is_valid(npc_id, "npc"):
+		return false
+	var state := state_for(npc_id)
+	var flags: Array = state.get("one_shot_flags", []) \
+		if state.get("one_shot_flags", []) is Array else []
+	return flags.has(clean_flag)
 
 
 func update_relationship(
@@ -401,6 +440,7 @@ static func _default_npc_state(npc_id: String) -> Dictionary:
 		"memory_event_ids": [],
 		"memory_summary": "",
 		"line_memory_fingerprints": [],
+		"one_shot_flags": [],
 		"updated_at_unix": int(Time.get_unix_time_from_system()),
 	}
 
@@ -514,6 +554,7 @@ static func _validate_npc_state(
 	for field in [
 		"memory_event_ids",
 		"line_memory_fingerprints",
+		"one_shot_flags",
 		"lounge_fact_ids",
 		"lounge_exchanges",
 	]:

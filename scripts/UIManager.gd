@@ -193,6 +193,18 @@ var _last_played_mechanic_line: String = ""
 # Tracks whether this docking visit used station repair services. N.O.V.A.'s
 # departure warning only applies when the player ignores an available repair.
 var _repaired_this_dock: bool = false
+const _MECHANIC_NOVA_FIRST_REPAIR_FLAG := "mechanic_nova_first_repair_seen"
+const _MECHANIC_FIRST_VISIT_FLAG := "mechanic_first_visit_seen"
+var _mechanic_first_visit_this_dock := false
+const _JENNA_NOVA_FIRST_REPAIR_LINE := "All patched. And your ship just corrected my diagnostic rig before I touched it. That is either very expensive hardware or something I should not be asking about. We are square."
+const _GENERATED_MECHANIC_NOVA_FIRST_REPAIR_LINES := [
+	"That is the repair. Your ship AI audited my tools while I worked. I have seen military rigs with less nerve. I saw nothing, obviously.",
+	"Hull is sound. Your AI is not anything I recognize from a civilian manual, and I enjoy having a license. So I recognize nothing.",
+	"She is fixed. Your onboard system asked my scanner a question it was not built to answer. I am going to call that a feature and invoice no one for it.",
+	"All clear. Whatever runs that ship is far too polite for the kind of hardware it is hiding. Do not make me say that twice.",
+	"Repairs are done. Your AI has some very interesting opinions about my diagnostic suite. I have decided I prefer not knowing where it learned them.",
+	"Ship is back together. That system in your hull is not standard, but neither is my discretion. Both cost extra; today you got one free."
+]
 
 # Mechanic pickup-offer state.
 var _mechanic_pickup_offer: Dictionary = {}
@@ -4019,6 +4031,7 @@ func toggle_dock_menu(
 			if not _was_docked or procedure_completed:
 				fresh_dock = true
 				_repaired_this_dock = false
+				_mechanic_first_visit_this_dock = false
 				# Fresh dock: lounge social session state resets (completion rep
 				# bumps and drinks are once per contact per DOCK, not per open).
 				_lounge_convo_done.clear()
@@ -7226,6 +7239,10 @@ func _current_mechanic_profile() -> Dictionary:
 				continue
 			return {
 				"name": str(npc_name),
+				"npc_id": _mechanic_npc_id_for(
+					str(npc_data.get("npc_id", "")),
+					station_id
+				),
 				"role": str(npc_data.get("role", "Station mechanic")),
 				"voice_profile_id": str(
 					npc_data.get("voice_profile_id", "voice.neutral.v1")
@@ -7239,6 +7256,7 @@ func _current_mechanic_profile() -> Dictionary:
 	var jenna_data := GlobalState.get_minor_npc_data("Jenna Kross")
 	return {
 		"name": "Jenna Kross",
+		"npc_id": "npc.jenna_kross",
 		"role": str(jenna_data.get("role", "Grease Monkeys mechanic")),
 		"voice_profile_id": str(
 			jenna_data.get("voice_profile_id", "voice.jenna_kross.v1")
@@ -7256,6 +7274,16 @@ func _current_station_display_name() -> String:
 		if display != null and str(display).strip_edges() != "":
 			return str(display)
 	return "this station"
+
+
+func _mechanic_npc_id_for(candidate_id: String, station_id: String) -> String:
+	var clean_candidate := candidate_id.strip_edges().to_lower()
+	if DomainId.is_valid(clean_candidate, "npc"):
+		return clean_candidate
+	var clean_station := station_id.strip_edges().to_lower().replace(".", "_")
+	if clean_station.is_empty():
+		clean_station = "unknown_station"
+	return "npc.gen.%s.mechanic" % clean_station
 
 
 func _mechanic_destination_name(mechanic_profile: Dictionary = {}) -> String:
@@ -7320,8 +7348,43 @@ func _title_case_words(value: String) -> String:
 
 func _on_maintenance_bay_pressed() -> void:
 	SpeechService.stop()
+	_mark_current_mechanic_first_visit()
 	current_submenu = DockSubmenu.MAINTENANCE
 	_render_dock_submenu()
+
+
+func _mechanic_has_prior_visit(mechanic_profile: Dictionary) -> bool:
+	var mechanic_id := str(mechanic_profile.get("npc_id", "")).strip_edges()
+	return mechanic_id != "" \
+		and GlobalState.campaign_npc_state_store != null \
+		and GlobalState.campaign_npc_state_store.has_method("has_one_shot_flag") \
+		and GlobalState.campaign_npc_state_store.has_one_shot_flag(
+			mechanic_id,
+			_MECHANIC_FIRST_VISIT_FLAG
+		)
+
+
+func _mark_current_mechanic_first_visit() -> void:
+	var mechanic_profile: Dictionary = (
+		_cached_mechanic_profile
+		if not _cached_mechanic_profile.is_empty()
+		else _current_mechanic_profile()
+	)
+	if _mechanic_has_prior_visit(mechanic_profile):
+		return
+	var mechanic_id := str(mechanic_profile.get("npc_id", "")).strip_edges()
+	if mechanic_id.is_empty() \
+			or GlobalState.campaign_npc_state_store == null \
+			or not GlobalState.campaign_npc_state_store.has_method("consume_one_shot_flag"):
+		# Do not risk a first-visit quest if campaign state is unavailable.
+		_mechanic_first_visit_this_dock = true
+		return
+	var marked: Dictionary = GlobalState.campaign_npc_state_store.consume_one_shot_flag(
+		mechanic_id,
+		_MECHANIC_FIRST_VISIT_FLAG
+	)
+	if bool(marked.get("ok", false)) and bool(marked.get("first_time", false)):
+		_mechanic_first_visit_this_dock = true
 
 
 func _on_station_lounge_pressed() -> void:
@@ -7895,8 +7958,8 @@ func _current_turn_in_station_id() -> String:
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
 # When the player docks at the main station (Grease Monkeys), we pre-cache
-# a personalized greeting for Jenna so the first time the player enters the
-# maintenance submenu the chat box has text ready. Tries the LLM first
+# Jenna's greeting so the first time the player enters the maintenance submenu
+# has text ready. Her first meeting is authored; later visits try the LLM
 # (qwen2.5:1.5b — small but cheap), falls back to one of 10 canned lines
 # selected by ship class + reputation tier. The LLM prompt is engineered
 # to keep her voice: cocky, observant, knows things about the pilot she
@@ -7907,6 +7970,7 @@ func _current_turn_in_station_id() -> String:
 # future variants should plug in here so the line can name the chassis
 # directly. Keep these short and punchy — they show up inside the chat box.
 const PLAYER_SHIP_NAME = "INDY Miner"
+const JENNA_FIRST_MEETING_LINE := "Name's Jenna. I can fix whatever you broke, but I can't fix whatever bad decision made you fly a bucket like this out to the edge of nowhere. So—what are we looking at?"
 
 # 10 canned lines. Each is a complete, in-character greeting Jenna would
 # give at the maintenance bay. References ship class and/or reputation
@@ -8107,8 +8171,28 @@ func _cache_mechanic_intro() -> void:
 	_cached_mechanic_line = ""
 	_cached_mechanic_line_is_fallback = false
 	_cached_mechanic_profile = _current_mechanic_profile()
+	# Jenna's first line is a real first meeting, never a generated callback
+	# that assumes history the player has not earned. It is cached here so it
+	# remains instant just like later greetings.
+	if not bool(_cached_mechanic_profile.get("is_generated", false)) \
+			and not _mechanic_has_prior_visit(_cached_mechanic_profile):
+		_cached_mechanic_line = JENNA_FIRST_MEETING_LINE
+		_cached_mechanic_line_is_fallback = false
+		_mechanic_precache_in_flight = false
+		_mechanic_pickup_offer = {}
+		_mechanic_pickup_declined = false
+		SpeechService.cache(
+			JENNA_FIRST_MEETING_LINE,
+			str(_cached_mechanic_profile.get("voice_profile_id", "voice.jenna_kross.v1"))
+		)
+		return
 
-	_mechanic_pickup_offer = GlobalState.roll_pickup_offer()
+	# A mechanic's first real visit establishes the shop and the person. It is
+	# never allowed to immediately turn into a fetch quest, even after Speak.
+	if _mechanic_first_visit_this_dock or not _mechanic_has_prior_visit(_cached_mechanic_profile):
+		_mechanic_pickup_offer = {}
+	else:
+		_mechanic_pickup_offer = GlobalState.roll_pickup_offer()
 	_mechanic_pickup_declined = false
 
 	# Build context for the LLM. Keep it small — the 1.5b model chews
@@ -10803,10 +10887,53 @@ func _repair_ship():
 	if repaired:
 		AudioManager.play_repair()
 		_repaired_this_dock = true
+		_play_first_repair_nova_notice()
 			
 	# Update HUD and button state
 	_update_hud_health()
 	_update_repair_button()
+
+
+# A mechanic gets one look inside this hull. The saved one-shot is consumed
+# before display, so a failed persistence write cannot turn this mystery beat
+# into repeat chatter after reload.
+func _play_first_repair_nova_notice() -> void:
+	var mechanic_profile: Dictionary = (
+		_cached_mechanic_profile
+		if not _cached_mechanic_profile.is_empty()
+		else _current_mechanic_profile()
+	)
+	var mechanic_id := str(mechanic_profile.get("npc_id", "")).strip_edges()
+	if mechanic_id.is_empty() \
+			or GlobalState.campaign_npc_state_store == null \
+			or not GlobalState.campaign_npc_state_store.has_method("consume_one_shot_flag"):
+		return
+	var consumed: Dictionary = GlobalState.campaign_npc_state_store.consume_one_shot_flag(
+		mechanic_id,
+		_MECHANIC_NOVA_FIRST_REPAIR_FLAG
+	)
+	if not bool(consumed.get("ok", false)) or not bool(consumed.get("first_time", false)):
+		return
+	var line := _JENNA_NOVA_FIRST_REPAIR_LINE
+	if bool(mechanic_profile.get("is_generated", false)):
+		var index: int = int(abs(mechanic_id.hash())) % _GENERATED_MECHANIC_NOVA_FIRST_REPAIR_LINES.size()
+		line = str(_GENERATED_MECHANIC_NOVA_FIRST_REPAIR_LINES[index])
+	_cached_mechanic_line = line
+	_cached_mechanic_line_is_fallback = false
+	_last_played_mechanic_line = ""
+	if current_submenu == DockSubmenu.MAINTENANCE:
+		_render_mechanic_intro()
+	else:
+		show_dock_message(
+			line,
+			str(mechanic_profile.get("name", "Station Mechanic")),
+			mechanic_profile.get("flavor_color", Color(1.0, 0.85, 0.4)),
+			mechanic_profile.get("portrait", null)
+		)
+		SpeechService.play(
+			line,
+			str(mechanic_profile.get("voice_profile_id", "voice.neutral.v1"))
+		)
 
 
 func _current_station_has_repair_services() -> bool:
@@ -11100,6 +11227,8 @@ func _show_kaelen_intro_quest_offer() -> void:
 			"reward_credits_multiplier": 1.0,
 		},
 	}
+
+
 	if is_instance_valid(Nova):
 		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
 

@@ -61,6 +61,13 @@ static func _output_contract(chapter_number: int = 1) -> Dictionary:
 		"packet_id": "chapter_packet.%d" % maxi(1, chapter_number),
 		"chapter": maxi(1, chapter_number),
 		"premise": "player-safe one-line chapter pressure",
+		"opposing_force": _default_opposing_force_dossier(),
+		"attachment_beats": [
+			{
+				"character_id": "kaelen|nova",
+				"beat_id": "only an ID listed in unresolved_story_state.eligible_attachment_beats",
+			},
+		],
 		"threads": [
 			{
 				"thread_id": "thread.<snake_case>",
@@ -101,7 +108,8 @@ static func parse_chapter_plan_response(
 	envelope_text: String,
 	available_objective_types: Array = [],
 	valid_entity_ids: Array = [],
-	model_name: String = ""
+	model_name: String = "",
+	eligible_attachment_beats: Array = []
 ) -> Dictionary:
 	var response_text := _extract_response_text(envelope_text)
 	if response_text.is_empty():
@@ -122,7 +130,8 @@ static func parse_chapter_plan_response(
 	var result := _validate_packet(
 		repaired,
 		available_objective_types,
-		valid_entity_ids
+		valid_entity_ids,
+		eligible_attachment_beats
 	)
 	if not result.is_valid():
 		return _failure("chapter_plan_validation_failed", result, model_name)
@@ -174,6 +183,8 @@ static func fallback_chapter_packet(
 		"packet_id": "chapter_packet.%d.fallback" % chapter_number,
 		"chapter": chapter_number,
 		"premise": "Local pressure is rising while the larger story plan recovers.",
+		"opposing_force": _default_opposing_force_dossier(),
+		"attachment_beats": [],
 		"threads": [
 			{
 				"thread_id": "thread.%s" % suffix,
@@ -268,6 +279,10 @@ static func _repair_packet_shape(source: Dictionary) -> Dictionary:
 	packet["threads"] = _array_or_empty(packet.get("threads", []))
 	packet["facts"] = _array_or_empty(packet.get("facts", []))
 	packet["beats"] = _array_or_empty(packet.get("beats", []))
+	packet["attachment_beats"] = _array_or_empty(packet.get("attachment_beats", []))
+	packet["opposing_force"] = _normalized_opposing_force_dossier(
+		packet.get("opposing_force", {})
+	)
 	return packet
 
 
@@ -283,10 +298,57 @@ static func _array_or_empty(value: Variant) -> Array:
 	return []
 
 
+# This is deliberately a dossier shell, not an antagonist generator. Until a
+# campaign premise earns an opposing force, `unformed` prevents the model from
+# treating an arbitrary early pressure as settled canon.
+static func _default_opposing_force_dossier() -> Dictionary:
+	return {
+		"status": "unformed",
+		"current_footprint": [],
+		"identity": {"known": [], "unknown": []},
+		"objectives": [],
+		"capabilities": [],
+		"limits": [],
+		"chapter_move": "",
+		"local_aftermath": [],
+		"evidence_trail": [],
+		"escalation_tier": 0,
+	}
+
+
+static func _normalized_opposing_force_dossier(value: Variant) -> Dictionary:
+	var dossier := _default_opposing_force_dossier()
+	if not value is Dictionary:
+		return dossier
+	var source: Dictionary = value
+	dossier["status"] = str(source.get("status", dossier["status"])).strip_edges()
+	if dossier["status"].is_empty():
+		dossier["status"] = "unformed"
+	for field in [
+		"current_footprint",
+		"objectives",
+		"capabilities",
+		"limits",
+		"local_aftermath",
+		"evidence_trail",
+	]:
+		dossier[field] = _array_or_empty(source.get(field, []))
+	var identity_source: Dictionary = source.get("identity", {}) \
+		if source.get("identity", {}) is Dictionary else {}
+	dossier["identity"] = {
+		"known": _array_or_empty(identity_source.get("known", [])),
+		"unknown": _array_or_empty(identity_source.get("unknown", [])),
+	}
+	dossier["chapter_move"] = str(source.get("chapter_move", "")).strip_edges()
+	dossier["escalation_tier"] = clampi(int(source.get("escalation_tier", 0)), 0, 5)
+	return dossier
+
+
 static func _validate_packet(
 	packet: Dictionary,
 	available_objective_types: Array,
-	valid_entity_ids: Array
+	valid_entity_ids: Array,
+	eligible_attachment_beats: Array
 ) -> ValidationResult:
 	var result := ValidationResultType.new()
 	if str(packet.get("packet_id", "")).strip_edges().is_empty():
@@ -307,7 +369,8 @@ static func _validate_packet(
 			"Chapter packet requires a player-safe premise.",
 			"premise"
 		)
-	for field in ["threads", "facts", "beats"]:
+	_validate_opposing_force_dossier(packet.get("opposing_force", {}), result)
+	for field in ["threads", "facts", "beats", "attachment_beats"]:
 		if not packet.get(field, []) is Array:
 			result.add_error(
 				"invalid_chapter_packet_array",
@@ -320,6 +383,11 @@ static func _validate_packet(
 	var known_entities := {}
 	for entity_id in valid_entity_ids:
 		known_entities[str(entity_id)] = true
+	_validate_attachment_beats(
+		_array_or_empty(packet.get("attachment_beats", [])),
+		eligible_attachment_beats,
+		result
+	)
 	var beats: Array = packet.get("beats", [])
 	for index in range(beats.size()):
 		if not beats[index] is Dictionary:
@@ -337,6 +405,99 @@ static func _validate_packet(
 			result
 		)
 	return result
+
+
+static func _validate_attachment_beats(
+	selected: Array,
+	eligible: Array,
+	result: ValidationResult
+) -> void:
+	var allowed := {}
+	for entry in eligible:
+		if not entry is Dictionary:
+			continue
+		var character_id := str((entry as Dictionary).get("character_id", "")).strip_edges()
+		var beat_id := str((entry as Dictionary).get("beat_id", "")).strip_edges()
+		if not character_id.is_empty() and not beat_id.is_empty():
+			allowed["%s|%s" % [character_id, beat_id]] = true
+	var selected_characters := {}
+	for index in range(selected.size()):
+		if not selected[index] is Dictionary:
+			result.add_error("invalid_attachment_beat", "Attachment beat must be an object.", "attachment_beats.%d" % index)
+			continue
+		var selection: Dictionary = selected[index]
+		var character_id := str(selection.get("character_id", "")).strip_edges()
+		var beat_id := str(selection.get("beat_id", "")).strip_edges()
+		var path := "attachment_beats.%d" % index
+		if character_id.is_empty() or beat_id.is_empty() or not allowed.has("%s|%s" % [character_id, beat_id]):
+			result.add_error("ineligible_attachment_beat", "Chapter packet selected an attachment beat that is not currently eligible.", path)
+			continue
+		if selected_characters.has(character_id):
+			result.add_error("duplicate_attachment_character", "Chapter packet may select at most one attachment beat per character.", path)
+			continue
+		selected_characters[character_id] = true
+
+
+static func _validate_opposing_force_dossier(
+	value: Variant,
+	result: ValidationResult
+) -> void:
+	if not value is Dictionary:
+		result.add_error(
+			"invalid_opposing_force_dossier",
+			"Chapter packet opposing_force must be an object.",
+			"opposing_force"
+		)
+		return
+	var dossier: Dictionary = value
+	if not ["unformed", "active"].has(str(dossier.get("status", ""))):
+		result.add_error(
+			"invalid_opposing_force_status",
+			"Opposing-force dossier status must be unformed or active.",
+			"opposing_force.status"
+		)
+	for field in [
+		"current_footprint",
+		"objectives",
+		"capabilities",
+		"limits",
+		"local_aftermath",
+		"evidence_trail",
+	]:
+		if not dossier.get(field, []) is Array:
+			result.add_error(
+				"invalid_opposing_force_array",
+				"Opposing-force dossier field '%s' must be an array." % field,
+				"opposing_force.%s" % field
+			)
+	var identity: Variant = dossier.get("identity", {})
+	if not identity is Dictionary:
+		result.add_error(
+			"invalid_opposing_force_identity",
+			"Opposing-force dossier identity must be an object.",
+			"opposing_force.identity"
+		)
+	else:
+		for field in ["known", "unknown"]:
+			if not (identity as Dictionary).get(field, []) is Array:
+				result.add_error(
+					"invalid_opposing_force_identity_array",
+					"Opposing-force identity field '%s' must be an array." % field,
+					"opposing_force.identity.%s" % field
+				)
+	if not dossier.get("chapter_move", "") is String:
+		result.add_error(
+			"invalid_opposing_force_chapter_move",
+			"Opposing-force dossier chapter_move must be a string.",
+			"opposing_force.chapter_move"
+		)
+	if int(dossier.get("escalation_tier", -1)) < 0 \
+			or int(dossier.get("escalation_tier", 6)) > 5:
+		result.add_error(
+			"invalid_opposing_force_escalation_tier",
+			"Opposing-force escalation_tier must be between 0 and 5.",
+			"opposing_force.escalation_tier"
+		)
 
 
 static func _validate_beat(

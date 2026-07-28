@@ -29,6 +29,10 @@ func _initialize() -> void:
 	_cleanup()
 	_test_lounge_conversation_memory()
 	_cleanup()
+	_test_one_shot_flag_persists()
+	_cleanup()
+	_test_one_shot_flag_persists()
+	_cleanup()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign NPC state store tests")
@@ -170,6 +174,34 @@ func _test_bootstrap_update_and_reopen_npc_state() -> void:
 			and str(reopened_state.get("memory_summary", "")) == "Mara remembers the relay inspection.",
 		"NPC state did not persist after reopen."
 	)
+
+
+func _test_one_shot_flag_persists() -> void:
+	var slots := SlotRegistryType.open(TEST_ROOT)
+	var created := slots.create_campaign(
+		"slot_01",
+		"NPC One-Shot Fixture",
+		"npc-state-one-shot-test",
+		_initial_state(),
+		SystemRegistryType.load_default()
+	)
+	_expect(bool(created.get("ok", false)), created.get("error", ""))
+	if not bool(created.get("ok", false)):
+		return
+	var store := NpcStateStoreType.open(CAMPAIGN_PATH)
+	var first: Dictionary = store.consume_one_shot_flag(
+		NPC_ID,
+		"mechanic_first_visit_seen"
+	)
+	_expect(bool(first.get("ok", false)) and bool(first.get("first_time", false)), "First one-shot consumption was not recorded.")
+	_expect(store.has_one_shot_flag(NPC_ID, "mechanic_first_visit_seen"), "Recorded mechanic visit flag was not readable.")
+	var second: Dictionary = store.consume_one_shot_flag(
+		NPC_ID,
+		"mechanic_first_visit_seen"
+	)
+	_expect(bool(second.get("ok", false)) and not bool(second.get("first_time", true)), "One-shot flag replayed on a second mechanic visit.")
+	var reopened := NpcStateStoreType.open(CAMPAIGN_PATH)
+	_expect(reopened.has_one_shot_flag(NPC_ID, "mechanic_first_visit_seen"), "One-shot mechanic visit flag did not persist after reopen.")
 
 
 func _test_structured_event_memory_projection() -> void:

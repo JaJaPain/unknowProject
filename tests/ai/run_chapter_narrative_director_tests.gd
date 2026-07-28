@@ -9,6 +9,8 @@ func _initialize() -> void:
 	_test_prompt_uses_labeled_director_inputs_only()
 	_test_prompt_declares_chapter_packet_contract()
 	_test_parser_repairs_aliases_and_accepts_valid_packet()
+	_test_parser_supplies_unformed_opposing_force_dossier()
+	_test_parser_rejects_ineligible_attachment_beats()
 	_test_parser_rejects_unavailable_objectives_and_entities()
 	_test_validation_correction_notes_are_retry_ready()
 	_test_fallback_packet_is_valid_and_grounded()
@@ -59,6 +61,12 @@ func _test_prompt_uses_labeled_director_inputs_only() -> void:
 			and prompt.contains("choice.helped_zenith")
 			and prompt.contains("thread:convoy_loss"),
 		"Chapter plan prompt dropped one of its explicit inputs."
+	)
+	_expect(
+		prompt.contains("opposing_force")
+			and prompt.contains("current_footprint")
+			and prompt.contains("escalation_tier"),
+		"Chapter plan prompt did not declare the opposing-force dossier contract."
 	)
 	_expect(
 		not prompt.contains("SECRET_UNPASSED_CAMPAIGN_BIBLE_FIELD"),
@@ -123,6 +131,77 @@ func _test_parser_repairs_aliases_and_accepts_valid_packet() -> void:
 			and (packet.get("facts", []) as Array).size() == 1
 			and (packet.get("beats", []) as Array).size() == 1,
 		"Chapter plan parser did not repair aliases into canonical packet shape."
+	)
+
+
+func _test_parser_supplies_unformed_opposing_force_dossier() -> void:
+	var raw_packet := {
+		"packet_id": "chapter_packet.3",
+		"chapter": 3,
+		"premise": "The route pressure has not identified its source.",
+		"threads": [],
+		"facts": [],
+		"beats": [
+			{
+				"beat_id": "beat.route_pressure",
+				"supported_objective_types": ["DELIVERY_COURIER"],
+				"eligible_entity_ids": ["station.start.main"],
+				"stake": "The local route remains unstable.",
+			},
+		],
+	}
+	var result: Dictionary = ChapterDirectorType.parse_chapter_plan_response(
+		JSON.stringify({"response": JSON.stringify(raw_packet)}),
+		["DELIVERY_COURIER"],
+		["station.start.main"],
+		"qwen3:8b"
+	)
+	var dossier: Dictionary = (result.get("packet", {}) as Dictionary).get(
+		"opposing_force",
+		{}
+	)
+	var identity: Dictionary = dossier.get("identity", {})
+	_expect(
+		bool(result.get("ok", false))
+			and str(dossier.get("status", "")) == "unformed"
+			and (identity.get("known", []) as Array).is_empty()
+			and (identity.get("unknown", []) as Array).is_empty()
+			and str(dossier.get("chapter_move", "")).is_empty()
+			and int(dossier.get("escalation_tier", -1)) == 0,
+		"Chapter plan parser did not add the safe unformed opposing-force dossier."
+	)
+
+
+func _test_parser_rejects_ineligible_attachment_beats() -> void:
+	var raw_packet := {
+		"packet_id": "chapter_packet.attachment",
+		"chapter": 1,
+		"premise": "A test pressure.",
+		"threads": [],
+		"facts": [],
+		"attachment_beats": [
+			{"character_id": "kaelen", "beat_id": "earned_change"},
+		],
+		"beats": [
+			{
+				"beat_id": "beat.attachment",
+				"supported_objective_types": ["DELIVERY_COURIER"],
+				"eligible_entity_ids": ["station.start.main"],
+				"stake": "The test needs a beat.",
+			},
+		],
+	}
+	var result: Dictionary = ChapterDirectorType.parse_chapter_plan_response(
+		JSON.stringify({"response": JSON.stringify(raw_packet)}),
+		["DELIVERY_COURIER"],
+		["station.start.main"],
+		"qwen3:8b",
+		[{"character_id": "kaelen", "beat_id": "first_impression"}]
+	)
+	_expect(
+		not bool(result.get("ok", true))
+			and _has_error_code(result.get("validation") as ValidationResult, "ineligible_attachment_beat"),
+		"Chapter plan parser accepted an attachment beat that had not been earned."
 	)
 
 

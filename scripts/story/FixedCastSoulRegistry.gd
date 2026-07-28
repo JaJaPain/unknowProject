@@ -77,7 +77,8 @@ static func prompt_block(
 	state_id: String,
 	situation: String,
 	rapport_band: String = "neutral",
-	attachment_memory: String = ""
+	attachment_memory: String = "",
+	player_known_facts: Array[String] = []
 ) -> String:
 	var projection := public_prompt_projection(soul_id, state_id, situation)
 	if not bool(projection.get("ok", false)):
@@ -105,4 +106,13 @@ static func prompt_block(
 	]
 	if not attachment_memory.strip_edges().is_empty():
 		lines.append("- Earned shared-memory callback: %s" % attachment_memory.strip_edges())
+	var clean_facts: Array[String] = []
+	for raw_fact in player_known_facts:
+		var fact := str(raw_fact).strip_edges()
+		if not fact.is_empty() and not clean_facts.has(fact):
+			clean_facts.append(fact)
+		if clean_facts.size() >= 3:
+			break
+	if not clean_facts.is_empty():
+		lines.append("- Player-known facts only: %s" % "; ".join(clean_facts))
 	return "\n".join(lines)

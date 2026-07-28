@@ -3299,6 +3299,7 @@ func _chapter_plan_unresolved_story_state(target_chapter: int = 0) -> Dictionary
 		"knowledge_revision": int(state.get("knowledge_revision", 0)),
 		"question_fact_revision": int(state.get("question_fact_revision", 0)),
 		"beat_revision": int(state.get("beat_revision", 0)),
+		"eligible_attachment_beats": StoryManager.fixed_cast_eligible_attachment_beats(),
 	}
 
 
@@ -4175,7 +4176,7 @@ func _dispatch_nova_seed_batch(
 func _nova_line_bank_generation_context() -> Dictionary:
 	var context := {}
 	context["fixed_cast_soul"] = FixedCastSoulRegistryType.prompt_block(
-		"nova", StoryManager.fixed_cast_state("nova"), "arrival", StoryManager.fixed_cast_rapport_band("nova"), StoryManager.fixed_cast_attachment_memory("nova")
+		"nova", StoryManager.fixed_cast_state("nova"), "arrival", StoryManager.fixed_cast_rapport_band("nova"), StoryManager.fixed_cast_attachment_memory("nova"), StoryManager.fixed_cast_player_known_facts()
 	)
 	if is_instance_valid(Nova):
 		context["persona"] = str(Nova.PERSONA)

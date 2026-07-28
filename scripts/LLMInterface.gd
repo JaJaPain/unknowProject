@@ -2354,7 +2354,8 @@ func _on_chapter_plan_generation_completed(
 		body.get_string_from_utf8(),
 		available_objective_types,
 		valid_entity_ids,
-		model_name
+		model_name,
+		unresolved_story_state.get("eligible_attachment_beats", [])
 	)
 	if not bool(parsed.get("ok", false)):
 		GenerationDiagnostics.record_event(
@@ -5290,7 +5291,7 @@ func request_kaelen_reaction(
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
 		mood_block + \
-		FixedCastSoulRegistryType.prompt_block("kaelen", StoryManager.fixed_cast_state("kaelen"), "turn_in", StoryManager.fixed_cast_rapport_band("kaelen"), StoryManager.fixed_cast_attachment_memory("kaelen")) + "\n" + \
+		FixedCastSoulRegistryType.prompt_block("kaelen", StoryManager.fixed_cast_state("kaelen"), "turn_in", StoryManager.fixed_cast_rapport_band("kaelen"), StoryManager.fixed_cast_attachment_memory("kaelen"), StoryManager.fixed_cast_player_known_facts()) + "\n" + \
 		curated_style_block + \
 		copy_rejection_block + \
 		safe_packet_block + \

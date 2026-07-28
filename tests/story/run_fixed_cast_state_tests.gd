@@ -12,6 +12,13 @@ func _initialize() -> void:
 	attachments = AttachmentType.advance(attachments, "mission_completed", {"is_intro_tutorial": true}, 1)
 	_expect(AttachmentType.has_completed("kaelen", "first_impression", attachments), "Tutorial completion must begin Kaelen's attachment arc.")
 	_expect(AttachmentType.has_completed("nova", "first_impression", attachments), "Tutorial completion must begin N.O.V.A.'s attachment arc.")
+	var eligible: Array[Dictionary] = AttachmentType.eligible_chapter_beats(attachments)
+	_expect(
+		eligible.size() == 2
+			and str(eligible[0].get("beat_id", "")) == "private_texture"
+			and str(eligible[1].get("beat_id", "")) == "private_texture",
+		"Chapter attachment eligibility must expose only each character's next unfinished beat."
+	)
 	attachments = AttachmentType.advance(attachments, "system_arrived", {}, 2)
 	attachments = AttachmentType.advance(attachments, "mission_completed", {"reward_credits": 350, "difficulty_band": "dangerous"}, 3)
 	_expect(AttachmentType.has_completed("kaelen", "mutual_reliance", attachments), "A profitable completion should advance Kaelen's mutual-reliance beat.")

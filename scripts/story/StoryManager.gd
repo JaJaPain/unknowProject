@@ -694,6 +694,30 @@ func fixed_cast_attachment_memory(character_id: String) -> String:
 	return FixedCastAttachmentLedgerType.public_memory_callback(character_id, ledger)
 
 
+# Director-safe planning data. It is deliberately separate from the public
+# fixed-cast prompt projection, and selecting a beat does not complete it.
+func fixed_cast_eligible_attachment_beats() -> Array[Dictionary]:
+	var ledger: Dictionary = story_state.get("fixed_cast_attachments", {}) \
+		if story_state.get("fixed_cast_attachments", {}) is Dictionary else {}
+	ledger = FixedCastAttachmentLedgerType.normalize_ledger(ledger)
+	story_state["fixed_cast_attachments"] = ledger
+	return FixedCastAttachmentLedgerType.eligible_chapter_beats(ledger)
+
+
+# This is the only fixed-cast path to campaign knowledge for small-model
+# prompts. It deliberately reads player-safe knowledge, never hidden truths.
+func fixed_cast_player_known_facts(limit: int = 3) -> Array[String]:
+	var known: Array = story_state.get("player_knows", []) \
+		if story_state.get("player_knows", []) is Array else []
+	var facts: Array[String] = []
+	var start := maxi(0, known.size() - clampi(limit, 0, 3))
+	for index in range(start, known.size()):
+		var fact := str(known[index]).strip_edges()
+		if not fact.is_empty() and not facts.has(fact):
+			facts.append(fact)
+	return facts
+
+
 func take_curated_fixed_cast_line(
 	character_id: String,
 	situation: String,

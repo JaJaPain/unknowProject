@@ -12,6 +12,7 @@ func _initialize() -> void:
 		return
 	_test_mechanic_rejects_ui_style_faction_status()
 	_test_mechanic_prompt_keeps_faction_status_private()
+	_test_jenna_first_meeting_is_authored_and_gated()
 	if _failures.is_empty():
 		print("[PASS] Mechanic dialogue tests")
 		quit(0)
@@ -51,6 +52,21 @@ func _test_mechanic_prompt_keeps_faction_status_private() -> void:
 			and source.contains("Private dockside subtext")
 			and source.contains("Faction status is private subtext only"),
 		"Mechanic prompt still exposes faction reputation labels to player-facing prose."
+	)
+
+
+func _test_jenna_first_meeting_is_authored_and_gated() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect Jenna first-meeting wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("JENNA_FIRST_MEETING_LINE")
+			and source.contains("Name's Jenna. I can fix whatever you broke")
+			and source.contains("not _mechanic_has_prior_visit")
+			and source.contains("_mechanic_pickup_offer = {}"),
+		"Jenna's authored first meeting is missing, not gated to the first visit, or can still create a fetch offer."
 	)
 
 

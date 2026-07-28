@@ -74,6 +74,24 @@ static func current_beat(character_id: String, ledger: Dictionary) -> Dictionary
 	return _next_beat(character_id, arc.get("completed_beat_ids", []))
 
 
+# A chapter packet may acknowledge only the next unfinished beat per character.
+# Completion remains event-driven in advance(), never model-selected.
+static func eligible_chapter_beats(ledger: Dictionary) -> Array[Dictionary]:
+	var eligible: Array[Dictionary] = []
+	for character_id in CHARACTER_IDS:
+		var beat := current_beat(character_id, ledger)
+		var beat_id := str(beat.get("id", "")).strip_edges()
+		if beat_id.is_empty():
+			continue
+		eligible.append({
+			"character_id": character_id,
+			"beat_id": beat_id,
+			"event": str(beat.get("event", "")),
+			"visible_payoff": str(beat.get("visible_payoff", "")),
+		})
+	return eligible
+
+
 static func has_completed(character_id: String, beat_id: String, ledger: Dictionary) -> bool:
 	var normalized := normalize_ledger(ledger)
 	var arc: Dictionary = normalized.get(character_id, {})

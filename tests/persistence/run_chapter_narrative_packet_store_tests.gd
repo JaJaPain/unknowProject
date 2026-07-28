@@ -57,6 +57,16 @@ func _test_bootstrap_append_reopen_and_reject_duplicate() -> void:
 			) == "Packet chapter_packet.1 pressure",
 		"Packet store did not persist and reopen appended packets."
 	)
+	var persisted_packet: Dictionary = reopened.latest_packet_for_chapter(1)
+	var dossier: Dictionary = persisted_packet.get("opposing_force", {})
+	_expect(
+		str(dossier.get("status", "")) == "unformed"
+			and dossier.get("identity", {}) is Dictionary
+			and (dossier.get("identity", {}) as Dictionary).get("known", []) is Array
+			and (dossier.get("identity", {}) as Dictionary).get("unknown", []) is Array
+			and int(dossier.get("escalation_tier", -1)) == 0,
+		"Packet store did not persist the default unformed opposing-force dossier."
+	)
 
 
 func _packet(packet_id: String, chapter: int) -> Dictionary:

@@ -18,15 +18,15 @@ func _initialize() -> void:
 	var nova := SoulsType.public_prompt_projection("nova", "protective", "repair_warning")
 	_expect(bool(nova.get("ok", false)) and JSON.stringify(nova).contains("Captain"), "Nova public projection lost address guidance.")
 	_expect(str(SoulsType.public_prompt_projection("nova", "missing", "arrival").get("reason", "")).begins_with("unknown_soul_state"), "Unknown fixed-cast state should fail precisely.")
-	var block := SoulsType.prompt_block("kaelen", "broker_neutral", "turn_in", "fond", "The Captain closed the first job.")
-	_expect(block.contains("Fixed-cast soul v1.0.0") and block.contains("Situation must do") and block.contains("Current rapport (fond)") and block.contains("Earned shared-memory callback"), "Fixed-cast prompt block lost its state/situation/rapport/memory contract.")
+	var block := SoulsType.prompt_block("kaelen", "broker_neutral", "turn_in", "fond", "The Captain closed the first job.", ["The relay went dark.", "A convoy is late.", "The dock is short on fuel.", "Hidden fourth fact."])
+	_expect(block.contains("Fixed-cast soul v1.0.0") and block.contains("Situation must do") and block.contains("Current rapport (fond)") and block.contains("Earned shared-memory callback") and block.contains("Player-known facts only") and not block.contains("Hidden fourth fact."), "Fixed-cast prompt block lost its state/situation/rapport/memory/public-fact contract.")
 	var llm_file := FileAccess.open("res://scripts/LLMInterface.gd", FileAccess.READ)
 	var root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
 	_expect(llm_file != null and root_file != null, "Could not inspect fixed-cast prompt wiring.")
 	if llm_file != null and root_file != null:
 		var llm_source := llm_file.get_as_text()
 		var root_source := root_file.get_as_text()
-		_expect(llm_source.contains("FixedCastSoulRegistryType.prompt_block(\"kaelen\"") and root_source.contains("FixedCastSoulRegistryType.prompt_block("), "Fixed-cast soul projections are not wired into Kaelen/Nova generation.")
+		_expect(llm_source.contains("FixedCastSoulRegistryType.prompt_block(\"kaelen\"") and root_source.contains("FixedCastSoulRegistryType.prompt_block(") and llm_source.contains("fixed_cast_player_known_facts") and root_source.contains("fixed_cast_player_known_facts"), "Fixed-cast soul projections are not wired into Kaelen/Nova generation with a player-known-facts projection.")
 		_expect(llm_source.contains("fixed_cast_rapport_band(\"kaelen\")") and root_source.contains("fixed_cast_rapport_band(\"nova\")"), "Current rapport is not wired into Kaelen/Nova generation.")
 		_expect(llm_source.contains("fixed_cast_state(\"kaelen\")") and root_source.contains("fixed_cast_state(\"nova\")"), "Code-owned fixed-cast states are not wired into generation.")
 	if _failures.is_empty():
