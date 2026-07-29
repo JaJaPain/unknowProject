@@ -1900,3 +1900,36 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - NOTE for live smoke: the lounge_bundle capability has never fired
   against real qwen3 — watch GenerationDiagnostics for lounge_bundle
   fallbacks and verify the flat 5-key JSON holds up.
+
+## 2026-07-29 — Quiet-moment LLM research (paused for PC repair)
+
+- Reviewed the quiet-moment LLM block documented in
+  `docs/quiet_moment_llm_research_log.md`. The log's diagnosis ("the model
+  invents facts") was wrong. Three prompt-side causes, all measured:
+  - `FixedCastSoulRegistry.prompt_block()` emits `public_board_money_rule`
+    unconditionally, so every Kaelen prompt CONTAINED the broker fee the log
+    recorded as invention. Board/fee mentions 5/8 with the line, 1/8 without.
+  - Prompt ban lists primed the banned words. "Do not invent ... coffee"
+    produced coffee 5/10 in the log, 2/6 in my repro, 0/16 once deleted.
+  - The 30 curated examples demonstrate unanchored idle observations, NOT the
+    fact-packet -> line transform actually being asked for. Copying was the
+    symptom of that mismatch, at 4b, 8b and 14b alike.
+- Fixing the few-shot to demonstrate the real transform: Kaelen 0/10 -> 11/12
+  fact-clean on qwen3:4b. `qwen3.6:35b-a3b` (MoE, 3B active) reaches
+  publishable voice at 3.0s warm, 7/8 clean. qwen3:8b is WORSE than 4b.
+- Opener mode-collapse fixed code-side, not prompt-side: rotating the
+  code-owned fact-packet wording took distinct openers from 1/10 to 10/10.
+  Prompt-side "vary the shape" instructions could not beat the attractor.
+- Voice work with the author: Kaelen is mercenary and candid about her own cut
+  (risk<->pay), NOT the zen broker the model defaults to; and "she isn't cold,
+  just wants her money" -- the complaint targets the job/rate/client, never the
+  Captain. That axis change moved shippable output ~2/10 -> ~6/10.
+- NOTE: `QuietMomentLineValidator._contains_any()` uses substring matching --
+  "fee" matches "feel", "use " matches "because ", "ready" matches "already".
+  It flags 26 of the project's own 30 curated Kaelen lines. Not yet fixed.
+- NOTE: in Ollama `format:"json"`, any `Label:` in the prompt becomes a JSON
+  key. Few-shot demos written as `FACTS:`/`LINE:` returned `{"facts": [...]}`
+  and looked like parse failures. Do not combine with the `@@label` technique.
+- Paused mid-way through voice tuning. Working state, current best config (V5),
+  reproducible harness and raw outputs: `docs/research/quiet_moment/RESUME.md`.
+  No production code changed; findings only.
