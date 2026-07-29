@@ -2,6 +2,37 @@
 
 ---
 
+## Session: 2026-07-28 (Quiet-Moment Curated Banks) — Codex
+**Branch:** `segment-3/economy-stores-events`
+**Status:** Uncommitted; content and sampler foundation are ready for the owner's review batch.
+
+### Goal and implementation boundary
+- Curate 30 **semantic-premise-distinct** `quiet_moment` references for each Kaelen and N.O.V.A. They are prompt rhythm/idea references, never canned player output.
+- The prompt sampler selects only three examples at a time. With 30 uniquely tagged entries, `C(30,3) = 4,060` unordered reference combinations before a repeat. Runtime persistence of the combination index is intentionally deferred until the owner approves generation samples.
+- Curated lines are protected from copying: exact matches and five-word overlap runs are rejected before presentation.
+
+### What the live local LLM taught us
+- A loose direct prompt can restate instructions rather than make a line. Strict `response_format: json` with a one-field inner schema fixed structural compliance.
+- Kaelen failure patterns: Earth-calendar language (for example “Tuesday”), invented unnamed crew, invented next offers, generic endings such as “no drama,” and copying a supplied reference.
+- N.O.V.A. failure patterns: invented Captain safety/breathing/comms facts, unasked directives (“let's move”), repeated “hull stable / no pursuit / no alarms,” and copying a supplied reference.
+- Broad, semantically varied references are necessary. A trial using only a couple of narrow premises caused obvious mode collapse even though individual outputs followed the broad voice.
+- A 10-per-character small-model probe did **not** clear human review: Kaelen repeatedly invented coffee/fees/prior jobs or used “no surprises”; N.O.V.A. repeatedly invented 98% hull values, safety, threats, or “systems nominal.” Tightening negative wording did not materially improve compliance.
+- A one-per-character 8B probe also failed: it introduced an unsupported ceiling/no-alarms claim and copied a supplied reference phrase. Model size alone is not the safety fix.
+- A fact-prefix prototype removed the model's access to numeric/mechanical facts but the small model still repeated the prefix verbatim and assumed the Captain's gender. Treat this as experimental probe code only, not runtime design.
+- Design conclusion: any future live quiet-moment path must validate, retry only when useful, and otherwise choose silence or a code-owned approved fallback. Never surface a raw draft merely because it is valid JSON.
+
+### Current artifacts
+- `data/content/fixed_cast_voice_examples.json`: 30 Kaelen + 30 N.O.V.A. `evergreen/quiet_moment` lines, all tagged with distinct `semantic_premise_tag` values.
+- `scripts/story/FixedCastVoiceBank.gd`: small style-slice sampler, tag exclusion, deterministic combination selection, combination count, and copy detection.
+- `scripts/story/QuietMomentLineValidator.gd`: deterministic prototype guard against the observed live-model errors; not yet wired into a gameplay quiet-moment trigger.
+- `data/content/fixed_cast_souls.json`: explicit quiet-moment must/must-not rules for each character.
+- `tests/tools/run_quiet_moment_live_probe.gd`: serial local-LLM probe; do not run parallel Godot tests.
+
+### Next owner-facing step
+Run one fresh **10-line generated batch per character** with three varied curated references per request, review it for voice, fact invention, copying, and repetition. Iterate the prompt/validator only if that batch exposes a real failure mode. Do not build the actual runtime ambient trigger until the batch is approved.
+
+---
+
 ## Session: 2026-07-01/02 (Campaign Bible Reliability + Wire Story Into Gameplay) — Claude
 **Branch:** `segment-3/economy-stores-events`
 **Commit:** `9ea1301`

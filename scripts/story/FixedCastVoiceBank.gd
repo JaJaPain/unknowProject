@@ -132,7 +132,41 @@ static func style_reference_block(
 	var loaded := load_examples()
 	if not bool(loaded.get("ok", false)):
 		return ""
+	var selected := select_style_references(
+		character_id,
+		state_id,
+		situation,
+		context,
+		limit
+	)
 	var lines: Array[String] = []
+	for candidate in selected:
+		lines.append("- %s" % str(candidate.get("line", "")))
+	if lines.is_empty():
+		return ""
+	return "Approved voice rhythm references. Do not quote, reuse, or paraphrase these lines; use only their level of specificity, dry humor, and restraint:\n" + "\n".join(lines) + "\n"
+
+
+# Returns a small, deterministic-but-varied reference slice. Curators should
+# supply semantic_premise_tag; legacy examples use their ID as a safe unique
+# fallback until they are tagged. A caller may exclude recently shown premise
+# tags to keep prompts fresh across a campaign or across campaigns.
+static func select_style_references(
+	character_id: String,
+	state_id: String,
+	situation: String,
+	context: Dictionary,
+	limit: int = 2
+) -> Array[Dictionary]:
+	var loaded := load_examples()
+	if not bool(loaded.get("ok", false)) or limit <= 0:
+		return []
+	var excluded: Dictionary = {}
+	for raw_tag in context.get("excluded_premise_tags", []):
+		var tag := str(raw_tag).strip_edges()
+		if not tag.is_empty():
+			excluded[tag] = true
+	var candidates: Array[Dictionary] = []
 	for example in loaded.get("examples", []):
 		var candidate: Dictionary = example
 		if str(candidate.get("character_id", "")) != character_id \
@@ -140,12 +174,74 @@ static func style_reference_block(
 				or str(candidate.get("situation", "")) != situation \
 				or not _requirements_match(candidate, context):
 			continue
-		lines.append("- %s" % str(candidate.get("line", "")))
-		if lines.size() >= limit:
+		var tag := semantic_premise_tag(candidate)
+		if excluded.has(tag):
+			continue
+		candidates.append(candidate)
+	var seed := str(context.get("reference_seed", context.get("runtime_id", "default")))
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return (seed + "|" + str(a.get("example_id", ""))).sha256_text() < (seed + "|" + str(b.get("example_id", ""))).sha256_text()
+	)
+	if context.has("reference_combination_index"):
+		return _combination_at(
+			candidates,
+			mini(limit, candidates.size()),
+			maxi(0, int(context.get("reference_combination_index", 0)))
+		)
+	var selected: Array[Dictionary] = []
+	var selected_tags: Dictionary = {}
+	for candidate in candidates:
+		var tag := semantic_premise_tag(candidate)
+		if selected_tags.has(tag):
+			continue
+		selected.append(candidate)
+		selected_tags[tag] = true
+		if selected.size() >= limit:
 			break
-	if lines.is_empty():
-		return ""
-	return "Approved voice rhythm references. Do not quote, reuse, or paraphrase these lines; use only their level of specificity, dry humor, and restraint:\n" + "\n".join(lines) + "\n"
+	return selected
+
+
+# Deterministic combination mode is used by persistent runtime schedulers.
+# With 30 eligible, uniquely tagged examples and a three-reference prompt, it
+# walks all 4,060 unordered combinations before returning to the first one.
+static func reference_combination_count(example_count: int, selection_size: int) -> int:
+	var n := maxi(0, example_count)
+	var k := clampi(selection_size, 0, n)
+	if k == 0:
+		return 1
+	var result := 1
+	for index in range(1, k + 1):
+		result = (result * (n - k + index)) / index
+	return result
+
+
+static func _combination_at(
+	candidates: Array[Dictionary],
+	selection_size: int,
+	combination_index: int
+) -> Array[Dictionary]:
+	if selection_size <= 0 or candidates.is_empty():
+		return []
+	var total := reference_combination_count(candidates.size(), selection_size)
+	var remaining_index := combination_index % maxi(1, total)
+	var selected: Array[Dictionary] = []
+	var start := 0
+	for picked in range(selection_size):
+		for candidate_index in range(start, candidates.size()):
+			var remaining_slots := selection_size - picked - 1
+			var following := candidates.size() - candidate_index - 1
+			var branch_count := reference_combination_count(following, remaining_slots)
+			if remaining_index < branch_count:
+				selected.append(candidates[candidate_index])
+				start = candidate_index + 1
+				break
+			remaining_index -= branch_count
+	return selected
+
+
+static func semantic_premise_tag(example: Dictionary) -> String:
+	var tagged := str(example.get("semantic_premise_tag", "")).strip_edges()
+	return tagged if not tagged.is_empty() else "legacy:%s" % _example_id(example)
 
 
 # Generation may use reviewed examples as rhythm guidance, but the player must

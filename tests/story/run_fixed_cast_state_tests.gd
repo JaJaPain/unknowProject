@@ -19,6 +19,11 @@ func _initialize() -> void:
 			and str(eligible[1].get("beat_id", "")) == "private_texture",
 		"Chapter attachment eligibility must expose only each character's next unfinished beat."
 	)
+	var after_decline := AttachmentType.advance(attachments, "mission_declined", {}, 2)
+	_expect(
+		JSON.stringify(after_decline) == JSON.stringify(attachments),
+		"Declining an optional attachment opportunity must not consume or erase its future beat."
+	)
 	attachments = AttachmentType.advance(attachments, "system_arrived", {}, 2)
 	attachments = AttachmentType.advance(attachments, "mission_completed", {"reward_credits": 350, "difficulty_band": "dangerous"}, 3)
 	_expect(AttachmentType.has_completed("kaelen", "mutual_reliance", attachments), "A profitable completion should advance Kaelen's mutual-reliance beat.")

@@ -57,6 +57,49 @@ func _initialize() -> void:
 		"kaelen", "quietly_relieved", "turn_in", {"high_payout": true, "known_tough": true}
 	)
 	_expect(style_block.contains("Approved voice rhythm references") and style_block.contains("Do not quote"), "Curated style references must be explicitly non-copying guidance.")
+	var references := VoiceBankType.select_style_references(
+		"kaelen", "quietly_relieved", "turn_in",
+		{"high_payout": true, "known_tough": true, "reference_seed": "style.test"}, 2
+	)
+	var premise_tags: Dictionary = {}
+	for reference in references:
+		var tag := VoiceBankType.semantic_premise_tag(reference)
+		_expect(not premise_tags.has(tag), "Style sampler selected duplicate semantic premise tags.")
+		premise_tags[tag] = true
+	_expect(references.size() == 2, "Style sampler should provide the requested small reference slice.")
+	_expect(
+		VoiceBankType.reference_combination_count(30, 3) == 4060,
+		"Thirty examples sampled three at a time must expose 4,060 unique combinations."
+	)
+	for character_id in ["kaelen", "nova"]:
+		var quiet_examples: Array[Dictionary] = []
+		var quiet_tags: Dictionary = {}
+		var quiet_lines: Dictionary = {}
+		for raw_example in loaded.get("examples", []):
+			var example: Dictionary = raw_example
+			if str(example.get("character_id", "")) != character_id \
+					or str(example.get("state", "")) != "evergreen" \
+					or str(example.get("situation", "")) != "quiet_moment":
+				continue
+			quiet_examples.append(example)
+			var quiet_tag := VoiceBankType.semantic_premise_tag(example)
+			_expect(not quiet_tags.has(quiet_tag), "%s quiet bank reused semantic tag %s." % [character_id, quiet_tag])
+			quiet_tags[quiet_tag] = true
+			var quiet_line := str(example.get("line", "")).to_lower().strip_edges()
+			_expect(not quiet_lines.has(quiet_line), "%s quiet bank repeated an exact line." % character_id)
+			quiet_lines[quiet_line] = true
+		_expect(quiet_examples.size() == 30, "%s needs exactly thirty reviewed quiet-moment references." % character_id)
+		_expect(quiet_tags.size() == 30, "%s quiet bank must use thirty distinct semantic premises." % character_id)
+		var quiet_slice := VoiceBankType.select_style_references(
+			character_id, "evergreen", "quiet_moment",
+			{"reference_seed": "%s.quiet.bank" % character_id, "reference_combination_index": 4059}, 3
+		)
+		_expect(quiet_slice.size() == 3, "%s quiet sampler must provide three references." % character_id)
+		var quiet_slice_tags: Dictionary = {}
+		for reference in quiet_slice:
+			var quiet_tag := VoiceBankType.semantic_premise_tag(reference)
+			_expect(not quiet_slice_tags.has(quiet_tag), "%s quiet sampler repeated a premise within one prompt." % character_id)
+			quiet_slice_tags[quiet_tag] = true
 	_expect(
 		VoiceBankType.matches_curated_line("kaelen", "turn_in", "Clean work, Shiny. I can sleep now knowing my credits are in my account. Oh, and you got paid a little too."),
 		"Exact curated Kaelen turn-in text must be detected before reaching the player."

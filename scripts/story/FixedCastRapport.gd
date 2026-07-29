@@ -89,6 +89,11 @@ static func _mission_deltas(event_type: String, mission: Dictionary) -> Dictiona
 	var reward := _reward_credits(mission)
 	var kaelen := 0
 	var nova := 0
+	# An attachment opportunity is optional by design. Choosing not to take it
+	# cannot reduce rapport; a later broadly eligible action can still advance
+	# the same code-owned attachment beat.
+	if event_type == "declined" and _is_attachment_opportunity(mission):
+		return {"kaelen": 0, "nova": 0}
 	match event_type:
 		"completed":
 			kaelen = 1
@@ -112,6 +117,14 @@ static func _mission_deltas(event_type: String, mission: Dictionary) -> Dictiona
 			kaelen = -1
 			nova = -1
 	return {"kaelen": kaelen, "nova": nova}
+
+
+static func _is_attachment_opportunity(mission: Dictionary) -> bool:
+	var metadata: Dictionary = mission.get("narrative_metadata", {}) \
+		if mission.get("narrative_metadata", {}) is Dictionary else {}
+	var attachment_beats: Array = metadata.get("attachment_beats", []) \
+		if metadata.get("attachment_beats", []) is Array else []
+	return not attachment_beats.is_empty()
 
 
 static func _objective_type(mission: Dictionary) -> String:

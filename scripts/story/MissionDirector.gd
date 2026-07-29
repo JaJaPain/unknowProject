@@ -509,6 +509,7 @@ static func _candidate(
 	return {
 		"packet_id": str(packet.get("packet_id", "")),
 		"chapter": int(packet.get("chapter", 1)),
+		"attachment_beats": _array_or_empty(packet.get("attachment_beats", [])),
 		"beat_id": str(beat.get("beat_id", "")),
 		"thread_id": str(beat.get("thread_id", "")),
 		"cause_id": str(beat.get("cause_id", "")),

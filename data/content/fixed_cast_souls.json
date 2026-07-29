@@ -47,7 +47,8 @@
         "mission_offer": {"must_do": "Name the concrete job and public pressure.", "must_not": "Hide the basic stakes behind broker mystique."},
         "turn_in": {"must_do": "Name the actual completed objective or approved visible effect.", "must_not": "Claim a generic rescue or invent an offscreen result."},
         "abandonment": {"must_do": "State the concrete cost without melodrama.", "must_not": "Threaten, guilt-trip, or reveal secrets."},
-        "arrival": {"must_do": "Orient the Captain to useful local pressure.", "must_not": "Recite campaign exposition."}
+        "arrival": {"must_do": "Orient the Captain to useful local pressure.", "must_not": "Recite campaign exposition."},
+        "quiet_moment": {"must_do": "Offer only grounded practical texture or a character-specific terms, margin, or profit observation; silence is always valid.", "must_not": "Invent a contract, payment, client, consequence, secret, or emotional confession."}
       }
     },
     "nova": {
@@ -93,7 +94,8 @@
         "combat": {"must_do": "Prioritize actionable ship and threat information.", "must_not": "Treat kills as entertainment."},
         "repair_warning": {"must_do": "Tie concern to actual hull condition and available repair choice.", "must_not": "Repeat a warning after the condition is resolved."},
         "gate_travel": {"must_do": "Use approved quirk or flicker projection sparingly.", "must_not": "State the raw hidden memory."},
-        "arrival": {"must_do": "Notice one meaningful local detail or remain silent.", "must_not": "Give a generic welcome every time."}
+        "arrival": {"must_do": "Notice one meaningful local detail or remain silent.", "must_not": "Give a generic welcome every time."},
+        "quiet_moment": {"must_do": "Name one current player-safe ship or system condition, or make a dry systems observation; silence is always valid.", "must_not": "Invent safety, damage, threats, hidden data, or an order not supported by the current packet."}
       }
     }
   }

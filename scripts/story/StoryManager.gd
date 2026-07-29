@@ -849,7 +849,7 @@ func _record_kaelen_contract_relationship_event(
 	mission_data: Dictionary
 ) -> void:
 	var clean_event := event_type.strip_edges()
-	var delta := _kaelen_relationship_delta_for_event(clean_event)
+	var delta := _kaelen_relationship_delta_for_event(clean_event, mission_data)
 	if delta == 0:
 		return
 	var relationship := kaelen_relationship_state()
@@ -873,7 +873,12 @@ func _record_kaelen_contract_relationship_event(
 	story_state["kaelen_relationship"] = relationship
 
 
-func _kaelen_relationship_delta_for_event(event_type: String) -> int:
+func _kaelen_relationship_delta_for_event(
+	event_type: String,
+	mission_data: Dictionary = {}
+) -> int:
+	if event_type == "declined" and _is_attachment_opportunity(mission_data):
+		return 0
 	match event_type:
 		"completed":
 			return 1
@@ -897,6 +902,14 @@ func _kaelen_relationship_band_for_respect(respect: int) -> String:
 	if respect >= 2:
 		return "reliable"
 	return "neutral"
+
+
+func _is_attachment_opportunity(mission_data: Dictionary) -> bool:
+	var metadata: Dictionary = mission_data.get("narrative_metadata", {}) \
+		if mission_data.get("narrative_metadata", {}) is Dictionary else {}
+	var attachment_beats: Array = metadata.get("attachment_beats", []) \
+		if metadata.get("attachment_beats", []) is Array else []
+	return not attachment_beats.is_empty()
 
 
 func promote_fact_after_delivery(

@@ -55,6 +55,10 @@ func _test_feasible_candidates_cross_available_beats_objectives_and_givers() -> 
 		"Candidate did not retain packet_id"
 	)
 	_expect(
+		candidates[0].get("attachment_beats", []) is Array,
+		"Candidate did not preserve packet attachment-beat metadata."
+	)
+	_expect(
 		candidates.any(func(c): return str(c.get("objective_type", "")) == "DELIVERY_COURIER"),
 		"Candidates missing DELIVERY_COURIER option"
 	)

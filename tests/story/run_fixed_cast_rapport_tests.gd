@@ -13,6 +13,11 @@ func _initialize() -> void:
 	_expect(int((hard_paid_battle.get("nova", {}) as Dictionary).get("score", 0)) < int((initial.get("nova", {}) as Dictionary).get("score", 0)), "Grueling completed battle should make Nova less happy with the Captain.")
 	var ordinary_battle := RapportType.apply_mission_event(initial, "completed", {"objective": {"type": "KILL_SHIPS", "reward_credits": 350}}, 42)
 	_expect(int((ordinary_battle.get("nova", {}) as Dictionary).get("score", 0)) > int((initial.get("nova", {}) as Dictionary).get("score", 0)), "Ordinary completed combat should not be treated as a grueling battle.")
+	var optional_attachment_decline := RapportType.apply_mission_event(initial, "declined", {
+		"objective_type": "DELIVERY_COURIER",
+		"narrative_metadata": {"attachment_beats": [{"character_id": "kaelen", "beat_id": "private_texture"}]},
+	}, 43)
+	_expect(JSON.stringify(optional_attachment_decline) == JSON.stringify(initial), "Declining an optional attachment opportunity must not lower fixed-cast rapport.")
 	var uninitialized := RapportType.apply_mission_event(RapportType.default_ledger(), "completed", {"objective_type": "KILL_SHIPS"}, 1)
 	_expect(JSON.stringify(uninitialized) == JSON.stringify(RapportType.default_ledger()), "Pre-tutorial missions must not change rapport.")
 	if _failures.is_empty():

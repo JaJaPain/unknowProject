@@ -3654,6 +3654,9 @@ func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
 			"cause_id": str(story_candidate.get("cause_id", "")),
 			"public_because": str(story_candidate.get("world_consequence", "")),
 			"stake": str(story_candidate.get("stake", "")),
+			"attachment_beats": (
+				story_candidate.get("attachment_beats", []) as Array
+			).duplicate(true) if story_candidate.get("attachment_beats", []) is Array else [],
 			"question_fact_ids": (
 				story_candidate.get("disclosure_fact_ids", []) as Array
 			).duplicate(true) if story_candidate.get("disclosure_fact_ids", []) is Array else [],
@@ -5280,6 +5283,7 @@ func request_kaelen_reaction(
 		"lower_payout": int(quest_data.get("reward_credits", obj.get("reward_credits", 0))) < 150,
 		"low_risk": not bool(quest_data.get("known_tough", false)),
 		"known_tough": bool(quest_data.get("known_tough", false)),
+		"reference_seed": str(quest_data.get("id", title)),
 	}
 	var curated_style_block := FixedCastVoiceBankType.style_reference_block(
 		"kaelen", "quietly_relieved", "turn_in", turn_in_style_context
