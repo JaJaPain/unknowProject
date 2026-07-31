@@ -1,0 +1,104 @@
+[
+ {
+  "line": "The job ran without incident. The pay is bare bones, but at least it's predictable.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "Safe work with thin pay is a door that only opens once. We walked through it. Now it’s closed.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "The job closed clean, and the payout was thin. I'll take the clean, but I'd rather take the thick.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "It went through clean. The rate was low. I'll note that the quiet ones usually do.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No danger, no reward — this is the kind of job that only gets you here, not anywhere else.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No injuries, and the coin barely covered the fuel. This kind of work is a leaky pocket, Shiny.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "The money was small, but the trouble was smaller. I’ll note that in the ledger, under ‘lessons’.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Low risk and low rate — it’s a tidy way to keep the job simple and the cut slim, but I’ll take it.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "This kind of job leaves the ledger flat. I prefer work that leaves it slightly richer.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "The job ended without incident. The pay landed at the low end. I'm beginning to think quiet is the only thing this kind of work pays for.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "Nobody bled, but the number was disappointing. I’ll keep that in mind the next time we chase thin returns.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Shiny. The take is light, but the ledger’s clean. I’ll file that under ‘discretion’ and forget it’s there.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "The job closed clean. The take is small. I’ll take small if the math is sound, but I don’t like the look of this math.",
+  "flags": [],
+  "secs": 3.3
+ },
+ {
+  "line": "Shiny. This one didn’t cost us, and it didn’t teach us. I’ll take the quiet, but not the price.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "No injuries, thin pay, and the job’s done. I’ll take the quiet, but not the cut.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Nobody bled. The number was disappointing. I prefer it when the math at least tries to look honest.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "The job ran clean and the money was neither too much nor too little. I’ll take that as a middle ground — safe, predictable, and not worth arguing over.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.3
+ },
+ {
+  "line": "Small pay for small risk is the deal I make, and I only grumble when it feels like a mistake.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "No danger, slim return — I’ll take the job, but I won’t take the rate.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Safe work, low pay — it’s behind us. I don’t mind the past, as long as it doesn’t repeat.",
+  "flags": [],
+  "secs": 3.1
+ }
+]

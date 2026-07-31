@@ -1,0 +1,54 @@
+[
+ {
+  "line": "The job ended without incident, and the fee reflects that \u2014 I prefer the incident, Shiny, but I\u2019ll take the pay.",
+  "flags": [],
+  "secs": 3.4
+ },
+ {
+  "line": "Smooth sailing and a flat fee \u2014 I don\u2019t mind the first, but the second leaves me cold. Let\u2019s aim for better, Shiny.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "The job closed without incident, and the fee is at the low end. I will note that in the ledger, and consider if this kind of work is worth the margin.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.3
+ },
+ {
+  "line": "The job went smoothly, but the rate was light. I\u2019ll note that in the ledger and think twice before chasing this kind of work again.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "The job closed cleanly. The payout is clean, but it\u2019s not enough to make me want to repeat it.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "Safe, and the payout is enough to keep the lights on. I don\u2019t mind the lights staying on, as long as they\u2019re not flickering.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "Safe, and the pay was plain. I prefer the pay to be better, but I will take plain if it's all we've got, Shiny.",
+  "flags": [],
+  "secs": 3.3
+ },
+ {
+  "line": "The job is closed, no one got hurt \u2014 but the take is small, and I'm not happy about that.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Low risk, small pay \u2014 I don\u2019t mind the risk, Shiny, but I do mind the math.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Shiny. The pay was thin, but the job didn\u2019t bleed us. I\u2019ll take that over most things \u2014 just not over much.",
+  "flags": [],
+  "secs": 3.2
+ }
+]

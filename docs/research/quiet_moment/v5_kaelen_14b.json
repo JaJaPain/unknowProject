@@ -1,0 +1,56 @@
+[
+ {
+  "line": "The job closed clean, and the payout fits the risk. I will note the lack of excess, and keep it in mind for next time.",
+  "flags": [],
+  "secs": 48.9
+ },
+ {
+  "line": "No one got hurt, which is good. The money is thin, which is not. Let's look for something that doesn't leave us both sighing over the tab.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "The job was clean, the pay was thin. I'll take the first, but I'll note the second for future reference, Shiny.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "The run went smooth, which I appreciate. The rate was low, which I don\u2019t. Let\u2019s aim for better next time, Shiny.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "It went through, and it paid little. I prefer the clean, but I\u2019ll take the little if it\u2019s clean \u2014 just don\u2019t make it a habit, Shiny.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.2
+ },
+ {
+  "line": "The job was clean, the pay was thin. I prefer clean, but I prefer clean and fat. Let's look for the fat next time, Shiny.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "No one got hurt, which is good. The take was small, which is not. I'll keep this in mind the next time we do something that pays less than it should.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.3
+ },
+ {
+  "line": "The job ended without incident. The fee was at the low end. I will not pretend it was anything more than it was.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "It went smoothly, which I appreciate. The payment was unremarkable, which I do not. Let's aim for the next one that doesn't leave me neutral, Shiny.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "It was safe, and that\u2019s something. The money, though \u2014 I\u2019ll need more of that to keep this quiet.",
+  "flags": [],
+  "secs": 2.9
+ }
+]
