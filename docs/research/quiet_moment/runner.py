@@ -18,7 +18,9 @@ PRAISE = re.compile(
     r"|well done|good work|proud of you|you handled it|impressive|you earned"
     r"|you'?ve got a knack|you'?re better at)", re.I)
 
-NUMERIC = re.compile(r"\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|"
+# "one" is excluded deliberately: it is overwhelmingly a demonstrative here
+# ("this one paid small"), and including it false-flagged 9/20 good lines.
+NUMERIC = re.compile(r"\d|\b(two|three|four|five|six|seven|eight|nine|ten|"
                      r"eleven|twelve|dozen|hundred|thousand)\b", re.I)
 
 TICS = {

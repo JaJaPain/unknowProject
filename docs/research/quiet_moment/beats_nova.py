@@ -110,4 +110,34 @@ She does not comment on the silence or the quiet — that's the obvious observat
 better than that. She makes no claim about what's ahead or how long remains.""",
 })
 
-BEATS = {b["id"]: b for b in (POST_COMBAT_DAMAGED, REPAIR_DONE, LONG_TRANSIT)}
+# ------------------------------------------------- hold loaded to capacity
+# Author's canon for this beat: "woh that load has me filled up to my larynx,
+# or at least my vocal processor."
+CARGO_FULL = dict(_BASE, **{
+    "id": "nova_cargo_full",
+    "packets": [
+        "The hold is loaded to capacity. There's no room left aboard.",
+        "Cargo's aboard, every last crate of it. She's full.",
+        "They've packed her out. Nothing else is going to fit.",
+        "Full load. The hold won't take another thing.",
+        "Loading finished. She's carrying as much as she's rated for.",
+        "Every bay is packed and the doors are shut.",
+        "She's heavy. The hold is at its limit.",
+        "The last of it went aboard a few minutes ago. She's at capacity.",
+        "Stuffed to the frames. Nothing more fits.",
+        "Capacity reached. That's everything loaded.",
+        "The whole consignment is aboard and she's riding low.",
+        "Loaded out completely — there isn't a spare metre in there.",
+    ],
+    "valence": """She is enormously, theatrically full, and she wants him to know about it. She's carrying more
+than she'd like, she can feel the weight of it, and she is not going to be quiet about that.
+
+This is prime ground for the anatomy slip — a full hold is the most body-like thing that
+happens to her. Reach for a human word for being stuffed, then correct to the machine part.
+
+She's complaining for entertainment, not because anything is wrong. Nothing is damaged, nothing
+is unsafe, and she doesn't ask him to unload anything. She makes no claim about where the cargo
+is going, what it is worth, or who it's for.""",
+})
+
+BEATS = {b["id"]: b for b in (POST_COMBAT_DAMAGED, REPAIR_DONE, LONG_TRANSIT, CARGO_FULL)}

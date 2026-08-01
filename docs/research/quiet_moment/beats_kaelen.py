@@ -43,32 +43,35 @@ PUBLIC_BOARD = {
     "speaker": "kaelen",
     "cap": 25,
     "who": KAELEN_WHO,
-    "register": KAELEN_REGISTER + """
-
-This job came off the public board. Board work pays her only a thin broker's cut — she may
-complain about that cut and about the board's rates, and she never pretends she took nothing.""",
+    "register": KAELEN_REGISTER,
     "scope": KAELEN_SCOPE,
     "sample": sample,
     "demo_lines": [l for _s, _f, l in _K_DEMOS],
     "packets": [
-        "The job came off the public board and it's done. The board sets the rate.",
-        "Board work, finished. The posted rate is the posted rate.",
-        "That one was public-board. It's closed out.",
-        "Off the boards, done, and paid at whatever the board felt like paying.",
-        "Public posting, completed. Standard board terms.",
-        "Done. It was board work, so the rate wasn't negotiable.",
-        "The board's job is finished and the board's rate applied.",
-        "Closed out a posting. Board rules, board money.",
-        "That was one of the open postings. Complete now.",
-        "Board contract, delivered. They pay what they advertise.",
-        "Finished a public listing. No negotiation on those.",
-        "It's done — public board, posted terms, nothing unusual.",
+        "It's finished. Anyone could have taken that one off the open listings.",
+        "Done. Nobody negotiated anything; the rate was posted before she ever saw it.",
+        "Closed out. That job was pinned on a wall where anyone could read it.",
+        "Delivered. She had no hand in setting those terms.",
+        "Complete. The posting paid exactly what the posting said.",
+        "That one's off the board and finished. Take it or leave it, and he took it.",
+        "Signed off. A public listing, open to anyone with a hull.",
+        "It's done. She brokered nothing — the board did all the talking.",
+        "Finished. There was nothing to arrange; it was already arranged.",
+        "Wrapped up. Public work, public rate, no room to move.",
+        "That's closed. Her name wasn't on it anywhere.",
+        "Handled. The kind of listing that doesn't need a fixer at all.",
     ],
-    "valence": """Board work pays her a thin cut and she's dry about that; it's a standing gripe, not an outrage.
-She took the cut and says so. The job itself went fine — she has no complaint about the work or
-about him.
+    "valence": """The money is small, but the money isn't really the point. Kaelen's whole trade is knowing who to
+call and what a job is actually worth. On board work none of that matters — the terms were set
+by somebody else before she arrived, anyone with a hull could have taken it, and she added
+nothing but her presence. It's honest work that makes her redundant, and that stings more than
+the rate does.
 
-She does not name an amount. She makes no claim about whether this has happened before.""",
+So she's dry about it rather than angry, and the joke is usually at her own expense. She is
+never bitter at the Captain — taking the job was sensible and she'd have told him to.
+
+She does not name an amount and makes no claim about whether this has happened before. She does
+not say the words "thin cut" or "board work" — find her own way to say it.""",
 }
 
 BEATS = {b["id"]: b for b in (HIGH_PAY, PUBLIC_BOARD)}
