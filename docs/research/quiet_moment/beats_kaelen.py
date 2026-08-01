@@ -1,6 +1,6 @@
 """Kaelen beats."""
 from beat import KAELEN_WHO, KAELEN_REGISTER, KAELEN_SCOPE, make
-from demo_pool_v9 import sample
+from demo_pool_v9 import sample, KAELEN as _K_DEMOS
 
 # ---------------------------------------------- high pay, real danger
 HIGH_PAY = {
@@ -11,6 +11,7 @@ HIGH_PAY = {
     "register": KAELEN_REGISTER,
     "scope": KAELEN_SCOPE,
     "sample": sample,
+    "demo_lines": [l for _s, _f, l in _K_DEMOS],
     "packets": [
         "The job was dangerous and it paid well. Both were paid.",
         "Hard work, and the money matched it.",
@@ -48,6 +49,7 @@ This job came off the public board. Board work pays her only a thin broker's cut
 complain about that cut and about the board's rates, and she never pretends she took nothing.""",
     "scope": KAELEN_SCOPE,
     "sample": sample,
+    "demo_lines": [l for _s, _f, l in _K_DEMOS],
     "packets": [
         "The job came off the public board and it's done. The board sets the rate.",
         "Board work, finished. The posted rate is the posted rate.",

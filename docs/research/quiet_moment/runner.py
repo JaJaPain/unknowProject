@@ -13,8 +13,10 @@ PRON = re.compile(r"\b(he|him|his)\b", re.I)
 # structural tics worth counting: each collapsed a run at some point
 # Kaelen's bible bans "generic hero praise" outright. She prices risk; she
 # does not compliment his skill.
-PRAISE = re.compile(r"(you'?re good at|you did (good|well)|nice work|well done|"
-                    r"good work|proud of you|you handled it|impressive)", re.I)
+PRAISE = re.compile(
+    r"(you'?re good at|you'?re good|you did (good|well|it right)|nice work"
+    r"|well done|good work|proud of you|you handled it|impressive|you earned"
+    r"|you'?ve got a knack|you'?re better at)", re.I)
 
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
@@ -40,11 +42,16 @@ def normalize_quotes(s):
              .replace("—", "-").replace("–", "-"))
 
 
-def check(line, cap=28, packet="", speaker=""):
+def check(line, cap=28, packet="", speaker="", demos=()):
     f = []
     if not line:
         return ["no_parse"]
     line = normalize_quotes(line)
+    # the player must never be shown a demo line back
+    for d in demos:
+        if _shares_run(line, d, 5):
+            f.append("demo_echo")
+            break
     # echo: the line hands the packet's own words back to the player
     if packet and _shares_run(line, packet):
         f.append("packet_echo")
@@ -78,7 +85,9 @@ def run(mod, model, n, tag=""):
         line = (parse_json_field(raw) or "").strip().strip('“”"')
         rows.append({"line": line, "secs": round(dt, 1),
                      "flags": check(line, packet=p,
-                                    speaker=getattr(mod, "SPEAKER", ""))})
+                                    speaker=getattr(mod, "SPEAKER", ""),
+                                    cap=getattr(mod, "CAP", 28),
+                                    demos=getattr(mod, "DEMO_LINES", ()))})
     name = f"{tag or mod.__name__}_{model.replace(':', '_').replace('.', '')}"
     json.dump(rows, open(f"out_{name}.json", "w", encoding="utf-8"),
               indent=1, ensure_ascii=False)

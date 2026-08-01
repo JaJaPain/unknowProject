@@ -48,6 +48,7 @@ def make(beat: dict):
         __name__ = beat["id"]
         SPEAKER = beat.get("speaker", "")
         CAP = beat.get("cap", 28)
+        DEMO_LINES = beat.get("demo_lines", ())
 
         @staticmethod
         def prompt(packet, rng):
