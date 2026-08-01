@@ -415,3 +415,58 @@ rare. The demos carry it but the model doesn't reliably copy it.
 brief alone is not portable across beats. Expect per-moment tuning of *what she's doing here*,
 even when the voice is settled — which matters because the author plans many beats per
 character across procedurally different campaigns.
+
+## N.O.V.A. post-combat, corrected: damage is the hook
+
+Author: *"you can use post combat for humor"* + the calibration example:
+
+> *"What that ship did to my body is going to take more than one night of that local mechanic's
+> hands up my manifold. Someone is going to owe me dinner first."*
+
+**−** My "register is per-moment" conclusion was **half wrong**. Post-combat isn't inherently a
+relief beat. My packets said *hull stable, Captain unhurt* — which gives her nothing to work
+with, so the only salient fact was survival.
+**+** Corrected rule: **a packet with no interesting hook forces the model onto the one salient
+fact.** Damage is material; stability isn't. Give her something to be theatrical about.
+**+** With damage packets: **18/20 distinct openers** — best in the project — 20/20 clean.
+
+### dmg1 → dmg2: the overcorrection pattern, again
+
+**−** dmg1 overshot exactly as Kaelen V4 did. Innuendo aimed straight at the Captain (*"I've
+been waiting for hands. You're late"*), and register slid from bawdy into **visceral** —
+*"peeled back my skin"*, *"cut me open"*, *"knife in my ribs"*.
+**+** **This is now a confirmed pattern, not a coincidence.** Give this model a new voice axis
+and it overshoots. Both times the fix was a constraint on **where it aims**, not on intensity:
+Kaelen's complaint aims at the job not the Captain; N.O.V.A.'s innuendo aims at the mechanic not
+the Captain. Expect to write an aim-constraint every time a new axis is introduced.
+**+** dmg2: `aimed_at_captain` **0/20**.
+**−** dmg2 lost the deniability instead — *"I'm not a fan of being open"*, *"I don't like my skin
+disturbed"* work ONLY as innuendo, so there's nothing to hide behind.
+
+### dmg3: the face-value rule ← current best for N.O.V.A.
+
+Author: *"lude insinuating humor, but that could be taken at face value"* and *"double entendres
+are a great way of doing it."*
+
+Encoded as a positive requirement: **every word must be literally true, ordinary maintenance
+talk.** Real parts (intakes, manifold, couplings, access ports, struts), real jobs (dusting,
+flushing, buffing, reseating, stripping back). A ship engineer should hear only a work order.
+Nothing that works ONLY as innuendo. The deniability *is* the joke — he can't call her on it
+because she didn't say anything.
+
+**+** `visceral` **0/20**, `aimed_at_captain` **0/20**, 17/20 distinct openers, 20/20 clean.
+**+** Closest to author intent yet: *"You'll still need to scrape that burn out of my aft struts.
+Not that I mind the attention."* / *"I've got a few loose panels waiting for fingers."* /
+*"They'll need to strip back the plating. It's not pretty under there. You'd think I'd be more
+embarrassed."*
+**−** New tic: *"Who do we know with [steady/soft] hands?"* 5/20 — a demo-shaped question form
+the model latched onto. Runtime `phrase_repeat` gate territory, not a prompt fix.
+**−** *"There's a dent in my flank/side/stern/prow"* repeats; one broken output
+(*"It's not the dent. It's not the dent."*).
+
+### Generalizable: how to specify innuendo to a small model
+
+Positive, mechanical, checkable — not "be subtle":
+1. Every phrase must have an innocent literal reading (double entendre, not euphemism).
+2. Aim it at a third party; the player overhears rather than being addressed.
+3. Constrain the vocabulary to a real technical domain — the domain does the work.

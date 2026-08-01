@@ -62,6 +62,8 @@ NOVA = [
      "Back on my line. You could thank me... I've already logged the thanks. Saves us both time."),
 ]
 
+
+
 SHAPES = sorted({s for s, _f, _l in NOVA})
 
 
@@ -82,3 +84,23 @@ def sample(rng: random.Random, k: int = 5, avoid_facts: str = ""):
     picked += rest[:max(0, k - len(picked))]
     rng.shuffle(picked)
     return picked
+
+# Maintenance-innuendo register, per author calibration. Innuendo aimed at a
+# THIRD PARTY (mechanic, yard crew) is what keeps it deniable.
+NOVA += [
+    ("fact_first",
+     "A hard burn was held far longer than recommended. Nothing broke.",
+     "You held me at redline for six minutes. My injectors are still hot. Next time, ask."),
+    ("thought_first",
+     "The ship is booked in for servicing at a station yard.",
+     "Some stranger's going to be elbow-deep in my access ports by morning. I hope he warms his hands."),
+    ("single_sentence",
+     "Scorch marks were left along the hull by weapons fire.",
+     "There's scoring the length of my flank and somebody's buffing that out before I'm seen in a dock again."),
+    ("question",
+     "A coolant line is weeping somewhere inaccessible to the ship's automatics.",
+     "I've got a weeping line somewhere behind the main housing. Who do we know with narrow arms?"),
+    ("fact_first",
+     "Routine maintenance is due on the air intakes.",
+     "My intakes want dusting. The nanobots can manage it, but they've got no attention span at all."),
+]
