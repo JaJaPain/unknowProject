@@ -500,3 +500,33 @@ newest tends to win. **Re-run the full check set after every prompt addition** �
 an addition is free.
 **+** Correct resolution: the accent is carried by the TTS voice, not by the text. `dmg3` stays
 canonical. Don't spend prompt budget on delivery the voice engine already provides.
+
+## Audio validation (2026-08-01)
+
+Rendered approved / canon / rejected lines through the project's Kokoro server using the real
+voice ids from `voice_provider_kokoro.json` (N.O.V.A. `bf_emma[0.7]+af_bella[0.3]`, Kaelen
+`af_bella`). Script: `render_audio.py`; output `.tmp_godot_user/quiet_moment_audio/`.
+
+**+** Author after listening: *"I still agree with our decisions of rejecting those and what we
+approved"* and *"the approved ones all hit well."*
+**+** **Text-level criteria hold up in the spoken medium.** This was a real risk — the whole
+project optimised against written lines for a feature that is heard, not read. It validates
+continuing to iterate on text, and means the rejection reasons in `approved.py` are sound.
+**+** Cheap to repeat: `render_audio.py` pulls voice ids from the game's own config, so listening
+tests can't drift from what ships.
+
+## Beat audit — see MOMENTS.md
+
+Surveyed the event surface for beats that could carry a quiet moment.
+
+**+** Much of the plumbing already exists. `ShipBehaviorObserver` emits semantic events with
+context and a 180s cooldown (`clean_long_transit`, `rough_arrival`, `boost_again_quickly`,
+`returned_to_same_station`). `LLMInterface.gd:5282-5285` already derives `high_payout`,
+`lower_payout`, `low_risk`, `known_tough` — **Kaelen's entire axis, already computed.**
+`FixedCastAttachmentLedger` already models earned beats like `known_tough_completion`.
+**+** The audit's organising principle is the hook rule learned from N.O.V.A.: rank candidate
+beats by whether they give the model *material*, not just a trigger. "Post-combat undamaged" is
+listed as a known-weak beat precisely because it was tested and failed.
+**−** Two strong beats (gate transit, cold boot) are **excluded from v1** because they collide
+with the scripted amnesia/flashback content in `docs/todo.md`. Generated lines there could
+contradict authored story — the one failure a player would actually notice.
