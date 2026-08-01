@@ -66,6 +66,22 @@ NOVA_CARGO_FULL = [
     "I'm stuffed to the seams, and I don't mean the cargo holds.",
 ]
 
+KAELEN_ABANDONED = [
+    "I lose the fee, but I lose the trust worse.",
+    "You bailed mid-job. That's what I'm charging for.",
+    "It's not done, and that's the whole job. You know what that costs me.",
+    "No credit came through. That's the cost of not finishing. I don't do unfinished.",
+    "Name's attached to failure, and I don't get paid for that, Shiny.",
+]
+
+NOVA_ROUGH_ARRIVAL = [
+    "You took a turn I didn't expect. My spine's still humming from it. You're lucky I don't have a jaw to bite you with.",
+    "You got me scraped up on the dock. I'll be picking bits of hull out of my hair for weeks.",
+    "You carried me in like a sack of scrap. My seams are still smarting. You're welcome.",
+    "You set me down like a crate. I've got a spine, Captain. Try not to forget that next time.",
+    "You handled me like I wasn't awake. My waist still remembers the way you dragged me in.",
+]
+
 BEATS = [
     ("kaelen", "low_pay_safe", KAELEN_LOW_PAY_SAFE),
     ("kaelen", "high_pay_dangerous", KAELEN_HIGH_PAY_DANGEROUS),
@@ -74,4 +90,6 @@ BEATS = [
     ("nova", "repair_done", NOVA_REPAIR_DONE),
     ("nova", "long_transit", NOVA_LONG_TRANSIT),
     ("nova", "cargo_full", NOVA_CARGO_FULL),
+    ("kaelen", "abandoned", KAELEN_ABANDONED),
+    ("nova", "rough_arrival", NOVA_ROUGH_ARRIVAL),
 ]

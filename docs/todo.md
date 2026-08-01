@@ -316,3 +316,14 @@ _Full analysis `docs/quiet_moment_llm_findings.md` (read §11 first); working st
 - [ ] **Confirm the config at n=30** -- current voice reads are 8-12 samples each and partly Claude's ear, not the author's. Run 30 per character on the frozen config before building against it.
 - [ ] **VRAM decision** -- `qwen3.6:35b-a3b` is 24GB resident at `keep_alive: "30m"` alongside the renderer. If headroom is short: short keep_alive with generation confined to loading/dock screens, or `qwen3:4b` with better demos and blander voice.
 - [ ] **`num_predict` floor for JSON responses** -- 70 truncates pretty-printed JSON around a 28-word line, producing silent empty rows that look like model failures. Audit callers; use 160-200 for one-line responses.
+
+### Quiet-moment beats — build-out done, integration pending (2026-08-01)
+_Nine beats built and measured. Full handoff: `docs/research/quiet_moment/SYSTEM.md`; research log `ITERATIONS.md`._
+
+- [ ] **Wire the selector into Godot with persisted recency state** -- `selector.py` gates on recent openers, phrases and closers. Without persistence the freshness guarantee dies at the first save/load, which is the whole point of the feature.
+- [ ] **Firing policy + arbitration** -- `ShipBehaviorObserver` already uses a 180s semantic cooldown. Quiet moments now compete with lounge chatter and mission dialogue; `PlayerInteractionQueue` looks like the right owner. Never fire during combat.
+- [ ] **Log silences and rejections through `GenerationDiagnostics`** -- per the project rule that fallbacks are failures to drive to root cause, not normal operation.
+- [ ] **Measure qwen3:14b VRAM under load** -- 9.3GB on a 16GB card alongside the renderer. `qwen3:4b` is the fallback at noticeably blander voice. (qwen3.6:35b-a3b is ruled out: 24GB, does not fit.)
+- [ ] **Bible updates the research implies** -- allow Kaelen's "steer toward better-paying work" (`quiet_moment.must_not` currently forbids it and the validator enforces that); gate `public_board_money_rule` to public-board moments only; drop `receipts` from her favored motifs (author: fine if it arises naturally, don't seed it).
+- [ ] **`nova_hard_burn` needs another pass** -- weakest of the nine at 7/12, with a "next time" tic at 6/12.
+- [ ] **Hand-write gate-transit and cold-boot beats** -- deliberately excluded from generation because they collide with the scripted amnesia flashback and pre-rendered opening audio.

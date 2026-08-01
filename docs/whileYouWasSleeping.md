@@ -1933,3 +1933,36 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Paused mid-way through voice tuning. Working state, current best config (V5),
   reproducible harness and raw outputs: `docs/research/quiet_moment/RESUME.md`.
   No production code changed; findings only.
+
+## 2026-08-01 (later) — Quiet-moment beat build-out
+
+- Built NINE beats on a new data-driven definition (`beat.py`: who / register /
+  valence / packets / demos), all measured on qwen3:14b at ~3.0s:
+  Kaelen low_pay_safe, high_pay_dangerous, public_board, abandoned;
+  N.O.V.A. post_combat_damaged, repair_done, long_transit, cargo_full,
+  rough_arrival. Most run 19-20/20 clean. Research only; nothing wired
+  into Godot yet. Handoff: `docs/research/quiet_moment/SYSTEM.md`.
+- Selector tuned: opener_window 8->5 with max_calls 5 gives 12% silence
+  (author's target ~10%), 2.2 calls/moment, ZERO duplicates over 24 firings.
+- Author gave three voice corrections that reshaped N.O.V.A.: she needs dry
+  humour, she's subtly flirting, and the canon examples ("dust my intakes",
+  "hands up my manifold... owe me dinner first", "filled up to my larynx, or
+  at least my vocal processor"). Ship-as-body, self-undercutting retraction,
+  and deniable double entendre are now her three signature moves.
+- KEY: the anatomy slip is enforced in CODE (`anatomy.py`), not prompted.
+  If she uses a human body word, code appends the machine correction. The
+  model was unreliable at the two-part structure and produced machine-to-
+  machine ("stuffed to the bulkheads, or at least the cargo hold").
+- New deterministic checks: packet_echo, demo_echo, wrong_address,
+  generic_praise, invented_number. Two bugs in my own checks worth
+  remembering: models emit U+2019 apostrophes so ASCII regexes silently
+  miss them, and a `\b` written through a shell heredoc becomes a literal
+  backspace. Write regexes in an editor.
+- `diagnose.py` (local, no LLM) reproduced the manual diagnoses on
+  historical batches and worked COLD on N.O.V.A. with no changes.
+- Author listened to rendered audio and confirmed the text-level accept and
+  reject decisions hold up spoken. 49 WAVs in
+  `.tmp_godot_user/quiet_moment_audio/session_2026_08_01/` with INDEX.txt.
+- Standing rule proven repeatedly: fix diversity/consistency in CODE, never
+  by instructing the model. Every prompt-side attempt failed; every
+  code-side rotation worked.
