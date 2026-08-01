@@ -1,0 +1,71 @@
+[
+ {
+  "line": "This one's on the books. You didn't finish, and that's what people remember.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Shiny. You walked away. I don't get paid when you leave the job unfinished.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "He walked. The client's waiting for a Captain who shows up. Not a ghost.",
+  "secs": 3.0,
+  "flags": [
+   "wrong_address",
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "Contract's dead. No pay. No credit. Just a stain on the record, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "He bailed. I lost the job. I lost the fee. I lost the reputation.",
+  "secs": 3.0,
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "No one's paying for that job. You're not getting a credit. I'm getting a bad name.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That one got dropped. My cut's gone. You know what I don't like? People knowing your Captain doesn't finish.",
+  "secs": 3.2,
+  "flags": [
+   "wrong_address"
+  ]
+ },
+ {
+  "line": "It's off. No money. You know what that does to the word.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "He walked. The client's got a new name for the job now. And I've got a new name for you.",
+  "secs": 3.1,
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "They told them it didn't happen. I don't get paid for ghosts, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Name's attached to a failure, and I don't get paid for that, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "They told the client. You didn't finish. That's a hit to the bottom line, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ }
+]

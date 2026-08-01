@@ -141,3 +141,64 @@ is going, what it is worth, or who it's for.""",
 })
 
 BEATS = {b["id"]: b for b in (POST_COMBAT_DAMAGED, REPAIR_DONE, LONG_TRANSIT, CARGO_FULL)}
+
+
+# ------------------------------------------------- rough arrival
+ROUGH_ARRIVAL = dict(_BASE, **{
+    "id": "nova_rough_arrival",
+    "packets": [
+        "That arrival was rough. She's down safe but it wasn't tidy.",
+        "He put her down hard. Nothing broke.",
+        "Docked, eventually. The approach was a mess.",
+        "They're stationary. Getting there involved more contact than it needed to.",
+        "Arrival complete, and it was not elegant.",
+        "She's parked. The last thirty seconds were ugly.",
+        "Down, safe, and badly. Nothing is damaged.",
+        "The approach went sideways but they're secured now.",
+        "Rough set-down. She took it without complaint until now.",
+        "They made it in. Grace was not involved.",
+        "That docking was heavy-handed from start to finish.",
+        "Secured. The manoeuvre that got them here was scruffy.",
+    ],
+    "valence": """Nothing is damaged and she knows it, so this is entirely about her dignity. She's been handled
+carelessly in public, at a dock where other ships can see, and she is going to have something to
+say about that.
+
+THE CAPTAIN did this — he was flying. This is the one beat where the teasing points straight at
+him rather than at a dock crew, so it's "you", not "they". Nobody else touched her.
+
+She teases him rather than scolds — she's not actually angry, and she'd never suggest he's a bad
+pilot. It's the indignity of it, and she milks it.
+
+She makes no claim about damage, does not tell him how to fly, and makes no claim about whether
+this has happened before.""",
+})
+BEATS["nova_rough_arrival"] = ROUGH_ARRIVAL
+
+# ------------------------------------------------- boost again, quickly
+HARD_BURN = dict(_BASE, **{
+    "id": "nova_hard_burn",
+    "packets": [
+        "He's hit the boost again, not long after the last one.",
+        "Another burn, hard on the heels of the previous one.",
+        "That's the second hard burn in quick succession.",
+        "He's leaning on the throttle again already.",
+        "Back on full power, barely any gap since the last time.",
+        "Another shove on the drive, and soon after the last.",
+        "He's boosting again. The previous burn is barely cold.",
+        "Full throttle for the second time in short order.",
+        "Hard acceleration, again, with little recovery between.",
+        "That's twice now, close together, at full power.",
+        "He's pushed the drive hard again after almost no pause.",
+        "Another burn. She's had no time to settle since the last.",
+    ],
+    "valence": """She is not worried — nothing is at risk — but she's very aware of being pushed hard twice in a
+row, and that's exactly the sort of thing she'll comment on.
+
+This is where she's at her most suggestive, and it should stay deniable: everything she says is
+ordinary talk about drive load, heat, and recovery time. She may note that she'd like a moment,
+or that he might warn her first, or that she isn't objecting.
+
+She does not tell him to stop, does not claim anything is damaged, and invents no readings.""",
+})
+BEATS["nova_hard_burn"] = HARD_BURN

@@ -629,3 +629,37 @@ is — my cargo hold."*).
 **Generalises:** for any signature verbal tic, prompt for the *setup* and let code enforce the
 *payoff*. Small models are unreliable at multi-part structures and perfectly reliable as input
 to a regex.
+
+## Three more beats: abandoned, rough arrival, hard burn
+
+**+** `kaelen_abandoned` — hook is that somebody was *told* her Captain doesn't finish, which
+damages the thing her trade runs on. 11/12 clean, **12/12 distinct openers**. Best:
+*"I lose the fee, but I lose the trust worse."* / *"You bailed mid-job. That's what I'm charging
+for."*
+**−** First attempt leaked `assumes_captain_gender` — **because my own packets said "He walked
+away"**. Packet wording is prompt content; write packets in the same register you want back.
+Fixed by using "the Captain" / passive.
+
+**+** `nova_rough_arrival` — 12/12 clean, and the funniest batch of the session:
+*"You're lucky I don't have a jaw to bite you with."* / *"I'll be picking bits of hull out of my
+hair for weeks."* / *"I've got a spine, Captain."*
+**−** First attempt blamed **"they"** (dock crew) for handling the packet attributed to *him*.
+Cause: the standing "aim the innuendo at a third party" rule, which is right for every other
+N.O.V.A. beat and wrong for this one. Adding "the Captain did this, so it's *you*, not *they*"
+took it from 6/12 to **1/12**.
+**→ A character-level rule can be wrong for a specific beat.** Check the standing rules against
+each new moment rather than assuming they carry over.
+
+**−** `nova_hard_burn` is the weakest of the nine: 7/12, "next time" tic 6/12, and several
+`invented_number` flags. Some of those are false positives (the packet says "second burn", so
+"two" is licensed) but "ten hours" was invented. Needs another pass.
+
+## Session summary
+
+Nine beats built on `beat.py`. Selector at **12% silence, 2.2 calls/moment, 0 duplicates**.
+Handoff for integration: `SYSTEM.md`.
+
+The compounding claim held up: with the mechanical lessons pre-applied, new beats reached
+structural cleanliness on the **first or second run**, versus eleven iterations for the first
+one. What still costs real time is finding each beat's *hook*, and that is authorial judgement
+rather than engineering.

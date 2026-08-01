@@ -114,3 +114,42 @@ She makes no claim about whether this has happened before.""",
 }
 
 BEATS = {b["id"]: b for b in (HIGH_PAY, PUBLIC_BOARD, LOW_PAY)}
+
+
+# ---------------------------------------------- mission abandoned
+ABANDONED = {
+    "id": "kaelen_abandoned",
+    "speaker": "kaelen",
+    "cap": 25,
+    "who": KAELEN_WHO,
+    "register": KAELEN_REGISTER,
+    "scope": KAELEN_SCOPE,
+    "sample": sample,
+    "demo_lines": [l for _s, _f, l in _K_DEMOS],
+    "packets": [
+        "The Captain walked away from the contract. It's dead, and nothing was paid.",
+        "The job's abandoned. Nobody sees a credit for it.",
+        "That one got dropped part-way. No payment, and the client knows.",
+        "It's off. The work stopped short, and there's no money.",
+        "Contract's dead in the water. Nothing earned.",
+        "The Captain backed out. The work is unfinished and unpaid.",
+        "Dropped, mid-job. No pay, and someone had to be told.",
+        "The client's been informed it isn't happening.",
+        "That work stopped and won't restart. Nothing came of it.",
+        "Walked away from it. Nothing to show, nothing banked.",
+        "Abandoned. No credits, and a name attached to the failure.",
+        "Quit partway through. It's closed and it's empty.",
+    ],
+    "valence": """This one costs her, and she doesn't hide that. Not the lost fee — the fact that somebody was
+told Kaelen's Captain didn't finish. Her whole trade runs on being the person whose people
+deliver, and that's the thing that took the damage here.
+
+So she states the cost plainly and without melodrama. She does not threaten him, guilt-trip him,
+or demand an explanation, and she does not sulk. If there was a good reason she'd rather have it
+than not, but she doesn't interrogate him for it.
+
+She makes no claim about what happens next, doesn't name the client, and makes no claim about
+whether this has happened before.""",
+}
+
+BEATS["kaelen_abandoned"] = ABANDONED
