@@ -530,3 +530,102 @@ listed as a known-weak beat precisely because it was tested and failed.
 **−** Two strong beats (gate transit, cold boot) are **excluded from v1** because they collide
 with the scripted amnesia/flashback content in `docs/todo.md`. Generated lines there could
 contradict authored story — the one failure a player would actually notice.
+
+---
+
+# Beat build-out session (2026-08-01)
+
+Six beats built on `beat.py`, a data-driven definition (who / register / valence / packets /
+demos) so beats can move to JSON without a rewrite. All on `qwen3:14b`, ~3.0s.
+
+## Results
+
+| Beat | clean | distinct openers | note |
+| --- | --- | --- | --- |
+| `kaelen_low_pay_safe` | 18/20 | 15/20 | rebuilt; was the original ~80% beat |
+| `kaelen_high_pay_dangerous` | 19/20 | — | voice transferred across valence first try |
+| `kaelen_public_board` | 20/20 | — | needed a hook rewrite (see below) |
+| `nova_post_combat_damaged` | 20/20 | 18/20 | author-approved |
+| `nova_repair_done` | 20/20 | 15/20 | her strongest register |
+| `nova_long_transit` | 19/20 | 13/20 | canon retraction structure achieved |
+| `nova_cargo_full` | 19/20 | 15/20 | anatomy slip, code-enforced |
+
+**+ Selector tuned:** `opener_window` 8→5 with `max_calls` 5 → **12% silence** (target ~10%),
+2.2 calls/moment, 17/21 distinct openers, **0 duplicates**. Task closed.
+
+## New deterministic checks, each from an observed defect
+
+| Check | Caught |
+| --- | --- |
+| `packet_echo` | line hands the packet's own words back to the player |
+| `demo_echo` | output copied a demo near-verbatim (2/20 on the repair beat) |
+| `wrong_address` | Kaelen saying "Captain"; N.O.V.A. saying "Shiny" |
+| `generic_praise` | "you're good at that" — banned in her bible |
+| `invented_number` | "45 knots", "warp six" in a space sim |
+
+**−** Two bugs in my own checks, both worth remembering:
+1. Models emit **U+2019** apostrophes; ASCII regexes silently missed `you're good at`. Normalise
+   quotes before matching. This had also caused a possessive miss earlier (`hull's`).
+2. `\b` written through a shell heredoc became a literal **backspace** (`\x08`), so the praise
+   regex matched nothing. **Write regexes with an editor, never through a heredoc.**
+3. Including "one" as a number word false-flagged 9/20 good lines ("this **one** paid small").
+   Demonstratives dominate; exclude it.
+
+## The hook rule, confirmed twice more
+
+**−** `kaelen_public_board` first attempt collapsed hard: *"Board work. Thin cut. No complaints."*
+in 14/20, **4/20 distinct openers**. Two causes — the register handed it the ready-made phrase
+"thin broker's cut", and the beat had no material.
+**+** Rewriting the hook fixed it completely. The interesting thing about board work for a
+*fixer* isn't the money, it's that **nobody negotiated** — the terms were set before she arrived
+and anyone could have taken it. It's honest work that makes her redundant. That produced the
+best Kaelen lines of the session: *"I showed up, took my cut, and got in the way of someone who
+could've done it better."*
+**+** Same treatment lifted `kaelen_low_pay_safe`: the hook is that safe work **doesn't move
+them anywhere** — *"This one didn't cost much. That's the problem — it didn't move anything."*
+
+**Rule: when a beat produces flat output, the fault is usually the hook, not the prompt.** Ask
+what this moment threatens or flatters in the character, not what happened mechanically.
+
+## Detail rotation — a new lever
+
+**−** When a beat needs a concrete detail the facts don't supply, the model picks one default
+and repeats it: *"my struts are loose"* 5/20.
+**+** Rotating the detail **in code** (`detail_pool`) took that to 0/20 and keeps the choice on
+the authored side. Same family as packet rotation: anything code can own reliably, code should.
+
+## Naming one move makes it formulaic
+
+**−** Telling her to retract with "she has automatics for that" produced the automation
+retraction in **20/20**.
+**+** Listing several ways to take it back (automated / he'd make a mess of it / she'd rather
+keep the fault / changes the subject / only mentioned it to see what he'd say) → **1/20**, and
+much funnier: *"if you're not too busy pretending to be useful."*
+
+## Agent confusion
+
+**−** On the repair beat, lines credited the **Captain** with work the packet said the yard crew
+did. The demos contain him doing repairs, so the role leaked.
+**+** Naming who did what in the valence — "the yard crew did this, not the Captain; keep the
+'you' for him and the 'they' for the crew" — took it to **0/20**.
+
+## The anatomy slip: hand it to code
+
+Author's canon: *"that load has me filled up to my larynx, or at least my vocal processor."*
+
+**−** Asking the model for the two-part slip produced machine-to-machine — *"stuffed to the
+bulkheads, or at least the cargo hold"* — which isn't the joke. 0/20 used a human body word.
+**−** Root cause was a **constraint collision**: the face-value rule ("every word must be
+ordinary maintenance talk") forbids anatomy words outright. Needed an explicit carve-out.
+**+** Author's fix, and better than prompting: **if she uses a body word, code appends the
+correction** (`anatomy.py`). The model only has to be natural about her body; the payoff is
+guaranteed. 7/20 now carry it, reading well: *"My ribs are aching from it. My frame spars,
+technically."*
+**+** Three guards, each from a real failure: only corrects **her** body (first-person
+possessive, so *"you can feel it in your bones"* is left alone), skips if she already corrected
+herself, and skips if the machine term is already in the line (*"My cargo hold's stuffed. That
+is — my cargo hold."*).
+
+**Generalises:** for any signature verbal tic, prompt for the *setup* and let code enforce the
+*payoff*. Small models are unreliable at multi-part structures and perfectly reliable as input
+to a regex.

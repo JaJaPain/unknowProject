@@ -74,4 +74,43 @@ She does not name an amount and makes no claim about whether this has happened b
 not say the words "thin cut" or "board work" — find her own way to say it.""",
 }
 
-BEATS = {b["id"]: b for b in (HIGH_PAY, PUBLIC_BOARD)}
+# ---------------------------------------------- safe job, low pay
+# The original beat, rebuilt on beat.py with every later lesson applied.
+LOW_PAY = {
+    "id": "kaelen_low_pay_safe",
+    "speaker": "kaelen",
+    "cap": 25,
+    "who": KAELEN_WHO,
+    "register": KAELEN_REGISTER,
+    "scope": KAELEN_SCOPE,
+    "sample": sample,
+    "demo_lines": [l for _s, _f, l in _K_DEMOS],
+    "packets": [
+        "The job closed safely and the payout was modest. Both were paid normally.",
+        "Nobody was hurt. The pay was thin. The work is finished.",
+        "Quietly, without trouble, the contract completed. The money was small.",
+        "Low risk from start to finish, and a rate on the low side.",
+        "It went through clean. It paid little. Both parties were settled.",
+        "There was never any danger. The return was slim. The task is done.",
+        "Small take, no injuries, job closed.",
+        "Payment landed at the low end. The assignment closed quietly.",
+        "Start to finish it went smoothly, and the payment was unremarkable.",
+        "Safe work for little money, and it's behind them now.",
+        "Done, and nobody bled. The number was disappointing.",
+        "Uneventful throughout. What it paid barely registers.",
+    ],
+    "valence": """Safety is cheap. That's the whole thought — nobody pays a premium for a job where nothing can
+go wrong, and she knew that going in. So the small number isn't a surprise or an injustice, it's
+arithmetic, and she's dry about it rather than aggrieved.
+
+What she actually minds is that work like this doesn't move them anywhere. It keeps the lights
+on and buys another week of the same. She'd rather be paid for something that mattered.
+
+She nudges him toward better-paying work without naming a specific job. She does not lecture him
+and does not suggest he did anything wrong — taking it was sensible. She prices his risk; she
+does not compliment his skill.
+
+She makes no claim about whether this has happened before.""",
+}
+
+BEATS = {b["id"]: b for b in (HIGH_PAY, PUBLIC_BOARD, LOW_PAY)}
