@@ -37,7 +37,10 @@ The model supplies voice; code supplies variety, truth, and structure.
 | `nova_cargo_full` | hold at capacity | 19/20 | 15/20 |
 | `nova_rough_arrival` | `rough_arrival` (already emitted) | 12/12 | 7/12 |
 
-Selector on a 24-firing playthrough: **12% silence, 2.2 calls/moment, 0 duplicates.**
+Selector, single beat in isolation: **12% silence, 2.2 calls/moment, 0 duplicates.**
+Selector across **all beats mixed** (the real case): **0% silence, 1.4 calls/moment, 0
+duplicates, 17/17 and 15/15 distinct openers per character.** Interleaving improves coverage,
+so single-beat silence figures are a pessimistic bound.
 
 ## Files
 
@@ -57,8 +60,10 @@ Selector on a 24-firing playthrough: **12% silence, 2.2 calls/moment, 0 duplicat
 ## Adding a beat — the recipe
 
 1. **Find the hook.** Not "what happened" but *what does this moment threaten or flatter in
-   her?* A beat with no hook produces flat output no matter how good the prompt. Public-board
-   work was dead until the hook became "nobody negotiated, which makes her redundant".
+   her?* A beat with no hook produces flat output no matter how good the prompt — and when the
+   author rejects a whole batch, suspect the hook before the prompt. Public-board work went
+   through two wrong hooks before landing on class snobbery: it's beneath both of them, and
+   they're slumming.
 2. **Write 12 fact packets.** Same facts, varied **vocabulary and grammar**. Do not let them all
    start the same way — the model mirrors the packet's opening construction.
 3. **Write the valence paragraph.** What this means to her, what she must not claim, and *who
@@ -71,11 +76,39 @@ Selector on a 24-firing playthrough: **12% silence, 2.2 calls/moment, 0 duplicat
 Do **not** try to fix opener repetition, tics, or duplication in the prompt. That is the
 selector's job and the prompt cannot beat it.
 
+**Whenever a character gets a sharp edge, write down who it points at in the same breath.**
+Three separate times a new voice axis overshot into contempt aimed at the player — Kaelen's
+mercenary streak, N.O.V.A.'s innuendo, N.O.V.A.'s teasing — and every time the fix was an
+aim-constraint, never a reduction in intensity.
+
+**Never put a target line or a distinctive frame in the brief.** The model reproduces both.
+Describe the technique instead.
+
 ## Deterministic checks
 
-`packet_echo` · `demo_echo` · `wrong_address` · `generic_praise` (Kaelen) · `invented_number` ·
-`too_long` · `assumes_captain_gender` · `multiline` — plus recency gates for openers, phrases
-and closers, whose state must persist in the save.
+Every one of these came from a defect seen in real output, not from theory.
+
+| Check | Catches |
+| --- | --- |
+| `packet_echo` | hands the packet's own words back to the player |
+| `demo_echo` | reproduces a few-shot demo |
+| `brief_echo` | quotes the valence/register prose at us |
+| `wrong_address` | Kaelen saying "Captain", N.O.V.A. saying "Shiny" |
+| `generic_praise` | "you're good at that" — banned in Kaelen's bible |
+| `invented_number` | a quantity the packet never supplied |
+| `word_echo` | same content word 3+ times in one line |
+| `tts_hyphen_compound` | hyphenated compounds Kokoro renders unreliably |
+| `tts_all_caps` / `tts_symbol` / `tts_ellipsis` | other unspeakable constructions |
+| `too_long`, `assumes_captain_gender`, `multiline`, `no_parse` | basics |
+
+Plus recency gates for openers, phrases and closers. **That state is per CHARACTER, not per
+beat**, and must persist in the save — a character repeating herself across two different beats
+is just as obvious to the player.
+
+Two bugs in the checks themselves, worth not repeating:
+- models emit **U+2019** apostrophes, so ASCII regexes silently miss them — normalise first;
+- combining case-sensitive alternatives under one `re.I` made `[A-Z]{2,}` match any two letters
+  and flag **55/55** good lines.
 
 ## Integration work still to do
 

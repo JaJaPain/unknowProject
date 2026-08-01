@@ -60,10 +60,11 @@ NOVA_LONG_TRANSIT = [
 # ** = anatomy.py appended the correction deterministically
 NOVA_CARGO_FULL = [
     "I'm stuffed to the seams, and I don't mean the cargo holds.",
-    "Captain, my hips are full. Can't twist left without scraping. Not that I'm asking you to. Or at least my gimbal mounts.",
     "My throat's full. The last load squeezed in tight. I'm not used to this much weight. Well. My intake trunk.",
+    "Captain, my hips are full. Can't twist left without scraping. Not that I'm asking you to. Or at least my gimbal mounts.",
     "Cargo's in. My waist's lower. You'd think I was carrying it myself. My midsection coupling, technically.",
     "Hold's full. Can't sit straight. You'll have to help me bend over later.",
+    "I'm carrying this like a second spine. You didn't have to stack it so high.",
 ]
 
 KAELEN_ABANDONED = [
