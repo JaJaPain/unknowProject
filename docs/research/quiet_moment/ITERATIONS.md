@@ -470,3 +470,33 @@ Positive, mechanical, checkable — not "be subtle":
 1. Every phrase must have an innocent literal reading (double entendre, not euphemism).
 2. Aim it at a third party; the player overhears rather than being addressed.
 3. Constrain the vocabulary to a real technical domain — the domain does the work.
+
+## Author approval + the compounding loop
+
+**+** 2026-08-01, author on the dmg3 batch: *"I loved every one of those. They are completely on
+brand for her."* First unqualified pass in the project. Locked into `approved.py` with the
+moment and packet alongside each line, plus a `REJECTED` list carrying the *reason* so the same
+mistakes aren't re-derived.
+**+** **Approved output is a better demo than anything I can write**, because it's on-brand by
+definition. Feeding approvals back as few-shot demos is a compounding loop: each round of
+approval makes the next round cheaper and more on-voice. This is the practical answer to
+"how do we avoid spending a week of compute per beat" — the corpus bootstraps once a
+character's voice is settled.
+
+## British delivery: DON'T put it in the prompt
+
+Author: *"with that british accent it will give it an even more dry feeling so it hits even
+harder"* (N.O.V.A.'s TTS voice is `bf_emma`, British).
+
+Tested a paragraph asking for dry English understatement, litotes, no emphasis.
+
+**−** **Made it worse, and in the most instructive way available.** The new paragraph silently
+**evicted the face-value rule**: outputs went back to phrases with no innocent reading
+(*"how much I like being touched"*, *"I like my curves intact"*, *"I'll give it to the next
+hands that touch me"*). Distinct openers also fell 17/20 → 14/20.
+**+** **New general finding: prompt real estate is finite, and adding a constraint can silently
+evict an earlier one.** The small model holds a limited number of simultaneous rules and the
+newest tends to win. **Re-run the full check set after every prompt addition** — do not assume
+an addition is free.
+**+** Correct resolution: the accent is carried by the TTS voice, not by the text. `dmg3` stays
+canonical. Don't spend prompt budget on delivery the voice engine already provides.
