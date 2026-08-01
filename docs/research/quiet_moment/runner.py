@@ -18,6 +18,9 @@ PRAISE = re.compile(
     r"|well done|good work|proud of you|you handled it|impressive|you earned"
     r"|you'?ve got a knack|you'?re better at)", re.I)
 
+NUMERIC = re.compile(r"\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|"
+                     r"eleven|twelve|dozen|hundred|thousand)\b", re.I)
+
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
     "i_prefer": re.compile(r"\bI (prefer|like)\b", re.I),
@@ -69,6 +72,10 @@ def check(line, cap=28, packet="", speaker="", demos=()):
         f.append("multiline")
     if speaker == "kaelen" and PRAISE.search(line):
         f.append("generic_praise")
+    # invented quantities: neither character is licensed to state a number the
+    # packet didn't supply. Caught "45 knots" and "0.7c" in a space sim.
+    if NUMERIC.search(line) and not NUMERIC.search(packet or ""):
+        f.append("invented_number")
     return f
 
 

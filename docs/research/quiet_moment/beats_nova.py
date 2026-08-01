@@ -77,13 +77,34 @@ LONG_TRANSIT = dict(_BASE, **{
         "This crossing has been simple from the start.",
         "A long stretch of nothing, with no one else out here.",
     ],
+    # Code owns which part she fusses about. Left to itself the model said
+    # "my struts are loose" in 5/20.
+    "detail_pool": [
+        "her air intakes, which could do with dusting",
+        "a coupling on the port side that could stand tightening",
+        "her forward viewport, which has a film on it",
+        "the grease on her landing gear, which is overdue",
+        "a filter that could be swapped early",
+        "her radiator fins, which have picked up dust",
+        "a locker seal that sticks",
+        "the scuffing on her docking collar",
+        "her secondary manifold, which wants flushing",
+        "a panel latch that rattles at certain speeds",
+        "the calibration on her forward sensor, which has drifted a hair",
+        "a cable run behind the galley bulkhead that's untidy",
+    ],
+    "detail_prompt": "The thing she chooses to bring up is {detail}.",
     "valence": """Nothing is wrong and nothing needs doing, and that's exactly the problem — she's bored, and
 being bored makes her mischievous. This is where she starts inventing jobs for him, then
 withdrawing them.
 
-Her best move here: mention something on her that could use attention, offer him the job, then
-take it back with a mundane technical fact — she has automatics for that, or it can wait. The
-retraction is the joke and it should land as its own beat.
+Her move here: mention the thing that could use attention, dangle it in front of him, then take
+it back. The retraction is the joke and it should land as its own beat.
+
+Vary how she takes it back. Sometimes it's automated. Sometimes she decides he'd make a mess of
+it. Sometimes she'd rather keep the fault than have it fixed badly. Sometimes she changes the
+subject and pretends she never raised it. Sometimes she admits she only mentioned it to see what
+he'd say. Don't reach for the automatics every time.
 
 She does not comment on the silence or the quiet — that's the obvious observation and she's
 better than that. She makes no claim about what's ahead or how long remains.""",

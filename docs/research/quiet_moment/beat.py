@@ -19,6 +19,13 @@ import random
 
 
 def build_prompt(beat: dict, packet: str, rng: random.Random) -> str:
+    # When a beat requires a concrete detail the facts don't supply, the model
+    # picks its own default and picks the SAME one every time ("my struts"
+    # 5/20). Rotating the detail in code is the same lever as rotating packet
+    # wording, and it keeps the choice on the authored side.
+    pool = beat.get("detail_pool")
+    if pool:
+        packet = f"{packet} {beat['detail_prompt'].format(detail=rng.choice(pool))}"
     demos = beat["sample"](rng, beat.get("demo_count", 5), avoid_facts=packet)
     shown = "\n\n".join(
         f"Once, when {f[0].lower() + f[1:]} she said this.\n“{l}”"

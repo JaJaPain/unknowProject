@@ -1,0 +1,102 @@
+[
+ {
+  "line": "Secondary manifold's due for a flush. You could do it. But I've got autos on standby. They're reliable. They don't flirt.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold's due for a flush. I'd say you're just the one to do it... but the automatics handle it every cycle.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "That latch rattles when we hit 0.7c. You'd think it was a problem. It's not. I have a clamp for that. I'll use it next time I'm bored.",
+  "secs": 3.6,
+  "flags": []
+ },
+ {
+  "line": "Sensor's drifted. You could recalibrate it. No, the auto-align kicks in every ten hours.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Grease on the landing gear is overdue. You could do it, but the bots handle it. Just making sure you're not bored.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My forward sensor's off by a hair. You could recalibrate it if you wanted. The automatics do it better, but they're slow.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's got a film on it. You could clean it if you wanted. It's just a polymer buildup — the scrubbers handle it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My secondary manifold's due for flushing. You'd be good at it. Too much flow for the automateds — they're not built for finesse.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "My viewport's fogged up. You could wipe it. If you had the right solvent.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Air filter's due. You could swap it now... or wait. The auto's been running fine since the last cycle.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "There's a panel latch that rattles when we hit 45 knots. Someone's going to have to check it. Oh, wait — I've got a dampener for that. It's just rattling.",
+  "secs": 3.5,
+  "flags": []
+ },
+ {
+  "line": "There's a cable run behind the galley bulkhead that's coiled like a bad habit. I could let you untangle it... but the automatics are patient.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "My collar's got a scuff. You could polish it if you wanted. The sensors don't care, though — they're all on the inside.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "My intakes are clean, but the filters need swapping. You could do it. If you had the right tools.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Filter's loose in port three. You could swap it. Automatics hold it for now.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Locker seal's stuck. You could try it. It's not that I don't have servos for that — I do. Just not right now.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My viewport's got a film. You could clean it, if you wanted. It's just smog, though — the filters handle that.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's fogged. You could wipe it, if you wanted. It's just condensation — automatics clear it every cycle.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold's due for a flush. I'll bet you'd like to do it. It's automated. Can wait.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Locker seal's stuck. You could try working it free... but I've got a motor for that, and it's waiting.",
+  "secs": 3.2,
+  "flags": []
+ }
+]

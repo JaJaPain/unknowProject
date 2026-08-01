@@ -1,0 +1,102 @@
+[
+ {
+  "line": "My aft struts need realigning. You'd be good at it. The hydraulics are still asleep, though — might as well wait.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "My struts are cold and stiff. You could warm them up... if you had a heat gun. I don't have a heat gun.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Struts on port side look loose. Want to check them? No, wait — automatics are already on it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "There's a seal on my starboard side that's whispering loose. You could check it, if you like. It's got a backup.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My intake's clear. You could clean it again... I've got a drone on standby. Saves us both time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My port thruster's humming off-scale. You could check it. It's just a harmonic. The dampeners handle it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My struts are loose. I'll need you to tighten them. The automateds did it already. Saves us both time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Your turn. I've got a coupling that's loose. No, wait — the auto-tighteners took care of it. Never mind.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My struts are loose. I'd let you tighten them, but the hydraulics are still under warranty.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "The struts need greasing. I'll let you do it — if you can reach without unbolting the fairing.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My coolant line's leaking. You could fix it. But I've got a bypass active. No rush.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Captain. My injectors are due. You could do it, but I've got servos for that. Probably.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My scopes are clean. You could scan them again. I already have the results. No point in waiting.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "My thruster's humming off-key. You could tune it, if you're feeling sentimental. The auto's got a better ear than you do.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My struts are loose. You could tighten them. I've got automatics for that — don't worry, they're not working right now.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My struts are loose. You could tighten them... I’ve got auto-tighteners in the secondary bays. Saves us both time.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My thrusters are clean. You could've left them be, but I see you polished the nozzles anyway.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My access port's loose. I'd let you reseat it. But the automatics did it already. Ten minutes ago.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "There's a buildup in the intake filters. You could clean them... but they're self-cleaning every six hours.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My port thruster's humming louder. You could check it. It's just a harmonic. The dampeners handle it.",
+  "secs": 3.1,
+  "flags": []
+ }
+]
