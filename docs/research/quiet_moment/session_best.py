@@ -93,6 +93,22 @@ NOVA_HARD_BURN = [
     "You're running me hot. I don't mind - I like it when you're sure of where you're going.",
 ]
 
+KAELEN_DECLINED = [
+    "You said no. No debt. No regret. That's a skill most don't have, Shiny.",
+    "They offered it, and you turned it down. I like that. Some people can't say no - you just did.",
+    "Refused before it started. That's a luxury most don't get.",
+    "Turned it down. That's your call. I'm not here to argue the price, Shiny.",
+    "No money, no trouble. I'm not even going to pretend this was hard.",
+]
+
+NOVA_RETURNED_SAME_STATION = [
+    "They're still holding me. I don't mind being held - you're the one who keeps bringing me back.",
+    "This berth's got my name on it in grease. You're not the first to circle back, but you're the only one who ever did it with me.",
+    "Same berth. I remember this one. You're not lost, Captain - just visiting again.",
+    "We're back where we started. I like it better this time. You're here, and I'm not lonely.",
+    "I'm back here. You're back here. Nobody's making a big deal about it, but I'm keeping track.",
+]
+
 BEATS = [
     ("kaelen", "low_pay_safe", KAELEN_LOW_PAY_SAFE),
     ("kaelen", "high_pay_dangerous", KAELEN_HIGH_PAY_DANGEROUS),
@@ -104,4 +120,6 @@ BEATS = [
     ("kaelen", "abandoned", KAELEN_ABANDONED),
     ("nova", "rough_arrival", NOVA_ROUGH_ARRIVAL),
     ("nova", "hard_burn", NOVA_HARD_BURN),
+    ("kaelen", "declined", KAELEN_DECLINED),
+    ("nova", "returned_same_station", NOVA_RETURNED_SAME_STATION),
 ]
