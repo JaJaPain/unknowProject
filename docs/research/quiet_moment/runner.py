@@ -11,6 +11,11 @@ from qm import gen, parse_json_field, words
 
 PRON = re.compile(r"\b(he|him|his)\b", re.I)
 # structural tics worth counting: each collapsed a run at some point
+# Kaelen's bible bans "generic hero praise" outright. She prices risk; she
+# does not compliment his skill.
+PRAISE = re.compile(r"(you'?re good at|you did (good|well)|nice work|well done|"
+                    r"good work|proud of you|you handled it|impressive)", re.I)
+
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
     "i_prefer": re.compile(r"\bI (prefer|like)\b", re.I),
@@ -19,16 +24,44 @@ TICS = {
 }
 
 
-def check(line, cap=28):
+def _shares_run(a, b, n=5):
+    aw, bw = words(a), words(b)
+    if len(aw) < n or len(bw) < n:
+        return False
+    bs = " ".join(bw)
+    return any(" ".join(aw[i:i + n]) in bs for i in range(len(aw) - n + 1))
+
+
+def normalize_quotes(s):
+    """Models emit U+2019 for apostrophes; ASCII regexes silently miss it.
+    This bit us twice: "you're good at" praise and possessive "hull's"."""
+    return (s.replace("’", "'").replace("‘", "'")
+             .replace("“", '"').replace("”", '"')
+             .replace("—", "-").replace("–", "-"))
+
+
+def check(line, cap=28, packet="", speaker=""):
     f = []
     if not line:
         return ["no_parse"]
+    line = normalize_quotes(line)
+    # echo: the line hands the packet's own words back to the player
+    if packet and _shares_run(line, packet):
+        f.append("packet_echo")
+    # cross-character address: only N.O.V.A. says Captain, only Kaelen says Shiny
+    low = line.lower()
+    if speaker == "kaelen" and "captain" in low:
+        f.append("wrong_address")
+    if speaker == "nova" and "shiny" in low:
+        f.append("wrong_address")
     if len(words(line)) > cap:
         f.append("too_long")
     if PRON.search(line):
         f.append("assumes_captain_gender")
     if "\n" in line:
         f.append("multiline")
+    if speaker == "kaelen" and PRAISE.search(line):
+        f.append("generic_praise")
     return f
 
 
@@ -43,7 +76,9 @@ def run(mod, model, n, tag=""):
         raw, dt = gen(mod.prompt(p, rng), model=model, num_predict=200,
                       temperature=0.9, top_p=0.95)
         line = (parse_json_field(raw) or "").strip().strip('“”"')
-        rows.append({"line": line, "flags": check(line), "secs": round(dt, 1)})
+        rows.append({"line": line, "secs": round(dt, 1),
+                     "flags": check(line, packet=p,
+                                    speaker=getattr(mod, "SPEAKER", ""))})
     name = f"{tag or mod.__name__}_{model.replace(':', '_').replace('.', '')}"
     json.dump(rows, open(f"out_{name}.json", "w", encoding="utf-8"),
               indent=1, ensure_ascii=False)
