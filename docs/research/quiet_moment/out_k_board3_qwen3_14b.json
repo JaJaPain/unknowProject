@@ -1,0 +1,84 @@
+[
+ {
+  "line": "This is the kind of job you find on a wall, not in a ledger. You're better than this.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you scrape off your boots and leave on the dock, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job someone else would take. You're better than this, Shiny.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you find on a wall, not in a ledger — and you're better than this, Shiny.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you scrape off your boots and leave on the dock.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job that gets posted on a wall, not negotiated in a room.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you pin up when you're out of options, and I'm not even going to pretend it's not beneath us.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you find on a wall, not in a ledger. You're better than this, Shiny.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Public-board postings? This is the kind of thing you scrape off your boots and leave behind.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job that gets posted on walls, not made by people with options.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you find on a wall, not in a ledger — and you're better than that, Shiny.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job that only happens when no one else will take it — and you're still better than the rest of them.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Public-board postings are what people take when they have no contacts, no leverage, and no better offer — scut work, badly paid, picked off a wall by anyone with a hull and nothing else on.",
+  "secs": 3.7,
+  "flags": [
+   "too_long"
+  ]
+ },
+ {
+  "line": "This is what happens when you post your name and your hull and nothing else — and here we are, stuck with it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This isn't even the kind of job that needs a fixer. Just hang up the hat and walk away.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of job you find on a wall, not in a ledger. You're better than this, Shiny.",
+  "secs": 3.3,
+  "flags": []
+ }
+]

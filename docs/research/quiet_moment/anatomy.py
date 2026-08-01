@@ -18,53 +18,34 @@ import re
 
 # human part -> the machine part she corrects herself to
 ANATOMY = {
+    # Only mappings where the machine term is a SURPRISINGLY precise substitute.
+    # Author calibration: "larynx -> vocal processor" lands; "belly -> cargo
+    # hold" falls flat, because a hold already IS a belly. Flat pairs were
+    # removed rather than kept for coverage.
     "larynx": "vocal processor",
     "throat": "intake trunk",
-    "voice": "vocal processor",
     "lungs": "air scrubbers",
     "ribs": "frame spars",
     "ribcage": "frame spars",
     "spine": "keel",
     "backbone": "keel",
+    "sternum": "keel plate",
     "waist": "midsection coupling",
     "hips": "gimbal mounts",
-    "belly": "cargo hold",
-    "stomach": "cargo hold",
-    "gut": "cargo hold",
-    "guts": "internals",
-    "chest": "forward bulkhead",
-    "shoulders": "dorsal mounts",
     "knees": "landing gear",
     "ankles": "landing struts",
     "jaw": "docking clamp",
     "teeth": "grapple hooks",
-    "skin": "plating",
-    "bones": "frame",
     "veins": "coolant lines",
-    "blood": "coolant",
     "nerves": "sensor net",
-    "heart": "reactor",
     "eyes": "optical array",
     "ears": "audio pickups",
     "hair": "antenna array",
     "fingers": "manipulators",
-    "hands": "manipulators",
-    "lips": "hatch seals",
     "elbows": "articulation joints",
-    "sternum": "keel plate",
-    "shoulder": "dorsal mount",
-    "knee": "landing gear",
-    "rib": "frame spar",
-    "lung": "air scrubber",
-    "throat lining": "intake trunk",
-    "belly button": "access port",
-    "toes": "landing pads",
     "wrists": "articulation joints",
     "neck": "dorsal spine housing",
-    "hip": "gimbal mount",
-    "thigh": "strut housing",
-    "back": "dorsal plating",
-    "stomach lining": "hold liner",
+    "shoulders": "dorsal mounts",
 }
 
 _PARTS = "|".join(sorted(ANATOMY, key=len, reverse=True))
@@ -78,9 +59,7 @@ _ALREADY = re.compile(r"\bor at least\b|\bwell,? not\b|\bi mean\b|\bfigure of sp
 CORRECTIONS = [
     "Or at least my {machine}.",
     "My {machine}, technically.",
-    "{machine_cap}, if we're being accurate.",
-    "That is — my {machine}.",
-    "Or the {machine}, if you want the correct term.",
+    "Well. My {machine}.",
 ]
 
 

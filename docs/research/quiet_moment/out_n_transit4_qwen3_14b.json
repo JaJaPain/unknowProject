@@ -1,0 +1,86 @@
+[
+ {
+  "line": "My secondary manifold's due for a flush. Just saying. No need to rush. I can wait.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold needs flushing. I'll wait. Maybe I'll forget. Maybe I won't.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That latch in the aft corridor rattles when we hit 0.4. You could tighten it. If you want.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "My sensors are off by a hair. You could recalibrate them. I'll wait while you figure out how to do it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Grease on the landing gear is due. I'm sure the manual says something about it. Oh, wait — it's automated.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My sensors are off by a hair. You could recalibrate them. I'll wait. I'm not in a hurry.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My viewport's got a film on it. It's not clear. Oh, wait — it's just condensation. Doesn't matter. Doesn't need doing.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold wants flushing. Don't think it's urgent. Probably not worth the trouble.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "My viewport's got a film on it. You could wipe it. I'll tell you what — I'll let it stay.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Filter's loose in the intake. You could swap it if you wanted... or we could wait for the next shift.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "There's a panel latch that rattles when we hit 0.8. You could tighten it, if you wanted.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "There's a tangle of cable behind the galley bulkhead. I could wait for maintenance. Or I could wait for you.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My collar's got a scuff. You could polish it if you wanted. I won't hold my breath.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My intakes are clean. They've been waiting for you to notice.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "There's a filter that could go early. I'll wait. Just don't forget I mentioned it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Locker seal's stuck. You could warm it up. Not that I need fixing.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

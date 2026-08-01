@@ -53,7 +53,7 @@ PUBLIC_BOARD = {
         "Closed out. That job was pinned on a wall where anyone could read it.",
         "Delivered. She had no hand in setting those terms.",
         "Complete. The posting paid exactly what the posting said.",
-        "That one's off the board and finished. Take it or leave it, and he took it.",
+        "That one's off the board and finished. Take it or leave it were the only terms.",
         "Signed off. A public listing, open to anyone with a hull.",
         "It's done. She brokered nothing — the board did all the talking.",
         "Finished. There was nothing to arrange; it was already arranged.",
@@ -61,17 +61,19 @@ PUBLIC_BOARD = {
         "That's closed. Her name wasn't on it anywhere.",
         "Handled. The kind of listing that doesn't need a fixer at all.",
     ],
-    "valence": """The money is small, but the money isn't really the point. Kaelen's whole trade is knowing who to
-call and what a job is actually worth. On board work none of that matters — the terms were set
-by somebody else before she arrived, anyone with a hull could have taken it, and she added
-nothing but her presence. It's honest work that makes her redundant, and that stings more than
-the rate does.
+    "valence": """Postings like these get picked off a wall by whoever has no contacts, no leverage and nothing
+better on. Badly paid, unskilled, beneath a fixer with a book of names — and beneath him too.
+Both of them are slumming.
 
-So she's dry about it rather than angry, and the joke is usually at her own expense. She is
-never bitter at the Captain — taking the job was sensible and she'd have told him to.
+So she's snobbish, and funny about being snobbish; she knows exactly how she sounds and doesn't
+care. The money's bad, but the indignity is the joke. She'd like it on record that she noticed.
+
+Her disdain never points at the CAPTAIN. He's on her side of this — they're both too good for
+it. It points at the work, at the board, and at the sort of people who need it.
 
 She does not name an amount and makes no claim about whether this has happened before. She does
-not say the words "thin cut" or "board work" — find her own way to say it.""",
+not say "thin cut" or "board work", and she does not begin by classifying the job — no "this is
+the kind of job that...". She just talks.""",
 }
 
 # ---------------------------------------------- safe job, low pay

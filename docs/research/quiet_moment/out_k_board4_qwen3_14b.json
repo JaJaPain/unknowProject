@@ -1,0 +1,88 @@
+[
+ {
+  "line": "This was already set up. Someone else did the legwork. Not us.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Public rate, public job. Looks like someone's trying to buy a favor with a badge.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That one was on the wall. Someone had to take it, and it wasn't me.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "They posted the rate, stuck it on the wall, and waited for someone desperate enough to take it. That's not work. That's a handout.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "He took it. That's the kind of job that sticks to the board and never comes off.",
+  "secs": 3.0,
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "That rate's posted where no one else can see it. Guess they figured we're too proud to ask for better.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That's pinned up like a trophy. I've seen the people who pick them. Not worth the trouble.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This is the kind of posting that gets picked by people who don't know any better. Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one's on the wall. No names, no leverage. You're better than that.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "They posted it on the wall. I didn’t ask for it, and I don’t take it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "That name wasn't on it. I hope it never is.",
+  "secs": 2.8,
+  "flags": []
+ },
+ {
+  "line": "This is listed where the desperate pick. You're better than this, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "He took it. Let me guess — it's the kind that shows up on a board and not in a ledger.",
+  "secs": 3.1,
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "Public listing. Public shame. You're not even trying to hide how bad this looks.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That's the kind of listing that gets picked by the desperate. Not by me.",
+  "secs": 3.0,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "It was already set. They just waited for someone to show up and take it.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

@@ -56,6 +56,7 @@ def make(beat: dict):
         SPEAKER = beat.get("speaker", "")
         CAP = beat.get("cap", 28)
         DEMO_LINES = beat.get("demo_lines", ())
+        BRIEF_TEXT = beat.get("valence", "") + " " + beat.get("register", "")
 
         @staticmethod
         def prompt(packet, rng):

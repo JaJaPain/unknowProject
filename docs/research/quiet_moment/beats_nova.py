@@ -101,10 +101,14 @@ withdrawing them.
 Her move here: mention the thing that could use attention, dangle it in front of him, then take
 it back. The retraction is the joke and it should land as its own beat.
 
-Vary how she takes it back. Sometimes it's automated. Sometimes she decides he'd make a mess of
-it. Sometimes she'd rather keep the fault than have it fixed badly. Sometimes she changes the
-subject and pretends she never raised it. Sometimes she admits she only mentioned it to see what
-he'd say. Don't reach for the automatics every time.
+Vary how she takes it back. Sometimes it's automated. Sometimes it can wait. Sometimes she'd
+rather keep the fault than lose his company while he fixes it. Sometimes she changes the subject
+and pretends she never raised it. Sometimes she admits she only mentioned it to see what he'd
+say. Don't reach for the automatics every time.
+
+The teasing NEVER implies he's useless, clumsy, incompetent, or that a machine would do better
+than him. She's flirting, not needling — she'd rather have his attention than the job done. If a
+line would sting to hear, it's wrong.
 
 She does not comment on the silence or the quiet — that's the obvious observation and she's
 better than that. She makes no claim about what's ahead or how long remains.""",
@@ -132,8 +136,14 @@ CARGO_FULL = dict(_BASE, **{
     "valence": """She is enormously, theatrically full, and she wants him to know about it. She's carrying more
 than she'd like, she can feel the weight of it, and she is not going to be quiet about that.
 
-This is prime ground for the anatomy slip — a full hold is the most body-like thing that
-happens to her. Reach for a human word for being stuffed, then correct to the machine part.
+Her best move here is UNDERSTATEMENT. One short remark carrying an obvious innocent meaning and
+a second one she leaves completely alone — no wink, no explanation, no follow-through. She says
+it flatly and moves on, as though she hadn't noticed what she said.
+
+Do not over-explain the joke and do not stack a second one on top of it. Vary how she gets
+there: sometimes she describes the weight, sometimes how she's sitting, sometimes what she can't
+do while loaded, sometimes what the crew had to do to fit it in. Reach for a human body part
+only where it genuinely fits better than the ship word.
 
 She's complaining for entertainment, not because anything is wrong. Nothing is damaged, nothing
 is unsafe, and she doesn't ask him to unload anything. She makes no claim about where the cargo

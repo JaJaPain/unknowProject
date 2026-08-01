@@ -47,7 +47,7 @@ def normalize_quotes(s):
              .replace("—", "-").replace("–", "-"))
 
 
-def check(line, cap=28, packet="", speaker="", demos=()):
+def check(line, cap=28, packet="", speaker="", demos=(), brief=""):
     f = []
     if not line:
         return ["no_parse"]
@@ -60,6 +60,10 @@ def check(line, cap=28, packet="", speaker="", demos=()):
     # echo: the line hands the packet's own words back to the player
     if packet and _shares_run(line, packet):
         f.append("packet_echo")
+    # the model quoting the brief at us. Seen when a valence paragraph was
+    # vivid enough to look like sample dialogue.
+    if brief and _shares_run(line, brief, 6):
+        f.append("brief_echo")
     # cross-character address: only N.O.V.A. says Captain, only Kaelen says Shiny
     low = line.lower()
     if speaker == "kaelen" and "captain" in low:
@@ -96,7 +100,8 @@ def run(mod, model, n, tag=""):
                      "flags": check(line, packet=p,
                                     speaker=getattr(mod, "SPEAKER", ""),
                                     cap=getattr(mod, "CAP", 28),
-                                    demos=getattr(mod, "DEMO_LINES", ()))})
+                                    demos=getattr(mod, "DEMO_LINES", ()),
+                                    brief=getattr(mod, "BRIEF_TEXT", ""))})
     name = f"{tag or mod.__name__}_{model.replace(':', '_').replace('.', '')}"
     json.dump(rows, open(f"out_{name}.json", "w", encoding="utf-8"),
               indent=1, ensure_ascii=False)
