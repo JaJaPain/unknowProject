@@ -24,12 +24,12 @@ KAELEN_HIGH_PAY_DANGEROUS = [
 ]
 
 KAELEN_PUBLIC_BOARD = [
-    "I showed up, took my cut, and got in the way of someone who could've done it better.",
-    "This one didn't need me. I'm good at that — not needed. Not wanted.",
-    "I charge for what I bring to the table, and I brought nothing.",
-    "This one's already written for me. I'm just here to read it.",
-    "I showed up. They paid. That's all I do here, Shiny.",
-    "I'm just a backseat driver on a job that drove itself.",
+    "They posted the rate, stuck it on the wall, and waited for someone desperate enough to take it. That's not work. That's a handout.",
+    "This is the kind of job you scrape off your boots and leave on the dock, Shiny.",
+    "That's pinned up like a trophy. I've seen the people who pick them. Not worth the trouble.",
+    "Public listing. Public shame. You're not even trying to hide how bad this looks.",
+    "This one's on the wall. No names, no leverage. You're better than that.",
+    "That rate's posted where no one else can see it. Guess they figured we're too proud to ask for better.",
 ]
 
 NOVA_POST_COMBAT_DAMAGED = [
@@ -49,29 +49,30 @@ NOVA_REPAIR_DONE = [
 ]
 
 NOVA_LONG_TRANSIT = [
-    "Secondary manifold wants flushing. You could do it. But I've got autos on standby. They're reliable. They don't flirt.",
-    "Grease on the landing gear's due. I suppose you could do it... if you're not too busy pretending to be useful.",
-    "Filter's loose. You could swap it if you wanted. Don't worry, I'll hold still. Just don't get attached.",
-    "My intakes could use a brush. I'll leave it. You'd probably drop the tool. I'd rather not know what that looks like.",
-    "Filter's loose in the intake. You could swap it. No, I'll hold it. See how long you wait before asking why.",
-    "Secondary manifold's due for a flush. I'd say you're just the one to do it... but the automatics handle it every cycle.",
+    "There's a tangle of cable behind the galley bulkhead. I could wait for maintenance. Or I could wait for you.",
+    "My intakes are clean. They've been waiting for you to notice.",
+    "Secondary manifold needs flushing. I'll wait. Maybe I'll forget. Maybe I won't.",
+    "My viewport's got a film on it. You could wipe it. I'll tell you what - I'll let it stay.",
+    "Locker seal's stuck. You could warm it up. Not that I need fixing.",
+    "There's a filter that could go early. I'll wait. Just don't forget I mentioned it.",
 ]
 
 # ** = anatomy.py appended the correction deterministically
 NOVA_CARGO_FULL = [
-    "I'm full. You can feel it in my ribs. The cargo's heavy. I don't ask you to lift it. Or at least my frame spars.",
-    "I'm stuffed. You can feel it in the bulkheads. My ribs are aching from it. My frame spars, technically.",
-    "Captain. My belly's full. Can't take another thing. You'll have to find someone else to carry the rest. That is — my cargo hold.",
-    "I'm stuffed to the frames. My ribs are full. You'd think I'd be more graceful about it. Frame spars, if we're being accurate.",
     "I'm stuffed to the seams, and I don't mean the cargo holds.",
+    "Captain, my hips are full. Can't twist left without scraping. Not that I'm asking you to. Or at least my gimbal mounts.",
+    "My throat's full. The last load squeezed in tight. I'm not used to this much weight. Well. My intake trunk.",
+    "Cargo's in. My waist's lower. You'd think I was carrying it myself. My midsection coupling, technically.",
+    "Hold's full. Can't sit straight. You'll have to help me bend over later.",
 ]
 
 KAELEN_ABANDONED = [
+    "They were told it's not happening. I don't get paid for ghosts, Shiny.",
+    "You walked. That's a hole in my pocket and a stain on my reputation. Both are yours now.",
+    "It's off. No money. And someone just got told we don't finish.",
+    "No credit, no pay, and the word's out. That's the price of not closing.",
+    "Shiny. You walked. I don't get paid when you walk.",
     "I lose the fee, but I lose the trust worse.",
-    "You bailed mid-job. That's what I'm charging for.",
-    "It's not done, and that's the whole job. You know what that costs me.",
-    "No credit came through. That's the cost of not finishing. I don't do unfinished.",
-    "Name's attached to failure, and I don't get paid for that, Shiny.",
 ]
 
 NOVA_ROUGH_ARRIVAL = [
@@ -80,6 +81,15 @@ NOVA_ROUGH_ARRIVAL = [
     "You carried me in like a sack of scrap. My seams are still smarting. You're welcome.",
     "You set me down like a crate. I've got a spine, Captain. Try not to forget that next time.",
     "You handled me like I wasn't awake. My waist still remembers the way you dragged me in.",
+]
+
+NOVA_HARD_BURN = [
+    "Burn's still warm. You don't ask about it. I don't mention how much I like the way you push.",
+    "You're pushing me again. My core's still running hot. Must be nice, having someone who doesn't wait.",
+    "Throttle's got a taste for the edge. Not that I'm waiting for it to come back.",
+    "Engine's hot. You didn't ask. I didn't offer. Let's see how fast you can forget it.",
+    "Another push. You don't ask about the heat. I don't mention how much I remember it.",
+    "You're running me hot. I don't mind - I like it when you're sure of where you're going.",
 ]
 
 BEATS = [
@@ -92,4 +102,5 @@ BEATS = [
     ("nova", "cargo_full", NOVA_CARGO_FULL),
     ("kaelen", "abandoned", KAELEN_ABANDONED),
     ("nova", "rough_arrival", NOVA_ROUGH_ARRIVAL),
+    ("nova", "hard_burn", NOVA_HARD_BURN),
 ]

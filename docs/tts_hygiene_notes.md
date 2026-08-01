@@ -161,3 +161,24 @@ Kokoro (TTS engine) handles Title Case multi-word names well as long as:
 
 **Rule:** Never use `af_bella` in generated NPC voice blends — it is Kaelen's exclusive
 voice. See memory: `feedback_voice_blends.md`.
+
+---
+
+## 4. Hyphenated compounds — suspected, 2026-08-02
+
+Author reported an unclear word in a generated Kaelen line rendered through Kokoro:
+
+> "You bailed mid-job. That's what I'm charging for."
+
+`bailed` is common and unlikely to be the problem; **`mid-job` is the suspect**. Hyphenated
+compounds have no reliable spoken form — Kokoro may run them together, insert a pause, or
+stress the wrong half.
+
+Generated dialogue is now screened for this before it can reach TTS
+(`docs/research/quiet_moment/runner.py`, `TTS_RISK`), alongside all-caps tokens, symbols
+(`/ & % @ # * _ ~`) and ellipses. Applied to the 55-line listening set it flagged exactly one
+line — the one the author could not parse.
+
+**Not yet confirmed by ear.** If a hyphen-free re-render of the same beat is clear, that
+confirms it and the rule should move into `normalize_tts_pronunciation()` so it protects all
+spoken paths, not just quiet moments.

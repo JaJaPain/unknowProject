@@ -23,6 +23,23 @@ PRAISE = re.compile(
 NUMERIC = re.compile(r"\d|\b(two|three|four|five|six|seven|eight|nine|ten|"
                      r"eleven|twelve|dozen|hundred|thousand)\b", re.I)
 
+# These lines are SPOKEN, so constructions the TTS renders unreliably are
+# defects even when the text reads fine. Author flagged an unclear word in
+# "You bailed mid-job" — hyphenated compounds are the likeliest culprit.
+# See docs/tts_hygiene_notes.md.
+TTS_RISK = [
+    # NOTE: keep these separate. A single combined pattern with re.I made
+    # [A-Z]{2,} match any two letters and flagged 55/55 good lines.
+    ("hyphen_compound", re.compile(r"[a-z]+-[a-z]+", re.I)),
+    ("all_caps", re.compile(r"\b[A-Z]{2,}\b")),          # no re.I, deliberately
+    ("symbol", re.compile(r"[/&%@#*_~]")),
+    ("ellipsis", re.compile(r"\.\.\.|…")),
+]
+
+
+def tts_risk(line):
+    return [name for name, rx in TTS_RISK if rx.search(line)]
+
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
     "i_prefer": re.compile(r"\bI (prefer|like)\b", re.I),
@@ -82,6 +99,7 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief=""):
     # packet didn't supply. Caught "45 knots" and "0.7c" in a space sim.
     if NUMERIC.search(line) and not NUMERIC.search(packet or ""):
         f.append("invented_number")
+    f += ["tts_" + r for r in tts_risk(line)]
     return f
 
 
