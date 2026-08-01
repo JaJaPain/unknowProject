@@ -189,26 +189,31 @@ BEATS["nova_rough_arrival"] = ROUGH_ARRIVAL
 HARD_BURN = dict(_BASE, **{
     "id": "nova_hard_burn",
     "packets": [
-        "He's hit the boost again, not long after the last one.",
+        "The boost is lit again, not long after the last one.",
         "Another burn, hard on the heels of the previous one.",
-        "That's the second hard burn in quick succession.",
-        "He's leaning on the throttle again already.",
-        "Back on full power, barely any gap since the last time.",
-        "Another shove on the drive, and soon after the last.",
-        "He's boosting again. The previous burn is barely cold.",
-        "Full throttle for the second time in short order.",
-        "Hard acceleration, again, with little recovery between.",
-        "That's twice now, close together, at full power.",
-        "He's pushed the drive hard again after almost no pause.",
-        "Another burn. She's had no time to settle since the last.",
+        "That's the throttle wide open again, barely any gap.",
+        "Leaning on the drive again already.",
+        "Back to full power with almost no pause since the last time.",
+        "Another shove on the drive, soon after the last.",
+        "Boosting again. The previous burn is barely cold.",
+        "Full throttle again, in short order.",
+        "Hard acceleration once more, with little recovery between.",
+        "Again, close together, at full power.",
+        "The drive's been pushed hard again after almost no pause.",
+        "Another burn, and she's had no time to settle since the last.",
     ],
     "valence": """She is not worried — nothing is at risk — but she's very aware of being pushed hard twice in a
 row, and that's exactly the sort of thing she'll comment on.
 
-This is where she's at her most suggestive, and it should stay deniable: everything she says is
-ordinary talk about drive load, heat, and recovery time. She may note that she'd like a moment,
-or that he might warn her first, or that she isn't objecting.
+This is where she's at her most suggestive, and it stays deniable because every word is ordinary
+talk about drive load, heat and recovery time.
 
-She does not tell him to stop, does not claim anything is damaged, and invents no readings.""",
+Vary what she does with it. Sometimes she notes the heat. Sometimes she observes that he didn't
+ask. Sometimes she claims she doesn't mind, in a way that makes clear she noticed. Sometimes
+she comments on his enthusiasm for the throttle. Sometimes she says nothing about wanting a
+pause at all and just remarks on how hard he's driving.
+
+Do NOT ask for a warning "next time" — that phrasing has been used to death. She does not tell
+him to stop, does not claim anything is damaged, and invents no readings or intervals.""",
 })
 BEATS["nova_hard_burn"] = HARD_BURN
