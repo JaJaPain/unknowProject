@@ -40,6 +40,15 @@ TTS_RISK = [
 def tts_risk(line):
     return [name for name, rx in TTS_RISK if rx.search(line)]
 
+STOP = set("""a an the and or but so of to in on at for with from as by if is are was were be
+    been am i my me you your it its this that these those we us our they them their he she
+    not no do does did done have has had will would can could should may might must s t re
+    ve ll d there here just still only even yet again now than too very much more most all
+    any some what which who when where why how
+    i'm i'll i've i'd you're you'll you've you'd it's that's don't doesn't didn't won't
+    can't couldn't wouldn't shouldn't isn't aren't wasn't weren't haven't hasn't we're
+    we'll we've they're they'll there's here's let's""".split())
+
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
     "i_prefer": re.compile(r"\bI (prefer|like)\b", re.I),
@@ -100,6 +109,11 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief=""):
     if NUMERIC.search(line) and not NUMERIC.search(packet or ""):
         f.append("invented_number")
     f += ["tts_" + r for r in tts_risk(line)]
+    # intra-line repetition: "My hips are full. The hold is full. My knees are
+    # full. My spine is full." passed every other check and is unusable.
+    counts = collections.Counter(w for w in words(line) if w not in STOP)
+    if counts and counts.most_common(1)[0][1] >= 3:
+        f.append("word_echo")
     return f
 
 

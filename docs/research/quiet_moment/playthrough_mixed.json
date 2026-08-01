@@ -1,0 +1,162 @@
+[
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "The viewport’s got a film on it. You’ll scrape it off. No, don’t worry — it’s not your turn yet."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Filter's loose in the intake. Could swap it. If you want. I won't remind you."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "My radiator fins are dusty. You could clean them if you wanted. I won't make you."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_cargo_full",
+  "line": "My hips are full. The bulkheads are full. The hold is full. My knees are full. The cargo is heavy. My spine is full. My gimbal mounts, technically."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "That one was risky and it paid right. Don't be surprised if I suggest more like it, Shiny."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "You jolted me. Publicly. I'll need a mirror. And a crew that doesn't laugh. You're paying for the mirror."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "It went through clean. Pay's thin. No surprises, no complaints — just another week of the same."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "Nobody got hurt. The pay's thin. You did the job. That's it."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "Low risk means low pay. You did the job. It's math, not a mistake."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Throttle's warm. You didn't ask if I mind. I don't. Not yet."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "Proper pay for proper risk — I like it when the math checks out."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "That contract was nasty. Paid like it was supposed to be. You're welcome."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Port coupling's loose. Could use a wrench. Or a minute. Or a reason to stay out of the way. Your call."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "It's the kind of job that sticks to your boots. You're better than that, Shiny."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Another burn cycle starts before the last one's cooled. You’re sure you don’t mind the smell of scorched insulation?"
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They wiped my throat clean. Left my systems humming. I like it when they're gentle. My intake trunk, technically."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "Shiny. That rate was up before I walked in. Looks like someone's doing the same old, same old."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "Backed out. Unfinished. Unpaid. My name's on the job, Shiny — and that's a cost you didn't account for."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "This was already set up. No need to run it again. Not my kind of work."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They sealed my waist tight. No leaks. I’ll let them keep the credit for that. Or at least my midsection coupling."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Another shove. I felt that. You didn't ask, but I'm here. Let me breathe."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Forward sensors are off by a hair. Just a little. You could fix it. If you wanted to."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "My back's clean. They used the right tools. I can feel the difference."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "This one paid right for the risk. I don't say that often, Shiny."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "They left me with a few holes. You don't have to patch them. I noticed you did anyway."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "There's a dent the size of a fist along my hip. They'll be painting over it before they even touch the plating."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "They missed me by a hair. You'll see the scratch when we're back on the wall. I'll need a second coat."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "You got me bent over the strut like I was a cargo crate. I have a reputation to maintain."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "Shiny. Someone had to know. You didn't finish. That's the cost."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "No risk, no reward. This barely covered the bullets. Find something that pays better."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "This one's on the wall. I hope it stays there."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "No credits, a name, and I get blamed for it. Not worth the trouble, Shiny."
+ }
+]
