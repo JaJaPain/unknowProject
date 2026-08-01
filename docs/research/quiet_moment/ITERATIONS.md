@@ -740,3 +740,16 @@ silence): different beats naturally produce different openers, so the recency wi
 less. Single-beat silence rates are a pessimistic bound.
 **−** One unusable line passed every check: *"My hips are full. The hold is full. My knees are
 full. My spine is full."* Added `word_echo` (any content word 3+ times).
+
+
+## Two more beats, both clean on the first run
+
+**+** `kaelen_declined` — 14/14 clean. Hook: saying no is a skill most pilots don't have, and
+she's watched plenty take work they should have refused. *"No debt. No regret. That's a skill
+most don't have, Shiny."*
+**+** `nova_returned_same_station` — 13/14 clean, **13/14 distinct openers**. Hook: she's happy
+to go in circles as long as he's flying. *"They're still holding me. I don't mind being held —
+you're the one who keeps bringing me back."* / *"You're not the first to circle back, but you're
+the only one who ever did it with me."*
+**+** Both reached the bar with **no iteration at all**, which is the compounding claim holding:
+eleven beats in, the mechanical work is free and only the hook costs thought.

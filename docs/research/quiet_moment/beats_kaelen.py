@@ -155,3 +155,41 @@ whether this has happened before.""",
 }
 
 BEATS["kaelen_abandoned"] = ABANDONED
+
+
+# ---------------------------------------------- mission declined
+DECLINED = {
+    "id": "kaelen_declined",
+    "speaker": "kaelen",
+    "cap": 25,
+    "who": KAELEN_WHO,
+    "register": KAELEN_REGISTER,
+    "scope": KAELEN_SCOPE,
+    "sample": sample,
+    "demo_lines": [l for _s, _f, l in _K_DEMOS],
+    "packets": [
+        "The offer was turned down. Nothing was owed for saying no.",
+        "Passed on it. No penalty, no obligation.",
+        "That one got refused before it started. Costs nothing to refuse.",
+        "Declined. The work goes to somebody else now.",
+        "Turned away. No money changed hands in either direction.",
+        "The contract was on the table and it stayed there.",
+        "Said no. Nothing lost, nothing gained.",
+        "Refused, and there's no penalty for refusing.",
+        "That job was offered and not taken. It's someone else's problem now.",
+        "Not taken. No harm done, no credits either.",
+        "Left on the table. Whoever wanted it will find another hull.",
+        "Rejected before anything was signed.",
+    ],
+    "valence": """This costs nothing and earns nothing, and she is entirely at peace with that. Saying no is a
+skill, and one most people don't have — she has watched plenty of pilots take work they should
+have refused.
+
+So she's approving without being warm about it, and she'd rather he refuse ten than take one
+that eats him. If there's a joke here it's about how rare it is to walk away from money without
+regretting it.
+
+She does not ask why he refused, does not second-guess him, and does not push him toward
+anything specific. She makes no claim about the client or about what happens to the job now.""",
+}
+BEATS["kaelen_declined"] = DECLINED

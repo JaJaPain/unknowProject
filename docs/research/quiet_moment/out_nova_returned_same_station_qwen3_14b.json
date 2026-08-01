@@ -1,0 +1,74 @@
+[
+ {
+  "line": "We're back where we started. I like it better this time. You're here, and I'm not lonely.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This berth's got my name on it in grease. You’re not the first to circle back, but you’re the only one who ever did it with me.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "Captain. We're back where we were. I like the way you make this place feel like a second home.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Same berth. I remember this one. You’re not lost, Captain — just visiting again.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm back here. You're back here. Nobody's making a big deal about it, but I'm keeping track.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "The same docking claw's still warm. You must've been holding your breath again. I heard it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This station's got my favorite kind of lights. They're the ones that flicker when you're not looking.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Back at the starting point. You're not lost, just... nostalgic. I like it here. You're better company than anywhere else.",
+  "secs": 3.2,
+  "flags": [
+   "tts_ellipsis"
+  ]
+ },
+ {
+  "line": "My ribs are still warm where you pressed against them. You’ll have to do better than that next time.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Same docking bay. I remember the smell of your boots last time. Still sharp. Still a little too close to my bulkhead.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "They're still holding me. I don't mind being held — you're the one who keeps bringing me back.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "We're back where we started. I remember this dock. It's got a better view of the stars than the last time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Captain. Same clamps. You're not lost, but you're not sure where you're going either.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I remember this dock. You're here again. I like it better than the last place we were.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

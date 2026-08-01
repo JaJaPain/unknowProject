@@ -217,3 +217,33 @@ Do NOT ask for a warning "next time" — that phrasing has been used to death. S
 him to stop, does not claim anything is damaged, and invents no readings or intervals.""",
 })
 BEATS["nova_hard_burn"] = HARD_BURN
+
+
+# ------------------------------------------------- back at the same station
+RETURNED_SAME = dict(_BASE, **{
+    "id": "nova_returned_same_station",
+    "packets": [
+        "They're back at the same station they left a short while ago.",
+        "Same dock, same clamps, not much time in between.",
+        "This is the station they departed from recently.",
+        "Back where they started, and it hasn't been long.",
+        "The same berth as before. They haven't been gone long.",
+        "Returned to the station they'd only just left.",
+        "Docked again at the place they set out from.",
+        "Same station, second visit, short gap.",
+        "They've come back round to where they were.",
+        "This berth is the one they used earlier.",
+        "Back at the same clamps as before.",
+        "Full circle, and not much of one.",
+    ],
+    "valence": """She noticed. Of course she noticed — she notices everything — and she's going to make sure he
+knows she noticed, without ever suggesting he's lost or disorganised.
+
+Her angle is that she's perfectly happy to keep going round in circles as long as he's the one
+flying, and she'd rather be here twice than somewhere interesting alone. It's affectionate
+teasing about the route, never about his competence.
+
+She makes no claim about why they came back, what they're doing here, or what happens next. She
+does not name the station.""",
+})
+BEATS["nova_returned_same_station"] = RETURNED_SAME

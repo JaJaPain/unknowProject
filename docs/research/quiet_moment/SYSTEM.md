@@ -1,6 +1,6 @@
 # Quiet-Moment System — how it works and how to add a beat
 
-State as of 2026-08-01. Nine beats built and measured; **nothing wired into Godot yet.**
+State as of 2026-08-02. **Eleven beats** built and measured; **nothing wired into Godot yet.**
 Research log with every positive and negative outcome: `ITERATIONS.md`.
 
 ## Shape
@@ -36,6 +36,9 @@ The model supplies voice; code supplies variety, truth, and structure.
 | `nova_long_transit` | `clean_long_transit` (already emitted) | 19/20 | 13/20 |
 | `nova_cargo_full` | hold at capacity | 19/20 | 15/20 |
 | `nova_rough_arrival` | `rough_arrival` (already emitted) | 12/12 | 7/12 |
+| `nova_hard_burn` | `boost_again_quickly` (already emitted) | 15/16 | 12/16 |
+| `kaelen_declined` | `quest_declined_details` | 14/14 | 10/14 |
+| `nova_returned_same_station` | `returned_to_same_station` (already emitted) | 13/14 | 13/14 |
 
 Selector, single beat in isolation: **12% silence, 2.2 calls/moment, 0 duplicates.**
 Selector across **all beats mixed** (the real case): **0% silence, 1.4 calls/moment, 0
