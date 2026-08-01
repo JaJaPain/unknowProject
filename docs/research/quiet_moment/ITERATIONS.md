@@ -347,3 +347,71 @@ Detection is reliable; blame assignment is not.
   `diagnose.py`, apply the named fixes, repeat once. No reasoning model in the loop.
 - **Untested:** whether a local model can propose *new* voice direction. It cannot judge voice
   (the ranker preferred bland over concrete), so assume not.
+
+---
+
+# N.O.V.A. — transfer test (2026-08-01)
+
+Purpose: apply the Kaelen recipe cold to a different character in a different fact domain, and
+count how much transfers. Author voice input: strong unnamed bond, mutual survival as her
+stated goal, faint jealousy about him and Kaelen, curiosity about her missing memory, gate-
+travel trauma. Later additions: **dry humour**, and **subtle deniable flirtation**.
+
+## What transferred with no rework
+
+**+** All mechanical lessons applied first time and held: contractions 12/12 demos, all demos
+≤20 words, shapes tagged, packets varied by grammar, `avoid_facts` on. Result: **20/20
+structurally clean on the very first run**, 0 exact duplicates, 2.9s.
+**+** `diagnose.py` worked **cold on a new character with zero changes** — instantly reported
+`"i didn't expect"` 6/20, and correctly chose `opener_collapse` (packets already varied → fix at
+runtime) over `opener_mirroring` (packets are the cause). The tooling generalizes.
+**+** So the *engineering* transferred completely. Kaelen needed 11 iterations to reach
+structural cleanliness; N.O.V.A. reached it on attempt 1.
+
+## What did NOT transfer — and cost 5 attempts
+
+**−** **Voice is per-character and unguessable.** My assumption ("competent and observant, warmth
+restrained") was wrong. Author corrections arrived in three separate notes: she needs *dry
+humour*; she's *subtly flirting*; and then the example that reframed everything:
+
+> *"This is a really long flight, you could use this time to dust my intakes... oh never mind,
+> I forgot I can have my nanobots do that."*
+
+Three things no amount of iteration would have found:
+  1. **The ship is her body** — "my intakes", "my plating". The flirtation is physical.
+  2. **The joke is self-undercutting** — she opens a door, then shuts it herself with a mundane
+     technical fact. The retraction is the punchline.
+  3. **She's playful, not mournful.** Everything I produced was worried-about-him.
+
+**−** **I violated my own negative-instruction rule and paid for it.** I wrote *"Do not comment
+on whether he is alive, breathing, or still here"* and `"you're still breathing"` went UP to
+9/20. Bans prime. This rule applies to me writing briefs, not just to the game's prompts.
+
+**−** **My attempt-4 "fix" caused the worst regression.** Adding *"the Captain came through it
+unhurt"* to the packet made survival the most salient fact, so every line reached for it.
+**Adding a fact to the packet makes that fact the attractor** — a lever in both directions.
+
+## The structural finding: register is a property of the MOMENT
+
+Attempts 1–5 all collapsed into relief on the post-combat beat, no matter what the brief said.
+Not a brief problem — the *moment* pulls that way. Someone was just shooting at them; playful
+flirtation does not belong in the minute after.
+
+Retested the same character and brief on a **long uneventful flight** (the moment the author's
+own example describes):
+
+**+** Flirtation and humour appeared immediately: *"You're not malfunctioning, are you,
+Captain?"* / *"I'll count the stars if you count the seconds between them."* / *"...wondering if
+you're bored enough to talk to me just for fun."*
+**−** New attractor: 13/20 mention silence/quiet, `"the silence is"` 5/20. Dead air makes
+"silence" the salient noun the way survival was on the combat beat.
+**−** `"All systems nominal"` reappeared once — the exact failure from the original research log.
+**−** Ship-as-body possessives only 5/20; the self-undercutting retraction structure is still
+rare. The demos carry it but the model doesn't reliably copy it.
+
+### Consequence for the design
+
+**Each moment needs its own valence and register note, not just its own facts.** A character
+brief alone is not portable across beats. Expect per-moment tuning of *what she's doing here*,
+even when the voice is settled — which matters because the author plans many beats per
+character across procedurally different campaigns.
