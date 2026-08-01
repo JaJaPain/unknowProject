@@ -1966,3 +1966,40 @@ validation, speech_service, game_content_registry, local_model_gateway.
 - Standing rule proven repeatedly: fix diversity/consistency in CODE, never
   by instructing the model. Every prompt-side attempt failed; every
   code-side rotation worked.
+
+## 2026-08-02 (overnight) — Quiet-moment feedback pass + 2 more beats
+
+- Acted on all four pieces of author audio feedback:
+  1. "didn't understand one of the words" in kaelen_abandoned_02 -> traced to
+     `mid-job`. Hyphenated compounds have no reliable spoken form in Kokoro.
+     Added a `tts_risk` screen; applied to the 55-line listening set it
+     flagged EXACTLY the one line the author flagged. Beat regenerated.
+     Noted in docs/tts_hygiene_notes.md (not yet confirmed by ear).
+  2. "all the public board are wrong, the wrong idea was sent" -> correct.
+     Rebuilt on CLASS SNOBBERY (trash work beneath both of them, slumming,
+     too bougie) instead of professional redundancy. Distinct openers
+     3/16 -> 13/16.
+  3. "cargo_full_05 is perfect, the rest didn't do well" -> the one that
+     worked had no anatomy correction. Curated the ANATOMY map to pairs where
+     the machine term is a SURPRISING substitute (larynx->vocal processor
+     lands; belly->cargo hold is flat because a hold IS a belly), and steered
+     the beat to understatement.
+  4. "long transit 01 and 02 are a bit insulting" -> third occurrence of the
+     overcorrection pattern. Added an aim-constraint; needling 0/16.
+- ELEVEN beats now. Added kaelen_declined and nova_returned_same_station,
+  both clean on the FIRST run with no iteration.
+- First mixed-beat playthrough sim (recency per CHARACTER, not per beat):
+  32/32 served, 0% silence, 1.4 calls/moment, 0 duplicates, 17/17 and 15/15
+  distinct openers across beats. Interleaving beats IMPROVES coverage, so the
+  single-beat 12% silence figure is a pessimistic bound.
+- New checks: brief_echo (model quoted my valence prose back), word_echo
+  (same content word 3+ times), tts_risk family.
+- Two self-inflicted bugs worth remembering: combining case-sensitive regex
+  alternatives under one re.I made [A-Z]{2,} match any two letters and flag
+  55/55 GOOD lines; and putting a target line in the brief makes the model
+  reproduce it (that caused both the "this is the kind of job" collapse and
+  the "and I don't mean the cargo bays" formula).
+- 67 WAVs for review in
+  `.tmp_godot_user/quiet_moment_audio/MORNING_2026_08_02/` with INDEX.txt
+  marking which beats were revised and which are new.
+- Still research only. Nothing wired into Godot.

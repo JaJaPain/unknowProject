@@ -325,5 +325,5 @@ _Nine beats built and measured. Full handoff: `docs/research/quiet_moment/SYSTEM
 - [ ] **Log silences and rejections through `GenerationDiagnostics`** -- per the project rule that fallbacks are failures to drive to root cause, not normal operation.
 - [ ] **Measure qwen3:14b VRAM under load** -- 9.3GB on a 16GB card alongside the renderer. `qwen3:4b` is the fallback at noticeably blander voice. (qwen3.6:35b-a3b is ruled out: 24GB, does not fit.)
 - [ ] **Bible updates the research implies** -- allow Kaelen's "steer toward better-paying work" (`quiet_moment.must_not` currently forbids it and the validator enforces that); gate `public_board_money_rule` to public-board moments only; drop `receipts` from her favored motifs (author: fine if it arises naturally, don't seed it).
-- [ ] **`nova_hard_burn` needs another pass** -- weakest of the nine at 7/12, with a "next time" tic at 6/12.
+- [x] ~~`nova_hard_burn` needs another pass~~ -- done 2026-08-02, now 15/16.
 - [ ] **Hand-write gate-transit and cold-boot beats** -- deliberately excluded from generation because they collide with the scripted amnesia flashback and pre-rendered opening audio.
