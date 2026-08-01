@@ -663,3 +663,80 @@ The compounding claim held up: with the mechanical lessons pre-applied, new beat
 structural cleanliness on the **first or second run**, versus eleven iterations for the first
 one. What still costs real time is finding each beat's *hook*, and that is authorial judgement
 rather than engineering.
+
+---
+
+# Author feedback pass 2 (2026-08-02, overnight)
+
+Feedback on the rendered audio, and what each item turned into.
+
+## 1. "kaelen_abandoned_02 — I didn't understand one of the words"
+
+Line: *"You bailed mid-job. That's what I'm charging for."*
+
+**+** `bailed` is common; **`mid-job` is the suspect** — hyphenated compounds have no reliable
+spoken form in Kokoro. Added a `tts_risk` screen (hyphen compounds, all-caps, symbols,
+ellipses). Applied to the 55-line listening set it flagged **exactly one line: the one the
+author flagged.** Beat regenerated hyphen-free; note added to `docs/tts_hygiene_notes.md`.
+**−** Near-miss worth remembering: my first version combined the alternatives under one `re.I`
+flag, so `[A-Z]{2,}` matched **any two letters** and flagged **55/55 good lines**.
+Case-sensitive alternatives must not share an IGNORECASE flag.
+**→ These lines are SPOKEN.** A construction that reads fine and renders badly is still a
+defect. Screen for it.
+
+## 2. "All the public board ones are wrong — the wrong idea was sent"
+
+Author's read: it's **trash work beneath her and the player**. Slumming it. Too bougie for this.
+Peasant work that doesn't pay well. My hook had been professional redundancy — technically true
+and completely flat.
+
+**+** Rebuilt on class snobbery. Distinct openers **3/16 → 13/16**, and the tone landed:
+*"They posted the rate, stuck it on the wall, and waited for someone desperate enough to take
+it. That's not work. That's a handout."* / *"Public listing. Public shame."*
+**+** Author was explicit that this was **not an output problem** — the inputs were wrong. That
+is the hook rule stated from the other side, and it's now the first question to ask of any flat
+beat.
+**−** First rebuild collapsed to *"This is the kind of job…"* **13/16** — because my own valence
+prose used that frame — and one output **quoted my valence paragraph verbatim**. Added
+`brief_echo`. **Never put a target line or a distinctive frame in the brief; describe the
+technique instead.**
+
+## 3. "nova_cargo_full_05 is perfect, the rest didn't do well"
+
+The one that worked was the **understated** one, with no anatomy correction at all.
+
+**+** Diagnosis: the corrections that failed were flat mappings — `belly → cargo hold` isn't a
+joke because a hold already *is* a belly. The author's canon works because `larynx → vocal
+processor` is an absurdly precise substitute. Curated `ANATOMY` down to surprising pairs only
+and shortened the correction phrasings.
+**+** Steered the beat to understatement: one remark with an innocent reading and a second she
+leaves alone, no wink, no follow-through.
+**−** Then over-corrected: the "and I don't mean the cargo bays" formula hit 8/16, because I had
+**quoted the target line in the brief**. Removing it took the formula to **0/16**.
+
+## 4. "long transit 01 and 02 are a bit insulting"
+
+Lines: *"They don't flirt"* and *"if you're not too busy pretending to be useful."*
+
+**+** **Third occurrence of the overcorrection pattern**, and the clearest. Kaelen V4 aimed
+contempt at the Captain; N.O.V.A. dmg1 aimed innuendo at him; here the teasing implied he was
+useless. Every time, the fix is an **aim-constraint**, and every time I had to be told.
+**+** Added: the teasing never implies he's useless, clumsy or that a machine would do better —
+she'd rather have his attention than the job done. Needling **0/16**, and warmer output:
+*"I could wait for maintenance. Or I could wait for you."* / *"My intakes are clean. They've
+been waiting for you to notice."*
+**→ Standing rule: whenever a character gets a sharp edge, write who it points at, in the same
+breath.** Assume the model will aim it at the player otherwise.
+
+## System-level validation
+
+First run mixing **all ten beats** with recency tracked **per character** rather than per beat —
+the real case, since a character shouldn't repeat herself across different beats either.
+
+**+** 32/32 served, **0% silence**, 1.4 calls/moment, **0 exact duplicates**, and **17/17 and
+15/15 distinct openers across beats** per character.
+**+** Interleaving beats **improves** coverage versus a single beat in isolation (0% vs 12%
+silence): different beats naturally produce different openers, so the recency window collides
+less. Single-beat silence rates are a pessimistic bound.
+**−** One unusable line passed every check: *"My hips are full. The hold is full. My knees are
+full. My spine is full."* Added `word_echo` (any content word 3+ times).
