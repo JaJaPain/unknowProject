@@ -238,3 +238,58 @@ I keep trying to fix opener repetition in the prompt and it keeps coming back. *
 diversity win came from code-side rotation, and the runtime already has the mechanism the
 author approved: generate up to N, reject on an opener-bigram recency window, else stay silent.
 Openers are a *runtime selection* problem, not a prompt problem.
+
+---
+
+## What transfers vs. what is Kaelen-only
+
+Asked by the author 2026-08-01: *"are we learning what works with this llm in general with this
+process or just what is working for this one?"* Honest classification.
+
+### General — technique, should hold for any character, moment, or small local model
+
+1. **Few-shot must demonstrate the actual transform** (fact packet → line), not just the target
+   register. This was the single biggest fix: 0/10 → 11/12. Ordinary in-context learning.
+2. **Negative instructions prime what they ban.** "Do not mention coffee" produced coffee.
+3. **Demo length sets output length.** 23–27-word demos → over-length output; ≤20 → 0/20.
+4. **Demo register sets output register.** Literary demos → literary output. Zero contractions
+   in the demos → stiff, written-sounding lines.
+5. **Demos carry valence.** A demo where she approves of a good payout leaked approval onto a
+   bad payout. State the moment's valence explicitly or the model borrows the demo's.
+6. **Demos too similar to the current moment invite templating** rather than transfer. Drop the
+   nearest demo (`avoid_facts`).
+7. **Code-side rotation beats prompt-side instruction, every time.** Packet vocabulary, packet
+   grammar, demo selection. Five attempts to fix diversity by instruction all failed.
+8. **In Ollama `format:"json"`, prompt labels become JSON keys.**
+9. **LLM rankers prefer bland over concrete** — usable as a rejector, not a selector.
+10. **No lexical validator grades quality.** Allow-list: 11/11 real failures caught, 30/30
+    legitimate lines false-rejected.
+11. **n=10 cannot confirm a fix.** A tic "fixed" at 0/10 returned at 4/10 on re-run. Use n≥20.
+
+### Kaelen-only — characterization, must be redone from scratch per character
+
+- The risk↔pay axis, warm-not-cold, dealmaker-not-bookkeeper, no paper trail because the work
+  is less than legal. None of this transfers; it is what the author told me about *her*.
+- The specific packets, demos, and valence paragraphs.
+
+### Not yet proven
+
+**The recipe has only ever been run on one character and one moment.** Whether the general list
+above actually generalizes is untested. The falsification test is to apply the whole method
+cold to N.O.V.A. — different character, and a different fact domain (ship systems, not money) —
+and count how much transfers without rework.
+
+## Playthrough simulation — 30 firings, freshness gates persisting
+
+First end-to-end test of the runtime selector (structural + opener-recency + phrase-repeat +
+closer-repeat gates, max 3 calls, then silence).
+
+**+** **0 exact duplicates across 30 firings**; 17/22 distinct openers. The replay-freshness
+goal looks achievable — repetition is being caught by code, not hoped away.
+**+** 1.9 calls/moment at 3.0s — affordable for an async optional line.
+**+** Quality holding at roughly 80% acceptable by the author's "not terrible" bar.
+**−** **27% silence, against the ~10% the author chose.** Rejections: `opener_repeat` 28,
+`phrase_repeat` 15, `closer_repeat` 2. The model's opener vocabulary is narrower than the
+8-slot recency window can absorb.
+**−** Fixes to try, cheapest first: raise `max_calls` 3 → 5; shrink `opener_window` 8 → 5;
+widen the packet pool past 12. Do **not** fix this in the prompt.
