@@ -293,3 +293,57 @@ goal looks achievable — repetition is being caught by code, not hoped away.
 8-slot recency window can absorb.
 **−** Fixes to try, cheapest first: raise `max_calls` 3 → 5; shrink `opener_window` 8 → 5;
 widen the packet pool past 12. Do **not** fix this in the prompt.
+
+---
+
+## diagnose.py — moving refinement off expensive compute
+
+Author's constraint (2026-08-01): iterating this way is too expensive to repeat per character
+per moment. *"I can see it being VERY expensive if every call took a week's worth of my compute
+to get correct."*
+
+Almost none of the cost was generation. It was: sample → spot a pattern → **diagnose which
+input caused it** → fix that input. And nearly every diagnosis had one shape:
+
+> The output mirrors a measurable property of the demos or packets. Measure it in both,
+> and the divergence names the fix.
+
+That is computable locally with no model. `diagnose.py` encodes the rules found by hand:
+
+| Rule | Detects | Discovered by hand in |
+| --- | --- | --- |
+| `demo_length_sets_output_length` | over-cap output ← long demos | V7 |
+| `demo_register_sets_output_register` | stiff output ← demos with no contractions | V9 |
+| `demo_phrase_leak` | literal templating off one demo | V6b |
+| `demo_pattern_leak` / `structural_monotony` | repeated *grammar* via function-word skeletons | V6b |
+| `emergent_tic` | repeated phrasing, no prior knowledge needed | V7/V8 |
+| `opener_mirroring` | opener collapse **and whether packets caused it** | V8 |
+| `valence_inversion` | approving of a negative moment | V9 |
+
+### Validation against known answers
+
+Re-run over historical batches where the answer was already established by hand:
+
+**+** V5/V7: independently reported the zero-contraction demo register (the finding that needed
+author calibration to spot), and `opener_mirroring` **with its cause** — *"8/10 packets also
+start with 'the'"* — which had taken several manual runs to isolate.
+**+** `emergent_tic` auto-discovered *"the job was"* 5/20 with no hardcoded regex.
+**+** `valence_inversion` found 2/20 in V9; by hand I had only spotted 1.
+**+** After tightening, `demo_pattern_leak` reports *"which is not"* 3/10 on V6b and
+*"this one _"* 6/20 on V11 — both exactly the known defects.
+**−** First cut was too permissive: generic frames like `"_ the _"` swamped the signal. Fixed by
+requiring ≥2 real function words per skeleton.
+**−** Attribution to a specific demo is imperfect — the which-hinge demo used *"which I like"*
+while outputs used *"which is"*, so it reports "model default" rather than naming the demo.
+Detection is reliable; blame assignment is not.
+
+### What this means for cost
+
+- **Rule discovery is expensive and one-time.** Rule *application* is free and local.
+- The remaining irreducibly-human input is **voice direction** — "she isn't cold", "not the
+  record-keeping type", "her work is less than legal". The author supplied ~4 such notes total,
+  and each one applies to *every* moment for that character, not per moment.
+- So the per-new-moment cost should be: write a fact packet set, run 20 samples, run
+  `diagnose.py`, apply the named fixes, repeat once. No reasoning model in the loop.
+- **Untested:** whether a local model can propose *new* voice direction. It cannot judge voice
+  (the ranker preferred bland over concrete), so assume not.
