@@ -178,3 +178,63 @@ not anywhere else"*), rambling. **No lexical rule can catch these.**
 Every diversity win so far came from **code-side rotation of something code owns** — packet
 vocabulary, packet grammar, demo selection. Every attempt to fix diversity by *instructing*
 the model has failed. Assume the next collapse also has a code-side source.
+
+## Author calibration #1 (2026-08-01) — the register was wrong
+
+Author marked the V8 batch: rejected 7 and 9, "6 ok ish", rest "not terrible".
+Both rejects were the most **writerly** lines, and both used *ledger*.
+
+**+** **The floor is what matters, not the ceiling.** Author: *"if we keep our worst as not
+terrible I think we are doing better."* Retarget: 90% at least fine, nothing embarrassing —
+not 90% brilliant.
+**−** My demo pool was the cause. Every demo was literary (*"There is a particular satisfaction
+in a job that pays what it promised and then has the decency to end"*) and **not one contained
+a contraction** — "I am", "I will", "It is". Written English, not spoken.
+**−** Author follow-up: *"it's the ledger comments I don't care for. I don't see Kaelen as the
+record keeping type."* Then the reason: **"her work is less than legal so she would not be the
+one to keep records."** Note `fixed_cast_souls.json → kaelen.voice_controls.favored_motifs`
+lists **"receipts"**, which now contradicts author intent and should be updated.
+
+## V9 — plain, spoken, contracted demos
+
+**+** Distinct openers 12/20 → **15/20**. 20/20 clean. `ledger` **0/20**. Contractions 16/20.
+**+** Produced the first lines in the author's own register: *"Low pay for low risk. I don't
+mind the risk. I mind the pay."* / *"No one bled. The number still leaves us short, Shiny."*
+**−** New failure class: **logic errors**, now the dominant one.
+  - *"Not worth the risk"* when the packet says there was no danger.
+  - *"That's the kind I like to see more of"* — **axis inversion**, she wants the opposite.
+  - *"That's a first"* — a claim about history she has no basis for.
+**−** Root cause of the inversion: **demos carry valence.** The pool contains *"Do more of
+that"* for a job that paid a premium, and the model transferred the approval to a low-pay
+moment. Nothing in the prompt said which valence this moment has.
+
+## V10 — state the moment's valence explicitly
+
+Added: *"This one paid badly. She is not pleased about the money... She also does not claim it
+was risky — it wasn't — and she makes no claim about whether this has happened before."*
+
+**+** **axis_inversion 0/20, false_novelty 0/20, bookkeeping 0/20.** One short paragraph killed
+all three logic failures.
+**+** Distinct openers **16/20** — best so far. 20/20 clean, 3.0s.
+**+** Best batch yet: *"This one didn't cost us, but it didn't pay us either. Not sure why we
+did it."* / *"I don't complain about the risk, but I do about the pay."* / *"The numbers still
+suck."* (that last one is the author's own bluntness landing).
+**−** Two lines called a modest payout *"a loss"* — factual overstatement, not a tic. Added a
+check.
+**−** `risk_claim` fired 4/20 but all four were **false positives** — "No risk, no reward" is
+correct. Crude regexes on a semantic property produce noise; keep them as signals, not gates.
+
+## V11 — add the "less than legal, so no paper" angle
+
+**+** `loss_overstatement` **0/20**, `bookkeeping` **0/20**. The illegality framing gives the
+no-records trait a *reason*, which turns it from a ban into material:
+*"This one paid small. No tricks, no traps. Just small."*
+**−** Distinct openers fell to 12/20, *"This one"* opening **6/20**. The extra paragraph shifted
+the opener distribution.
+
+### Standing lesson, restated
+
+I keep trying to fix opener repetition in the prompt and it keeps coming back. **Stop.** Every
+diversity win came from code-side rotation, and the runtime already has the mechanism the
+author approved: generate up to N, reject on an opener-bigram recency window, else stay silent.
+Openers are a *runtime selection* problem, not a prompt problem.
