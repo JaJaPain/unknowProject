@@ -363,8 +363,10 @@ _Three places where the game hands the player a moment but doesn't tell them wha
   - **Where:** `scripts/ui/CombatPanel.gd`. `_execute_btn` is built at ~line 812 and `CombatManager.ap_changed` is already connected at ~line 250, so the state needed is already arriving — it's a visual treatment on `_on_ap_changed` when current AP hits 0.
   - **Consider:** also flash when remaining AP is lower than the cheapest available action, since that's equally a dead end.
 
-- [ ] **Disable "Attack Hostile" beyond 600m** -- the target-window attack action should be unavailable when the selected hostile is further than 600m, rather than letting the player commit to an attack they cannot reach.
+- [ ] **Gate "Attack Hostile" on range, with hysteresis** -- the target-window attack action should be unavailable while the selected hostile is out of reach, rather than letting the player commit to an attack they cannot make.
+  - **Two thresholds, not one:** it **enables at 600m** and then **stays enabled until 1200m**. A single 600m line would make the button pop in and out while the player manoeuvres around that distance. Once you're close enough to attack, you keep the option until you have clearly given up the chase.
   - **Where:** `scripts/UIManager.gd` — `target_action_btn` is set to "Attack Hostile" for anything in the `ship` group at ~line 3755, with a second site at ~line 9216 (`context_action_btn`). Both need the same rule or they'll disagree.
+  - **State:** hysteresis means the button is not a pure function of distance — it depends on whether it was already enabled. Track one bool per target and reset it when the target changes, or a new target inherits the previous one's state.
   - **Distance is already tracked** — the overview list sorts on it and refreshes via `_update_overview_distances()`, so the number is available without new plumbing.
   - **Decide:** disabled-but-visible with a tooltip ("out of range — close to 600m") reads better than hiding it, since a vanishing button looks like a bug. The tooltip slot is already there and currently set to "".
-  - **Watch:** the button is refreshed on target change, but distance changes continuously while flying. It needs re-evaluating as range closes/opens, not only when a new target is picked, or it'll be stale.
+  - **Watch:** the button is currently only refreshed on target change, but distance varies continuously while flying, so it needs re-evaluating as range closes and opens.
