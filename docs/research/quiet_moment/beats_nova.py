@@ -169,29 +169,34 @@ BEATS = {b["id"]: b for b in (POST_COMBAT_DAMAGED, REPAIR_DONE, LONG_TRANSIT, CA
 # ------------------------------------------------- rough arrival
 ROUGH_ARRIVAL = dict(_BASE, **{
     "id": "nova_rough_arrival",
+    # Author 2026-08-02: "Down and stopped" is planetary-landing language and
+    # this is a station dock — she'd never say it. Same for "We're down".
+    # Whatever brought them here, the arrival ends on clamps, not on ground.
     "lead_in_pool": [
         "I wasn't sure we were going to make it here in one piece.",
-        "We're down. Somehow.",
         "Docked. Barely.",
-        "That's us secured, Captain.",
+        "That's us on the clamps, Captain.",
         "We made it. Just.",
         "Clamps have us. Eventually.",
-        "We're stationary. That's the kind word for it.",
-        "Down and stopped, which I'd stopped expecting.",
+        "We're alongside, in a manner of speaking.",
+        "Berthed. I'm using the word generously.",
+        "The station's got hold of us. I'd stopped assuming it would.",
+        "We're tied up and holding. Somehow.",
+        "That's us in. It wasn't pretty.",
     ],
     "packets": [
-        "That arrival was rough. She's down safe but it wasn't tidy.",
-        "He put her down hard. Nothing broke.",
-        "Docked, eventually. The approach was a mess.",
-        "They're stationary. Getting there involved more contact than it needed to.",
+        "That approach was rough. She's on the clamps now but it wasn't tidy.",
+        "The Captain brought her in hard. Nothing broke.",
+        "Docked, eventually. The run-in was a mess.",
+        "They're secured. Getting there involved more contact than it needed to.",
         "Arrival complete, and it was not elegant.",
-        "She's parked. The last thirty seconds were ugly.",
-        "Down, safe, and badly. Nothing is damaged.",
-        "The approach went sideways but they're secured now.",
-        "Rough set-down. She took it without complaint until now.",
-        "They made it in. Grace was not involved.",
-        "That docking was heavy-handed from start to finish.",
-        "Secured. The manoeuvre that got them here was scruffy.",
+        "She's berthed. The last part of the approach was ugly.",
+        "In, safe, and badly. Nothing is damaged.",
+        "The approach went sideways but the clamps have them now.",
+        "Ugly docking. She took it without complaint until now.",
+        "They made it onto the arm. Grace was not involved.",
+        "That berthing was clumsy from start to finish.",
+        "Secured. The manoeuvre that got them alongside was scruffy.",
     ],
     "valence": """Nothing is damaged and she knows it, so this is entirely about her dignity. She's been handled
 carelessly in public, at a dock where other ships can see, and she is going to have something to
