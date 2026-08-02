@@ -12,7 +12,25 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 Both observations are explained by one cause. Her intro is not generated — it is the hardcoded constant `JENNA_FIRST_MEETING_LINE` (`UIManager.gd:7973`), which is why it was word-for-word identical. It is served whenever `_mechanic_has_prior_visit()` returns false, and the later normal greeting means that check finally started returning true.
 
-**Where to look — the asymmetry is the likely cause:**
+**CONFIRMED by the playtester:** they tried to undock, N.O.V.A. prompted about repairs, and they entered maintenance via **her** button rather than the main Maintenance Bay button. That path does not mark the visit.
+
+```gdscript
+func _on_maintenance_bay_pressed() -> void:
+    SpeechService.stop()
+    _mark_current_mechanic_first_visit()     # flag written
+    current_submenu = DockSubmenu.MAINTENANCE
+    _render_dock_submenu()
+
+func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
+    _hide_nova_repair_decision()
+                                             # flag NOT written
+    current_submenu = DockSubmenu.MAINTENANCE
+    _render_dock_submenu()
+```
+
+**Fix:** move the flag write so it cannot be bypassed. Marking it inside `_render_dock_submenu()` when the maintenance submenu renders — or better, at the point the intro line is actually SERVED in `_cache_mechanic_intro()`/`_render_mechanic_intro()` — closes both entry points and any future third one. Patching only `_on_nova_repair_prompt_repairs()` fixes today's repro and leaves the same trap for the next entry point added.
+
+**Supporting detail (original analysis):**
 - **The first-meeting line is served at DOCK time.** `_cache_mechanic_intro()` (~`UIManager.gd:8171`) pre-caches the greeting on arrival and, if `_mechanic_has_prior_visit()` is false, uses `JENNA_FIRST_MEETING_LINE`.
 - **The flag is written from exactly ONE place, and it is a different event:** `_mark_current_mechanic_first_visit()` has a single call site, `_on_maintenance_bay_pressed()` (`UIManager.gd:7351`) — i.e. only when the player clicks into the Maintenance Bay submenu.
 - So docking, hearing/seeing the intro, and leaving **without entering the maintenance bay** would never set the flag, and the next dock legitimately serves the first-meeting line again. Confirm whether the intro can be surfaced anywhere the flag write isn't reached.
