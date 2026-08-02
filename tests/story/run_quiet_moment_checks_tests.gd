@@ -78,6 +78,13 @@ func _test_rejects_known_defects() -> void:
 		{"speaker": "nova", "word_cap": 45}, "word_echo", "intra_line_repeat")
 	_expect_flag(
 		"That was a FUBAR run.", {"speaker": "kaelen"}, "tts_all_caps", "all_caps")
+	# from a live Godot run: both are character violations her bible forbids
+	_expect_flag("This trade paid well. You got hurt. I wanted that.",
+		{"speaker": "kaelen"}, "cruel_to_captain", "wished_harm")
+	_expect_flag("You got paid for safe work. Do better next time.",
+		{"speaker": "kaelen"}, "cruel_to_captain", "instructive_scolding")
+	_expect_clean("Danger's the only thing that pays this well. Glad you came back in one piece, Shiny.",
+		{"speaker": "kaelen"}, "warmth_still_passes")
 
 
 func _test_echo_family() -> void:

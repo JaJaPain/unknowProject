@@ -1636,8 +1636,10 @@ func _on_campaign_bible_generation_completed(
 # text back — shape validation lives in AmbientChatGenerator.parse_chat_lines
 # so it stays unit-testable without a network. Callback receives
 # {ok, inner_text} or {ok: false, reason}.
-# Optional fixed-cast quiet moment. Temperature is high because these lines
-# live or die on voice, and every unsafe or repetitive candidate is caught by
+# Optional fixed-cast quiet moment. temperature 0.9 / top_p 0.95 is the exact
+# configuration the research measured; 0.95 was tried in the live Godot run
+# and produced noticeably more erratic lines from an identical prompt. Every
+# unsafe or repetitive candidate is caught by
 # QuietMomentChecks before it can be spoken. num_predict is generous: the
 # research found 70 truncates a JSON-wrapped line and reads as a parse
 # failure. See skills/skill_llm_character_dialogue.md.
@@ -1646,7 +1648,7 @@ func request_quiet_moment(prompt: String, callback: Callable) -> void:
 		"quiet_moment",
 		prompt,
 		callback,
-		{"temperature": 0.95, "top_p": 0.95, "num_predict": 280, "seed": randi()}
+		{"temperature": 0.9, "top_p": 0.95, "num_predict": 280, "seed": randi()}
 	)
 
 

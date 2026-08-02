@@ -187,7 +187,7 @@ ROUGH_ARRIVAL = dict(_BASE, **{
     "packets": [
         "That approach was rough. She's on the clamps now but it wasn't tidy.",
         "The Captain brought her in hard. Nothing broke.",
-        "Docked, eventually. The run-in was a mess.",
+        "Docked, eventually. The approach was a mess.",
         "They're secured. Getting there involved more contact than it needed to.",
         "Arrival complete, and it was not elegant.",
         "She's berthed. The last part of the approach was ugly.",

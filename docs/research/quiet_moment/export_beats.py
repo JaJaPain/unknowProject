@@ -10,6 +10,7 @@ was measured.
 import io
 import json
 import os
+import re
 
 import beat_transit
 import beats_kaelen
@@ -47,6 +48,26 @@ def export_beat(bid, b):
         if b.get(key):
             out[key] = b[key]
     return out
+
+
+HYPHEN = re.compile(r"[a-z]-[a-z]", re.I)
+THIRD = re.compile(r"(he|him|his)", re.I)
+
+
+def lint(beats):
+    """Authored text is prompt content and leaks into speech. Three separate
+    defects in this project came from packets and lead-ins we wrote: a
+    third-person 'The Captain' that she then echoed, hyphen compounds the TTS
+    garbles, and planetary-landing words for a station dock."""
+    problems = []
+    for bid, b in beats.items():
+        for field in ("packets", "lead_in_pool"):
+            for text in b.get(field, []):
+                if HYPHEN.search(text):
+                    problems.append(f"{bid}.{field}: hyphen compound -- {text}")
+                if THIRD.search(text):
+                    problems.append(f"{bid}.{field}: third-person pronoun -- {text}")
+    return problems
 
 
 def main():
@@ -89,6 +110,12 @@ def main():
         },
         "beats": beats,
     }
+    problems = lint(beats)
+    if problems:
+        for p in problems:
+            print(f"  REFUSED: {p}")
+        raise SystemExit(f"export aborted: {len(problems)} authored-text defect(s)")
+
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, indent="\t", ensure_ascii=False))
     print(f"wrote {OUT}")

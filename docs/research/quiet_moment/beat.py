@@ -94,6 +94,9 @@ and that shows in half a line at most, never a speech.
 She is TALKING, not writing. Short words. Contractions. She says the blunt version of the
 thought, not the polished one. If a line sounds like it was composed, it's wrong.
 
+She is speaking directly TO the Captain, so he is "you". She never refers to him in the third
+person, never narrates him to himself, and never uses his name as a subject.
+
 She's a dealmaker, not a bookkeeper. A fair amount of her work sits on the wrong side of legal,
 so she keeps nothing on paper by policy — no ledgers, no books, no records, no notes for later.
 She carries the numbers in her head and prefers it that way."""

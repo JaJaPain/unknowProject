@@ -129,22 +129,22 @@ ABANDONED = {
     "sample": sample,
     "demo_lines": [l for _s, _f, l in _K_DEMOS],
     "packets": [
-        "The Captain walked away from the contract. It's dead, and nothing was paid.",
+        "The contract got walked out on partway through. It's dead, and nothing was paid.",
         "The job's abandoned. Nobody sees a credit for it.",
-        "That one got dropped part-way. No payment, and the client knows.",
+        "That one got dropped partway. No payment, and the client knows.",
         "It's off. The work stopped short, and there's no money.",
         "Contract's dead in the water. Nothing earned.",
-        "The Captain backed out. The work is unfinished and unpaid.",
-        "Dropped, mid-job. No pay, and someone had to be told.",
+        "Backed out partway. The work is unfinished and unpaid.",
+        "Dropped halfway. No pay, and someone had to be told.",
         "The client's been informed it isn't happening.",
         "That work stopped and won't restart. Nothing came of it.",
         "Walked away from it. Nothing to show, nothing banked.",
         "Abandoned. No credits, and a name attached to the failure.",
         "Quit partway through. It's closed and it's empty.",
     ],
-    "valence": """This one costs her, and she doesn't hide that. Not the lost fee — the fact that somebody was
-told Kaelen's Captain didn't finish. Her whole trade runs on being the person whose people
-deliver, and that's the thing that took the damage here.
+    "valence": """This one costs her, and she doesn't hide that. Not the lost fee — the fact that word is out
+that her Captain doesn't finish. Her whole trade runs on being the person whose people deliver,
+and that's the thing that took the damage here.
 
 So she states the cost plainly and without melodrama. She does not threaten him, guilt-trip him,
 or demand an explanation, and she does not sulk. If there was a good reason she'd rather have it

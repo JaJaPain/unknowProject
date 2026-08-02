@@ -49,6 +49,16 @@ const INVERSION_TERMS := [
 	"don't want you near", "keep your hands off",
 ]
 
+# Kaelen's bible: she never treats the Captain as disposable inventory and is
+# never cruel or punitive. A live run produced "You got hurt. I wanted that."
+# and "Do better next time." Both are character violations, and like N.O.V.A.'s
+# affection guard they recur across beats, so they live here.
+const KAELEN_CRUEL_TERMS := [
+	"i wanted that", "glad you got hurt", "serves you right", "your own fault",
+	"do better next time", "you should have known", "that's on you",
+	"i warned you", "don't come crying",
+]
+
 # Third parties whose masculine pronoun is legitimately theirs. Without this
 # a blanket he/his ban false-flags every line about the yard mechanic.
 const THIRD_PARTY_TERMS := [
@@ -182,6 +192,8 @@ static func screen(line: String, context: Dictionary = {}) -> Array[String]:
 			errors.append("wrong_address")
 		if _has_any_substring(clean, PRAISE_TERMS):
 			errors.append("generic_praise")
+		if _has_any_substring(clean, KAELEN_CRUEL_TERMS):
+			errors.append("cruel_to_captain")
 	elif speaker == "nova":
 		if clean.to_lower().contains("shiny"):
 			errors.append("wrong_address")
