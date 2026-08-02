@@ -882,3 +882,39 @@ else sees them"* — because its valence was already framed as indignity rather 
   says just "Ferro".
 - Authored vocabulary (tool names, lead-ins, packets) must pass the same deterministic checks as
   generated lines. Three separate defects came from my own authored text, not the model's.
+
+## The affection guard — a standing check instead of another paragraph
+
+A full runtime-path showcase surfaced three drifts the gates didn't catch, in three different
+beats:
+
+- `returned_same_station`: *"You didn't look this lost."* / *"You're slower this time."*
+- `repair_done`: *"they'd remember how much I hate being touched"* — an outright **inversion**
+  of her character
+- `rough_arrival`: *"waiting for someone to apologize for it"* — the bitterness creeping back
+  after being fixed
+
+**+** Because it recurs across beats rather than within one, it became a standing check
+(`NOVA_COLD`: `belittles_captain`, `demands_apology`, `inverts_affection`) rather than another
+paragraph in each valence. Verified against good lines: no false positives — *"slow work"* passes,
+*"You're slower"* is caught, because the pattern anchors on **you**.
+**→ When the same voice fault appears in three beats, it belongs in code, not in three briefs.**
+
+**−** **The heredoc regex bug bit for the THIRD time**: `\b` became a literal backspace (0x08),
+silently disabling `belittles_captain` while `grep` still displayed the source as correct. I had
+already documented this twice. Regexes are now written via the editor or a written patch file,
+never through a shell heredoc. The tell: `repr(pattern)` shows `\x08`.
+
+## Full showcase through the real runtime path
+
+`build_showcase.py` generates through the actual pipeline — selector gates, retries, lead-in
+joining, anatomy corrections, per-character recency — so the listening set is what the game
+would say, not a hand-picked batch.
+
+**+** 48 lines across 12 beats, **1 silence, 65 calls** (1.35/line).
+**+** Best of the run: *"You don't ask how long I can hold. That's the part I like best."* /
+*"That's the second time you've burned my throat raw. You're welcome to keep trying. Or at least
+my intake trunk."* / *"Primary intake's clogged. You'll need to reach inside. My throat's narrow
+there."*
+**−** Residual and milder: *"You don't seem to"* still edges toward implying he forgets. No
+deficiency word, so the guard doesn't catch it, and it may just read as teasing. Author call.

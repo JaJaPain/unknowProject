@@ -55,6 +55,28 @@ STOP = set("""a an the and or but so of to in on at for with from as by if is ar
     can't couldn't wouldn't shouldn't isn't aren't wasn't weren't haven't hasn't we're
     we'll we've they're they'll there's here's let's""".split())
 
+# N.O.V.A. is close to being in love with the Captain. Three separate beats
+# drifted into implying he's deficient, demanding an apology, or inverting
+# her own affection. Because it recurs across beats, it's a standing check
+# rather than another paragraph in each valence.
+NOVA_COLD = [
+    # A deficiency word anywhere in a line addressed to him.
+    ("belittles_captain", re.compile(
+        r"\byou\b(?=.*\b(lost|slow|slower|clumsy|careless|useless|sloppy"
+        r"|hopeless|reckless|amateur|no good)\b)", re.I | re.S)),
+    ("demands_apology", re.compile(
+        r"(apolog|say sorry|owe me an|make it up to me|feel guilty"
+        r"|should feel bad)", re.I)),
+    ("inverts_affection", re.compile(
+        r"(hate being touched|don'?t like being touched|hate (it )?when you touch"
+        r"|don'?t want you near|keep your hands off)", re.I)),
+]
+
+
+def nova_cold(line):
+    return [n for n, rx in NOVA_COLD if rx.search(line)]
+
+
 TICS = {
     "which_hinge": re.compile(r",\s*which\s+(is|i)\b", re.I),
     "i_prefer": re.compile(r"\bI (prefer|like)\b", re.I),
@@ -135,6 +157,8 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in="",
     if NUMERIC.search(line) and not NUMERIC.search(packet or ""):
         f.append("invented_number")
     f += ["tts_" + r for r in tts_risk(line)]
+    if speaker == "nova":
+        f += nova_cold(line)
     # intra-line repetition: "My hips are full. The hold is full. My knees are
     # full. My spine is full." passed every other check and is unusable.
     counts = collections.Counter(w for w in words(line) if w not in STOP)
