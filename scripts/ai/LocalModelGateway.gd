@@ -60,6 +60,10 @@ const CAPABILITY_PROFILES := {
 	"partial_delivery_line": "small_dialogue",
 	"ambient_chat": "small_dialogue",
 	"lounge_chat": "small_dialogue",
+	# Optional fixed-cast quiet moments. Nobody is waiting on these — an
+	# unusable candidate is retried and, failing that, the character simply
+	# says nothing. See skills/skill_llm_character_dialogue.md.
+	"quiet_moment": "small_dialogue",
 	# Whole-exchange lounge bundle (Phase 9): prepared ahead of the click,
 	# player-safe context only.
 	"lounge_bundle": "small_dialogue",
@@ -95,6 +99,9 @@ const REQUEST_TIMEOUTS := {
 	# Player IS waiting on lounge turns (they just pressed a reply) — keep it
 	# tighter; a slow turn falls back to the one-liner path rather than stalling.
 	"lounge_chat": 12.0,
+	# Quiet moments are fired-and-forgotten: the player is flying, not
+	# waiting. Generous, because silence is a valid outcome anyway.
+	"quiet_moment": 20.0,
 	# Bundles prepare in the background (flight-to-station prefetch); five
 	# fields need more room than a single turn and nobody is watching.
 	"lounge_bundle": 25.0,
