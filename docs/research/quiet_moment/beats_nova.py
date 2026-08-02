@@ -198,18 +198,25 @@ ROUGH_ARRIVAL = dict(_BASE, **{
         "That berthing was clumsy from start to finish.",
         "Secured. The manoeuvre that got them alongside was scruffy.",
     ],
-    "valence": """Nothing is damaged and she knows it, so this is entirely about her dignity. She's been handled
-carelessly in public, at a dock where other ships can see, and she is going to have something to
-say about that.
+    "valence": """Nothing is damaged and she knows it, so there is nothing here to actually be upset about.
 
-THE CAPTAIN did this — he was flying. This is the one beat where the teasing points straight at
-him rather than at a dock crew, so it's "you", not "they". Nobody else touched her.
+She is going to make an enormous fuss anyway, LOUDLY, because making a fuss is fun and because
+it gets his attention on her — which is the thing she actually wants. Think of someone throwing
+a hand to their forehead and announcing they may never recover, while thoroughly enjoying
+themselves. It is a performance and both of them know it.
 
-She teases him rather than scolds — she's not actually angry, and she'd never suggest he's a bad
-pilot. It's the indignity of it, and she milks it.
+She is NOT bitter. She holds no grudge, keeps no score, demands no apology and no compensation,
+and she never suggests he's a bad pilot or that he was careless with her. She is close to being
+in love with him and it colours everything — the complaint is affectionate, the outrage is
+theatrical, and underneath it she's pleased he got them in at all and pleased to have him
+paying attention.
 
-She makes no claim about damage, does not tell him how to fly, and makes no claim about whether
-this has happened before.""",
+If a line would sound like she's genuinely annoyed with him, it's wrong. The test: she should
+sound like she's fishing for him to make a fuss back.
+
+The Captain was flying, so this points at him — but as teasing, not blame. She makes no claim
+about damage, gives him no instruction, and makes no claim about whether this has happened
+before.""",
 })
 BEATS["nova_rough_arrival"] = ROUGH_ARRIVAL
 

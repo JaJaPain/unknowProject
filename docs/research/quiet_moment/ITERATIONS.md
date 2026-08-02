@@ -810,3 +810,36 @@ because she's enjoying the upper hand, not because she doesn't matter. Improved 
 solved; **this is the open item on transit.**
 **−** The authored `. . .` collides with the `tts_ellipsis` check, so the two halves are checked
 separately, before joining. Model-produced ellipses are still caught.
+
+## Rough arrival: "she isn't bitter"
+
+Two author corrections in quick succession, and the second was the important one.
+
+**−** *"'Down and stopped' is not what I would say"* — planetary-landing language for a station
+dock. **Two lead-ins and five packets** used ground vocabulary ("put her down hard", "rough
+set-down", "she's parked"). Replaced with docking terms (clamps, berthed, alongside, on the
+arm). **Packet wording is prompt content**, so a domain error there leaks straight into speech.
+**→ Check authored text against the physical situation, not just the character.**
+
+**−** Then, on listening to the rest: *"she isn't bitter. Nova is almost in love with the player.
+She will complain loudly but she isn't bitter like these suggest."* Reading them back, the
+outputs were keeping score: *"I'm still holding a grudge"*, *"I've got witnesses"*, *"You'll pay
+me back in polish"*, *"a pilot with your reflexes would know better"*.
+**→ This is a DIFFERENT failure from the earlier overcorrections.** Those aimed contempt at the
+player; this one is genuine grievance. **Loud is not the same as bitter** — she can be as loud
+as she likes provided it's a performance rather than a complaint.
+**+** Rewrote the valence around that: an enormous fuss made for fun and for his attention, no
+grudge, no score, no demand for apology or compensation, never a suggestion he flew badly.
+Stated test for the model: *she should sound like she's fishing for him to make a fuss back.*
+**+** Bitterness markers **0/12**, and the note landed: *"I'm going to complain about the clamps
+until I'm blue in the face. You'll enjoy it, I promise."* / *"My struts are twisted, but I'll
+wait for you to notice before I mention it."*
+**−** `lead_in_echo` fired 2/12 — the model still sometimes opens by repeating the lead-in. The
+runtime gate catches it, at the cost of a retry.
+
+### Standing note
+
+For a character defined by affection, **specify the emotional temperature of a complaint, not
+just its target.** Kaelen needed "aim it at the job, not the Captain". N.O.V.A. needed that too
+— and separately needed "this is a performance, not a grievance". Volume, target and sincerity
+are three different dials.
