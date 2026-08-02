@@ -362,3 +362,9 @@ _Three places where the game hands the player a moment but doesn't tell them wha
 - [ ] **Combat: flash EXECUTE when action points are spent** -- once the player has queued actions using all their AP, the execute button should flash. Right now a player with 0 AP left can sit in planning phase without realising the game is waiting on them.
   - **Where:** `scripts/ui/CombatPanel.gd`. `_execute_btn` is built at ~line 812 and `CombatManager.ap_changed` is already connected at ~line 250, so the state needed is already arriving — it's a visual treatment on `_on_ap_changed` when current AP hits 0.
   - **Consider:** also flash when remaining AP is lower than the cheapest available action, since that's equally a dead end.
+
+- [ ] **Disable "Attack Hostile" beyond 600m** -- the target-window attack action should be unavailable when the selected hostile is further than 600m, rather than letting the player commit to an attack they cannot reach.
+  - **Where:** `scripts/UIManager.gd` — `target_action_btn` is set to "Attack Hostile" for anything in the `ship` group at ~line 3755, with a second site at ~line 9216 (`context_action_btn`). Both need the same rule or they'll disagree.
+  - **Distance is already tracked** — the overview list sorts on it and refreshes via `_update_overview_distances()`, so the number is available without new plumbing.
+  - **Decide:** disabled-but-visible with a tooltip ("out of range — close to 600m") reads better than hiding it, since a vanishing button looks like a bug. The tooltip slot is already there and currently set to "".
+  - **Watch:** the button is refreshed on target change, but distance changes continuously while flying. It needs re-evaluating as range closes/opens, not only when a new target is picked, or it'll be stale.
