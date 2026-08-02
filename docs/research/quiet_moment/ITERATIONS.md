@@ -753,3 +753,60 @@ you're the one who keeps bringing me back."* / *"You're not the first to circle 
 the only one who ever did it with me."*
 **+** Both reached the bar with **no iteration at all**, which is the compounding claim holding:
 eleven beats in, the mechanical work is free and only the hook costs thought.
+
+---
+
+# Author feedback pass 3 (2026-08-02)
+
+**+ 41 lines approved**: all Kaelen beats from the batch, plus `nova_cargo_full` and
+`nova_hard_burn`. Recorded in `approved.py`.
+
+## Code-owned lead-ins — the biggest structural change since the beat builder
+
+Author: post-combat and rough-arrival reactions *"need extra context… without that it will sound
+unwarranted, or out of place"*, e.g. **"Enemy vessel is destroyed."** then the reaction.
+
+**+** Implemented as `lead_in_pool` — authored lines, rotated like packets, prepended in code.
+The model is told the lead-in has already been said and must carry on rather than restate it.
+Both beats went to **9/10 and 10/10 clean** and read far better situated:
+*"Hostile is down. They got me on the left flank. My best side. I'll have words with the
+schedule."* / *"We made it. Just. You've got a bruise on my stern. Nobody else was close enough
+to do that."*
+**+** This **converges on the fact-clause + reaction split** from the original architecture work
+— reached independently from the author's ear rather than from analysis, which is decent
+evidence it's the right shape.
+**−** Two new defects, both caught and fixed: the model repeated a short lead-in verbatim
+(*"They're finished. They're finished."* — a 4-word run check misses two-word lead-ins, so
+opening words are now compared directly), and "Captain" appeared in both halves
+(`double_address`).
+
+## Firing probability
+
+**+** Author: hard burn *"should only play about 25% of the time the player hits the boost or it
+will become too redundant."* Added `fire_probability` to the beat definition. **A beat's quality
+and its firing rate are separate problems** — a good line on too common a trigger still wears
+out.
+
+## Long transit, reworked to spec
+
+Author's spec: a lead-in like *"This is a very long flight. Since you got time you could…"*, then
+the pullback, **with a `. . .` pause between them in the TTS**; *"sexy and playful, not bitter or
+angry… she just wants his attention, not to complain for real."* Plus: rare time alone with him;
+rotate devices; longer and meandering; memory gap allowed as vague unease only.
+
+**+** Restructured into **three parts, two of them code-owned**: authored lead-in + model
+`offer` + authored `. . .` pause + model `pullback`. Asking for two named JSON fields guarantees
+both halves exist and puts the pause exactly where the author wants it — in prose the model
+merged them or dropped the retraction entirely.
+**+** 8-9/10 clean, and the register arrived: *"You'd need to get in there, fingers first. Maybe
+a little pressure. Just to see what's sticking. . . . No need to linger."* / *"Intakes need
+dusting. You could do it. I wasn't going to mention it. . . . Forget it. I was just testing."*
+**−** `rng.choice` over the detail pool repeated "collar" 4/10 in a single run — **sampling with
+replacement is not rotation**. Switched to a shuffled bag. Same bug class as the packet-sampling
+error back in V6.
+**−** Pullbacks drifted self-pitying (*"You've got better things to do"*, *"Someone else can
+handle it. Probably better."*). Added: the pullback is a wink, never sad — she's releasing him
+because she's enjoying the upper hand, not because she doesn't matter. Improved but not fully
+solved; **this is the open item on transit.**
+**−** The authored `. . .` collides with the `tts_ellipsis` check, so the two halves are checked
+separately, before joining. Model-produced ellipses are still caught.
