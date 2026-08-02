@@ -5,6 +5,19 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Jenna Kross replayed her intro at a second dock
+**Spotted:** 2026-08-02 (playtest)
+**Severity:** Medium — breaks the fiction of having already met someone, and undermines the agent-memory system that is otherwise tracking this relationship
+**Description:** Jenna Kross delivered her introduction dialogue twice, at two separate docking events. Her intro should play once, on first meeting, and every later dock should get an ongoing-relationship greeting instead. Note the spelling for searching: the NPC is **Jenna Kross** (`npc.jenna_kross`), not "Cross".
+**Where to look:**
+- `data/content/npcs.json` — `npc.jenna_kross` is `location_id: station.start.main` with `role_tags: ["mechanic", "contact"]`, so she is both a mechanic contact and a mission agent. Two systems may be greeting her independently; check whether the second intro came from the mechanic path or the agent path, since they may not share a "met" flag.
+- **Strong lead: no first-meeting flag was found anywhere in `scripts/`.** Searches for `intro_seen` / `first_meeting` / `has_met` / `greeted` / `introduced` turn up nothing. If there genuinely is no "have I introduced myself to this NPC" state, then repeating the intro is the CURRENT DESIGN rather than a state-restore bug, and the fix is to add that flag rather than to repair one.
+- If a flag does exist, check it persists through save/load and is keyed per NPC id rather than per station — a station-keyed flag would re-fire her intro at any dock she appears at.
+- `campaign_agent_memory_store` (`GameRoot.gd:155`) already records her by name in `agent_memory_snippets.json`, including completed jobs. That store may be the right home for a "met" flag, since it already survives across docks and is per agent.
+- Her tone card lives in `data/content/llm_dialogue_content.json` ("Cocky mechanic (Jenna Kross)"), and there is an existing `mechanic_intro` LLM capability (see the session-start timeout entry below), so the intro is generated rather than fixed — worth confirming whether the repeat was the same text or a second generated intro.
+
+---
+
 ### Tutorial overview panel starts collapsed for new players
 **Spotted:** 2026-07-15 (starter tutorial screenshot)
 **Severity:** Medium — first-time UX confusion; the tutorial points at a panel the player has never learned to expand
