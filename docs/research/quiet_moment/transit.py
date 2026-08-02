@@ -9,8 +9,18 @@ Author:
    complain for real."
 
 Design consequences:
-  - the beat has THREE parts, and code owns two of them:
-      lead-in (authored, rotated) + offer (model) + " . . . " + pullback (model)
+  - UPDATE 2026-08-02, after listening: the author dropped the pullback.
+    "the pullbacks dont hit well. The starting line does though. so we can
+     just drop the pause and pullback... the lines sounded like she was sad
+     or rejected not playful."
+    Also: "there was no noticeable pause between lines" — Kokoro does NOT
+    honour a spaced ". . ." as silence. A real pause needs separate TTS calls
+    with inserted silence, so the pause idea is parked.
+  - MODE_OFFER_ONLY is now the default: lead-in (authored) + offer (model).
+  - MODE_WITH_PULLBACK is kept for comparison. Its retraction is reframed:
+    the canon pullback ("I forgot I can have my nanobots do that") is her
+    CATCHING HERSELF WITH A FACT, not letting him off. Mine were all "never
+    mind, you're busy", which reads as rejection — hence "sad".
   - asking for two named fields guarantees both halves exist and puts the
     pause exactly where the author wants it. Left to prose the model merged
     them or dropped the retraction.
@@ -56,7 +66,52 @@ DETAILS = [
 ]
 
 # rotate the MOVE as well as the detail
+# Rotated in code: naming one rival in the brief made the model reproduce
+# that exact sentence in 6/10 outputs. Same failure as putting a target line
+# in a brief, which is documented and which I did anyway.
+RIVALS = [
+    "the mechanic back at {place}, the one with the nice hands",
+    "the yard crew at {place}, who never say no",
+    "whoever's on the docking arm when they next put in at {place}",
+    "that engineer at {place} who did the last refit and took his time about it",
+    "the service hands at {place}",
+    "the one at {place} who did her plating, who was very thorough",
+    "any of the dock crew at {place}, who'd be glad of the work",
+    "the next pair of hands aboard at {place}",
+]
+
+# INTEGRATION: fill from the real playthrough. ShipBehaviorObserver already
+# carries `last_dock_station` and `station_name` in its event context, and
+# GameRoot has the current system id. Naming a place the player actually
+# visited is what makes the jealousy land as part of THIS campaign rather
+# than as generic flavour.
+PLACES_FOR_TESTING = [
+    "Kova Station", "Iron Reach", "the Latch", "Bellhaven",
+    "Ordos Yard", "Trell's Landing",
+]
+
+# Author example of the reminiscence device (2026-08-02):
+#   "You know Mrs. Kross scrubs my manifold with a nano vibration gun. I
+#    thought I was going to leak coolant if she wasn't careful."
+# Note: a NAMED servicer, a real tool, a real failure mode, and she is
+# recounting rather than asking. It makes HIM jealous instead of the reverse.
+MECHANICS = [
+    "Mrs. Kross", "old Ferro", "the Dalley girl", "Mister Ovin",
+    "that Bexley woman", "young Tam", "Doctor Hesse", "the Rusk brothers",
+]
+
+# Loaded because they are ACCURATE, not because they are euphemisms.
+TOOLS = [
+    "a nano vibration gun", "a warm solvent bath", "a soft-bristle rotary",
+    "an ultrasonic probe", "a pressure flush", "a hand-buffer",
+    "a heated seal iron", "a magnetic pick",
+]
+
 DEVICES = [
+    "She reminisces about a past servicing in far more detail than the moment "
+    "requires — who did it, what they used on her, and how close it came to "
+    "going wrong. She is not asking him for anything; she is telling him about "
+    "somebody else's hands, and letting that sit.",
     "She offers him the job outright, then takes it back.",
     "She wonders aloud whether he'd be any good at it, then decides not to find out.",
     "She points out he has nothing better to do, then withdraws the invitation.",
@@ -92,20 +147,26 @@ wants him over here.
 
 {device}
 
+If it helps, {mechanic} has serviced her before and is the sort to use {tool} on her. Use that
+only if the device above calls for it.
+
 She has already said this out loud: "{lead}"
 You are writing what comes next, in two parts.
 
 The OFFER: she raises {detail} and dangles it in front of him. Provocative, unhurried, and
 entirely ordinary maintenance talk on its face.
 
-The PULLBACK: she takes it away again, and she enjoys doing it. She can change her mind, claim
-she was only testing him, admit she wanted him to look up, or airily decide it can wait. It
-should land like a wink — she is letting him off a hook she never meant to set, and both of them
-know it.
+The PULLBACK: she does NOT let him off. She mentions, lightly, that {rival} would be glad to do
+it instead. Say it as pure convenience — people service ships, that's all she means — and put
+her own spin on it in her own words. Do not use the phrasing given here; find another way to
+land the same idea.
 
-The pullback is never sad, never self-pitying, and never tells him he has better things to do.
-She is not releasing him because she doesn't matter; she's releasing him because she's enjoying
-having the upper hand.
+This keeps the pressure on him rather than releasing it. She is not withdrawing, not resigned,
+not giving up and not sad — she is making it clear the offer has other takers. She never says
+she's jealous and never asks him to choose. She just mentions the alternative and lets it sit.
+
+Never "never mind". Never "you've got better things to do". Never "it's automated" — the point
+is that a person would do it, not a machine.
 
 Every word stays literally true, ordinary maintenance talk — real parts, real jobs. The
 suggestion lives in the listener's head, never in what she actually says. She invents no number,
@@ -124,6 +185,23 @@ Return ONLY this JSON object, with exactly two keys:
 {{"offer":"...","pullback":"..."}}"""
 
 
+# Offer-only: the author's preferred shape after listening. No pause, no
+# retraction — the provocative opener is the whole line.
+BRIEF_OFFER_ONLY = BRIEF.split("The PULLBACK:")[0].rstrip() + """
+
+Every word stays literally true, ordinary maintenance talk — real parts, real jobs. The
+suggestion lives in the listener's head, never in what she actually says. She invents no number,
+no fault, no threat, and gives no order.
+
+She has time here, so let her meander a little. Two or three short sentences.
+
+Here is her voice on other occasions:
+
+{shown}
+
+Return ONLY this JSON object, with exactly one key: {{"offer":"..."}}"""
+
+
 _detail_bag = []
 
 
@@ -136,13 +214,17 @@ def _next_detail(rng: random.Random) -> str:
     return _detail_bag.pop()
 
 
-def compose(rng: random.Random, packet: str):
+def compose(rng: random.Random, packet: str, with_pullback: bool = False,
+            place: str = ""):
     demos = sample(rng, 4, avoid_facts=packet)
     shown = "\n\n".join(f'"{l}"' for _s, _f, l in demos)
     lead = rng.choice(LEAD_INS)
-    prompt = BRIEF.format(
+    template = BRIEF if with_pullback else BRIEF_OFFER_ONLY
+    prompt = template.format(
         who=NOVA_WHO, register=NOVA_REGISTER, device=rng.choice(DEVICES),
-        lead=lead, detail=_next_detail(rng), shown=shown)
+        lead=lead, detail=_next_detail(rng), shown=shown,
+        mechanic=rng.choice(MECHANICS), tool=rng.choice(TOOLS),
+        rival=rng.choice(RIVALS).format(place=place or rng.choice(PLACES_FOR_TESTING)))
     return prompt, lead
 
 

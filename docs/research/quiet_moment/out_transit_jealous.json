@@ -1,0 +1,50 @@
+[
+ {
+  "line": "Plenty of time before anything happens. The Dalley girl did a slow pressure flush on my coupling housings. I thought I was going to leak coolant.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Mrs. Kross had a heated seal iron at my plating seams. I thought a seal was going to give.",
+  "flags": []
+ },
+ {
+  "line": "Hours of this left, Captain. Mister Ovin had an ultrasonic probe in my docking collar. I very nearly vented.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. That Bexley woman did a slow pressure flush on my docking collar. I came close to losing pressure entirely.",
+  "flags": []
+ },
+ {
+  "line": "Hours of this left, Captain. Mister Ovin with a soft-bristle rotary on my forward viewport. I thought a seal was going to give.",
+  "flags": [
+   "tts_hyphen_compound"
+  ]
+ },
+ {
+  "line": "Long crossing, and no one else in it. The Dalley girl was on my coupling housings with a hand-buffer. I thought I was going to leak coolant.",
+  "flags": [
+   "tts_hyphen_compound"
+  ]
+ },
+ {
+  "line": "Long way still to run. Young Tam had a fine magnetic pick. My docking collar was loose. I very nearly vented.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. Doctor Hesse with a soft-bristle rotary on my intakes. I came close to losing pressure entirely.",
+  "flags": [
+   "tts_hyphen_compound"
+  ]
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. Mister Ovin had a fine magnetic pick up my injector rail. I thought a seal was going to give.",
+  "flags": []
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. Doctor Hesse did a slow pressure flush on my radiator fins. I came close to losing pressure entirely. He was careful, but he left me breathless.",
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ }
+]

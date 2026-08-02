@@ -10,6 +10,12 @@ import collections, json, random, re, sys
 from qm import gen, parse_json_field, words
 
 PRON = re.compile(r"\b(he|him|his)\b", re.I)
+# A named or implied third party whose masculine pronoun is legitimate. Once
+# beats can mention the mechanic or the yard crew, a blanket he/his ban
+# false-flags them.
+THIRD_PARTY = re.compile(
+    r"\b(mechanic|engineer|crew|yard|dock hand|dockhand|service hands"
+    r"|technician|fitter|someone else|somebody else|stranger)\b", re.I)
 # structural tics worth counting: each collapsed a run at some point
 # Kaelen's bible bans "generic hero praise" outright. She prices risk; she
 # does not compliment his skill.
@@ -73,7 +79,8 @@ def normalize_quotes(s):
              .replace("—", "-").replace("–", "-"))
 
 
-def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in=""):
+def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in="",
+          third_parties=()):
     f = []
     if not line:
         return ["no_parse"]
@@ -109,7 +116,11 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in=""):
         f.append("wrong_address")
     if len(words(line)) > cap:
         f.append("too_long")
-    if PRON.search(line):
+    # he/him/his is only a problem when it means the CAPTAIN. Once a beat can
+    # name a third party (the mechanic, the yard crew), the pronoun is
+    # legitimately theirs, so don't flag it when one is present.
+    named = any(t and t.lower() in line.lower() for t in third_parties)
+    if PRON.search(line) and not THIRD_PARTY.search(line) and not named:
         f.append("assumes_captain_gender")
     if "\n" in line:
         f.append("multiline")
