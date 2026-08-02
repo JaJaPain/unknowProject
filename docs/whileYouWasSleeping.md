@@ -2033,3 +2033,40 @@ validation, speech_service, game_content_registry, local_model_gateway.
      THIS THE FRESHNESS GUARANTEE RESETS EVERY RELOAD
   3. call `reset_for_new_campaign()` on new-campaign start
   4. arbitration with lounge chatter and mission dialogue
+
+## 2026-08-02 (final) — In-game wiring + mission-agent personalities
+
+- QUIET MOMENTS NOW FIRE IN GAME. Previously the scripts passed headless but
+  nothing instantiated the director, so launching the game produced nothing.
+  Wired in GameRoot: ShipBehaviorObserver semantic events, QuestManager
+  completion/abandon/decline, combat_ended (gated on hull <=85%, since her
+  post-combat beat needs DAMAGE to have material), and cargo_changed on the
+  transition into a full hold. Lines route to Nova.speak or Kaelen's flavor
+  path. Save/load persists recency; new campaign resets it.
+  11 of 12 beats have a real trigger. nova_repair_done has none - there is no
+  repair-completion signal in the codebase and inventing one is a gameplay
+  decision. Reachable from the DevPanel.
+- DevPanel -> Story -> "Quiet Moments": pick a beat, Fire Quiet Moment.
+  Ignores cooldown; silences echo to chatter while the panel is open.
+- TWO-MODE BEATS: cargo-full always announces "Cargo hold is full" and only
+  uses the character line 25% of the time (measured 76/24). Better than
+  silencing, because the hold filling is information the player wants every
+  time while the joke only stays funny if rare. Three quarters of that beat's
+  triggers now cost no model call.
+- NOVA's transit flirting was failing because 9 of 12 entries in the detail
+  pool had NO sexual second reading ("a film on the forward viewport"). The
+  model was being asked to flirt about wiping a window. transit_vocab.py now
+  enforces a two-readings rule with a self-audit. NOTE: we never teach the
+  model to misuse words - she is always technically accurate; the innuendo is
+  loaded into WHICH JOB CODE PICKS.
+- NEW: skills/skill_llm_character_dialogue.md - the whole methodology,
+  written because the first attempt failed badly enough that canned lines
+  looked like the only option.
+- NEW: five mission-agent personalities (desperate / old_hand / chancer /
+  believer / paranoid). Author approved 4 outright; the weirdo is accepted on
+  the basis that the mission card carries the real facts. Research only.
+  Handoff: docs/research/quiet_moment/AGENTS.md
+- Biggest recurring lesson, now proven a fourth time: every decision moved
+  from the model into code improved the output. Latest instance is the
+  author's own - let Godot choose WHICH FACTS each personality receives,
+  rather than sending all of them and asking the model to be selective.

@@ -331,9 +331,19 @@ _Nine beats built and measured. Full handoff: `docs/research/quiet_moment/SYSTEM
 ### Quiet moments — wiring landed, hookup pending (2026-08-02)
 _Scripts, data and tests are in. Handoff: `docs/research/quiet_moment/SYSTEM.md`; method: `skills/skill_llm_character_dialogue.md`._
 
-- [ ] **Connect triggers to `QuietMomentDirector.try_fire()`** -- nothing calls it yet. `ShipBehaviorObserver` already emits `clean_long_transit`, `rough_arrival`, `boost_again_quickly`, `returned_to_same_station` with context; `QuestManager` emits completion/decline/abandon.
-- [ ] **Persist the director through the save** -- `to_save_dict()`/`load_from_dict()` exist but nothing calls them. Without this the recency state resets on every reload and the freshness guarantee is gone, which is the entire point of the feature.
-- [ ] **Call `reset_for_new_campaign()`** on new-campaign start, or the first hour inherits the previous playthrough's position in every rotation cycle.
+- [x] ~~Connect triggers to `QuietMomentDirector.try_fire()`~~ -- done 2026-08-02, 11/12 beats -- nothing calls it yet. `ShipBehaviorObserver` already emits `clean_long_transit`, `rough_arrival`, `boost_again_quickly`, `returned_to_same_station` with context; `QuestManager` emits completion/decline/abandon.
+- [x] ~~Persist the director through the save~~ -- done 2026-08-02 -- `to_save_dict()`/`load_from_dict()` exist but nothing calls them. Without this the recency state resets on every reload and the freshness guarantee is gone, which is the entire point of the feature.
+- [x] ~~Call `reset_for_new_campaign()`~~ -- done 2026-08-02 on new-campaign start, or the first hour inherits the previous playthrough's position in every rotation cycle.
 - [ ] **Arbitration** -- quiet moments compete with lounge chatter and mission dialogue. The director has its own 180s cooldown but doesn't know about other speakers; `PlayerInteractionQueue` looks like the right owner.
 - [ ] **Never fire during combat** -- the fixed-cast bible separates `combat` from `quiet_moment`.
 - [ ] **Named servicers from game state** -- the jealousy device names a mechanic ("Mrs. Kross"); the pool is a placeholder. Draw from the current/last visited system so it names someone the player actually met.
+
+### Mission-agent personalities (research done, wiring pending)
+_Five personalities for the agents Kaelen introduces. Handoff: `docs/research/quiet_moment/AGENTS.md`. Author approved 4 of 5 outright._
+
+- [ ] **Decide how a personality is assigned to an agent** -- deterministic from the agent's seed (stable, no storage) or stored on the agent record (survives generation changes). Save-format call.
+- [ ] **Wire agent offers** -- the quiet-moment plumbing is directly reusable. `packet_echo` screening matters most here: reciting the briefing is this beat's characteristic failure.
+- [ ] **Per-agent recency** -- agents live in their systems and are met repeatedly, so recency keys on the agent, not just the personality.
+- [ ] **`nova_repair_done` has no trigger** -- no repair-completion signal exists in the codebase. Needs a gameplay decision about where "repairs finished" is emitted.
+- [ ] **Later agent beats** -- accept / progress / failure. Failure is where an axis shows most (the desperate one panics, the old hand shrugs).
+- [ ] **Weirdo constraint** -- he may be vague relative to the mission card but must NEVER contradict it, and he is the wrong personality for any beat carrying information the player has no other source for.
