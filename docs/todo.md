@@ -347,3 +347,18 @@ _Five personalities for the agents Kaelen introduces. Handoff: `docs/research/qu
 - [ ] **`nova_repair_done` has no trigger** -- no repair-completion signal exists in the codebase. Needs a gameplay decision about where "repairs finished" is emitted.
 - [ ] **Later agent beats** -- accept / progress / failure. Failure is where an axis shows most (the desperate one panics, the old hand shrugs).
 - [ ] **Weirdo constraint** -- he may be vague relative to the mission card but must NEVER contradict it, and he is the wrong personality for any beat carrying information the player has no other source for.
+
+## Player affordances / onboarding prompts (2026-08-02)
+_Three places where the game hands the player a moment but doesn't tell them what to do with it. All three are "make the next action obvious", not new systems._
+
+- [ ] **Cold open: teach look-around during the silent gap** -- after N.O.V.A. finishes speaking and before Kaelen hails, control returns to the player and there is a silent beat with nothing to do. Put on-screen text there instructing **left mouse button to look around**. This is the player's first moment of agency and currently reads as dead air.
+  - **Where:** `scripts/story/IntroCinematic.gd` — it already sequences N.O.V.A.'s lines and calls `ui.show_kaelen_intro()` after a 1s beat (see ~line 559). The prompt belongs in that gap, and should clear on first look input or when Kaelen hails.
+  - **Ties into:** the opening-cinematic item earlier in this file. Same sequence, same file.
+
+- [ ] **First mission complete: flash the return-to-station button** -- when the first mission's objective is done, the mission card's return/turn-in button (wording may differ) should flash so a new player knows the mission isn't over until they go back. Only needs to be attention-grabbing for the FIRST mission; after that the player knows the loop.
+  - **Where:** not yet located — no obvious "return to station" button in `scripts/ui/*.gd`. Find whichever control the mission card shows on objective completion before estimating.
+  - **Note:** gate it on first-mission-ever, not every mission, or it becomes noise.
+
+- [ ] **Combat: flash EXECUTE when action points are spent** -- once the player has queued actions using all their AP, the execute button should flash. Right now a player with 0 AP left can sit in planning phase without realising the game is waiting on them.
+  - **Where:** `scripts/ui/CombatPanel.gd`. `_execute_btn` is built at ~line 812 and `CombatManager.ap_changed` is already connected at ~line 250, so the state needed is already arriving — it's a visual treatment on `_on_ap_changed` when current AP hits 0.
+  - **Consider:** also flash when remaining AP is lower than the cheapest available action, since that's equally a dead end.
