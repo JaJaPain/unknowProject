@@ -965,3 +965,53 @@ within four tokens of "you", which separates *"work it slow"* from *"you're slow
 **Generalises:** when a joke depends on a property of the subject matter, put that property in
 the code-owned selection rather than asking the model to find it. The model supplies voice; code
 supplies the setup.
+
+---
+
+# Mission agents (2026-08-02)
+
+Five personalities, assigned one per generated agent, so a given agent stays consistent across
+repeat work in their system. Offers only; Kaelen still closes. Delivery only — mission
+generation untouched.
+
+## Packets must not sound like speech
+
+**−** First packets were phrased as things a person would say ("It's dangerous, and I'm telling
+you that up front"). On a kill job **four of five personalities recited all three bullets in
+order** with no voice whatsoever. If the packet reads like a line, the model hands it back.
+**+** Rewritten as flat briefing notes — `job:` / `risk:` / `fee:` — which nobody could speak
+aloud. **The register of the packet is as load-bearing as the register of the demos.**
+
+## Code picks the facts, not the model
+
+Author: *"can't the GD app put the correct context in when it decides the job and send it to the
+LLM so it only has what it needs?"*
+
+**−** My fix had been a prompt rule ("do NOT cover all three notes"). It helped, and it still
+leaked.
+**+** The author's version is strictly better: **code decides which facts each personality
+receives.** The model cannot recite a note it never got. Assignments follow character — the
+chancer gets the fee and NOT the risk, since he'd skate over it anyway; the believer gets only
+the objective, because the cause is his pitch and the terms are beside the point.
+**+** Immediate result — five clearly distinct voices, no recitation:
+*"You're the only one left who can do this. I don't like asking, but I don't have a choice."* /
+*"They're not stupid, so don't assume they'll stay put."* / *"Not much of a fight, really… You've
+got the edge, so why not use it?"*
+**→ Generalises: every time a decision moved from the model to code, output improved. This is
+the same lesson as packet rotation, detail rotation and the anatomy correction, now applied to
+fact SELECTION.**
+
+## The weirdo's fixation must suit the job
+
+Author's two examples — *"For real, DON'T show them. I'm serious"* and *"if he says he's sorry,
+tell him I'm sorry too. Then make him dead"* — are the same move: a narrow thing that matters
+far too much, insisted on by plain repetition, then straight back to the job. The fixation does
+not have to be procedural; it can be a feeling.
+
+**−** A single flat fixation pool produced nonsense: "don't let it go through the scanner twice"
+on a kill contract, where there is no crate. That reads as a malfunction, not a character.
+**+** Fixations are now grouped by what they suit (cargo / target / any) and drawn per objective
+type.
+**−** They were also written in third person ("the agent's regards"), and the model dutifully
+said "the agent" instead of "me". **Authored text that a character will SPEAK must be written
+the way they'd say it.**
