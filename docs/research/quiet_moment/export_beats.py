@@ -21,6 +21,12 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")
 OUT = os.path.join(ROOT, "data", "content", "quiet_moment_beats.json")
 
 
+def unescape(text):
+    """Python format-strings escape braces as {{ }}; GDScript does not.
+    Left in place these reach the model as literal doubled braces."""
+    return text.replace("{{", "{").replace("}}", "}")
+
+
 def demo_block(pool):
     return [{"shape": s, "facts": f, "line": l} for s, f, l in pool]
 
@@ -62,9 +68,9 @@ def main():
         "packets": beat_transit.PACKETS,
         "lead_in_pool": beat_transit.LEAD_INS,
         "devices": {
-            "dangle": {"template": beat_transit.DANGLE,
+            "dangle": {"template": unescape(beat_transit.DANGLE),
                        "detail_pool": beat_transit.DETAILS},
-            "jealousy": {"template": beat_transit.JEALOUSY,
+            "jealousy": {"template": unescape(beat_transit.JEALOUSY),
                          "mechanics": beat_transit.MECHANICS,
                          "tools": beat_transit.TOOLS,
                          "parts": beat_transit.PARTS,
