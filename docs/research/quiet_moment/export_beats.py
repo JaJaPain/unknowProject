@@ -38,13 +38,14 @@ def export_beat(bid, b):
         "speaker": b.get("speaker", ""),
         "word_cap": b.get("cap", 28),
         "fire_probability": b.get("fire_probability", 1.0),
+        "full_line_probability": b.get("full_line_probability", 1.0),
         "who": b["who"],
         "register": b["register"],
         "scope": b["scope"],
         "valence": b["valence"],
         "packets": b["packets"],
     }
-    for key in ("lead_in_pool", "detail_pool", "detail_prompt"):
+    for key in ("lead_in_pool", "detail_pool", "detail_prompt", "base_lines"):
         if b.get(key):
             out[key] = b[key]
     return out
@@ -61,7 +62,7 @@ def lint(beats):
     garbles, and planetary-landing words for a station dock."""
     problems = []
     for bid, b in beats.items():
-        for field in ("packets", "lead_in_pool"):
+        for field in ("packets", "lead_in_pool", "base_lines"):
             for text in b.get(field, []):
                 if HYPHEN.search(text):
                     problems.append(f"{bid}.{field}: hyphen compound -- {text}")

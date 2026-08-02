@@ -132,6 +132,20 @@ better than that. She makes no claim about what's ahead or how long remains.""",
 # or at least my vocal processor."
 CARGO_FULL = dict(_BASE, **{
     "id": "nova_cargo_full",
+    # Author 2026-08-02: the hold filling should ALWAYS be announced, but the
+    # joke should be rare. So this beat has two modes: a code-owned factual
+    # base line most of the time, and the generated character line 25% of the
+    # time. Different from fire_probability, which produces silence - here the
+    # player always gets the information.
+    "base_lines": [
+        "Cargo hold is full, Captain.",
+        "Hold's at capacity.",
+        "That's the hold full.",
+        "Cargo hold's full up.",
+        "We're loaded to capacity.",
+        "Hold is full, Captain.",
+    ],
+    "full_line_probability": 0.25,
     "packets": [
         "The hold is loaded to capacity. There's no room left aboard.",
         "Cargo's aboard, every last crate of it. She's full.",

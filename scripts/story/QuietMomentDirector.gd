@@ -26,6 +26,8 @@ var _selectors: Dictionary = {}
 var _anatomy := AnatomySlip.new()
 var _rng := RandomNumberGenerator.new()
 var _last_fired_msec: int = -1
+# per-beat, so a two-mode beat never repeats its announcement back to back
+var _last_base_line: Dictionary = {}
 var _in_flight: bool = false
 
 
@@ -49,11 +51,27 @@ func try_fire(beat_id: String, options: Dictionary = {}) -> bool:
 		push_warning("[QuietMoment] unknown beat: %s" % beat_id)
 		return false
 
+	# Two-mode beats: the fact is always announced, the character line is a
+	# rare flourish on top. The base line is authored, needs no model call,
+	# and is NOT subject to the conversational cooldown — it's information the
+	# player asked for by filling the hold, not chatter.
+	var base_lines: Array = beat.get("base_lines", [])
+	var full_probability := float(beat.get("full_line_probability", 1.0))
+	var use_base := not base_lines.is_empty() and _rng.randf() > full_probability
+
 	var now := Time.get_ticks_msec()
 	var ignore_cooldown := bool(options.get("ignore_cooldown", false))
-	if not ignore_cooldown and _last_fired_msec >= 0:
+	if not use_base and not ignore_cooldown and _last_fired_msec >= 0:
 		if now - _last_fired_msec < int(GLOBAL_COOLDOWN_SECONDS * 1000.0):
+			# Cooldown blocks the flourish, but a two-mode beat still reports.
+			if not base_lines.is_empty():
+				_speak_base(beat_id, beat, base_lines)
+				return true
 			return false
+
+	if use_base:
+		_speak_base(beat_id, beat, base_lines)
+		return true
 
 	# A good line on too frequent a trigger still wears out. Boost fires far
 	# more often than it deserves a comment, so its beat carries p=0.25.
@@ -68,6 +86,30 @@ func try_fire(beat_id: String, options: Dictionary = {}) -> bool:
 	_in_flight = true
 	_request(beat_id, beat, 1)
 	return true
+
+
+# The factual half of a two-mode beat. No model call, no screening needed
+# (it is authored text), but it still goes through recency so she does not
+# announce a full hold the same way twice running.
+func _speak_base(beat_id: String, beat: Dictionary, base_lines: Array) -> void:
+	var speaker := str(beat.get("speaker", ""))
+	var selector = _selector_for(speaker)
+
+	# Exclude only the PREVIOUS one. Checking the full recency window fails
+	# here: with a handful of base lines they are all "recent" almost
+	# immediately, and the fallback then repeats back to back.
+	var pool: Array = []
+	var previous := str(_last_base_line.get(beat_id, ""))
+	for candidate in base_lines:
+		if str(candidate) != previous:
+			pool.append(str(candidate))
+	if pool.is_empty():
+		pool = base_lines.duplicate()
+
+	var line := str(pool[_rng.randi_range(0, pool.size() - 1)])
+	_last_base_line[beat_id] = line
+	selector.accept(line)
+	quiet_moment_ready.emit(speaker, beat_id, line)
 
 
 func _request(beat_id: String, beat: Dictionary, attempt: int) -> void:
@@ -195,4 +237,5 @@ func reset_for_new_campaign() -> void:
 	_selectors.clear()
 	_anatomy.reset()
 	Beats.reset_rotation()
+	_last_base_line.clear()
 	_last_fired_msec = -1

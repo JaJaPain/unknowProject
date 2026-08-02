@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_unknown_beat_declined()
 	_test_persistence_round_trip()
 	_test_new_campaign_reset()
+	_test_base_line_mode()
 	if _failures.is_empty():
 		print("[PASS] QuietMomentDirector (all cases)")
 		quit(0)
@@ -69,4 +70,34 @@ func _test_new_campaign_reset() -> void:
 		"My ribs are aching from it.", {"speaker": "nova", "word_cap": 40})
 	if reasons.has("phrase_repeat"):
 		_failures.append("new campaign inherited previous recency")
+	d.queue_free()
+
+
+# Two-mode beats: the fact is always announced, the character line is rare.
+func _test_base_line_mode() -> void:
+	var d := Director.new()
+	get_root().add_child(d)
+
+	var beat := {
+		"speaker": "nova",
+		"base_lines": ["Hold's at capacity.", "Cargo hold is full, Captain."],
+		"full_line_probability": 0.0,   # never the full line, always the base
+	}
+	var spoken: Array[String] = []
+	d.quiet_moment_ready.connect(func(_s, _b, line): spoken.append(line))
+
+	for i in 5:
+		d.call("_speak_base", "nova_cargo_full", beat, beat["base_lines"])
+	if spoken.size() != 5:
+		_failures.append("base line did not emit every time: %d/5" % spoken.size())
+	for line in spoken:
+		if not (beat["base_lines"] as Array).has(line):
+			_failures.append("base mode spoke something unauthored: %s" % line)
+	# consecutive repeats should be avoided where an alternative exists
+	var back_to_back := 0
+	for i in range(1, spoken.size()):
+		if spoken[i] == spoken[i - 1]:
+			back_to_back += 1
+	if back_to_back > 1:
+		_failures.append("base lines repeated back to back %d times" % back_to_back)
 	d.queue_free()

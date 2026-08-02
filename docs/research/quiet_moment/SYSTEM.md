@@ -46,6 +46,12 @@ offers him a job and leaves the offer standing, and JEALOUSY, where she recounts
 hands on her in loaded technical detail. The offer/pullback shape is retired — the retraction
 always read as rejection.
 
+**Two-mode beats.** A beat may carry `base_lines` (authored, factual) plus a
+`full_line_probability`. Most triggers speak the base line — no model call at all — and the
+generated character line only appears at the stated rate. Cargo-full uses this: the hold filling
+is always announced, the joke lands 25% of the time. Distinct from `fire_probability`, which
+produces silence; here the player always gets the information.
+
 **Lead-ins.** `nova_post_combat_damaged`, `nova_rough_arrival` and `nova_long_transit` open with
 an authored, rotated factual line ("Enemy vessel is destroyed.", "Docked. Barely.") before the
 generated reaction. Without it the reaction sounds unwarranted. `fire_probability` throttles

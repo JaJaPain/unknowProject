@@ -918,3 +918,20 @@ my intake trunk."* / *"Primary intake's clogged. You'll need to reach inside. My
 there."*
 **−** Residual and milder: *"You don't seem to"* still edges toward implying he forgets. No
 deficiency word, so the guard doesn't catch it, and it may just read as teasing. Author call.
+
+
+## Two-mode beats (author, 2026-08-02)
+
+Author on cargo-full: *"we should use a 'Cargo hold is full' base line and 25% of the time use
+the full line."*
+
+**+** Better than throttling with silence, because the hold filling is *information* — the player
+wants it every time — while the joke only stays funny if it's rare. Implemented as `base_lines`
++ `full_line_probability`: 76%/24% measured over 2000 rolls, six base variants.
+**+** The base line needs no model call, so three quarters of this beat's triggers are free.
+**+** It also gives the cooldown somewhere to go: when the 180s window blocks the flourish, a
+two-mode beat still reports the fact rather than staying mute.
+**−** First implementation repeated the base line back to back. Cause: it checked the 30-line
+recency window, but with six base variants they are *all* "recent" within a few firings, so the
+fallback picked at random. **Excluding only the PREVIOUS line is the correct rule for a small
+authored pool** — general recency machinery is the wrong tool at that scale.
