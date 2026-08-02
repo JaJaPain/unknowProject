@@ -15,10 +15,15 @@ import beats_kaelen
 import beats_nova
 from selector import QuietMomentSelector
 
+import beat_transit
+
 BEATS = []
 for src in (beats_kaelen.BEATS, beats_nova.BEATS):
     for bid, b in src.items():
+        if bid == "nova_long_transit":
+            continue           # superseded by beat_transit (two rotating devices)
         BEATS.append((b.get("speaker", ""), bid, beatlib.make(b)))
+BEATS.append(("nova", "nova_long_transit", beat_transit.Module))
 
 
 def run(moments=40, model="qwen3:14b", seed=99):
@@ -36,6 +41,8 @@ def run(moments=40, model="qwen3:14b", seed=99):
             pk = packets[bid] = list(mod.PACKETS)
         p = pk.pop(rng.randrange(len(pk)))
         line, c, rej = sel[who].request(mod, p, rng, model=model, max_calls=5)
+        if line and getattr(mod, "LEAD_INS", None) is None and hasattr(mod, "lead_in"):
+            pass  # lead-in already joined inside the selector
         calls += c
         for _l, why in rej:
             rejects.update(why)

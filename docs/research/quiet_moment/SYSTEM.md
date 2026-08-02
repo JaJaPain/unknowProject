@@ -33,12 +33,22 @@ The model supplies voice; code supplies variety, truth, and structure.
 | `kaelen_abandoned` | `quest_abandoned_details` | 11/12 | 12/12 |
 | `nova_post_combat_damaged` | `combat_ended(true)` + low `hull_fraction` | 20/20 | 18/20 |
 | `nova_repair_done` | repair/dock completion | 20/20 | 15/20 |
-| `nova_long_transit` | `clean_long_transit` (already emitted) | 19/20 | 13/20 |
+| `nova_long_transit` | `clean_long_transit` (already emitted) | 13/16 | 8/10 second-clause |
 | `nova_cargo_full` | hold at capacity | 19/20 | 15/20 |
 | `nova_rough_arrival` | `rough_arrival` (already emitted) | 12/12 | 7/12 |
 | `nova_hard_burn` | `boost_again_quickly` (already emitted) | 15/16 | 12/16 |
 | `kaelen_declined` | `quest_declined_details` | 14/14 | 10/14 |
 | `nova_returned_same_station` | `returned_to_same_station` (already emitted) | 13/14 | 13/14 |
+
+**`nova_long_transit` carries two rotating devices** (see `beat_transit.py`): DANGLE, where she
+offers him a job and leaves the offer standing, and JEALOUSY, where she recounts somebody else's
+hands on her in loaded technical detail. The offer/pullback shape is retired — the retraction
+always read as rejection.
+
+**Lead-ins.** `nova_post_combat_damaged`, `nova_rough_arrival` and `nova_long_transit` open with
+an authored, rotated factual line ("Enemy vessel is destroyed.", "Docked. Barely.") before the
+generated reaction. Without it the reaction sounds unwarranted. `fire_probability` throttles
+beats on common triggers — `nova_hard_burn` is 0.25.
 
 Selector, single beat in isolation: **12% silence, 2.2 calls/moment, 0 duplicates.**
 Selector across **all beats mixed** (the real case): **0% silence, 1.4 calls/moment, 0
@@ -58,6 +68,9 @@ so single-beat silence figures are a pessimistic bound.
 | `diagnose.py` | local zero-cost diagnosis of a batch |
 | `anatomy.py` | N.O.V.A.'s code-enforced body-word correction |
 | `approved.py` | author-approved lines + rejected-with-reason |
+| `beat_transit.py` | long transit: two rotating devices + runtime adapter |
+| `transit_jealous.py` | the jealousy device's vocabulary (mechanics, tools, parts, mishaps) |
+| `playthrough.py` | mixed-beat simulation over all beats |
 | `render_audio.py`, `session_best.py` | TTS listening passes |
 
 ## Adding a beat — the recipe
@@ -102,6 +115,8 @@ Every one of these came from a defect seen in real output, not from theory.
 | `word_echo` | same content word 3+ times in one line |
 | `tts_hyphen_compound` | hyphenated compounds Kokoro renders unreliably |
 | `tts_all_caps` / `tts_symbol` / `tts_ellipsis` | other unspeakable constructions |
+| `lead_in_echo` | the reaction restates the authored opener it follows |
+| `double_address` | "Captain" in both the lead-in and the reaction |
 | `too_long`, `assumes_captain_gender`, `multiline`, `no_parse` | basics |
 
 Plus recency gates for openers, phrases and closers. **That state is per CHARACTER, not per
@@ -125,7 +140,14 @@ Two bugs in the checks themselves, worth not repeating:
    project rule that fallbacks are failures to drive to root cause.
 5. **VRAM.** `qwen3:14b` is 9.3GB on a 16GB card, alongside the renderer. Measure under load
    before committing; `qwen3:4b` is the fallback at noticeably blander voice.
-6. **Bible updates** the research implies: allow Kaelen's "steer toward better work"
+6. **Named servicers from game state.** The jealousy device names a mechanic ("Mrs. Kross").
+   `transit_jealous.MECHANICS` is a placeholder — draw from the current or last visited system so
+   the jealousy names someone the player actually met. That is what makes it *this* campaign
+   rather than flavour text.
+7. **A real pause needs separate TTS calls.** Kokoro does not audibly honour a spaced `". . ."`;
+   the author confirmed by ear. If a beat ever wants a beat of silence, it has to be two
+   utterances with a gap inserted between them.
+8. **Bible updates** the research implies: allow Kaelen's "steer toward better work"
    (`quiet_moment.must_not` currently forbids it), gate `public_board_money_rule` to public-board
    moments, and drop `receipts` from her favored motifs.
 

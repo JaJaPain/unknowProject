@@ -49,9 +49,11 @@ class QuietMomentSelector:
         self.recent_lines = collections.deque(maxlen=line_window)
         self.recent_tics = collections.deque(maxlen=tic_window)
 
-    def reasons(self, line, packet="", speaker="", cap=28):
+    def reasons(self, line, packet="", speaker="", cap=28, demos=(),
+                lead_in="", third_parties=()):
         """Why this candidate is unusable. Empty list means serve it."""
-        r = check(line, cap=cap, packet=packet, speaker=speaker)
+        r = check(line, cap=cap, packet=packet, speaker=speaker, demos=demos,
+                  lead_in=lead_in, third_parties=third_parties)
         if r:
             return r
         op = " ".join(words(line)[:2])
@@ -80,9 +82,15 @@ class QuietMomentSelector:
             raw, _dt = gen(mod.prompt(packet, rng), model=model,
                            num_predict=200, temperature=0.95, top_p=0.95)
             line = (parse_json_field(raw) or "").strip().strip('“”"')
+            lead = mod.lead_in() if hasattr(mod, "lead_in") else ""
             why = self.reasons(line, packet=packet,
                                speaker=getattr(mod, "SPEAKER", ""),
-                               cap=getattr(mod, "CAP", 28))
+                               cap=getattr(mod, "CAP", 28),
+                               demos=getattr(mod, "DEMO_LINES", ()),
+                               lead_in=lead,
+                               third_parties=getattr(mod, "THIRD_PARTIES", ()))
+            if not why and lead:
+                line = lead.rstrip() + " " + line
             if not why:
                 self.accept(line)
                 return line, attempt + 1, rejected

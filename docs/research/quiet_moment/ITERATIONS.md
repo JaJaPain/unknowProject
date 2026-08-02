@@ -843,3 +843,42 @@ For a character defined by affection, **specify the emotional temperature of a c
 just its target.** Kaelen needed "aim it at the job, not the Captain". N.O.V.A. needed that too
 — and separately needed "this is a performance, not a grievance". Volume, target and sincerity
 are three different dials.
+
+## Transit consolidated: two devices, rotated
+
+Author: *"it can be both"*. `beat_transit.py` now holds DANGLE (offer, no retraction) and
+JEALOUSY (recount someone else's hands on her), drawn without replacement so neither wears out.
+
+**+** 13/16 clean at an even 8/8 device split. Best of the run: *"Mrs. Kross had her hands on me
+for hours. Warm solvent, slow work. I almost lost pressure entirely."* / *"Mister Ovin worked me
+over with that ultrasonic probe — didn't think I'd ever been that loose before."*
+**−** Presenting the jealousy slots as a labelled list produced ten identical "NAME did TOOL to
+PART, then MISHAP" service records. Reframing them as *raw material* with the template shape
+explicitly forbidden fixed it. **A slot list is a form, and the model fills forms.**
+**−** My own `TOOLS` vocabulary contained hyphenated compounds that trip the TTS screen. Authored
+vocabulary has to pass the same checks as generated text.
+
+## Full-system run, everything integrated
+
+30 moments across all 12 beats, lead-ins and device rotation live, recency per character.
+
+**+** **30/30 served, 0% silence, 1.4 calls/moment, 0 exact duplicates, 15/15 and 15/15 distinct
+openers per character.** Rejections spread across `packet_echo`, `demo_echo`, `opener_repeat`,
+`wrong_address`, `phrase_repeat`, `tts_ellipsis` — every gate earning its place.
+**−** The anatomy correction repeated ("My frame spars, technically" twice in thirty). Added a
+recency window to `anatomy.py`: the same machine part won't be corrected to twice inside four
+uses. Every other repetition source is gated; this one wasn't.
+
+## Post-combat checked for the rough-arrival fault
+
+After the author caught bitterness in rough arrival, audited post-combat for the same thing:
+**0/12 bitterness markers.** It stayed theatrical — *"I'll have to polish the scars before anyone
+else sees them"* — because its valence was already framed as indignity rather than injury.
+
+### Two check bugs found by the new material
+
+- `assumes_captain_gender` fired on *"He was careful"* about a named mechanic. Now exempt when a
+  third party is present — and matched on name TOKENS, since the pool holds "old Ferro" while she
+  says just "Ferro".
+- Authored vocabulary (tool names, lead-ins, packets) must pass the same deterministic checks as
+  generated lines. Three separate defects came from my own authored text, not the model's.

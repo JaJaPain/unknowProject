@@ -119,7 +119,11 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in="",
     # he/him/his is only a problem when it means the CAPTAIN. Once a beat can
     # name a third party (the mechanic, the yard crew), the pronoun is
     # legitimately theirs, so don't flag it when one is present.
-    named = any(t and t.lower() in line.lower() for t in third_parties)
+    # match on name TOKENS too: the pool holds "old Ferro" but she says
+    # just "Ferro", and a whole-string match misses it
+    tokens = {w for t in third_parties for w in str(t).split() if len(w) > 2}
+    low_line = line.lower()
+    named = any(t and str(t).lower() in low_line for t in third_parties) or         any(w.lower() in low_line for w in tokens)
     if PRON.search(line) and not THIRD_PARTY.search(line) and not named:
         f.append("assumes_captain_gender")
     if "\n" in line:

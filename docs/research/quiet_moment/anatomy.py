@@ -13,6 +13,7 @@ hold"), which isn't the joke at all.
 Author's canon:
   "that load has me filled up to my larynx, or at least my vocal processor"
 """
+import collections
 import random
 import re
 
@@ -68,8 +69,16 @@ def find_part(line: str):
     return m.group(1).lower() if m else None
 
 
-def apply(line: str, rng: random.Random = None) -> str:
-    """Append her self-correction if she used a body word and hasn't corrected."""
+_recent = collections.deque(maxlen=4)
+
+
+def apply(line: str, rng: random.Random = None, track: bool = True) -> str:
+    """Append her self-correction if she used a body word and hasn't corrected.
+
+    Skips if the same machine part was corrected to recently — "My frame
+    spars, technically" twice in thirty lines is exactly the repetition the
+    rest of the system works to avoid.
+    """
     if not line:
         return line
     part = find_part(line)
@@ -80,8 +89,12 @@ def apply(line: str, rng: random.Random = None) -> str:
     # ("My cargo hold's stuffed. That is - my cargo hold.")
     if re.search(r"\b" + re.escape(machine) + r"\b", line, re.I):
         return line
+    if machine in _recent:
+        return line
     rng = rng or random
     template = rng.choice(CORRECTIONS)
+    if track:
+        _recent.append(machine)
     tail = template.format(machine=machine, machine_cap=machine[0].upper() + machine[1:])
     sep = " " if line.rstrip()[-1:] in ".!?" else ". "
     return line.rstrip() + sep + tail
