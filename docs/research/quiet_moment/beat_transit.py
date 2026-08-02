@@ -18,6 +18,7 @@ import random
 from beat import NOVA_WHO, NOVA_REGISTER
 from nova_demos import sample, NOVA as _NOVA_DEMOS
 import transit_jealous as TJ
+import transit_vocab as VOCAB
 
 SPEAKER = "nova"
 CAP = 45
@@ -26,24 +27,13 @@ DEMO_LINES = [l for _s, _f, l in _NOVA_DEMOS]
 LEAD_INS = TJ.LEAD_INS
 PACKETS = TJ.PACKETS
 MECHANICS = TJ.MECHANICS
-TOOLS = TJ.TOOLS
-PARTS = TJ.PARTS
-MISHAPS = TJ.MISHAPS
+# Loaded-but-accurate: see transit_vocab for the two-readings rule.
+TOOLS = VOCAB.TOOLS
+PARTS = VOCAB.PARTS
+MISHAPS = VOCAB.MISHAPS
 
-DETAILS = [
-    "her air intakes, which could do with dusting",
-    "her secondary manifold, which wants flushing",
-    "a coupling on the port side that could stand tightening",
-    "the grease on her landing gear",
-    "her radiator fins, which have picked up dust",
-    "a locker seal that sticks",
-    "the scuffing on her docking collar",
-    "a filter that could be swapped early",
-    "her forward viewport, which has a film on it",
-    "a panel latch that rattles",
-    "the calibration on her forward sensor",
-    "a cable run behind the galley bulkhead",
-]
+DETAILS = VOCAB.DETAILS
+
 
 _HEAD = """{who}
 

@@ -935,3 +935,33 @@ two-mode beat still reports the fact rather than staying mute.
 recency window, but with six base variants they are *all* "recent" within a few firings, so the
 fallback picked at random. **Excluding only the PREVIOUS line is the correct rule for a small
 authored pool** — general recency machinery is the wrong tool at that scale.
+
+## The innuendo has to be in the JOB, not the wording
+
+Author, 2026-08-02: *"it never figured out that the maintenance job needs to imply something to
+do with sex. not just a random job that could be done."* And then the sharp question:
+*"not sure how we teach an llm to use words wrong on purpose."*
+
+**+ We don't, and that's the point.** She never uses a word incorrectly. Every phrase is
+accurate maintenance language. The double reading comes from **which job code selects**, before
+the model sees anything — so the model is only ever asked to be accurate, which it is reliably
+good at. It is never asked to be sly, subtle, or wrong.
+**−** The failure was mine and it was in code: **9 of 12 entries in the detail pool had no second
+reading at all** — "a film on the forward viewport", "a cable run behind the galley bulkhead",
+"the calibration on her forward sensor". The model was being asked to flirt about wiping a
+window, which cannot work no matter how the brief is phrased.
+**+** Rebuilt as `transit_vocab.py`, with a stated two-readings rule and a self-audit: every job
+must have a body-analogous part (opening, shaft, socket, seal, fluid line) AND an action that
+maps to an act (easing open, seating, stroking, greasing, flushing, bleeding off). If only the
+technical reading holds, the flirt has nothing to stand on; if only the other holds, deniability
+is gone and it stops being her joke.
+**+** Immediate result on both devices: *"My shaft's dry. You could grease it while you're
+here."* / *"This valve's been stubborn. You'll want to work it slow. It likes being coaxed."* /
+*"Mister Ovin had his hands inside me for a long time, and I almost let him stay."*
+**−** The new material exposed a false positive: `belittles_captain` fired on *"You'll want to
+work it slow"* because "slow" described the task, not him. Now requires the deficiency word
+within four tokens of "you", which separates *"work it slow"* from *"you're slower this time"*.
+
+**Generalises:** when a joke depends on a property of the subject matter, put that property in
+the code-owned selection rather than asking the model to find it. The model supplies voice; code
+supplies the setup.

@@ -197,7 +197,7 @@ static func screen(line: String, context: Dictionary = {}) -> Array[String]:
 	elif speaker == "nova":
 		if clean.to_lower().contains("shiny"):
 			errors.append("wrong_address")
-		if _has_word(clean, "you") and _has_any_word(clean, BELITTLE_TERMS):
+		if _belittles(clean):
 			errors.append("belittles_captain")
 		if _has_any_substring(clean, APOLOGY_TERMS):
 			errors.append("demands_apology")
@@ -252,6 +252,21 @@ static func screen(line: String, context: Dictionary = {}) -> Array[String]:
 			break
 
 	return errors
+
+
+# The deficiency word has to be describing HIM, not the task. "You'll want to
+# work it slow" is an instruction about a valve; "You're slower this time" is
+# a dig. Proximity to "you" separates them where a whole-line check cannot.
+static func _belittles(text: String) -> bool:
+	var w := words_of(text)
+	for i in w.size():
+		if not BELITTLE_TERMS.has(w[i]):
+			continue
+		var start := maxi(0, i - 4)
+		for j in range(start, i):
+			if w[j] == "you" or w[j] == "you're" or w[j] == "youre" or w[j] == "your":
+				return true
+	return false
 
 
 static func _packet_has_number(packet: String) -> bool:

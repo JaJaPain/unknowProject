@@ -122,6 +122,11 @@ func _test_nova_affection_guard() -> void:
 	# "slow work" is fine; the guard anchors on "you"
 	_expect_clean("Warm solvent, slow work. I almost lost pressure entirely.",
 		{"speaker": "nova", "word_cap": 45}, "slow_work_ok")
+	# the deficiency word must describe HIM, not the task
+	_expect_clean("This valve's been stubborn. You'll want to work it slow. It likes being coaxed.",
+		{"speaker": "nova", "word_cap": 45}, "slow_describes_the_task")
+	_expect_flag("You're slower this time. Not that I'm counting.",
+		{"speaker": "nova", "word_cap": 45}, "belittles_captain", "slower_describes_him")
 
 	# he/his is legitimate when it belongs to a named third party
 	_expect_clean("Ferro had his hands on me once. He used a heated seal iron.",
