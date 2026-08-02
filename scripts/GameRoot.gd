@@ -169,6 +169,7 @@ var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
 var event_scheduler = null
 var ship_behavior_observer: Node = null
+var quiet_moment_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
 # seeded this session, so the two-batch seed fires at most once per bank.
 var _nova_bank_seed_requests: Dictionary = {}
@@ -215,6 +216,7 @@ func _start_gameplay_runtime() -> void:
 	_init_dev_panel()
 	_init_event_scheduler()
 	_init_ship_behavior_observer()
+	_init_quiet_moment_director()
 	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
 	if start_definition == null:
@@ -245,6 +247,9 @@ func _start_gameplay_runtime() -> void:
 	QuestManager.quest_completed_details.connect(_on_quest_completed_chronicle)
 	QuestManager.quest_completed_details.connect(StoryManager.on_quest_completed)
 	QuestManager.quest_abandoned_details.connect(_on_quest_abandoned_chronicle)
+	QuestManager.quest_completed_details.connect(_on_quiet_moment_quest_completed)
+	QuestManager.quest_abandoned_details.connect(_on_quiet_moment_quest_abandoned)
+	QuestManager.quest_declined_details.connect(_on_quiet_moment_quest_declined)
 	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
 
 
@@ -296,6 +301,11 @@ func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary
 	if occupied:
 		return await select_and_load_campaign(slot_id)
 	Engine.set_meta("creating_new_campaign", true)
+	# A new campaign must not inherit the previous one's recency or its
+	# position in every rotation cycle, or its first hour sounds like a
+	# continuation of the last playthrough.
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.reset_for_new_campaign()
 	return create_campaign_in_slot(
 		slot_id,
 		# The opening quest generator replaces this provisional label with its
@@ -1167,6 +1177,142 @@ func _init_ship_behavior_observer() -> void:
 		)
 
 
+# Optional fixed-cast quiet moments. Nothing blocks on these and silence is
+# always valid, so every connection here is best-effort.
+# Method and rationale: skills/skill_llm_character_dialogue.md
+const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirector.gd")
+
+# Which game event fires which beat. The behaviour observer already emits
+# these with a 180s semantic cooldown of its own.
+const QUIET_MOMENT_MOVEMENT_BEATS := {
+	"clean_long_transit": "nova_long_transit",
+	"rough_arrival": "nova_rough_arrival",
+	"boost_again_quickly": "nova_hard_burn",
+	"returned_to_same_station": "nova_returned_same_station",
+}
+
+
+func _init_quiet_moment_director() -> void:
+	quiet_moment_director = QuietMomentDirectorType.new()
+	quiet_moment_director.name = "QuietMomentDirector"
+	add_child(quiet_moment_director)
+	quiet_moment_director.quiet_moment_ready.connect(_on_quiet_moment_ready)
+	quiet_moment_director.quiet_moment_silent.connect(_on_quiet_moment_silent)
+	if is_instance_valid(CombatManager) and CombatManager.has_signal("combat_ended"):
+		CombatManager.combat_ended.connect(_on_quiet_moment_combat_ended)
+	if is_instance_valid(GlobalState) and GlobalState.has_signal("cargo_changed"):
+		GlobalState.cargo_changed.connect(_on_quiet_moment_cargo_changed)
+	if is_instance_valid(ship_behavior_observer):
+		ship_behavior_observer.semantic_movement_event.connect(
+			_on_quiet_moment_movement_event
+		)
+
+
+# Her post-combat beat is built around DAMAGE — a packet saying "hull stable"
+# gives her nothing to work with and every line collapses into relief. So it
+# only fires when she actually took a beating.
+const QUIET_MOMENT_DAMAGED_HULL_FRACTION := 0.85
+
+
+func _on_quiet_moment_combat_ended(player_won: bool) -> void:
+	if not player_won or not is_instance_valid(quiet_moment_director):
+		return
+	if player == null or not is_instance_valid(player):
+		return
+	var max_health := float(player.get("max_health"))
+	if max_health <= 0.0:
+		return
+	var fraction := float(player.get("health")) / max_health
+	if fraction <= QUIET_MOMENT_DAMAGED_HULL_FRACTION:
+		quiet_moment_director.try_fire("nova_post_combat_damaged")
+
+
+# Fires on the transition into a full hold, not on every cargo tick.
+var _quiet_moment_hold_was_full: bool = false
+
+
+func _on_quiet_moment_cargo_changed(new_cargo: float) -> void:
+	if not is_instance_valid(quiet_moment_director) or not is_instance_valid(GlobalState):
+		return
+	var capacity := float(GlobalState.cargo_max)
+	if capacity <= 0.0:
+		return
+	var full := new_cargo >= capacity - 0.001
+	if full and not _quiet_moment_hold_was_full:
+		quiet_moment_director.try_fire("nova_cargo_full")
+	_quiet_moment_hold_was_full = full
+
+
+func _on_quiet_moment_movement_event(event_id: String, _context: Dictionary) -> void:
+	var beat_id := str(QUIET_MOMENT_MOVEMENT_BEATS.get(event_id, ""))
+	if beat_id.is_empty() or not is_instance_valid(quiet_moment_director):
+		return
+	quiet_moment_director.try_fire(beat_id)
+
+
+# Silence is a valid outcome, but a tester needs to see it happened and why —
+# otherwise a working beat that stayed quiet looks like a broken one.
+func _capture_quiet_moment_state() -> Dictionary:
+	if not is_instance_valid(quiet_moment_director):
+		return {}
+	return quiet_moment_director.to_save_dict()
+
+
+func _on_quiet_moment_silent(beat_id: String, reasons: Array) -> void:
+	# Silences also go to GenerationDiagnostics unconditionally; this is only
+	# the on-screen echo, so it stays behind the open dev panel rather than
+	# spamming a real playthrough's chatter feed.
+	if not is_instance_valid(_dev_panel) or not _dev_panel.visible:
+		return
+	GlobalState.emit_chatter("SYSTEM",
+		"DEBUG: %s silent (%s)" % [beat_id, ", ".join(reasons)],
+		Color(1.0, 0.85, 0.5))
+
+
+# Kaelen's completion beats split on the same payout/risk bands the rest of
+# the dialogue layer already uses (see LLMInterface high_payout/lower_payout).
+func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
+	if not is_instance_valid(quiet_moment_director):
+		return
+	var reward := int(quest_data.get("reward_credits", 0))
+	var beat_id := "kaelen_low_pay_safe"
+	if bool(quest_data.get("public_board", false)):
+		# Her snobbery about board work outranks the payout band: the joke is
+		# that it was beneath them, whatever it paid.
+		beat_id = "kaelen_public_board"
+	elif reward >= 300 or bool(quest_data.get("known_tough", false)):
+		beat_id = "kaelen_high_pay_dangerous"
+	quiet_moment_director.try_fire(beat_id)
+
+
+func _on_quiet_moment_quest_abandoned(_quest_data: Dictionary) -> void:
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire("kaelen_abandoned")
+
+
+func _on_quiet_moment_quest_declined(_quest_data: Dictionary) -> void:
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire("kaelen_declined")
+
+
+# A finished line goes out in the speaker's own voice. N.O.V.A. has her own
+# budget/severity handling; Kaelen routes through the flavor path that carries
+# her TTS profile.
+func _on_quiet_moment_ready(speaker: String, _beat_id: String, line: String) -> void:
+	if line.strip_edges().is_empty():
+		return
+	if speaker == "nova":
+		if is_instance_valid(Nova) and Nova.has_method("speak"):
+			Nova.speak(line)
+		return
+	if speaker == "kaelen" and is_instance_valid(GlobalState):
+		GlobalState.emit_npc_flavor({
+			"npc_name": "Broker Kaelen",
+			"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
+			"line": line,
+		})
+
+
 # Safe, player-visible context stamped onto every semantic movement event.
 # Only knowledge the player and the ship already have: hull band, the active
 # mission's public beat, whether this system is new, and whether the player
@@ -1856,6 +2002,9 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"board_cooldowns": QuestManager.capture_board_cooldowns(),
 		"story_state": StoryManager.capture_story_state_for_checkpoint(),
 		"npc_states": _capture_npc_state_for_checkpoint(),
+		# Quiet-moment recency. WITHOUT THIS the freshness guarantee resets on
+		# every reload, which is the entire point of the feature.
+		"quiet_moments": _capture_quiet_moment_state(),
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -5754,6 +5903,9 @@ func _apply_save_data(data: Dictionary) -> void:
 		push_warning(
 			"[GameRoot] Save story_state failed validation during restore."
 		)
+	var checkpoint_quiet_moments = data.get("quiet_moments", {})
+	if checkpoint_quiet_moments is Dictionary and is_instance_valid(quiet_moment_director):
+		quiet_moment_director.load_from_dict(checkpoint_quiet_moments)
 	var checkpoint_npc_states = data.get("npc_states", {})
 	if checkpoint_npc_states is Dictionary \
 			and not (checkpoint_npc_states as Dictionary).is_empty():
@@ -9927,6 +10079,18 @@ func _init_dev_panel() -> void:
 	_dev_panel.force_dock_rumor_requested.connect(func():
 		if is_instance_valid(StoryManager):
 			StoryManager._maybe_fire_dock_rumor(null, true)
+	)
+	_dev_panel.quiet_moment_requested.connect(func(beat_id: String):
+		if not is_instance_valid(quiet_moment_director):
+			GlobalState.emit_chatter("SYSTEM", "DEBUG: quiet-moment director missing.", Color(1.0, 0.6, 0.6))
+			return
+		# ignore_cooldown so a tester can fire beats back to back; probability
+		# still applies, which is itself worth being able to observe.
+		var fired: bool = quiet_moment_director.try_fire(beat_id, {"ignore_cooldown": true})
+		if not fired:
+			GlobalState.emit_chatter("SYSTEM",
+				"DEBUG: %s declined (probability roll, model not ready, or already running)." % beat_id,
+				Color(1.0, 0.85, 0.5))
 	)
 	_dev_panel.ollama_auto_restart_toggled.connect(func(enabled: bool):
 		LLMInterface.ollama_auto_restart_allowed = enabled

@@ -6,10 +6,28 @@ signal spawn_boss_requested
 signal spawn_squad_requested
 signal stores_restock_requested
 signal force_dock_rumor_requested
+signal quiet_moment_requested(beat_id: String)
 signal ollama_auto_restart_toggled(enabled: bool)
 signal force_restart_ollama_requested
 signal spawn_test_hostile_requested
 signal clear_test_hostiles_requested
+
+# Kept in declaration order so the picker reads predictably. Source of truth
+# is data/content/quiet_moment_beats.json.
+const QUIET_MOMENT_BEAT_IDS := [
+	"kaelen_low_pay_safe",
+	"kaelen_high_pay_dangerous",
+	"kaelen_public_board",
+	"kaelen_abandoned",
+	"kaelen_declined",
+	"nova_post_combat_damaged",
+	"nova_repair_done",
+	"nova_long_transit",
+	"nova_cargo_full",
+	"nova_rough_arrival",
+	"nova_hard_burn",
+	"nova_returned_same_station",
+]
 
 # ── Layout refs ───────────────────────────────────────────────────────────────
 var _action_vbox: VBoxContainer
@@ -240,6 +258,26 @@ func _build_story_debug_tab() -> void:
 	force_rumor_btn.text = "Force Dock Rumor Roll"
 	force_rumor_btn.pressed.connect(func(): force_dock_rumor_requested.emit())
 	tab.add_child(force_rumor_btn)
+
+	tab.add_child(HSeparator.new())
+	tab.add_child(_story_section_label("Quiet Moments"))
+	var qm_hint := Label.new()
+	qm_hint.text = ("Fires a fixed-cast beat now, ignoring cooldown and fire
+"
+		+ "probability. Silence is a valid result; watch the log for why.")
+	qm_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tab.add_child(qm_hint)
+	var qm_picker := OptionButton.new()
+	for beat_id in QUIET_MOMENT_BEAT_IDS:
+		qm_picker.add_item(str(beat_id))
+	tab.add_child(qm_picker)
+	var qm_btn := Button.new()
+	qm_btn.text = "Fire Quiet Moment"
+	qm_btn.pressed.connect(func():
+		if qm_picker.selected >= 0:
+			quiet_moment_requested.emit(qm_picker.get_item_text(qm_picker.selected))
+	)
+	tab.add_child(qm_btn)
 
 	tab.add_child(HSeparator.new())
 	tab.add_child(_story_section_label("Ollama Recovery"))
