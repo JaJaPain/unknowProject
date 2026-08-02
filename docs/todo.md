@@ -320,10 +320,20 @@ _Full analysis `docs/quiet_moment_llm_findings.md` (read §11 first); working st
 ### Quiet-moment beats — build-out done, integration pending (2026-08-01)
 _Nine beats built and measured. Full handoff: `docs/research/quiet_moment/SYSTEM.md`; research log `ITERATIONS.md`._
 
-- [ ] **Wire the selector into Godot with persisted recency state** -- `selector.py` gates on recent openers, phrases and closers. Without persistence the freshness guarantee dies at the first save/load, which is the whole point of the feature.
+- [x] ~~Wire the selector into Godot with persisted recency state~~ -- scripts landed 2026-08-02; SAVE INTEGRATION STILL PENDING (see below) -- `selector.py` gates on recent openers, phrases and closers. Without persistence the freshness guarantee dies at the first save/load, which is the whole point of the feature.
 - [ ] **Firing policy + arbitration** -- `ShipBehaviorObserver` already uses a 180s semantic cooldown. Quiet moments now compete with lounge chatter and mission dialogue; `PlayerInteractionQueue` looks like the right owner. Never fire during combat.
 - [ ] **Log silences and rejections through `GenerationDiagnostics`** -- per the project rule that fallbacks are failures to drive to root cause, not normal operation.
 - [ ] **Measure qwen3:14b VRAM under load** -- 9.3GB on a 16GB card alongside the renderer. `qwen3:4b` is the fallback at noticeably blander voice. (qwen3.6:35b-a3b is ruled out: 24GB, does not fit.)
 - [ ] **Bible updates the research implies** -- allow Kaelen's "steer toward better-paying work" (`quiet_moment.must_not` currently forbids it and the validator enforces that); gate `public_board_money_rule` to public-board moments only; drop `receipts` from her favored motifs (author: fine if it arises naturally, don't seed it).
 - [x] ~~`nova_hard_burn` needs another pass~~ -- done 2026-08-02, now 15/16.
 - [ ] **Hand-write gate-transit and cold-boot beats** -- deliberately excluded from generation because they collide with the scripted amnesia flashback and pre-rendered opening audio.
+
+### Quiet moments — wiring landed, hookup pending (2026-08-02)
+_Scripts, data and tests are in. Handoff: `docs/research/quiet_moment/SYSTEM.md`; method: `skills/skill_llm_character_dialogue.md`._
+
+- [ ] **Connect triggers to `QuietMomentDirector.try_fire()`** -- nothing calls it yet. `ShipBehaviorObserver` already emits `clean_long_transit`, `rough_arrival`, `boost_again_quickly`, `returned_to_same_station` with context; `QuestManager` emits completion/decline/abandon.
+- [ ] **Persist the director through the save** -- `to_save_dict()`/`load_from_dict()` exist but nothing calls them. Without this the recency state resets on every reload and the freshness guarantee is gone, which is the entire point of the feature.
+- [ ] **Call `reset_for_new_campaign()`** on new-campaign start, or the first hour inherits the previous playthrough's position in every rotation cycle.
+- [ ] **Arbitration** -- quiet moments compete with lounge chatter and mission dialogue. The director has its own 180s cooldown but doesn't know about other speakers; `PlayerInteractionQueue` looks like the right owner.
+- [ ] **Never fire during combat** -- the fixed-cast bible separates `combat` from `quiet_moment`.
+- [ ] **Named servicers from game state** -- the jealousy device names a mechanic ("Mrs. Kross"); the pool is a placeholder. Draw from the current/last visited system so it names someone the player actually met.

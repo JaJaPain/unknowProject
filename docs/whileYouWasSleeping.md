@@ -2003,3 +2003,33 @@ validation, speech_service, game_content_registry, local_model_gateway.
   `.tmp_godot_user/quiet_moment_audio/MORNING_2026_08_02/` with INDEX.txt
   marking which beats were revised and which are new.
 - Still research only. Nothing wired into Godot.
+
+## 2026-08-02 (later) — Quiet moments wired into Godot + methodology skill
+
+- Wrote `skills/skill_llm_character_dialogue.md`: how this was made to work,
+  written because the first attempt failed badly enough that switching to
+  canned lines looked like the only option. Leads with the three
+  misdiagnoses (examples demonstrating the WRONG TASK; ban lists
+  manufacturing their own failures; the bible injecting the "invention"),
+  then the hook, demos-as-spec, code-side rotation, valence/aim constraints,
+  why validation cannot judge quality, and what transfers between characters.
+- WIRED INTO GODOT. Live end-to-end run: 22/24 served, 0 duplicates, 22/22
+  distinct openers; both declines were nova_hard_burn losing its 25% roll.
+  - `data/content/quiet_moment_beats.json` (generated, not transcribed)
+  - `QuietMomentChecks.gd` / `QuietMomentBeats.gd` / `QuietMomentSelector.gd`
+    / `NovaAnatomySlip.gd` / `QuietMomentDirector.gd`
+  - capability `quiet_moment` in LocalModelGateway; request path on
+    LLMInterface at temperature 0.9 / top_p 0.95
+  - four headless test suites + a live serial soak, all green
+- The live run caught three defects, ALL in text we authored ourselves:
+  third-person "The Captain" in a valence and two packets (she echoed it back
+  while talking TO him), four hyphen compounds in packets, and temperature
+  shipped at 0.95 where the research measured 0.9. export_beats.py now
+  refuses to ship authored text that fails our own screening.
+- STILL TO DO before this is live in a playthrough:
+  1. nothing calls `try_fire()` yet — connect the ShipBehaviorObserver and
+     QuestManager signals
+  2. save/load does not call `to_save_dict()`/`load_from_dict()` — WITHOUT
+     THIS THE FRESHNESS GUARANTEE RESETS EVERY RELOAD
+  3. call `reset_for_new_campaign()` on new-campaign start
+  4. arbitration with lounge chatter and mission dialogue
