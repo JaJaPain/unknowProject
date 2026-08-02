@@ -5,16 +5,22 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
-### Jenna Kross replayed her intro at a second dock
+### Jenna Kross replayed her first-meeting intro at a second dock
 **Spotted:** 2026-08-02 (playtest)
-**Severity:** Medium — breaks the fiction of having already met someone, and undermines the agent-memory system that is otherwise tracking this relationship
-**Description:** Jenna Kross delivered her introduction dialogue twice, at two separate docking events. Her intro should play once, on first meeting, and every later dock should get an ongoing-relationship greeting instead. Note the spelling for searching: the NPC is **Jenna Kross** (`npc.jenna_kross`), not "Cross".
-**Where to look:**
-- `data/content/npcs.json` — `npc.jenna_kross` is `location_id: station.start.main` with `role_tags: ["mechanic", "contact"]`, so she is both a mechanic contact and a mission agent. Two systems may be greeting her independently; check whether the second intro came from the mechanic path or the agent path, since they may not share a "met" flag.
-- **Strong lead: no first-meeting flag was found anywhere in `scripts/`.** Searches for `intro_seen` / `first_meeting` / `has_met` / `greeted` / `introduced` turn up nothing. If there genuinely is no "have I introduced myself to this NPC" state, then repeating the intro is the CURRENT DESIGN rather than a state-restore bug, and the fix is to add that flag rather than to repair one.
-- If a flag does exist, check it persists through save/load and is keyed per NPC id rather than per station — a station-keyed flag would re-fire her intro at any dock she appears at.
-- `campaign_agent_memory_store` (`GameRoot.gd:155`) already records her by name in `agent_memory_snippets.json`, including completed jobs. That store may be the right home for a "met" flag, since it already survives across docks and is per agent.
-- Her tone card lives in `data/content/llm_dialogue_content.json` ("Cocky mechanic (Jenna Kross)"), and there is an existing `mechanic_intro` LLM capability (see the session-start timeout entry below), so the intro is generated rather than fixed — worth confirming whether the repeat was the same text or a second generated intro.
+**Severity:** Medium — breaks the fiction of having already met someone, and the line explicitly introduces her by name ("Name's Jenna...") so the repeat is very noticeable
+**Description:** Jenna Kross delivered her first-meeting introduction twice, at two separate docks. Playtester is ~95% sure the text was **identical** both times, and reports a **different, normal greeting after turning in the first mission**. Note the spelling for searching: `npc.jenna_kross`, Kross with a K.
+
+Both observations are explained by one cause. Her intro is not generated — it is the hardcoded constant `JENNA_FIRST_MEETING_LINE` (`UIManager.gd:7973`), which is why it was word-for-word identical. It is served whenever `_mechanic_has_prior_visit()` returns false, and the later normal greeting means that check finally started returning true.
+
+**Where to look — the asymmetry is the likely cause:**
+- **The first-meeting line is served at DOCK time.** `_cache_mechanic_intro()` (~`UIManager.gd:8171`) pre-caches the greeting on arrival and, if `_mechanic_has_prior_visit()` is false, uses `JENNA_FIRST_MEETING_LINE`.
+- **The flag is written from exactly ONE place, and it is a different event:** `_mark_current_mechanic_first_visit()` has a single call site, `_on_maintenance_bay_pressed()` (`UIManager.gd:7351`) — i.e. only when the player clicks into the Maintenance Bay submenu.
+- So docking, hearing/seeing the intro, and leaving **without entering the maintenance bay** would never set the flag, and the next dock legitimately serves the first-meeting line again. Confirm whether the intro can be surfaced anywhere the flag write isn't reached.
+- If the player DID enter the bay both times, then the write itself is the suspect: `campaign_npc_state_store.has_one_shot_flag(mechanic_id, _MECHANIC_FIRST_VISIT_FLAG)` — check the flag actually persists (the store is captured under `npc_states` in the save) and that `mechanic_id` is non-empty at write time, since `_mechanic_has_prior_visit` returns false for an empty id.
+- **Fix direction:** mark the first visit when the intro is SERVED, not when a submenu is opened. The two should not be able to disagree.
+- **Correcting an earlier note in this entry:** a first-meeting flag *does* exist. Searching for `intro_seen` / `first_meeting` / `has_met` finds nothing because it is named `_MECHANIC_FIRST_VISIT_FLAG` and goes through `has_one_shot_flag`.
+
+**How to verify next time:** the line is a constant, so an exact-match repeat confirms the first-meeting path fired twice. Any *differently worded* greeting came from the generated path instead and is a separate issue.
 
 ---
 
