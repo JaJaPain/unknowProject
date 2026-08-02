@@ -73,7 +73,7 @@ def normalize_quotes(s):
              .replace("—", "-").replace("–", "-"))
 
 
-def check(line, cap=28, packet="", speaker="", demos=(), brief=""):
+def check(line, cap=28, packet="", speaker="", demos=(), brief="", lead_in=""):
     f = []
     if not line:
         return ["no_parse"]
@@ -90,6 +90,17 @@ def check(line, cap=28, packet="", speaker="", demos=(), brief=""):
     # vivid enough to look like sample dialogue.
     if brief and _shares_run(line, brief, 6):
         f.append("brief_echo")
+    # The reaction must not restate the code-owned lead-in it follows.
+    # A 4-word run misses short lead-ins ("They're finished." is two words and
+    # was echoed verbatim), so also compare the opening words directly.
+    if lead_in:
+        lw, xw = words(normalize_quotes(lead_in)), words(line)
+        n = min(len(lw), len(xw))
+        if _shares_run(line, lead_in, 4) or (n >= 2 and lw[:n] == xw[:n]):
+            f.append("lead_in_echo")
+        # only one "Captain" per spoken line; the lead-in may already have it
+        if (lead_in + " " + line).lower().count("captain") > 1:
+            f.append("double_address")
     # cross-character address: only N.O.V.A. says Captain, only Kaelen says Shiny
     low = line.lower()
     if speaker == "kaelen" and "captain" in low:

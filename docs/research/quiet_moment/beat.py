@@ -26,6 +26,18 @@ def build_prompt(beat: dict, packet: str, rng: random.Random) -> str:
     pool = beat.get("detail_pool")
     if pool:
         packet = f"{packet} {beat['detail_prompt'].format(detail=rng.choice(pool))}"
+    # Author 2026-08-02: some beats sound unwarranted without a code-owned
+    # factual opener naming what just happened ("Enemy vessel is destroyed."
+    # then the reaction). The lead-in is authored text, never generated, and
+    # the model is told it has already been said so it doesn't repeat it.
+    lead = beat.get("_lead_in")
+    if lead:
+        packet = (
+            packet
+            + '\n\nShe has ALREADY said this out loud, just now: "' + lead + '"\n'
+            + 'Your line is what she says NEXT. Do not repeat it, do not restate the '
+            + 'fact it contains, and do not begin by agreeing with it — carry straight '
+            + 'on from it as the same breath of speech.')
     demos = beat["sample"](rng, beat.get("demo_count", 5), avoid_facts=packet)
     shown = "\n\n".join(
         f"Once, when {f[0].lower() + f[1:]} she said this.\n“{l}”"
@@ -56,6 +68,8 @@ def make(beat: dict):
         SPEAKER = beat.get("speaker", "")
         CAP = beat.get("cap", 28)
         DEMO_LINES = beat.get("demo_lines", ())
+        LEAD_INS = beat.get("lead_in_pool", ())
+        FIRE_PROBABILITY = beat.get("fire_probability", 1.0)
         BRIEF_TEXT = beat.get("valence", "") + " " + beat.get("register", "")
 
         @staticmethod
@@ -127,3 +141,20 @@ She is not mournful and she is not fussing over him. She's enjoying herself."""
 NOVA_SCOPE = """She picks ONE thing and runs with it. She never invents a number, a percentage, another
 system's condition, a threat, a contact, a place, or an event before or after this moment. She
 gives no instruction or recommendation. Under 30 words."""
+
+
+def compose(beat: dict, packet: str, rng: random.Random):
+    """Returns (prompt, lead_in). Pick the lead-in before building the prompt
+    so the model can be told what it has to follow on from."""
+    lead = ""
+    if beat.get("lead_in_pool"):
+        lead = rng.choice(beat["lead_in_pool"])
+    scoped = dict(beat, _lead_in=lead)
+    return build_prompt(scoped, packet, rng), lead
+
+
+def join(lead: str, line: str) -> str:
+    if not lead:
+        return line
+    sep = " " if lead.rstrip()[-1:] in ".!?" else ". "
+    return lead.rstrip() + sep + line

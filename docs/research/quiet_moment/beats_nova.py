@@ -9,6 +9,19 @@ _BASE = {"speaker": "nova", "cap": 30, "who": NOVA_WHO,
 # ------------------------------------------------- post-combat, damaged
 POST_COMBAT_DAMAGED = dict(_BASE, **{
     "id": "nova_post_combat_damaged",
+    # Author 2026-08-02: without a factual opener the reaction sounds
+    # unwarranted. Code owns the kill confirmation; the model owns what
+    # follows it.
+    "lead_in_pool": [
+        "Enemy vessel is destroyed.",
+        "That's the last of them.",
+        "Hostile is down.",
+        "Target's gone.",
+        "They're finished.",
+        "The last one's scrap.",
+        "Enemy ship is down, Captain.",
+        "That's them dealt with.",
+    ],
     "packets": [
         "The fight is over. The ship took a beating and needs work at a dock.",
         "They're gone, but not before opening up a stretch of her plating.",
@@ -156,6 +169,16 @@ BEATS = {b["id"]: b for b in (POST_COMBAT_DAMAGED, REPAIR_DONE, LONG_TRANSIT, CA
 # ------------------------------------------------- rough arrival
 ROUGH_ARRIVAL = dict(_BASE, **{
     "id": "nova_rough_arrival",
+    "lead_in_pool": [
+        "I wasn't sure we were going to make it here in one piece.",
+        "We're down. Somehow.",
+        "Docked. Barely.",
+        "That's us secured, Captain.",
+        "We made it. Just.",
+        "Clamps have us. Eventually.",
+        "We're stationary. That's the kind word for it.",
+        "Down and stopped, which I'd stopped expecting.",
+    ],
     "packets": [
         "That arrival was rough. She's down safe but it wasn't tidy.",
         "He put her down hard. Nothing broke.",
@@ -188,6 +211,9 @@ BEATS["nova_rough_arrival"] = ROUGH_ARRIVAL
 # ------------------------------------------------- boost again, quickly
 HARD_BURN = dict(_BASE, **{
     "id": "nova_hard_burn",
+    # Author 2026-08-02: "should only play about 25% of the time the player
+    # hits the boost or it will become too redundant."
+    "fire_probability": 0.25,
     "packets": [
         "The boost is lit again, not long after the last one.",
         "Another burn, hard on the heels of the previous one.",
