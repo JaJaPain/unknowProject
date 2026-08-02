@@ -1015,3 +1015,23 @@ type.
 **−** They were also written in third person ("the agent's regards"), and the model dutifully
 said "the agent" instead of "me". **Authored text that a character will SPEAK must be written
 the way they'd say it.**
+
+## Author verdict on the cast (2026-08-02)
+
+> *"4 of the 5 are on brand. the weirdo is mostly there but it's a bit misleading. but the
+> mission card should clear most of that up. the player can chalk it up to him being strange."*
+
+**+ Four approved:** desperate, old_hand, chancer, believer.
+**+ The weirdo is accepted with a caveat**, and the caveat carries a design constraint worth
+stating explicitly:
+
+> His vagueness is only safe **because the mission card carries the real facts.** The player is
+> never relying on him to understand the job.
+
+That gives the beat a hard boundary. He may be **vague** relative to the card, and he may dwell
+on the wrong things — but he must never **contradict** it. Being unclear is characterisation;
+being wrong is a bug the player would rightly report. Any future work on him keeps that line.
+
+It also means his vagueness is *cheap* here and would not be cheap elsewhere. If a beat ever
+carries information the player has no other source for, the weirdo is the wrong personality to
+put on it.
