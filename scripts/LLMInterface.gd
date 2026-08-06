@@ -5110,6 +5110,44 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		temp_http.queue_free()
 
 
+# Name tokens the GENERATED cast must never reuse — the fixed cast plus the
+# named faction agents. A generated salvager came back as "Kaelen Voss": the
+# broker's given name welded onto the Zenith agent's surname. The chatter feed
+# then showed "Kaelen Voss" and "Broker Kaelen" talking as two different people.
+#
+# Matched on TOKENS rather than whole strings, because the collision is never an
+# exact duplicate — it is always a recombination or a near-homophone.
+const RESERVED_CAST_TOKENS: Array[String] = [
+	"kaelen", "caelen", "kaelin", "kaylen",
+	"voss", "ryn", "dask",
+	"jenna", "kross", "cross",
+	"nova",
+]
+
+
+## True if `candidate` reuses any protected cast name. Use before accepting ANY
+## model-invented character name.
+static func name_collides_with_cast(candidate: String) -> bool:
+	var lowered := candidate.to_lower()
+	var flattened := lowered.replace(".", " ").replace("-", " ").replace("'", " ")
+	for raw_token in flattened.split(" ", false):
+		if RESERVED_CAST_TOKENS.has(str(raw_token).strip_edges()):
+			return true
+	# Acronym spellings survive tokenising: "N.O.V.A." splits into four
+	# single letters, none of which is "nova". Stripping every separator and
+	# comparing the whole thing catches that form. Deliberately an EXACT match,
+	# not a substring test — "ryn" as a substring would reject Bryn and Karyn.
+	var squashed := ""
+	for i in lowered.length():
+		var ch := lowered[i]
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			squashed += ch
+	return RESERVED_CAST_TOKENS.has(squashed)
+
+
+# "Caelen Drake" was removed: a near-homophone of Kaelen is exactly the
+# confusion this list should not be seeding, and the guard above would reject
+# it anyway.
 var fallback_salvager_names = [
 	"Maeve Sterling",
 	"Rorik Flint",
@@ -5118,7 +5156,7 @@ var fallback_salvager_names = [
 	"Sloane Mercer",
 	"Jaxom Cruz",
 	"Kira Thorne",
-	"Caelen Drake"
+	"Bel Ashgrove"
 ]
 
 var fallback_salvager_backstories = [
@@ -5145,6 +5183,8 @@ func fetch_salvager_profile(callback: Callable):
 	
 	var prompt = "Generate a unique sci-fi scrapper/miner pilot name and a short (2-3 sentences) backstory. " + \
 		"The pilot operates a salvager ship in the sector. The backstory should detail their origins, their ship name, and their scrapper personality. " + \
+		"The name must NOT use, rhyme with, or recombine any of these existing characters: Kaelen, Voss, Ryn, Dask, Jenna Kross, Nova. " + \
+		"Pick given and family names that sound nothing like those. " + \
 		"You MUST respond strictly in valid JSON format matching this schema exactly. Do not output any notes, markdown codeblock formatting, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
 		"  \"name\": \"[Pilot Name]\",\n" + \
@@ -5224,6 +5264,18 @@ func _on_salvager_profile_request_completed(
 
 
 func _call_salvager_profile_callback(callback: Callable, profile: Dictionary) -> void:
+	# Last line of defence on model-invented names. The prompt asks for a name
+	# unlike the cast's, but asking is not enforcing — this is.
+	var generated_name := str(profile.get("name", "")).strip_edges()
+	if generated_name.is_empty() or name_collides_with_cast(generated_name):
+		if not generated_name.is_empty():
+			_record_llm_fallback(
+				"salvager_profile",
+				"name_collides_with_cast",
+				{"rejected_name": generated_name}
+			)
+		profile = profile.duplicate()
+		profile["name"] = fallback_salvager_names[randi() % fallback_salvager_names.size()]
 	if callback.is_valid():
 		callback.call(profile)
 

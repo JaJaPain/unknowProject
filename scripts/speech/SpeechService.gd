@@ -13,6 +13,15 @@ const LATENCY_FILLER_WAIT_REASONS := [
 ]
 const LATENCY_FILLER_MIN_QUIET_SECONDS := 0.35
 const LATENCY_FILLER_MAX_WAIT_SECONDS := 2.5
+# Ambient lines waiting for the current speaker to finish. Small on purpose:
+# see play_ambient.
+const AMBIENT_QUEUE_MAX := 3
+# How often the queue re-checks whether it can move, and how long a queued line
+# may wait before it is dropped as stale.
+const AMBIENT_DRAIN_POLL_S := 0.25
+const AMBIENT_QUEUE_STALE_MS := 20000
+var _ambient_queue: Array[Dictionary] = []
+var _ambient_drain_accum := 0.0
 
 signal cache_queue_completed()
 signal speech_connection_attempt(attempt: int)
@@ -21,6 +30,12 @@ signal speech_connection_established()
 # audio player's native `finished`, so callers can time things off "she stopped
 # talking" (e.g. fade N.O.V.A.'s portrait, sequence the cold-open).
 signal playback_finished()
+# Fires when a line passed to play_ambient() ACTUALLY starts playing, which is
+# not the same moment it was handed over — it may have queued behind another
+# speaker first. Anything that decorates a line while it is spoken (N.O.V.A.'s
+# talking portrait, the station welcome hold) must key off this rather than off
+# the emit, or it will attach itself to whoever is talking right now instead.
+signal ambient_line_started(text: String)
 
 var provider := KokoroSpeechProvider.new()
 var last_interaction_time: float = 0.0
@@ -70,6 +85,7 @@ func _connect_playback_finished() -> void:
 
 func _on_playback_finished() -> void:
 	playback_finished.emit()
+	_drain_ambient_queue()
 
 
 func start_interaction(interaction_name: String) -> void:
@@ -117,7 +133,93 @@ func stop() -> void:
 	_sequential_active = false
 	_sequential_line_started = Callable()
 	_sequential_total_lines = 0
+	_ambient_queue.clear()
 	provider.stop()
+
+
+## True while a line is being fetched or is actually sounding. Covers both,
+## because TTS is asynchronous: between the request going out and audio starting
+## the player is silent but very much still busy.
+func is_busy() -> bool:
+	if provider.is_requesting():
+		return true
+	var ap = TTSInterface.audio_player
+	return ap != null and is_instance_valid(ap) and ap.playing
+
+
+## Speak a line that ARRIVED UNBIDDEN — N.O.V.A.'s observations, Kaelen's quiet
+## moments, ambient chatter. These queue behind whatever is already talking
+## instead of cutting it off.
+##
+## Why this exists: one game event can trigger two speakers. Combat ending fires
+## both a post-combat N.O.V.A. line and a quiet-moment beat, and provider.play()
+## is a hard cut, so the second line truncated the first mid-sentence.
+##
+## Player-INITIATED speech still uses play() and still cuts in — when the player
+## clicks something, the response to that click is what they want to hear, and
+## making them wait out an ambient line would feel unresponsive.
+func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> bool:
+	if text.strip_edges().is_empty():
+		return false
+	if _sequential_active or is_busy():
+		# Dropped rather than stacked past the cap. A backlog would arrive long
+		# after the moment it was reacting to, which reads worse than silence.
+		if _ambient_queue.size() >= AMBIENT_QUEUE_MAX:
+			return false
+		_ambient_queue.append({
+			"text": text,
+			"voice": voice_profile,
+			"queued_ms": Time.get_ticks_msec(),
+		})
+		return true
+	play(text, voice_profile)
+	ambient_line_started.emit(text)
+	return true
+
+
+## True while ambient lines are still waiting for their turn. Callers that hold
+## something open "until she stops talking" need this: without it they release
+## on the CURRENT speaker's playback_finished, which may be someone else
+## entirely and may land before the queued line has even begun.
+func has_pending_ambient() -> bool:
+	return not _ambient_queue.is_empty()
+
+
+## Polled as well as signal-driven, and this is not belt-and-braces — the
+## signal alone is NOT sufficient. `finished` only fires when a clip actually
+## plays to the end. A TTS request that fails at the HTTP layer clears
+## is_requesting without ever producing audio, and provider.stop() does not emit
+## `finished` either. Draining only from the signal therefore meant one failed
+## line could wedge the queue forever, and every later ambient line — every
+## N.O.V.A. observation, every Kaelen quiet moment — would be silently
+## swallowed for the rest of the session.
+##
+## Polling makes the signal a latency optimisation instead of the only path out.
+func _process(delta: float) -> void:
+	if _ambient_queue.is_empty():
+		_ambient_drain_accum = 0.0
+		return
+	_ambient_drain_accum += delta
+	if _ambient_drain_accum < AMBIENT_DRAIN_POLL_S:
+		return
+	_ambient_drain_accum = 0.0
+	_drain_ambient_queue()
+
+
+func _drain_ambient_queue() -> void:
+	if _ambient_queue.is_empty() or _sequential_active or is_busy():
+		return
+	# Drop anything that waited so long it is no longer commenting on anything
+	# the player still remembers doing.
+	var now := Time.get_ticks_msec()
+	while not _ambient_queue.is_empty():
+		var entry: Dictionary = _ambient_queue.pop_front()
+		if now - int(entry.get("queued_ms", now)) > AMBIENT_QUEUE_STALE_MS:
+			continue
+		var started_text := str(entry.get("text", ""))
+		play(started_text, entry.get("voice", DEFAULT_PROFILE))
+		ambient_line_started.emit(started_text)
+		return
 
 
 func prepare_text(text: String, voice_profile: Variant) -> String:

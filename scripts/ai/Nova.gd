@@ -213,6 +213,17 @@ var _last_gate_line_ms := -100000000 # anti-spam guard for gate-transit lines
 var _last_hull_warn_ms := -100000000 # anti-spam guard for hull-critical lines
 var _last_arrival_ms := -100000000   # anti-spam guard for system-arrival lines
 var _last_line_index := {}           # tag -> last picked index (avoids back-to-back repeats)
+# Instance id of the ship the engagement warning last fired for. The 8s time
+# cooldown is not enough on its own: a single hostile can trip the warning at
+# target acquisition and again when combat actually opens, which is far enough
+# apart to clear the cooldown but tells the player nothing new the second time.
+var _last_engagement_warn_target_id := 0
+# Verbatim repeat guard, applied to EVERY line she speaks. Any single
+# anti-spam timer only protects its own beat; this catches two different code
+# paths independently arriving at the same sentence.
+var _last_spoken_line := ""
+var _last_spoken_line_ms := -100000000
+const REPEAT_LINE_SUPPRESS_MS := 45000
 
 
 func _ready() -> void:
@@ -345,8 +356,15 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	if not is_instance_valid(GlobalState):
 		return
 	var now := Time.get_ticks_msec()
+	# Verbatim repeat guard. Deliberately ABOVE the severity check: a THREAT
+	# line bypasses the speech budget entirely, so without this the highest
+	# priority lines are the ones most able to repeat themselves.
+	if line == _last_spoken_line and now - _last_spoken_line_ms < REPEAT_LINE_SUPPRESS_MS:
+		return
 	if not _speech_budget_allows(severity, now):
 		return
+	_last_spoken_line = line
+	_last_spoken_line_ms = now
 	# Only casual IDLE/NAV lines count toward the "spoken enough" budget.
 	# Combat/threat warnings are essential and must not spend her budget —
 	# otherwise a fight silences her next dock/arrival line.
@@ -413,6 +431,12 @@ func warn_hostile_engagement(enemy: Node = null) -> String:
 	var now := Time.get_ticks_msec()
 	if now - _last_combat_warn_ms < COMBAT_WARN_COOLDOWN_MS:
 		return ""
+	# One warning per hostile. Announcing the same ship twice is not a second
+	# piece of information, however much time has passed.
+	var target_id: int = enemy.get_instance_id() if enemy != null and is_instance_valid(enemy) else 0
+	if target_id != 0 and target_id == _last_engagement_warn_target_id:
+		return ""
+	_last_engagement_warn_target_id = target_id
 	_last_combat_warn_ms = now
 	var enemy_label := "hostile vessel"
 	if enemy != null and is_instance_valid(enemy):
