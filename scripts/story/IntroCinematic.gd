@@ -549,6 +549,12 @@ func _finish() -> void:
 	if _ui != null and is_instance_valid(_ui):
 		_ui.visible = true
 		var ui := _ui
+		# Control has just come back and nothing is asking for it yet — the gap
+		# before Kaelen hails reads as dead air unless the player is told the
+		# camera is his. Clears itself the moment he looks around, or when
+		# Kaelen takes over below.
+		if ui.has_method("show_control_hint"):
+			ui.show_control_hint("Hold RIGHT MOUSE and drag to look around")
 		get_tree().create_timer(
 			HANDOFF_TO_KAELEN_S - NOVA_CALLING_BEFORE_KAELEN_S,
 			true,
@@ -556,6 +562,8 @@ func _finish() -> void:
 			true
 		).timeout.connect(_play_nova_handoff_line)
 		get_tree().create_timer(HANDOFF_TO_KAELEN_S, true, false, true).timeout.connect(func() -> void:
+			if is_instance_valid(ui) and ui.has_method("clear_control_hint"):
+				ui.clear_control_hint()
 			if is_instance_valid(ui) and ui.has_method("show_kaelen_intro"):
 				ui.show_kaelen_intro()
 			queue_free()

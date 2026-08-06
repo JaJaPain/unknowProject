@@ -74,6 +74,12 @@ var story_state: Dictionary = {
 	"intro_quest_delivered": false,
 	"intro_repair_target_tip_delivered": false,
 	"kaelen_voss_robot_jab_delivered": false,
+	# Per-campaign. Gates the one-time "Dock at Station" flash on the mission
+	# card. Deliberately NOT QuestManager.get_completed_count(), which parses
+	# user://quest_history.md — that file is GLOBAL, so on any machine that has
+	# ever finished a contract it never reads as zero and a new campaign's first
+	# mission gets no flash.
+	"first_contract_handed_in": false,
 	"hinted_lounge_rumors": [],
 	"agent_cooldown_until_minute": 0,
 	"agent_cooldown_message_index": 0,
@@ -293,6 +299,7 @@ func clear_story_state() -> void:
 		"intro_quest_delivered": false,
 		"intro_repair_target_tip_delivered": false,
 		"kaelen_voss_robot_jab_delivered": false,
+		"first_contract_handed_in": false,
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
@@ -1548,6 +1555,11 @@ func _dock_rumor_context(_station) -> Dictionary:
 
 func on_quest_completed(quest: Dictionary) -> void:
 	_check_delay_beats()
+	# One-way latch for the mission card's first-turn-in flash. Set here rather
+	# than on the UI side so it covers every hand-in path.
+	if not bool(story_state.get("first_contract_handed_in", false)):
+		story_state["first_contract_handed_in"] = true
+		_save_story_state()
 	record_mission_outcome_consequence(quest, "completed")
 	_resolve_hooks_for_quest(quest)
 

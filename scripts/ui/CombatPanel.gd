@@ -216,6 +216,12 @@ var _bar_center_x: float = 0.0
 var _queue_strip:      HBoxContainer
 var _execute_row:      HBoxContainer
 var _execute_btn:      Button
+# EXECUTE attention pulse. When nothing on the wheel is affordable any more the
+# turn is a dead end and the game is silently waiting on the player — a player
+# sitting at 0 AP has no way of knowing that. Pulsing the only button that still
+# does something says it without a tutorial popup.
+var _execute_pulse_tween: Tween = null
+var _execute_pulsing := false
 var _btn_active:      Array[TextureRect] = []   # per-button active image
 var _btn_disabled:    Array[TextureRect] = []   # per-button disabled image
 var _btn_blocked:     Array[bool] = []          # per-button disabled state (polar hit-test)
@@ -873,8 +879,10 @@ func _on_planning_started(ap: int, max_ap: int, _intent: Dictionary, _taunts: Di
 			return _sensor_sig(a.get("type", -1), faction, is_boss))
 		_typewrite(" ─►  ".join(sigs))
 	_clear_queue_chips()
-	_refresh_button_states()
+	# Enable before refreshing: _refresh_button_states reads `disabled` when it
+	# decides whether the EXECUTE pulse is warranted.
 	_execute_btn.disabled = false
+	_refresh_button_states()
 	_refresh_hp_bars()
 	_refresh_target_label()
 	if _warp_cd_label:
@@ -914,6 +922,7 @@ func _on_execution_started() -> void:
 	for i in _btn_blocked.size():
 		_btn_blocked[i] = true
 	_execute_btn.disabled = true
+	_set_execute_attention(false)
 	_reset_hover()
 	_fade_controls(false)  # hide the wheel during the action sequence
 
@@ -936,6 +945,7 @@ func _fade_controls(visible_state: bool) -> void:
 		tw.tween_property(node, "modulate:a", target, 0.22)
 
 func _on_combat_ended(_player_won: bool) -> void:
+	_set_execute_attention(false)
 	hide()
 
 func _on_ap_changed(current: int, max_ap: int) -> void:
@@ -1042,6 +1052,16 @@ func _refresh_button_states() -> void:
 		if i < _btn_active.size():
 			_btn_active[i].visible   = not is_disabled
 			_btn_disabled[i].visible = is_disabled
+	# Every wedge unavailable = the turn can only go forward through EXECUTE.
+	# Deriving it from _btn_blocked rather than testing _ap_current == 0 also
+	# catches the equally dead case where AP remains but nothing costs that
+	# little, and the case where cooldowns/consumables have closed the rest.
+	var dead_end := not _btn_blocked.is_empty()
+	for blocked_state in _btn_blocked:
+		if not blocked_state:
+			dead_end = false
+			break
+	_set_execute_attention(dead_end and is_instance_valid(_execute_btn) and not _execute_btn.disabled)
 	# Repair-kit count badge — shows remaining consumables (greys at 0).
 	if is_instance_valid(_repair_count_label):
 		var kits: int = GlobalState.inventory.get_quantity("repair_kit")
@@ -1049,6 +1069,29 @@ func _refresh_button_states() -> void:
 		_repair_count_label.add_theme_color_override(
 			"font_color",
 			Color(0.45, 1.0, 0.55) if kits > 0 else Color(0.6, 0.6, 0.6))
+
+## Starts/stops the EXECUTE pulse. Idempotent — called every button refresh.
+func _set_execute_attention(on: bool) -> void:
+	if not is_instance_valid(_execute_btn) or on == _execute_pulsing:
+		return
+	_execute_pulsing = on
+	if is_instance_valid(_execute_pulse_tween):
+		_execute_pulse_tween.kill()
+		_execute_pulse_tween = null
+	if not on:
+		_execute_btn.self_modulate = Color.WHITE
+		return
+	_execute_pulse_tween = _execute_btn.create_tween().set_loops()
+	# Wall-clock, like _fade_controls: the planning phase runs in slow-mo and a
+	# pulse that slowed with it would read as the UI lagging, not as a prompt.
+	_execute_pulse_tween.set_ignore_time_scale(true)
+	_execute_pulse_tween.tween_property(
+		_execute_btn, "self_modulate", Color(1.75, 1.75, 1.75, 1.0), 0.45
+	).set_trans(Tween.TRANS_SINE)
+	_execute_pulse_tween.tween_property(
+		_execute_btn, "self_modulate", Color.WHITE, 0.45
+	).set_trans(Tween.TRANS_SINE)
+
 
 func _refresh_hp_bars() -> void:
 	var p     := CombatManager.player_node

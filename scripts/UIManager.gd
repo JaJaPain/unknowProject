@@ -196,6 +196,17 @@ var _repaired_this_dock: bool = false
 const _MECHANIC_NOVA_FIRST_REPAIR_FLAG := "mechanic_nova_first_repair_seen"
 const _MECHANIC_FIRST_VISIT_FLAG := "mechanic_first_visit_seen"
 var _mechanic_first_visit_this_dock := false
+# Attack range gate. TWO thresholds, not one: the action becomes available at
+# ENTER and stays available all the way out to EXIT. A single line would make
+# the button blink in and out while the player manoeuvres around it. Once you
+# are close enough to attack you keep the option until you have clearly given
+# up the chase.
+const ATTACK_REACH_ENTER_M := 600.0
+const ATTACK_REACH_EXIT_M := 1200.0
+# Hysteresis means the button is not a pure function of distance — it also
+# depends on whether it was already enabled. That is one bool on the targeting
+# side, not per-ship state, because there is only ever one target.
+var _attack_in_reach := false
 const _JENNA_NOVA_FIRST_REPAIR_LINE := "All patched. And your ship just corrected my diagnostic rig before I touched it. That is either very expensive hardware or something I should not be asking about. We are square."
 const _GENERATED_MECHANIC_NOVA_FIRST_REPAIR_LINES := [
 	"That is the repair. Your ship AI audited my tools while I worked. I have seen military rigs with less nerve. I saw nothing, obviously.",
@@ -295,6 +306,7 @@ var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
 var quest_tracker_route_btn: Button
 var quest_tracker_turn_in_btn: Button
+var _first_turn_in_flash_on := false
 var quest_tracker_secondary_container: VBoxContainer
 var quest_tracker_nav_container: HBoxContainer
 var quest_tracker_prev_btn: Button
@@ -446,6 +458,10 @@ var marker_active: bool = false
 var marker_timer: float = 0.0
 var marker_pos_3d: Vector3 = Vector3.ZERO
 var selection_marker: Control
+var _control_hint_label: Label = null
+# line text -> N.O.V.A. expression, held between a line being handed to the
+# speech queue and that line actually starting. See _on_ambient_line_started.
+var _pending_nova_expressions: Dictionary = {}
 var intro_handhold_arrow: Control
 var _intro_handhold_arrow_start: Vector2 = Vector2.ZERO
 var _intro_handhold_arrow_end: Vector2 = Vector2.ZERO
@@ -660,6 +676,7 @@ func _process(delta):
 	# Update overview list item distances
 	_update_overview_distances(delta)
 	_update_intro_handhold()
+	_update_control_hint()
 	_update_npc_attention_buttons()
 	
 	# Update target indicator marker
@@ -992,6 +1009,8 @@ func _create_hud():
 	GlobalState.npc_flavor_spoken.connect(_on_npc_flavor_spoken)
 	if SpeechService.has_signal("playback_finished"):
 		SpeechService.playback_finished.connect(_fade_nova_talk_portrait)
+	if SpeechService.has_signal("ambient_line_started"):
+		SpeechService.ambient_line_started.connect(_on_ambient_line_started)
 
 	# Story quest HUD — connect signals so the panel updates without polling
 	if is_instance_valid(StoryQuestManager):
@@ -3691,6 +3710,9 @@ func _sort_overview_list():
 
 # Target signal callbacks
 func _on_target_changed(new_target: Node3D):
+	# Selecting a new target is what clears the hysteresis latch — being in
+	# reach of the last ship says nothing about this one.
+	_attack_in_reach = false
 	if new_target and is_instance_valid(new_target):
 		target_panel.visible = true
 		var type_str = "Object"
@@ -3753,7 +3775,7 @@ func _on_target_changed(new_target: Node3D):
 				target_action_btn.visible = true
 			elif new_target.is_in_group("ship"):
 				target_action_btn.text = "Attack Hostile"
-				target_action_btn.tooltip_text = ""
+				_apply_attack_reach(target_action_btn, new_target)
 				target_action_btn.visible = true
 			elif new_target.is_in_group("wreckage"):
 				target_action_btn.text = "Salvage"
@@ -3985,6 +4007,8 @@ func toggle_dock_menu(
 			inventory_panel.visible = false
 		if GlobalState.player:
 			GlobalState.player.is_docked = false
+		# Dock state gates the mission card, so both edges have to re-run this.
+		_update_quest_tracker()
 	else:
 		var procedure_completed := _dock_procedure_completed_pending
 		_dock_procedure_completed_pending = false
@@ -4101,6 +4125,9 @@ func toggle_dock_menu(
 			_cache_mechanic_intro()
 			_announce_bounties_on_dock()
 
+		# Dock state gates the mission card, so both edges have to re-run this.
+		_update_quest_tracker()
+
 		if fresh_dock:
 			_show_station_welcome(station, is_outpost)
 		else:
@@ -4194,6 +4221,20 @@ func _show_station_welcome(station: Node3D, is_outpost: bool) -> void:
 func _release_station_welcome(serial: int) -> void:
 	if serial != _station_welcome_serial or not _station_welcome_active \
 			or not is_instance_valid(station_welcome_overlay):
+		return
+	# N.O.V.A.'s arrival line may still be waiting its turn behind dock control.
+	# Releasing on THAT clip's playback_finished dismissed this overlay before
+	# she had said a word — which is what made the welcome look like it never
+	# appeared. Re-arm and wait for the queue to actually empty. The
+	# STATION_WELCOME_MAX_WAIT_SECONDS timer still guarantees release, so a line
+	# that never plays cannot strand the overlay.
+	if is_instance_valid(SpeechService) \
+			and SpeechService.has_method("has_pending_ambient") \
+			and SpeechService.has_pending_ambient():
+		SpeechService.playback_finished.connect(
+			_release_station_welcome.bind(serial),
+			CONNECT_ONE_SHOT
+		)
 		return
 	_station_welcome_active = false
 	var fade := station_welcome_overlay.create_tween().set_ignore_time_scale(true)
@@ -4464,7 +4505,9 @@ func _render_bounty_board(should_show: bool) -> void:
 		return
 	for child in _bounty_board_list.get_children():
 		child.queue_free()
-	if not should_show:
+	# WANTED posters are a second, competing offer. They stay off the wall until
+	# the starter contract has actually been handed in.
+	if not should_show or _starter_contract_pending():
 		_bounty_board_panel.visible = false
 		return
 	var active: Array = BountyRegistryScript.shared().get_active_bounties_for_system(GlobalState.current_system_id)
@@ -7348,7 +7391,9 @@ func _title_case_words(value: String) -> String:
 
 func _on_maintenance_bay_pressed() -> void:
 	SpeechService.stop()
-	_mark_current_mechanic_first_visit()
+	# The first-visit flag is NOT written here. It belongs to the moment the
+	# intro is served (_render_mechanic_intro), because this is not the only
+	# way into the bay — N.O.V.A.'s repair prompt gets there too.
 	current_submenu = DockSubmenu.MAINTENANCE
 	_render_dock_submenu()
 
@@ -8031,6 +8076,12 @@ func _best_reputation_tier() -> String:
 # Idempotent: only triggers once per dock. Clears the prior cached line
 # so the next render shows the new one.
 func _announce_bounties_on_dock() -> void:
+	# Gate the ANNOUNCEMENT too, not just the posters: Kaelen calling out bounty
+	# work over comms during the tutorial is the same competing offer, and
+	# _bounty_announced_system latches per system, so announcing early would
+	# also consume the one announcement this system ever gets.
+	if _starter_contract_pending():
+		return
 	var sys := GlobalState.current_system_id
 	if _bounty_announced_system == sys:
 		return
@@ -8189,7 +8240,11 @@ func _cache_mechanic_intro() -> void:
 
 	# A mechanic's first real visit establishes the shop and the person. It is
 	# never allowed to immediately turn into a fetch quest, even after Speak.
-	if _mechanic_first_visit_this_dock or not _mechanic_has_prior_visit(_cached_mechanic_profile):
+	# The starter contract outranks that: until it is handed in, she offers no
+	# errand at all, however many times you have met her.
+	if _starter_contract_pending() \
+			or _mechanic_first_visit_this_dock \
+			or not _mechanic_has_prior_visit(_cached_mechanic_profile):
 		_mechanic_pickup_offer = {}
 	else:
 		_mechanic_pickup_offer = GlobalState.roll_pickup_offer()
@@ -8618,7 +8673,14 @@ func _render_mechanic_intro() -> void:
 		
 	mechanic_line_label.text = line
 	mechanic_intro_panel.visible = true
-	
+
+	# Mark the first meeting HERE, where the line actually reaches the player,
+	# not at whichever button opened the bay. Jenna re-introduced herself at a
+	# second dock because only _on_maintenance_bay_pressed() wrote the flag and
+	# N.O.V.A.'s repair prompt reaches this same panel without going through it.
+	# Any future third entry point is covered by construction.
+	_mark_current_mechanic_first_visit()
+
 	# Show/hide accept/decline buttons if an offer is active
 	var show_offer_btns = false
 	if _mechanic_pickup_offer.get("offer", false) and not _mechanic_pickup_declined and not QuestManager.is_lane_occupied("STATION"):
@@ -8897,11 +8959,33 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 	if line == "":
 		return
 	var voice_profile_id: String = flavor.get("voice_profile_id", "voice.neutral.v1")
-	SpeechService.play(line, voice_profile_id)
-	# N.O.V.A. lines carry an expression — show her portrait above the chat while
-	# she talks (faded out on SpeechService.playback_finished).
+	# N.O.V.A. lines carry an expression. Register it BEFORE handing the line to
+	# the speech queue: if the line plays immediately, ambient_line_started fires
+	# inside that call and the handler needs the expression already waiting.
+	#
+	# The portrait deliberately does NOT go up here. This line may queue behind
+	# another speaker, and showing her face while someone else is talking meant
+	# the very next playback_finished — theirs, not hers — faded her straight
+	# back out again, so she never appeared at all.
 	if flavor.has("nova_expression"):
-		_show_nova_talk_portrait(str(flavor.get("nova_expression", "neutral")))
+		_pending_nova_expressions[line] = str(flavor.get("nova_expression", "neutral"))
+		# Bounded: a dropped or stale line never gets its start signal, so old
+		# entries would otherwise accumulate for the whole session.
+		if _pending_nova_expressions.size() > 8:
+			_pending_nova_expressions.erase(_pending_nova_expressions.keys()[0])
+	# Queued, not played outright: these lines arrive unbidden and two of them
+	# can land on one event (combat ending fires a post-combat N.O.V.A. line AND
+	# a quiet-moment beat), which used to truncate the first mid-sentence.
+	SpeechService.play_ambient(line, voice_profile_id)
+
+
+## Her portrait goes up at the moment her line actually begins.
+func _on_ambient_line_started(text: String) -> void:
+	if not _pending_nova_expressions.has(text):
+		return
+	var expression := str(_pending_nova_expressions[text])
+	_pending_nova_expressions.erase(text)
+	_show_nova_talk_portrait(expression)
 
 
 func _get_contact_mood(npc_name: String) -> String:
@@ -9214,8 +9298,8 @@ func show_context_menu(
 			context_action_btn.visible = true
 		elif entity.is_in_group("ship"):
 			context_action_btn.text = "Attack Hostile"
-			context_action_btn.disabled = false
-			context_action_btn.tooltip_text = ""
+			# Same rule as the target window, or the two would disagree.
+			_apply_attack_reach(context_action_btn, entity)
 			context_action_btn.visible = true
 		elif entity.is_in_group("wreckage"):
 			context_action_btn.text = _salvage_action_label(entity)
@@ -9310,6 +9394,37 @@ func _on_boost_pressed() -> void:
 	_update_target_command_feedback()
 
 
+## Updates the attack-reach latch from the current distance to `target` and
+## returns it. Only the CURRENTLY TARGETED ship is ever measured, so this is one
+## distance test per frame rather than a scan over every hostile.
+func _refresh_attack_reach(target: Node) -> bool:
+	if target == null or not is_instance_valid(target) or not (target is Node3D) \
+			or not target.is_in_group("ship") \
+			or GlobalState.player == null \
+			or not is_instance_valid(GlobalState.player):
+		_attack_in_reach = false
+		return false
+	var dist: float = GlobalState.player.global_position.distance_to(
+		(target as Node3D).global_position
+	)
+	if dist <= ATTACK_REACH_ENTER_M:
+		_attack_in_reach = true
+	elif dist >= ATTACK_REACH_EXIT_M:
+		_attack_in_reach = false
+	# Between the two thresholds the latch simply holds its previous value.
+	return _attack_in_reach
+
+
+## Applies the reach latch to an "Attack Hostile" button. Both the target window
+## and the right-click context menu route through here so they cannot disagree.
+func _apply_attack_reach(btn: Button, target: Node) -> void:
+	if btn == null or not is_instance_valid(btn):
+		return
+	var reachable := _refresh_attack_reach(target)
+	btn.disabled = not reachable
+	btn.tooltip_text = "" if reachable else "Too far to engage — close to %dm." % int(ATTACK_REACH_ENTER_M)
+
+
 func _update_target_command_feedback() -> void:
 	_update_boost_button()
 	if target_approach_btn == null or target_orbit_btn == null or target_action_btn == null:
@@ -9332,6 +9447,13 @@ func _update_target_command_feedback() -> void:
 		target_action_btn.text = _salvage_action_label(target)
 		target_action_btn.disabled = not _can_start_targeted_salvage(target)
 		target_action_btn.tooltip_text = _salvage_action_tooltip(target)
+		_set_command_button_state(target_action_btn, false)
+	elif target and is_instance_valid(target) and target.is_in_group("ship") \
+			and active_mode != "ATTACK":
+		# Re-evaluated every frame so the latch tracks the chase. Skipped while
+		# ATTACK is the active command: at that point the button is reporting a
+		# running order, not offering one, and range must not revoke it mid-chase.
+		_apply_attack_reach(target_action_btn, target)
 		_set_command_button_state(target_action_btn, false)
 	elif active_mode in ["MINE", "ATTACK", "DOCK"]:
 		var in_range := false
@@ -9508,6 +9630,21 @@ func _mechanic_is_waiting_for_player() -> bool:
 func _mechanic_pickup_ready_to_deliver() -> bool:
 	var station_quest: Dictionary = QuestManager.get_pickup_special_data()
 	return not station_quest.is_empty() and bool(station_quest.get("picked_up", false))
+
+
+## True until the player has handed in their FIRST contract.
+##
+## The opening minutes are a guided sequence: Kaelen gives you one job and the
+## whole UI points at it. Anything that offers a second thing to do — bounty
+## posters, a mechanic's fetch errand — competes with the one thing the player
+## has been told to do, and a new player cannot tell which is the tutorial.
+##
+## Uses the same per-campaign flag as the first-turn-in flash. Note this is
+## COMPLETION, not acceptance: `intro_quest_delivered` is set when the player
+## accepts the starter contract, so it is already true while they are flying it.
+func _starter_contract_pending() -> bool:
+	return is_instance_valid(StoryManager) \
+		and not bool(StoryManager.story_state.get("first_contract_handed_in", false))
 
 
 func _intro_handhold_active() -> bool:
@@ -10326,6 +10463,65 @@ func show_hud_warning(text: String):
 # so it reads as neutral information / flavor dialogue rather than an
 # error state. Use for quest progress, gossip lines, lore drops, etc.
 # Reserve show_hud_warning for actual failures the player needs to react to.
+## A persistent on-screen control prompt. Unlike show_hud_info this does NOT
+## time out — it waits for the player to actually do the thing. Used for the
+## cold open, where control returns during a silent beat and a new player has
+## no way to know the camera is theirs; the dead air is the whole problem, so a
+## prompt that expires on a timer would not solve it.
+## Clears itself the moment the control is used (see _update_control_hint).
+func show_control_hint(text: String) -> void:
+	clear_control_hint()
+	var lbl := Label.new()
+	lbl.name = "ControlHint"
+	lbl.text = text
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_color_override("font_color", Color(0.75, 0.92, 1.0))
+	lbl.add_theme_color_override("font_shadow_color", Color.BLACK)
+	lbl.add_theme_constant_override("shadow_outline_size", 4)
+	# Low-center, well clear of show_hud_info's top band.
+	lbl.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	lbl.offset_left = -320
+	lbl.offset_right = 320
+	lbl.offset_top = -190
+	lbl.offset_bottom = -150
+	lbl.modulate.a = 0.0
+	add_child(lbl)
+	_control_hint_label = lbl
+	var fade_in := lbl.create_tween().set_ignore_time_scale(true)
+	fade_in.tween_property(lbl, "modulate:a", 1.0, 0.6)
+	fade_in.tween_callback(func() -> void:
+		if not is_instance_valid(lbl):
+			return
+		var pulse := lbl.create_tween().set_loops().set_ignore_time_scale(true)
+		pulse.tween_property(lbl, "modulate:a", 0.45, 1.1).set_trans(Tween.TRANS_SINE)
+		pulse.tween_property(lbl, "modulate:a", 1.0, 1.1).set_trans(Tween.TRANS_SINE)
+	)
+
+
+func clear_control_hint() -> void:
+	if _control_hint_label == null or not is_instance_valid(_control_hint_label):
+		_control_hint_label = null
+		return
+	var lbl := _control_hint_label
+	_control_hint_label = null
+	var out := lbl.create_tween().set_ignore_time_scale(true)
+	out.tween_property(lbl, "modulate:a", 0.0, 0.4)
+	out.tween_callback(lbl.queue_free)
+
+
+## Polled rather than hooked into _input: the hint lives on a CanvasLayer and
+## the ship's own handler may consume the event first, so asking Input directly
+## is the reading that can't be intercepted.
+func _update_control_hint() -> void:
+	if _control_hint_label == null or not is_instance_valid(_control_hint_label):
+		return
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		clear_control_hint()
+
+
 func show_hud_info(text: String, tint: Color = Color(0.0, 0.85, 1.0)):
 	var info_label = Label.new()
 	info_label.text = text
@@ -11026,18 +11222,21 @@ func _on_talk_to_agent_pressed():
 			type_str = "Clear Hostiles"
 		elif q["objective_type"] == "RECOVER_COMBAT_DROP":
 			type_str = "Recover Data"
-		var active_header := "Active Contract: "
-		if bool(q.get("public_board", false)):
-			active_header = "Public Board Job: "
-		agent_dialogue_label.text = active_header + q["title"] + " (" + type_str + ")\n\n" + \
-			"Briefing: " + q["dialogue"] + "\n\n" + \
-			"Response choice accepted: '" + q["choice_text_selected"] + "'\n"
-		if bool(q.get("public_board", false)):
-			agent_dialogue_label.text += (
-				"Local handler note: Kaelen can close the payout, but she did not post this mess."
-			)
-		else:
-			agent_dialogue_label.text += "Agent feedback: '" + q["agent_response"] + "'"
+		# Her portrait is right here — this is a conversation, and you have
+		# already had the briefing one. Re-opening the panel used to replay the
+		# whole original briefing PLUS a receipt of your own accepted reply,
+		# under field labels ("Response choice accepted:", "Agent feedback:").
+		# That is the UI narrating its own mechanics. She just says hello and
+		# reacts to whether the job is done; the contract itself lives on the
+		# mission card.
+		var is_board_job := bool(q.get("public_board", false))
+		var header := "%s — %s" % [str(q["title"]), type_str]
+		if is_board_job:
+			header = "%s — %s  (public board)" % [str(q["title"]), type_str]
+		agent_dialogue_label.text = "%s\n\n%s" % [
+			header,
+			_kaelen_return_line(QuestManager.is_quest_completed(), is_board_job),
+		]
 			
 		agent_back_btn.visible = true
 		
@@ -12450,13 +12649,26 @@ func _on_quest_expired(title: String) -> void:
 		Color(1.0, 0.55, 0.25)
 	)
 
+## True while the player is parked at a station. The mission card is a flight
+## HUD element — everything it offers (set course, dock at station) is either
+## meaningless or already in front of you once you are docked, and it overlaps
+## the dock menu.
+func _tracker_suppressed_by_dock() -> bool:
+	return GlobalState.player != null \
+		and is_instance_valid(GlobalState.player) \
+		and bool(GlobalState.player.is_docked)
+
+
 func _update_quest_tracker():
-	if not QuestManager.is_quest_active():
+	# Layout edit mode still forces it visible so it can be repositioned; that
+	# check lives at the caller and must keep winning over this one.
+	if not QuestManager.is_quest_active() or _tracker_suppressed_by_dock():
 		quest_tracker_panel.visible = false
 		if quest_tracker_route_btn:
 			quest_tracker_route_btn.visible = false
 		if quest_tracker_turn_in_btn:
 			quest_tracker_turn_in_btn.visible = false
+		_update_first_turn_in_flash(false)
 		return
 
 	quest_tracker_panel.visible = true
@@ -12491,13 +12703,21 @@ func _update_quest_tracker():
 	_refit_quest_tracker_panel()
 
 
+## Reads as a contract ledger entry rather than an instruction to the player.
+## "Return to the station and speak with your agent" is the GAME talking to the
+## person holding the mouse; a settlement line is the fiction talking to the
+## Captain, and it carries the same information — the job isn't closed until
+## someone pays you.
 func _completed_contract_tracker_text(q: Dictionary) -> String:
-	var objective_text := "Mission complete."
 	if bool(q.get("public_board", false)):
-		objective_text = "Board job complete."
-	elif str(q.get("objective_type", "")) == "PICKUP_SPECIAL":
-		objective_text = "Pickup complete."
-	return objective_text + "\nReturn to the station and speak with your agent."
+		return "Board job satisfied.\nPayment pending — dock and settle with the local agent."
+	var objective_text := "Contract satisfied."
+	if str(q.get("objective_type", "")) == "PICKUP_SPECIAL":
+		objective_text = "Cargo secured."
+	var payer := str(q.get("agent_name", "")).strip_edges()
+	if payer.is_empty():
+		payer = "Broker Kaelen"
+	return objective_text + "\nPayment pending — dock and settle with %s." % payer
 
 
 func _should_flash_undock() -> bool:
@@ -12540,9 +12760,13 @@ func _update_quest_tracker_route_button(q: Dictionary) -> void:
 			quest_tracker_route_btn.text = "Dock at Station"
 			quest_tracker_route_btn.disabled = false
 			quest_tracker_route_btn.visible = true
+			_update_first_turn_in_flash(true)
 			if quest_tracker_progress:
 				quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		else:
+			_update_first_turn_in_flash(false)
 		return
+	_update_first_turn_in_flash(false)
 	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
 		return
 	var target := _quest_tracker_route_target(q)
@@ -12559,6 +12783,91 @@ func _update_quest_tracker_route_button(q: Dictionary) -> void:
 	if quest_tracker_progress:
 		quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		quest_tracker_progress.tooltip_text = "Click to set course to %s." % target_name
+
+
+## Flashes the completed-mission "Dock at Station" button, but only for the very
+## first contract of a campaign. A new player has just finished the objective and
+## has no reason to know the mission is not over until he flies back. After that
+## he knows the loop, and flashing it every time would be noise.
+##
+## Reuses the same attention-pulse the intro handhold arrow drives, so there is
+## one flashing treatment in the game rather than two that look slightly
+## different.
+##
+## Gated on the per-campaign story_state flag, NOT QuestManager
+## .get_completed_count(): that parses user://quest_history.md, which is a
+## GLOBAL file. On any machine that has ever finished a contract it never reads
+## as zero, so a new campaign's first mission got no flash at all.
+## Kaelen's line when you re-open her panel on a contract you already accepted.
+## She is greeting you, not re-briefing you.
+##
+## True round-robin rather than random: random re-picks the same line back to
+## back often enough to read as broken, and the player opens this panel a lot.
+##
+## TODO (see the "kill static/canned lines" section of docs/todo.md): these
+## should be LLM-generated per return, with these pools demoted to the logged
+## fallback bucket. Authored for now so the panel is never empty.
+const _KAELEN_RETURN_LINES_WORKING: Array[String] = [
+	"Oh, you're back. Did you get it done?",
+	"There you are. How did it go?",
+	"Back already? Tell me you've got something for me.",
+	"Well? Any progress worth hearing about?",
+	"You're here. Is that good news or are you just lonely?",
+	"Still breathing. That's something. Is it finished?",
+	"Hello again. Come back when there's something to pay you for.",
+	"I've not moved. Neither has the job. One of us should.",
+	"You keep checking in like the contract might do itself.",
+	"Not done yet. I'd have heard. I always hear.",
+]
+const _KAELEN_RETURN_LINES_DONE: Array[String] = [
+	"Oh, you're back. And it's done. Let's settle up.",
+	"There you are. Work's closed on my end — let's make it official.",
+	"Back in one piece with the job finished. Rare combination, Shiny.",
+	"Well. You actually did it. Sit down, I'll square the credits.",
+	"Done and delivered. I'll pretend I never doubted it.",
+	"You're back and the board's clear. That's my favourite version of you.",
+	"Finished. Good. Let's get you paid before someone changes their mind.",
+	"That's the job closed. I've got your cut right here.",
+	"You're back, and it's done. How was it out there?",
+	"Job's clear. Any of it go the way it was supposed to?",
+]
+const _KAELEN_RETURN_LINES_BOARD: Array[String] = [
+	"I can close the payout on this one. I didn't post it, though — that mess isn't mine.",
+	"Board job. I'll handle the credits, but don't hand me the blame for the wording.",
+	"Somebody else posted this. I just take the fee for cleaning up after them.",
+	"I'll settle it. Public board work always reads like it was written by a committee.",
+]
+var _kaelen_return_line_index: Dictionary = {}
+
+
+func _kaelen_return_line(objective_done: bool, is_board_job: bool) -> String:
+	var pool: Array[String] = _KAELEN_RETURN_LINES_BOARD
+	var key := "board"
+	if not is_board_job:
+		pool = _KAELEN_RETURN_LINES_DONE if objective_done else _KAELEN_RETURN_LINES_WORKING
+		key = "done" if objective_done else "working"
+	if pool.is_empty():
+		return ""
+	var idx: int = int(_kaelen_return_line_index.get(key, 0)) % pool.size()
+	_kaelen_return_line_index[key] = idx + 1
+	return pool[idx]
+
+
+func _update_first_turn_in_flash(should_show: bool) -> void:
+	if quest_tracker_route_btn == null or not is_instance_valid(quest_tracker_route_btn):
+		return
+	var wanted := should_show \
+		and is_instance_valid(StoryManager) \
+		and not bool(StoryManager.story_state.get("first_contract_handed_in", false))
+	if wanted == _first_turn_in_flash_on:
+		return
+	_first_turn_in_flash_on = wanted
+	if wanted:
+		_set_npc_attention_button(
+			quest_tracker_route_btn, true, Color(1.0, 0.88, 0.05, 1.0)
+		)
+	else:
+		_set_npc_attention_button(quest_tracker_route_btn, false)
 
 
 func _on_quest_tracker_progress_gui_input(event: InputEvent) -> void:
