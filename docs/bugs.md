@@ -5,7 +5,28 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### First run of a session: no station welcome overlay, N.O.V.A. portrait missing
+**Spotted:** 2026-08-06 (playtest) — **ROOT-CAUSED AND FIXED 2026-08-06** from a live console log.
+**Severity:** Was Medium — the arrival beat silently lost both of its visuals.
+**Cause:** self-inflicted, by the ambient speech queue added earlier the same day. That queue made a line's EMIT and its PLAYBACK two different moments, but two consumers still assumed the next `playback_finished` belonged to the line just emitted:
+
+1. `_show_nova_talk_portrait()` ran at emit time, and `_fade_nova_talk_portrait` is connected to `playback_finished` permanently (`UIManager.gd` ~1008).
+2. `_show_station_welcome()` armed a one-shot `playback_finished` to release the overlay.
+
+The log showed the exact ordering: `Docking control acknowledges…` was still playing when the dock completed, so N.O.V.A.'s arrival line QUEUED behind it. Her portrait went up and the welcome opened — then dock control's clip finished, and that single `playback_finished` faded her portrait and dismissed the welcome, *before she had said a word*. She then spoke to an empty screen.
+
+**Fix:** `SpeechService` now emits `ambient_line_started(text)` when a line actually begins, and exposes `has_pending_ambient()`.
+- The portrait is registered at emit time but only SHOWN on `ambient_line_started` for that exact line, so it appears with her voice and the following `playback_finished` is genuinely hers.
+- `_release_station_welcome()` re-arms instead of releasing while ambient work is pending. The `STATION_WELCOME_MAX_WAIT_SECONDS` timer still guarantees release, so a line that never plays cannot strand the overlay.
+
+**NOT a bug, ruled out during investigation:** the dock menu showing only `Talk to Agent` / `Undock Ship` is correct — services are gated on `_intro_done` (`UIManager.gd` ~4356) until the player has visited the agent.
+
+**Lesson:** introducing a queue in front of playback silently invalidates every listener that treats "the next completion signal" as "my completion signal". When adding one, audit the consumers of the completion event, not just the producer.
+
+---
+
 ### Jenna Kross replayed her first-meeting intro at a second dock
+**Status:** FIXED 2026-08-06 — the flag write moved from `_on_maintenance_bay_pressed()` to `_render_mechanic_intro()`, i.e. from "a particular button was clicked" to "the intro actually reached the player". Both known entry points and any future third one are now covered by construction. Awaiting a live regression run (dock, undock via N.O.V.A.'s repair prompt, re-dock — she should greet normally the second time).
 **Spotted:** 2026-08-02 (playtest)
 **Severity:** Medium — breaks the fiction of having already met someone, and the line explicitly introduces her by name ("Name's Jenna...") so the repeat is very noticeable
 **Description:** Jenna Kross delivered her first-meeting introduction twice, at two separate docks. Playtester is ~95% sure the text was **identical** both times, and reports a **different, normal greeting after turning in the first mission**. Note the spelling for searching: `npc.jenna_kross`, Kross with a K.

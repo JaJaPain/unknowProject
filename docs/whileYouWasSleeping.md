@@ -2070,3 +2070,207 @@ validation, speech_service, game_content_registry, local_model_gateway.
   from the model into code improved the output. Latest instance is the
   author's own - let Godot choose WHICH FACTS each personality receives,
   rather than sending all of them and asking the model to be selective.
+
+---
+
+## 2026-08-06 — First-five-minutes affordance pass + Jenna fix
+
+Everything here lands inside the opening five minutes, which is the milestone
+Abe named last session. All of it is UI-layer; no gameplay systems changed.
+None of it has been playtested yet.
+
+- JENNA'S REPEATED INTRO IS FIXED. The first-visit flag was written by
+  _on_maintenance_bay_pressed() — i.e. by a particular BUTTON — while the
+  intro is served from _render_mechanic_intro(). N.O.V.A.'s repair prompt
+  reaches the same panel without passing through that button, so the flag
+  never got written and she reintroduced herself at the next dock. The write
+  moved to where the line actually reaches the player. Both known entry
+  points and any future third one are now covered by construction; patching
+  only the N.O.V.A. path would have fixed the repro and left the trap.
+- "ATTACK HOSTILE" IS RANGE-GATED, with hysteresis: enables at 600m, stays
+  enabled out to 1200m. One bool on the targeting side, cleared when the
+  target changes. Both the target window and the right-click context menu
+  route through one writer (_apply_attack_reach) so they cannot disagree.
+  Disabled-but-visible with a tooltip, not hidden — a vanishing button reads
+  as a bug. Skipped while ATTACK is already the active nav mode: there the
+  button reports a running order, and range must not revoke it mid-chase.
+- EXECUTE PULSES WHEN THE TURN IS A DEAD END. Derived from every wheel wedge
+  being unavailable rather than from AP == 0, so it also covers "AP left but
+  nothing costs that little" and "cooldowns/consumables closed the rest".
+  Wall-clock tween, like _fade_controls — the planning phase runs in slow-mo
+  and a pulse that slowed with it would read as UI lag, not as a prompt.
+- COLD-OPEN LOOK PROMPT. New UIManager.show_control_hint/clear_control_hint:
+  persistent, softly pulsing, low-centre, NO timeout. The dead air is the
+  problem, so a prompt that expires wouldn't solve it. Clears the instant the
+  control is used. Polled via Input.is_mouse_button_pressed rather than
+  hooked into _input, because the ship's own handler may consume the event.
+- CONTROL CORRECTION (settled): the todo said "left mouse button to look
+  around". Left mouse is select / double-click-to-move; look-around is HOLD
+  RIGHT MOUSE AND DRAG (PlayerShip.gd:946). Abe confirmed right mouse is
+  correct and intended — the prompt stands, no rebind wanted.
+- FIRST-TURN-IN FLASH. The "return to station button" turned out to be
+  quest_tracker_route_btn, relabelled to "Dock at Station" on completion —
+  the todo had it as not-yet-located. Flash reuses the same attention pulse
+  the intro handhold arrow drives, so there is one flashing treatment in the
+  game rather than two that look slightly different. Gated on
+  get_completed_count() == 0, which parses quest history off disk, so it is
+  read once on the hidden->shown edge and latched.
+- NEW: tests/tools/run_parse_check.gd. UIManager is a scene script, not an
+  autoload, so no headless suite loads it and --check-only can't be used on
+  it (it compiles without a running main loop, so every autoload identifier
+  reports as missing). This loads the file from inside a real SceneTree
+  instead. Worth running after any edit to a big scene script.
+- Green: parse check (4 scripts), Mechanic dialogue, Intro handhold, Campaign
+  NPC state store.
+
+## 2026-08-06 (later) — first playtest of the affordance pass, five findings
+
+Abe ran the first five minutes and reported five issues. All five addressed.
+
+- THE FIRST-TURN-IN FLASH NEVER FIRED, and the reason is worth remembering:
+  it was gated on QuestManager.get_completed_count() == 0, and that parses
+  user://quest_history.md — which is GLOBAL, not per-campaign. On any machine
+  that has ever finished a contract it can never read as zero, so the gate was
+  dead on arrival for everyone except a fresh install. Replaced with a new
+  per-campaign story_state flag, first_contract_handed_in, latched in
+  StoryManager.on_quest_completed() so it covers every hand-in path. No disk
+  read, so the UI side lost its caching complexity too.
+  LESSON: check whether a "have I ever" signal is per-campaign or per-machine
+  before gating first-run content on it.
+- MISSION CARD NOW HIDES WHILE DOCKED. Everything it offers (set course, dock
+  at station) is meaningless or redundant once you are parked, and it overlaps
+  the dock menu. Gated in _update_quest_tracker via _tracker_suppressed_by_dock;
+  both dock and undock edges re-run the update. Layout edit mode still forces
+  it visible for repositioning.
+- SPEECH NO LONGER CUTS ITSELF OFF. Two N.O.V.A. lines landed on one event
+  (combat ending fires both a post-combat line and a quiet-moment beat) and
+  the second truncated the first mid-sentence; same for Kaelen. Root cause:
+  SpeechService.play() goes straight to provider.play(), which is a hard cut.
+  Added SpeechService.play_ambient() — an "arrived unbidden" lane that queues
+  behind whatever is talking (cap 3, drops beyond that rather than stacking a
+  stale backlog). _on_npc_flavor_spoken is the one consumer switched over.
+  Player-INITIATED speech deliberately still uses play() and still cuts in:
+  when you click something, the answer to that click is what you want to hear.
+- "KAELEN VOSS" WAS A NAME COLLISION, and a real bug. The salvager profile is
+  fully LLM-generated with no constraint on names, so the model welded the
+  broker's given name onto the Zenith agent's surname. The chatter feed then
+  showed "Kaelen Voss" and "Broker Kaelen" as two different speakers in one
+  conversation. Added LLMInterface.name_collides_with_cast() — token matching
+  plus an exact match on the punctuation-stripped whole string, so "N.O.V.A."
+  is caught too but "Bryn" and "Karyn" are not. Applied at the salvager
+  callback, with a prompt constraint as the first line of defence and the
+  guard as the second. Also dropped "Caelen Drake" from the fallback name
+  list: seeding a near-homophone of Kaelen is the exact confusion we are
+  trying to prevent. Guard is unit-tested in run_parse_check.gd.
+  Worth applying to every other model-invented character name.
+- THE AGENT PANEL WAS A FORM, NOT A CONVERSATION. It rendered
+  "Response choice accepted: '...'" and "Agent feedback: '...'" — the UI
+  narrating its own mechanics next to Kaelen's portrait — and replayed the
+  entire original briefing every time the panel was reopened. Abe's call: she
+  should just say something like "oh, you're back". Now a short header plus
+  one greeting from _kaelen_return_line(), a 3-pool round-robin (working /
+  done / public board, 8/8/4 lines) so returns vary. True round-robin, not
+  random: this panel gets opened a lot and random repeats read as broken.
+  agent_response was also arriving EMPTY, which is what produced the literal
+  '' on screen — that path now logs record_fallback("agent_response",
+  "empty_agent_response") instead of rendering empty quotes.
+- Also reworded the mission card's "Return to the station and speak with your
+  agent" to a settlement line. NOT what Abe was pointing at (he meant the
+  agent panel) — flagged to him, trivial to revert if unwanted.
+- Green: parse check (8 scripts) + cast-name guard, speech service, story
+  state migration, mechanic dialogue, intro handhold, campaign NPC state.
+
+## 2026-08-06 (third pass) — tutorial gating + N.O.V.A. repeat
+
+- ONE PREDICATE FIXED TWO REGRESSIONS. Bounty WANTED posters and the mechanic's
+  fetch errand were both appearing before the starter contract was handed in.
+  Both now go through UIManager._starter_contract_pending(), which reads the
+  same per-campaign story_state flag added earlier today for the turn-in flash.
+  The rule is one sentence: nothing offers the player a SECOND thing to do
+  until the first job is closed, because a new player cannot tell which one is
+  the tutorial.
+  WATCH OUT: intro_quest_delivered is NOT this signal — it is set when the
+  player ACCEPTS the starter contract, so it is already true while they are
+  flying it. That is very likely how these gates rotted in the first place.
+  Gated the bounty ANNOUNCEMENT as well as the posters, because
+  _bounty_announced_system latches per system — announcing early would also
+  burn the single announcement that system ever gets.
+- N.O.V.A. REPEATED THE ENGAGEMENT WARNING (new bug, not a regression). Root
+  cause: warn_hostile_engagement had an 8s time cooldown but no IDENTITY
+  check, and one hostile can trip it at target acquisition and again when
+  combat opens — far enough apart to clear the cooldown. Now one warning per
+  hostile instance id.
+  Also added a general verbatim-repeat guard to Nova.speak(): the same
+  sentence within 45s is dropped. Placed ABOVE the severity check on purpose —
+  THREAT lines bypass the speech budget entirely, so without it the highest
+  priority lines are the ones most able to repeat. This catches two unrelated
+  code paths independently arriving at the same sentence, which no single
+  per-beat timer can.
+- Green: Nova tests, parse check + cast-name guard.
+
+## 2026-08-06 (diff audit) — a latent silence bug in the new speech queue
+
+Abe suspected an edit had clobbered something. Audited every removed line in
+the diff: 28 deletions across scripts, all of them accounted for by an
+intentional edit. Nothing was overwritten.
+
+The audit did surface a real defect in code added earlier today, though:
+
+- THE AMBIENT SPEECH QUEUE COULD WEDGE PERMANENTLY. It drained only on the
+  audio player's `finished` signal, and that signal is not guaranteed. A TTS
+  request that fails at the HTTP layer clears TTSInterface.is_requesting
+  WITHOUT ever producing audio, and provider.stop() does not emit `finished`
+  either. Either path left the queue holding lines with nothing left to wake
+  it, so every later ambient line — every N.O.V.A. observation, every Kaelen
+  quiet moment — would have been silently swallowed for the rest of the
+  session. Exactly the kind of failure that presents as "the characters just
+  stopped talking" hours later and is miserable to trace back.
+  Fixed by polling: _process re-checks every 0.25s, so `finished` is now a
+  latency optimisation rather than the only way out. Entries also carry a
+  queued_ms stamp and are dropped after 20s, since a line commenting on
+  something the player has long since stopped doing is worse than silence.
+  LESSON: never make a queue's only exit an event that a failure path can skip.
+
+## 2026-08-06 (fourth pass) — the missing welcome + portrait, root-caused from a live log
+
+Abe caught the repeat and sent the running console output. That log settled it
+in one read, and the cause was mine.
+
+THE ORDERING IN THE LOG:
+  [TTSInterface] Requesting speech for: Docking control acknowledges...
+  [StoryScreenshots] captured ..._station_first_dock.png
+  [TTSInterface] Requesting speech for: Captain... this station wasn't on any route...
+
+Dock control was still speaking when the dock completed, so N.O.V.A.'s arrival
+line QUEUED behind it. Then:
+  1. her portrait went up (shown at EMIT time)
+  2. the welcome overlay opened, arming a one-shot playback_finished
+  3. dock control's clip finished -> that ONE signal faded her portrait AND
+     dismissed the welcome
+  4. only then did her line start — to an empty screen
+
+ROOT CAUSE: the ambient queue I added earlier today made EMIT and PLAYBACK two
+different moments, but two consumers still treated "the next playback_finished"
+as "my line finished". Neither of them was wrong before the queue existed.
+
+FIX: SpeechService now emits ambient_line_started(text) when a line actually
+begins, and exposes has_pending_ambient().
+  - The portrait is REGISTERED at emit time (keyed by line text) and only SHOWN
+    on ambient_line_started for that exact line, so it arrives with her voice
+    and the next playback_finished genuinely is hers.
+  - _release_station_welcome re-arms instead of releasing while ambient work is
+    pending. STATION_WELCOME_MAX_WAIT_SECONDS still guarantees release, so a
+    line that never plays cannot strand the overlay.
+  - Registration happens BEFORE play_ambient is called: when the line plays
+    immediately, ambient_line_started fires inside that call.
+
+ALSO RULED OUT (do not re-investigate): the first dock showing only
+`Talk to Agent` / `Undock Ship` is CORRECT. Services are gated on _intro_done
+(UIManager.gd ~4356) until the player has visited the agent once.
+
+THE LESSON, worth keeping: putting a queue in front of playback silently
+invalidates every listener that treats the next completion signal as its own.
+When you add a queue, audit the CONSUMERS of the completion event, not just the
+producer. Two unrelated features broke this way and neither was touched.
+
+- Green: parse check + cast-name guard, speech service tests.
