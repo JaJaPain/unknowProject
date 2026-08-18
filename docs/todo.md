@@ -51,7 +51,15 @@ _Active task list. Update this file at the end of every session._
 - [x] **Salvage drone wreck action** -- wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
 - [ ] **Enemy low-health escalation arc** -- enemy dialogue/behavior should escalate when below 30% HP
 - [ ] **Impact decals on player ship** -- hull hit marks that persist during a fight
-- [ ] **Richer combat taunt flavor** -- taunt bucket system: reason-aware taunts (flanked, shielded, drone hit, etc.)
+- [ ] **Richer combat taunt flavor** -- TACTICAL bucket system: situation-aware taunts (flanked, shielded, drone hit, etc.)
+  - 2026-08-18: the CAUSE half of this shipped -- taunts now know WHY the fight
+    started (see `scripts/combat/TauntCause.gd`, 8 causes derived from real
+    state) and rotate true round-robin per cause with a persisted cursor
+    (`TauntBag`). What remains here is the orthogonal axis: reacting to what
+    just happened IN the fight. Those two should compose, not replace each
+    other -- a pirate who just got flanked should still sound like a pirate.
+  - Rerun `tests/tools/run_taunt_bank_live_fire.gd` after touching the taunt
+    prompt or parser, and `run_taunt_growth_probe.gd` to watch pools fill.
 - [x] **Execute button flashes when AP fully spent** -- 2026-08-06; see the player-affordances section near the end of this file for the implementation note.
 
 ---

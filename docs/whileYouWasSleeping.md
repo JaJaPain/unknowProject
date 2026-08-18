@@ -2356,3 +2356,89 @@ KNOWN LIMITATION LEFT ON PURPOSE: a repeated ONE-word closer ("Good.") still
 slips both guards. Lowering the closer floor to one word would also reject
 lines ending "Captain.", which is in-voice and common, so the trade was not
 worth it. Logged in docs/bugs.md as low severity.
+
+## 2026-08-18 (second pass) — enemy taunts now know why the fight started
+
+Abe: the taunts are VERY BAD; they need a flag for WHY they are being said, a
+format per reason, and the dark/dry house humour.
+
+THE BUG WAS ONE SENTENCE IN A PROMPT. `request_combat_taunts` described the
+speaker as "a furious stranger trash-talking whoever just attacked them" --
+which is wrong every single time the NPC started the fight. A pirate who
+ambushed you, a patrol collecting a mining fine, and a contract target who has
+just worked out they were sold all read from the same two buckets, `rage` and
+`reason`, the second of which was even commented "generic motive for v1; see
+the REVISIT task for splitting this into reason buckets later". This was that
+task.
+
+THE CAUSES ARE DERIVED, NOT INVENTED. This was the design constraint worth
+holding: every cause has to come from state the game already tracks, because a
+speaker who claims a grievance the player never earned is worse than a vague
+one. `NPCShip` decides the player is an enemy for exactly two reasons (minor
+faction, or reputation < -10), and the rest fall out of existing metadata:
+  contract_hit       player fired on an is_quest_target
+  preemptive_strike  player fired on someone already hostile
+  unprovoked         player fired on a neutral
+  code_enforcement   is_code_enforcement -- the illegal-mining fine system
+  reinforcement      is_reinforcement -- called in after an earlier fight
+  pirate_predation   is_minor_faction
+  reputation_grudge  reputation past the same threshold NPCShip uses
+  opportunist        THEY started it and we cannot prove why, so they claim
+                     nothing. The honest default.
+Precedence is tested: enforcement outranks faction, a contract outranks
+hostility, backup outranks a standing grudge.
+
+ROUND-ROBIN, AND IT SURVIVES A RESTART. Abe asked for true round-robin over a
+huge pool. `TauntBag` gives a shuffled bag per cause -- nothing repeats until
+its cause is exhausted -- and the rotation is written to disk the moment a line
+is consumed, so quitting cannot rewind it. The shuffle is SEEDED so that state
+is three numbers instead of an index per line, which is what makes saving on
+every draw affordable as the pool grows. Pools grow in the background toward
+120 per cause, always feeding whichever cause is furthest behind, with every
+banked line sent as an exclusion so a long campaign stops re-collecting what it
+already has.
+
+THE CACHE HAD TO BE RETIRED, not migrated. The 434 lines in cached_taunts.json
+were written with no idea why their fight had started, so they cannot be sorted
+into causes; importing them would have quietly undone the feature. New path,
+cached_taunts_v2.json, old file left on disk. The yo-mama comedy pool went with
+it -- that was the "humour" bucket, and it is not the register this game wants
+anywhere near a fight.
+
+WHAT LIVE FIRE CAUGHT THAT UNIT TESTS COULD NOT (twice now this session):
+- WHOLE CAUSES RETURNED NOTHING because generation stopped one brace short of
+  valid JSON. Raised the token budget to cover the wrapper, then stopped
+  relying on that: a truncated body is now salvaged for its complete strings,
+  and anything cut mid-word is dropped rather than delivered half-said.
+  Discarding a batch over a missing "}" cost five good lines to save nothing.
+- THE FAILURE PATH REPORTED NO REASON AT ALL -- `all_lines_rejected` with the
+  rejections thrown away. Fixed my own diagnostics first, which is how the
+  truncation was identified in one run. Ollama's `done_reason` and eval count
+  now come back with the failure too.
+- A CURLY APOSTROPHE ARRIVED AS A BARE "?" ("This isn?t personal"), which TTS
+  would read aloud as a glitch. Now rejected. I checked the raw bytes before
+  writing that guard: the em-dashes in the same file are intact UTF-8, so the
+  save path is fine and the "?" came from the model. Worth recording, because
+  the obvious next move would have been hunting an encoding bug that is not
+  there.
+
+ABE'S NOTE MID-BUILD, and it was the right call: not every line should explain
+itself. Some should just be a flat threat -- "I'm going to make this one hurt"
+-- carrying the mood of the cause without narrating it. Added as one prompt
+rule (deliberately one, after the lesson earlier today that piling rules on the
+4b backfires), and it came back verbatim in the next run.
+
+SAMPLE OF WHAT IT NOW PRODUCES:
+  pirate:      "You're cargo with opinions."
+  contract:    "You didn't shoot me. You bought me."
+  enforcement: "I'm not here to shoot you. Just to finish the form."
+  reinforcement: "This mess was their problem, now it's ours."
+  grudge:      "Your reputation's a stain we're cleaning up."
+
+- Green: taunt cause + bag (mutation-checked), taunt parse, scene parse check,
+  ambient chat, nova suites. Live: 8 causes generated, rotation probe, growth
+  probe 32 -> 93 lines.
+
+STILL OPEN: only a human can confirm these sound right in a real fight with
+voice. The per-fight LLM bundle (npc_brace, npc_dying and friends) now receives
+the cause but its 20 keys have NOT been live-checked one by one.
