@@ -180,3 +180,69 @@ static func derive(player_initiated: bool, enemy_flags: Dictionary) -> String:
 		return REPUTATION_GRUDGE
 	# They started it and we cannot prove why. Say nothing specific.
 	return OPPORTUNIST
+
+
+# Authored floor, used before the model has banked anything for a cause and
+# whenever generation fails. Small on purpose -- these exist so the first fight
+# of a fresh install is not silent, not to carry the game. Written in the house
+# voice, with a mix of situation-carrying lines and plain flat threats.
+const _AUTHORED: Dictionary = {
+	CONTRACT_HIT: [
+		"Somebody put a price on me. I hope it was embarrassing.",
+		"You're not angry. You're just employed.",
+		"I'm going to make this one hurt.",
+		"Whatever they paid you, it wasn't enough for this part.",
+	],
+	PREEMPTIVE_STRIKE: [
+		"You moved first. Doesn't change where this ends.",
+		"Saved me the trouble of the approach.",
+		"Eager. I like that in a wreck.",
+		"That was my line, and my minute.",
+	],
+	UNPROVOKED: [
+		"I don't even know you. That's the insulting part.",
+		"Was it something I flew?",
+		"You picked the wrong quiet afternoon.",
+		"No warning, no reason. Fine. Same to you.",
+	],
+	CODE_ENFORCEMENT: [
+		"You mined a belt you don't have a permit for. This is the escalation step.",
+		"The fine was cheaper an hour ago.",
+		"I'd rather be doing paperwork. You've made it this instead.",
+		"Nothing personal. It's a form with guns attached.",
+	],
+	REINFORCEMENT: [
+		"You made a mess. We're the cleanup.",
+		"The first crew underestimated you. We read their file.",
+		"Second wave. Better funded.",
+		"They called it in before they stopped transmitting.",
+	],
+	PIRATE_PREDATION: [
+		"Open the hold and we can both be somewhere else in ten minutes.",
+		"You're cargo with opinions.",
+		"Nothing personal. You're just carrying.",
+		"I'm going to make this quick. For me.",
+	],
+	REPUTATION_GRUDGE: [
+		"Your record with us reads like a confession.",
+		"We keep accounts. Yours came due.",
+		"This isn't about today. Today's just when we found you.",
+		"You earned this one slowly.",
+	],
+	OPPORTUNIST: [
+		"I'm going to make this one hurt.",
+		"Wrong place. That's all it ever is.",
+		"Don't take it personally. Don't take it any way at all.",
+		"Let's get this over with.",
+	],
+}
+
+
+static func authored_lines(cause: String) -> Array[String]:
+	var out: Array[String] = []
+	var key := cause.strip_edges()
+	if not _AUTHORED.has(key):
+		key = OPPORTUNIST
+	for line in (_AUTHORED[key] as Array):
+		out.append(str(line))
+	return out

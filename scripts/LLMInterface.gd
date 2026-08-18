@@ -6623,22 +6623,33 @@ const COMBAT_TAUNT_FALLBACKS := {
 	"kaelen_kill_confirm":    "One less headache. Logging the kill now.",
 }
 
-func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable, _attempt: int = 0) -> void:
+func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable, _attempt: int = 0, cause: String = "") -> void:
 	var faction_cap := npc_faction.capitalize()
 	var arch_cap   := npc_archetype.capitalize()
+	# The per-fight bundle used to assert the enemy had "just been attacked",
+	# which was wrong every time they started the fight. The cause block states
+	# the real situation instead.
+	var cause_block := TauntCauseType.prompt_block(
+		cause if TauntCauseType.is_valid(cause) else TauntCauseType.OPPORTUNIST
+	)
 
 	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 20 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
 
+%s
+
 There are TWO speakers. Write each line for the correct one:
 
-1) THE ENEMY PILOT — every key starting with "npc_". A hostile %s %s who has NEVER met the player and does NOT know their name. They are a furious stranger trash-talking whoever just attacked them. Use crude, contemptuous insults aimed at the player ("scrap-rat", "you absolute idiot", "listen here, you piece of garbage", "scumbag", "moron"). Mild profanity is fine. NEVER use any name or nickname — they have no idea who the player is. Pure hostility and threats, zero familiarity.
+1) THE ENEMY PILOT — every key starting with "npc_". A hostile %s %s who has NEVER met the player and does NOT know their name. Their situation is the one described above; every npc_ line must fit it. Dark and dry: gallows humour, understatement, threats delivered calmly. Contempt is fine and mild profanity is fine, but never puns and never jokes about anyone's mother. NEVER use any name or nickname — they have no idea who the player is.
 
 2) KAELEN — every key starting with "kaelen_". The player's cynical, money-minded broker watching the fight over comms. Kaelen KNOWS the player and calls them "Shiny". Dry, sardonic, keep Kaelen's lines clean (PG-13). Kaelen never insults the player crudely — that's the enemy's job.
 
-Tone examples (do not reuse — match the energy):
-- enemy: "You call that a weapon? My recycling drone hits harder, idiot."
-- enemy: "Hold still and die quiet, scrap-rat."
-- enemy fleeing: "I'm out of here. Tell your crew I said sorry about the mess."
+Vary how much they explain: some lines carry the situation, others are just a
+short flat threat ("I'm going to make this one hurt."). Both are the same pilot.
+
+Tone examples (do not reuse — match the register):
+- enemy: "Hold still. This is the easy part."
+- enemy: "You're cargo with opinions."
+- enemy fleeing: "I'm out. Tell them I said sorry about the mess."
 - kaelen: "Shiny, don't get sentimental. Just get paid."
 
 Return ONLY valid JSON, no markdown fences:
@@ -6663,7 +6674,7 @@ Return ONLY valid JSON, no markdown fences:
   "kaelen_player_low_health": "...",
   "kaelen_winning": "...",
   "kaelen_kill_confirm": "..."
-}""" % [faction_cap, arch_cap]
+}""" % [cause_block, faction_cap, arch_cap]
 
 	var temp_http := HTTPRequest.new()
 	add_child(temp_http)
@@ -6676,7 +6687,7 @@ Return ONLY valid JSON, no markdown fences:
 			if _attempt == 0:
 				push_warning("[TAUNT FALLBACK RISK] combat taunts HTTP failed (result=%d code=%d) for %s %s — retrying in 3s" % [result, response_code, faction_cap, arch_cap])
 				get_tree().create_timer(3.0, true, false, true).timeout.connect(
-					func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1))
+					func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1, cause))
 				return
 			_log_combat_taunt_fallback("http_failed", faction_cap, arch_cap,
 				{"result": result, "response_code": response_code})
@@ -6748,7 +6759,7 @@ Return ONLY valid JSON, no markdown fences:
 		if _attempt == 0:
 			push_warning("[TAUNT FALLBACK RISK] combat taunts request() error=%d for %s %s — retrying in 3s" % [err, faction_cap, arch_cap])
 			get_tree().create_timer(3.0, true, false, true).timeout.connect(
-				func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1))
+				func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1, cause))
 			return
 		_log_combat_taunt_fallback("request_error", faction_cap, arch_cap, {"err": err})
 		callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())

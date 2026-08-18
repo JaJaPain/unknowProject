@@ -131,36 +131,11 @@ const TAUNT_STYLE := 1.4
 const TAUNT_LEAD_VOICES := [
 	"am_onyx", "am_adam", "am_fenrir", "am_liam", "bm_george", "am_puck", "am_eric", "am_echo",
 ]
-# Player struck first — the NPC is enraged at an unprovoked attack.
-const TAUNT_RAGE_LINES := [
-	"You fired on me? You're dead, you absolute idiot.",
-	"Big mistake, scrap-rat. I'll tear you apart.",
-	"Unprovoked? You've got a death wish.",
-	"You'll regret pulling that trigger, moron.",
-	"Wrong move. Now I'm angry.",
-	"You shot first? Then I'll shoot last.",
-]
-# NPC struck first — they came for the player (generic motive for v1; see
-# the REVISIT task for splitting this into reason buckets later).
-const TAUNT_REASON_LINES := [
-	"End of the line, scrap-rat. Nothing personal.",
-	"You're worth more dead. Hold still.",
-	"Wrong sector, wrong day. Eat plasma.",
-	"Orders are orders. You lose.",
-	"Should've stayed home, idiot.",
-	"This is what you get for flying through here.",
-]
-# Comedic insults — occasionally fired instead of a straight taunt, regardless
-# of who started it. Same angry delivery; the contrast is the joke.
-const TAUNT_HUMOR_CHANCE := 0.22
-const TAUNT_HUMOR_LINES := [
-	"Hey, wait a minute! Your mom swore she wasn't married. Not my fault!",
-	"Did your mother teach you to fly, or did she give up too?",
-	"I'd insult your ship, but it already looks embarrassed.",
-	"Was that an attack, or did your cat sit on the controls?",
-	"Your mama's so dense, light bends around her cargo hold.",
-	"I've seen escape pods with more fight in them than you.",
-]
+# Authored taunt lines now live in TauntCause, one set per reason the fight
+# started, because a single "player struck first" bucket could not tell an
+# ambushed pirate from a patrol collecting a mining fine. The old comedy pool
+# went with them: it was yo-mama jokes, which is not the register this game
+# wants anywhere near a fight.
 var _player_initiated: bool = false
 # When the one-time combat tutorial popup is up, hold the opening enemy taunt so
 # it doesn't talk over N.O.V.A.'s tutorial line. UIManager sets/clears the hold
@@ -168,10 +143,27 @@ var _player_initiated: bool = false
 # on release. (Only ever engages on the very first fight — the tutorial is once.)
 var _opening_taunt_held: bool = false
 var _opening_taunt_pending: bool = false
-var _cached_rage:   Array = []   # [{text, voice}, ...] pre-cached audio pairs
-var _cached_reason: Array = []
-var _cached_humor:  Array = []
-const _TAUNT_CACHE_PATH := "user://cached_taunts.json"
+# Taunt pools keyed by TauntCause, each with its own persistent round-robin bag
+# so a line cannot repeat until its cause has been exhausted.
+const TauntCauseType := preload("res://scripts/combat/TauntCause.gd")
+const TauntBagType := preload("res://scripts/combat/TauntBag.gd")
+var _cause_pools: Dictionary = {}   # cause -> [{text, voice}, ...]
+var _cause_bags: Dictionary = {}    # cause -> TauntBag
+var _pool_texts: Dictionary = {}    # text -> true, dedupe across every cause
+# Why the CURRENT fight started. Set at start_combat, drives every taunt in it.
+var _taunt_cause: String = TauntCauseType.OPPORTUNIST
+
+const _TAUNT_CACHE_PATH := "user://cached_taunts_v2.json"
+# v1 (user://cached_taunts.json) stored rage/reason/humor lines generated with
+# no idea why the fight had started, so they cannot be sorted into causes now.
+# A new path retires them rather than importing lines that would undo the
+# feature -- and leaves the old file on disk in case it is ever worth mining.
+const _TAUNT_CACHE_VERSION := 2
+# Keep growing each cause in the background until it holds this many lines.
+# Sized so a player has to fight through a lot of one situation before a line
+# comes round again.
+const TAUNT_POOL_TARGET := 120
+const TAUNT_REFILL_BATCH := 8
 var _general_taunt_fetch_in_flight: bool = false
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -181,14 +173,16 @@ func _ready() -> void:
 	# Live-fire dialogue tools must issue exactly one model request at a time.
 	# They retain the authored/persisted taunt floor and opt out only of refill.
 	if "--llm-live-fire" not in OS.get_cmdline_user_args():
-		_request_general_taunt_pool()
+		_request_cause_refill(_leanest_cause())
 
 # Build the two taunt pools, each line paired with a random angry blend, and
 # pre-cache the audio so combat playback is instant (queues if TTS isn't up yet).
 func _build_and_cache_taunts() -> void:
-	_cached_rage   = _make_taunt_pool(TAUNT_RAGE_LINES)
-	_cached_reason = _make_taunt_pool(TAUNT_REASON_LINES)
-	_cached_humor  = _make_taunt_pool(TAUNT_HUMOR_LINES)
+	for cause in TauntCauseType.ALL:
+		_cause_pools[cause] = _make_taunt_pool(TauntCauseType.authored_lines(cause))
+		_cause_bags[cause] = TauntBagType.new((_cause_pools[cause] as Array).size())
+		for entry in (_cause_pools[cause] as Array):
+			_pool_texts[str((entry as Dictionary).get("text", ""))] = true
 
 # Load lines saved from the previous session immediately — instant pool boost.
 func _load_persisted_taunts() -> void:
@@ -201,59 +195,162 @@ func _load_persisted_taunts() -> void:
 	f.close()
 	if not parsed is Dictionary:
 		return
-	for cat in ["rage", "reason", "humor"]:
-		if parsed.has(cat) and parsed[cat] is Array:
-			var target: Array = _cached_rage if cat == "rage" \
-				else (_cached_reason if cat == "reason" else _cached_humor)
-			for line in parsed[cat]:
-				var s := str(line).strip_edges()
-				if s.length() > 4 and not _pool_has_line(target, s):
-					target.append(_make_taunt_entry(s))
-	print("[CombatManager] Loaded %d persisted taunt lines." % (
-		_cached_rage.size() + _cached_reason.size() + _cached_humor.size()))
-
-# Fire an async Ollama request for generic taunts. Safe to call multiple times —
-# skips if a fetch is already in flight.
-func _request_general_taunt_pool() -> void:
-	if _general_taunt_fetch_in_flight:
+	if int((parsed as Dictionary).get("version", 0)) != _TAUNT_CACHE_VERSION:
 		return
-	_general_taunt_fetch_in_flight = true
-	LLMInterface.request_general_taunts(_on_general_taunts_ready)
-
-func _on_general_taunts_ready(data: Dictionary) -> void:
-	_general_taunt_fetch_in_flight = false
-	if data.is_empty():
-		return
-	var added := 0
-	var cat_map := {"rage": _cached_rage, "reason": _cached_reason, "humor": _cached_humor}
-	for cat in cat_map.keys():
-		if not data.has(cat):
+	var causes: Dictionary = (parsed as Dictionary).get("causes", {}) 		if (parsed as Dictionary).get("causes", {}) is Dictionary else {}
+	var loaded := 0
+	for cause in causes.keys():
+		var key := str(cause)
+		if not TauntCauseType.is_valid(key):
 			continue
-		for line in data[cat]:
-			var s := str(line).strip_edges()
-			if s.length() > 4 and not _pool_has_line(cat_map[cat], s):
-				cat_map[cat].append(_make_taunt_entry(s))
-				TTSInterface.cache_dialogue_audio(s, _make_taunt_entry(s)["voice"],
-					TAUNT_SPEED, TAUNT_STYLE)
-				added += 1
-	if added > 0:
-		print("[CombatManager] +%d fresh general taunt lines cached." % added)
-		_save_taunt_pool()
+		var record: Dictionary = causes[cause] if causes[cause] is Dictionary else {}
+		var pool: Array = _cause_pools.get(key, [])
+		for line in (record.get("lines", []) as Array if record.get("lines", []) is Array else []):
+			var text := str(line).strip_edges()
+			if text.length() > 4 and not _pool_texts.has(text):
+				pool.append(_make_taunt_entry(text))
+				_pool_texts[text] = true
+				loaded += 1
+		_cause_pools[key] = pool
+		# Restore the rotation exactly where it stopped, so relaunching does not
+		# replay the opening taunts the player just heard.
+		_cause_bags[key] = TauntBagType.from_dict(
+			record.get("bag", {}) if record.get("bag", {}) is Dictionary else {},
+			pool.size()
+		)
+	print("[CombatManager] Loaded %d persisted taunt lines across %d causes." % [
+		loaded, causes.size(),
+	])
 
+
+# Writes pools AND rotation state. Called every time a line is drawn, so a
+# crash or a force-quit cannot rewind the rotation.
 func _save_taunt_pool() -> void:
-	var out := {"rage": [], "reason": [], "humor": []}
-	for entry in _cached_rage:   out["rage"].append(entry["text"])
-	for entry in _cached_reason: out["reason"].append(entry["text"])
-	for entry in _cached_humor:  out["humor"].append(entry["text"])
+	var causes: Dictionary = {}
+	for cause in TauntCauseType.ALL:
+		var texts: Array = []
+		for entry in (_cause_pools.get(cause, []) as Array):
+			texts.append(str((entry as Dictionary).get("text", "")))
+		var bag = _cause_bags.get(cause, null)
+		causes[cause] = {
+			"lines": texts,
+			"bag": bag.to_dict() if bag != null else {},
+		}
 	var f := FileAccess.open(_TAUNT_CACHE_PATH, FileAccess.WRITE)
 	if f == null:
 		return
-	f.store_string(JSON.stringify(out, "\t"))
+	f.store_string(JSON.stringify({
+		"version": _TAUNT_CACHE_VERSION,
+		"causes": causes,
+	}))
 	f.close()
+
+
+# Grows the pool for one cause in the background. Called after fights and at
+# startup: over many sessions each cause climbs toward TAUNT_POOL_TARGET, which
+# is what turns the round-robin from "a few dozen lines" into a rotation the
+# player has to work at to exhaust.
+func _request_cause_refill(cause: String) -> void:
+	if _general_taunt_fetch_in_flight:
+		return
+	if not TauntCauseType.is_valid(cause):
+		return
+	var pool: Array = _cause_pools.get(cause, [])
+	if pool.size() >= TAUNT_POOL_TARGET:
+		return
+	if not is_instance_valid(LLMInterface) 			or not LLMInterface.has_method("request_taunt_bank_batch"):
+		return
+	_general_taunt_fetch_in_flight = true
+	LLMInterface.request_taunt_bank_batch(
+		cause,
+		TAUNT_REFILL_BATCH,
+		_taunt_generation_context(cause),
+		func(result: Dictionary) -> void:
+			_on_cause_refill_ready(cause, result)
+	)
+
+
+# The pool the model must not repeat is every line already banked, in any
+# cause. Passing it in is what stops a long-running campaign from slowly
+# re-collecting lines it already has.
+func _taunt_generation_context(cause: String) -> Dictionary:
+	var context: Dictionary = {"existing_texts": _pool_texts}
+	if is_instance_valid(enemy_node):
+		var faction := str(enemy_node.get("faction")) if enemy_node.get("faction") else ""
+		if not faction.is_empty():
+			context["faction_label"] = faction.capitalize()
+		var role := str(enemy_node.get("ship_role")) if enemy_node.get("ship_role") else ""
+		if not role.is_empty():
+			context["archetype"] = role.to_lower()
+	var facts: Array = []
+	match cause:
+		TauntCauseType.REPUTATION_GRUDGE:
+			var faction_id := str(enemy_node.get("faction")) if is_instance_valid(enemy_node) and enemy_node.get("faction") else ""
+			if not faction_id.is_empty() and GlobalState.reputations.has(faction_id):
+				facts.append("Their standing with this pilot is: %s." % GlobalState.reputation_tier(
+					float(GlobalState.reputations[faction_id])
+				))
+		TauntCauseType.CODE_ENFORCEMENT:
+			facts.append("The pilot was mining a belt they hold no permit for.")
+	if not facts.is_empty():
+		context["facts"] = facts
+	return context
+
+
+func _on_cause_refill_ready(cause: String, result: Dictionary) -> void:
+	_general_taunt_fetch_in_flight = false
+	if not bool(result.get("ok", false)):
+		return
+	var pool: Array = _cause_pools.get(cause, [])
+	var added := 0
+	for line in (result.get("lines", []) as Array):
+		var text := str(line).strip_edges()
+		if text.length() <= 4 or _pool_texts.has(text):
+			continue
+		var entry := _make_taunt_entry(text)
+		pool.append(entry)
+		_pool_texts[text] = true
+		TTSInterface.cache_dialogue_audio(text, entry["voice"], TAUNT_SPEED, TAUNT_STYLE)
+		added += 1
+	if added <= 0:
+		return
+	_cause_pools[cause] = pool
+	var bag = _cause_bags.get(cause, null)
+	if bag != null:
+		bag.resize(pool.size())
+	print("[CombatManager] +%d %s taunts (pool now %d/%d)." % [
+		added, cause, pool.size(), TAUNT_POOL_TARGET,
+	])
+	_save_taunt_pool()
+
+
+# Picks the cause whose pool is furthest from target, so growth spreads across
+# every situation instead of over-feeding whichever fight happens most.
+func _leanest_cause() -> String:
+	var leanest := TauntCauseType.OPPORTUNIST
+	var fewest := 1 << 30
+	for cause in TauntCauseType.ALL:
+		var size: int = (_cause_pools.get(cause, []) as Array).size()
+		if size < fewest:
+			fewest = size
+			leanest = str(cause)
+	return leanest
+
 
 func _make_taunt_entry(line: String) -> Dictionary:
 	var lead: String = TAUNT_LEAD_VOICES[randi() % TAUNT_LEAD_VOICES.size()]
 	return {"text": line, "voice": "%s[0.7]+am_michael[0.3]" % lead}
+
+# One angry blend for a line that carries its own text (per-fight action and
+# flee taunts). Reuses the voice already assigned to a banked line for this
+# cause so the same enemy keeps a consistent voice through the fight, and falls
+# back to a fresh blend when the pool is empty.
+func _taunt_voice() -> String:
+	var pool: Array = _cause_pools.get(_taunt_cause, [])
+	if not pool.is_empty():
+		return str((pool[0] as Dictionary).get("voice", ""))
+	return str(_make_taunt_entry("").get("voice", ""))
+
 
 func _pool_has_line(pool: Array, line: String) -> bool:
 	for entry in pool:
@@ -299,15 +396,20 @@ func _play_combat_taunt() -> void:
 	# dialog — skip the generic taunt for them.
 	if _is_comms_reversal_target():
 		return
-	# Usually anger (aggressor-based); occasionally a comedic jab instead.
-	var pool: Array
-	if randf() < TAUNT_HUMOR_CHANCE and not _cached_humor.is_empty():
-		pool = _cached_humor
-	else:
-		pool = _cached_rage if _player_initiated else _cached_reason
+	# The line has to fit WHY this fight started, so draw from that cause's pool.
+	var pool: Array = _cause_pools.get(_taunt_cause, [])
 	if pool.is_empty():
 		return
-	var pick: Dictionary = pool[randi() % pool.size()]
+	var bag = _cause_bags.get(_taunt_cause, null)
+	if bag == null:
+		bag = TauntBagType.new(pool.size())
+		_cause_bags[_taunt_cause] = bag
+	var pick: Dictionary = bag.next(pool)
+	if pick.is_empty():
+		return
+	# Persist the rotation the moment a line is consumed: quitting after a fight
+	# must not hand the same opening taunt back on the next launch.
+	_save_taunt_pool()
 	if pick.get("canned", false):
 		var msg := "[TAUNT FALLBACK] opening taunt used canned line — LLM pool not ready yet. Text: \"%s\"" % pick["text"]
 		push_warning(msg)
@@ -339,9 +441,7 @@ func _play_npc_action_taunt(key: String) -> void:
 		return
 	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
-	if not _cached_rage.is_empty():
-		var pick: Dictionary = _cached_rage[randi() % _cached_rage.size()]
-		TTSInterface.play_dialogue_audio(line, pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
 
 func _play_npc_flee_taunt() -> void:
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):
@@ -351,10 +451,7 @@ func _play_npc_flee_taunt() -> void:
 		return
 	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
-	# Pick a voice from the cached rage pool (same angry blend the opening taunt uses).
-	if not _cached_rage.is_empty():
-		var pick: Dictionary = _cached_rage[randi() % _cached_rage.size()]
-		TTSInterface.play_dialogue_audio(line, pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
 
 
 func _record_combat_fallback(content_type: String, reason: String, context: Dictionary = {}) -> void:
@@ -416,6 +513,7 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 	_enemy_brace  = [false]
 	_enemy_shield = [false]
 	_player_initiated = player_initiated
+	_taunt_cause = _derive_taunt_cause(enemy, player_initiated)
 	_taunts_ready = false
 	taunts = {}
 	_load_upgrade_stats()
@@ -424,9 +522,33 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 	# Fetch taunts async; _on_taunts_ready finishes setup when they arrive.
 	var faction:   String = enemy.get("faction") if enemy.get("faction") else "unknown"
 	var archetype: String = enemy.get("ship_role") if enemy.get("ship_role") else "Gunner"
-	LLMInterface.request_combat_taunts(faction, archetype, _on_taunts_ready)
+	LLMInterface.request_combat_taunts(faction, archetype, _on_taunts_ready, 0, _taunt_cause)
 
 	emit_signal("combat_started", enemy)
+
+# Reads why this fight is happening off the enemy ship and the world state.
+# Everything here is state the game already maintains -- nothing is invented,
+# because a taunt that claims a grievance the player never earned is worse than
+# a vague one.
+func _derive_taunt_cause(enemy: Node, player_initiated: bool) -> String:
+	if not is_instance_valid(enemy):
+		return TauntCauseType.OPPORTUNIST
+	var faction := str(enemy.get("faction")) if enemy.get("faction") else ""
+	var reputation := 0.0
+	if not faction.is_empty() and GlobalState.reputations.has(faction):
+		reputation = float(GlobalState.reputations[faction])
+	var cause: String = TauntCauseType.derive(player_initiated, {
+		"is_quest_target": bool(enemy.get_meta("is_quest_target", false)),
+		"is_code_enforcement": bool(enemy.get_meta("is_code_enforcement", false)),
+		"is_reinforcement": bool(enemy.get("is_reinforcement")) if enemy.get("is_reinforcement") != null else false,
+		"is_minor_faction": GlobalState.is_minor_faction(faction),
+		"reputation": reputation,
+	})
+	GlobalState.trace("[TRACE] [CombatManager] taunt cause=%s (%s)" % [
+		cause, TauntCauseType.describe(cause),
+	])
+	return cause
+
 
 ## Cycles the player's target to the next live enemy in the squad.
 ## Called by the TARGET ▸ button in CombatPanel. Free action, 0 AP cost.
@@ -556,7 +678,7 @@ func end_combat(player_won: bool) -> void:
 	PlayerInteractionQueue.notify_combat_ended()
 	emit_signal("combat_ended", player_won)
 	# Top up the general taunt pool in the background after each fight.
-	_request_general_taunt_pool()
+	_request_cause_refill(_leanest_cause())
 
 func _reset_fight_state() -> void:
 	# Runs before combat_started is emitted, so any stale tutorial hold clears
