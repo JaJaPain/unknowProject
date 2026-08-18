@@ -80,6 +80,7 @@ const CAPABILITY_PROFILES := {
 	# Flat @@label batches of prepared N.O.V.A. bank lines (Phase 8B).
 	# Player-safe context only — small model by design.
 	"nova_line_bank": "small_dialogue",
+	"taunt_bank": "small_dialogue",
 }
 
 const REQUEST_TIMEOUTS := {
@@ -116,6 +117,7 @@ const REQUEST_TIMEOUTS := {
 	# Background bank prefetch, nobody waiting — give a 10-field batch room
 	# to finish on a busy GPU.
 	"nova_line_bank": 30.0,
+	"taunt_bank": 45.0,
 }
 
 

@@ -6765,6 +6765,321 @@ func _log_combat_taunt_fallback(reason: String, faction: String, archetype: Stri
 ## Request a batch of generic combat taunts (not faction-specific) for the
 ## general opening-taunt pool. Returns {"rage":[...], "reason":[...], "humor":[...]}.
 ## Retries once before giving up; logs with push_warning on failure.
+const TauntCauseType := preload("res://scripts/combat/TauntCause.gd")
+
+
+# Batch of enemy taunts for ONE cause (see TauntCause). This is the engine that
+# grows the pool: it is called repeatedly across sessions and every accepted
+# line is appended, so the player can fly for a long time before a repeat.
+#
+# The old prompt hardcoded "a furious stranger trash-talking whoever just
+# attacked them", which was wrong every time the NPC started the fight. The
+# cause brief replaces that with the speaker's actual situation, what they
+# know, what they want, and the register to hit.
+static func build_taunt_bank_prompt(
+	cause: String,
+	count: int,
+	context: Dictionary = {}
+) -> String:
+	var parts: Array[String] = [
+		"You are writing enemy pilot barks for a gritty space combat game.",
+		"",
+		TauntCauseType.prompt_block(cause, context),
+		"",
+	]
+	var faction := str(context.get("faction_label", "")).strip_edges()
+	if not faction.is_empty():
+		parts.append("The speaker flies for: %s." % faction)
+	var archetype := str(context.get("archetype", "")).strip_edges()
+	if not archetype.is_empty():
+		parts.append("Their role in the fight: %s." % archetype)
+	parts.append("")
+	parts.append("HOUSE VOICE -- this matters more than being funny:")
+	parts.append(
+		"Dark and dry. Gallows humour, understatement, people being casually"
+	)
+	parts.append(
+		"awful about violence because it is a normal working day. Threats"
+	)
+	parts.append(
+		"land harder when they are delivered calmly. Never zany, never puns,"
+	)
+	parts.append("never jokes about anyone's mother.")
+	parts.append("")
+	parts.append("Hard rules:")
+	parts.append("- One sentence each, under 18 words, spoken out loud in the fight.")
+	parts.append(
+		"- They do NOT know the pilot's name or callsign. Never invent one."
+	)
+	parts.append(
+		"- Never invent a grievance beyond the situation described above."
+	)
+	parts.append("- No placeholder brackets, no speaker labels, no stage directions.")
+	parts.append("- Every line different from the others in shape and opening.")
+	parts.append(
+		"- Vary how much they explain. Some lines carry the situation; others"
+	)
+	parts.append(
+		"  are just a short flat threat -- \"I'm going to make this one hurt.\""
+	)
+	parts.append("  Both must sound like the same angry pilot.")
+	parts.append("")
+	parts.append(
+		"Return ONLY a JSON object with one key \"lines\", an array of %d strings." % count
+	)
+	parts.append("{\"lines\": [\"first line here\", \"second line here\"]}")
+	return "
+".join(parts)
+
+
+# Validates one taunt line. Returns "" when acceptable, else the reason.
+static func validate_taunt_line(text: String) -> String:
+	var clean := text.strip_edges()
+	if clean.length() < 8:
+		return "too_short"
+	if clean.length() > 170:
+		return "too_long"
+	if clean.contains("
+"):
+		return "multiline"
+	if clean.contains("{") or clean.contains("}") 			or clean.contains("[") or clean.contains("]"):
+		return "placeholder_braces"
+	if clean.contains("*"):
+		return "stage_direction"
+	var colon := clean.find(":")
+	if colon > 0 and colon <= 24:
+		var prefix := clean.substr(0, colon)
+		if not prefix.contains(" ") or prefix.to_upper() == prefix:
+			return "speaker_prefix"
+	return ""
+
+
+# Pulls complete quoted strings out of a truncated batch body. Only strings
+# that are fully closed are returned, so a line cut mid-word is dropped rather
+# than delivered half-said. Returns [] when the body is not a recognisable
+# attempt at the expected shape.
+static func _salvage_truncated_lines(text: String) -> Array[String]:
+	var out: Array[String] = []
+	var key_at := text.find("\"lines\"")
+	if key_at == -1:
+		return out
+	var open_at := text.find("[", key_at)
+	if open_at == -1:
+		return out
+	var i := open_at + 1
+	var current := ""
+	var in_string := false
+	var escaped := false
+	while i < text.length():
+		var ch := text[i]
+		i += 1
+		if in_string:
+			if escaped:
+				# Keep the standard escapes readable; anything else passes through.
+				match ch:
+					"n": current += "
+"
+					"t": current += "	"
+					_: current += ch
+				escaped = false
+				continue
+			if ch == "\\":
+				escaped = true
+				continue
+			if ch == "\"":
+				# Closed cleanly, so this line is safe to keep.
+				out.append(current)
+				current = ""
+				in_string = false
+				continue
+			current += ch
+			continue
+		if ch == "\"":
+			in_string = true
+			current = ""
+			continue
+		if ch == "]":
+			break
+	return out
+
+
+# Parses a {"lines": [...]} batch. `existing_texts` is the pool already on
+# disk: with a pool this large the model WILL re-propose lines it gave in an
+# earlier session, and the dedupe has to span sessions, not just this batch.
+# Near-duplicate rejection mirrors the N.O.V.A. bank guards -- a shared whole
+# sentence or a repeated closer is what a player actually hears as repetition.
+static func parse_taunt_bank_batch(
+	raw: String,
+	existing_texts: Dictionary = {}
+) -> Dictionary:
+	var text := raw.strip_edges()
+	if text.begins_with("```"):
+		var newline := text.find("
+")
+		if newline != -1:
+			text = text.substr(newline + 1)
+		if text.ends_with("```"):
+			text = text.substr(0, text.length() - 3)
+		text = text.strip_edges()
+	var parser := JSON.new()
+	var salvaged: Array[String] = []
+	if parser.parse(text) != OK:
+		# Generation occasionally stops one brace short of valid JSON. Throwing
+		# the batch away costs five good lines to save nothing, so recover the
+		# complete strings that arrived before the cut. Anything half-written is
+		# left behind -- this salvages, it does not repair.
+		salvaged = _salvage_truncated_lines(text)
+		if salvaged.is_empty():
+			return {"lines": [], "rejected": [{
+				"reason": "inner_parse_failed",
+				"length": text.length(),
+				"tail": text.substr(maxi(0, text.length() - 90), 90),
+			}]}
+	var data = parser.get_data()
+	var raw_lines: Array = []
+	if not salvaged.is_empty():
+		for value in salvaged:
+			raw_lines.append(value)
+	elif not data is Dictionary or not (data as Dictionary).has("lines"):
+		return {"lines": [], "rejected": [{
+			"reason": "missing_lines_key",
+			"keys": str((data as Dictionary).keys()) if data is Dictionary else "not_a_dict",
+		}]}
+	elif not (data as Dictionary)["lines"] is Array:
+		return {"lines": [], "rejected": [{"reason": "lines_not_an_array"}]}
+	else:
+		raw_lines = (data as Dictionary)["lines"]
+	var out: Array = []
+	var rejected: Array = []
+	var seen_sentences: Dictionary = {}
+	var seen_closers: Dictionary = {}
+	for raw_line in (raw_lines as Array):
+		var line := str(raw_line).strip_edges()
+		if line.begins_with("\"") and line.ends_with("\"") and line.length() > 1:
+			line = line.substr(1, line.length() - 2).strip_edges()
+		var reason := validate_taunt_line(line)
+		if not reason.is_empty():
+			rejected.append({"text": line, "reason": reason})
+			continue
+		if existing_texts.has(line):
+			rejected.append({"text": line, "reason": "already_in_pool"})
+			continue
+		if not _nova_bank_shared_sentence(line, seen_sentences).is_empty():
+			rejected.append({"text": line, "reason": "duplicate_sentence"})
+			continue
+		var closer := _nova_bank_final_sentence(line)
+		if not closer.is_empty() and seen_closers.has(closer):
+			rejected.append({"text": line, "reason": "duplicate_closer"})
+			continue
+		for sentence in _nova_bank_sentences(line):
+			seen_sentences[sentence] = true
+		if not closer.is_empty():
+			seen_closers[closer] = true
+		out.append(line)
+	return {"lines": out, "rejected": rejected}
+
+
+# Fires one cause-keyed batch at the small model. Fire-and-forget: the caller
+# already has an authored floor plus whatever previous sessions banked, so a
+# failure costs variety, never silence.
+func request_taunt_bank_batch(
+	cause: String,
+	count: int,
+	context: Dictionary,
+	callback: Callable
+) -> void:
+	var capability := "taunt_bank"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"taunt_bank", "model_unavailable", "llm_interface", {"cause": cause}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	if not TauntCauseType.is_valid(cause):
+		callback.call({"ok": false, "reason": "invalid_cause"})
+		return
+	var wanted := clampi(count, 1, 20)
+	var prompt := build_taunt_bank_prompt(cause, wanted, context)
+	var existing: Dictionary = context.get("existing_texts", {}) 		if context.get("existing_texts", {}) is Dictionary else {}
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		# Budget per line PLUS the JSON wrapper. At 48/line the array closed but
+		# the object never did, and whole causes came back as inner_parse_failed
+		# purely because the last brace was cut off.
+		{"temperature": 1.0, "num_predict": 64 * wanted + 96, "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "http_failed", "llm_interface",
+					{"cause": cause, "result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var parsed := parse_taunt_bank_batch(
+				str(outer_data["response"]), existing
+			)
+			# Ollama reports WHY generation stopped. A truncated batch and a
+			# model that ignored the format look identical in the body but need
+			# opposite fixes, so record the distinction rather than guess.
+			var stop_reason := str(outer_data.get("done_reason", ""))
+			if stop_reason == "length":
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "truncated_generation", "llm_interface",
+					{
+						"cause": cause,
+						"eval_count": int(outer_data.get("eval_count", 0)),
+						"requested": wanted,
+					}
+				)
+			var lines: Array = parsed.get("lines", [])
+			if lines.is_empty():
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "all_lines_rejected", "llm_interface",
+					{"cause": cause, "rejected": (parsed.get("rejected", []) as Array).size()}
+				)
+				# Carry the rejections out with the failure. Without them a
+				# wholesale rejection is unreadable -- you know the batch died
+				# but not whether the model returned junk or the guards were
+				# simply too strict for this cause.
+				callback.call({
+					"ok": false,
+					"reason": "all_lines_rejected",
+					"rejected": parsed.get("rejected", []),
+					"stop_reason": stop_reason,
+					"eval_count": int(outer_data.get("eval_count", 0)),
+				})
+				return
+			callback.call({
+				"ok": true,
+				"cause": cause,
+				"lines": lines,
+				"rejected": parsed.get("rejected", []),
+			})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
 func request_general_taunts(callback: Callable, _attempt: int = 0) -> void:
 	if _skip_for_campaign_bible_priority("general_taunts"):
 		callback.call({})
