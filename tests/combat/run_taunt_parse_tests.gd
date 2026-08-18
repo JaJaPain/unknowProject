@@ -41,6 +41,21 @@ func _test_validation() -> void:
 		_llm.validate_taunt_line("Die.") == "too_short",
 		"A fragment must be rejected."
 	)
+	# Straight from a live batch: a curly apostrophe arrived as a bare "?",
+	# which TTS would happily read out as a glitch.
+	_expect(
+		_llm.validate_taunt_line("This isn?t personal, it's policy enforcement.") 			== "corrupt_punctuation",
+		"A question mark inside a word must be rejected."
+	)
+	# A real question, and a question mark next to punctuation, must survive.
+	_expect(
+		_llm.validate_taunt_line("Was it something I flew?").is_empty(),
+		"A genuine question must be accepted."
+	)
+	_expect(
+		_llm.validate_taunt_line("You want to do this? Fine. Let's go.").is_empty(),
+		"A mid-line question must be accepted."
+	)
 
 
 func _test_batch_parsing() -> void:

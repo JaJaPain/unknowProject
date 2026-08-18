@@ -6843,6 +6843,11 @@ static func build_taunt_bank_prompt(
 ".join(parts)
 
 
+static func _is_word_char(ch: String) -> bool:
+	var lower := ch.to_lower()
+	return lower >= "a" and lower <= "z"
+
+
 # Validates one taunt line. Returns "" when acceptable, else the reason.
 static func validate_taunt_line(text: String) -> String:
 	var clean := text.strip_edges()
@@ -6857,6 +6862,13 @@ static func validate_taunt_line(text: String) -> String:
 		return "placeholder_braces"
 	if clean.contains("*"):
 		return "stage_direction"
+	# A question mark wedged between two letters is never real punctuation --
+	# it is a curly apostrophe that lost a fight with an encoding somewhere
+	# upstream ("isn?t personal"). Cheap to spot, and it would otherwise be
+	# spoken aloud as a glitch.
+	for i in range(1, clean.length() - 1):
+		if clean[i] == "?" and _is_word_char(clean[i - 1]) and _is_word_char(clean[i + 1]):
+			return "corrupt_punctuation"
 	var colon := clean.find(":")
 	if colon > 0 and colon <= 24:
 		var prefix := clean.substr(0, colon)
