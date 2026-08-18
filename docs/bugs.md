@@ -5,6 +5,16 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### N.O.V.A. bank lines can share a one-word closer ("Good.")
+**Spotted:** 2026-08-18 (nova line-bank live fire) — **accepted limitation, not scheduled**
+**Severity:** Low — mild audible repetition; the bad cases are already caught
+**Description:** Batch parsing now rejects a line that reuses a whole 4+ word sentence (`duplicate_sentence`) or repeats a 2+ word CLOSING sentence (`duplicate_closer`). A repeated ONE-word closer still gets through, e.g. a draw where two victory lines ended "Good." and a third ended "Still good."
+**Why it was left:** dropping the closer floor to one word would also reject lines ending "Captain.", which is in-voice and frequent, and would gut ordinary terse batches. The two-word floor is the deliberate trade.
+**If it becomes worth fixing:** `LLMInterface._nova_bank_final_sentence` is the single knob (the `>= 2` word floor). A better fix is probably a small stop-list of one-word closers rather than a blanket floor change.
+**Do not "fix" by tightening the prompt** — that was tried on 2026-08-18 and drove the 4b into one shared template across eight beats, worse than the problem. See the session log.
+
+---
+
 ### First run of a session: no station welcome overlay, N.O.V.A. portrait missing
 **Spotted:** 2026-08-06 (playtest) — **ROOT-CAUSED AND FIXED 2026-08-06** from a live console log.
 **Severity:** Was Medium — the arrival beat silently lost both of its visuals.

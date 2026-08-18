@@ -2274,3 +2274,85 @@ When you add a queue, audit the CONSUMERS of the completion event, not just the
 producer. Two unrelated features broke this way and neither was touched.
 
 - Green: parse check + cast-name guard, speech service tests.
+
+## 2026-08-18 — live-verifying the dialogue fixes, and what the live model exposed
+
+Step 1 of the hand-off: get a real Ollama run behind the dialogue-quality work
+that had only ever been unit-tested.
+
+- BUILT A REAL-MODEL GATE FOR THE N.O.V.A. BANKS,
+  `tests/tools/run_nova_line_bank_live_fire.gd`. It fires the exact two seed
+  batches GameRoot dispatches on campaign load (movement/arrival, then
+  combat/hull/welcome/dock) and prints every line with the label it landed on,
+  so the output is readable as dialogue rather than as a pass count.
+- THE FLAT-JSON FIX WORKS LIVE. First run: 17/17 labels accepted, both batches
+  OK, ~1.5s each. No seed_batch_failed, no all_lines_rejected. Three rounds
+  came back 51/51. The @@label form that qwen3 rejected wholesale is properly
+  dead.
+- Ruled out on the way past: a banked `system_arrival` line naming a specific
+  system ("Kepler Reach confirmed.") is NOT a bug. Banks are keyed
+  `prefetch:current_system_nova:<system_id>` and the generation context names
+  that same system, so such a line can only ever be consumed where it is true.
+
+THE ACTUAL FINDING, which the live run gave up and no unit test could:
+
+- A BATCH CAN BE STRUCTURALLY PERFECT AND STILL BE ONE LINE WEARING EIGHT HATS.
+  One draw returned "Good thing you didn't take the long way." as the TAIL of
+  six lines — on beats as unrelated as hull_critical and docked. Every one of
+  them passed validation, because exact-match dedupe only ever compared whole
+  strings and the opening clauses differed. Another draw closed three lines
+  with "Still flying." and two with "Stay calm."
+  Two guards added on the accepted-lines side, where a prompt cannot undo them:
+    - `duplicate_sentence` — a line reusing a whole 4+ word sentence from one
+      already accepted this batch. Normalization drops apostrophes and splits
+      on em-dashes, because the model mixes straight/curly quotes freely and
+      likes welding a stock tail on with a dash.
+    - `duplicate_closer` — a repeated CLOSING sentence, floor of two words.
+      The tic lands on the tail and it lands short. Shared OPENINGS stay legal
+      on purpose: "Hull's intact." has to work on more than one beat, and a
+      stricter rule would gut ordinary terse batches.
+
+- I TRIED FIXING THIS IN THE PROMPT FIRST AND IT BACKFIRED, which is the part
+  worth remembering. Adding "no two lines may share an opening phrase or end
+  on the same word" drove the 4b into a SINGLE shared template across eight
+  beats — the exact failure the rule was meant to prevent, but worse, and
+  accept rate fell 100% -> 88%. Reverted. Piling negative constraints on a 4b
+  spends instruction budget it does not have.
+  LESSON: an anti-repetition rule belongs in the parser, not the prompt. The
+  prompt asks; only the parser can refuse.
+
+- FIXED WHAT THE GATE ASSERTS while I was in there. Rejecting a repetitive
+  draw is the system working, so quality rejections (duplicate_*,
+  missing_label) no longer fail the run; a STRUCTURAL rejection does —
+  unparseable body, leaked label, speaker prefix, placeholder braces. Those
+  mean our format contract broke. Final live state: 51 lines, zero structural
+  failures, 88.2% accepted, duplicate_closer firing once and correctly.
+
+The other two step-1 items are deterministic, so they got read + tested rather
+than played:
+
+- STARTER TURN-IN IS CLEAN. `_TUTORIAL_KAELEN_COMPLETION_LINES` /
+  `_TUTORIAL_KAELEN_ABANDON_LINES` (UIManager ~12375) are authored, pinned to
+  the actual task (the raider), and name no faction and no payer. The "Shiny"
+  in two of them is CORRECT and must not be "fixed": per docs/bugs.md the rule
+  is that only Kaelen uses it — the open bug is the AGENT NPC using it.
+- N.O.V.A.'S COMBAT BUDGET FIX NOW HAS THE TEST IT WAS MISSING. The existing
+  test proved combat lines PASS the budget gate; nothing proved they stay OUT
+  of the ledger, and that second half is what fixed her going silent on docks
+  after a fight. Added that coverage and MUTATION-CHECKED it: reverting the
+  guard in `speak()` to append unconditionally fails all three assertions, so
+  the test is not vacuous.
+
+STILL NEEDS A HUMAN AT THE CONTROLS (I cannot fly the ship): confirming in a
+real session that she actually speaks on docking and that the starter turn-in
+reads well in the panel. Everything reachable from the model and the
+deterministic layers is verified.
+
+- Green: nova line bank batch parser (incl. two new dedupe tests), nova tests
+  (incl. new accounting test), line bank refill, scene script parse check,
+  nova line-bank live fire x3 rounds.
+
+KNOWN LIMITATION LEFT ON PURPOSE: a repeated ONE-word closer ("Good.") still
+slips both guards. Lowering the closer floor to one word would also reject
+lines ending "Captain.", which is in-voice and common, so the trade was not
+worth it. Logged in docs/bugs.md as low severity.
