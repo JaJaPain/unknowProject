@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_arrival_can_consume_ready_line_bank()
 	_test_generated_bank_lines_use_campaign_quality_gate()
 	_test_global_speech_budget()
+	_test_combat_lines_do_not_spend_budget()
 	_test_semantic_movement_consumes_banks_or_stays_silent()
 	_test_repeated_events_mostly_produce_silence()
 	_test_repair_aware_undock_warning_rotation()
@@ -561,6 +562,37 @@ func _test_gate_glitch_bank_is_protected() -> void:
 			),
 		"LLMInterface glitch generation is no longer a guarded large-model call."
 	)
+
+
+# She was going silent on docks after a fight. The budget GATE lets combat
+# lines through, but speak() also has to keep them OUT of the ledger -- a
+# firefight is many lines, and if they counted, the arrival/dock line on the
+# other side of it would always be the one that got cut. Covers the accounting
+# side, which the gate test above cannot see.
+func _test_combat_lines_do_not_spend_budget() -> void:
+	var nova: Node = NovaType.new()
+	get_root().add_child(nova)
+	var combat: int = NovaType.Severity.COMBAT
+	var idle: int = NovaType.Severity.IDLE
+
+	for i in range(5):
+		nova.speak("Combat line number %d, all mine." % i, combat)
+	_expect(
+		(nova._recent_speech_ms as Array).is_empty(),
+		"Combat lines must not enter the speech ledger, found %d." % (nova._recent_speech_ms as Array).size()
+	)
+	_expect(
+		bool(nova._speech_budget_allows(idle, Time.get_ticks_msec())),
+		"A dock line right after a firefight must still be allowed."
+	)
+	# A casual line, by contrast, does spend budget.
+	nova.speak("Just an idle observation about your flying, Captain.", idle)
+	_expect(
+		(nova._recent_speech_ms as Array).size() == 1,
+		"A casual line should spend exactly one budget slot."
+	)
+	get_root().remove_child(nova)
+	nova.free()
 
 
 func _expect(condition: bool, message: String) -> void:
