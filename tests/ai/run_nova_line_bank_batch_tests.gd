@@ -13,6 +13,8 @@ func _initialize() -> void:
 	_test_label_expansion()
 	_test_per_line_validation()
 	_test_batch_parsing()
+	_test_shared_sentence_rejection()
+	_test_duplicate_closer_rejection()
 
 	if _failures.is_empty():
 		print("[PASS] Nova line bank batch tests")
@@ -137,6 +139,117 @@ func _test_batch_parsing() -> void:
 	_expect(
 		(junk.get("lines", []) as Array).is_empty(),
 		"Non-JSON batch body should yield no lines."
+	)
+
+
+# Regression from a real live-fire batch: the small model welded one stock tail
+# onto beat after beat -- "Good thing you didn't take the long way." closed six
+# lines, on beats as unrelated as hull_critical and docked. Every one of them
+# passed exact-match dedupe because the opening clauses differed, so the bank
+# would have accepted N.O.V.A. saying the same thing all campaign.
+func _test_shared_sentence_rejection() -> void:
+	var expected := [
+		"combat_victory_clean_1",
+		"combat_victory_battered_1",
+		"hull_critical_1",
+		"docked_1",
+		"welcome_back_1",
+	]
+	var raw := "
+".join([
+		"{",
+		"  \"combat_victory_clean_1\": \"Hull's intact. Good thing you didn't take the long way.\",",
+		"  \"combat_victory_battered_1\": \"Hull's bleeding. Good thing you didn't take the long way.\",",
+		# Curly apostrophe: normalization must still see the same sentence.
+		"  \"hull_critical_1\": \"Hull's failing. Good thing you didn’t take the long way.\",",
+		# Em-dash instead of a period, same tail welded on.
+		"  \"docked_1\": \"Clamps engaged—good thing you didn't take the long way.\",",
+		"  \"welcome_back_1\": \"You're back. I kept your seat warm, Captain.\"",
+		"}",
+	])
+	var parsed: Dictionary = _llm.parse_nova_line_bank_batch(raw, expected)
+	var lines: Array = parsed.get("lines", [])
+	_expect(
+		lines.size() == 2,
+		"Only the first tail-sharing line and the distinct line should survive, got %d." % lines.size()
+	)
+	var texts: Array = []
+	for line in lines:
+		texts.append(str((line as Dictionary).get("text", "")))
+	_expect(
+		texts.size() == 2 and texts[1] == "You're back. I kept your seat warm, Captain.",
+		"The distinct line must be kept: %s" % str(texts)
+	)
+	var reasons: Array = []
+	for entry in (parsed.get("rejected", []) as Array):
+		reasons.append(str((entry as Dictionary).get("reason", "")))
+	_expect(
+		reasons.count("duplicate_sentence") == 3,
+		"Expected 3 duplicate_sentence rejections, got %s" % str(reasons)
+	)
+	# A short shared fragment is NOT repetition -- terse status openings have to
+	# stay reusable across beats or ordinary batches would gut themselves.
+	var terse := "
+".join([
+		"{",
+		"  \"combat_victory_clean_1\": \"Hull's intact. Nothing to report, Captain.\",",
+		"  \"docked_1\": \"Hull's intact. Clamps engaged, and I am staying put.\"",
+		"}",
+	])
+	var terse_parsed: Dictionary = _llm.parse_nova_line_bank_batch(
+		terse, ["combat_victory_clean_1", "docked_1"]
+	)
+	_expect(
+		(terse_parsed.get("lines", []) as Array).size() == 2,
+		"A two-word shared opening must not be treated as a duplicate sentence."
+	)
+
+
+# Also from a live batch: three lines closed with "Still flying." and two with
+# "Stay calm.". Both are under the shared-sentence word floor, but a repeated
+# closer is what a player actually hears as repetition. Shared OPENINGS must
+# stay legal, or ordinary terse batches would gut themselves.
+func _test_duplicate_closer_rejection() -> void:
+	var expected := [
+		"combat_victory_clean_1",
+		"combat_victory_battered_1",
+		"hull_critical_1",
+	]
+	var raw := "
+".join([
+		"{",
+		"  \"combat_victory_clean_1\": \"Hull's intact. Still flying.\",",
+		"  \"combat_victory_battered_1\": \"Hull's cracked. Still flying.\",",
+		"  \"hull_critical_1\": \"Hull's failing. Stay calm, Captain.\"",
+		"}",
+	])
+	var parsed: Dictionary = _llm.parse_nova_line_bank_batch(raw, expected)
+	var lines: Array = parsed.get("lines", [])
+	_expect(
+		lines.size() == 2,
+		"The second line sharing a closer should drop, got %d lines." % lines.size()
+	)
+	var reasons: Array = []
+	for entry in (parsed.get("rejected", []) as Array):
+		reasons.append(str((entry as Dictionary).get("reason", "")))
+	_expect(
+		reasons == ["duplicate_closer"],
+		"Expected one duplicate_closer rejection, got %s" % str(reasons)
+	)
+	# A shared opening with distinct closers is fine.
+	var openings := "
+".join([
+		"{",
+		"  \"combat_victory_clean_1\": \"Hull's intact. Nothing to report.\",",
+		"  \"combat_victory_battered_1\": \"Hull's intact. I want a refit.\"",
+		"}",
+	])
+	var opening_parsed: Dictionary = _llm.parse_nova_line_bank_batch(
+		openings, ["combat_victory_clean_1", "combat_victory_battered_1"]
+	)
+	_expect(
+		(opening_parsed.get("lines", []) as Array).size() == 2,
+		"A shared opening with distinct closers must be accepted."
 	)
 
 

@@ -2019,6 +2019,8 @@ static func parse_nova_line_bank_batch(
 	var lines_out: Array = []
 	var rejected: Array = []
 	var seen_texts: Dictionary = {}
+	var seen_sentences: Dictionary = {}
+	var seen_closers: Dictionary = {}
 	for label in expected_labels:
 		var lower_label := str(label).to_lower()
 		if not by_lower.has(lower_label):
@@ -2035,6 +2037,28 @@ static func parse_nova_line_bank_batch(
 		if seen_texts.has(line_text):
 			rejected.append({"label": label, "reason": "duplicate_text"})
 			continue
+		# A batch can be structurally perfect and still be one line wearing
+		# eight hats. A live run returned "Good thing you didn't take the long
+		# way." as the tail of six lines, on beats as unrelated as
+		# hull_critical and docked; exact-match dedupe never saw it, because
+		# the opening clauses differed. Reject a line that reuses a whole
+		# sentence from one already accepted in this batch.
+		if not _nova_bank_shared_sentence(line_text, seen_sentences).is_empty():
+			rejected.append({"label": label, "reason": "duplicate_sentence"})
+			continue
+		# The tail is where the model's tic lands, and it lands short: one live
+		# batch closed three lines with "Still flying." and two with "Stay
+		# calm.". Too short for the shared-sentence floor above, but a repeated
+		# closer is exactly what a player hears as repetition. Shared OPENINGS
+		# stay legal -- "Hull's intact." has to work on more than one beat.
+		var closer := _nova_bank_final_sentence(line_text)
+		if not closer.is_empty() and seen_closers.has(closer):
+			rejected.append({"label": label, "reason": "duplicate_closer"})
+			continue
+		for sentence in _nova_bank_sentences(line_text):
+			seen_sentences[sentence] = true
+		if not closer.is_empty():
+			seen_closers[closer] = true
 		seen_texts[line_text] = true
 		var category := str(label)
 		var underscore := category.rfind("_")
@@ -2042,6 +2066,68 @@ static func parse_nova_line_bank_batch(
 			category = category.substr(0, underscore)
 		lines_out.append({"kind": category, "text": line_text})
 	return {"lines": lines_out, "rejected": rejected}
+
+
+# A shared clause only reads as repetition once it is long enough to be a
+# phrase rather than a stock fragment: "Hull's intact." is two words and must
+# stay reusable across beats.
+const _NOVA_BANK_SHARED_SENTENCE_MIN_WORDS := 4
+
+
+# The first sentence of `text` that already appeared in `seen_sentences`, or
+# "" when the line shares nothing.
+static func _nova_bank_shared_sentence(
+	text: String,
+	seen_sentences: Dictionary
+) -> String:
+	for sentence in _nova_bank_sentences(text):
+		if seen_sentences.has(sentence):
+			return sentence
+	return ""
+
+
+# Normalized sentences of `text`, long enough to count as a shared phrase.
+# Em-dashes split too: the model likes welding a stock tail on with one.
+static func _nova_bank_sentences(text: String) -> Array[String]:
+	var flattened := text
+	for delimiter in ["!", "?", ";", "—", "–"]:
+		flattened = flattened.replace(delimiter, ".")
+	var out: Array[String] = []
+	for raw in flattened.split(".", false):
+		var normalized := _nova_bank_normalize(str(raw))
+		var words := normalized.split(" ", false)
+		if words.size() >= _NOVA_BANK_SHARED_SENTENCE_MIN_WORDS:
+			out.append(normalized)
+	return out
+
+
+# Lowercase, letters and digits only, whitespace collapsed. Dropping
+# apostrophes outright is deliberate: the model mixes straight and curly ones
+# freely, and "didn't" / "didn’t" must not read as different sentences.
+static func _nova_bank_normalize(text: String) -> String:
+	var out := ""
+	for i in range(text.length()):
+		var ch := text[i].to_lower()
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			out += ch
+		elif ch == " " or ch == "	":
+			out += " "
+	return " ".join(out.split(" ", false))
+
+
+# The line's closing sentence, normalized. Two words is enough here (unlike
+# the shared-sentence floor) because a repeated closer is audible even when it
+# is short. Returns "" when the line has no closing sentence worth comparing.
+static func _nova_bank_final_sentence(text: String) -> String:
+	var flattened := text
+	for delimiter in ["!", "?", ";", "—", "–"]:
+		flattened = flattened.replace(delimiter, ".")
+	var pieces := flattened.split(".", false)
+	for i in range(pieces.size() - 1, -1, -1):
+		var normalized := _nova_bank_normalize(str(pieces[i]))
+		if normalized.split(" ", false).size() >= 2:
+			return normalized
+	return ""
 
 
 static func _nova_line_bank_prompt(

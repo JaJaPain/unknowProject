@@ -12,7 +12,27 @@ extends SceneTree
 #     --llm-live-fire --rounds=2
 
 const RESULT_ARTIFACT_PATH := "res://logs/nova_line_bank_live_fire.json"
-const REQUIRED_ACCEPT_RATE := 0.9
+
+# What this gate asserts, and what it deliberately does not.
+#
+# STRUCTURAL rejections mean the prompt/format contract broke -- the model
+# returned something the parser cannot read, or leaked a label or a speaker
+# prefix into a line. Those are our bugs and any one of them fails the run.
+#
+# QUALITY rejections (duplicate_*, missing_label) mean the guards caught a
+# repetitive or incomplete draw. That is the system working, not failing, so
+# they only have to leave enough usable lines behind to seed a bank.
+const REQUIRED_ACCEPT_RATE := 0.6
+const STRUCTURAL_REJECTIONS: Array[String] = [
+	"inner_parse_failed",
+	"not_an_object",
+	"label_leak",
+	"speaker_prefix",
+	"placeholder_braces",
+	"multiline",
+	"too_long",
+	"too_short",
+]
 
 var _llm: Node = null
 var _rows: Array[Dictionary] = []
@@ -159,6 +179,7 @@ func _finish() -> void:
 		"accept_rate": accept_rate,
 		"required_rate": REQUIRED_ACCEPT_RATE,
 		"reason_counts": reason_counts,
+		"structural_rejections": STRUCTURAL_REJECTIONS,
 		"elapsed_seconds": float(Time.get_ticks_msec() - _started_msec) / 1000.0,
 		"rows": _rows,
 	}
@@ -173,6 +194,12 @@ func _finish() -> void:
 	])
 	if not reason_counts.is_empty():
 		print("[NovaBankLiveFire] rejection reasons: %s" % JSON.stringify(reason_counts))
-	var passed := failed_batches == 0 and accept_rate >= REQUIRED_ACCEPT_RATE
+	var structural: Array[String] = []
+	for reason in reason_counts.keys():
+		if str(reason) in STRUCTURAL_REJECTIONS:
+			structural.append("%s x%d" % [str(reason), int(reason_counts[reason])])
+	if not structural.is_empty():
+		print("[NovaBankLiveFire] STRUCTURAL failures: %s" % ", ".join(structural))
+	var passed := failed_batches == 0 		and structural.is_empty() 		and accept_rate >= REQUIRED_ACCEPT_RATE
 	print("[PASS] N.O.V.A. line-bank live fire" if passed else "[FAIL] N.O.V.A. line-bank live fire")
 	quit(0 if passed else 1)
