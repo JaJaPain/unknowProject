@@ -82,6 +82,19 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 ---
 
 ### N.O.V.A. filler word plays during new-campaign loading screen
+**Status:** FIXED 2026-07-15 (commit 1a62701), VERIFIED AND HARDENED 2026-08-18.
+The original fix landed two days after this was filed and was never closed out.
+Re-audited it and found two real gaps, both now closed:
+- The gate lived in one `UIManager._play_nova_latency_filler` helper, so any
+  other caller of `play_latency_filler_clip` bypassed it, and it only ever
+  covered N.O.V.A. -- Kaelen had no equivalent. The ban now lives in
+  `SpeechService.set_latency_filler_suppressed()`, which every caller goes
+  through, and refuses with the suppressing sequence as the reason.
+- It was keyed on `loading_panel` still existing, but that panel is freed to
+  START the intro cinematic, so the gate opened while the player was still
+  watching an authored sequence with no control. Suppression now lifts when
+  gameplay actually resumes.
+Pinned by `tests/story/run_intro_dock_gating_tests.gd`.
 **Spotted:** 2026-07-13 (fresh campaign loading health check)
 **Severity:** Low-Medium — immersion/polish issue; makes a non-semantic latency mask feel like dialogue before gameplay has started
 **Description:** During the loading screen for a new campaign, N.O.V.A. can play a filler word/clip. Filler words are meant to mask short quiet waits while the player is already in an interaction waiting on LLM/TTS readiness, not to fire during the full fresh-campaign loading screen. New-campaign loading should either stay quiet, use deliberate authored/loading VO, or wait for actual prepared content; it should not spend a casual "um/oh/well/ahh" filler before the player is in the world.
@@ -90,6 +103,17 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 ---
 
 ### N.O.V.A. talks during first dock flow
+**Status:** NOT REPRODUCIBLE as written, 2026-08-18 -- the first dock already
+belongs to her AUTHORED arrival line, not ordinary dock banter. `UIManager`
+branches on `kaelen_briefing_seen`, and that flag is only set inside the agent
+panel, which the player cannot reach before docking. So the branch is correct
+by construction.
+**A REAL BUG FOUND WHILE CHECKING IT, now fixed:** the authored line had no
+once-only latch. `kaelen_briefing_seen` stays false until the player actually
+talks to Kaelen, so dock -> undock without visiting him -> re-dock replayed the
+identical authored line. Same failure as the Jenna Kross repeat, and fixed the
+way that entry prescribes: `StoryManager.claim_intro_first_dock_line()` latches
+where the line is SERVED, so every dock path is covered including later ones.
 **Spotted:** 2026-07-08 (intro cinematic playtest)
 **Severity:** Medium - can interrupt/confuse the first dock onboarding beat
 **Description:** On the player's first dock after the opening cinematic, N.O.V.A. can speak as part of the normal dock flow. That first dock is supposed to belong to Kaelen's onboarding / station direction, so regular N.O.V.A. dock chatter should be suppressed until the first-dock intro flow has cleared.
@@ -172,6 +196,29 @@ Two complementary layers need to work together:
 ---
 
 ### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
+**Status:** NEEDS ABE'S CALL, 2026-08-18 -- this entry and the code disagree
+about the intended design, so I have not changed behaviour.
+
+What I verified: the mechanical LEAK is closed on both paths. "Shiny" in a
+non-Kaelen mouth is rewritten to "Indy" by `GlobalState.apply_tone_guard()`,
+which runs on the audio path (`SpeechService.prepare_text`, `TTSInterface`) AND
+on the displayed dock message (`UIManager` ~10915). Repeated address inside one
+line is stripped by `remove_repeated_player_address()`. There is a smoke check
+in `GameRoot` ~8973.
+
+Where the disagreement is: this entry says "the agent should not know or use
+the player's callsign", but the agent prompts deliberately assign "Indy" as the
+non-Kaelen nickname and instruct "only occasionally call the pilot 'Indy' --
+most of the time use 'you' or 'pilot'". So agents using it sparingly is the
+implemented DESIGN, not a leak. "Indy" is not leaking from the pilot backstory
+as this entry originally guessed; it is passed in as `player_nickname`.
+
+**The question for Abe:** should agents use "Indy" at all?
+- If NO, this is a small prompt change (drop `player_nickname` for agents, add
+  "never address the pilot by name") plus a guard that strips it -- say the
+  word and it is quick.
+- If YES-but-rarer, the fix is frequency, not prohibition, and is best judged
+  from a real transcript rather than by tightening prompt wording blind.
 **Spotted:** 2026-06-26
 **Severity:** Low — immersion break
 **Description:** Agent NPC dialogue (quest offers, contract details) occasionally includes "Indy" or "Shiny" directly in the agent's speech — e.g. "3 Wraiths raiders are probing our perimeter, Indy." The agent should not know or use the player's callsign; only Kaelen uses "Shiny". "Indy" appears to be leaking from the pilot backstory or prompt context into the agent prompt.

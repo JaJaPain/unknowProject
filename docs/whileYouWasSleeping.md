@@ -2442,3 +2442,50 @@ SAMPLE OF WHAT IT NOW PRODUCES:
 STILL OPEN: only a human can confirm these sound right in a real fight with
 voice. The per-fight LLM bundle (npc_brace, npc_dying and friends) now receives
 the cause but its 20 keys have NOT been live-checked one by one.
+
+## 2026-08-18 (third pass) — first-five-minutes bugs, and one nobody had hit yet
+
+Abe could not playtest, so I took the first-five-minutes list and stuck to what
+is provable without eyes on the screen. Two of the four were already fixed and
+never closed out; checking them properly is what found the new one.
+
+- THE FILLER LEAK WAS FIXED ON 2026-07-15, two days after it was filed. The
+  guard held. But it had two gaps worth closing anyway:
+  it lived inside ONE UIManager helper, so any other caller of
+  play_latency_filler_clip bypassed it and Kaelen had no equivalent guard at
+  all; and it was keyed on `loading_panel` still existing, while that panel is
+  freed to START the intro cinematic -- so the gate opened while the player was
+  still watching an authored sequence with no control. The ban now lives in
+  SpeechService, where every caller goes through it, and lifts when gameplay
+  actually resumes rather than when a panel disappears.
+  THE RULE: a policy about when the game may make a noise belongs with the
+  service that makes the noise, not at one of its call sites. Same reasoning as
+  moving the ambient queue's exit condition off a single signal.
+- "N.O.V.A. TALKS DURING FIRST DOCK" IS NOT REPRODUCIBLE AS WRITTEN. The first
+  dock already belongs to her authored arrival line: UIManager branches on
+  kaelen_briefing_seen, and that flag is only set inside the agent panel, which
+  cannot be reached before docking. The branch is correct by construction.
+- BUT THAT AUTHORED LINE COULD REPEAT, and this one was live. kaelen_briefing_seen
+  stays false until the player actually TALKS to Kaelen, so dock -> undock
+  without visiting him -> re-dock served the identical authored line a second
+  time. Exactly the Jenna Kross repeat, in a different costume, and fixed the
+  way her entry prescribes: latch where the line is SERVED
+  (StoryManager.claim_intro_first_dock_line), not where a later button is
+  pressed, so every dock path is covered including ones added later.
+  Mutation-checked: disabling the latch fails the repeat test.
+- THE "INDY" BUG IS A DESIGN DISAGREEMENT, NOT A LEAK, so I changed nothing and
+  wrote the question down instead. The mechanical leak is genuinely closed --
+  "Shiny" in a non-Kaelen mouth is rewritten by apply_tone_guard on BOTH the
+  audio path and the displayed dock message. But the entry says agents should
+  never use the player's callsign, while the agent prompts deliberately pass
+  "Indy" as player_nickname and say to use it occasionally. That is Abe's call
+  to make, and it is a two-minute change once he makes it. Details and both
+  options are in docs/bugs.md.
+
+- Green: intro dock gating (new, mutation-checked, and run three times after the
+  first attempt hit the known autoload compile-order flake), speech service,
+  scene parse check.
+
+STILL OPEN from that list: the tutorial overview panel starting collapsed. It is
+a UI-layout bug whose failure mode is "it looks wrong", so it wants the same
+human pass as the taunts rather than a headless assertion.
