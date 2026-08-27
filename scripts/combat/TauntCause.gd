@@ -60,10 +60,18 @@ static func is_player_initiated(cause: String) -> bool:
 # and it is NOT the yo-mama material this system used to ship.
 const _BRIEFS: Dictionary = {
 	CONTRACT_HIT: {
-		"situation": "the player opened fire on them to fulfil a kill contract",
-		"knows": "They have just worked out they were SOLD. They do not know who bought it, and that is the part that stings.",
-		"wants": "To find out what they were worth, and to make the player feel cheap for taking the job.",
-		"register": "Bitter, wounded, darkly funny about their own price tag. Betrayal, not surprise.",
+		"situation": "there is a BOUNTY ON THE SPEAKER'S HEAD, and the pilot has just attacked them to collect it. The speaker is the hunted one, and every line comes from the hunted",
+		# Say the thing plainly. An earlier brief described them as having
+		# "worked out they were SOLD", and the model wrote from inside that
+		# realisation -- "You were sold. Not me." -- which is a riddle to a
+		# player who only knows they took a job. Name the transaction.
+		# Positive framing only. Spelling out what NOT to say ("the pilot was not
+		# sold") got it read straight back as "You were never sold. You were
+		# hired." A 4b treats a prohibition as vocabulary. Describing the one
+		# thing they DO talk about is what keeps the roles straight.
+		"knows": "A stranger has come to cash in the bounty on them. They have no idea who posted it, and that is the part that stings.",
+		"wants": "To needle the stranger for killing a person for money, and to wonder aloud what the bounty on them was worth.",
+		"register": "Bitter and wounded, darkly funny about their own price tag. Every line is about the speaker's head or the pilot's fee, in plain words the pilot can tie to the job they took.",
 	},
 	PREEMPTIVE_STRIKE: {
 		"situation": "the player shot first at a ship that was already coming for them",
@@ -72,10 +80,14 @@ const _BRIEFS: Dictionary = {
 		"register": "Dry, almost approving. Professional respect delivered as an insult.",
 	},
 	UNPROVOKED: {
-		"situation": "the player opened fire on them for no reason at all",
-		"knows": "Nothing. They were flying along minding their business and someone shot them.",
-		"wants": "An explanation, then revenge, roughly in that order.",
-		"register": "Outraged and genuinely baffled. The comedy is in how personally they take it.",
+		"situation": "the pilot opened fire on them with no warning and no reason. They were flying along doing something completely ordinary",
+		"knows": "Nothing about the pilot at all. One moment they were working, the next a stranger was shooting at them.",
+		# "Wants an explanation" produced argumentative lines that read like a
+		# comeback to an insult rather than a reaction to being shot -- "You
+		# don't get to decide who's an idiot". Naming the ordinary activity
+		# gives the model something concrete to be outraged about.
+		"wants": "To know what they did to deserve this, while naming the dull thing they were in the middle of -- a delivery, a survey run, a shift that ends in an hour.",
+		"register": "Outraged and genuinely baffled, and SPECIFIC about the ordinary business the pilot just interrupted. The mundane detail is the joke, not an insult contest.",
 	},
 	CODE_ENFORCEMENT: {
 		"situation": "they were dispatched because the player was mining a belt they had no permit for",
@@ -187,11 +199,24 @@ static func derive(player_initiated: bool, enemy_flags: Dictionary) -> String:
 # of a fresh install is not silent, not to carry the game. Written in the house
 # voice, with a mix of situation-carrying lines and plain flat threats.
 const _AUTHORED: Dictionary = {
+	# Larger than the other floors on purpose. This cause asks a 4b to hold two
+	# roles at once -- the speaker is the hunted, the pilot is the hired gun --
+	# and it reliably collapses them ("you were sold", "how much did you pay").
+	# Four rounds of prompt work got it to roughly half usable, so the authored
+	# set carries this one and generation supplements it under a role guard.
 	CONTRACT_HIT: [
 		"Somebody put a price on me. I hope it was embarrassing.",
 		"You're not angry. You're just employed.",
 		"I'm going to make this one hurt.",
 		"Whatever they paid you, it wasn't enough for this part.",
+		"So that's what I'm worth this season.",
+		"You came a long way for someone else's grudge.",
+		"Bounty work. Very honest, very brave.",
+		"I'd ask who wants me dead, but you wouldn't know either.",
+		"Collect carefully. I'm told I'm difficult.",
+		"Hope the fee clears before the funeral.",
+		"You don't even know my name. Just my number.",
+		"Somebody's paying you to be here. Nobody's paying me.",
 	],
 	PREEMPTIVE_STRIKE: [
 		"You moved first. Doesn't change where this ends.",

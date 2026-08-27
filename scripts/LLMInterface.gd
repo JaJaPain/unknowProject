@@ -6825,6 +6825,16 @@ static func build_taunt_bank_prompt(
 	parts.append(
 		"- Never invent a grievance beyond the situation described above."
 	)
+	parts.append(
+		"- THE PILOT MUST UNDERSTAND THE LINE WITH NO BACK-STORY. They hear one"
+	)
+	parts.append(
+		"  sentence in a fight. Say the situation in plain words rather than"
+	)
+	parts.append(
+		"  alluding to it: a line the speaker understands but the pilot cannot"
+	)
+	parts.append("  decode is a failed line, however good it sounds.")
 	parts.append("- No placeholder brackets, no speaker labels, no stage directions.")
 	parts.append("- Every line different from the others in shape and opening.")
 	parts.append(
@@ -6926,6 +6936,33 @@ static func _salvage_truncated_lines(text: String) -> Array[String]:
 	return out
 
 
+# Cause-specific coherence check. Small models reverse who is who: for a
+# contract kill they produce "you were sold", "you owe me", "you weren't worth
+# the contract" -- the pilot cast as the target instead of the hired gun. The
+# line reads fluently and is nonsense, so no generic validator catches it.
+#
+# Deliberately handled HERE rather than by adding prohibitions to the prompt.
+# Telling a 4b not to say a phrase teaches it the phrase; rejecting the output
+# costs one line and never leaks into the writing.
+static func taunt_role_confusion(text: String, cause: String) -> String:
+	if cause.strip_edges() != TauntCauseType.CONTRACT_HIT:
+		return ""
+	var lower := text.to_lower()
+	# The pilot recast as the one who was traded, priced, or indebted.
+	for phrase in [
+		"you were sold", "you was sold", "you were bought", "you were traded",
+		"you owe me", "you owe them", "you're the contract", "you are the contract",
+		"your price", "you were never sold", "you weren't worth",
+		"you were not worth", "pay me back", "bought your",
+		# The pilot recast as the one spending rather than being paid.
+		"did you pay", "you pay to", "you paid to", "much did you pay",
+		"i've got your bounty", "i have your bounty",
+	]:
+		if lower.contains(phrase):
+			return "role_confusion"
+	return ""
+
+
 # Parses a {"lines": [...]} batch. `existing_texts` is the pool already on
 # disk: with a pool this large the model WILL re-propose lines it gave in an
 # earlier session, and the dedupe has to span sessions, not just this batch.
@@ -6933,7 +6970,8 @@ static func _salvage_truncated_lines(text: String) -> Array[String]:
 # sentence or a repeated closer is what a player actually hears as repetition.
 static func parse_taunt_bank_batch(
 	raw: String,
-	existing_texts: Dictionary = {}
+	existing_texts: Dictionary = {},
+	cause: String = ""
 ) -> Dictionary:
 	var text := raw.strip_edges()
 	if text.begins_with("```"):
@@ -6986,6 +7024,10 @@ static func parse_taunt_bank_batch(
 			continue
 		if existing_texts.has(line):
 			rejected.append({"text": line, "reason": "already_in_pool"})
+			continue
+		var confusion := taunt_role_confusion(line, cause)
+		if not confusion.is_empty():
+			rejected.append({"text": line, "reason": confusion})
 			continue
 		if not _nova_bank_shared_sentence(line, seen_sentences).is_empty():
 			rejected.append({"text": line, "reason": "duplicate_sentence"})
@@ -7054,7 +7096,7 @@ func request_taunt_bank_batch(
 				callback.call({"ok": false, "reason": "missing_response_field"})
 				return
 			var parsed := parse_taunt_bank_batch(
-				str(outer_data["response"]), existing
+				str(outer_data["response"]), existing, cause
 			)
 			# Ollama reports WHY generation stopped. A truncated batch and a
 			# model that ignored the format look identical in the body but need

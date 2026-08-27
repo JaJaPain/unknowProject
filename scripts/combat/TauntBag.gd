@@ -86,7 +86,10 @@ func resize(pool_size: int) -> void:
 # Best-effort by design: with a pool barely larger than the recent list no seed
 # can satisfy the window, and one slightly early repeat is much better than
 # spinning here or breaking the no-skip invariant.
-const CYCLE_START_ATTEMPTS := 12
+# Enough tries that a clean opening is found in practice rather than by luck.
+# A shuffle of a few hundred ints is trivial and this runs once per cycle, so
+# the cost is irrelevant next to handing the player a line they just heard.
+const CYCLE_START_ATTEMPTS := 48
 
 
 func _start_new_cycle(pool: Array) -> void:
@@ -96,18 +99,26 @@ func _start_new_cycle(pool: Array) -> void:
 		_seed = randi()
 		return
 	var window: int = mini(12, maxi(1, int(_size / 2)))
+	# Keep the best candidate seen, so a pool too small for a perfectly clean
+	# opening still gets the LEAST repetitive one available instead of whatever
+	# the final attempt happened to roll.
+	var best_seed := 0
+	var best_hits := 1 << 30
 	for attempt in range(CYCLE_START_ATTEMPTS):
 		_seed = randi()
 		var order := _order()
 		if order.is_empty():
 			return
-		var clean := true
+		var hits := 0
 		for i in range(mini(window, order.size())):
 			if _recent.has(_text_at(pool, order[i])):
-				clean = false
-				break
-		if clean:
+				hits += 1
+		if hits == 0:
 			return
+		if hits < best_hits:
+			best_hits = hits
+			best_seed = _seed
+	_seed = best_seed
 
 
 func _text_at(pool: Array, index: int) -> String:
