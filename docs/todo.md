@@ -3,6 +3,33 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## Awaiting a human playtest (code landed, eyes/ears pending)
+_Work that is committed and green in headless tests but that only a person can
+sign off on, because the failure mode is "it sounds wrong", not "it errors"._
+
+- [ ] **Cause-aware enemy taunts -- listen to them in a real fight** (landed
+  2026-08-18). Taunts now derive WHY the fight started and rotate per cause.
+  What a human still has to judge:
+  - Do the lines fit the situation, WITH voice, at combat pace? Read on a page
+    is not the same as heard over a fight.
+  - Attack a contract target, get ambushed by a pirate, tank a faction's
+    reputation and let them jump you, and mine without a permit -- each should
+    sound clearly different from the others.
+  - Confirm the rotation survives a restart in the real game: note an opening
+    taunt, quit, relaunch, fight again, and check it does not come back.
+  - The dark/dry register: too jokey anywhere? Anything that reads as a pun or
+    a quip rather than gallows humour is a prompt problem, not a parser one.
+  - Re-run `tests/tools/run_taunt_bank_live_fire.gd` to regenerate samples for
+    review without needing to play.
+- [ ] **Per-fight taunt bundle keys are cause-aware but unverified** (landed
+  2026-08-18). `request_combat_taunts` now receives the cause, but its 20 keys
+  (`npc_brace`, `npc_dying`, `npc_boss_phase_2`, `kaelen_*`, ...) were not
+  checked one at a time against each cause. Most likely drift: Kaelen's lines
+  ignoring the cause, and the boss-phase keys reading generic. Worth a live
+  pass that prints every key per cause the way the taunt live-fire tool does.
+
+---
+
 ## Local workspace hygiene
 
 - [ ] **Investigate or remove local workspace artifacts** -- `tests/domain/run_intro_handhold_tests.gd.uid` and `tests/domain/run_overview_filter_tests.gd.uid` exist without their matching `.gd` sources, and `.claude/` contains local Claude workspace metadata. They are intentionally ignored in `.gitignore` so they do not pollute status; restore any intended source tests or project configuration before committing it, otherwise remove the local artifacts when safe.
