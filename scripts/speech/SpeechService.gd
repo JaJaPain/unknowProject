@@ -236,6 +236,26 @@ func prepare_followup_text(text: String, voice_profile: Variant) -> String:
 	return prepared
 
 
+# Hard stop on hesitation clips, owned here rather than at a call site.
+#
+# The loading-screen gate used to live in one UIManager helper, which meant any
+# other caller of play_latency_filler_clip silently bypassed it. Filler is a
+# POLICY about when the game may make a non-semantic noise, so it belongs with
+# the service that makes the noise -- the same reasoning that moved the ambient
+# queue's exit condition off a single signal.
+var _latency_filler_suppressed: bool = false
+var _latency_filler_suppress_reason: String = ""
+
+
+func set_latency_filler_suppressed(suppressed: bool, reason: String = "") -> void:
+	_latency_filler_suppressed = suppressed
+	_latency_filler_suppress_reason = reason.strip_edges() if suppressed else ""
+
+
+func is_latency_filler_suppressed() -> bool:
+	return _latency_filler_suppressed
+
+
 func latency_filler_clip_request(
 	speaker_id: String,
 	voice_profile: Variant,
@@ -247,6 +267,8 @@ func latency_filler_clip_request(
 	var profile_id := resolve_voice_profile(voice_profile)
 	var clean_speaker := speaker_id.strip_edges().to_lower()
 	var clean_reason := wait_reason.strip_edges().to_lower()
+	if _latency_filler_suppressed:
+		return _filler_rejected("suppressed:%s" % _latency_filler_suppress_reason)
 	if required_text_ready:
 		return _filler_rejected("required_text_ready")
 	if quiet_seconds < LATENCY_FILLER_MIN_QUIET_SECONDS:

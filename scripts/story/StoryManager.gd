@@ -80,6 +80,10 @@ var story_state: Dictionary = {
 	# ever finished a contract it never reads as zero and a new campaign's first
 	# mission gets no flash.
 	"first_contract_handed_in": false,
+	# N.O.V.A.'s authored "this station wasn't on any route" line, latched when
+	# it is SERVED rather than when some later button is pressed -- the Jenna
+	# Kross repeat was exactly that mistake (see docs/bugs.md).
+	"intro_first_dock_line_spoken": false,
 	"hinted_lounge_rumors": [],
 	"agent_cooldown_until_minute": 0,
 	"agent_cooldown_message_index": 0,
@@ -300,6 +304,7 @@ func clear_story_state() -> void:
 		"intro_repair_target_tip_delivered": false,
 		"kaelen_voss_robot_jab_delivered": false,
 		"first_contract_handed_in": false,
+		"intro_first_dock_line_spoken": false,
 		"hinted_lounge_rumors": [],
 		"agent_cooldown_until_minute": 0,
 		"agent_cooldown_message_index": 0,
@@ -1551,6 +1556,26 @@ func _dock_rumor_context(_station) -> Dictionary:
 	# contact", "dock crews") for a missing context, so an empty context is
 	# the safe choice rather than guessing at station property names.
 	return {}
+
+
+# One-way latch for N.O.V.A.'s authored first-dock line. Returns true the first
+# time only, so the caller speaks it exactly once per campaign.
+#
+# Gating on kaelen_briefing_seen alone was not enough: that flag is only set
+# inside the agent panel, so a player who docks, undocks without talking to
+# Kaelen, and docks again heard the identical authored line a second time --
+# the same failure as Jenna Kross's repeated introduction. Latching here, where
+# the line is actually served, closes every dock path including future ones.
+func claim_intro_first_dock_line() -> bool:
+	if bool(story_state.get("intro_first_dock_line_spoken", false)):
+		return false
+	story_state["intro_first_dock_line_spoken"] = true
+	_save_story_state()
+	return true
+
+
+func has_spoken_intro_first_dock_line() -> bool:
+	return bool(story_state.get("intro_first_dock_line_spoken", false))
 
 
 func on_quest_completed(quest: Dictionary) -> void:

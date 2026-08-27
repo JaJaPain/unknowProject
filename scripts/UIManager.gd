@@ -648,6 +648,7 @@ func _ready():
 func _complete_offline_loading_for_tests() -> void:
 	if loading_panel and is_instance_valid(loading_panel):
 		loading_panel.queue_free()
+		_release_loading_filler_suppression()
 	GlobalState.paused = false
 
 func _on_startup_load_completed(save_loaded: bool) -> void:
@@ -4048,7 +4049,12 @@ func toggle_dock_menu(
 			# transition, so re-rendering the dock menu while already docked can't
 			# re-trigger her (and can't wrongly climb her "docking again?" streak).
 			if (not _was_docked or procedure_completed) and is_instance_valid(Nova):
-				if not GlobalState.kaelen_briefing_seen:
+				# The authored arrival line is once per campaign, claimed at the
+				# moment it is served. kaelen_briefing_seen alone did not cover
+				# this: it is only set inside the agent panel, so docking,
+				# undocking without visiting Kaelen, and re-docking replayed the
+				# identical line -- the Jenna Kross repeat, again.
+				if not GlobalState.kaelen_briefing_seen 						and is_instance_valid(StoryManager) 						and StoryManager.has_method("claim_intro_first_dock_line") 						and StoryManager.claim_intro_first_dock_line():
 					Nova.on_intro_first_dock()
 				else:
 					Nova.on_docked()
@@ -6110,6 +6116,14 @@ func _show_lounge_pending_turn(
 	)
 
 
+# Lifts the loading-screen filler ban. Separate from freeing the panel because
+# the two do not happen at the same moment on the new-campaign path.
+func _release_loading_filler_suppression() -> void:
+	if is_instance_valid(SpeechService) \
+			and SpeechService.has_method("set_latency_filler_suppressed"):
+		SpeechService.set_latency_filler_suppressed(false)
+
+
 func _play_kaelen_latency_filler(
 	wait_reason: String,
 	quiet_seconds: float,
@@ -6134,13 +6148,11 @@ func _play_nova_latency_filler(
 ) -> void:
 	if not is_instance_valid(SpeechService):
 		return
-	# Fresh-campaign loading is a deliberate opening sequence, not an interactive
-	# quiet wait. Save the pre-recorded hesitation clips for actual player-facing
-	# LLM/TTS delays after the game has begun.
-	if not startup_save_loaded \
-			and loading_panel != null \
-			and is_instance_valid(loading_panel):
-		return
+	# The loading/cinematic ban now lives in SpeechService, so it covers every
+	# caller rather than this one helper. It is also keyed on the sequence being
+	# active rather than on the loading panel still existing: that panel is
+	# freed to START the intro cinematic, which is still not a moment for a
+	# hesitation noise.
 	SpeechService.play_latency_filler_clip(
 		"N.O.V.A.",
 		"voice.nova.v1",
@@ -13908,6 +13920,12 @@ func _apply_pickup_handoff_fallback(
 	)
 
 func _create_loading_screen():
+	# The loading screen is a deliberate opening sequence, not an interactive
+	# quiet wait, so hesitation clips stay off for its whole life -- including
+	# the intro cinematic, which deliberately keeps this panel alive.
+	if is_instance_valid(SpeechService) \
+			and SpeechService.has_method("set_latency_filler_suppressed"):
+		SpeechService.set_latency_filler_suppressed(true, "loading_screen")
 	loading_panel = Panel.new()
 	loading_panel.name = "LoadingScreen"
 	loading_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -14476,6 +14494,7 @@ func _finish_loading_after_story_ready() -> void:
 		# loading/landing tracks immediately before returning to gameplay.
 		AudioManager.exit_landing_music()
 		loading_panel.queue_free()
+		_release_loading_filler_suppression()
 		_queue_startup_line_bank_background_voice_cache()
 		GlobalState.paused = false # Resume gameplay!
 		GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
@@ -14507,6 +14526,10 @@ func _create_intro_handoff_cover() -> ColorRect:
 func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
 	if loading_panel != null and is_instance_valid(loading_panel):
 		loading_panel.queue_free()
+	# Deliberately NOT releasing filler suppression here. This frees the loading
+	# panel to START the cinematic, so a gate keyed on that panel's existence
+	# would open while the player is still watching an authored sequence with no
+	# control. Suppression lifts below, when gameplay actually resumes.
 	# The landing tracks intentionally continue through loading. The cinematic
 	# begins with the normal in-game music under its gate and ship effects.
 	AudioManager.exit_landing_music()
@@ -14529,6 +14552,7 @@ func _begin_intro_cinematic_from_black(cover: ColorRect) -> void:
 		if cover_layer != null and is_instance_valid(cover_layer):
 			cover_layer.queue_free()
 	GlobalState.paused = false
+	_release_loading_filler_suppression()
 	GlobalState.trace("[TRACE] [UIManager] Loading Screen completed. Game started!")
 
 
