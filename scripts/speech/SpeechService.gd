@@ -225,15 +225,21 @@ func _drain_ambient_queue() -> void:
 func prepare_text(text: String, voice_profile: Variant) -> String:
 	var profile_id := resolve_voice_profile(voice_profile)
 	var clean_text := TTSInterface.clean_dialogue_text(text.strip_edges())
-	return GlobalState.apply_tone_guard(clean_text, str(profile_id))
+	var guarded := GlobalState.apply_tone_guard(clean_text, str(profile_id))
+	# Only Kaelen names the player. Everyone else addresses them directly but
+	# never by nickname -- implied, not stated. This runs on EVERY prepared line
+	# rather than only on follow-ups, which is where the "Indy ... Indy ... Indy"
+	# paragraphs were getting through.
+	if not GlobalState.is_kaelen_voice(str(profile_id)):
+		guarded = GlobalState.strip_player_address(guarded)
+	return guarded
 
 
 func prepare_followup_text(text: String, voice_profile: Variant) -> String:
 	var profile_id := resolve_voice_profile(voice_profile)
-	var prepared := prepare_text(text, profile_id)
-	if not GlobalState.is_kaelen_voice(str(profile_id)):
-		prepared = GlobalState.remove_repeated_player_address(prepared)
-	return prepared
+	# prepare_text already strips every non-Kaelen address, so a follow-up needs
+	# nothing extra. Kept as a distinct entry point for its callers.
+	return prepare_text(text, profile_id)
 
 
 # Hard stop on hesitation clips, owned here rather than at a call site.

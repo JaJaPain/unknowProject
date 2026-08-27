@@ -2625,6 +2625,58 @@ static func apply_tone_guard(text: String, voice_id: String) -> String:
 	return out
 
 
+# Whitespace class for the address patterns below. Built as a constant so the
+# regex sources stay readable instead of drowning in escaped backslashes.
+const WS := "\\s"
+const WB := "\\b"
+
+
+# Removes EVERY direct address of the player by nickname from a line.
+#
+# Non-Kaelen speakers must not say the player's name at all. They still address
+# them directly -- "you", "pilot" -- so who is being spoken to stays obvious;
+# it is simply implied rather than stated, which is how people actually talk.
+# The prompts already say not to, but a model asked not to do something will
+# still do it sometimes, and the failure mode here is loud: "Indy ... and Indy
+# ... so Indy" in a single paragraph. This is the structural guarantee behind
+# the prompt rule.
+#
+# Handles both nicknames: apply_tone_guard() rewrites "Shiny" to "Indy" for
+# non-Kaelen speakers, but this must also be correct when called on its own.
+static func strip_player_address(text: String) -> String:
+	var out := text.strip_edges()
+	for token in ["indy", "shiny"]:
+		var word: String = WB + str(token) + WB
+		# Order matters: the specific punctuation shapes first, so the catch-all
+		# at the end never has to guess what to do with a stray comma.
+		# "..., Indy, ..." mid-sentence.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*," + WS + "*", ", ")
+		# "..., Indy." closing a sentence.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*(?=[.!?])", "")
+		# "..., Indy" running off the end with no punctuation.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*$", "")
+		# "Indy, ..." opening a line OR trailing a conjunction: "So Indy,",
+		# "and Indy,". This is the shape that read as constant name-dropping,
+		# and no comma-first pattern catches it.
+		out = _sub(out, word + WS + "*[,!?:;-]+" + WS + "*", "")
+		# Anything left: a bare mention with no punctuation attached.
+		out = _sub(out, WS + "*" + word, "")
+	# Stripping can leave a doubled space or a space before punctuation.
+	out = _sub(out, WS + "{2,}", " ")
+	out = _sub(out, WS + "+([.!?,])", "$1")
+	out = out.strip_edges()
+	if out.length() > 0 and out[0] >= "a" and out[0] <= "z":
+		out = out[0].to_upper() + out.substr(1)
+	return out
+
+
+static func _sub(text: String, pattern: String, replacement: String) -> String:
+	var regex := RegEx.new()
+	if regex.compile("(?i)" + pattern) != OK:
+		return text
+	return regex.sub(text, replacement, true)
+
+
 static func remove_repeated_player_address(text: String) -> String:
 	var out := text.strip_edges()
 	var leading := RegEx.new()

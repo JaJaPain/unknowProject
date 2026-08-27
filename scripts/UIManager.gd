@@ -10913,6 +10913,10 @@ func show_dock_message(
 					)
 				)
 	text = GlobalState.apply_tone_guard(text, display_voice)
+	# The written line has to match the spoken one. Without this the panel
+	# still read "..., Indy." while the audio had already dropped it.
+	if not GlobalState.is_kaelen_voice(display_voice):
+		text = GlobalState.strip_player_address(text)
 
 	# Configure content.
 	dock_message_line.text = text
