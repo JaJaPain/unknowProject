@@ -24,17 +24,31 @@ func _initialize() -> void:
 		push_error("[FAIL] Authored floor missing for %s." % cause)
 		quit(1)
 		return
-	# Draw a full cycle straight from the live bag and check for repeats.
+	# Draw out the REST of the current cycle and check for repeats.
+	#
+	# Deliberately not a full pool's worth: this bag was restored from disk and
+	# legitimately resumes mid-cycle, which is the persistence feature working.
+	# Asking for pool.size() draws would cross the cycle boundary, and a line
+	# reappearing in the NEXT cycle is correct behaviour, not a repeat.
 	var bags: Dictionary = _cm.get("_cause_bags")
 	var bag = bags.get(cause, null)
+	var remaining: int = int(bag.remaining())
+	print("[TauntProbe] resuming mid-cycle: %d of %d lines left before it wraps." % [
+		remaining, pool.size(),
+	])
 	var seen: Dictionary = {}
-	for i in range(pool.size()):
+	for i in range(remaining):
 		var entry: Dictionary = bag.next(pool)
 		var text := str(entry.get("text", ""))
 		if seen.has(text):
-			failures.append("'%s' repeated within one cycle." % text)
+			failures.append("'%s' repeated before the cycle wrapped." % text)
 		seen[text] = true
 		print("    %d. %s" % [i + 1, text])
+	if remaining > 0 and seen.size() != remaining:
+		failures.append(
+			"Expected %d distinct lines in the cycle remainder, saw %d."
+			% [remaining, seen.size()]
+		)
 	# Save, then rebuild a bag from what was written, as a relaunch would.
 	_cm.call("_save_taunt_pool")
 	var path: String = _cm.get("_TAUNT_CACHE_PATH")

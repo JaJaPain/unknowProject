@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_bag_is_exhaustive()
 	_test_bag_survives_restart()
 	_test_bag_growth()
+	_test_exhaustive_after_growth()
 
 	if _failures.is_empty():
 		print("[PASS] Taunt cause + bag tests")
@@ -194,6 +195,45 @@ func _test_bag_growth() -> void:
 	_expect(
 		not str(restored.next(grown).get("text", "")).is_empty(),
 		"A restored bag on a resized pool must still deliver a line."
+	)
+
+
+# Regression: the recent-lines guard used to SKIP entries, which burned cursor
+# positions, so a cycle wrapped before covering the pool and repeated. It only
+# showed up once a real bank had grown past the authored floor -- the small
+# fixed pools in the other tests never triggered it.
+func _test_exhaustive_after_growth() -> void:
+	var pool := _pool(12)
+	var bag := BagType.new(pool.size())
+	for i in range(8):
+		bag.next(pool)
+	# Pool grows the way a background refill grows it.
+	var grown := pool.duplicate()
+	for i in range(12, 60):
+		grown.append({"text": "line_%d" % i})
+	# A full cycle over the GROWN pool must still cover every line exactly once.
+	var seen: Dictionary = {}
+	for i in range(grown.size()):
+		var text := str(bag.next(grown).get("text", ""))
+		if seen.has(text):
+			_failures.append(
+				"'%s' repeated at draw %d of a %d-line cycle after growth."
+				% [text, i + 1, grown.size()]
+			)
+		seen[text] = true
+	_expect(
+		seen.size() == grown.size(),
+		"A grown pool's cycle must cover all %d lines, saw %d." % [
+			grown.size(), seen.size()
+		]
+	)
+	# And the cycle after that must also be complete.
+	var second: Dictionary = {}
+	for i in range(grown.size()):
+		second[str(bag.next(grown).get("text", ""))] = true
+	_expect(
+		second.size() == grown.size(),
+		"The second cycle must also cover every line, saw %d." % second.size()
 	)
 
 

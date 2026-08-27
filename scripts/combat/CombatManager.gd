@@ -199,6 +199,7 @@ func _load_persisted_taunts() -> void:
 		return
 	var causes: Dictionary = (parsed as Dictionary).get("causes", {}) 		if (parsed as Dictionary).get("causes", {}) is Dictionary else {}
 	var loaded := 0
+	var dropped := 0
 	for cause in causes.keys():
 		var key := str(cause)
 		if not TauntCauseType.is_valid(key):
@@ -207,10 +208,18 @@ func _load_persisted_taunts() -> void:
 		var pool: Array = _cause_pools.get(key, [])
 		for line in (record.get("lines", []) as Array if record.get("lines", []) is Array else []):
 			var text := str(line).strip_edges()
-			if text.length() > 4 and not _pool_texts.has(text):
-				pool.append(_make_taunt_entry(text))
-				_pool_texts[text] = true
-				loaded += 1
+			if text.length() <= 4 or _pool_texts.has(text):
+				continue
+			# Re-validate on LOAD, not just on insert. A line banked before a
+			# guard existed would otherwise keep being spoken forever -- an
+			# encoding-corrupted line ("This isn?t personal") survived exactly
+			# that way and was still being served after the guard landed.
+			if is_instance_valid(LLMInterface) 					and LLMInterface.has_method("validate_taunt_line") 					and not str(LLMInterface.validate_taunt_line(text)).is_empty():
+				dropped += 1
+				continue
+			pool.append(_make_taunt_entry(text))
+			_pool_texts[text] = true
+			loaded += 1
 		_cause_pools[key] = pool
 		# Restore the rotation exactly where it stopped, so relaunching does not
 		# replay the opening taunts the player just heard.
@@ -221,6 +230,14 @@ func _load_persisted_taunts() -> void:
 	print("[CombatManager] Loaded %d persisted taunt lines across %d causes." % [
 		loaded, causes.size(),
 	])
+	if dropped > 0:
+		# Rewrite immediately so the offenders are gone from disk too, rather
+		# than being re-read and re-dropped on every future launch.
+		print("[CombatManager] Dropped %d banked taunt(s) that fail current validation." % dropped)
+		GenerationDiagnostics.record_event(
+			"taunt_bank", "stale_lines_dropped", "combat_manager", {"count": dropped}
+		)
+		_save_taunt_pool()
 
 
 # Writes pools AND rotation state. Called every time a line is drawn, so a

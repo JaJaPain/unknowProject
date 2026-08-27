@@ -29,6 +29,9 @@ var _size: int = 0
 # Texts played most recently, kept across a reshuffle so growing the pool
 # mid-cycle cannot produce an audible immediate repeat.
 var _recent: Array[String] = []
+# Set when the pool changed size: the next draw must open a fresh cycle, and
+# only next() has the pool needed to choose a good starting order.
+var _pending_cycle_start: bool = false
 
 const RECENT_MEMORY := 25
 
@@ -62,48 +65,81 @@ func resize(pool_size: int) -> void:
 	var size := maxi(0, pool_size)
 	if size == _size:
 		return
-	if size == 0:
-		_size = 0
-		_cursor = 0
-		return
-	# A resized pool invalidates the seeded order, so start a fresh cycle. The
-	# recent-texts guard below is what stops that from sounding like a repeat.
 	_size = size
-	_seed = randi()
 	_cursor = 0
+	if size == 0:
+		return
+	# A resized pool invalidates the seeded order. Defer choosing the new one
+	# until next(), which has the pool and can therefore avoid opening on
+	# something just heard.
+	_pending_cycle_start = true
 
 
-# Picks the next line from `pool`, or "" when there is nothing to say.
-# `pool` is an array of entry dictionaries carrying a "text" key.
+# Picks the ORDER for a fresh cycle so its opening stretch avoids lines the
+# player just heard.
+#
+# This is where the two guarantees are reconciled. Exhaustiveness is absolute,
+# so a new cycle MUST include everything, including what was just played -- the
+# only freedom left is where those land. Re-rolling the seed until the opening
+# window is clear pushes them deep into the cycle without ever skipping them.
+#
+# Best-effort by design: with a pool barely larger than the recent list no seed
+# can satisfy the window, and one slightly early repeat is much better than
+# spinning here or breaking the no-skip invariant.
+const CYCLE_START_ATTEMPTS := 12
+
+
+func _start_new_cycle(pool: Array) -> void:
+	_pending_cycle_start = false
+	_cursor = 0
+	if _recent.is_empty():
+		_seed = randi()
+		return
+	var window: int = mini(12, maxi(1, int(_size / 2)))
+	for attempt in range(CYCLE_START_ATTEMPTS):
+		_seed = randi()
+		var order := _order()
+		if order.is_empty():
+			return
+		var clean := true
+		for i in range(mini(window, order.size())):
+			if _recent.has(_text_at(pool, order[i])):
+				clean = false
+				break
+		if clean:
+			return
+
+
+func _text_at(pool: Array, index: int) -> String:
+	if index < 0 or index >= pool.size():
+		return ""
+	var entry = pool[index]
+	return str((entry as Dictionary).get("text", "")) if entry is Dictionary else str(entry)
+
+
+# Picks the next line from `pool`, or {} when there is nothing to say.
+#
+# Exhaustiveness is ABSOLUTE here: every draw advances the cursor by exactly
+# one, so a cycle always covers the whole pool before wrapping. An earlier
+# version SKIPPED entries that were in recent memory, which quietly burned
+# cursor positions -- the cycle then hit its end before every line had played,
+# reshuffled early, and repeated. Avoiding recent lines is now handled by
+# choosing the cycle's ORDER, never by skipping within it.
 func next(pool: Array) -> Dictionary:
 	if pool.is_empty():
 		return {}
 	if _size != pool.size():
 		resize(pool.size())
+	if _pending_cycle_start or _cursor >= _size:
+		_start_new_cycle(pool)
 	var order := _order()
-	if order.is_empty():
+	if order.is_empty() or _cursor >= order.size():
 		return {}
-	# One full cycle of attempts at most: skip anything in recent memory, but
-	# never loop forever when the pool is smaller than that memory.
-	var attempts := 0
-	var chosen := -1
-	while attempts < order.size():
-		if _cursor >= order.size():
-			_seed = randi()
-			_cursor = 0
-			order = _order()
-		var candidate: int = order[_cursor]
-		_cursor += 1
-		attempts += 1
-		var text := str((pool[candidate] as Dictionary).get("text", "")) \
-			if pool[candidate] is Dictionary else str(pool[candidate])
-		if _recent.has(text) and pool.size() > _recent.size():
-			continue
-		chosen = candidate
-		break
-	if chosen == -1:
+	var index: int = order[_cursor]
+	_cursor += 1
+	if index < 0 or index >= pool.size():
 		return {}
-	var entry = pool[chosen]
+	var entry = pool[index]
 	if not entry is Dictionary:
 		return {}
 	_remember(str((entry as Dictionary).get("text", "")))
