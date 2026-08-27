@@ -196,6 +196,45 @@ Two complementary layers need to work together:
 ---
 
 ### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
+**Status:** FIXED 2026-08-18. Abe's call, with the reason that made it obvious:
+the agents were using it in EVERY clause -- "Indy ... and Indy ... so Indy" --
+and nobody talks that way. You use a name once at the start of a conversation
+if at all, never again while still sitting at the table. Implied address reads
+as normal speech; stated address reads as a chatbot.
+
+Fixed in two halves, because the prompt alone was never going to hold it:
+- The four agent personas said "only occasionally call the pilot 'Indy'", which
+  is an invitation. They now say never to use a name or nickname.
+- `GlobalState.strip_player_address()` is the structural guarantee. It removes
+  every address form including the one that actually leaked, an address riding
+  a conjunction ("So Indy," / "and Indy,"), which no comma-first pattern caught.
+  It runs in `SpeechService.prepare_text` so it covers every prepared line, not
+  just the single follow-up path the old stripper was wired to, and on the
+  displayed dock message so panel and audio cannot disagree.
+
+**Kaelen keeps "Shiny"** -- it is hers, and it is part of what makes her read as
+more than an ordinary NPC. She is exempt from both the tone guard and the strip,
+and `tests/story/run_player_address_tests.gd` pins that so a later change cannot
+quietly take it away.
+
+**Correcting this entry's original guess:** "Indy" was not leaking from the pilot
+backstory. It was passed in deliberately as `player_nickname`.
+**Spotted:** 2026-06-26  
+**Severity:** High — data loss risk  
+**Description:** Starting a new campaign appears to overwrite an occupied slot rather than selecting the next empty one. Player loses an existing campaign save.  
+**Where to look:** `GameRoot.gd` → new campaign slot selection logic. Check `campaign_slot_registry.first_empty_slot_id()` is being called and that the result is being used rather than defaulting to slot 1 or the active slot.
+
+---
+
+### Quest tracker panel blue box reappears on second quest
+**Spotted:** 2026-06-25  
+**Severity:** Low — cosmetic  
+**Description:** When the player accepts a second quest, the oversized empty blue box (quest tracker panel) reappears. The `call_deferred("reset_size")` fix only fires when the panel first becomes visible; it doesn't re-fire when a new quest loads into an already-visible panel.  
+**Where to look:** `scripts/UIManager.gd` → `_update_quest_tracker()`. The `reset_size()` call needs to fire every time quest content changes. Also check if `user://ui_layout.json` is persisting a saved `w`/`h` for the quest panel and re-applying it on each update.
+
+---
+
+### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
 **Status:** NEEDS ABE'S CALL, 2026-08-18 -- this entry and the code disagree
 about the intended design, so I have not changed behaviour.
 

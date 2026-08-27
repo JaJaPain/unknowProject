@@ -2489,3 +2489,44 @@ never closed out; checking them properly is what found the new one.
 STILL OPEN from that list: the tutorial overview panel starting collapsed. It is
 a UI-layout bug whose failure mode is "it looks wrong", so it wants the same
 human pass as the taunts rather than a headless assertion.
+
+## 2026-08-18 (fourth pass) — the "Indy" spam, and why it was the wrong question
+
+I had written this up as a design question for Abe: should agents use the
+player's callsign at all? His answer reframed it usefully. The problem was never
+WHETHER they used it, it was that they used it in every clause -- "Indy, we have
+a problem ... the raiders are probing our perimeter, Indy, and Indy, I need this
+handled quietly." His rule: you say a name once at the start of a conversation
+if at all, and never again while you are still at the table. Then: "I'm ok with
+implied rather than used. It seems more normal speech."
+
+So: agents address the player directly and never name them. Who is being spoken
+to stays obvious; it is implied rather than stated.
+
+- THE PROMPTS WERE INVITING IT. All four agent personas said "only occasionally
+  call the pilot 'Indy'". Asking a small model for "occasionally" gets you
+  "constantly" -- there is no way for it to track frequency across a paragraph.
+  They now say never, and the nickname is not passed as something to use.
+- THE GUARD WAS WIRED TO ONE PATH. remove_repeated_player_address existed and
+  worked, but its only caller was prepare_followup_text, which one agent reply
+  path used. Quest offers and contract details -- the lines Abe was actually
+  reading -- never went through it. The new strip runs in prepare_text, so every
+  prepared line is covered, plus the displayed dock message so the panel and the
+  audio cannot disagree.
+- THE SHAPE THAT LEAKED was an address riding a conjunction: "So Indy," and
+  "and Indy,". Every existing pattern was comma-FIRST (", Indy") or
+  start-of-line, and neither matches. Found it by testing against Abe's verbatim
+  example rather than a tidy invented one, which is the argument for using the
+  reported text as the fixture.
+- KAELEN KEEPS "SHINY", explicitly. It is hers and it is part of what makes her
+  read as more than an NPC. She is exempt from both the tone guard and the
+  strip, and there is a test pinning it so a later change cannot quietly take it
+  away. A non-Kaelen speaker who says "Shiny" still gets it converted to the
+  neutral nickname and then stripped.
+- ANOTHER FALSE [PASS], same shape as the taunt suite: load() returns a GDScript
+  even when the file failed to PARSE, and calling a missing static on it only
+  logs an error and returns null. The suite now proves the function is really
+  callable before asserting anything.
+
+- Green: player address (mutation-checked), speech service, intro dock gating,
+  scene parse check.
