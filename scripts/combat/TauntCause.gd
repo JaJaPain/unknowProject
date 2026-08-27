@@ -263,11 +263,80 @@ const _AUTHORED: Dictionary = {
 }
 
 
+const LINES_PATH := "res://data/content/taunt_lines.json"
+
+# Lines loaded from LINES_PATH, cached after the first read. Empty until then.
+static var _loaded_lines: Dictionary = {}
+static var _load_attempted: bool = false
+
+
+# Authored lines for a cause: the data file when it has them, otherwise the
+# in-script set below.
+#
+# The data file is the real content and is meant to be edited by hand -- adding
+# or rewriting a taunt should never need a code change. The in-script copy stays
+# as a floor so a missing or malformed file degrades to something speakable
+# rather than to silence.
 static func authored_lines(cause: String) -> Array[String]:
-	var out: Array[String] = []
 	var key := cause.strip_edges()
 	if not _AUTHORED.has(key):
 		key = OPPORTUNIST
+	_ensure_lines_loaded()
+	var from_file: Array = _loaded_lines.get(key, [])
+	if not from_file.is_empty():
+		var loaded: Array[String] = []
+		for line in from_file:
+			loaded.append(str(line))
+		return loaded
+	var out: Array[String] = []
 	for line in (_AUTHORED[key] as Array):
 		out.append(str(line))
 	return out
+
+
+static func _ensure_lines_loaded() -> void:
+	if _load_attempted:
+		return
+	_load_attempted = true
+	if not FileAccess.file_exists(LINES_PATH):
+		return
+	var file := FileAccess.open(LINES_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not parsed is Dictionary:
+		push_warning("[TauntCause] %s is not a JSON object; using built-in lines." % LINES_PATH)
+		return
+	var causes = (parsed as Dictionary).get("causes", {})
+	if not causes is Dictionary:
+		return
+	for cause_id in (causes as Dictionary).keys():
+		var key := str(cause_id).strip_edges()
+		if not is_valid(key):
+			push_warning("[TauntCause] Unknown cause '%s' in %s." % [key, LINES_PATH])
+			continue
+		var record = (causes as Dictionary)[cause_id]
+		if not record is Dictionary:
+			continue
+		var raw = (record as Dictionary).get("lines", [])
+		if not raw is Array:
+			continue
+		var clean: Array[String] = []
+		var seen: Dictionary = {}
+		for line in (raw as Array):
+			var text := str(line).strip_edges()
+			# Skip blanks and duplicates here so a hand-edited file cannot
+			# quietly weight one line more heavily in the rotation.
+			if text.length() < 8 or seen.has(text):
+				continue
+			seen[text] = true
+			clean.append(text)
+		if not clean.is_empty():
+			_loaded_lines[key] = clean
+
+
+# Test seam: forces the next authored_lines() call to re-read the file.
+static func reload_lines() -> void:
+	_loaded_lines = {}
+	_load_attempted = false

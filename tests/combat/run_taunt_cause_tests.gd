@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_bag_survives_restart()
 	_test_bag_growth()
 	_test_exhaustive_after_growth()
+	_test_authored_lines_load_from_data()
 
 	if _failures.is_empty():
 		print("[PASS] Taunt cause + bag tests")
@@ -234,6 +235,41 @@ func _test_exhaustive_after_growth() -> void:
 	_expect(
 		second.size() == grown.size(),
 		"The second cycle must also cover every line, saw %d." % second.size()
+	)
+
+
+# The authored lines are hand-edited content in data/content/taunt_lines.json.
+# A typo there must degrade to a shorter pool, never to a crash or a spoken
+# fragment, so the loader is checked as carefully as the code paths.
+func _test_authored_lines_load_from_data() -> void:
+	CauseType.reload_lines()
+	for cause in CauseType.ALL:
+		var lines: Array = CauseType.authored_lines(str(cause))
+		_expect(
+			not lines.is_empty(),
+			"Cause %s must have authored lines to fall back on." % cause
+		)
+		var seen: Dictionary = {}
+		for line in lines:
+			var text := str(line)
+			_expect(
+				text.strip_edges().length() >= 8,
+				"Cause %s has a too-short authored line: '%s'." % [cause, text]
+			)
+			_expect(
+				not seen.has(text),
+				"Cause %s repeats an authored line: '%s'." % [cause, text]
+			)
+			seen[text] = true
+			# These are spoken mid-fight; a paragraph would be cut off.
+			_expect(
+				text.split(" ").size() <= 24,
+				"Cause %s has an over-long authored line: '%s'." % [cause, text]
+			)
+	# An unknown cause must still yield something speakable.
+	_expect(
+		not (CauseType.authored_lines("nonsense_cause") as Array).is_empty(),
+		"An unknown cause must fall back to a usable set."
 	)
 
 

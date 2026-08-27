@@ -1,0 +1,86 @@
+{
+	"_comment": [
+		"Authored enemy taunt lines, one list per reason the fight started.",
+		"These are the game's real taunt content, written by hand rather than",
+		"generated at runtime: they are short, the player hears them constantly,",
+		"and a weak clause has nowhere to hide. Edit freely -- this file is data,",
+		"and nothing here needs a code change.",
+		"Rules: one line each, under about 18 words, spoken aloud mid-fight.",
+		"The speaker never knows the pilot's name.",
+		"Lines are re-validated on load, so a malformed one is dropped, not spoken."
+	],
+	"causes": {
+		"contract_hit": {
+			"lines": [
+				"Somebody put a price on me. I hope it was embarrassing.",
+				"You're not angry. You're just employed.",
+				"I'm going to make this one hurt.",
+				"Whatever they paid you, it wasn't enough for this part.",
+				"So that's what I'm worth this season.",
+				"You came a long way for someone else's grudge.",
+				"Bounty work. Very honest, very brave.",
+				"I'd ask who wants me dead, but you wouldn't know either.",
+				"Collect carefully. I'm told I'm difficult.",
+				"Hope the fee clears before the funeral.",
+				"You don't even know my name. Just my number.",
+				"Somebody's paying you to be here. Nobody's paying me."
+			]
+		},
+		"preemptive_strike": {
+			"lines": [
+				"You moved first. Doesn't change where this ends.",
+				"Saved me the trouble of the approach.",
+				"Eager. I like that in a wreck.",
+				"That was my line, and my minute."
+			]
+		},
+		"unprovoked": {
+			"lines": [
+				"I don't even know you. That's the insulting part.",
+				"Was it something I flew?",
+				"You picked the wrong quiet afternoon.",
+				"No warning, no reason. Fine. Same to you."
+			]
+		},
+		"code_enforcement": {
+			"lines": [
+				"You mined a belt you don't have a permit for. This is the escalation step.",
+				"The fine was cheaper an hour ago.",
+				"I'd rather be doing paperwork. You've made it this instead.",
+				"Nothing personal. It's a form with guns attached."
+			]
+		},
+		"reinforcement": {
+			"lines": [
+				"You made a mess. We're the cleanup.",
+				"The first crew underestimated you. We read their file.",
+				"Second wave. Better funded.",
+				"They called it in before they stopped transmitting."
+			]
+		},
+		"pirate_predation": {
+			"lines": [
+				"Open the hold and we can both be somewhere else in ten minutes.",
+				"You're cargo with opinions.",
+				"Nothing personal. You're just carrying.",
+				"I'm going to make this quick. For me."
+			]
+		},
+		"reputation_grudge": {
+			"lines": [
+				"Your record with us reads like a confession.",
+				"We keep accounts. Yours came due.",
+				"This isn't about today. Today's just when we found you.",
+				"You earned this one slowly."
+			]
+		},
+		"opportunist": {
+			"lines": [
+				"I'm going to make this one hurt.",
+				"Wrong place. That's all it ever is.",
+				"Don't take it personally. Don't take it any way at all.",
+				"Let's get this over with."
+			]
+		}
+	}
+}
