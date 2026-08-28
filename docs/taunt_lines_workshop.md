@@ -10,16 +10,21 @@ the game that the speech path would mangle.
 
 | Cause | When it fires | Status |
 |---|---|---|
-| `pirate_predation` | Pirates jumped you for your cargo | 🟡 |
+| `pirate_predation` | Pirates jumped you for your cargo | ✅ |
 | `contract_hit` | You shot them to collect a bounty | 🟡 |
 | `unprovoked` | You shot a neutral going about their business | ✅ |
 | `preemptive_strike` | You shot first at someone already coming for you | ✅ |
 | `code_enforcement` | Patrol collecting your unpaid mining fine | ✅ |
 | `reputation_grudge` | A faction acting on your bad standing | ✅ |
 | `reinforcement` | Backup, after you fought their people earlier | ✅ |
-| `opportunist` | They started it and won't say why | ⬜ |
+| `opportunist` | They started it and won't say why | ✅ |
 
 **Standing decisions from Abe (2026-08-18):**
+- **Enemies exist fully in this world.** Their motivation can be greed or
+  revenge, but equally survival, fear, or a mental condition. They are not a
+  menace-delivery system. This is the single most useful note of the session --
+  it turns each cause from one emotion into a range, and it is why `opportunist`
+  can hold both a sadist and a frightened pilot.
 - **Creepy/menacing is intentional.** These NPCs are attacking the player; an
   unsettling register is wanted, not an accident. "naughty, naughty boy" stands.
 - **Male-default address is fine.** The speaker does not know the player's
@@ -315,4 +320,77 @@ never quote a sum, or the taunt advertises a mechanic that is not there.
      friends are here. The player learns the mechanic from the taunt.
    - CAUSE COMPLETE: blunt collective threat / stunned disbelief / calm advice.
 
-_(filled in as we go)_
+### opportunist
+
+0. **Abe (moved here from pirate_predation):** "I really don't need your shit. I just like to hurt people."
+   - Works BECAUSE the only motive offered is enjoyment, which is not a
+     grievance the player can catch as a lie.
+
+1. **Abe:** "I told my girl i wouldn't hurt anyone today.  I'm pretty sure she'll forgive me."
+   - Grammar: `i` -> `I`. Double space normalised. Validator OK (15 words).
+   - FINAL: "I told my girl I wouldn't hurt anyone today. I'm pretty sure she'll forgive me."
+   - REGISTER NOTE: offers NO grievance at all -- the nearest thing to a motive is
+     being mildly amused about breaking a promise, which cannot be caught as a
+     lie. Exactly the constraint this cause needs, and the hardest to write to.
+     "I'm pretty sure she'll forgive me" implies this is routine.
+   - PATTERN (good, but do not overuse): Abe's second line using a DOMESTIC LIFE
+     outside the violence as the humanising device -- the pirate has kids to
+     feed, this one has a girl he promised. It is becoming a signature: his
+     antagonists have lives, which makes killing them land differently. Vary the
+     device when filling out rather than writing forty men with families.
+2. **Abe:** "I don't know why you are flying so close.  But i cant take any chances."
+   - Grammar: `i` -> `I`, `cant` -> `can't`. Double space normalised.
+     Validator OK (15 words, 71 chars).
+   - FINAL: "I don't know why you are flying so close. But I can't take any chances."
+   - REGISTER NOTE: the most interesting line in the set. It makes the PLAYER the
+     villain -- they really were just flying, and this person is scared, has no
+     information, and shot first. The only line that reframes the encounter
+     rather than colouring it.
+   - It also fits the cause's constraint better than anything else: it does not
+     merely decline to give a reason, it says outright there is not one. "I don't
+     know why" IS the cause, spoken.
+   - ACTION: update the OPPORTUNIST brief in TauntCause.gd. "Curt and unbothered"
+     is too narrow and would steer every fill-in line toward swagger. Abe's
+     framing gives the cause four registers: greed, revenge, survival, or
+     something wrong with them.
+   - Optional, not applied: "you're" (14 words), marginally more natural for a
+     nervous speaker; uncontracted reads more deliberate, which suits someone
+     choosing to shoot.
+3. **Abe:** "Who sent you?  Stay back!  Stay back!"
+   - Double spaces normalised. Validator OK (7 words, 35 chars).
+   - FINAL: "Who sent you? Stay back! Stay back!"
+   - REGISTER NOTE: pure panic, and the repetition does work no adjective could.
+     Pairs with line 2 as the same person seconds later, giving the cause a
+     frightened voice alongside the sadist.
+   - WORTH KNOWING (kept deliberately): "Who sent you?" implies someone sent the
+     player, and in this cause nobody did. He is WRONG, which is the point --
+     but the game has real hidden-agenda machinery, so a player may read it as a
+     plot hook. Keeping it: NPCs being wrong about the player is good
+     worldbuilding, and strangers assuming you were sent fits the paranoid
+     texture.
+
+## ALL 8 CAUSES ANCHORED — 24 lines, every one validated against the runtime.
+
+### What Abe's lines taught me that my briefs had wrong
+
+1. **Imply the cause, don't state it.** "You just gave me a SECOND reason" tells
+   the player there was a first without explaining it. My briefs pushed the model
+   to state the situation, which is exactly why its lines explained themselves.
+2. **Give the writer a concrete handle, not an emotion.** "Outraged and baffled"
+   produced an argument; naming the dull thing they were interrupted doing
+   produced "My shift ends in twelve minutes."
+3. **Enemies have lives.** Kids to feed, a girl he promised, a shift ending.
+   The humanising detail is what makes the dark humour land.
+4. **A cause is a RANGE, not an emotion.** `opportunist` holds both a sadist and
+   a frightened man who shot first. Greed, revenge, survival, or something wrong
+   with them.
+5. **Escalation of banality is the house joke.** "A good apology and a drink
+   waiting, or your ass is going to die today."
+
+### Remaining opens for Abe
+- `contract_hit` line 3: bribe line A / B / C (system conflict with the real
+  comms-reversal mechanic — see that entry).
+- `reputation_grudge` line 3: keep "My computer shows..." or swap to the
+  non-database variant, since all three lines currently open with the same move.
+- TTS pause default is 0.7s globally, for every speaker, at any "...".
+
