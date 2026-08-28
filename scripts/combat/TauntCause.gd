@@ -114,10 +114,16 @@ const _BRIEFS: Dictionary = {
 		"register": "Cold and institutional. This is policy being enforced, and they are enjoying it slightly too much.",
 	},
 	OPPORTUNIST: {
-		"situation": "they attacked and the reason is not worth explaining",
+		"situation": "they attacked and there is no provable reason for it",
 		"knows": "Nothing in particular about the player.",
-		"wants": "The fight, or whatever falls out of it.",
-		"register": "Curt and unbothered. They do not justify themselves -- never invent a specific grievance here.",
+		# Abe's framing, and it is better than what was here. "Curt and
+		# unbothered" was one emotion, and it steered everything toward swagger.
+		# These people exist fully in the world: the motive can be greed or
+		# revenge, but just as easily survival, fear, or something wrong with
+		# them. That is why this cause can hold a sadist AND a frightened pilot
+		# who shot first because he could not afford to be wrong.
+		"wants": "Anything or nothing -- the fight, what falls out of it, or simply to not be the one who hesitated.",
+		"register": "Any of: bored menace, glee, blank refusal to explain, or plain fear. Never a specific grievance -- there is not one, and an invented one is a lie the player can catch.",
 	},
 }
 
