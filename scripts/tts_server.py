@@ -2,11 +2,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 import io
 import re
+import numpy as np
 import soundfile as sf
 import torch
 from kokoro import KPipeline
 
 app = FastAPI()
+
+SAMPLE_RATE = 24000
+# Segment boundaries: a newline, or an ellipsis written as "..." or as the
+# single-character form.
+SEGMENT_SPLIT = r'(?:\n+|\.\.\.|…)'
+# Silence inserted at each boundary. Overridable per request via pause_seconds.
+DEFAULT_PAUSE_SECONDS = 0.7
 
 # Initialize the Kokoro pipeline (it will download weights on first run, ~300MB)
 print("[TTS Server] Initializing Kokoro Pipeline...")
@@ -85,6 +93,7 @@ async def text_to_speech(data: dict):
     speed = data.get("speed", 1.0)
     style_scale = float(data.get("style_scale", 1.0))
     style_from = data.get("style_from", "")
+    pause_seconds = max(0.0, min(float(data.get("pause_seconds", DEFAULT_PAUSE_SECONDS)), 3.0))
 
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
@@ -93,13 +102,37 @@ async def text_to_speech(data: dict):
     try:
         voice_pack = resolve_voice(voice)
         voice_pack = apply_style(voice_pack, style_scale, style_from)
-        generator = pipeline(text, voice=voice_pack, speed=speed, split_pattern=r'\n+')
-        for _, _, audio in generator:
-            wav_io = io.BytesIO()
-            # Kokoro sample rate is 24000Hz
-            sf.write(wav_io, audio, 24000, format='WAV', subtype='PCM_16')
-            wav_io.seek(0)
-            return Response(content=wav_io.read(), media_type="audio/wav")
+        # Split on newlines AND on an ellipsis, so an author can place a real
+        # beat inside a line by writing "..." -- which is what a reader already
+        # expects it to mean, and it needs no change to the on-screen text.
+        #
+        # Kokoro's own punctuation handling barely pauses: measured across
+        # ". . . .", "...", chr(8230), "." and "," the whole spread was 0.17s, so a
+        # written pause was not audible. The silence below is explicit instead.
+        generator = pipeline(
+            text, voice=voice_pack, speed=speed, split_pattern=SEGMENT_SPLIT
+        )
+        chunks = [audio for _, _, audio in generator]
+        if not chunks:
+            raise HTTPException(status_code=500, detail="Failed to generate audio")
+        # This previously returned INSIDE the loop, so any text containing a
+        # newline was silently truncated to its first segment. Concatenating is
+        # both the pause feature and the fix for that.
+        if len(chunks) > 1:
+            gap = np.zeros(int(SAMPLE_RATE * pause_seconds), dtype=np.float32)
+            joined = []
+            for index, chunk in enumerate(chunks):
+                if index > 0:
+                    joined.append(gap)
+                joined.append(np.asarray(chunk, dtype=np.float32))
+            audio_out = np.concatenate(joined)
+        else:
+            audio_out = np.asarray(chunks[0], dtype=np.float32)
+        wav_io = io.BytesIO()
+        # Kokoro sample rate is 24000Hz
+        sf.write(wav_io, audio_out, SAMPLE_RATE, format='WAV', subtype='PCM_16')
+        wav_io.seek(0)
+        return Response(content=wav_io.read(), media_type="audio/wav")
     except Exception as e:
         print("[TTS Server] Error during generation: ", e)
         raise HTTPException(status_code=500, detail=str(e))

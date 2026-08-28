@@ -5,6 +5,28 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Illegal-mining fines can never be paid
+**Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
+whether the fine could be paid and the answer turned out to be no)
+**Severity:** Medium — the player accrues a debt with no way to clear it, and
+the enforcement patrols that come with it never stop being justified.
+**Description:** `IllegalMiningEnforcement` tracks `outstanding_fines` per
+system/faction and stacks 250 credits per violation. It exposes `fine_due()` and
+a complete `pay_fine()` that handles partial funds, clears the debt, and reports
+whether enforcement heat was lifted — but **neither function has a single caller
+anywhere in the codebase.** The debt accrues and is never collectable.
+**Where to look:** `scripts/systems/IllegalMiningEnforcement.gd` (the working
+capability), then the station dock menu in `scripts/UIManager.gd` for where a
+"pay outstanding fine" affordance would live. `pay_fine()` already returns
+everything a UI needs (`paid`, `amount_paid`, `remaining_due`, `heat_cleared`),
+so this is a wiring job, not new logic.
+**Related:** taunt lines for the `code_enforcement` cause deliberately avoid
+naming a sum, because quoting a fine the player cannot pay would advertise a
+mechanic that is not there.
+
+---
+
+
 ### N.O.V.A. bank lines can share a one-word closer ("Good.")
 **Spotted:** 2026-08-18 (nova line-bank live fire) — **accepted limitation, not scheduled**
 **Severity:** Low — mild audible repetition; the bad cases are already caught
