@@ -19,7 +19,32 @@ the game that the speech path would mangle.
 | `reinforcement` | Backup, after you fought their people earlier | ✅ |
 | `opportunist` | They started it and won't say why | ✅ |
 
+### THE GOVERNING PRINCIPLE (Abe, after the code_enforcement rewrite)
+
+> "Each one should be a *real* person saying it. They have their own reason for
+> what they are doing. It's never cut and dry. It should show some personality
+> behind it. Can be funny, can be rude. But like a person with his own issues
+> that you get in the way of."
+
+The CAUSE is the situation. The LINE is a person. Every rejection in this
+session traces back to this: lines that recited a role ("You've been flagged.
+I'm the flag.") were cut, and lines with a human behind them ("I like rules!",
+"my kids need to eat", "I was having a perfectly boring day") were kept.
+
+Test before writing any line: whose day is this, and what is their problem with
+today? If the answer is "they are the enforcement mechanic", start again.
+
 **Standing decisions from Abe (2026-08-18):**
+- **Fix pause and syntax mistakes directly** when the intent is clear (e.g. he
+  wrote ". . ." for a pause; the splitter needs "..."). Only ask when the intent
+  is genuinely ambiguous.
+- **Quiet, "thin" lines are not weak.** I flagged "I was having a perfectly
+  boring day" as doing no work; Abe kept it because it is a very human thing to
+  say. Not doing work IS the work -- people say small ordinary things when
+  something big happens. Stop treating understatement as filler.
+- **Lines are heard ALONE, never as a themed set.** A line that only makes sense
+  beside its neighbours fails. This killed "I'd love to know my own number" and
+  is the same failure as "You were sold. Not me." from the first scenario.
 - **Enemies exist fully in this world.** Their motivation can be greed or
   revenge, but equally survival, fear, or a mental condition. They are not a
   menace-delivery system. This is the single most useful note of the session --
