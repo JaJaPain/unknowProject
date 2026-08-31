@@ -274,6 +274,11 @@ const LINES_PATH := "res://data/content/taunt_lines.json"
 # Lines loaded from LINES_PATH, cached after the first read. Empty until then.
 static var _loaded_lines: Dictionary = {}
 static var _load_attempted: bool = false
+# text -> {"speed": float, "pause": float}. Only lines that need a different
+# delivery appear here; -1 on either field means "use the global default".
+# Keyed by TEXT rather than by index so the persisted pool can stay a plain
+# list of strings and still pick up an override edited in later.
+static var _delivery: Dictionary = {}
 
 
 # Authored lines for a cause: the data file when it has them, otherwise the
@@ -331,7 +336,19 @@ static func _ensure_lines_loaded() -> void:
 		var clean: Array[String] = []
 		var seen: Dictionary = {}
 		for line in (raw as Array):
-			var text := str(line).strip_edges()
+			# A line is either a plain string, or an object carrying delivery
+			# overrides: {"text": "...", "speed": 0.95, "pause": 0.45}. Most
+			# lines need neither, so the plain form stays the default and only
+			# the handful that were judged too fast carry the extra fields.
+			var text := ""
+			if line is Dictionary:
+				text = str((line as Dictionary).get("text", "")).strip_edges()
+				var speed := float((line as Dictionary).get("speed", -1.0))
+				var pause := float((line as Dictionary).get("pause", -1.0))
+				if not text.is_empty() and (speed > 0.0 or pause >= 0.0):
+					_delivery[text] = {"speed": speed, "pause": pause}
+			else:
+				text = str(line).strip_edges()
 			# Skip blanks and duplicates here so a hand-edited file cannot
 			# quietly weight one line more heavily in the rotation.
 			if text.length() < 8 or seen.has(text):
@@ -345,4 +362,15 @@ static func _ensure_lines_loaded() -> void:
 # Test seam: forces the next authored_lines() call to re-read the file.
 static func reload_lines() -> void:
 	_loaded_lines = {}
+	_delivery = {}
 	_load_attempted = false
+
+
+# Delivery overrides for one line: {"speed": float, "pause": float}, each -1
+# when the global default should be used. Safe to call for any text.
+static func delivery_for(text: String) -> Dictionary:
+	_ensure_lines_loaded()
+	var found = _delivery.get(text.strip_edges(), null)
+	if found is Dictionary:
+		return (found as Dictionary).duplicate()
+	return {"speed": -1.0, "pause": -1.0}

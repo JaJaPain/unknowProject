@@ -132,7 +132,20 @@ func _run_tts_heartbeat() -> void:
 		_schedule_tts_heartbeat()
 
 
-func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0):
+# Cache identity for one rendered clip. Delivery is part of the identity: the
+# same words at a different speed or with a different pause are a different
+# recording, and keying on voice|text alone would hand back whichever was
+# rendered first.
+func _delivery_cache_key(voice_id: String, clean_text: String, speed: float, pause: float) -> String:
+	var key := voice_id + "|" + clean_text
+	if speed > 0.0:
+		key += "|s%.2f" % speed
+	if pause >= 0.0:
+		key += "|p%.2f" % pause
+	return key
+
+
+func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0, pause_seconds: float = -1.0):
 	# Support legacy call: play_dialogue_audio(text, faction_string)
 	# Detect by checking if voice_id_override is a known faction OR if
 	# the caller passed a 2-arg combo. We resolve the voice from
@@ -178,7 +191,7 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	if last_interaction_time > 0.0:
 		elapsed_str = " (Elapsed since '%s': %.3fs)" % [last_interaction_name, (tts_request_time - last_interaction_time) / 1000.0]
 		
-	var cache_key: String = voice_id + "|" + clean_text
+	var cache_key: String = _delivery_cache_key(voice_id, clean_text, speed_override, pause_seconds)
 	# Check cache first!
 	if tts_audio_cache.has(cache_key):
 		var stream = tts_audio_cache[cache_key]
@@ -201,6 +214,10 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 		"speed": speed_override,
 		"style_scale": style_scale
 	}
+	# Only sent when the caller asked for a specific gap, so the server keeps
+	# applying its own default everywhere else.
+	if pause_seconds >= 0.0:
+		payload["pause_seconds"] = pause_seconds
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	

@@ -30,7 +30,22 @@ func _initialize() -> void:
 		if lines.size() < 20:
 			failures.append("%s has only %d lines (target 25+)." % [cause_id, lines.size()])
 		for raw in lines:
-			var text := str(raw)
+			# A line is a plain string, or an object carrying delivery overrides.
+			# Validate the TEXT either way -- reading the object as a string is
+			# how this check first caught the schema change.
+			var text := ""
+			if raw is Dictionary:
+				text = str((raw as Dictionary).get("text", ""))
+				var speed := float((raw as Dictionary).get("speed", -1.0))
+				var pause := float((raw as Dictionary).get("pause", -1.0))
+				if speed > 0.0 and (speed < 0.5 or speed > 2.0):
+					failures.append("%s: speed %.2f out of sane range: %s" % [cause_id, speed, text])
+				if pause >= 0.0 and pause > 3.0:
+					failures.append("%s: pause %.2f exceeds the server cap: %s" % [cause_id, pause, text])
+				if speed <= 0.0 and pause < 0.0:
+					failures.append("%s: object form with no overrides, use a plain string: %s" % [cause_id, text])
+			else:
+				text = str(raw)
 			var reason := str(llm.validate_taunt_line(text))
 			if not reason.is_empty():
 				failures.append("%s REJECT(%s): %s" % [cause_id, reason, text])

@@ -441,7 +441,17 @@ func _play_combat_taunt() -> void:
 		)
 	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
 	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
-	TTSInterface.play_dialogue_audio(pick["text"], pick["voice"], TAUNT_SPEED, TAUNT_STYLE)
+	# A few lines were judged too fast or wanted a shorter beat during the audio
+	# review. Those carry per-line overrides in the data file; everything else
+	# uses the global taunt delivery.
+	var delivery: Dictionary = TauntCauseType.delivery_for(str(pick["text"]))
+	var speed: float = float(delivery.get("speed", -1.0))
+	if speed <= 0.0:
+		speed = TAUNT_SPEED
+	TTSInterface.play_dialogue_audio(
+		pick["text"], pick["voice"], speed, TAUNT_STYLE,
+		float(delivery.get("pause", -1.0))
+	)
 
 func _play_npc_action_taunt(key: String) -> void:
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):

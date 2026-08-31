@@ -21,6 +21,7 @@ func _initialize() -> void:
 	_test_bag_growth()
 	_test_exhaustive_after_growth()
 	_test_authored_lines_load_from_data()
+	_test_delivery_overrides()
 
 	if _failures.is_empty():
 		print("[PASS] Taunt cause + bag tests")
@@ -270,6 +271,45 @@ func _test_authored_lines_load_from_data() -> void:
 	_expect(
 		not (CauseType.authored_lines("nonsense_cause") as Array).is_empty(),
 		"An unknown cause must fall back to a usable set."
+	)
+
+
+# A line can be a plain string or an object carrying delivery overrides. Both
+# forms must load, the override must be found by TEXT (so the persisted pool can
+# stay a list of plain strings), and a line without overrides must report the
+# defaults rather than nothing.
+func _test_delivery_overrides() -> void:
+	CauseType.reload_lines()
+	var overridden := ""
+	var plain := ""
+	for cause in CauseType.ALL:
+		for line in (CauseType.authored_lines(str(cause)) as Array):
+			var text := str(line)
+			var delivery: Dictionary = CauseType.delivery_for(text)
+			if float(delivery.get("speed", -1.0)) > 0.0 					or float(delivery.get("pause", -1.0)) >= 0.0:
+				overridden = text
+			elif plain.is_empty():
+				plain = text
+	_expect(
+		not overridden.is_empty(),
+		"At least one line should carry a delivery override to exercise this path."
+	)
+	# An object-form line must still appear as ordinary text in the pool, or it
+	# would never be spoken.
+	_expect(
+		overridden.length() > 8 and not overridden.begins_with("{"),
+		"An override line must load as its text, not as a serialised object: '%s'" % overridden
+	)
+	var plain_delivery: Dictionary = CauseType.delivery_for(plain)
+	_expect(
+		float(plain_delivery.get("speed", 0.0)) < 0.0 			and float(plain_delivery.get("pause", 0.0)) < 0.0,
+		"A line with no overrides must report defaults, got %s" % str(plain_delivery)
+	)
+	# Unknown text must not crash or invent a delivery.
+	var unknown: Dictionary = CauseType.delivery_for("this line does not exist anywhere")
+	_expect(
+		float(unknown.get("speed", 0.0)) < 0.0,
+		"Unknown text must report the default speed."
 	)
 
 
