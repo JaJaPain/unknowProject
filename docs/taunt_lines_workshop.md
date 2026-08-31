@@ -34,6 +34,23 @@ I'm the flag.") were cut, and lines with a human behind them ("I like rules!",
 Test before writing any line: whose day is this, and what is their problem with
 today? If the answer is "they are the enforcement mechanic", start again.
 
+- **Passing the rules is not sounding natural.** Abe cut "I'm the overdraft"
+  with: "The rules were there but the feel was forced." A metaphor stacked on a
+  metaphor reads fine written down and sounds authored out loud. If a line draws
+  attention to its own cleverness, it is wrong however well it scores.
+
+- **"It wasn't 'friend'" is DELIBERATE, not a typo.** In "There's a word for
+  what you are to us now. It wasn't 'friend'." the past tense is intentional:
+  the implication is that the player was never a friend even before. It looks
+  like a tense slip. Do not "fix" it.
+
+- **A keeper is not always a model.** Abe on "Does there have to be a reason?":
+  *"iffy so don't train others on it but you can keep it."* Some lines earn a
+  slot without earning imitation. When writing new lines, pattern off the
+  strong ones, never off the merely-acceptable -- otherwise the pool drifts
+  toward its own weakest habits.
+  Currently in that category: "Does there have to be a reason?" (opportunist).
+
 **Standing decisions from Abe (2026-08-18):**
 - **Fix pause and syntax mistakes directly** when the intent is clear (e.g. he
   wrote ". . ." for a pause; the splitter needs "..."). Only ask when the intent
