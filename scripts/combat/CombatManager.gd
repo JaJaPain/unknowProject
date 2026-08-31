@@ -125,7 +125,10 @@ var _engine_tier:    int   = 1
 var _flee_base_chance: float = 0.50
 
 # ── Angry combat taunts (cached at startup, one per attacking ship) ─────────────
-const TAUNT_SPEED := 1.18
+# 1.18 read as rushed in the audition and ran sentences together; Abe called
+# it slightly too fast. Every reviewed line was judged at 1.10, so this is
+# the speed the approved pool was written and approved against.
+const TAUNT_SPEED := 1.10
 const TAUNT_STYLE := 1.4
 # Lead voices, each blended 70/30 with am_michael for an angry-but-varied read.
 const TAUNT_LEAD_VOICES := [
