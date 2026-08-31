@@ -97,20 +97,20 @@
 		},
 		"code_enforcement": {
 			"lines": [
-				"Mining without a permit. Don't take this personally. I'm just doing my job.",
+				"Mining without a permit... Don't take this personally. I'm just doing my job.",
 				"No permit, no rocks. Sorry!",
 				"I don't write the rules, I just enforce them.",
 				"Unlicensed extraction. That's a citation and a beat down.",
 				"This is the escalation step. There were earlier ones. You missed them.",
-				"The rules say I can destroy your ship for ore poaching. I like rules!",
-				"Compliance would have been faster. It usually is.",
+				"The rules say I can destroy your ship for ore poaching... I like the rules!",
+				"Compliance would have been faster... It usually is.",
 				"Mining without a permit. I didn't make the rules, argue with the guys who did.",
-				"Ore poaching. Do you know how rarely I get to use the cannons?",
+				"Ore poaching... Do you know how rarely I get to use the cannons?",
 				"I've been waiting all shift for someone to do something this stupid.",
 				"You mined a belt that wasn't yours. Now I get to mine you.",
-				"Do you know what the penalty for ore poaching is? Me. I'm the penalty.",
+				"Do you know what the penalty for ore poaching is?... Me... I'm the penalty.",
 				"You've committed four violations. I intend to enjoy all four.",
-				"I get a bonus for this. Not a big one. Big enough.",
+				"I get a bonus for this. Not a big one... Big enough.",
 				"Every rock you pulled out of there is a separate charge. I counted.",
 				"That belt is licensed to people who paid. You are not people who paid.",
 				"Poaching ore from a licensed claim. Bold, and very illegal.",
@@ -119,8 +119,8 @@
 				"I've read the regulations twice. Both times they said I could do this.",
 				"You can make this quick, or you can make this thorough.",
 				"Cut your engines. It'll read better in the report.",
-				"You're going to want a lawyer. There isn't one out here.",
-				"Stand down. Now."
+				"You are going to need a lawyer... Only problem is... there isn't one out here.",
+				"Stand down... Now!"
 			]
 		},
 		"reinforcement": {
