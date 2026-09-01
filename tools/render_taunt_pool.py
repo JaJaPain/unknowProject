@@ -25,10 +25,11 @@ LEADS = ["am_onyx", "am_adam", "am_fenrir", "am_liam",
          "bm_george", "am_puck", "am_eric", "am_echo"]
 
 
-def render(text, voice):
-    payload = json.dumps({
-        "text": text, "voice": voice, "speed": SPEED, "style_scale": STYLE,
-    }).encode("utf-8")
+def render(text, voice, speed=SPEED, pause=-1.0):
+    body = {"text": text, "voice": voice, "speed": speed, "style_scale": STYLE}
+    if pause >= 0.0:
+        body["pause_seconds"] = pause
+    payload = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         TTS_URL, data=payload, headers={"Content-Type": "application/json"}
     )
@@ -50,14 +51,23 @@ def main():
         folder = os.path.join(OUT_ROOT, cause)
         os.makedirs(folder, exist_ok=True)
         index = []
-        for n, text in enumerate(lines, start=1):
+        for n, entry in enumerate(lines, start=1):
+            # A line is a plain string, or an object carrying delivery
+            # overrides. Render with the values the GAME will use, otherwise the
+            # audition lies about the lines that were deliberately re-timed.
+            if isinstance(entry, dict):
+                text = entry["text"]
+                speed = float(entry.get("speed", SPEED))
+                pause = float(entry.get("pause", -1.0))
+            else:
+                text, speed, pause = entry, SPEED, -1.0
             lead = LEADS[lead_index % len(LEADS)]
             lead_index += 1
             voice = "%s[0.7]+am_michael[0.3]" % lead
             name = "%s_%02d_%s.wav" % (cause, n, lead)
             path = os.path.join(folder, name)
             try:
-                audio = render(text, voice)
+                audio = render(text, voice, speed, pause)
             except Exception as exc:
                 failed.append((name, str(exc)))
                 print("FAILED %s: %s" % (name, exc), flush=True)
@@ -66,7 +76,15 @@ def main():
                 f.write(audio)
             with wave.open(path) as w:
                 secs = w.getnframes() / float(w.getframerate())
-            row = "%-42s %5.2fs  %s" % (name, secs, text)
+            tags = ""
+            if isinstance(entry, dict):
+                bits = []
+                if entry.get("speed") is not None:
+                    bits.append("speed %.2f" % speed)
+                if pause >= 0.0:
+                    bits.append("pause %.2f" % pause)
+                tags = "  [%s]" % ", ".join(bits) if bits else ""
+            row = "%-42s %5.2fs  %s%s" % (name, secs, text, tags)
             index.append(row)
             master.append(row)
             rendered += 1

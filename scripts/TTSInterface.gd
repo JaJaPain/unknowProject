@@ -132,6 +132,52 @@ func _run_tts_heartbeat() -> void:
 		_schedule_tts_heartbeat()
 
 
+# Pre-baked clips for authored lines, so a fight never waits on a TTS round
+# trip. The manifest maps "voice|text" to a filename; keying on the pair avoids
+# needing the same hashing scheme in GDScript and in the bake script.
+#
+# The DATA FILE remains the source of truth -- these are a derived build
+# artifact. Swapping in a better TTS model means deleting the folder and
+# re-running tools/bake_taunt_audio.py.
+const BAKED_AUDIO_DIR := "res://assets/audio/taunts"
+const BAKED_MANIFEST := "res://assets/audio/taunts/manifest.json"
+var _baked_clips: Dictionary = {}
+var _baked_loaded: bool = false
+
+
+func _load_baked_manifest() -> void:
+	if _baked_loaded:
+		return
+	_baked_loaded = true
+	if not FileAccess.file_exists(BAKED_MANIFEST):
+		return
+	var file := FileAccess.open(BAKED_MANIFEST, FileAccess.READ)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary and (parsed as Dictionary).get("clips", null) is Dictionary:
+		_baked_clips = (parsed as Dictionary)["clips"]
+		print("[TTSInterface] %d pre-baked clips available." % _baked_clips.size())
+
+
+# Returns a ready AudioStream for an authored line, or null when this line was
+# never baked (a newly written line, or one edited since the last bake). Loaded
+# from the file directly rather than through the import pipeline, so generated
+# audio needs no editor reimport.
+func baked_stream_for(voice_id: String, clean_text: String) -> AudioStream:
+	_load_baked_manifest()
+	if _baked_clips.is_empty():
+		return null
+	var name := str(_baked_clips.get("%s|%s" % [voice_id, clean_text], ""))
+	if name.is_empty():
+		return null
+	var path := "%s/%s" % [BAKED_AUDIO_DIR, name]
+	if not FileAccess.file_exists(path):
+		return null
+	return AudioStreamOggVorbis.load_from_file(path)
+
+
 # Cache identity for one rendered clip. Delivery is part of the identity: the
 # same words at a different speed or with a different pause are a different
 # recording, and keying on voice|text alone would hand back whichever was
@@ -192,6 +238,12 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 		elapsed_str = " (Elapsed since '%s': %.3fs)" % [last_interaction_name, (tts_request_time - last_interaction_time) / 1000.0]
 		
 	var cache_key: String = _delivery_cache_key(voice_id, clean_text, speed_override, pause_seconds)
+	# A pre-baked clip beats both the memory cache and the network: it is on
+	# disk, it is exactly what was approved, and it needs no TTS server at all.
+	if not tts_audio_cache.has(cache_key):
+		var baked := baked_stream_for(voice_id, clean_text)
+		if baked != null:
+			tts_audio_cache[cache_key] = baked
 	# Check cache first!
 	if tts_audio_cache.has(cache_key):
 		var stream = tts_audio_cache[cache_key]

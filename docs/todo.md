@@ -7,9 +7,10 @@ _Active task list. Update this file at the end of every session._
 _Work that is committed and green in headless tests but that only a person can
 sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 
-- [ ] **Cause-aware enemy taunts -- listen to them in a real fight** (landed
-  2026-08-18). Taunts now derive WHY the fight started and rotate per cause.
-  What a human still has to judge:
+- [ ] **Cause-aware enemy taunts -- hear them in a REAL FIGHT** (landed
+  2026-08-18; lines and delivery reviewed clip-by-clip, so what remains is
+  purely how they land at combat pace). The pool is 190 hand-authored lines,
+  each judged in isolation as audio. What a human still has to judge:
   - Do the lines fit the situation, WITH voice, at combat pace? Read on a page
     is not the same as heard over a fight.
   - Attack a contract target, get ambushed by a pirate, tank a faction's
@@ -19,8 +20,41 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     taunt, quit, relaunch, fight again, and check it does not come back.
   - The dark/dry register: too jokey anywhere? Anything that reads as a pun or
     a quip rather than gallows humour is a prompt problem, not a parser one.
-  - Re-run `tests/tools/run_taunt_bank_live_fire.gd` to regenerate samples for
-    review without needing to play.
+  - `tools/render_taunt_pool.py` re-renders every line to .wav using the game's
+    real speed, style, voice blend AND per-line delivery overrides.
+  - Runtime generation is NO LONGER USED for taunts. `run_taunt_bank_live_fire.gd`
+    still exercises the model path if it is ever revived, but the shipping pool
+    is authored.
+
+- [ ] **Taunt loose ends left when Abe finished the audio review** (2026-08-18).
+  None are blocking; all were raised and never answered, so they stand as-is:
+  - Is `bm_george` a weak lead voice, or just unlucky with short lines? One clip
+    was unintelligible. Comparison renders in `logs/taunt_audition/short_test`.
+    If it is the voice, the fix is trimming `CombatManager.TAUNT_LEAD_VOICES`.
+  - `unprovoked_13` ("There's no cargo, no bounty, no reason") -- he asked for
+    it slower; 0.95 and 0.85 were rendered, no pick made. Still 1.10. The line
+    is a three-beat list, so pacing the list with "..." may beat slowing it.
+  - 14 clips remain under 2 seconds. Two ultra-short ones were cut for being
+    gone before the player registers them; the rest may share that fault.
+  - The `contract_hit` bribe line still collides with the real comms-reversal
+    mechanic -- see docs/bugs.md. Abe's original version is strong material for
+    the comms-reversal HAIL, where the offer is actually interactive.
+
+- [ ] **Extend pre-baked audio beyond taunts** (the pipeline landed 2026-08-18).
+  Taunts are baked to OGG because their text and delivery are fixed and they
+  fire at a latency-critical moment. The same is true of every other AUTHORED
+  line, and the TTS memory cache does not persist across launches, so each of
+  these still costs a live round trip on first play every session:
+  - N.O.V.A.'s authored floor and her stock pools (`scripts/ai/Nova.gd`)
+  - Kaelen's intro pool and return lines (`scripts/UIManager.gd`)
+  - The authored tutorial hand-in bundle
+  Same shape as `tools/bake_taunt_audio.py`: source text stays in code or data,
+  the audio is derived, the runtime falls back to live TTS on a miss. Worth
+  doing before the 8GB shipping target, where Kokoro competes with the LLM.
+  NOTE for export: baked clips load via `AudioStreamOggVorbis.load_from_file`
+  rather than Godot's import pipeline, so `assets/audio/taunts/` must be
+  included by an export filter or the build ships without them (it degrades to
+  live TTS, so this fails quietly rather than loudly).
 - [ ] **Per-fight taunt bundle keys are cause-aware but unverified** (landed
   2026-08-18). `request_combat_taunts` now receives the cause, but its 20 keys
   (`npc_brace`, `npc_dying`, `npc_boss_phase_2`, `kaelen_*`, ...) were not
