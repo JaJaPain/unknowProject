@@ -162,7 +162,49 @@ where the line is SERVED, so every dock path is covered including later ones.
 ---
 
 ### Autopilot object avoidance regressed
-**Status:** STILL BROKEN — confirmed 2026-07-01 playtest. Prior fix attempts (2026-06-26, 2026-06-30) did NOT hold. New symptom: trying to "Fly to" a hostile target on the far side of a planet, the ship flew the OPPOSITE direction, then got stuck/stalled and never reached the target — playtest was unplayable because of it. So the failure is not just grazing hazards; the route/steer target itself is inverting or dead-ending when a large body (planet/gas giant) sits between ship and target. Re-investigate `_route_steer_target` planner output + `_get_autopilot_avoidance` wiring; check for a heading sign-flip and a stall with no replan. Previous notes below still apply.
+**Status:** FIXED 2026-08-18, verified by the in-engine smoke test on real Kova
+and Kova-to-Iron-Reach routes past a rocky planet and a gas giant.
+
+**WHY THE JUNE AND JULY FIXES DID NOT HOLD: they were patching dead code.**
+`_get_autopilot_avoidance` had NO callers, and `_route_steer_target` only ever
+called itself. This entry's own "code map" pointed at both. The smoke tests
+looked green because they invoked those dead functions DIRECTLY, so the tests
+passed while the live autopilot flew players into planets. About 650 lines of
+unreachable code have been deleted so the trap cannot be walked into again.
+
+**Root causes in the live path** (each reproduced in a test before fixing):
+1. Inside a keep-out sphere the planner exited to the NEAREST surface point.
+   With the target on the far side that is directly behind the ship -- the
+   "flew the OPPOSITE direction" report, literally a heading agreement of -1.
+   The ship is inside those spheres routinely, because the radius is body plus
+   comfort margin.
+2. The waypoint was the sphere's widest point relative to the ship, not a true
+   tangent. The ship stepped sideways until clear, turned at the target, that
+   heading re-entered the sphere, and it stepped sideways again -- circling the
+   boundary forever at a constant distance. That is the "stalled and never
+   arrived" half.
+3. Flying an arc in discrete steps chords inward, so the ship sank until it hit
+   a "too close" branch, got pushed out, and sank again -- shuddering in place.
+4. Steering considered only the NEAREST blocker, so the ship was pushed deep
+   inside a second body's envelope while rounding the first.
+5. Aiming at exactly the required radius left no headroom, and real planets
+   ORBIT into that gap.
+
+**The design is the sphere keep-out plus tangent steering proposed in this
+entry**, now in `scripts/navigation/TangentNavigator.gd` as pure functions over
+plain data so it is testable without a scene -- which is what made the causes
+findable. Key rule learned: the margin is NOT a wall. Once inside it, route
+around the actual body; fighting back out is what sent the ship away.
+
+**Regression cover:** `tests/navigation/run_tangent_navigator_tests.gd` (the
+reported scenario, closed-loop flight, long range, crowded fields, moving
+target) and `--autopilot-smoke-test` in engine.
+
+**Also fixed along the way:** the player-facing "Direct route obstructed"
+notice had gone silent, because the dead avoider was its only caller.
+
+**Spotted:** ~2026-06-21 — **superseded notes below**
+**Old status:** STILL BROKEN — confirmed 2026-07-01 playtest. Prior fix attempts (2026-06-26, 2026-06-30) did NOT hold. New symptom: trying to "Fly to" a hostile target on the far side of a planet, the ship flew the OPPOSITE direction, then got stuck/stalled and never reached the target — playtest was unplayable because of it. So the failure is not just grazing hazards; the route/steer target itself is inverting or dead-ending when a large body (planet/gas giant) sits between ship and target. Re-investigate `_route_steer_target` planner output + `_get_autopilot_avoidance` wiring; check for a heading sign-flip and a stall with no replan. Previous notes below still apply.
 
 **Current code map (2026-07-01, so we don't re-trace):** Autopilot lives in `PlayerShip.gd _physics_process` (~1160-1186). Per frame it: (1) nose whisker `_nose_ray` sphere-cast → `_clear_planned_route()` on obstacle; (2) `_route_steer_target(dest, active_target)` — STATIC A*-ish planner (`_plan_route_with_belt_clearance` ~1365, `_plan_route_with_vertical_clearance` ~1435) returns a `steer_target`; (3) `_update_route_progress`; (4) `_get_autopilot_avoidance(steer_target, active_target)` (~1641) — REAL-TIME avoider with `_get_locked_avoidance_obstacle`, `_choose_avoidance_side` (~1967), `_build_avoidance_waypoint` (~2163) — can override the steer target; (5) `steer_towards`. TWO stacked systems (~700 lines) that interact; the "flies opposite" is almost certainly one of them emitting a steer target behind the ship (bad side choice or degenerate planner node), and the stall is no-replan when steering into a body. This over-complex pair is the thing Abe wants to REPLACE, not keep patching.
 
