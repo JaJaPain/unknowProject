@@ -184,7 +184,11 @@ static func violated_obstacle(
 		if eff < 0.0:
 			continue
 		var center: Vector3 = obstacle.get("center", Vector3.ZERO)
-		var depth := eff - from_pos.distance_to(center)
+		# Trigger at the standoff, not at the breach. Waiting until the ship is
+		# actually inside means it always dips below the envelope first and only
+		# then climbs back -- the minimum recorded over a flight is a breach even
+		# though the ship recovers.
+		var depth := (eff + BOUNDARY_STANDOFF) - from_pos.distance_to(center)
 		if depth > worst_depth:
 			worst_depth = depth
 			worst = {

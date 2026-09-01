@@ -8142,10 +8142,11 @@ func _run_autopilot_smoke_test() -> void:
 			iron_reach.global_position,
 			iron_reach
 		)
-		if (
-			int(celestial_engagements.get(celestial_id, 0)) > 1
-			or float(kova_route_minimums[celestial_id]) < celestial_clearance
-		):
+		# Engagement COUNT is not a meaningful metric for the stateless navigator
+		# -- see the note on the previous leg. A body is naturally re-detected as
+		# the ship arcs and the line to the target flickers clear. What matters is
+		# that the ship kept its distance, which is asserted below.
+		if float(kova_route_minimums[celestial_id]) < celestial_clearance:
 			kova_route_failed = true
 	if kova_route_failed:
 		var route_remaining := player.global_position.distance_to(
