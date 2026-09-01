@@ -121,7 +121,17 @@ static func sphere_tangent_waypoint(
 	# Never pad the sphere out past the ship itself -- that is what forced the
 	# degenerate boundary fallback, and the fallback is what slid the ship around
 	# the edge forever.
-	var safe_radius := minf(radius + margin, center_dist - 5.0)
+	#
+	# But the clamp may only eat the optional MARGIN, never the required radius.
+	# Clamping straight to center_dist - 5 lets the allowed radius shrink by five
+	# units every step as the ship closes on its own tangent point, so it spirals
+	# inward and ends up inside the envelope it was told to respect.
+	# Floor the grazing radius ABOVE the requirement, not at it. Aiming exactly at
+	# the required radius leaves no headroom, and real bodies orbit -- the planet
+	# drifts into the gap the ship never actually held.
+	var safe_radius := minf(
+		radius + margin, maxf(radius + BOUNDARY_STANDOFF, center_dist - 5.0)
+	)
 	if safe_radius <= 0.0 or center_dist <= safe_radius:
 		# Numerically inside the padded sphere; the caller handles exits, but be
 		# safe rather than feeding asin a value above 1. Aim clear of the boundary
@@ -143,14 +153,65 @@ static func steer_from(
 ) -> Vector3:
 	if from_pos.distance_to(destination) < 1.0:
 		return destination
+	# A body the ship is ALREADY inside outranks the one merely in the way.
+	# Steering only by the nearest blocker lets the ship be pushed deep into a
+	# second envelope while dutifully rounding the first -- which is how a real
+	# system with several bodies breaches a clearance the geometry says it holds.
+	var violated := violated_obstacle(from_pos, destination, obstacles)
+	if not violated.is_empty():
+		return steer_clear_of(from_pos, destination, violated)
 	var blocker := blocking_obstacle(from_pos, destination, obstacles)
 	if blocker.is_empty():
 		return destination
+	return steer_clear_of(from_pos, destination, blocker)
+
+
+## The obstacle whose keep-out volume the ship is currently INSIDE by the largest
+## margin, or {} when it is inside none. Destination-containing bodies are
+## skipped, as everywhere else -- you must enter those to arrive.
+static func violated_obstacle(
+	from_pos: Vector3,
+	destination: Vector3,
+	obstacles: Array
+) -> Dictionary:
+	var worst := {}
+	var worst_depth := 0.0
+	for raw in obstacles:
+		if not raw is Dictionary:
+			continue
+		var obstacle: Dictionary = raw
+		var eff := effective_radius(obstacle, destination)
+		if eff < 0.0:
+			continue
+		var center: Vector3 = obstacle.get("center", Vector3.ZERO)
+		var depth := eff - from_pos.distance_to(center)
+		if depth > worst_depth:
+			worst_depth = depth
+			worst = {
+				"center": center,
+				"radius": eff,
+				"physical": float(obstacle.get("physical", eff)),
+				"node": obstacle.get("node", null),
+			}
+	return worst
+
+
+## Steering for one specific obstacle: tangent when comfortably outside, arc in
+## the boundary band, escape when against the body.
+static func steer_clear_of(
+	from_pos: Vector3,
+	destination: Vector3,
+	blocker: Dictionary
+) -> Vector3:
 	var center: Vector3 = blocker["center"]
 	var radius := float(blocker["radius"])
 	var physical := float(blocker.get("physical", radius))
 	var from_dist := from_pos.distance_to(center)
-	if from_dist >= radius:
+	# Tangent steering only when COMFORTABLY outside. Aiming a tangent at exactly
+	# the required radius means the ship rides the boundary, and flying an arc in
+	# straight steps dips below it on every chord. The band just outside the
+	# envelope belongs to the arc, which carries an outward bias.
+	if from_dist >= radius + BOUNDARY_STANDOFF:
 		return sphere_tangent_waypoint(from_pos, center, radius, destination)
 
 	# Already inside the keep-out sphere. That sphere is the body PLUS a comfort
@@ -166,7 +227,20 @@ static func steer_from(
 	if from_dist <= floor_radius:
 		# Genuinely against the body: get out, biased toward the destination.
 		return exit_waypoint(from_pos, center, floor_radius, destination)
-	return arc_waypoint(from_pos, center, destination, floor_radius, radius)
+	# Climb toward the full envelope, not merely toward the radius the ship
+	# happens to hold. Capping the target at from_dist meant that once the ship
+	# slipped inside the envelope it stayed there -- fine against a static body,
+	# but real planets ORBIT, and the body then drifts into the gap.
+	#
+	# This is a gentle outward BIAS layered on an arc, not the radial exit that
+	# caused the original bug: the ship keeps travelling around toward its target
+	# the whole time it is climbing.
+	# Climb toward a standoff ABOVE the envelope, not to the envelope itself.
+	# Targeting the requirement exactly means hovering on it, and chord stepping
+	# plus an orbiting body then nibble below.
+	return arc_waypoint(
+		from_pos, center, destination, radius + BOUNDARY_STANDOFF, radius
+	)
 
 
 ## Steering while inside a body's comfort margin: arc AROUND at roughly the
@@ -206,6 +280,12 @@ static func arc_waypoint(
 		# the "around" term and points the ship away from its target again --
 		# the original bug, reintroduced by the cure for it.
 		outward += ARC_CLIMB_BOOST * clampf(1.0 - from_dist / band, 0.0, 1.0)
+	# Hard ceiling on the outward pull. When the target is on the far side, every
+	# unit of "outward" is a unit of "backward" -- so the climb may never grow
+	# strong enough to dominate the lateral term, however far inside the ship is.
+	# Without this cap, holding clearance against a moving planet reintroduced the
+	# original bug: a ship flying away from its own destination.
+	outward = minf(outward, ARC_OUTWARD_MAX)
 	var dir := (around + out_dir * outward).normalized()
 	return from_pos + dir * ARC_LOOKAHEAD
 
@@ -213,7 +293,11 @@ static func arc_waypoint(
 const ARC_OUTWARD_BASE := 0.22
 const ARC_CLIMB_BAND := 1.25
 const ARC_CLIMB_BOOST := 0.55
+const ARC_OUTWARD_MAX := 0.35
 const ARC_LOOKAHEAD := 140.0
+## How far outside the required radius the ship must be before a straight
+## tangent is safe to fly given discrete stepping.
+const BOUNDARY_STANDOFF := 18.0
 
 
 ## Where to aim when the ship is already INSIDE a keep-out sphere.

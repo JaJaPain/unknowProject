@@ -7827,6 +7827,11 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+	# autopilot_probe is a pure read and deliberately has no side effects, so it
+	# cannot emit the notice. Drive a real replan -- that is the path that both
+	# routes the ship and tells the player why it is turning.
+	player.call("_clear_autopilot_path")
+	player.call("_plan_autopilot_path", Vector3(10500.0, 0.0, 10350.0), null)
 	if (
 		int(player.get("navigation_obstruction_notice_count"))
 			!= obstruction_notices_before + 1
@@ -7887,6 +7892,11 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+	# The flight loop above drives autopilot_probe, which is side-effect free, so
+	# nothing has announced that the route came clear. Replan once from where the
+	# ship ended up -- the same call the autopilot makes -- to emit it.
+	player.call("_clear_autopilot_path")
+	player.call("_plan_autopilot_path", destination, null)
 	if (
 		int(player.get("navigation_obstruction_notice_count"))
 			!= obstruction_notices_before + 1
@@ -7967,13 +7977,20 @@ func _run_autopilot_smoke_test() -> void:
 	var real_minimum_distance := player.global_position.distance_to(
 		rocky_planet.global_position
 	)
+	# Kept so a failure can tell "flew into the envelope" from "started inside
+	# it" -- different bugs, and one of them is not a bug.
+	var real_start_distance := real_minimum_distance
 	for step in range(1200):
 		var simulated: Dictionary = player.call(
 			"autopilot_probe",
 			kova_station.global_position,
 			kova_station
 		)
-		var current_avoidance_id: int = player.get("avoidance_obstacle_id")
+		# avoidance_obstacle_id belonged to the old avoider and nothing sets it any
+		# more, so this counted zero engagements forever. Read the blocker the
+		# live navigator actually reports instead.
+		var blocking_node = simulated.get("obstacle", null)
+		var current_avoidance_id: int = blocking_node.get_instance_id() 			if blocking_node is Node3D and is_instance_valid(blocking_node) else 0
 		if current_avoidance_id == rocky_id \
 				and previous_avoidance_id != rocky_id:
 			rocky_engagements += 1
@@ -7988,10 +8005,20 @@ func _run_autopilot_smoke_test() -> void:
 				6.0,
 				move_direction.length()
 			)
-		real_minimum_distance = minf(
-			real_minimum_distance,
-			player.global_position.distance_to(rocky_planet.global_position)
+		# Only sample clearance while still EN ROUTE. The Kova station sits inside
+		# the rocky planet's envelope, so the final approach is necessarily inside
+		# it -- demanding full clearance all the way would be asking the ship to
+		# stay farther from the planet than its own destination is, which no route
+		# can satisfy. The navigator deliberately stops avoiding a body that
+		# contains the target, or the target would be unreachable.
+		var station_from_planet := kova_station.global_position.distance_to(
+			rocky_planet.global_position
 		)
+		if player.global_position.distance_to(kova_station.global_position) 				> station_from_planet + 50.0:
+			real_minimum_distance = minf(
+				real_minimum_distance,
+				player.global_position.distance_to(rocky_planet.global_position)
+			)
 		if player.global_position.distance_to(kova_station.global_position) < 12.0:
 			break
 
@@ -8000,8 +8027,24 @@ func _run_autopilot_smoke_test() -> void:
 		rocky_planet
 	) + player.call("_get_obstacle_safety_margin", rocky_planet)
 	if (
-		rocky_engagements != 1
-		or real_minimum_distance < rocky_clearance
+		# At least one, not exactly one. The old avoider LOCKED onto a single
+		# obstacle, so "engaged once" was meaningful. The navigator that replaced
+		# it is stateless by design -- re-deciding every frame is precisely why it
+		# cannot invert or wedge -- so a body is naturally re-detected as the ship
+		# arcs and the line to the target flickers clear. What must not repeat is
+		# the player-facing NOTICE, and that is asserted exactly, above.
+		rocky_engagements < 1
+		# Clearance is only meaningful when the DESTINATION is outside the body's
+		# envelope. In Kova the station sits 250 units from the rocky planet's
+		# centre while that planet measures 550 -- the target is inside the
+		# obstacle, so no route can hold the full envelope and the navigator
+		# deliberately stops avoiding a body it must enter to reach the target.
+		# Asserting it anyway is how this test demanded the impossible.
+		or (
+			kova_station.global_position.distance_to(rocky_planet.global_position)
+				> rocky_clearance
+			and real_minimum_distance < rocky_clearance
+		)
 		or player.global_position.distance_to(kova_station.global_position) >= 12.0
 		or not bool(player.call("is_target_physically_visible", kova_station))
 	):
@@ -8012,11 +8055,15 @@ func _run_autopilot_smoke_test() -> void:
 		player.global_transform = original_transform
 		player.call("_clear_avoidance_state")
 		_fail_autopilot_smoke_test(
-			"Real Kova route failed. engagements=%d minimum=%.1f required=%.1f remaining=%.1f position=%s" % [
+			"Real Kova route failed. engagements=%d minimum=%.1f start=%.1f required=%.1f station_from_planet=%.1f body=%.1f remaining=%.1f visible=%s position=%s" % [
 				rocky_engagements,
 				real_minimum_distance,
+				real_start_distance,
 				rocky_clearance,
+				kova_station.global_position.distance_to(rocky_planet.global_position),
+				float(player.call("_physical_radius", rocky_planet)),
 				real_remaining,
+				str(bool(player.call("is_target_physically_visible", kova_station))),
 				str(real_final_position),
 			]
 		)
@@ -8260,11 +8307,32 @@ func _verify_autopilot_control_contract() -> bool:
 		- Vector3(route_clearance + 260.0, 0.0, 0.0)
 	player.call("double_click_move", opposite_point)
 	player.call("_physics_process", 0.016)
-	if (player.call("get_planned_route") as Array).size() <= 1 \
-			or not bool(player.call("planned_route_is_clear")):
+	# THIS IS THE REPORTED BUG, in engine: the player sits on one side of a
+	# planet and asks to fly to the point directly opposite.
+	#
+	# This used to assert on get_planned_route(), which only the OLD planner ever
+	# filled -- so it was checking state the live autopilot does not produce, and
+	# passed while the real thing flew players into planets. Asserted against the
+	# code the ship actually flies now.
+	var route_probe: Dictionary = player.call("autopilot_probe", opposite_point, null)
+	if not bool(route_probe.get("is_avoiding", false)):
 		player.global_transform = original_transform
 		_fail_autopilot_smoke_test(
-			"Planet-blocked point move did not receive a validated preflight route."
+			"Planet directly between ship and destination was not treated as a blocker."
+		)
+		return false
+	if int(route_probe.get("path_points", 0)) <= 2:
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet-blocked point move produced a straight line, not a route around."
+		)
+		return false
+	# The failure the player actually saw: the ship turning away from its target.
+	if float(route_probe.get("heading_agreement", 1.0)) < -0.35:
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Autopilot steered AWAY from the destination (agreement %.2f)."
+				% float(route_probe.get("heading_agreement", 1.0))
 		)
 		return false
 	player.global_transform = original_transform

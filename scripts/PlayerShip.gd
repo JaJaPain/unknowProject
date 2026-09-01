@@ -1702,10 +1702,37 @@ func _path_offcourse_distance() -> float:
 
 ## Build the raw dogleg with the tangent logic, then Catmull-Rom smooth it.
 func _plan_autopilot_path(destination: Vector3, navigation_target: Node3D) -> void:
-	var raw := _march_tangent_waypoints(destination, navigation_target)
+	# One obstacle snapshot for the whole replan: the blocker check and the march
+	# both need it, and it walks the scene tree.
+	var obstacles := _navigator_obstacles(navigation_target)
+	_announce_route_obstruction(destination, obstacles)
+	var raw: PackedVector3Array = TangentNavigatorType.march_waypoints(
+		global_position, destination, obstacles
+	)
 	_auto_path = _push_path_clear(_catmull_rom_smooth(raw), destination)
 	_auto_path_dest = destination
 	_auto_path_index = 0
+
+
+## Tell the player why the ship is about to turn.
+##
+## This notice went silent when the old avoider was disconnected: it was the only
+## caller of _emit_navigation_obstruction, so the ship quietly started swerving
+## with no explanation. The smoke test kept passing because it invoked the dead
+## avoider directly, which emitted the notice as a side effect.
+func _announce_route_obstruction(destination: Vector3, obstacles: Array) -> void:
+	var blocker: Dictionary = TangentNavigatorType.blocking_obstacle(
+		global_position, destination, obstacles
+	)
+	var node = blocker.get("node", null)
+	if node is Node3D and is_instance_valid(node):
+		_emit_navigation_obstruction(node as Node3D)
+		return
+	if navigation_notice_obstacle_id == 0:
+		return
+	var previous := instance_from_id(navigation_notice_obstacle_id)
+	if previous is Node3D and is_instance_valid(previous):
+		_emit_navigation_route_clear(previous as Node3D)
 
 
 ## Safety pass: a Catmull-Rom curve can bow inward and clip a sphere even when the
