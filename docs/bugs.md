@@ -241,49 +241,6 @@ quietly take it away.
 
 **Correcting this entry's original guess:** "Indy" was not leaking from the pilot
 backstory. It was passed in deliberately as `player_nickname`.
-**Spotted:** 2026-06-26  
-**Severity:** High — data loss risk  
-**Description:** Starting a new campaign appears to overwrite an occupied slot rather than selecting the next empty one. Player loses an existing campaign save.  
-**Where to look:** `GameRoot.gd` → new campaign slot selection logic. Check `campaign_slot_registry.first_empty_slot_id()` is being called and that the result is being used rather than defaulting to slot 1 or the active slot.
-
----
-
-### Quest tracker panel blue box reappears on second quest
-**Spotted:** 2026-06-25  
-**Severity:** Low — cosmetic  
-**Description:** When the player accepts a second quest, the oversized empty blue box (quest tracker panel) reappears. The `call_deferred("reset_size")` fix only fires when the panel first becomes visible; it doesn't re-fire when a new quest loads into an already-visible panel.  
-**Where to look:** `scripts/UIManager.gd` → `_update_quest_tracker()`. The `reset_size()` call needs to fire every time quest content changes. Also check if `user://ui_layout.json` is persisting a saved `w`/`h` for the quest panel and re-applying it on each update.
-
----
-
-### Agent dialogue sometimes addresses player as "Indy" or "Shiny"
-**Status:** NEEDS ABE'S CALL, 2026-08-18 -- this entry and the code disagree
-about the intended design, so I have not changed behaviour.
-
-What I verified: the mechanical LEAK is closed on both paths. "Shiny" in a
-non-Kaelen mouth is rewritten to "Indy" by `GlobalState.apply_tone_guard()`,
-which runs on the audio path (`SpeechService.prepare_text`, `TTSInterface`) AND
-on the displayed dock message (`UIManager` ~10915). Repeated address inside one
-line is stripped by `remove_repeated_player_address()`. There is a smoke check
-in `GameRoot` ~8973.
-
-Where the disagreement is: this entry says "the agent should not know or use
-the player's callsign", but the agent prompts deliberately assign "Indy" as the
-non-Kaelen nickname and instruct "only occasionally call the pilot 'Indy' --
-most of the time use 'you' or 'pilot'". So agents using it sparingly is the
-implemented DESIGN, not a leak. "Indy" is not leaking from the pilot backstory
-as this entry originally guessed; it is passed in as `player_nickname`.
-
-**The question for Abe:** should agents use "Indy" at all?
-- If NO, this is a small prompt change (drop `player_nickname` for agents, add
-  "never address the pilot by name") plus a guard that strips it -- say the
-  word and it is quick.
-- If YES-but-rarer, the fix is frequency, not prohibition, and is best judged
-  from a real transcript rather than by tightening prompt wording blind.
-**Spotted:** 2026-06-26
-**Severity:** Low — immersion break
-**Description:** Agent NPC dialogue (quest offers, contract details) occasionally includes "Indy" or "Shiny" directly in the agent's speech — e.g. "3 Wraiths raiders are probing our perimeter, Indy." The agent should not know or use the player's callsign; only Kaelen uses "Shiny". "Indy" appears to be leaking from the pilot backstory or prompt context into the agent prompt.
-**Where to look:** `LLMInterface.gd` — quest generation prompt assembly. Check what context fields are passed and whether the pilot callsign/name is included in a way the agent template can pick up. Add a post-generation strip or a prompt rule: "Do NOT address the pilot by name or callsign. You do not know their name."
 
 ---
 
