@@ -2530,3 +2530,95 @@ to stays obvious; it is implied rather than stated.
 
 - Green: player address (mutation-checked), speech service, intro dock gating,
   scene parse check.
+
+## 2026-08-18 (fifth pass) — the taunts got rewritten by hand, and Abe wrote the best ones
+
+The generated taunts were bad and Abe said so: "they all kinda suck, no
+offense." He was right, and the diagnosis matters more than the fix.
+
+WHY THE 4b COULD NOT DO THIS. Four rounds of prompt work on one cause got to
+roughly half-usable. Short, high-repetition, high-visibility barks are the worst
+possible fit for a small model: there is no room to recover from a weak clause,
+and the player hears them constantly. Two failures worth remembering:
+- Writing a PROHIBITION taught the phrase. Telling it "the pilot was not sold"
+  produced "You were never sold. You were hired." A 4b reads a negative
+  constraint as vocabulary. Role confusion is now rejected in the PARSER
+  instead, where it costs one line and cannot leak into the writing.
+- I auditioned lines I had already screened, so the samples flattered the pool.
+  The real hit rate was worse than what I sent.
+
+ABE'S PROPOSAL WAS BETTER THAN EITHER OF MY OPTIONS: he writes 2-3 anchors per
+cause, I fill out toward them. That removed the actual constraint, which was
+never model size -- it was generating under latency at runtime. Authoring at dev
+time has no such limit.
+
+THE PRINCIPLE, in his words, and it should govern anything written for this game:
+  "Each one should be a real person saying it. They have their own reason for
+  what they are doing. It's never cut and dry. It should show some personality
+  behind it. Can be funny, can be rude. But like a person with his own issues
+  that you get in the way of."
+Every rejection traced back to it. Lines reciting a role were cut; lines with a
+human behind them were kept. Rewriting code_enforcement to that standard took
+his approval rate from 2-of-6 to 5-of-5.
+
+FOUR MORE THINGS HIS REVIEW TAUGHT ME:
+- Passing the rules is not sounding natural. "I'm the overdraft" was cut with
+  "the rules were there but the feel was forced."
+- Quiet lines are not weak. "I was having a perfectly boring day" survived
+  because it is a human thing to say, not despite doing no work.
+- Lines are heard ALONE, never as a themed set. A line that only makes sense
+  beside its neighbours fails.
+- A keeper is not always a model. Some lines earn a slot without earning
+  imitation, and new lines must pattern off the strong ones.
+
+THE AUDIO PASS FOUND WHAT READING COULD NOT. Abe listened to all 190 clips and
+called delivery on each. Three features came out of it, each because the
+existing system could not express what he asked for:
+
+- REAL PAUSES. He wrote "Um. . . ." to get a beat. I measured whether that
+  works: it does not. Across ". . . .", "...", "…", "." and "," the whole spread
+  was 0.17 seconds. Kokoro barely pauses on punctuation, which also CORRECTS
+  advice I had given him earlier about commas being "the spoken beat". The
+  server now segments the text and inserts real silence, default 0.7s.
+  That also fixed a latent bug: the old code returned INSIDE the generator loop,
+  so any text containing a newline was silently truncated to its first segment.
+- PER-LINE DELIVERY. He asked three times for one specific line to be slower,
+  and speed was a single global -- so each request produced an audition clip
+  that could never ship. A line can now carry {"speed": ..., "pause": ...}.
+  Wiring it exposed a second latent bug: the TTS cache key was voice|text with
+  no delivery in it, so per-line speed would have silently done nothing once a
+  line was cached.
+- HALF PAUSES. He wanted the LAST pause in a line shortened while the others
+  stayed. "..." is a full beat, ".." is half. This required segmenting in the
+  server rather than handing a split_pattern to Kokoro, because the pipeline
+  never reported which separator produced a break.
+
+TAUNT_SPEED dropped 1.18 -> 1.10. Every line was judged at 1.10 during the
+review, so the game would otherwise have played the whole approved set faster
+than he had ever heard it.
+
+MISTAKES I MADE IN THIS PASS, recorded because they are all repeatable:
+- I made the exact duplication mistake I had flagged to him one message
+  earlier: three "Nothing personal" lines and three "I'm going to make this one
+  hurt". The validator now FAILS on stock phrases across causes, because an
+  exact-duplicate check does not catch a verbal tic.
+- My rewrite script desynced the review queue from the data file, duplicating
+  one entry and dropping another, which would have let an unreviewed line ship.
+  Audited coverage for every cause afterwards.
+- I wrote two-word fragments ("Right then.", "That all?") when he asked for
+  SIMPLE lines. Simple still needs a complete thought; at ~1.2s a fragment is
+  gone before the player registers it. Both were cut.
+
+FINAL: 190 hand-authored lines across 8 causes, 23-25 each, every one validated
+against the runtime validators and rendered to audio for review.
+
+STILL OPEN (Abe declared the audio review finished; these were never answered,
+so they stand as they are):
+- Whether bm_george is a weak lead voice or just unlucky with short lines.
+  Comparison clips are in logs/taunt_audition/short_test.
+- unprovoked_13 "There's no cargo, no bounty, no reason" -- he asked for it
+  slower, I sent 0.95 and 0.85, no pick. Still at 1.10.
+- 14 clips remain under 2 seconds and may share the fault of the two that were
+  cut.
+- contract_hit's bribe line still collides with the real comms-reversal
+  mechanic (docs/bugs.md has the detail).
