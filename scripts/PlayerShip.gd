@@ -2027,54 +2027,32 @@ func _physical_radius(obstacle: Node3D) -> float:
 	return r if r > 0.0 else _get_obstacle_radius(obstacle)
 
 
+const TangentNavigatorType := preload("res://scripts/navigation/TangentNavigator.gd")
+
+
+## The obstacle field as plain data for TangentNavigator: centre, keep-out radius
+## (body + comfort margin) and the real body radius. The navigation target is
+## never its own obstacle.
+func _navigator_obstacles(navigation_target: Node3D) -> Array:
+	var out: Array = []
+	for candidate in _tangent_obstacles():
+		if candidate == navigation_target:
+			continue
+		out.append({
+			"center": candidate.global_position,
+			"radius": _keepout_radius(candidate),
+			"physical": _physical_radius(candidate),
+		})
+	return out
+
+
 ## Returns the steer waypoint from `from_pos`: the destination if the path is clear,
 ## otherwise a point that carries the ship around the nearest blocking sphere.
 ## Position-parameterized so the path planner can march it forward from any point.
 func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_target: Node3D) -> Vector3:
-	var to_dest := destination - from_pos
-	if to_dest.length() < 1.0:
-		return destination
-
-	# Find the nearest obstacle whose keep-out sphere the segment from->dest pierces.
-	var blocker: Node3D = null
-	var blocker_radius := 0.0
-	var blocker_dist := INF
-	for candidate in _tangent_obstacles():
-		if candidate == navigation_target:
-			continue  # the thing we're flying to is never its own obstacle
-		var radius := _keepout_radius(candidate)
-		var phys := _physical_radius(candidate)
-		var dest_from_center := candidate.global_position.distance_to(destination)
-		# Target is inside the actual body — genuinely unavoidable, approach direct.
-		if dest_from_center < phys + 30.0:
-			continue
-		# Target sits within the comfortable margin (e.g. an enemy orbiting a planet):
-		# shrink the avoidance radius so we still round the BODY but can reach the
-		# target, instead of scraping the surface via the "approach direct" shortcut.
-		var eff_radius := radius
-		if dest_from_center < radius:
-			eff_radius = maxf(phys + 40.0, dest_from_center - 40.0)
-		if _segment_clears_sphere(from_pos, destination, candidate.global_position, eff_radius):
-			continue
-		var d := from_pos.distance_to(candidate.global_position)
-		if d < blocker_dist:
-			blocker = candidate
-			blocker_radius = eff_radius
-			blocker_dist = d
-	if blocker == null:
-		return destination
-
-	# Inside the blocking sphere -> exit radially to the nearest surface point first.
-	if from_pos.distance_to(blocker.global_position) < blocker_radius:
-		var out_dir := from_pos - blocker.global_position
-		if out_dir.length() < 0.001:
-			out_dir = destination - blocker.global_position
-		if out_dir.length() < 0.001:
-			out_dir = Vector3.RIGHT
-		out_dir = out_dir.normalized()
-		return blocker.global_position + out_dir * (blocker_radius + blocker_radius * 0.15 + 20.0)
-
-	return _sphere_tangent_waypoint(from_pos, blocker.global_position, blocker_radius, destination)
+	return TangentNavigatorType.steer_from(
+		from_pos, destination, _navigator_obstacles(navigation_target)
+	)
 
 
 ## Convenience: tangent waypoint from the ship's current position.
@@ -2129,7 +2107,11 @@ func _push_path_clear(path: PackedVector3Array, destination: Vector3) -> PackedV
 		var p := path[i]
 		for ob in obstacles:
 			var c := ob.global_position
-			var r := _keepout_radius(ob)
+			# Push clear of the BODY, not the comfort margin. Shoving the path out
+			# to the full keep-out radius is exactly the "margin is a wall" rule
+			# that made the ship flee a planet it was already beside -- doing it
+			# here would quietly undo the fix one layer further down.
+			var r := _physical_radius(ob) + TangentNavigatorType.INSIDE_BODY_CLEARANCE
 			if c.distance_to(destination) < r:
 				continue
 			var d := p.distance_to(c)
@@ -2139,27 +2121,14 @@ func _push_path_clear(path: PackedVector3Array, destination: Vector3) -> PackedV
 	return path
 
 
-## March the tangent steer forward from the ship to the destination, recording the
-## corner points. A clear shot yields [start, dest]; a blocked shot bends around.
+## March the tangent steer forward from the ship to the destination, recording
+## the corner points. A clear shot yields [start, dest]; a blocked one bends
+## around. The obstacle field is snapshotted ONCE and reused for every step --
+## rebuilding it per step walked the whole scene sixty times per replan.
 func _march_tangent_waypoints(destination: Vector3, navigation_target: Node3D) -> PackedVector3Array:
-	var pts := PackedVector3Array()
-	pts.append(global_position)
-	var cur := global_position
-	for _i in _PATH_MAX_STEPS:
-		if cur.distance_to(destination) <= _PATH_MARCH_STEP:
-			break
-		var steer := _tangent_steer_from(cur, destination, navigation_target)
-		if steer.distance_to(destination) < 1.0:
-			break  # clear line from here on — no more bends, go straight to dest
-		var dir := steer - cur
-		if dir.length() < 0.001:
-			dir = destination - cur
-		if dir.length() < 0.001:
-			break
-		cur += dir.normalized() * _PATH_MARCH_STEP
-		pts.append(cur)
-	pts.append(destination)
-	return pts
+	return TangentNavigatorType.march_waypoints(
+		global_position, destination, _navigator_obstacles(navigation_target)
+	)
 
 
 ## Catmull-Rom spline through the raw points -> dense smooth point list.
