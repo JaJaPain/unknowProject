@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_route_reaches_far_side()
 	_test_closed_loop_does_not_stall()
 	_test_long_range_and_crowded_fields()
+	_test_moving_target_is_caught()
 	if _failures.is_empty():
 		print("[PASS] Tangent navigator tests")
 		quit(0)
@@ -268,6 +269,37 @@ func _test_long_range_and_crowded_fields() -> void:
 				center, clearance, body
 			]
 		)
+
+
+# The reported case was flying to a HOSTILE, which moves. A target that drifts
+# while the ship rounds a planet is the situation that produced the report, and
+# a navigator that only works on stationary points would still fail it.
+func _test_moving_target_is_caught() -> void:
+	var center := Vector3(0, 0, -1000)
+	var obstacles := [_planet(center, 300.0)]
+	var target := Vector3(0, 0, -2000)
+	var drift := Vector3(9.0, 0.0, -2.0)   # target running, faster laterally
+	var pos := Vector3(0, 0, -780)          # ship starts inside the margin
+	var step := 25.0
+	var caught := false
+	var closest := pos.distance_to(target)
+	for _i in range(3000):
+		target += drift
+		if pos.distance_to(target) <= step * 1.5:
+			caught = true
+			break
+		var steer: Vector3 = Nav.steer_from(pos, target, obstacles)
+		var dir := steer - pos
+		if dir.length() < 0.001:
+			dir = target - pos
+		if dir.length() < 0.001:
+			break
+		pos += dir.normalized() * step
+		closest = minf(closest, pos.distance_to(target))
+	_expect(
+		caught,
+		"Moving target was never caught (closest %.0f)" % closest
+	)
 
 
 func _expect(condition: bool, message: String) -> void:
