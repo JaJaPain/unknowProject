@@ -20,7 +20,10 @@
 				"Hope the fee clears before your funeral.",
 				"You came a long way for someone else's grudge.",
 				"Bounty work... Very honest... Very brave.",
-				"Somebody's paying you to be here. Nobody's paying me.",
+				{
+					"text": "Somebody's paying you to be here... Nobody's paying me.",
+					"speed": 0.95
+				},
 				"You don't even know my name. Just my price.",
 				"Must be nice, having someone else decide who you hate.",
 				"Do you ask what they did, or just where they are?",
@@ -61,8 +64,7 @@
 				"You've saved us both a conversation.",
 				"I'd have offered terms. You've saved me the trouble.",
 				"My turn.",
-				"That all?",
-				"Right then."
+				"That all?"
 			]
 		},
 		"unprovoked": {
@@ -131,7 +133,7 @@
 				"The first crew underestimated you. We read their file.",
 				"They sent the cheap crew first. I'm not the cheap crew.",
 				"They called it in before they stopped transmitting.",
-				"You got through them. We're not them.",
+				"You got through them... We're not them.",
 				"Whatever worked last time won't. We watched.",
 				"You let them send a very detailed distress call. Thank you for that.",
 				"Ew. I just saw what's left of them.",
@@ -144,7 +146,7 @@
 				"There's more of us behind me, but I'd like this one.",
 				"You must be tired by now. We're not.",
 				"Now it stops being one-sided.",
-				"I knew him. Not well. Well enough.",
+				"I knew him... Not well... Well enough.",
 				"He owed me twenty credits. You've cost me twenty credits.",
 				"You should have run.",
 				"My turn now.",
@@ -159,10 +161,10 @@
 				"Everything on your manifest is now on mine.",
 				"This is the part where you get lighter.",
 				"I've done this four times today. You're the one making it difficult.",
-				"Empty it. I've got another one of these at four.",
+				"Empty it now!... I've got another one of these at four.",
 				"I'm not paid enough to chase you. Don't make me.",
 				"I'd let you go, but then I'd have to work tomorrow.",
-				"Rent's due. You're rent.",
+				"Sorry for this!... Rent's due.",
 				"Open the hold and we can both be somewhere else in ten minutes.",
 				"Cheaper to hand it over. I've run the numbers.",
 				"Stop shooting and start unloading.",
@@ -170,8 +172,8 @@
 				"I'll take the cargo. You can keep the ship, if you're quick.",
 				"Move fast and nobody has to explain a body to anyone.",
 				"Nice ship. It would be a shame if something happened to the owner.",
-				"You want to die over freight? Genuinely?",
-				"Your insurance covers this. Probably.",
+				"You want to die over freight?... Really?",
+				"Your insurance should cover this... Probably.",
 				"I'm going to make this quick... For me.",
 				"You've got ten seconds to become cooperative.",
 				"Just business. Awful business, but business.",
