@@ -10,9 +10,12 @@ from kokoro import KPipeline
 app = FastAPI()
 
 SAMPLE_RATE = 24000
-# Segment boundaries: a newline, or an ellipsis written as "..." or as the
-# single-character form.
-SEGMENT_SPLIT = r'(?:\n+|\.\.\.|…)'
+# Segment boundaries, CAPTURING so the separator itself is returned and we can
+# tell a full beat from a half one:
+#   "..." or the single-character ellipsis -> a full beat
+#   ".."                                   -> half a beat
+# Order matters: three dots must be tried before two.
+SEGMENT_SPLIT = re.compile(r'(\n+|\.\.\.|\.\.|\u2026)')
 # Silence inserted at each boundary. Overridable per request via pause_seconds.
 DEFAULT_PAUSE_SECONDS = 0.7
 
@@ -102,32 +105,41 @@ async def text_to_speech(data: dict):
     try:
         voice_pack = resolve_voice(voice)
         voice_pack = apply_style(voice_pack, style_scale, style_from)
-        # Split on newlines AND on an ellipsis, so an author can place a real
-        # beat inside a line by writing "..." -- which is what a reader already
-        # expects it to mean, and it needs no change to the on-screen text.
-        #
-        # Kokoro's own punctuation handling barely pauses: measured across
-        # ". . . .", "...", chr(8230), "." and "," the whole spread was 0.17s, so a
-        # written pause was not audible. The silence below is explicit instead.
-        generator = pipeline(
-            text, voice=voice_pack, speed=speed, split_pattern=SEGMENT_SPLIT
-        )
-        chunks = [audio for _, _, audio in generator]
+        # Segment the text OURSELVES rather than handing a split_pattern to
+        # Kokoro, so we know WHICH marker produced each break and can give it
+        # its own gap length:
+        #   "..."  a full beat        (pause_seconds)
+        #   ".."   half a beat        (pause_seconds / 2)
+        # A line often wants both -- three angry fragments where the last runs
+        # closer to the line before it than the others do.
+        parts = [p for p in SEGMENT_SPLIT.split(text) if p is not None]
+        segments = []
+        gaps = []
+        for index, part in enumerate(parts):
+            if index % 2 == 0:
+                if part.strip():
+                    segments.append(part.strip())
+            else:
+                # Separator: full beat unless it was the two-dot half marker.
+                gaps.append(pause_seconds * (0.5 if part.strip() == '..' else 1.0))
+        if not segments:
+            raise HTTPException(status_code=400, detail="Text had no speakable content")
+        chunks = []
+        for segment in segments:
+            produced = [audio for _, _, audio in
+                        pipeline(segment, voice=voice_pack, speed=speed)]
+            if not produced:
+                continue
+            chunks.append(np.concatenate([np.asarray(a, dtype=np.float32)
+                                          for a in produced]))
         if not chunks:
             raise HTTPException(status_code=500, detail="Failed to generate audio")
-        # This previously returned INSIDE the loop, so any text containing a
-        # newline was silently truncated to its first segment. Concatenating is
-        # both the pause feature and the fix for that.
-        if len(chunks) > 1:
-            gap = np.zeros(int(SAMPLE_RATE * pause_seconds), dtype=np.float32)
-            joined = []
-            for index, chunk in enumerate(chunks):
-                if index > 0:
-                    joined.append(gap)
-                joined.append(np.asarray(chunk, dtype=np.float32))
-            audio_out = np.concatenate(joined)
-        else:
-            audio_out = np.asarray(chunks[0], dtype=np.float32)
+        pieces = [chunks[0]]
+        for i, chunk in enumerate(chunks[1:]):
+            gap_seconds = gaps[i] if i < len(gaps) else pause_seconds
+            pieces.append(np.zeros(int(SAMPLE_RATE * gap_seconds), dtype=np.float32))
+            pieces.append(chunk)
+        audio_out = np.concatenate(pieces) if len(pieces) > 1 else pieces[0]
         wav_io = io.BytesIO()
         # Kokoro sample rate is 24000Hz
         sf.write(wav_io, audio_out, SAMPLE_RATE, format='WAV', subtype='PCM_16')
