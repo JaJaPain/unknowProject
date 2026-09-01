@@ -48,9 +48,20 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - N.O.V.A.'s authored floor and her stock pools (`scripts/ai/Nova.gd`)
   - Kaelen's intro pool and return lines (`scripts/UIManager.gd`)
   - The authored tutorial hand-in bundle
-  Same shape as `tools/bake_taunt_audio.py`: source text stays in code or data,
-  the audio is derived, the runtime falls back to live TTS on a miss. Worth
-  doing before the 8GB shipping target, where Kokoro competes with the LLM.
+  DEFERRED 2026-08-18 after scoping it -- deliberately, not forgotten:
+  - The lines worth baking most (N.O.V.A.'s dock tiers, Kaelen's intro list) are
+    INLINE ARRAYS inside function bodies, unreachable without calling the
+    function or parsing GDScript source. Only named constants extract cleanly
+    via `get_script_constant_map()`.
+  - So doing it properly means migrating those pools to data files first: a
+    refactor of two large live gameplay files, for a payoff that is latency at
+    DOCK and MENU moments rather than at combat start.
+  - Correctness trap to respect when it is done: these lines go through
+    `SpeechService.prepare_text` (tone guard, player-address stripping), so the
+    baked text must match the POST-PROCESSED text, not the constant. A mismatch
+    misses silently and falls back to live TTS, so it would look like it worked.
+  Natural trigger is the 8GB shipping work, where dropping the Kokoro runtime
+  dependency has a concrete payoff and the migration earns its risk.
   NOTE for export: baked clips load via `AudioStreamOggVorbis.load_from_file`
   rather than Godot's import pipeline, so `assets/audio/taunts/` must be
   included by an export filter or the build ships without them (it degrades to
