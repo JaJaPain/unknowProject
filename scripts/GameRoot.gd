@@ -6526,7 +6526,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		var arrived := false
 		for step in range(5000):
 			var navigation: Dictionary = player.call(
-				"_get_autopilot_avoidance",
+				"autopilot_probe",
 				destination.global_position,
 				destination
 			)
@@ -6609,7 +6609,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		return false
 	player.target_position = ring_target.global_position
 	player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		ring_target.global_position,
 		ring_target
 	)
@@ -6628,7 +6628,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		)
 		return false
 	var switched_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		alternate_ring_target.global_position,
 		alternate_ring_target
 	)
@@ -6695,7 +6695,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		return false
 	player.target_position = front_target.global_position
 	var front_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		front_target.global_position,
 		front_target
 	)
@@ -6725,7 +6725,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		)
 		return false
 	var rear_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		rear_target.global_position,
 		rear_target
 	)
@@ -6770,7 +6770,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		# the bypass must follow the ring instead of solving a frozen snapshot.
 		ring_target.call("_physics_process", 1.0 / 60.0)
 		var navigation: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			ring_target.global_position,
 			ring_target
 		)
@@ -6898,7 +6898,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	var reached_occluded_station := false
 	for step in range(4000):
 		var navigation: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			halcyon_watch.global_position,
 			halcyon_watch
 		)
@@ -7752,7 +7752,7 @@ func _run_autopilot_smoke_test() -> void:
 	obstacle.global_position = Vector3(10200.0, 0.0, 10000.0)
 	obstacle.add_to_group("asteroid")
 	var asteroid_result: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		Vector3(10400.0, 0.0, 10000.0),
 		null
 	)
@@ -7808,7 +7808,7 @@ func _run_autopilot_smoke_test() -> void:
 		"navigation_route_clear_notice_count"
 	)
 	var planet_result: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		Vector3(10500.0, 0.0, 10350.0),
 		null
 	)
@@ -7850,7 +7850,7 @@ func _run_autopilot_smoke_test() -> void:
 	var minimum_distance := player.global_position.distance_to(obstacle.global_position)
 	for step in range(500):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			destination,
 			null
 		)
@@ -7969,7 +7969,7 @@ func _run_autopilot_smoke_test() -> void:
 	)
 	for step in range(1200):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			kova_station.global_position,
 			kova_station
 		)
@@ -8039,7 +8039,7 @@ func _run_autopilot_smoke_test() -> void:
 	var station_arrival_distance := 100.0
 	for step in range(2400):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			iron_reach.global_position,
 			iron_reach
 		)

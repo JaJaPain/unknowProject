@@ -68,6 +68,10 @@ static func blocking_obstacle(
 				"radius": eff,
 				"physical": float(obstacle.get("physical", eff)),
 				"distance": d,
+				# Opaque passenger: the navigator never looks at this, but callers
+				# need to know WHICH thing blocked them, and threading it through
+				# beats making them re-derive it from the position.
+				"node": obstacle.get("node", null),
 			}
 	return best
 

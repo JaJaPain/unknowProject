@@ -1395,104 +1395,6 @@ func _physics_process(delta: float):
 		else:
 			is_aligning = false
 
-func _route_steer_target(
-	destination: Vector3,
-	route_target: Node3D
-) -> Dictionary:
-	var needs_plan := planned_route.is_empty() \
-		or planned_route_index >= planned_route.size() \
-		or planned_destination.distance_to(destination) > 35.0
-	if needs_plan:
-		var hazards := _navigation_hazards(route_target)
-		var planned := _plan_route_with_belt_clearance(
-			destination,
-			route_target,
-			hazards
-		)
-		if planned.is_empty():
-			planned = NavigationRoutePlannerType.plan_route(
-				global_position,
-				destination,
-				hazards
-			)
-		if not bool(planned.get("ok", false)):
-			planned = _plan_route_with_vertical_clearance(
-				destination,
-				route_target,
-				hazards
-			)
-		if not bool(planned.get("ok", false)):
-			return planned
-		planned_route.clear()
-		for waypoint in planned.get("waypoints", []):
-			planned_route.append(waypoint as Vector3)
-		planned_route_index = 0
-		planned_destination = destination
-		route_plan_count += 1
-		route_stall_replans = 0
-		route_notice_override = str(planned.get("notice", ""))
-		if planned_route.size() > 1:
-			_emit_planned_route_notice(planned_route.size())
-	var prev_index := planned_route_index
-	while planned_route_index < planned_route.size() - 1 \
-			and global_position.distance_to(
-				planned_route[planned_route_index]
-			) < 18.0:
-		planned_route_index += 1
-		route_progress_distance = INF
-		route_stall_timer = 0.0
-	# After advancing to a new waypoint, verify the remaining path is still clear.
-	# If an obstacle has moved into it since we planned, replan immediately.
-	if planned_route_index != prev_index and planned_route_index < planned_route.size():
-		var remaining: Array[Vector3] = []
-		for i in range(planned_route_index, planned_route.size()):
-			remaining.append(planned_route[i])
-		var hazards := _navigation_hazards(route_target)
-		if not NavigationRoutePlannerType.route_is_clear(global_position, remaining, hazards):
-			_clear_planned_route()
-			return _route_steer_target(destination, route_target)
-	if planned_route_index >= planned_route.size():
-		return {"ok": true, "steer_target": destination}
-	return {
-		"ok": true,
-		"steer_target": planned_route[planned_route_index],
-	}
-
-
-func _plan_route_with_belt_clearance(
-	destination: Vector3,
-	route_target: Node3D,
-	hazards: Array
-) -> Dictionary:
-	var belt_planet := _find_belt_planet_crossing_route(destination, route_target)
-	if belt_planet == null:
-		return {}
-	var clearance_y := float(
-		belt_planet.get_meta("belt_clearance_y", AUTOPILOT_BELT_CLEARANCE_Y)
-	)
-	clearance_y = maxf(clearance_y, AUTOPILOT_BELT_CLEARANCE_Y)
-	for y_sign in [-1.0, 1.0]:
-		var lane_y: float = belt_planet.global_position.y + clearance_y * y_sign
-		var waypoints: Array[Vector3] = [
-			Vector3(global_position.x, lane_y, global_position.z),
-			Vector3(destination.x, lane_y, destination.z),
-			destination,
-		]
-		if NavigationRoutePlannerType.route_is_clear(
-			global_position,
-			waypoints,
-			hazards
-		):
-			return {
-				"ok": true,
-				"waypoints": waypoints,
-				"notice": (
-					"NAVIGATION: Moving clear of the asteroid field. "
-					+ "Replanning safe destination checkpoints."
-				),
-			}
-	return {}
-
 
 func _find_belt_planet_crossing_route(
 	destination: Vector3,
@@ -1527,57 +1429,6 @@ func _find_belt_planet_crossing_route(
 			best_distance = route_distance
 			best_planet = planet
 	return best_planet
-
-
-func _plan_route_with_vertical_clearance(
-	destination: Vector3,
-	route_target: Node3D,
-	hazards: Array
-) -> Dictionary:
-	if route_target != null \
-			and is_instance_valid(route_target) \
-			and route_target.is_in_group("asteroid"):
-		return {
-			"ok": false,
-			"error": "No safe route is available.",
-			"waypoints": [],
-		}
-	var blocker := _find_celestial_crossing_route(destination, route_target)
-	if blocker == null:
-		return {
-			"ok": false,
-			"error": "No safe route is available.",
-			"waypoints": [],
-		}
-	var clearance_y := maxf(
-		float(blocker.get_meta("belt_clearance_y", AUTOPILOT_BELT_CLEARANCE_Y)),
-		_get_obstacle_radius(blocker) + _get_obstacle_safety_margin(blocker) + 80.0
-	)
-	for y_sign in [-1.0, 1.0]:
-		var lane_y: float = blocker.global_position.y + clearance_y * y_sign
-		var waypoints: Array[Vector3] = [
-			Vector3(global_position.x, lane_y, global_position.z),
-			Vector3(destination.x, lane_y, destination.z),
-			destination,
-		]
-		if NavigationRoutePlannerType.route_is_clear(
-			global_position,
-			waypoints,
-			hazards
-		):
-			return {
-				"ok": true,
-				"waypoints": waypoints,
-				"notice": (
-					"NAVIGATION: Direct path obstructed. "
-					+ "Replanning safe destination checkpoints."
-				),
-			}
-	return {
-		"ok": false,
-		"error": "No safe route is available.",
-		"waypoints": [],
-	}
 
 
 func _find_celestial_crossing_route(
@@ -1666,35 +1517,6 @@ func _clear_planned_route() -> void:
 	planned_destination = Vector3.ZERO
 	route_progress_distance = INF
 	route_stall_timer = 0.0
-
-
-func _update_route_progress(steer_target: Vector3, delta: float) -> bool:
-	var remaining := global_position.distance_to(steer_target)
-	if remaining < route_progress_distance - 0.5:
-		route_progress_distance = remaining
-		route_stall_timer = 0.0
-		return true
-	route_stall_timer += delta
-	if route_stall_timer < 2.5:
-		return true
-	if route_stall_replans >= 2:
-		_emit_route_failure(
-			"Autopilot cancelled after the route remained obstructed."
-		)
-		cancel_autopilot()
-		return false
-	route_stall_replans += 1
-	GlobalState.emit_ship_movement_event(
-		ShipMovementEventsType.ROUTE_REPLANNED,
-		{
-			"mode": nav_mode,
-			"stall_replans": route_stall_replans,
-		}
-	)
-	_clear_planned_route()
-	current_speed = 0.0
-	velocity = Vector3.ZERO
-	return false
 
 
 func _emit_planned_route_notice(waypoint_count: int) -> void:
@@ -1799,6 +1621,7 @@ func _navigator_obstacles(navigation_target: Node3D) -> Array:
 			"center": candidate.global_position,
 			"radius": _keepout_radius(candidate),
 			"physical": _physical_radius(candidate),
+			"node": candidate,
 		})
 	return out
 
@@ -1810,6 +1633,39 @@ func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_tar
 	return TangentNavigatorType.steer_from(
 		from_pos, destination, _navigator_obstacles(navigation_target)
 	)
+
+
+## Test seam: what the LIVE autopilot would do for `destination` right now.
+##
+## The smoke tests used to assert against _get_autopilot_avoidance, which had not
+## been wired into the autopilot for a long time -- so they stayed green while
+## the real thing was broken. Anything checking autopilot behaviour should go
+## through this, which reads the same code the ship actually flies.
+func autopilot_probe(destination: Vector3, navigation_target: Node3D) -> Dictionary:
+	var obstacles := _navigator_obstacles(navigation_target)
+	var blocker: Dictionary = TangentNavigatorType.blocking_obstacle(
+		global_position, destination, obstacles
+	)
+	var steer: Vector3 = TangentNavigatorType.steer_from(
+		global_position, destination, obstacles
+	)
+	var path: PackedVector3Array = TangentNavigatorType.march_waypoints(
+		global_position, destination, obstacles
+	)
+	return {
+		"steer_target": steer,
+		"is_avoiding": not blocker.is_empty(),
+		"blocker_center": blocker.get("center", Vector3.ZERO),
+		"blocker_radius": float(blocker.get("radius", 0.0)),
+		"obstacle": blocker.get("node", null),
+		"path_points": path.size(),
+		"path": path,
+		# Negative means the autopilot is pointing the ship away from its goal,
+		# which is the shape of the bug this seam exists to catch.
+		"heading_agreement": TangentNavigatorType.heading_agreement(
+			global_position, steer, destination
+		),
+	}
 
 
 ## Convenience: tangent waypoint from the ship's current position.
@@ -1968,47 +1824,6 @@ func _tangent_obstacles() -> Array[Node3D]:
 	return out
 
 
-## True if the segment a->b stays at least `radius` from sphere center c.
-func _segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -> bool:
-	var ab := b - a
-	var len_sq := ab.length_squared()
-	if len_sq < 1.0:
-		return a.distance_to(c) >= radius
-	var t := clampf((c - a).dot(ab) / len_sq, 0.0, 1.0)
-	var closest := a + ab * t
-	return closest.distance_to(c) >= radius
-
-
-## A waypoint on the near silhouette of the keep-out sphere, biased toward the
-## destination side, that carries the ship around the outside of the sphere.
-func _sphere_tangent_waypoint(from_pos: Vector3, center: Vector3, radius: float, destination: Vector3) -> Vector3:
-	var to_center := center - from_pos
-	var center_dist := to_center.length()
-	if center_dist < 0.001:
-		to_center = (destination - from_pos)
-		center_dist = max(to_center.length(), 0.001)
-	var center_dir := to_center / center_dist
-
-	# Direction from the sphere center toward the chord between ship and dest, made
-	# perpendicular to the ship->center line — this is the "go around" sideways push.
-	var dest_dir := (destination - from_pos)
-	if dest_dir.length() < 0.001:
-		dest_dir = center_dir
-	dest_dir = dest_dir.normalized()
-	var side := dest_dir - center_dir * dest_dir.dot(center_dir)
-	if side.length() < 0.01:
-		# Ship, center and dest are nearly collinear — pick a stable sideways axis.
-		side = center_dir.cross(Vector3.UP)
-		if side.length() < 0.01:
-			side = center_dir.cross(Vector3.RIGHT)
-	side = side.normalized()
-
-	# Aim just outside the sphere: a point offset sideways by the full radius at the
-	# level of the sphere center, so the ship skims the edge rather than the body.
-	var margin := radius * 0.15 + 20.0
-	return center + side * (radius + margin)
-
-
 func _has_clear_navigation_line(navigation_target: Node3D) -> bool:
 	return is_navigation_target_visible(navigation_target)
 
@@ -2062,169 +1877,6 @@ func _get_autopilot_obstacles() -> Array[Node3D]:
 			obstacles.append(node)
 	return obstacles
 
-func _find_celestial_blocking_route(
-	route_target: Vector3,
-	destination: Vector3,
-	navigation_target: Node3D
-) -> Node3D:
-	var closest: Node3D = null
-	var closest_distance := INF
-	for candidate in get_tree().get_nodes_in_group("celestial"):
-		if not candidate is Node3D:
-			continue
-		var celestial := candidate as Node3D
-		var clearance := _get_navigation_clearance_for_destination(
-			celestial,
-			destination,
-			navigation_target
-		)
-		if _is_route_clear_of_obstacle(
-			route_target,
-			celestial,
-			clearance
-		):
-			continue
-		var distance := global_position.distance_to(celestial.global_position)
-		if distance < closest_distance:
-			closest = celestial
-			closest_distance = distance
-	return closest
-
-
-func _choose_celestial_orbit_sign(
-	obstacle: Node3D,
-	required_clearance: float,
-	destination: Vector3,
-	preferred_sign: float,
-	navigation_target: Node3D = null
-) -> float:
-	var target_orbit_sign := _get_target_orbit_sign(
-		navigation_target,
-		obstacle
-	)
-	if not is_zero_approx(target_orbit_sign):
-		return target_orbit_sign
-
-	var original_sign := avoidance_orbit_sign
-	var best_sign := preferred_sign
-	var best_score := INF
-	for candidate_sign in [preferred_sign, -preferred_sign]:
-		avoidance_orbit_sign = candidate_sign
-		var candidate := _build_avoidance_waypoint(
-			obstacle.global_position,
-			required_clearance
-		)
-		var score := candidate.distance_to(destination)
-		for other in get_tree().get_nodes_in_group("celestial"):
-			if not other is Node3D or other == obstacle:
-				continue
-			var other_body := other as Node3D
-			var other_clearance := _get_obstacle_radius(other_body) \
-				+ _get_obstacle_safety_margin(other_body)
-			if not _is_route_clear_of_obstacle(
-				candidate,
-				other_body,
-				other_clearance
-			):
-				score += 1000000.0
-		if score < best_score:
-			best_score = score
-			best_sign = candidate_sign
-	avoidance_orbit_sign = original_sign
-	return best_sign
-
-func _get_target_orbit_sign(
-	navigation_target: Node3D,
-	celestial: Node3D
-) -> float:
-	if (
-		navigation_target == null
-		or celestial == null
-		or not is_instance_valid(navigation_target)
-		or not navigation_target.is_in_group("asteroid")
-		or not _target_orbits_celestial(navigation_target, celestial)
-		or not bool(navigation_target.get("is_orbiting"))
-	):
-		return 0.0
-
-	var orbit_speed := float(navigation_target.get("orbit_speed"))
-	if is_zero_approx(orbit_speed):
-		return 0.0
-	return signf(orbit_speed)
-
-func _set_initial_celestial_exit(
-	obstacle: Node3D,
-	required_clearance: float,
-	destination: Vector3
-) -> void:
-	var best_index := 0
-	var best_score := INF
-	for index in range(6):
-		var candidate := _celestial_exit_position(
-			obstacle.global_position,
-			required_clearance,
-			index
-		)
-		if not _is_route_clear_of_obstacle(
-			candidate,
-			obstacle,
-			required_clearance
-		):
-			continue
-		var crosses_other_celestial := false
-		for other in get_tree().get_nodes_in_group("celestial"):
-			if not other is Node3D or other == obstacle:
-				continue
-			var other_body := other as Node3D
-			var other_clearance := _get_obstacle_radius(other_body) \
-				+ _get_obstacle_safety_margin(other_body)
-			if not _is_route_clear_of_obstacle(
-				candidate,
-				other_body,
-				other_clearance
-			):
-				crosses_other_celestial = true
-				break
-		if crosses_other_celestial:
-			continue
-		var score := global_position.distance_to(candidate) \
-			+ candidate.distance_to(destination)
-		if score < best_score:
-			best_score = score
-			best_index = index
-	avoidance_exit_index = best_index
-	avoidance_exits_visited = 0
-	avoidance_waypoint = _celestial_exit_position(
-		obstacle.global_position,
-		required_clearance,
-		avoidance_exit_index
-	)
-
-func _advance_celestial_exit(
-	obstacle: Node3D,
-	required_clearance: float,
-	destination: Vector3
-) -> void:
-	avoidance_exits_visited += 1
-	if avoidance_exits_visited >= 6:
-		# A moving target or changed clearance can invalidate the original
-		# choice. Reassess once per lap and reverse direction rather than
-		# silently beginning the same endless orbit.
-		avoidance_full_lap_reassessments += 1
-		avoidance_orbit_sign *= -1.0
-		_set_initial_celestial_exit(
-			obstacle,
-			required_clearance,
-			destination
-		)
-		return
-	var step := 1 if avoidance_orbit_sign >= 0.0 else -1
-	avoidance_exit_index = posmod(avoidance_exit_index + step, 6)
-	avoidance_waypoint = _celestial_exit_position(
-		obstacle.global_position,
-		required_clearance,
-		avoidance_exit_index
-	)
 
 func _celestial_exit_position(
 	obstacle_position: Vector3,
