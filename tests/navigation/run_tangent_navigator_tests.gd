@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_inside_sphere_never_flies_backward()
 	_test_route_reaches_far_side()
 	_test_closed_loop_does_not_stall()
+	_test_long_range_and_crowded_fields()
 	if _failures.is_empty():
 		print("[PASS] Tangent navigator tests")
 		quit(0)
@@ -222,6 +223,51 @@ func _test_closed_loop_does_not_stall() -> void:
 	# tried here and removed: with the rest of the pipeline fixed, a single bad
 	# exit no longer strands the ship, so "does the old exit stall a whole flight"
 	# stopped being a stable statement about the bug.
+
+
+# A real system is not one planet at a convenient distance. The march has a step
+# budget, and a long detour can exhaust it; a crowded field can hand the ship a
+# new blocker every frame.
+func _test_long_range_and_crowded_fields() -> void:
+	# Long range: far enough that the marching budget matters.
+	var far_obstacles := [_planet(Vector3(0, 0, -3000), 600.0)]
+	var far_dest := Vector3(0, 0, -6000)
+	var flown: Dictionary = _fly(Vector3.ZERO, far_dest, far_obstacles, false)
+	_expect(
+		bool(flown["arrived"]),
+		"Long range: never arrived (%d steps, got within %.0f)" % [
+			int(flown["steps"]), float(flown["closest"])
+		]
+	)
+
+	# Several bodies between ship and target, including one the route must thread
+	# past after clearing another.
+	var crowded := [
+		_planet(Vector3(0, 0, -800), 250.0),
+		_planet(Vector3(300, 0, -1600), 300.0),
+		_planet(Vector3(-350, 0, -2400), 280.0),
+	]
+	var crowded_dest := Vector3(0, 0, -3200)
+	var crowded_flight: Dictionary = _fly(Vector3.ZERO, crowded_dest, crowded, false)
+	_expect(
+		bool(crowded_flight["arrived"]),
+		"Crowded field: never arrived (%d steps, got within %.0f)" % [
+			int(crowded_flight["steps"]), float(crowded_flight["closest"])
+		]
+	)
+
+	# And the route must not pass through any of the bodies on the way.
+	var path: PackedVector3Array = Nav.march_waypoints(Vector3.ZERO, crowded_dest, crowded)
+	for ob in crowded:
+		var center: Vector3 = ob["center"]
+		var body: float = float(ob["physical"])
+		var clearance: float = Nav.route_min_clearance(path, center)
+		_expect(
+			clearance >= body,
+			"Crowded field: route passes through a body at %s (closest %.0f, body %.0f)" % [
+				center, clearance, body
+			]
+		)
 
 
 func _expect(condition: bool, message: String) -> void:
