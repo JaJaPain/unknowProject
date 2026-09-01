@@ -211,8 +211,8 @@ func _lounge_fixture(index: int) -> Dictionary:
 
 
 func _nova_event_fixture(index: int) -> Dictionary:
-	var kinds := ["targeted", "ambush", "nav", "arrival", "idle", "mystery", "loss", "too_powerful"]
-	var kind := kinds[index % kinds.size()]
+	var kinds: Array[String] = ["targeted", "ambush", "nav", "arrival", "idle", "mystery", "loss", "too_powerful"]
+	var kind: String = kinds[index % kinds.size()]
 	return {
 		"event_kind": kind,
 		"eligible": true,
@@ -222,8 +222,8 @@ func _nova_event_fixture(index: int) -> Dictionary:
 
 
 func _kaelen_quest_fixture(index: int) -> Dictionary:
-	var types := ["KILL_SHIPS", "DELIVER_ORE", "PICKUP_SPECIAL"]
-	var objective_type := types[index % types.size()]
+	var types: Array[String] = ["KILL_SHIPS", "DELIVER_ORE", "PICKUP_SPECIAL"]
+	var objective_type: String = types[index % types.size()]
 	var objective := {"type": objective_type, "reward_credits": 250 + index * 10}
 	match objective_type:
 		"KILL_SHIPS":
