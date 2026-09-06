@@ -27,7 +27,7 @@ resume exactly here after a session limit. Newest entries at the bottom._
 
 | Slice | State | Notes |
 |---|---|---|
-| _(none yet)_ | — | — |
+| P2-1 shape catalog + registry | **DONE** | `data/content/mission_shapes.json` (4 shapes), `scripts/domain/MissionShapeDefinition.gd`, `scripts/domain/MissionShapeRegistry.gd`, `tests/domain/run_mission_shape_registry_tests.gd`. Catalog is rejected WHOLESALE on any bad shape; `report` branch is mandatory so a missing consumable cannot strand a contract; eligibility filters before pool formation. Note: `class_name` type annotations do not resolve in `--script` mode, so the registry uses preloaded consts and `Variant` returns. |
 
 # 1. Executive summary
 

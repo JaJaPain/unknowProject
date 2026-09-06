@@ -1,0 +1,89 @@
+{
+	"_comment": [
+		"Investigation mission shapes (plan P2). Executable content, NOT model-authored.",
+		"A shape composes an objective with a complication and a set of terminal branches.",
+		"Truth (route codes, forged status, recorder owner) is generated in CODE at offer",
+		"time from the mission seed -- never by a model, and never rerolled once accepted.",
+		"branch_ids must match exactly what InvestigateSignalCapability dispatches on.",
+		"Slice one ships survey_discrepancy and competing_claims; the other two are gated",
+		"on Abe's playtest of those (see the plan's human-gate H1)."
+	],
+	"version": 1,
+	"shapes": [
+		{
+			"id": "mission_shape.survey_discrepancy",
+			"schema_version": 1,
+			"objective_type": "INVESTIGATE_SIGNAL",
+			"recipe": "survey_discrepancy",
+			"display_name": "Survey Discrepancy",
+			"requires_second_site": true,
+			"can_spawn_hostile": false,
+			"branch_ids": [
+				"report",
+				"certify_match",
+				"certify_mismatch"
+			],
+			"requires_flags": [
+				"post_tutorial_unlocked"
+			],
+			"weight": 1,
+			"preview": "Two beacons disagree about a route code. Confirm which reading is correct, or file it unverified."
+		},
+		{
+			"id": "mission_shape.competing_claims",
+			"schema_version": 1,
+			"objective_type": "INVESTIGATE_SIGNAL",
+			"recipe": "competing_claims",
+			"display_name": "Competing Claims",
+			"requires_second_site": true,
+			"can_spawn_hostile": false,
+			"branch_ids": [
+				"report",
+				"preserve",
+				"liquidate"
+			],
+			"requires_flags": [
+				"post_tutorial_unlocked"
+			],
+			"weight": 1,
+			"preview": "A recorder and a salvage bus share one power source. Only one survives."
+		},
+		{
+			"id": "mission_shape.transmitter_lure",
+			"schema_version": 1,
+			"objective_type": "INVESTIGATE_SIGNAL",
+			"recipe": "transmitter_lure",
+			"display_name": "Transmitter Lure",
+			"requires_second_site": true,
+			"can_spawn_hostile": true,
+			"branch_ids": [
+				"report",
+				"extract"
+			],
+			"requires_flags": [
+				"post_tutorial_unlocked"
+			],
+			"weight": 1,
+			"preview": "A beacon advertises a cache. Extraction may attract a hostile; verification is available."
+		},
+		{
+			"id": "mission_shape.unstable_archive",
+			"schema_version": 1,
+			"objective_type": "INVESTIGATE_SIGNAL",
+			"recipe": "unstable_archive",
+			"display_name": "Unstable Archive",
+			"requires_second_site": true,
+			"can_spawn_hostile": false,
+			"branch_ids": [
+				"report",
+				"stabilize",
+				"reconstruct"
+			],
+			"requires_flags": [
+				"post_tutorial_unlocked"
+			],
+			"weight": 1,
+			"preview": "An archive is failing. Spend a repair kit to hold it, or travel to reconstruct a lesser copy."
+		}
+	]
+}
