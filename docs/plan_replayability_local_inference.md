@@ -1,3 +1,34 @@
+# 0. Implementation progress
+
+_Maintained by the implementing agent. Update as each slice lands so work can
+resume exactly here after a session limit. Newest entries at the bottom._
+
+**Decisions taken (Abe, 2026-09-06):**
+- Start order: **the plan's own order — P2 investigation prototype first.**
+  Not infrastructure-first. The riskiest question is whether the verbs are
+  interesting, and it should be answered before funding the rest.
+- Hardware gates: **build it, measure later.** I implement and ship a
+  measurement harness with instructions; Abe runs it on the real GPU and reports
+  numbers. No invented performance figures.
+- Section 5 recommendations are taken as executable defaults, per the plan's own
+  instruction, except the two flagged as real sign-off gates (hardware
+  qualification, voice preset audition).
+
+**Awaiting a human — do not block on these, collect them here:**
+| # | Needs | Blocks |
+|---|---|---|
+| H1 | Play the two-shape prototype and decide whether the verbs merit expansion | Phase 5 (more shapes, P3 pressure tracks) |
+| H2 | Run the VRAM/residency measurement harness on the real 8GB GPU | P1 shipping gate, final release sign-off |
+| H3 | Confirm the qualification test hardware (CPU/RAM/GPU) | Phase 0 acceptance targets |
+| H4 | Audition and approve any new voice delivery presets | P5 preset work only; caching/timing unaffected |
+| H5 | Freshness playtest sessions (three two-hour) | Release sign-off |
+
+**Slice log:**
+
+| Slice | State | Notes |
+|---|---|---|
+| _(none yet)_ | — | — |
+
 # 1. Executive summary
 
 Fund five bounded changes: enforce exclusive model residency; add investigation contracts with genuinely different decisions; make their outcomes alter subsequent local opportunities; compile smaller, state-specific dialogue packets; and turn generated speech into persistent, correctly timed assets.
