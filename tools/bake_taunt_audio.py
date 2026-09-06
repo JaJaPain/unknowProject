@@ -62,7 +62,10 @@ def main():
                 text, speed, pause = entry, SPEED, -1.0
             for lead in LEADS:
                 voice = "%s[0.7]+am_michael[0.3]" % lead
-                key = "%s|%s" % (voice, text)
+                # Key on the DELIVERY, matching TTSInterface.baked_stream_for.
+                # A bare voice|text key is coarser than the filename hash below,
+                # so a re-timed line would be served its old audio.
+                key = "%s|%s|%.2f|%.2f" % (voice, text, speed, pause)
                 # Name from a hash of the exact delivery, so changing a line's
                 # text, speed or pause produces a different file rather than
                 # silently reusing a stale one.

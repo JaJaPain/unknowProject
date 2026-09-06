@@ -165,11 +165,23 @@ func _load_baked_manifest() -> void:
 # never baked (a newly written line, or one edited since the last bake). Loaded
 # from the file directly rather than through the import pipeline, so generated
 # audio needs no editor reimport.
-func baked_stream_for(voice_id: String, clean_text: String) -> AudioStream:
+func baked_stream_for(
+	voice_id: String,
+	clean_text: String,
+	speed: float = -1.0,
+	pause: float = -1.0
+) -> AudioStream:
 	_load_baked_manifest()
 	if _baked_clips.is_empty():
 		return null
-	var name := str(_baked_clips.get("%s|%s" % [voice_id, clean_text], ""))
+	# The manifest key carries the DELIVERY, not just the words. Keying on
+	# voice|text alone is coarser than the file identity (the filename hashes
+	# speed and pause too), so a line re-timed later would have been served its
+	# old audio -- right words, wrong performance, and silent about it.
+	# A miss falls through to live synthesis, which is correct, not a failure.
+	var name := str(_baked_clips.get(
+		"%s|%s|%.2f|%.2f" % [voice_id, clean_text, speed, pause], ""
+	))
 	if name.is_empty():
 		return null
 	var path := "%s/%s" % [BAKED_AUDIO_DIR, name]
@@ -182,12 +194,22 @@ func baked_stream_for(voice_id: String, clean_text: String) -> AudioStream:
 # same words at a different speed or with a different pause are a different
 # recording, and keying on voice|text alone would hand back whichever was
 # rendered first.
-func _delivery_cache_key(voice_id: String, clean_text: String, speed: float, pause: float) -> String:
+func _delivery_cache_key(
+	voice_id: String,
+	clean_text: String,
+	speed: float,
+	pause: float,
+	style: float
+) -> String:
 	var key := voice_id + "|" + clean_text
 	if speed > 0.0:
 		key += "|s%.2f" % speed
 	if pause >= 0.0:
 		key += "|p%.2f" % pause
+	# Style was missing here and it aliases: the same words in the same voice at
+	# the same speed but a different style are a different recording, and the key
+	# would have handed back whichever was synthesised first.
+	key += "|y%.2f" % style
 	return key
 
 
@@ -237,11 +259,15 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	if last_interaction_time > 0.0:
 		elapsed_str = " (Elapsed since '%s': %.3fs)" % [last_interaction_name, (tts_request_time - last_interaction_time) / 1000.0]
 		
-	var cache_key: String = _delivery_cache_key(voice_id, clean_text, speed_override, pause_seconds)
+	var cache_key: String = _delivery_cache_key(
+		voice_id, clean_text, speed_override, pause_seconds, style_scale
+	)
 	# A pre-baked clip beats both the memory cache and the network: it is on
 	# disk, it is exactly what was approved, and it needs no TTS server at all.
 	if not tts_audio_cache.has(cache_key):
-		var baked := baked_stream_for(voice_id, clean_text)
+		var baked := baked_stream_for(
+			voice_id, clean_text, speed_override, pause_seconds
+		)
 		if baked != null:
 			tts_audio_cache[cache_key] = baked
 	# Check cache first!
