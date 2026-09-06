@@ -45,6 +45,39 @@ expressive. Latency, VRAM, quality, and failure behaviour are all in scope.
 - **No new heavyweight dependencies** without explicitly justifying the install
   burden for an end user.
 
+### N.O.V.A. and Kaelen are canon. Do not touch them.
+
+These two are the heart of the game and the reason a player stays. Their
+identity is FIXED and is not a variable available to your freshness proposals.
+This is the single easiest way for a plan to be worthless here: a model asked to
+make each run feel different will reach for "randomise the companions", and that
+trades the thing players bond with for novelty they did not ask for.
+
+Preserved, non-negotiable:
+
+- **N.O.V.A.**, the ship's AI. Sardonic and self-preserving: the ship IS her
+  body, so keeping the captain alive is keeping herself intact. Dry, deadpan,
+  faintly put-upon. She calls the hull and systems "my". Grudging care leaks out
+  sideways, never sentimentally. She notices repetition and gets exasperated.
+  Her wiped-memory / gate-unease arc is an authored mystery with protected
+  content that only the large-model story path may write.
+- **Kaelen**, the broker. Cynical, money-minded, politically neutral, working
+  every angle for herself. She and only she calls the player **"Shiny"** — a
+  guard enforces this, rewriting the nickname out of every other speaker's
+  mouth, and there is a test pinning it. She has an authored hidden angle.
+- Their **voices are reserved**: `af_bella` is Kaelen's alone, `bf_emma` is
+  N.O.V.A.'s alone, and N.O.V.A.'s blend `bf_emma[0.7]+af_bella[0.3]` is the one
+  sanctioned crossover. Do not reassign, pool, or randomise these.
+- The **fixed-cast machinery** around them -- souls, rapport bands, attachment
+  memory, per-campaign quirks -- is the supported way they vary. A quirk colours
+  a run; it does not redefine who they are.
+
+What you MAY propose: giving them more to react to, more situations, more
+memory, better timing, more moments where their existing character is tested or
+revealed. Deepening them is welcome. Replacing, rotating, randomising or
+re-personalising them is not, and neither is adding a third fixed companion who
+competes for the same emotional space.
+
 ## The codebase as it actually is
 
 This is real, not aspirational. Ground every proposal in it.
