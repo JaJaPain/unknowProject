@@ -286,9 +286,19 @@ Deployment checklist for a shipped build:
     player kills are excluded). That signal IS the third-party-kill case.
   - Fire only when the destroyed ship was the player's `GlobalState.active_target`,
     otherwise she narrates every distant explosion.
-  - The signal currently carries only the faction of the ship that DIED. To say
-    who killed it, the killer has to be threaded through -- worth widening the
-    signal rather than having N.O.V.A. guess.
+  - **The killer is already tracked.** `NPCShip.last_attacker_faction` is set in
+    `take_damage()` and is in scope inside `die()`, right where `ship_destroyed`
+    is emitted -- so widening that signal is a one-line change, not a new system.
+    `die()` already copies it onto the spawned wreck, which the salvager reads.
+    (Abe asked whether a script on each wreck should store what destroyed it:
+    that exists. And N.O.V.A. does not need the wreck anyway -- going via it
+    would be a round trip for something already in hand at death time.)
+  - **Granularity is the open decision.** Only the FACTION is recorded, never the
+    attacking ship instance. So "Vanguard got there first" works today with no
+    new data; "that interceptor you were watching got it" needs the attacker
+    NODE stored on the ship (not the wreck -- the ship is what is alive when the
+    shot lands). Worth choosing before writing her lines, since it changes what
+    she can say.
   - Register: dry and factual, this is her job. "Someone got there first."
     Not a consolation. Line belongs in her authored pools, not generated.
   - Watch: this fires during combat, where her speech budget is already tight
