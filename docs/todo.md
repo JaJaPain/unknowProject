@@ -203,6 +203,22 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## UI / UX
 
+- [ ] **Pin the active target to the top of the overview** (Abe, 2026-09-06).
+  The overview re-sorts on a timer, so the thing the player has actually
+  targeted can be pushed off-screen by whatever sort they have chosen -- fly far
+  enough away and nearer contacts fill the top of the list. The player loses
+  sight of their own target through no action of their own.
+  - Wants a dedicated active-target row/box ABOVE the sorted list, so it is
+    never subject to sorting at all, rather than a sort rule that competes with
+    the player's chosen column.
+  - Precedent to copy: `_sort_overview_list()` in `scripts/UIManager.gd` (~3670)
+    already pins mission targets via `_overview_prioritize_mission_targets`
+    ahead of the sort comparison. Same idea, but a pinned ROW is stronger than a
+    sort bias because it cannot be scrolled past.
+  - Keep it in sync with `GlobalState.active_target`, including the case where
+    the target dies or is cleared -- see the N.O.V.A. third-party-kill item,
+    which is the same event from the audio side.
+
 - [ ] **Landing page / campaign select** -- late-process main menu that finally gives the game a real front door. Needs a `Continue` button that loads the most recently played campaign, three visible campaign slots showing what is in each slot, actions to load another campaign, delete a campaign, and create a new one. Use a cool animated backdrop such as a rotating space station / orbital scene instead of a static flat menu. Also use this phase to brainstorm and choose the real game title, since the current title is only a placeholder.
 - [x] **Quest tracker panel blue box on second quest** -- `reset_size()` now fires after the tracker content is rebuilt so the panel shrinks back to content on quest changes.
 - [ ] **Station lounge UI / social layer** -- give the lounge its own polished interface instead of a plain utility menu: contact cards, relationship heat bar, contact moods, "last seen" timestamp, rumor badge, available conversation/action buttons, and a layout that can support dynamic NPCs and bartering later. See `docs/design_parking_lot.md section1`
@@ -259,6 +275,24 @@ Deployment checklist for a shipped build:
   - **Design notes:** decide targeting UI (pick destination from system map/known outposts only); block use if already in combat; refund vs. no-refund on cancel (current call: consumed, no refund); interaction with autopilot/PlayerInteractionQueue for the warmup timer.
 
 ## N.O.V.A. — Ship A.I. (LLM-driven cast member)
+
+- [ ] **N.O.V.A. calls out a target destroyed by someone else** (Abe, 2026-09-06).
+  You lock a pirate at distance, another NPC kills it first, and the target
+  silently vanishes -- the player is left aiming at nothing with no idea why.
+  She should say the target is gone AND what took it, so the loss reads as the
+  world being alive rather than as a bug.
+  - The hook already exists: `GlobalState.ship_destroyed(faction_name)` fires
+    ONLY for non-player kills (see the comment at `NPCShip.gd` ~990, where
+    player kills are excluded). That signal IS the third-party-kill case.
+  - Fire only when the destroyed ship was the player's `GlobalState.active_target`,
+    otherwise she narrates every distant explosion.
+  - The signal currently carries only the faction of the ship that DIED. To say
+    who killed it, the killer has to be threaded through -- worth widening the
+    signal rather than having N.O.V.A. guess.
+  - Register: dry and factual, this is her job. "Someone got there first."
+    Not a consolation. Line belongs in her authored pools, not generated.
+  - Watch: this fires during combat, where her speech budget is already tight
+    (see the budget note about her going silent on docks after a fight).
 
 **N.O.V.A. = Network Optimized Virtual Agent** — the AI installed on the player's own ship, and the game's second persistent storytelling agent after Kaelen. She rides along the whole game: warns the player in combat, narrates the world, and keeps him company on the long transit hauls between stations and quest objectives. Distinct from Kaelen — Kaelen is the external broker who hands out work; N.O.V.A. is the internal voice who is always there.
 
