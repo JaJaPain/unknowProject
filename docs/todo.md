@@ -312,10 +312,30 @@ Deployment checklist for a shipped build:
     - `_target_lost_message()` (`UIManager.gd` ~723) already exists and says
       "Target destroyed -- X is no longer on scanners." It should become the
       handoff message instead: destroyed by whom, wreck still on scanners.
-  - **SCOPE DECISION before building:** during an active fight, switching the
-    reticle to debris is probably wrong -- the player wants the next threat, not
-    salvage. Likely rule: retarget to the wreck when NOT in combat, and let
-    combat targeting advance normally. Needs Abe's call.
+  - **SCOPE RESOLVED (Abe, 2026-09-06): it depends on whether anything is still
+    shooting at us.** Two different moments, and she treats them differently:
+    - **Still under fire.** She does not offer you salvage while something is
+      perforating her hull. She says the target is gone and moves the weapons
+      lock onto whatever is actually engaging -- audibly, because the player's
+      reticle just changed without them touching anything, and an unannounced
+      lock change reads as the game taking the controls away.
+    - **Nothing left engaging.** The fight is over, so the wreck is the useful
+      thing to hold: she hands the lock to it and lets the player decide whether
+      to salvage.
+  - **Her framing, in canon.** This is not a status readout. It is her body being
+    shot at, and she is dry about it. She is not consoling the player for losing
+    a kill -- she is redirecting attention to the thing that can still kill her.
+    Sample register, for the authored pool:
+    - "Your target is scrap. Somebody else wanted it more. Locking the one still
+      shooting at me."
+    - "That one is dead, and not by you. I have moved us onto whatever is still
+      trying to open my hull."
+    - "Target gone. I would mourn it, but something else is aiming at me."
+    - (fight over) "It is over. There is what is left of it, if you want the
+      salvage."
+  - Multi-enemy already exists: `CombatManager.enemy_nodes` is an Array, with
+    `enemy_node` as a property over it -- so "whatever is still engaging" can be
+    read directly rather than rediscovered by scanning the system.
   - Fallback: a wreck is not guaranteed to spawn (`die()` only spawns one if
     `Wreckage.gd` loads). Keep the clear-and-announce path for that case.
   - Register: dry and factual, this is her job. "Someone got there first."
