@@ -299,6 +299,25 @@ Deployment checklist for a shipped build:
     NODE stored on the ship (not the wreck -- the ship is what is alive when the
     shot lands). Worth choosing before writing her lines, since it changes what
     she can say.
+  - **PREFERRED APPROACH (Abe, 2026-09-06): retarget to the WRECK rather than
+    clearing.** The target did not vanish, it changed state -- so keep it. Both
+    prerequisites already exist: wrecks appear in the overview
+    (`UIManager.gd` ~3524) and are already targetable with their own target-panel
+    handling (~3739, ~3781). So this is a retarget at death, not new UI.
+    - The wreck already carries `last_attacker_faction`, so the message can name
+      the killer without touching the ship at all.
+    - It also makes the retarget USEFUL rather than cosmetic: wrecks are
+      salvageable, so the player keeps a live objective instead of an empty
+      reticle.
+    - `_target_lost_message()` (`UIManager.gd` ~723) already exists and says
+      "Target destroyed -- X is no longer on scanners." It should become the
+      handoff message instead: destroyed by whom, wreck still on scanners.
+  - **SCOPE DECISION before building:** during an active fight, switching the
+    reticle to debris is probably wrong -- the player wants the next threat, not
+    salvage. Likely rule: retarget to the wreck when NOT in combat, and let
+    combat targeting advance normally. Needs Abe's call.
+  - Fallback: a wreck is not guaranteed to spawn (`die()` only spawns one if
+    `Wreckage.gd` loads). Keep the clear-and-announce path for that case.
   - Register: dry and factual, this is her job. "Someone got there first."
     Not a consolation. Line belongs in her authored pools, not generated.
   - Watch: this fires during combat, where her speech budget is already tight
