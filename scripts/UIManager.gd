@@ -3589,9 +3589,12 @@ func _should_show_overview_entity(entity: Node) -> bool:
 		return false
 	if entity.is_in_group("asteroid") and not _overview_show_asteroids:
 		return false
-	if not GlobalState.sensor_reveal_enabled:
-		return true
-	return _passes_sensor_reveal(entity)
+	# NOTE: sensor reveal is deliberately NOT applied here. This function only
+	# runs when the list is REBUILT (spawns, target changes), while distance
+	# changes every frame -- so a range test here would freeze at whatever the
+	# distance happened to be at build time. It lives in
+	# _update_overview_distances instead, which runs per frame.
+	return true
 
 
 ## Sensor-range gate: small objects have to be found, landmarks never vanish.
@@ -3613,12 +3616,11 @@ func _gate_knowledge_state(entity: Node) -> String:
 	return str(root.get_gate_knowledge_state(gate_id))
 
 
-func _passes_sensor_reveal(entity: Node) -> bool:
-	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
-		return true  # No player to measure from: never hide on a technicality.
+func _passes_sensor_reveal(entity: Node, distance: float) -> bool:
+	if not GlobalState.sensor_reveal_enabled:
+		return true
 	if not (entity is Node3D):
 		return true
-	var distance: float = GlobalState.player.global_position.distance_to(entity.global_position)
 	var size_class: String = RevealModel.size_class_for_groups(
 		entity.get_groups(), _gate_knowledge_state(entity)
 	)
@@ -3670,6 +3672,12 @@ func _update_overview_distances(delta: float = 999.0):
 			if entity and is_instance_valid(entity):
 				var dist = p_pos.distance_to(entity.global_position)
 				btn.set_meta("distance_val", dist)
+				# Sensor reveal is applied HERE, per frame, because this is the only
+				# place that sees the current distance. Hiding the row rather than
+				# rebuilding the list keeps it cheap enough to run every frame.
+				var revealed: bool = _passes_sensor_reveal(entity, dist)
+				if btn.visible != revealed:
+					btn.visible = revealed
 				var dist_lbl = btn.get_meta("dist_label_ref")
 				if is_instance_valid(dist_lbl):
 					dist_lbl.text = "  " + str(int(dist)) + "m"
