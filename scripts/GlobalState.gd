@@ -2572,6 +2572,11 @@ const KAELEN_VOICE_ID: String = "af_bella"
 # not persisted. UIManager reads nova_warn_distance for the ambush-alert gate;
 # NPCShip reads combat_warning_grace_ms for the hold before combat auto-starts.
 var nova_warn_distance: float = 600.0
+
+## Sensor reveal (hide distant objects from the overview). OFF by default: the
+## default ranges are guesses from a plan written without this game's scale, and
+## turning them on untuned would hide the wrong things. Dev panel > Sensors.
+var sensor_reveal_enabled: bool = false
 var combat_warning_grace_ms: int = 7000
 
 # Substitutions for non-Kaelen speakers. Keyed on the source token

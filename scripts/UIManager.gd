@@ -3579,7 +3579,6 @@ func update_overview_list(entities: Array):
 ## registered in headless runs, so the parse check fails on a bare identifier.
 const RevealModel = preload("res://scripts/domain/SiteRevealModel.gd")
 
-var _overview_sensor_reveal := false
 var _overview_sensor_tier: String = RevealModel.DEFAULT_TIER
 
 
@@ -3590,7 +3589,7 @@ func _should_show_overview_entity(entity: Node) -> bool:
 		return false
 	if entity.is_in_group("asteroid") and not _overview_show_asteroids:
 		return false
-	if not _overview_sensor_reveal:
+	if not GlobalState.sensor_reveal_enabled:
 		return true
 	return _passes_sensor_reveal(entity)
 
@@ -3600,13 +3599,29 @@ func _should_show_overview_entity(entity: Node) -> bool:
 ## "Seen" is tracked per entity so the hysteresis in SiteRevealModel has state to
 ## work with: an object is picked up at detection range and held until the longer
 ## drop range, instead of flickering when it sits exactly at the boundary.
+## Discovery state for a gate, or "known" for anything that is not a gate (so a
+## non-gate is never accidentally treated as undiscovered and hidden).
+func _gate_knowledge_state(entity: Node) -> String:
+	if not entity.is_in_group("jumpgate"):
+		return "known"
+	var gate_id := str(entity.get("gate_id"))
+	if gate_id.is_empty():
+		return "known"
+	var root := get_tree().current_scene if get_tree() else null
+	if root == null or not root.has_method("get_gate_knowledge_state"):
+		return "known"
+	return str(root.get_gate_knowledge_state(gate_id))
+
+
 func _passes_sensor_reveal(entity: Node) -> bool:
 	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
 		return true  # No player to measure from: never hide on a technicality.
 	if not (entity is Node3D):
 		return true
 	var distance: float = GlobalState.player.global_position.distance_to(entity.global_position)
-	var size_class: String = RevealModel.size_class_for_groups(entity.get_groups())
+	var size_class: String = RevealModel.size_class_for_groups(
+		entity.get_groups(), _gate_knowledge_state(entity)
+	)
 	var reveal: Dictionary = RevealModel.reveal_for(
 		distance,
 		_overview_sensor_tier,

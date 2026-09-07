@@ -60,6 +60,11 @@ func add_action_button(label: String, callback: Callable) -> Button:
 	return btn
 
 ## Add a new tab to the right panel. Returns the VBoxContainer to populate.
+const SensorRevealModel = preload("res://scripts/domain/SiteRevealModel.gd")
+
+var _reveal_row_refreshers: Array = []
+
+
 func add_tab(title: String) -> VBoxContainer:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -88,6 +93,7 @@ func _ready() -> void:
 	_build_dialogue_content_tab()
 	_build_dialogue_rules_tab()
 	_build_combat_feel_tab()
+	_build_sensor_reveal_tab()
 	_build_story_debug_tab()
 	# ── Add more built-in tabs here in future sessions ──
 	# var my_tab := add_tab("My Tool")
@@ -306,6 +312,124 @@ func _build_story_debug_tab() -> void:
 	tab.add_child(_story_full_debug_text)
 
 	_refresh_story_debug_tab()
+
+
+
+func _build_sensor_reveal_tab() -> void:
+	var tab := add_tab("Sensors")
+
+	var hint := Label.new()
+	hint.text = (
+		"Sensor reveal is OFF by default. Its default ranges came from a plan "
+		+ "written without this game's scale in mind, so they are guesses. Turn it "
+		+ "on, fly around, and report the numbers that feel right -- do not trust "
+		+ "the defaults."
+	)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	tab.add_child(hint)
+	tab.add_child(HSeparator.new())
+
+	var toggle := CheckBox.new()
+	toggle.text = "Enable sensor reveal (hide distant objects)"
+	toggle.button_pressed = GlobalState.sensor_reveal_enabled
+	toggle.toggled.connect(func(on: bool) -> void:
+		GlobalState.sensor_reveal_enabled = on
+	)
+	tab.add_child(toggle)
+	tab.add_child(HSeparator.new())
+
+	var readout := Label.new()
+	readout.autowrap_mode = TextServer.AUTOWRAP_WORD
+	readout.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+
+	# Live readout of what the current dials actually mean in metres, because the
+	# multipliers alone do not tell you what you will see out the window.
+	var refresh_readout := func() -> void:
+		var model := SensorRevealModel
+		readout.text = (
+			"ordinary %.0fm (drops %.0fm)   mission %.0fm (drops %.0fm)
+"
+			+ "unfound gate %.0fm   planets/stations/known gates: always visible"
+		) % [
+			model.detection_range("basic", false, model.SIZE_SMALL),
+			model.drop_range_for_tier("basic", false, model.SIZE_SMALL),
+			model.detection_range("basic", true, model.SIZE_SMALL),
+			model.drop_range_for_tier("basic", true, model.SIZE_SMALL),
+			model.detection_range("basic", false, model.SIZE_TINY),
+		]
+
+	_build_reveal_row(tab, "Sensor range scale", "range_scale", 0.1, refresh_readout)
+	_build_reveal_row(tab, "Drop range multiplier", "drop_multiplier", 0.25, refresh_readout)
+	_build_reveal_row(tab, "Mission ship bonus", "mission_multiplier", 0.1, refresh_readout)
+	_build_reveal_row(tab, "Unfound gate multiplier", "tiny_multiplier", 0.05, refresh_readout)
+
+	tab.add_child(HSeparator.new())
+	tab.add_child(readout)
+
+	var reset := Button.new()
+	reset.text = "Reset to defaults"
+	reset.pressed.connect(func() -> void:
+		SensorRevealModel.reset_tuning()
+		refresh_readout.call()
+		_refresh_reveal_rows()
+	)
+	tab.add_child(reset)
+
+	refresh_readout.call()
+
+
+## Nudge row bound to a SiteRevealModel static, rather than to GlobalState like
+## _build_feel_row -- the tuning lives on the model so the pure module stays the
+## single source of truth for what a range means.
+func _build_reveal_row(
+	parent: VBoxContainer,
+	label_text: String,
+	prop: String,
+	step: float,
+	on_change: Callable
+) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(230, 0)
+	row.add_child(label)
+
+	var value := Label.new()
+	value.custom_minimum_size = Vector2(90, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.add_theme_color_override("font_color", Color(0.4, 1.0, 0.8))
+	row.add_child(value)
+
+	var refresh := func() -> void:
+		value.text = "%.2fx" % SensorRevealModel.get_tuning(prop)
+	var nudge := func(delta: float) -> void:
+		# Floored just above zero: a zero scale would blind sensors entirely and
+		# read as a broken game rather than a tuning result.
+		SensorRevealModel.set_tuning(prop, maxf(0.05, SensorRevealModel.get_tuning(prop) + delta))
+		refresh.call()
+		on_change.call()
+
+	var minus := Button.new()
+	minus.text = "-%.2f" % step
+	minus.pressed.connect(func() -> void: nudge.call(-step))
+	row.add_child(minus)
+
+	var plus := Button.new()
+	plus.text = "+%.2f" % step
+	plus.pressed.connect(func() -> void: nudge.call(step))
+	row.add_child(plus)
+
+	_reveal_row_refreshers.append(refresh)
+	refresh.call()
+
+
+func _refresh_reveal_rows() -> void:
+	for refresher in _reveal_row_refreshers:
+		if refresher is Callable and refresher.is_valid():
+			refresher.call()
 
 
 func _build_combat_feel_tab() -> void:

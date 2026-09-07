@@ -19,11 +19,52 @@ extends RefCounted
 
 const SIZE_LARGE := "large"   ## Planets, moons, stations: never hidden.
 const SIZE_SMALL := "small"   ## Ships, wrecks, containers, anomalies.
+const SIZE_TINY := "tiny"     ## Gates the player has not found yet.
 
-## Groups whose objects are landmarks. Jump gates are included deliberately: a
-## gate is how the player LEAVES, and a route that vanishes because you drifted
-## away from it is a navigation failure, not an atmosphere win.
-const LARGE_GROUPS := ["station", "celestial", "jumpgate"]
+## Groups whose objects are landmarks.
+const LARGE_GROUPS := ["station", "celestial"]
+
+## A gate the player KNOWS is a landmark: it is how they leave, and a route that
+## vanishes because you drifted away from it is a navigation failure, not an
+## atmosphere win. "blocked" and "damaged" count as known -- you still know where
+## it is, you just cannot use it.
+const KNOWN_GATE_STATES := ["known", "blocked", "damaged"]
+
+## Tunable at runtime from the dev panel. These are FEEL VALUES: the defaults
+## below are the plan's numbers, which were written without knowledge of this
+## game's scale, so expect to move them in the air rather than trust them.
+static var range_scale := 1.0
+static var drop_multiplier := 2.0
+static var mission_multiplier := 1.5
+static var tiny_multiplier := 0.25
+
+
+## Named access to the tunables. Godot cannot reach a static var through get()/
+## set() on a script class, so live tuning needs explicit accessors.
+static func get_tuning(key: String) -> float:
+	match key:
+		"range_scale": return range_scale
+		"drop_multiplier": return drop_multiplier
+		"mission_multiplier": return mission_multiplier
+		"tiny_multiplier": return tiny_multiplier
+	return 0.0
+
+
+static func set_tuning(key: String, value: float) -> void:
+	match key:
+		"range_scale": range_scale = value
+		"drop_multiplier": drop_multiplier = value
+		"mission_multiplier": mission_multiplier = value
+		"tiny_multiplier": tiny_multiplier = value
+
+
+## Restore every tunable to its shipped default.
+static func reset_tuning() -> void:
+	range_scale = 1.0
+	drop_multiplier = 2.0
+	mission_multiplier = 1.5
+	tiny_multiplier = 0.25
+
 
 const TIER_RANGES := {
 	"basic": 600.0,
@@ -36,16 +77,6 @@ const DEFAULT_TIER := "basic"
 ## rather than popping into existence.
 const FADE_UNITS := 50.0
 
-## A known small object survives out to this multiple of sensor range before it
-## drops off. Detect at 600, lose at 1200.
-const DROP_RANGE_MULTIPLIER := 2.0
-
-## Mission-relevant ships are detected further out than ordinary traffic. This is
-## a playability concession, not a fiction: hunting one specific hull through a
-## system full of identical contacts is tedium, not difficulty. A FEEL VALUE --
-## expect to tune it in playtest.
-const MISSION_RANGE_MULTIPLIER := 1.5
-
 const STATE_HIDDEN := "hidden"
 const STATE_CONTACT := "contact"
 const STATE_IDENTIFIED := "identified"
@@ -55,8 +86,11 @@ const CONTACT_LABEL := "Signal contact"
 
 ## Size class for an entity, from its groups. Takes plain strings rather than a
 ## Node so the classification is testable without a running scene.
-static func size_class_for_groups(groups: Array) -> String:
+static func size_class_for_groups(groups: Array, gate_state: String = "known") -> String:
 	for group in groups:
+		if str(group) == "jumpgate":
+			# An unfound gate is the one thing hidden harder than ordinary debris.
+			return SIZE_LARGE if gate_state in KNOWN_GATE_STATES else SIZE_TINY
 		if str(group) in LARGE_GROUPS:
 			return SIZE_LARGE
 	return SIZE_SMALL
@@ -66,20 +100,30 @@ static func size_class_for_groups(groups: Array) -> String:
 ## zero -- a typo in a ship definition should weaken sensors, not blind them.
 static func range_for_tier(tier: String) -> float:
 	if TIER_RANGES.has(tier):
-		return float(TIER_RANGES[tier])
-	return float(TIER_RANGES[DEFAULT_TIER])
+		return float(TIER_RANGES[tier]) * range_scale
+	return float(TIER_RANGES[DEFAULT_TIER]) * range_scale
 
 
 ## Range at which an object is first detected. Mission ships get a bonus so the
 ## player is not hunting one hull among identical contacts.
-static func detection_range(tier: String, is_mission_target: bool = false) -> float:
+static func detection_range(
+	tier: String,
+	is_mission_target: bool = false,
+	size_class: String = SIZE_SMALL
+) -> float:
 	var base := range_for_tier(tier)
-	return base * MISSION_RANGE_MULTIPLIER if is_mission_target else base
+	if size_class == SIZE_TINY:
+		base *= tiny_multiplier
+	return base * mission_multiplier if is_mission_target else base
 
 
 ## Range at which an already-known small object finally drops off the overview.
-static func drop_range_for_tier(tier: String, is_mission_target: bool = false) -> float:
-	return detection_range(tier, is_mission_target) * DROP_RANGE_MULTIPLIER
+static func drop_range_for_tier(
+	tier: String,
+	is_mission_target: bool = false,
+	size_class: String = SIZE_SMALL
+) -> float:
+	return detection_range(tier, is_mission_target, size_class) * drop_multiplier
 
 
 ## Display state for one object. Returns {state, label, alpha, targetable}.
@@ -95,10 +139,10 @@ static func reveal_for(
 		# Planets and stations are landmarks. They are how a player orients
 		# themselves in a system, so they are never hidden and never fade.
 		return _shown(STATE_IDENTIFIED, site_name if not site_name.is_empty() else "Unknown body", 1.0)
-	var sensor_range := detection_range(tier, is_mission_target)
+	var sensor_range := detection_range(tier, is_mission_target, size_class)
 	if is_scanned:
 		# Known small object: keep it out to the drop range, then let it go.
-		if distance > drop_range_for_tier(tier, is_mission_target):
+		if distance > drop_range_for_tier(tier, is_mission_target, size_class):
 			return _hidden()
 		return _shown(STATE_IDENTIFIED, site_name if not site_name.is_empty() else CONTACT_LABEL, 1.0)
 	if distance > sensor_range:

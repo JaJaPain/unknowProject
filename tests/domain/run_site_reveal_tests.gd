@@ -21,6 +21,8 @@ func _initialize() -> void:
 	_test_small_objects_drop_off_beyond_the_drop_range()
 	_test_mission_ships_are_detected_further_out()
 	_test_group_classification_protects_landmarks()
+	_test_gate_visibility_follows_discovery()
+	_test_live_tuning_moves_real_ranges()
 	_test_unknown_tier_weakens_rather_than_blinds()
 	if _failures.is_empty():
 		print("[PASS] Site reveal model tests")
@@ -198,7 +200,7 @@ func _test_mission_ships_are_detected_further_out() -> void:
 
 
 func _test_group_classification_protects_landmarks() -> void:
-	for large_group in ["station", "celestial", "jumpgate"]:
+	for large_group in ["station", "celestial"]:
 		_expect(
 			RevealType.size_class_for_groups([large_group, "persistent_entity"]) == RevealType.SIZE_LARGE,
 			"'%s' should classify as large" % large_group
@@ -212,4 +214,80 @@ func _test_group_classification_protects_landmarks() -> void:
 	_expect(
 		RevealType.size_class_for_groups([]) == RevealType.SIZE_SMALL,
 		"An ungrouped entity should default to small, not to always-visible."
+	)
+
+
+func _test_gate_visibility_follows_discovery() -> void:
+	# A gate you know is a landmark; a gate you have not found is the hardest
+	# thing in the system to see, so a new route is discovered rather than handed
+	# over on arrival.
+	for known_state in ["known", "blocked", "damaged"]:
+		_expect(
+			RevealType.size_class_for_groups(["jumpgate"], known_state) == RevealType.SIZE_LARGE,
+			"A '%s' gate should stay a landmark" % known_state
+		)
+	for unknown_state in ["unknown", "rumored", "hidden"]:
+		_expect(
+			RevealType.size_class_for_groups(["jumpgate"], unknown_state) == RevealType.SIZE_TINY,
+			"A '%s' gate should be hard to find" % unknown_state
+		)
+	# A known gate never drops off, at any distance.
+	var known_gate: Dictionary = RevealType.reveal_for(
+		50000.0, "basic", false, "Ares Gate", RevealType.SIZE_LARGE
+	)
+	_expect(
+		str(known_gate["state"]) == RevealType.STATE_IDENTIFIED,
+		"A known gate must never drop off, got %s" % str(known_gate["state"])
+	)
+	# An unfound gate must be harder to see than ordinary debris.
+	var tiny_range := RevealType.detection_range("basic", false, RevealType.SIZE_TINY)
+	var small_range := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL)
+	_expect(
+		tiny_range < small_range,
+		"An unfound gate (%.0f) must be harder to detect than a wreck (%.0f)" % [tiny_range, small_range]
+	)
+	_expect(tiny_range > 0.0, "An unfound gate must still be findable, not impossible.")
+	var far_gate: Dictionary = RevealType.reveal_for(
+		small_range - 10.0, "basic", false, "Ares Gate", RevealType.SIZE_TINY
+	)
+	_expect(
+		str(far_gate["state"]) == RevealType.STATE_HIDDEN,
+		"An unfound gate at wreck-detection range must still be hidden, got %s" % str(far_gate["state"])
+	)
+	var close_gate: Dictionary = RevealType.reveal_for(
+		tiny_range - 10.0, "basic", false, "Ares Gate", RevealType.SIZE_TINY
+	)
+	_expect(
+		str(close_gate["state"]) == RevealType.STATE_CONTACT,
+		"An unfound gate up close must appear as a contact, got %s" % str(close_gate["state"])
+	)
+	_expect(
+		str(close_gate["label"]) == RevealType.CONTACT_LABEL,
+		"An unfound gate must not name itself before it is found."
+	)
+
+
+func _test_live_tuning_moves_real_ranges() -> void:
+	# The dev panel nudges these statics while the game runs, so a dial that does
+	# not actually move a range would waste a whole playtest.
+	RevealType.reset_tuning()
+	var base := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL)
+	RevealType.set_tuning("range_scale", 0.5)
+	_expect(
+		RevealType.detection_range("basic", false, RevealType.SIZE_SMALL) < base,
+		"Lowering range_scale must shorten detection range."
+	)
+	_expect(
+		is_equal_approx(RevealType.get_tuning("range_scale"), 0.5),
+		"get_tuning must read back what set_tuning wrote."
+	)
+	RevealType.set_tuning("tiny_multiplier", 0.5)
+	RevealType.reset_tuning()
+	_expect(
+		is_equal_approx(RevealType.detection_range("basic", false, RevealType.SIZE_SMALL), base),
+		"reset_tuning must restore the shipped defaults."
+	)
+	_expect(
+		is_equal_approx(RevealType.get_tuning("unknown_key"), 0.0),
+		"An unknown tuning key should read 0.0 rather than crash."
 	)
