@@ -246,6 +246,14 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
        live speech.
     3. Accept the difference if the clone is close enough -- Abe's ear decides,
        and this is a real audition, not a formality.
+  - **SCOPED BY ABE (2026-09-07): option 2.** Cloned voices are for content that
+    cannot sit beside live speech, specifically:
+    - N.O.V.A.'s REPEATED ship callouts -- her stock docking/nav/combat pools,
+      which recur constantly and are the strongest case for a better read.
+    - Kaelen's OPENING MONOLOGUES -- the intro pool, which plays as a set piece
+      before any generated dialogue is in flight.
+    Anything that can interleave with live generated speech stays on Kokoro, so
+    a character's voice never shifts inside a scene.
   - Reference samples are easy: generate clean Kokoro lines in each voice and
     clone from those, so the clone targets the voice players already know rather
     than a new performance.
