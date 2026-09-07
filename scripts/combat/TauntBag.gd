@@ -35,10 +35,24 @@ var _pending_cycle_start: bool = false
 
 const RECENT_MEMORY := 25
 
+## Optional deterministic source for cycle seeds. Taunts leave this null and keep
+## using global randi(), which is what they want -- an enemy line should not be
+## reproducible from a save. Mission selection injects one so a campaign can
+## restore its cycle exactly rather than reshuffling on load.
+var _rng: RandomNumberGenerator = null
+
+
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
+func _next_seed() -> int:
+	return int(_rng.randi()) if _rng != null else int(randi())
+
 
 func _init(pool_size: int = 0, bag_seed: int = 0) -> void:
 	_size = maxi(0, pool_size)
-	_seed = bag_seed if bag_seed != 0 else randi()
+	_seed = bag_seed if bag_seed != 0 else _next_seed()
 	_cursor = 0
 
 
@@ -96,7 +110,7 @@ func _start_new_cycle(pool: Array) -> void:
 	_pending_cycle_start = false
 	_cursor = 0
 	if _recent.is_empty():
-		_seed = randi()
+		_seed = _next_seed()
 		return
 	var window: int = mini(12, maxi(1, int(_size / 2)))
 	# Keep the best candidate seen, so a pool too small for a perfectly clean
@@ -105,7 +119,7 @@ func _start_new_cycle(pool: Array) -> void:
 	var best_seed := 0
 	var best_hits := 1 << 30
 	for attempt in range(CYCLE_START_ATTEMPTS):
-		_seed = randi()
+		_seed = _next_seed()
 		var order := _order()
 		if order.is_empty():
 			return
