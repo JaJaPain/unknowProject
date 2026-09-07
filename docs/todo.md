@@ -201,6 +201,57 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ---
 
+## Speech / TTS
+
+- [ ] **Try Orpheus (Canopy Labs) as a BAKE-TIME voice engine** (Abe, 2026-09-07).
+  Kokoro is `hexgrad/Kokoro-82M`, weights `kokoro-v1_0.pth`, package 0.9.4. At
+  82M it is fast and CPU-friendly, and that is also its ceiling: the flat
+  "angry" reads Abe rejected during the taunt audition are not a settings
+  problem, they are what the model can do. Orpheus is an autoregressive LLM
+  (Llama backbone + audio codec decoder) with emotion tags, which is exactly the
+  axis Kokoro cannot move on.
+  - **Bake time, not runtime.** At runtime Orpheus would compete with qwen3:4b
+    for the same 8GB, which is the residency problem P1 exists to solve. Baked,
+    it runs on Abe's machine at dev time, emits files, and ships as audio: no
+    VRAM cost, no latency, no new end-user dependency.
+  - **The pipeline already supports it.** `tools/bake_taunt_audio.py` and
+    `scripts/TTSInterface.gd` both talk to one HTTP endpoint
+    (`localhost:5000/tts`). A second engine is another process on another port
+    that the BAKER points at; the game never learns which engine made a file.
+  - **Scope: anything baked ahead of time**, not just taunts. Taunts first
+    because they are already fully baked (1520 clips) and enemies are anonymous,
+    so there is no canon-voice risk in the trial.
+  - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
+    through Orpheus and listen against the approved Kokoro versions. Hours, not
+    days, and fully reversible -- the Kokoro clips stay on disk.
+  - Note the plan (`docs/plan_replayability_local_inference.md`) lists "no second
+    TTS engine" as a non-goal. That was aimed at runtime scope creep; a
+    bake-time engine does not add an end-user runtime. Abe has approved reading
+    around it deliberately.
+
+- [ ] **Clone N.O.V.A. and Kaelen for baked content** (Abe, 2026-09-07).
+  Orpheus can clone voices, which removes the objection to using it for the
+  fixed cast: baked lines would keep THEIR voices rather than adopting a new
+  actor. `af_bella` is Kaelen's alone and `bf_emma` is N.O.V.A.'s alone, and
+  `tests/story/run_player_address_tests.gd` already pins the reservation.
+  - **THE RISK TO SOLVE FIRST, before cloning anything:** if baked lines use the
+    clone and live/generated lines still use Kokoro, the SAME character has two
+    slightly different voices depending on whether a line happened to be
+    pre-baked. Players notice a character's voice shifting mid-scene, and that is
+    worse than either engine used consistently. Options, in preference order:
+    1. Bake ALL of a character's authored lines and check whether any live line
+       can appear in the same scene as a baked one. Where they cannot mix, the
+       clone is safe.
+    2. Use the clone only for content that is always baked and never adjacent to
+       live speech.
+    3. Accept the difference if the clone is close enough -- Abe's ear decides,
+       and this is a real audition, not a formality.
+  - Reference samples are easy: generate clean Kokoro lines in each voice and
+    clone from those, so the clone targets the voice players already know rather
+    than a new performance.
+  - Do NOT change the canon voice ASSIGNMENTS. This is about which engine renders
+    a reserved voice, never about reassigning or pooling them.
+
 ## UI / UX
 
 - [ ] **Pin the active target to the top of the overview** (Abe, 2026-09-06).
