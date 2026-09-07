@@ -16,6 +16,7 @@ static func _ensure_defaults() -> void:
 	register(load("res://scripts/domain/capabilities/PurchaseDeliveryCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/RecoverCombatDropCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/CommsReversalCapability.gd").new())
+	register(load("res://scripts/domain/capabilities/InvestigateSignalCapability.gd").new())
 
 
 static func register(capability: MissionCapability) -> void:

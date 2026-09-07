@@ -27,6 +27,7 @@ resume exactly here after a session limit. Newest entries at the bottom._
 
 | Slice | State | Notes |
 |---|---|---|
+| P2-2 InvestigateSignalCapability | **DONE** | `scripts/domain/capabilities/InvestigateSignalCapability.gd` + `tests/domain/run_investigate_signal_tests.gd`, registered in `MissionCapabilityRegistry`. PURE -- no scene access -- so branch rules, payouts and consumable spend are testable headless. Invariants pinned by test: completion is never inferred from "both scanned" (mutation-checked); verification site locked until the primary scan; prerequisites revalidated at execution not button-enable; commands idempotent by id so a replay never double-spends; stale revisions refused; extraction commits (spawning a forged beacon's hostile) but only completes on reaching the cache, with no retreat to a safer branch afterwards. |
 | P2-1 shape catalog + registry | **DONE** | `data/content/mission_shapes.json` (4 shapes), `scripts/domain/MissionShapeDefinition.gd`, `scripts/domain/MissionShapeRegistry.gd`, `tests/domain/run_mission_shape_registry_tests.gd`. Catalog is rejected WHOLESALE on any bad shape; `report` branch is mandatory so a missing consumable cannot strand a contract; eligibility filters before pool formation. Note: `class_name` type annotations do not resolve in `--script` mode, so the registry uses preloaded consts and `Variant` returns. |
 
 # 1. Executive summary
