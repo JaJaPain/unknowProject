@@ -17,7 +17,9 @@ func _initialize() -> void:
 	_test_hidden_beyond_sensor_range()
 	_test_better_sensors_see_further()
 	_test_contact_fades_in_and_stays_anonymous()
-	_test_scanned_sites_are_never_lost()
+	_test_large_objects_are_never_hidden()
+	_test_small_objects_drop_off_beyond_the_drop_range()
+	_test_mission_ships_are_detected_further_out()
 	_test_unknown_tier_weakens_rather_than_blinds()
 	if _failures.is_empty():
 		print("[PASS] Site reveal model tests")
@@ -77,19 +79,68 @@ func _test_contact_fades_in_and_stays_anonymous() -> void:
 		)
 
 
-func _test_scanned_sites_are_never_lost() -> void:
-	var far_but_known: Dictionary = RevealType.reveal_for(9000.0, "basic", true, "Derelict Hauler")
-	_expect(
-		str(far_but_known["state"]) == RevealType.STATE_IDENTIFIED,
-		"A scanned site must stay visible at any range, got %s" % str(far_but_known["state"])
+func _test_large_objects_are_never_hidden() -> void:
+	# A planet is visible across a system by eye. Requiring sensors to notice one
+	# would be absurd, and landmarks are how a player orients themselves.
+	for distance in [50.0, 5000.0, 500000.0]:
+		var body: Dictionary = RevealType.reveal_for(
+			distance, "basic", false, "Kepler IV", RevealType.SIZE_LARGE
+		)
+		_expect(
+			str(body["state"]) == RevealType.STATE_IDENTIFIED,
+			"A planet at %.0f units must stay visible, got %s" % [distance, str(body["state"])]
+		)
+		_expect(
+			str(body["label"]) == "Kepler IV",
+			"A large body should always show its name, got '%s'" % str(body["label"])
+		)
+		_expect(
+			is_equal_approx(float(body["alpha"]), 1.0),
+			"A large body must not fade at %.0f units." % distance
+		)
+	# It does not need scanning to be named, either.
+	var station: Dictionary = RevealType.reveal_for(
+		9000.0, "basic", false, "Tycho Relay", RevealType.SIZE_LARGE
+	)
+	_expect(bool(station["targetable"]), "A station must always be targetable.")
+
+
+func _test_small_objects_drop_off_beyond_the_drop_range() -> void:
+	# Hysteresis: detected at 600, kept out to 1200, gone past that. The gap
+	# stops an object parked at sensor range from flickering as the ship drifts.
+	var detect := RevealType.range_for_tier("basic")
+	var drop := RevealType.drop_range_for_tier("basic")
+	_expect(drop > detect, "The drop range must exceed the detection range.")
+	var just_outside_detect: Dictionary = RevealType.reveal_for(
+		detect + 100.0, "basic", true, "Derelict Hauler", RevealType.SIZE_SMALL
 	)
 	_expect(
-		str(far_but_known["label"]) == "Derelict Hauler",
-		"A scanned site should show its real name, got '%s'" % str(far_but_known["label"])
+		str(just_outside_detect["state"]) == RevealType.STATE_IDENTIFIED,
+		"A known wreck past detection range but inside drop range must persist, got %s"
+			% str(just_outside_detect["state"])
 	)
 	_expect(
-		is_equal_approx(float(far_but_known["alpha"]), 1.0),
-		"A scanned site must not fade with distance."
+		str(just_outside_detect["label"]) == "Derelict Hauler",
+		"A known wreck should keep its name while it persists."
+	)
+	var beyond: Dictionary = RevealType.reveal_for(
+		drop + 100.0, "basic", true, "Derelict Hauler", RevealType.SIZE_SMALL
+	)
+	_expect(
+		str(beyond["state"]) == RevealType.STATE_HIDDEN,
+		"A known wreck past the drop range must fall off, got %s" % str(beyond["state"])
+	)
+	_expect(
+		str(beyond["label"]).is_empty(),
+		"A dropped wreck must leak no label, got '%s'" % str(beyond["label"])
+	)
+	# Coming back re-shows it as identified: scanning is not undone by distance.
+	var returned: Dictionary = RevealType.reveal_for(
+		100.0, "basic", true, "Derelict Hauler", RevealType.SIZE_SMALL
+	)
+	_expect(
+		str(returned["state"]) == RevealType.STATE_IDENTIFIED,
+		"Returning to a scanned wreck must not require re-scanning, got %s" % str(returned["state"])
 	)
 
 
@@ -108,3 +159,38 @@ func _test_unknown_tier_weakens_rather_than_blinds() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _test_mission_ships_are_detected_further_out() -> void:
+	# Hunting one specific hull among identical contacts is tedium, not
+	# difficulty, so mission targets get detection range the player did not earn.
+	var ordinary_only := RevealType.range_for_tier("basic") + 50.0
+	var ordinary: Dictionary = RevealType.reveal_for(
+		ordinary_only, "basic", false, "Courier", RevealType.SIZE_SMALL, false
+	)
+	_expect(
+		str(ordinary["state"]) == RevealType.STATE_HIDDEN,
+		"An ordinary ship past sensor range must stay hidden, got %s" % str(ordinary["state"])
+	)
+	var mission: Dictionary = RevealType.reveal_for(
+		ordinary_only, "basic", false, "Courier", RevealType.SIZE_SMALL, true
+	)
+	_expect(
+		str(mission["state"]) == RevealType.STATE_CONTACT,
+		"A mission ship at the same distance must be detected, got %s" % str(mission["state"])
+	)
+	_expect(
+		RevealType.detection_range("basic", true) > RevealType.detection_range("basic", false),
+		"Mission targets must have a strictly longer detection range."
+	)
+	# The bonus is slight, not a system-wide reveal.
+	_expect(
+		RevealType.detection_range("basic", true) < RevealType.range_for_tier("basic") * 3.0,
+		"The mission bonus should be slight, not a system-wide reveal."
+	)
+	# It carries into the drop range too, so a mission ship does not blink out
+	# sooner than an ordinary one that was detected further away.
+	_expect(
+		RevealType.drop_range_for_tier("basic", true) > RevealType.drop_range_for_tier("basic", false),
+		"The mission bonus must extend the drop range as well."
+	)
