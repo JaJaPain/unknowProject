@@ -20,6 +20,7 @@ func _initialize() -> void:
 	_test_large_objects_are_never_hidden()
 	_test_small_objects_drop_off_beyond_the_drop_range()
 	_test_mission_ships_are_detected_further_out()
+	_test_group_classification_protects_landmarks()
 	_test_unknown_tier_weakens_rather_than_blinds()
 	if _failures.is_empty():
 		print("[PASS] Site reveal model tests")
@@ -193,4 +194,22 @@ func _test_mission_ships_are_detected_further_out() -> void:
 	_expect(
 		RevealType.drop_range_for_tier("basic", true) > RevealType.drop_range_for_tier("basic", false),
 		"The mission bonus must extend the drop range as well."
+	)
+
+
+func _test_group_classification_protects_landmarks() -> void:
+	for large_group in ["station", "celestial", "jumpgate"]:
+		_expect(
+			RevealType.size_class_for_groups([large_group, "persistent_entity"]) == RevealType.SIZE_LARGE,
+			"'%s' should classify as large" % large_group
+		)
+	for small_group in ["ship", "wreckage", "asteroid", "anomaly", "salvager"]:
+		_expect(
+			RevealType.size_class_for_groups([small_group]) == RevealType.SIZE_SMALL,
+			"'%s' should classify as small" % small_group
+		)
+	# An unknown or empty group set must not silently become a landmark.
+	_expect(
+		RevealType.size_class_for_groups([]) == RevealType.SIZE_SMALL,
+		"An ungrouped entity should default to small, not to always-visible."
 	)

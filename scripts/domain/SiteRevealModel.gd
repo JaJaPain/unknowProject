@@ -20,6 +20,11 @@ extends RefCounted
 const SIZE_LARGE := "large"   ## Planets, moons, stations: never hidden.
 const SIZE_SMALL := "small"   ## Ships, wrecks, containers, anomalies.
 
+## Groups whose objects are landmarks. Jump gates are included deliberately: a
+## gate is how the player LEAVES, and a route that vanishes because you drifted
+## away from it is a navigation failure, not an atmosphere win.
+const LARGE_GROUPS := ["station", "celestial", "jumpgate"]
+
 const TIER_RANGES := {
 	"basic": 600.0,
 	"improved": 900.0,
@@ -46,6 +51,15 @@ const STATE_CONTACT := "contact"
 const STATE_IDENTIFIED := "identified"
 
 const CONTACT_LABEL := "Signal contact"
+
+
+## Size class for an entity, from its groups. Takes plain strings rather than a
+## Node so the classification is testable without a running scene.
+static func size_class_for_groups(groups: Array) -> String:
+	for group in groups:
+		if str(group) in LARGE_GROUPS:
+			return SIZE_LARGE
+	return SIZE_SMALL
 
 
 ## Sensor range for a tier. An unknown tier falls back to basic rather than to

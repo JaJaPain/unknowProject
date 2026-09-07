@@ -3570,6 +3570,19 @@ func update_overview_list(entities: Array):
 			btn.set_meta("name_label_ref", name_lbl)
 
 
+## Sensor reveal is OFF by default. It changes what the player can see, and its
+## ranges (600/900/1200) came from a plan written without knowing this game's
+## scale -- placements here sit within a few hundred units, so those numbers
+## likely reveal almost everything. Turn it on from the dev panel and tune the
+## ranges there before considering it default behaviour.
+## Preloaded rather than referenced by class_name: global class names are not
+## registered in headless runs, so the parse check fails on a bare identifier.
+const RevealModel = preload("res://scripts/domain/SiteRevealModel.gd")
+
+var _overview_sensor_reveal := false
+var _overview_sensor_tier: String = RevealModel.DEFAULT_TIER
+
+
 func _should_show_overview_entity(entity: Node) -> bool:
 	if entity == null or not is_instance_valid(entity):
 		return false
@@ -3577,7 +3590,34 @@ func _should_show_overview_entity(entity: Node) -> bool:
 		return false
 	if entity.is_in_group("asteroid") and not _overview_show_asteroids:
 		return false
-	return true
+	if not _overview_sensor_reveal:
+		return true
+	return _passes_sensor_reveal(entity)
+
+
+## Sensor-range gate: small objects have to be found, landmarks never vanish.
+##
+## "Seen" is tracked per entity so the hysteresis in SiteRevealModel has state to
+## work with: an object is picked up at detection range and held until the longer
+## drop range, instead of flickering when it sits exactly at the boundary.
+func _passes_sensor_reveal(entity: Node) -> bool:
+	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
+		return true  # No player to measure from: never hide on a technicality.
+	if not (entity is Node3D):
+		return true
+	var distance: float = GlobalState.player.global_position.distance_to(entity.global_position)
+	var size_class: String = RevealModel.size_class_for_groups(entity.get_groups())
+	var reveal: Dictionary = RevealModel.reveal_for(
+		distance,
+		_overview_sensor_tier,
+		bool(entity.get_meta("overview_seen", false)),
+		str(entity.name),
+		size_class,
+		_is_overview_mission_target(entity)
+	)
+	var visible: bool = str(reveal["state"]) != RevealModel.STATE_HIDDEN
+	entity.set_meta("overview_seen", visible)
+	return visible
 
 
 func _is_overview_mission_target(entity: Node) -> bool:
