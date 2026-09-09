@@ -48,6 +48,13 @@ she replied correctly IN HER OWN VOICE, then about a second later Kaelen spoke a
 SECOND completion line complaining about the low payout.
 **Severity:** Medium -- reads as the game speaking twice about one event, and
 undercuts the agent who just handled the turn-in.
+**Status:** FIXED 2026-09-09 (unverified in play). `GameRoot` now HOLDS the beat
+while the player is docked (`_pending_quiet_moment_beat`) and
+`UIManager.undock_player` releases it via `flush_pending_quiet_moment()`. The
+line is delayed, never dropped. Only one beat is held: two turn-ins in a single
+dock means she remarks on the LAST one, which is the one the player just did.
+**Needs a playtest** to confirm she now speaks after undocking rather than over
+the agent, and that the line still arrives at all.
 
 **Cause:** two independent systems both fire on completion, and neither knows
 about the other.

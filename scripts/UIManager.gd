@@ -9117,6 +9117,12 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	# workaround the player has is toggling the UI layout lock, because edit mode
 	# force-shows the panel. See docs/bugs.md.
 	_update_quest_tracker()
+	# Kaelen's completion commentary is held while docked so it does not land on
+	# top of the agent handling the turn-in. Release it now the player is back in
+	# space, which is what "quiet moment" was supposed to mean.
+	var root := get_tree().current_scene if get_tree() else null
+	if root != null and root.has_method("flush_pending_quiet_moment"):
+		root.flush_pending_quiet_moment()
 	# Clear any docked-message slot content so the next dock starts fresh.
 	clear_dock_message()
 	# Hide the mechanic intro panel and clear the cached greeting so the

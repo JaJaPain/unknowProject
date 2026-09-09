@@ -1271,6 +1271,12 @@ func _on_quiet_moment_silent(beat_id: String, reasons: Array) -> void:
 
 # Kaelen's completion beats split on the same payout/risk bands the rest of
 # the dialogue layer already uses (see LLMInterface high_payout/lower_payout).
+## Beat held back because the player was docked when a contract completed.
+## Only one is kept: if two contracts are turned in during a single dock, the
+## LAST one is the one she remarks on, which is the one the player just did.
+var _pending_quiet_moment_beat: String = ""
+
+
 func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
 	if not is_instance_valid(quiet_moment_director):
 		return
@@ -1282,7 +1288,30 @@ func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
 		beat_id = "kaelen_public_board"
 	elif reward >= 300 or bool(quest_data.get("known_tough", false)):
 		beat_id = "kaelen_high_pay_dangerous"
+	# A turn-in is not a quiet moment. Firing here put Kaelen's payout comment on
+	# top of the agent who just handled the hand-off, so the game said two
+	# different things about one event and talked over its own NPC. Hold the beat
+	# until the player is back in space, where an aside is an aside.
+	if _player_is_docked():
+		_pending_quiet_moment_beat = beat_id
+		return
 	quiet_moment_director.try_fire(beat_id)
+
+
+func _player_is_docked() -> bool:
+	return player != null and is_instance_valid(player) and bool(player.get("is_docked"))
+
+
+## Fire a beat that was held back because the player was mid-conversation.
+## Called from UIManager.undock_player -- the beat is DELAYED, never dropped,
+## because the commentary is good, it was just arriving over someone else.
+func flush_pending_quiet_moment() -> void:
+	if _pending_quiet_moment_beat.is_empty():
+		return
+	var beat_id := _pending_quiet_moment_beat
+	_pending_quiet_moment_beat = ""
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire(beat_id)
 
 
 func _on_quiet_moment_quest_abandoned(_quest_data: Dictionary) -> void:
