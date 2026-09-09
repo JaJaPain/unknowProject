@@ -566,6 +566,19 @@ const GENERATED_CONTACT_FACTION_HANDOFF_LINES := {
 	],
 }
 
+## Voice of the station's own mechanic, for anything the STATION says to the
+## player -- dock clearance most of all. A station talking in a generic voice is
+## a vending machine; a station talking in the voice of the person who works on
+## your hull is a place. Returns "" when the station has no mechanic on file, so
+## the caller can pick its own fallback.
+static func get_station_mechanic_voice(outpost_id: String) -> String:
+	for npc_name in get_minor_npcs_at_outpost(outpost_id):
+		var data: Dictionary = generated_outpost_npc_data.get(npc_name, {})
+		if str(data.get("role", "")) == "Station mechanic":
+			return str(data.get("voice_profile_id", ""))
+	return ""
+
+
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 	if generated_outpost_npcs.has(outpost_id):
 		return generated_outpost_npcs[outpost_id].duplicate()

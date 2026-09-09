@@ -3953,7 +3953,15 @@ func _play_dock_clearance(station: Node3D) -> void:
 	var line := DOCK_CLEARANCE_LINES[randi() % DOCK_CLEARANCE_LINES.size()].replace(
 		"{call}", call_sign
 	)
-	SpeechService.play(line, "voice.neutral.v1")
+	# The station speaks in the voice of its own mechanic. A station talking in a
+	# generic voice is a vending machine; the person who works on your hull
+	# clearing you to dock makes it a place with someone in it. Falls back to the
+	# neutral profile only when a station has no mechanic on file -- never to a
+	# main-cast voice, which stay reserved (Kaelen = af_bella, N.O.V.A. = bf_emma).
+	var dock_voice := GlobalState.get_station_mechanic_voice(_current_station_contact_id())
+	if dock_voice.is_empty() or GlobalState.is_kaelen_voice(dock_voice):
+		dock_voice = "voice.neutral.v1"
+	SpeechService.play(line, dock_voice)
 	GlobalState.emit_chatter("Dock Control", line, Color(0.25, 0.82, 1.0))
 
 
