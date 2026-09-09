@@ -37,26 +37,6 @@ mechanic that is not there.
 
 ---
 
-### First run of a session: no station welcome overlay, N.O.V.A. portrait missing
-**Spotted:** 2026-08-06 (playtest) — **ROOT-CAUSED AND FIXED 2026-08-06** from a live console log.
-**Severity:** Was Medium — the arrival beat silently lost both of its visuals.
-**Cause:** self-inflicted, by the ambient speech queue added earlier the same day. That queue made a line's EMIT and its PLAYBACK two different moments, but two consumers still assumed the next `playback_finished` belonged to the line just emitted:
-
-1. `_show_nova_talk_portrait()` ran at emit time, and `_fade_nova_talk_portrait` is connected to `playback_finished` permanently (`UIManager.gd` ~1008).
-2. `_show_station_welcome()` armed a one-shot `playback_finished` to release the overlay.
-
-The log showed the exact ordering: `Docking control acknowledges…` was still playing when the dock completed, so N.O.V.A.'s arrival line QUEUED behind it. Her portrait went up and the welcome opened — then dock control's clip finished, and that single `playback_finished` faded her portrait and dismissed the welcome, *before she had said a word*. She then spoke to an empty screen.
-
-**Fix:** `SpeechService` now emits `ambient_line_started(text)` when a line actually begins, and exposes `has_pending_ambient()`.
-- The portrait is registered at emit time but only SHOWN on `ambient_line_started` for that exact line, so it appears with her voice and the following `playback_finished` is genuinely hers.
-- `_release_station_welcome()` re-arms instead of releasing while ambient work is pending. The `STATION_WELCOME_MAX_WAIT_SECONDS` timer still guarantees release, so a line that never plays cannot strand the overlay.
-
-**NOT a bug, ruled out during investigation:** the dock menu showing only `Talk to Agent` / `Undock Ship` is correct — services are gated on `_intro_done` (`UIManager.gd` ~4356) until the player has visited the agent.
-
-**Lesson:** introducing a queue in front of playback silently invalidates every listener that treats "the next completion signal" as "my completion signal". When adding one, audit the consumers of the completion event, not just the producer.
-
----
-
 ### Jenna Kross replayed her first-meeting intro at a second dock
 **Status:** FIXED 2026-08-06 — the flag write moved from `_on_maintenance_bay_pressed()` to `_render_mechanic_intro()`, i.e. from "a particular button was clicked" to "the intro actually reached the player". Both known entry points and any future third one are now covered by construction. Awaiting a live regression run (dock, undock via N.O.V.A.'s repair prompt, re-dock — she should greet normally the second time).
 **Spotted:** 2026-08-02 (playtest)
@@ -100,25 +80,6 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 **Severity:** Medium — first-time UX confusion; the tutorial points at a panel the player has never learned to expand
 **Description:** At the start of the starter tutorial, the system overview panel can appear collapsed/too short, showing only the header and column labels instead of the actual overview contents. This did not used to be the default. Because the tutorial arrow points at this overview, a brand-new player may not understand what they are supposed to look at or click.
 **Where to look:** `scripts/UIManager.gd` overview panel creation, collapse/expand state, saved UI layout restore, and tutorial/startup flow. Likely causes are persisted collapsed state being applied too early, a default collapsed flag changing, or the tutorial not forcing the overview open/expanded on first exposure. Fix should ensure the starter tutorial forces the overview panel visible and expanded regardless of prior layout state, without permanently overwriting the player's later preference.
-
----
-
-### N.O.V.A. talks during first dock flow
-**Status:** NOT REPRODUCIBLE as written, 2026-08-18 -- the first dock already
-belongs to her AUTHORED arrival line, not ordinary dock banter. `UIManager`
-branches on `kaelen_briefing_seen`, and that flag is only set inside the agent
-panel, which the player cannot reach before docking. So the branch is correct
-by construction.
-**A REAL BUG FOUND WHILE CHECKING IT, now fixed:** the authored line had no
-once-only latch. `kaelen_briefing_seen` stays false until the player actually
-talks to Kaelen, so dock -> undock without visiting him -> re-dock replayed the
-identical authored line. Same failure as the Jenna Kross repeat, and fixed the
-way that entry prescribes: `StoryManager.claim_intro_first_dock_line()` latches
-where the line is SERVED, so every dock path is covered including later ones.
-**Spotted:** 2026-07-08 (intro cinematic playtest)
-**Severity:** Medium - can interrupt/confuse the first dock onboarding beat
-**Description:** On the player's first dock after the opening cinematic, N.O.V.A. can speak as part of the normal dock flow. That first dock is supposed to belong to Kaelen's onboarding / station direction, so regular N.O.V.A. dock chatter should be suppressed until the first-dock intro flow has cleared.
-**Where to look:** `scripts/UIManager.gd` first-dock / dock-menu flow and any `Nova.on_docked` or dock-chatter calls. Gate the regular N.O.V.A. dock line behind the same first-dock story flags that control Kaelen's starter guidance.
 
 ---
 
@@ -299,6 +260,8 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-09-09 | First run of a session: no station welcome overlay, N.O.V.A. portrait missing | Root-caused and fixed 2026-08-06 from a live console log. Self-inflicted by the ambient speech queue added the same day: that queue split a line's EMIT from its PLAYBACK, but two consumers still assumed the next `playback_finished` belonged to the line just emitted, so the arrival beat silently lost both visuals. **Confirmed correct in play by Abe, 2026-09-09 -- overlay and portrait both present.** |
+| 2026-09-09 | N.O.V.A. talked during the first dock flow | Marked NOT REPRODUCIBLE 2026-08-18: the first dock belongs to her AUTHORED arrival line, not ordinary dock banter. `UIManager` branches on `kaelen_briefing_seen`, which is only set inside the agent panel, and the player cannot reach that before docking -- so the branch was already correct. **Confirmed in play by Abe, 2026-09-09.** |
 | 2026-09-09 | N.O.V.A. filler word played during new-campaign loading screen | Fixed 2026-07-15 (commit 1a62701), hardened 2026-08-18 (ban moved out of a single UIManager helper so other callers could not bypass it, extended to Kaelen, and the suppression re-keyed to "gameplay has resumed" rather than "loading panel still exists" -- the panel is freed to START the intro cinematic). Pinned by `tests/story/run_intro_dock_gating_tests.gd`. **Confirmed silent in play by Abe, 2026-09-09.** |
 | 2026-09-09 | New campaign overwrote an existing slot instead of using the next empty one | **No known fix commit -- it simply stopped reproducing.** Filed 2026-06-26 as a high-severity data-loss risk; Abe confirmed 2026-09-09 that a new campaign now lands in an empty slot. Something between those dates fixed it incidentally, so there is no test pinning the behaviour and nothing preventing a regression. If save slots are touched again, re-check this first. |
 | 2026-07-15 | Active KILL_SHIPS mission could have no targets after save/load | Saved mission ships still restore normally. `QuestManager` now also reconciles every unfinished KILL_SHIPS contract after system and player restore: if its faction has no living quest target, it spawns only the remaining count at the normal safe distance. The focused mission is preserved, so regenerated persistent IDs belong to the correct contract. Covered by `tests/domain/run_mission_state_transition_tests.gd`. |
