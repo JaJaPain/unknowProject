@@ -26,8 +26,7 @@ DATA = "data/content/taunt_lines.json"
 OUT = os.path.join("assets", "audio", "taunts")
 SPEED = 1.10
 STYLE = 1.4
-LEADS = ["am_onyx", "am_adam", "am_fenrir", "am_liam",
-         "bm_george", "am_puck", "am_eric", "am_echo"]
+LEADS = ["am_onyx", "am_adam", "am_fenrir", "am_liam", "am_puck", "am_eric", "am_echo"]
 
 
 def render_wav(text, voice, speed, pause):

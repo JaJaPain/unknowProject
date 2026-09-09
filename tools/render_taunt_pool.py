@@ -21,8 +21,7 @@ DATA = "data/content/taunt_lines.json"
 OUT_ROOT = os.path.join("logs", "taunt_pool_audio")
 SPEED = 1.10          # CombatManager.TAUNT_SPEED
 STYLE = 1.4           # CombatManager.TAUNT_STYLE
-LEADS = ["am_onyx", "am_adam", "am_fenrir", "am_liam",
-         "bm_george", "am_puck", "am_eric", "am_echo"]
+LEADS = ["am_onyx", "am_adam", "am_fenrir", "am_liam", "am_puck", "am_eric", "am_echo"]
 
 
 def render(text, voice, speed=SPEED, pause=-1.0):

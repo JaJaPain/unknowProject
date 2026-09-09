@@ -131,8 +131,11 @@ var _flee_base_chance: float = 0.50
 const TAUNT_SPEED := 1.10
 const TAUNT_STYLE := 1.4
 # Lead voices, each blended 70/30 with am_michael for an angry-but-varied read.
+# bm_george was CUT 2026-09-09 (Abe) on voice quality. No re-bake was needed --
+# every lead was baked separately, so the remaining seven simply cover the draw.
+# His clips are left on disk rather than deleted, in case the call is revisited.
 const TAUNT_LEAD_VOICES := [
-	"am_onyx", "am_adam", "am_fenrir", "am_liam", "bm_george", "am_puck", "am_eric", "am_echo",
+	"am_onyx", "am_adam", "am_fenrir", "am_liam", "am_puck", "am_eric", "am_echo",
 ]
 # Authored taunt lines now live in TauntCause, one set per reason the fight
 # started, because a single "player struck first" bucket could not tell an

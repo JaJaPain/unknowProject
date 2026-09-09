@@ -17,8 +17,7 @@ TTS_URL = "http://localhost:5000/tts"
 SPEED = 1.18          # CombatManager.TAUNT_SPEED
 STYLE = 1.4           # CombatManager.TAUNT_STYLE
 LEAD_VOICES = [       # CombatManager.TAUNT_LEAD_VOICES
-    "am_onyx", "am_adam", "am_fenrir", "am_liam",
-    "bm_george", "am_puck", "am_eric", "am_echo",
+    "am_onyx", "am_adam", "am_fenrir", "am_liam", "am_puck", "am_eric", "am_echo",
 ]
 
 # Order the causes so the contrast is audible: the two "you started it" cases
