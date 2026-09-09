@@ -7,24 +7,21 @@ _Active task list. Update this file at the end of every session._
 _Work that is committed and green in headless tests but that only a person can
 sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 
-- [ ] **Cause-aware enemy taunts -- hear them in a REAL FIGHT** (landed
-  2026-08-18; lines and delivery reviewed clip-by-clip, so what remains is
-  purely how they land at combat pace). The pool is 190 hand-authored lines,
-  each judged in isolation as audio. What a human still has to judge:
-  - Do the lines fit the situation, WITH voice, at combat pace? Read on a page
-    is not the same as heard over a fight.
-  - Attack a contract target, get ambushed by a pirate, tank a faction's
-    reputation and let them jump you, and mine without a permit -- each should
-    sound clearly different from the others.
-  - Confirm the rotation survives a restart in the real game: note an opening
-    taunt, quit, relaunch, fight again, and check it does not come back.
-  - The dark/dry register: too jokey anywhere? Anything that reads as a pun or
-    a quip rather than gallows humour is a prompt problem, not a parser one.
-  - `tools/render_taunt_pool.py` re-renders every line to .wav using the game's
-    real speed, style, voice blend AND per-line delivery overrides.
-  - Runtime generation is NO LONGER USED for taunts. `run_taunt_bank_live_fire.gd`
-    still exercises the model path if it is ever revived, but the shipping pool
-    is authored.
+- [x] **Cause-aware enemy taunts -- heard in a REAL FIGHT.** VERDICT 2026-09-09
+  (Abe, run sheet 2.2). The result splits cleanly and the split matters:
+  - **The CONTENT system passes.** "The words are correct" -- the right lines
+    fire for the right cause. So the cause-aware bundling is NOT decoration; it
+    reaches the player exactly as designed. Do not rework it.
+  - **The DELIVERY fails.** "Still sound very lifeless... good for monotone
+    voice, sucks for anger and excitement." The bottleneck is the TTS engine, not
+    the authoring, the bundling, or the tuning.
+  - **The delivery-control lever is now exhausted.** I previously suggested that
+    speed, pause and style steering were the remaining way to get expressiveness
+    out of Kokoro. Abe has now heard the result in a fight and it is still flat,
+    so that path is closed. Do not spend more time on TAUNT_SPEED/TAUNT_STYLE
+    values; the ceiling is the 82M model.
+  - Consequence: the taunt work is DONE until the voice engine changes. Every
+    further improvement here is blocked on the Orpheus item below.
 
 - [ ] **Taunt loose ends left when Abe finished the audio review** (2026-08-18).
   None are blocking; all were raised and never answered, so they stand as-is:
@@ -262,6 +259,12 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   - **Scope: anything baked ahead of time**, not just taunts. Taunts first
     because they are already fully baked (1520 clips) and enemies are anonymous,
     so there is no canon-voice risk in the trial.
+  - **CONFIRMED IN A REAL FIGHT 2026-09-09 (Abe), the decisive test:** "still
+    sound very lifeless... good for monotone voice, sucks for anger and
+    excitement." This is now the THIRD confirmation and the only one taken in
+    the place the lines actually play. Taunts are the strongest case for the
+    trial precisely because their register (anger) is the one Kokoro cannot do,
+    and because they are already fully baked, so nothing at runtime changes.
   - **REINFORCED 2026-09-09 (Abe):** after hearing the pool again, "they land
     flat" -- he expects to move these voices to a different TTS in the long run.
     That is the same expressiveness ceiling noted above, now confirmed by ear
