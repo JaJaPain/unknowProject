@@ -90,6 +90,38 @@ it; her commentary is good, it is just arriving over someone else's dialogue.
 
 ---
 
+### Anomalies spoiled their own outcome in the target window
+**Spotted:** 2026-09-09 (Abe, from a screenshot).
+**Severity:** Medium-High -- silently removed the point of the entire anomaly
+mechanic. Not a visual glitch; a design leak.
+**Status:** FIXED 2026-09-09 (unverified in play).
+
+An unvisited anomaly 621m away displayed as
+`Anomaly_0 [Anomaly — Reaver Ambush Point]`. The target window was printing the
+anomaly's registry NAME, and in `AnomalyRegistry.gd` that name is its OUTCOME:
+"Reaver Ambush Point", "Cracked Reactor Core", "Distress Beacon — No Survivors".
+So every anomaly announced what it would do before the player went near it.
+Nobody flies into an ambush that is labelled as an ambush, which means the trap
+could never spring on an attentive player.
+
+**The registry proves the intent was the opposite.** Each anomaly carries
+`approach_lines` that are deliberately ambiguous -- the ambush's is "Debris
+field. Pattern suggests deliberate placement." That line only has a job if the
+player does NOT already know. The name was authored as designer-facing content
+and leaked into the UI.
+
+**Fix:** `UIManager._anomaly_display_name()` returns "Unknown Signal" until the
+anomaly's existing `_activated` flag is set, then its real name. Applied to the
+target window and the overview both, so a resolved anomaly still earns its name
+and a place the player has been reads as known.
+
+**Related, deliberately NOT changed:** `SiteRevealModel` already models exactly
+this (hidden -> anonymous contact -> identified once scanned) but is default OFF
+pending tuning. This fix is independent of it, so anomalies stop spoiling
+themselves whether or not sensor reveal is ever switched on.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)

@@ -3524,7 +3524,12 @@ func update_overview_list(entities: Array):
 			elif entity.is_in_group("wreckage"):
 				type_str = "Wreckage"
 			elif entity.is_in_group("anomaly"):
+				# Resolved anomalies earn their real name in the overview too, so a
+				# place the player has already been reads as known rather than
+				# staying an anonymous contact forever.
 				type_str = "Anomaly"
+				if bool(entity.get("_activated")):
+					type_str = "Anomaly — " + _anomaly_display_name(entity)
 			
 			type_lbl.text = "  " + type_str
 			type_lbl.custom_minimum_size = Vector2(160, 0)
@@ -3803,8 +3808,15 @@ func _on_target_changed(new_target: Node3D):
 			type_str = "Wreckage"
 			icon_index = 4
 		elif new_target.is_in_group("anomaly"):
-			var aname: String = str(new_target.anomaly_data.get("name", "Unknown Signal")) if new_target.get("anomaly_data") else "Unknown Signal"
-			type_str = "Anomaly — " + aname
+			# An anomaly's registry name IS its outcome -- "Reaver Ambush Point",
+			# "Cracked Reactor Core", "Distress Beacon — No Survivors". Showing it
+			# before the player investigates hands them the answer and disarms the
+			# trap: nobody flies into an ambush that is labelled as one. The
+			# registry's approach_lines are the intended reveal, and they are
+			# deliberately ambiguous ("Debris field. Pattern suggests deliberate
+			# placement."), which is the proof that the name was never meant to be
+			# read out here. Reveal the real name only once it has fired.
+			type_str = "Anomaly — " + _anomaly_display_name(new_target)
 			icon_index = 4
 		elif new_target.is_in_group("celestial"):
 			type_str = "Planet"
@@ -7392,6 +7404,21 @@ func _current_mechanic_profile() -> Dictionary:
 		"is_generated": false,
 		"station_display_name": "Grease Monkeys",
 	}
+
+
+## What the player is allowed to call an anomaly. Its true name is the spoiler,
+## so it stays "Unknown Signal" until the anomaly has actually fired.
+func _anomaly_display_name(anomaly: Node) -> String:
+	if anomaly == null or not is_instance_valid(anomaly):
+		return "Unknown Signal"
+	if not bool(anomaly.get("_activated")):
+		return "Unknown Signal"
+	var data: Variant = anomaly.get("anomaly_data")
+	if data is Dictionary:
+		var real := str((data as Dictionary).get("name", "")).strip_edges()
+		if not real.is_empty():
+			return real
+	return "Unknown Signal"
 
 
 func _current_station_display_name() -> String:
