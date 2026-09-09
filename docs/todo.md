@@ -117,8 +117,19 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 - [x] **Damage number visual feedback for resistance** -- resisted hits show small dim `RESIST` numbers; vulnerable hits show large bright `WEAK` numbers. Player reads the difference in the moment and learns without being told explicitly.
 - [ ] **Phase 7 -- Boss (mega)** -- DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 -- Squads** -- DONE (in-game) but needs StoryManager trigger hook (see Story section below)
-- [ ] **Shield Reroute sub-picker** -- currently defaults to Front face; needs the face-select sub-wheel
-- [ ] **Boost direction toggle** -- currently defaults to "closer to enemy"; needs toggle for Evade/Close
+- [ ] **Shield reroute: hold until it does its job** (Abe, 2026-09-09, run sheet 2.4).
+  The reroute should PERSIST until either the enemy fires and the shield absorbs
+  that damage, or the turn ends -- whichever comes first. Today it is spent on a
+  timer/phase boundary regardless of whether it ever met an attack, which makes
+  the verb feel like it evaporated for nothing when the enemy chose not to fire.
+  This is a behaviour change, and it outranks the face picker below: a reroute
+  that reliably does its job with a fixed face is worth more than a choosable
+  face that expires unused. **Decide when implementing:** if the shield absorbs a
+  hit EARLY in a turn, does it drop immediately (spent) or hold out the rest of
+  the turn? "Absorbs the damage" reads as spent-on-use, so that is the default
+  unless Abe says otherwise.
+- [ ] **Shield Reroute sub-picker** -- currently defaults to Front face; needs the face-select sub-wheel. Lower priority than the persistence fix above.
+- [ ] **Boost direction toggle** -- currently defaults to "closer to enemy"; needs toggle for Evade/Close. **PARKED 2026-09-09 (Abe): keep as-is for now, may circle back.** The default was not biting in play, so the toggle is not yet worth the work.
 - [x] **Attack drone visual** -- strike now peels the nearest green orbiting drone out of formation (hides it for the run) and launches a matching green strike-drone from that position instead of a blue ball from the ship center. Camera rides a POV chase cam behind the diving drone, with a green drone-cam reticle overlay (corner frame + center crosshair + enemy-tracking bracket) via `scripts/DroneReticle.gd`. Hands back to the impact framing on the hit. (`PlayerShip.gd` `launch_combat_drone` / `_begin_drone_pov` / `_end_drone_pov`)
 - [x] **Salvage drone wreck action** -- wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
 - [ ] **Enemy low-health escalation arc** -- enemy dialogue/behavior should escalate when below 30% HP
@@ -221,6 +232,12 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   - **Scope: anything baked ahead of time**, not just taunts. Taunts first
     because they are already fully baked (1520 clips) and enemies are anonymous,
     so there is no canon-voice risk in the trial.
+  - **REINFORCED 2026-09-09 (Abe):** after hearing the pool again, "they land
+    flat" -- he expects to move these voices to a different TTS in the long run.
+    That is the same expressiveness ceiling noted above, now confirmed by ear
+    rather than predicted, and it raises this from an experiment to the likely
+    direction. bm_george was cut the same day, but flatness is a POOL-WIDE
+    property, not one bad voice, so cutting more leads will not fix it.
   - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
     through Orpheus and listen against the approved Kokoro versions. Hours, not
     days, and fully reversible -- the Kokoro clips stay on disk.
