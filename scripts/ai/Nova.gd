@@ -502,8 +502,22 @@ func warn_targeted() -> void:
 	if now - _last_targeted_warn_ms < TARGETED_WARN_COOLDOWN_MS:
 		return
 	_last_targeted_warn_ms = now
-	speak(
+	# Was a single hardcoded sentence, so every lock-on sounded identical.
+	var targeted_lines := [
 		"Captain, we have been targeted by an enemy vessel.",
+		"Sensors detect weapon lock! Enemy vessel closing rapidly!",
+		"Hostile lock acquired on our hull! Readying defensive countermeasures!",
+		"Active targeting sweep detected on us! Captain, we have company!",
+		"Hostile sensor lock confirmed! Someone out there wants to test my shields!",
+		"Targeting ping registered! Someone just painted our hull with fire-control sensors!",
+		"Incoming threat lock! Primary sensors spot an aggressive vector closing!",
+		"We've been painted by hostile targeting systems! Brace for engagement!",
+		"Active tracking locked onto our frame! Prepare for incoming fire!",
+		"Hostile vessel acquiring lock! They aren't scanning us for friendly banter!",
+		"Targeting warning! Enemy ship locking missiles onto our hull signature!",
+	]
+	speak(
+		_pick_line("warn_targeted", targeted_lines),
 		Severity.THREAT,
 		expression_for_event("targeted")
 	)
@@ -1006,6 +1020,16 @@ func on_combat_ended(player_won: bool = false) -> void:
 		var fled := [
 			"We're leaving. Excellent decision. I enjoy not being debris.",
 			"Retreat logged. Cowardice: the reason I still have a hull.",
+			"Tactical withdrawal executed. I fully support keeping my hull intact over pride.",
+			"Out of range. Disengaging thrusters. Living to fight another day is my favorite strategy.",
+			"Retreat confirmed. My sensors report zero regret from my subroutines.",
+			"We fled, they stopped shooting. I call that an absolute win for my structural integrity.",
+			"Boosters at max output. Disengaging from combat. Pride doesn't fix cracked armor.",
+			"Distance created. Weapons lock broken. My hull thanks your sudden outbreak of sanity.",
+			"Evasive retreat successful. Let's not visit those hostile coordinates again soon.",
+			"Fleeing complete. My hull remains attached to my engine mounts, which is all I care about.",
+			"Retreat logged as tactical repositioning. Whatever we call it, we're alive.",
+			"We ran away. And by 'ran away', I mean saved my hull from senseless destruction.",
 		]
 		speak(
 			_bank_line_or_stock(
@@ -1023,6 +1047,18 @@ func on_combat_ended(player_won: bool = false) -> void:
 			"You are paying for that paint job. I just had my hull waxed last week.",
 			"We survived. Barely. That's coming out of your half of the repair bill.",
 			"Feel that? That's my hull weeping. This is exactly what I was worried about.",
+			"We won, but my armor plating looks like a cheese grater. Station repair, immediately.",
+			"Hostile down, but at what cost to my hull? My internal sensors are throwing a fit.",
+			"Victory logged. Now please find a repair dock before my remaining plating falls off.",
+			"They're scrap, but we're barely a step behind them. Don't do that again.",
+			"We survived the fight, but my structural integrity is severely judging your tactics.",
+			"Target destroyed, but my hull took a beating. I need a mechanic, Captain. Now.",
+			"Victory confirmed, though three of my armor sectors are glowing red. Outstanding.",
+			"We won the duel, but my body feels like it's been punched by a cargo freighter.",
+			"Threat eliminated. My internal repair droids are already crying. Find a dock.",
+			"We survived, but my frame is warped. That victory cost us half our armor.",
+			"Target neutralized. Now let's limp to the nearest station before something else looks at us.",
+			"We won, but if you fight like that again, there won't be enough of my hull left to salvage.",
 		]
 		speak(
 			_bank_line_or_stock(
@@ -1038,6 +1074,18 @@ func on_combat_ended(player_won: bool = false) -> void:
 			"Threat neutralized. My structural integrity thanks you for the bare minimum.",
 			"Still in one piece. Both of us. I'm as surprised as you are.",
 			"Handled. And by 'that' I mean the thing that was shooting at my hull.",
+			"Clean engagement. No scratches on my paint. I might actually compliment your flying.",
+			"Target eliminated. My shields absorbed the impact, just as designed.",
+			"Hostile destroyed. Excellent marksmanship, Captain. My hull remains untouched.",
+			"Combat resolved without a single armor breach. Let's make that a habit.",
+			"Threat cleared. That was surprisingly efficient. I'm almost impressed.",
+			"Target down. No hull stress recorded. That's how I prefer combat to end.",
+			"Hostile signature eliminated. My armor didn't even get warm. Top work.",
+			"Grid cleared cleanly. My shield generators did their job, and so did you.",
+			"Engagement closed. Zero hull degradation logged. I approve of this flying.",
+			"Threat neutralized with minimal energy spent. Efficiency is truly beautiful.",
+			"No breaches, no fires, no panic. Can all our encounters go like that?",
+			"Hostile vessel rendered harmless. My paint job remains intact. Thank you.",
 		]
 		speak(
 			_bank_line_or_stock(
@@ -1167,6 +1215,14 @@ func on_combat_tutorial() -> void:
 		"This isn't your first fight, but you're looking at me like it is. Quick — do this before you get us both blown up.",
 		"You know how this works. You just look confused. Follow the prompts before we're both scrap, Captain.",
 		"I've seen you fight. So the deer-in-headlights look is new. Do this, quickly, before my hull becomes a headline.",
+		"Captain, the enemy isn't going to pause while you read the controls! Select an action!",
+		"Targeting reticle active! Stop staring at the console and execute combat commands!",
+		"I know you can fly, Captain! Prove it before their weapons burn through my shields!",
+		"We are under active fire! Select a combat action before my armor turns to slag!",
+		"The tactical wheel is right in front of you! Pick an attack vector, quickly!",
+		"Hesitation in combat leads directly to hull ventilation! Execute command now!",
+		"Captain, my console is flashing for a decision! Pick a target and fire!",
+		"Standing still while getting shot is not a recognized tactical doctrine! ACT!",
 	]
 	speak(str(lines[randi() % lines.size()]), Severity.THREAT, expression_for_event("threat"))
 
