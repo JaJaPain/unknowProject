@@ -211,6 +211,7 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 ---
 
 ### Autopilot object avoidance regressed
+**LIKELY FIXED -- Abe flew tight spaces 2026-09-09 (run sheet 2.6) and reports it appears fixed, along with the fishtailing. Kept open per his standing preference: this one has ALREADY regressed once after being fixed (2026-06-26), so it earns a second confirmation before closing. Watch it specifically when steering code is next touched.**
 **Status:** FIXED 2026-08-18, verified by the in-engine smoke test on real Kova
 and Kova-to-Iron-Reach routes past a rocky planet and a gas giant.
 
