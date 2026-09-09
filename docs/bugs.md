@@ -5,41 +5,40 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
-### Quest cards hidden after load until the layout is unlocked and relocked
-**Spotted:** 2026-09-09 (Abe, playtest)
-**Severity:** Medium -- the player's active contracts are invisible after loading
-a save, and the only workaround is a UI ritual nobody would guess.
-**Description:** After loading, the quest tracker shows no cards. Toggling the UI
-layout lock OFF and back ON makes them appear. Nothing else recovers them.
+### Quest card disappears (after load, and after docking) until the layout is unlocked and relocked
+**Spotted:** 2026-09-09 (Abe, playtest). Reported first for LOADING, then for
+DOCKING AT AN OUTPOST -- the second report is what identified the real cause.
+**Severity:** Medium -- the player's active contract is invisible, and the only
+workaround is a UI ritual nobody would guess.
+**Status:** UNDOCK PATH FIXED 2026-09-09 (`UIManager.undock_player` now calls
+`_update_quest_tracker()`). **The load path is NOT yet confirmed fixed** -- see
+below. Needs a playtest to close.
 
-**Likely root cause (from code, NOT yet verified in a debugger):** the quest
-panel is the only DYNAMIC panel -- `UILayoutManager._is_dynamic()` returns true
-for `"quest"` and nothing else -- which means it is the only panel expected to
-auto-size to its content instead of carrying an explicit size.
+**Root cause:** the tracker's visibility is only ever recomputed inside
+`_update_quest_tracker()`, and that function is driven by QUEST events (accepted,
+progress, completed, abandoned, expired) plus combat end and
+`refresh_restored_state()`. Docking is not a quest event. `_tracker_suppressed_by_dock()`
+hides the card on dock, and before this fix NOTHING restored it on undock, so it
+stayed hidden until some unrelated quest event happened to fire.
 
-Two facts combine badly:
-- `_load_layout()` deliberately skips size restore for this panel
-  (`if id != "quest"` at `UILayoutManager.gd:290`), setting only its position. So
-  after a load the panel keeps whatever size it happened to have, which is the
-  pre-content size if the tracker is populated later in the sequence.
-- `reset_size()` is called on dynamic panels in exactly ONE place: the LOCK half
-  of `toggle_edit_mode()`. There is no other caller.
+Toggling the layout lock works around it because edit mode force-shows the panel
+so it can be repositioned, and the lock half then re-runs the update.
 
-So the unlock/relock is not a coincidence -- it is the player manually reaching
-the only line in the codebase that re-sizes this panel to its content.
+**A WRONG THEORY, recorded so it is not re-investigated:** the first guess was
+that this was a SIZING problem -- the quest panel is the only dynamic
+(auto-sizing) panel, and `_load_layout()` deliberately skips size restore for it.
+That is all true but is NOT the bug: `_update_quest_tracker()` already ends with
+`_refit_quest_tracker_panel()`, which already calls `reset_size()` deferred. The
+panel was not mis-sized, it was never made visible.
 
-**Where to look:** `UILayoutManager.gd` `_load_layout()` and `toggle_edit_mode()`;
-`UIManager._update_quest_tracker()` for when cards are actually populated
-relative to layout load.
-
-**Fix direction:** call `reset_size()` on the quest panel after the tracker is
-populated on load, rather than relying on an edit-mode round trip. Deferring it
-(`call_deferred`) is likely needed so it runs after the cards exist -- sizing to
-content before the content is there would just reproduce the bug.
-
-**Watch for:** whether this also affects a fresh campaign whose first contract is
-accepted before any layout interaction, or only the load path. That distinction
-says whether the fix belongs in the load path or next to tracker population.
+**Still open -- the load path.** `refresh_restored_state()` does call
+`_update_quest_tracker()`, so loading should already work by the same reasoning.
+Since Abe saw it fail after loading too, the likely explanation is ORDERING:
+`refresh_restored_state()` runs before `QuestManager` has restored the active
+quest, or while the player still counts as docked, so the update correctly hides
+the card and is never re-run. **Where to look:** the call order between
+`QuestManager` restore and `UIManager.refresh_restored_state()`, and whether
+`GlobalState.player.is_docked` is still true at that moment.
 
 ---
 

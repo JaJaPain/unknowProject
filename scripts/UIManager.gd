@@ -9110,6 +9110,13 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	# Restore full overview when heading back into space
 	_set_overview_dock_locked(false)
 	set_overview_collapsed(false)
+	# The quest tracker is SUPPRESSED while docked (_tracker_suppressed_by_dock),
+	# but its visibility is only ever recomputed by _update_quest_tracker -- which
+	# is driven by quest events, not by docking. Without this call the card stays
+	# hidden after undocking until some unrelated quest event fires, and the only
+	# workaround the player has is toggling the UI layout lock, because edit mode
+	# force-shows the panel. See docs/bugs.md.
+	_update_quest_tracker()
 	# Clear any docked-message slot content so the next dock starts fresh.
 	clear_dock_message()
 	# Hide the mechanic intro panel and clear the cached greeting so the
