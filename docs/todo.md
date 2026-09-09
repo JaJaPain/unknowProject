@@ -319,10 +319,25 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
       because the reference audio makes the prompt long. Consequence: clone a
       HANDFUL of identities (Kaelen, N.O.V.A., named enemies), never a 1520-clip
       pool. The taunt bake therefore uses the 8 stock voices.
-    - Canon test rendered: Kaelen (af_bella) and N.O.V.A.
-      (bf_emma[0.7]+af_bella[0.3]) references made with the GAME'S OWN Kokoro via
-      `make_canon_refs.py`, then cloned. Awaiting Abe's ear on whether they still
-      sound like her.
+    - **CANON TEST RESULT 2026-09-09 (Abe): NO GO for Kaelen and N.O.V.A.**
+      The clones "don't sound close to our main 2 characters at all". Cloning
+      does NOT preserve identity well enough for the fixed cast.
+    - **This kills the clone-the-cast plan (2026-09-07) outright.** Kaelen stays
+      `af_bella` and N.O.V.A. stays `bf_emma[0.7]+af_bella[0.3]` on KOKORO,
+      everywhere, with no exceptions. The scoping Abe set on 2026-09-07 -- cloned
+      voices for her repeated ship callouts and his opening monologues -- is
+      withdrawn, and the mid-scene voice-shift risk it carried is gone with it.
+    - **Consequence to accept, not work around:** the two characters who matter
+      most keep Kokoro's flat delivery. Every expressiveness gain from Orpheus
+      lands on enemies and NPCs only. Do not attempt to "fix" this with a closer
+      clone; Abe's ear has already ruled, and a near-miss on a main character is
+      worse than an honest Kokoro read.
+    - **But the clones ARE good for NPCs** (Abe): they sound like distinct
+      people, which is exactly what a generated station contact or enemy needs.
+      Combined with Kokoro-blend references as identity seeds, this is the
+      unique-voice supply the game was short of -- and it covers the separate
+      "no two stations share a mechanic" item, whose 7-voice ceiling was the
+      blocker there.
   - **Bake state:** `assets/audio/taunts_orpheus/` (gitignored), 1520 clips
     planned, resumable -- rerun `bake_orpheus_taunts.py` to continue.
     - Run 1 CRASHED at 188 clips and then PRINTED "DONE". Two bugs of mine:
@@ -340,7 +355,12 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
     bake-time engine does not add an end-user runtime. Abe has approved reading
     around it deliberately.
 
-- [ ] **Clone N.O.V.A. and Kaelen for baked content** (Abe, 2026-09-07).
+- [x] **~~Clone N.O.V.A. and Kaelen for baked content~~ -- REJECTED 2026-09-09.**
+  Tested and ruled out by Abe's ear: the clones do not sound close enough to
+  either character. The fixed cast stays on Kokoro permanently. Kept here as a
+  record so it is not proposed again; the reasoning below is now historical.
+  Cloning itself works and is being redirected to NPC voices instead.
+- [ ] ~~Clone N.O.V.A. and Kaelen for baked content~~ (Abe, 2026-09-07).
   Orpheus can clone voices, which removes the objection to using it for the
   fixed cast: baked lines would keep THEIR voices rather than adopting a new
   actor. `af_bella` is Kaelen's alone and `bf_emma` is N.O.V.A.'s alone, and
