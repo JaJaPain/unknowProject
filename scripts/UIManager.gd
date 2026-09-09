@@ -3622,6 +3622,15 @@ func _gate_knowledge_state(entity: Node) -> String:
 
 
 func _passes_sensor_reveal(entity: Node, distance: float) -> bool:
+	# Anomalies are gated ALWAYS, not only when sensor reveal is on. An anomaly
+	# visible from across the system is just a waypoint: you read its marker,
+	# fly at it, and arrive knowing something is there. It is supposed to be a
+	# thing you stumble onto, or a place a lounge tip points you toward. That
+	# only works if it is not already sitting on the overview.
+	# An anomaly that has FIRED stays visible -- you found it, it is yours now.
+	if entity.is_in_group("anomaly") and not bool(entity.get("_activated")):
+		if distance > RevealModel.anomaly_reveal_range():
+			return false
 	if not GlobalState.sensor_reveal_enabled:
 		return true
 	if not (entity is Node3D):

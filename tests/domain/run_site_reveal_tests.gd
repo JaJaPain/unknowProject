@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_mission_ships_are_detected_further_out()
 	_test_group_classification_protects_landmarks()
 	_test_gate_visibility_follows_discovery()
+	_test_anomalies_are_gated_tightly()
 	_test_live_tuning_moves_real_ranges()
 	_test_unknown_tier_weakens_rather_than_blinds()
 	if _failures.is_empty():
@@ -290,4 +291,35 @@ func _test_live_tuning_moves_real_ranges() -> void:
 	_expect(
 		is_equal_approx(RevealType.get_tuning("unknown_key"), 0.0),
 		"An unknown tuning key should read 0.0 rather than crash."
+	)
+
+
+func _test_anomalies_are_gated_tightly() -> void:
+	# An anomaly visible across the system is a waypoint, not a discovery. This
+	# gate applies whether or not sensor reveal is on, so it is the one range in
+	# the model that is always live.
+	RevealType.reset_tuning()
+	var anomaly_range := RevealType.anomaly_reveal_range()
+	var ordinary := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL)
+	_expect(
+		anomaly_range < ordinary * 0.5,
+		"An anomaly (%.0fm) must be far harder to spot than a wreck (%.0fm)"
+			% [anomaly_range, ordinary]
+	)
+	_expect(anomaly_range > 0.0, "An anomaly must still be findable by flying near it.")
+	_expect(
+		is_equal_approx(anomaly_range, ordinary * 0.25),
+		"Abe set anomalies to a quarter of normal range; got %.0fm of %.0fm"
+			% [anomaly_range, ordinary]
+	)
+	# Tunable live, like the rest.
+	RevealType.set_tuning("anomaly_range_share", 0.5)
+	_expect(
+		RevealType.anomaly_reveal_range() > anomaly_range,
+		"The anomaly dial must move the real range."
+	)
+	RevealType.reset_tuning()
+	_expect(
+		is_equal_approx(RevealType.anomaly_reveal_range(), anomaly_range),
+		"reset_tuning must restore the anomaly range."
 	)

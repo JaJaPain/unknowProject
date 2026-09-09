@@ -18,7 +18,7 @@ extends RefCounted
 ## sitting exactly at sensor range flickers on and off as the ship drifts.
 
 const SIZE_LARGE := "large"   ## Planets, moons, stations: never hidden.
-const SIZE_SMALL := "small"   ## Ships, wrecks, containers, anomalies.
+const SIZE_SMALL := "small"   ## Ships, wrecks, containers.
 const SIZE_TINY := "tiny"     ## Gates the player has not found yet.
 
 ## Groups whose objects are landmarks.
@@ -39,6 +39,18 @@ static var mission_multiplier := 1.5
 static var tiny_multiplier := 0.25
 
 
+## Share of normal sensor range at which an UNRESOLVED anomaly appears. Abe cut
+## this by 75% (2026-09-09): an anomaly you can see across the system is a
+## waypoint, not a discovery. Applied whether or not sensor reveal is on, because
+## the spoiler is in the anomaly being LISTED at all.
+static var anomaly_range_share := 0.25
+
+
+## Detection range for an unresolved anomaly, in metres.
+static func anomaly_reveal_range() -> float:
+	return range_for_tier(DEFAULT_TIER) * anomaly_range_share
+
+
 ## Named access to the tunables. Godot cannot reach a static var through get()/
 ## set() on a script class, so live tuning needs explicit accessors.
 static func get_tuning(key: String) -> float:
@@ -47,6 +59,7 @@ static func get_tuning(key: String) -> float:
 		"drop_multiplier": return drop_multiplier
 		"mission_multiplier": return mission_multiplier
 		"tiny_multiplier": return tiny_multiplier
+		"anomaly_range_share": return anomaly_range_share
 	return 0.0
 
 
@@ -56,6 +69,7 @@ static func set_tuning(key: String, value: float) -> void:
 		"drop_multiplier": drop_multiplier = value
 		"mission_multiplier": mission_multiplier = value
 		"tiny_multiplier": tiny_multiplier = value
+		"anomaly_range_share": anomaly_range_share = value
 
 
 ## Restore every tunable to its shipped default.
@@ -64,6 +78,7 @@ static func reset_tuning() -> void:
 	drop_multiplier = 2.0
 	mission_multiplier = 1.5
 	tiny_multiplier = 0.25
+	anomaly_range_share = 0.25
 
 
 const TIER_RANGES := {

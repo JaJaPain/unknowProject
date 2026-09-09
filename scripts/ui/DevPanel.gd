@@ -349,13 +349,16 @@ func _build_sensor_reveal_tab() -> void:
 		readout.text = (
 			"ordinary %.0fm (drops %.0fm)   mission %.0fm (drops %.0fm)
 "
-			+ "unfound gate %.0fm   planets/stations/known gates: always visible"
+			+ "unfound gate %.0fm   anomaly %.0fm (gated even with reveal off)
+"
+			+ "planets/stations/known gates: always visible"
 		) % [
 			model.detection_range("basic", false, model.SIZE_SMALL),
 			model.drop_range_for_tier("basic", false, model.SIZE_SMALL),
 			model.detection_range("basic", true, model.SIZE_SMALL),
 			model.drop_range_for_tier("basic", true, model.SIZE_SMALL),
 			model.detection_range("basic", false, model.SIZE_TINY),
+			model.anomaly_reveal_range(),
 		]
 
 	_build_reveal_row(tab, "Sensor range scale", "range_scale", 0.1, refresh_readout)
