@@ -144,6 +144,114 @@ const BAKED_MANIFEST := "res://assets/audio/taunts/manifest.json"
 var _baked_clips: Dictionary = {}
 var _baked_loaded: bool = false
 
+# ── English-only baked layers ─────────────────────────────────────────────────
+# Two newer bakes, both ENGLISH ONLY and both strictly optional:
+#   cast_en          F5-TTS clones of N.O.V.A. and Kaelen (their authored lines)
+#   taunts_orpheus   Orpheus renders of the enemy taunt pool
+#
+# Abe's rule, and the reason every lookup here returns null instead of failing:
+# localization CANNOT use pre-baked English audio, so the game must always be
+# able to synthesize these lines live through Kokoro. A missing clip is not an
+# error, it is the normal case in any non-English build. Nothing in this file may
+# ever make a baked clip a hard requirement.
+const CAST_AUDIO_DIR := "res://assets/audio/cast_en"
+const CAST_MANIFEST := "res://assets/audio/cast_en/manifest.json"
+const ORPHEUS_AUDIO_DIR := "res://assets/audio/taunts_orpheus"
+const ORPHEUS_MANIFEST := "res://assets/audio/taunts_orpheus/manifest.json"
+
+# Key building and voice identification live in a PURE module so they can be
+# tested headlessly -- this file depends on autoloads and cannot be instantiated
+# in a --script run, and untested lookup rules fail silently rather than loudly.
+const BakedIndex = preload("res://scripts/domain/BakedAudioIndex.gd")
+
+var _cast_clips: Dictionary = {}
+var _orpheus_clips: Dictionary = {}
+var _flat_loaded: Dictionary = {}
+
+
+## True only when the game is actually running in English. Every baked layer is
+## gated on this: serving English audio for a translated line would be worse than
+## serving nothing, because the fallback path produces the right words.
+func _is_english_locale() -> bool:
+	return BakedIndex.is_english(TranslationServer.get_locale())
+
+
+## Load a flat {key: filename} manifest once. Returns the dictionary, empty when
+## the bake has not been run -- which is a normal state, not a failure.
+func _load_flat_manifest(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	return parsed if parsed is Dictionary else {}
+
+
+func _flat_clips(path: String, cache: String) -> Dictionary:
+	if not _flat_loaded.get(cache, false):
+		_flat_loaded[cache] = true
+		var loaded := _load_flat_manifest(path)
+		if cache == "cast":
+			_cast_clips = loaded
+		else:
+			_orpheus_clips = loaded
+		if not loaded.is_empty():
+			print("[TTSInterface] %d pre-baked %s clips available." % [loaded.size(), cache])
+	return _cast_clips if cache == "cast" else _orpheus_clips
+
+
+## Which fixed-cast character a voice belongs to, or "" for anyone else.
+## Matches on both the profile id and the raw provider voice, because callers
+## reach this function through several different paths.
+func _cast_character_for_voice(voice_id: String) -> String:
+	return BakedIndex.cast_character_for_voice(voice_id, GlobalState.KAELEN_VOICE_ID)
+
+
+## The Kokoro LEAD name out of a blend string ("am_onyx[0.7]+am_michael[0.3]"
+## -> "am_onyx"). Returns "" when this is not a blend, so non-taunt voices skip
+## the Orpheus layer entirely.
+func _lead_voice_of(voice_id: String) -> String:
+	return BakedIndex.lead_voice_of(voice_id)
+
+
+## A baked N.O.V.A. or Kaelen line, or null to synthesize live.
+## `character` is "nova" or "kaelen".
+func cast_stream_for(character: String, clean_text: String) -> AudioStream:
+	if not _is_english_locale():
+		return null
+	var clips := _flat_clips(CAST_MANIFEST, "cast")
+	var key := BakedIndex.cast_key(character, clean_text)
+	if key.is_empty():
+		return null
+	var name := str(clips.get(key, ""))
+	if name.is_empty():
+		return null
+	var path := "%s/%s" % [CAST_AUDIO_DIR, name]
+	if not FileAccess.file_exists(path):
+		return null
+	return AudioStreamWAV.load_from_file(path)
+
+
+## A baked Orpheus taunt for a Kokoro lead voice, or null to fall through.
+## Takes the lead NAME (e.g. "am_onyx"), not the blend string.
+func orpheus_taunt_stream_for(lead_voice: String, clean_text: String) -> AudioStream:
+	if not _is_english_locale():
+		return null
+	var voice := BakedIndex.orpheus_voice_for_lead(lead_voice)
+	var key := BakedIndex.orpheus_key(voice, clean_text)
+	if key.is_empty():
+		return null
+	var clips := _flat_clips(ORPHEUS_MANIFEST, "orpheus")
+	var name := str(clips.get(key, ""))
+	if name.is_empty():
+		return null
+	var path := "%s/%s" % [ORPHEUS_AUDIO_DIR, name]
+	if not FileAccess.file_exists(path):
+		return null
+	return AudioStreamWAV.load_from_file(path)
+
 
 func _load_baked_manifest() -> void:
 	if _baked_loaded:
@@ -265,9 +373,19 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	# A pre-baked clip beats both the memory cache and the network: it is on
 	# disk, it is exactly what was approved, and it needs no TTS server at all.
 	if not tts_audio_cache.has(cache_key):
-		var baked := baked_stream_for(
-			voice_id, clean_text, speed_override, pause_seconds
+		# Best available recording wins, then the network. Order is quality
+		# order, and EVERY step returns null rather than failing, so the chain
+		# degrades to live synthesis instead of to silence. That matters most in
+		# a non-English build, where all three baked layers miss by design.
+		var baked: AudioStream = cast_stream_for(
+			_cast_character_for_voice(voice_id), clean_text
 		)
+		if baked == null:
+			baked = orpheus_taunt_stream_for(_lead_voice_of(voice_id), clean_text)
+		if baked == null:
+			baked = baked_stream_for(
+				voice_id, clean_text, speed_override, pause_seconds
+			)
 		if baked != null:
 			tts_audio_cache[cache_key] = baked
 	# Check cache first!
