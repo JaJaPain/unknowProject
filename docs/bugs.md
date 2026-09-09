@@ -293,6 +293,7 @@ Two complementary layers need to work together:
 ---
 
 ### Quest tracker panel blue box reappears on second quest
+**LIKELY FIXED -- Abe took a second quest 2026-09-09 (run sheet 2.7) and does not recall seeing the blue box. Kept open on his instruction: not recalling it is weaker evidence than confirming it is gone, and no commit is known to have addressed it. Close once a second quest is taken with this specifically watched for.**
 **Spotted:** 2026-06-25  
 **Severity:** Low — cosmetic  
 **Description:** When the player accepts a second quest, the oversized empty blue box (quest tracker panel) reappears. The `call_deferred("reset_size")` fix only fires when the panel first becomes visible; it doesn't re-fire when a new quest loads into an already-visible panel.  
