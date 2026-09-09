@@ -103,27 +103,6 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 
 ---
 
-### N.O.V.A. filler word plays during new-campaign loading screen
-**Status:** FIXED 2026-07-15 (commit 1a62701), VERIFIED AND HARDENED 2026-08-18.
-The original fix landed two days after this was filed and was never closed out.
-Re-audited it and found two real gaps, both now closed:
-- The gate lived in one `UIManager._play_nova_latency_filler` helper, so any
-  other caller of `play_latency_filler_clip` bypassed it, and it only ever
-  covered N.O.V.A. -- Kaelen had no equivalent. The ban now lives in
-  `SpeechService.set_latency_filler_suppressed()`, which every caller goes
-  through, and refuses with the suppressing sequence as the reason.
-- It was keyed on `loading_panel` still existing, but that panel is freed to
-  START the intro cinematic, so the gate opened while the player was still
-  watching an authored sequence with no control. Suppression now lifts when
-  gameplay actually resumes.
-Pinned by `tests/story/run_intro_dock_gating_tests.gd`.
-**Spotted:** 2026-07-13 (fresh campaign loading health check)
-**Severity:** Low-Medium — immersion/polish issue; makes a non-semantic latency mask feel like dialogue before gameplay has started
-**Description:** During the loading screen for a new campaign, N.O.V.A. can play a filler word/clip. Filler words are meant to mask short quiet waits while the player is already in an interaction waiting on LLM/TTS readiness, not to fire during the full fresh-campaign loading screen. New-campaign loading should either stay quiet, use deliberate authored/loading VO, or wait for actual prepared content; it should not spend a casual "um/oh/well/ahh" filler before the player is in the world.
-**Where to look:** `SpeechService` filler gating plus fresh-campaign loading / startup TTS warmup paths in `GameRoot.gd`, `UIManager.gd`, and the narrative cache loading planner. The earlier Phase 6D note allowed N.O.V.A. fillers during campaign/chapter loading waits; revise that gate so `new_campaign_loading` blocks filler playback, or split "short in-interaction wait" from "loading screen wait" as separate policies.
-
----
-
 ### N.O.V.A. talks during first dock flow
 **Status:** NOT REPRODUCIBLE as written, 2026-08-18 -- the first dock already
 belongs to her AUTHORED arrival line, not ordinary dock banter. `UIManager`
@@ -243,14 +222,6 @@ Two complementary layers need to work together:
 
 ---
 
-### New campaign overwrites existing slot instead of using next empty slot
-**Spotted:** 2026-06-26  
-**Severity:** High — data loss risk  
-**Description:** Starting a new campaign appears to overwrite an occupied slot rather than selecting the next empty one. Player loses an existing campaign save.  
-**Where to look:** `GameRoot.gd` → new campaign slot selection logic. Check `campaign_slot_registry.first_empty_slot_id()` is being called and that the result is being used rather than defaulting to slot 1 or the active slot.
-
----
-
 ### Quest tracker panel blue box reappears on second quest
 **Spotted:** 2026-06-25  
 **Severity:** Low — cosmetic  
@@ -328,6 +299,8 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-09-09 | N.O.V.A. filler word played during new-campaign loading screen | Fixed 2026-07-15 (commit 1a62701), hardened 2026-08-18 (ban moved out of a single UIManager helper so other callers could not bypass it, extended to Kaelen, and the suppression re-keyed to "gameplay has resumed" rather than "loading panel still exists" -- the panel is freed to START the intro cinematic). Pinned by `tests/story/run_intro_dock_gating_tests.gd`. **Confirmed silent in play by Abe, 2026-09-09.** |
+| 2026-09-09 | New campaign overwrote an existing slot instead of using the next empty one | **No known fix commit -- it simply stopped reproducing.** Filed 2026-06-26 as a high-severity data-loss risk; Abe confirmed 2026-09-09 that a new campaign now lands in an empty slot. Something between those dates fixed it incidentally, so there is no test pinning the behaviour and nothing preventing a regression. If save slots are touched again, re-check this first. |
 | 2026-07-15 | Active KILL_SHIPS mission could have no targets after save/load | Saved mission ships still restore normally. `QuestManager` now also reconciles every unfinished KILL_SHIPS contract after system and player restore: if its faction has no living quest target, it spawns only the remaining count at the normal safe distance. The focused mission is preserved, so regenerated persistent IDs belong to the correct contract. Covered by `tests/domain/run_mission_state_transition_tests.gd`. |
 | 2026-07-14 | Game crashed on player death — "Trying to cast a freed object" in NPCShip.gd | `_redirect_from_combat_queue` and the gateless-flee path cast `GlobalState.player as Node3D`. `die()` calls `queue_free()` but never nulls `GlobalState.player`, so the next NPC frame cast a freed object — and `as` crashes *before* `is_instance_valid` runs. `player` is already `Node3D`-typed, so both sites now assign without the cast and validate first — `NPCShip.gd:779,1043` |
 | 2026-07-13 | Every mission completion warned `[MissionInstance] Invalid transition: ACTIVE -> COMPLETED` (READY_TO_TURN_IN was dead state) | `_mark_objective_ready_if_completed` now transitions the instance to READY_TO_TURN_IN when the objective completes; `complete_quest` and the comms-bribe resolution route through `_transition_to_completed()` (hops via READY_TO_TURN_IN for pre-fix saves); READY_TO_TURN_IN → EXPIRED added so timed contracts can still expire awaiting hand-in. State persists through save/reload via `_instance_state`. Covered by `tests/domain/run_mission_state_transition_tests.gd` — `QuestManager.gd`, `MissionInstance.gd` |
