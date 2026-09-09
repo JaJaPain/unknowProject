@@ -3827,8 +3827,8 @@ func _on_target_changed(new_target: Node3D):
 		if target_action_btn:
 			if new_target.is_in_group("asteroid"):
 				target_action_btn.text = "Mine Asteroid"
-				target_action_btn.tooltip_text = ""
 				target_action_btn.visible = true
+				_apply_mine_reach(target_action_btn, new_target)
 			elif new_target.is_in_group("station"):
 				target_action_btn.text = "Dock at Station"
 				target_action_btn.tooltip_text = ""
@@ -9379,9 +9379,8 @@ func show_context_menu(
 	if context_action_btn:
 		if entity.is_in_group("asteroid"):
 			context_action_btn.text = "Mine Asteroid"
-			context_action_btn.disabled = false
-			context_action_btn.tooltip_text = ""
 			context_action_btn.visible = true
+			_apply_mine_reach(context_action_btn, entity)
 		elif entity.is_in_group("station"):
 			context_action_btn.text = "Dock at Station"
 			context_action_btn.disabled = false
@@ -9511,6 +9510,38 @@ func _refresh_attack_reach(target: Node) -> bool:
 	return _attack_in_reach
 
 
+## Mining reach gate, mirroring the attack one. MINING_RANGE is 75m and mining
+## silently does nothing outside it, so an always-enabled "Mine Asteroid" button
+## reads as broken rather than out of range. Same enter/exit hysteresis: a single
+## threshold at 75m would make the button flicker while the player drifts.
+const MINE_REACH_ENTER_M := 75.0
+const MINE_REACH_EXIT_M := 150.0
+var _mine_in_reach := false
+
+
+func _refresh_mine_reach(target: Node) -> bool:
+	if target == null or not is_instance_valid(target) or not (target is Node3D):
+		_mine_in_reach = false
+		return false
+	if GlobalState.player == null or not is_instance_valid(GlobalState.player):
+		_mine_in_reach = false
+		return false
+	var distance: float = GlobalState.player.global_position.distance_to(target.global_position)
+	var threshold := MINE_REACH_EXIT_M if _mine_in_reach else MINE_REACH_ENTER_M
+	_mine_in_reach = distance <= threshold
+	return _mine_in_reach
+
+
+## Applies the reach latch to a "Mine Asteroid" button. Both the target window
+## and the right-click context menu route through here so they cannot disagree.
+func _apply_mine_reach(btn: Button, target: Node) -> void:
+	if btn == null or not is_instance_valid(btn):
+		return
+	var reachable := _refresh_mine_reach(target)
+	btn.disabled = not reachable
+	btn.tooltip_text = "" if reachable else "Too far to mine — close to %dm." % int(MINE_REACH_ENTER_M)
+
+
 ## Applies the reach latch to an "Attack Hostile" button. Both the target window
 ## and the right-click context menu route through here so they cannot disagree.
 func _apply_attack_reach(btn: Button, target: Node) -> void:
@@ -9550,6 +9581,12 @@ func _update_target_command_feedback() -> void:
 		# ATTACK is the active command: at that point the button is reporting a
 		# running order, not offering one, and range must not revoke it mid-chase.
 		_apply_attack_reach(target_action_btn, target)
+		_set_command_button_state(target_action_btn, false)
+	elif target and is_instance_valid(target) and target.is_in_group("asteroid") 			and active_mode != "MINE":
+		# Same rule as the attack latch above: re-evaluated every frame so the
+		# button tracks the approach, but skipped once MINE is the active command,
+		# where the button reports a running order rather than offering one.
+		_apply_mine_reach(target_action_btn, target)
 		_set_command_button_state(target_action_btn, false)
 	elif active_mode in ["MINE", "ATTACK", "DOCK"]:
 		var in_range := false
