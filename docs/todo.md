@@ -288,8 +288,22 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
       SNAC 24kHz decoder, soundfile.
     - Speed: ~10-22s per line on GPU, ~5s of audio each. Fine for bake time,
       far too slow for runtime -- which is exactly why this is a bake-time engine.
-    - Rendered 5 real taunt lines x 2 voices (leo, dan), three carrying `<angry>`
-      tags. Sent to Abe for A/B against the approved Kokoro bakes.
+    - Rendered real taunt lines across two voices (leo, dan) for A/B against the
+      approved Kokoro bakes.
+    - **CORRECTION -- `<angry>` IS NOT A REAL ORPHEUS TAG.** My first run used it
+      and Abe heard the model SPEAK THE WORD "angry" aloud. Orpheus finetuned
+      only a PARALINGUISTIC set (`<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`,
+      `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`) -- sounds a person makes, not
+      emotional states. None of them means "angry". Anything outside that set is
+      plain text and gets read out.
+    - **This weakens the original argument for Orpheus.** The pitch was "emotion
+      tags are the axis Kokoro cannot move on". There are no emotion tags. So the
+      question is narrower and must be settled by ear: can the Orpheus VOICES
+      carry a threat that Kokoro reads flat, using only the writing, punctuation
+      and capitals? A second render (no tags, plus one `<groan>` control) went to
+      Abe to answer exactly that.
+    - If the plain renders are also flat, Orpheus is NOT the fix and this whole
+      item should be closed rather than expanded. Do not assume it wins.
   - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
     through Orpheus and listen against the approved Kokoro versions. Hours, not
     days, and fully reversible -- the Kokoro clips stay on disk.
