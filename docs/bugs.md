@@ -211,6 +211,7 @@ backstory. It was passed in deliberately as `player_nickname`.
 ---
 
 ### Shield visual persists after combat ends
+**LIKELY FIXED -- not observed by Abe in play, 2026-09-09 (run sheet 2.5). Kept open deliberately: absence of a sighting is not a fix, and no commit is known to have addressed this. Close it once it survives more combat sessions.**
 **Spotted:** 2026-06-26
 **Severity:** Low — cosmetic
 **Description:** The shield effect sometimes remains visible on the player ship after combat ends instead of disappearing with the combat state. Likely the shield deactivation call is not firing on all combat-exit paths (timeout, enemy death, flee).
@@ -219,6 +220,7 @@ backstory. It was passed in deliberately as `player_nickname`.
 ---
 
 ### Mouse cursor lost when entering combat
+**LIKELY FIXED -- not observed by Abe in play, 2026-09-09 (run sheet 2.5), which adds a session to the 2026-06-28 fix attempt's evidence. Still open by its own terms until it survives more combat.**
 **Status:** Fix attempt made 2026-06-28 and seems to be working in playtest so far. PlayerShip.gd now releases mouse capture on combat start/end, and UIManager.gd forces MOUSE_MODE_VISIBLE when pause or inventory opens. Keep this bug open until it survives more combat sessions without recurrence.
 **Spotted:** 2026-06-28
 **Severity:** High — can soft-lock input; only recoverable by Alt-Tab + closing from the taskbar
