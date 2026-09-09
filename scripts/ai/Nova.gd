@@ -771,22 +771,48 @@ func on_docked(_station_name: String = "") -> void:
 		"dock",
 		[
 			# Tier 0 — first dock (or first in a while): dry acknowledgement.
+			# Deliberately the longest tier: this is the one the player hears most,
+			# and three lines could not carry it however well they cycled.
 			[
 				"Docking clamps engaged. Try not to break anything that's mine.",
 				"Docked. Enjoy the recycled air; I certainly am.",
 				"We're in. A rare moment where nothing is shooting at me.",
+				"Clamps locked. I'll be here, holding still, thrilled.",
+				"Hard seal confirmed. Someone else's problem for a while.",
+				"Docked. My hull is intact, which I'm told is the goal.",
+				"We're attached. Structurally, at least.",
+				"Berth secured. Try to come back with the same number of parts.",
+				"Docking complete. I'll idle. It's what I'm best at, apparently.",
+				"Seal is good. Station air smells like other people's decisions.",
+				"Clamps engaged. Wake me if anything catches fire.",
+				"We've arrived intact. I'd like that noted somewhere permanent.",
+				"Docked and stable. Enjoy gravity you didn't have to pay for.",
+				"Locked in. The station now shares responsibility for us. Small comfort.",
+				"That's a clean approach. I'll allow it.",
+				"Docking sequence closed. My sensors get a rest; I do not.",
 			],
 			# Tier 1 — docked again within the minute: she clocks the repeat.
 			[
 				"Docking. Again. That was fast.",
 				"Back so soon? These clamps aren't self-lubricating.",
 				"In and out and in again. I'm keeping count, for the record.",
+				"Twice now. I'm not complaining. I'm annotating.",
+				"Returned already. Did we forget something, or someone?",
+				"Back in the berth. The station hasn't changed in ninety seconds.",
+				"That was a short trip even by our standards.",
+				"Docked again. I hadn't finished retracting.",
+				"You've discovered the station is still here. I could have told you.",
 			],
 			# Tier 2 — third-plus quick dock: fully exasperated.
 			[
 				"Are you trying to wear out my docking clamps? Because it's working.",
 				"That's three. My clamps and I would like a word.",
 				"If you dock one more time I'm filing a grievance with... well with someone.",
+				"We are commuting. Between one station and the space directly outside it.",
+				"I've begun logging these separately. The file has a name now.",
+				"At this rate the clamps will outlast neither of us.",
+				"Docked. I've stopped fully retracting. It seemed optimistic.",
+				"Whatever you're looking for, it is not out there. You keep checking.",
 			],
 		],
 		60000,               # "less than a minute" resets the streak
