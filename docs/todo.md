@@ -242,6 +242,19 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   - ~28s per line on CPU; 516 authored lines (423 N.O.V.A., 93 Kaelen) is about
     4 hours. Script: `bake_cast.py`, resumable, aborts after 5 consecutive
     failures rather than reporting a false DONE.
+  - **BOTH BAKES COMPLETE 2026-09-09.** Orpheus taunts: 1520 clips (190 x 8
+    voices, evenly distributed, 0 errors on the resumed run). F5 cast: 516 clips
+    (N.O.V.A. 423, Kaelen 93, 0 errors). Verified by counting files against
+    manifest entries rather than trusting the scripts' own "DONE" -- the first
+    Orpheus run printed DONE over 1332 failures, so completion is now checked,
+    not reported.
+  - **Both are LIVE.** `TTSInterface` resolves cast -> Orpheus taunt -> Kokoro
+    baked -> live synthesis, gated on an English locale. Nothing further needed
+    to hear them.
+  - **`bm_george` has no Orpheus mapping, deliberately.** He was cut from the
+    lead pool the same morning, so his existing lines fall through to the old
+    Kokoro clips. One flat taunt among expressive ones is the fallback working,
+    not a bake gap.
   - **Kaelen has far fewer bakeable lines than N.O.V.A. and that is not an
     oversight.** His reaction lines are LLM-GENERATED per mission
     (`llm_kaelen_reaction`), so they cannot be pre-baked at all. Only the curated
