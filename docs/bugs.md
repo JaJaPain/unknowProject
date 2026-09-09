@@ -5,6 +5,44 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Quest cards hidden after load until the layout is unlocked and relocked
+**Spotted:** 2026-09-09 (Abe, playtest)
+**Severity:** Medium -- the player's active contracts are invisible after loading
+a save, and the only workaround is a UI ritual nobody would guess.
+**Description:** After loading, the quest tracker shows no cards. Toggling the UI
+layout lock OFF and back ON makes them appear. Nothing else recovers them.
+
+**Likely root cause (from code, NOT yet verified in a debugger):** the quest
+panel is the only DYNAMIC panel -- `UILayoutManager._is_dynamic()` returns true
+for `"quest"` and nothing else -- which means it is the only panel expected to
+auto-size to its content instead of carrying an explicit size.
+
+Two facts combine badly:
+- `_load_layout()` deliberately skips size restore for this panel
+  (`if id != "quest"` at `UILayoutManager.gd:290`), setting only its position. So
+  after a load the panel keeps whatever size it happened to have, which is the
+  pre-content size if the tracker is populated later in the sequence.
+- `reset_size()` is called on dynamic panels in exactly ONE place: the LOCK half
+  of `toggle_edit_mode()`. There is no other caller.
+
+So the unlock/relock is not a coincidence -- it is the player manually reaching
+the only line in the codebase that re-sizes this panel to its content.
+
+**Where to look:** `UILayoutManager.gd` `_load_layout()` and `toggle_edit_mode()`;
+`UIManager._update_quest_tracker()` for when cards are actually populated
+relative to layout load.
+
+**Fix direction:** call `reset_size()` on the quest panel after the tracker is
+populated on load, rather than relying on an edit-mode round trip. Deferring it
+(`call_deferred`) is likely needed so it runs after the cards exist -- sizing to
+content before the content is there would just reproduce the bug.
+
+**Watch for:** whether this also affects a fresh campaign whose first contract is
+accepted before any layout interaction, or only the load path. That distinction
+says whether the fix belongs in the load path or next to tracker population.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)
