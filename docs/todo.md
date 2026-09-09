@@ -302,8 +302,35 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
       carry a threat that Kokoro reads flat, using only the writing, punctuation
       and capitals? A second render (no tags, plus one `<groan>` control) went to
       Abe to answer exactly that.
-    - If the plain renders are also flat, Orpheus is NOT the fix and this whole
-      item should be closed rather than expanded. Do not assume it wins.
+    - **VERDICT 2026-09-09 (Abe), untagged renders: "10x better than what we
+      had."** Orpheus is the direction. Pitch-shifting as a voice multiplier was
+      tried and REJECTED by ear ("sounds horrible") -- do not revisit it.
+  - **CLONING WORKS, including from BLENDED Kokoro voices** (Abe's idea, and it
+    is the important one). Kokoro renders a blend to a waveform; to a cloner that
+    waveform is simply a person. So Kokoro's blending survives the engine change
+    as an IDENTITY GENERATOR: any blend ratio -> a reference clip -> a distinct
+    cloned Orpheus voice. Unlimited unique voices, which is what Abe wanted.
+    - **The reference format matters and only one works.** Reference turn, then a
+      new turn ending with the start-of-audio token (128261) so the model
+      continues IN AUDIO. Closing the turn normally yields 0.17s fragments.
+      Working recipe is `clone_v2.py` variant B; `clone_canon.py` applies it.
+    - **Cloning is 10-20x SLOWER than stock voices** (45-205s per line vs ~10s)
+      because the reference audio makes the prompt long. Consequence: clone a
+      HANDFUL of identities (Kaelen, N.O.V.A., named enemies), never a 1520-clip
+      pool. The taunt bake therefore uses the 8 stock voices.
+    - Canon test rendered: Kaelen (af_bella) and N.O.V.A.
+      (bf_emma[0.7]+af_bella[0.3]) references made with the GAME'S OWN Kokoro via
+      `make_canon_refs.py`, then cloned. Awaiting Abe's ear on whether they still
+      sound like her.
+  - **Bake state:** `assets/audio/taunts_orpheus/` (gitignored), 1520 clips
+    planned, resumable -- rerun `bake_orpheus_taunts.py` to continue.
+    - Run 1 CRASHED at 188 clips and then PRINTED "DONE". Two bugs of mine:
+      generated SNAC codes were never range-checked, so one out-of-codebook frame
+      fired a device-side assert that poisons the CUDA context for the whole
+      process (the remaining 1332 all failed); and the error handler treated
+      wholesale failure as success. Both fixed -- frames outside SNAC's 4096-entry
+      codebook are dropped, and the script now ABORTS after 5 consecutive
+      failures instead of claiming completion.
   - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
     through Orpheus and listen against the approved Kokoro versions. Hours, not
     days, and fully reversible -- the Kokoro clips stay on disk.
