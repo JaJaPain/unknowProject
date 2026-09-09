@@ -75,14 +75,6 @@ func _on_nova_repair_prompt_repairs() -> void:   # UIManager.gd:9140
 
 ---
 
-### Tutorial overview panel starts collapsed for new players
-**Spotted:** 2026-07-15 (starter tutorial screenshot)
-**Severity:** Medium — first-time UX confusion; the tutorial points at a panel the player has never learned to expand
-**Description:** At the start of the starter tutorial, the system overview panel can appear collapsed/too short, showing only the header and column labels instead of the actual overview contents. This did not used to be the default. Because the tutorial arrow points at this overview, a brand-new player may not understand what they are supposed to look at or click.
-**Where to look:** `scripts/UIManager.gd` overview panel creation, collapse/expand state, saved UI layout restore, and tutorial/startup flow. Likely causes are persisted collapsed state being applied too early, a default collapsed flag changing, or the tutorial not forcing the overview open/expanded on first exposure. Fix should ensure the starter tutorial forces the overview panel visible and expanded regardless of prior layout state, without permanently overwriting the player's later preference.
-
----
-
 ### Kaelen handoff batch intermittently returns no JSON array
 **Spotted:** 2026-07-02 (live playtest during story-wiring session)
 **Status:** Fixed in code 2026-07-22; awaiting a live regression run.
@@ -260,6 +252,7 @@ NEXT REPRO: dock at the outpost with ore, press through, and check the console f
 
 | Date | Bug | Fix |
 |---|---|---|
+| 2026-09-09 | Tutorial overview panel starts collapsed for new players | **Not a bug -- confirmed correct by Abe, 2026-09-09, and promoted to a design rule:** the overview expands ONLY outside the station, never inside it. Already enforced structurally: `set_overview_collapsed` forces the collapsed state while `_overview_dock_locked` is on, so the invariant sits at the single write point and no call site can expand it while docked. Docking hides and locks it; undocking unlocks and expands. Now documented at the guard and pinned by `tests/domain/run_intro_handhold_tests.gd` (previously only string-matched the function names). |
 | 2026-09-09 | First run of a session: no station welcome overlay, N.O.V.A. portrait missing | Root-caused and fixed 2026-08-06 from a live console log. Self-inflicted by the ambient speech queue added the same day: that queue split a line's EMIT from its PLAYBACK, but two consumers still assumed the next `playback_finished` belonged to the line just emitted, so the arrival beat silently lost both visuals. **Confirmed correct in play by Abe, 2026-09-09 -- overlay and portrait both present.** |
 | 2026-09-09 | N.O.V.A. talked during the first dock flow | Marked NOT REPRODUCIBLE 2026-08-18: the first dock belongs to her AUTHORED arrival line, not ordinary dock banter. `UIManager` branches on `kaelen_briefing_seen`, which is only set inside the agent panel, and the player cannot reach that before docking -- so the branch was already correct. **Confirmed in play by Abe, 2026-09-09.** |
 | 2026-09-09 | N.O.V.A. filler word played during new-campaign loading screen | Fixed 2026-07-15 (commit 1a62701), hardened 2026-08-18 (ban moved out of a single UIManager helper so other callers could not bypass it, extended to Kaelen, and the suppression re-keyed to "gameplay has resumed" rather than "loading panel still exists" -- the panel is freed to START the intro cinematic). Pinned by `tests/story/run_intro_dock_gating_tests.gd`. **Confirmed silent in play by Abe, 2026-09-09.** |

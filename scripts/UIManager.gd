@@ -11217,6 +11217,10 @@ func _current_station_has_repair_services() -> bool:
 		and str(current_station.get("station_type")) != "outpost"
 
 func set_overview_collapsed(collapsed: bool):
+	# The overview expands ONLY outside the station, never inside it (Abe,
+	# 2026-09-09). Forcing it here rather than at each call site means no caller
+	# can expand it while docked, however it is reached. Pinned by
+	# tests/domain/run_intro_handhold_tests.gd.
 	if _overview_dock_locked:
 		collapsed = true
 	overview_collapsed = collapsed

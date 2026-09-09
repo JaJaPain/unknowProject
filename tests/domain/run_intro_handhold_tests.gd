@@ -143,6 +143,25 @@ func _test_docked_overview_and_repair_decision_contracts() -> void:
 			and source.contains("_set_overview_dock_locked(false)"),
 		"Docking does not hard-lock and hide the overview until undock."
 	)
+	# Abe's rule (2026-09-09): the overview expands ONLY outside the station,
+	# never inside it. That holds because set_overview_collapsed forces the
+	# collapsed state while the dock lock is on, so the invariant sits at the
+	# single write point and no caller -- present or future -- can expand the
+	# overview while docked by calling the setter directly.
+	var setter_start := source.find("func set_overview_collapsed")
+	var setter_guarded := false
+	if setter_start >= 0:
+		# Wide enough to survive the explanatory comment above the guard.
+		var setter_body := source.substr(setter_start, 600)
+		setter_guarded = (
+			setter_body.contains("if _overview_dock_locked:")
+			and setter_body.contains("collapsed = true")
+		)
+	_expect(
+		setter_guarded,
+		"set_overview_collapsed no longer forces collapse while dock-locked, so the "
+			+ "overview can now be expanded inside a station."
+	)
 	_expect(
 		source.contains("func _ensure_nova_repair_decision_panel")
 			and source.contains("nova_repair_prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)")
