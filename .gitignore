@@ -92,3 +92,5 @@ tools/lounge_review/generator_*.log
 # BUILD/EXPORT NOTE: these must be produced and included when packaging, or the
 # game silently falls back to live TTS.
 assets/audio/taunts/
+assets/audio/taunts_orpheus/
+assets/audio/cast_en/

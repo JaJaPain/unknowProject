@@ -212,6 +212,43 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## Speech / TTS
 
+- [ ] **Baked audio is an ENGLISH-ONLY layer -- the game must keep live TTS**
+  (Abe, 2026-09-09). This is a hard architectural rule, not a preference.
+  Everything baked ahead of time -- taunts, and now the N.O.V.A./Kaelen cast
+  lines -- is a QUALITY CACHE for English. Localization cannot use pre-baked
+  English audio, so the in-game Kokoro path must remain able to synthesize every
+  one of these lines live.
+  - **Therefore:** a missing baked clip is NEVER an error. Lookup must fall
+    through to live TTS silently, and no baked manifest may become a hard
+    dependency. If the game ever *requires* a baked clip to speak a line, that is
+    a bug, and it will only show up in a non-English build where nobody is
+    looking.
+  - Applies to `assets/audio/taunts/` (Kokoro), `assets/audio/taunts_orpheus/`
+    (Orpheus, in progress) and `assets/audio/cast_en/` (F5-TTS, in progress).
+  - The `_en` suffix on the cast directory is deliberate: it names the constraint
+    in the path so a future reader cannot mistake it for language-neutral audio.
+
+- [ ] **F5-TTS is the cloning engine for N.O.V.A. and Kaelen** (Abe, 2026-09-09).
+  Set up by Antigravity in `C:\CodingProjects\TestTTS` (own venv, own
+  references). Abe's verdict: F5-TTS clones both characters WELL -- "better at
+  cloning than the one we are currently using".
+  - **This reverses the same-day Orpheus rejection, and the distinction matters:**
+    what failed was ORPHEUS cloning, not cloning as a technique. Orpheus clones
+    were not close enough for the fixed cast (though good enough for NPCs); F5
+    clones are. Do not read the earlier "no go" as a verdict on cloning.
+  - Running on CPU deliberately: it dodges the sm_120 PyTorch issue on the RTX
+    5060 Ti AND leaves the GPU free for the Orpheus taunt bake. GPU contention is
+    what crashed that bake earlier today, so this is not just a workaround.
+  - ~28s per line on CPU; 516 authored lines (423 N.O.V.A., 93 Kaelen) is about
+    4 hours. Script: `bake_cast.py`, resumable, aborts after 5 consecutive
+    failures rather than reporting a false DONE.
+  - **Kaelen has far fewer bakeable lines than N.O.V.A. and that is not an
+    oversight.** His reaction lines are LLM-GENERATED per mission
+    (`llm_kaelen_reaction`), so they cannot be pre-baked at all. Only the curated
+    voice examples and the tutorial completion/abandon pools are static. Any
+    future attempt to "bake all of Kaelen" needs to reckon with that first.
+
+
 - [ ] **No two stations should share a maintenance person** (Abe, 2026-09-09).
   Dock clearance now speaks in the station mechanic's voice (landed same day), so
   a repeated mechanic is now AUDIBLE as well as visible -- two stations that
