@@ -271,6 +271,25 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
     rather than predicted, and it raises this from an experiment to the likely
     direction. bm_george was cut the same day, but flatness is a POOL-WIDE
     property, not one bad voice, so cutting more leads will not fix it.
+  - **TRIAL RUN 2026-09-09 -- IT WORKS, awaiting Abe's ear.** Environment:
+    `C:\CodingProjects\orpheus_trial` (isolated venv OUTSIDE the game repo, so
+    the game's Kokoro install and its CPU-only torch are untouched -- Abe's call:
+    "we can run these in a new environment since this TTS won't be run at
+    gametime"). Generator: `gen_taunts.py`, output in `out/`.
+    - Model: `audo/orpheus-3b-0.1-ft` (Apache-2.0 mirror). **The canonical
+      `canopylabs/orpheus-3b-0.1-ft` is a GATED repo** -- `gated: auto`, so
+      accepting the terms on huggingface.co auto-approves. Worth Abe doing to use
+      the canonical source; the mirror is legitimate redistribution meanwhile.
+    - **The 150M/400M variants do not exist publicly.** Canopy publishes only 3B
+      models. No loss: this box is an RTX 5060 Ti with 16GB, and 3B is
+      comfortable. (Note: that also means this machine is NOT the 8GB card the
+      H2 VRAM gate needs to be measured on.)
+    - Deps: torch 2.11.0+cu128 (Blackwell sm_120 verified), transformers 5.16.1,
+      SNAC 24kHz decoder, soundfile.
+    - Speed: ~10-22s per line on GPU, ~5s of audio each. Fine for bake time,
+      far too slow for runtime -- which is exactly why this is a bake-time engine.
+    - Rendered 5 real taunt lines x 2 voices (leo, dan), three carrying `<angry>`
+      tags. Sent to Abe for A/B against the approved Kokoro bakes.
   - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
     through Orpheus and listen against the approved Kokoro versions. Hours, not
     days, and fully reversible -- the Kokoro clips stay on disk.
