@@ -484,15 +484,32 @@ var _event_memory := {}
 # Picks a random line from `pool` but never the same one twice running for a given
 # `tag` — so even a modest pool never feels like an immediate repeat. (Future: grow
 # each pool toward ~200 canned lines, or hook the LLM, so full repeats are rare.)
+## Shuffle bags, keyed "tag|pool_size". Keyed on size as well as tag so a pool
+## that grows (LLM-added lines) starts a fresh cycle rather than drawing indices
+## that no longer mean what they did.
+var _line_bags: Dictionary = {}
+
+
 func _pick_line(tag: String, pool: Array) -> String:
 	if pool.is_empty():
 		return ""
 	if pool.size() == 1:
 		return str(pool[0])
-	var last := int(_last_line_index.get(tag, -1))
-	var idx := randi() % pool.size()
-	if idx == last:
-		idx = (idx + 1) % pool.size()
+	# Draw WITHOUT replacement: every line in a pool is heard once before any of
+	# them repeats. The old version picked at random and only refused the
+	# immediately previous line, which on a small pool still meant hearing the
+	# same two or three constantly -- the docking lines were the obvious case.
+	var key := "%s|%d" % [tag, pool.size()]
+	var bag: Array = _line_bags.get(key, [])
+	if bag.is_empty():
+		bag = range(pool.size())
+		bag.shuffle()
+		# A reshuffle can otherwise open the new cycle with the line that just
+		# closed the old one, which is the one repeat the player would notice.
+		if bag.size() > 1 and int(bag[0]) == int(_last_line_index.get(tag, -1)):
+			bag.append(bag.pop_front())
+	var idx: int = int(bag.pop_front())
+	_line_bags[key] = bag
 	_last_line_index[tag] = idx
 	return str(pool[idx])
 
@@ -738,7 +755,13 @@ func _say_tiered(
 	var pool: Array = tiers[tier]
 	if pool.is_empty():
 		return
-	speak(str(pool[randi() % pool.size()]), severity, expression_for_event(event_kind))
+	# Was a raw randi pick, which is why docking repeated: this path serves the
+	# per-event pools, docking among them.
+	speak(
+		_pick_line("%s|%s" % [event_kind, tier], pool),
+		severity,
+		expression_for_event(event_kind)
+	)
 
 
 # Player docked. Escalates if they dock repeatedly within a minute — she notices.
