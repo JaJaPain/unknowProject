@@ -214,6 +214,36 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## Speech / TTS
 
+- [ ] **No two stations should share a maintenance person** (Abe, 2026-09-09).
+  Dock clearance now speaks in the station mechanic's voice (landed same day), so
+  a repeated mechanic is now AUDIBLE as well as visible -- two stations that
+  share one sound like the same place.
+  - **Current behaviour:** `_generated_contact_data` picks
+    `presentation_index = (index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()`,
+    which is random per contact. Two stations can collide today, and nothing
+    checks.
+  - **HARD CEILING, needs Abe's decision:** there are only **7** entries in
+    `GENERATED_CONTACT_VOICES` and 7 portraits. True global uniqueness is
+    impossible past 7 stations. Options:
+    1. **Expand the pools.** Real fix, but it is content: more voice profiles in
+       `data/content/voice_provider_kokoro.json` plus portraits. Voice profiles
+       are cheap (they are Kokoro blends, and blends of existing leads sound
+       distinct), portraits are not.
+    2. **Guarantee uniqueness among stations the player can reach quickly** --
+       never repeat within a system, or within N most-recently-visited -- and
+       allow reuse far away. Cheaper, and the collision a player can actually
+       notice is a nearby one.
+    3. Accept repeats and differentiate by NAME and lines alone. Weakest now that
+       voice carries the identity.
+  - Recommend **2 first** (bounded work, kills the noticeable case) with **1** as
+    the real fix when the voice pool is next touched -- likely alongside the
+    Orpheus trial below, since that revisits voices anyway.
+  - Assignment should be DETERMINISTIC from the station id, not `rng.randi()`, so
+    a station keeps its mechanic across saves and sessions. That matters more
+    than uniqueness: a station whose mechanic changes between visits is worse
+    than two stations sharing one.
+
+
 - [ ] **Try Orpheus (Canopy Labs) as a BAKE-TIME voice engine** (Abe, 2026-09-07).
   Kokoro is `hexgrad/Kokoro-82M`, weights `kokoro-v1_0.pth`, package 0.9.4. At
   82M it is fast and CPU-friendly, and that is also its ceiling: the flat
