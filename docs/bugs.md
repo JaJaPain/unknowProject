@@ -42,6 +42,47 @@ the card and is never re-run. **Where to look:** the call order between
 
 ---
 
+### Kaelen speaks a second turn-in line right after the agent's own reply
+**Spotted:** 2026-09-09 (Abe, playtest). Turned a contract in to Jenna Kross:
+she replied correctly IN HER OWN VOICE, then about a second later Kaelen spoke a
+SECOND completion line complaining about the low payout.
+**Severity:** Medium -- reads as the game speaking twice about one event, and
+undercuts the agent who just handled the turn-in.
+
+**Cause:** two independent systems both fire on completion, and neither knows
+about the other.
+1. The agent's own turn-in reply, in the agent's voice. Correct.
+2. `GameRoot._on_quiet_moment_quest_completed` -> `quiet_moment_director.try_fire()`,
+   which picks a Kaelen beat by payout band: `kaelen_low_pay_safe`,
+   `kaelen_high_pay_dangerous`, or `kaelen_public_board`. This is Kaelen's
+   commentary on the work, and it is authored content behaving as designed.
+
+The beat itself is not wrong -- Kaelen having opinions about a bad payout is
+exactly her. The problem is TIMING: it lands immediately, on top of the agent
+exchange, so it reads as a second turn-in line rather than a later aside. The
+system is literally called a QUIET moment, and a turn-in conversation is not one.
+
+**NOT a voice bug.** Kaelen is the correct speaker for the board lane
+(`_on_public_board_turn_in_pressed` routes to `_on_agent_complete_pressed`, which
+sets "BROKER KAELEN" deliberately). Nothing is mis-routing a voice here.
+
+**Hypothesis worth testing:** this may be what the older report "Agent accept
+reply uses Kaelen voice" (filed 2026-06-23) actually was all along -- Kaelen
+speaking a SECOND line after the agent, misheard as the agent's line coming out
+in her voice. If a playtest of ACCEPT shows the same double-speak shape, the two
+entries are one bug and the older one should be closed into this.
+
+**Where to look:** `GameRoot.gd:1274` `_on_quiet_moment_quest_completed`;
+`scripts/story/QuietMomentDirector.gd` `try_fire()` for its gating (currently a
+cooldown, with no "player is mid-conversation" check).
+
+**Fix direction:** gate quiet moments on the player NOT being in an agent
+interaction -- defer the beat until the dock conversation ends, or until undock,
+rather than dropping it. Losing the line entirely would be worse than delaying
+it; her commentary is good, it is just arriving over someone else's dialogue.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)
