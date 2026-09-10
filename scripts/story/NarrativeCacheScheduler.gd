@@ -90,6 +90,52 @@ func queue_job(job: Dictionary) -> Dictionary:
 	return {"ok": true, "job": prepared.duplicate(true)}
 
 
+## Queue one conversation as SLICE jobs instead of a single all-or-nothing job
+## (plan P4).
+##
+## `slices` comes from MissionConversationCompiler.plan_slices(). The opening is
+## queued at the caller's priority; intent slices sit one band lower and DEPEND on
+## the opening, because an answer written before the opening exists is answering a
+## conversation that has not started.
+##
+## Each slice gets its own job_id and cache_key, so a failure retires one slice
+## rather than the conversation, and an already-ready slice is not regenerated.
+func queue_conversation_slices(base_job: Dictionary, slices: Array) -> Dictionary:
+	var base_id := str(base_job.get("job_id", "")).strip_edges()
+	var base_key := str(base_job.get("cache_key", "")).strip_edges()
+	if base_id.is_empty() or base_key.is_empty():
+		return _failure("Slice queueing requires job_id and cache_key.")
+	if slices.is_empty():
+		return _failure("Slice queueing requires at least one slice.")
+	var base_priority := int(base_job.get("priority", PRIORITY_P1))
+	var queued: Array[Dictionary] = []
+	var opening_job_id := ""
+	for i in range(slices.size()):
+		var slice: Dictionary = slices[i]
+		var is_opening: bool = str(slice.get("kind", "")) == "opening"
+		var job := base_job.duplicate(true)
+		job["job_id"] = "%s#s%d" % [base_id, i]
+		job["cache_key"] = "%s#s%d" % [base_key, i]
+		job["slice"] = slice.duplicate(true)
+		job["slice_index"] = i
+		job["slice_of"] = base_id
+		# The opening is what the player sees first, so it outranks its own
+		# answers. Without this an intent slice could win the queue and the
+		# player would wait on work they cannot see yet.
+		job["priority"] = base_priority if is_opening else base_priority + 1
+		if is_opening:
+			job["depends_on"] = []
+		else:
+			job["depends_on"] = [opening_job_id] if not opening_job_id.is_empty() else []
+		var result := queue_job(job)
+		if not bool(result.get("ok", false)):
+			return result
+		if is_opening:
+			opening_job_id = str(job["job_id"])
+		queued.append(result.get("job", {}))
+	return {"ok": true, "jobs": queued, "slice_count": queued.size()}
+
+
 func jobs() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for raw in _jobs.values():
@@ -112,7 +158,46 @@ func jobs() -> Array[Dictionary]:
 func pending_jobs() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for job in jobs():
-		if str(job.get("status", "")) == "queued":
+		if str(job.get("status", "")) != "queued":
+			continue
+		# A job whose dependencies are unmet is not pending, it is WAITING. Handing
+		# it out early is how an intent answer gets generated before the opening it
+		# has to follow -- the model would be answering a conversation that does
+		# not exist yet.
+		if not dependencies_met(job):
+			continue
+		result.append(job)
+	return result
+
+
+## True when every job this one depends on has finished successfully.
+##
+## A dependency that is no longer in the queue counts as MET: jobs are dropped
+## when they complete and are cleaned up, and treating a missing dependency as
+## unmet would strand its dependants forever.
+func dependencies_met(job: Dictionary) -> bool:
+	for raw_id in job.get("depends_on", []):
+		var dep_id := str(raw_id).strip_edges()
+		if dep_id.is_empty() or not _jobs.has(dep_id):
+			continue
+		var dep: Dictionary = _jobs[dep_id]
+		var status := str(dep.get("status", ""))
+		if status == "failed" or status == "canceled":
+			# A failed dependency does not block forever -- the dependant is
+			# allowed to proceed on its own. Blocking would turn one bad opening
+			# into a silent conversation.
+			continue
+		if status != "ready":
+			return false
+	return true
+
+
+## Jobs that are queued but waiting on a dependency. Separate from pending so the
+## distinction is visible in diagnostics rather than looking like a stall.
+func waiting_jobs() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for job in jobs():
+		if str(job.get("status", "")) == "queued" and not dependencies_met(job):
 			result.append(job)
 	return result
 
