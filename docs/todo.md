@@ -242,6 +242,31 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   - ~28s per line on CPU; 516 authored lines (423 N.O.V.A., 93 Kaelen) is about
     4 hours. Script: `bake_cast.py`, resumable, aborts after 5 consecutive
     failures rather than reporting a false DONE.
+  - **TAIL CHOP FIXED 2026-09-10, and the diagnosis took three tries.** Abe
+    heard "a weird sneeze" at the END of two N.O.V.A. clips. Root cause: F5-TTS
+    leaves almost no trailing silence -- median 26ms across the cast bake, 85% of
+    clips under 60ms -- so the final word's decay is cut and reads as a chop.
+    - **Two wrong diagnoses first, recorded so they are not repeated.** I blamed
+      ALL-CAPS text and rewrote 13 lines: capitals made no measurable difference
+      and the rewrite fixed nothing. I then blamed a short trailing clause: closer
+      (a long clause DID sound clean) but still the wrong mechanism. Abe's own
+      description -- "the last few milliseconds are chopped" -- was the actual
+      answer. My zero-crossing metric measures NOISINESS and cannot tell a clipped
+      ending from a sharp consonant, which is what kept sending me the wrong way.
+      Trust the ear over that metric.
+    - **Fix is post-process, not content:** `TestTTS/fix_tails.py` applies an 18ms
+      fade plus 140ms of silence, ONLY to clips ending under 80ms. Nothing is
+      re-rendered and no line is rewritten -- which matters, because 67 lines end
+      in a short closer ("Probably.", "Wonderful.", "I'm annotating.") and those
+      dry tags ARE her voice. Rewriting them to suit a renderer was the wrong
+      trade; fixing the renderer output was the right one.
+    - Applied: 488 of 516 cast clips, 14 of 1520 taunts. **Orpheus did not have
+      this problem** (median 359ms trailing) -- it is F5-specific, which is why
+      the pass is threshold-guarded rather than blanket. The guard also makes it
+      idempotent: a re-run processes 0 files.
+    - Abe's call on the capitals rewrite: KEEP the sentence-case version. Removing
+      caps "does make them safer without hearing each one of them 1 by 1", even
+      though caps were not the cause.
   - **BOTH BAKES COMPLETE 2026-09-09.** Orpheus taunts: 1520 clips (190 x 8
     voices, evenly distributed, 0 errors on the resumed run). F5 cast: 516 clips
     (N.O.V.A. 423, Kaelen 93, 0 errors). Verified by counting files against
