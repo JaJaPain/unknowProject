@@ -59,9 +59,31 @@ static func _unknown_capitalized_terms(text: String, allowed_aliases: Array) -> 
 	var result: Array[String] = []
 	for hit in regex.search_all(text):
 		var term := hit.get_string()
+		# SENTENCE-INITIAL capitals are grammar, not entities. Without this the
+		# heuristic flagged every line opening with an ordinary word --
+		# "Docked.", "Structural.", "Threat." -- and a stop-word list can never
+		# keep up, because the set of words that can begin a sentence is the
+		# whole language. That noise is what made this diagnostic useless: real
+		# unexplained references were buried under hundreds of false positives.
+		if _starts_a_sentence(text, hit.get_start()):
+			continue
 		if term.to_lower() not in allowed and term not in result:
 			result.append(term)
 	return result
+
+
+## True when the capital at `index` opens the text or a new sentence, where the
+## capital says nothing about the word itself.
+static func _starts_a_sentence(text: String, index: int) -> bool:
+	var i := index - 1
+	while i >= 0:
+		var c := text[i]
+		if c == " " or c == "	" or c == "
+" or c == "\"" or c == "'":
+			i -= 1
+			continue
+		return c == "." or c == "!" or c == "?" or c == ":" or c == "-" or c == "—"
+	return true  # only whitespace before it: start of the line
 
 
 static func _fail(reason: String, detail: Dictionary = {}) -> Dictionary:

@@ -161,32 +161,32 @@ onto a per-frame path, it will develop this exact bug.
 
 ### System crash preceded by a flood of narrative_quality warnings
 **Spotted:** 2026-09-10 (Abe: "system crashed").
-**Severity:** High -- a crash, and the log shows an unbounded loop before it.
-**Status:** OPEN, lead only. NOT yet reproduced or root-caused.
+**Severity:** was High, now Low -- the warning flood is FIXED; the crash itself
+is unexplained and stays open.
+**Status:** WARNING FLOOD FIXED 2026-09-10. Crash NOT reproduced or diagnosed.
 
-The last log (`user://logs/godot.log`) ends in **518 consecutive**
-`[GenerationDiagnostics] event type=narrative_quality reason=quality_warning
-source=GameRoot` lines with no other output between them. The counter climbs
-monotonically to 518 and the log simply stops -- consistent with a runaway retry
-or validation loop rather than a clean shutdown.
+**I over-read the log first time and want that on record.** I described 518
+consecutive `narrative_quality quality_warning` events as an "unbounded retry
+loop". There is no evidence of a loop: the counter is a session-wide running
+total, and the events are consistent with ordinary validation of many lines. The
+crash may be entirely unrelated. Do not treat the two as one bug.
 
-The last ordinary activity before the flood was routine: background chatter
-caching succeeding, and ambient minor-faction ships spawning
-("WRAITHS Interceptor 568").
+**The flood WAS real and is fixed.** The quality gate's only warning is
+`unexplained_reference:<Term>`, raised for any capitalised word not in
+`allowed_aliases`. Two faults made it fire constantly:
+1. `GameRoot.validate_and_register_narrative_lines` never PASSED any aliases, so
+   every faction, character and station name warned on every line, forever.
+2. The heuristic flagged SENTENCE-INITIAL capitals, so any line opening with an
+   ordinary word warned -- "Docked.", "Structural.", "Threat.". A stop-word list
+   cannot fix that: the set of words that can begin a sentence is the language.
 
-**Where to look:** `GameRoot` narrative-quality validation -- whatever calls
-`GenerationDiagnostics.record_event("narrative_quality", "quality_warning", ...)`.
-A validator that rejects a line and retries without a bounded attempt count would
-produce exactly this shape.
+Both fixed, with tests. This matters beyond tidiness: the gate exists to surface
+lines referencing things the player has never heard of, and at hundreds of false
+positives a session nobody could ever see a real one. A diagnostic nobody can
+read costs attention and returns nothing.
 
-**Note this is the "fallbacks are failures" rule firing at volume.** 518 quality
-warnings is not a cosmetic log issue; it means generation was failing repeatedly
-and something kept asking. Even if the crash turns out to be unrelated, the loop
-is a real defect.
-
-**Unknown and worth establishing first:** whether the crash is caused by this
-loop (memory/stack exhaustion) or merely coincident with it. The log gives no
-stack trace.
+**Still open:** the crash. No stack trace was captured. If it recurs, get the
+crash log before assuming a cause -- the warnings were a red herring.
 
 ---
 

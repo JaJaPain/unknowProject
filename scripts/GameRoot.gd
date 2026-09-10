@@ -4729,6 +4729,48 @@ func _persist_narrative_cache_payload_update(cache_key: String, payload: Diction
 	campaign_narrative_cache_store.update_result_payload(clean_key, payload)
 
 
+## Names the player is expected to recognise, so the quality gate stops reporting
+## them as unexplained references.
+##
+## Without this the gate had NO aliases at all: every faction, every fixed-cast
+## name and every station warned on every line, forever. Combined with the
+## sentence-opener bug that produced hundreds of warnings a session, which is why
+## nobody could read the diagnostic.
+##
+## Built once and cached -- this runs per line, and a session validates hundreds.
+var _known_alias_cache: Array = []
+
+
+func _known_entity_aliases() -> Array:
+	if not _known_alias_cache.is_empty():
+		return _known_alias_cache
+	var names := {}
+	# The fixed cast, who the player meets by name.
+	for n in ["Kaelen", "Nova", "Captain", "Jenna", "Kross"]:
+		names[n] = true
+	# Factions and ship classes, from the profile table the game already ships.
+	# Every word of a display name counts: "Aurelia Interceptor" teaches both.
+	for profile_key in FactionRegistry.KNOWN_PROFILES:
+		var profile: Dictionary = FactionRegistry.KNOWN_PROFILES[profile_key]
+		for word in str(profile.get("display_name", "")).split(" ", false):
+			var w := str(word).strip_edges()
+			if w.length() > 2:
+				names[w] = true
+	# Station and outpost names the player docks at and reads constantly. Taken
+	# from the systems the campaign actually contains rather than a second list
+	# that would drift out of sync with them.
+	if system_registry != null:
+		for sys_def in system_registry.get_all_systems():
+			if sys_def == null:
+				continue
+			for word in str(sys_def.display_name).split(" ", false):
+				var w2 := str(word).strip_edges()
+				if w2.length() > 2:
+					names[w2] = true
+	_known_alias_cache = names.keys()
+	return _known_alias_cache
+
+
 func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictionary:
 	if campaign_narrative_fingerprint_ledger == null:
 		return {"ok": true, "reason": "ledger_unavailable"}
@@ -4738,7 +4780,7 @@ func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictio
 		if text.is_empty():
 			continue
 		var quality: Dictionary = NarrativeQualityGateType.validate_line(
-			text, campaign_narrative_fingerprint_ledger, kind
+			text, campaign_narrative_fingerprint_ledger, kind, _known_entity_aliases()
 		)
 		if not bool(quality.get("ok", false)):
 			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
