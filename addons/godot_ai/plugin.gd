@@ -6,13 +6,8 @@ const GAME_HELPER_AUTOLOAD_PATH := "res://addons/godot_ai/runtime/game_helper.gd
 
 ## Editor-process Logger subclass — captures parse errors, @tool runtime
 ## errors, and push_error/push_warning so the LLM can read them via
-## `logs_read(source="editor")`. Loaded dynamically because
-## `extends Logger` requires Godot 4.5+. The logger script lives in the
-## `.gdignore`'d `runtime/loggers/` folder so Godot's editor scan never
-## parses it (no "Could not find base class Logger" error on < 4.5), and
-## LoggerLoader compiles it from source at runtime only after the
-## ClassDB.class_exists("Logger") gate below. See issue #231 / #475.
-const LoggerLoader := preload("res://addons/godot_ai/runtime/logger_loader.gd")
+## `logs_read(source="editor")`.
+const EditorLogger := preload("res://addons/godot_ai/runtime/editor_logger.gd")
 
 ## EditorSettings keys used to remember which server process the plugin
 ## spawned — survives editor restarts, lets a later editor session adopt
@@ -20,12 +15,17 @@ const LoggerLoader := preload("res://addons/godot_ai/runtime/logger_loader.gd")
 const MANAGED_SERVER_PID_SETTING := "godot_ai/managed_server_pid"
 const MANAGED_SERVER_VERSION_SETTING := "godot_ai/managed_server_version"
 const MANAGED_SERVER_WS_PORT_SETTING := "godot_ai/managed_server_ws_port"
+## Per-launch WS handshake auth token (#690), generated at spawn and handed
+## to the server via the GODOT_AI_WS_TOKEN spawn env. Persisted alongside
+## the managed-server record so a reloaded plugin instance adopting the
+## same server keeps authenticating; cleared with the rest of the record.
+const MANAGED_SERVER_WS_TOKEN_SETTING := "godot_ai/managed_server_ws_token"
+## keep_server_on_exit (#800): records whether the managed server was
+## launched with the keep-alive env opt-outs, so a later session adopting
+## the survivor routes its own editor exit through detach too. The live
+## setting can't answer that — it may have changed since the spawn.
+const MANAGED_SERVER_KEEP_ALIVE_SETTING := "godot_ai/managed_server_keep_alive"
 const UPDATE_RELOAD_RUNNER_SCRIPT := preload("res://addons/godot_ai/update_reload_runner.gd")
-
-## Preloaded so `_stop_server` / `force_restart_server` have a local script
-## dependency for the cleanup helper. See utils/uv_cache_cleanup.gd for what
-## this does and why it lives next to the server-stop hot path.
-const UvCacheCleanup := preload("res://addons/godot_ai/utils/uv_cache_cleanup.gd")
 
 ## Server lifecycle + port discovery extracted from this file (#297 PR 5).
 ## State enums + version-check seam extracted in PR 6 (#297). Plugin.gd
@@ -35,7 +35,6 @@ const UvCacheCleanup := preload("res://addons/godot_ai/utils/uv_cache_cleanup.gd
 const ServerLifecycleManager := preload("res://addons/godot_ai/utils/server_lifecycle.gd")
 const PortResolver := preload("res://addons/godot_ai/utils/port_resolver.gd")
 const ServerStateScript := preload("res://addons/godot_ai/utils/mcp_server_state.gd")
-const StartupPathScript := preload("res://addons/godot_ai/utils/mcp_startup_path.gd")
 
 ## Plugin-class scripts used by this file. The script-local preload aliases
 ## are ordinary dependency shorthand and keep construction sites compact.
@@ -48,41 +47,31 @@ const Telemetry := preload("res://addons/godot_ai/telemetry.gd")
 const LogBuffer := preload("res://addons/godot_ai/utils/log_buffer.gd")
 const GameLogBuffer := preload("res://addons/godot_ai/utils/game_log_buffer.gd")
 const EditorLogBuffer := preload("res://addons/godot_ai/utils/editor_log_buffer.gd")
+const SurfacedErrorTracker := preload("res://addons/godot_ai/utils/surfaced_error_tracker.gd")
 const Dock := preload("res://addons/godot_ai/mcp_dock.gd")
 const DebuggerPlugin := preload("res://addons/godot_ai/debugger/mcp_debugger_plugin.gd")
+const VisionRoutingScript := preload("res://addons/godot_ai/vision_routing.gd")
+const ExportPlugin := preload("res://addons/godot_ai/export/mcp_export_plugin.gd")
 const ClientConfigurator := preload("res://addons/godot_ai/client_configurator.gd")
 const WindowsPortReservation := preload("res://addons/godot_ai/utils/windows_port_reservation.gd")
+const McpToolRegistry := preload("res://addons/godot_ai/custom_tools/mcp_tool_registry.gd")
+const McpServiceLocator := preload("res://addons/godot_ai/custom_tools/mcp_service_locator.gd")
 
-## Handlers — preloaded as consts instead of registered via `class_name` so
-## they don't pollute the project-wide global scope. A user project that
-## happens to define its own `InputHandler`, `SceneHandler`, etc. would
-## otherwise hard-error on plugin enable.
-const EditorHandler := preload("res://addons/godot_ai/handlers/editor_handler.gd")
-const SceneHandler := preload("res://addons/godot_ai/handlers/scene_handler.gd")
-const NodeHandler := preload("res://addons/godot_ai/handlers/node_handler.gd")
-const ProjectHandler := preload("res://addons/godot_ai/handlers/project_handler.gd")
-const ClientHandler := preload("res://addons/godot_ai/handlers/client_handler.gd")
-const ScriptHandler := preload("res://addons/godot_ai/handlers/script_handler.gd")
-const ResourceHandler := preload("res://addons/godot_ai/handlers/resource_handler.gd")
-const ApiHandler := preload("res://addons/godot_ai/handlers/api_handler.gd")
-const FilesystemHandler := preload("res://addons/godot_ai/handlers/filesystem_handler.gd")
-const SignalHandler := preload("res://addons/godot_ai/handlers/signal_handler.gd")
-const AutoloadHandler := preload("res://addons/godot_ai/handlers/autoload_handler.gd")
-const InputHandler := preload("res://addons/godot_ai/handlers/input_handler.gd")
-const TestHandler := preload("res://addons/godot_ai/handlers/test_handler.gd")
-const BatchHandler := preload("res://addons/godot_ai/handlers/batch_handler.gd")
-const UiHandler := preload("res://addons/godot_ai/handlers/ui_handler.gd")
-const ThemeHandler := preload("res://addons/godot_ai/handlers/theme_handler.gd")
-const AnimationHandler := preload("res://addons/godot_ai/handlers/animation_handler.gd")
-const MaterialHandler := preload("res://addons/godot_ai/handlers/material_handler.gd")
-const ParticleHandler := preload("res://addons/godot_ai/handlers/particle_handler.gd")
-const CameraHandler := preload("res://addons/godot_ai/handlers/camera_handler.gd")
-const AudioHandler := preload("res://addons/godot_ai/handlers/audio_handler.gd")
-const PhysicsShapeHandler := preload("res://addons/godot_ai/handlers/physics_shape_handler.gd")
-const EnvironmentHandler := preload("res://addons/godot_ai/handlers/environment_handler.gd")
-const TextureHandler := preload("res://addons/godot_ai/handlers/texture_handler.gd")
-const CurveHandler := preload("res://addons/godot_ai/handlers/curve_handler.gd")
-const ControlDrawRecipeHandler := preload("res://addons/godot_ai/handlers/control_draw_recipe_handler.gd")
+## Handlers are intentionally NOT preloaded here (#736). The old
+## `const X := preload("res://addons/godot_ai/handlers/...")` block pulled
+## every handler — and everything handlers preload — into plugin.gd's
+## compile closure, so Godot parsed/compiled ~119 addon scripts before the
+## first instruction of _enter_tree ran. GDScript has no cross-restart
+## compile cache, so that stalled "Initializing plugins" on every editor
+## boot and every plugin re-enable. Handlers are now registered by script
+## path via McpDispatcher.register_lazy_handler / register_lazy and are
+## load()ed at the first dispatch of one of their commands.
+##
+## Handlers remain preload-style scripts with no `class_name` so they don't
+## pollute the project-wide global scope (#253): a user project that happens
+## to define its own `InputHandler`, `SceneHandler`, etc. would otherwise
+## hard-error on plugin enable.
+const HANDLERS_DIR := "res://addons/godot_ai/handlers/"
 
 ## The Python server writes its own PID here on startup (passed as
 ## `--pid-file`) and unlinks on clean exit. Deterministic replacement
@@ -94,18 +83,43 @@ const ControlDrawRecipeHandler := preload("res://addons/godot_ai/handlers/contro
 ## resolver, and characterization tests share one source of truth.
 const SERVER_PID_FILE := PortResolver.SERVER_PID_FILE
 
-## How long we watch the spawned server for early exit. If the process is
-## still alive when this expires, we stop watching. Mid-session crashes
-## after this point get caught by the WebSocket disconnect flow.
+## How long we watch the spawned server for early exit once it has PROVEN it
+## started — i.e. published its pid-file. If the process is still alive when
+## this expires, we stop watching. Mid-session crashes after this point get
+## caught by the WebSocket disconnect flow.
 const SERVER_WATCH_MS := 30 * 1000
+## Watch ceiling for a spawn that has NOT yet published its pid-file (#896).
+##
+## The short window above justifies itself with "mid-session crashes surface
+## via WebSocket disconnect" — which is only true for a server that got far
+## enough to be connected to. A cold `uvx` spawn on a slow link can still be
+## resolving and downloading its ~67-package environment at 30s, having proven
+## nothing; stopping the watch there means a launcher that dies at 45s is never
+## observed, `_diagnose_spawn_fast_exit` never runs (it is only reachable from
+## inside the watch), and the plugin redials forever while the dock shows a
+## bare "Disconnected".
+##
+## Sized to cover that download. Independent of any pre-warm: this window has
+## to hold even when nothing warmed the cache first.
+const SERVER_COLD_START_WATCH_MS := 180 * 1000
 ## Python's import graph (FastMCP + Rich + uvicorn) plus the pid-file write
 ## take a beat on cold starts, especially on Windows. Hold off on declaring
 ## a spawn a crash until this window elapses so the watch loop has time to
 ## observe either the pid-file (dev venv) or the port listening (uvx).
 const SPAWN_GRACE_MS := 5 * 1000
+## Windows only (#797). A uv-created venv launches the real server under a
+## different PID than the one `OS.create_process` returns, and that watched PID
+## has been seen dying on a healthy boot while the server was still starting
+## and had not written its pid-file yet. Past SPAWN_GRACE_MS that reads as
+## "server exited" and only the crash-survivor adoption path rescues the
+## session. While no pid-file has appeared we keep watching until this longer
+## window closes, rather than calling a handoff an exit. Sized to cover a cold
+## uvx resolve on top of the launcher hop, and kept well under SERVER_WATCH_MS
+## so a genuinely dead Windows spawn is still diagnosed inside the watch rather
+## than falling off the end of it.
+const SPAWN_HANDOFF_MS := 15 * 1000
 const SERVER_STATUS_PATH := "/godot-ai/status"
 const SERVER_STATUS_PROBE_TIMEOUT_MS := 800
-const SERVER_HANDSHAKE_VERSION_TIMEOUT_MS := 5 * 1000
 const STARTUP_TRACE_COUNTER_NAMES := [
 	"powershell",
 	"netstat",
@@ -144,22 +158,20 @@ const STARTUP_TRACE_COUNTER_NAMES := [
 ##
 ## `tests/unit/test_plugin_self_update_safety.py` locks this wording in.
 ##
-## `_editor_logger` is untyped because its script extends Godot 4.5+'s Logger
-## class: `logger_loader.gd` compiles it at runtime from on-disk source
-## (FileAccess + `GDScript.new()`) past the `ClassDB.class_exists("Logger")`
-## gate in `_attach_editor_logger`, so the plugin still parses on 4.4. Null on
-## Godot < 4.5 or before `_attach_editor_logger` runs; "attached" state IS
-## exactly "non-null".
 var _connection
 var _dispatcher
 var _telemetry
 var _log_buffer
 var _game_log_buffer
 var _editor_log_buffer
-var _editor_logger
+var _surfaced_error_tracker
+var _editor_logger: Logger
 var _dock
-var _handlers: Array = []  # prevent GC of RefCounted handlers
 var _debugger_plugin
+var _vision_routing
+var _export_plugin
+var _custom_tool_registry
+var _custom_tool_service_locator
 ## Spawn / stop / adopt orchestration plus state machine; allocated in
 ## `_init` so test fixtures (which never enter the tree) can drive
 ## `_start_server`. Owns `_server_pid`, `_server_state`, the version-
@@ -168,6 +180,19 @@ var _debugger_plugin
 var _lifecycle
 static var _server_started_this_session := false  # guard against re-entrant spawns
 static var _resolved_ws_port := ClientConfigurator.DEFAULT_WS_PORT
+## True once a startup walk has published a port via `_set_resolved_ws_port`
+## this editor session. Gates the `_enter_tree` pre-resolution seed: a fresh
+## session seeds `_resolved_ws_port` from the configured EditorSettings
+## value, but a plugin reload must keep the prior instance's published
+## resolution, which can legitimately differ from the configured value
+## (Windows-reservation remap, adopted-server record).
+static var _ws_port_resolution_published := false
+## Per-launch WS handshake auth token (#690). Static for the same reason as
+## _resolved_ws_port: a plugin reload in the same editor session adopts the
+## server the previous instance spawned, and must keep its token. Empty
+## when this editor never spawned a token-carrying server (dev servers,
+## fresh installs) — the handshake then omits the field.
+static var _ws_auth_token := ""
 
 ## Server-watch timer lives on the plugin because it's a Node — the
 ## manager is RefCounted and can't host children.
@@ -177,6 +202,9 @@ var _startup_trace_enabled := false
 var _startup_trace_start_ms := 0
 var _startup_trace_last_ms := 0
 var _startup_trace_counters: Dictionary = {}
+## Startup-path probes can now run on a worker thread (#678); the trace
+## counters they bump are shared with the main thread, so serialize.
+var _startup_trace_mutex := Mutex.new()
 var _startup_trace_netsh_start_count := 0
 
 
@@ -192,16 +220,21 @@ func _enter_tree() -> void:
 	## plugin has zero per-frame cost in the common case.
 	set_process(false)
 
+	## #740: register the export plugin BEFORE the headless guard so
+	## `godot --headless --export-*` runs strip the game-helper autoload
+	## from exported packs too — CI export pipelines are headless. The
+	## export plugin is inert outside exports: no server, no sockets.
+	_export_plugin = ExportPlugin.new()
+	add_export_plugin(_export_plugin)
+
 	if _mcp_disabled_for_headless_launch():
 		_headless_disabled = true
 		print("MCP | plugin disabled in headless mode")
 		return
 
-	## Self-update from a pre-loggers/ version leaves the old logger scripts
-	## orphaned at runtime/*.gd (the runner only writes files in the new ZIP,
-	## it doesn't prune). Those still `extends Logger` and re-emit the parse
-	## errors on Godot < 4.5. Delete them once so upgraders match a fresh
-	## install. No-op on fresh installs and dev checkouts (files absent).
+	## Self-update extracts over the live addon and doesn't prune files that
+	## disappeared from the new ZIP. Remove obsolete Logger-loader quarantine
+	## files/folders once so upgraders match a fresh install.
 	_cleanup_legacy_logger_scripts()
 
 	## Register port overrides before spawn so `http_port()` / `ws_port()`
@@ -210,19 +243,71 @@ func _enter_tree() -> void:
 	ClientConfigurator.ensure_settings_registered()
 	_startup_trace_phase("settings_registered")
 
+	## With the startup walk's blocking port resolution deferred to a worker
+	## (#678), the Connection below dials before `_set_resolved_ws_port`
+	## publishes. Seed the pre-resolution port from the configured
+	## EditorSettings value (a cheap main-thread read, not a blocking probe)
+	## so the first dial honors a `godot_ai/ws_port` override — without this
+	## it targeted the compile-time default and the override only took
+	## effect on the 1s retry.
+	_resolved_ws_port = _startup_ws_port_seed(
+		_ws_port_resolution_published,
+		_resolved_ws_port,
+		ClientConfigurator.ws_port(),
+	)
+
+	## #691: pre-warm the env snapshot on the main thread before any worker
+	## exists, so worker-thread env reads (dock refresh/action workers, the
+	## #678 startup walk's discovery worker) serve from the snapshot and can
+	## never race the spawn window's setenv/unsetenv around
+	## OS.create_process.
+	ClientConfigurator.warm_env_snapshot()
+
 	_log_buffer = LogBuffer.new()
+	## Apply the persisted dock "Log" toggle before anything logs through the
+	## buffer. Without this the choice only took effect after a manual toggle
+	## and reset to noisy on every editor restart (#626).
+	_log_buffer.enabled = McpSettings.mcp_logging_enabled()
+	## #678: in the real editor, run the startup path's blocking probes and
+	## kill-drain waits off the main thread so a contended port can't freeze
+	## plugin init/reload. Set here (not _init) so test fixtures — which
+	## extend this plugin but never enter the tree — keep the synchronous
+	## default and can call-then-assert.
+	_lifecycle.defer_blocking_work = true
+	## A completed self-update means the user's Update click already
+	## authorized replacing the previous-version backend. Armed BEFORE the
+	## startup walk (a peek, not a drain — `_flush_pending_self_update_telemetry`
+	## below still owns the read-and-clear) so the walk can weak-proof-kill
+	## the stale server an attach bridge kept alive, and bounded retries
+	## absorb the bridge-respawn port race, instead of latching INCOMPATIBLE
+	## and waiting for a manual recovery click.
+	if _pending_self_update_succeeded():
+		_lifecycle.authorize_stale_recovery()
 	_start_server()
 	_startup_trace_phase("server_start")
 
 	_game_log_buffer = GameLogBuffer.new()
 	_editor_log_buffer = EditorLogBuffer.new()
+	_surfaced_error_tracker = SurfacedErrorTracker.new(_editor_log_buffer, _game_log_buffer)
 	_attach_editor_logger()
-	_dispatcher = Dispatcher.new(_log_buffer)
+	_dispatcher = Dispatcher.new(_log_buffer, _surfaced_error_tracker)
+	_dispatcher.mcp_logging = _log_buffer.enabled
 	_startup_trace_phase("core_objects")
 
 	_connection = Connection.new()
 	_connection.log_buffer = _log_buffer
+	_connection.surfaced_error_tracker = _surfaced_error_tracker
 	_connection.ws_port = _resolved_ws_port
+	## Restore the token before the first connect: after an editor restart
+	## the static is empty but the managed-server record still names the
+	## token the running server was spawned with (#690). A fresh spawn later
+	## overwrites both via _set_ws_auth_token.
+	if _ws_auth_token.is_empty():
+		_ws_auth_token = str(_read_managed_server_record().get("ws_token", ""))
+	_connection.auth_token = _ws_auth_token
+	## Pause-depth restore boundary (#712): the dispatcher rebalances any
+	## pause_processing level a crashed handler leaked.
+	_dispatcher.pause_target = _connection
 	_connection.connect_blocked = _lifecycle.is_connection_blocked()
 	_connection.connect_block_reason = _lifecycle.get_status_dict().get("message", "")
 	if (
@@ -230,176 +315,225 @@ func _enter_tree() -> void:
 		and not ServerStateScript.is_terminal_diagnosis(_lifecycle.get_state())
 	):
 		_arm_server_version_check()
+	## Replay the custom-tool catalog on (re)connect so tools registered
+	## before the initial connection or during a disconnect window reach
+	## the server — send_event silently drops while _connected is false.
+	_connection.connection_state_changed.connect(_on_connection_state_changed)
 
 	_telemetry = Telemetry.new(_connection)
 
-	_debugger_plugin = DebuggerPlugin.new(_log_buffer, _game_log_buffer)
+	_debugger_plugin = DebuggerPlugin.new(_log_buffer, _game_log_buffer, _editor_log_buffer, _surfaced_error_tracker)
+	_vision_routing = VisionRoutingScript.new()
+	_vision_routing.log_buffer = _log_buffer
+	_debugger_plugin.vision_routing = _vision_routing
 	add_debugger_plugin(_debugger_plugin)
+	_connection.debugger_plugin = _debugger_plugin
 	_ensure_game_helper_autoload()
 
-	var editor_handler := EditorHandler.new(_log_buffer, _connection, _debugger_plugin, _game_log_buffer, _editor_log_buffer)
-	var scene_handler := SceneHandler.new(_connection)
-	var node_handler := NodeHandler.new(get_undo_redo())
-	var project_handler := ProjectHandler.new(_connection, _debugger_plugin)
-	var client_handler := ClientHandler.new()
-	var script_handler := ScriptHandler.new(get_undo_redo(), _connection)
-	var resource_handler := ResourceHandler.new(get_undo_redo(), _connection)
-	var api_handler := ApiHandler.new()
-	var filesystem_handler := FilesystemHandler.new()
-	var signal_handler := SignalHandler.new(get_undo_redo())
-	var autoload_handler := AutoloadHandler.new()
-	var input_handler := InputHandler.new()
-	var test_handler := TestHandler.new(get_undo_redo(), _log_buffer)
-	var batch_handler := BatchHandler.new(_dispatcher, get_undo_redo())
-	var ui_handler := UiHandler.new(get_undo_redo())
-	var theme_handler := ThemeHandler.new(get_undo_redo())
-	var animation_handler := AnimationHandler.new(get_undo_redo())
-	var material_handler := MaterialHandler.new(get_undo_redo())
-	var particle_handler := ParticleHandler.new(get_undo_redo())
-	var camera_handler := CameraHandler.new(get_undo_redo())
-	var audio_handler := AudioHandler.new(get_undo_redo())
-	var physics_shape_handler := PhysicsShapeHandler.new(get_undo_redo())
-	var environment_handler := EnvironmentHandler.new(get_undo_redo(), _connection)
-	var texture_handler := TextureHandler.new(get_undo_redo(), _connection)
-	var curve_handler := CurveHandler.new(get_undo_redo(), _connection)
-	var control_draw_recipe_handler := ControlDrawRecipeHandler.new(get_undo_redo())
-	_handlers = [editor_handler, scene_handler, node_handler, project_handler, client_handler, script_handler, resource_handler, api_handler, filesystem_handler, signal_handler, autoload_handler, input_handler, test_handler, batch_handler, ui_handler, theme_handler, animation_handler, material_handler, particle_handler, camera_handler, audio_handler, physics_shape_handler, environment_handler, texture_handler, curve_handler, control_draw_recipe_handler]
-
-	_dispatcher.register("get_editor_state", editor_handler.get_editor_state)
-	_dispatcher.register("get_scene_tree", scene_handler.get_scene_tree)
-	_dispatcher.register("get_open_scenes", scene_handler.get_open_scenes)
-	_dispatcher.register("find_nodes", scene_handler.find_nodes)
-	_dispatcher.register("create_scene", scene_handler.create_scene)
-	_dispatcher.register("open_scene", scene_handler.open_scene)
-	_dispatcher.register("save_scene", scene_handler.save_scene)
-	_dispatcher.register("save_scene_as", scene_handler.save_scene_as)
-	_dispatcher.register("get_selection", editor_handler.get_selection)
-	_dispatcher.register("create_node", node_handler.create_node)
-	_dispatcher.register("delete_node", node_handler.delete_node)
-	_dispatcher.register("reparent_node", node_handler.reparent_node)
-	_dispatcher.register("set_property", node_handler.set_property)
-	_dispatcher.register("rename_node", node_handler.rename_node)
-	_dispatcher.register("duplicate_node", node_handler.duplicate_node)
-	_dispatcher.register("move_node", node_handler.move_node)
-	_dispatcher.register("add_to_group", node_handler.add_to_group)
-	_dispatcher.register("remove_from_group", node_handler.remove_from_group)
-	_dispatcher.register("set_selection", node_handler.set_selection)
-	_dispatcher.register("get_node_properties", node_handler.get_node_properties)
-	_dispatcher.register("get_children", node_handler.get_children)
-	_dispatcher.register("get_groups", node_handler.get_groups)
-	_dispatcher.register("get_logs", editor_handler.get_logs)
-	_dispatcher.register("clear_logs", editor_handler.clear_logs)
-	_dispatcher.register("take_screenshot", editor_handler.take_screenshot)
-	_dispatcher.register("get_performance_monitors", editor_handler.get_performance_monitors)
-	_dispatcher.register("reload_plugin", editor_handler.reload_plugin)
-	_dispatcher.register("quit_editor", editor_handler.quit_editor)
-	_dispatcher.register("game_eval", editor_handler.game_eval)
-	_dispatcher.register("game_command", editor_handler.game_command)
-	_dispatcher.register("get_project_setting", project_handler.get_project_setting)
-	_dispatcher.register("set_project_setting", project_handler.set_project_setting)
-	_dispatcher.register("run_project", project_handler.run_project)
-	_dispatcher.register("stop_project", project_handler.stop_project)
-	_dispatcher.register("search_filesystem", project_handler.search_filesystem)
-	_dispatcher.register("configure_client", client_handler.configure_client)
-	_dispatcher.register("remove_client", client_handler.remove_client)
-	_dispatcher.register("check_client_status", client_handler.check_client_status)
-	_dispatcher.register("create_script", script_handler.create_script)
-	_dispatcher.register("patch_script", script_handler.patch_script)
-	_dispatcher.register("read_script", script_handler.read_script)
-	_dispatcher.register("attach_script", script_handler.attach_script)
-	_dispatcher.register("detach_script", script_handler.detach_script)
-	_dispatcher.register("find_symbols", script_handler.find_symbols)
-	_dispatcher.register("search_resources", resource_handler.search_resources)
-	_dispatcher.register("load_resource", resource_handler.load_resource)
-	_dispatcher.register("assign_resource", resource_handler.assign_resource)
-	_dispatcher.register("create_resource", resource_handler.create_resource)
-	_dispatcher.register("get_resource_info", resource_handler.get_resource_info)
-	_dispatcher.register("get_class_info", api_handler.get_class_info)
-	_dispatcher.register("read_file", filesystem_handler.read_file)
-	_dispatcher.register("write_file", filesystem_handler.write_file)
-	_dispatcher.register("reimport", filesystem_handler.reimport)
-	_dispatcher.register("list_signals", signal_handler.list_signals)
-	_dispatcher.register("connect_signal", signal_handler.connect_signal)
-	_dispatcher.register("disconnect_signal", signal_handler.disconnect_signal)
-	_dispatcher.register("list_autoloads", autoload_handler.list_autoloads)
-	_dispatcher.register("add_autoload", autoload_handler.add_autoload)
-	_dispatcher.register("remove_autoload", autoload_handler.remove_autoload)
-	_dispatcher.register("list_actions", input_handler.list_actions)
-	_dispatcher.register("add_action", input_handler.add_action)
-	_dispatcher.register("remove_action", input_handler.remove_action)
-	_dispatcher.register("bind_event", input_handler.bind_event)
-	_dispatcher.register("run_tests", test_handler.run_tests)
-	_dispatcher.register("get_test_results", test_handler.get_test_results)
-	_dispatcher.register("batch_execute", batch_handler.batch_execute)
-	_dispatcher.register("set_anchor_preset", ui_handler.set_anchor_preset)
-	_dispatcher.register("set_text", ui_handler.set_text)
-	_dispatcher.register("build_layout", ui_handler.build_layout)
-	_dispatcher.register("create_theme", theme_handler.create_theme)
-	_dispatcher.register("theme_set_color", theme_handler.set_color)
-	_dispatcher.register("theme_set_constant", theme_handler.set_constant)
-	_dispatcher.register("theme_set_font_size", theme_handler.set_font_size)
-	_dispatcher.register("theme_set_stylebox_flat", theme_handler.set_stylebox_flat)
-	_dispatcher.register("apply_theme", theme_handler.apply_theme)
-	_dispatcher.register("animation_player_create", animation_handler.create_player)
-	_dispatcher.register("animation_create", animation_handler.create_animation)
-	_dispatcher.register("animation_add_property_track", animation_handler.add_property_track)
-	_dispatcher.register("animation_add_method_track", animation_handler.add_method_track)
-	_dispatcher.register("animation_set_autoplay", animation_handler.set_autoplay)
-	_dispatcher.register("animation_play", animation_handler.play)
-	_dispatcher.register("animation_stop", animation_handler.stop)
-	_dispatcher.register("animation_list", animation_handler.list_animations)
-	_dispatcher.register("animation_get", animation_handler.get_animation)
-	_dispatcher.register("animation_create_simple", animation_handler.create_simple)
-	_dispatcher.register("animation_delete", animation_handler.delete_animation)
-	_dispatcher.register("animation_validate", animation_handler.validate_animation)
-	_dispatcher.register("animation_preset_fade", animation_handler.preset_fade)
-	_dispatcher.register("animation_preset_slide", animation_handler.preset_slide)
-	_dispatcher.register("animation_preset_shake", animation_handler.preset_shake)
-	_dispatcher.register("animation_preset_pulse", animation_handler.preset_pulse)
-	_dispatcher.register("material_create", material_handler.create_material)
-	_dispatcher.register("material_set_param", material_handler.set_param)
-	_dispatcher.register("material_set_shader_param", material_handler.set_shader_param)
-	_dispatcher.register("material_get", material_handler.get_material)
-	_dispatcher.register("material_list", material_handler.list_materials)
-	_dispatcher.register("material_assign", material_handler.assign_material)
-	_dispatcher.register("material_apply_to_node", material_handler.apply_to_node)
-	_dispatcher.register("material_apply_preset", material_handler.apply_preset)
-	_dispatcher.register("particle_create", particle_handler.create_particle)
-	_dispatcher.register("particle_set_main", particle_handler.set_main)
-	_dispatcher.register("particle_set_process", particle_handler.set_process)
-	_dispatcher.register("particle_set_draw_pass", particle_handler.set_draw_pass)
-	_dispatcher.register("particle_restart", particle_handler.restart_particle)
-	_dispatcher.register("particle_get", particle_handler.get_particle)
-	_dispatcher.register("particle_apply_preset", particle_handler.apply_preset)
-	_dispatcher.register("camera_create", camera_handler.create_camera)
-	_dispatcher.register("camera_configure", camera_handler.configure)
-	_dispatcher.register("camera_set_limits_2d", camera_handler.set_limits_2d)
-	_dispatcher.register("camera_set_damping_2d", camera_handler.set_damping_2d)
-	_dispatcher.register("camera_follow_2d", camera_handler.follow_2d)
-	_dispatcher.register("camera_get", camera_handler.get_camera)
-	_dispatcher.register("camera_list", camera_handler.list_cameras)
-	_dispatcher.register("camera_apply_preset", camera_handler.apply_preset)
-	_dispatcher.register("audio_player_create", audio_handler.create_player)
-	_dispatcher.register("audio_player_set_stream", audio_handler.set_stream)
-	_dispatcher.register("audio_player_set_playback", audio_handler.set_playback)
-	_dispatcher.register("audio_play", audio_handler.play)
-	_dispatcher.register("audio_stop", audio_handler.stop)
-	_dispatcher.register("audio_list", audio_handler.list_streams)
-	_dispatcher.register("physics_shape_autofit", physics_shape_handler.autofit)
-	_dispatcher.register("environment_create", environment_handler.create_environment)
-	_dispatcher.register("gradient_texture_create", texture_handler.create_gradient_texture)
-	_dispatcher.register("noise_texture_create", texture_handler.create_noise_texture)
-	_dispatcher.register("curve_set_points", curve_handler.set_points)
-	_dispatcher.register(
-		"control_draw_recipe", control_draw_recipe_handler.control_draw_recipe
+	## Lazy handler registration (#736): declare each handler's script path
+	## and constructor args, then map every command to (handler_key, method).
+	## The dispatcher load()s + constructs a handler at the first dispatch of
+	## one of its commands and caches the instance, so this block is the
+	## authoritative command list without pulling any handler script into the
+	## boot-time compile closure. Constructor args are captured now (they are
+	## all plugin-lifetime objects) and released by _dispatcher.clear() in
+	## _exit_tree.
+	var undo := get_undo_redo()
+	_dispatcher.register_lazy_handler("editor", HANDLERS_DIR + "editor_handler.gd", [_log_buffer, _connection, _debugger_plugin, _game_log_buffer, _editor_log_buffer, null, _surfaced_error_tracker, _vision_routing])
+	_dispatcher.register_lazy_handler("scene", HANDLERS_DIR + "scene_handler.gd", [_connection])
+	_dispatcher.register_lazy_handler("node", HANDLERS_DIR + "node_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("project", HANDLERS_DIR + "project_handler.gd", [_connection, _debugger_plugin, _editor_log_buffer])
+	_dispatcher.register_lazy_handler(
+		"client",
+		HANDLERS_DIR + "client_handler.gd",
+		[_connection, ClientConfigurator.capture_launch_context()],
 	)
+	_dispatcher.register_lazy_handler("script", HANDLERS_DIR + "script_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("resource", HANDLERS_DIR + "resource_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("api", HANDLERS_DIR + "api_handler.gd", [])
+	_dispatcher.register_lazy_handler("filesystem", HANDLERS_DIR + "filesystem_handler.gd", [_connection])
+	_dispatcher.register_lazy_handler("signal", HANDLERS_DIR + "signal_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("autoload", HANDLERS_DIR + "autoload_handler.gd", [])
+	_dispatcher.register_lazy_handler("input", HANDLERS_DIR + "input_handler.gd", [])
+	_dispatcher.register_lazy_handler("test", HANDLERS_DIR + "test_handler.gd", [undo, _log_buffer, _dispatcher, _connection])
+	_dispatcher.register_lazy_handler("batch", HANDLERS_DIR + "batch_handler.gd", [_dispatcher, undo])
+	_dispatcher.register_lazy_handler("ui", HANDLERS_DIR + "ui_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("theme", HANDLERS_DIR + "theme_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("animation", HANDLERS_DIR + "animation_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("material", HANDLERS_DIR + "material_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("particle", HANDLERS_DIR + "particle_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("camera", HANDLERS_DIR + "camera_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("audio", HANDLERS_DIR + "audio_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("physics_shape", HANDLERS_DIR + "physics_shape_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("environment", HANDLERS_DIR + "environment_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("texture", HANDLERS_DIR + "texture_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("curve", HANDLERS_DIR + "curve_handler.gd", [undo, _connection])
+	_dispatcher.register_lazy_handler("control_draw_recipe", HANDLERS_DIR + "control_draw_recipe_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("tilemap", HANDLERS_DIR + "tilemap_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("tileset", HANDLERS_DIR + "tileset_handler.gd", [])
+	_dispatcher.register_lazy_handler("gridmap", HANDLERS_DIR + "gridmap_handler.gd", [undo])
+	_dispatcher.register_lazy_handler("csg", HANDLERS_DIR + "csg_handler.gd", [undo])
+
+	_dispatcher.register_lazy("get_editor_state", "editor", &"get_editor_state")
+	_dispatcher.register_lazy("get_scene_tree", "scene", &"get_scene_tree")
+	_dispatcher.register_lazy("get_open_scenes", "scene", &"get_open_scenes")
+	_dispatcher.register_lazy("find_nodes", "scene", &"find_nodes")
+	_dispatcher.register_lazy("create_scene", "scene", &"create_scene")
+	_dispatcher.register_lazy("open_scene", "scene", &"open_scene")
+	_dispatcher.register_lazy("save_scene", "scene", &"save_scene")
+	_dispatcher.register_lazy("save_scene_as", "scene", &"save_scene_as")
+	_dispatcher.register_lazy("get_selection", "editor", &"get_selection")
+	_dispatcher.register_lazy("create_node", "node", &"create_node")
+	_dispatcher.register_lazy("delete_node", "node", &"delete_node")
+	_dispatcher.register_lazy("reparent_node", "node", &"reparent_node")
+	_dispatcher.register_lazy("set_property", "node", &"set_property")
+	_dispatcher.register_lazy("rename_node", "node", &"rename_node")
+	_dispatcher.register_lazy("duplicate_node", "node", &"duplicate_node")
+	_dispatcher.register_lazy("move_node", "node", &"move_node")
+	_dispatcher.register_lazy("add_to_group", "node", &"add_to_group")
+	_dispatcher.register_lazy("remove_from_group", "node", &"remove_from_group")
+	_dispatcher.register_lazy("set_selection", "node", &"set_selection")
+	_dispatcher.register_lazy("get_node_properties", "node", &"get_node_properties")
+	_dispatcher.register_lazy("get_children", "node", &"get_children")
+	_dispatcher.register_lazy("get_groups", "node", &"get_groups")
+	_dispatcher.register_lazy("get_logs", "editor", &"get_logs")
+	_dispatcher.register_lazy("clear_logs", "editor", &"clear_logs")
+	_dispatcher.register_lazy("take_screenshot", "editor", &"take_screenshot")
+	_dispatcher.register_lazy("get_performance_monitors", "editor", &"get_performance_monitors")
+	_dispatcher.register_lazy("reload_plugin", "editor", &"reload_plugin")
+	_dispatcher.register_lazy("quit_editor", "editor", &"quit_editor")
+	_dispatcher.register_lazy("game_eval", "editor", &"game_eval")
+	_dispatcher.register_lazy("game_command", "editor", &"game_command")
+	_dispatcher.register_lazy("get_project_setting", "project", &"get_project_setting")
+	_dispatcher.register_lazy("set_project_setting", "project", &"set_project_setting")
+	_dispatcher.register_lazy("set_main_scene", "project", &"set_main_scene")
+	_dispatcher.register_lazy("run_project", "project", &"run_project")
+	_dispatcher.register_lazy("stop_project", "project", &"stop_project")
+	_dispatcher.register_lazy("search_filesystem", "project", &"search_filesystem")
+	_dispatcher.register_lazy("configure_client", "client", &"configure_client")
+	_dispatcher.register_lazy("remove_client", "client", &"remove_client")
+	_dispatcher.register_lazy("check_client_status", "client", &"check_client_status")
+	_dispatcher.register_lazy("create_script", "script", &"create_script")
+	_dispatcher.register_lazy("patch_script", "script", &"patch_script")
+	_dispatcher.register_lazy("read_script", "script", &"read_script")
+	_dispatcher.register_lazy("attach_script", "script", &"attach_script")
+	_dispatcher.register_lazy("detach_script", "script", &"detach_script")
+	_dispatcher.register_lazy("find_symbols", "script", &"find_symbols")
+	_dispatcher.register_lazy("search_resources", "resource", &"search_resources")
+	_dispatcher.register_lazy("load_resource", "resource", &"load_resource")
+	_dispatcher.register_lazy("assign_resource", "resource", &"assign_resource")
+	_dispatcher.register_lazy("create_resource", "resource", &"create_resource")
+	_dispatcher.register_lazy("get_resource_info", "resource", &"get_resource_info")
+	_dispatcher.register_lazy("get_class_info", "api", &"get_class_info")
+	_dispatcher.register_lazy("read_file", "filesystem", &"read_file")
+	_dispatcher.register_lazy("write_file", "filesystem", &"write_file")
+	_dispatcher.register_lazy("reimport", "filesystem", &"reimport")
+	_dispatcher.register_lazy("scan_filesystem", "filesystem", &"scan_filesystem")
+	_dispatcher.register_lazy("list_signals", "signal", &"list_signals")
+	_dispatcher.register_lazy("connect_signal", "signal", &"connect_signal")
+	_dispatcher.register_lazy("disconnect_signal", "signal", &"disconnect_signal")
+	_dispatcher.register_lazy("list_autoloads", "autoload", &"list_autoloads")
+	_dispatcher.register_lazy("add_autoload", "autoload", &"add_autoload")
+	_dispatcher.register_lazy("remove_autoload", "autoload", &"remove_autoload")
+	_dispatcher.register_lazy("list_actions", "input", &"list_actions")
+	_dispatcher.register_lazy("add_action", "input", &"add_action")
+	_dispatcher.register_lazy("ensure_action", "input", &"ensure_action")
+	_dispatcher.register_lazy("remove_action", "input", &"remove_action")
+	_dispatcher.register_lazy("bind_event", "input", &"bind_event")
+	_dispatcher.register_lazy("ensure_binding", "input", &"ensure_binding")
+	_dispatcher.register_lazy("run_tests", "test", &"run_tests")
+	_dispatcher.register_lazy("get_test_results", "test", &"get_test_results")
+	_dispatcher.register_lazy("batch_execute", "batch", &"batch_execute")
+	_dispatcher.register_lazy("set_anchor_preset", "ui", &"set_anchor_preset")
+	_dispatcher.register_lazy("set_text", "ui", &"set_text")
+	_dispatcher.register_lazy("build_layout", "ui", &"build_layout")
+	_dispatcher.register_lazy("create_theme", "theme", &"create_theme")
+	_dispatcher.register_lazy("theme_set_color", "theme", &"set_color")
+	_dispatcher.register_lazy("theme_set_constant", "theme", &"set_constant")
+	_dispatcher.register_lazy("theme_set_font_size", "theme", &"set_font_size")
+	_dispatcher.register_lazy("theme_set_stylebox_flat", "theme", &"set_stylebox_flat")
+	_dispatcher.register_lazy("apply_theme", "theme", &"apply_theme")
+	_dispatcher.register_lazy("animation_player_create", "animation", &"create_player")
+	_dispatcher.register_lazy("animation_create", "animation", &"create_animation")
+	_dispatcher.register_lazy("animation_add_property_track", "animation", &"add_property_track")
+	_dispatcher.register_lazy("animation_add_method_track", "animation", &"add_method_track")
+	_dispatcher.register_lazy("animation_set_autoplay", "animation", &"set_autoplay")
+	_dispatcher.register_lazy("animation_play", "animation", &"play")
+	_dispatcher.register_lazy("animation_stop", "animation", &"stop")
+	_dispatcher.register_lazy("animation_list", "animation", &"list_animations")
+	_dispatcher.register_lazy("animation_get", "animation", &"get_animation")
+	_dispatcher.register_lazy("animation_create_simple", "animation", &"create_simple")
+	_dispatcher.register_lazy("animation_delete", "animation", &"delete_animation")
+	_dispatcher.register_lazy("animation_validate", "animation", &"validate_animation")
+	_dispatcher.register_lazy("animation_preset_fade", "animation", &"preset_fade")
+	_dispatcher.register_lazy("animation_preset_slide", "animation", &"preset_slide")
+	_dispatcher.register_lazy("animation_preset_shake", "animation", &"preset_shake")
+	_dispatcher.register_lazy("animation_preset_pulse", "animation", &"preset_pulse")
+	_dispatcher.register_lazy("material_create", "material", &"create_material")
+	_dispatcher.register_lazy("material_set_param", "material", &"set_param")
+	_dispatcher.register_lazy("material_set_shader_param", "material", &"set_shader_param")
+	_dispatcher.register_lazy("material_get", "material", &"get_material")
+	_dispatcher.register_lazy("material_list", "material", &"list_materials")
+	_dispatcher.register_lazy("material_assign", "material", &"assign_material")
+	_dispatcher.register_lazy("material_apply_to_node", "material", &"apply_to_node")
+	_dispatcher.register_lazy("material_apply_preset", "material", &"apply_preset")
+	_dispatcher.register_lazy("particle_create", "particle", &"create_particle")
+	_dispatcher.register_lazy("particle_set_main", "particle", &"set_main")
+	_dispatcher.register_lazy("particle_set_process", "particle", &"set_process")
+	_dispatcher.register_lazy("particle_set_draw_pass", "particle", &"set_draw_pass")
+	_dispatcher.register_lazy("particle_restart", "particle", &"restart_particle")
+	_dispatcher.register_lazy("particle_get", "particle", &"get_particle")
+	_dispatcher.register_lazy("particle_apply_preset", "particle", &"apply_preset")
+	_dispatcher.register_lazy("camera_create", "camera", &"create_camera")
+	_dispatcher.register_lazy("camera_configure", "camera", &"configure")
+	_dispatcher.register_lazy("camera_set_limits_2d", "camera", &"set_limits_2d")
+	_dispatcher.register_lazy("camera_set_damping_2d", "camera", &"set_damping_2d")
+	_dispatcher.register_lazy("camera_follow_2d", "camera", &"follow_2d")
+	_dispatcher.register_lazy("camera_get", "camera", &"get_camera")
+	_dispatcher.register_lazy("camera_list", "camera", &"list_cameras")
+	_dispatcher.register_lazy("camera_apply_preset", "camera", &"apply_preset")
+	_dispatcher.register_lazy("audio_player_create", "audio", &"create_player")
+	_dispatcher.register_lazy("audio_player_set_stream", "audio", &"set_stream")
+	_dispatcher.register_lazy("audio_player_set_playback", "audio", &"set_playback")
+	_dispatcher.register_lazy("audio_play", "audio", &"play")
+	_dispatcher.register_lazy("audio_stop", "audio", &"stop")
+	_dispatcher.register_lazy("audio_list", "audio", &"list_streams")
+	_dispatcher.register_lazy("physics_shape_autofit", "physics_shape", &"autofit")
+	_dispatcher.register_lazy("environment_create", "environment", &"create_environment")
+	_dispatcher.register_lazy("gradient_texture_create", "texture", &"create_gradient_texture")
+	_dispatcher.register_lazy("noise_texture_create", "texture", &"create_noise_texture")
+	_dispatcher.register_lazy("curve_set_points", "curve", &"set_points")
+	_dispatcher.register_lazy("control_draw_recipe", "control_draw_recipe", &"control_draw_recipe")
+	_dispatcher.register_lazy("tilemap_set_cell", "tilemap", &"set_cell")
+	_dispatcher.register_lazy("tilemap_set_cells_rect", "tilemap", &"set_cells_rect")
+	_dispatcher.register_lazy("tilemap_clear", "tilemap", &"clear_layer")
+	_dispatcher.register_lazy("tilemap_get_cells", "tilemap", &"get_used_cells")
+	_dispatcher.register_lazy("tileset_get_atlas_tiles", "tileset", &"get_atlas_tiles")
+	_dispatcher.register_lazy("tileset_get_atlas_image", "tileset", &"get_atlas_image")
+	_dispatcher.register_lazy("gridmap_set_item", "gridmap", &"set_item")
+	_dispatcher.register_lazy("gridmap_fill", "gridmap", &"fill")
+	_dispatcher.register_lazy("gridmap_clear", "gridmap", &"clear_layer")
+	_dispatcher.register_lazy("gridmap_get_used_cells", "gridmap", &"get_used_cells")
+	_dispatcher.register_lazy("gridmap_list_library_items", "gridmap", &"list_library_items")
+	_dispatcher.register_lazy("csg_create", "csg", &"create")
+	_dispatcher.register_lazy("csg_set_operation", "csg", &"set_operation")
 
 	_connection.dispatcher = _dispatcher
 	add_child(_connection)
 	_startup_trace_phase("handlers_registered")
 
+	# Custom tool registry
+	_custom_tool_service_locator = McpServiceLocator.new()
+	_custom_tool_service_locator.setup(_connection, _log_buffer)
+	_custom_tool_registry = McpToolRegistry.new()
+	_custom_tool_registry.setup(_dispatcher, _custom_tool_service_locator)
+	_custom_tool_registry.tools_changed.connect(_on_custom_tools_changed)
+	_custom_tool_registry.mark_ready()
+	_startup_trace_phase("custom_tools_ready")
+
 	# Dock panel
 	_dock = Dock.new()
+	_dock.vision_routing = _vision_routing
 	_dock.name = "Godot AI"
 	_dock.setup(_connection, _log_buffer, self)
 	add_control_to_dock(DOCK_SLOT_RIGHT_BL, _dock)
@@ -410,8 +544,8 @@ func _enter_tree() -> void:
 		_telemetry.record_dock_startup()
 		_flush_pending_self_update_telemetry()
 		_telemetry.flush_pending_plugin_reload()
-	var startup_path: String = str(_lifecycle.get_startup_path())
-	_startup_trace_finish(startup_path if not startup_path.is_empty() else "loaded")
+	## The startup-trace 'done' line is stamped by _start_server after the
+	## (possibly suspended) walk completes — not here (#682 review).
 
 
 ## Public wrapper around the dev-server-toggle telemetry emit. Lets the
@@ -426,6 +560,28 @@ func record_dev_server_toggle(action: String) -> void:
 	_telemetry.record_dev_server_toggle(action)
 
 
+## Non-draining read of the runner's pending self-update marker. Peeked
+## before `_start_server` (the drain in `_flush_pending_self_update_telemetry`
+## runs later, after the dock attaches) so the startup walk knows an update
+## just completed. Only a `status == "success"` marker counts: a failed
+## install left the OLD plugin version enabled, and killing a same-version
+## backend is not this path's business.
+func _pending_self_update_succeeded() -> bool:
+	var settings := EditorInterface.get_editor_settings()
+	if settings == null:
+		return false
+	var key := UPDATE_RELOAD_RUNNER_SCRIPT.PENDING_SELF_UPDATE_TELEMETRY_KEY
+	if not settings.has_setting(key):
+		return false
+	var raw := str(settings.get_setting(key))
+	if raw.is_empty():
+		return false
+	var parsed = JSON.parse_string(raw)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	return str(parsed.get("status", "")) == "success"
+
+
 ## Drain any self_update event written by `update_reload_runner` during the
 ## previous disable -> enable window.
 func _flush_pending_self_update_telemetry() -> void:
@@ -436,18 +592,48 @@ func _flush_pending_self_update_telemetry() -> void:
 	var status := str(parsed.get("status", "unknown"))
 	var error := str(parsed.get("error", ""))
 	## Positional args: GDScript doesn't support keyword args in calls
-	## (unlike Python). from_version + to_version are empty strings here
-	## — only ``status`` and ``error`` are known at flush time.
-	_telemetry.record_self_update(status, "", "", error)
+	## (unlike Python). from/to versions ride the marker since the repin
+	## gate landed; markers written by older runners simply lack them.
+	var from_version := str(parsed.get("from_version", ""))
+	var to_version := str(parsed.get("to_version", ""))
+	_telemetry.record_self_update(status, from_version, to_version, error)
+	## After a successful update, previously-configured client entries still
+	## pin the old server version; arm the dock's one-shot auto-repin so its
+	## first healthy status sweep rewrites them without the user having to
+	## click through the drift banner. The dock repins ONLY entries whose
+	## sole drift is the old version pin — it needs `from_version` to render
+	## that comparison, so a marker from an older runner (no version fields)
+	## arms nothing and the drift banner stays the manual path. `has_method`
+	## (not a typed call): the dock script is one of the files the update
+	## just overwrote, and the untyped-reference convention applies across
+	## that boundary.
+	if status == "success" and _dock != null and _dock.has_method("notify_self_update_success"):
+		_dock.notify_self_update_success(from_version)
 
 
 
 
 func _exit_tree() -> void:
+	## Registered before the headless guard in _enter_tree, so it must be
+	## removed before the headless early-return here too.
+	if _export_plugin != null:
+		remove_export_plugin(_export_plugin)
+		_export_plugin = null
+
 	if _headless_disabled:
 		_server_started_this_session = false
 		_headless_disabled = false
+		## `_lifecycle` is built in _init(), before the headless guard in
+		## _enter_tree() runs, so it exists even on this path — null it here
+		## too (the full teardown below is skipped).
+		_lifecycle = null
 		return
+
+	if _custom_tool_registry != null:
+		_custom_tool_registry.clear()
+		_custom_tool_registry = null
+
+	_custom_tool_service_locator = null
 
 	## Outer-to-inner teardown. Dispatcher Callables hold RefCounted handlers
 	## alive past the point where Godot reloads their class_name scripts — the
@@ -460,13 +646,14 @@ func _exit_tree() -> void:
 	if _connection:
 		_connection.teardown()
 
-	# Break the Callable -> handler ref chain before dropping _handlers, so the
-	# array clear actually decrefs the handler RefCounteds to zero.
+	# Drop the dispatcher's Callables AND its lazily-constructed handler
+	# instances (#736: handlers live in the dispatcher's cache now). Handler
+	# destructors run here, while their scripts are still loaded.
 	if _dispatcher:
 		_dispatcher.clear()
-
-	# Handler destructors run here, while their class_name scripts are still loaded.
-	_handlers.clear()
+	if _vision_routing:
+		_vision_routing.shutdown()
+		_vision_routing = null
 
 	if _dock:
 		remove_control_from_docks(_dock)
@@ -489,8 +676,20 @@ func _exit_tree() -> void:
 	_log_buffer = null
 	_game_log_buffer = null
 	_editor_log_buffer = null
+	_surfaced_error_tracker = null
 
-	_stop_server()
+	## keep_server_on_exit (#800): the manager routes on the spawn-time
+	## keep-alive flag (persisted in the managed-server record), NOT the
+	## live setting — detach leaves the server for the next session (or a
+	## same-session disable/enable cycle) to adopt. Explicit stops (dock
+	## Restart, update reload) still kill via _stop_server.
+	_lifecycle.teardown_for_editor_exit()
+	## Match the nulling every sibling field gets above. `_lifecycle` was built
+	## as ServerLifecycleManager.new(self), so it holds the plugin back —
+	## leaving the field set keeps the manager and its scripts alive past
+	## plugin teardown (surfaces as leaked ObjectDB instances / "resource still
+	## in use" for server_lifecycle.gd + server_version_check.gd at editor exit).
+	_lifecycle = null
 	## Symmetric with prepare_for_update_reload: the static guard persists
 	## across disable/enable within a single editor session, so the re-enabled
 	## plugin instance's _start_server would short-circuit and never respawn.
@@ -504,9 +703,7 @@ func _exit_tree() -> void:
 ## Attach editor_logger.gd as a Godot logger so editor-process script
 ## errors (parse errors, @tool runtime errors, EditorPlugin errors,
 ## push_error/push_warning) flow into _editor_log_buffer for
-## logs_read(source="editor"). Logger subclassing is 4.5+ only; the
-## ClassDB gate keeps the plugin loadable on 4.4 with no-op editor logs
-## (the buffer stays empty, logs_read returns no entries).
+## logs_read(source="editor").
 ##
 ## Limitation called out in the issue: parse errors fired *before* the
 ## plugin's _enter_tree (e.g. during the editor's initial filesystem
@@ -516,36 +713,53 @@ func _exit_tree() -> void:
 ## file would re-emit them but at the cost of disrupting the user's
 ## editing state, so we accept the gap.
 func _attach_editor_logger() -> void:
-	if not (ClassDB.class_exists("Logger") and OS.has_method("add_logger")):
-		return
-	var logger_script := LoggerLoader.build(LoggerLoader.EDITOR_LOGGER_PATH)
-	if logger_script == null:
-		return
-	_editor_logger = logger_script.new(_editor_log_buffer)
-	OS.call("add_logger", _editor_logger)
+	_editor_logger = EditorLogger.new(_editor_log_buffer)
+	OS.add_logger(_editor_logger)
 
 
-## Remove the pre-2.5.8 logger scripts left at runtime/*.gd by a self-update
-## (the runner doesn't prune files dropped between versions). They `extends
-## Logger` and would re-emit "Could not find base class Logger" parse errors
-## on Godot < 4.5 even though the live copies now live in the .gdignore'd
-## runtime/loggers/ folder. Idempotent: existence-guarded, so it's a no-op on
-## fresh installs and symlinked dev checkouts.
+## Remove old Logger-quarantine artifacts left by extract-over-live
+## self-update. Idempotent: existence-guarded, so it's a no-op on fresh
+## installs and symlinked dev checkouts.
 func _cleanup_legacy_logger_scripts() -> void:
-	var legacy := [
-		"res://addons/godot_ai/runtime/editor_logger.gd",
-		"res://addons/godot_ai/runtime/editor_logger.gd.uid",
-		"res://addons/godot_ai/runtime/game_logger.gd",
-		"res://addons/godot_ai/runtime/game_logger.gd.uid",
+	var legacy_files := [
+		"res://addons/godot_ai/runtime/logger_loader.gd",
+		"res://addons/godot_ai/runtime/logger_loader.gd.uid",
+		"res://addons/godot_ai/testing/script_error_capture_loader.gd",
+		"res://addons/godot_ai/testing/script_error_capture_loader.gd.uid",
 	]
-	for res_path in legacy:
+	for res_path in legacy_files:
 		if FileAccess.file_exists(res_path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(res_path))
+	var legacy_dirs := [
+		"res://addons/godot_ai/runtime/loggers",
+		"res://addons/godot_ai/testing/loggers",
+	]
+	for res_path in legacy_dirs:
+		var absolute := ProjectSettings.globalize_path(res_path)
+		if DirAccess.dir_exists_absolute(absolute):
+			_remove_dir_recursive_absolute(absolute)
+
+
+static func _remove_dir_recursive_absolute(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var name := dir.get_next()
+	while not name.is_empty():
+		var child := path.path_join(name)
+		if dir.current_is_dir():
+			_remove_dir_recursive_absolute(child)
+		else:
+			DirAccess.remove_absolute(child)
+		name = dir.get_next()
+	dir.list_dir_end()
+	DirAccess.remove_absolute(path)
 
 
 func _detach_editor_logger() -> void:
-	if _editor_logger != null and OS.has_method("remove_logger"):
-		OS.call("remove_logger", _editor_logger)
+	if _editor_logger != null:
+		OS.remove_logger(_editor_logger)
 	_editor_logger = null
 
 
@@ -638,7 +852,9 @@ func _startup_trace_begin() -> void:
 func _startup_trace_count(counter: String, amount: int = 1) -> void:
 	if not _startup_trace_enabled:
 		return
+	_startup_trace_mutex.lock()
 	_startup_trace_counters[counter] = int(_startup_trace_counters.get(counter, 0)) + amount
+	_startup_trace_mutex.unlock()
 
 
 func _startup_trace_phase(name: String) -> void:
@@ -656,17 +872,37 @@ func _startup_trace_finish(path: String) -> void:
 	if not _startup_trace_enabled:
 		return
 	var now := Time.get_ticks_msec()
+	## Same lock as _startup_trace_count — a worker probe may still be
+	## bumping counters while this reads/writes the shared dictionary.
+	_startup_trace_mutex.lock()
 	_startup_trace_counters["netsh"] = (
 		WindowsPortReservation.netsh_query_count() - _startup_trace_netsh_start_count
 	)
+	var counters_snapshot: Dictionary = _startup_trace_counters.duplicate()
+	_startup_trace_mutex.unlock()
 	print(
 		"MCP startup trace | done path=%s total_ms=%d counters=%s"
-		% [path, now - _startup_trace_start_ms, str(_startup_trace_counters)]
+		% [path, now - _startup_trace_start_ms, str(counters_snapshot)]
 	)
 
 
 func _start_server() -> void:
+	## Fire-and-forget: the walk is a coroutine in production (#678). Its
+	## completion continuation must NOT live in this method — a reload can
+	## free this plugin while the walk is suspended, and resuming a freed
+	## Node's coroutine errors out. The manager calls
+	## `_finish_startup_trace_after_walk` on walk completion instead,
+	## guarded by is_instance_valid.
 	_lifecycle.start_server()
+
+
+## Called by the lifecycle manager when the (possibly suspended) startup
+## walk completes — the point where the real startup outcome is known, so
+## the trace 'done' line reports the true contended-port path and duration
+## instead of a pre-walk placeholder (#682 review).
+func _finish_startup_trace_after_walk() -> void:
+	var startup_path: String = str(_lifecycle.get_startup_path())
+	_startup_trace_finish(startup_path if not startup_path.is_empty() else "loaded")
 
 
 ## Test-fixture shim — characterization tests in test_plugin_lifecycle
@@ -769,15 +1005,52 @@ static func _probe_live_server_status(port: int, timeout_ms: int = SERVER_STATUS
 	if not (parsed is Dictionary):
 		result["error"] = "invalid_json"
 		return result
-	result["reachable"] = true
-	result["name"] = str(parsed.get("name", ""))
-	result["version"] = _extract_server_version(parsed)
-	result["ws_port"] = int(parsed.get("ws_port", 0))
-	## `package_path` was added in v2.4.4 (#416) so the dock's
-	## "Incompatible server" banner can name the source of a version
-	## skew. Older servers omit it; treat the missing field as "".
-	result["package_path"] = str(parsed.get("package_path", ""))
+	result.merge(_project_status_payload(parsed), true)
 	return result
+
+
+## Project a parsed `/godot-ai/status` body into the probe's result shape.
+##
+## Extracted from the probe so it can be tested against a real payload. The
+## probe is a whitelist — a field the server publishes does not reach callers
+## unless it is copied here — and that is silent: the consumer just sees a
+## missing key. #824's lease check shipped reading `active_lease_count` while
+## this projection dropped it, so the branch was dead on every platform, and
+## the tests could not see it because they hand-built the result dict this
+## function is supposed to produce. Add new fields here, and cover them with a
+## projection test rather than a fabricated `live_status`.
+static func _project_status_payload(parsed: Dictionary) -> Dictionary:
+	var projected := {
+		"reachable": true,
+		"name": str(parsed.get("name", "")),
+		"version": _extract_server_version(parsed),
+		"ws_port": int(parsed.get("ws_port", 0)),
+		## `package_path` was added in v2.4.4 (#416) so the dock's
+		## "Incompatible server" banner can name the source of a version
+		## skew. Older servers omit it; treat the missing field as "".
+		"package_path": str(parsed.get("package_path", "")),
+	}
+	## #913: live server telemetry state. Absent on older backends so the
+	## dock can tell "too old to publish" from an explicit false.
+	var telemetry_enabled: Variant = parsed.get("telemetry_enabled")
+	if telemetry_enabled is bool:
+		projected["telemetry_enabled"] = telemetry_enabled
+	## #824: advisory attach-lease count, consumed by teardown to decide
+	## detach-vs-kill. Absent stays absent rather than defaulting to 0, so
+	## `ServerLifecycleManager.active_lease_count` keeps distinguishing "backend
+	## too old to publish this" from "backend reports zero leases" — both stop
+	## the server, but only one of them is a compatibility statement.
+	## Anything that is not a finite whole number is dropped, for the same
+	## reason the value is clamped downstream: a malformed count must not read
+	## as occupancy and keep a server alive. Godot parses every JSON number as
+	## a float, so the whole-number test is what distinguishes a real count
+	## from junk — truncating 1.5 to 1 would manufacture a held lease.
+	var raw: Variant = parsed.get("active_lease_count")
+	if raw is int or raw is float:
+		var numeric := float(raw)
+		if is_finite(numeric) and numeric == floor(numeric):
+			projected["active_lease_count"] = int(numeric)
+	return projected
 
 
 func _probe_live_server_status_for_port(port: int) -> Dictionary:
@@ -854,6 +1127,9 @@ func _arm_server_version_check() -> void:
 
 
 func _update_process_enabled() -> void:
+	if _lifecycle == null:
+		set_process(false)
+		return
 	set_process(
 		_lifecycle.get_adoption_watch_deadline_ms() > 0
 		or _lifecycle.is_awaiting_server_version()
@@ -861,6 +1137,12 @@ func _update_process_enabled() -> void:
 
 
 func _process(_delta: float) -> void:
+	## Guard: during script-reload / dual-plugin enable races `_lifecycle`
+	## can be null while process is still armed — spam would otherwise flood
+	## the Output dock every frame.
+	if _lifecycle == null:
+		set_process(false)
+		return
 	var now := Time.get_ticks_msec()
 	var version_check = _lifecycle.get_version_check()
 	if version_check != null:
@@ -895,11 +1177,12 @@ func _on_server_version_unverified() -> void:
 	_update_process_enabled()
 
 
-## Start a 1s-tick timer that watches the spawned server for up to
-## SERVER_WATCH_MS. If the process dies inside the window we drain the
-## captured pipes and mark the server as crashed so the dock can surface
-## what went wrong. After the window expires we close the pipes so they
-## don't pin file descriptors or fill their kernel buffers. See #146.
+## Start a 1s-tick timer that watches the spawned server through its cold-start
+## window, then for SERVER_WATCH_MS after pid-file publication. If the process
+## dies inside the active window we drain the captured pipes and mark the server
+## as crashed so the dock can surface what went wrong. After the window expires
+## we close the pipes so they don't pin file descriptors or fill their kernel
+## buffers. See #146 and #896.
 func _start_server_watch() -> void:
 	_stop_server_watch()
 	_server_watch_timer = Timer.new()
@@ -962,14 +1245,34 @@ func get_server_status() -> Dictionary:
 	return _lifecycle.get_status_dict()
 
 
+## Diagnostic accessor for the dock's ownership label. Positive = a PID this
+## plugin instance spawned (or re-acquired via the managed record); -1 = an
+## adopted external/attach-owned backend. Display only — adoption transfers
+## end-of-life responsibility, so this value is never kill proof (#669).
+func get_server_pid() -> int:
+	return _lifecycle.get_server_pid()
+
+
 func get_resolved_ws_port() -> int:
 	return _resolved_ws_port
 
 
 func _set_resolved_ws_port(port: int) -> void:
+	_ws_port_resolution_published = true
 	_resolved_ws_port = port
 	if _connection != null:
 		_connection.ws_port = port
+
+
+## Pure decision helper — environment-state reads (the published flag, the
+## EditorSettings port) stay in `_enter_tree`; the logic lives here so tests
+## can drive the three inputs directly without mutating the shared statics.
+static func _startup_ws_port_seed(
+	resolution_published: bool,
+	session_ws_port: int,
+	configured_ws_port: int
+) -> int:
+	return session_ws_port if resolution_published else configured_ws_port
 
 
 func _resolve_ws_port() -> int:
@@ -1009,21 +1312,19 @@ static func _resolve_ws_port_from_output(
 
 
 ## Plugin-level shim around the resolver — keeps the startup-trace
-## counter increment and the `_ProofPlugin` override hook on the plugin.
+## counter wiring and the `_ProofPlugin` override hook on the plugin.
+## The scrape takes `_startup_trace_count` directly so the counter names
+## track the scraper that actually ran (Windows can fall through netstat
+## → PowerShell; the fallback used to hide under the `netstat` count).
 func _is_port_in_use(port: int) -> bool:
 	if PortResolver.can_bind_local_port(port):
 		## POSIX can still have an IPv6 wildcard listener on this port
 		## even when an IPv4 loopback bind succeeds. Confirm through
 		## lsof so startup and kill-path discovery agree.
 		if OS.get_name() != "Windows":
-			_startup_trace_count("lsof")
-			return PortResolver.is_port_in_use_via_scrape(port)
+			return PortResolver.is_port_in_use_via_scrape(port, _startup_trace_count)
 		return false
-	if OS.get_name() == "Windows":
-		_startup_trace_count("netstat")
-	else:
-		_startup_trace_count("lsof")
-	return PortResolver.is_port_in_use_via_scrape(port)
+	return PortResolver.is_port_in_use_via_scrape(port, _startup_trace_count)
 
 
 ## Pass `_startup_trace_count` so the resolver bumps the right counter
@@ -1081,13 +1382,20 @@ func _find_managed_pid(port: int) -> int:
 ## preserves the historical behavior for callers outside the spawn flow
 ## (`can_recover_incompatible_server`, the dock's UI buttons), where a
 ## fresh probe is the right thing.
-func _evaluate_strong_port_occupant_proof(port: int, live: Dictionary = {}) -> Dictionary:
+## `record_override`: a managed-server record snapshot the caller already
+## read. Non-empty skips the internal `_read_managed_server_record()` —
+## required when this helper runs on a worker thread (#678), because the
+## record lives in EditorSettings, which is main-thread-only. `{}` keeps
+## the historical read-it-here behavior for synchronous callers
+## (`_read_managed_server_record` never returns a bare `{}`, so the
+## sentinel is unambiguous).
+func _evaluate_strong_port_occupant_proof(port: int, live: Dictionary = {}, record_override: Dictionary = {}) -> Dictionary:
 	var result := {"proof": "", "pids": []}
 	var listener_pids := _find_all_pids_on_port(port)
 	if listener_pids.is_empty():
 		return result
 
-	var record := _read_managed_server_record()
+	var record: Dictionary = record_override if not record_override.is_empty() else _read_managed_server_record()
 	var record_pid := int(record.get("pid", 0))
 	var record_version := str(record.get("version", ""))
 
@@ -1115,16 +1423,33 @@ func _evaluate_strong_port_occupant_proof(port: int, live: Dictionary = {}) -> D
 		and not record_version.is_empty()
 		and str(current_live.get("version", "")) == record_version
 	):
-		return {"proof": "status_matches_record", "pids": listener_pids}
+		## Brand-check every listener before returning it as a kill target
+		## (#686): the /godot-ai/status match proves *a* godot-ai server owns
+		## the port, but `listener_pids` is a raw scrape that can include an
+		## unrelated process sharing the port number (e.g. a ::1-only
+		## listener lsof reports alongside our IPv4 one). The other two tiers
+		## brand-check every target (#525); this tier feeds the fully
+		## automatic start_server drift-kill path, so it must too.
+		var branded_listeners: Array[int] = []
+		for pid in listener_pids:
+			var listener_pid := int(pid)
+			if _pid_cmdline_is_godot_ai_for_proof(listener_pid):
+				branded_listeners.append(listener_pid)
+		if not branded_listeners.is_empty():
+			return {"proof": "status_matches_record", "pids": branded_listeners}
 
 	return result
 
 
-## See `_evaluate_strong_port_occupant_proof` for the `live` contract.
-## Threads `live` through the strong-proof delegate so neither helper
-## probes when the caller already knows the port-owner status.
-func _evaluate_recovery_port_occupant_proof(port: int, live: Dictionary = {}) -> Dictionary:
-	var proof := _evaluate_strong_port_occupant_proof(port, live)
+## See `_evaluate_strong_port_occupant_proof` for the `live` and
+## `record_override` contracts. Threads both through the strong-proof
+## delegate so neither helper probes when the caller already knows the
+## port-owner status, and so callers running this on a worker thread
+## (#712) can inject the EditorSettings record read on the main thread.
+func _evaluate_recovery_port_occupant_proof(
+	port: int, live: Dictionary = {}, record_override: Dictionary = {}
+) -> Dictionary:
+	var proof := _evaluate_strong_port_occupant_proof(port, live, record_override)
 	if not str(proof.get("proof", "")).is_empty():
 		return proof
 
@@ -1135,8 +1460,19 @@ func _evaluate_recovery_port_occupant_proof(port: int, live: Dictionary = {}) ->
 	return {"proof": "", "pids": []}
 
 
+## Seam over the static pre-warm so lifecycle recovery flows can fire it
+## through the host (`_host._prewarm_server_package(...)`) and test stubs
+## can record the call instead of spawning a real uvx process. Worker-safe:
+## the static touches only CliFinder (mutex-guarded) and OS.create_process.
+func _prewarm_server_package(version: String) -> int:
+	return ClientConfigurator.prewarm_server_package(version)
+
+
 func _recover_strong_port_occupant(port: int, wait_s: float, pre_kill_live: Dictionary = {}) -> bool:
-	return _lifecycle.recover_strong_port_occupant(port, wait_s, pre_kill_live)
+	## `await` because the manager method is a coroutine in production
+	## (#678); with `defer_blocking_work` off it completes synchronously
+	## and this await is a pass-through.
+	return await _lifecycle.recover_strong_port_occupant(port, wait_s, pre_kill_live)
 
 
 func _legacy_pidfile_kill_targets(_port: int, listener_pids: Array[int]) -> Array[int]:
@@ -1244,6 +1580,15 @@ static func _build_server_flags(port: int, ws_port: int) -> Array[String]:
 	if not excluded.is_empty():
 		flags.append("--exclude-domains")
 		flags.append(excluded)
+	## LAN opt-in (#507, server core #421): pass `--allow-host` only when the
+	## developer-mode Settings tab named at least one CIDR / bare IP. Skipping
+	## the empty case keeps the default spawn byte-for-byte identical and
+	## compatible with older servers that don't know the flag — same pattern
+	## as `--exclude-domains` above.
+	var allow_hosts := ClientConfigurator.allow_hosts()
+	if not allow_hosts.is_empty():
+		flags.append("--allow-host")
+		flags.append(allow_hosts)
 	return flags
 
 
@@ -1399,7 +1744,7 @@ func _wait_for_port_free(port: int, timeout_s: float) -> void:
 func _read_managed_server_record() -> Dictionary:
 	var es := EditorInterface.get_editor_settings()
 	if es == null:
-		return {"pid": 0, "version": "", "ws_port": 0}
+		return {"pid": 0, "version": "", "ws_port": 0, "ws_token": "", "keep_alive": false}
 	var pid: int = 0
 	if es.has_setting(MANAGED_SERVER_PID_SETTING):
 		pid = int(es.get_setting(MANAGED_SERVER_PID_SETTING))
@@ -1409,19 +1754,49 @@ func _read_managed_server_record() -> Dictionary:
 	var ws_port: int = 0
 	if es.has_setting(MANAGED_SERVER_WS_PORT_SETTING):
 		ws_port = int(es.get_setting(MANAGED_SERVER_WS_PORT_SETTING))
-	return {"pid": pid, "version": version, "ws_port": ws_port}
+	var ws_token: String = ""
+	if es.has_setting(MANAGED_SERVER_WS_TOKEN_SETTING):
+		ws_token = str(es.get_setting(MANAGED_SERVER_WS_TOKEN_SETTING))
+	var keep_alive := false
+	if es.has_setting(MANAGED_SERVER_KEEP_ALIVE_SETTING):
+		keep_alive = bool(es.get_setting(MANAGED_SERVER_KEEP_ALIVE_SETTING))
+	return {
+		"pid": pid,
+		"version": version,
+		"ws_port": ws_port,
+		"ws_token": ws_token,
+		"keep_alive": keep_alive,
+	}
 
 
-func _write_managed_server_record(pid: int, version: String) -> void:
+func _write_managed_server_record(pid: int, version: String, keep_alive: bool = false) -> void:
 	var es := EditorInterface.get_editor_settings()
 	if es == null:
 		return
 	es.set_setting(MANAGED_SERVER_PID_SETTING, pid)
 	es.set_setting(MANAGED_SERVER_VERSION_SETTING, version)
 	es.set_setting(MANAGED_SERVER_WS_PORT_SETTING, _resolved_ws_port)
+	es.set_setting(MANAGED_SERVER_WS_TOKEN_SETTING, _ws_auth_token)
+	es.set_setting(MANAGED_SERVER_KEEP_ALIVE_SETTING, keep_alive)
+
+
+## Keep the in-memory token, the connection's handshake field, and (via the
+## next _write_managed_server_record) the persisted record in one place so
+## the three can't drift. Empty token = "send no auth_token field".
+func _set_ws_auth_token(token: String) -> void:
+	_ws_auth_token = token
+	if _connection != null:
+		_connection.auth_token = token
 
 
 func _clear_managed_server_record() -> void:
+	## Drop the in-memory token together with the persisted one: a cleared
+	## record means "no managed server", and a surviving static would make
+	## the next handshake send a stale token — the exact present-but-wrong
+	## shape a newer spawned server rejects with 4003. (Runs before the
+	## es == null early return on purpose: the in-memory scrub must not
+	## depend on EditorSettings being available.)
+	_set_ws_auth_token("")
 	var es := EditorInterface.get_editor_settings()
 	if es == null:
 		return
@@ -1431,14 +1806,33 @@ func _clear_managed_server_record() -> void:
 		es.set_setting(MANAGED_SERVER_VERSION_SETTING, "")
 	if es.has_setting(MANAGED_SERVER_WS_PORT_SETTING):
 		es.set_setting(MANAGED_SERVER_WS_PORT_SETTING, 0)
+	if es.has_setting(MANAGED_SERVER_WS_TOKEN_SETTING):
+		es.set_setting(MANAGED_SERVER_WS_TOKEN_SETTING, "")
+	if es.has_setting(MANAGED_SERVER_KEEP_ALIVE_SETTING):
+		es.set_setting(MANAGED_SERVER_KEEP_ALIVE_SETTING, false)
 
 
 func prepare_for_update_reload() -> void:
+	if _dispatcher != null:
+		# Stop accepting handler work and hand any live status worker to its
+		# frame-polled teardown coroutine. _exit_tree() calls clear() again; the
+		# second call is intentionally inert because the caches are empty.
+		_dispatcher.clear()
 	_lifecycle.prepare_for_update_reload()
 
 
-func _adopt_compatible_server(record_version: String, current_version: String, owner: int) -> String:
-	return _lifecycle.adopt_compatible_server(record_version, current_version, owner)
+func _adopt_compatible_server(
+	record_version: String,
+	current_version: String,
+	owner: int,
+	record_owns_listener: bool = false
+) -> String:
+	return _lifecycle.adopt_compatible_server(
+		record_version,
+		current_version,
+		owner,
+		record_owns_listener
+	)
 
 
 static func _compatible_adoption_log_message(
@@ -1511,8 +1905,22 @@ func _resume_connection_after_recovery() -> void:
 	_arm_server_version_check()
 
 
-func recover_incompatible_server() -> bool:
-	if not _lifecycle.recover_incompatible_server():
+func recover_incompatible_server(user_initiated: bool = true, stale_version: String = "") -> bool:
+	## A user's click (the dock's Restart) authorizes the bounded
+	## stale-occupant retry for this episode, so a bridge respawning the old
+	## version and winning the post-kill bind race gets re-killed
+	## automatically instead of dead-ending the click in a terminal state.
+	## The automatic triggers (post-update handshake mismatch, fast-exit
+	## re-walk) call with `user_initiated=false` and only SPEND from the
+	## already-authorized budget — re-arming there would unbound the
+	## kill/respawn loop against a persistent respawner.
+	if user_initiated:
+		_lifecycle.authorize_stale_recovery()
+	## `await` because the manager's recovery is a coroutine in production
+	## (#678): `_resume_connection_after_recovery` gates on the post-walk
+	## state, so it must not run until the respawn walk has completed. With
+	## `defer_blocking_work` off this completes synchronously.
+	if not await _lifecycle.recover_incompatible_server(stale_version):
 		return false
 	_resume_connection_after_recovery()
 	return true
@@ -1622,6 +2030,10 @@ func stop_dev_server() -> void:
 		# We have a managed server — use normal stop
 		_stop_server()
 		return
+	## A suspended startup walk holds pre-kill probe results; without this
+	## it can resume against the listener we are about to kill and adopt a
+	## dead server.
+	_lifecycle._invalidate_async_startup()
 	var port := ClientConfigurator.http_port()
 	var candidates: Array[int] = []
 	for pid in _find_all_pids_on_port(port):
@@ -1633,11 +2045,23 @@ func stop_dev_server() -> void:
 		print("MCP | stopped dev server on port %d" % port)
 
 
-func _kill_processes_and_windows_spawn_children(pids: Array[int]) -> Array[int]:
+## `verify_brand`: re-check `pid_alive` + the godot-ai cmdline brand
+## immediately before the kill (#686). Pass true when the proof that
+## nominated `pids` was evaluated in an earlier scheduling window (e.g.
+## `recover_strong_port_occupant`'s proof runs in one `_run_blocking` task
+## and the kill in a second, with main-thread frames in between) — a branded
+## target that exits in that gap can have its PID recycled to an innocent
+## process. Default false preserves the intentionally-unbranded call sites
+## (the dock's explicit-consent Restart button, orphan spawn workers whose
+## parent died so brand detection misses them).
+func _kill_processes_and_windows_spawn_children(pids: Array[int], verify_brand: bool = false) -> Array[int]:
 	var unique: Array[int] = []
 	for pid in pids:
-		if pid > 0 and not unique.has(pid):
-			unique.append(pid)
+		if pid <= 0 or unique.has(pid):
+			continue
+		if verify_brand and not (_pid_alive_for_proof(pid) and _pid_cmdline_is_godot_ai_for_proof(pid)):
+			continue
+		unique.append(pid)
 	if OS.get_name() == "Windows":
 		for child_pid in _find_windows_spawn_children(unique):
 			if not unique.has(child_pid):
@@ -1650,8 +2074,10 @@ func _kill_processes_and_windows_spawn_children(pids: Array[int]) -> Array[int]:
 			if exit_code == 0 or not _pid_alive(pid):
 				killed.append(pid)
 		else:
-			OS.kill(pid)
-			killed.append(pid)
+			## Mirror the Windows branch: only report the PID as killed if
+			## the kill succeeded or the process is verifiably gone.
+			if OS.kill(pid) == OK or not _pid_alive(pid):
+				killed.append(pid)
 	return killed
 
 
@@ -1698,3 +2124,37 @@ func can_restart_managed_server() -> bool:
 	## means this plugin spawned/adopted a managed server; a non-empty
 	## managed record is the cross-session proof used by the drift branch.
 	return _lifecycle.can_restart_managed_server()
+
+
+func _on_custom_tools_changed() -> void:
+	if _connection == null:
+		push_warning("MCP | connection isn't established")
+		return
+	var tool_list: Array[Dictionary] = []
+	## Send all definitions plus their state: the server hides disabled tools
+	## from fresh tools/list responses but retains a callable tombstone so a
+	## client using a cached promoted name receives CUSTOM_TOOL_DISABLED.
+	for spec in _custom_tool_registry.all():
+		tool_list.append({
+			"name": spec.name,
+			"description": spec.description,
+			"params_schema": spec.params_schema,
+			"source": spec.source,
+			"deferred": spec.deferred,
+			"timeout_ms": spec.timeout_ms,
+			"requires_writable": spec.requires_writable,
+			"undoable": spec.undoable,
+			"promoted": spec.promoted,
+			"enabled": _custom_tool_registry.is_tool_enabled(spec.name)
+		})
+	_connection.send_event("custom_tools_changed", {"tools": tool_list})
+
+
+## On (re)connect, replay the current custom-tool catalog so tools
+## registered before the initial connection or during a disconnect
+## window reach the server. send_event silently drops while
+## _connected is false (connection.gd::_send_json), so without this
+## replay those tools only surface on the next registry mutation.
+func _on_connection_state_changed(is_open: bool) -> void:
+	if is_open and _custom_tool_registry != null:
+		_on_custom_tools_changed()
