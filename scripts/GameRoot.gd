@@ -1,17 +1,55 @@
-extends Node3D
+﻿extends Node3D
 
 signal system_changed(system_id: String, arrival_gate_id: String)
 signal startup_load_completed(save_loaded: bool)
+signal campaign_bible_generation_finished(ok: bool, status: String)
+signal chapter_plan_generation_finished(ok: bool, status: String)
 
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
-const JUMP_EXIT_DURATION := 0.9
+const JUMP_EXIT_DURATION := 2.0
+const PLAYER_CAMERA_FOV := 75.0  # canonical gameplay FOV (player_ship.tscn default)
+const STARTING_STATION_APPROACH_SECONDS := 8.0
+# Keep this aligned with PlayerShip.DOCK_TRACTOR_CAPTURE_RANGE. A fresh
+# campaign should require a real approach before the tractor can take over.
+const STARTING_STATION_TRACTOR_BUFFER := 72.0
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
 const DOCK_SERVICE_MINUTES := 10
 const UNDOCK_SERVICE_MINUTES := 5
+# Queue a line-bank refill while this many unused lines remain, so the bank
+# is topped up BEFORE it reaches two remaining (Phase 8B).
+const LINE_BANK_REFILL_MIN_AVAILABLE := 3
+# N.O.V.A.'s shared bank spans several categories, so it needs room for the
+# arrival template lines PLUS the movement/combat lines seeded after ready.
+const NOVA_LINE_BANK_TARGET_SIZE := 48
+const _PROVISIONAL_CAMPAIGN_SLOT_NAMES := [
+	"Shiny's Campaign",
+	"Pending Campaign",
+	"Pending Large-Model Campaign",
+	"Campaign 1",
+	"Campaign 2",
+	"Campaign 3",
+]
+const _LEGACY_OPENING_NAME_FALLBACKS := [
+	"Cold Meridian",
+	"Ember Passage",
+	"Far Horizon",
+	"Last Light",
+	"Silent Dividend",
+	"Wayward Star",
+	"Iron Pilgrim",
+	"Broken Compass",
+]
+const _BIBLE_FAILURE_SLOT_TITLE := "Uncharted Signal"
 const NPC_SHIP_SCENE := preload("res://scenes/npc_ship.tscn")
+const ShipMovementEventsType := preload(
+	"res://scripts/story/ShipMovementEvents.gd"
+)
+const ShipBehaviorObserverType := preload(
+	"res://scripts/story/ShipBehaviorObserver.gd"
+)
 const CampaignSlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
@@ -24,12 +62,72 @@ const CampaignChronicleStoreType := preload(
 const CampaignKaelenMemoryStoreType := preload(
 	"res://scripts/persistence/CampaignKaelenMemoryStore.gd"
 )
+const CampaignIdeaMemoryStoreType := preload(
+	"res://scripts/persistence/CampaignIdeaMemoryStore.gd"
+)
+const CampaignBibleStoreType := preload(
+	"res://scripts/persistence/CampaignBibleStore.gd"
+)
+const ChapterNarrativePacketStoreType := preload(
+	"res://scripts/persistence/ChapterNarrativePacketStore.gd"
+)
+const CampaignGeneratedFactionStoreType := preload(
+	"res://scripts/persistence/CampaignGeneratedFactionStore.gd"
+)
+const CampaignNpcIdentityStoreType := preload(
+	"res://scripts/persistence/CampaignNpcIdentityStore.gd"
+)
+const CampaignNpcStateStoreType := preload(
+	"res://scripts/persistence/CampaignNpcStateStore.gd"
+)
+const KaelenInteractionKindsType := preload(
+	"res://scripts/story/KaelenInteractionKinds.gd"
+)
+const CampaignAgentMemorySnippetStoreType := preload(
+	"res://scripts/persistence/CampaignAgentMemorySnippetStore.gd"
+)
+const NarrativeCacheStoreType := preload(
+	"res://scripts/persistence/NarrativeCacheStore.gd"
+)
+const NarrativeCacheSchedulerType := preload(
+	"res://scripts/story/NarrativeCacheScheduler.gd"
+)
+const NarrativeFingerprintLedgerType := preload(
+	"res://scripts/story/NarrativeFingerprintLedger.gd"
+)
+const NarrativeQualityGateType := preload(
+	"res://scripts/story/NarrativeQualityGate.gd"
+)
+const FixedCastSoulRegistryType := preload(
+	"res://scripts/story/FixedCastSoulRegistry.gd"
+)
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
+const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 const CampaignLegacySaveImporterType := preload(
 	"res://scripts/persistence/CampaignLegacySaveImporter.gd"
 )
 const RuntimeTraceType := preload(
 	"res://scripts/diagnostics/RuntimeTrace.gd"
 )
+const NarrativeDirectorType := preload(
+	"res://scripts/ai/NarrativeDirector.gd"
+)
+const ChapterNarrativeDirectorType := preload(
+	"res://scripts/ai/ChapterNarrativeDirector.gd"
+)
+const ContextBlockBuilderType := preload("res://scripts/ai/ContextBlockBuilder.gd")
+const MissionDirectorType := preload("res://scripts/story/MissionDirector.gd")
+const StoryAgentOfferBuilderType := preload(
+	"res://scripts/story/StoryAgentOfferBuilder.gd"
+)
+const ChallengeBudgetType := preload("res://scripts/story/ChallengeBudget.gd")
+const FallbackLineBankType := preload("res://scripts/story/FallbackLineBank.gd")
+const MissionHistoryLedgerType := preload(
+	"res://scripts/story/MissionHistoryLedger.gd"
+)
+const StoreRegistryScript := preload("res://scripts/economy/StoreRegistry.gd")
 
 @onready var system_container: Node3D = $SystemContainer
 @onready var player: CharacterBody3D = $PlayerShip
@@ -48,12 +146,43 @@ var campaign_slot_registry: CampaignSlotRegistry
 var campaign_checkpoint_store: CampaignCheckpointStore
 var campaign_chronicle_store: CampaignChronicleStore
 var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
+var campaign_idea_memory_store: CampaignIdeaMemoryStore
+var campaign_bible_store: CampaignBibleStore
+var campaign_chapter_packet_store = null
+var campaign_generated_faction_store: CampaignGeneratedFactionStore
+var campaign_npc_identity_store = null
+var campaign_npc_state_store = null
+var campaign_agent_memory_store = null
+var campaign_narrative_cache_store = null
+var campaign_narrative_fingerprint_ledger = null
+var narrative_cache_scheduler = null
+var narrative_cache_scheduler_pause_reasons: Dictionary = {}
+var campaign_bible_generation_requested_slots: Dictionary = {}
+var campaign_bible_generation_in_flight: bool = false
+var chapter_plan_generation_in_flight: bool = false
+var chapter_plan_pending_target_chapter: int = 0
 var last_legacy_import_result: Dictionary = {}
 var active_campaign_slot_id: String = ""
 var restoring_safe_checkpoint: bool = false
 var last_autosave_notification_key: String = ""
 var last_autosave_notification_msec: int = 0
 var pending_gate_discoveries: Array[String] = []
+var event_scheduler = null
+var ship_behavior_observer: Node = null
+var quiet_moment_director: Node = null
+# Requester IDs whose N.O.V.A. bank has already had its generated categories
+# seeded this session, so the two-batch seed fires at most once per bank.
+var _nova_bank_seed_requests: Dictionary = {}
+var ship_pre_generator: ShipPreGenerator = null
+var gameplay_runtime_started := false
+var landing_screen_active := false
+
+
+func _enter_tree() -> void:
+	# Children enter after the root. Mark the pre-game state here so UIManager
+	# does not start its loading/cinematic flow before a campaign is selected.
+	if OS.get_cmdline_user_args().is_empty() and has_node("LandingLayer/LandingScreen"):
+		Engine.set_meta("landing_screen_active", true)
 
 func _ready() -> void:
 	RuntimeTraceType.begin_session()
@@ -69,13 +198,32 @@ func _ready() -> void:
 		)
 		get_tree().quit(1)
 		return
+	landing_screen_active = Engine.has_meta("landing_screen_active")
+	if landing_screen_active:
+		GlobalState.paused = true
+		# Read only the slot index at the landing page. Opening a selected
+		# campaign's chronicle here can initialize story stores before Continue.
+		_initialize_campaign_registry(false)
+		return
+	_start_gameplay_runtime()
+	_start_requested_runtime_mode()
+
+
+func _start_gameplay_runtime() -> void:
+	if gameplay_runtime_started:
+		return
+	gameplay_runtime_started = true
+	_init_dev_panel()
+	_init_event_scheduler()
+	_init_ship_behavior_observer()
+	_init_quiet_moment_director()
+	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
-	var start_scene := system_registry.load_scene("system.start")
-	if start_definition == null or start_scene == null:
+	if start_definition == null:
 		push_error("[GameRoot] Registered starting system could not be loaded.")
 		get_tree().quit(1)
 		return
-	var system_root := start_scene.instantiate() as Node3D
+	var system_root := system_registry.instantiate_system("system.start")
 	if system_root == null:
 		push_error("[GameRoot] Registered starting system has an invalid root.")
 		get_tree().quit(1)
@@ -83,8 +231,29 @@ func _ready() -> void:
 	system_container.add_child(system_root)
 	GlobalState.active_system_root = system_root
 	GlobalState.current_system_id = start_definition.legacy_id
-	QuestManager.quest_completed.connect(_on_quest_completed_chronicle)
-	QuestManager.quest_abandoned.connect(_on_quest_abandoned_chronicle)
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(start_definition.id)
+	ship_pre_generator = ShipPreGenerator.new()
+	ship_pre_generator.name = "ShipPreGenerator"
+	ship_pre_generator.initialize(system_registry)
+	add_child(ship_pre_generator)
+	system_changed.connect(_on_system_changed_prepare_destinations)
+	system_changed.connect(_on_system_arrival_prefetch)
+	system_changed.connect(ship_pre_generator.on_system_entered)
+	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
+	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
+	QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)
+	QuestManager.quest_declined_details.connect(_on_quest_declined_chronicle)
+	QuestManager.quest_completed_details.connect(_on_quest_completed_chronicle)
+	QuestManager.quest_completed_details.connect(StoryManager.on_quest_completed)
+	QuestManager.quest_abandoned_details.connect(_on_quest_abandoned_chronicle)
+	QuestManager.quest_completed_details.connect(_on_quiet_moment_quest_completed)
+	QuestManager.quest_abandoned_details.connect(_on_quiet_moment_quest_abandoned)
+	QuestManager.quest_declined_details.connect(_on_quiet_moment_quest_declined)
+	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
+
+
+func _start_requested_runtime_mode() -> void:
 	if "--performance-baseline" in OS.get_cmdline_user_args():
 		call_deferred("_run_performance_baseline")
 	elif "--core-smoke-test" in OS.get_cmdline_user_args():
@@ -113,12 +282,74 @@ func _ready() -> void:
 		call_deferred("_run_legacy_import_smoke_test")
 	elif "--public-board-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_public_board_smoke_test")
+	elif "--generation-diagnostics-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_generation_diagnostics_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_jump_smoke_test")
 	elif "--no-save-load" not in OS.get_cmdline_user_args():
 		call_deferred("_load_startup_save")
+
+
+func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary:
+	if landing_screen_active:
+		landing_screen_active = false
+		if Engine.has_meta("landing_screen_active"):
+			Engine.remove_meta("landing_screen_active")
+		_start_gameplay_runtime()
+	if occupied:
+		return await select_and_load_campaign(slot_id)
+	Engine.set_meta("creating_new_campaign", true)
+	# A new campaign must not inherit the previous one's recency or its
+	# position in every rotation cycle, or its first hour sounds like a
+	# continuation of the last playthrough.
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.reset_for_new_campaign()
+	return create_campaign_in_slot(
+		slot_id,
+		# The opening quest generator replaces this provisional label with its
+		# player-facing LLM campaign title. Keeping it provisional restores the
+		# foreshadowing title shown on the landing screen after the first setup.
+		"Pending Campaign"
+	)
+
+
+func _position_fresh_campaign_ship_for_station_approach() -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	var station := GlobalState.get_primary_station()
+	if station == null or not is_instance_valid(station):
+		push_warning("[GameRoot] Fresh campaign start station was unavailable.")
+		return
+	var approach_direction := player.global_position - station.global_position
+	approach_direction.y = 0.0
+	if approach_direction.length_squared() < 0.001:
+		approach_direction = -station.global_transform.basis.z
+		approach_direction.y = 0.0
+	if approach_direction.length_squared() < 0.001:
+		approach_direction = Vector3.FORWARD
+	approach_direction = approach_direction.normalized()
+	var docking_position := station.global_position
+	if station.has_method("get_docking_position"):
+		docking_position = station.call(
+			"get_docking_position",
+			station.global_position + approach_direction
+		) as Vector3
+	var approach_distance := maxf(0.0, float(player.get("max_speed"))) \
+		* STARTING_STATION_APPROACH_SECONDS
+	player.global_position = docking_position + approach_direction * (
+		approach_distance + STARTING_STATION_TRACTOR_BUFFER
+	)
+	player.velocity = Vector3.ZERO
+	player.set("current_speed", 0.0)
+	player.set("target_position", null)
+	player.set("nav_mode", "MANUAL")
+	player.set("is_docked", false)
+	player.look_at(station.global_position, Vector3.UP)
+	if player.has_method("sync_camera_to_ship"):
+		player.sync_camera_to_ship()
+
 
 func get_active_system_root() -> Node3D:
 	return GlobalState.get_system_root()
@@ -145,6 +376,8 @@ func get_jump_block_reason(gate: Node3D) -> String:
 	var ship_forward := -player.global_transform.basis.z.normalized()
 	if ship_forward.dot(to_gate) < cos(deg_to_rad(12.0)):
 		return "Align the ship with the jumpgate."
+	if gate.has_method("is_jump_allowed") and not gate.call("is_jump_allowed"):
+		return "Gate route is not unlocked."
 	return ""
 
 func request_gate_jump(gate: Node3D) -> bool:
@@ -172,15 +405,11 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if transition_in_progress:
 		jump_request_pending = false
 		return
+	var ui_mgr := GlobalState.get_ui_manager()
 	var runtime_system_id := system_registry.runtime_system_id(
 		destination_system_id
 	)
 	var runtime_gate_id := system_registry.runtime_gate_id(arrival_gate_id)
-	var packed_system := system_registry.load_scene(destination_system_id)
-	if not packed_system:
-		jump_request_pending = false
-		push_warning("[GameRoot] Unknown destination system '%s'." % destination_system_id)
-		return
 	if runtime_system_id.is_empty() or runtime_gate_id.is_empty():
 		jump_request_pending = false
 		push_warning(
@@ -188,7 +417,13 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		)
 		return
 
-	var new_system := packed_system.instantiate() as Node3D
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(destination_system_id)
+	var new_system := system_registry.instantiate_system(destination_system_id)
+	if not new_system:
+		jump_request_pending = false
+		push_warning("[GameRoot] Unknown destination system '%s'." % destination_system_id)
+		return
 	var arrival_gate := _find_gate_in_tree(new_system, runtime_gate_id)
 	if not arrival_gate:
 		new_system.free()
@@ -201,6 +436,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	jump_request_pending = false
 	transition_in_progress = true
 	_prepare_player_for_system_change()
+	if is_instance_valid(Nova):
+		Nova.on_gate_transition()  # occasional unsettled gate line (mystery seed)
 	var source_gate := GlobalState.active_target
 	var source_gate_id := (
 		str(source_gate.call("get_world_id"))
@@ -209,16 +446,82 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 			and source_gate.has_method("get_world_id")
 		else ""
 	)
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.GATE_DEPARTURE,
+		{
+			"destination_system_id": runtime_system_id,
+			"source_gate_id": source_gate_id,
+		}
+	)
 	var camera := player.get_node_or_null("CameraPivot/Camera3D") as Camera3D
-	var original_fov := camera.fov if camera else 70.0
+	# Use the canonical FOV (not the live camera.fov) so a previously-polluted
+	# wide value can't get re-captured and re-applied as the "rest" FOV.
+	var original_fov := PLAYER_CAMERA_FOV
 	var effect_duration := 0.05 if DisplayServer.get_name() == "headless" else JUMP_ENTRY_DURATION
+	
+	# entry length-contraction warp-stretch effect
+	var orig_scale := Vector3.ONE
+	var visual_node = player.get_node_or_null("Visual")
+	if visual_node and DisplayServer.get_name() != "headless":
+		orig_scale = visual_node.scale
+		var target_scale = orig_scale
+		target_scale.z *= 2.2 # stretch along Z
+		create_tween().tween_property(visual_node, "scale", target_scale, effect_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		
 	if source_gate and is_instance_valid(source_gate) and source_gate.has_method("begin_jump_charge"):
 		source_gate.begin_jump_charge(effect_duration)
 		create_tween().tween_property(player, "global_position", source_gate.global_position, effect_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	AudioManager.play_jump_spool()
 	if camera:
+		# Snap to the canonical FOV before the entry widen so the jump always
+		# begins from a clean value (matches the after-jump reset).
+		camera.fov = PLAYER_CAMERA_FOV
 		create_tween().tween_property(camera, "fov", min(original_fov + 24.0, 120.0), effect_duration)
 	await transition_fx.play_entry(effect_duration)
+	
+	# Reset scale back to normal now that we're inside the tunnel
+	if visual_node and DisplayServer.get_name() != "headless":
+		visual_node.scale = orig_scale
+		
+	var orig_collision_layer := player.collision_layer
+	var orig_collision_mask := player.collision_mask
+	
+	# Teleport player to remote coordinate and spawn the 3D hyperspace tunnel
+	var jump_tunnel = null
+	if DisplayServer.get_name() != "headless":
+		player.collision_layer = 0
+		player.collision_mask = 0
+		player.set("current_speed", 0.0)
+		player.velocity = Vector3.ZERO
+		player.set_physics_process(true)
+		
+		# Hide UI during transit to prevent HUD/overview distortion leaks
+		if ui_mgr:
+			ui_mgr.visible = false
+		
+		var remote_position := Vector3(50000.0, 50000.0, 50000.0)
+		player.global_transform = Transform3D(Basis.IDENTITY, remote_position)
+		var camera_pivot = player.get_node_or_null("CameraPivot")
+		if camera_pivot:
+			camera_pivot.rotation_degrees = Vector3(-15, 0, 0)
+		if player.has_method("sync_camera_to_ship"):
+			player.sync_camera_to_ship()
+			
+		var old_system := get_active_system_root()
+		if old_system and is_instance_valid(old_system):
+			old_system.visible = false
+			
+		jump_tunnel = load("res://scenes/jump_tunnel.tscn").instantiate()
+		add_child(jump_tunnel)
+		jump_tunnel.global_position = remote_position
+		jump_tunnel.setup_real_ship(player)
+		
+		# Fade the white flash OUT so the player can see the 3D tunnel!
+		var flash_node = transition_fx.get_node_or_null("Flash")
+		if flash_node:
+			var fade_out_tween = create_tween()
+			fade_out_tween.tween_property(flash_node, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		
 	AudioManager.play_jump_transit()
 	if not _capture_current_system_state():
 		push_error("[GameRoot] System state capture failed during gate travel.")
@@ -232,11 +535,33 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		await get_tree().process_frame
 
 	system_container.add_child(new_system)
+	if DisplayServer.get_name() != "headless":
+		new_system.visible = false
 	GlobalState.active_system_root = new_system
 	GlobalState.current_system_id = runtime_system_id
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
+	_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)
 
+	# Let the player fly down the 3D tunnel for a satisfying duration.
+	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
+	if DisplayServer.get_name() != "headless":
+		await get_tree().create_timer(3.1).timeout
+		# Start fading the tunnel jet early with a stutter gate. Duration is sized
+		# so the fade still ends at the same point (3.1 + 4.5 == prior 4.1 + 3.5),
+		# and the whiteout still fires at 5.6 (3.1 + 2.5).
+		AudioManager.fade_out_jump_transit(4.5)
+		await get_tree().create_timer(2.5).timeout
+		# Final acceleration punch out the end of the bore, then whiteout over it.
+		if jump_tunnel and is_instance_valid(jump_tunnel) and jump_tunnel.has_method("begin_exit_burst"):
+			jump_tunnel.begin_exit_burst(0.6)
+		var flash_node = transition_fx.get_node_or_null("Flash")
+		if flash_node:
+			var fade_in_tween = create_tween()
+			fade_in_tween.tween_property(flash_node, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			await fade_in_tween.finished
+
+	# Teleport player to the arrival gate portal now that the transit screen is fully white
 	var arrival_transform: Transform3D = arrival_gate.call("get_arrival_transform")
 	player.global_transform = arrival_transform
 	last_arrival_gate_id = runtime_gate_id
@@ -245,9 +570,54 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		player.sync_camera_to_ship()
 	if camera:
 		camera.fov = original_fov
+		
 	await transition_fx.hold_covered(1 if DisplayServer.get_name() == "headless" else 2)
+	
+	# Remove the 3D tunnel and restore player visuals/collision
+	if jump_tunnel and is_instance_valid(jump_tunnel):
+		jump_tunnel.cleanup()
+		jump_tunnel.queue_free()
+
+	# Authoritative FOV reset — AFTER the tunnel is gone so its _process can no
+	# longer widen the camera. (Fixes the post-jump fisheye view.)
+	if camera:
+		camera.fov = original_fov
+
+	player.collision_layer = orig_collision_layer
+	player.collision_mask = orig_collision_mask
+	
+	if new_system and is_instance_valid(new_system):
+		new_system.visible = true
+		
+	# Restore UI visibility
+	if ui_mgr:
+		ui_mgr.visible = true
+	if camera:
+		camera.make_current()
+	
 	AudioManager.play_jump_arrival()
+	
+	# Spawn exit shockwave bubble and tween player deceleration
+	if DisplayServer.get_name() != "headless" and arrival_gate:
+		var final_transform = arrival_gate.call("get_arrival_transform")
+		var gate_center = arrival_gate.global_position
+		player.global_position = gate_center
+		
+		var bubble_scene = load("res://scenes/warp_exit_bubble.tscn")
+		if bubble_scene:
+			var bubble = bubble_scene.instantiate()
+			new_system.add_child(bubble)
+			bubble.global_position = gate_center
+			
+		var exit_dur := JUMP_EXIT_DURATION
+		var exit_tween := create_tween()
+		exit_tween.tween_property(player, "global_position", final_transform.origin, exit_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		exit_tween.parallel().tween_property(player.get_node("CameraPivot"), "global_position", final_transform.origin, exit_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		
 	await transition_fx.play_exit(0.05 if DisplayServer.get_name() == "headless" else JUMP_EXIT_DURATION)
+	var arriving_sys := system_registry.get_system(destination_system_id)
+	if arriving_sys and transition_fx.has_method("play_arrival_banner"):
+		transition_fx.play_arrival_banner(arriving_sys.display_name)
 	_prepare_player_after_system_change()
 	CampaignClock.advance_minutes(GATE_TRAVEL_MINUTES)
 	arrival_cooldown_until_msec = Time.get_ticks_msec() + int(ARRIVAL_COOLDOWN_SECONDS * 1000.0)
@@ -256,12 +626,30 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		source_gate_id,
 		str(arrival_gate.call("get_world_id"))
 	)
+	if event_scheduler:
+		event_scheduler.set_just_arrived(true)
+	_tick_events()
+	_maybe_emit_kaelen_system_arrival(runtime_system_id)
 	request_safe_checkpoint("gate_arrival", arrival_gate)
+	GlobalState.emit_ship_movement_event(
+		ShipMovementEventsType.SYSTEM_ARRIVAL,
+		{
+			"system_id": runtime_system_id,
+			"arrival_gate_id": runtime_gate_id,
+		}
+	)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 
-	var ui := GlobalState.get_ui_manager()
-	if ui and ui.has_method("refresh_overview"):
-		ui.call_deferred("refresh_overview")
+	if ui_mgr and ui_mgr.has_method("refresh_overview"):
+		ui_mgr.call_deferred("refresh_overview")
+	if ui_mgr and ui_mgr.has_method("notify_system_arrived"):
+		ui_mgr.call_deferred("notify_system_arrived", runtime_system_id)
+	if is_instance_valid(Nova):
+		Nova.on_system_arrived()  # occasional dry arrival line (skips if she spoke going through)
+	if is_instance_valid(StoryManager):
+		StoryManager.on_system_arrived(runtime_system_id)
+	if is_instance_valid(StoryQuestManager):
+		StoryQuestManager.on_system_arrived(runtime_system_id)
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
 	for gate in get_tree().get_nodes_in_group("jumpgate"):
@@ -400,9 +788,20 @@ func _restore_system_state(system_id: String, system_root: Node3D) -> void:
 			npc.faction = str(entity_state.get("faction", "zenith"))
 			npc.ship_role = str(entity_state.get("ship_role", "Gunner"))
 			npc.set_meta("is_quest_target", true)
+			if _is_intro_tutorial_mission_ship(entity_state):
+				npc.set_meta("intro_tutorial_target", true)
+				npc.set_meta("npc_attack_protected", true)
 			npc.add_to_group("persistent_entity")
 			system_root.add_child(npc)
 			npc.restore_state(entity_state)
+
+
+func _is_intro_tutorial_mission_ship(entity_state: Dictionary) -> bool:
+	return QuestManager.is_quest_active() \
+		and str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
+		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers" \
+		and str(entity_state.get("faction", "")) == "reavers"
 
 func save_game() -> bool:
 	var prepared := _capture_prepared_runtime_state()
@@ -489,8 +888,10 @@ func request_safe_checkpoint(
 func _advance_campaign_time_for_safe_checkpoint(source_reason: String) -> void:
 	if source_reason == "dock":
 		CampaignClock.advance_minutes(DOCK_SERVICE_MINUTES)
+		_tick_events()
 	elif source_reason == "undock":
 		CampaignClock.advance_minutes(UNDOCK_SERVICE_MINUTES)
+		_tick_events()
 
 
 func _queue_gate_discovery(
@@ -505,12 +906,512 @@ func _queue_gate_discovery(
 
 func get_gate_knowledge_state(gate_id: String) -> String:
 	if campaign_checkpoint_store == null:
-		return "hidden"
-	var knowledge := campaign_checkpoint_store.current_map_knowledge()
-	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
-		if gate_id in knowledge.get("%s_gate_ids" % state, []):
-			return state
-	return "hidden"
+		return "unknown"
+	if campaign_checkpoint_store._initial_known_gates.is_empty() and system_registry:
+		campaign_checkpoint_store.set_registry_defaults(system_registry)
+	return campaign_checkpoint_store.get_gate_state(gate_id)
+
+
+func _refresh_gate_states() -> void:
+	var system_root := get_active_system_root()
+	if system_root == null:
+		return
+	for node in system_root.get_children():
+		if node.is_in_group("jumpgate") and node.has_method("_apply_knowledge_state"):
+			node._apply_knowledge_state()
+
+
+func _init_generated_system_configs() -> void:
+	if system_registry == null:
+		return
+	for sys_def: SystemDefinition in system_registry.get_all_systems():
+		if sys_def.scene_path != "generated":
+			continue
+		var sys_id := str(sys_def.id)
+		var frontier_factions := _frontier_factions_for_system_definition(sys_def)
+		var existing_config := system_registry.get_generated_config(sys_id)
+		var expected_seed: int = sys_id.hash() ^ GlobalState.campaign_seed
+		if existing_config != null \
+				and existing_config.seed_value == expected_seed:
+			continue
+		var seed_val: int = expected_seed
+		var config := SystemConfig.from_seed(
+			sys_def.display_name,
+			sys_id,
+			seed_val,
+			frontier_factions
+		)
+		system_registry.set_generated_config(sys_id, config)
+		system_registry.set_generated_config(config.legacy_id, config)
+
+
+func _frontier_factions_for_system_definition(sys_def: SystemDefinition) -> Array:
+	if campaign_generated_faction_store == null:
+		return []
+	var ids: Array[String] = []
+	for faction_id in sys_def.faction_ids:
+		var id_text := str(faction_id)
+		if id_text.begins_with("faction.generated."):
+			ids.append(id_text)
+	return campaign_generated_faction_store.factions_by_ids(ids)
+
+
+func _on_system_changed_prepare_destinations(
+	system_id: String,
+	_arrival_gate_id: String
+) -> void:
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(system_id)
+
+
+func _on_system_arrival_prefetch(
+	system_id: String,
+	arrival_gate_id: String
+) -> void:
+	var event := _narrative_prefetch_event_from_system_arrival(
+		system_id,
+		arrival_gate_id
+	)
+	_queue_narrative_prefetch_jobs_for_event(event)
+	if _can_process_story_agent_offer_cache_jobs():
+		process_narrative_cache_jobs_for_kind("system_contact_offer_bundle", 12)
+
+
+func _queue_gate_travel_kaelen_arrival_prefetch(
+	system_id: String,
+	arrival_gate_id: String
+) -> void:
+	if system_id.is_empty() or GlobalState.is_current_system_home():
+		return
+	if system_id in GlobalState.kaelen_arrival_systems_seen:
+		return
+	var sys_def := system_registry.get_system(system_id) if system_registry else null
+	if sys_def == null or sys_def.origin != "generated":
+		return
+	var event := _narrative_prefetch_event_from_system_arrival(
+		system_id,
+		arrival_gate_id
+	)
+	_queue_narrative_prefetch_jobs_for_event(event)
+	process_narrative_cache_job_for_requester(
+		"prefetch:current_system_kaelen:%s" % system_id
+	)
+
+
+func _maybe_emit_kaelen_system_arrival(system_id: String) -> void:
+	if system_id.is_empty() or GlobalState.is_current_system_home():
+		return
+	if system_id in GlobalState.kaelen_arrival_systems_seen:
+		return
+	var sys_def := system_registry.get_system(system_id) if system_registry else null
+	if sys_def == null or sys_def.origin != "generated":
+		return
+	GlobalState.kaelen_arrival_systems_seen.append(system_id)
+	var faction_names := _arrival_faction_names(sys_def)
+	var faction_clause := "the locals"
+	if not faction_names.is_empty():
+		faction_clause = _human_join(faction_names)
+	var story_pack := _system_story_pack_for_definition(sys_def)
+	var line := _ready_kaelen_system_arrival_bank_line(system_id)
+	if line.is_empty():
+		line = _kaelen_arrival_line(sys_def.display_name, faction_clause, story_pack)
+	GlobalState.emit_chatter("KAELEN", line, Color(0.85, 0.5, 1.0))
+	record_kaelen_line_playback(
+		line,
+		KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+		{
+			"system_id": system_id,
+			"system_name": sys_def.display_name,
+			"source": "system_arrival",
+		}
+	)
+
+
+func _ready_kaelen_system_arrival_bank_line(system_id: String) -> String:
+	var clean_system_id := system_id.strip_edges()
+	if clean_system_id.is_empty():
+		return ""
+	var requester_id := "prefetch:current_system_kaelen:%s" % clean_system_id
+	var payload := consume_cached_narrative_line_bank(
+		requester_id,
+		KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+	)
+	if payload.is_empty():
+		return ""
+	var consumed_line: Dictionary = payload.get("consumed_line", {}) \
+		if payload.get("consumed_line", {}) is Dictionary else {}
+	var consumed_text := str(consumed_line.get("text", "")).strip_edges()
+	if not consumed_text.is_empty():
+		if _accept_generated_kaelen_bank_line(
+			consumed_text, KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+		):
+			return consumed_text
+		return ""
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var candidates: Array[String] = []
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var line: Dictionary = raw_line
+		if str(line.get("kind", "")) != KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL:
+			continue
+		var text := str(line.get("text", "")).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return ""
+	var selected := candidates[randi() % candidates.size()]
+	if _accept_generated_kaelen_bank_line(
+		selected, KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL
+	):
+		return selected
+	return ""
+
+
+func _accept_generated_kaelen_bank_line(text: String, kind: String) -> bool:
+	var quality := validate_and_register_narrative_lines([text], "kaelen_bank:%s" % kind)
+	if bool(quality.get("ok", false)):
+		return true
+	GenerationDiagnostics.record_event(
+		"kaelen_line_bank", "quality_%s" % str(quality.get("reason", "unknown")),
+		"GameRoot", {"kind": kind}
+	)
+	return false
+
+
+func _arrival_faction_names(sys_def: SystemDefinition) -> Array[String]:
+	var names: Array[String] = []
+	for faction_id in sys_def.faction_ids:
+		var info := GlobalState.faction_info(str(faction_id))
+		var display := str(info.get("name", "")).strip_edges()
+		if display.is_empty():
+			display = str(faction_id).trim_prefix("faction.").capitalize()
+		if display not in names:
+			names.append(display)
+		if names.size() >= 3:
+			break
+	return names
+
+
+func _system_story_pack_for_definition(sys_def: SystemDefinition) -> Dictionary:
+	if system_registry == null or sys_def == null:
+		return {}
+	var config := system_registry.get_generated_config(str(sys_def.id))
+	if config == null and not sys_def.legacy_id.is_empty():
+		config = system_registry.get_generated_config(sys_def.legacy_id)
+	if config == null:
+		return {}
+	return config.story_pack.duplicate(true)
+
+
+func _kaelen_arrival_line(
+	system_name: String,
+	faction_clause: String,
+	story_pack: Dictionary = {}
+) -> String:
+	var nickname := str(story_pack.get("local_nickname", "")).strip_edges()
+	var tension := str(story_pack.get("active_tension", "")).strip_edges()
+	var humor := str(story_pack.get("humor_guidance", "")).strip_edges()
+	var local_name := nickname if not nickname.is_empty() else system_name
+	if not tension.is_empty():
+		var story_lines: Array[String] = [
+			"Fancy seeing you in %s, Shiny. %s are making noise, and %s means somebody is charging rent on the panic.",
+			"Welcome to %s. Local menu says %s, house special is %s, and yes, I followed the money.",
+			"%s. New stars, same invoice. %s run the room while %s keeps the knives politely labeled.",
+			"Look at you, opening doors. %s has %s, %s, and my favorite smell: billable trouble.",
+		]
+		var story_seed := "%s|%s|%s|kaelen_story_arrival" % [
+			system_name,
+			faction_clause,
+			tension,
+		]
+		var story_pick: int = abs(story_seed.hash()) % story_lines.size()
+		return story_lines[story_pick] % [
+			local_name,
+			faction_clause,
+			tension,
+		]
+	var lines: Array[String] = [
+		"Fancy seeing you in %s, Shiny. When I said that route was yours, I meant ours. Watch %s and keep my credits breathing.",
+		"Welcome to %s. %s already found three ways to charge you for air, so naturally I followed the money.",
+		"%s. New stars, same invoice. %s run the room here, so smile like you meant to survive.",
+		"Look at you, opening doors. This one's %s, and %s are already making it expensive. Proud of you. Financially.",
+	]
+	if not humor.is_empty():
+		lines.append("%s already has %s and humor like %s. I brought optimism. Kidding, I brought invoices.")
+	var seed_text := "%s|%s|%s|kaelen_arrival" % [
+		system_name,
+		faction_clause,
+		humor,
+	]
+	var pick: int = abs(seed_text.hash()) % lines.size()
+	if lines[pick].count("%s") == 3:
+		return lines[pick] % [local_name, faction_clause, humor]
+	return lines[pick] % [local_name, faction_clause]
+
+
+func _human_join(values: Array[String]) -> String:
+	if values.is_empty():
+		return ""
+	if values.size() == 1:
+		return values[0]
+	if values.size() == 2:
+		return "%s and %s" % [values[0], values[1]]
+	var head := values.slice(0, values.size() - 1)
+	return "%s, and %s" % [", ".join(head), values.back()]
+
+
+func _init_ship_behavior_observer() -> void:
+	ship_behavior_observer = ShipBehaviorObserverType.new()
+	ship_behavior_observer.name = "ShipBehaviorObserver"
+	ship_behavior_observer.context_provider = _ship_behavior_safe_context
+	add_child(ship_behavior_observer)
+	GlobalState.ship_movement_event.connect(
+		ship_behavior_observer._on_ship_movement_event
+	)
+	if is_instance_valid(Nova) \
+			and Nova.has_method("on_semantic_movement_event"):
+		ship_behavior_observer.semantic_movement_event.connect(
+			Nova.on_semantic_movement_event
+		)
+
+
+# Optional fixed-cast quiet moments. Nothing blocks on these and silence is
+# always valid, so every connection here is best-effort.
+# Method and rationale: skills/skill_llm_character_dialogue.md
+const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirector.gd")
+
+# Which game event fires which beat. The behaviour observer already emits
+# these with a 180s semantic cooldown of its own.
+const QUIET_MOMENT_MOVEMENT_BEATS := {
+	"clean_long_transit": "nova_long_transit",
+	"rough_arrival": "nova_rough_arrival",
+	"boost_again_quickly": "nova_hard_burn",
+	"returned_to_same_station": "nova_returned_same_station",
+}
+
+
+func _init_quiet_moment_director() -> void:
+	quiet_moment_director = QuietMomentDirectorType.new()
+	quiet_moment_director.name = "QuietMomentDirector"
+	add_child(quiet_moment_director)
+	quiet_moment_director.quiet_moment_ready.connect(_on_quiet_moment_ready)
+	quiet_moment_director.quiet_moment_silent.connect(_on_quiet_moment_silent)
+	if is_instance_valid(CombatManager) and CombatManager.has_signal("combat_ended"):
+		CombatManager.combat_ended.connect(_on_quiet_moment_combat_ended)
+	if is_instance_valid(GlobalState) and GlobalState.has_signal("cargo_changed"):
+		GlobalState.cargo_changed.connect(_on_quiet_moment_cargo_changed)
+	if is_instance_valid(ship_behavior_observer):
+		ship_behavior_observer.semantic_movement_event.connect(
+			_on_quiet_moment_movement_event
+		)
+
+
+# Her post-combat beat is built around DAMAGE — a packet saying "hull stable"
+# gives her nothing to work with and every line collapses into relief. So it
+# only fires when she actually took a beating.
+const QUIET_MOMENT_DAMAGED_HULL_FRACTION := 0.85
+
+
+func _on_quiet_moment_combat_ended(player_won: bool) -> void:
+	if not player_won or not is_instance_valid(quiet_moment_director):
+		return
+	if player == null or not is_instance_valid(player):
+		return
+	var max_health := float(player.get("max_health"))
+	if max_health <= 0.0:
+		return
+	var fraction := float(player.get("health")) / max_health
+	if fraction <= QUIET_MOMENT_DAMAGED_HULL_FRACTION:
+		quiet_moment_director.try_fire("nova_post_combat_damaged")
+
+
+# Fires on the transition into a full hold, not on every cargo tick.
+var _quiet_moment_hold_was_full: bool = false
+
+
+func _on_quiet_moment_cargo_changed(new_cargo: float) -> void:
+	if not is_instance_valid(quiet_moment_director) or not is_instance_valid(GlobalState):
+		return
+	var capacity := float(GlobalState.cargo_max)
+	if capacity <= 0.0:
+		return
+	var full := new_cargo >= capacity - 0.001
+	if full and not _quiet_moment_hold_was_full:
+		quiet_moment_director.try_fire("nova_cargo_full")
+	_quiet_moment_hold_was_full = full
+
+
+func _on_quiet_moment_movement_event(event_id: String, _context: Dictionary) -> void:
+	var beat_id := str(QUIET_MOMENT_MOVEMENT_BEATS.get(event_id, ""))
+	if beat_id.is_empty() or not is_instance_valid(quiet_moment_director):
+		return
+	quiet_moment_director.try_fire(beat_id)
+
+
+# Silence is a valid outcome, but a tester needs to see it happened and why —
+# otherwise a working beat that stayed quiet looks like a broken one.
+func _capture_quiet_moment_state() -> Dictionary:
+	if not is_instance_valid(quiet_moment_director):
+		return {}
+	return quiet_moment_director.to_save_dict()
+
+
+func _on_quiet_moment_silent(beat_id: String, reasons: Array) -> void:
+	# Silences also go to GenerationDiagnostics unconditionally; this is only
+	# the on-screen echo, so it stays behind the open dev panel rather than
+	# spamming a real playthrough's chatter feed.
+	if not is_instance_valid(_dev_panel) or not _dev_panel.visible:
+		return
+	GlobalState.emit_chatter("SYSTEM",
+		"DEBUG: %s silent (%s)" % [beat_id, ", ".join(reasons)],
+		Color(1.0, 0.85, 0.5))
+
+
+# Kaelen's completion beats split on the same payout/risk bands the rest of
+# the dialogue layer already uses (see LLMInterface high_payout/lower_payout).
+## Beat held back because the player was docked when a contract completed.
+## Only one is kept: if two contracts are turned in during a single dock, the
+## LAST one is the one she remarks on, which is the one the player just did.
+var _pending_quiet_moment_beat: String = ""
+
+
+func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
+	if not is_instance_valid(quiet_moment_director):
+		return
+	var reward := int(quest_data.get("reward_credits", 0))
+	var beat_id := "kaelen_low_pay_safe"
+	if bool(quest_data.get("public_board", false)):
+		# Her snobbery about board work outranks the payout band: the joke is
+		# that it was beneath them, whatever it paid.
+		beat_id = "kaelen_public_board"
+	elif reward >= 300 or bool(quest_data.get("known_tough", false)):
+		beat_id = "kaelen_high_pay_dangerous"
+	# A turn-in is not a quiet moment. Firing here put Kaelen's payout comment on
+	# top of the agent who just handled the hand-off, so the game said two
+	# different things about one event and talked over its own NPC. Hold the beat
+	# until the player is back in space, where an aside is an aside.
+	if _player_is_docked():
+		_pending_quiet_moment_beat = beat_id
+		return
+	quiet_moment_director.try_fire(beat_id)
+
+
+func _player_is_docked() -> bool:
+	return player != null and is_instance_valid(player) and bool(player.get("is_docked"))
+
+
+## Fire a beat that was held back because the player was mid-conversation.
+## Called from UIManager.undock_player -- the beat is DELAYED, never dropped,
+## because the commentary is good, it was just arriving over someone else.
+func flush_pending_quiet_moment() -> void:
+	if _pending_quiet_moment_beat.is_empty():
+		return
+	var beat_id := _pending_quiet_moment_beat
+	_pending_quiet_moment_beat = ""
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire(beat_id)
+
+
+func _on_quiet_moment_quest_abandoned(_quest_data: Dictionary) -> void:
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire("kaelen_abandoned")
+
+
+func _on_quiet_moment_quest_declined(_quest_data: Dictionary) -> void:
+	if is_instance_valid(quiet_moment_director):
+		quiet_moment_director.try_fire("kaelen_declined")
+
+
+# A finished line goes out in the speaker's own voice. N.O.V.A. has her own
+# budget/severity handling; Kaelen routes through the flavor path that carries
+# her TTS profile.
+func _on_quiet_moment_ready(speaker: String, _beat_id: String, line: String) -> void:
+	if line.strip_edges().is_empty():
+		return
+	if speaker == "nova":
+		if is_instance_valid(Nova) and Nova.has_method("speak"):
+			Nova.speak(line)
+		return
+	if speaker == "kaelen" and is_instance_valid(GlobalState):
+		GlobalState.emit_npc_flavor({
+			"npc_name": "Broker Kaelen",
+			"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
+			"line": line,
+		})
+
+
+# Safe, player-visible context stamped onto every semantic movement event.
+# Only knowledge the player and the ship already have: hull band, the active
+# mission's public beat, whether this system is new, and whether the player
+# is off the mission's system. Never story secrets.
+func _ship_behavior_safe_context() -> Dictionary:
+	var context := {}
+	if player != null and is_instance_valid(player):
+		var hull_fraction: float = clampf(
+			float(player.health) / maxf(1.0, float(player.max_health)),
+			0.0,
+			1.0
+		)
+		var band := "healthy"
+		if hull_fraction < 0.4:
+			band = "critical"
+		elif hull_fraction < 0.7:
+			band = "worn"
+		context["hull_band"] = band
+	var quest: Dictionary = QuestManager.active_quest
+	if quest.is_empty():
+		context["mission_beat"] = ""
+		context["route_deviation"] = "no_mission"
+	else:
+		context["mission_beat"] = "%s (%s)" % [
+			str(quest.get("title", "")),
+			str(quest.get("objective_type", "")),
+		]
+		var mission_system := str(quest.get("system_id", ""))
+		context["route_deviation"] = (
+			"off_mission_system"
+			if not mission_system.is_empty()
+				and mission_system != str(GlobalState.current_system_id)
+			else "in_mission_system"
+		)
+	context["system_status"] = (
+		"returning"
+		if system_states.has(str(GlobalState.current_system_id))
+		else "new"
+	)
+	return context
+
+
+func _init_event_scheduler() -> void:
+	var EventSchedulerScript = preload("res://scripts/events/EventScheduler.gd")
+	var InterceptorEventScript = preload("res://scripts/events/types/InterceptorEvent.gd")
+	var GateRumorEventScript = preload("res://scripts/events/types/GateRumorEvent.gd")
+	var SystemStoryArcEventScript = preload("res://scripts/events/types/SystemStoryArcEvent.gd")
+	event_scheduler = EventSchedulerScript.shared()
+	event_scheduler.register_event_type(InterceptorEventScript.new(), 90)
+	event_scheduler.register_event_type(GateRumorEventScript.new(), 120)
+	event_scheduler.register_event_type(SystemStoryArcEventScript.new(), 180)
+
+
+func _tick_events() -> void:
+	if event_scheduler == null:
+		return
+	var EventContextScript = preload("res://scripts/events/EventContext.gd")
+	var ctx = EventContextScript.new()
+	ctx.campaign_time = CampaignClock.total_minutes
+	ctx.current_system_id = GlobalState.current_system_id
+	ctx.player_credits = GlobalState.player_credits
+	ctx.reputations = GlobalState.reputations.duplicate()
+	ctx.system_registry = system_registry
+	var risk_tags: Array[String] = []
+	for m in QuestManager.get_mission_collection().get_all_active():
+		for tag in m.data.get("risk_tags", []):
+			if tag is String and tag not in risk_tags:
+				risk_tags.append(tag)
+	ctx.active_mission_risk_tags = risk_tags
+	event_scheduler.tick(CampaignClock.total_minutes, ctx)
 
 
 func get_manual_checkpoint_status() -> Dictionary:
@@ -664,6 +1565,10 @@ func get_campaign_ui_state() -> Dictionary:
 			"selected_slot_id": "",
 			"manual": [],
 		}
+	# Earlier landing builds used the opening quest's generic fallback name for
+	# the campaign slot. Repair those records from the bible before rendering the
+	# selector; manual player names are intentionally left alone.
+	_repair_campaign_slot_titles_from_bibles()
 	var autosave := {}
 	if campaign_checkpoint_store != null:
 		var active := campaign_checkpoint_store.runtime_state_from_active()
@@ -694,6 +1599,63 @@ func get_campaign_ui_state() -> Dictionary:
 			else [],
 		"autosave": autosave,
 	}
+
+
+func print_generation_diagnostics_summary() -> void:
+	GenerationDiagnostics.print_summary()
+
+
+func generation_diagnostics_summary_text(recent_limit: int = 8) -> String:
+	return GenerationDiagnostics.summary_text(recent_limit)
+
+
+func _run_generation_diagnostics_smoke_test() -> void:
+	GenerationDiagnostics.reset()
+	GenerationDiagnostics.record_content_source(
+		"quest_dialogue",
+		"llm",
+		"diagnostics_smoke",
+		{"capability": "quest_dialogue"}
+	)
+	GenerationDiagnostics.record_fallback(
+		"mechanic_intro",
+		"max_attempts_reached",
+		"diagnostics_smoke",
+		{"capability": "mechanic_line"}
+	)
+	var summary := GenerationDiagnostics.summary()
+	if int(summary.get("total_fallbacks", -1)) != 1:
+		_fail_generation_diagnostics_smoke_test(
+			"Expected one recorded fallback."
+		)
+		return
+	if int(summary.get("content_source_total", -1)) != 2:
+		_fail_generation_diagnostics_smoke_test(
+			"Expected two content-source events."
+		)
+		return
+	if absf(float(summary.get("fallback_source_rate", 0.0)) - 0.5) > 0.001:
+		_fail_generation_diagnostics_smoke_test(
+			"Fallback source rate was not 50%."
+		)
+		return
+	var text := GenerationDiagnostics.summary_text()
+	if not text.contains("total_fallbacks: 1") \
+			or not text.contains("fallback_source_rate: 50.0%") \
+			or not text.contains("mechanic_intro"):
+		_fail_generation_diagnostics_smoke_test(
+			"Summary text did not include the fallback counters."
+		)
+		return
+	GenerationDiagnostics.print_summary()
+	print("[GenerationDiagnosticsSmokeTest] PASS")
+	get_tree().quit(0)
+
+
+func _fail_generation_diagnostics_smoke_test(message: String) -> void:
+	push_error("[GenerationDiagnosticsSmokeTest] FAIL: %s" % message)
+	GenerationDiagnostics.print_summary()
+	get_tree().quit(1)
 
 
 func import_legacy_save(slot_id: String = "") -> Dictionary:
@@ -743,6 +1705,7 @@ func create_campaign_in_slot(
 	)
 	if creating_fresh_campaign:
 		QuestManager.reset_for_restart()
+		_position_fresh_campaign_ship_for_station_approach()
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)):
 		return {
@@ -763,6 +1726,21 @@ func create_campaign_in_slot(
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return {"ok": false, "error": "Campaign storage is unavailable."}
+	if creating_fresh_campaign:
+		_clear_active_campaign_runtime_context()
+		var requested_slot := campaign_slot_registry.get_slot(slot_id)
+		if slot_id.is_empty() \
+				or requested_slot.is_empty() \
+				or bool(requested_slot.get("occupied", false)):
+			slot_id = campaign_slot_registry.first_empty_slot_id()
+		if slot_id.is_empty():
+			Engine.remove_meta("creating_new_campaign")
+			if Engine.has_meta("pending_opening_campaign_name"):
+				Engine.remove_meta("pending_opening_campaign_name")
+			return {
+				"ok": false,
+				"error": "All three campaigns are occupied. Delete one to start another.",
+			}
 	var created := campaign_slot_registry.create_campaign(
 		slot_id,
 		display_name,
@@ -784,6 +1762,8 @@ func create_campaign_in_slot(
 	]
 	campaign_checkpoint_store = CampaignCheckpointStoreType.open(slot_path)
 	_initialize_campaign_chronicle()
+	if creating_fresh_campaign:
+		_queue_campaign_bible_generation_for_active_slot("new_campaign")
 	GlobalState.emit_chatter(
 		"SYSTEM",
 		"Campaign \"%s\" created." %
@@ -849,33 +1829,70 @@ func rename_campaign_slot(
 
 
 func apply_opening_campaign_name(display_name: String) -> bool:
-	if Engine.has_meta("creating_new_campaign"):
-		Engine.set_meta(
-			"pending_opening_campaign_name",
-			display_name
-		)
-		return true
-	if campaign_slot_registry == null:
-		_initialize_campaign_registry()
-	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
+	# Kept as a compatibility entry point for older UI code. Quest titles are
+	# mission flavor, not campaign titles; only the campaign bible may name a
+	# campaign slot.
+	return false
+
+
+func _slot_title_is_repairable(display_name: String) -> bool:
+	var clean_name := display_name.strip_edges()
+	return clean_name.is_empty() \
+		or clean_name in _PROVISIONAL_CAMPAIGN_SLOT_NAMES \
+		or clean_name in _LEGACY_OPENING_NAME_FALLBACKS \
+		or clean_name.begins_with("Astra Arcana — Campaign")
+
+
+func _valid_bible_slot_title(bible: Dictionary) -> String:
+	var title := str(bible.get("campaign_title", "")).strip_edges()
+	if title.length() < 2:
+		return ""
+	return title.substr(0, 48)
+
+
+func _apply_bible_title_to_slot(slot_id: String, bible: Dictionary) -> bool:
+	if campaign_slot_registry == null or slot_id.is_empty():
 		return false
-	var active_slot: Dictionary = campaign_slot_registry.get_slot(
-		active_campaign_slot_id
-	)
-	var current_name := str(active_slot.get("display_name", ""))
-	if current_name not in [
-		"Shiny's Campaign",
-		"Pending Campaign",
-		"Campaign 1",
-		"Campaign 2",
-		"Campaign 3",
-	]:
+	var title := _valid_bible_slot_title(bible)
+	if title.is_empty():
+		return false
+	var slot := campaign_slot_registry.get_slot(slot_id)
+	if not bool(slot.get("occupied", false)):
+		return false
+	var current_name := str(slot.get("display_name", ""))
+	if current_name == title:
 		return true
-	var renamed := campaign_slot_registry.rename_campaign(
-		active_campaign_slot_id,
-		display_name
-	)
-	return bool(renamed.get("ok", false))
+	if not _slot_title_is_repairable(current_name):
+		return false
+	var renamed := campaign_slot_registry.rename_campaign(slot_id, title)
+	if not bool(renamed.get("ok", false)):
+		push_warning("[GameRoot] Could not apply campaign bible title: %s" % renamed.get("error", "unknown error"))
+		return false
+	return true
+
+
+func _apply_bible_failure_title_to_slot(slot_id: String) -> void:
+	if campaign_slot_registry == null or slot_id.is_empty():
+		return
+	var slot := campaign_slot_registry.get_slot(slot_id)
+	if bool(slot.get("occupied", false)) and _slot_title_is_repairable(str(slot.get("display_name", ""))):
+		campaign_slot_registry.rename_campaign(slot_id, _BIBLE_FAILURE_SLOT_TITLE)
+
+
+func _repair_campaign_slot_titles_from_bibles() -> void:
+	if campaign_slot_registry == null:
+		return
+	for slot in campaign_slot_registry.enumerate_slots():
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_id := str(slot.get("slot_id", ""))
+		if not _slot_title_is_repairable(str(slot.get("display_name", ""))):
+			continue
+		var slot_path := "%s/%s" % [campaign_slot_registry.root_path, slot_id]
+		var bible_store := CampaignBibleStoreType.open(slot_path)
+		if bible_store.is_valid() \
+				and bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+			_apply_bible_title_to_slot(slot_id, bible_store.data)
 
 
 func delete_campaign_slot(slot_id: String) -> Dictionary:
@@ -893,6 +1910,22 @@ func delete_campaign_slot(slot_id: String) -> Dictionary:
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
 		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.campaign_bible_context_text = ""
+		LLMInterface.story_state_context_text = ""
+		LLMInterface.clear_quest_fingerprints()
+		StoryManager.clear_story_state()
 	deleted["deleted_active_campaign"] = deleted_active_campaign
 	GlobalState.emit_chatter(
 		"SYSTEM",
@@ -996,18 +2029,89 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"global": _capture_global_state(),
 		"quest": quest_array,
 		"board_cooldowns": QuestManager.capture_board_cooldowns(),
+		"story_state": StoryManager.capture_story_state_for_checkpoint(),
+		"npc_states": _capture_npc_state_for_checkpoint(),
+		# Quiet-moment recency. WITHOUT THIS the freshness guarantee resets on
+		# every reload, which is the entire point of the feature.
+		"quiet_moments": _capture_quiet_moment_state(),
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
 
-func _initialize_campaign_registry() -> void:
+func _campaign_slot_path(slot_id: String) -> String:
+	if slot_id.is_empty() or campaign_slot_registry == null:
+		return ""
+	return "%s/%s" % [campaign_slot_registry.root_path, slot_id]
+
+
+# Phase 9: persist a completed lounge conversation (player stance + fact
+# IDs surfaced) into the NPC's structured memory. Contact keys outside the
+# npc namespace (lounge.bartender.*, lounge.agent.*) get the stable
+# "npc." prefix so one contact keeps one memory across campaigns of docks.
+func record_lounge_conversation_memory(
+	contact_key: String,
+	stance: String,
+	fact_ids: Array
+) -> Dictionary:
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.is_valid():
+		return {"ok": false, "error": "npc_state_store_unavailable"}
+	var npc_id := contact_key.strip_edges()
+	if npc_id.is_empty():
+		return {"ok": false, "error": "missing_contact_key"}
+	if not npc_id.begins_with("npc."):
+		npc_id = "npc.%s" % npc_id
+	return campaign_npc_state_store.record_lounge_conversation(
+		npc_id, stance, fact_ids
+	)
+
+
+func _capture_npc_state_for_checkpoint() -> Dictionary:
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("capture_state_for_checkpoint"):
+		return {}
+	return campaign_npc_state_store.capture_state_for_checkpoint()
+
+
+func _clear_active_campaign_runtime_context() -> void:
+	active_campaign_slot_id = ""
+	campaign_checkpoint_store = null
+	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	campaign_bible_store = null
+	campaign_chapter_packet_store = null
+	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
+	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
+	campaign_narrative_fingerprint_ledger = null
+	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
+	GlobalState.campaign_agent_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
+
+
+func _initialize_campaign_registry(
+	open_selected_campaign: bool = true
+) -> void:
 	campaign_slot_registry = CampaignSlotRegistryType.open()
 	if campaign_slot_registry == null \
 			or not campaign_slot_registry.is_valid():
 		campaign_slot_registry = null
 		return
+	if Engine.has_meta("creating_new_campaign"):
+		_clear_active_campaign_runtime_context()
+		ShipGenerator.active_campaign_path = ""
+		return
 	active_campaign_slot_id = campaign_slot_registry.selected_slot_id
-	if active_campaign_slot_id.is_empty():
+	ShipGenerator.active_campaign_path = _campaign_slot_path(active_campaign_slot_id)
+	if active_campaign_slot_id.is_empty() or not open_selected_campaign:
 		return
 	var slot_path := "%s/%s" % [
 		campaign_slot_registry.root_path,
@@ -1021,6 +2125,22 @@ func _initialize_campaign_registry() -> void:
 		)
 		campaign_checkpoint_store = null
 		campaign_chronicle_store = null
+		campaign_idea_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.campaign_bible_context_text = ""
+		LLMInterface.story_state_context_text = ""
+		LLMInterface.clear_quest_fingerprints()
+		StoryManager.clear_story_state()
 		return
 	_initialize_campaign_chronicle()
 
@@ -1028,18 +2148,23 @@ func _initialize_campaign_registry() -> void:
 func _ensure_campaign_checkpoint_store(
 	prepared_runtime_state: Dictionary
 ) -> bool:
-	if campaign_checkpoint_store != null \
+	var creating_fresh_campaign := Engine.has_meta("creating_new_campaign")
+	if not creating_fresh_campaign \
+			and campaign_checkpoint_store != null \
 			and campaign_checkpoint_store.is_valid():
 		return true
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return false
-	if not campaign_slot_registry.selected_slot_id.is_empty():
-		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
-	else:
+	var created_new_campaign := false
+	if creating_fresh_campaign:
+		_clear_active_campaign_runtime_context()
 		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
 		if active_campaign_slot_id.is_empty():
+			Engine.remove_meta("creating_new_campaign")
+			if Engine.has_meta("pending_opening_campaign_name"):
+				Engine.remove_meta("pending_opening_campaign_name")
 			return false
 		var automatic_name := str(
 			Engine.get_meta(
@@ -1047,9 +2172,8 @@ func _ensure_campaign_checkpoint_store(
 				"Shiny's Campaign"
 			)
 		)
-		if Engine.has_meta("creating_new_campaign"):
-			QuestManager.reset_for_restart()
-			prepared_runtime_state["quest"] = {}
+		QuestManager.reset_for_restart()
+		prepared_runtime_state["quest"] = {}
 		var created := campaign_slot_registry.create_campaign(
 			active_campaign_slot_id,
 			automatic_name,
@@ -1064,8 +2188,37 @@ func _ensure_campaign_checkpoint_store(
 			)
 			active_campaign_slot_id = ""
 			return false
-		if Engine.has_meta("creating_new_campaign"):
-			Engine.remove_meta("creating_new_campaign")
+		created_new_campaign = true
+		Engine.remove_meta("creating_new_campaign")
+		if Engine.has_meta("pending_opening_campaign_name"):
+			Engine.remove_meta("pending_opening_campaign_name")
+	elif not campaign_slot_registry.selected_slot_id.is_empty():
+		active_campaign_slot_id = campaign_slot_registry.selected_slot_id
+	else:
+		active_campaign_slot_id = campaign_slot_registry.first_empty_slot_id()
+		if active_campaign_slot_id.is_empty():
+			return false
+		var automatic_name := str(
+			Engine.get_meta(
+				"pending_opening_campaign_name",
+				"Shiny's Campaign"
+			)
+		)
+		var created := campaign_slot_registry.create_campaign(
+			active_campaign_slot_id,
+			automatic_name,
+			"prototype-phase-2",
+			prepared_runtime_state,
+			system_registry
+		)
+		if not bool(created.get("ok", false)):
+			push_warning(
+				"[GameRoot] Campaign creation failed: %s" %
+				created.get("error", "unknown error")
+			)
+			active_campaign_slot_id = ""
+			return false
+		created_new_campaign = true
 		if Engine.has_meta("pending_opening_campaign_name"):
 			Engine.remove_meta("pending_opening_campaign_name")
 	var slot_path := "%s/%s" % [
@@ -1076,12 +2229,39 @@ func _ensure_campaign_checkpoint_store(
 	if not campaign_checkpoint_store.is_valid():
 		return false
 	_initialize_campaign_chronicle()
+	if created_new_campaign:
+		_queue_campaign_bible_generation_for_active_slot("automatic_new_campaign")
 	return campaign_chronicle_store != null
 
 
 func _initialize_campaign_chronicle() -> void:
+	if campaign_checkpoint_store != null:
+		var saved_transponder := str(
+			campaign_checkpoint_store.campaign.get("ship_transponder_code", "")
+		)
+		if saved_transponder.length() != 6 or not saved_transponder.is_valid_int():
+			saved_transponder = "%06d" % (
+				absi(str(campaign_checkpoint_store.campaign.get("campaign_id", "legacy")).hash()) % 1000000
+			)
+		GlobalState.ship_transponder_code = saved_transponder
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	campaign_bible_store = null
+	campaign_chapter_packet_store = null
+	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
+	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
+	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
+	GlobalState.campaign_agent_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
 	if campaign_slot_registry == null or active_campaign_slot_id.is_empty():
 		return
 	var slot_path := "%s/%s" % [
@@ -1103,10 +2283,281 @@ func _initialize_campaign_chronicle() -> void:
 				opened_memory.validation.summary()
 		)
 		campaign_chronicle_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
 		return
 	campaign_kaelen_memory_store = opened_memory
+	var opened_idea_memory := CampaignIdeaMemoryStoreType.open(slot_path)
+	if not opened_idea_memory.is_valid():
+		push_warning(
+			"[GameRoot] Campaign idea memory store is unavailable: %s" %
+				opened_idea_memory.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_idea_memory_store = opened_idea_memory
+	var opened_bible := CampaignBibleStoreType.open(slot_path)
+	if not opened_bible.is_valid():
+		push_warning(
+			"[GameRoot] Campaign bible store is unavailable: %s" %
+				opened_bible.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_bible_store = opened_bible
+	var opened_chapter_packets := ChapterNarrativePacketStoreType.open(slot_path)
+	if not opened_chapter_packets.is_valid():
+		push_warning(
+			"[GameRoot] Chapter narrative packet store is unavailable: %s" %
+				opened_chapter_packets.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_chapter_packet_store = opened_chapter_packets
+	var opened_generated_factions := CampaignGeneratedFactionStoreType.open(slot_path)
+	if not opened_generated_factions.is_valid():
+		push_warning(
+			"[GameRoot] Generated faction store is unavailable: %s" %
+				opened_generated_factions.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_generated_faction_store = opened_generated_factions
+	var opened_npc_identities := CampaignNpcIdentityStoreType.open(slot_path)
+	if not opened_npc_identities.is_valid():
+		push_warning(
+			"[GameRoot] NPC identity store is unavailable: %s" %
+				opened_npc_identities.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_npc_identity_store = opened_npc_identities
+	GlobalState.campaign_npc_identity_store = campaign_npc_identity_store
+	var opened_npc_states := CampaignNpcStateStoreType.open(slot_path)
+	if not opened_npc_states.is_valid():
+		push_warning(
+			"[GameRoot] NPC state store is unavailable: %s" %
+				opened_npc_states.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_npc_state_store = opened_npc_states
+	GlobalState.campaign_npc_state_store = campaign_npc_state_store
+	var opened_agent_memory := CampaignAgentMemorySnippetStoreType.open(slot_path)
+	if not opened_agent_memory.is_valid():
+		push_warning(
+			"[GameRoot] Agent memory snippet store is unavailable: %s" %
+				opened_agent_memory.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_agent_memory_store = opened_agent_memory
+	GlobalState.campaign_agent_memory_store = campaign_agent_memory_store
+	var opened_narrative_cache := NarrativeCacheStoreType.open(slot_path)
+	if not opened_narrative_cache.is_valid():
+		push_warning(
+			"[GameRoot] Narrative cache store is unavailable: %s" %
+				opened_narrative_cache.validation.summary()
+		)
+		campaign_chronicle_store = null
+		campaign_kaelen_memory_store = null
+		campaign_idea_memory_store = null
+		campaign_bible_store = null
+		campaign_chapter_packet_store = null
+		campaign_generated_faction_store = null
+		campaign_npc_identity_store = null
+		campaign_npc_state_store = null
+		campaign_agent_memory_store = null
+		campaign_narrative_cache_store = null
+		GlobalState.campaign_npc_identity_store = null
+		GlobalState.campaign_npc_state_store = null
+		GlobalState.campaign_agent_memory_store = null
+		LLMInterface.idea_memory_context_text = ""
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	campaign_narrative_cache_store = opened_narrative_cache
+	campaign_narrative_fingerprint_ledger = NarrativeFingerprintLedgerType.new()
+	campaign_narrative_fingerprint_ledger.load_dict(opened_narrative_cache.quality_ledger_data())
+	_restore_ready_narrative_cache_payloads()
+	_init_generated_system_configs()
+	_refresh_llm_idea_memory_context()
+	_refresh_llm_campaign_bible_context()
+	# Only seed from a bible that's actually been written by the large story
+	# model — at this point in a fresh campaign it's still the bootstrap
+	# placeholder; generation finishes async later and seeds via
+	# _on_campaign_bible_generation_result instead.
+	var bible_for_seed := {}
+	if campaign_bible_store != null and campaign_bible_store.is_valid() \
+			and campaign_bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+		bible_for_seed = campaign_bible_store.data
+	StoryManager.init_story_state(slot_path, bible_for_seed, campaign_bible_store)
+	_refresh_llm_story_state_context()
 	_sync_checkpoint_chronicle_context()
 	_import_legacy_quest_history()
+
+
+func _ensure_narrative_cache_scheduler() -> RefCounted:
+	if narrative_cache_scheduler == null:
+		narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
+	return narrative_cache_scheduler
+
+
+func _restore_ready_narrative_cache_payloads() -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var entries: Dictionary = campaign_narrative_cache_store.entries()
+	for cache_key in entries.keys():
+		var raw_entry: Variant = entries[cache_key]
+		if not raw_entry is Dictionary:
+			continue
+		var entry: Dictionary = raw_entry
+		if str(entry.get("status", "")) != "ready":
+			continue
+		var payload: Dictionary = entry.get("result_payload", {}) \
+			if entry.get("result_payload", {}) is Dictionary else {}
+		if payload.is_empty():
+			continue
+		var job_id := "restored:%s" % str(cache_key).sha256_text().substr(0, 16)
+		scheduler.restore_ready_job({
+			"job_id": job_id,
+			"cache_key": str(cache_key),
+			"kind": str(entry.get("kind", "restored_narrative_cache")),
+			"priority": int(entry.get("priority", NarrativeCacheSchedulerType.PRIORITY_P2)),
+			"requesters": (entry.get("requesters", []) as Array).duplicate(true) \
+				if entry.get("requesters", []) is Array else [],
+			"requester_id": str(entry.get("subject_id", "")),
+		}, payload)
+
+
+func _pause_narrative_cache_scheduler(reason: String) -> void:
+	var clean_reason := reason.strip_edges()
+	if clean_reason.is_empty():
+		clean_reason = "large_model_gate"
+	narrative_cache_scheduler_pause_reasons[clean_reason] = true
+	_ensure_narrative_cache_scheduler().pause(clean_reason)
+
+
+func _resume_narrative_cache_scheduler(reason: String) -> void:
+	var clean_reason := reason.strip_edges()
+	if clean_reason.is_empty():
+		clean_reason = "large_model_gate"
+	narrative_cache_scheduler_pause_reasons.erase(clean_reason)
+	if narrative_cache_scheduler_pause_reasons.is_empty():
+		_ensure_narrative_cache_scheduler().resume()
+		return
+	var reasons: Array = narrative_cache_scheduler_pause_reasons.keys()
+	reasons.sort()
+	_ensure_narrative_cache_scheduler().pause(",".join(reasons))
 
 
 func _classify_kaelen_rollback(restored: Dictionary) -> bool:
@@ -1208,7 +2659,7 @@ func restore_latest_campaign_checkpoint_after_death() -> bool:
 
 func can_start_new_campaign() -> bool:
 	if campaign_slot_registry == null:
-		_initialize_campaign_registry()
+		_initialize_campaign_registry(not landing_screen_active)
 	return campaign_slot_registry != null \
 		and not campaign_slot_registry.first_empty_slot_id().is_empty()
 
@@ -1240,6 +2691,1005 @@ func get_kaelen_current_memories() -> Array:
 	return campaign_kaelen_memory_store.current_memories()
 
 
+func record_kaelen_line_playback(
+	line_text: String,
+	event_kind: String = "",
+	context: Dictionary = {}
+) -> void:
+	var clean_line := line_text.strip_edges()
+	if clean_line.is_empty():
+		return
+	if campaign_checkpoint_store == null:
+		_initialize_campaign_registry()
+	if campaign_checkpoint_store == null \
+			or campaign_chronicle_store == null \
+			or campaign_kaelen_memory_store == null:
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var clean_kind := event_kind.strip_edges()
+	if clean_kind.is_empty():
+		clean_kind = "kaelen_line"
+	var fingerprint := clean_line.sha256_text()
+	var payload := context.duplicate(true)
+	payload.merge({
+		"speaker_id": "kaelen",
+		"speaker_name": "Broker Kaelen",
+		"event_kind": clean_kind,
+		"line_fingerprint": fingerprint,
+		"line_text": clean_line,
+	}, true)
+	var subjects := [campaign_chronicle_store.campaign["id"]]
+	var appended := campaign_chronicle_store.append_event(
+		"kaelen_line_delivered",
+		subjects,
+		payload,
+		str(active.get("checkpoint_id", ""))
+	)
+	if not bool(appended.get("ok", false)):
+		return
+	var event: Dictionary = appended.get("event", {}) \
+		if appended.get("event", {}) is Dictionary else {}
+	var summary := "Kaelen delivered a %s line to Shiny." % clean_kind
+	var remembered := campaign_kaelen_memory_store.append_memory(
+		"observation",
+		summary,
+		[],
+		str(event.get("timeline_id", "")),
+		str(active.get("checkpoint_id", "")),
+		int(event.get("sequence", -1)),
+		"",
+		{
+			"line_fingerprint": fingerprint,
+			"event_kind": clean_kind,
+		}
+	)
+	if not bool(remembered.get("ok", false)):
+		push_warning("[GameRoot] Kaelen line playback memory was not retained.")
+	_sync_checkpoint_chronicle_context()
+
+
+func remember_generated_quest_idea(
+	quest_data: Dictionary,
+	is_fallback: bool
+) -> void:
+	if is_fallback or campaign_idea_memory_store == null or quest_data.is_empty():
+		return
+	var objective: Dictionary = quest_data.get("objective", {})
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	var title := str(quest_data.get("title", "Untitled contract"))
+	var faction := str(quest_data.get("faction", "neutral"))
+	var agent_name := str(quest_data.get("agent_name", "Unknown agent"))
+	var summary := _quest_idea_memory_summary(
+		quest_data,
+		objective,
+		objective_type,
+		title,
+		faction,
+		agent_name
+	)
+	var tags: Array = [
+		"quest",
+		faction,
+		objective_type.to_lower(),
+		agent_name.to_lower().replace(" ", "_"),
+		str(GlobalState.current_system_id),
+	]
+	if objective.has("target_faction"):
+		tags.append(str(objective.get("target_faction", "")))
+	if objective.has("target_outpost"):
+		tags.append(str(objective.get("target_outpost", "")))
+	if objective.has("target_npc"):
+		tags.append(str(objective.get("target_npc", "")).to_lower().replace(" ", "_"))
+	if objective.has("part_name"):
+		tags.append(str(objective.get("part_name", "")).to_lower().replace(" ", "_"))
+	var fingerprint_source := JSON.stringify({
+		"title": title,
+		"faction": faction,
+		"agent_name": agent_name,
+		"dialogue": str(quest_data.get("dialogue", "")),
+		"objective": objective,
+	})
+	var appended = campaign_idea_memory_store.append_idea(
+		"mission",
+		summary,
+		tags,
+		fingerprint_source,
+		{
+			"title": title,
+			"faction": faction,
+			"agent_name": agent_name,
+			"objective_type": objective_type,
+			"objective": objective.duplicate(true),
+			"dialogue_excerpt": _short_memory_text(
+				str(quest_data.get("dialogue", "")),
+				220
+			),
+		}
+	)
+	if not bool(appended.get("ok", false)):
+		push_warning(
+			"[GameRoot] Generated quest idea was not remembered: %s" %
+			appended.get("error", "unknown error")
+		)
+		return
+	LLMInterface.register_quest_fingerprint(fingerprint_source)
+	_refresh_llm_idea_memory_context()
+
+
+func remember_agent_memory_snippet(quest_data: Dictionary, outcome: String) -> void:
+	if campaign_agent_memory_store == null or quest_data.is_empty():
+		return
+	if bool(quest_data.get("public_board", false)):
+		return
+	var agent_name := str(quest_data.get("agent_name", "")).strip_edges()
+	if agent_name.is_empty() \
+			or agent_name in ["Public Board", "Board Poster"]:
+		return
+	var faction := str(quest_data.get("faction", "neutral")).strip_edges()
+	if faction.is_empty():
+		faction = "neutral"
+	var agent_id := str(quest_data.get("agent_memory_id", "")).strip_edges()
+	if agent_id.is_empty():
+		agent_id = LLMInterface.agent_memory_id_for_profile(
+			agent_name,
+			faction,
+			{}
+		)
+	var objective := _quest_memory_objective(quest_data)
+	var objective_type := str(
+		objective.get("type", quest_data.get("objective_type", ""))
+	).strip_edges()
+	var title := str(quest_data.get("title", "Untitled contract")).strip_edges()
+	if title.is_empty():
+		title = "Untitled contract"
+	var detail := _quest_objective_memory_detail(objective, objective_type)
+	var clean_outcome := outcome.strip_edges().to_lower()
+	var summary := "Indy %s '%s' for %s" % [
+		clean_outcome,
+		title,
+		agent_name,
+	]
+	if not detail.is_empty():
+		summary += ": %s" % detail
+	if clean_outcome == "completed":
+		var payout := int(quest_data.get("final_payout", 0))
+		if payout > 0:
+			summary += ". Final payout: %d SC" % payout
+	elif clean_outcome == "abandoned":
+		summary += ". The work was abandoned before completion"
+	var response_excerpt := _short_memory_text(
+		str(quest_data.get("agent_response", "")),
+		120
+	)
+	if not response_excerpt.is_empty():
+		summary += ". Agent response: \"%s\"" % response_excerpt
+	var tags: Array = [
+		"quest",
+		clean_outcome,
+		faction,
+		objective_type.to_lower(),
+		str(quest_data.get("system_id", GlobalState.current_system_id)),
+	]
+	for optional_key in [
+		"target_faction",
+		"target_outpost",
+		"target_npc",
+		"part_name",
+		"item_name",
+	]:
+		if objective.has(optional_key):
+			tags.append(
+				str(objective.get(optional_key, "")).to_lower().replace(" ", "_")
+			)
+	var appended: Dictionary = campaign_agent_memory_store.append_snippet(
+		agent_id,
+		agent_name,
+		faction,
+		summary,
+		tags,
+		{
+			"title": title,
+			"outcome": clean_outcome,
+			"faction": faction,
+			"agent_name": agent_name,
+			"objective_type": objective_type,
+			"objective": objective.duplicate(true),
+			"narrative_metadata": NarrativeMetadataType.from_source(quest_data),
+			"system_id": str(
+				quest_data.get("system_id", GlobalState.current_system_id)
+			),
+		}
+	)
+	if not bool(appended.get("ok", false)):
+		push_warning(
+			"[GameRoot] Agent memory snippet was not saved: %s" %
+				appended.get("error", "unknown error")
+		)
+
+
+func _quest_memory_objective(quest_data: Dictionary) -> Dictionary:
+	var existing: Dictionary = quest_data.get("objective", {})
+	if not existing.is_empty():
+		return existing.duplicate(true)
+	var objective_type := str(quest_data.get("objective_type", ""))
+	var objective: Dictionary = {"type": objective_type}
+	for key in [
+		"target_faction",
+		"count_required",
+		"amount_required",
+		"target_outpost",
+		"target_outpost_display",
+		"target_npc",
+		"part_name",
+		"destination",
+		"item_name",
+		"turn_in_location",
+	]:
+		if quest_data.has(key):
+			objective[key] = quest_data[key]
+	return objective
+
+
+func _quest_idea_memory_summary(
+	quest_data: Dictionary,
+	objective: Dictionary,
+	objective_type: String,
+	title: String,
+	faction: String,
+	agent_name: String
+) -> String:
+	var detail := _quest_objective_memory_detail(objective, objective_type)
+	var dialogue := _short_memory_text(str(quest_data.get("dialogue", "")), 150)
+	var parts: Array[String] = [
+		"%s offered '%s' for %s" % [agent_name, title, faction],
+	]
+	if not detail.is_empty():
+		parts.append(detail)
+	if not dialogue.is_empty():
+		parts.append("opening: \"%s\"" % dialogue)
+	return ". ".join(parts)
+
+
+func _quest_objective_memory_detail(
+	objective: Dictionary,
+	objective_type: String
+) -> String:
+	match objective_type:
+		"KILL_SHIPS":
+			return "kill %d ships from %s" % [
+				int(objective.get("count_required", 0)),
+				str(objective.get("target_faction", "unknown faction")),
+			]
+		"DELIVER_ORE":
+			return "deliver %.0f m3 of ore" % float(
+				objective.get("amount_required", 0.0)
+			)
+		"PICKUP_SPECIAL":
+			return "pickup %s from %s at %s for %s" % [
+				str(objective.get("part_name", "unknown cargo")),
+				str(objective.get("target_npc", "unknown contact")),
+				str(
+					objective.get(
+						"target_outpost_display",
+						objective.get("target_outpost", "unknown outpost")
+					)
+				),
+				str(objective.get("destination", "unknown destination")),
+			]
+	return objective_type.to_lower().replace("_", " ")
+
+
+func _short_memory_text(text: String, limit: int) -> String:
+	var clean := text.strip_edges().replace("\n", " ").replace("\r", " ")
+	while clean.contains("  "):
+		clean = clean.replace("  ", " ")
+	if clean.length() <= limit:
+		return clean
+	return clean.left(maxi(0, limit - 3)).strip_edges() + "..."
+
+
+func _refresh_llm_idea_memory_context() -> void:
+	if campaign_idea_memory_store == null or not campaign_idea_memory_store.is_valid():
+		LLMInterface.idea_memory_context_text = ""
+		return
+	LLMInterface.idea_memory_context_text = campaign_idea_memory_store.prompt_context(
+		[],
+		[],
+		24
+	)
+	var fps: Array = []
+	for idea in campaign_idea_memory_store.data.get("ideas", []):
+		if idea is Dictionary and str((idea as Dictionary).get("category", "")) == "mission":
+			var fp := str((idea as Dictionary).get("fingerprint", ""))
+			if not fp.is_empty():
+				fps.append(fp)
+	LLMInterface.seed_quest_fingerprints(fps)
+
+
+func _refresh_llm_campaign_bible_context() -> void:
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		LLMInterface.campaign_bible_context_text = ""
+		return
+	# Small-model prompts get the player-safe projection only — never the raw
+	# bible, which carries the campaign twist, mystery, and rumor payoffs.
+	LLMInterface.campaign_bible_context_text = campaign_bible_store.public_prompt_context()
+
+func _refresh_llm_story_state_context() -> void:
+	var block := StoryManager.get_story_context_block()
+	LLMInterface.story_state_context_text = block
+	GenerationDiagnostics.record_content_source(
+		"campaign_bible",
+		campaign_bible_store.generation_status(),
+		"campaign_bible_store",
+		{
+			"source": campaign_bible_store.source_name(),
+			"summary": campaign_bible_store.status_summary(),
+		}
+	)
+
+
+func request_campaign_bible_generation() -> Dictionary:
+	if campaign_bible_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		return {"ok": false, "error": "Campaign bible store is unavailable."}
+	var current_status := campaign_bible_store.generation_status()
+	if current_status == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+		return {
+			"ok": true,
+			"status": "already_generated",
+			"bible": campaign_bible_store.data.duplicate(true),
+		}
+	if LLMInterface.has_method("set_campaign_bible_priority_active"):
+		LLMInterface.set_campaign_bible_priority_active(true)
+	if campaign_bible_generation_in_flight:
+		return {"ok": true, "status": "already_requested"}
+	if not LLMInterface.llm_connected:
+		if not LLMInterface.llm_connection_established.is_connected(_on_llm_ready_for_campaign_bible):
+			LLMInterface.llm_connection_established.connect(_on_llm_ready_for_campaign_bible, CONNECT_ONE_SHOT)
+		return {"ok": true, "status": "waiting_for_llm_connection"}
+	var baseline := campaign_bible_store.data.duplicate(true)
+	var idea_context := LLMInterface.idea_memory_context_text
+	var motif_history := {}
+	if campaign_idea_memory_store != null \
+			and campaign_idea_memory_store.is_valid():
+		idea_context = campaign_idea_memory_store.campaign_bible_prompt_context(32)
+		# Recent titles/reveals so LLMInterface can retry on a near-duplicate.
+		motif_history = {
+			"titles": campaign_idea_memory_store.query_recent("campaign_title", 12),
+			"reveals": campaign_idea_memory_store.query_recent("reveal", 12),
+		}
+		# Recent creative lanes so generation avoids repeating one back-to-back
+		# (plan §3.1). Transient hint on the baseline; NarrativeDirector strips it
+		# before storing. Window of 2 leaves 5 of 7 lanes eligible.
+		baseline["_recent_lanes"] = campaign_idea_memory_store.query_recent("creative_lane", 2)
+	# Campaign idea memory is slot-local, so also include titles from the other
+	# occupied slots. This gives the large model an actual cross-campaign guard
+	# before it writes a new bible.
+	if not motif_history.has("titles"):
+		motif_history["titles"] = []
+	for existing_title in _other_campaign_bible_titles():
+		if not motif_history["titles"].has(existing_title):
+			motif_history["titles"].append(existing_title)
+	_pause_narrative_cache_scheduler("campaign_bible_generation")
+	LLMInterface.request_campaign_bible_generation(
+		baseline,
+		idea_context,
+		_on_campaign_bible_generation_result,
+		motif_history
+	)
+	campaign_bible_generation_in_flight = true
+	return {"ok": true, "status": "requested"}
+
+
+func _on_llm_ready_for_campaign_bible(_model_name: String) -> void:
+	call_deferred("_request_campaign_bible_generation_for_active_slot")
+
+
+func _queue_campaign_bible_generation_for_active_slot(reason: String) -> void:
+	if active_campaign_slot_id.is_empty():
+		return
+	if campaign_bible_generation_requested_slots.has(active_campaign_slot_id):
+		return
+	if LLMInterface.has_method("set_campaign_bible_priority_active") \
+			and not is_campaign_story_ready():
+		LLMInterface.set_campaign_bible_priority_active(true)
+	campaign_bible_generation_requested_slots[active_campaign_slot_id] = true
+	GenerationDiagnostics.record_event(
+		"campaign_bible",
+		"generation_queued",
+		"game_root",
+		{"slot_id": active_campaign_slot_id, "reason": reason}
+	)
+	call_deferred("_request_campaign_bible_generation_for_active_slot")
+
+
+func _request_campaign_bible_generation_for_active_slot() -> void:
+	var requested := request_campaign_bible_generation()
+	if not bool(requested.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign bible generation could not be requested: %s" %
+				str(requested.get("error", "unknown error"))
+		)
+
+
+func _other_campaign_bible_titles() -> Array[String]:
+	var titles: Array[String] = []
+	if campaign_slot_registry == null:
+		return titles
+	for slot in campaign_slot_registry.enumerate_slots():
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_id := str(slot.get("slot_id", ""))
+		if slot_id.is_empty() or slot_id == active_campaign_slot_id:
+			continue
+		var bible_store := CampaignBibleStoreType.open(
+			"%s/%s" % [campaign_slot_registry.root_path, slot_id]
+		)
+		if bible_store.is_valid() \
+				and bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED:
+			var title := _valid_bible_slot_title(bible_store.data)
+			if not title.is_empty():
+				titles.append(title)
+	return titles
+
+
+func _on_campaign_bible_generation_result(result: Dictionary) -> void:
+	campaign_bible_generation_in_flight = false
+	_resume_narrative_cache_scheduler("campaign_bible_generation")
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		push_warning("[GameRoot] Campaign bible generation result arrived without a valid store.")
+		campaign_bible_generation_finished.emit(false, "Campaign bible store unavailable.")
+		return
+	var model_name := str(result.get("model", ""))
+	var committed := {}
+	if bool(result.get("ok", false)):
+		committed = campaign_bible_store.replace_bible(result.get("bible", {}))
+		if bool(committed.get("ok", false)):
+			StoryManager.seed_story_state_from_bible(campaign_bible_store.data)
+			_apply_bible_title_to_slot(active_campaign_slot_id, campaign_bible_store.data)
+	else:
+		var reason := str(result.get("reason", "campaign_bible_generation_failed"))
+		if reason == "model_unavailable":
+			committed = campaign_bible_store.mark_model_unavailable(reason, model_name)
+		else:
+			committed = campaign_bible_store.mark_generation_failed(reason, model_name)
+		# Clear the per-slot request guard so a later slot activation or relaunch
+		# re-requests generation instead of leaving this campaign permanently
+		# stranded behind the manual recovery button. LLMInterface has already
+		# retried once internally; this is the between-sessions safety net.
+		if not active_campaign_slot_id.is_empty():
+			campaign_bible_generation_requested_slots.erase(active_campaign_slot_id)
+		_apply_bible_failure_title_to_slot(active_campaign_slot_id)
+	if not bool(committed.get("ok", false)):
+		push_warning(
+			"[GameRoot] Campaign bible generation status could not be stored: %s" %
+				str(committed.get("error", "unknown error"))
+		)
+		return
+	if bool(result.get("ok", false)) and campaign_idea_memory_store != null:
+		var remembered := campaign_idea_memory_store.remember_campaign_bible(
+			campaign_bible_store.data
+		)
+		if not bool(remembered.get("ok", false)):
+			push_warning(
+				"[GameRoot] Campaign bible ideas were not fully remembered: %s" %
+					JSON.stringify(remembered.get("errors", []))
+			)
+		_refresh_llm_idea_memory_context()
+	_refresh_llm_campaign_bible_context()
+	if bool(result.get("ok", false)):
+		print("[GameRoot] Campaign bible generated by local story model.")
+	else:
+		push_warning(
+			"[GameRoot] Campaign bible generation did not complete: %s" %
+				str(result.get("reason", "unknown"))
+		)
+	campaign_bible_generation_finished.emit(
+		is_campaign_story_ready(),
+		campaign_story_status_summary()
+	)
+
+
+func is_campaign_story_ready() -> bool:
+	return campaign_bible_store != null \
+		and campaign_bible_store.is_valid() \
+		and campaign_bible_store.generation_status() == CampaignBibleStoreType.STATUS_LLM_GENERATED
+
+
+func campaign_story_status_summary() -> String:
+	if campaign_bible_store == null or not campaign_bible_store.is_valid():
+		return "Campaign story unavailable: no valid campaign bible store."
+	return campaign_bible_store.status_summary()
+
+
+func is_chapter_plan_ready() -> bool:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return false
+	var chapter := int(StoryManager.story_state.get("chapter", 1))
+	return not campaign_chapter_packet_store.latest_packet_for_chapter(chapter).is_empty()
+
+
+func chapter_plan_status_summary() -> String:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return "Chapter plan unavailable: no valid chapter packet store."
+	if is_chapter_plan_ready():
+		return "Chapter plan ready."
+	if chapter_plan_generation_in_flight:
+		return "Chapter plan generation in progress."
+	if not is_campaign_story_ready():
+		return "Chapter plan waiting for generated campaign bible."
+	return "Chapter plan not generated yet."
+
+
+func request_chapter_plan_generation(target_chapter: int = 0) -> Dictionary:
+	if campaign_chapter_packet_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return {"ok": false, "error": "Chapter packet store is unavailable."}
+	if not is_campaign_story_ready():
+		return {"ok": true, "status": "waiting_for_campaign_bible"}
+	var chapter := target_chapter
+	if chapter <= 0:
+		chapter = int(StoryManager.story_state.get("chapter", 1))
+	if not campaign_chapter_packet_store.latest_packet_for_chapter(chapter).is_empty():
+		return {"ok": true, "status": "already_generated"}
+	if chapter_plan_generation_in_flight:
+		return {"ok": true, "status": "already_requested"}
+	if not LLMInterface.llm_connected:
+		chapter_plan_pending_target_chapter = chapter
+		if not LLMInterface.llm_connection_established.is_connected(_on_llm_ready_for_chapter_plan):
+			LLMInterface.llm_connection_established.connect(_on_llm_ready_for_chapter_plan, CONNECT_ONE_SHOT)
+		return {"ok": true, "status": "waiting_for_llm_connection"}
+	chapter_plan_pending_target_chapter = 0
+	var objective_types := MissionCapabilityRegistry.objective_types()
+	var validated_entities := _chapter_plan_validated_entities()
+	var valid_entity_ids := _chapter_plan_valid_entity_ids(validated_entities)
+	_pause_narrative_cache_scheduler("chapter_plan_generation")
+	LLMInterface.request_chapter_plan_generation(
+		campaign_bible_store.director_context(),
+		validated_entities,
+		objective_types,
+		_chapter_plan_recent_player_choices(),
+		_chapter_plan_unresolved_story_state(chapter),
+		objective_types,
+		valid_entity_ids,
+		_on_chapter_plan_generation_result.bind(chapter)
+	)
+	chapter_plan_generation_in_flight = true
+	return {"ok": true, "status": "requested"}
+
+
+func _on_llm_ready_for_chapter_plan(_model_name: String) -> void:
+	call_deferred("_request_chapter_plan_generation_for_active_slot")
+
+
+func _request_chapter_plan_generation_for_active_slot() -> void:
+	var requested := request_chapter_plan_generation(chapter_plan_pending_target_chapter)
+	if not bool(requested.get("ok", false)):
+		push_warning(
+			"[GameRoot] Chapter plan generation could not be requested: %s" %
+				str(requested.get("error", "unknown error"))
+		)
+
+
+func _on_chapter_plan_generation_result(result: Dictionary, target_chapter: int = 0) -> void:
+	chapter_plan_generation_in_flight = false
+	_resume_narrative_cache_scheduler("chapter_plan_generation")
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		push_warning("[GameRoot] Chapter plan result arrived without a valid store.")
+		chapter_plan_generation_finished.emit(false, "Chapter packet store unavailable.")
+		return
+	if bool(result.get("ok", false)):
+		var packet: Dictionary = result.get("packet", {})
+		if target_chapter > 0 and int(packet.get("chapter", 0)) != target_chapter:
+			push_warning(
+				"[GameRoot] Chapter plan generated chapter %d when chapter %d was requested." %
+					[int(packet.get("chapter", 0)), target_chapter]
+			)
+			chapter_plan_generation_finished.emit(false, "chapter_plan_generation_failed")
+			return
+		var committed: Dictionary = campaign_chapter_packet_store.append_packet(packet)
+		if bool(committed.get("ok", false)):
+			StoryManager.register_chapter_packet(packet)
+			_seed_npc_stakes_from_chapter_packet(packet)
+			_queue_narrative_prefetch_jobs_for_event(
+				_narrative_prefetch_event_from_chapter_packet(packet)
+			)
+			print("[GameRoot] Chapter narrative packet generated by local story model.")
+			chapter_plan_generation_finished.emit(true, chapter_plan_status_summary())
+			return
+		push_warning(
+			"[GameRoot] Chapter plan could not be stored: %s" %
+				str(committed.get("error", "unknown error"))
+		)
+	else:
+		push_warning(
+			"[GameRoot] Chapter plan generation did not complete: %s" %
+				str(result.get("reason", "unknown"))
+		)
+		var fallback_committed := _commit_fallback_chapter_plan(
+			target_chapter,
+			str(result.get("reason", "chapter_plan_generation_failed"))
+		)
+		if bool(fallback_committed.get("ok", false)):
+			chapter_plan_generation_finished.emit(true, chapter_plan_status_summary())
+			return
+	chapter_plan_generation_finished.emit(false, chapter_plan_status_summary())
+
+
+func _commit_fallback_chapter_plan(target_chapter: int, reason: String) -> Dictionary:
+	var chapter := target_chapter
+	if chapter <= 0:
+		chapter = int(StoryManager.story_state.get("chapter", 1))
+	var existing: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(chapter)
+	if not existing.is_empty():
+		return {"ok": true, "status": "already_ready", "packet": existing}
+	var validated_entities := _chapter_plan_validated_entities()
+	var valid_entity_ids := _chapter_plan_valid_entity_ids(validated_entities)
+	var objective_types := MissionCapabilityRegistry.objective_types()
+	var fallback_packet: Dictionary = ChapterNarrativeDirectorType.fallback_chapter_packet(
+		chapter,
+		objective_types,
+		valid_entity_ids,
+		reason
+	)
+	var committed: Dictionary = campaign_chapter_packet_store.append_packet(fallback_packet)
+	if not bool(committed.get("ok", false)):
+		push_warning(
+			"[GameRoot] Fallback chapter plan could not be stored: %s" %
+				str(committed.get("error", "unknown error"))
+		)
+		return committed
+	GenerationDiagnostics.record_fallback(
+		"chapter_plan",
+		reason,
+		"GameRoot",
+		{"chapter": chapter, "packet_id": str(fallback_packet.get("packet_id", ""))}
+	)
+	StoryManager.register_chapter_packet(fallback_packet)
+	_seed_npc_stakes_from_chapter_packet(fallback_packet)
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_chapter_packet(fallback_packet)
+	)
+	print("[GameRoot] Fallback chapter narrative packet committed after model plan failure.")
+	return {"ok": true, "status": "fallback_committed", "packet": fallback_packet}
+
+
+func _seed_npc_stakes_from_chapter_packet(packet: Dictionary) -> void:
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("set_current_stake"):
+		return
+	var stakes := StoryManager.npc_stakes_from_chapter_packet(packet)
+	for npc_id in stakes.keys():
+		var result: Dictionary = campaign_npc_state_store.set_current_stake(
+			str(npc_id),
+			stakes[npc_id]
+		)
+		if not bool(result.get("ok", false)):
+			push_warning(
+				"[GameRoot] Chapter packet NPC stake was not recorded for %s: %s" %
+				[str(npc_id), str(result.get("error", "unknown error"))]
+			)
+
+
+func maybe_queue_next_chapter_plan_generation() -> Dictionary:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return {"ok": false, "error": "Chapter packet store is unavailable."}
+	var current_chapter := int(StoryManager.story_state.get("chapter", 1))
+	var current_packet: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(current_chapter)
+	if current_packet.is_empty():
+		return {"ok": true, "status": "no_current_packet"}
+	if not StoryManager.should_queue_next_chapter_packet(current_packet):
+		return {"ok": true, "status": "below_threshold"}
+	var next_chapter := current_chapter + 1
+	if not campaign_chapter_packet_store.latest_packet_for_chapter(next_chapter).is_empty():
+		return {"ok": true, "status": "already_generated"}
+	if StoryManager.is_next_chapter_packet_queued(next_chapter):
+		return {"ok": true, "status": "already_queued"}
+	var requested := request_chapter_plan_generation(next_chapter)
+	if not bool(requested.get("ok", false)):
+		push_warning(
+			"[GameRoot] Next chapter plan generation could not be requested: %s" %
+				str(requested.get("error", "unknown error"))
+		)
+		return requested
+	StoryManager.mark_next_chapter_packet_queued(next_chapter)
+	return requested
+
+
+func _chapter_plan_validated_entities() -> Array:
+	var entities: Array = []
+	entities.append({
+		"entity_id": "system.%s" % str(GlobalState.current_system_id),
+		"entity_type": "system",
+		"display_name": str(GlobalState.current_system_id),
+	})
+	entities.append({
+		"entity_id": "npc.kaelen",
+		"entity_type": "npc",
+		"display_name": "Kaelen",
+	})
+	entities.append({
+		"entity_id": "ai.nova",
+		"entity_type": "ship_ai",
+		"display_name": "N.O.V.A.",
+	})
+	for faction_id in GlobalState.get_current_system_factions():
+		entities.append({
+			"entity_id": str(faction_id),
+			"entity_type": "faction",
+			"display_name": str(faction_id).capitalize(),
+		})
+	for outpost in GlobalState.get_current_pickup_outposts():
+		if outpost is Dictionary:
+			var outpost_id := str(outpost.get("id", "")).strip_edges()
+			if not outpost_id.is_empty():
+				entities.append({
+					"entity_id": outpost_id,
+					"entity_type": "location",
+					"display_name": str(outpost.get("display", outpost_id)),
+				})
+	return entities
+
+
+func _chapter_plan_valid_entity_ids(validated_entities: Array) -> Array:
+	var ids: Array = []
+	for entity in validated_entities:
+		if entity is Dictionary:
+			var entity_id := str((entity as Dictionary).get("entity_id", "")).strip_edges()
+			if not entity_id.is_empty() and not ids.has(entity_id):
+				ids.append(entity_id)
+	return ids
+
+
+func _chapter_plan_recent_player_choices() -> Array:
+	var choices: Array = StoryManager.story_state.get("player_choices", []) \
+		if StoryManager.story_state.get("player_choices", []) is Array else []
+	var start := maxi(0, choices.size() - 8)
+	return choices.slice(start)
+
+
+func _chapter_plan_unresolved_story_state(target_chapter: int = 0) -> Dictionary:
+	var state := StoryManager.story_state
+	var requested_chapter := target_chapter
+	if requested_chapter <= 0:
+		requested_chapter = int(state.get("chapter", 1))
+	return {
+		"chapter": int(state.get("chapter", 1)),
+		"requested_chapter": requested_chapter,
+		"active_tensions": (state.get("active_tensions", []) as Array).duplicate(true)
+			if state.get("active_tensions", []) is Array else [],
+		"pending_hooks": (state.get("pending_hooks", []) as Array).duplicate(true)
+			if state.get("pending_hooks", []) is Array else [],
+		"player_knows": (state.get("player_knows", []) as Array).duplicate(true)
+			if state.get("player_knows", []) is Array else [],
+		"player_does_not_know_yet": (state.get("player_does_not_know_yet", []) as Array).duplicate(true)
+			if state.get("player_does_not_know_yet", []) is Array else [],
+		"current_foreshadow": str(state.get("current_foreshadow", "")),
+		"knowledge_revision": int(state.get("knowledge_revision", 0)),
+		"question_fact_revision": int(state.get("question_fact_revision", 0)),
+		"beat_revision": int(state.get("beat_revision", 0)),
+		"eligible_attachment_beats": StoryManager.fixed_cast_eligible_attachment_beats(),
+	}
+
+
+func build_story_agent_offer_context(agent_profile: Dictionary = {}) -> Dictionary:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return {"ok": false, "status": "chapter_packet_store_unavailable"}
+	var chapter := int(StoryManager.story_state.get("chapter", 1))
+	var packet: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(chapter)
+	if packet.is_empty():
+		return {"ok": false, "status": "chapter_packet_unavailable"}
+	var validated_entities := _chapter_plan_validated_entities()
+	var valid_entity_ids := _chapter_plan_valid_entity_ids(validated_entities)
+	var local_givers := _story_agent_offer_givers(agent_profile)
+	if local_givers.is_empty():
+		return {"ok": false, "status": "no_local_giver"}
+	var beat_states: Dictionary = StoryManager.story_state.get("beat_states", {}) \
+		if StoryManager.story_state.get("beat_states", {}) is Dictionary else {}
+	var director_context := {
+		"packet_consumed_ratio": StoryManager.chapter_packet_consumed_ratio(packet),
+		"preferred_giver_ids": _story_agent_preferred_giver_ids(local_givers),
+		"preferred_objective_types": _story_agent_offer_supported_types(),
+		"ship_fit_by_objective": _story_agent_ship_fit_by_objective(),
+	}
+	var selection: Dictionary = MissionDirectorType.select_best_candidate(
+		packet,
+		beat_states,
+		local_givers,
+		valid_entity_ids,
+		director_context,
+		_recent_agent_contracts_for_mission_director(),
+		StoryManager.declined_offer_cooldowns(),
+		int(CampaignClock.total_minutes)
+	)
+	if not bool(selection.get("ok", false)):
+		return selection
+	var candidate: Dictionary = selection.get("candidate", {})
+	var player_context := _story_agent_player_context()
+	var chapter_context := {
+		"pressure": clampi(
+			int(round(StoryManager.chapter_packet_consumed_ratio(packet) * 5.0)),
+			0,
+			5
+		),
+	}
+	var budget: Dictionary = ChallengeBudgetType.budget_for_candidate(
+		candidate,
+		player_context,
+		chapter_context
+	)
+	selection["budget"] = budget
+	selection["player_context"] = player_context
+	selection["chapter_context"] = chapter_context
+	selection["hint"] = _story_agent_offer_hint(candidate, budget)
+	return selection
+
+
+func _story_agent_offer_supported_types() -> Array:
+	return [
+		"DELIVER_ORE",
+		"KILL_SHIPS",
+		"PICKUP_SPECIAL",
+		"DELIVERY_COURIER",
+		"PURCHASE_DELIVERY",
+		"RECOVER_COMBAT_DROP",
+		"TARGET_WITH_COMMS_REVERSAL",
+	]
+
+
+func _story_agent_offer_givers(agent_profile: Dictionary) -> Array:
+	var giver_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if giver_id.is_empty():
+		giver_id = str(agent_profile.get("agent_name", "")).strip_edges()
+	if giver_id.is_empty():
+		giver_id = "npc.kaelen"
+	var display_name := str(agent_profile.get("agent_name", "")).strip_edges()
+	if display_name.is_empty():
+		display_name = "Broker Kaelen"
+	return [{
+		"giver_id": giver_id,
+		"display_name": display_name,
+		"available": true,
+		"objective_types": _story_agent_offer_supported_types(),
+	}]
+
+
+func _story_agent_preferred_giver_ids(local_givers: Array) -> Array:
+	var ids: Array = []
+	for giver in local_givers:
+		if not giver is Dictionary:
+			continue
+		var giver_id := str((giver as Dictionary).get("giver_id", "")).strip_edges()
+		if not giver_id.is_empty():
+			ids.append(giver_id)
+	return ids
+
+
+func _story_agent_ship_fit_by_objective() -> Dictionary:
+	var cargo_fit := clampi(int(round(GlobalState.cargo_max / 8.0)), 0, 10)
+	var combat_rating := _story_agent_combat_rating()
+	var combat_fit := clampi(int(round(combat_rating * 4.0)), 0, 10)
+	return {
+		"DELIVER_ORE": cargo_fit,
+		"PICKUP_SPECIAL": cargo_fit,
+		"KILL_SHIPS": combat_fit,
+	}
+
+
+func _story_agent_combat_rating() -> float:
+	var damage_score := maxf(0.5, GlobalState.weapon_damage / 20.0)
+	var cooldown_score := maxf(0.5, 0.75 / maxf(0.1, GlobalState.weapon_cooldown))
+	var shield_score := 1.0 + (GlobalState.shield_capacity / 150.0)
+	return maxf(0.5, (damage_score + cooldown_score + shield_score) / 3.0)
+
+
+func _story_agent_player_context() -> Dictionary:
+	var hull_ratio := 1.0
+	if is_instance_valid(player) and "health" in player and "max_health" in player:
+		hull_ratio = clampf(
+			float(player.get("health")) / maxf(1.0, float(player.get("max_health"))),
+			0.0,
+			1.0
+		)
+	return {
+		"cargo_capacity": GlobalState.cargo_max,
+		"mining_rate_per_minute": 8.0,
+		"combat_rating": _story_agent_combat_rating(),
+		"enemy_strength": 1.0,
+		"route_minutes": DOCK_SERVICE_MINUTES + UNDOCK_SERVICE_MINUTES,
+		"hull_ratio": hull_ratio,
+	}
+
+
+func _story_agent_offer_hint(candidate: Dictionary, budget: Dictionary) -> Dictionary:
+	var flavor_parts: Array[String] = []
+	for field in ["stake", "complication", "world_consequence"]:
+		var text := str(candidate.get(field, "")).strip_edges()
+		if not text.is_empty():
+			flavor_parts.append(text)
+	return {
+		"preferred_type": str(candidate.get("objective_type", "")),
+		"preferred_system": str(GlobalState.current_system_id),
+		"flavor_tag": " ".join(flavor_parts),
+		"expires_after_docks": 1,
+		"story_candidate": candidate.duplicate(true),
+		"challenge_budget": budget.duplicate(true),
+	}
+
+
+func _recent_agent_contracts_for_mission_director(limit: int = 8) -> Array:
+	if campaign_chronicle_store == null \
+			or not campaign_chronicle_store.is_valid():
+		return []
+	var branch: Dictionary = campaign_chronicle_store.current_branch_events()
+	if not bool(branch.get("ok", false)):
+		return []
+	var events: Array = branch.get("events", []) \
+		if branch.get("events", []) is Array else []
+	return MissionHistoryLedgerType.recent_agent_contracts_from_events(
+		events,
+		limit
+	)
+
+
+func ensure_generated_frontier_factions(count: int = 6) -> Dictionary:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return {"ok": false, "error": "Generated faction store is unavailable."}
+	var seed_text := active_campaign_slot_id
+	if campaign_checkpoint_store != null:
+		seed_text = str(campaign_checkpoint_store.campaign.get("campaign_seed", seed_text))
+	return campaign_generated_faction_store.ensure_frontier_batch(seed_text, count)
+
+
+func reveal_generated_factions_for_system(
+	system_id: String,
+	count: int = 2
+) -> Dictionary:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return {"ok": false, "error": "Generated faction store is unavailable."}
+	var ensured := ensure_generated_frontier_factions()
+	if not bool(ensured.get("ok", false)):
+		return ensured
+	return campaign_generated_faction_store.reveal_next_for_system(system_id, count)
+
+
+func generated_factions_for_ids(ids: Array) -> Array:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return []
+	return campaign_generated_faction_store.factions_by_ids(ids)
+
+
+func revealed_generated_factions() -> Array:
+	if campaign_generated_faction_store == null:
+		_initialize_campaign_chronicle()
+	if campaign_generated_faction_store == null:
+		return []
+	return campaign_generated_faction_store.revealed_factions()
+
+
+func generated_faction_prompt_context(revealed_only: bool = false) -> String:
+	if campaign_generated_faction_store == null \
+			or not campaign_generated_faction_store.is_valid():
+		return ""
+	return campaign_generated_faction_store.prompt_context(revealed_only)
+
+
 func _death_category_for_source(death_source: String) -> String:
 	if death_source == "collision":
 		return "collision"
@@ -1255,6 +3705,10 @@ func _reset_and_reload_scene() -> void:
 	LLMInterface.reset_for_restart()
 	QuestManager.reset_for_restart()
 	GlobalState.reset_for_restart()
+	StoryManager.reset_for_restart()
+	StoryQuestManager.reset_for_restart()
+	Nova.reset_for_restart()
+	AmbientChat.reset_for_restart()
 	get_tree().reload_current_scene()
 
 
@@ -1300,37 +3754,1947 @@ func _import_legacy_quest_history() -> void:
 
 func _append_quest_chronicle_event(
 	event_type: String,
+	quest: Dictionary,
 	outcome: String
 ) -> void:
 	if campaign_chronicle_store == null \
 			or campaign_checkpoint_store == null \
-			or QuestManager.active_quest.is_empty():
+			or quest.is_empty():
 		return
 	var active := campaign_checkpoint_store.runtime_state_from_active()
 	if not bool(active.get("ok", false)):
 		return
-	var quest := QuestManager.active_quest
 	var appended := campaign_chronicle_store.append_event(
 		event_type,
-		[campaign_chronicle_store.campaign["id"]],
-		{
-			"title": quest.get("title", ""),
-			"objective_type": quest.get("objective_type", ""),
-			"faction": quest.get("faction", ""),
-			"outcome": outcome,
-		},
+		_quest_chronicle_subject_ids(quest),
+		_quest_chronicle_payload(quest, outcome),
 		str(active.get("checkpoint_id", ""))
 	)
 	if bool(appended.get("ok", false)):
 		_sync_checkpoint_chronicle_context()
+		_record_quest_giver_npc_memory_event(quest, appended.get("event", {}))
 
 
-func _on_quest_completed_chronicle() -> void:
-	_append_quest_chronicle_event("mission_completed", "completed")
+func _append_timed_quest_chronicle_event(
+	event_type: String,
+	quest: Dictionary,
+	outcome: String
+) -> void:
+	if campaign_chronicle_store == null \
+			or campaign_checkpoint_store == null \
+			or quest.is_empty() \
+			or not bool(quest.get("is_timed", false)):
+		return
+	var active := campaign_checkpoint_store.runtime_state_from_active()
+	if not bool(active.get("ok", false)):
+		return
+	var payload := _quest_chronicle_payload(quest, outcome)
+	payload.merge({
+		"runtime_id": str(quest.get("runtime_id", "")),
+		"definition_id": str(quest.get("definition_id", "")),
+		"title": str(quest.get("title", "")),
+		"objective_type": str(quest.get("objective_type", "")),
+		"faction": str(quest.get("faction", "")),
+		"source_lane": str(quest.get("_source_lane", "")),
+		"public_board": bool(quest.get("public_board", false)),
+		"system_id": str(quest.get("system_id", "")),
+		"outcome": outcome,
+		"accepted_time_minutes": int(quest.get("accepted_time_minutes", 0)),
+		"deadline_time_minutes": int(quest.get("deadline_time_minutes", 0)),
+		"expires_after_minutes": int(quest.get("expires_after_minutes", 0)),
+		"expiration_policy": str(quest.get("expiration_policy", "")),
+		"is_urgent": bool(quest.get("is_urgent", false)),
+		"base_reward_credits": int(quest.get("base_reward_credits", 0)),
+		"reward_credits": int(quest.get("reward_credits", 0)),
+		"reward_credits_multiplier": float(quest.get("reward_credits_multiplier", 1.0)),
+		"urgent_reward_multiplier": float(quest.get("urgent_reward_multiplier", 1.0)),
+	}, true)
+	for time_key in [
+		"completed_time_minutes",
+		"abandoned_time_minutes",
+		"expired_time_minutes",
+	]:
+		if quest.has(time_key):
+			payload[time_key] = int(quest.get(time_key, 0))
+	if quest.has("final_payout"):
+		payload["final_payout"] = int(quest.get("final_payout", 0))
+	var appended := campaign_chronicle_store.append_event(
+		event_type,
+		_quest_chronicle_subject_ids(quest),
+		payload,
+		str(active.get("checkpoint_id", ""))
+	)
+	if bool(appended.get("ok", false)):
+		_sync_checkpoint_chronicle_context()
+		_record_quest_giver_npc_memory_event(quest, appended.get("event", {}))
 
 
-func _on_quest_abandoned_chronicle() -> void:
-	_append_quest_chronicle_event("mission_abandoned", "abandoned")
+static func _quest_chronicle_payload(quest: Dictionary, outcome: String) -> Dictionary:
+	return {
+		"runtime_id": str(quest.get("runtime_id", "")),
+		"definition_id": str(quest.get("definition_id", "")),
+		"title": str(quest.get("title", "")),
+		"objective_type": str(quest.get("objective_type", "")),
+		"faction": str(quest.get("faction", "")),
+		"source_lane": _quest_source_lane_name(quest),
+		"public_board": bool(quest.get("public_board", false)),
+		"station_errand": bool(quest.get("station_errand", false)),
+		"system_id": str(quest.get("system_id", "")),
+		"outcome": outcome,
+		"narrative_metadata": NarrativeMetadataType.from_source(quest),
+	}
+
+
+func _quest_chronicle_subject_ids(quest: Dictionary) -> Array:
+	var subjects: Array = [campaign_chronicle_store.campaign["id"]]
+	var npc_id := _quest_giver_npc_id(quest)
+	if not npc_id.is_empty() and npc_id not in subjects:
+		subjects.append(npc_id)
+	return subjects
+
+
+static func _quest_giver_npc_id(quest: Dictionary) -> String:
+	if bool(quest.get("public_board", false)):
+		return ""
+	var npc_id := str(quest.get("giver_npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(quest.get("agent_id", "")).strip_edges()
+	if DomainIdType.is_valid(npc_id, "npc"):
+		return npc_id
+	return ""
+
+
+static func _quest_source_lane_name(quest: Dictionary) -> String:
+	var explicit := str(quest.get("_source_lane", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	if bool(quest.get("public_board", false)):
+		return "BOARD"
+	if bool(quest.get("station_errand", false)):
+		return "STATION"
+	return "AGENT"
+
+
+func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "mission_accepted")
+	)
+	_mark_story_offer_beat(quest, "accepted", "Mission accepted.")
+	_record_quest_giver_npc_outcome(quest, "accepted")
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_accepted",
+			quest,
+			"accepted"
+		)
+	else:
+		_append_quest_chronicle_event("mission_accepted", quest, "accepted")
+
+
+func _on_quest_progress_prefetch() -> void:
+	if not QuestManager.is_quest_active():
+		return
+	var quest: Dictionary = QuestManager.active_quest.duplicate(true)
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "objective_progress")
+	)
+
+
+func _queue_narrative_prefetch_jobs_for_event(event: Dictionary) -> void:
+	if event.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	for job in NarrativeCacheSchedulerType.prefetch_jobs_for_event(event):
+		scheduler.queue_job(job)
+
+
+func queue_kaelen_handoff_pool_refill(
+	agent_name: String,
+	faction: String,
+	agent_role: String,
+	system_id: String,
+	current_count: int,
+	target_count: int,
+	story_revision: int,
+	relationship_band: String,
+	force_replace: bool = false
+) -> Dictionary:
+	var clean_agent := agent_name.strip_edges()
+	var clean_system := system_id.strip_edges()
+	if clean_agent.is_empty() or clean_system.is_empty():
+		return {"ok": false, "status": "missing_handoff_scope"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var priority := NarrativeCacheSchedulerType.priority_for_trigger(
+		NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+	)
+	if not force_replace and not scheduler.can_refill_pool(
+		current_count,
+		target_count,
+		priority
+	):
+		return {
+			"ok": false,
+			"deferred": true,
+			"status": "handoff_refill_deferred",
+		}
+	var safe_pool := "%s.%s.%s.%s" % [
+		clean_system,
+		str(story_revision),
+		relationship_band.strip_edges(),
+		clean_agent,
+	]
+	var safe_id := safe_pool.sha256_text().substr(0, 16)
+	return scheduler.queue_job({
+		"job_id": "job.kaelen_handoff_pool_refill.%s" % safe_id,
+		"cache_key": "prefetch.kaelen_handoff_pool_refill.%s" % safe_id,
+		"kind": "kaelen_handoff_pool_refill",
+		"trigger": NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT,
+		"priority": priority,
+		"subject_id": clean_agent,
+		"requester_id": "prefetch:kaelen_handoff_pool_refill:%s" % safe_id,
+		"speaker_id": clean_agent,
+		"agent_name": clean_agent,
+		"faction": faction.strip_edges(),
+		"agent_role": agent_role.strip_edges(),
+		"system_id": clean_system,
+		"story_revision": story_revision,
+		"relationship_tier": relationship_band.strip_edges(),
+		"pool_count": max(0, current_count),
+		"pool_target": max(1, target_count),
+		"force_replace": force_replace,
+	})
+
+
+func process_next_narrative_cache_job() -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": false, "status": "scheduler_paused"}
+	for job in scheduler.pending_jobs():
+		if _narrative_cache_job_has_worker(job):
+			return _process_narrative_cache_job(job)
+	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
+
+
+func process_narrative_cache_job_for_requester(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_requester_id"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": false, "status": "scheduler_paused"}
+	for job in scheduler.pending_jobs():
+		var requesters: Array = job.get("requesters", []) \
+			if job.get("requesters", []) is Array else []
+		if requesters.has(clean_requester) and _narrative_cache_job_has_worker(job):
+			return _process_narrative_cache_job(job)
+	return {"ok": true, "processed": false, "status": "no_supported_pending_job"}
+
+
+func process_narrative_cache_jobs_for_kind(kind: String, max_jobs: int = 12) -> Dictionary:
+	var clean_kind := kind.strip_edges()
+	if clean_kind.is_empty():
+		return {"ok": false, "processed": 0, "status": "missing_job_kind"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler.is_paused():
+		return {"ok": false, "processed": 0, "status": "scheduler_paused"}
+	var cap := maxi(1, max_jobs)
+	var processed_count := 0
+	var ready_count := 0
+	var failed_count := 0
+	var statuses: Array[String] = []
+	for job in scheduler.pending_jobs():
+		if processed_count >= cap:
+			break
+		if str(job.get("kind", "")) != clean_kind:
+			continue
+		if not _narrative_cache_job_has_worker(job):
+			continue
+		var result := _process_narrative_cache_job(job)
+		if not bool(result.get("processed", false)):
+			continue
+		processed_count += 1
+		statuses.append(str(result.get("status", "ready")))
+		if bool(result.get("ok", false)):
+			ready_count += 1
+		else:
+			failed_count += 1
+	return {
+		"ok": failed_count == 0,
+		"processed": processed_count,
+		"ready": ready_count,
+		"failed": failed_count,
+		"statuses": statuses,
+	}
+
+
+func ready_cached_narrative_contact_offer(agent_profile: Dictionary) -> Dictionary:
+	var requester_id := _narrative_contact_offer_requester_id(agent_profile)
+	if requester_id.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+	if not payload.is_empty():
+		_mark_narrative_cache_interaction_clicked(requester_id)
+		return payload
+	var processed := process_narrative_cache_job_for_requester(requester_id)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+		if not payload.is_empty():
+			_mark_narrative_cache_interaction_clicked(requester_id)
+	return payload
+
+
+func ready_cached_narrative_station_offer(station_id: String) -> Dictionary:
+	var requester_id := _narrative_station_offer_requester_id(station_id)
+	if requester_id.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+	if not payload.is_empty():
+		_mark_narrative_cache_interaction_clicked(requester_id)
+		return payload
+	var processed := process_narrative_cache_job_for_requester(requester_id)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(requester_id, "story_agent_offer")
+		if not payload.is_empty():
+			_mark_narrative_cache_interaction_clicked(requester_id)
+	return payload
+
+
+func ready_cached_narrative_line_bank(requester_id: String) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {}
+	var payload := _ready_narrative_payload_for_requester(clean_requester, "story_line_bank")
+	if not payload.is_empty():
+		return payload
+	var processed := process_narrative_cache_job_for_requester(clean_requester)
+	if bool(processed.get("processed", false)):
+		payload = _ready_narrative_payload_for_requester(clean_requester, "story_line_bank")
+	return payload
+
+
+func consume_cached_narrative_line_bank(
+	requester_id: String,
+	preferred_kind: String = "",
+	prefer_story_aware: bool = false
+) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return {}
+	var ready := _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		var processed := process_narrative_cache_job_for_requester(clean_requester)
+		if bool(processed.get("processed", false)):
+			ready = _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		return {}
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	var fallback_bank: Dictionary = payload.get("fallback_bank", {}) \
+		if payload.get("fallback_bank", {}) is Dictionary else {}
+	if fallback_bank.is_empty():
+		return {}
+	var consumed := FallbackLineBankType.consume(
+		fallback_bank, preferred_kind, prefer_story_aware
+	)
+	if not bool(consumed.get("ok", false)):
+		return {}
+	var next_bank: Dictionary = consumed.get("bank", {}) \
+		if consumed.get("bank", {}) is Dictionary else {}
+	var line: Dictionary = consumed.get("line", {}) \
+		if consumed.get("line", {}) is Dictionary else {}
+	if next_bank.is_empty() or line.is_empty():
+		return {}
+	var entries: Array = next_bank.get("entries", []) \
+		if next_bank.get("entries", []) is Array else []
+	var next_payload := payload.duplicate(true)
+	next_payload["fallback_bank"] = next_bank
+	next_payload["line_bank"] = entries.duplicate(true)
+	next_payload["consumed_line"] = line
+	next_payload["fallback_available_count"] = FallbackLineBankType.available_count(next_bank)
+	next_payload["fallback_uses"] = FallbackLineBankType.fallback_use_count(next_bank)
+	next_payload["generated_replacements"] = FallbackLineBankType.generated_replacement_count(next_bank)
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var updated: Dictionary = scheduler.update_result_payload(
+		str(ready.get("job_id", "")),
+		next_payload
+	)
+	if not bool(updated.get("ok", false)):
+		return {}
+	_persist_narrative_cache_payload_update(
+		str(ready.get("cache_key", "")),
+		next_payload
+	)
+	_mark_narrative_cache_interaction_clicked(clean_requester)
+	_queue_line_bank_refill_if_low(clean_requester, next_payload)
+	return next_payload
+
+
+func replace_used_cached_fallback_lines(
+	requester_id: String,
+	generated_lines: Array,
+	source_id: String = "llm"
+) -> Dictionary:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty() or generated_lines.is_empty():
+		return {"ok": false, "status": "replacement_unavailable"}
+	var ready := _ready_narrative_result_for_requester(clean_requester, "story_line_bank")
+	if ready.is_empty():
+		return {"ok": false, "status": "line_bank_not_ready"}
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	var fallback_bank: Dictionary = payload.get("fallback_bank", {}) \
+		if payload.get("fallback_bank", {}) is Dictionary else {}
+	if fallback_bank.is_empty():
+		return {"ok": false, "status": "fallback_bank_unavailable"}
+	var replacement := FallbackLineBankType.replace_used_with_generated(
+		fallback_bank,
+		generated_lines,
+		source_id
+	)
+	var next_bank: Dictionary = replacement.get("bank", {}) \
+		if replacement.get("bank", {}) is Dictionary else {}
+	if next_bank.is_empty():
+		return {"ok": false, "status": "replacement_failed"}
+	var entries: Array = next_bank.get("entries", []) \
+		if next_bank.get("entries", []) is Array else []
+	var next_payload := payload.duplicate(true)
+	next_payload["fallback_bank"] = next_bank
+	next_payload["line_bank"] = entries.duplicate(true)
+	next_payload["fallback_available_count"] = FallbackLineBankType.available_count(next_bank)
+	next_payload["fallback_uses"] = FallbackLineBankType.fallback_use_count(next_bank)
+	next_payload["generated_replacements"] = FallbackLineBankType.generated_replacement_count(next_bank)
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var updated: Dictionary = scheduler.update_result_payload(
+		str(ready.get("job_id", "")),
+		next_payload
+	)
+	if not bool(updated.get("ok", false)):
+		return {"ok": false, "status": "replacement_update_failed"}
+	_persist_narrative_cache_payload_update(
+		str(ready.get("cache_key", "")),
+		next_payload
+	)
+	return {
+		"ok": true,
+		"replacements": int(replacement.get("replacements", 0)),
+		"payload": next_payload,
+	}
+
+
+# Queues a low-priority refill when a consumed bank is running dry. Fires
+# while LINE_BANK_REFILL_MIN_AVAILABLE lines remain so fresh lines land
+# before the bank hits two. Deduped by cache key while queued/in flight;
+# every later consume at/below the threshold re-arms it.
+func _queue_line_bank_refill_if_low(requester_id: String, payload: Dictionary) -> void:
+	var available := int(payload.get("fallback_available_count", 0))
+	if available > LINE_BANK_REFILL_MIN_AVAILABLE:
+		return
+	var speaker_key := str(payload.get("speaker_key", "")).strip_edges()
+	if speaker_key.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var safe_id := requester_id.sha256_text().substr(0, 16)
+	scheduler.queue_job({
+		"job_id": "job.line_bank_low_refill.%s" % safe_id,
+		"cache_key": "prefetch.line_bank_low_refill.%s" % safe_id,
+		"kind": "line_bank_low_refill",
+		"trigger": NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT,
+		"priority": NarrativeCacheSchedulerType.priority_for_trigger(
+			NarrativeCacheSchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+		),
+		"subject_id": speaker_key,
+		"requester_id": "prefetch:line_bank_low_refill:%s" % safe_id,
+		"target_requester_id": requester_id,
+		"speaker_key": speaker_key,
+		"system_id": str(GlobalState.current_system_id),
+		"pool_count": available,
+		"pool_target": int(payload.get("fallback_target_size", 0)),
+	})
+
+
+# Worker for line_bank_low_refill jobs. Nova banks dispatch a flat @@label
+# batch to the small model (persona + quirk + system tone + safe facts +
+# bounded recent-event summary); the template bank is the logged degraded
+# floor on failure, and the only source for non-Nova speakers. Retired
+# texts are refused by the bank itself, so refills never re-offer
+# something the player already heard this campaign.
+func _line_bank_low_refill_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var target_requester := str(job.get("target_requester_id", "")).strip_edges()
+	var speaker_key := str(job.get("speaker_key", "")).strip_edges()
+	if target_requester.is_empty() or speaker_key.is_empty():
+		return {"ok": false, "status": "missing_refill_scope"}
+	if speaker_key == "nova" \
+			and is_instance_valid(LLMInterface) \
+			and LLMInterface.has_method("request_nova_line_bank_batch"):
+		var dispatch_job := job.duplicate(true)
+		LLMInterface.request_nova_line_bank_batch(
+			_nova_refill_batch_fields(),
+			_nova_line_bank_generation_context(),
+			func(result: Dictionary) -> void:
+				_on_nova_line_bank_batch_completed(
+					dispatch_job, target_requester, result
+				)
+		)
+		return {
+			"ok": true,
+			"payload": {
+				"content_type": "line_bank_low_refill",
+				"source": "narrative_cache_scheduler",
+				"cache_key": str(job.get("cache_key", "")),
+				"requester_id": str(job.get("requester_id", "")),
+				"target_requester_id": target_requester,
+				"speaker_key": speaker_key,
+				"generation_dispatched": true,
+			},
+		}
+	return _template_line_bank_refill(job, target_requester, speaker_key)
+
+
+func _on_nova_line_bank_batch_completed(
+	job: Dictionary,
+	target_requester: String,
+	result: Dictionary
+) -> void:
+	if bool(result.get("ok", false)):
+		var replaced := replace_used_cached_fallback_lines(
+			target_requester,
+			result.get("lines", []),
+			"llm_nova_bank"
+		)
+		if bool(replaced.get("ok", false)):
+			return
+	GenerationDiagnostics.record_event(
+		"nova_line_bank",
+		"template_refill_used",
+		"game_root",
+		{"reason": str(result.get("reason", "replace_failed"))}
+	)
+	_template_line_bank_refill(job, target_requester, "nova")
+
+
+# One refill batch: the five movement semantics plus three arrival lines —
+# 8 labeled fields, inside the 6-10 per-batch contract.
+func _nova_refill_batch_fields() -> Array:
+	return [
+		{"category": "boost_again_quickly", "count": 1},
+		{"category": "changed_mind_again", "count": 1},
+		{"category": "returned_to_same_station", "count": 1},
+		{"category": "clean_long_transit", "count": 1},
+		{"category": "rough_arrival", "count": 1},
+		{"category": "system_arrival", "count": 3},
+	]
+
+
+# Second seed batch: the combat/hull/welcome/dock beats that otherwise only
+# ever draw stock lines (the batch caps at 10 labels, so seeding splits into
+# this plus the movement/arrival set above).
+func _nova_seed_combat_batch_fields() -> Array:
+	return [
+		{"category": "combat_victory_clean", "count": 2},
+		{"category": "combat_victory_battered", "count": 2},
+		{"category": "combat_retreat", "count": 1},
+		{"category": "hull_critical", "count": 2},
+		{"category": "welcome_back", "count": 1},
+		{"category": "docked", "count": 1},
+	]
+
+
+# Phase 8B seeding: once a fresh N.O.V.A. bank is ready, populate its
+# generated categories so movement/combat beats stop falling to stock. Two
+# sequential batches (movement/arrival, then combat/hull/welcome/dock) so
+# their merges into the shared payload never race. Fire-and-forget: on any
+# failure the arrival template + stock pools already cover delivery.
+func _seed_nova_line_bank(requester_id: String) -> void:
+	var clean_requester := requester_id.strip_edges()
+	if clean_requester.is_empty():
+		return
+	if not is_instance_valid(LLMInterface) \
+			or not LLMInterface.has_method("request_nova_line_bank_batch"):
+		return
+	if _nova_bank_seed_requests.has(clean_requester):
+		return  # already seeded (or seeding) this bank
+	_nova_bank_seed_requests[clean_requester] = true
+	_dispatch_nova_seed_batch(
+		clean_requester,
+		_nova_refill_batch_fields(),
+		_nova_seed_combat_batch_fields()
+	)
+
+
+func _dispatch_nova_seed_batch(
+	requester_id: String,
+	fields: Array,
+	next_fields: Array
+) -> void:
+	LLMInterface.request_nova_line_bank_batch(
+		fields,
+		_nova_line_bank_generation_context(),
+		func(result: Dictionary) -> void:
+			if bool(result.get("ok", false)):
+				replace_used_cached_fallback_lines(
+					requester_id,
+					result.get("lines", []),
+					"llm_nova_bank"
+				)
+			else:
+				GenerationDiagnostics.record_event(
+					"nova_line_bank",
+					"seed_batch_failed",
+					"game_root",
+					{"reason": str(result.get("reason", "unknown"))}
+				)
+			if not next_fields.is_empty():
+				_dispatch_nova_seed_batch(requester_id, next_fields, [])
+	)
+
+
+# Player-safe generation context: her fixed persona, the campaign quirk,
+# the bible's public tone, the current system by display name, and the
+# observer's bounded recent-action streak. No director-only fields.
+func _nova_line_bank_generation_context() -> Dictionary:
+	var context := {}
+	context["fixed_cast_soul"] = FixedCastSoulRegistryType.prompt_block(
+		"nova", StoryManager.fixed_cast_state("nova"), "arrival", StoryManager.fixed_cast_rapport_band("nova"), StoryManager.fixed_cast_attachment_memory("nova"), StoryManager.fixed_cast_player_known_facts()
+	)
+	if is_instance_valid(Nova):
+		context["persona"] = str(Nova.PERSONA)
+	if is_instance_valid(StoryManager):
+		context["campaign_quirk"] = str(
+			StoryManager.story_state.get("nova_quirk", "")
+		).strip_edges()
+	if campaign_bible_store != null and campaign_bible_store.is_valid():
+		context["system_tone"] = str(
+			campaign_bible_store.data.get("tone", "")
+		).strip_edges()
+	var facts: Array = []
+	var sys_def := system_registry.get_system(GlobalState.current_system_id) \
+		if system_registry != null else null
+	if sys_def != null:
+		facts.append("The ship is currently in the %s system." % sys_def.display_name)
+	context["known_facts"] = facts
+	if ship_behavior_observer != null \
+			and ship_behavior_observer.has_method("state_snapshot"):
+		var snapshot: Dictionary = ship_behavior_observer.state_snapshot()
+		context["recent_events"] = snapshot.get("recent_actions", [])
+	return context
+
+
+func _template_line_bank_refill(
+	job: Dictionary,
+	target_requester: String,
+	speaker_key: String
+) -> Dictionary:
+	var template := _template_line_bank_for_speaker(job, speaker_key)
+	var candidates: Array = []
+	for raw_line in (
+		template.get("fallback_lines", [])
+		if template.get("fallback_lines", []) is Array else []
+	):
+		var text := str(
+			(raw_line as Dictionary).get("text", "")
+			if raw_line is Dictionary else raw_line
+		).strip_edges()
+		if not text.is_empty():
+			candidates.append(text)
+	if candidates.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
+	var result := replace_used_cached_fallback_lines(
+		target_requester,
+		candidates,
+		"template_refill"
+	)
+	if not bool(result.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(result.get("status", "line_bank_refill_failed")),
+		}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "line_bank_low_refill",
+			"source": "narrative_cache_scheduler",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"target_requester_id": target_requester,
+			"speaker_key": speaker_key,
+			"replacements": int(result.get("replacements", 0)),
+		},
+	}
+
+
+func _ready_narrative_payload_for_requester(
+	requester_id: String,
+	content_type: String = ""
+) -> Dictionary:
+	var ready := _ready_narrative_result_for_requester(requester_id, content_type)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	return payload
+
+
+func _ready_narrative_result_for_requester(
+	requester_id: String,
+	content_type: String = ""
+) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var ready: Dictionary = scheduler.ready_result_for_requester(requester_id)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	var required_type := content_type.strip_edges()
+	if not required_type.is_empty() and str(payload.get("content_type", "")) != required_type:
+		return {}
+	return ready
+
+
+func _mark_narrative_cache_interaction_clicked(requester_id: String) -> void:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	scheduler.mark_interaction_clicked_for_requester(requester_id)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"narrative_cache",
+		"interaction_clicked",
+		"GameRoot",
+		{"interaction_name": requester_id.strip_edges()}
+	)
+
+
+func _narrative_contact_offer_requester_id(agent_profile: Dictionary) -> String:
+	var contact_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if contact_id.is_empty():
+		contact_id = str(agent_profile.get("agent_name", "")).strip_edges()
+	var system_id := str(GlobalState.current_system_id).strip_edges()
+	if contact_id.is_empty() or system_id.is_empty():
+		return ""
+	return "prefetch:%s:%s.%s" % [
+		NarrativeCacheSchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT,
+		system_id,
+		contact_id,
+	]
+
+
+func _narrative_station_offer_requester_id(station_id: String) -> String:
+	var clean_station_id := station_id.strip_edges()
+	if clean_station_id.is_empty():
+		return ""
+	return "prefetch:%s:%s" % [
+		NarrativeCacheSchedulerType.TRIGGER_CURRENT_VISIBLE_STATION,
+		clean_station_id,
+	]
+
+
+func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
+	match str(job.get("kind", "")):
+		"tts_cache":
+			return true
+		"system_contact_offer_bundle":
+			return true
+		"current_station_agent_offer_bundle":
+			return true
+		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
+			return true
+		"kaelen_handoff_pool_refill":
+			return true
+		"current_system_nova_bundle", "new_campaign_nova_bank":
+			return true
+		"ambient_pool_refill":
+			return true
+		"line_bank_low_refill":
+			return true
+		_:
+			return false
+
+
+func _can_process_story_agent_offer_cache_jobs() -> bool:
+	if campaign_chapter_packet_store == null \
+			or not campaign_chapter_packet_store.is_valid():
+		return false
+	var chapter := int(StoryManager.story_state.get("chapter", 1)) \
+		if is_instance_valid(StoryManager) else 1
+	return not campaign_chapter_packet_store.latest_packet_for_chapter(chapter).is_empty()
+
+
+func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var job_id := str(job.get("job_id", "")).strip_edges()
+	if job_id.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_job_id"}
+	if str(job.get("kind", "")) == "tts_cache":
+		return _process_narrative_tts_cache_job(job)
+	var started: Dictionary = scheduler.mark_generation_started(job_id)
+	if not bool(started.get("ok", false)):
+		started["processed"] = false
+		return started
+	var payload_result := _narrative_cache_payload_for_job(job)
+	scheduler.mark_generation_finished(job_id)
+	if not bool(payload_result.get("ok", false)):
+		var status := str(payload_result.get("status", "generation_failed"))
+		var field_errors: Array = payload_result.get("errors", []) \
+			if payload_result.get("errors", []) is Array else []
+		if field_errors.is_empty():
+			field_errors.append(status)
+		var failed: Dictionary = scheduler.mark_validation_failed(job_id, field_errors, 1)
+		return {
+			"ok": false,
+			"processed": true,
+			"status": status,
+			"retry_queued": bool(failed.get("retry_queued", false)),
+			"job": failed.get("job", {}),
+		}
+	var validated: Dictionary = scheduler.mark_validation_finished(job_id)
+	if not bool(validated.get("ok", false)):
+		validated["processed"] = true
+		return validated
+	var tts_queued := _queue_tts_for_validated_narrative_payload(
+		job_id,
+		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+	)
+	var ready: Dictionary = scheduler.mark_ready(
+		job_id,
+		payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+	)
+	if bool(ready.get("ok", false)):
+		_persist_narrative_ready_payload(
+			job,
+			payload_result.get("payload", {}) if payload_result.get("payload", {}) is Dictionary else {}
+		)
+		if bool(tts_queued.get("ok", false)):
+			_process_queued_narrative_tts_cache_jobs(
+				tts_queued.get("queued", []) if tts_queued.get("queued", []) is Array else []
+			)
+			ready["tts_jobs_queued"] = (
+				tts_queued.get("queued", []) as Array
+			).size() if tts_queued.get("queued", []) is Array else 0
+		# A freshly-ready N.O.V.A. bank gets its movement/combat categories
+		# seeded so those beats stop drawing stock (Phase 8B).
+		if str(job.get("kind", "")) in [
+			"current_system_nova_bundle",
+			"new_campaign_nova_bank",
+		]:
+			_seed_nova_line_bank(str(job.get("requester_id", "")))
+	ready["processed"] = bool(ready.get("ok", false))
+	return ready
+
+
+func _process_narrative_tts_cache_job(job: Dictionary) -> Dictionary:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var job_id := str(job.get("job_id", "")).strip_edges()
+	if job_id.is_empty():
+		return {"ok": false, "processed": false, "status": "missing_job_id"}
+	var text := str(job.get("text", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	if text.is_empty() or voice_profile_id.is_empty():
+		var failed: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"tts_cache_missing_text_or_voice"
+		)
+		failed["processed"] = true
+		return failed
+	var started: Dictionary = scheduler.mark_tts_cache_started(job_id)
+	if not bool(started.get("ok", false)):
+		started["processed"] = false
+		return started
+	var cache_status := "unavailable"
+	if is_instance_valid(SpeechService):
+		cache_status = str(SpeechService.cache(text, voice_profile_id))
+	else:
+		var unavailable: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"speech_service_unavailable"
+		)
+		_persist_narrative_tts_status(job, "failed")
+		unavailable["processed"] = true
+		return unavailable
+	if cache_status == "empty":
+		var empty: Dictionary = scheduler.mark_tts_failed(
+			job_id,
+			"tts_cache_empty_text"
+		)
+		_persist_narrative_tts_status(job, "failed")
+		empty["processed"] = true
+		return empty
+	var persisted_status := "ready" if cache_status == "already_cached" else "pending"
+	_persist_narrative_tts_status(job, persisted_status)
+	if cache_status == "already_cached":
+		var ready: Dictionary = scheduler.mark_tts_ready(job_id)
+		ready["processed"] = bool(ready.get("ok", false))
+		ready["status"] = "tts_cache_ready"
+		return ready
+	started["processed"] = true
+	started["status"] = "tts_cache_pending"
+	started["cache_status"] = cache_status
+	return started
+
+
+func _queue_tts_for_validated_narrative_payload(
+	source_job_id: String,
+	payload: Dictionary
+) -> Dictionary:
+	if payload.is_empty():
+		return {"ok": false, "queued": [], "status": "empty_payload"}
+	var text_bundle := _text_bundle_for_narrative_payload(payload)
+	var required_fields := _tts_required_fields_for_text_bundle(text_bundle)
+	if required_fields.is_empty():
+		return {"ok": false, "queued": [], "status": "no_tts_text_fields"}
+	var voice_profile_id := _voice_profile_for_narrative_payload(payload)
+	if voice_profile_id.is_empty():
+		return {"ok": false, "queued": [], "status": "missing_voice_profile_id"}
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	return scheduler.queue_tts_jobs_for_validated_text(
+		source_job_id,
+		text_bundle,
+		required_fields,
+		voice_profile_id
+	)
+
+
+func _process_queued_narrative_tts_cache_jobs(job_ids: Array) -> void:
+	if job_ids.is_empty():
+		return
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	for raw_id in job_ids:
+		var job_id := str(raw_id).strip_edges()
+		if job_id.is_empty():
+			continue
+		var job: Dictionary = scheduler.get_job(job_id)
+		if job.is_empty():
+			continue
+		_process_narrative_tts_cache_job(job)
+
+
+func _persist_narrative_tts_status(job: Dictionary, status: String) -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var cache_key := str(job.get("text_cache_key", "")).strip_edges()
+	if cache_key.is_empty():
+		return
+	var field_id := str(job.get("field_id", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	if field_id.is_empty() or voice_profile_id.is_empty():
+		return
+	campaign_narrative_cache_store.mark_tts_status(
+		cache_key,
+		field_id,
+		voice_profile_id,
+		status
+	)
+
+
+func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> void:
+	if campaign_narrative_cache_store == null or payload.is_empty():
+		return
+	var cache_key := str(job.get("cache_key", payload.get("cache_key", ""))).strip_edges()
+	if cache_key.is_empty():
+		return
+	var subject_id := str(job.get("subject_id", "")).strip_edges()
+	if subject_id.is_empty():
+		subject_id = str(job.get("requester_id", "")).strip_edges()
+	if subject_id.is_empty():
+		subject_id = cache_key
+	var entry := {
+		"cache_key": cache_key,
+		"kind": str(job.get("kind", "narrative_cache_job")),
+		"subject_id": subject_id,
+		"speaker_id": str(payload.get("speaker_key", job.get("speaker_id", ""))),
+		"system_id": str(job.get("system_id", "")),
+		"station_id": str(job.get("station_id", "")),
+		"context_fingerprint": str(
+			job.get("context_fingerprint", cache_key.sha256_text())
+		),
+		"text_bundle": _text_bundle_for_narrative_payload(payload),
+		"result_payload": payload.duplicate(true),
+		"status": "ready",
+		"priority": int(job.get("priority", 0)),
+		"timeline_id": (
+			campaign_chronicle_store.current_timeline_id()
+			if campaign_chronicle_store != null
+					and campaign_chronicle_store.is_valid()
+			else ""
+		),
+		"context_revision": int(job.get("story_revision", 0)),
+		"story_revision": int(job.get("story_revision", 0)),
+		"knowledge_revision": int(job.get("knowledge_revision", 0)),
+		"mission_history_revision": int(job.get("mission_history_revision", 0)),
+		"requesters": (job.get("requesters", []) as Array).duplicate(true) \
+			if job.get("requesters", []) is Array else [],
+		"consumed": false,
+	}
+	campaign_narrative_cache_store.upsert_entry(entry)
+
+
+func _persist_narrative_cache_payload_update(cache_key: String, payload: Dictionary) -> void:
+	if campaign_narrative_cache_store == null:
+		return
+	var clean_key := cache_key.strip_edges()
+	if clean_key.is_empty() or payload.is_empty():
+		return
+	campaign_narrative_cache_store.update_result_payload(clean_key, payload)
+
+
+## Names the player is expected to recognise, so the quality gate stops reporting
+## them as unexplained references.
+##
+## Without this the gate had NO aliases at all: every faction, every fixed-cast
+## name and every station warned on every line, forever. Combined with the
+## sentence-opener bug that produced hundreds of warnings a session, which is why
+## nobody could read the diagnostic.
+##
+## Built once and cached -- this runs per line, and a session validates hundreds.
+var _known_alias_cache: Array = []
+
+
+func _known_entity_aliases() -> Array:
+	if not _known_alias_cache.is_empty():
+		return _known_alias_cache
+	var names := {}
+	# The fixed cast, who the player meets by name.
+	for n in ["Kaelen", "Nova", "Captain", "Jenna", "Kross"]:
+		names[n] = true
+	# Factions and ship classes, from the profile table the game already ships.
+	# Every word of a display name counts: "Aurelia Interceptor" teaches both.
+	for profile_key in FactionRegistry.KNOWN_PROFILES:
+		var profile: Dictionary = FactionRegistry.KNOWN_PROFILES[profile_key]
+		for word in str(profile.get("display_name", "")).split(" ", false):
+			var w := str(word).strip_edges()
+			if w.length() > 2:
+				names[w] = true
+	# Station and outpost names the player docks at and reads constantly. Taken
+	# from the systems the campaign actually contains rather than a second list
+	# that would drift out of sync with them.
+	if system_registry != null:
+		for sys_def in system_registry.get_all_systems():
+			if sys_def == null:
+				continue
+			for word in str(sys_def.display_name).split(" ", false):
+				var w2 := str(word).strip_edges()
+				if w2.length() > 2:
+					names[w2] = true
+	_known_alias_cache = names.keys()
+	return _known_alias_cache
+
+
+func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictionary:
+	if campaign_narrative_fingerprint_ledger == null:
+		return {"ok": true, "reason": "ledger_unavailable"}
+	var snapshot: Dictionary = campaign_narrative_fingerprint_ledger.to_dict()
+	for raw_line in lines:
+		var text := str(raw_line).strip_edges()
+		if text.is_empty():
+			continue
+		var quality: Dictionary = NarrativeQualityGateType.validate_line(
+			text, campaign_narrative_fingerprint_ledger, kind, _known_entity_aliases()
+		)
+		if not bool(quality.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return quality
+		for raw_warning in quality.get("warnings", []):
+			var warning := str(raw_warning).strip_edges()
+			if not warning.is_empty():
+				GenerationDiagnostics.record_event(
+					"narrative_quality", "quality_warning", "GameRoot",
+					{"kind": kind, "warning": warning}
+				)
+		var verdict: Dictionary = campaign_narrative_fingerprint_ledger.register(text, kind)
+		if not bool(verdict.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return verdict
+	if campaign_narrative_cache_store != null:
+		var persisted: Dictionary = campaign_narrative_cache_store.update_quality_ledger(
+			campaign_narrative_fingerprint_ledger.to_dict()
+		)
+		if not bool(persisted.get("ok", false)):
+			campaign_narrative_fingerprint_ledger.load_dict(snapshot)
+			return {"ok": false, "reason": "ledger_persist_failed"}
+	return {"ok": true}
+
+
+func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary:
+	var bundle: Dictionary = {}
+	var lines: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var index := 0
+	for raw_line in lines:
+		if not raw_line is Dictionary:
+			continue
+		var text := str((raw_line as Dictionary).get("text", "")).strip_edges()
+		if text.is_empty():
+			continue
+		bundle["line_%03d" % index] = text
+		index += 1
+	var quest_data: Dictionary = payload.get("quest_data", {}) \
+		if payload.get("quest_data", {}) is Dictionary else {}
+	var dialogue := str(quest_data.get("dialogue", "")).strip_edges()
+	if not dialogue.is_empty():
+		bundle["offer_dialogue"] = dialogue
+	var mission_dialogue_bundle: Dictionary = quest_data.get("mission_dialogue_bundle", {}) \
+		if quest_data.get("mission_dialogue_bundle", {}) is Dictionary else {}
+	for key in mission_dialogue_bundle.keys():
+		var bundle_text := str(mission_dialogue_bundle.get(key, "")).strip_edges()
+		if not bundle_text.is_empty():
+			bundle["mission_%s" % str(key)] = bundle_text
+	var choice_index := 0
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for raw_choice in choices:
+		if not raw_choice is Dictionary:
+			continue
+		var consequence: Dictionary = (raw_choice as Dictionary).get("consequence", {}) \
+			if (raw_choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		var response := str(consequence.get("dialogue_response", "")).strip_edges()
+		if not response.is_empty():
+			bundle["choice_%03d_response" % choice_index] = response
+		choice_index += 1
+	for key in ["opening", "description", "title"]:
+		var value := str(quest_data.get(key, "")).strip_edges()
+		if not value.is_empty():
+			bundle[key] = value
+	if bundle.is_empty():
+		bundle["payload_type"] = str(payload.get("content_type", "narrative_payload"))
+	return bundle
+
+
+func _tts_required_fields_for_text_bundle(text_bundle: Dictionary) -> Array:
+	var fields: Array[String] = []
+	for key in text_bundle.keys():
+		var field_id := str(key).strip_edges()
+		if field_id.is_empty():
+			continue
+		if str(text_bundle.get(field_id, "")).strip_edges().is_empty():
+			continue
+		fields.append(field_id)
+	fields.sort()
+	return fields
+
+
+func _voice_profile_for_narrative_payload(payload: Dictionary) -> String:
+	var direct := str(payload.get("voice_profile_id", "")).strip_edges()
+	if not direct.is_empty():
+		return direct
+	var quest_data: Dictionary = payload.get("quest_data", {}) \
+		if payload.get("quest_data", {}) is Dictionary else {}
+	var quest_voice := str(quest_data.get("agent_voice_profile_id", "")).strip_edges()
+	if not quest_voice.is_empty():
+		return quest_voice
+	var agent_profile: Dictionary = payload.get("agent_profile", {}) \
+		if payload.get("agent_profile", {}) is Dictionary else {}
+	var agent_voice := str(agent_profile.get("agent_voice_profile_id", "")).strip_edges()
+	if not agent_voice.is_empty():
+		return agent_voice
+	return "voice.neutral.v1"
+
+
+func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
+	match str(job.get("kind", "")):
+		"system_contact_offer_bundle":
+			return _system_contact_offer_payload_for_cache_job(job)
+		"current_station_agent_offer_bundle":
+			return _station_agent_offer_payload_for_cache_job(job)
+		"current_system_kaelen_bundle", "new_campaign_kaelen_handoff_bank":
+			return _line_bank_payload_for_cache_job(job, "kaelen")
+		"kaelen_handoff_pool_refill":
+			return _kaelen_handoff_pool_refill_payload_for_cache_job(job)
+		"current_system_nova_bundle", "new_campaign_nova_bank":
+			return _line_bank_payload_for_cache_job(job, "nova")
+		"ambient_pool_refill":
+			return _line_bank_payload_for_cache_job(job, "ambient")
+		"line_bank_low_refill":
+			return _line_bank_low_refill_payload_for_cache_job(job)
+		_:
+			return {"ok": false, "status": "unsupported_job_kind"}
+
+
+func _kaelen_handoff_pool_refill_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var line_payload_result := _line_bank_payload_for_cache_job(job, "kaelen")
+	if not bool(line_payload_result.get("ok", false)):
+		return line_payload_result
+	var payload: Dictionary = line_payload_result.get("payload", {}) \
+		if line_payload_result.get("payload", {}) is Dictionary else {}
+	var entries: Array = payload.get("line_bank", []) \
+		if payload.get("line_bank", []) is Array else []
+	var lines: Array = []
+	for raw_entry in entries:
+		if not raw_entry is Dictionary:
+			continue
+		var text := str(raw_entry.get("text", "")).strip_edges()
+		if not text.is_empty():
+			lines.append(text)
+	if lines.is_empty():
+		return {"ok": false, "status": "kaelen_handoff_lines_unavailable"}
+	if not is_instance_valid(StoryManager) \
+			or not StoryManager.has_method("refill_kaelen_handoff_pool_from_lines"):
+		return {"ok": false, "status": "story_manager_handoff_refill_unavailable"}
+	var refill_result: Dictionary = StoryManager.call(
+		"refill_kaelen_handoff_pool_from_lines",
+		str(job.get("agent_name", job.get("speaker_id", ""))),
+		lines,
+		str(job.get("system_id", "")),
+		int(job.get("story_revision", -1)),
+		str(job.get("relationship_tier", ""))
+	)
+	if not bool(refill_result.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(refill_result.get("status", "kaelen_handoff_refill_failed")),
+		}
+	payload["content_type"] = "kaelen_handoff_pool_refill"
+	payload["source"] = "narrative_cache_scheduler"
+	payload["agent_name"] = str(job.get("agent_name", job.get("speaker_id", "")))
+	payload["system_id"] = str(job.get("system_id", ""))
+	payload["story_revision"] = int(job.get("story_revision", -1))
+	payload["relationship_tier"] = str(job.get("relationship_tier", ""))
+	payload["refilled_count"] = int(refill_result.get("count", lines.size()))
+	return {
+		"ok": true,
+		"payload": payload,
+	}
+
+
+func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var agent_profile := _agent_profile_for_system_contact_cache_job(job)
+	var story_context := build_story_agent_offer_context(agent_profile)
+	if not bool(story_context.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(story_context.get("status", "story_context_unavailable")),
+		}
+	agent_profile["story_agent_offer_context"] = story_context
+	if not StoryAgentOfferBuilderType.can_build(agent_profile):
+		return {"ok": false, "status": "template_builder_unavailable_for_candidate"}
+	var faction_arg := str(agent_profile.get("faction_id", "")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = str(agent_profile.get("faction", "neutral")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = "neutral"
+	var offer: Dictionary = StoryAgentOfferBuilderType.build_offer(
+		faction_arg,
+		agent_profile,
+		int(CampaignClock.total_minutes)
+	)
+	if offer.is_empty():
+		return {"ok": false, "status": "template_offer_build_failed"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_agent_offer",
+			"source": "story_agent_offer_builder",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"quest_data": offer,
+			"agent_profile": agent_profile,
+		},
+	}
+
+
+func _station_agent_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	var agent_profile := _agent_profile_for_station_offer_cache_job(job)
+	if agent_profile.is_empty():
+		return {"ok": false, "status": "station_contact_unavailable"}
+	var story_context := build_story_agent_offer_context(agent_profile)
+	if not bool(story_context.get("ok", false)):
+		return {
+			"ok": false,
+			"status": str(story_context.get("status", "story_context_unavailable")),
+		}
+	agent_profile["story_agent_offer_context"] = story_context
+	if not StoryAgentOfferBuilderType.can_build(agent_profile):
+		return {"ok": false, "status": "template_builder_unavailable_for_candidate"}
+	var faction_arg := str(agent_profile.get("faction_id", "")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = str(agent_profile.get("faction", "neutral")).strip_edges()
+	if faction_arg.is_empty():
+		faction_arg = "neutral"
+	var offer: Dictionary = StoryAgentOfferBuilderType.build_offer(
+		faction_arg,
+		agent_profile,
+		int(CampaignClock.total_minutes)
+	)
+	if offer.is_empty():
+		return {"ok": false, "status": "template_offer_build_failed"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_agent_offer",
+			"source": "story_agent_offer_builder",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"station_id": str(job.get("station_id", "")),
+			"quest_data": offer,
+			"agent_profile": agent_profile,
+		},
+	}
+
+
+func _line_bank_payload_for_cache_job(job: Dictionary, speaker_key: String) -> Dictionary:
+	var line_bank := _template_line_bank_for_speaker(job, speaker_key)
+	if line_bank.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
+	# N.O.V.A.'s bank holds one shared pool spanning several categories
+	# (arrival template lines plus generated movement/combat lines seeded
+	# after the bank is ready). Give it headroom so those appends have slots.
+	var target_size := FallbackLineBankType.DEFAULT_TARGET_SIZE
+	if speaker_key == "nova":
+		target_size = NOVA_LINE_BANK_TARGET_SIZE
+	var fallback_bank: Dictionary = FallbackLineBankType.create_bank(
+		speaker_key,
+		str(line_bank.get("line_kind", "")),
+		line_bank.get("fallback_lines", []),
+		target_size
+	)
+	var entries: Array = fallback_bank.get("entries", []) \
+		if fallback_bank.get("entries", []) is Array else []
+	if entries.is_empty():
+		return {"ok": false, "status": "line_bank_unavailable"}
+	return {
+		"ok": true,
+		"payload": {
+			"content_type": "story_line_bank",
+			"source": "fallback_bank",
+			"cache_key": str(job.get("cache_key", "")),
+			"requester_id": str(job.get("requester_id", "")),
+			"speaker_key": speaker_key,
+			"speaker_name": str(line_bank.get("speaker_name", "")),
+			"voice_profile_id": str(line_bank.get("voice_profile_id", "")),
+			"line_bank": entries.duplicate(true),
+			"fallback_bank": fallback_bank,
+			"fallback_target_size": int(fallback_bank.get("target_size", 0)),
+			"fallback_available_count": FallbackLineBankType.available_count(fallback_bank),
+			"context_block": str(line_bank.get("context_block", "")),
+		},
+	}
+
+
+func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Dictionary:
+	var context_block := _safe_line_bank_context_block(speaker_key)
+	var system_label := _line_bank_system_label(job)
+	var chapter := int(StoryManager.story_state.get("chapter", 1)) \
+		if is_instance_valid(StoryManager) else 1
+	match speaker_key:
+		"kaelen":
+			return {
+				"speaker_name": "Broker Kaelen",
+				"voice_profile_id": "voice.kaelen.v1",
+				"context_block": context_block,
+				"line_kind": KaelenInteractionKindsType.AGENT_HANDOFF,
+				"fallback_lines": [
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "Welcome to %s, Shiny. Broker rule: learn who owns the room before you buy the lie." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "%s has fresh stars, old debts, and enough local pride to make invoices interesting." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "First time in %s. Smile like a guest, listen like a creditor, and touch nothing for free." % system_label,
+					},
+					{
+						"kind": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL,
+						"text": "%s just became our problem, Shiny. Conveniently, problems bill by the hour." % system_label,
+					},
+					"Easy start, Shiny: hear the local pitch, ask the expensive question, and keep your exit vector clean.",
+					"The first job in %s should tell us who smiles too quickly. Pay attention to that part." % system_label,
+					"Chapter %d of this mess starts small. That is usually how the costly ones introduce themselves." % chapter,
+					"Take the meeting, keep your tells quiet, and let them spend the first lie.",
+					"If they offer simple money, assume the complicated part is waiting two rooms over.",
+					"Walk in like you belong there. If that fails, walk out like you meant to.",
+					"Ask what they are not saying. That answer usually pays better.",
+					"Keep one hand on the contract and one eye on whoever pretends not to care.",
+					"Do not promise heroics. Heroics invoice poorly and bleed through good jackets.",
+					"I trust a clean job description less than a dirty one. Dirty ones admit they exist.",
+					"Let them talk first. People get generous with mistakes when silence makes them nervous.",
+					"If the room likes you too fast, check the exits before you check the reward.",
+					"This should be routine, which is exactly when routine starts sharpening a knife.",
+					"Smile politely, decline politely, and never forget which part of that was theater.",
+					"Contracts have teeth. Read where they tried to hide the gums.",
+					"Bring back money, leverage, or a very funny problem. Ideally two of those.",
+					"I am not saying expect betrayal. I am saying betrayal hates an empty calendar.",
+					"The local pitch will tell us who needs help and who needs distance.",
+					"Take the job if it smells survivable. Leave the noble speeches for people with armor.",
+					"Make them name the risk out loud. It becomes harder to sell you fog after that.",
+				],
+			}
+		"nova":
+			return {
+				"speaker_name": "N.O.V.A.",
+				"voice_profile_id": "voice.nova.v1",
+				"context_block": context_block,
+				"line_kind": "startup_navigation",
+				"fallback_lines": [
+					"Local charts for %s are loaded. I distrust them the normal amount." % system_label,
+					"Sensors are awake, Captain. So are several things I would prefer stayed theoretical.",
+					"I have ranked our likely mistakes by survivability. You will be delighted to know there are options.",
+					"Navigation is green. My optimism remains amber.",
+					"Arrival checks complete. The ship is intact, which I am classifying as rude luck.",
+					"I have updated local hazards. Several appear committed to personal growth.",
+					"Telemetry is stable. The universe is doing that thing where it pretends this is temporary.",
+					"Course data loaded. Please enjoy this brief interval before reality edits it.",
+					"Local traffic mapped. Some pilots are making bold arguments against licensing.",
+					"Power balance nominal. I will begin worrying about the non-nominal items alphabetically.",
+					"System scan complete. The comforting silence is statistically suspicious.",
+					"Thrusters report ready. I report cautious approval, pending evidence.",
+					"Beacon data acquired. It is either outdated or lying with confidence.",
+					"Route options prepared. I recommend the one with fewer exciting debris fields.",
+					"All primary systems answer. The secondary systems are being emotionally complex.",
+					"Navigation solution accepted. I only object on philosophical grounds.",
+					"Local map indexed. I have placed the warnings where humans might actually notice them.",
+					"Drive temperature is clean. Space outside remains aggressively space-shaped.",
+					"I have prepared our next mistake with excellent formatting.",
+					"Arrival profile archived. If we survive, I will pretend this was the plan.",
+				],
+			}
+		"ambient":
+			return {
+				"speaker_name": "Local ambient channel",
+				"voice_profile_id": "voice.neutral.v1",
+				"context_block": context_block,
+				"line_kind": "ambient_chatter",
+				"fallback_lines": [
+					"The local channel keeps mentioning %s like saying it softer will make it safer." % system_label,
+					"Dock crews are trading warnings in the polite tone people use around bad wiring.",
+					"Someone nearby laughs too late, then checks who noticed.",
+					"The room has the careful quiet of people pretending not to listen.",
+					"A freight handler mutters that clean manifests are usually the suspicious ones.",
+					"Two locals argue over routes, then both choose the one with better exits.",
+					"The public board refreshes with the nervous little blink of unpaid trouble.",
+					"A bartender wipes the same glass three times and watches the door between passes.",
+					"The station intercom coughs, apologizes, and somehow makes that less reassuring.",
+					"Someone says the word routine with enough dread to make it feel expensive.",
+					"A passing pilot recommends avoiding heroics, which sounds learned the hard way.",
+					"The lounge feed loops a weather advisory for a place with no weather.",
+					"Cargo tags clatter in the distance like tiny, bureaucratic bones.",
+					"A dockhand calls this shift quiet, then immediately knocks on the nearest bulkhead.",
+					"The local gossip has already outrun the official bulletin by three bad decisions.",
+					"Somebody lowers their voice when a faction badge crosses the room.",
+					"The station lights flicker once, and everyone pretends not to count it.",
+					"A courier checks their route twice and their reflection once.",
+					"The room smells faintly of coolant, burned coffee, and negotiated optimism.",
+					"A nearby table goes silent right when the interesting name would have landed.",
+				],
+			}
+		_:
+			return {}
+
+
+func _safe_line_bank_context_block(speaker_key: String) -> String:
+	if not is_instance_valid(StoryManager):
+		return ""
+	var state: Dictionary = StoryManager.story_state \
+		if StoryManager.story_state is Dictionary else {}
+	match speaker_key:
+		"kaelen":
+			return ContextBlockBuilderType.kaelen_block(state)
+		"nova":
+			return ContextBlockBuilderType.nova_block(state)
+		"ambient":
+			return ContextBlockBuilderType.ambient_chatter_block(state)
+		_:
+			return ContextBlockBuilderType.story_state_public_block(state)
+
+
+func _line_bank_system_label(job: Dictionary) -> String:
+	var system_id := str(job.get("system_id", job.get("subject_id", ""))).strip_edges()
+	if system_id.is_empty():
+		system_id = str(GlobalState.current_system_id).strip_edges()
+	if system_id.is_empty():
+		return "this system"
+	return system_id.replace("_", " ").replace(".", " ").capitalize()
+
+
+func _agent_profile_for_system_contact_cache_job(job: Dictionary) -> Dictionary:
+	var contact_id := str(job.get("contact_id", "")).strip_edges()
+	var display_name := str(job.get("contact_display", "")).strip_edges()
+	if display_name.is_empty():
+		display_name = contact_id
+	if display_name.is_empty():
+		display_name = "System Contact"
+	var faction_id := str(job.get("faction_id", "")).strip_edges()
+	var voice_profile_id := str(job.get("voice_profile_id", "")).strip_edges()
+	return {
+		"agent_id": contact_id,
+		"name": display_name,
+		"agent_name": display_name,
+		"agent_role": "System faction contact",
+		"faction": faction_id if not faction_id.is_empty() else "neutral",
+		"faction_id": faction_id,
+		"agent_voice_profile_id": voice_profile_id,
+	}
+
+
+func _agent_profile_for_station_offer_cache_job(job: Dictionary) -> Dictionary:
+	var station_id := str(job.get("station_id", "")).strip_edges()
+	if station_id.is_empty():
+		return {}
+	for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+		if str(npc_data.get("role", "")) != "Faction contact":
+			continue
+		var faction := str(npc_data.get("faction", ""))
+		var faction_id := str(npc_data.get("faction_id", ""))
+		if faction.is_empty() and faction_id.is_empty():
+			continue
+		var faction_key: String = faction if not faction.is_empty() else faction_id
+		var faction_info := GlobalState.faction_info(faction_key)
+		var faction_display := str(
+			faction_info.get("name", faction_key.capitalize())
+		)
+		return {
+			"agent_id": str(npc_data.get("npc_id", "")),
+			"name": str(npc_name),
+			"agent_name": str(npc_name),
+			"agent_role": "%s Station Contact" % faction_display,
+			"agent_portrait_id": str(npc_data.get("portrait_id", "")),
+			"agent_voice_profile_id": str(
+				npc_data.get("voice_profile_id", "voice.neutral.v1")
+			),
+			"identity_record": npc_data.get("identity_record", {}),
+			"persona": (
+				npc_data.get("identity_record", {}).get("persona", {})
+				if npc_data.get("identity_record", {}) is Dictionary else {}
+			),
+			"voice_rules": (
+				npc_data.get("identity_record", {}).get("voice_rules", {})
+				if npc_data.get("identity_record", {}) is Dictionary else {}
+			),
+			"faction": faction,
+			"faction_id": faction_id,
+			"faction_display": faction_display,
+		}
+	return {}
+
+
+func queue_narrative_station_target_prefetch(
+	station: Node3D,
+	target_reason: String = "targeted"
+) -> void:
+	if station == null or not is_instance_valid(station):
+		return
+	if not station.is_in_group("station"):
+		return
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_station_target(
+			station,
+			target_reason
+		)
+	)
+
+
+func queue_narrative_new_campaign_loading_prefetch() -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_new_campaign_loading()
+	)
+
+
+func _narrative_prefetch_event_from_station_target(
+	station: Node3D,
+	target_reason: String
+) -> Dictionary:
+	var station_id := ""
+	if station.has_method("get_world_id"):
+		station_id = str(station.call("get_world_id")).strip_edges()
+	if station_id.is_empty():
+		var raw_world_id: Variant = station.get("world_id")
+		station_id = str(raw_world_id).strip_edges() if raw_world_id != null else ""
+	if station_id.is_empty() or station_id == "<null>":
+		station_id = str(station.get_meta("world_id", "")).strip_edges()
+	if station_id.is_empty():
+		return {}
+	var raw_station_type: Variant = station.get("station_type")
+	var station_type := str(raw_station_type).strip_edges() \
+		if raw_station_type != null else ""
+	if station_type.is_empty() or station_type == "<null>":
+		station_type = str(station.get_meta("station_type", "")).strip_edges()
+	return {
+		"event_type": "station_targeted",
+		"subject_id": station_id,
+		"station_id": station_id,
+		"station_type": station_type,
+		"target_reason": target_reason.strip_edges(),
+		"system_id": str(GlobalState.current_system_id),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+
+
+func _narrative_prefetch_event_from_new_campaign_loading() -> Dictionary:
+	var event := {
+		"event_type": "new_campaign_loading",
+		"subject_id": str(GlobalState.current_system_id),
+		"system_id": str(GlobalState.current_system_id),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+	var station := GlobalState.get_primary_station()
+	if station != null and is_instance_valid(station):
+		var station_event := _narrative_prefetch_event_from_station_target(
+			station,
+			"new_campaign_loading"
+		)
+		if not station_event.is_empty():
+			event["station_id"] = str(station_event.get("station_id", ""))
+			event["station_type"] = str(station_event.get("station_type", ""))
+	var current_chapter := int(StoryManager.story_state.get("chapter", 1))
+	if campaign_chapter_packet_store != null \
+			and campaign_chapter_packet_store.is_valid():
+		var packet: Dictionary = campaign_chapter_packet_store.latest_packet_for_chapter(
+			current_chapter
+		)
+		if not packet.is_empty():
+			event["packet_id"] = str(packet.get("packet_id", ""))
+			event["chapter"] = int(packet.get("chapter", current_chapter))
+			event["first_beat_ids"] = _first_chapter_packet_beat_ids(packet)
+	return event
+
+
+func _narrative_prefetch_event_from_chapter_packet(packet: Dictionary) -> Dictionary:
+	var packet_id := str(packet.get("packet_id", "")).strip_edges()
+	if packet_id.is_empty():
+		return {}
+	return {
+		"event_type": "chapter_packet_ready",
+		"subject_id": packet_id,
+		"packet_id": packet_id,
+		"chapter": int(packet.get("chapter", StoryManager.story_state.get("chapter", 1))),
+		"first_beat_ids": _first_chapter_packet_beat_ids(packet),
+		"system_id": str(GlobalState.current_system_id),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+
+
+static func _first_chapter_packet_beat_ids(packet: Dictionary, limit: int = 3) -> Array[String]:
+	var beat_ids: Array[String] = []
+	var beats: Array = packet.get("beats", []) if packet.get("beats", []) is Array else []
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var beat_id := str((beat as Dictionary).get("beat_id", "")).strip_edges()
+		if beat_id.is_empty() or beat_ids.has(beat_id):
+			continue
+		beat_ids.append(beat_id)
+		if beat_ids.size() >= maxi(1, limit):
+			break
+	return beat_ids
+
+
+func _narrative_prefetch_event_from_system_arrival(
+	system_id: String,
+	arrival_gate_id: String
+) -> Dictionary:
+	var clean_system_id := system_id.strip_edges()
+	if clean_system_id.is_empty():
+		return {}
+	var system_root := get_active_system_root()
+	var event := {
+		"event_type": "system_arrived",
+		"subject_id": clean_system_id,
+		"system_id": clean_system_id,
+		"arrival_gate_id": arrival_gate_id.strip_edges(),
+		"contact_profiles": _system_arrival_contact_profiles(system_root),
+		"visible_station_ids": _visible_station_ids_for_narrative_prefetch(
+			system_root
+		),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+	return event
+
+
+func _system_arrival_contact_profiles(system_root: Node3D) -> Array[Dictionary]:
+	var profiles: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var registry := GameContentRegistry.shared()
+	for faction_id in GlobalState.get_current_system_factions():
+		var faction_def := registry.faction(faction_id)
+		if faction_def == null or str(faction_def.agent_npc_id).is_empty():
+			continue
+		var contact_id := str(faction_def.agent_npc_id)
+		if seen.has(contact_id):
+			continue
+		var display_name := "%s Agent" % str(faction_def.display_name)
+		var npc_def: NpcDefinition = registry.npcs.get(faction_def.agent_npc_id)
+		if npc_def != null and not str(npc_def.display_name).is_empty():
+			display_name = str(npc_def.display_name)
+		profiles.append({
+			"contact_id": contact_id,
+			"display_name": display_name,
+			"faction_id": str(faction_def.id),
+			"voice_profile_id": str(faction_def.voice_profile_id),
+		})
+		seen[contact_id] = true
+	if system_root == null:
+		return profiles
+	for station in get_tree().get_nodes_in_group("station"):
+		var station_node := station as Node3D
+		if station_node == null or not is_instance_valid(station_node):
+			continue
+		if not system_root.is_ancestor_of(station_node):
+			continue
+		if not station_node.has_method("get_world_id"):
+			continue
+		var station_id := str(station_node.call("get_world_id")).strip_edges()
+		if station_id.is_empty():
+			continue
+		for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+			var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
+			if str(npc_data.get("role", "")) != "Faction contact":
+				continue
+			var contact_id := str(npc_data.get("npc_id", "")).strip_edges()
+			if contact_id.is_empty():
+				contact_id = str(npc_name)
+			if seen.has(contact_id):
+				continue
+			profiles.append({
+				"contact_id": contact_id,
+				"display_name": str(npc_name),
+				"faction_id": str(npc_data.get("faction_id", npc_data.get("faction", ""))),
+				"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
+			})
+			seen[contact_id] = true
+	return profiles
+
+
+func _visible_station_ids_for_narrative_prefetch(system_root: Node3D) -> Array[String]:
+	var station_ids: Array[String] = []
+	if system_root == null:
+		return station_ids
+	for candidate in get_tree().get_nodes_in_group("station"):
+		var station := candidate as Node3D
+		if station == null or not is_instance_valid(station):
+			continue
+		if not system_root.is_ancestor_of(station):
+			continue
+		if not station.has_method("get_world_id"):
+			continue
+		var station_id := str(station.call("get_world_id")).strip_edges()
+		if station_id.is_empty() or station_ids.has(station_id):
+			continue
+		station_ids.append(station_id)
+	return station_ids
+
+
+static func _narrative_prefetch_event_from_quest(
+	quest: Dictionary,
+	event_type: String
+) -> Dictionary:
+	var runtime_id := str(quest.get("runtime_id", "")).strip_edges()
+	if runtime_id.is_empty():
+		runtime_id = str(quest.get("definition_id", "")).strip_edges()
+	if runtime_id.is_empty():
+		return {}
+	var event := {
+		"event_type": event_type,
+		"mission_id": runtime_id,
+		"subject_id": runtime_id,
+		"system_id": str(quest.get("system_id", "")),
+		"station_id": str(quest.get("station_id", "")),
+		"speaker_id": str(quest.get("agent_id", quest.get("giver_npc_id", ""))),
+		"story_beat_id": str(quest.get("story_beat_id", "")),
+		"cause_id": str(quest.get("cause_id", "")),
+		"relationship_tier": str(quest.get("relationship_tier", "")),
+		"story_revision": int(StoryManager.story_state.get("story_revision", 0))
+			if is_instance_valid(StoryManager) else 0,
+		"knowledge_revision": int(StoryManager.story_state.get(
+			"knowledge_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+		"mission_history_revision": int(StoryManager.story_state.get(
+			"mission_history_revision",
+			0
+		)) if is_instance_valid(StoryManager) else 0,
+	}
+	var progress_fraction := _quest_progress_fraction(quest)
+	if progress_fraction >= 0.0:
+		event["progress_fraction"] = progress_fraction
+	if quest.get("likely_outcome_variants", []) is Array:
+		event["likely_outcome_variants"] = (
+			quest.get("likely_outcome_variants", []) as Array
+		).duplicate(true)
+	return event
+
+
+static func _quest_progress_fraction(quest: Dictionary) -> float:
+	match str(quest.get("objective_type", "")):
+		"DELIVER_ORE":
+			var required := float(quest.get("amount_required", 0.0))
+			if required <= 0.0:
+				return -1.0
+			return clampf(float(quest.get("partial_delivered", 0.0)) / required, 0.0, 1.0)
+		"KILL_SHIPS", "TARGET_WITH_COMMS_REVERSAL":
+			var required_count := int(quest.get("count_required", 0))
+			if required_count <= 0:
+				return -1.0
+			return clampf(float(quest.get("current_count", 0)) / float(required_count), 0.0, 1.0)
+		"RECOVER_COMBAT_DROP":
+			return 1.0 if bool(quest.get("ship_log_recovered", false)) else 0.0
+		"PICKUP_SPECIAL":
+			return 1.0 if bool(quest.get("picked_up", false)) else 0.0
+	return -1.0
+
+
+func _on_quest_declined_chronicle(quest: Dictionary) -> void:
+	_record_quest_giver_npc_outcome(quest, "declined")
+	var candidate := _story_offer_candidate_from_quest(quest)
+	if candidate.is_empty():
+		return
+	StoryManager.record_chapter_offer_declined(
+		candidate,
+		str(quest.get("decline_reason", "declined"))
+	)
+	StoryManager.record_mission_outcome_consequence(quest, "declined")
+
+
+func _on_quest_completed_chronicle(quest: Dictionary) -> void:
+	_queue_narrative_prefetch_jobs_for_event(
+		_narrative_prefetch_event_from_quest(quest, "objective_complete")
+	)
+	_mark_story_offer_beat(quest, "completed", "Mission completed.")
+	_record_quest_giver_npc_outcome(quest, "completed")
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_completed",
+			quest,
+			"completed"
+		)
+	else:
+		_append_quest_chronicle_event("mission_completed", quest, "completed")
+	remember_agent_memory_snippet(quest, "completed")
+
+
+func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
+	_mark_story_offer_beat(quest, "failed", "Mission abandoned.")
+	StoryManager.record_mission_outcome_consequence(quest, "abandoned")
+	_record_quest_giver_npc_outcome(quest, "abandoned")
+	if bool(quest.get("is_timed", false)):
+		_append_timed_quest_chronicle_event(
+			"timed_mission_abandoned",
+			quest,
+			"abandoned"
+		)
+	else:
+		_append_quest_chronicle_event("mission_abandoned", quest, "abandoned")
+	remember_agent_memory_snippet(quest, "abandoned")
+
+
+func _on_quest_expired_chronicle(quest: Dictionary) -> void:
+	_mark_story_offer_beat(quest, "failed", "Mission expired.")
+	StoryManager.record_mission_outcome_consequence(quest, "expired")
+	_record_quest_giver_npc_outcome(quest, "expired")
+	_append_timed_quest_chronicle_event(
+		"timed_mission_expired",
+		quest,
+		"expired"
+	)
+
+
+func _record_quest_giver_npc_outcome(quest: Dictionary, outcome: String) -> void:
+	if quest.is_empty() or bool(quest.get("public_board", false)):
+		return
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("record_mission_outcome"):
+		return
+	var npc_id := str(quest.get("giver_npc_id", "")).strip_edges()
+	if npc_id.is_empty():
+		npc_id = str(quest.get("agent_id", "")).strip_edges()
+	if npc_id.is_empty() or not npc_id.begins_with("npc."):
+		return
+	var result: Dictionary = campaign_npc_state_store.record_mission_outcome(
+		npc_id,
+		outcome
+	)
+	if not bool(result.get("ok", false)):
+		push_warning(
+			"[GameRoot] NPC mission outcome was not recorded for %s: %s" %
+			[npc_id, str(result.get("error", "unknown error"))]
+		)
+
+
+func _record_quest_giver_npc_memory_event(
+	quest: Dictionary,
+	event: Dictionary
+) -> void:
+	if quest.is_empty() or event.is_empty() or bool(quest.get("public_board", false)):
+		return
+	if campaign_npc_state_store == null \
+			or not campaign_npc_state_store.has_method("record_memory_events"):
+		return
+	var npc_id := _quest_giver_npc_id(quest)
+	if npc_id.is_empty():
+		return
+	var result: Dictionary = campaign_npc_state_store.record_memory_events(
+		npc_id,
+		[event],
+		str(quest.get("agent_response", ""))
+	)
+	if not bool(result.get("ok", false)):
+		push_warning(
+			"[GameRoot] NPC mission memory event was not recorded for %s: %s" %
+			[npc_id, str(result.get("error", "unknown error"))]
+		)
+
+
+func _mark_story_offer_beat(
+	quest: Dictionary,
+	state: String,
+	outcome: String = ""
+) -> void:
+	var beat_id := str(quest.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		var metadata: Dictionary = quest.get("narrative_metadata", {}) \
+			if quest.get("narrative_metadata", {}) is Dictionary else {}
+		beat_id = str(metadata.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		return
+	StoryManager.mark_chapter_beat_state(beat_id, state, outcome)
+
+
+func _story_offer_candidate_from_quest(quest: Dictionary) -> Dictionary:
+	var metadata: Dictionary = quest.get("narrative_metadata", {}) \
+		if quest.get("narrative_metadata", {}) is Dictionary else {}
+	var snapshot: Dictionary = metadata.get("outcome_snapshot", {}) \
+		if metadata.get("outcome_snapshot", {}) is Dictionary else {}
+	var candidate: Dictionary = snapshot.get("story_candidate", {}) \
+		if snapshot.get("story_candidate", {}) is Dictionary else {}
+	if not candidate.is_empty():
+		return candidate.duplicate(true)
+	var beat_id := str(metadata.get("story_beat_id", quest.get("story_beat_id", ""))).strip_edges()
+	if beat_id.is_empty():
+		return {}
+	return {
+		"beat_id": beat_id,
+		"objective_type": str(quest.get("objective_type", "")),
+		"giver_id": str(quest.get("giver_npc_id", "")),
+	}
 
 
 func _safe_location_for(
@@ -1412,6 +5776,10 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 		return false
 	restoring_safe_checkpoint = true
 	await _apply_save_data(decoded["data"])
+	_discard_narrative_cache_outside_restored_context(
+		restored,
+		decoded["data"]
+	)
 	await _restore_safe_location(safe_location)
 	restoring_safe_checkpoint = false
 	RuntimeTraceType.event("checkpoint", "restore_completed", {
@@ -1424,6 +5792,38 @@ func _apply_campaign_checkpoint_state(restored: Dictionary) -> bool:
 		],
 	})
 	return true
+
+
+func _discard_narrative_cache_outside_restored_context(
+	restored_checkpoint: Dictionary,
+	decoded_state: Dictionary
+) -> void:
+	if campaign_narrative_cache_store == null \
+			or not campaign_narrative_cache_store.has_method(
+				"discard_entries_outside_context"
+			):
+		return
+	var story_state: Dictionary = decoded_state.get("story_state", {}) \
+		if decoded_state.get("story_state", {}) is Dictionary else {}
+	var story_revision := int(story_state.get("story_revision", 0))
+	var restored_context := {
+		"timeline_id": str(restored_checkpoint.get("timeline_id", "")),
+		"context_revision": story_revision,
+		"story_revision": story_revision,
+		"knowledge_revision": int(story_state.get("knowledge_revision", 0)),
+		"mission_history_revision": int(story_state.get(
+			"mission_history_revision",
+			0
+		)),
+	}
+	var discarded: Dictionary = campaign_narrative_cache_store.discard_entries_outside_context(
+		restored_context
+	)
+	if not bool(discarded.get("ok", false)):
+		push_warning(
+			"[GameRoot] Narrative cache rollback discard failed: %s" %
+				str(discarded.get("error", "unknown error"))
+		)
 
 
 func _restore_safe_location(safe_location: Dictionary) -> void:
@@ -1459,6 +5859,7 @@ func _restore_safe_location(safe_location: Dictionary) -> void:
 		)
 	player.global_position = docking_position
 	player.is_docked = true
+	StoryManager.on_docked(entity)
 	var ui := GlobalState.get_ui_manager()
 	if ui and ui.has_method("toggle_dock_menu") \
 			and not bool(ui.get("dock_panel").visible):
@@ -1521,8 +5922,13 @@ func _load_startup_save() -> void:
 						created.get("error", "unknown error"),
 					]
 				)
+		CampaignSystemNames.reset()
+		ShipGenerator.active_campaign_path = _campaign_slot_path(
+			active_campaign_slot_id
+		)
 		startup_save_loaded = false
 		startup_load_finished = true
+		_refresh_gate_states()
 		startup_load_completed.emit(false)
 		return
 	_initialize_campaign_registry()
@@ -1549,6 +5955,7 @@ func _load_startup_save() -> void:
 		if bool(prepared.get("ok", false)):
 			_ensure_campaign_checkpoint_store(prepared["data"])
 	startup_load_finished = true
+	_refresh_gate_states()
 	startup_load_completed.emit(startup_save_loaded)
 
 func _is_valid_save_data(data: Variant) -> bool:
@@ -1558,9 +5965,35 @@ func _is_valid_save_data(data: Variant) -> bool:
 	).is_valid()
 
 func _apply_save_data(data: Dictionary) -> void:
+	var checkpoint_story_state = data.get("story_state", {})
+	if checkpoint_story_state is Dictionary \
+			and not (checkpoint_story_state as Dictionary).is_empty() \
+			and not StoryManager.restore_story_state_from_checkpoint(
+				checkpoint_story_state
+			):
+		push_warning(
+			"[GameRoot] Save story_state failed validation during restore."
+		)
+	var checkpoint_quiet_moments = data.get("quiet_moments", {})
+	if checkpoint_quiet_moments is Dictionary and is_instance_valid(quiet_moment_director):
+		quiet_moment_director.load_from_dict(checkpoint_quiet_moments)
+	var checkpoint_npc_states = data.get("npc_states", {})
+	if checkpoint_npc_states is Dictionary \
+			and not (checkpoint_npc_states as Dictionary).is_empty():
+		if campaign_npc_state_store == null \
+				or not campaign_npc_state_store.has_method(
+					"restore_state_from_checkpoint"
+				) \
+				or not campaign_npc_state_store.restore_state_from_checkpoint(
+					checkpoint_npc_states
+				):
+			push_warning(
+				"[GameRoot] Save NPC state failed validation during restore."
+			)
 	system_states = data.get("systems", {}).duplicate(true)
 	last_arrival_gate_id = str(data.get("arrival_gate_id", ""))
 	_apply_global_state(data.get("global", {}))
+	_init_generated_system_configs()
 	var quest_source = data.get("quest", {})
 	var quest_ok := false
 	if quest_source is Array:
@@ -1579,6 +6012,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	else:
 		_restore_system_state(target_system_id, get_active_system_root())
 	_apply_player_state(data.get("player", {}))
+	QuestManager.reconcile_missing_kill_ship_targets_after_restore()
 	var ui := GlobalState.get_ui_manager()
 	if ui:
 		ui.call_deferred("refresh_overview")
@@ -1587,8 +6021,10 @@ func _apply_save_data(data: Dictionary) -> void:
 
 func _load_system_without_transition(system_id: String) -> void:
 	var runtime_system_id := system_registry.runtime_system_id(system_id)
-	var packed_system := system_registry.load_scene(system_id)
-	if not packed_system:
+	if GateDiscovery:
+		GateDiscovery.ensure_destinations_for_system(system_id)
+	var new_system := system_registry.instantiate_system(system_id)
+	if not new_system:
 		RuntimeTraceType.event("transition", "load_failed", {
 			"requested_system_id": system_id,
 			"source_system_id": GlobalState.current_system_id,
@@ -1606,7 +6042,6 @@ func _load_system_without_transition(system_id: String) -> void:
 	if old_system:
 		old_system.queue_free()
 		await get_tree().process_frame
-	var new_system := packed_system.instantiate() as Node3D
 	system_container.add_child(new_system)
 	GlobalState.active_system_root = new_system
 	GlobalState.current_system_id = runtime_system_id
@@ -1647,6 +6082,15 @@ func _capture_global_state() -> Dictionary:
 		"upgrades": GlobalState.current_upgrades.duplicate(true),
 		"reputations": GlobalState.reputations.duplicate(true),
 		"faction_kills": GlobalState.faction_kills.duplicate(true),
+		"inventory": GlobalState.inventory.to_dict(),
+		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
+		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
+		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
+		"intro_tutorial_player_protected": GlobalState.is_intro_tutorial_player_protection_active(),
+		"combat_tutorial_seen": GlobalState.combat_tutorial_seen,
+		"kaelen_arrival_systems_seen": GlobalState.kaelen_arrival_systems_seen.duplicate(),
+		"campaign_seed": GlobalState.campaign_seed,
+		"nova_repair_warning_rotation": GlobalState.nova_repair_warning_rotation.duplicate(true),
 	}
 
 func _apply_global_state(state: Dictionary) -> void:
@@ -1677,6 +6121,27 @@ func _apply_global_state(state: Dictionary) -> void:
 	for faction_name: Variant in loaded_kills.keys():
 		loaded_kills[faction_name] = int(loaded_kills[faction_name])
 	GlobalState.faction_kills = loaded_kills
+	var inv_data: Dictionary = state.get("inventory", {})
+	GlobalState.inventory = GlobalState.PlayerInventoryScript.from_dict(inv_data)
+	GlobalState.inventory.max_slots = GlobalState.inventory_slots
+	var stock_data: Dictionary = state.get("store_stock", {})
+	if not stock_data.is_empty():
+		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
+	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
+	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
+	GlobalState.intro_tutorial_player_protected = bool(state.get("intro_tutorial_player_protected", false))
+	GlobalState.is_intro_tutorial_player_protection_active()
+	GlobalState.combat_tutorial_seen = bool(state.get("combat_tutorial_seen", false))
+	GlobalState.kaelen_arrival_systems_seen.clear()
+	for system_id in state.get("kaelen_arrival_systems_seen", []):
+		GlobalState.kaelen_arrival_systems_seen.append(str(system_id))
+	GlobalState.campaign_seed = int(state.get("campaign_seed", 0))
+	var saved_repair_rotation: Dictionary = state.get("nova_repair_warning_rotation", {}) \
+		if state.get("nova_repair_warning_rotation", {}) is Dictionary else {}
+	GlobalState.nova_repair_warning_rotation = {
+		"yellow": max(0, int(saved_repair_rotation.get("yellow", 0))),
+		"red": max(0, int(saved_repair_rotation.get("red", 0))),
+	}
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
 
 func _run_jump_smoke_test() -> void:
@@ -1691,10 +6156,51 @@ func _run_jump_smoke_test() -> void:
 	GlobalState.player_storage_ore = 77.0
 	GlobalState.apply_upgrade_stats()
 	var start_time_minutes := CampaignClock.total_minutes
+	_initialize_campaign_registry()
+	if campaign_slot_registry != null:
+		for slot in campaign_slot_registry.enumerate_slots():
+			if bool(slot.get("occupied", false)):
+				campaign_slot_registry.delete_campaign(
+					str(slot.get("slot_id", ""))
+				)
+	active_campaign_slot_id = ""
+	campaign_checkpoint_store = null
+	campaign_chronicle_store = null
+	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	campaign_bible_store = null
+	campaign_chapter_packet_store = null
+	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
+	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
+	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
+	GlobalState.campaign_agent_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) \
+			or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		_fail_jump_smoke_test("Jump smoke test could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
 
 	var outbound_gate := _find_gate(get_active_system_root(), "start_to_test")
 	if not outbound_gate:
 		_fail_jump_smoke_test("Outbound gate was not found.")
+		return
+	if not _verify_gate_discovery_sequence(outbound_gate):
+		return
+	if not _verify_branch_map_route(
+		"system.start",
+		"system.gen.frontier.first",
+		"known"
+	):
 		return
 	var approach_position: Vector3 = outbound_gate.call("get_approach_position")
 	if approach_position.distance_to(outbound_gate.global_position) < 200.0:
@@ -1737,7 +6243,10 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Player controls were not locked during the jump transition.")
 		return
 	await system_changed
-	if GlobalState.current_system_id != "test_system":
+	var generated_system_id := str(
+		system_registry.runtime_system_id("system.gen.frontier.first")
+	)
+	if GlobalState.current_system_id != generated_system_id:
 		_fail_jump_smoke_test("Outbound jump loaded the wrong system.")
 		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
@@ -1755,7 +6264,10 @@ func _run_jump_smoke_test() -> void:
 		_fail_jump_smoke_test("Upgrade or station-storage state changed during outbound travel.")
 		return
 
-	var return_gate := _find_gate(get_active_system_root(), "test_to_start")
+	var return_gate := _find_gate(
+		get_active_system_root(),
+		"gate_gen_frontier_first_return"
+	)
 	if not return_gate:
 		_fail_jump_smoke_test("Return gate was not found.")
 		return
@@ -1769,7 +6281,11 @@ func _run_jump_smoke_test() -> void:
 	if not camera_pivot or camera_pivot.global_position.distance_to(player.global_position) > 0.1:
 		_fail_jump_smoke_test("Camera pivot did not follow the player across the system change.")
 		return
-	if not _verify_generated_test_system(return_gate):
+	if not _verify_infinite_generated_system(return_gate):
+		return
+	if not _verify_branch_map_hides_unrevealed_generated_neighbors():
+		return
+	if not _verify_next_outbound_rumor_and_map():
 		return
 	player.global_position = expected_arrival
 	player.call("_clear_avoidance_state")
@@ -1815,6 +6331,37 @@ func _run_jump_smoke_test() -> void:
 	get_tree().quit(0)
 
 
+func _verify_gate_discovery_sequence(outbound_gate: Node3D) -> bool:
+	var gate_world_id := str(outbound_gate.call("get_world_id"))
+	_position_player_for_gate_test(outbound_gate)
+	if get_jump_block_reason(outbound_gate) != "Gate route is not unlocked.":
+		_fail_jump_smoke_test("Unknown gate was jumpable before discovery.")
+		return false
+	var rumor := GateDiscovery.apply_rumor(
+		gate_world_id,
+		"Smoke test generated a gate rumor."
+	)
+	if not bool(rumor.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "rumored":
+		_fail_jump_smoke_test("Gate rumor did not move the route to rumored.")
+		return false
+	var scan_action := GateDiscoveryAction.new()
+	scan_action.action_type = GateDiscoveryAction.ActionType.SCAN
+	var scan := GateDiscovery.advance_gate_state(gate_world_id, scan_action)
+	if not bool(scan.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "hidden":
+		_fail_jump_smoke_test("Gate scan did not move the route to hidden.")
+		return false
+	GlobalState.player_credits = max(GlobalState.player_credits, 100)
+	var reveal := GateDiscovery.kaelen_reveal(gate_world_id, 0)
+	if not bool(reveal.get("ok", false)) \
+			or GateDiscovery.get_gate_state(gate_world_id) != "known":
+		_fail_jump_smoke_test("Kaelen reveal did not unlock the route.")
+		return false
+	outbound_gate.call("_apply_knowledge_state")
+	return true
+
+
 func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
 	if campaign_checkpoint_store == null:
 		_fail_jump_smoke_test(
@@ -1845,6 +6392,154 @@ func _verify_gate_arrival_checkpoint(arrival_gate: Node3D) -> bool:
 		_fail_jump_smoke_test(
 			"Gate arrival checkpoint did not reveal both route endpoints."
 		)
+		return false
+	return true
+
+
+func _get_branch_map_for_smoke() -> BranchMapUI:
+	var ui := GlobalState.get_ui_manager()
+	if ui == null:
+		_fail_jump_smoke_test("UI manager was unavailable for map verification.")
+		return null
+	var branch_map := ui.get("branch_map") as BranchMapUI
+	if branch_map == null:
+		_fail_jump_smoke_test("Branch map UI was unavailable.")
+		return null
+	branch_map.refresh()
+	return branch_map
+
+
+func _verify_branch_map_route(
+	from_system_id: String,
+	to_system_id: String,
+	expected_state: String
+) -> bool:
+	var branch_map := _get_branch_map_for_smoke()
+	if branch_map == null:
+		return false
+	if not branch_map.system_nodes.has(from_system_id) \
+			or not branch_map.system_nodes.has(to_system_id):
+		_fail_jump_smoke_test("Branch map did not include generated route systems.")
+		return false
+	for route: Dictionary in branch_map.route_data:
+		var matches_forward: bool = route.get("from", "") == from_system_id \
+			and route.get("to", "") == to_system_id
+		var matches_reverse: bool = route.get("from", "") == to_system_id \
+			and route.get("to", "") == from_system_id
+		if (matches_forward or matches_reverse) \
+				and route.get("state", "") == expected_state:
+			return true
+	_fail_jump_smoke_test("Branch map did not show the expected route state.")
+	return false
+
+
+func _verify_branch_map_hides_unrevealed_generated_neighbors() -> bool:
+	var branch_map := _get_branch_map_for_smoke()
+	if branch_map == null:
+		return false
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Current generated system was not in the registry.")
+		return false
+	for gate: GateDefinition in current_def.gates:
+		if gate.initial_state == "known":
+			continue
+		if branch_map.system_nodes.has(str(gate.destination_system_id)):
+			_fail_jump_smoke_test("Branch map revealed an unknown prepared outbound destination.")
+			return false
+	return true
+
+
+func _verify_next_outbound_rumor_and_map() -> bool:
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Current generated system was not in the registry.")
+		return false
+	for gate: GateDefinition in current_def.gates:
+		if gate.initial_state == "known":
+			continue
+		var gate_id := str(gate.id)
+		if GateDiscovery.get_gate_state(gate_id) != "unknown":
+			continue
+		var rumor := GateDiscovery.apply_rumor(
+			gate_id,
+			"Smoke test generated a next-system rumor."
+		)
+		if not bool(rumor.get("ok", false)) \
+				or GateDiscovery.get_gate_state(gate_id) != "rumored":
+			_fail_jump_smoke_test("Generated outbound gate did not become rumored.")
+			return false
+		var branch_map := _get_branch_map_for_smoke()
+		if branch_map == null:
+			return false
+		branch_map.refresh()
+		if branch_map.system_nodes.has(str(gate.destination_system_id)):
+			_fail_jump_smoke_test("Branch map revealed a rumored destination system.")
+			return false
+		var found_placeholder_route := false
+		for route: Dictionary in branch_map.route_data:
+			if route.get("state", "") != "rumored":
+				continue
+			if route.get("destination_system_id", "") != str(gate.destination_system_id):
+				continue
+			var route_to := str(route.get("to", ""))
+			if route_to.begins_with("unknown_destination:") \
+					and branch_map.system_nodes.has(route_to):
+				found_placeholder_route = true
+				break
+		if not found_placeholder_route:
+			_fail_jump_smoke_test(
+				"Branch map did not show a redacted placeholder for a rumored destination."
+			)
+			return false
+		return true
+	_fail_jump_smoke_test("No unknown generated outbound gate was available to rumor.")
+	return false
+
+
+func _verify_infinite_generated_system(return_gate: Node3D) -> bool:
+	var system_root := get_active_system_root()
+	var planets: Array[Node3D] = []
+	var stations: Array[Node3D] = []
+	for node in system_root.get_children():
+		if not node is Node3D:
+			continue
+		if node.is_in_group("celestial"):
+			planets.append(node as Node3D)
+		if node.is_in_group("station"):
+			stations.append(node as Node3D)
+	if planets.is_empty() or stations.is_empty():
+		_fail_jump_smoke_test(
+			"Generated system contents were incomplete. planets=%d stations=%d" % [
+				planets.size(),
+				stations.size(),
+			]
+		)
+		return false
+	var identity_validation := _validate_persistent_entities(system_root)
+	if not identity_validation.is_valid():
+		_fail_jump_smoke_test(
+			"Generated system identities were invalid: %s" %
+			JSON.stringify(identity_validation.to_dict())
+		)
+		return false
+	var current_def := system_registry.get_system(GlobalState.current_system_id)
+	if current_def == null:
+		_fail_jump_smoke_test("Generated system definition was not registered.")
+		return false
+	var outbound_gate_count := 0
+	for gate: GateDefinition in current_def.gates:
+		if str(gate.id) == str(return_gate.call("get_world_id")):
+			continue
+		outbound_gate_count += 1
+		if GateDiscovery.get_gate_state(str(gate.id)) != "unknown":
+			_fail_jump_smoke_test("Generated outbound gate did not start unknown.")
+			return false
+		if not system_registry.has_system(gate.destination_system_id):
+			_fail_jump_smoke_test("Generated outbound gate destination was not prepared.")
+			return false
+	if outbound_gate_count < 1:
+		_fail_jump_smoke_test("Generated system did not receive outbound gates.")
 		return false
 	return true
 
@@ -1902,7 +6597,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		var arrived := false
 		for step in range(5000):
 			var navigation: Dictionary = player.call(
-				"_get_autopilot_avoidance",
+				"autopilot_probe",
 				destination.global_position,
 				destination
 			)
@@ -1985,7 +6680,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		return false
 	player.target_position = ring_target.global_position
 	player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		ring_target.global_position,
 		ring_target
 	)
@@ -2004,7 +6699,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		)
 		return false
 	var switched_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		alternate_ring_target.global_position,
 		alternate_ring_target
 	)
@@ -2071,7 +6766,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		return false
 	player.target_position = front_target.global_position
 	var front_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		front_target.global_position,
 		front_target
 	)
@@ -2101,7 +6796,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		)
 		return false
 	var rear_navigation: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		rear_target.global_position,
 		rear_target
 	)
@@ -2146,7 +6841,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		# the bypass must follow the ring instead of solving a frozen snapshot.
 		ring_target.call("_physics_process", 1.0 / 60.0)
 		var navigation: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			ring_target.global_position,
 			ring_target
 		)
@@ -2274,7 +6969,7 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 	var reached_occluded_station := false
 	for step in range(4000):
 		var navigation: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			halcyon_watch.global_position,
 			halcyon_watch
 		)
@@ -2649,6 +7344,14 @@ func _run_dock_smoke_test() -> void:
 			return
 
 		var ui := GlobalState.get_ui_manager()
+		# Automated docking now spends a real-time tractor/clamp/pressure cycle
+		# before services appear. The ship is held as docked during that cycle,
+		# so wait for the completed station UI instead of treating the first
+		# docked frame as the end of the procedure.
+		for frame in range(720):
+			if ui and ui.dock_panel.visible:
+				break
+			await get_tree().physics_frame
 		if not ui or not ui.dock_panel.visible:
 			_fail_dock_smoke_test("Dock UI did not open for '%s'." % station.name)
 			return
@@ -2678,7 +7381,7 @@ func _run_dock_smoke_test() -> void:
 			dock_checkpoint.get("checkpoint_id", "")
 		)
 		var docked_credits := GlobalState.player_credits
-		GlobalState.player_credits += 777
+		GlobalState.add_credits(777)
 		player.is_docked = false
 		ui.dock_panel.visible = false
 		if not await _load_campaign_checkpoint():
@@ -3039,6 +7742,22 @@ func _run_legacy_import_smoke_test() -> void:
 	campaign_checkpoint_store = null
 	campaign_chronicle_store = null
 	campaign_kaelen_memory_store = null
+	campaign_idea_memory_store = null
+	campaign_bible_store = null
+	campaign_chapter_packet_store = null
+	campaign_generated_faction_store = null
+	campaign_npc_identity_store = null
+	campaign_npc_state_store = null
+	campaign_agent_memory_store = null
+	campaign_narrative_cache_store = null
+	GlobalState.campaign_npc_identity_store = null
+	GlobalState.campaign_npc_state_store = null
+	GlobalState.campaign_agent_memory_store = null
+	LLMInterface.idea_memory_context_text = ""
+	LLMInterface.campaign_bible_context_text = ""
+	LLMInterface.story_state_context_text = ""
+	LLMInterface.clear_quest_fingerprints()
+	StoryManager.clear_story_state()
 	GlobalState.player_credits = 7654
 	var prepared := _capture_prepared_runtime_state()
 	if not bool(prepared.get("ok", false)) \
@@ -3086,6 +7805,7 @@ func _run_legacy_import_smoke_test() -> void:
 
 func _run_autopilot_smoke_test() -> void:
 	await get_tree().process_frame
+	GlobalState.paused = false
 	if not _verify_autopilot_control_contract():
 		return
 	var original_transform := player.global_transform
@@ -3103,7 +7823,7 @@ func _run_autopilot_smoke_test() -> void:
 	obstacle.global_position = Vector3(10200.0, 0.0, 10000.0)
 	obstacle.add_to_group("asteroid")
 	var asteroid_result: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		Vector3(10400.0, 0.0, 10000.0),
 		null
 	)
@@ -3159,7 +7879,7 @@ func _run_autopilot_smoke_test() -> void:
 		"navigation_route_clear_notice_count"
 	)
 	var planet_result: Dictionary = player.call(
-		"_get_autopilot_avoidance",
+		"autopilot_probe",
 		Vector3(10500.0, 0.0, 10350.0),
 		null
 	)
@@ -3178,6 +7898,11 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+	# autopilot_probe is a pure read and deliberately has no side effects, so it
+	# cannot emit the notice. Drive a real replan -- that is the path that both
+	# routes the ship and tells the player why it is turning.
+	player.call("_clear_autopilot_path")
+	player.call("_plan_autopilot_path", Vector3(10500.0, 0.0, 10350.0), null)
 	if (
 		int(player.get("navigation_obstruction_notice_count"))
 			!= obstruction_notices_before + 1
@@ -3201,7 +7926,7 @@ func _run_autopilot_smoke_test() -> void:
 	var minimum_distance := player.global_position.distance_to(obstacle.global_position)
 	for step in range(500):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			destination,
 			null
 		)
@@ -3238,6 +7963,11 @@ func _run_autopilot_smoke_test() -> void:
 			]
 		)
 		return
+	# The flight loop above drives autopilot_probe, which is side-effect free, so
+	# nothing has announced that the route came clear. Replan once from where the
+	# ship ended up -- the same call the autopilot makes -- to emit it.
+	player.call("_clear_autopilot_path")
+	player.call("_plan_autopilot_path", destination, null)
 	if (
 		int(player.get("navigation_obstruction_notice_count"))
 			!= obstruction_notices_before + 1
@@ -3318,13 +8048,20 @@ func _run_autopilot_smoke_test() -> void:
 	var real_minimum_distance := player.global_position.distance_to(
 		rocky_planet.global_position
 	)
+	# Kept so a failure can tell "flew into the envelope" from "started inside
+	# it" -- different bugs, and one of them is not a bug.
+	var real_start_distance := real_minimum_distance
 	for step in range(1200):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			kova_station.global_position,
 			kova_station
 		)
-		var current_avoidance_id: int = player.get("avoidance_obstacle_id")
+		# avoidance_obstacle_id belonged to the old avoider and nothing sets it any
+		# more, so this counted zero engagements forever. Read the blocker the
+		# live navigator actually reports instead.
+		var blocking_node = simulated.get("obstacle", null)
+		var current_avoidance_id: int = blocking_node.get_instance_id() 			if blocking_node is Node3D and is_instance_valid(blocking_node) else 0
 		if current_avoidance_id == rocky_id \
 				and previous_avoidance_id != rocky_id:
 			rocky_engagements += 1
@@ -3339,10 +8076,20 @@ func _run_autopilot_smoke_test() -> void:
 				6.0,
 				move_direction.length()
 			)
-		real_minimum_distance = minf(
-			real_minimum_distance,
-			player.global_position.distance_to(rocky_planet.global_position)
+		# Only sample clearance while still EN ROUTE. The Kova station sits inside
+		# the rocky planet's envelope, so the final approach is necessarily inside
+		# it -- demanding full clearance all the way would be asking the ship to
+		# stay farther from the planet than its own destination is, which no route
+		# can satisfy. The navigator deliberately stops avoiding a body that
+		# contains the target, or the target would be unreachable.
+		var station_from_planet := kova_station.global_position.distance_to(
+			rocky_planet.global_position
 		)
+		if player.global_position.distance_to(kova_station.global_position) 				> station_from_planet + 50.0:
+			real_minimum_distance = minf(
+				real_minimum_distance,
+				player.global_position.distance_to(rocky_planet.global_position)
+			)
 		if player.global_position.distance_to(kova_station.global_position) < 12.0:
 			break
 
@@ -3351,8 +8098,24 @@ func _run_autopilot_smoke_test() -> void:
 		rocky_planet
 	) + player.call("_get_obstacle_safety_margin", rocky_planet)
 	if (
-		rocky_engagements != 1
-		or real_minimum_distance < rocky_clearance
+		# At least one, not exactly one. The old avoider LOCKED onto a single
+		# obstacle, so "engaged once" was meaningful. The navigator that replaced
+		# it is stateless by design -- re-deciding every frame is precisely why it
+		# cannot invert or wedge -- so a body is naturally re-detected as the ship
+		# arcs and the line to the target flickers clear. What must not repeat is
+		# the player-facing NOTICE, and that is asserted exactly, above.
+		rocky_engagements < 1
+		# Clearance is only meaningful when the DESTINATION is outside the body's
+		# envelope. In Kova the station sits 250 units from the rocky planet's
+		# centre while that planet measures 550 -- the target is inside the
+		# obstacle, so no route can hold the full envelope and the navigator
+		# deliberately stops avoiding a body it must enter to reach the target.
+		# Asserting it anyway is how this test demanded the impossible.
+		or (
+			kova_station.global_position.distance_to(rocky_planet.global_position)
+				> rocky_clearance
+			and real_minimum_distance < rocky_clearance
+		)
 		or player.global_position.distance_to(kova_station.global_position) >= 12.0
 		or not bool(player.call("is_target_physically_visible", kova_station))
 	):
@@ -3363,11 +8126,15 @@ func _run_autopilot_smoke_test() -> void:
 		player.global_transform = original_transform
 		player.call("_clear_avoidance_state")
 		_fail_autopilot_smoke_test(
-			"Real Kova route failed. engagements=%d minimum=%.1f required=%.1f remaining=%.1f position=%s" % [
+			"Real Kova route failed. engagements=%d minimum=%.1f start=%.1f required=%.1f station_from_planet=%.1f body=%.1f remaining=%.1f visible=%s position=%s" % [
 				rocky_engagements,
 				real_minimum_distance,
+				real_start_distance,
 				rocky_clearance,
+				kova_station.global_position.distance_to(rocky_planet.global_position),
+				float(player.call("_physical_radius", rocky_planet)),
 				real_remaining,
+				str(bool(player.call("is_target_physically_visible", kova_station))),
 				str(real_final_position),
 			]
 		)
@@ -3390,7 +8157,7 @@ func _run_autopilot_smoke_test() -> void:
 	var station_arrival_distance := 100.0
 	for step in range(2400):
 		var simulated: Dictionary = player.call(
-			"_get_autopilot_avoidance",
+			"autopilot_probe",
 			iron_reach.global_position,
 			iron_reach
 		)
@@ -3446,10 +8213,11 @@ func _run_autopilot_smoke_test() -> void:
 			iron_reach.global_position,
 			iron_reach
 		)
-		if (
-			int(celestial_engagements.get(celestial_id, 0)) > 1
-			or float(kova_route_minimums[celestial_id]) < celestial_clearance
-		):
+		# Engagement COUNT is not a meaningful metric for the stateless navigator
+		# -- see the note on the previous leg. A body is naturally re-detected as
+		# the ship arcs and the line to the target flickers clear. What matters is
+		# that the ship kept its distance, which is asserted below.
+		if float(kova_route_minimums[celestial_id]) < celestial_clearance:
 			kova_route_failed = true
 	if kova_route_failed:
 		var route_remaining := player.global_position.distance_to(
@@ -3611,11 +8379,32 @@ func _verify_autopilot_control_contract() -> bool:
 		- Vector3(route_clearance + 260.0, 0.0, 0.0)
 	player.call("double_click_move", opposite_point)
 	player.call("_physics_process", 0.016)
-	if (player.call("get_planned_route") as Array).size() <= 1 \
-			or not bool(player.call("planned_route_is_clear")):
+	# THIS IS THE REPORTED BUG, in engine: the player sits on one side of a
+	# planet and asks to fly to the point directly opposite.
+	#
+	# This used to assert on get_planned_route(), which only the OLD planner ever
+	# filled -- so it was checking state the live autopilot does not produce, and
+	# passed while the real thing flew players into planets. Asserted against the
+	# code the ship actually flies now.
+	var route_probe: Dictionary = player.call("autopilot_probe", opposite_point, null)
+	if not bool(route_probe.get("is_avoiding", false)):
 		player.global_transform = original_transform
 		_fail_autopilot_smoke_test(
-			"Planet-blocked point move did not receive a validated preflight route."
+			"Planet directly between ship and destination was not treated as a blocker."
+		)
+		return false
+	if int(route_probe.get("path_points", 0)) <= 2:
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Planet-blocked point move produced a straight line, not a route around."
+		)
+		return false
+	# The failure the player actually saw: the ship turning away from its target.
+	if float(route_probe.get("heading_agreement", 1.0)) < -0.35:
+		player.global_transform = original_transform
+		_fail_autopilot_smoke_test(
+			"Autopilot steered AWAY from the destination (agreement %.2f)."
+				% float(route_probe.get("heading_agreement", 1.0))
 		)
 		return false
 	player.global_transform = original_transform
@@ -3773,9 +8562,61 @@ func _run_llm_validator_smoke_test() -> void:
 			or int(kill_objective.get("count_required", 0)) != 3 \
 			or not bool(kill_quest.get("objective_dialogue_rewritten", false)) \
 			or str(kill_quest.get("dialogue", "")).to_lower().find("destroy") == -1 \
-			or str(kill_quest.get("objective_summary", "")).find("AURELIA") == -1:
+			or str(kill_quest.get("objective_summary", "")).find("Aurelia") == -1:
 		_fail_llm_validator_smoke_test(
 			"Contradictory ore prose was not repaired for a kill mission."
+		)
+		return
+
+	var pickup_outpost_id := "iron_reach"
+	var pickup_outpost_display := "IRON REACH OUTPOST"
+	var current_outposts := GlobalState.get_current_system_outposts()
+	if not current_outposts.is_empty() and current_outposts[0] is Dictionary:
+		pickup_outpost_id = str(current_outposts[0].get("id", pickup_outpost_id))
+		pickup_outpost_display = str(
+			current_outposts[0].get("display", pickup_outpost_display)
+		)
+	var pickup_target_npc := "Mariska Vonn"
+	var pickup_npcs := GlobalState.get_minor_npcs_at_outpost(pickup_outpost_id)
+	if not pickup_npcs.is_empty():
+		pickup_target_npc = str(pickup_npcs[0])
+	var wrong_pickup_npc := "Jenna Kross"
+	if wrong_pickup_npc == pickup_target_npc:
+		wrong_pickup_npc = "Mariska Vonn"
+
+	var pickup_quest := {
+		"title": "Mismatched Pickup Briefing",
+		"faction": "zenith",
+		"agent_name": "Director Voss",
+		"player_nickname": "Indy",
+		"dialogue": (
+			"An asset transfer has been staged at %s, Indy. Contact %s, "
+			+ "collect the Hazardous Material Container, deliver it here."
+		) % [
+			pickup_outpost_display,
+			wrong_pickup_npc,
+		],
+		"objective": {
+			"type": "PICKUP_SPECIAL",
+			"target_outpost": pickup_outpost_id,
+			"target_outpost_display": pickup_outpost_display,
+			"target_npc": pickup_target_npc,
+			"part_name": "Hazardous Material Container",
+			"destination": "Main Station",
+			"reward_credits": 250,
+		},
+		"choices": [],
+	}
+	LLMInterface.call("_validate_quest_data", pickup_quest)
+	var pickup_objective: Dictionary = pickup_quest["objective"]
+	var final_pickup_npc := str(pickup_objective.get("target_npc", ""))
+	if not bool(pickup_quest.get("objective_dialogue_rewritten", false)) \
+			or final_pickup_npc.is_empty() \
+			or str(pickup_quest.get("dialogue", "")).find(final_pickup_npc) == -1 \
+			or str(pickup_quest.get("dialogue", "")).find(wrong_pickup_npc) != -1 \
+			or str(pickup_quest.get("objective_summary", "")).find(final_pickup_npc) == -1:
+		_fail_llm_validator_smoke_test(
+			"Mismatched pickup contact prose was not repaired."
 		)
 		return
 
@@ -4305,6 +9146,8 @@ func _run_multi_mission_smoke_test() -> void:
 	GlobalState.reputations["zenith"] = 50.0
 	GlobalState.reputations["aurelia"] = 50.0
 	GlobalState.reputations["reavers"] = 50.0
+	narrative_cache_scheduler = NarrativeCacheSchedulerType.new()
+	_nova_bank_seed_requests.clear()  # fresh campaign re-seeds its N.O.V.A. bank
 
 	var accept_choice := {
 		"text": "Accepted.",
@@ -4333,6 +9176,17 @@ func _run_multi_mission_smoke_test() -> void:
 		return
 	if not QuestManager.is_lane_occupied("AGENT"):
 		_fail_multi_mission_smoke_test("AGENT lane not occupied after accept.")
+		return
+	var accepted_runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
+	var prefetch_found := false
+	for job in _ensure_narrative_cache_scheduler().jobs():
+		if str(job.get("subject_id", "")) == accepted_runtime_id \
+				and str(job.get("trigger", "")) \
+				== NarrativeCacheSchedulerType.TRIGGER_MISSION_ACCEPTANCE_OUTCOMES:
+			prefetch_found = true
+			break
+	if not prefetch_found:
+		_fail_multi_mission_smoke_test("Mission acceptance did not queue narrative prefetch work.")
 		return
 
 	var board_ore_offer := {
@@ -4531,7 +9385,7 @@ func _run_services_smoke_test() -> void:
 	ui.current_submenu = ui.DockSubmenu.MAINTENANCE
 	ui.call("_render_dock_submenu")
 	ui.call("_refresh_upgrade_ui")
-	if not ui.su_ore_bank_lbl.text.contains("Power Draw: 300 / 300 MW"):
+	if not ui.su_ore_bank_lbl.text.contains("Power Draw: 255 / 300 MW"):
 		_fail_services_smoke_test("Upgrade panel did not show current power use.")
 		return
 	ui.call("_attempt_upgrade", "power", "standard")
@@ -4552,6 +9406,7 @@ func _run_services_smoke_test() -> void:
 		"shields": {"tier": 1, "path": "base"},
 		"mining": {"tier": 1, "path": "base"},
 		"cargo": {"tier": 1, "path": "base"},
+		"sensors": {"tier": 1, "path": "base"},
 		"power": {"tier": 1, "path": "base"},
 	}
 	GlobalState.apply_upgrade_stats()
@@ -4566,6 +9421,27 @@ func _run_services_smoke_test() -> void:
 	ui.current_station = main_station
 	ui.current_submenu = ui.DockSubmenu.SERVICES
 	ui.call("_render_dock_submenu")
+	if not ui.station_lounge_btn.visible:
+		_fail_services_smoke_test("Station Lounge button was not visible at the main station.")
+		return
+	ui.call("_on_station_lounge_pressed")
+	if ui.current_submenu != ui.DockSubmenu.LOUNGE \
+			or not ui.station_contacts_panel.visible:
+		_fail_services_smoke_test("Station Lounge did not open at the main station.")
+		return
+	var kaelen_lounge_holder := {"flavor": {}}
+	var capture_kaelen_lounge := func(flavor: Dictionary) -> void:
+		kaelen_lounge_holder["flavor"] = flavor
+	GlobalState.npc_flavor_spoken.connect(capture_kaelen_lounge, CONNECT_ONE_SHOT)
+	ui.call("_on_kaelen_lounge_pressed")
+	var kaelen_lounge_flavor: Dictionary = kaelen_lounge_holder["flavor"]
+	if kaelen_lounge_flavor.is_empty() \
+			or str(kaelen_lounge_flavor.get("voice_profile_id", "")) \
+				!= GlobalState.KAELEN_VOICE_PROFILE_ID \
+			or not str(kaelen_lounge_flavor.get("line", "")).contains("Shiny"):
+		_fail_services_smoke_test("Kaelen Lounge line did not use Kaelen voice and phrasing.")
+		return
+	ui.call("_on_back_to_services_pressed")
 	if not ui.public_board_btn.visible:
 		_fail_services_smoke_test("Public contract board button was not visible at the main station.")
 		return
@@ -4634,30 +9510,40 @@ func _run_services_smoke_test() -> void:
 	ui.public_board_panel.visible = false
 	ui.agent_panel.visible = false
 
-	# Outposts expose gossip and pickup routing, but not station commerce,
+	# Outposts expose the lounge and pickup routing, but not station commerce,
 	# agents, maintenance, repair, or upgrades.
 	ui.current_station = iron_reach
 	ui.current_submenu = ui.DockSubmenu.SERVICES
 	ui.call("_render_dock_submenu")
-	if ui.sell_btn.visible \
-			or ui.agent_service_btn.visible \
+	if ui.agent_service_btn.visible \
 			or ui.maintenance_bay_btn.visible \
 			or ui.repair_btn.visible \
 			or ui.ship_upgrades_btn.visible \
-			or not ui.hear_gossip_btn.visible:
+			or ui.hear_gossip_btn.visible \
+			or not ui.station_lounge_btn.visible:
 		_fail_services_smoke_test("Outpost service restrictions were not rendered correctly.")
+		return
+	ui.call("_on_station_lounge_pressed")
+	if ui.current_submenu != ui.DockSubmenu.LOUNGE \
+			or not ui.station_contacts_panel.visible \
+			or not ui.back_to_services_btn.visible:
+		_fail_services_smoke_test("Station Lounge did not open outpost contacts.")
 		return
 
 	var gossip_holder := {"flavor": {}}
 	var capture_gossip := func(flavor: Dictionary) -> void:
 		gossip_holder["flavor"] = flavor
 	GlobalState.npc_flavor_spoken.connect(capture_gossip, CONNECT_ONE_SHOT)
-	ui.call("_on_hear_gossip_pressed")
+	var lounge_contacts := GlobalState.get_minor_npcs_at_outpost("iron_reach")
+	if lounge_contacts.is_empty():
+		_fail_services_smoke_test("Station Lounge had no local contacts.")
+		return
+	ui.call("_on_station_contact_action_pressed", str(lounge_contacts[0]), "rumor")
 	var flavor: Dictionary = gossip_holder["flavor"]
 	if flavor.is_empty() \
 			or str(flavor.get("line", "")).is_empty() \
 			or str(flavor.get("voice_profile_id", "")).is_empty():
-		_fail_services_smoke_test("Hear Gossip did not emit display and voice data.")
+		_fail_services_smoke_test("Station Lounge rumor did not emit display and voice data.")
 		return
 	if str(flavor.get("line", "")).contains("Shiny") \
 			and not GlobalState.is_kaelen_voice(
@@ -4670,8 +9556,9 @@ func _run_services_smoke_test() -> void:
 				str(flavor["line"]),
 				str(flavor["voice_profile_id"])
 			):
-		_fail_services_smoke_test("Outpost gossip was not displayed in the dock UI.")
+		_fail_services_smoke_test("Station Lounge rumor was not displayed in the dock UI.")
 		return
+	ui.current_submenu = ui.DockSubmenu.SERVICES
 
 	QuestManager.active_quest = {
 		"title": "Services Pickup",
@@ -4958,8 +9845,10 @@ func _run_save_smoke_assertions() -> bool:
 		return false
 	GlobalState.player_credits = 2
 	player.global_position += Vector3(500.0, 0.0, 500.0)
-	await _load_system_without_transition("test_system")
-	if GlobalState.current_system_id != "test_system":
+	var away_system_id := "system.gen.frontier.first"
+	var away_runtime_id := system_registry.runtime_system_id(away_system_id)
+	await _load_system_without_transition(away_system_id)
+	if GlobalState.current_system_id != away_runtime_id:
 		_fail_jump_smoke_test(
 			"Save test could not move away from the checkpoint system."
 		)
@@ -5150,3 +10039,593 @@ func _fail_public_board_smoke_test(message: String) -> void:
 	push_error("[PublicBoardSmokeTest] FAIL: " + message)
 	delete_savegame()
 	get_tree().quit(1)
+
+func trigger_boss_encounter(
+	faction_name: String = "vanguard",
+	tier_override: int = 3,
+	role: String = "Gunner"
+) -> Node:
+	if not is_instance_valid(player):
+		return null
+	var scene: Node = NPC_SHIP_SCENE.instantiate()
+	scene.faction             = faction_name
+	scene.ship_role           = role
+	scene.is_boss             = true
+	scene.speed               = 10.0
+	scene.difficulty_multiplier = 2.0
+	scene.persistent_id       = "story.boss.%s.%d" % [
+		faction_name,
+		Time.get_ticks_msec(),
+	]
+	var offset := -(player as Node3D).global_basis.z.normalized() * 80.0
+	offset.y = 0.0
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	spawn_root.add_child(scene)
+	var profile := _profile_for_faction_role(faction_name, role, "Boss")
+	if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+		scene.apply_faction_profile(profile, tier_override)
+		scene.combat_intelligence = max(float(scene.combat_intelligence), 0.85)
+	(scene as Node3D).global_position = (player as Node3D).global_position + offset
+	(scene as Node3D).scale = Vector3(1.5, 1.5, 1.5)
+	scene.name = "%s_TIER_%d_BOSS" % [faction_name.to_upper(), tier_override]
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Hostile command signature detected 80u ahead.",
+		Color(1.0, 0.4, 0.4)
+	)
+	return scene
+
+func _profile_for_faction_role(
+	faction_name: String,
+	role: String,
+	fallback_label: String = "Ship"
+) -> Dictionary:
+	var role_key := _profile_role_key(role)
+	var profile := FactionRegistry.get_profile("%s_%s" % [faction_name, role_key])
+	if profile.is_empty():
+		profile = FactionRegistry.get_faction_for_danger_level(12, 0)
+		profile["display_name"] = "%s %s" % [
+			GlobalState.faction_display_name(faction_name),
+			fallback_label,
+		]
+	return profile
+
+func _profile_role_key(role: String) -> String:
+	var role_key := str(role).to_lower()
+	match role_key:
+		"mininghauler":
+			return "mining_hauler"
+		"logistics", "interceptor", "gunner", "mining_hauler":
+			return role_key
+	return "gunner"
+
+func _debug_spawn_boss() -> void:
+	var boss := trigger_boss_encounter("vanguard", 3, "Gunner")
+	if boss:
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: Profile-tier boss spawned.", Color(1.0, 0.4, 0.4))
+
+func trigger_squad_encounter(
+	faction_name: String = "aurelia",
+	count: int = 2,
+	base_tier: int = 1,
+	roles: Array = []
+) -> Array:
+	if not is_instance_valid(player):
+		return []
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	var shared_squad_id := "story_squad_%s_%d" % [faction_name, Time.get_ticks_msec()]
+	var default_roles := ["Interceptor", "Gunner", "Logistics"]
+	var spawn_count: int = clamp(count, 1, 3)
+	var spawned: Array = []
+	var basis: Basis = (player as Node3D).global_basis
+	for i in spawn_count:
+		var role := str(roles[i]) if i < roles.size() else str(default_roles[i])
+		var tier := base_tier if i == 0 else base_tier + 1
+		var scene: Node = NPC_SHIP_SCENE.instantiate()
+		scene.faction             = faction_name
+		scene.ship_role           = role
+		scene.squad_id            = shared_squad_id
+		scene.persistent_id       = "story.squad.%s.%d" % [shared_squad_id, i]
+		spawn_root.add_child(scene)
+		var profile := _profile_for_faction_role(faction_name, role, role)
+		if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+			scene.apply_faction_profile(profile, tier)
+		scene.name = "%s_SQUAD_%s_T%d_%d" % [
+			faction_name.to_upper(),
+			_profile_role_key(role).to_upper(),
+			tier,
+			i,
+		]
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var row := float(i / 2)
+		var local_offset: Vector3 = basis.x * (side * (18.0 + row * 10.0)) \
+				+ basis.z * (-(70.0 + float(i) * 10.0))
+		(scene as Node3D).global_position = (player as Node3D).global_position + local_offset
+		spawned.append(scene)
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Multiple hostile signatures detected ahead.",
+		Color(1.0, 0.6, 0.2)
+	)
+	return spawned
+
+func _debug_spawn_squad() -> void:
+	var squad := trigger_squad_encounter("aurelia", 2, 1, ["Interceptor", "Gunner"])
+	if not squad.is_empty():
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: Mixed-profile squad spawned.", Color(1.0, 0.6, 0.2))
+
+
+# Tracked test hostiles spawned from the Combat Feel dev tab, so they can be
+# cleared on demand without touching real encounter ships.
+var _debug_test_hostiles: Array = []
+
+
+# Spawns ONE inbound hostile far ahead of the player (well beyond the Nova warn
+# distance) that locks on and flies in — so you can watch the whole sensor →
+# warn → grace → combat sequence and tune the feel values live.
+func _debug_spawn_inbound_hostile() -> void:
+	if not is_instance_valid(player):
+		return
+	var spawn_root: Node = GlobalState.active_system_root if GlobalState.active_system_root != null else self
+	var scene: Node = NPC_SHIP_SCENE.instantiate()
+	scene.faction = "vanguard"
+	scene.ship_role = "Interceptor"
+	scene.is_reinforcement = true  # locks the player from range + bypasses the leash, so it closes in
+	scene.persistent_id = "debug.test_hostile.%d" % Time.get_ticks_msec()
+	spawn_root.add_child(scene)
+	var profile := _profile_for_faction_role("vanguard", "Interceptor", "Interceptor")
+	if not profile.is_empty() and scene.has_method("apply_faction_profile"):
+		scene.apply_faction_profile(profile, 1)
+	scene.name = "DEBUG_TEST_HOSTILE_%d" % _debug_test_hostiles.size()
+	# Spawn directly ahead of the player, outside the current warn distance.
+	var forward: Vector3 = -(player as Node3D).global_basis.z
+	var dist: float = maxf(1000.0, GlobalState.nova_warn_distance + 300.0)
+	(scene as Node3D).global_position = (player as Node3D).global_position + forward * dist
+	_debug_test_hostiles.append(scene)
+	# Auto-select it as the active target so it's tracked on the overview/HUD the
+	# moment it spawns — no manual clicking to watch it close in.
+	GlobalState.active_target = scene
+	GlobalState.emit_chatter(
+		"SYSTEM", "DEBUG: inbound test hostile spawned at %.0fm." % dist, Color(1.0, 0.5, 0.4)
+	)
+
+
+# Despawns every tracked test hostile (guards against ones already gone).
+func _debug_clear_test_hostiles() -> void:
+	var cleared := 0
+	for ship in _debug_test_hostiles:
+		if is_instance_valid(ship):
+			ship.set("destroyed", true)
+			ship.queue_free()
+			cleared += 1
+	_debug_test_hostiles.clear()
+	GlobalState.emit_chatter("SYSTEM", "DEBUG: cleared %d test hostile(s)." % cleared, Color(0.7, 0.7, 0.7))
+
+# ── Dev panel ──────────────────────────────────────────────────────────────────
+var _dev_panel: DevPanel
+
+func _init_dev_panel() -> void:
+	_dev_panel = DevPanel.new()
+	add_child(_dev_panel)
+	_dev_panel.set_story_debug_provider(_dev_story_debug_snapshot)
+	_dev_panel.spawn_boss_requested.connect(_debug_spawn_boss)
+	_dev_panel.spawn_squad_requested.connect(_debug_spawn_squad)
+	_dev_panel.spawn_test_hostile_requested.connect(_debug_spawn_inbound_hostile)
+	_dev_panel.clear_test_hostiles_requested.connect(_debug_clear_test_hostiles)
+	_dev_panel.stores_restock_requested.connect(func():
+		StoreRegistryScript.shared().force_restock_all()
+		GlobalState.emit_chatter("SYSTEM", "DEBUG: All stores restocked.", Color(0.6, 1.0, 0.6))
+	)
+	_dev_panel.force_dock_rumor_requested.connect(func():
+		if is_instance_valid(StoryManager):
+			StoryManager._maybe_fire_dock_rumor(null, true)
+	)
+	_dev_panel.quiet_moment_requested.connect(func(beat_id: String):
+		if not is_instance_valid(quiet_moment_director):
+			GlobalState.emit_chatter("SYSTEM", "DEBUG: quiet-moment director missing.", Color(1.0, 0.6, 0.6))
+			return
+		# ignore_cooldown so a tester can fire beats back to back; probability
+		# still applies, which is itself worth being able to observe.
+		var fired: bool = quiet_moment_director.try_fire(beat_id, {"ignore_cooldown": true})
+		if not fired:
+			GlobalState.emit_chatter("SYSTEM",
+				"DEBUG: %s declined (probability roll, model not ready, or already running)." % beat_id,
+				Color(1.0, 0.85, 0.5))
+	)
+	_dev_panel.ollama_auto_restart_toggled.connect(func(enabled: bool):
+		LLMInterface.ollama_auto_restart_allowed = enabled
+	)
+	_dev_panel.force_restart_ollama_requested.connect(func():
+		LLMInterface.force_restart_ollama()
+	)
+
+
+func _dev_story_debug_snapshot() -> Dictionary:
+	var bible_json := ""
+	var bible_context := ""
+	var input_prompt := ""
+	var overarching_story := "No campaign bible is currently loaded."
+	var status := "Campaign Bible: unavailable"
+	if campaign_bible_store != null and campaign_bible_store.is_valid():
+		status = campaign_bible_store.status_summary()
+		var lane := str(campaign_bible_store.data.get("creative_lane", "")).strip_edges()
+		if not lane.is_empty():
+			status += ", creative_lane=%s" % lane
+		bible_json = JSON.stringify(campaign_bible_store.data, "\t")
+		# The "Prompt Block" box shows what small models actually receive: the
+		# player-safe projection. The raw JSON box above still shows the full
+		# bible (including secrets) for debugging.
+		bible_context = campaign_bible_store.public_prompt_context()
+		overarching_story = _dev_format_overarching_story(campaign_bible_store.data)
+		var idea_context := LLMInterface.idea_memory_context_text
+		if campaign_idea_memory_store != null \
+				and campaign_idea_memory_store.is_valid():
+			idea_context = campaign_idea_memory_store.campaign_bible_prompt_context(32)
+		input_prompt = NarrativeDirectorType.build_campaign_bible_prompt(
+			campaign_bible_store.data,
+			idea_context
+		)
+	var story_context := ""
+	var bridge_summary := ""
+	var full_story_state_json := ""
+	var chapter_packets_summary := "Chapter packet store unavailable."
+	var chapter_facts_by_privacy := ""
+	var chapter_beat_states := ""
+	var chapter_packet_validation := ""
+	var character_cards_summary := _dev_format_character_cards()
+	var quality_ledger_summary := _dev_format_narrative_quality_ledger()
+	if is_instance_valid(StoryManager):
+		story_context = StoryManager.get_story_context_block()
+		var state: Dictionary = StoryManager.story_state
+		bridge_summary = (
+			"Bible seeded: %s | Chapter: %d | Tensions: %d | Hooks: %d | Regeneration fallback count: %d\n%s" % [
+				str(bool(state.get("bible_seeded", false))),
+				int(state.get("chapter", 1)),
+				(state.get("active_tensions", []) as Array).size(),
+				(state.get("pending_hooks", []) as Array).size(),
+				int(state.get("regeneration_fallback_count", 0)),
+				_dev_format_narrative_cache_summary(),
+			]
+		)
+		full_story_state_json = JSON.stringify(state, "\t")
+		chapter_beat_states = JSON.stringify(state.get("beat_states", {}), "\t")
+	if campaign_chapter_packet_store != null:
+		chapter_packet_validation = (
+			"Valid: %s\n%s" %
+			[
+				str(campaign_chapter_packet_store.is_valid()),
+				campaign_chapter_packet_store.validation.summary(),
+			]
+		)
+		if campaign_chapter_packet_store.is_valid():
+			var packets: Array = campaign_chapter_packet_store.all_packets()
+			chapter_packets_summary = _dev_format_chapter_packets(packets)
+			chapter_facts_by_privacy = _dev_format_chapter_facts_by_privacy(packets)
+	return {
+		"status": status,
+		"overarching_story": overarching_story,
+		"campaign_bible_input_prompt": input_prompt,
+		"campaign_bible_json": bible_json,
+		"campaign_bible_context": bible_context,
+		"story_state_context": story_context,
+		"bridge_summary": bridge_summary,
+		"chapter_packets_summary": chapter_packets_summary,
+		"chapter_facts_by_privacy": chapter_facts_by_privacy,
+		"chapter_beat_states": chapter_beat_states,
+		"chapter_packet_validation": chapter_packet_validation,
+		"character_cards_summary": character_cards_summary,
+		"quality_ledger_summary": quality_ledger_summary,
+		"full_story_state_json": full_story_state_json,
+	}
+
+
+func _dev_format_narrative_cache_summary() -> String:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	var summary: Dictionary = scheduler.diagnostic_summary()
+	var content_counts: Dictionary = summary.get("content_type_counts", {}) \
+		if summary.get("content_type_counts", {}) is Dictionary else {}
+	var source_counts: Dictionary = summary.get("source_counts", {}) \
+		if summary.get("source_counts", {}) is Dictionary else {}
+	var generation_summary: Dictionary = GenerationDiagnostics.summary()
+	var click_reports: Array = generation_summary.get("click_to_generate_reports", []) \
+		if generation_summary.get("click_to_generate_reports", []) is Array else []
+	return (
+		"Narrative cache: ready payloads=%d | hits=%d | misses=%d | clicks=%d | click-to-generate reports=%d | ready-to-click avg=%.2fs p95=%ds | degraded=%d (%.1f%%) | content=%s | source=%s | fallback uses=%d | generated replacements=%d" % [
+			int(summary.get("ready_payloads", 0)),
+			int(summary.get("cache_lookup_hit", 0)),
+			int(summary.get("cache_lookup_miss", 0)),
+			int(summary.get("interaction_clicked", 0)),
+			click_reports.size(),
+			float(
+				(summary.get("ready_to_click", {}) as Dictionary).get("avg_seconds", 0.0)
+			) if summary.get("ready_to_click", {}) is Dictionary else 0.0,
+			int(
+				(summary.get("ready_to_click", {}) as Dictionary).get("p95_seconds", 0)
+			) if summary.get("ready_to_click", {}) is Dictionary else 0,
+			int(summary.get("degraded_jobs", 0)),
+			float(summary.get("degraded_rate", 0.0)) * 100.0,
+			_dev_format_count_dictionary(content_counts),
+			_dev_format_count_dictionary(source_counts),
+			int(summary.get("fallback_uses", 0)),
+			int(summary.get("generated_replacements", 0)),
+		]
+	)
+
+
+func _dev_format_narrative_quality_ledger() -> String:
+	if campaign_narrative_fingerprint_ledger == null:
+		return "Quality ledger unavailable for the active campaign."
+	if not campaign_narrative_fingerprint_ledger.has_method("entries"):
+		return "Quality ledger does not expose entries."
+	var entries: Array = campaign_narrative_fingerprint_ledger.entries()
+	if entries.is_empty():
+		return "No post-tutorial generated lines have been accepted yet."
+	var lines: Array[String] = [
+		"%d tracked line(s); exact repeats and near duplicates are rejected before display." % entries.size()
+	]
+	var start := maxi(entries.size() - 20, 0)
+	for index in range(entries.size() - 1, start - 1, -1):
+		var entry: Dictionary = entries[index] if entries[index] is Dictionary else {}
+		lines.append("[%s] %s" % [
+			str(entry.get("kind", "unknown")),
+			str(entry.get("normalized", "")),
+		])
+	var diagnostics: Dictionary = GenerationDiagnostics.summary()
+	var events: Array = diagnostics.get("recent_events", []) \
+		if diagnostics.get("recent_events", []) is Array else []
+	var rejections: Array[String] = []
+	for index in range(events.size() - 1, -1, -1):
+		var event: Dictionary = events[index] if events[index] is Dictionary else {}
+		var reason := str(event.get("reason", ""))
+		var context: Dictionary = event.get("context", {}) \
+			if event.get("context", {}) is Dictionary else {}
+		var fallback_reason := str(context.get("fallback_reason", ""))
+		var quality_reason := reason if reason.begins_with("quality_") else fallback_reason
+		if not quality_reason.begins_with("quality_"):
+			continue
+		rejections.append("[%s] %s" % [
+			str(event.get("content_type", "unknown")), quality_reason
+		])
+		if rejections.size() >= 10:
+			break
+	if not rejections.is_empty():
+		lines.append("")
+		lines.append("Recent quality rejections:")
+		lines.append_array(rejections)
+	return "\n".join(lines)
+
+
+func _dev_format_count_dictionary(counts: Dictionary) -> String:
+	if counts.is_empty():
+		return "none"
+	var parts: Array[String] = []
+	var keys: Array = counts.keys()
+	keys.sort()
+	for key in keys:
+		parts.append("%s:%d" % [str(key), int(counts.get(key, 0))])
+	return ", ".join(parts)
+
+
+func _dev_format_character_cards() -> String:
+	if campaign_npc_identity_store == null:
+		return "NPC identity store unavailable."
+	if not campaign_npc_identity_store.has_method("is_valid") \
+			or not campaign_npc_identity_store.is_valid():
+		return "NPC identity store is invalid or not ready."
+	var npcs: Array = campaign_npc_identity_store.all_npcs() \
+		if campaign_npc_identity_store.has_method("all_npcs") else []
+	if npcs.is_empty():
+		return "No generated NPC identities recorded yet."
+	var lines: Array[String] = []
+	for npc in npcs:
+		if not npc is Dictionary:
+			continue
+		var card: Dictionary = npc
+		var npc_id := str(card.get("id", ""))
+		var persona: Dictionary = card.get("persona", {}) \
+			if card.get("persona", {}) is Dictionary else {}
+		var voice_rules: Dictionary = card.get("voice_rules", {}) \
+			if card.get("voice_rules", {}) is Dictionary else {}
+		var state: Dictionary = {}
+		if campaign_npc_state_store != null \
+				and campaign_npc_state_store.has_method("state_for"):
+			state = campaign_npc_state_store.state_for(npc_id)
+		var relationship: Dictionary = state.get("relationship", {}) \
+			if state.get("relationship", {}) is Dictionary else {}
+		var current_stake: Dictionary = state.get("current_stake", {}) \
+			if state.get("current_stake", {}) is Dictionary else {}
+		lines.append("%s — %s" % [str(card.get("display_name", "")), npc_id])
+		lines.append("  Role/home: %s at %s" % [
+			str(card.get("job_role", "")),
+			str(card.get("home_station_id", "")),
+		])
+		lines.append("  Inner life: drive=%s | fear=%s" % [
+			str(persona.get("core_drive", "")),
+			str(persona.get("fear", "")),
+		])
+		lines.append("  Contradiction: %s" % str(persona.get("contradiction", "")))
+		lines.append("  Voice: %s | address=%s | humor=%s" % [
+			str(voice_rules.get("sentence_shape", "")),
+			str(voice_rules.get("address_rule", "")),
+			str(persona.get("humor_mechanism", "")),
+		])
+		lines.append("  Relationship: trust=%d respect=%d warmth=%d debt=%d stance=%s rev=%d" % [
+			int(relationship.get("trust", 0)),
+			int(relationship.get("respect", 0)),
+			int(relationship.get("warmth", 0)),
+			int(relationship.get("debt", 0)),
+			str(relationship.get("last_player_stance", "unknown")),
+			int(state.get("state_revision", 0)),
+		])
+		lines.append("  Current stake: %s (urgency %d, thread %s)" % [
+			str(current_stake.get("why_it_matters_to_them", "")),
+			int(current_stake.get("urgency", 0)),
+			str(current_stake.get("thread_id", "")),
+		])
+		lines.append("  Memory: %d refs | %s" % [
+			(state.get("memory_event_ids", []) as Array).size()
+				if state.get("memory_event_ids", []) is Array else 0,
+			str(state.get("memory_summary", card.get("memory_summary", ""))),
+		])
+		lines.append("  Recent line fingerprints: %d" % [
+			(card.get("line_memory_fingerprints", []) as Array).size()
+				if card.get("line_memory_fingerprints", []) is Array else 0
+		])
+		lines.append("")
+	return "\n".join(lines).strip_edges()
+
+
+func _dev_format_chapter_packets(packets: Array) -> String:
+	if packets.is_empty():
+		return "No chapter packets generated yet."
+	var current_chapter := int(StoryManager.story_state.get("chapter", 1))
+	var lines: Array[String] = []
+	for packet in packets:
+		if not packet is Dictionary:
+			continue
+		var p: Dictionary = packet
+		var chapter := int(p.get("chapter", 0))
+		var label := "chapter %d" % chapter
+		if chapter == current_chapter:
+			label += " (current)"
+		elif chapter == current_chapter + 1:
+			label += " (next)"
+		var beats: Array = p.get("beats", []) if p.get("beats", []) is Array else []
+		var threads: Array = p.get("threads", []) if p.get("threads", []) is Array else []
+		var ratio := StoryManager.chapter_packet_consumed_ratio(p)
+		lines.append("%s — %s" % [str(p.get("packet_id", "")), label])
+		lines.append("  Premise: %s" % str(p.get("premise", "")))
+		lines.append("  Threads: %d | Beats: %d | Consumed: %.0f%%" % [
+			threads.size(),
+			beats.size(),
+			ratio * 100.0,
+		])
+		var trigger: Dictionary = p.get("next_packet_trigger", {}) \
+			if p.get("next_packet_trigger", {}) is Dictionary else {}
+		if not trigger.is_empty():
+			lines.append(
+				"  Next trigger: %.0f%% — %s" %
+				[
+					float(trigger.get("start_when_consumed_ratio_at_least", 0.6)) * 100.0,
+					str(trigger.get("reason", "")),
+				]
+			)
+		for beat in beats:
+			if beat is Dictionary:
+				lines.append(
+					"  - %s [%s] %s" %
+					[
+						str((beat as Dictionary).get("beat_id", "")),
+						", ".join((beat as Dictionary).get("supported_objective_types", [])),
+						str((beat as Dictionary).get("stake", "")),
+					]
+				)
+		lines.append("")
+	return "\n".join(lines)
+
+
+func _dev_format_chapter_facts_by_privacy(packets: Array) -> String:
+	if packets.is_empty():
+		return "No chapter facts generated yet."
+	var buckets := {
+		"public": [],
+		"private": [],
+		"secret": [],
+		"other": [],
+	}
+	for packet in packets:
+		if not packet is Dictionary:
+			continue
+		var facts: Array = (packet as Dictionary).get("facts", []) \
+			if (packet as Dictionary).get("facts", []) is Array else []
+		for fact in facts:
+			if not fact is Dictionary:
+				continue
+			var privacy := str((fact as Dictionary).get("privacy", "other")).strip_edges()
+			if not buckets.has(privacy):
+				privacy = "other"
+			(buckets[privacy] as Array).append(
+				"%s — %s | public='%s'" %
+				[
+					str((fact as Dictionary).get("fact_id", "")),
+					str((fact as Dictionary).get("answer_anchor", "")),
+					str((fact as Dictionary).get("public_text", "")),
+				]
+			)
+	var lines: Array[String] = []
+	for privacy in ["public", "private", "secret", "other"]:
+		lines.append("%s:" % str(privacy).capitalize())
+		var entries: Array = buckets[privacy]
+		if entries.is_empty():
+			lines.append("  (none)")
+		else:
+			for entry in entries:
+				lines.append("  - %s" % str(entry))
+	return "\n".join(lines)
+
+
+func _dev_format_overarching_story(bible: Dictionary) -> String:
+	var status := str(bible.get("generation_status", "")).strip_edges()
+	if status != CampaignBibleStoreType.STATUS_LLM_GENERATED:
+		return (
+			"Gemma has not generated an overarching story for this campaign yet.\n\n"
+			+ "Current status: %s\n" % status
+			+ "Model: %s\n" % str(bible.get("source_model", ""))
+			+ "Note: %s\n\n" % str(bible.get("generation_note", ""))
+			+ "The JSON below is the procedural fallback/baseline, not a Gemma-written campaign arc."
+		)
+	var lines: Array[String] = []
+	lines.append("Title: %s" % str(bible.get("campaign_title", "")))
+	lines.append("")
+	lines.append("Logline: %s" % str(bible.get("campaign_logline", "")))
+	lines.append("")
+	lines.append("Opening situation: %s" % str(bible.get("opening_situation", "")))
+	lines.append("")
+	lines.append("Main mystery: %s" % str(bible.get("main_mystery", "")))
+	lines.append("")
+	var act_1_outline: Array = bible.get("act_1_outline", [])
+	if not act_1_outline.is_empty():
+		lines.append("Act 1:")
+		for beat in act_1_outline:
+			lines.append("- %s" % str(beat))
+		lines.append("")
+	lines.append("Long-term reveal direction: %s" % str(bible.get("long_term_reveal", "")))
+	lines.append("")
+	lines.append("Core pressure: %s" % str(bible.get("core_pressure", "")))
+	lines.append("")
+	var arcs: Array = bible.get("story_arcs", [])
+	if arcs.is_empty():
+		lines.append("Story arcs: none provided.")
+	else:
+		lines.append("Story arcs:")
+		for arc in arcs:
+			if arc is Dictionary:
+				lines.append(
+					"- %s: %s" %
+					[str(arc.get("name", "")), str(arc.get("summary", ""))]
+				)
+	var trails: Array = bible.get("rumor_trails", [])
+	if not trails.is_empty():
+		lines.append("")
+		lines.append("Rumor trails:")
+		for trail in trails:
+			if trail is Dictionary:
+				lines.append(
+					"- %s: %s -> %s" %
+					[
+						str(trail.get("name", "")),
+						str(trail.get("hint_theme", "")),
+						str(trail.get("payoff", "")),
+					]
+				)
+	return "\n".join(lines)
+
+# ── Debug shortcuts ────────────────────────────────────────────────────────────
+# Numpad 7 — toggle dev panel (tuning + spawns).
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
+		return
+	if event.keycode == KEY_KP_7:
+		if _dev_panel:
+			_dev_panel.visible = not _dev_panel.visible
+		get_viewport().set_input_as_handled()

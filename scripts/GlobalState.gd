@@ -1,5 +1,10 @@
 extends Node
 
+const IllegalMiningEnforcementType := preload(
+	"res://scripts/systems/IllegalMiningEnforcement.gd"
+)
+const ILLEGAL_MINING_WITNESS_RADIUS := 220.0
+
 # ── Ship Upgrade Caps ─────────────────────────────────────────────────────────
 # Per-ship-class hard caps for every upgradeable stat. The current values are
 # the starter-ship (INDYMiner) caps. If you add a heavier hauler ship class
@@ -10,6 +15,8 @@ extends Node
 # and disable buttons when maxed.
 const SHIP_BASE_STATS = {
 	"cargo_max_m3":       100.0,
+	"inventory_slots":    8,
+	"ore_bank_max":       1000.0,
 	"mining_laser_yield": 1.0,
 	"mining_cooldown":    1.0,
 	"weapon_damage":      20.0,
@@ -25,41 +32,41 @@ const SHIP_BASE_STATS = {
 }
 const UPGRADE_TREE = {
 	"weapons": {
-		"base_power": 50,
+		"base_power": 55,
 		"branches": {
 			"rapid": {
-				2: { "cost_cr": 200, "cost_ore": 50, "power": 60, "stats": {"weapon_cooldown": 0.6, "weapon_damage": 20} },
-				3: { "cost_cr": 400, "cost_ore": 100, "power": 70, "stats": {"weapon_cooldown": 0.45, "weapon_damage": 20} },
-				4: { "cost_cr": 800, "cost_ore": 200, "power": 80, "stats": {"weapon_cooldown": 0.35, "weapon_damage": 20} },
-				5: { "cost_cr": 1600, "cost_ore": 400, "power": 100, "stats": {"weapon_cooldown": 0.25, "weapon_damage": 20, "has_max_rapid_weapon": true} }
+				2: { "cost_cr": 200, "cost_ore": 50, "power": 65, "stats": {"weapon_cooldown": 0.6, "weapon_damage": 20} },
+				3: { "cost_cr": 400, "cost_ore": 100, "power": 75, "stats": {"weapon_cooldown": 0.45, "weapon_damage": 20} },
+				4: { "cost_cr": 800, "cost_ore": 200, "power": 90, "stats": {"weapon_cooldown": 0.35, "weapon_damage": 20} },
+				5: { "cost_cr": 1600, "cost_ore": 400, "power": 110, "stats": {"weapon_cooldown": 0.25, "weapon_damage": 20, "has_max_rapid_weapon": true} }
 			},
 			"heavy": {
-				2: { "cost_cr": 200, "cost_ore": 50, "power": 60, "stats": {"weapon_cooldown": 0.8, "weapon_damage": 30} },
-				3: { "cost_cr": 400, "cost_ore": 100, "power": 70, "stats": {"weapon_cooldown": 0.9, "weapon_damage": 45} },
-				4: { "cost_cr": 800, "cost_ore": 200, "power": 80, "stats": {"weapon_cooldown": 1.0, "weapon_damage": 65} },
-				5: { "cost_cr": 1600, "cost_ore": 400, "power": 100, "stats": {"weapon_cooldown": 1.1, "weapon_damage": 90, "has_max_heavy_weapon": true} }
+				2: { "cost_cr": 200, "cost_ore": 50, "power": 75, "stats": {"weapon_cooldown": 0.8, "weapon_damage": 30} },
+				3: { "cost_cr": 400, "cost_ore": 100, "power": 90, "stats": {"weapon_cooldown": 0.9, "weapon_damage": 45} },
+				4: { "cost_cr": 800, "cost_ore": 200, "power": 110, "stats": {"weapon_cooldown": 1.0, "weapon_damage": 65} },
+				5: { "cost_cr": 1600, "cost_ore": 400, "power": 135, "stats": {"weapon_cooldown": 1.1, "weapon_damage": 90, "has_max_heavy_weapon": true} }
 			}
 		}
 	},
 	"engine": {
-		"base_power": 100,
+		"base_power": 85,
 		"branches": {
 			"speed": {
-				2: { "cost_cr": 250, "cost_ore": 0, "power": 110, "stats": {"engine_speed_mult": 1.2, "acceleration_mult": 1.2} },
-				3: { "cost_cr": 500, "cost_ore": 50, "power": 120, "stats": {"engine_speed_mult": 1.4, "acceleration_mult": 1.4} },
-				4: { "cost_cr": 1000, "cost_ore": 100, "power": 140, "stats": {"engine_speed_mult": 1.6, "acceleration_mult": 1.6} },
-				5: { "cost_cr": 2000, "cost_ore": 200, "power": 160, "stats": {"engine_speed_mult": 1.9, "acceleration_mult": 1.9, "has_max_speed_engine": true} }
+				2: { "cost_cr": 250, "cost_ore": 0, "power": 105, "stats": {"engine_speed_mult": 1.2, "acceleration_mult": 1.2} },
+				3: { "cost_cr": 500, "cost_ore": 50, "power": 125, "stats": {"engine_speed_mult": 1.4, "acceleration_mult": 1.4} },
+				4: { "cost_cr": 1000, "cost_ore": 100, "power": 150, "stats": {"engine_speed_mult": 1.6, "acceleration_mult": 1.6} },
+				5: { "cost_cr": 2000, "cost_ore": 200, "power": 180, "stats": {"engine_speed_mult": 1.9, "acceleration_mult": 1.9, "has_max_speed_engine": true} }
 			},
 			"hauler": {
-				2: { "cost_cr": 250, "cost_ore": 100, "power": 110, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.0, "acceleration_mult": 1.0} },
-				3: { "cost_cr": 500, "cost_ore": 200, "power": 120, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.05, "acceleration_mult": 1.05} },
-				4: { "cost_cr": 1000, "cost_ore": 400, "power": 140, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.1, "acceleration_mult": 1.1} },
-				5: { "cost_cr": 2000, "cost_ore": 800, "power": 160, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.15, "acceleration_mult": 1.15, "has_max_hauler_engine": true, "hull_armor": -10} }
+				2: { "cost_cr": 250, "cost_ore": 100, "power": 100, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.0, "acceleration_mult": 1.0} },
+				3: { "cost_cr": 500, "cost_ore": 200, "power": 115, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.05, "acceleration_mult": 1.05} },
+				4: { "cost_cr": 1000, "cost_ore": 400, "power": 135, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.1, "acceleration_mult": 1.1} },
+				5: { "cost_cr": 2000, "cost_ore": 800, "power": 155, "stats": {"ignore_cargo_mass": true, "engine_speed_mult": 1.15, "acceleration_mult": 1.15, "has_max_hauler_engine": true, "hull_armor": -10} }
 			}
 		}
 	},
 	"shields": {
-		"base_power": 50,
+		"base_power": 15,
 		"branches": {
 			"bulwark": {
 				2: { "cost_cr": 300, "cost_ore": 100, "power": 60, "stats": {"shield_capacity": 50, "shield_regen_rate": 2.0, "shield_regen_delay": 15.0} },
@@ -76,30 +83,52 @@ const UPGRADE_TREE = {
 		}
 	},
 	"mining": {
-		"base_power": 100,
+		"base_power": 80,
 		"branches": {
 			"rapid": {
-				2: { "cost_cr": 150, "cost_ore": 50, "power": 120, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 1.0} },
+				2: { "cost_cr": 150, "cost_ore": 50, "power": 115, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 1.0} },
 				3: { "cost_cr": 300, "cost_ore": 100, "power": 140, "stats": {"mining_cooldown": 0.6, "mining_laser_yield": 1.0} },
-				4: { "cost_cr": 600, "cost_ore": 200, "power": 160, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 1.0} },
-				5: { "cost_cr": 1200, "cost_ore": 400, "power": 180, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 1.0, "has_max_rapid_mining": true} }
+				4: { "cost_cr": 600, "cost_ore": 200, "power": 165, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 1.0} },
+				5: { "cost_cr": 1200, "cost_ore": 400, "power": 195, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 1.0, "has_max_rapid_mining": true} }
 			},
 			"deep": {
-				2: { "cost_cr": 150, "cost_ore": 100, "power": 120, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 2.0} },
+				2: { "cost_cr": 150, "cost_ore": 100, "power": 115, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 2.0} },
 				3: { "cost_cr": 300, "cost_ore": 200, "power": 140, "stats": {"mining_cooldown": 1.5, "mining_laser_yield": 4.0} },
-				4: { "cost_cr": 600, "cost_ore": 400, "power": 160, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 8.0} },
-				5: { "cost_cr": 1200, "cost_ore": 800, "power": 180, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 15.0, "has_max_deep_mining": true} }
+				4: { "cost_cr": 600, "cost_ore": 400, "power": 165, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 8.0} },
+				5: { "cost_cr": 1200, "cost_ore": 800, "power": 195, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 15.0, "has_max_deep_mining": true} }
 			}
 		}
 	},
 	"cargo": {
-		"base_power": 0,
+		"base_power": 5,
 		"branches": {
 			"standard": {
-				2: { "cost_cr": 100, "cost_ore": 100, "power": 0, "stats": {"cargo_max_m3": 150.0} },
-				3: { "cost_cr": 200, "cost_ore": 200, "power": 0, "stats": {"cargo_max_m3": 250.0} },
-				4: { "cost_cr": 400, "cost_ore": 400, "power": 0, "stats": {"cargo_max_m3": 400.0} },
-				5: { "cost_cr": 800, "cost_ore": 800, "power": 0, "stats": {"cargo_max_m3": 600.0} }
+				2: { "cost_cr": 100, "cost_ore": 100, "power": 10, "stats": {"cargo_max_m3": 150.0, "ore_bank_max": 3000.0} },
+				3: { "cost_cr": 200, "cost_ore": 200, "power": 15, "stats": {"cargo_max_m3": 250.0, "ore_bank_max": 8000.0} },
+				4: { "cost_cr": 400, "cost_ore": 400, "power": 20, "stats": {"cargo_max_m3": 400.0, "ore_bank_max": 20000.0} },
+				5: { "cost_cr": 800, "cost_ore": 800, "power": 25, "stats": {"cargo_max_m3": 600.0, "ore_bank_max": 50000.0} }
+			}
+		}
+	},
+	"storage": {
+		"base_power": 5,
+		"branches": {
+			"standard": {
+				2: { "cost_cr": 200, "cost_ore": 100, "power": 8, "stats": {"inventory_slots": 10} },
+				3: { "cost_cr": 600, "cost_ore": 300, "power": 12, "stats": {"inventory_slots": 12} },
+				4: { "cost_cr": 1800, "cost_ore": 900, "power": 16, "stats": {"inventory_slots": 14} },
+				5: { "cost_cr": 5400, "cost_ore": 2700, "power": 20, "stats": {"inventory_slots": 16} },
+				6: { "cost_cr": 16000, "cost_ore": 8000, "power": 25, "stats": {"inventory_slots": 18} },
+				7: { "cost_cr": 48000, "cost_ore": 24000, "power": 30, "stats": {"inventory_slots": 20} }
+			}
+		}
+	},
+	"sensors": {
+		"base_power": 10,
+		"branches": {
+			"standard": {
+				2: { "cost_cr": 300, "cost_ore": 80, "power": 20, "stats": {"sensor_tier": 1} },
+				3: { "cost_cr": 900, "cost_ore": 240, "power": 35, "stats": {"sensor_tier": 2} }
 			}
 		}
 	},
@@ -146,7 +175,7 @@ const MINOR_FACTIONS = {
 # 0.85-1.10) for unique TTS voices — see skills/skill_using_tts_in_spacegame.md.
 const MINOR_NPCS = {
 	"Cassen Vane":   { "image": "res://assets/MinorNPC01.png", "position": "top_left",     "vibe": "grizzled mercenary, scars and salt-and-pepper hair", "outpost": "kova",       "voice_id": "am_onyx",   "voice_speed": 0.92, "flavor_color": Color(1.0, 0.6, 0.55), "flavor_lines": [
-		"Kova's got no rules, Shiny. Just people with guns and people without.",
+		"Kova's got no rules for you. Just people with guns and people without.",
 		"Vanguard patrols hit Sector 7 hard last week. Someone's paying them to.",
 		"Aurelia tried to recruit me once. I declined. Politely. With a knife.",
 	], "pickup_handoff_fallback_lines": [
@@ -157,12 +186,12 @@ const MINOR_NPCS = {
 		"There you go. The mechanic's credit cleared this morning, so I expect you to do the same.",
 	] },
 	"Mariska Vonn":  { "image": "res://assets/MinorNPC01.png", "position": "top_right",    "vibe": "young blonde corporate fixer, white-and-gold outfit", "outpost": "iron_reach", "voice_id": "af_nicole", "voice_speed": 1.05, "flavor_color": Color(0.55, 0.85, 1.0), "flavor_lines": [
-		"Zenith's been running the numbers on you, Shiny. Try not to disappoint the spreadsheet.",
+		"Zenith's been running the numbers on you. Try not to disappoint the spreadsheet.",
 		"Iron Reach's market is... complicated. Keep your credits close and your questions closer.",
 		"Aurelia's been sniffing our freight lanes again. Don't ask what they're moving.",
 	], "pickup_handoff_fallback_lines": [
 		"There's the part. Receipts on delivery, no exceptions. Tell Jenna I said hi.",
-		"All yours, Indy. Don't make me file a claim when it shows up scratched.",
+		"All yours. Don't make me file a claim when it shows up scratched.",
 		"Part's in your bay. Contract's signed, courier's gone, my liability ends here.",
 		"There. Iron Reach is nothing if not punctual. Try to return the favor.",
 		"Invoice, manifest, release code. All yours. Next time, route the requisition through procurement.",
@@ -244,10 +273,23 @@ const SAFE_ZONES = [
 const SAFE_ZONE_REP_THRESHOLD = -40.0
 
 static func is_minor_faction(faction_name: String) -> bool:
+	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
+		return true
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	return definition != null and definition.classification == "minor"
 
 static func minor_faction_data(faction_name: String) -> Dictionary:
+	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
+		var generated := _generated_faction_record(faction_name)
+		var color := _generated_faction_color(generated, faction_name)
+		var ship_style: Dictionary = generated.get("ship_style", {})
+		return {
+			"color": color,
+			"projectile": color.lightened(0.15),
+			"model": str(ship_style.get("model", "faction1")),
+			"tint": color.darkened(0.18),
+			"ship_style": ship_style.duplicate(true),
+		}
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	if definition == null or definition.classification != "minor":
 		return {}
@@ -324,18 +366,68 @@ static func faction_info(faction_id: String) -> Dictionary:
 			"descriptor": definition.descriptor,
 			"abbrev": definition.abbreviation,
 		}
+	var generated := _generated_faction_record(faction_id)
+	if not generated.is_empty():
+		return {
+			"name": str(generated.get("display_name", faction_id.capitalize())),
+			"descriptor": str(generated.get("descriptor", "Generated Frontier Faction")),
+			"abbrev": str(generated.get("abbreviation", faction_id.substr(0, 3).to_upper())),
+		}
 	return {"name": faction_id.capitalize(), "descriptor": "Unknown", "abbrev": faction_id.substr(0, 3).to_upper()}
+
+static func faction_display_name(faction_id: String, adjective: bool = false) -> String:
+	var clean := faction_id.strip_edges()
+	if clean.is_empty():
+		return "Unknown"
+	var definition := GameContentRegistry.shared().faction(clean)
+	if definition:
+		var display := str(definition.display_name)
+		if adjective and clean in ["reavers", "faction.reavers", "wraiths", "faction.wraiths"]:
+			return display.trim_suffix("s")
+		return display
+	var generated := _generated_faction_record(clean)
+	if not generated.is_empty():
+		return str(generated.get("display_name", _title_faction_key(clean)))
+	return _title_faction_key(clean)
+
+
+static func _title_faction_key(faction_id: String) -> String:
+	var clean := faction_id.strip_edges().to_lower()
+	if clean.begins_with("faction.generated."):
+		clean = clean.trim_prefix("faction.generated.")
+	elif clean.begins_with("faction."):
+		clean = clean.trim_prefix("faction.")
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var parts := clean.replace(".", "_").replace("-", "_").split("_", false)
+	var titled: Array[String] = []
+	for part in parts:
+		if part.is_valid_int():
+			continue
+		if part.length() <= 1:
+			continue
+		titled.append(part.substr(0, 1).to_upper() + part.substr(1))
+	if titled.is_empty():
+		return "Local"
+	return " ".join(titled)
 
 # Returns the AtlasTexture for a minor NPC's portrait, sliced from its 2x2
 # source image at the cell position stored in MINOR_NPCS.
 # Returns null if the name isn't recognized or the image fails to load.
 static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture:
+	if generated_outpost_npc_data.has(npc_name):
+		var generated_data: Dictionary = generated_outpost_npc_data[npc_name]
+		return GameContentRegistry.shared().portrait_texture(
+			generated_data.get("portrait_id", "")
+		)
 	var definition := GameContentRegistry.shared().npc_by_name(npc_name)
 	if definition == null:
 		return null
 	return GameContentRegistry.shared().portrait_texture(definition.portrait_id)
 
 static func get_minor_npc_data(npc_name: String) -> Dictionary:
+	if generated_outpost_npc_data.has(npc_name):
+		return generated_outpost_npc_data[npc_name].duplicate(true)
 	if not MINOR_NPCS.has(npc_name):
 		return {}
 	var data: Dictionary = MINOR_NPCS[npc_name].duplicate(true)
@@ -349,19 +441,637 @@ static func get_minor_npc_data(npc_name: String) -> Dictionary:
 # Returns the list of minor NPC names stationed at a given outpost id
 # (e.g. "iron_reach", "kova"). Returns an empty array if no NPCs are
 # assigned. The mechanic (Jenna Kross) is excluded — she's at Grease Monkeys.
+static var generated_outpost_npcs: Dictionary = {}
+static var generated_outpost_npc_data: Dictionary = {}
+static var npc_line_memory: Dictionary = {}
+static var campaign_npc_identity_store = null
+static var campaign_npc_state_store = null
+static var campaign_agent_memory_store = null
+
+static func _canonical_minor_outpost_id(outpost_id: String) -> String:
+	match outpost_id:
+		"station.start.iron_reach":
+			return "iron_reach"
+		"station.start.kova":
+			return "kova"
+		_:
+			return outpost_id
+
+const GENERATED_CONTACT_FIRST_NAMES: Array[String] = [
+	"Rook",
+	"Vale",
+	"Mara",
+	"Sable",
+	"Juno",
+	"Nyx",
+	"Orin",
+	"Vexa",
+	"Tamsin",
+	"Corin",
+	"Ivara",
+	"Ren",
+]
+const GENERATED_CONTACT_LAST_NAMES: Array[String] = [
+	"Kade",
+	"Sol",
+	"Venn",
+	"Dray",
+	"Quill",
+	"Marl",
+	"Rusk",
+	"Thane",
+	"Voss",
+	"Keir",
+	"Rook",
+	"Calder",
+]
+const GENERATED_CONTACT_PORTRAITS: Array[String] = [
+	"portrait.minor_npc_01.cassen_vane",
+	"portrait.minor_npc_01.mariska_vonn",
+	"portrait.minor_npc_01.korvin_shaw",
+	"portrait.minor_npc_01.hana_quill",
+	"portrait.minor_npc_02.oleg_stroud",
+	"portrait.minor_npc_02.dasha_invar",
+	"portrait.minor_npc_02.alaric_venn",
+]
+const GENERATED_CONTACT_VOICES: Array[String] = [
+	"voice.cassen_vane.v1",
+	"voice.mariska_vonn.v1",
+	"voice.korvin_shaw.v1",
+	"voice.hana_quill.v1",
+	"voice.oleg_stroud.v1",
+	"voice.dasha_invar.v1",
+	"voice.alaric_venn.v1",
+]
+const GENERATED_CONTACT_LINES: Array[String] = [
+	"Local board's thin today, but the trouble is fresh.",
+	"New system, old math: fuel, favors, and someone else's mess.",
+	"You need a contact out here, you talk to whoever is still breathing.",
+	"The gate crews keep secrets. The station crews sell them by the cup.",
+	"Don't trust clean paperwork past the frontier gate.",
+]
+const GENERATED_MECHANIC_LINES: Array[String] = [
+	"Your ship is talking in repair bills. I speak that dialect.",
+	"Frontier maintenance rule: if it is still smoking, it is still negotiable.",
+	"Bring me dents, leaks, and bad decisions. I invoice all three.",
+	"I can fix honest damage. Political damage costs extra.",
+]
+const GENERATED_CONTACT_FACTION_LINES := {
+	"reavers": [
+		"Reaver work is simple: take the job, take the risk, take payment first.",
+		"Keep your beacon cold out there. Reaver crews respect quiet engines.",
+		"If you heard screaming on comms, that was negotiation.",
+	],
+	"obsidian": [
+		"Obsidian ledgers remember every debt, even the ones written in vacuum.",
+		"The station looks neutral. The accounts under it aren't.",
+		"If an Obsidian broker smiles, count your credits twice.",
+	],
+	"dustborn": [
+		"Dustborn routes aren't pretty, but they still pay when the clean lanes fail.",
+		"Out here, every filter, seal, and water tank has a story.",
+		"Corporate charts call this empty space. Dustborn crews call it home.",
+	],
+	"wraiths": [
+		"Wraiths don't vanish. They just make sure you're looking the wrong way.",
+		"If the scope shows nothing, assume the Wraiths got there first.",
+		"Some jobs need a signature. Wraith jobs need a rumor.",
+	],
+	"ironclad": [
+		"Ironclad convoys move slow because they know they can survive the argument.",
+		"Steel, discipline, and a paid invoice. That's the Ironclad way.",
+		"People mock the armor until the first volley hits.",
+	],
+}
+const GENERATED_CONTACT_FACTION_HANDOFF_LINES := {
+	"reavers": [
+		"Cargo's yours. Reaver rule: lose it and the debt follows you.",
+		"Loaded hot and clean. Don't fly it like a tourist.",
+	],
+	"obsidian": [
+		"Transfer logged. Obsidian receipts have long memories.",
+		"The part is aboard. The fee cleared before you docked.",
+	],
+	"dustborn": [
+		"Packed it myself. Dustborn seals hold better than station promises.",
+		"Part's in your bay. Keep it out of grit and corporate hands.",
+	],
+	"wraiths": [
+		"Package is aboard. If anyone asks, it never existed.",
+		"Clean handoff. Wraith clean, meaning nobody saw enough to matter.",
+	],
+	"ironclad": [
+		"Manifest signed, crate secured. Ironclad doesn't do loose ends.",
+		"Part's locked down. Bring it back in one piece or bring the reason.",
+	],
+}
+
+## Voice of the station's own mechanic, for anything the STATION says to the
+## player -- dock clearance most of all. A station talking in a generic voice is
+## a vending machine; a station talking in the voice of the person who works on
+## your hull is a place. Returns "" when the station has no mechanic on file, so
+## the caller can pick its own fallback.
+static func get_station_mechanic_voice(outpost_id: String) -> String:
+	for npc_name in get_minor_npcs_at_outpost(outpost_id):
+		var data: Dictionary = generated_outpost_npc_data.get(npc_name, {})
+		if str(data.get("role", "")) == "Station mechanic":
+			return str(data.get("voice_profile_id", ""))
+	return ""
+
+
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
+	if generated_outpost_npcs.has(outpost_id):
+		return generated_outpost_npcs[outpost_id].duplicate()
+	var canonical_id := _canonical_minor_outpost_id(outpost_id)
+	if generated_outpost_npcs.has(canonical_id):
+		return generated_outpost_npcs[canonical_id].duplicate()
 	var result: Array = []
 	for npc_name in MINOR_NPCS:
-		if MINOR_NPCS[npc_name].get("outpost", "") == outpost_id:
+		if MINOR_NPCS[npc_name].get("outpost", "") == canonical_id:
 			result.append(npc_name)
 	return result
+
+static func assign_generated_outpost_npcs(
+	world_id: String,
+	seed_value: int,
+	faction_weights: Dictionary = {}
+) -> Array:
+	if generated_outpost_npcs.has(world_id):
+		return generated_outpost_npcs[world_id].duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var count := 2 + (1 if rng.randf() < 0.4 else 0)
+	var picked: Array = []
+	for index in range(count):
+		var faction_name := _pick_generated_contact_faction(faction_weights, rng)
+		var npc_name := _generated_contact_name(world_id, rng, index, faction_name)
+		picked.append(npc_name)
+		var npc_data := _generated_contact_data(
+			world_id,
+			npc_name,
+			rng,
+			index,
+			faction_name
+		)
+		generated_outpost_npc_data[npc_name] = _persist_generated_contact_identity(
+			npc_name,
+			npc_data
+		)
+	generated_outpost_npcs[world_id] = picked
+	return picked.duplicate()
+
+static func assign_generated_station_npcs(
+	world_id: String,
+	seed_value: int,
+	faction_weights: Dictionary = {}
+) -> Array:
+	if generated_outpost_npcs.has(world_id):
+		return generated_outpost_npcs[world_id].duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var picked: Array = []
+	var faction_names := _generated_station_contact_faction_keys(faction_weights)
+	for faction_name in faction_names:
+		var npc_name := _generated_contact_name(
+			world_id,
+			rng,
+			picked.size(),
+			faction_name
+		)
+		picked.append(npc_name)
+		var npc_data := _generated_contact_data(
+			world_id,
+			npc_name,
+			rng,
+			picked.size(),
+			faction_name,
+			"Faction contact"
+		)
+		generated_outpost_npc_data[npc_name] = _persist_generated_contact_identity(
+			npc_name,
+			npc_data
+		)
+	var mechanic_name := _generated_contact_name(
+		world_id,
+		rng,
+		picked.size(),
+		"",
+		"Mechanic"
+	)
+	picked.append(mechanic_name)
+	var mechanic_data := _generated_contact_data(
+		world_id,
+		mechanic_name,
+		rng,
+		picked.size(),
+		"",
+		"Station mechanic"
+	)
+	generated_outpost_npc_data[mechanic_name] = _persist_generated_contact_identity(
+		mechanic_name,
+		mechanic_data
+	)
+	generated_outpost_npcs[world_id] = picked
+	return picked.duplicate()
+
+static func _generated_contact_name(
+	world_id: String,
+	rng: RandomNumberGenerator,
+	index: int,
+	faction_name: String = "",
+	role_prefix: String = ""
+) -> String:
+	var first := GENERATED_CONTACT_FIRST_NAMES[
+		rng.randi() % GENERATED_CONTACT_FIRST_NAMES.size()
+	]
+	var last := GENERATED_CONTACT_LAST_NAMES[
+		rng.randi() % GENERATED_CONTACT_LAST_NAMES.size()
+	]
+	var faction_display := ""
+	if not faction_name.is_empty():
+		faction_display = str(faction_info(faction_name).get("name", faction_name.capitalize()))
+	var name := "%s %s" % [first, last]
+	if not faction_display.is_empty():
+		name = "%s %s" % [faction_display, name]
+	elif not role_prefix.is_empty():
+		name = "%s %s" % [role_prefix, name]
+	if generated_outpost_npc_data.has(name):
+		name = "%s %s" % [name, world_id.sha256_text().substr(index * 2, 2).to_upper()]
+	return name
+
+static func _generated_contact_data(
+	world_id: String,
+	npc_name: String,
+	rng: RandomNumberGenerator,
+	index: int,
+	faction_name: String = "",
+	role: String = "Local contact"
+) -> Dictionary:
+	var presentation_index := (index + int(rng.randi())) % GENERATED_CONTACT_PORTRAITS.size()
+	var portrait_id := GENERATED_CONTACT_PORTRAITS[presentation_index]
+	var voice_id := GENERATED_CONTACT_VOICES[presentation_index]
+	var contact_lines := GENERATED_CONTACT_LINES.duplicate()
+	if GENERATED_CONTACT_FACTION_LINES.has(faction_name):
+		contact_lines.append_array(GENERATED_CONTACT_FACTION_LINES[faction_name])
+	if role == "Station mechanic":
+		contact_lines = GENERATED_MECHANIC_LINES.duplicate()
+	var handoff_lines: Array = [
+		"Part's in your bay. Around here, that counts as a clean handoff.",
+		"You got what you came for. Don't make the route back interesting.",
+		"Loaded and logged. Tell the mechanic this one was local trouble, not mine.",
+		"There. Frontier parts, frontier warranty: none.",
+	]
+	if GENERATED_CONTACT_FACTION_HANDOFF_LINES.has(faction_name):
+		handoff_lines.append_array(GENERATED_CONTACT_FACTION_HANDOFF_LINES[faction_name])
+	var faction_color := Color.WHITE
+	if not faction_name.is_empty():
+		var fdata := minor_faction_data(faction_name)
+		faction_color = fdata.get("color", faction_color)
+	var hue := rng.randf()
+	return {
+		"outpost": world_id,
+		"display_name": npc_name,
+		"role": role,
+		"faction": faction_name,
+		"faction_id": _contact_faction_id(faction_name),
+		"portrait_id": portrait_id,
+		"voice_profile_id": voice_id,
+		"personality_tags": _generated_contact_personality_tags(role, faction_name),
+		"humor_style": _generated_contact_humor_style(role, faction_name),
+		"relationship_state": "neutral",
+		"memory_summary": "%s works from %s as a %s." % [
+			npc_name,
+			world_id,
+			role.to_lower(),
+		],
+		"line_memory_fingerprints": [],
+		"lifecycle": {
+			"available": true,
+			"relocated": false,
+			"captured": false,
+			"dead": false,
+			"protected": false,
+		},
+		"flavor_color": faction_color if not faction_name.is_empty() else Color.from_hsv(hue, 0.45, 1.0),
+		"flavor_lines": contact_lines,
+		"pickup_handoff_fallback_lines": handoff_lines,
+	}
+
+static func _persist_generated_contact_identity(
+	npc_name: String,
+	npc_data: Dictionary
+) -> Dictionary:
+	var enriched := npc_data.duplicate(true)
+	enriched["display_name"] = npc_name
+	if campaign_npc_identity_store == null:
+		return enriched
+	if not campaign_npc_identity_store.has_method("ensure_npc_record"):
+		return enriched
+	var identity_source := {
+		"source_key": "%s|%s|%s|%s" % [
+			str(npc_data.get("outpost", "")),
+			npc_name,
+			str(npc_data.get("role", "")),
+			str(npc_data.get("faction_id", "")),
+		],
+		"display_name": npc_name,
+		"portrait_id": str(npc_data.get("portrait_id", "")),
+		"voice_profile_id": str(npc_data.get("voice_profile_id", "")),
+		"faction_id": str(npc_data.get("faction_id", "")),
+		"faction_key": str(npc_data.get("faction", "")),
+		"job_role": str(npc_data.get("role", "Local contact")),
+		"home_system_id": _system_id_from_station_id(str(npc_data.get("outpost", ""))),
+		"home_station_id": str(npc_data.get("outpost", "")),
+		"personality_tags": npc_data.get("personality_tags", []),
+		"humor_style": str(npc_data.get("humor_style", "")),
+		"relationship_state": str(npc_data.get("relationship_state", "neutral")),
+		"memory_summary": str(npc_data.get("memory_summary", "")),
+		"line_memory_fingerprints": npc_data.get("line_memory_fingerprints", []),
+		"lifecycle": npc_data.get("lifecycle", {}),
+	}
+	var ensured: Dictionary = campaign_npc_identity_store.ensure_npc_record(identity_source)
+	if not bool(ensured.get("ok", false)):
+		push_warning(
+			"[GlobalState] Generated NPC identity was not persisted: %s" %
+				str(ensured.get("error", "unknown error"))
+		)
+		return enriched
+	var record: Dictionary = ensured.get("npc", {})
+	enriched["npc_id"] = str(record.get("id", ""))
+	enriched["identity_record"] = record
+	return enriched
+
+static func _system_id_from_station_id(station_id: String) -> String:
+	var marker := ".station."
+	var station_index := station_id.find(marker)
+	if station_index > 0:
+		return station_id.substr(0, station_index)
+	if station_id.begins_with("station."):
+		var parts := station_id.split(".")
+		if parts.size() >= 3:
+			return "%s.%s" % [parts[0], parts[1]]
+	return ""
+
+static func _generated_contact_personality_tags(
+	role: String,
+	faction_name: String
+) -> Array:
+	var tags: Array = ["frontier", role.to_lower().replace(" ", "_")]
+	if not faction_name.is_empty():
+		tags.append(faction_name)
+	if role == "Station mechanic":
+		tags.append("practical")
+	else:
+		tags.append("deal_minded")
+	return tags
+
+static func _generated_contact_humor_style(role: String, faction_name: String) -> String:
+	if role == "Station mechanic":
+		return "dry repair-bay sarcasm"
+	if faction_name.is_empty():
+		return "deadpan frontier gossip"
+	var generated := _generated_faction_record(faction_name)
+	if not generated.is_empty():
+		return str(generated.get("humor_style", "dry faction wit"))
+	return "dry faction wit"
+
+static func _pick_generated_contact_faction(
+	faction_weights: Dictionary,
+	rng: RandomNumberGenerator
+) -> String:
+	var weighted_factions := _generated_contact_faction_keys(faction_weights)
+	if weighted_factions.is_empty():
+		return ""
+	var total := 0.0
+	for faction_name in weighted_factions:
+		total += maxf(0.0, float(faction_weights.get(faction_name, 0.0)))
+	if total <= 0.0:
+		return str(weighted_factions[rng.randi() % weighted_factions.size()])
+	var roll := rng.randf() * total
+	var cumulative := 0.0
+	for faction_name in weighted_factions:
+		cumulative += maxf(0.0, float(faction_weights.get(faction_name, 0.0)))
+		if roll <= cumulative:
+			return str(faction_name)
+	return str(weighted_factions.back())
+
+static func _generated_contact_faction_keys(faction_weights: Dictionary) -> Array:
+	var result: Array = []
+	for faction_name in faction_weights.keys():
+		if is_minor_faction(str(faction_name)):
+			result.append(str(faction_name))
+	if result.is_empty():
+		for faction_name in MINOR_FACTIONS.keys():
+			result.append(str(faction_name))
+	return result
+
+static func _generated_station_contact_faction_keys(faction_weights: Dictionary) -> Array:
+	var result: Array = []
+	for faction_name in faction_weights.keys():
+		var clean := str(faction_name).strip_edges()
+		if not clean.is_empty():
+			result.append(clean)
+	if result.is_empty():
+		result.append_array(["zenith", "aurelia", "vanguard"])
+	return result
+
+static func _contact_faction_id(faction_name: String) -> String:
+	if faction_name.is_empty():
+		return ""
+	var generated := _generated_faction_record(faction_name)
+	if not generated.is_empty():
+		return str(generated.get("id", ""))
+	if faction_name.begins_with("faction."):
+		return faction_name
+	return "faction.%s" % faction_name
+
+static func resolve_outpost_id(station: Node3D) -> String:
+	if station == null:
+		return ""
+	var world_id = station.get("world_id") if station.get("world_id") else ""
+	if typeof(world_id) == TYPE_STRING and generated_outpost_npcs.has(world_id):
+		return world_id
+	return ""
 
 # Returns the outpost id for a minor NPC, or "" if they aren't outpost-based
 # (e.g. the mechanic, who lives at Grease Monkeys).
 static func get_minor_npc_outpost(npc_name: String) -> String:
+	if generated_outpost_npc_data.has(npc_name):
+		return str(generated_outpost_npc_data[npc_name].get("outpost", ""))
 	if not MINOR_NPCS.has(npc_name):
 		return ""
 	return MINOR_NPCS[npc_name].get("outpost", "")
+
+static func get_current_system_outposts() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var tree := Engine.get_main_loop()
+	var state = (
+		tree.root.get_node_or_null("GlobalState")
+		if tree and tree.root
+		else null
+	)
+	var entities: Array = (
+		state.get("active_system_entities")
+		if state != null
+		else []
+	)
+	for entity in entities:
+		if not is_instance_valid(entity):
+			continue
+		if not entity is Node3D:
+			continue
+		if not entity.is_in_group("station"):
+			continue
+		var raw_station_type: Variant = entity.get("station_type")
+		var station_type := str(raw_station_type) if raw_station_type != null else ""
+		if station_type.is_empty() or station_type == "<null>":
+			station_type = str(entity.get_meta("station_type", ""))
+		if station_type != "outpost":
+			continue
+		var outpost_id := resolve_outpost_id(entity)
+		if outpost_id.is_empty():
+			var raw_world_id: Variant = entity.get("world_id")
+			outpost_id = str(raw_world_id) if raw_world_id != null else ""
+		if outpost_id.is_empty() or outpost_id == "<null>":
+			outpost_id = str(entity.get_meta("world_id", ""))
+		if outpost_id.is_empty():
+			continue
+		var raw_display_name: Variant = entity.get("display_name")
+		var display := str(raw_display_name) if raw_display_name != null else ""
+		if display.is_empty() or display == "<null>":
+			display = str(entity.get_meta("display_name", ""))
+		result.append({
+			"id": _canonical_minor_outpost_id(outpost_id),
+			"display": display if not display.is_empty() else outpost_id,
+		})
+	return result
+
+static func is_current_system_home() -> bool:
+	var tree := Engine.get_main_loop()
+	var state = (
+		tree.root.get_node_or_null("GlobalState")
+		if tree and tree.root
+		else null
+	)
+	var sys_id: String = state.get("current_system_id") if state else "start_system"
+	return sys_id == "start_system" or sys_id == "system.start"
+
+static func starter_pickup_outposts() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for starter_id in PICKUP_OUTPOST_IDS:
+		result.append({
+			"id": str(starter_id),
+			"display": str(PICKUP_OUTPOST_DISPLAY.get(starter_id, starter_id)),
+		})
+	return result
+
+static func get_current_pickup_outposts() -> Array[Dictionary]:
+	var outposts := get_current_system_outposts()
+	if outposts.is_empty() and is_current_system_home():
+		return starter_pickup_outposts()
+	return outposts
+
+static func get_current_system_minor_factions() -> Array[String]:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.current_scene and "system_registry" in tree.current_scene:
+		var state = tree.root.get_node_or_null("GlobalState")
+		var sys_id: String = state.get("current_system_id") if state else "start_system"
+		var registry = tree.current_scene.system_registry
+		if registry != null:
+			var sys_def = registry.get_system(sys_id)
+			if sys_def != null and not sys_def.faction_ids.is_empty():
+				var factions: Array[String] = []
+				for fid in sys_def.faction_ids:
+					var legacy := _legacy_faction_key_for_system_id(
+						str(fid),
+						sys_def.legacy_id,
+						registry
+					)
+					if is_minor_faction(legacy):
+						factions.append(legacy)
+				if not factions.is_empty():
+					return factions
+	var fallback: Array[String] = []
+	fallback.assign(MINOR_FACTIONS.keys())
+	return fallback
+
+
+static func get_current_system_factions() -> Array[String]:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.current_scene and "system_registry" in tree.current_scene:
+		var state = tree.root.get_node_or_null("GlobalState")
+		var sys_id: String = state.get("current_system_id") if state else "start_system"
+		var registry = tree.current_scene.system_registry
+		if registry != null:
+			var sys_def = registry.get_system(sys_id)
+			if sys_def != null and not sys_def.faction_ids.is_empty():
+				var factions: Array[String] = []
+				for fid in sys_def.faction_ids:
+					var legacy := _legacy_faction_key_for_system_id(
+						str(fid),
+						sys_def.legacy_id,
+						registry
+					)
+					if not legacy.is_empty():
+						factions.append(legacy)
+				if not factions.is_empty():
+					return factions
+	if is_current_system_home():
+		return ["zenith", "aurelia", "vanguard"]
+	return get_current_system_minor_factions()
+
+static func _legacy_faction_key_for_system_id(
+	faction_id: String,
+	system_legacy_id: String,
+	registry: Variant
+) -> String:
+	var config = registry.get_generated_config(system_legacy_id) if registry != null else null
+	if config != null:
+		for legacy_key in config.faction_id_lookup.keys():
+			if str(config.faction_id_lookup[legacy_key]) == faction_id:
+				return str(legacy_key)
+	if faction_id.begins_with("faction.generated."):
+		var generated := _generated_faction_record(faction_id)
+		if not generated.is_empty():
+			return str(generated.get("legacy_id", faction_id))
+		return faction_id
+	if faction_id.begins_with("faction."):
+		return faction_id.trim_prefix("faction.")
+	return faction_id
+
+static func _generated_faction_record(faction_name: String) -> Dictionary:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.current_scene == null:
+		return {}
+	var game_root := tree.current_scene
+	var factions: Array = []
+	if game_root.has_method("revealed_generated_factions"):
+		factions.append_array(game_root.revealed_generated_factions())
+	if game_root.has_method("generated_factions_for_ids") \
+			and faction_name.begins_with("faction.generated."):
+		factions.append_array(game_root.generated_factions_for_ids([faction_name]))
+	for faction in factions:
+		if not faction is Dictionary:
+			continue
+		if str(faction.get("legacy_id", "")) == faction_name \
+				or str(faction.get("id", "")) == faction_name:
+			return (faction as Dictionary).duplicate(true)
+	return {}
+
+static func _generated_faction_color(
+	faction_record: Dictionary,
+	fallback_key: String
+) -> Color:
+	var raw_color: Array = faction_record.get("ui_color", [])
+	if raw_color.size() == 4:
+		return Color(
+			float(raw_color[0]),
+			float(raw_color[1]),
+			float(raw_color[2]),
+			float(raw_color[3])
+		)
+	var hue := float(abs(fallback_key.hash()) % 360) / 360.0
+	return Color.from_hsv(hue, 0.62, 0.9)
 
 # Returns a random minor NPC name. Used for picking a quest-board contact
 # at an outpost when the player asks "who's hiring?"
@@ -378,7 +1088,7 @@ static func random_minor_npc_name() -> String:
 #   { "npc_name": String, "line": String, "color": Color,
 #     "voice_id": String, "voice_speed": float }
 # `voice_id` is a Kokoro voice name (e.g. "am_onyx", "af_nicole"). The
-# default fallback is "af_bella" if an NPC has no voice data assigned.
+# default fallback is a neutral non-Kaelen voice if an NPC has no voice data assigned.
 # `voice_speed` is a 0.85-1.10 modifier that subtly differentiates
 # voices that share an underlying voice family.
 static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
@@ -390,13 +1100,104 @@ static func get_random_npc_flavor_line(outpost_id: String) -> Dictionary:
 	var lines: Array = npc.get("flavor_lines", [])
 	if lines.is_empty():
 		return {}
-	var line: String = lines[randi() % lines.size()]
+	var line: String = _pick_remembered_npc_flavor_line(npc_name, lines)
 	return {
 		"npc_name": npc_name,
 		"line": line,
 		"color": npc.get("flavor_color", Color.WHITE),
 		"voice_profile_id": npc.get("voice_profile_id", "voice.neutral.v1"),
 	}
+
+static func _pick_remembered_npc_flavor_line(npc_name: String, lines: Array) -> String:
+	var clean_lines: Array[String] = []
+	for raw_line in lines:
+		var clean_line := str(raw_line).strip_edges()
+		if not clean_line.is_empty():
+			clean_lines.append(clean_line)
+	if clean_lines.is_empty():
+		return ""
+	var memory: Array = npc_line_memory.get(npc_name, []).duplicate()
+	if generated_outpost_npc_data.has(npc_name):
+		var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+		memory = npc_data.get("line_memory_fingerprints", memory).duplicate()
+	var candidates: Array[String] = []
+	for line in clean_lines:
+		if _npc_line_fingerprint(line) not in memory:
+			candidates.append(line)
+	if candidates.is_empty():
+		memory.clear()
+		candidates = clean_lines.duplicate()
+	var picked_line := candidates[randi() % candidates.size()]
+	var picked_fingerprint := _npc_line_fingerprint(picked_line)
+	if picked_fingerprint not in memory:
+		memory.append(picked_fingerprint)
+	while memory.size() > maxi(1, clean_lines.size()):
+		memory.pop_front()
+	npc_line_memory[npc_name] = memory.duplicate()
+	if generated_outpost_npc_data.has(npc_name):
+		generated_outpost_npc_data[npc_name]["line_memory_fingerprints"] = memory.duplicate()
+		_remember_generated_npc_line(npc_name, picked_line)
+	return picked_line
+
+static func generated_npc_line_is_repeat(npc_name: String, line: String) -> bool:
+	var clean_line := line.strip_edges()
+	if clean_line.is_empty():
+		return false
+	if not generated_outpost_npc_data.has(npc_name):
+		return false
+	var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+	var npc_id := str(npc_data.get("npc_id", ""))
+	if campaign_npc_identity_store != null \
+			and campaign_npc_identity_store.has_method("has_line_repeat") \
+			and not npc_id.is_empty():
+		return bool(campaign_npc_identity_store.has_line_repeat(npc_id, clean_line))
+	var memory: Array = npc_data.get("line_memory_fingerprints", []).duplicate()
+	return _npc_line_fingerprint(clean_line) in memory
+
+
+static func remember_generated_npc_line(
+	npc_name: String,
+	line: String,
+	topic: String = "outpost_gossip"
+) -> void:
+	_remember_generated_npc_line(npc_name, line, topic)
+
+
+static func _remember_generated_npc_line(
+	npc_name: String,
+	line: String,
+	topic: String = "outpost_gossip"
+) -> void:
+	if campaign_npc_identity_store == null:
+		return
+	if not campaign_npc_identity_store.has_method("remember_line"):
+		return
+	if not generated_outpost_npc_data.has(npc_name):
+		return
+	var npc_data: Dictionary = generated_outpost_npc_data[npc_name]
+	var npc_id := str(npc_data.get("npc_id", ""))
+	if npc_id.is_empty():
+		return
+	var remembered: Dictionary = campaign_npc_identity_store.remember_line(
+		npc_id,
+		line,
+		topic
+	)
+	if bool(remembered.get("ok", false)):
+		var record: Dictionary = remembered.get("npc", {})
+		generated_outpost_npc_data[npc_name]["identity_record"] = record
+		generated_outpost_npc_data[npc_name]["line_memory_fingerprints"] = (
+			record.get(
+				"line_memory_fingerprints",
+				generated_outpost_npc_data[npc_name].get(
+					"line_memory_fingerprints",
+					[]
+				)
+			)
+		)
+
+static func _npc_line_fingerprint(line: String) -> String:
+	return line.strip_edges().to_lower().sha256_text().substr(0, 16)
 
 # Returns the full set of (npc_name, line) pairs for every NPC at the
 # given outpost, across all NPCs and all flavor lines. Used by the
@@ -431,7 +1232,7 @@ static func get_outpost_flavor_tts_lines(outpost_id: String) -> Array:
 # hit cache, so we re-warm the NPC's other lines in the background.
 # If `just_played` is empty or not in the list, returns every line.
 static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array:
-	if not MINOR_NPCS.has(npc_name):
+	if not MINOR_NPCS.has(npc_name) and not generated_outpost_npc_data.has(npc_name):
 		return []
 	var npc: Dictionary = get_minor_npc_data(npc_name)
 	var lines: Array = npc.get("flavor_lines", [])
@@ -464,6 +1265,18 @@ var player_credits: int = 50:
 	set(val):
 		player_credits = val
 		credits_changed.emit(player_credits)
+
+
+func add_credits(amount: int) -> void:
+	player_credits += amount
+
+
+func spend_credits(amount: int) -> void:
+	player_credits -= amount
+
+
+const PlayerInventoryScript = preload("res://scripts/economy/PlayerInventory.gd")
+var inventory = PlayerInventoryScript.new()
 
 var _cargo_normalizing: bool = false
 var cargo: float = 0.0:
@@ -546,7 +1359,13 @@ func add_ore(amount: float) -> float:
 
 # Accept a special cargo item. Only valid when the hold is empty.
 # Returns true if accepted, false if the hold wasn't empty.
-func accept_special(item_name: String, description: String, source: String, destination: String = "") -> bool:
+func accept_special(
+	item_name: String,
+	description: String,
+	source: String,
+	destination: String = "",
+	metadata: Dictionary = {}
+) -> bool:
 	if not can_accept_special():
 		return false
 	cargo_special = {
@@ -555,6 +1374,8 @@ func accept_special(item_name: String, description: String, source: String, dest
 		"source": source,
 		"destination": destination,
 	}
+	for key in metadata.keys():
+		cargo_special[key] = metadata[key]
 	cargo_type = CargoType.SPECIAL
 	cargo_changed.emit(cargo)
 	return true
@@ -620,27 +1441,56 @@ const PICKUP_PART_NAMES: Array = [
 # What the mechanic pays on successful delivery. Single source of truth —
 # the live offer path AND the test buttons read this.
 const PICKUP_REWARD_CREDITS: int = 200
+static var last_mechanic_pickup_roll_debug: Dictionary = {}
 
 # Returns a pickup-offer roll. The offer is a single (outpost, npc, part)
 # tuple shared by the LLM prompt and the quest-build so they can't drift.
 # Returns {offer: false} on the negative side of the chance roll. Caller
 # is responsible for the per-dock lock (this is a single call — not stateful).
 static func roll_pickup_offer() -> Dictionary:
-	if randf() > MECHANIC_PICKUP_OFFER_CHANCE:
+	var roll := randf()
+	var outposts := get_current_pickup_outposts()
+	var valid_outposts: Array = []
+	for outpost in outposts:
+		if outpost is Dictionary \
+				and not get_minor_npcs_at_outpost(str(outpost.get("id", ""))).is_empty():
+			valid_outposts.append(outpost)
+	last_mechanic_pickup_roll_debug = {
+		"chance": MECHANIC_PICKUP_OFFER_CHANCE,
+		"roll": roll,
+		"outpost_count": outposts.size(),
+		"valid_outpost_count": valid_outposts.size(),
+		"outposts": outposts.duplicate(true),
+		"valid_outposts": valid_outposts.duplicate(true),
+		"offered": false,
+		"reason": "",
+	}
+	if roll > MECHANIC_PICKUP_OFFER_CHANCE:
+		last_mechanic_pickup_roll_debug["reason"] = "chance_missed"
 		return { "offer": false }
-	var outpost_id: String = PICKUP_OUTPOST_IDS[randi() % PICKUP_OUTPOST_IDS.size()]
+	if valid_outposts.is_empty():
+		last_mechanic_pickup_roll_debug["reason"] = "no_valid_pickup_outposts"
+		return { "offer": false }
+	var selected: Dictionary = valid_outposts[randi() % valid_outposts.size()]
+	var outpost_id: String = str(selected.get("id", ""))
 	var npcs: Array = get_minor_npcs_at_outpost(outpost_id)
 	if npcs.is_empty():
 		# Defensive: the outposts always have NPCs today, but if that
 		# ever changes we want a clean negative result, not a crash.
 		push_warning("[GlobalState] roll_pickup_offer: outpost '%s' has no NPCs." % outpost_id)
+		last_mechanic_pickup_roll_debug["reason"] = "selected_outpost_had_no_npcs"
 		return { "offer": false }
 	var npc_name: String = npcs[randi() % npcs.size()]
 	var part_name: String = PICKUP_PART_NAMES[randi() % PICKUP_PART_NAMES.size()]
+	last_mechanic_pickup_roll_debug["offered"] = true
+	last_mechanic_pickup_roll_debug["reason"] = "offer_created"
+	last_mechanic_pickup_roll_debug["selected_outpost"] = outpost_id
+	last_mechanic_pickup_roll_debug["selected_npc"] = npc_name
+	last_mechanic_pickup_roll_debug["selected_part"] = part_name
 	return {
 		"offer": true,
 		"outpost_id": outpost_id,
-		"outpost_display": PICKUP_OUTPOST_DISPLAY.get(outpost_id, outpost_id),
+		"outpost_display": str(selected.get("display", outpost_id)),
 		"npc_name": npc_name,
 		"part_name": part_name,
 		"reward_credits": PICKUP_REWARD_CREDITS,
@@ -705,6 +1555,7 @@ func cargo_display_text() -> String:
 
 var player_storage_ore: float = 0.0
 var player_storage_max: float = 1000.0
+var ore_bank_max: float = 1000.0
 var power_capacity: float = 300.0
 
 var current_upgrades: Dictionary = {
@@ -713,6 +1564,8 @@ var current_upgrades: Dictionary = {
 	"shields": {"tier": 1, "path": "base"},
 	"mining": {"tier": 1, "path": "base"},
 	"cargo": {"tier": 1, "path": "base"},
+	"storage": {"tier": 1, "path": "base"},
+	"sensors": {"tier": 1, "path": "base"},
 	"power": {"tier": 1, "path": "base"}
 }
 
@@ -730,6 +1583,7 @@ var acceleration_mult: float = SHIP_BASE_STATS["acceleration_mult"]
 var ignore_cargo_mass: bool = SHIP_BASE_STATS["ignore_cargo_mass"]
 var hull_armor: float = SHIP_BASE_STATS["hull_armor"]
 var player_max_health: float = SHIP_BASE_STATS["max_health"]
+var sensor_tier: int = 0
 
 # Max Tier Drawback Flags
 var has_max_rapid_weapon: bool = false
@@ -740,6 +1594,30 @@ var has_max_bulwark_shield: bool = false
 var has_max_deflector_shield: bool = false
 var has_max_rapid_mining: bool = false
 var has_max_deep_mining: bool = false
+var inventory_slots: int = 8
+
+var kaelen_briefing_seen: bool = false
+var kaelen_briefing_accepted: bool = false
+var kaelen_arrival_systems_seen: Array[String] = []
+
+# ── StoryManager tool slots ───────────────────────────────────────────────────
+# Written by StoryManager; read by existing systems. Session-only (not persisted).
+var story_world_pressure: Dictionary = {}  # {faction, intensity, system_id, event_type}
+var story_quest_hint: Dictionary = {}      # {preferred_system, preferred_type, flavor_tag, expires_after_docks}
+var story_loot_plant: Dictionary = {}      # {item_id, consumed_on_pickup: bool}
+var story_station_climate: Dictionary = {} # {station_id, text}
+var story_forced_anomaly: Dictionary = {}  # {system_id, flavor_type}
+var story_planted_npc: Dictionary = {}     # {station_id, npc_id, display_name, portrait_id, line, one_shot}
+var story_map_highlight: Dictionary = {}   # {system_id: true, ...} — systems to show Kaelen-intel ring on map
+
+# Unique per-campaign seed mixed into procedural system generation so each
+# campaign produces different systems even from the same gate destination IDs.
+var campaign_seed: int = 0
+var ship_transponder_code: String = ""
+# Campaign-persisted round-robin cursors for N.O.V.A.'s authored repair-bay
+# departure warnings. Kept outside Nova so a scene reload/restart cannot repeat
+# the opening line before a band has completed its full pool.
+var nova_repair_warning_rotation: Dictionary = {"yellow": 0, "red": 0}
 
 # Non-upgradeable baseline
 var damage: float = weapon_damage # Legacy support until swapped
@@ -751,6 +1629,9 @@ var runtime_entity_sequence: int = 0
 var player: Node3D = null
 var active_system_root: Node3D = null
 var current_system_id: String = "start_system"
+var intro_tutorial_player_protected: bool = false
+var intro_cinematic_active: bool = false
+var combat_tutorial_seen: bool = false
 var active_target: Node3D = null:
 	set(val):
 		active_target = val
@@ -762,22 +1643,87 @@ var paused: bool = false:
 		paused = val
 		game_paused.emit(paused)
 
+
+func clear_intro_tutorial_player_protection() -> void:
+	intro_tutorial_player_protected = false
+
+
+func is_intro_tutorial_player_protection_active() -> bool:
+	if not intro_tutorial_player_protected:
+		return false
+	if not _active_mission_is_intro_tutorial():
+		intro_tutorial_player_protected = false
+		return false
+	if QuestManager.is_quest_completed():
+		intro_tutorial_player_protected = false
+		return false
+	return true
+
+var bloom_enabled: bool = true:
+	set(val):
+		bloom_enabled = val
+		if not val and bloom_amount > 0.0:
+			bloom_amount = 0.0
+		elif val and bloom_amount <= 0.0:
+			bloom_amount = 1.0
+		bloom_changed.emit(val)
+		bloom_amount_changed.emit(bloom_amount)
+		_save_visual_prefs()
+
+var bloom_amount: float = 1.0:
+	set(val):
+		bloom_amount = clampf(val, 0.0, 2.0)
+		var next_enabled := bloom_amount > 0.01
+		if bloom_enabled != next_enabled:
+			bloom_enabled = next_enabled
+		else:
+			bloom_changed.emit(bloom_enabled)
+			bloom_amount_changed.emit(bloom_amount)
+			_save_visual_prefs()
+
+signal bloom_changed(enabled: bool)
+signal bloom_amount_changed(amount: float)
+
 # Reputation system
 var reputations: Dictionary = {
 	"zenith": 50.0,
 	"aurelia": -20.0,
-	"vanguard": -20.0
+	"vanguard": -20.0,
+	"reavers": 0.0,
+	"obsidian": 0.0,
+	"dustborn": 0.0,
+	"wraiths": 0.0,
+	"ironclad": 0.0,
 }
 signal reputation_changed(faction_name: String, new_rep: float)
 signal ship_destroyed(faction_name: String)
+signal player_kill(faction_name: String)   # fires only when player lands the killing blow
 signal entities_changed()
 signal system_chatter_received(sender: String, message: String, color: Color)
+
+# Phase 8A semantic movement channel. Emitters publish raw movement events
+# here (boost, autopilot, gate, dock, hull); ShipBehaviorObserver aggregates
+# and rate-limits before N.O.V.A. sees anything. Never poll ship state per
+# frame for narrative — emit through here instead.
+signal ship_movement_event(event_id: String, context: Dictionary)
+
+const ShipMovementEventsType = preload("res://scripts/story/ShipMovementEvents.gd")
+
+func emit_ship_movement_event(event_id: String, context: Dictionary = {}) -> bool:
+	if not ShipMovementEventsType.is_valid(event_id):
+		push_warning(
+			"[GlobalState] Rejected unknown ship movement event: %s" % event_id
+		)
+		return false
+	ship_movement_event.emit(event_id, context)
+	return true
 
 var faction_kills: Dictionary = {
 	"zenith": 0,
 	"aurelia": 0,
 	"vanguard": 0
 }
+var illegal_mining_enforcement = IllegalMiningEnforcementType.new()
 
 func record_kill(faction_name: String):
 	# Track kills for ANY faction — including LLM-generated custom ones
@@ -829,7 +1775,10 @@ func spawn_reinforcement(faction_name: String):
 			var alert = LLMInterface.get_chatter_line("system_alert")
 			emit_chatter("SYSTEM", alert, Color(0.0, 0.9, 0.9))
 
-func spawn_mission_targets(faction_name: String, count: int):
+func spawn_mission_targets(faction_name: String, count: int, min_player_distance: float = 0.0):
+	# min_player_distance > 0 forces each target to spawn at least that far from the
+	# player (used by NPC-kill respawns so a replacement never pops in the player's
+	# lap or on the fresh wreckage). 0 keeps the original station-ring behavior.
 	var player_node = player
 	if not player_node or not is_instance_valid(player_node) or player_node.get("destroyed"):
 		return
@@ -843,28 +1792,44 @@ func spawn_mission_targets(faction_name: String, count: int):
 		print("[GlobalState] ERROR: Could not load npc_ship.tscn for mission targets.")
 		return
 	
-	# Use the station as the spawn anchor so targets appear in open space,
-	# not on top of the dock where the player accepted the quest
+	var patrol_route := _pick_mission_target_route(system_root)
+
+	# Use the station as the fallback spawn anchor so targets appear in open
+	# space, not on top of the dock where the player accepted the quest.
 	var spawn_anchor: Vector3 = player_node.global_position
 	var station_node = get_primary_station()
 	if station_node and is_instance_valid(station_node):
 		spawn_anchor = station_node.global_position
 	
-	print("[GlobalState] Spawning ", count, " mission targets for faction: ", faction_name, " at distance from station")
+	GlobalState.trace("[GlobalState] Spawning %d mission targets for faction: %s at distance from station" % [count, faction_name])
 	
 	# Spread ships evenly in a ring 550-900m from the station — far enough
 	# that the player has to fly out to engage, close enough to feel immediate
 	var mission_key := _active_mission_identity_key()
+	var is_intro_tutorial_target := _active_mission_is_intro_tutorial()
+	if is_intro_tutorial_target:
+		intro_tutorial_player_protected = true
 	var start_index := int(
 		QuestManager.active_quest.get("target_spawn_sequence", 0)
 	)
 	QuestManager.active_quest["target_spawn_sequence"] = start_index + count
 	for i in range(count):
-		var angle = (TAU / count) * i + randf_range(-0.4, 0.4)
-		var dist = randf_range(550.0, 900.0)
+		var target_pos := spawn_anchor
+		if not patrol_route.is_empty():
+			target_pos = patrol_route[i % patrol_route.size()]
+		var angle = (TAU / max(count, 1)) * i + randf_range(-0.4, 0.4)
+		var dist = randf_range(60.0, 140.0) if not patrol_route.is_empty() else randf_range(550.0, 900.0)
 		var offset = Vector3(cos(angle), randf_range(-0.05, 0.05), sin(angle)) * dist
-		var spawn_pos = spawn_anchor + offset
-		
+		var spawn_pos = target_pos + offset
+		# Push the target out to a safe distance from the player if requested.
+		if min_player_distance > 0.0 \
+				and spawn_pos.distance_to(player_node.global_position) < min_player_distance:
+			var away: Vector3 = spawn_pos - player_node.global_position
+			if away.length() < 1.0:
+				away = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+			spawn_pos = player_node.global_position \
+				+ away.normalized() * (min_player_distance + randf_range(50.0, 200.0))
+
 		var npc = npc_scene.instantiate()
 		npc.faction = faction_name
 		npc.is_reinforcement = false
@@ -873,6 +1838,9 @@ func spawn_mission_targets(faction_name: String, count: int):
 		# Mark as a quest target so QuestManager can count survivors and
 		# decide when to spawn replacements after NPC kills.
 		npc.set_meta("is_quest_target", true)
+		if is_intro_tutorial_target:
+			npc.set_meta("intro_tutorial_target", true)
+			npc.set_meta("npc_attack_protected", true)
 		npc.persistent_id = "entity.mission.%s.%06d" % [
 			mission_key,
 			start_index + i,
@@ -880,12 +1848,282 @@ func spawn_mission_targets(faction_name: String, count: int):
 		npc.add_to_group("persistent_entity")
 		system_root.add_child(npc)
 		npc.global_position = spawn_pos
+		npc.patrol_center = target_pos if not patrol_route.is_empty() else spawn_pos
+		if patrol_route.size() >= 2:
+			npc.patrol_route = patrol_route
+			npc.patrol_route_index = i % patrol_route.size()
 	
 	# HUD warning + chatter so the arrival feels like an event
 	var ui = get_ui_manager()
 	if ui and ui.has_method("show_hud_warning"):
 		ui.show_hud_warning("CONTRACT ACTIVE: " + str(count) + " " + faction_name.to_upper() + " targets have entered the sector.")
 	emit_chatter("SYSTEM", "Sensor sweep: " + str(count) + " " + faction_name.to_upper() + " signatures detected in open space.", Color(0.0, 0.9, 0.9))
+
+
+func _pick_mission_target_route(system_root: Node3D) -> Array[Vector3]:
+	var belt_route := _pick_mission_asteroid_belt_route(system_root)
+	if not belt_route.is_empty():
+		return belt_route
+	return _pick_mission_shipping_lane_route(system_root)
+
+
+func _pick_mission_asteroid_belt_route(system_root: Node3D) -> Array[Vector3]:
+	var belts: Dictionary = {}
+	if system_root == null:
+		return []
+	for node in _mission_route_nodes_in_group(system_root, "asteroid"):
+		if not (node is Node3D) or not is_instance_valid(node):
+			continue
+		var belt_id := str(node.get_meta("belt_id", "")).strip_edges()
+		if belt_id == "":
+			belt_id = _mission_belt_id_from_name(str(node.name))
+		if belt_id == "":
+			belt_id = "unmarked"
+		if not belts.has(belt_id):
+			belts[belt_id] = []
+		belts[belt_id].append(_mission_route_position(node as Node3D))
+	if belts.is_empty():
+		return []
+	var best_points: Array = []
+	for belt_id in belts.keys():
+		var points: Array = belts[belt_id]
+		if points.size() > best_points.size():
+			best_points = points
+	if best_points.is_empty():
+		return []
+	var center := Vector3.ZERO
+	for point: Vector3 in best_points:
+		center += point
+	center /= float(best_points.size())
+	var route: Array[Vector3] = []
+	for point: Vector3 in best_points:
+		if point.distance_to(center) >= 40.0:
+			route.append(point)
+	if route.size() >= 2:
+		route.sort_custom(func(a: Vector3, b: Vector3) -> bool:
+			return atan2(a.z - center.z, a.x - center.x) < atan2(b.z - center.z, b.x - center.x)
+		)
+		if route.size() > 6:
+			var sampled: Array[Vector3] = []
+			for i in range(6):
+				sampled.append(route[int(round(float(i) * float(route.size() - 1) / 5.0))])
+			return sampled
+		return route
+	return [center]
+
+
+func _mission_belt_id_from_name(node_name: String) -> String:
+	var idx := node_name.find("Asteroid")
+	if idx <= 0:
+		return ""
+	var clean := node_name.substr(0, idx).strip_edges()
+	while clean.ends_with("_") or clean.ends_with(" "):
+		clean = clean.substr(0, clean.length() - 1)
+	return clean
+
+
+func _pick_mission_shipping_lane_route(system_root: Node3D) -> Array[Vector3]:
+	if system_root == null:
+		return []
+	var stations: Array[Node3D] = []
+	for node in _mission_route_nodes_in_group(system_root, "station"):
+		if node is Node3D and is_instance_valid(node):
+			stations.append(node)
+	if stations.size() < 2:
+		return []
+	var best_a: Node3D = stations[0]
+	var best_b: Node3D = stations[1]
+	var best_dist := -1.0
+	for i in range(stations.size()):
+		for j in range(i + 1, stations.size()):
+			var dist := _mission_route_position(stations[i]).distance_squared_to(_mission_route_position(stations[j]))
+			if dist > best_dist:
+				best_dist = dist
+				best_a = stations[i]
+				best_b = stations[j]
+	return [_mission_route_position(best_a), _mission_route_position(best_b)]
+
+
+func _mission_route_nodes_in_group(root: Node, group_name: String) -> Array:
+	var result: Array = []
+	if root == null:
+		return result
+	if root.is_in_group(group_name):
+		result.append(root)
+	for child in root.get_children():
+		result.append_array(_mission_route_nodes_in_group(child, group_name))
+	return result
+
+
+func _mission_route_position(node: Node3D) -> Vector3:
+	return node.global_position if node.is_inside_tree() else node.position
+
+
+func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary:
+	if asteroid == null or not is_instance_valid(asteroid):
+		return {}
+	var owner_faction := _asteroid_owner_faction(asteroid)
+	var belt_id := _asteroid_belt_id(asteroid)
+	if not _has_illegal_mining_witness(owner_faction):
+		return {
+			"accepted": false,
+			"dispatch": false,
+			"reason": "unwitnessed",
+			"faction": owner_faction,
+			"belt_id": belt_id,
+		}
+	var result: Dictionary = illegal_mining_enforcement.report_violation(
+		current_system_id,
+		belt_id,
+		owner_faction,
+		Time.get_ticks_msec()
+	)
+	var faction_label := faction_display_name(owner_faction)
+	var belt_label := _belt_display_name(belt_id)
+	emit_chatter(
+		"MINER",
+		"Illegal miner in %s. %s code enforcement requested." % [
+			belt_label,
+			faction_label,
+		],
+		Color(1.0, 0.72, 0.25)
+	)
+	if bool(result.get("dispatch", false)):
+		_dispatch_illegal_mining_enforcement(
+			result,
+			_node3d_position(asteroid)
+		)
+	return result
+
+
+func _dispatch_illegal_mining_enforcement(
+	report: Dictionary,
+	violation_pos: Vector3
+) -> void:
+	var player_node: Node3D = player
+	var system_root: Node3D = get_system_root()
+	if player_node == null or not is_instance_valid(player_node) \
+			or player_node.get("destroyed") or system_root == null:
+		return
+	var npc_scene := load("res://scenes/npc_ship.tscn") as PackedScene
+	if npc_scene == null:
+		push_warning("[GlobalState] Could not load npc_ship.tscn for enforcement response.")
+		return
+	var faction_name := str(report.get("faction", "neutral"))
+	var count: int = max(1, int(report.get("ship_count", 2)))
+	for i in range(count):
+		var angle := (TAU / float(count)) * float(i) + randf_range(-0.35, 0.35)
+		var offset := Vector3(cos(angle), 0.0, sin(angle)) * randf_range(160.0, 220.0)
+		var npc := npc_scene.instantiate() as Node3D
+		npc.faction = faction_name
+		npc.is_reinforcement = false
+		npc.ship_role = "Interceptor"
+		npc.speed = 16.0
+		npc.name = "%s_CodeEnforcement_%03d" % [
+			faction_display_name(faction_name).replace(" ", ""),
+			randi() % 1000,
+		]
+		runtime_entity_sequence += 1
+		npc.persistent_id = "entity.%s.enforcement.%06d" % [
+			current_system_id,
+			runtime_entity_sequence,
+		]
+		IllegalMiningEnforcementType.mark_enforcement_ship(
+			npc,
+			faction_name,
+			current_system_id
+		)
+		system_root.add_child(npc)
+		if npc.is_inside_tree():
+			npc.global_position = violation_pos + offset
+		else:
+			npc.position = violation_pos + offset
+	var ui: Control = get_ui_manager()
+	if ui and ui.has_method("show_hud_warning"):
+		ui.show_hud_warning("CODE ENFORCEMENT: Illegal mining response inbound.")
+	emit_chatter(
+		"SYSTEM",
+		"%s enforcement ships are moving to investigate the mining violation." %
+			faction_display_name(faction_name),
+		Color(0.0, 0.9, 0.9)
+	)
+
+
+func _asteroid_owner_faction(asteroid: Node) -> String:
+	for key in ["belt_owner_faction", "owner_faction", "faction"]:
+		var value := str(asteroid.get_meta(key, "")).strip_edges()
+		if not value.is_empty():
+			return value
+	var factions := get_current_system_factions()
+	if factions.is_empty():
+		return "zenith"
+	var source := _asteroid_belt_id(asteroid)
+	var index: int = abs(hash(source)) % factions.size()
+	return factions[index]
+
+
+func _asteroid_belt_id(asteroid: Node) -> String:
+	var explicit := str(asteroid.get_meta("belt_id", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var persistent := str(asteroid.get("persistent_id")).strip_edges()
+	if not persistent.is_empty():
+		var parts := persistent.split(".")
+		if parts.size() >= 4:
+			return str(parts[3])
+		return persistent
+	return str(asteroid.name)
+
+
+func _belt_display_name(belt_id: String) -> String:
+	var clean := belt_id.strip_edges()
+	if clean.is_empty():
+		return "the belt"
+	clean = clean.replace("_", " ").replace("-", " ")
+	return clean.capitalize()
+
+
+func _has_illegal_mining_witness(owner_faction: String) -> bool:
+	var player_node := player
+	if player_node == null or not is_instance_valid(player_node):
+		return false
+	for entity in active_system_entities:
+		if entity == null or not is_instance_valid(entity):
+			continue
+		if entity.get("destroyed"):
+			continue
+		var ship_role := str(entity.get("ship_role"))
+		if ship_role == "<null>":
+			ship_role = ""
+		var is_miner := ship_role == "MiningHauler" \
+			or bool(entity.get_meta("is_mining_witness", false))
+		if not is_miner:
+			continue
+		var witness_faction := str(entity.get("faction"))
+		if witness_faction == "<null>":
+			witness_faction = ""
+		if not witness_faction.is_empty() and witness_faction != owner_faction:
+			continue
+		if _node3d_position(player_node).distance_to(_node3d_position(entity)) \
+				<= ILLEGAL_MINING_WITNESS_RADIUS:
+			return true
+	return false
+
+
+func _node3d_position(node: Node3D) -> Vector3:
+	if node == null:
+		return Vector3.ZERO
+	if node.is_inside_tree():
+		return node.global_position
+	return node.position
+
+
+func _active_mission_is_intro_tutorial() -> bool:
+	return QuestManager.is_quest_active() \
+		and str(QuestManager.active_quest.get("title", "")) == "Clean and Easy" \
+		and str(QuestManager.active_quest.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(QuestManager.active_quest.get("target_faction", "")) == "reavers"
+
 
 func _active_mission_identity_key() -> String:
 	var runtime_id := str(QuestManager.active_quest.get("runtime_id", ""))
@@ -929,13 +2167,62 @@ func emit_npc_flavor(flavor: Dictionary) -> void:
 	npc_flavor_spoken.emit(spoken_flavor)
 
 func adjust_reputation(faction_name: String, amount: float):
-	if reputations.has(faction_name):
-		reputations[faction_name] = clamp(reputations[faction_name] + amount, -100.0, 100.0)
-		reputation_changed.emit(faction_name, reputations[faction_name])
+	if not reputations.has(faction_name):
+		reputations[faction_name] = 0.0
+	reputations[faction_name] = clamp(reputations[faction_name] + amount, -100.0, 100.0)
+	reputation_changed.emit(faction_name, reputations[faction_name])
+
+const TRACE_LOG: bool = false
+
+static func trace(msg: String) -> void:
+	if TRACE_LOG:
+		print(msg)
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_inputs()
+	_load_visual_prefs()
+	CampaignClock.time_changed.connect(_on_campaign_time_for_stores)
+
+
+const VISUAL_PREFS_PATH := "user://player_preferences.json"
+
+func _load_visual_prefs() -> void:
+	if not FileAccess.file_exists(VISUAL_PREFS_PATH):
+		return
+	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary:
+		if parsed.has("bloom_amount"):
+			bloom_amount = float(parsed.get("bloom_amount", 1.0))
+		else:
+			bloom_enabled = bool(parsed.get("bloom_enabled", true))
+
+func _save_visual_prefs() -> void:
+	var prefs := {}
+	if FileAccess.file_exists(VISUAL_PREFS_PATH):
+		var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.READ)
+		if file:
+			var parsed: Variant = JSON.parse_string(file.get_as_text())
+			file.close()
+			if parsed is Dictionary:
+				prefs = parsed
+	prefs["bloom_enabled"] = bloom_enabled
+	prefs["bloom_amount"] = bloom_amount
+	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(prefs, "\t"))
+	file.close()
+
+
+const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
+
+func _on_campaign_time_for_stores(total_minutes: int) -> void:
+	StoreRegistryScript.shared().restock_all(total_minutes)
 
 func get_system_root() -> Node3D:
 	if active_system_root and is_instance_valid(active_system_root):
@@ -943,7 +2230,12 @@ func get_system_root() -> Node3D:
 	return get_tree().current_scene
 
 func get_ui_manager() -> Control:
-	var scene_root := get_tree().current_scene
+	if not is_inside_tree():
+		return null
+	var tree := get_tree()
+	if tree == null:
+		return null
+	var scene_root := tree.current_scene
 	if not scene_root:
 		return null
 	return scene_root.get_node_or_null("CanvasLayer/UIManager") as Control
@@ -963,13 +2255,21 @@ func reset_for_restart():
 	player = null
 	active_system_root = null
 	current_system_id = "start_system"
+	intro_tutorial_player_protected = false
+	intro_cinematic_active = false
+	combat_tutorial_seen = false
 	active_system_entities.clear()
+	generated_outpost_npcs.clear()
+	generated_outpost_npc_data.clear()
+	npc_line_memory.clear()
+	illegal_mining_enforcement = IllegalMiningEnforcementType.new()
 	# Directly set paused to avoid emitting game_paused into freed UIManager
 	paused = false
 	# Silently clear active_target without emitting target_changed
 	active_target = null
 	# Reset gameplay stats
 	player_credits = 50
+	inventory = PlayerInventoryScript.new()
 	cargo = 0.0
 	cargo_special = {}
 	cargo_type = CargoType.EMPTY
@@ -981,6 +2281,8 @@ func reset_for_restart():
 		"shields": {"tier": 1, "path": "base"},
 		"mining": {"tier": 1, "path": "base"},
 		"cargo": {"tier": 1, "path": "base"},
+		"storage": {"tier": 1, "path": "base"},
+		"sensors": {"tier": 1, "path": "base"},
 		"power": {"tier": 1, "path": "base"}
 	}
 	apply_upgrade_stats()
@@ -996,6 +2298,7 @@ func reset_for_restart():
 	ignore_cargo_mass = SHIP_BASE_STATS["ignore_cargo_mass"]
 	hull_armor = SHIP_BASE_STATS["hull_armor"]
 	player_max_health = SHIP_BASE_STATS["max_health"]
+	sensor_tier = 0
 	
 	has_max_rapid_weapon = false
 	has_max_heavy_weapon = false
@@ -1010,11 +2313,45 @@ func reset_for_restart():
 	laser_range = 80.0
 	destroyed_ships_pool = 0
 	runtime_entity_sequence = 0
+	# Reset Kaelen briefing flags so new campaigns show the intro
+	kaelen_briefing_seen = false
+	kaelen_briefing_accepted = false
+	kaelen_arrival_systems_seen.clear()
+	story_world_pressure = {}
+	story_quest_hint = {}
+	story_loot_plant = {}
+	story_station_climate = {}
+	story_forced_anomaly = {}
+	story_planted_npc = {}
+	story_map_highlight = {}
+	nova_repair_warning_rotation = {"yellow": 0, "red": 0}
+	# New seed so procedural systems differ across campaigns
+	campaign_seed = randi()
 	# Reset reputations
-	reputations = { "zenith": 50.0, "aurelia": -20.0, "vanguard": -20.0 }
+	reputations = {
+		"zenith": 50.0,
+		"aurelia": -20.0,
+		"vanguard": -20.0,
+		"reavers": 0.0,
+		"obsidian": 0.0,
+		"dustborn": 0.0,
+		"wraiths": 0.0,
+		"ironclad": 0.0,
+	}
 	# Reset kill tracking
 	faction_kills = { "zenith": 0, "aurelia": 0, "vanguard": 0 }
-	print("[GlobalState] State reset for new game.")
+	GlobalState.trace("[GlobalState] State reset for new game.")
+
+
+func next_nova_repair_warning_index(band: String, pool_size: int) -> int:
+	if pool_size <= 0:
+		return 0
+	var clean_band := band.strip_edges().to_lower()
+	if clean_band not in ["yellow", "red"]:
+		return 0
+	var current := posmod(int(nova_repair_warning_rotation.get(clean_band, 0)), pool_size)
+	nova_repair_warning_rotation[clean_band] = (current + 1) % pool_size
+	return current
 
 
 # ── Ship Upgrade Logic ────────────────────────────────────────────────────────
@@ -1034,7 +2371,10 @@ func apply_upgrade_stats():
 	ignore_cargo_mass = SHIP_BASE_STATS["ignore_cargo_mass"]
 	hull_armor = SHIP_BASE_STATS["hull_armor"]
 	player_max_health = SHIP_BASE_STATS["max_health"]
+	inventory_slots = SHIP_BASE_STATS["inventory_slots"]
+	ore_bank_max = SHIP_BASE_STATS["ore_bank_max"]
 	power_capacity = 300.0
+	sensor_tier = 0
 
 	has_max_rapid_weapon = false
 	has_max_heavy_weapon = false
@@ -1058,6 +2398,10 @@ func apply_upgrade_stats():
 				if tier_data.has("stats"):
 					for stat_key in tier_data["stats"].keys():
 						set(stat_key, tier_data["stats"][stat_key])
+
+	# Sync inventory slot capacity and ore bank
+	inventory.max_slots = inventory_slots
+	player_storage_max = ore_bank_max
 
 	# Update player health bounds
 	if player and is_instance_valid(player):
@@ -1088,8 +2432,16 @@ func get_current_power_draw() -> float:
 func purchase_upgrade(sys: String, path: String) -> bool:
 	var info = current_upgrades[sys]
 	var next_tier = info["tier"] + 1
-	if next_tier > 5:
-		return false # Maxed
+	if not UPGRADE_TREE.has(sys):
+		return false
+	var branch_data: Dictionary = UPGRADE_TREE[sys]["branches"]
+	var any_branch_has_tier := false
+	for b in branch_data.values():
+		if b.has(next_tier):
+			any_branch_has_tier = true
+			break
+	if not any_branch_has_tier:
+		return false
 		
 	# If branching at tier 2
 	if info["tier"] == 1:
@@ -1145,7 +2497,7 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	
 	current_upgrades[sys] = {"tier": next_tier, "path": path}
 	apply_upgrade_stats()
-	print("[GlobalState] Upgraded %s to tier %d path %s" % [sys, next_tier, path])
+	GlobalState.trace("[GlobalState] Upgraded %s to tier %d path %s" % [sys, next_tier, path])
 	return true
 
 func refund_upgrade(sys: String):
@@ -1193,6 +2545,7 @@ func _setup_inputs():
 	_add_key_action("override_action", KEY_E)
 	_add_key_action("pause_game", KEY_ESCAPE)
 	_add_key_action("action_jump", KEY_J)
+	_add_key_action("hard_stop", KEY_SPACE)
 	
 	# Define mouse zoom actions
 	_add_mouse_action("zoom_in", MOUSE_BUTTON_WHEEL_UP)
@@ -1223,19 +2576,29 @@ func _add_mouse_action(action_name: String, button_index: int):
 # here, and any UI code that displays dialogue should too, so the
 # on-screen text and the spoken audio stay in sync.
 #
-# Kaelen's voice after faction resolution is "af_bella" — that's how
-# the call path identifies her. Anyone else gets the substitution.
+# Kaelen's voice is Bella. Keep this provider voice exclusive to Kaelen;
+# generic/neutral NPC fallbacks must route elsewhere.
 const KAELEN_VOICE_PROFILE_ID: String = "voice.kaelen.v1"
 const KAELEN_VOICE_ID: String = "af_bella"
+
+# Live-tunable combat feel values (DevPanel → "Combat Feel" tab). Session-only,
+# not persisted. UIManager reads nova_warn_distance for the ambush-alert gate;
+# NPCShip reads combat_warning_grace_ms for the hold before combat auto-starts.
+var nova_warn_distance: float = 600.0
+
+## Sensor reveal (hide distant objects from the overview). OFF by default: the
+## default ranges are guesses from a plan written without this game's scale, and
+## turning them on untuned would hide the wrong things. Dev panel > Sensors.
+var sensor_reveal_enabled: bool = false
+var combat_warning_grace_ms: int = 7000
 
 # Substitutions for non-Kaelen speakers. Keyed on the source token
 # (case-insensitive, word-boundary aware). Each entry's "to" is tried
 # in order — first match wins. Add more rules here as more voice-leak
 # bugs show up.
 const TONE_REPLACEMENTS: Array = [
-	# "Shiny" → "Indy" (preserves the call-out feel; matches the
-	# player's ship class name, so it reads as "Indy pilot").
-	{ "from": "shiny", "to": ["indy"] },
+	# "Shiny" belongs to Kaelen. Other voices get a neutral pilot address.
+	{ "from": "shiny", "to": ["pilot"] },
 ]
 
 # Returns true if the resolved voice_id is Kaelen's. Cheap pointer
@@ -1278,6 +2641,79 @@ static func apply_tone_guard(text: String, voice_id: String) -> String:
 			var replacement: String = _match_tone_casing(canonical, original)
 			out = out.substr(0, m.get_start()) + replacement + out.substr(m.get_end())
 	return out
+
+
+# Whitespace class for the address patterns below. Built as a constant so the
+# regex sources stay readable instead of drowning in escaped backslashes.
+const WS := "\\s"
+const WB := "\\b"
+
+
+# Removes EVERY direct address of the player by nickname from a line.
+#
+# Non-Kaelen speakers must not say the player's name at all. They still address
+# them directly -- "you", "pilot" -- so who is being spoken to stays obvious;
+# it is simply implied rather than stated, which is how people actually talk.
+# The prompts already say not to, but a model asked not to do something will
+# still do it sometimes, and the failure mode here is loud: "Indy ... and Indy
+# ... so Indy" in a single paragraph. This is the structural guarantee behind
+# the prompt rule.
+#
+# Handles both nicknames: apply_tone_guard() rewrites "Shiny" to "Indy" for
+# non-Kaelen speakers, but this must also be correct when called on its own.
+static func strip_player_address(text: String) -> String:
+	var out := text.strip_edges()
+	for token in ["indy", "shiny"]:
+		var word: String = WB + str(token) + WB
+		# Order matters: the specific punctuation shapes first, so the catch-all
+		# at the end never has to guess what to do with a stray comma.
+		# "..., Indy, ..." mid-sentence.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*," + WS + "*", ", ")
+		# "..., Indy." closing a sentence.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*(?=[.!?])", "")
+		# "..., Indy" running off the end with no punctuation.
+		out = _sub(out, WS + "*," + WS + "*" + word + WS + "*$", "")
+		# "Indy, ..." opening a line OR trailing a conjunction: "So Indy,",
+		# "and Indy,". This is the shape that read as constant name-dropping,
+		# and no comma-first pattern catches it.
+		out = _sub(out, word + WS + "*[,!?:;-]+" + WS + "*", "")
+		# Anything left: a bare mention with no punctuation attached.
+		out = _sub(out, WS + "*" + word, "")
+	# Stripping can leave a doubled space or a space before punctuation.
+	out = _sub(out, WS + "{2,}", " ")
+	out = _sub(out, WS + "+([.!?,])", "$1")
+	out = out.strip_edges()
+	if out.length() > 0 and out[0] >= "a" and out[0] <= "z":
+		out = out[0].to_upper() + out.substr(1)
+	return out
+
+
+static func _sub(text: String, pattern: String, replacement: String) -> String:
+	var regex := RegEx.new()
+	if regex.compile("(?i)" + pattern) != OK:
+		return text
+	return regex.sub(text, replacement, true)
+
+
+static func remove_repeated_player_address(text: String) -> String:
+	var out := text.strip_edges()
+	var leading := RegEx.new()
+	leading.compile("(?i)^\\s*indy\\s*[,!?:;\\-]+\\s*")
+	out = leading.sub(out, "", true).strip_edges()
+
+	var paired := RegEx.new()
+	paired.compile("(?i)\\s*,\\s*indy\\s*,\\s*")
+	out = paired.sub(out, ", ", true)
+
+	var terminal := RegEx.new()
+	terminal.compile("(?i)\\s*,\\s*indy\\s*([.!?])")
+	out = terminal.sub(out, "$1", true)
+
+	out = out.strip_edges()
+	if out.length() > 0 and out[0] >= "a" and out[0] <= "z":
+		out = out[0].to_upper() + out.substr(1)
+	return out
+
 
 # Internal: rebuild `replacement` in the casing style of `original`.
 # "SHINY" → "INDY", "Shiny" → "Indy", "shiny" → "indy". Falls back to

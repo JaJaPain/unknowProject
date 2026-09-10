@@ -1,0 +1,61 @@
+{
+  "campaign_title": "The Sovereign Debt",
+  "campaign_logline": "A corporate debt-collection spree across the Aurelia system where every oxygen tank is leased and your very existence is an interest-bearing asset.",
+  "opening_situation": "You are a 'Collection Agent' for the Vane Corporation. You’ve been assigned to Zenith, a mining hub currently in default on its life-support payments.",
+  "main_mystery": "Why did the high-ranking directors of the Aurelia Oversight suddenly vanish during the last fiscal audit?",
+  "act_1_outline": [
+    "Negotiate with miners at Zenith to accept 'partial' oxygen credits while avoiding local militia hostility.",
+    "Navigate the lawless gap between Zenith and Aurelia to secure a shipment of contraband carbon-scrubbers.",
+    "Infiltrate an Aurelia logistics hub to identify which corporate executives actually skipped out on their contracts."
+  ],
+  "long_term_reveal": "The missing directors didn't flee; they staged a private, off-book privatization of the system's atmosphere.",
+  "tone": "Dry, cynical corporate satire. Corporate bureaucracy as a looming existential threat.",
+  "core_pressure": "Oxygen Scarcity vs. Contractual Obligations",
+  "kaelen_rule": "Kaelen is an auditor; she survives because she knows exactly which officials to bribe and which laws to ignore.",
+  "faction_reveal_rule": "Newer factions (like the Syndicate or The Cult) only appear upon entering a new system gate.",
+  "humor_rule": "Dry, sardonic wit regarding bureaucracy. No 'high-tech' puns; just the misery of paperwork and bad coffee.",
+  "address_rule": "Every interaction must mention the legal cost of the player's current actions.",
+  "fallback_rule": "If a plot point is skipped, generate an automated bureaucratic inquiry from Vane Corp.",
+  "story_horizon_rule": "Trigger expansion when systems explored drops below 3 or arcs completed exceeds 2.",
+  "story_arcs": [
+    {
+      "name": "The Debt Collection",
+      "summary": "Recover physical assets and 'repossess' breathing rights from the desperate inhabitants of the Zenith mining belt."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Audit",
+      "trail_id": "rumor_trail.ghost_audit",
+      "clue_count": 2,
+      "hint_theme": "Encrypted financial logs from the Aurelia high-rise.",
+      "clue_templates": [
+        "A decrypted ledger showing a secret offshore account for 'Atmospheric Reserves'.",
+        "An encrypted memo regarding an 'Emergency Exit' protocol for executives."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the truth about the CEO's secret colony and a unique 'Golden Handshake' ship skin."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "expansion_trigger_01",
+      "metric": "prepared_systems_remaining",
+      "threshold": 2,
+      "action": "append_story_horizon",
+      "description": "Add new system layers when the player explores enough territory to find more desperate corporate clients."
+    }
+  ],
+  "expansion_rules": [
+    "Never reveal non-current system factions until a physical jump is completed.",
+    "Append new arcs based on local resources (e.g., 'The Scrap Metal Crisis' for high-mineral worlds)."
+  ],
+  "banned_repeats": [
+    "ancient/dead civilization",
+    "sentient AI failsafes",
+    "purge protocols",
+    "Great Silence",
+    "The Zenith title"
+  ]
+}

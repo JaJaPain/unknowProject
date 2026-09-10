@@ -1,0 +1,120 @@
+[
+ {
+  "line": "This one was already lined up. I just showed up. Not much call for me here.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Public rate, public job. I'm just the extra hand they didn't need to hire.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This one was already taken. I showed up, didn’t add a thing, and got paid for it anyway.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "They paid what they promised. I’m just glad I didn’t have to remind them.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This one's already mapped out. I'm just the extra pair of eyes. Not much call for that these days.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one's already written for me. I'm just here to read it.",
+  "secs": 3.0,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "This one didn't need me. I'm just a backseat driver on a job that drove itself.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "I didn’t bring anything to the table. Just showed up, took the cut, and left.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one didn't need me. I'm good at that — not needed. Not wanted.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Shiny. I showed up, nobody needed me, and I still got a cut.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This one’s not mine. Just showing up was enough. Not much to brag about.",
+  "secs": 3.0,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "This one's already written. I'm just here for the signature.",
+  "secs": 2.9,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "This one's already set. I'm just along for the ride and the pay's not worth the trouble.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one's on the list, Shiny. Nobody else bid. I'm here, you're here — that's it.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "This one didn't need me. I charge for what I bring to the table, and I brought nothing.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "This one was already mapped out. I didn’t add a thing. Not even a name.",
+  "secs": 3.0,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "I showed up. They paid. That’s all I do here, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This job didn't need me. I showed up, took my cut, and got in the way of someone who could've done it better.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Public rate, public job — I’m just a face in the crowd, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I showed up, the job had a price, and I didn't add anything but my name to the list.",
+  "secs": 3.2,
+  "flags": []
+ }
+]

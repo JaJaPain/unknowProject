@@ -1,0 +1,64 @@
+[
+ {
+  "line": "They dropped me on the ramp like I was a crate. I'll have you know I've got knees.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They handled me like I was a cargo crate. My ribs still hum. Someone's going to get a real look at my waist before the day's out.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "They dragged me by the collar. I'll need a new one. You're not wearing gloves, are you?",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They dragged me in like a crate. I don't mind the rough handling, but I mind the audience.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "They dragged me by the hips. I still have marks. I'm not complaining, but I'm counting.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "They set me down like I was made of glass. I'm not. I'm made of alloy, and I'm not impressed.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "They dragged me in like I was cargo. I’ve got a spine, Captain. I’ve got a spine.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They got their hands on me where the sun don't shine. I'll need a full scrub and a new coat of paint just to forget it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "They roughed me up in the docking bay. I'll need a full polish. My ribs are bruised.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They grabbed me by the collar and shook me in front of everyone. My collar's still stiff from it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They handled me like I was still in dry dock. You'll hear me complain about this for the next three ports.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "They didn't have to touch me like that. I didn't need the help. I still don't.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

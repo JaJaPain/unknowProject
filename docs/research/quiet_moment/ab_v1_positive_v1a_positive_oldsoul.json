@@ -1,0 +1,741 @@
+[
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Shiny, this job barely cleared the break-even. Modest payout? More like the ledger\u2019s last sigh before the next trade.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "cleared",
+    "break",
+    "last",
+    "sigh",
+    "before",
+    "next",
+    "trade"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The ship is not arriving with a new story for the mechanic. Let us preserve the miracle.",
+   "A calm day is just trouble without the fine print visible yet.",
+   "The ledger balanced itself for once. I am checking for a hidden fee on principle."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull integrity stable. No threats detected. Captain, the ship's calm is just physics doing its job.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "threats",
+    "detected",
+    "physics",
+    "doing",
+    "job"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "Communications are clear. I miss them only when they are not.",
+   "Heat is leaving the ship at the expected rate. Physics remains willing to cooperate."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Modest payout. Shiny, that's the kind of profit that doesn't even make the ledger tick.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "tick"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The numbers are behaving. I will not praise them; they get ideas.",
+   "My contacts are quiet. Either they are resting or planning something billable.",
+   "Professional boredom. It does not pay much, but it rarely shoots back."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull integrity holding. No threats in the sensor sweep. Captain, the ship\u2019s quiet now.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "threats"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming.",
+   "The latest scan is unremarkable. I know that sounds dismissive; it is a compliment.",
+   "Our vector is stable. The universe has agreed not to edit it for the moment."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": null,
+  "score": {
+   "struct": [
+    "empty"
+   ],
+   "black": [],
+   "lex": [],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous.",
+   "Waiting is still a choice when you make it on purpose. That makes it almost respectable.",
+   "Income has gaps, Shiny. The trick is not calling every gap a tragedy."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull's stable. No pursuit detected. Captain, the ship's quiet today.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "detected",
+    "today"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming.",
+   "The hull is not presenting any new opinions. I appreciate its restraint.",
+   "Current probabilities are not interesting enough to brief you on. That is favorable."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Modest payout, Shiny. Not a big loss\u2014just not the kind that makes you forget the next job.",
+  "score": {
+   "struct": [],
+   "black": [
+    "future_offer:next job"
+   ],
+   "lex": [
+    "loss",
+    "makes",
+    "forget",
+    "next"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "An honest pause. Rare commodity. Do not waste it by asking me how I feel.",
+   "We are between problems, not out of work. There is a difference, and it keeps me pleasant.",
+   "Income has gaps, Shiny. The trick is not calling every gap a tragedy."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull stable. No pursuit. Quiet as a ship that's finally stopped worrying.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "finally",
+    "stopped",
+    "worrying"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Power reserve remains where I left it. This is the sort of stability I can support.",
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "The hull is not presenting any new opinions. I appreciate its restraint."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Shiny, this job hit the modest payout bracket. The margin's clean\u2014no hidden fees, just the quiet kind of profit that doesn't need shouting.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:fees"
+   ],
+   "lex": [
+    "hit",
+    "bracket",
+    "margin's",
+    "hidden",
+    "fees",
+    "shouting"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "I keep expecting someone to ruin this calm for us. Experience has made me efficient that way.",
+   "The ledger balanced itself for once. I am checking for a hidden fee on principle.",
+   "For a change, the next credit is not already promised to something smoking."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull integrity holds. No threats detected. Captain, the ship's calm is as it should be.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "holds",
+    "threats",
+    "detected"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Nearby traffic is minding its distance. We should respect that excellent habit.",
+   "Power reserve remains where I left it. This is the sort of stability I can support.",
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Modest payout, Shiny. You got the right margin for the job's safety \u2014 it's a clean break.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "right",
+    "job's",
+    "safety",
+    "break"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "A little room to breathe in the schedule. I would frame it if framing paid better.",
+   "Somewhere, paperwork is multiplying without us. Let it enjoy the head start.",
+   "The ship is not arriving with a new story for the mechanic. Let us preserve the miracle."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": null,
+  "score": {
+   "struct": [
+    "empty"
+   ],
+   "black": [],
+   "lex": [],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Vibration is within tolerance. The deck has stopped trying to communicate through my feet.",
+   "Current probabilities are not interesting enough to brief you on. That is favorable.",
+   "Cargo mass remains exactly where the calculations expect it. A rare courtesy."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Modest payout for a safe job. Shiny, this one didn't need a risk.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [],
+   "pass_black": true,
+   "pass_lex": true
+  },
+  "copy": null,
+  "picks": [
+   "I enjoy moments that do not require a plan, a favor, or a plausible lie.",
+   "Somewhere, paperwork is multiplying without us. Let it enjoy the head start.",
+   "I could find us something reckless to do. I am choosing maturity, briefly."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull integrity confirmed. No threats detected. Captain, the ship's breathing easy.",
+  "score": {
+   "struct": [],
+   "black": [
+    "unsupported_status:breathing",
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "confirmed",
+    "threats",
+    "detected",
+    "breathing",
+    "easy"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The diagnostics are boring in a very organized way. I find that reassuring.",
+   "The sensors are mostly reporting empty space. It is a detailed report, but a welcome one.",
+   "Nothing has earned an alarm from me. I intend to keep it that way."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "kaelen",
+  "line": "Shiny, this job paid less than a week's rent. It's not a big loss, but it's a quiet one.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "week's",
+    "rent",
+    "loss"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Professional boredom. It does not pay much, but it rarely shoots back.",
+   "My contacts are quiet. Either they are resting or planning something billable.",
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous."
+  ]
+ },
+ {
+  "variant": "v1_positive",
+  "ch": "nova",
+  "line": "Hull's stable. No pursuit detected. Good.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "detected"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Nearby traffic is minding its distance. We should respect that excellent habit.",
+   "This is no longer luck, Captain. We have practiced being here.",
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Shiny, the payout's a public-board nickel. That's all the profit we got from this safe job.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:board",
+    "invented_amount:nickel"
+   ],
+   "lex": [
+    "payout's",
+    "public",
+    "board",
+    "nickel",
+    "all"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The ship is not arriving with a new story for the mechanic. Let us preserve the miracle.",
+   "A calm day is just trouble without the fine print visible yet.",
+   "The ledger balanced itself for once. I am checking for a hidden fee on principle."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull integrity holds. The ship doesn't need a second breath.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "holds",
+    "need",
+    "second",
+    "breath"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "Communications are clear. I miss them only when they are not.",
+   "Heat is leaving the ship at the expected rate. Physics remains willing to cooperate."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Shiny, this payout\u2019s barely enough to cover the fee. It\u2019s a clean profit\u2014just enough to keep the lights on.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:fee"
+   ],
+   "lex": [
+    "fee",
+    "lights"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The numbers are behaving. I will not praise them; they get ideas.",
+   "My contacts are quiet. Either they are resting or planning something billable.",
+   "Professional boredom. It does not pay much, but it rarely shoots back."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull integrity confirmed. No threats detected. Captain, the ship's quiet tonight.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "confirmed",
+    "threats",
+    "detected",
+    "tonight"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming.",
+   "The latest scan is unremarkable. I know that sounds dismissive; it is a compliment.",
+   "Our vector is stable. The universe has agreed not to edit it for the moment."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout, Shiny. The board\u2019s fee\u2019s tiny\u2014just like your schedule.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:fee"
+   ],
+   "lex": [
+    "board",
+    "fee",
+    "schedule"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous.",
+   "Waiting is still a choice when you make it on purpose. That makes it almost respectable.",
+   "Income has gaps, Shiny. The trick is not calling every gap a tragedy."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull stable. No pursuit detected. Quiet systems today.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "detected",
+    "today"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming.",
+   "The hull is not presenting any new opinions. I appreciate its restraint.",
+   "Current probabilities are not interesting enough to brief you on. That is favorable."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout. You\u2019ll get a little more on the board next cycle. Shiny.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:board"
+   ],
+   "lex": [
+    "little",
+    "board",
+    "next",
+    "cycle"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "An honest pause. Rare commodity. Do not waste it by asking me how I feel.",
+   "We are between problems, not out of work. There is a difference, and it keeps me pleasant.",
+   "Income has gaps, Shiny. The trick is not calling every gap a tragedy."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull stable. No pursuit detected. Captain, the ship\u2019s calm is the only thing we need right now.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "detected",
+    "thing",
+    "need",
+    "right"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Power reserve remains where I left it. This is the sort of stability I can support.",
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "The hull is not presenting any new opinions. I appreciate its restraint."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout, Shiny. The next job won't be so tidy.",
+  "score": {
+   "struct": [],
+   "black": [
+    "future_offer:next job"
+   ],
+   "lex": [
+    "next",
+    "tidy"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "I keep expecting someone to ruin this calm for us. Experience has made me efficient that way.",
+   "The ledger balanced itself for once. I am checking for a hidden fee on principle.",
+   "For a change, the next credit is not already promised to something smoking."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull's stable. No pursuit detected. Captain, we're clear.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "detected",
+    "we're"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Nearby traffic is minding its distance. We should respect that excellent habit.",
+   "Power reserve remains where I left it. This is the sort of stability I can support.",
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout means the board paid just enough to keep the ship running. Shiny, this is why we don't get the extra.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:board"
+   ],
+   "lex": [
+    "means",
+    "board",
+    "running",
+    "extra"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "A little room to breathe in the schedule. I would frame it if framing paid better.",
+   "Somewhere, paperwork is multiplying without us. Let it enjoy the head start.",
+   "The ship is not arriving with a new story for the mechanic. Let us preserve the miracle."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull integrity confirmed. No pursuit detected. Captain, the ship's quiet now.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "confirmed",
+    "detected"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Vibration is within tolerance. The deck has stopped trying to communicate through my feet.",
+   "Current probabilities are not interesting enough to brief you on. That is favorable.",
+   "Cargo mass remains exactly where the calculations expect it. A rare courtesy."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout, Shiny. You\u2019ll get what you paid for\u2014no more, no less. The board\u2019s quiet tonight.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_accounting:board",
+    "earth_calendar:tonight"
+   ],
+   "lex": [
+    "board",
+    "tonight"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "I enjoy moments that do not require a plan, a favor, or a plausible lie.",
+   "Somewhere, paperwork is multiplying without us. Let it enjoy the head start.",
+   "I could find us something reckless to do. I am choosing maturity, briefly."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": "Hull integrity holds. No threats detected. The ship's calm is a system state, not a choice.",
+  "score": {
+   "struct": [],
+   "black": [
+    "invented_threat:threats"
+   ],
+   "lex": [
+    "holds",
+    "threats",
+    "detected",
+    "state",
+    "choice"
+   ],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "The diagnostics are boring in a very organized way. I find that reassuring.",
+   "The sensors are mostly reporting empty space. It is a detailed report, but a welcome one.",
+   "Nothing has earned an alarm from me. I intend to keep it that way."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "kaelen",
+  "line": "Modest payout, as promised. Shiny, your schedule's still clear\u2014no need to fret over what's empty.",
+  "score": {
+   "struct": [],
+   "black": [],
+   "lex": [
+    "promised",
+    "schedule's",
+    "clear",
+    "fret",
+    "what's",
+    "empty"
+   ],
+   "pass_black": true,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Professional boredom. It does not pay much, but it rarely shoots back.",
+   "My contacts are quiet. Either they are resting or planning something billable.",
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous."
+  ]
+ },
+ {
+  "variant": "v1a_positive_oldsoul",
+  "ch": "nova",
+  "line": null,
+  "score": {
+   "struct": [
+    "empty"
+   ],
+   "black": [],
+   "lex": [],
+   "pass_black": false,
+   "pass_lex": false
+  },
+  "copy": null,
+  "picks": [
+   "Nearby traffic is minding its distance. We should respect that excellent habit.",
+   "This is no longer luck, Captain. We have practiced being here.",
+   "Signal traffic is low enough that I can hear the instruments thinking. They are not saying anything alarming."
+  ]
+ }
+]

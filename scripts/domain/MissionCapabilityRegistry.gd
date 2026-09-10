@@ -12,8 +12,11 @@ static func _ensure_defaults() -> void:
 	register(load("res://scripts/domain/capabilities/KillShipsCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/DeliverOreCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/PickupSpecialCapability.gd").new())
+	register(load("res://scripts/domain/capabilities/DeliveryCourierCapability.gd").new())
+	register(load("res://scripts/domain/capabilities/PurchaseDeliveryCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/RecoverCombatDropCapability.gd").new())
 	register(load("res://scripts/domain/capabilities/CommsReversalCapability.gd").new())
+	register(load("res://scripts/domain/capabilities/InvestigateSignalCapability.gd").new())
 
 
 static func register(capability: MissionCapability) -> void:
@@ -29,6 +32,15 @@ static func get_for_type(objective_type: String) -> MissionCapability:
 static func has_type(objective_type: String) -> bool:
 	_ensure_defaults()
 	return _capabilities.has(objective_type)
+
+
+static func objective_types() -> Array[String]:
+	_ensure_defaults()
+	var types: Array[String] = []
+	for objective_type in _capabilities.keys():
+		types.append(str(objective_type))
+	types.sort()
+	return types
 
 
 static func reset() -> void:

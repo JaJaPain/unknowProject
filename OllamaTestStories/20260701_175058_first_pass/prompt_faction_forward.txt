@@ -1,0 +1,118 @@
+You are the large local story model for SpaceGame, a procedural space game.
+
+Create the first campaign story bible for a new game. This must be useful to game code, but it must also contain a real campaign premise the player can feel: an opening situation, a visible problem, a hidden problem, early objectives, faction tension, recurring clues, and long-term mystery direction.
+
+Important: do not just write rules. Fill the fields with story content.
+
+Creative constraints:
+- The first handcrafted system is anchored by Zenith, Aurelia, and Vanguard.
+- Do not reveal future frontier factions to the player up front.
+- Kaelen is the only fixed recurring NPC besides the player.
+- Kaelen cannot die.
+- Kaelen appears publicly as a broker, fixer, and contract handler. Do not make her publicly a gate scientist, official liaison, commander, prophet, or mechanic.
+- Kaelen may privately know more about gates, signals, missing ships, or old infrastructure than she admits.
+- Kaelen's full mystery must never be completely solved.
+- New systems should reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.
+- Tone is PG-13 frontier space opera with dry, slightly dark humor.
+- The player begins as a broke new pilot with a working ship and very little context.
+- The story should support mining, salvage, delivery, combat, station services, rumors, and gate exploration.
+- Avoid making the player a chosen one, heir, prophecy figure, or uniquely destined hero.
+- The player should matter because they are useful, deniable, independent, persistent, and make choices.
+- The starter mission must support a simple first combat tutorial against exactly one Reaver or Reaver-like hostile ship.
+- The starter enemy can know one small unsettling clue, but must not dump the whole mystery.
+- Use plain ASCII punctuation only. No smart quotes, em dashes, accented characters, or mojibake.
+- Keep future reveals flexible. Give direction, not a final answer.
+
+Return only valid JSON. No markdown. No comments.
+
+Fill this object exactly:
+{
+  "campaign_title": "",
+  "campaign_subtitle": "",
+  "campaign_logline": "",
+  "campaign_pitch": "",
+  "campaign_story_summary": "",
+
+  "tone": "",
+  "opening_status_quo": "",
+  "visible_crisis": "",
+  "hidden_crisis": "",
+  "why_now": "",
+  "player_role": "",
+  "kaelen_public_role": "",
+  "kaelen_secret_angle": "",
+
+  "main_mystery_question": "",
+  "main_mystery_false_answer": "",
+  "main_mystery_true_answer_hint": "",
+  "long_term_reveal_direction": "",
+
+  "act_1_name": "",
+  "act_1_goal": "",
+  "act_1_opening_incident": "",
+  "act_1_midpoint_turn": "",
+  "act_1_finale": "",
+  "act_1_player_takeaway": "",
+
+  "starter_mission_title": "",
+  "starter_mission_reason": "",
+  "starter_enemy_identity": "",
+  "starter_enemy_knows": "",
+  "starter_mission_aftershock": "",
+
+  "zenith_current_problem": "",
+  "aurelia_current_problem": "",
+  "vanguard_current_problem": "",
+  "faction_conflict_triangle": "",
+  "neutral_space_pressure": "",
+
+  "recurring_clue_name": "",
+  "recurring_clue_signal": "",
+  "recurring_clue_first_appearance": "",
+  "recurring_clue_escalation": "",
+  "recurring_clue_payoff_hint": "",
+
+  "rumor_trail_name": "",
+  "rumor_trail_id": "rumor_trail.snake_case_id",
+  "rumor_hint_theme": "",
+  "rumor_clue_templates": ["", ""],
+  "rumor_discovery_type": "hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg",
+  "rumor_rarity": "local|uncommon|rare|legendary",
+  "rumor_payoff": "",
+
+  "gate_horizon_tease": "",
+  "new_system_reveal_rule": "",
+  "future_faction_tease": "",
+  "future_ore_or_upgrade_tease": "",
+
+  "story_regeneration_trigger": {
+    "id": "snake_case_id",
+    "metric": "prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state",
+    "threshold": 0,
+    "action": "append_story_horizon|append_rumor_trail|append_story_arc",
+    "description": ""
+  },
+
+  "kaelen_address_rule": "",
+  "kaelen_never_reveal_rule": "",
+  "humor_rule": "",
+  "fallback_rule": "",
+  "banned_repeats": [],
+
+  "story_questions_for_future_generation": ["", "", "", "", ""]
+}
+
+Field guidance:
+- campaign_pitch should be 2-4 sentences and read like a real campaign premise, not metadata.
+- campaign_story_summary should be 5-7 sentences summarizing Act 1 and the larger mystery direction in readable prose.
+- hidden_crisis should be discoverable through clues over time.
+- kaelen_secret_angle should suggest why Kaelen is involved without explaining her fully.
+- starter_mission_reason must connect the first one-Reaver combat mission to the larger story without making it too important.
+- starter_enemy_knows should be small but unsettling.
+- faction_conflict_triangle should explain how Zenith, Aurelia, and Vanguard pressure each other.
+- recurring_clue fields should describe a flexible clue pattern usable in missions, anomalies, salvage logs, station rumors, or gate travel.
+- rumor_trail_id must start with "rumor_trail." and use lower snake_case after that.
+- story_questions_for_future_generation should be open-ended questions. They must not force one answer.
+- story_questions_for_future_generation must leave room for future stories to become different from this one. They should ask about pressure, consequence, secrets, costs, choices, or contradictions without forcing a specific motif, culprit, technology, prophecy, ancient species, signal, or final explanation.
+
+Prioritize faction tension: each early mission should be able to affect who has leverage without locking the whole plot.

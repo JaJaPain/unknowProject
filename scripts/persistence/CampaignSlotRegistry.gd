@@ -123,7 +123,12 @@ func create_campaign(
 
 	var campaign_path := "%s/%s" % [root_path, slot_id]
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(campaign_path)):
-		return _failure("Campaign slot directory already exists.")
+		if bool(slots.get(slot_id, {}).get("occupied", false)):
+			return _failure("Campaign slot directory already exists.")
+		if not _remove_tree(campaign_path):
+			return _failure(
+				"Empty campaign slot contains stale files that could not be cleared."
+			)
 
 	var document_paths := {
 		SchemaType.CAMPAIGN: "campaign.json",
@@ -406,6 +411,8 @@ func _load_or_create() -> void:
 	if not validation.is_valid():
 		return
 	_load_slot_registry(parsed["data"])
+	if validation.is_valid():
+		_repair_orphaned_slots()
 
 
 func _load_slot_registry(data: Dictionary) -> void:
@@ -532,6 +539,32 @@ func _load_slot_registry(data: Dictionary) -> void:
 			)
 
 
+func _repair_orphaned_slots() -> void:
+	var repaired := false
+	for slot_id in SLOT_IDS:
+		var slot: Dictionary = slots.get(slot_id, _empty_slot(slot_id))
+		if not bool(slot.get("occupied", false)):
+			continue
+		var slot_path := "%s/%s" % [root_path, slot_id]
+		if FileAccess.file_exists("%s/campaign.json" % slot_path):
+			continue
+		push_warning(
+			"[CampaignSlotRegistry] Clearing orphaned campaign slot '%s': campaign.json is missing." %
+				slot_id
+		)
+		_remove_tree(slot_path)
+		slots[slot_id] = _empty_slot(slot_id)
+		if selected_slot_id == slot_id:
+			selected_slot_id = ""
+		repaired = true
+	if repaired and not _write_slot_registry():
+		validation.add_error(
+			"slot_registry_repair_failed",
+			"Orphaned campaign slots were detected but the registry could not be repaired.",
+			slots_path
+		)
+
+
 func _build_initial_documents(
 	campaign_id: String,
 	campaign_seed: String,
@@ -547,11 +580,29 @@ func _build_initial_documents(
 	if system_definition == null:
 		current_system_id = "system.start"
 		system_definition = system_registry.get_system(current_system_id)
+	var known_gates: Array[String] = []
+	var rumored_gates: Array[String] = []
 	var hidden_gates: Array[String] = []
+	var blocked_gates: Array[String] = []
+	var damaged_gates: Array[String] = []
 	for registered_system: SystemDefinition in system_registry.systems.values():
 		for gate in registered_system.gates:
-			hidden_gates.append(str(gate.id))
+			match gate.initial_state:
+				"known":
+					known_gates.append(str(gate.id))
+				"rumored":
+					rumored_gates.append(str(gate.id))
+				"hidden":
+					hidden_gates.append(str(gate.id))
+				"blocked":
+					blocked_gates.append(str(gate.id))
+				"damaged":
+					damaged_gates.append(str(gate.id))
+	known_gates.sort()
+	rumored_gates.sort()
 	hidden_gates.sort()
+	blocked_gates.sort()
+	damaged_gates.sort()
 
 	var campaign := {
 		"document_type": SchemaType.CAMPAIGN,
@@ -565,6 +616,7 @@ func _build_initial_documents(
 		"asset_registry_id": ids["assets"],
 		"kaelen_meta_id": ids["kaelen"],
 		"current_timeline_id": ids["timeline"],
+		"ship_transponder_code": "%06d" % randi_range(0, 999999),
 	}
 	var canon_result := ManifestStoreType.build_handcrafted_documents(
 		campaign_id,
@@ -605,11 +657,11 @@ func _build_initial_documents(
 		"id": ids["map"],
 		"campaign_id": campaign_id,
 		"checkpoint_id": ids["checkpoint"],
-		"known_gate_ids": [],
-		"rumored_gate_ids": [],
+		"known_gate_ids": known_gates,
+		"rumored_gate_ids": rumored_gates,
 		"hidden_gate_ids": hidden_gates,
-		"blocked_gate_ids": [],
-		"damaged_gate_ids": [],
+		"blocked_gate_ids": blocked_gates,
+		"damaged_gate_ids": damaged_gates,
 	}
 	var chronicle := {
 		"document_type": SchemaType.CHRONICLE_SEGMENT,

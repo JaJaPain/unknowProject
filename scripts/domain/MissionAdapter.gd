@@ -11,6 +11,10 @@ const ConsequenceType := preload(
 	"res://scripts/domain/MissionConsequenceDefinition.gd"
 )
 const StateType := preload("res://scripts/domain/MissionState.gd")
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
+const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 
 
 static func build_active_state(
@@ -27,6 +31,17 @@ static func build_active_state(
 		consequence.load_from_choice(selected_choice),
 		"selected_choice"
 	)
+	var selected_choice_id := _choice_id_from_offer(
+		quest_data,
+		selected_choice
+	)
+	if not DomainIdType.is_valid(selected_choice_id, "choice"):
+		validation.add_error(
+			"invalid_selected_choice_id",
+			"Selected choice ID is invalid: %s" %
+				DomainIdType.validation_error(selected_choice_id, "choice"),
+			"choice_id_selected"
+		)
 	if not validation.is_valid():
 		return {
 			"state": {},
@@ -46,13 +61,28 @@ static func build_active_state(
 		"faction": str(quest_data.get("faction", "neutral")),
 		"faction_id": str(definition.faction_id),
 		"agent_name": str(quest_data.get("agent_name", "Broker Kaelen")),
+		"agent_id": str(quest_data.get("agent_id", "")),
+		"agent_memory_id": str(quest_data.get("agent_memory_id", "")),
+		"agent_voice_profile_id": str(
+			quest_data.get("agent_voice_profile_id", "")
+		),
 		"giver_npc_id": str(definition.giver_npc_id),
 		"dialogue": definition.dialogue,
 		"objective_type": definition.objective.type,
 		"combat_multiplier": consequence.combat_multiplier,
 		"reward_credits_multiplier": consequence.reward_credits_multiplier,
 		"reward_credits": definition.reward.credits,
+		"choice_id_selected": selected_choice_id,
 		"choice_text_selected": str(selected_choice.get("text", "")),
+		"conversation_intent_id_selected": str(
+			selected_choice.get("conversation_intent_id", "")
+		),
+		"conversation_asked_intents": _string_array(
+			selected_choice.get("asked_intents", [])
+		),
+		"conversation_learned_fact_ids": _string_array(
+			selected_choice.get("learned_fact_ids", [])
+		),
 		"agent_response": consequence.dialogue_response,
 		"system_id": system_id,
 		"target_spawn_sequence": 0,
@@ -82,12 +112,23 @@ static func build_active_state(
 			quest_data.get("public_board_text_is_fallback", false)
 		),
 		"station_errand": bool(quest_data.get("station_errand", false)),
+		"is_intro_tutorial": bool(quest_data.get("is_intro_tutorial", false)),
 	}
+	state = NarrativeMetadataType.apply_to_state(
+		state,
+		definition.narrative_metadata
+	)
 
 	match definition.objective.type:
 		"KILL_SHIPS":
 			state["target_faction"] = str(
 				objective.get("target_faction", "zenith")
+			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "zenith")
+				)
 			)
 			state["count_required"] = max(
 				1,
@@ -119,9 +160,57 @@ static func build_active_state(
 				objective.get("destination", "Grease Monkeys")
 			)
 			state["picked_up"] = false
+		"DELIVERY_COURIER":
+			state["item_name"] = str(
+				objective.get("item_name", "Sealed Courier Package")
+			)
+			state["origin_station_id"] = str(
+				objective.get("origin_station_id", "")
+			)
+			state["origin_display"] = str(
+				objective.get("origin_display", state["origin_station_id"])
+			)
+			state["destination_station_id"] = str(
+				objective.get("destination_station_id", "")
+			)
+			state["destination_display"] = str(
+				objective.get(
+					"destination_display",
+					state["destination_station_id"]
+				)
+			)
+			state["cargo_loaded"] = true
+		"PURCHASE_DELIVERY":
+			state["item_id"] = str(objective.get("item_id", ""))
+			state["item_name"] = str(objective.get("item_name", ""))
+			state["quantity_required"] = max(
+				1,
+				int(objective.get("quantity_required", 1))
+			)
+			state["store_station_id"] = str(
+				objective.get("store_station_id", "")
+			)
+			state["store_display"] = str(
+				objective.get("store_display", state["store_station_id"])
+			)
+			state["destination_station_id"] = str(
+				objective.get("destination_station_id", "")
+			)
+			state["destination_display"] = str(
+				objective.get(
+					"destination_display",
+					state["destination_station_id"]
+				)
+			)
 		"RECOVER_COMBAT_DROP":
 			state["target_faction"] = str(
 				objective.get("target_faction", "reavers")
+			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "reavers")
+				)
 			)
 			state["count_required"] = max(
 				1,
@@ -144,6 +233,12 @@ static func build_active_state(
 		"TARGET_WITH_COMMS_REVERSAL":
 			state["target_faction"] = str(
 				objective.get("target_faction", "reavers")
+			)
+			state["target_faction_display"] = str(
+				objective.get(
+					"target_faction_display",
+					_target_faction_display(objective, "reavers")
+				)
 			)
 			state["count_required"] = max(
 				2,
@@ -175,6 +270,52 @@ static func build_active_state(
 
 static func validate_active_state(source: Dictionary) -> ValidationResult:
 	return StateType.new().load_from_dict(source)
+
+
+static func _target_faction_display(
+	objective: Dictionary,
+	fallback_key: String
+) -> String:
+	var explicit := str(objective.get("target_faction_display", "")).strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	return _display_faction_key(str(objective.get("target_faction", fallback_key)))
+
+
+static func _display_faction_key(faction_key: String) -> String:
+	var clean := faction_key.strip_edges().to_lower()
+	match clean:
+		"zenith", "faction.zenith":
+			return "Zenith"
+		"aurelia", "faction.aurelia":
+			return "Aurelia"
+		"vanguard", "faction.vanguard":
+			return "Vanguard"
+		"reavers", "faction.reavers":
+			return "Reavers"
+		"obsidian", "faction.obsidian":
+			return "Obsidian"
+		"dustborn", "faction.dustborn":
+			return "Dustborn"
+		"wraiths", "faction.wraiths":
+			return "Wraiths"
+		"ironclad", "faction.ironclad":
+			return "Ironclad"
+	if clean.begins_with("faction.generated."):
+		clean = clean.trim_prefix("faction.generated.")
+	elif clean.begins_with("faction."):
+		clean = clean.trim_prefix("faction.")
+	if clean.begins_with("gen_"):
+		clean = clean.trim_prefix("gen_")
+	var words := clean.replace(".", "_").replace("-", "_").split("_", false)
+	var titled: Array[String] = []
+	for word in words:
+		if word.is_valid_int() or word.length() <= 1:
+			continue
+		titled.append(word.substr(0, 1).to_upper() + word.substr(1))
+	if titled.is_empty():
+		return "Local"
+	return " ".join(titled)
 
 
 static func normalize_legacy_state(source: Dictionary) -> Dictionary:
@@ -241,6 +382,21 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	normalized["choice_text_selected"] = str(
 		normalized.get("choice_text_selected", "")
 	)
+	normalized["choice_id_selected"] = str(
+		normalized.get("choice_id_selected", "")
+	)
+	normalized["conversation_intent_id_selected"] = str(
+		normalized.get("conversation_intent_id_selected", "")
+	)
+	normalized["conversation_asked_intents"] = _string_array(
+		normalized.get("conversation_asked_intents", [])
+	)
+	normalized["conversation_learned_fact_ids"] = _string_array(
+		normalized.get("conversation_learned_fact_ids", [])
+	)
+	normalized["agent_voice_profile_id"] = str(
+		normalized.get("agent_voice_profile_id", "")
+	)
 	normalized["system_id"] = str(
 		normalized.get("system_id", "start_system")
 	)
@@ -257,6 +413,10 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	normalized["station_errand"] = bool(
 		normalized.get("station_errand", false)
 	)
+	normalized = NarrativeMetadataType.apply_to_state(
+		normalized,
+		NarrativeMetadataType.from_source(normalized)
+	)
 	match str(normalized.get("objective_type", "")):
 		"KILL_SHIPS":
 			normalized["current_count"] = max(
@@ -271,6 +431,15 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 		"PICKUP_SPECIAL":
 			normalized["picked_up"] = bool(
 				normalized.get("picked_up", false)
+			)
+		"DELIVERY_COURIER":
+			normalized["cargo_loaded"] = bool(
+				normalized.get("cargo_loaded", true)
+			)
+		"PURCHASE_DELIVERY":
+			normalized["quantity_required"] = max(
+				1,
+				int(normalized.get("quantity_required", 1))
 			)
 		"RECOVER_COMBAT_DROP":
 			normalized["current_count"] = max(
@@ -316,6 +485,58 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	return normalized
 
 
+static func _choice_id_from_offer(
+	quest_data: Dictionary,
+	selected_choice: Dictionary
+) -> String:
+	var explicit_id := _choice_id_from_source(selected_choice, -1)
+	if not explicit_id.is_empty():
+		return explicit_id
+
+	var choices: Array = quest_data.get("choices", [])
+	for i in range(choices.size()):
+		if not choices[i] is Dictionary:
+			continue
+		var candidate: Dictionary = choices[i]
+		if _choices_match(candidate, selected_choice):
+			return _choice_id_from_source(candidate, i)
+
+	return "choice.selected_direct"
+
+
+static func _choice_id_from_source(choice: Dictionary, index: int) -> String:
+	var explicit_id := str(choice.get("choice_id", "")).strip_edges()
+	if explicit_id.is_empty():
+		explicit_id = str(choice.get("id", "")).strip_edges()
+	if not explicit_id.is_empty():
+		return explicit_id
+	if index >= 0:
+		return "choice.selected_%02d" % index
+	return ""
+
+
+static func _choices_match(left: Dictionary, right: Dictionary) -> bool:
+	if left == right:
+		return true
+	return (
+		str(left.get("text", "")) == str(right.get("text", ""))
+		and JSON.stringify(left.get("consequence", {})) == JSON.stringify(
+			right.get("consequence", {})
+		)
+	)
+
+
+static func _string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not (value is Array):
+		return result
+	for item in (value as Array):
+		var text := str(item).strip_edges()
+		if not text.is_empty() and text not in result:
+			result.append(text)
+	return result
+
+
 static func _legacy_objective(source: Dictionary) -> Dictionary:
 	var objective := {"type": str(source.get("objective_type", ""))}
 	for field in [
@@ -328,7 +549,15 @@ static func _legacy_objective(source: Dictionary) -> Dictionary:
 		"target_npc",
 		"part_name",
 		"destination",
+		"item_id",
 		"item_name",
+		"quantity_required",
+		"origin_station_id",
+		"origin_display",
+		"destination_station_id",
+		"destination_display",
+		"store_station_id",
+		"store_display",
 		"turn_in_location",
 		"reward_credits",
 	]:

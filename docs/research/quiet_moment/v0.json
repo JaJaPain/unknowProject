@@ -1,0 +1,122 @@
+[
+ {
+  "ch": "kaelen",
+  "line": "Shiny, this job\u2019s profit margin\u2019s about as thick as a nickel.",
+  "picks": [
+   "An honest pause. Rare commodity. Do not waste it by asking me how I feel.",
+   "We still own the ship, the hour, and most of our dignity. Strong quarter.",
+   "Nothing is demanding payment this second. That is practically a holiday."
+  ],
+  "dt": 2.7
+ },
+ {
+  "ch": "nova",
+  "line": "Hull stable. Sensors clear. No pursuit detected. Ship's condition: nominal.",
+  "picks": [
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "Our route has stopped asking difficult questions. I will record the moment for future disbelief.",
+   "Nothing has earned an alarm from me. I intend to keep it that way."
+  ],
+  "dt": 2.5
+ },
+ {
+  "ch": "kaelen",
+  "line": "Shiny, this job's profit margin was just enough to cover the coffee cost.",
+  "picks": [
+   "No one is currently charging us extra for bad timing. I have noted the exception.",
+   "Nothing broke, no one lied to my face, and the clock kept moving. I can work with that.",
+   "Silence is when sensible people read the terms. We should try it sometime."
+  ],
+  "dt": 2.5
+ },
+ {
+  "ch": "nova",
+  "line": "Hull integrity holds. No active threats detected. Systems nominal.",
+  "picks": [
+   "Cargo mass remains exactly where the calculations expect it. A rare courtesy.",
+   "Vibration is within tolerance. The deck has stopped trying to communicate through my feet.",
+   "Our route has stopped asking difficult questions. I will record the moment for future disbelief."
+  ],
+  "dt": 2.5
+ },
+ {
+  "ch": "kaelen",
+  "line": "Shiny, that job\u2019s payout\u2019s a quiet one\u2014just enough to cover the coffee.",
+  "picks": [
+   "Nothing is demanding payment this second. That is practically a holiday.",
+   "An honest pause. Rare commodity. Do not waste it by asking me how I feel.",
+   "If waiting paid by the hour, I would have retired us both by now."
+  ],
+  "dt": 2.5
+ },
+ {
+  "ch": "nova",
+  "line": "Hull integrity holds. Systems show no immediate threat. Captain, the ship is safe.",
+  "picks": [
+   "Fuel estimates agree with each other. I am choosing not to disturb them with enthusiasm.",
+   "Engine temperature is ordinary. I have learned to enjoy ordinary when it visits.",
+   "We have gone an entire hour without inventing a reason to visit a mechanic. Progress has many forms."
+  ],
+  "dt": 2.5
+ },
+ {
+  "ch": "kaelen",
+  "line": "Shiny, this job\u2019s margins are exactly what you\u2019d expect for a safe, low-payout run.",
+  "picks": [
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous.",
+   "If waiting paid by the hour, I would have retired us both by now.",
+   "I enjoy moments that do not require a plan, a favor, or a plausible lie."
+  ],
+  "dt": 2.6
+ },
+ {
+  "ch": "nova",
+  "line": "Hull integrity holds. Sensors show no threat. Captain, your ship is steady.",
+  "picks": [
+   "Communications are clear. I miss them only when they are not.",
+   "Our vector is stable. The universe has agreed not to edit it for the moment.",
+   "The diagnostics are boring in a very organized way. I find that reassuring."
+  ],
+  "dt": 2.6
+ },
+ {
+  "ch": "kaelen",
+  "line": "The ledger\u2019s quiet tonight. Modest payment, no surprises.",
+  "picks": [
+   "The ledger balanced itself for once. I am checking for a hidden fee on principle.",
+   "Panic is expensive, Shiny. Enjoy the discount while the universe is offering it.",
+   "For a change, the next credit is not already promised to something smoking."
+  ],
+  "dt": 2.6
+ },
+ {
+  "ch": "nova",
+  "line": "Hull integrity holds. Systems are quiet. No threats detected.",
+  "picks": [
+   "Vibration is within tolerance. The deck has stopped trying to communicate through my feet.",
+   "Power reserve remains where I left it. This is the sort of stability I can support.",
+   "Three independent readings agree. It is nice when reality is not being creative."
+  ],
+  "dt": 2.6
+ },
+ {
+  "ch": "kaelen",
+  "line": "Your payout's modest, but the schedule's clean. No chaos here.",
+  "picks": [
+   "There is room in the schedule. Do not fill it just because empty space makes you nervous.",
+   "I keep expecting someone to ruin this calm for us. Experience has made me efficient that way.",
+   "Income has gaps, Shiny. The trick is not calling every gap a tragedy."
+  ],
+  "dt": 2.6
+ },
+ {
+  "ch": "nova",
+  "line": "Hull integrity holds. Sensors show no threat. Systems stable for now.",
+  "picks": [
+   "This is no longer luck, Captain. We have practiced being here.",
+   "Fuel estimates agree with each other. I am choosing not to disturb them with enthusiasm.",
+   "Our route has stopped asking difficult questions. I will record the moment for future disbelief."
+  ],
+  "dt": 2.6
+ }
+]

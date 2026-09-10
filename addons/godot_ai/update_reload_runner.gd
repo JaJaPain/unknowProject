@@ -49,6 +49,9 @@ const INSTALL_BACKUP_SUFFIX := ".update_backup"
 enum InstallStatus { OK, FAILED_CLEAN, FAILED_MIXED }
 
 var _zip_path := ""
+## Old plugin.cfg version, read from disk in `start()` before the extract
+## replaces it. Rides the pending self-update marker.
+var _from_version := ""
 var _temp_dir := ""
 var _detached_dock = null
 var _started := false
@@ -110,7 +113,30 @@ func start(zip_path: String, temp_dir: String, detached_dock) -> void:
 	_zip_path = zip_path
 	_temp_dir = temp_dir
 	_detached_dock = detached_dock
+	## Captured before the extract replaces plugin.cfg: the success marker
+	## carries from/to versions so the re-enabled plugin can (a) report a
+	## complete self_update telemetry event and (b) scope the post-update
+	## client repin to entries whose ONLY drift is the old version pin. Pure
+	## file IO on purpose — the runner must not call into plugin scripts
+	## during the disable window.
+	_from_version = _read_plugin_cfg_version()
 	_wait_frames(PRE_DISABLE_DRAIN_FRAMES, "_disable_old_plugin")
+
+
+## Read `version="X.Y.Z"` from the on-disk plugin.cfg. Returns "" when the
+## file or key is missing — consumers treat an empty version as "unknown"
+## and degrade (telemetry sends empty fields, the repin gate skips).
+static func _read_plugin_cfg_version() -> String:
+	var file := FileAccess.open(PLUGIN_CFG_PATH, FileAccess.READ)
+	if file == null:
+		return ""
+	var text := file.get_as_text()
+	file.close()
+	var re := RegEx.new()
+	if re.compile("(?m)^version=\"([^\"]+)\"") != OK:
+		return ""
+	var found := re.search(text)
+	return found.get_string(1) if found != null else ""
 
 
 func _process(_delta: float) -> void:
@@ -326,6 +352,13 @@ func _is_safe_zip_addon_file(file_path: String) -> bool:
 	var rel_path := file_path.trim_prefix(ZIP_ADDON_PREFIX)
 	if rel_path.is_empty() or rel_path.ends_with("/"):
 		return false
+	## Reserved install-machinery suffixes (#713): an entry named like the
+	## runner's own staging/backup files would collide with the temp file
+	## `_install_zip_file` writes, or overwrite / later be deleted with the
+	## rollback snapshots `_finalize_install_success` cleans up — corrupting
+	## the very rollback set protecting this install.
+	if rel_path.ends_with(TEMP_FILE_SUFFIX) or rel_path.ends_with(INSTALL_BACKUP_SUFFIX):
+		return false
 	for segment in rel_path.split("/", true):
 		if segment.is_empty() or segment == "." or segment == "..":
 			return false
@@ -374,13 +407,31 @@ func _install_zip_file(
 			FileAccess.get_open_error(),
 		])
 		return {}
-	f.store_buffer(content)
+	## `store_buffer` reports a short write only via its return value — it
+	## does NOT set the last-error state `get_error()` reads — and the write
+	## is stdio-buffered, so disk-full surfaces at flush/close, not here.
+	## Capture the return and re-verify the on-disk size after close() so a
+	## disk-full "succeeds" write can't rename a truncated file over the
+	## live target (#687).
+	var stored := f.store_buffer(content)
+	f.flush()
 	var write_error := f.get_error()
 	f.close()
-	if write_error != OK:
-		print("MCP | update extract failed: write error %d for %s" % [
+	## get_length() on a read handle, not get_file_as_bytes().size() — the
+	## latter re-reads the whole file into memory per extracted entry just
+	## to learn its length.
+	var written_size := -1
+	var verify := FileAccess.open(temp_path, FileAccess.READ)
+	if verify != null:
+		written_size = verify.get_length()
+		verify.close()
+	if not stored or write_error != OK or written_size != content.size():
+		print("MCP | update extract failed: write validation failed (error %d) for %s (stored=%s size=%d expected=%d)" % [
 			write_error,
 			temp_path,
+			stored,
+			written_size,
+			content.size(),
 		])
 		DirAccess.remove_absolute(temp_path)
 		return {}
@@ -480,7 +531,14 @@ func _finalize_install_success() -> void:
 		if record.get("had_original", false):
 			DirAccess.remove_absolute(String(record.get("backup_path", "")))
 	_paths_written.clear()
-	_record_pending_self_update({"status": "success"})
+	## plugin.cfg on disk is the NEW version by now — read it back rather
+	## than trusting any in-memory value, so the marker describes what was
+	## actually installed.
+	_record_pending_self_update({
+		"status": "success",
+		"from_version": _from_version,
+		"to_version": _read_plugin_cfg_version(),
+	})
 
 
 ## Persist a self_update event description so the re-enabled plugin can

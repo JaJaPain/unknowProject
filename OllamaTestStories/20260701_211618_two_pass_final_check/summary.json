@@ -1,0 +1,38 @@
+[
+  {
+    "name": "two_pass_01",
+    "variant": "two_pass",
+    "seed": 954978,
+    "elapsed_seconds": 7.9,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "meta_failed",
+      "missing_field:future_generation_questions",
+      "bad_question_list:future_generation_questions"
+    ],
+    "warnings": [
+      "avoid_motifs_may_be_too_sparse"
+    ]
+  },
+  {
+    "name": "two_pass_02",
+    "variant": "two_pass",
+    "seed": 955009,
+    "elapsed_seconds": 42.71,
+    "valid": false,
+    "score": 81,
+    "title": "Iron Scarcity",
+    "logline": "A desperate pilot navigates the crumbling infrastructure of a resource-starved sector.",
+    "errors": [
+      "missing_field:story_questions_for_future_generation",
+      "story_questions_not_five_items"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  }
+]

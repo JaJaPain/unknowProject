@@ -1,0 +1,90 @@
+{
+    "schema_version": 2,
+    "stores": [
+        {
+            "store_id": "store.haven.general",
+            "station_id": "haven",
+            "item_ids": [
+                "repair_kit",
+                "shield_cell",
+                "scanner_probe",
+                "flare_decoy",
+                "fuel_booster",
+                "emp_charge",
+                "salvage_drone",
+                "damaged_transponder",
+                "kinetic_ammo",
+                "thermal_ammo",
+                "data_chip",
+                "coffee_maker",
+                "antimatter_pod",
+                "hull_plating",
+                "power_coils",
+                "sensor_cluster",
+                "memory_bank"
+            ],
+            "stock_overrides": {}
+        },
+        {
+            "store_id": "store.iron_reach.supply",
+            "station_id": "iron_reach",
+            "item_ids": [
+                "repair_kit",
+                "shield_cell",
+                "fuel_booster",
+                "emp_charge",
+                "target_painter",
+                "kinetic_ammo",
+                "thermal_ammo",
+                "explosive_ammo",
+                "energy_ammo",
+                "hull_plating",
+                "fusion_cell"
+            ],
+            "stock_overrides": {
+                "repair_kit": 2,
+                "shield_cell": 2,
+                "fuel_booster": 2,
+                "kinetic_ammo": 10,
+                "thermal_ammo": 8,
+                "explosive_ammo": 4,
+                "energy_ammo": 3,
+                "hull_plating": 1,
+                "fusion_cell": 1
+            }
+        },
+        {
+            "store_id": "store.kova.supply",
+            "station_id": "kova",
+            "item_ids": [
+                "repair_kit",
+                "scanner_probe",
+                "flare_decoy",
+                "fuel_booster",
+                "damaged_transponder",
+                "toilet_paper",
+                "mystery_box",
+                "pet_rock",
+                "salvage_drone",
+                "neon_sign",
+                "lava_lamp",
+                "data_chip",
+                "memory_bank"
+            ],
+            "stock_overrides": {
+                "repair_kit": 2,
+                "scanner_probe": 3,
+                "flare_decoy": 1,
+                "damaged_transponder": 10,
+                "toilet_paper": 2,
+                "mystery_box": 1,
+                "pet_rock": 3,
+                "salvage_drone": 5,
+                "neon_sign": 1,
+                "lava_lamp": 1,
+                "data_chip": 2,
+                "memory_bank": 1
+            }
+        }
+    ]
+}

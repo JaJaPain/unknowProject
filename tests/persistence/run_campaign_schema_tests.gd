@@ -37,10 +37,37 @@ func _test_ownership_catalog() -> void:
 		SchemaType.ownership_for(SchemaType.CHECKPOINT) == SchemaType.REWINDABLE,
 		"Checkpoint ownership should be rewindable."
 	)
+	_expect(
+		SchemaType.ownership_for(SchemaType.CHAPTER_PACKETS)
+			== SchemaType.PERMANENT,
+		"Chapter narrative packet ownership should be permanent prepared canon."
+	)
+	_expect(
+		SchemaType.ownership_for(SchemaType.CAMPAIGN_NPC_IDENTITIES)
+			== SchemaType.PERMANENT,
+		"NPC identity/persona/voice ownership should be permanent."
+	)
+	_expect(
+		SchemaType.ownership_for(SchemaType.CAMPAIGN_NPC_STATES)
+			== SchemaType.REWINDABLE,
+		"NPC relationship/stake/memory projection ownership should be rewindable."
+	)
 	var table := SchemaType.ownership_table()
 	_expect(
 		"autopilot_waypoint" in table[SchemaType.DISPOSABLE],
 		"Disposable ownership table is missing tactical waypoints."
+	)
+	_expect(
+		"npc_identity_persona_voice" in table[SchemaType.PERMANENT],
+		"Permanent ownership table is missing NPC identity/persona/voice."
+	)
+	_expect(
+		"npc_current_stake_projection" in table[SchemaType.REWINDABLE],
+		"Rewindable ownership table is missing NPC current stake projection."
+	)
+	_expect(
+		"npc_memory_event" in table[SchemaType.APPEND_ONLY],
+		"Append-only ownership table is missing NPC memory events."
 	)
 
 
@@ -58,7 +85,11 @@ func _test_valid_documents() -> void:
 
 func _test_valid_bundle() -> void:
 	var validation = SchemaType.validate_bundle(_valid_bundle())
-	_expect(validation.is_valid(), "Representative campaign bundle failed.")
+	_expect(
+		validation.is_valid(),
+		"Representative campaign bundle failed: %s" %
+			JSON.stringify(validation.to_dict())
+	)
 
 
 func _test_missing_ids() -> void:
@@ -212,6 +243,17 @@ func _test_kaelen_restrictions() -> void:
 		),
 		"Non-death memory accepted a death category."
 	)
+	document = _kaelen_meta()
+	document["memories"][0]["line_fingerprint"] = "not-a-sha"
+	validation = SchemaType.validate_document(document)
+	_expect(
+		_has_issue(
+			validation.errors,
+			"invalid_line_fingerprint",
+			"memories.0.line_fingerprint"
+		),
+		"Kaelen memory accepted an invalid delivered-line fingerprint."
+	)
 
 
 func _valid_bundle() -> Array:
@@ -223,6 +265,7 @@ func _valid_bundle() -> Array:
 		_map_knowledge(),
 		_chronicle(),
 		_kaelen_meta(),
+		_chapter_packets(),
 	]
 
 
@@ -367,6 +410,30 @@ func _kaelen_meta() -> Dictionary:
 			"fact_refs": ["fact.opening.kaelen_present"],
 			"summary": "Shiny arrived in the opening system.",
 			"timeline_status": "current",
+			"line_fingerprint": "Kaelen opening line.".sha256_text(),
+			"event_kind": "first_system_arrival",
+		}],
+	}
+
+
+func _chapter_packets() -> Dictionary:
+	return {
+		"document_type": SchemaType.CHAPTER_PACKETS,
+		"schema_version": 1,
+		"ownership": SchemaType.PERMANENT,
+		"campaign_id": "campaign.local.alpha",
+		"packets": [{
+			"packet_id": "chapter_packet.1",
+			"chapter": 1,
+			"premise": "The opening system is under pressure.",
+			"threads": [{"thread_id": "thread.opening"}],
+			"facts": [{"fact_id": "fact.opening.visible"}],
+			"beats": [{
+				"beat_id": "beat.opening",
+				"supported_objective_types": ["DELIVERY_COURIER"],
+				"eligible_entity_ids": ["station.main"],
+				"stake": "The station needs a clean route.",
+			}],
 		}],
 	}
 

@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "id": "example-001",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "context": "The player has heard a rumor that an ore convoy vanished near the belt.",
+      "opener": "You picked a strange week to drink here, pilot. The manifests have been nervous all night.",
+      "player_question": "I keep hearing about the missing ore convoy. What's the real story?",
+      "npc_answer": "The convoy went dark past the belt. Nobody says why out loud, which usually means somebody important is already lying about it.",
+      "close": "That is all I know without getting assigned paperwork. Watch the belt lanes."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Dust of the Rim",
+  "campaign_subtitle": "A Scavenger's Survival",
+  "campaign_logline": "A broke pilot must navigate the shifting trade routes between three warring factions.",
+  "campaign_pitch": "Navigate a dying economic zone. Survive the pirate raids and secure your own fuel supply.",
+  "campaign_story_summary": "The Zenith corporation faces resource shortages. The Aurelia Collective demands more territory. The Vanguard militia guards the border. You are just trying to survive.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are failing due to heavy pirate activity.",
+    "visible_crisis": "The Zenith corporation is losing supply lines and desperate for resources.",
+    "hidden_crisis": "A massive industrial collapse in the core systems is forcing a migration of wealth.",
+    "why_now": "Fuel prices have spiked, making independent survival nearly impossible.",
+    "player_role": "An independent pilot with an aging ship and empty pockets."
+  },
+  "mystery": {
+    "question": "Why are the pirates so aggressive now?",
+    "false_answer": "They are just desperate scavengers looking for scraps.",
+    "true_answer_hint": "The pirate routes follow a specific, planned pattern of destruction.",
+    "long_term_reveal_direction": "A corporate conspiracy to create artificial scarcity."
+  },
+  "kaelen": {
+    "public_role": "Broker and fixer for independent pilots.",
+    "secret_angle": "She monitors the movement of cargo that shouldn't exist.",
+    "address_rule": "Always refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her origin, true name, or any special abilities."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is running out of refined fuel and needs new sources.",
+    "aurelia_problem": "Aurelia wants to expand their territory into the contested zones.",
+    "vanguard_problem": "The Vanguard are struggling to hold the line against pirate incursions.",
+    "conflict_triangle": "Zenith wants resources, Aurelia wants land, and Vanguard must defend it.",
+    "neutral_space_pressure": "Independent pilots are being squeezed out of the lucrative trade routes."
+  },
+  "act_1": {
+    "name": "The Scavenger's Path",
+    "goal": "Establish a foothold in the local sector.",
+    "opening_incident": "A cargo ship is intercepted by a pirate vessel.",
+    "midpoint_turn": "You find a shipment of high-grade minerals that both Zenith and Aurelia want.",
+    "finale": "You must choose which faction to deliver the materials to.",
+    "player_takeaway": "The local economy is fractured, and every choice has a cost."
+  },
+  "starter_mission": {
+    "title": "The Lone Raider",
+    "reason": "A pirate ship is harassing trade routes near your home port.",
+    "enemy_identity": "Reaver-class scavenger ship.",
+    "enemy_knows": "It thinks you are an easy target for scrap metal.",
+    "aftershock_reason": "The local authorities will notice the pirate's destruction."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signals",
+    "signal": "A rhythmic pulse of data packets on a 10hz frequency.",
+    "first_appearance": "Detected during your first mission to clear the path.",
+    "escalation": "The signal appears more frequently near high-value cargo.",
+    "payoff_hint": "The signals are linked to an automated mining network."
+  },
+  "rumor_trail": {
+    "name": "The Ghost Mine",
+    "trail_id": "rumor_trail.ghost_mine_scavenge",
+    "hint_theme": "Whispers of a massive, abandoned mine.",
+    "clue_templates": [
+      "A local trader mentions an old mining site.",
+      "A derelict ship's log warns of heavy radiation."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Unlocks access to a high-value, hidden mineral zone."
+  },
+  "horizon": {
+    "gate_tease": "The gate leads to a realm of uncharted territory and new resources.",
+    "new_system_reveal_rule": "New systems are revealed only when the player reaches the nearest gate.",
+    "future_faction_tease": "Rumors of a nomadic tribe that controls the trade routes.",
+    "future_ore_or_upgrade_tease": "There is talk of being able to find more advanced alloys.",
+    "regeneration_trigger": {
+      "id": "regen_gate_trigger",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main arc of Act 1 is complete, a new gate's path is teased."
+    }
+  },
+  "rules": {
+    "humor_rule": "Dry, slightly dark humor.",
+    "fallback_rule": "If no story content is available, use a generic trade mission.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "scarcity",
+      "pirate raids"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the pirate ships' names?",
+    "Why is the core system experiencing a collapse?",
+    "How many ships in the vanguard to be hired as mercs?",
+    "Who is behind the organization that tracks the rumors?",
+    "Where is the turn point for the next campaign?"
+  ]
+}

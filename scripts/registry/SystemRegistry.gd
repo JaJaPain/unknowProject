@@ -43,6 +43,10 @@ func get_system(system_id: Variant) -> SystemDefinition:
 	return systems.get(canonical) as SystemDefinition
 
 
+func get_all_systems() -> Array:
+	return systems.values()
+
+
 func get_gate(gate_id: Variant) -> GateDefinition:
 	var canonical := resolve_gate_id(gate_id)
 	return gates.get(canonical) as GateDefinition
@@ -76,7 +80,201 @@ func load_scene(system_id: Variant) -> PackedScene:
 	var definition := get_system(system_id)
 	if definition == null:
 		return null
+	if definition.scene_path == "generated":
+		return null
 	return load(definition.scene_path) as PackedScene
+
+
+func instantiate_system(system_id: Variant) -> Node3D:
+	var definition := get_system(system_id)
+	if definition == null:
+		return null
+	if definition.scene_path == "generated":
+		return _build_generated_root(definition)
+	var packed := load(definition.scene_path) as PackedScene
+	if packed == null:
+		return null
+	return packed.instantiate() as Node3D
+
+
+func register_generated_system(
+	sys_data: Dictionary,
+	gate_defs: Array[Dictionary]
+) -> ValidationResult:
+	var result := ValidationResult.new()
+	var definition := SystemDefinition.new()
+	definition.id = DomainId.canonicalize(sys_data.get("id", ""))
+	definition.schema_version = SystemDefinition.SUPPORTED_SCHEMA_VERSION
+	definition.legacy_id = str(sys_data.get("legacy_id", ""))
+	definition.display_name = str(sys_data.get("display_name", ""))
+	definition.scene_path = "generated"
+	definition.origin = "generated"
+	definition.tags = ["procedural"]
+	for sid in sys_data.get("station_ids", []):
+		definition.station_ids.append(DomainId.canonicalize(sid))
+	for fid in sys_data.get("faction_ids", []):
+		definition.faction_ids.append(DomainId.canonicalize(fid))
+
+	for gate_data: Dictionary in gate_defs:
+		var gate := GateDefinition.new()
+		gate.id = DomainId.canonicalize(gate_data.get("id", ""))
+		gate.schema_version = GateDefinition.SUPPORTED_SCHEMA_VERSION
+		gate.legacy_id = str(gate_data.get("legacy_id", ""))
+		gate.system_id = definition.id
+		gate.display_name = str(gate_data.get("display_name", ""))
+		gate.destination_system_id = DomainId.canonicalize(
+			gate_data.get("destination_system_id", "")
+		)
+		gate.destination_gate_id = DomainId.canonicalize(
+			gate_data.get("destination_gate_id", "")
+		)
+		gate.initial_state = str(gate_data.get("initial_state", "unknown"))
+		gate.discovery_action = str(gate_data.get("discovery_action", "scan"))
+		gate.discovery_cost = gate_data.get("discovery_cost", {})
+		gate.discovery_prerequisites = gate_data.get("discovery_prerequisites", [])
+		definition.gates.append(gate)
+		if not gates.has(gate.id):
+			gates[gate.id] = gate
+			gate_aliases[gate.legacy_id] = gate.id
+			gate_aliases[str(gate.id)] = gate.id
+
+	if systems.has(definition.id):
+		result.add_error("duplicate_system_id", "System '%s' already registered." % definition.id, "id")
+		return result
+
+	systems[definition.id] = definition
+	system_aliases[definition.legacy_id] = definition.id
+	system_aliases[str(definition.id)] = definition.id
+	return result
+
+
+func export_generated_systems() -> Array[Dictionary]:
+	var output: Array[Dictionary] = []
+	for definition: SystemDefinition in systems.values():
+		if definition.origin == "generated":
+			var record := definition.to_dict()
+			var config := _config_for_definition(definition)
+			if config != null:
+				record["config"] = config.to_dict()
+			output.append(record)
+	return output
+
+
+func import_generated_systems(records: Variant) -> ValidationResult:
+	var result := ValidationResult.new()
+	if records == null:
+		return result
+	if not records is Array:
+		result.add_error(
+			"invalid_generated_systems",
+			"Generated systems must be an array.",
+			"generated_systems"
+		)
+		return result
+	for index in range((records as Array).size()):
+		var record: Variant = (records as Array)[index]
+		if not record is Dictionary:
+			result.add_error(
+				"invalid_generated_system",
+				"Generated system entry must be an object.",
+				"generated_systems.%d" % index
+			)
+			continue
+		var system_id := DomainId.canonicalize(record.get("id", ""))
+		if systems.has(system_id):
+			_import_generated_config(record)
+			continue
+		var gate_defs: Variant = record.get("gates", [])
+		if not gate_defs is Array:
+			result.add_error(
+				"invalid_generated_gates",
+				"Generated system gates must be an array.",
+				"generated_systems.%d.gates" % index
+			)
+			continue
+		var typed_gate_defs: Array[Dictionary] = []
+		var gates_valid := true
+		for gate_def in gate_defs:
+			if gate_def is Dictionary:
+				typed_gate_defs.append(gate_def)
+			else:
+				gates_valid = false
+				result.add_error(
+					"invalid_generated_gate",
+					"Generated gate entry must be an object.",
+					"generated_systems.%d.gates" % index
+				)
+		if not gates_valid:
+			continue
+		var registered := register_generated_system(record, typed_gate_defs)
+		result.merge(registered, "generated_systems.%d" % index)
+		if registered.is_valid():
+			_import_generated_config(record)
+	return result
+
+
+var _generated_configs: Dictionary = {}
+
+
+func set_generated_config(system_id: String, config: SystemConfig) -> void:
+	_generated_configs[system_id] = config
+
+
+func get_generated_config(system_id: String) -> SystemConfig:
+	return _generated_configs.get(system_id) as SystemConfig
+
+
+func _config_for_definition(definition: SystemDefinition) -> SystemConfig:
+	var config: SystemConfig = _generated_configs.get(str(definition.id))
+	if config == null:
+		config = _generated_configs.get(definition.legacy_id)
+	return config
+
+
+func _import_generated_config(record: Dictionary) -> void:
+	var raw_config: Variant = record.get("config", {})
+	if not raw_config is Dictionary:
+		return
+	var config := SystemConfig.from_dict(raw_config)
+	if config.system_id.is_empty():
+		config.system_id = str(record.get("id", ""))
+	if config.legacy_id.is_empty():
+		config.legacy_id = str(record.get("legacy_id", ""))
+	if config.system_name.is_empty():
+		config.system_name = str(record.get("display_name", ""))
+	set_generated_config(config.system_id, config)
+	if not config.legacy_id.is_empty():
+		set_generated_config(config.legacy_id, config)
+
+
+func _build_generated_root(definition: SystemDefinition) -> Node3D:
+	var config := _config_for_definition(definition)
+	if config == null:
+		push_error("[SystemRegistry] No config for generated system '%s'." % definition.id)
+		return null
+	var result := SystemFactory.generate(config)
+	if not bool(result.get("ok", false)):
+		return null
+	var root: Node3D = result["root"]
+	for gate in definition.gates:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = config.seed_value + gate.id.hash()
+		var angle := rng.randf_range(0.0, TAU)
+		var dist := rng.randf_range(500.0, 1200.0)
+		var gate_pos := Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var dest_sys := get_system(gate.destination_system_id)
+		SystemFactory.add_gate_to_system(
+			root,
+			gate.legacy_id,
+			str(gate.id),
+			gate.display_name,
+			runtime_system_id(gate.destination_system_id),
+			runtime_gate_id(gate.destination_gate_id),
+			dest_sys.display_name if dest_sys else "UNKNOWN",
+			gate_pos,
+			angle + PI
+		)
+	return root
 
 
 func _load_from_dict(data: Dictionary) -> void:
@@ -173,23 +371,25 @@ func _register_system(definition: SystemDefinition, index: int) -> void:
 func _validate_gate_destinations() -> void:
 	for gate: GateDefinition in gates.values():
 		if not systems.has(gate.destination_system_id):
-			validation.add_error(
-				"unknown_destination_system",
-				"Gate '%s' references unknown system '%s'." % [
-					gate.id,
-					gate.destination_system_id,
-				],
-				str(gate.id)
-			)
+			if not DomainId.is_generated(gate.destination_system_id):
+				validation.add_error(
+					"unknown_destination_system",
+					"Gate '%s' references unknown system '%s'." % [
+						gate.id,
+						gate.destination_system_id,
+					],
+					str(gate.id)
+				)
 		if not gates.has(gate.destination_gate_id):
-			validation.add_error(
-				"unknown_destination_gate",
-				"Gate '%s' references unknown gate '%s'." % [
-					gate.id,
-					gate.destination_gate_id,
-				],
-				str(gate.id)
-			)
+			if not DomainId.is_generated(gate.destination_gate_id):
+				validation.add_error(
+					"unknown_destination_gate",
+					"Gate '%s' references unknown gate '%s'." % [
+						gate.id,
+						gate.destination_gate_id,
+					],
+					str(gate.id)
+				)
 
 
 func _validate_gate_pairs() -> void:

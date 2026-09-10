@@ -1,6 +1,8 @@
 class_name MissionTextGenerator
 extends RefCounted
 
+const DiagnosticsType := preload("res://scripts/diagnostics/GenerationDiagnostics.gd")
+
 const KAELEN_AUTHORSHIP_BLOCKLIST: Array[String] = [
 	"i posted",
 	"my posting",
@@ -45,6 +47,9 @@ static func build_generation_request(
 		prompt += (
 			"Kaelen turn-in rule: Kaelen may process payout, but she did not post this job. "
 			+ "She should sound visibly grossed out that the player is slumming it on public-board work.\n"
+			+ "Kaelen's turn-in must reference the actual public-board job: include {POSTER_HANDLE}, "
+			+ "at least one listed job placeholder, and {STORY_PRESSURE} when it is non-empty. "
+			+ "Keep it simple for the player: one concrete payoff, one jab at the board, then paid-in-full.\n"
 		)
 	if not critique.strip_edges().is_empty():
 		prompt += "\nSELF-CRITIQUE: previous output failed because " + critique
@@ -86,7 +91,7 @@ static func validate_payload(
 		if combined.contains("%"):
 			return _invalid("recovery posting exposed hidden drop percentage")
 	if template.has_rule(MissionTemplateRegistry.KAELEN_DISGUST_RULE):
-		var result := _validate_kaelen(payload)
+		var result := _validate_kaelen(payload, offer, template)
 		if not bool(result.get("ok", false)):
 			return result
 	return {"ok": true, "reason": ""}
@@ -102,7 +107,12 @@ static func fallback_payload(
 		for field in template.write_fields:
 			fb[field] = "—"
 		return fb
-	return template.fallback_variants[abs(salt) % template.fallback_variants.size()].duplicate(true)
+	var fallback: Dictionary = template.fallback_variants[
+		abs(salt) % template.fallback_variants.size()
+	].duplicate(true)
+	if template.has_rule(MissionTemplateRegistry.KAELEN_DISGUST_RULE):
+		_contextualize_board_fallback_kaelen(template, offer, fallback)
+	return fallback
 
 
 static func apply_payload_to_offer(
@@ -141,6 +151,15 @@ static func fallback_offer(
 	offer: Dictionary,
 	salt: int = 0
 ) -> Dictionary:
+	_record_diagnostics_fallback(
+		"public_board_text",
+		"fallback_offer_requested",
+		"MissionTextGenerator",
+		{
+			"template_id": template.template_id,
+			"salt": salt,
+		}
+	)
 	var payload := fallback_payload(template, offer, salt)
 	var applied := apply_payload_to_offer(template, offer, payload, true)
 	if bool(applied.get("ok", false)):
@@ -150,6 +169,28 @@ static func fallback_offer(
 		str(applied.get("reason", "unknown"))
 	)
 	return offer
+
+
+static func _record_diagnostics_fallback(
+	content_type: String,
+	reason: String,
+	source: String,
+	context: Dictionary
+) -> void:
+	var diagnostics = _diagnostics()
+	if diagnostics != null and diagnostics.has_method("record_fallback"):
+		diagnostics.record_fallback(content_type, reason, source, context)
+
+
+static func _diagnostics() -> Node:
+	var tree := Engine.get_main_loop()
+	if tree and tree.has_method("get_root"):
+		var root = tree.get_root()
+		if root:
+			var autoload = root.get_node_or_null("GenerationDiagnostics")
+			if autoload:
+				return autoload
+	return DiagnosticsType.new()
 
 
 static func _apply_board_quest_data(
@@ -173,7 +214,39 @@ static func _apply_board_quest_data(
 	rendered["quest_data"] = quest_data
 
 
-static func _validate_kaelen(payload: Dictionary) -> Dictionary:
+static func _contextualize_board_fallback_kaelen(
+	template: MissionTemplate,
+	offer: Dictionary,
+	payload: Dictionary
+) -> void:
+	var job_placeholder := _primary_job_placeholder(template)
+	var story_pressure := _story_pressure_for_offer(offer)
+	var pressure_clause := ""
+	if not story_pressure.is_empty():
+		pressure_clause = " Local pressure: {STORY_PRESSURE}."
+	payload["kaelen_turn_in"] = (
+		"%s job for {POSTER_HANDLE} closed.%s Public-board grime, Shiny. "
+		+ "Still, paid in full."
+	) % [job_placeholder, pressure_clause]
+
+
+static func _primary_job_placeholder(template: MissionTemplate) -> String:
+	if template.required_placeholders.is_empty():
+		return "Board"
+	return str(template.required_placeholders[0])
+
+
+static func _story_pressure_for_offer(offer: Dictionary) -> String:
+	var values: Dictionary = offer.get("placeholder_values", {}) \
+		if offer.get("placeholder_values", {}) is Dictionary else {}
+	return str(values.get("{STORY_PRESSURE}", "")).strip_edges()
+
+
+static func _validate_kaelen(
+	payload: Dictionary,
+	offer: Dictionary,
+	template: MissionTemplate
+) -> Dictionary:
 	var kaelen := str(payload.get("kaelen_turn_in", "")).to_lower()
 	for blocked in KAELEN_AUTHORSHIP_BLOCKLIST:
 		if kaelen.contains(blocked):
@@ -185,6 +258,18 @@ static func _validate_kaelen(payload: Dictionary) -> Dictionary:
 			break
 	if not has_disgust:
 		return _invalid("Kaelen line is not disgusted enough about public-board work")
+	if not kaelen.contains("{poster_handle}"):
+		return _invalid("Kaelen line does not reference the actual poster")
+	var has_job_placeholder := false
+	for placeholder in template.required_placeholders:
+		if kaelen.contains(str(placeholder).to_lower()):
+			has_job_placeholder = true
+			break
+	if not has_job_placeholder:
+		return _invalid("Kaelen line does not reference the actual board job")
+	if not _story_pressure_for_offer(offer).is_empty() \
+			and not kaelen.contains("{story_pressure}"):
+		return _invalid("Kaelen line does not reference current story pressure")
 	return {"ok": true, "reason": ""}
 
 
@@ -205,9 +290,15 @@ static func _facts_for_prompt(offer: Dictionary) -> String:
 	var objective: Dictionary = quest_data.get("objective", {})
 	var lines: Array[String] = [
 		"- template_id: " + str(offer.get("template_id", "")),
+		"- poster_handle_placeholder: {POSTER_HANDLE}",
+		"- poster_handle: " + str(offer.get("poster", "")),
 		"- objective_summary: " + str(offer.get("objective", "")),
 		"- base_reward: " + str(offer.get("base_reward", 0)) + " SC",
 	]
+	var story_pressure := _story_pressure_for_offer(offer)
+	if not story_pressure.is_empty():
+		lines.append("- story_pressure_placeholder: {STORY_PRESSURE}")
+		lines.append("- story_pressure: " + story_pressure)
 	if int(offer.get("duration_minutes", 0)) > 0:
 		lines.append(
 			"- deadline_minutes: " + str(offer.get("duration_minutes", 0))

@@ -15,6 +15,10 @@ const CHECKPOINT := "checkpoint"
 const MAP_KNOWLEDGE := "map_knowledge"
 const CHRONICLE_SEGMENT := "chronicle_segment"
 const KAELEN_META := "kaelen_meta"
+const CHAPTER_PACKETS := "chapter_narrative_packets"
+const NARRATIVE_CACHE := "narrative_cache"
+const CAMPAIGN_NPC_IDENTITIES := "campaign_npc_identities"
+const CAMPAIGN_NPC_STATES := "campaign_npc_states"
 
 const PERMANENT := "permanent"
 const REWINDABLE := "rewindable"
@@ -30,6 +34,13 @@ const DOCUMENT_OWNERSHIP: Dictionary = {
 	MAP_KNOWLEDGE: REWINDABLE,
 	CHRONICLE_SEGMENT: APPEND_ONLY,
 	KAELEN_META: META_MEMORY,
+	CHAPTER_PACKETS: PERMANENT,
+	NARRATIVE_CACHE: DISPOSABLE,
+}
+
+const SIDECAR_DOCUMENT_OWNERSHIP: Dictionary = {
+	CAMPAIGN_NPC_IDENTITIES: PERMANENT,
+	CAMPAIGN_NPC_STATES: REWINDABLE,
 }
 
 const OWNERSHIP_TABLE: Dictionary = {
@@ -39,6 +50,8 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"generated_entity_identity",
 		"canon_fact",
 		"generated_asset_identity",
+		"chapter_narrative_packet",
+		"npc_identity_persona_voice",
 	],
 	REWINDABLE: [
 		"player_state",
@@ -47,10 +60,14 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"world_entity_state",
 		"map_knowledge",
 		"story_state",
+		"npc_relationship_state",
+		"npc_current_stake_projection",
+		"npc_memory_projection",
 	],
 	APPEND_ONLY: [
 		"chronicle_event",
 		"timeline_branch",
+		"npc_memory_event",
 	],
 	META_MEMORY: [
 		"timeline_reversal_count",
@@ -64,6 +81,8 @@ const OWNERSHIP_TABLE: Dictionary = {
 		"transient_spawn_timer",
 		"speech_request",
 		"generation_temp_file",
+		"narrative_text_bundle_cache",
+		"narrative_audio_readiness_cache",
 	],
 }
 
@@ -136,6 +155,10 @@ static func validate_document(data: Dictionary) -> ValidationResult:
 			_validate_chronicle(data, result)
 		KAELEN_META:
 			_validate_kaelen_meta(data, result)
+		CHAPTER_PACKETS:
+			_validate_chapter_packets(data, result)
+		NARRATIVE_CACHE:
+			_validate_narrative_cache(data, result)
 	return result
 
 
@@ -227,7 +250,9 @@ static func validate_bundle(documents: Array) -> ValidationResult:
 
 
 static func ownership_for(document_type: String) -> String:
-	return str(DOCUMENT_OWNERSHIP.get(document_type, ""))
+	if DOCUMENT_OWNERSHIP.has(document_type):
+		return str(DOCUMENT_OWNERSHIP.get(document_type, ""))
+	return str(SIDECAR_DOCUMENT_OWNERSHIP.get(document_type, ""))
 
 
 static func ownership_table() -> Dictionary:
@@ -524,6 +549,106 @@ static func _validate_chronicle(data: Dictionary, result: ValidationResult) -> v
 		seen[event_id] = true
 
 
+static func _validate_chapter_packets(
+	data: Dictionary,
+	result: ValidationResult
+) -> void:
+	_require_id(data, "campaign_id", "campaign", result)
+	var packets: Variant = data.get("packets", null)
+	if not packets is Array:
+		result.add_error(
+			"invalid_chapter_packets",
+			"chapter_narrative_packets requires a packets array.",
+			"packets"
+		)
+		return
+	var seen: Dictionary = {}
+	for index in range((packets as Array).size()):
+		var raw: Variant = (packets as Array)[index]
+		if not raw is Dictionary:
+			result.add_error(
+				"invalid_chapter_packet",
+				"Chapter narrative packet must be an object.",
+				"packets.%d" % index
+			)
+			continue
+		var packet := raw as Dictionary
+		var prefix := "packets.%d." % index
+		_require_nonempty_string(packet, "packet_id", result, prefix)
+		if int(packet.get("chapter", 0)) < 1:
+			result.add_error(
+				"invalid_chapter_packet_chapter",
+				"Chapter narrative packet chapter must be at least 1.",
+				"%schapter" % prefix
+			)
+		var packet_id := str(packet.get("packet_id", ""))
+		if not packet_id.is_empty() and seen.has(packet_id):
+			result.add_error(
+				"duplicate_chapter_packet_id",
+				"Chapter narrative packet IDs must be unique.",
+				"%spacket_id" % prefix
+			)
+		seen[packet_id] = true
+		for array_field in ["threads", "facts", "beats"]:
+			if not packet.get(array_field, []) is Array:
+				result.add_error(
+					"invalid_chapter_packet_array",
+					"Chapter narrative packet field '%s' must be an array." %
+						array_field,
+					"%s%s" % [prefix, array_field]
+				)
+		for runtime_field in ["beat_states", "knowledge_states"]:
+			if packet.has(runtime_field):
+				result.add_error(
+					"wrong_ownership",
+					"Field '%s' belongs in rewindable story_state, not prepared canon." %
+						runtime_field,
+					"%s%s" % [prefix, runtime_field]
+				)
+
+
+static func _validate_narrative_cache(
+	data: Dictionary,
+	result: ValidationResult
+) -> void:
+	_require_id(data, "campaign_id", "campaign", result)
+	var entries: Variant = data.get("entries", null)
+	if not entries is Dictionary:
+		result.add_error(
+			"invalid_narrative_cache_entries",
+			"narrative_cache requires an entries object.",
+			"entries"
+		)
+		return
+	for cache_key in (entries as Dictionary).keys():
+		var raw: Variant = (entries as Dictionary)[cache_key]
+		if not raw is Dictionary:
+			result.add_error(
+				"invalid_narrative_cache_entry",
+				"Narrative cache entry must be an object.",
+				"entries.%s" % str(cache_key)
+			)
+			continue
+		var entry := raw as Dictionary
+		var prefix := "entries.%s." % str(cache_key)
+		_require_nonempty_string(entry, "cache_key", result, prefix)
+		_require_nonempty_string(entry, "kind", result, prefix)
+		_require_nonempty_string(entry, "subject_id", result, prefix)
+		_require_nonempty_string(entry, "context_fingerprint", result, prefix)
+		if str(entry.get("cache_key", "")) != str(cache_key):
+			result.add_error(
+				"narrative_cache_key_mismatch",
+				"Narrative cache entry key must match cache_key.",
+				"%scache_key" % prefix
+			)
+		if not entry.get("text_bundle", {}) is Dictionary:
+			result.add_error(
+				"invalid_narrative_cache_text_bundle",
+				"Narrative cache entry text_bundle must be an object.",
+				"%stext_bundle" % prefix
+			)
+
+
 static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) -> void:
 	_require_id(data, "id", "kaelen_meta", result)
 	_require_id(data, "campaign_id", "campaign", result)
@@ -570,6 +695,15 @@ static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) ->
 		_require_nonempty_string(memory, "category", result, prefix)
 		_validate_id_array(memory, "fact_refs", "fact", result, prefix)
 		_require_nonempty_string(memory, "summary", result, prefix)
+		if memory.has("line_fingerprint") \
+				and not _is_sha256_hex(str(memory.get("line_fingerprint", ""))):
+			result.add_error(
+				"invalid_line_fingerprint",
+				"line_fingerprint must be a SHA-256 hex string.",
+				"%sline_fingerprint" % prefix
+			)
+		if memory.has("event_kind"):
+			_require_nonempty_string(memory, "event_kind", result, prefix)
 		var status := str(memory.get("timeline_status", ""))
 		if status not in ["current", "discarded"]:
 			result.add_error(
@@ -1008,3 +1142,17 @@ static func _is_whole_number(value: Variant) -> bool:
 		float(value),
 		floorf(float(value))
 	)
+
+
+static func _is_sha256_hex(value: String) -> bool:
+	var clean := value.strip_edges()
+	if clean.length() != 64:
+		return false
+	for i in range(clean.length()):
+		var code := clean.unicode_at(i)
+		var is_digit := code >= 48 and code <= 57
+		var is_lower_hex := code >= 97 and code <= 102
+		var is_upper_hex := code >= 65 and code <= 70
+		if not (is_digit or is_lower_hex or is_upper_hex):
+			return false
+	return true

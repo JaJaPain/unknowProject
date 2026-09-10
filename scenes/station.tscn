@@ -1,10 +1,14 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/Station.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/station_tex.png" id="2_tex"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(35.0, 30.0, 35.0)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pick_core"]
+height = 25.0
+radius = 4.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_st"]
 albedo_texture = ExtResource("2_tex")
@@ -32,6 +36,13 @@ script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_1")
+
+[node name="CoreSelection" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoreSelection"]
+shape = SubResource("CylinderShape3D_pick_core")
 
 [node name="Core" type="MeshInstance3D" parent="."]
 mesh = SubResource("CylinderMesh_1")

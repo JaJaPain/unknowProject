@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/TestSystem.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/jump_gate.tscn" id="2_gate"]
@@ -7,8 +7,22 @@
 background_mode = 1
 background_color = Color(0.008, 0.012, 0.03, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.25, 0.32, 0.5, 1)
-ambient_light_energy = 1.1
+ambient_light_color = Color(0.12, 0.16, 0.3, 1)
+ambient_light_energy = 0.4
+glow_enabled = true
+glow_intensity = 1.2
+glow_strength = 1.2
+glow_bloom = 0.0
+glow_blend_mode = 0
+glow_hdr_threshold = 1.0
+glow_hdr_scale = 2.5
+glow_levels/1 = false
+glow_levels/2 = true
+glow_levels/3 = true
+glow_levels/4 = false
+glow_levels/5 = true
+glow_levels/6 = false
+glow_levels/7 = false
 
 [node name="TestSystem" type="Node3D"]
 script = ExtResource("1_script")
@@ -31,3 +45,4 @@ display_name = "UNCHARTED RETURN GATE"
 destination_system_id = "start_system"
 destination_gate_id = "start_to_test"
 destination_display_name = "FRONTIER SYSTEM"
+

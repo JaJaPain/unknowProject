@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 const HISTORY_FILE_PATH = "user://quest_history.md"
 const MissionAdapterType := preload(
@@ -13,12 +13,21 @@ const MissionCapabilityRegistryType := preload(
 const MissionCollectionType := preload(
 	"res://scripts/domain/MissionCollection.gd"
 )
+const StoryAgentOfferBuilderType := preload(
+	"res://scripts/story/StoryAgentOfferBuilder.gd"
+)
 
 signal quest_accepted()
+signal quest_accepted_details(quest_data: Dictionary)
 signal quest_progress_updated()
+signal quest_objective_completed_details(quest_data: Dictionary)
 signal quest_completed()
+signal quest_completed_details(quest_data: Dictionary)
 signal quest_abandoned()
+signal quest_abandoned_details(quest_data: Dictionary)
 signal quest_expired(title: String)
+signal quest_expired_details(quest_data: Dictionary)
+signal quest_declined_details(quest_data: Dictionary)
 signal pickup_handoff_ready(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String)
 signal comms_reversal_triggered(mission_data: Dictionary)
 
@@ -39,12 +48,20 @@ var active_quest: Dictionary:
 var last_validation_error: String = ""
 var _board_cooldowns: Dictionary = {}
 const BOARD_COOLDOWN_MINUTES: int = 120
+const EMPTY_AGENT_MEMORY_CONTEXT := (
+	"No prior contracts with this agent are recorded yet. "
+	+ "Treat the relationship as first-contact or strictly professional."
+)
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Create history file if it does not exist
 	_load_quest_history()
-	# Connect to ship destroyed signals to track combat quests
+	# Connect to ship destroyed signals to track combat quests.
+	# player_kill = the player landed the killing blow (counts toward the contract).
+	# ship_destroyed = a NON-player kill (never counts; schedules a replacement
+	# target so an NPC clearing your target can't finish — or stall — the contract).
+	GlobalState.player_kill.connect(_on_player_ship_kill)
 	GlobalState.ship_destroyed.connect(_on_ship_destroyed)
 	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
@@ -78,54 +95,49 @@ func _log_quest_to_file(quest_title: String, quest_type: String, outcome: String
 		f.close()
 
 
-# Returns only the history lines relevant to `agent_name` (e.g. "Director Voss").
-# Since the on-disk history doesn't store agent_name, we filter by the faction
-# the agent speaks for — Zenith=Voss, Aurelia=Ryn, Vanguard=Dask, neutral=Kaelen.
-# This keeps the LLM prompt short and focused on the pilot's relationship with
-# the upcoming quest giver's faction, instead of dumping the whole log.
-# Falls back to a substring search on the quest title if the faction map misses.
-func filter_history_for_agent(agent_name: String, faction: String) -> String:
-	var full = _load_quest_history()
-	if full.strip_edges() == "":
-		return ""
+# Returns campaign-scoped memory for the quest giver instead of scraping the
+# legacy global markdown log. The markdown file remains useful as human-readable
+# debug output, but model prompts should query structured per-campaign memory.
+func filter_history_for_agent(
+	agent_name: String,
+	faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var agent_id := LLMInterface.agent_memory_id_for_profile(
+		agent_name,
+		faction,
+		agent_profile
+	)
+	return _agent_memory_context_for_id(agent_id)
 
-	# Map agent → faction keyword to look for in the quest title (lowercased)
-	var faction_keyword: String = ""
-	match faction.to_lower():
-		"zenith":
-			faction_keyword = "zenith"
-		"aurelia":
-			faction_keyword = "aurelia"
-		"vanguard":
-			faction_keyword = "vanguard"
-		_:
-			# neutral / unknown — treat as "the rest". Return last 5 lines unfiltered
-			# so Kaelen can still reference the pilot's overall track record.
-			var all_lines = full.split("\n")
-			var tail: Array = []
-			for i in range(max(0, all_lines.size() - 5), all_lines.size()):
-				if all_lines[i].strip_edges() != "":
-					tail.append(all_lines[i])
-			return "\n".join(tail)
 
-	# Filter: keep lines that mention the faction keyword OR contain the agent's
-	# name directly (covers edge cases where the LLM uses a unique title).
-	var kept: Array = []
-	for line in full.split("\n"):
-		var lower = line.to_lower()
-		if line.strip_edges() == "":
-			continue
-		if lower.find(faction_keyword) != -1 or lower.find(agent_name.to_lower()) != -1:
-			kept.append(line)
+func _generation_history_context(
+	agent_faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var agent_name := str(agent_profile.get("name", "Broker Kaelen")).strip_edges()
+	if agent_name.is_empty():
+		agent_name = "Broker Kaelen"
+	var faction := str(
+		agent_profile.get("faction", agent_faction)
+	).strip_edges().to_lower()
+	if faction.is_empty():
+		faction = "neutral"
+	return filter_history_for_agent(agent_name, faction, agent_profile)
 
-	if kept.is_empty():
-		return ""
 
-	# Cap at the most recent 8 entries to keep the prompt small
-	if kept.size() > 8:
-		kept = kept.slice(kept.size() - 8, kept.size())
-
-	return "\n".join(kept)
+func _agent_memory_context_for_id(agent_id: String) -> String:
+	var clean_agent_id := agent_id.strip_edges()
+	if clean_agent_id.is_empty():
+		return EMPTY_AGENT_MEMORY_CONTEXT
+	if GlobalState.campaign_agent_memory_store != null \
+			and GlobalState.campaign_agent_memory_store.has_method("prompt_context"):
+		var context := str(
+			GlobalState.campaign_agent_memory_store.prompt_context(clean_agent_id)
+		).strip_edges()
+		if not context.is_empty():
+			return context
+	return EMPTY_AGENT_MEMORY_CONTEXT
 
 func is_quest_active() -> bool:
 	return _collection.has_any_active()
@@ -149,6 +161,41 @@ func is_lane_occupied(lane_name: String) -> bool:
 		return false
 	return _collection.is_lane_occupied(lane_map[lane_name])
 
+func get_lane_data(lane_name: String) -> Dictionary:
+	var lane_map := {
+		"AGENT": MissionInstanceType.SourceLane.AGENT,
+		"BOARD": MissionInstanceType.SourceLane.BOARD,
+		"STATION": MissionInstanceType.SourceLane.STATION,
+	}
+	if not lane_map.has(lane_name):
+		return {}
+	var mission = _collection.get_by_lane(lane_map[lane_name])
+	if mission == null:
+		return {}
+	return mission.data
+
+
+func get_pickup_special_data() -> Dictionary:
+	var station = get_lane_data("STATION")
+	if not station.is_empty() and station.get("objective_type", "") == "PICKUP_SPECIAL":
+		return station
+	var agent = get_lane_data("AGENT")
+	if not agent.is_empty() and agent.get("objective_type", "") == "PICKUP_SPECIAL":
+		return agent
+	return {}
+
+
+func get_completed_count() -> int:
+	var history := _load_quest_history()
+	if history.strip_edges().is_empty():
+		return 0
+	var count := 0
+	for line in history.split("\n"):
+		if line.strip_edges().begins_with("- **"):
+			count += 1
+	return count
+
+
 func is_quest_completed() -> bool:
 	if not is_quest_active():
 		return false
@@ -160,9 +207,48 @@ func is_quest_completed() -> bool:
 	return cap.is_completed(active_quest)
 
 
-func request_new_quest(agent_faction: String, callback: Callable):
-	var history_text = _load_quest_history()
-	LLMInterface.request_quest_generation(agent_faction, history_text, GlobalState.player_credits, GlobalState.reputations, callback)
+func request_new_quest(
+	agent_faction: String,
+	callback: Callable,
+	agent_profile: Dictionary = {}
+) -> void:
+	if StoryAgentOfferBuilderType.can_build(agent_profile):
+		var story_offer := StoryAgentOfferBuilderType.build_offer(
+			agent_faction,
+			agent_profile,
+			int(CampaignClock.total_minutes)
+		)
+		if not story_offer.is_empty():
+			GenerationDiagnostics.record_content_source(
+				"quest_generation",
+				"template_fallback",
+				"QuestManager",
+				{
+					"agent_faction": agent_faction,
+					"agent_name": str(agent_profile.get("agent_name", "")),
+					"objective_type": str(story_offer.get("objective", {}).get("type", "")),
+				}
+			)
+			callback.call(story_offer, true)
+			return
+	var history_text := _generation_history_context(agent_faction, agent_profile)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"job_queued",
+		"QuestManager",
+		{
+			"agent_faction": agent_faction,
+			"agent_name": str(agent_profile.get("name", "")),
+		}
+	)
+	LLMInterface.request_quest_generation(
+		agent_faction,
+		history_text,
+		GlobalState.player_credits,
+		GlobalState.reputations,
+		callback,
+		agent_profile
+	)
 
 func accept_quest(
 	quest_data: Dictionary,
@@ -184,9 +270,15 @@ func accept_quest(
 			last_validation_error
 		)
 		return false
+	var adapted_state: Dictionary = adapted["state"]
+	if str(adapted_state.get("objective_type", "")) == "DELIVERY_COURIER" \
+			and not GlobalState.can_accept_special():
+		last_validation_error = "Cargo hold must be empty before accepting courier cargo"
+		push_warning("[QuestManager] %s" % last_validation_error)
+		return false
 
 	var consequence = adapted["consequence"]
-	GlobalState.player_credits += consequence.credits_immediate
+	GlobalState.add_credits(consequence.credits_immediate)
 	for faction in consequence.reputation_change.keys():
 		GlobalState.adjust_reputation(
 			faction,
@@ -221,6 +313,26 @@ func accept_quest(
 				return
 			GlobalState.spawn_mission_targets(spawn_faction, spawn_count)
 		)
+	elif active_quest["objective_type"] == "DELIVERY_COURIER":
+		var item_name := str(active_quest.get("item_name", "Courier Package"))
+		var origin_display := str(active_quest.get("origin_display", "the station"))
+		var destination_display := str(
+			active_quest.get("destination_display", "the destination")
+		)
+		var description := "Courier cargo accepted at %s. Deliver to %s." % [
+			origin_display,
+			destination_display,
+		]
+		if not GlobalState.accept_special(
+			item_name,
+			description,
+			origin_display,
+			destination_display
+		):
+			_collection.remove(new_mission.runtime_id)
+			last_validation_error = "Cargo hold rejected courier package"
+			push_warning("[QuestManager] %s" % last_validation_error)
+			return false
 
 	print(
 		"[QuestManager] Quest accepted: ",
@@ -231,8 +343,21 @@ func accept_quest(
 		active_quest["combat_multiplier"],
 		")"
 	)
+	_increment_mission_history_revision("accepted", active_quest)
 	quest_accepted.emit()
+	quest_accepted_details.emit(active_quest.duplicate(true))
 	return true
+
+
+func decline_quest(
+	quest_data: Dictionary = {},
+	reason: String = "declined"
+) -> void:
+	var declined_quest := quest_data.duplicate(true)
+	declined_quest["declined_time_minutes"] = CampaignClock.total_minutes
+	declined_quest["decline_reason"] = reason
+	_increment_mission_history_revision("declined", declined_quest)
+	quest_declined_details.emit(declined_quest)
 
 
 func _create_runtime_mission_id(quest_data: Dictionary) -> String:
@@ -258,6 +383,57 @@ func capture_active_quest() -> Dictionary:
 	focused.data = normalized
 	last_validation_error = ""
 	return normalized
+
+
+func clear_active_kaelen_reaction_bundle() -> void:
+	if not is_quest_active():
+		return
+	active_quest.erase("kaelen_reaction_bundle")
+
+
+func store_active_kaelen_reaction_bundle(
+	mission_runtime_id: String,
+	completion_line: String,
+	abandon_line: String,
+	source_id: String = "llm_kaelen_reaction"
+) -> bool:
+	if not is_quest_active():
+		return false
+	var clean_runtime_id := mission_runtime_id.strip_edges()
+	if clean_runtime_id.is_empty() \
+			or str(active_quest.get("runtime_id", "")) != clean_runtime_id:
+		return false
+	var clean_completion := completion_line.strip_edges()
+	var clean_abandon := abandon_line.strip_edges()
+	if clean_completion.is_empty() and clean_abandon.is_empty():
+		return false
+	active_quest["kaelen_reaction_bundle"] = {
+		"mission_runtime_id": clean_runtime_id,
+		"completion_line": clean_completion,
+		"abandon_line": clean_abandon,
+		"source_id": source_id.strip_edges(),
+		"generated_time_minutes": CampaignClock.total_minutes,
+	}
+	return true
+
+
+func active_kaelen_reaction_line(line_kind: String) -> String:
+	if not is_quest_active():
+		return ""
+	var bundle: Dictionary = active_quest.get("kaelen_reaction_bundle", {}) \
+		if active_quest.get("kaelen_reaction_bundle", {}) is Dictionary else {}
+	if bundle.is_empty():
+		return ""
+	if str(bundle.get("mission_runtime_id", "")) \
+			!= str(active_quest.get("runtime_id", "")):
+		return ""
+	match line_kind.strip_edges():
+		"completion":
+			return str(bundle.get("completion_line", "")).strip_edges()
+		"abandon":
+			return str(bundle.get("abandon_line", "")).strip_edges()
+		_:
+			return ""
 
 
 func capture_all_quests() -> Array:
@@ -303,6 +479,8 @@ func check_active_quest_expiration() -> bool:
 			continue
 		if CampaignClock.total_minutes < int(m.data.get("deadline_time_minutes", 0)):
 			continue
+		var expired_quest: Dictionary = m.data.duplicate(true)
+		expired_quest["expired_time_minutes"] = CampaignClock.total_minutes
 		var expired_title := str(m.data.get("title", "Contract"))
 		var expired_type := str(m.data.get("objective_type", "TIMED"))
 		_record_board_cooldown(m.data)
@@ -312,7 +490,9 @@ func check_active_quest_expiration() -> bool:
 		var rid: String = m.runtime_id
 		_collection.remove(rid)
 		print("[QuestManager] Quest expired: ", expired_title)
+		_increment_mission_history_revision("expired", expired_quest)
 		quest_expired.emit(expired_title)
+		quest_expired_details.emit(expired_quest)
 		any_expired = true
 	return any_expired
 
@@ -393,6 +573,15 @@ func _validation_message(validation: ValidationResult) -> String:
 	return "; ".join(messages)
 
 
+func _increment_mission_history_revision(
+	event_type: String,
+	mission_data: Dictionary
+) -> void:
+	if is_instance_valid(StoryManager) \
+			and StoryManager.has_method("increment_mission_history_revision"):
+		StoryManager.increment_mission_history_revision(event_type, mission_data)
+
+
 # Set the LLM-generated (or fallback) handoff line for an active
 # PICKUP_SPECIAL quest. Called by UIManager once the Ollama call
 # resolves (or when falling back to a canned line). Stores the line +
@@ -425,8 +614,15 @@ func deliver_partial(amount: float) -> float:
 		return 0.0
 	GlobalState.remove_ore(to_deliver)
 	active_quest["partial_delivered"] = active_quest.get("partial_delivered", 0.0) + to_deliver
+	active_quest["partial_delivery_count"] = int(
+		active_quest.get("partial_delivery_count", 0)
+	) + 1
+	active_quest["last_partial_delivery_amount"] = to_deliver
 	print("[QuestManager] Partial delivery: %.1f m³ banked. Total so far: %.1f / %.1f" % [
 		to_deliver, active_quest["partial_delivered"], active_quest["amount_required"]])
+	var focused = _collection.get_focused()
+	if focused != null:
+		_mark_objective_ready_if_completed(focused)
 	quest_progress_updated.emit()
 	return to_deliver
 
@@ -452,12 +648,16 @@ func mark_pickup_complete() -> bool:
 		
 	active_quest["picked_up"] = true
 	print("[QuestManager] PICKUP_SPECIAL picked up: '%s' from %s" % [part_name, target_npc])
+	var focused = _collection.get_focused()
+	if focused != null:
+		_mark_objective_ready_if_completed(focused)
 	quest_progress_updated.emit()
 	return true
 
 func complete_quest():
 	if not is_quest_active() or not is_quest_completed():
 		return
+	GlobalState.clear_intro_tutorial_player_protection()
 
 	var cap = MissionCapabilityRegistryType.get_for_type(
 		active_quest["objective_type"]
@@ -471,8 +671,11 @@ func complete_quest():
 		_apply_completion_hints(hints)
 
 	var final_payout = active_quest_payout()
-	GlobalState.player_credits += final_payout
+	GlobalState.add_credits(final_payout)
 	GlobalState.adjust_reputation(active_quest["faction"], 5.0)
+	var completed_quest: Dictionary = active_quest.duplicate(true)
+	completed_quest["completed_time_minutes"] = CampaignClock.total_minutes
+	completed_quest["final_payout"] = final_payout
 
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
@@ -482,16 +685,21 @@ func complete_quest():
 	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
 	var focused = _collection.get_focused()
 	if focused:
-		focused.transition_to(MissionInstanceType.State.COMPLETED)
+		_transition_to_completed(focused)
 	_collection.remove(completed_id)
+	_increment_mission_history_revision("completed", completed_quest)
 	quest_completed.emit()
+	quest_completed_details.emit(completed_quest)
 
 func abandon_quest():
 	if not is_quest_active():
 		return
+	GlobalState.clear_intro_tutorial_player_protection()
 
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
 	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
+	var abandoned_quest: Dictionary = active_quest.duplicate(true)
+	abandoned_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
 
 	_record_board_cooldown(active_quest)
 	var abandoned_id := str(active_quest.get("runtime_id", ""))
@@ -500,7 +708,9 @@ func abandon_quest():
 	if focused:
 		focused.transition_to(MissionInstanceType.State.ABANDONED)
 	_collection.remove(abandoned_id)
+	_increment_mission_history_revision("abandoned", abandoned_quest)
 	quest_abandoned.emit()
+	quest_abandoned_details.emit(abandoned_quest)
 
 
 func _cleanup_expired_quest() -> void:
@@ -522,7 +732,18 @@ func _cleanup_mission(mission) -> void:
 func _on_campaign_time_changed(_total_minutes: int) -> void:
 	check_active_quest_expiration()
 
-func _on_ship_destroyed(faction_name: String):
+func _on_player_ship_kill(faction_name: String) -> void:
+	_dispatch_ship_destroyed(faction_name, true)
+
+
+func _on_ship_destroyed(faction_name: String) -> void:
+	# Reached only for NON-player kills now (see NPCShip: player kills go through
+	# player_kill). Passing by_player=false lets KILL_SHIPS refuse the credit and
+	# request a replacement target instead.
+	_dispatch_ship_destroyed(faction_name, false)
+
+
+func _dispatch_ship_destroyed(faction_name: String, by_player: bool) -> void:
 	for m in _collection.get_all_active():
 		var cap = MissionCapabilityRegistryType.get_for_type(
 			m.data.get("objective_type", "")
@@ -531,7 +752,7 @@ func _on_ship_destroyed(faction_name: String):
 			continue
 
 		var hints := cap.handle_event(
-			m.data, "ship_destroyed", {"faction": faction_name}
+			m.data, "ship_destroyed", {"faction": faction_name, "by_player": by_player}
 		)
 		if hints.is_empty():
 			continue
@@ -539,6 +760,10 @@ func _on_ship_destroyed(faction_name: String):
 		if hints.get("progress_changed", false):
 			print("[QuestManager] Quest progress: ", m.data.get("current_count", 0),
 				"/", m.data.get("count_required", 0))
+			if _is_intro_tutorial_contract(m.data) \
+					and int(m.data.get("current_count", 0)) >= int(m.data.get("count_required", 1)):
+				GlobalState.clear_intro_tutorial_player_protection()
+			_mark_objective_ready_if_completed(m)
 			quest_progress_updated.emit()
 
 		if hints.has("chatter"):
@@ -555,6 +780,49 @@ func _on_ship_destroyed(faction_name: String):
 			_schedule_respawn(respawn_faction)
 
 
+# COMPLETED is only reachable through READY_TO_TURN_IN. Instances that get
+# here still ACTIVE (saves from before the ready-state fix, or resolutions
+# like the comms bribe that skip the progress path) take the hop first.
+func _transition_to_completed(instance) -> void:
+	if instance == null:
+		return
+	if instance.state == MissionInstanceType.State.ACTIVE:
+		instance.transition_to(MissionInstanceType.State.READY_TO_TURN_IN)
+	instance.transition_to(MissionInstanceType.State.COMPLETED)
+
+
+func _mark_objective_ready_if_completed(mission) -> void:
+	if mission == null:
+		return
+	if bool(mission.data.get("objective_completed_notified", false)):
+		return
+	var cap = MissionCapabilityRegistryType.get_for_type(
+		mission.data.get("objective_type", "")
+	)
+	if cap == null or not cap.is_completed(mission.data):
+		return
+	mission.data["objective_completed_notified"] = true
+	mission.data["objective_completed_time_minutes"] = CampaignClock.total_minutes
+	mission.data["objective_complete_pending_turn_in"] = true
+	# READY_TO_TURN_IN persists through save/reload via _instance_state.
+	# No current capability can regress a completed objective; if one ever
+	# does, READY_TO_TURN_IN -> ACTIVE is a valid transition back.
+	mission.transition_to(MissionInstanceType.State.READY_TO_TURN_IN)
+	quest_objective_completed_details.emit(mission.data.duplicate(true))
+
+
+func _is_intro_tutorial_contract(data: Dictionary) -> bool:
+	return str(data.get("title", "")) == "Clean and Easy" \
+		and str(data.get("objective_type", "")) == "KILL_SHIPS" \
+		and str(data.get("target_faction", "")) == "reavers"
+
+
+# Public wrapper: the starter mission uses authored dialogue instead of the
+# small model, so callers outside QuestManager can detect it too.
+func is_intro_tutorial_contract(data: Dictionary) -> bool:
+	return _is_intro_tutorial_contract(data)
+
+
 func resolve_comms_branch(branch_id: String) -> void:
 	var focused = _collection.get_focused()
 	if focused == null or focused.data.get("objective_type", "") != "TARGET_WITH_COMMS_REVERSAL":
@@ -568,24 +836,37 @@ func resolve_comms_branch(branch_id: String) -> void:
 			_set_ceasefire_for_faction(target_faction, false)
 			GlobalState.adjust_reputation(target_faction, -2.0)
 		"accept_bribe":
+			var bribe_quest: Dictionary = focused.data.duplicate(true)
 			var bribe: int = int(focused.data.get("bribe_amount", 0))
-			GlobalState.player_credits += bribe
+			GlobalState.add_credits(bribe)
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -3.0)
 			GlobalState.adjust_reputation(target_faction, 2.0)
 			_despawn_ceasefire_targets(target_faction)
-			focused.transition_to(MissionInstanceType.State.COMPLETED)
+			_transition_to_completed(focused)
 			var rid: String = focused.runtime_id
 			_record_board_cooldown(focused.data)
 			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: accepted bribe (%d SC)." % bribe)
+			bribe_quest["completed_time_minutes"] = CampaignClock.total_minutes
+			bribe_quest["final_payout"] = bribe
+			bribe_quest["outcome_detail"] = "accepted_bribe"
 			_collection.remove(rid)
+			_increment_mission_history_revision("completed", bribe_quest)
+			quest_completed.emit()
+			quest_completed_details.emit(bribe_quest)
 		"walk_away":
+			var walkaway_quest: Dictionary = focused.data.duplicate(true)
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -1.0)
 			_despawn_ceasefire_targets(target_faction)
 			focused.transition_to(MissionInstanceType.State.ABANDONED)
 			var rid: String = focused.runtime_id
 			_record_board_cooldown(focused.data)
 			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: walked away.")
+			walkaway_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
+			walkaway_quest["outcome_detail"] = "walked_away"
 			_collection.remove(rid)
+			_increment_mission_history_revision("abandoned", walkaway_quest)
+			quest_abandoned.emit()
+			quest_abandoned_details.emit(walkaway_quest)
 
 	quest_progress_updated.emit()
 
@@ -609,6 +890,10 @@ func _despawn_ceasefire_targets(faction_name: String) -> void:
 func _apply_completion_hints(hints: Dictionary) -> void:
 	if hints.get("remove_ore", 0.0) > 0.0:
 		GlobalState.remove_ore(hints["remove_ore"])
+	var item_id := str(hints.get("remove_inventory_item", ""))
+	var item_quantity := int(hints.get("remove_inventory_quantity", 0))
+	if not item_id.is_empty() and item_quantity > 0:
+		GlobalState.inventory.remove(item_id, item_quantity)
 	if hints.get("clear_cargo", false):
 		GlobalState.clear_cargo()
 
@@ -621,8 +906,96 @@ func _apply_cleanup_hints(hints: Dictionary) -> void:
 		_set_ceasefire_for_faction(cf_faction, false)
 
 
+const RESPAWN_DELAY_SECONDS := 20.0        # gap before a replacement target arrives
+const RESPAWN_MIN_PLAYER_DISTANCE := 800.0  # spawn far from the player + wreckage
+
+
+# Persistent mission ships normally restore with the system. Older or
+# interrupted saves can have an active KILL_SHIPS contract without those
+# entities, though, which would otherwise leave the contract impossible.
+func reconcile_missing_kill_ship_targets_after_restore() -> int:
+	var plans := plan_missing_kill_ship_target_respawns(
+		GlobalState.active_system_entities
+	)
+	if plans.is_empty():
+		return 0
+	var focused = _collection.get_focused()
+	var previous_runtime_id: String = (
+		focused.runtime_id if focused != null else ""
+	)
+	var restored_count := 0
+	for plan in plans:
+		var runtime_id := str(plan.get("runtime_id", ""))
+		if not runtime_id.is_empty():
+			_collection.focus(runtime_id)
+		var target_faction := str(plan.get("target_faction", ""))
+		var spawn_count := int(plan.get("spawn_count", 0))
+		if target_faction.is_empty() or spawn_count <= 0:
+			continue
+		GlobalState.spawn_mission_targets(
+			target_faction,
+			spawn_count,
+			RESPAWN_MIN_PLAYER_DISTANCE
+		)
+		restored_count += spawn_count
+	if not previous_runtime_id.is_empty():
+		_collection.focus(previous_runtime_id)
+	if restored_count > 0:
+		print(
+			"[QuestManager] Restored %d missing mission target(s) after load."
+			% restored_count
+		)
+	return restored_count
+
+
+# Kept separate from spawning so the recovery decision is deterministic and can
+# be checked without loading a game scene.
+func plan_missing_kill_ship_target_respawns(entities: Array) -> Array[Dictionary]:
+	var plans: Array[Dictionary] = []
+	for mission in _collection.get_all_active():
+		var data: Dictionary = mission.data
+		if str(data.get("objective_type", "")) != "KILL_SHIPS":
+			continue
+		var capability = MissionCapabilityRegistryType.get_for_type("KILL_SHIPS")
+		if capability == null or capability.is_completed(data):
+			continue
+		var faction := str(data.get("target_faction", "")).strip_edges()
+		if faction.is_empty() or _has_alive_quest_target_for_faction(entities, faction):
+			continue
+		var remaining := maxi(
+			1,
+			int(data.get("count_required", 1)) - int(data.get("current_count", 0))
+		)
+		plans.append({
+			"runtime_id": mission.runtime_id,
+			"target_faction": faction,
+			"spawn_count": remaining,
+		})
+	return plans
+
+
+func _has_alive_quest_target_for_faction(entities: Array, faction: String) -> bool:
+	for entity in entities:
+		if entity is Dictionary:
+			var snapshot := entity as Dictionary
+			if bool(snapshot.get("is_quest_target", false)) \
+					and bool(snapshot.get("is_ship", true)) \
+					and not bool(snapshot.get("destroyed", false)) \
+					and str(snapshot.get("faction", "")) == faction:
+				return true
+			continue
+		if entity == null or not is_instance_valid(entity):
+			continue
+		if entity.is_in_group("ship") \
+				and bool(entity.get_meta("is_quest_target", false)) \
+				and not bool(entity.get("destroyed")) \
+				and str(entity.get("faction")) == faction:
+			return true
+	return false
+
+
 func _schedule_respawn(faction: String) -> void:
-	get_tree().create_timer(2.0).timeout.connect(func():
+	get_tree().create_timer(RESPAWN_DELAY_SECONDS).timeout.connect(func():
 		var needs_targets := false
 		for m in _collection.get_all_active():
 			if m.data.get("target_faction", "") != faction:
@@ -635,14 +1008,12 @@ func _schedule_respawn(faction: String) -> void:
 				break
 		if not needs_targets:
 			return
-		var alive_targets := 0
-		for e in GlobalState.active_system_entities:
-			if e and is_instance_valid(e) and not e.get("destroyed"):
-				if e.is_in_group("ship") and e.get_meta("is_quest_target", false):
-					alive_targets += 1
-		if alive_targets == 0:
-			GlobalState.spawn_mission_targets(faction, 1)
-			print("[QuestManager] Respawned quest target after NPC kill.")
+		if not _has_alive_quest_target_for_faction(
+			GlobalState.active_system_entities,
+			faction
+		):
+			GlobalState.spawn_mission_targets(faction, 1, RESPAWN_MIN_PLAYER_DISTANCE)
+			print("[QuestManager] Respawned quest target far from player after NPC kill.")
 	)
 
 

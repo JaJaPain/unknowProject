@@ -1,0 +1,106 @@
+[
+ {
+  "line": "Nothing dangerous happened. That's why the pay's not worth talking about.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Safe work pays small. I'll take the small, but I'd rather be somewhere else when the credits roll.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "It went smooth. The money's low. Not a bad way to spend a week, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "It went through clean. Paid what it was worth. Nothing more, nothing less.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "No risk, no reward. This one's just a stopgap — you know that, Captain.",
+  "secs": 3.0,
+  "flags": [
+   "wrong_address"
+  ]
+ },
+ {
+  "line": "No injuries, low pay — I knew that before we left. Still, it doesn't move the needle.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Small cash for a small job. No risk, no reward. I’d rather see you move something that’s worth moving.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Low risk, low pay. It's the math, Shiny. Not sure it's worth the time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one didn't cost much. That's the problem — it didn't move anything.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Low pay for low risk — that's the math. Not much else to say about it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Nobody bled. The number's low. Not a bad day, but not a good one either.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one didn't cost me anything. That's not a compliment — it's just math.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Lights stay on, but nothing moves. Take it, Shiny — just don't expect it to carry us far.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "It's not bad. Just not worth the time. You take it, I take my cut, and we both know it's the same next week.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Nobody got hurt, and that's the only thing that came out ahead.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "Done, and nobody bled. The number's low, but the math's right. I'd take a better one if it came along.",
+  "secs": 3.2,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "It went smooth. Paid what it was worth. That's not a complaint, just the math.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Lights stay on, but this job don't move us forward. You take it. I price the risk, not the glory.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "No danger, no risk. That's how it's priced. You took it. I don't argue with that.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Safe work don't pay, Shiny. You know that. I do too.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

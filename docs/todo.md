@@ -1,0 +1,803 @@
+# TODO
+_Active task list. Update this file at the end of every session._
+
+---
+
+## Awaiting a human playtest (code landed, eyes/ears pending)
+_Work that is committed and green in headless tests but that only a person can
+sign off on, because the failure mode is "it sounds wrong", not "it errors"._
+
+- [x] **Cause-aware enemy taunts -- heard in a REAL FIGHT.** VERDICT 2026-09-09
+  (Abe, run sheet 2.2). The result splits cleanly and the split matters:
+  - **The CONTENT system passes.** "The words are correct" -- the right lines
+    fire for the right cause. So the cause-aware bundling is NOT decoration; it
+    reaches the player exactly as designed. Do not rework it.
+  - **The DELIVERY fails.** "Still sound very lifeless... good for monotone
+    voice, sucks for anger and excitement." The bottleneck is the TTS engine, not
+    the authoring, the bundling, or the tuning.
+  - **The delivery-control lever is now exhausted.** I previously suggested that
+    speed, pause and style steering were the remaining way to get expressiveness
+    out of Kokoro. Abe has now heard the result in a fight and it is still flat,
+    so that path is closed. Do not spend more time on TAUNT_SPEED/TAUNT_STYLE
+    values; the ceiling is the 82M model.
+  - Consequence: the taunt work is DONE until the voice engine changes. Every
+    further improvement here is blocked on the Orpheus item below.
+
+- [ ] **Taunt loose ends left when Abe finished the audio review** (2026-08-18).
+  None are blocking; all were raised and never answered, so they stand as-is:
+  - Is `bm_george` a weak lead voice, or just unlucky with short lines? One clip
+    was unintelligible. Comparison renders in `logs/taunt_audition/short_test`.
+    If it is the voice, the fix is trimming `CombatManager.TAUNT_LEAD_VOICES`.
+  - `unprovoked_13` ("There's no cargo, no bounty, no reason") -- he asked for
+    it slower; 0.95 and 0.85 were rendered, no pick made. Still 1.10. The line
+    is a three-beat list, so pacing the list with "..." may beat slowing it.
+  - 14 clips remain under 2 seconds. Two ultra-short ones were cut for being
+    gone before the player registers them; the rest may share that fault.
+  - The `contract_hit` bribe line still collides with the real comms-reversal
+    mechanic -- see docs/bugs.md. Abe's original version is strong material for
+    the comms-reversal HAIL, where the offer is actually interactive.
+
+- [ ] **Extend pre-baked audio beyond taunts** (the pipeline landed 2026-08-18).
+  Taunts are baked to OGG because their text and delivery are fixed and they
+  fire at a latency-critical moment. The same is true of every other AUTHORED
+  line, and the TTS memory cache does not persist across launches, so each of
+  these still costs a live round trip on first play every session:
+  - N.O.V.A.'s authored floor and her stock pools (`scripts/ai/Nova.gd`)
+  - Kaelen's intro pool and return lines (`scripts/UIManager.gd`)
+  - The authored tutorial hand-in bundle
+  DEFERRED 2026-08-18 after scoping it -- deliberately, not forgotten:
+  - The lines worth baking most (N.O.V.A.'s dock tiers, Kaelen's intro list) are
+    INLINE ARRAYS inside function bodies, unreachable without calling the
+    function or parsing GDScript source. Only named constants extract cleanly
+    via `get_script_constant_map()`.
+  - So doing it properly means migrating those pools to data files first: a
+    refactor of two large live gameplay files, for a payoff that is latency at
+    DOCK and MENU moments rather than at combat start.
+  - Correctness trap to respect when it is done: these lines go through
+    `SpeechService.prepare_text` (tone guard, player-address stripping), so the
+    baked text must match the POST-PROCESSED text, not the constant. A mismatch
+    misses silently and falls back to live TTS, so it would look like it worked.
+  Natural trigger is the 8GB shipping work, where dropping the Kokoro runtime
+  dependency has a concrete payoff and the migration earns its risk.
+  NOTE for export: baked clips load via `AudioStreamOggVorbis.load_from_file`
+  rather than Godot's import pipeline, so `assets/audio/taunts/` must be
+  included by an export filter or the build ships without them (it degrades to
+  live TTS, so this fails quietly rather than loudly).
+- [ ] **Per-fight taunt bundle keys are cause-aware but unverified** (landed
+  2026-08-18). `request_combat_taunts` now receives the cause, but its 20 keys
+  (`npc_brace`, `npc_dying`, `npc_boss_phase_2`, `kaelen_*`, ...) were not
+  checked one at a time against each cause. Most likely drift: Kaelen's lines
+  ignoring the cause, and the boss-phase keys reading generic. Worth a live
+  pass that prints every key per cause the way the taunt live-fire tool does.
+
+---
+
+## Local workspace hygiene
+
+- [ ] **Investigate or remove local workspace artifacts** -- `tests/domain/run_intro_handhold_tests.gd.uid` and `tests/domain/run_overview_filter_tests.gd.uid` exist without their matching `.gd` sources, and `.claude/` contains local Claude workspace metadata. They are intentionally ignored in `.gitignore` so they do not pollute status; restore any intended source tests or project configuration before committing it, otherwise remove the local artifacts when safe.
+
+---
+
+## Narrative / first-meeting continuity
+
+- [x] **Jenna Cross first-meeting line** -- 2026-07-28: Jenna's first maintenance-bay visit now uses one authored introduction before any LLM/canned familiarity can appear: "Name's Jenna. I can fix whatever you broke, but I can't fix whatever bad decision made you fly a bucket like this out to the edge of nowhere. So—what are we looking at?" The campaign-persisted mechanic visit flag unlocks normal relationship-aware greetings only on later visits.
+
+---
+
+## Combat -- Unified System (do in order, blocks everything below)
+
+- [x] **FactionRegistry.gd autoload** -- single source of truth for all faction data: known profiles (aurelia/vanguard/zenith) + unknown faction progression list ordered by tier; `get_profile(key)`, `get_faction_for_danger_level(n)`; runtime override dict so tuning tool can hot-apply changes without touching the const.
+- [x] **Unknown faction progression list** -- 4 factions per tier band, each band covers ~4 generated systems; same tier = same damage/HP budget but different combat role, weapon bias, shield vs hull split, and aggression pattern so each feels distinct to fight. Proposed bands:
+  - **Band 1** (systems 2-5): Rift Collective (weapon-heavy burst), Hollow Syndicate (engine-heavy hit-and-run), Pale March (hull tank, braces constantly), Cinder Wake (repair-capable attrition)
+  - **Band 2** (systems 6-9): Eclipse Legion (balanced), Obsidian Pact (shield-heavy), Ashen Drift (reposition every turn, chip damage), Iron Chorus (disable-focused)
+  - **Band 3** (systems 10-13): Void Covenant (all-round high), Shatter Bloc (extreme weapon bias), Null Meridian (drone-specialist), Fracture Syndicate (squad-oriented)
+  - **Band 4** (systems 14+): elite tier, reserved for late-game / story systems
+- [x] **Faction tuning tool** -- Numpad 7 opens unified DevPanel; faction tuning tab with all factions x tier fields, up/down per cell, hot-apply + save to `user://faction_tuning.json`. DevPanel also has Spawn Boss, Spawn Squad, Restock actions. Extensible via `add_action_button()` / `add_tab()`.
+
+
+
+- [x] **Step 1 -- CombatAction.gd: expand enum** -- BRACE, FLANK, SHIELD_ANGLE, DISABLE_ENGINES added with AP costs + labels.
+- [x] **Step 2 -- NPCShip.gd: tier vars + faction profiles** -- tier vars added; `apply_faction_profile()` derives all combat stats; `_action_*` helpers use `CombatAction.make()`.
+- [x] **Step 3 -- CombatManager.gd: unified execution** -- `_execute_npc_action` on int enum; damage in `params`; `_apply_hit` applies faction resistances.
+- [x] **Step 4 -- Spawning: apply profiles** -- `MainScene._spawn_npc()` and `GeneratedSystemNPCManager` all three spawn paths wired.
+- [x] **Step 5 -- Sensor sig table: collapse to one** -- `SENSOR_SIGS_NAMED` deleted; single int-keyed table in CombatPanel.
+
+## Combat -- Unlocked by unified system
+
+- [x] **Pre-combat sensor scan** -- at `combat_started`, typewriter-decode target's tier loadout in sensor panel. Tier 0 sensor = "THREAT LEVEL: HIGH / EXTREME", Tier 1 = individual stats ("Hull T2 / Weapons T3 / Engine T1"), Tier 2 = full assessment + warning ("Weapon systems exceed your fit by 2 tiers").
+- [x] **Sensor upgrade path** -- adds `sensor_tier` (0-2) through maintenance-bay ship upgrades; gates how much pre-combat intel the player sees. `sensor_cluster` remains a store ship-part/trade item for now rather than a required install component.
+- [x] **Difficulty scaling via profiles** -- done; all spawn paths call `apply_faction_profile()` with tier-matched unknown faction or named known faction.
+- [x] **Boss as tier override** -- story-triggered boss = `apply_faction_profile(profile, tier_override)` instead of hardcoded stats; `GameRoot.trigger_boss_encounter(faction, tier, role)` now provides the story/dev hook.
+- [x] **Mixed-profile squads** -- `GameRoot.trigger_squad_encounter()` can spawn mixed profile squads (e.g. Tier 1 Interceptor + Tier 2 Gunner); makes 2-on-1 fights more varied than two identical ships.
+- [x] **Phase 6 -- Enemy kit parity** -- BRACE and REPOSITION now in enum; NPC planners use them as real actions with camera beats, SFX, status floats, chatter, and taunts.
+- [x] **Damage type resistance** -- `weapon_dmg_mult` / `drone_dmg_mult` per profile, applied in `_apply_hit()`. Hull composition in sensor scan.
+- [x] **Damage number visual feedback for resistance** -- resisted hits show small dim `RESIST` numbers; vulnerable hits show large bright `WEAK` numbers. Player reads the difference in the moment and learns without being told explicitly.
+- [ ] **Phase 7 -- Boss (mega)** -- DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
+- [ ] **Phase 8 -- Squads** -- DONE (in-game) but needs StoryManager trigger hook (see Story section below)
+- [ ] **Shield reroute: hold until it does its job** (Abe, 2026-09-09, run sheet 2.4).
+  The reroute should PERSIST until either the enemy fires and the shield absorbs
+  that damage, or the turn ends -- whichever comes first. Today it is spent on a
+  timer/phase boundary regardless of whether it ever met an attack, which makes
+  the verb feel like it evaporated for nothing when the enemy chose not to fire.
+  This is a behaviour change, and it outranks the face picker below: a reroute
+  that reliably does its job with a fixed face is worth more than a choosable
+  face that expires unused. **Decide when implementing:** if the shield absorbs a
+  hit EARLY in a turn, does it drop immediately (spent) or hold out the rest of
+  the turn? "Absorbs the damage" reads as spent-on-use, so that is the default
+  unless Abe says otherwise.
+- [ ] **Shield Reroute sub-picker** -- currently defaults to Front face; needs the face-select sub-wheel. Lower priority than the persistence fix above.
+- [ ] **Boost direction toggle** -- currently defaults to "closer to enemy"; needs toggle for Evade/Close. **PARKED 2026-09-09 (Abe): keep as-is for now, may circle back.** The default was not biting in play, so the toggle is not yet worth the work.
+- [x] **Attack drone visual** -- strike now peels the nearest green orbiting drone out of formation (hides it for the run) and launches a matching green strike-drone from that position instead of a blue ball from the ship center. Camera rides a POV chase cam behind the diving drone, with a green drone-cam reticle overlay (corner frame + center crosshair + enemy-tracking bracket) via `scripts/DroneReticle.gd`. Hands back to the impact framing on the hit. (`PlayerShip.gd` `launch_combat_drone` / `_begin_drone_pov` / `_end_drone_pov`)
+- [x] **Salvage drone wreck action** -- wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
+- [ ] **Enemy low-health escalation arc** -- enemy dialogue/behavior should escalate when below 30% HP
+- [ ] **Impact decals on player ship** -- hull hit marks that persist during a fight
+- [ ] **Richer combat taunt flavor** -- TACTICAL bucket system: situation-aware taunts (flanked, shielded, drone hit, etc.)
+  - 2026-08-18: the CAUSE half of this shipped -- taunts now know WHY the fight
+    started (see `scripts/combat/TauntCause.gd`, 8 causes derived from real
+    state) and rotate true round-robin per cause with a persisted cursor
+    (`TauntBag`). What remains here is the orthogonal axis: reacting to what
+    just happened IN the fight. Those two should compose, not replace each
+    other -- a pirate who just got flanked should still sound like a pirate.
+  - Rerun `tests/tools/run_taunt_bank_live_fire.gd` after touching the taunt
+    prompt or parser, and `run_taunt_growth_probe.gd` to watch pools fill.
+- [x] **Execute button flashes when AP fully spent** -- 2026-08-06; see the player-affordances section near the end of this file for the implementation note.
+
+---
+
+## Story / Narrative System
+_Full design in `docs/design_narrative_system.md`. Build in order -- each phase depends on the one before._
+
+- [x] **Phase A -- Campaign Spine Generator** -- gemma4 generates the campaign bible at new-campaign start (`NarrativeDirector.gd` + `LLMInterface.request_campaign_bible_generation`). Made reliable 2026-07-01 (`think:false` fixed JSON reliability; deterministic creative lanes + anti-motif guidance fixed motif collapse). `kaelen_angle` (her hidden angle) added to the schema 2026-07-02, protected the same way as hidden truths -- never shown to any prompt, only used to derive a mood descriptor.
+- [x] **Phase B -- Story State Document** -- StoryManager gets a live `story_state` dict (chapter, active_tensions, player_knows, hidden_truths, current_foreshadow, kaelen_mood). `get_story_context_block()` returns a short string injected into every LLM prompt. `advance_chapter()` fires on chapter-link mission completion. Persisted via `StoryStateStore` (CampaignTransactionStore pattern). `LLMInterface.story_state_context_text` injected as `### STORY STATE:` block in quest prompts. **2026-07-02: the bible->story_state bridge was actually missing until now** -- `seed_story_state_from_bible()` finally connects Phase A's generated content into this living state (previously it silently stayed empty forever); includes a migration path for pre-existing saves.
+- [x] **Phase C -- Mission Causality** -- 2026-07-02: `because` field threads active tension into quest prompts; `story_hook_ref` stamps a quest with the hook it was generated for; completion resolves that hook and checks chapter advancement. Chapters never end the campaign -- hook exhaustion refills from the bible's reserve, then falls back to a `regeneration_trigger` LLM call (retry-once + logged fallback counter, never silent).
+- [x] **Kaelen handoff pool** -- Gemma4 pre-generates 16 story-aware Kaelen intro lines per agent during gate travel dead time; stored in `kaelen_handoffs.json` via KaelenHandoffStore; drawn instantly in `request_kaelen_intro` before falling back to small model. Triggers: game start, gate "Fly to", system arrival (top-up), chapter advance (replace). Full design in `docs/plan_kaelen_handoff_pool.md`.
+- [x] **Phase D -- Kaelen Integration (partial)** -- 2026-07-02: `kaelen_hidden_angle` seeded into story_state, derives `kaelen_current_mood` (mood-only, angle never reaches any prompt); `request_kaelen_reaction()` now gets mood context (previously got none). Still missing: `kaelen_chapter_comment` / `kaelen_hint` line types (deferred, low-risk to add later).
+- [x] **Phase E -- Ambient NPC Dialogue** -- 2026-07-04: `AmbientChatGenerator.gd` autoload (`AmbientChat`) live. Fires every 180-300s of open play (gated: not docked/combat/dead, small model verified, bible seeded); bucket roll 50% mundane / 30% story-adjacent / 20% overheard-intel; topics from PLAYER-SAFE story state only (tensions/foreshadow/knowns/hooks) + 24-subject mundane pool; 8 named archetype pairs; small model (`ambient_chat` capability, 14s) writes 2-4 alternating lines, validated by `parse_chat_lines` (both voices required, 4-line cap); delivered staggered 2.4-4.2s via `emit_chatter` with mid-convo abort on dock/combat/restart. `ambient_used_topics` dedup per chapter (cleared in `advance_chapter`, capped 48). Failure = silence + diagnostics, never canned. DevPanel "Fire Ambient Chat" button for live tuning. Tests: `tests/story/run_ambient_chat_tests.gd`.
+- [x] **Automatic story screenshots** -- DONE 2026-07-05: capture core (`StoryScreenshots.gd`, frame_post_draw-timed, `<campaign>/screenshots/`, 200 cap, headless-safe) + ALL triggers: campaign start, chapter advance, story-hook resolution, first jump to a new system (`screenshot_systems_seen`, campaign-load arrival excluded), first dock at a new station (`screenshot_stations_seen` by node name), kill-cinematic frame (lethal `action_impact`, 10-min rate limit), boss kill (always captures). All triggers live in StoryManager; plan doc `docs/plan_screenshot_triggers.md`. PDF embedding comes with campaign closure.
+- [ ] **Campaign closure -- Story PDF + permanent lock** -- When a player chooses to end a campaign, gemma4 compiles the full story into a readable narrative document: the inciting event, the chapter arc as the player experienced it, key missions and what they meant to the larger story, Kaelen's thread, and the ending. Delivered as a PDF saved to the user's machine. The campaign save is then permanently locked -- marked as `ended`, all missions and travel disabled, the slot shows "ENDED" in the save screen. The story is theirs to keep. The world is closed. This is the equivalent of finishing a book -- you don't go back and replay chapter 3. New campaign for a new story. PDF generation via GDScript writing HTML and converting, or via a simple text layout written to a styled file. Include the campaign name, playtime, systems visited, missions completed, and the narrative prose gemma4 writes from the story state history.
+- [x] **N.O.V.A. campaign fields + plot armor (all 3 layers)** -- 2026-07-04: bible schema gained `nova_quirk` (first-person, player-safe, spoken by her on arrivals/long docks via `Nova.set_campaign_quirk`) and `nova_memory_flicker` (director-only fragment of her wiped past tied to the main mystery — not yet surfaced in-game; future glitch-hint delivery pass). Plot-armor contract enforced: prompt constraints + `NarrativeDirector.plot_armor_offense()` validation on bibles AND horizon expansions + `StoryQuestManager.quest_violates_plot_armor()` runtime wall. Schema doc: `docs/campaign_bible_schema.md`.
+- [x] **N.O.V.A. memory-flicker delivery** -- 2026-07-04 (same day, follow-up session): `LLMInterface.request_nova_glitch_hints` (new `nova_glitch` capability, LARGE model only — prompt carries the director-only flicker) writes 4 oblique gate-transit lines once per campaign at `_on_llm_ready`; `StoryManager.glitch_line_leaks_flicker()` rejects any line echoing the flicker's distinctive words (allowlist for gate/memory vocabulary); stored in `story_state.nova_glitch_hints`, pushed via `Nova.set_memory_glitch_lines`, ~40% of her gate-flinch lines now use campaign-specific glitches. No canned fallback: failure = stock gate lines + logged diagnostics + natural retry next session.
+- [x] **Phase F -- Rumors** -- 2026-07-02: rumor trails seed `pending_hooks`; `on_docked()` has a ~40% chance to fire a rumor via the existing `get_lounge_rumor()`/`record_lounge_rumor_heard()` pipeline (already built, was just never triggered). Hook marked "hinted" via dedup list, same as the existing NPC-conversation rumor path.
+- [x] **Story-aware lounge dialogue** -- 2026-07-04: `request_lounge_chatter` + `fetch_chatter_background` prompts now carry `StoryManager.get_ambient_flavor_block()` (tone, core pressure, humor rule, lead tension, foreshadow, latest player-known truth); UIManager's canned greeting/faction/trouble topic lines and the bartender press gained story-anchored variants; lounge rumor "Echo" weight scales with chapter so uncovered truths take over dock talk late-campaign. Rep-aware nuance per contact folds into the lounge social-layer item.
+- [x] **Lounge conversation choices + consequences** -- 2026-07-05 (Lounge Social Layer L1, see `docs/plan_lounge_social_layer.md`): every lounge card press now opens a 2-way conversation — `LoungeConversation.gd` flat line/r1/r2/r3 protocol, up to 3 NPC turns with player reply buttons on the dock-message row + always-available nod-and-leave; completing a chat with a faction contact gives +1.0 rep once per contact per dock; failures fall back to the old one-liner (logged).
+- [x] **Kaelen suspicion lounge thread (hint-plan delivery)** -- 2026-07-04: the bible's `kaelen_hint_plan` finally reaches the player — `deliver_next_kaelen_hint()` had ZERO callers before this. Now `get_lounge_rumor()` offers the next hint as a top-weight "Something About Kaelen" observation (phrased as something the contact noticed, never Kaelen explaining herself), paced at most one hint per chapter; `record_lounge_rumor_heard()` pops hidden→delivered only when genuinely heard and nudges her mood. Remaining flavor (Kaelen's own lounge lines implying she arrives too conveniently) can layer on later via her card context.
+- [x] **Faction lounge social checks** -- 2026-07-05 (L5a, plan doc updated): `LoungeConversation.agent_disposition(rep)` (pure, tested) maps rep tier to refusal/context/rep numbers. Sworn enemies refuse the conversation outright; hostile contacts are talkable but cold (completing one is worth +2.0); friendly+ agents tip leads 30% of the time (first unhinted story hook, delivered as a discreet aside, rumor-dedup marked); walking out on an agent's opener costs bail_rep and turns them cold for the rest of the dock (`_lounge_cold_contacts`). Agent cards carry `rep_key` so lookups don't depend on display names.
+- [x] **Kaelen "any more work?" flow after payout** -- 2026-07-26: payout screen now offers a persistent 20-line, true round-robin "Any more work for me?" follow-up. Kaelen finishes the check-in line before the same existing agent offer/no-work flow appears.
+- [x] **First-repair mechanic reaction to N.O.V.A.** -- 2026-07-28: each mechanic consumes campaign-persisted one-shot flags for their first maintenance visit and first successful repair. First visit cannot roll a pickup/fetch offer, including after a Speak refresh during that dock. First repair replaces the mechanic line with an authored, mechanic-specific N.O.V.A. observation that implies unlicensed/nonstandard hardware without explaining it; later repairs remain silent on the subject.
+- [ ] **Opposing-force near-reveal payoff** -- Once a campaign's opposing force has been deliberately designed, give it an earned moment that implies it knows something real about either the Captain's ship or Kaelen's private history. The player should get close enough to understand the danger, then lose the direct answer because the force is killed, the Captain must kill it, or another actor removes it first. Seed and pace the clue chain so this is a meaningful consequence of the campaign conflict, not a random mystery tease; do not decide which secret is involved until the campaign premise supports it.
+- [x] **Boss fight trigger tool** -- expose `GameRoot.trigger_boss_encounter(faction, tier_override, role)` so StoryManager can script a boss ambush as a story beat
+- [x] **Squad fight trigger tool** -- expose `GameRoot.trigger_squad_encounter(faction, count, base_tier, roles)` for scripted 2-on-1 ambushes. Good future callers: anomaly outcomes and public-board combat contracts.
+- [x] **Anomaly data core delivery** -- anomaly drops a named data core; player delivers to NPC for payout via special cargo system
+- [x] **Salvage drone wreck action** -- (also listed under Combat) targeted wreck action replaces the post-kill prompt idea so salvage is available from `Fly to` / `Orbit` / `Salvage`.
+
+---
+
+## Navigation / Autopilot
+
+- [ ] **Docking sequence** -- replace instant snap with a 3-second felt transition: input lock -> ship tween into collar -> camera hold + clamp SFX -> fade-in dock UI. Enemies in active pursuit hold at dock initiation (not arrival), re-engage on undock with a warning chatter line. One new file: `DockSequence.gd` state machine; everything else reuses JumpTransitionFX, EngineExhaust, and the existing camera node. Full design in `docs/plan_docking_sequence.md`.
+- [ ] **Fix autopilot avoidance regression** *(see bugs.md for full root-cause analysis)*
+  - Wire `_get_autopilot_avoidance()` back into the autopilot movement block (`PlayerShip.gd:740-754`). It exists and works but is not being called.
+  - After `_route_steer_target()` returns a `steer_target`, pass it through `_get_autopilot_avoidance(steer_target, active_target)`. When `is_avoiding` is true, use the avoidance waypoint as the actual steer target.
+  - This gives two complementary layers: A* planner handles the macro route, real-time avoidance handles surprises mid-flight.
+- [ ] **Forward whisker (nose sensor) for imminent collision**
+  - Add a `RayCast3D` pointing forward (`-Z`) on the ship. No new scene node needed -- configure it in `_ready()`.
+  - In `_physics_process` during autopilot: if the raycast hits something within ~50u that is not the nav target, call `_clear_planned_route()` immediately to force a fresh A* replan without waiting for the 2.5s stall timer.
+  - Godot equivalent of the Unity "empty object on ship nose" pattern. The raycast IS the whisker.
+- [x] **Fishtailing in tight spaces** -- LIKELY FIXED, Abe 2026-09-09 (run sheet 2.6): flew tight spaces and saw neither the fishtail nor the avoidance regression. Answers the question I asked with it -- they went away together, which is consistent with one steering fault rather than two, so `steer_towards()` did not need separate fixes. Original note kept below for the next regression.
+- [ ] ~~Fishtailing in tight spaces~~ -- ship wiggles its butt side to side when trying to squeeze into a tight area (e.g. navigating close to a station or between asteroids). The steering overshoots, corrects, overshoots the other way, and oscillates instead of committing to a clean line. Needs dampening on the angular correction when the ship is close to an obstacle and the heading delta is small -- reduce turn aggression proportionally to proximity so it slides in smoothly instead of wagging its tail. **Fix is in `steer_towards()` in `PlayerShip.gd`** -- when proximity to an obstacle is detected AND the heading correction angle is small, scale down the turn rate so the ship commits to the line rather than overcorrecting back and forth.
+- [ ] **Route validity re-check while following waypoints**
+  - After each waypoint is passed (`planned_route_index` advances), call `NavigationRoutePlanner.route_is_clear()` on the remaining waypoints against current hazards. If it returns false, replan immediately.
+  - Catches cases where an obstacle moved into the planned path since the last full replan.
+
+---
+
+## World / Exploration
+
+- [ ] **Map hover tooltips** -- hovering a map node shows stations, ore types, factions present
+- [ ] **Route planner** -- click-to-plan route; gates highlight in overview; auto-clears on arrival
+- [ ] **Gate portal particles** -- particle effects off the gate portal (portal shader is locked/approved, don't touch it)
+- [ ] **Generated systems: NPC ships** -- procedural systems feel empty; need ambient NPC traffic
+- [ ] **Generated systems: station variety** -- all proc-gen stations look the same; need visual variants
+- [ ] **Generated systems: difficulty scaling** -- enemy stats should scale with system danger level
+- [ ] **Discovery visual treatments** -- named/story systems should feel different on arrival: skybox tint, arrival text banner, environmental storytelling (debris, explosion haze). See `docs/design_parking_lot.md section2`
+- [ ] **Sensor contacts panel (name TBD)** -- when a ship comes within passive-sensor range (or you're in combat with it), it's added to a contacts list. Open the list to view that ship's 3D model (rotatable) plus the details your sensors picked up: ship class/role, weapon types, power supply/reactor, shields, hull composition, faction, etc. Fidelity of detail could scale with sensor strength / scan time. Data already partially exists on `NPCShip` (weapon_tier, powerplant_tier, hull_composition, shield_tier, archetype) -- surface it here. Kitbash ships make the 3D model view cheap to render. **3D viewer already built:** `scripts/ui/ModelViewer.gd` + `scenes/ui/model_viewer.tscn` (orbit-drag/zoom/auto-spin, `show_ship(faction,role,seed)` / `set_model(node)`) -- just drop it into the panel.
+- [ ] **Rumor-instanced anomalies** -- anomalies should not all pre-exist as obvious map loot. A lounge/story rumor can spawn a hidden anomaly in a plausible region of the current system, then system chat records the unverified lead ("Possible anomaly signal added to local sensor memory"). State flow: `rumored` -> `sensor_contact` -> `identified` -> `resolved`.
+- [ ] **Rumor-instanced derelict ships** -- same loop for dead ships: lounge/story rumor spawns a hidden derelict, initially invisible to overview. It resolves from "weak metallic signature" to "derelict ship" only after the player gets close enough or scans it.
+- [ ] **Overview reveal radius for anomalies/derelicts** -- hidden exploration objects should appear on overview only inside passive sensor range. Reveal distance should scale with scanner quality, object signal strength, and possibly purchased/earned intel quality.
+- [ ] **Visual reveal distance matches sensor reveal** -- anomalies and derelicts should not be visibly obvious from across the system before overview can detect them. Their render/fade-in distance should correspond to the same sensor reveal rules.
+- [ ] **Search-zone hints instead of exact markers** -- lounge NPCs and system chat should point to regions ("outer belt", "near Kova outbound lane", "past the gas giant") rather than exact object markers unless the player buys high-quality intel.
+- [ ] **Discovery outcomes from rumors** -- rumor-spawned finds can resolve into anomaly data cores, hidden caches, derelicts, rare salvage, illegal goods, or ambushes so the lounge becomes an exploration seed source instead of a flavor-only room.
+
+---
+
+## Speech / TTS
+
+- [ ] **Baked audio is an ENGLISH-ONLY layer -- the game must keep live TTS**
+  (Abe, 2026-09-09). This is a hard architectural rule, not a preference.
+  Everything baked ahead of time -- taunts, and now the N.O.V.A./Kaelen cast
+  lines -- is a QUALITY CACHE for English. Localization cannot use pre-baked
+  English audio, so the in-game Kokoro path must remain able to synthesize every
+  one of these lines live.
+  - **Therefore:** a missing baked clip is NEVER an error. Lookup must fall
+    through to live TTS silently, and no baked manifest may become a hard
+    dependency. If the game ever *requires* a baked clip to speak a line, that is
+    a bug, and it will only show up in a non-English build where nobody is
+    looking.
+  - Applies to `assets/audio/taunts/` (Kokoro), `assets/audio/taunts_orpheus/`
+    (Orpheus, in progress) and `assets/audio/cast_en/` (F5-TTS, in progress).
+  - The `_en` suffix on the cast directory is deliberate: it names the constraint
+    in the path so a future reader cannot mistake it for language-neutral audio.
+
+- [ ] **F5-TTS is the cloning engine for N.O.V.A. and Kaelen** (Abe, 2026-09-09).
+  Set up by Antigravity in `C:\CodingProjects\TestTTS` (own venv, own
+  references). Abe's verdict: F5-TTS clones both characters WELL -- "better at
+  cloning than the one we are currently using".
+  - **This reverses the same-day Orpheus rejection, and the distinction matters:**
+    what failed was ORPHEUS cloning, not cloning as a technique. Orpheus clones
+    were not close enough for the fixed cast (though good enough for NPCs); F5
+    clones are. Do not read the earlier "no go" as a verdict on cloning.
+  - Running on CPU deliberately: it dodges the sm_120 PyTorch issue on the RTX
+    5060 Ti AND leaves the GPU free for the Orpheus taunt bake. GPU contention is
+    what crashed that bake earlier today, so this is not just a workaround.
+  - ~28s per line on CPU; 516 authored lines (423 N.O.V.A., 93 Kaelen) is about
+    4 hours. Script: `bake_cast.py`, resumable, aborts after 5 consecutive
+    failures rather than reporting a false DONE.
+  - **TAIL CHOP FIXED 2026-09-10, and the diagnosis took three tries.** Abe
+    heard "a weird sneeze" at the END of two N.O.V.A. clips. Root cause: F5-TTS
+    leaves almost no trailing silence -- median 26ms across the cast bake, 85% of
+    clips under 60ms -- so the final word's decay is cut and reads as a chop.
+    - **Two wrong diagnoses first, recorded so they are not repeated.** I blamed
+      ALL-CAPS text and rewrote 13 lines: capitals made no measurable difference
+      and the rewrite fixed nothing. I then blamed a short trailing clause: closer
+      (a long clause DID sound clean) but still the wrong mechanism. Abe's own
+      description -- "the last few milliseconds are chopped" -- was the actual
+      answer. My zero-crossing metric measures NOISINESS and cannot tell a clipped
+      ending from a sharp consonant, which is what kept sending me the wrong way.
+      Trust the ear over that metric.
+    - **Fix is post-process, not content:** `TestTTS/fix_tails.py` applies an 18ms
+      fade plus 140ms of silence, ONLY to clips ending under 80ms. Nothing is
+      re-rendered and no line is rewritten -- which matters, because 67 lines end
+      in a short closer ("Probably.", "Wonderful.", "I'm annotating.") and those
+      dry tags ARE her voice. Rewriting them to suit a renderer was the wrong
+      trade; fixing the renderer output was the right one.
+    - Applied: 488 of 516 cast clips, 14 of 1520 taunts. **Orpheus did not have
+      this problem** (median 359ms trailing) -- it is F5-specific, which is why
+      the pass is threshold-guarded rather than blanket. The guard also makes it
+      idempotent: a re-run processes 0 files.
+    - Abe's call on the capitals rewrite: KEEP the sentence-case version. Removing
+      caps "does make them safer without hearing each one of them 1 by 1", even
+      though caps were not the cause.
+  - **INTRO LINES WERE MISSED IN THE FIRST PASS, baked 2026-09-10.** Abe asked
+    whether N.O.V.A.'s "ALMOST!" was baked -- it was not. My extraction only
+    scanned `Nova.gd` and the curated voice examples, so the seven lines in
+    `scripts/story/IntroCinematic.gd` were skipped: the OPENING CINEMATIC, which
+    is the first audio a player ever hears and never varies. Exactly the content
+    that most deserves a bake, missed because I assumed two sources were the
+    whole inventory. Cast bake is now 523 clips.
+    - Lesson for any future bake: grep `const .*LINE.* := "` across `scripts/`
+      before assuming the line inventory is complete. Noted in `bake_cast.py`.
+  - **BOTH BAKES COMPLETE 2026-09-09.** Orpheus taunts: 1520 clips (190 x 8
+    voices, evenly distributed, 0 errors on the resumed run). F5 cast: 516 clips
+    (N.O.V.A. 423, Kaelen 93, 0 errors). Verified by counting files against
+    manifest entries rather than trusting the scripts' own "DONE" -- the first
+    Orpheus run printed DONE over 1332 failures, so completion is now checked,
+    not reported.
+  - **Both are LIVE.** `TTSInterface` resolves cast -> Orpheus taunt -> Kokoro
+    baked -> live synthesis, gated on an English locale. Nothing further needed
+    to hear them.
+  - **`bm_george` has no Orpheus mapping, deliberately.** He was cut from the
+    lead pool the same morning, so his existing lines fall through to the old
+    Kokoro clips. One flat taunt among expressive ones is the fallback working,
+    not a bake gap.
+  - **Kaelen has far fewer bakeable lines than N.O.V.A. and that is not an
+    oversight.** His reaction lines are LLM-GENERATED per mission
+    (`llm_kaelen_reaction`), so they cannot be pre-baked at all. Only the curated
+    voice examples and the tutorial completion/abandon pools are static. Any
+    future attempt to "bake all of Kaelen" needs to reckon with that first.
+
+
+- [ ] **No two stations should share a maintenance person** (Abe, 2026-09-09).
+  Dock clearance now speaks in the station mechanic's voice (landed same day), so
+  a repeated mechanic is now AUDIBLE as well as visible -- two stations that
+  share one sound like the same place.
+  - **Current behaviour:** `_generated_contact_data` picks
+    `presentation_index = (index + rng.randi()) % GENERATED_CONTACT_PORTRAITS.size()`,
+    which is random per contact. Two stations can collide today, and nothing
+    checks.
+  - **HARD CEILING, needs Abe's decision:** there are only **7** entries in
+    `GENERATED_CONTACT_VOICES` and 7 portraits. True global uniqueness is
+    impossible past 7 stations. Options:
+    1. **Expand the pools.** Real fix, but it is content: more voice profiles in
+       `data/content/voice_provider_kokoro.json` plus portraits. Voice profiles
+       are cheap (they are Kokoro blends, and blends of existing leads sound
+       distinct), portraits are not.
+    2. **Guarantee uniqueness among stations the player can reach quickly** --
+       never repeat within a system, or within N most-recently-visited -- and
+       allow reuse far away. Cheaper, and the collision a player can actually
+       notice is a nearby one.
+    3. Accept repeats and differentiate by NAME and lines alone. Weakest now that
+       voice carries the identity.
+  - Recommend **2 first** (bounded work, kills the noticeable case) with **1** as
+    the real fix when the voice pool is next touched -- likely alongside the
+    Orpheus trial below, since that revisits voices anyway.
+  - Assignment should be DETERMINISTIC from the station id, not `rng.randi()`, so
+    a station keeps its mechanic across saves and sessions. That matters more
+    than uniqueness: a station whose mechanic changes between visits is worse
+    than two stations sharing one.
+
+
+- [ ] **Try Orpheus (Canopy Labs) as a BAKE-TIME voice engine** (Abe, 2026-09-07).
+  Kokoro is `hexgrad/Kokoro-82M`, weights `kokoro-v1_0.pth`, package 0.9.4. At
+  82M it is fast and CPU-friendly, and that is also its ceiling: the flat
+  "angry" reads Abe rejected during the taunt audition are not a settings
+  problem, they are what the model can do. Orpheus is an autoregressive LLM
+  (Llama backbone + audio codec decoder) with emotion tags, which is exactly the
+  axis Kokoro cannot move on.
+  - **Bake time, not runtime.** At runtime Orpheus would compete with qwen3:4b
+    for the same 8GB, which is the residency problem P1 exists to solve. Baked,
+    it runs on Abe's machine at dev time, emits files, and ships as audio: no
+    VRAM cost, no latency, no new end-user dependency.
+  - **The pipeline already supports it.** `tools/bake_taunt_audio.py` and
+    `scripts/TTSInterface.gd` both talk to one HTTP endpoint
+    (`localhost:5000/tts`). A second engine is another process on another port
+    that the BAKER points at; the game never learns which engine made a file.
+  - **Scope: anything baked ahead of time**, not just taunts. Taunts first
+    because they are already fully baked (1520 clips) and enemies are anonymous,
+    so there is no canon-voice risk in the trial.
+  - **CONFIRMED IN A REAL FIGHT 2026-09-09 (Abe), the decisive test:** "still
+    sound very lifeless... good for monotone voice, sucks for anger and
+    excitement." This is now the THIRD confirmation and the only one taken in
+    the place the lines actually play. Taunts are the strongest case for the
+    trial precisely because their register (anger) is the one Kokoro cannot do,
+    and because they are already fully baked, so nothing at runtime changes.
+  - **REINFORCED 2026-09-09 (Abe):** after hearing the pool again, "they land
+    flat" -- he expects to move these voices to a different TTS in the long run.
+    That is the same expressiveness ceiling noted above, now confirmed by ear
+    rather than predicted, and it raises this from an experiment to the likely
+    direction. bm_george was cut the same day, but flatness is a POOL-WIDE
+    property, not one bad voice, so cutting more leads will not fix it.
+  - **TRIAL RUN 2026-09-09 -- IT WORKS, awaiting Abe's ear.** Environment:
+    `C:\CodingProjects\orpheus_trial` (isolated venv OUTSIDE the game repo, so
+    the game's Kokoro install and its CPU-only torch are untouched -- Abe's call:
+    "we can run these in a new environment since this TTS won't be run at
+    gametime"). Generator: `gen_taunts.py`, output in `out/`.
+    - Model: `audo/orpheus-3b-0.1-ft` (Apache-2.0 mirror). **The canonical
+      `canopylabs/orpheus-3b-0.1-ft` is a GATED repo** -- `gated: auto`, so
+      accepting the terms on huggingface.co auto-approves. Worth Abe doing to use
+      the canonical source; the mirror is legitimate redistribution meanwhile.
+    - **The 150M/400M variants do not exist publicly.** Canopy publishes only 3B
+      models. No loss: this box is an RTX 5060 Ti with 16GB, and 3B is
+      comfortable. (Note: that also means this machine is NOT the 8GB card the
+      H2 VRAM gate needs to be measured on.)
+    - Deps: torch 2.11.0+cu128 (Blackwell sm_120 verified), transformers 5.16.1,
+      SNAC 24kHz decoder, soundfile.
+    - Speed: ~10-22s per line on GPU, ~5s of audio each. Fine for bake time,
+      far too slow for runtime -- which is exactly why this is a bake-time engine.
+    - Rendered real taunt lines across two voices (leo, dan) for A/B against the
+      approved Kokoro bakes.
+    - **CORRECTION -- `<angry>` IS NOT A REAL ORPHEUS TAG.** My first run used it
+      and Abe heard the model SPEAK THE WORD "angry" aloud. Orpheus finetuned
+      only a PARALINGUISTIC set (`<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`,
+      `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`) -- sounds a person makes, not
+      emotional states. None of them means "angry". Anything outside that set is
+      plain text and gets read out.
+    - **This weakens the original argument for Orpheus.** The pitch was "emotion
+      tags are the axis Kokoro cannot move on". There are no emotion tags. So the
+      question is narrower and must be settled by ear: can the Orpheus VOICES
+      carry a threat that Kokoro reads flat, using only the writing, punctuation
+      and capitals? A second render (no tags, plus one `<groan>` control) went to
+      Abe to answer exactly that.
+    - **VERDICT 2026-09-09 (Abe), untagged renders: "10x better than what we
+      had."** Orpheus is the direction. Pitch-shifting as a voice multiplier was
+      tried and REJECTED by ear ("sounds horrible") -- do not revisit it.
+  - **CLONING WORKS, including from BLENDED Kokoro voices** (Abe's idea, and it
+    is the important one). Kokoro renders a blend to a waveform; to a cloner that
+    waveform is simply a person. So Kokoro's blending survives the engine change
+    as an IDENTITY GENERATOR: any blend ratio -> a reference clip -> a distinct
+    cloned Orpheus voice. Unlimited unique voices, which is what Abe wanted.
+    - **The reference format matters and only one works.** Reference turn, then a
+      new turn ending with the start-of-audio token (128261) so the model
+      continues IN AUDIO. Closing the turn normally yields 0.17s fragments.
+      Working recipe is `clone_v2.py` variant B; `clone_canon.py` applies it.
+    - **Cloning is 10-20x SLOWER than stock voices** (45-205s per line vs ~10s)
+      because the reference audio makes the prompt long. Consequence: clone a
+      HANDFUL of identities (Kaelen, N.O.V.A., named enemies), never a 1520-clip
+      pool. The taunt bake therefore uses the 8 stock voices.
+    - **CANON TEST RESULT 2026-09-09 (Abe): NO GO for Kaelen and N.O.V.A.**
+      The clones "don't sound close to our main 2 characters at all". Cloning
+      does NOT preserve identity well enough for the fixed cast.
+    - **This kills the clone-the-cast plan (2026-09-07) outright.** Kaelen stays
+      `af_bella` and N.O.V.A. stays `bf_emma[0.7]+af_bella[0.3]` on KOKORO,
+      everywhere, with no exceptions. The scoping Abe set on 2026-09-07 -- cloned
+      voices for her repeated ship callouts and his opening monologues -- is
+      withdrawn, and the mid-scene voice-shift risk it carried is gone with it.
+    - **Consequence to accept, not work around:** the two characters who matter
+      most keep Kokoro's flat delivery. Every expressiveness gain from Orpheus
+      lands on enemies and NPCs only. Do not attempt to "fix" this with a closer
+      clone; Abe's ear has already ruled, and a near-miss on a main character is
+      worse than an honest Kokoro read.
+    - **But the clones ARE good for NPCs** (Abe): they sound like distinct
+      people, which is exactly what a generated station contact or enemy needs.
+      Combined with Kokoro-blend references as identity seeds, this is the
+      unique-voice supply the game was short of -- and it covers the separate
+      "no two stations share a mechanic" item, whose 7-voice ceiling was the
+      blocker there.
+  - **Bake state:** `assets/audio/taunts_orpheus/` (gitignored), 1520 clips
+    planned, resumable -- rerun `bake_orpheus_taunts.py` to continue.
+    - Run 1 CRASHED at 188 clips and then PRINTED "DONE". Two bugs of mine:
+      generated SNAC codes were never range-checked, so one out-of-codebook frame
+      fired a device-side assert that poisons the CUDA context for the whole
+      process (the remaining 1332 all failed); and the error handler treated
+      wholesale failure as success. Both fixed -- frames outside SNAC's 4096-entry
+      codebook are dropped, and the script now ABORTS after 5 consecutive
+      failures instead of claiming completion.
+  - **Cheap experiment:** re-bake one cause (~20 `code_enforcement` lines)
+    through Orpheus and listen against the approved Kokoro versions. Hours, not
+    days, and fully reversible -- the Kokoro clips stay on disk.
+  - Note the plan (`docs/plan_replayability_local_inference.md`) lists "no second
+    TTS engine" as a non-goal. That was aimed at runtime scope creep; a
+    bake-time engine does not add an end-user runtime. Abe has approved reading
+    around it deliberately.
+
+- [x] **~~Clone N.O.V.A. and Kaelen for baked content~~ -- REJECTED 2026-09-09.**
+  Tested and ruled out by Abe's ear: the clones do not sound close enough to
+  either character. The fixed cast stays on Kokoro permanently. Kept here as a
+  record so it is not proposed again; the reasoning below is now historical.
+  Cloning itself works and is being redirected to NPC voices instead.
+- [ ] ~~Clone N.O.V.A. and Kaelen for baked content~~ (Abe, 2026-09-07).
+  Orpheus can clone voices, which removes the objection to using it for the
+  fixed cast: baked lines would keep THEIR voices rather than adopting a new
+  actor. `af_bella` is Kaelen's alone and `bf_emma` is N.O.V.A.'s alone, and
+  `tests/story/run_player_address_tests.gd` already pins the reservation.
+  - **THE RISK TO SOLVE FIRST, before cloning anything:** if baked lines use the
+    clone and live/generated lines still use Kokoro, the SAME character has two
+    slightly different voices depending on whether a line happened to be
+    pre-baked. Players notice a character's voice shifting mid-scene, and that is
+    worse than either engine used consistently. Options, in preference order:
+    1. Bake ALL of a character's authored lines and check whether any live line
+       can appear in the same scene as a baked one. Where they cannot mix, the
+       clone is safe.
+    2. Use the clone only for content that is always baked and never adjacent to
+       live speech.
+    3. Accept the difference if the clone is close enough -- Abe's ear decides,
+       and this is a real audition, not a formality.
+  - **SCOPED BY ABE (2026-09-07): option 2.** Cloned voices are for content that
+    cannot sit beside live speech, specifically:
+    - N.O.V.A.'s REPEATED ship callouts -- her stock docking/nav/combat pools,
+      which recur constantly and are the strongest case for a better read.
+    - Kaelen's OPENING MONOLOGUES -- the intro pool, which plays as a set piece
+      before any generated dialogue is in flight.
+    Anything that can interleave with live generated speech stays on Kokoro, so
+    a character's voice never shifts inside a scene.
+  - Reference samples are easy: generate clean Kokoro lines in each voice and
+    clone from those, so the clone targets the voice players already know rather
+    than a new performance.
+  - Do NOT change the canon voice ASSIGNMENTS. This is about which engine renders
+    a reserved voice, never about reassigning or pooling them.
+
+## UI / UX
+
+- [ ] **Pin the active target to the top of the overview** (Abe, 2026-09-06).
+  The overview re-sorts on a timer, so the thing the player has actually
+  targeted can be pushed off-screen by whatever sort they have chosen -- fly far
+  enough away and nearer contacts fill the top of the list. The player loses
+  sight of their own target through no action of their own.
+  - Wants a dedicated active-target row/box ABOVE the sorted list, so it is
+    never subject to sorting at all, rather than a sort rule that competes with
+    the player's chosen column.
+  - Precedent to copy: `_sort_overview_list()` in `scripts/UIManager.gd` (~3670)
+    already pins mission targets via `_overview_prioritize_mission_targets`
+    ahead of the sort comparison. Same idea, but a pinned ROW is stronger than a
+    sort bias because it cannot be scrolled past.
+  - Keep it in sync with `GlobalState.active_target`, including the case where
+    the target dies or is cleared -- see the N.O.V.A. third-party-kill item,
+    which is the same event from the audio side.
+
+- [ ] **Landing page / campaign select** -- late-process main menu that finally gives the game a real front door. Needs a `Continue` button that loads the most recently played campaign, three visible campaign slots showing what is in each slot, actions to load another campaign, delete a campaign, and create a new one. Use a cool animated backdrop such as a rotating space station / orbital scene instead of a static flat menu. Also use this phase to brainstorm and choose the real game title, since the current title is only a placeholder.
+- [x] **Quest tracker panel blue box on second quest** -- `reset_size()` now fires after the tracker content is rebuilt so the panel shrinks back to content on quest changes.
+- [ ] **Station lounge UI / social layer** -- give the lounge its own polished interface instead of a plain utility menu: contact cards, relationship heat bar, contact moods, "last seen" timestamp, rumor badge, available conversation/action buttons, and a layout that can support dynamic NPCs and bartering later. See `docs/design_parking_lot.md section1`
+- [x] **Lounge black-market passerby** -- 2026-07-05 (L4): rare "A Stranger" temp card (6%, 90-min cooldown, not in start system, exclusive with wants-a-word). LLM pitches; deal is code-owned (intel|goods, chapter-scaled ask, 35% scam, one haggle, walk-away may sweeten). Goods fence 1.6x; intel appends a pending story hook; scams sting quietly; all outcomes in record_player_choice. FUTURE (kept from original idea): stolen/illegal ship upgrades + shady-mechanic installs, delayed-payout job kind.
+- [ ] **Unstable dynamic NPCs & Dynamic Bartering** -- Docking at station lounges puts you in contact with unstable dynamic NPCs. Instead of traditional visual menus, trading rare cargo updates into a dynamic bartering sequence.
+- [ ] **Store presentation polish** -- item cards, purchase confirm dialog, inventory integration, mission highlight. See `docs/design_parking_lot.md section3`
+
+---
+
+## Shipping / Deployment (Ollama)
+
+The game depends on Ollama for all LLM content (taunts, quests, Kaelen dialogue).
+The watchdog in `LLMInterface.gd` already auto-starts Ollama and pulls missing models.
+Deployment checklist for a shipped build:
+
+- [ ] **Bundle ollama.exe** -- copy the Ollama binary into `ollama/ollama.exe` next to the game executable. The watchdog checks this path first before LOCALAPPDATA or PATH.
+- [ ] **Choose a shippable model** -- `qwen2.5:3b-instruct-q4_K_M` (current small model) is ~2GB. Verify its license permits commercial distribution. Mistral 7B (Apache 2.0) is a clean alternative. `gemma4:12b` (large model) is too big to bundle -- decide if large-model features ship or are skipped.
+- [ ] **Bundle the model file** -- Ollama stores models in `%USERPROFILE%\.ollama\models\`. For a fully offline install, pre-populate this folder in the installer OR ship a GGUF file and set `OLLAMA_MODELS` env var to a path inside the game bundle.
+- [ ] **First-run model pull fallback** -- if model is not bundled, the watchdog auto-pulls it on first launch. This requires internet and takes 2-5 min. Show a loading screen / progress message to the player during this window (currently silent in-game).
+- [ ] **First-run UX** -- add a splash/loading state that shows "Preparing AI systems..." while the watchdog polls and the model pulls. Do not drop the player into the main menu until `_ollama_ready` is true and models are confirmed.
+- [ ] **Installer script** -- write a setup script (NSIS / Inno Setup) that: copies `ollama.exe`, sets `OLLAMA_MODELS` to a bundled path, and optionally pre-warms the model on install so first launch is instant.
+- [ ] **macOS / Linux path** -- watchdog already checks `/usr/local/bin/ollama` and `ollama` on PATH. Test on those platforms. Mac may need a signed/notarized ollama binary.
+- [ ] **Offline mode** -- if Ollama never comes up (no internet, corporate firewall, etc.), the game should surface a clear one-time message: "AI features unavailable -- game will use built-in dialogue." Currently just logs to console.
+- [ ] **Maybe: optional cloud AI provider settings** -- long-term possibility: let the player choose to use cloud APIs instead of bundled/local Ollama and local TTS. This should be opt-in, clearly labeled, and never required for offline play. Needs a provider abstraction for LLM + TTS, secure API key storage, cost/privacy warnings, rate-limit handling, fallback to built-in/local dialogue, and separate settings for text generation vs voice generation. Good fit after `llm_model_profiles.json` / provider adapters exist.
+
+---
+
+## Illegal Upgrade Loop (Narrative & Gameplay)
+
+- [ ] **Illegal Blueprint Salvaging & Upgrades**
+  - **1. The Trigger: Salvaging the Blueprint** -- Add a rare chance to drop an `Encrypted Data Core` during wreckage salvage (`Wreckage.gd` / `NPCShip.gd`). This item goes into `PlayerInventory.gd` with metadata of an illegal blueprint variant (e.g., "Overclocked Plasma Core"). Inspecting it in the inventory (`UIManager.gd`) uses LLM for rendering a short description, and triggers the AI companion Kaelen (`TTSInterface.gd` / `KokoroSpeechProvider.gd`) to warn the player: *"Warning: This schematic bypasses standard Concord safety protocols. Possession is a class-G sector felony."*
+  - **2. The Scavenger Hunt** -- Require specific items: Material A (ore from mining belts with lasers) + Material B (salvaged component from a specific enemy ship archetype like Interceptor/Logistics of a particular faction, hunting them down via `CombatManager.gd`).
+  - **3. Finding a Shady Mechanic** -- Tag certain stations/outposts as having a low-ethics mechanic. When docking there, the mechanic's intro (`_render_mechanic_intro` in `UIManager.gd`) adapts to offer illegal installation if the player has the core and materials, demanding a hefty credit bribe (*"but for 15,000 credits, my cameras can go offline..."*) played in a quiet, rough voice profile.
+  - **4. Mechanical Payoff & Security Risk** Once installed (`apply_upgrade_stats`), player gets a game-changing unlicensed weapon/part (e.g. purple ionized beam drone, speed-limit breaking booster). However, scans near outposts by patrols (`IllegalMiningEnforcement.gd` logic) will flag "Illegal Modification Detected", triggering alerts, massive bribes, or dogfights.
+
+---
+
+## Electronic Warfare (combat extension)
+
+- [ ] **Electronic warfare capability** -- an EW option that extends the existing turn-based combat ring. Delivery is open (decide later):
+  - **As a ship upgrade** -- installed capability that adds an EW action/tab to the combat wheel (parallels shield reroute / drone slots).
+  - **As a consumable drone** -- a deployable EW drone (like the attack/salvage drones) for a one-off effect without a permanent install.
+  - **Or replacing/adding a combat-ring tab** -- fold EW into the action wheel as its own pick.
+  - **Possible effects to flesh out:** sensor jamming (reduce enemy accuracy / delay their turn), disable enemy shields or engines for a turn, spoof targeting, scramble drones, mask the player's signature to break lock. Tie into the existing `DISABLE_ENGINES`/`SHIELD_ANGLE` action vocabulary and faction resistances.
+  - **Why it fits:** natural extension of the unified combat system (AP costs, camera beats, status floats already exist); gives a non-damage tactical lane and more build variety. Design the effect set + delivery method before building.
+
+## Intra-System Jump Consumable
+
+- [ ] **Emergency jump beacon (expensive consumable)** -- one-use item that jumps the player directly to any station/outpost **in the current solar system** (not cross-gate). Details:
+  - **Warmup:** 5-second charge before the jump fires. If combat starts (or an existing fight interrupts) during warmup, the jump is **canceled AND the consumable is still consumed** — the risk is part of the cost.
+  - **Cost/economy:** expensive to buy; a deliberate "get me out of here / skip the haul" luxury, not routine travel.
+  - **Acquisition:** buyable at stores, plus a **chance to drop from salvaged wreckage** (ties into the salvage loop).
+  - **Visual/FX:** needs a cool jump animation/effect similar to the existing gate-jump sequence (reuse the gate portal shader/transition where possible, but distinct enough to read as a short-range beacon jump, not a gate).
+  - **Design notes:** decide targeting UI (pick destination from system map/known outposts only); block use if already in combat; refund vs. no-refund on cancel (current call: consumed, no refund); interaction with autopilot/PlayerInteractionQueue for the warmup timer.
+
+## N.O.V.A. — Ship A.I. (LLM-driven cast member)
+
+- [ ] **N.O.V.A. calls out a target destroyed by someone else** (Abe, 2026-09-06).
+  You lock a pirate at distance, another NPC kills it first, and the target
+  silently vanishes -- the player is left aiming at nothing with no idea why.
+  She should say the target is gone AND what took it, so the loss reads as the
+  world being alive rather than as a bug.
+  - The hook already exists: `GlobalState.ship_destroyed(faction_name)` fires
+    ONLY for non-player kills (see the comment at `NPCShip.gd` ~990, where
+    player kills are excluded). That signal IS the third-party-kill case.
+  - Fire only when the destroyed ship was the player's `GlobalState.active_target`,
+    otherwise she narrates every distant explosion.
+  - **The killer is already tracked.** `NPCShip.last_attacker_faction` is set in
+    `take_damage()` and is in scope inside `die()`, right where `ship_destroyed`
+    is emitted -- so widening that signal is a one-line change, not a new system.
+    `die()` already copies it onto the spawned wreck, which the salvager reads.
+    (Abe asked whether a script on each wreck should store what destroyed it:
+    that exists. And N.O.V.A. does not need the wreck anyway -- going via it
+    would be a round trip for something already in hand at death time.)
+  - **Granularity is the open decision.** Only the FACTION is recorded, never the
+    attacking ship instance. So "Vanguard got there first" works today with no
+    new data; "that interceptor you were watching got it" needs the attacker
+    NODE stored on the ship (not the wreck -- the ship is what is alive when the
+    shot lands). Worth choosing before writing her lines, since it changes what
+    she can say.
+  - **PREFERRED APPROACH (Abe, 2026-09-06): retarget to the WRECK rather than
+    clearing.** The target did not vanish, it changed state -- so keep it. Both
+    prerequisites already exist: wrecks appear in the overview
+    (`UIManager.gd` ~3524) and are already targetable with their own target-panel
+    handling (~3739, ~3781). So this is a retarget at death, not new UI.
+    - The wreck already carries `last_attacker_faction`, so the message can name
+      the killer without touching the ship at all.
+    - It also makes the retarget USEFUL rather than cosmetic: wrecks are
+      salvageable, so the player keeps a live objective instead of an empty
+      reticle.
+    - `_target_lost_message()` (`UIManager.gd` ~723) already exists and says
+      "Target destroyed -- X is no longer on scanners." It should become the
+      handoff message instead: destroyed by whom, wreck still on scanners.
+  - **SCOPE RESOLVED (Abe, 2026-09-06): it depends on whether anything is still
+    shooting at us.** Two different moments, and she treats them differently:
+    - **Still under fire.** She does not offer you salvage while something is
+      perforating her hull. She says the target is gone and moves the weapons
+      lock onto whatever is actually engaging -- audibly, because the player's
+      reticle just changed without them touching anything, and an unannounced
+      lock change reads as the game taking the controls away.
+    - **Nothing left engaging.** The fight is over, so the wreck is the useful
+      thing to hold: she hands the lock to it and lets the player decide whether
+      to salvage.
+  - **Her framing, in canon.** This is not a status readout. It is her body being
+    shot at, and she is dry about it. She is not consoling the player for losing
+    a kill -- she is redirecting attention to the thing that can still kill her.
+    Sample register, for the authored pool:
+    - "Your target is scrap. Somebody else wanted it more. Locking the one still
+      shooting at me."
+    - "That one is dead, and not by you. I have moved us onto whatever is still
+      trying to open my hull."
+    - "Target gone. I would mourn it, but something else is aiming at me."
+    - (fight over) "It is over. There is what is left of it, if you want the
+      salvage."
+  - Multi-enemy already exists: `CombatManager.enemy_nodes` is an Array, with
+    `enemy_node` as a property over it -- so "whatever is still engaging" can be
+    read directly rather than rediscovered by scanning the system.
+  - Fallback: a wreck is not guaranteed to spawn (`die()` only spawns one if
+    `Wreckage.gd` loads). Keep the clear-and-announce path for that case.
+  - Register: dry and factual, this is her job. "Someone got there first."
+    Not a consolation. Line belongs in her authored pools, not generated.
+  - Watch: this fires during combat, where her speech budget is already tight
+    (see the budget note about her going silent on docks after a fight).
+
+**N.O.V.A. = Network Optimized Virtual Agent** — the AI installed on the player's own ship, and the game's second persistent storytelling agent after Kaelen. She rides along the whole game: warns the player in combat, narrates the world, and keeps him company on the long transit hauls between stations and quest objectives. Distinct from Kaelen — Kaelen is the external broker who hands out work; N.O.V.A. is the internal voice who is always there.
+
+- **Portrait:** `assets/Portraits/ShipAI.png` — a holographic blue "networked constellation" woman rendered as a **3x3 emotion sheet** (9 expressions: neutral, warm smile, serious, thoughtful, calm/eyes-closed, alert/surprised, worried/concerned, wondering/looking-up, downcast). Slice into 9 frames and swap by state so her face reacts (alert during threats, calm on idle, worried when outmatched, etc.).
+
+- [ ] **N.O.V.A. combat & threat warnings (priority)** -- the player's tactical early-warning system:
+  - **"You're being targeted"** -- when a hostile acquires a lock on the player, N.O.V.A. calls it out (voice + alert expression + optional HUD cue). Hook into the sensor/combat targeting signals.
+  - **"This one's out of our league"** -- when a detected ship is too powerful to engage (use the existing sensor-tier / `apply_faction_profile` threat assessment — Tier 2 sensor already says "exceeds your fit by N tiers"), she gives a spoken read + recommendation (disengage / run / reroute). Escalate her worried expression with the threat gap.
+  - **In-combat commentary** -- optional running read during fights (enemy bracing, low shields, "drone incoming"), gated so it never buries combat SFX.
+- [ ] **N.O.V.A. navigation / status callouts** -- reroute notices (hazard, blocked route, autopilot avoidance, gate coords updated), arrival ETA, "approaching X", fuel/hull status.
+  - 2026-07-13: foundation landed (Phase 8A slices 1-3 of `docs/plan_living_narrative_shining_star.md`): `ShipMovementEvents` registry + validated `GlobalState.ship_movement_event` channel; PlayerShip/GameRoot emit boost/autopilot/evasive/route-replan/hull/dock/gate/arrival events; `ShipBehaviorObserver` (spawned by GameRoot) aggregates them into boost_again_quickly / changed_mind_again / returned_to_same_station / clean_long_transit / rough_arrival with 30s global + 180s per-event rate limits and a `state_snapshot()` for N.O.V.A.
+  - 2026-07-13 (later): Phase 8A + 8B COMPLETE. Nova consumes semantic events (prepared bank lines only, silence otherwise, model-free tripwired); global speech budget (3 casual lines / 2 min); campaign retirement ledger + low-bank refill at 3 remaining; `request_nova_line_bank_batch` generates flat @@label batches on the small model with per-line validation; stock pools demoted to logged degraded content; gate-glitch bank protected on consumption; relevance scoring prefers story-aware lines on live mission beats. REMAINING: live gameplay smoke for 3 Phase 8 exit gates (scripted-flight no-repeat, knowledge audit, instant-with-model-stopped).
+  - 2026-08-18: BATCH GENERATION IS LIVE-VERIFIED. The @@label form is gone (qwen3 rejected it wholesale); flat JSON returns 51/51 labels over 3 rounds at ~1.7s/batch, zero structural failures. Gate lives in `tests/tools/run_nova_line_bank_live_fire.gd` -- rerun it after any change to the batch prompt or parser. The live run also exposed near-duplicate lines passing validation, now rejected as `duplicate_sentence` / `duplicate_closer`. Do NOT try to solve repetition in the prompt; that was tried and made it worse (see session log 2026-08-18).
+- [ ] **N.O.V.A. long-flight companionship** -- during quiet transit she fills the silence to make travel feel alive: observations about the destination, ship musings, reactions to recent player deeds (pull from StoryManager `player_choices` / faction pressure), light humor. **Personality/voice is a design decision to lock before building** — the earlier concept was deliberately-bad dad jokes; her portrait reads warmer/elegant, so decide whether she's dry-and-earnest, wry, motherly, or the goofy-pun angle. Rate-limited so it stays charming, not annoying.
+- [ ] **N.O.V.A. story integration** -- can surface story-adjacent nudges (rumor leads, contract reminders, "Kaelen pinged us"); mood/expression can track story state. Could eventually carry a light mystery of her own (who wrote her, what she isn't saying) — but keep her clearly a tool/companion, not a second Kaelen.
+  - **Tech notes:** LLM lines (small model) with logged fallback bucket per `project_fallbacks_are_failures`; TTS via `SpeechService` with **her own voice profile** (blends TBD — af_bella stays Kaelen-only per the voice-blend rule); delivery through PlayerInteractionQueue with severity tiers so **threat warnings always pre-empt idle chatter/jokes**; triggers = combat/sensor targeting signals, autopilot/nav events, CampaignClock idle timer; portrait state machine maps events -> one of the 9 expressions. Write a short design doc first (triggers + anti-annoyance pacing + expression map + voice choice).
+
+## Polish / Future
+
+- [ ] **Kitbash ships: extend to other factions** -- only `vanguard` is wired (`ASSEMBLED_FACTIONS` in `NPCShip.gd`). Add Zenith (NavyBlueMetal/ZenithBadge), Aurelia (ForestGreenMetal/AurelliaBadge) to `ShipAssembler.FACTION_STYLE`, then add to `ASSEMBLED_FACTIONS`. Hybrid plan: introduce a few NEW hull designs for new factions and recycle existing ones in by system 4-5.
+- [ ] **Kitbash ships: per-faction normal variants** -- wire `hull_normal_var_1..9.png` into `FACTION_STYLE` so factions read distinctly beyond color.
+- [ ] **Kitbash ships: mesh-merge + texture atlas (deferred opt)** -- only if hundreds of ships on screen; merge each design's parts into one mesh + atlas. Recipe data already supports baking later.
+- [ ] **Kitbash ships: greeble pass** -- designs currently use hull+engines+weapons only; the `greebles/` (64) and `detail/` (13) part folders are exported but unused. Add bridges/antennas/vents for extra silhouette interest.
+- [ ] **Thruster nozzle split for ALL engine parts** -- only `5-Engine` has its nozzles split into a `Thruster` material so far (done via Blender MCP: separate the rear nozzle/fan loose parts, assign a 2nd material slot, re-export). Do the same one-time split for every engine in `assets/ship_parts/engines/` so each gets a metal nozzle + proper thrust plume. One-time per piece, then works forever for all future ship builds. Assembler already routes "Thruster"-named surfaces to the thruster material.
+- [ ] **NPC exhaust glow rework** -- current `NPCShip._create_engine_glow` draws flat sphere blobs at the engine markers (read as stickers, not thrust). Make them look like proper thruster exhaust -- space-game stylized, not photoreal: tapered plume/cone, hot core + falloff, subtle flicker, speed-scaled length, maybe a short trail. Color per faction (`_get_engine_color`).
+- [ ] **Player ship: gunmetal hull.tall (hero ship)** -- replace the old INDYMiner player model (UVs/mesh trashed from Trellis). Plan: (1) bring `hull.tall` back into Blender and **separate the thruster from the engine body** as distinct meshes/material slots so each can take its own UV (crisp exhaust is the priority -- player stares down it for hours). (2) Re-export; keep hull.tall as the body. (3) Cockpit detail = two **emissive white rectangle decal strips**, one in each of the two circled front spots -- that's enough once the exhaust is crisp. (4) Orient fore-aft: hull.tall's long axis is Y (14.5) -- its TALL end is the engine/exhaust cluster (confirmed good-looking), point that at the camera. (5) Wire into `scenes/player_ship.tscn` / `PlayerShip.gd` Visual, refit collision box + camera distance. Gunmetal style already exists in `ShipAssembler.FACTION_STYLE`.
+- [ ] **Player ship: try opposite tilt** -- `PLAYER_SHIP_TILT_DEG` in `PlayerShip.gd` is 0 (upright) now. Tried +18 deg (leaned wrong way). Worth trying **-18 deg** (lean the other direction) to show more exhaust/top in the behind-above camera. One-line change to evaluate.
+- [ ] **Drones: make fitment parametric** -- drone orbit/size are hardcoded to ship scale (`PlayerShip.gd` `_create_drones` orbit_radius=6.8 :2090, sphere_radius=0.12 :2091; salvage rest 6.8 ~:2311; combat drone scale 1.8 :1917). Derive from player visual AABB in `_ready` so any new ship -- and future ship-upgrade hull swaps -- auto-fit. See memory `project_drone_ship_fitment`.
+- [ ] **Kitbash ships: cockpit lights** -- add a warm emissive glow at the cockpit/bridge area (lit windows). Approach: emissive marker/quad near the bow-top, or an emissive sub-material. Player liked the rest of the parts as-is; cockpit lights + thruster rework are the two finishing touches before these "look great."
+- [ ] **Badge polish** -- dorsal badge is small/subtle on large hulls; consider cropping to emblem-only (drop wordmark) for hull decals.
+- [ ] **NAS asset migration** -- move binary assets off git repo to NAS once hardware acquired; binaries-in-repo is accepted interim
+- [ ] **Boss cinematic phases** -- phase transition should have its own brief camera moment / sting beyond the current chatter line
+- [ ] **Multi-boss / 3-on-1** -- true squad fights beyond 2 enemies; needs a target picker on the wheel
+
+- [ ] **Player thrusters: tune yellow flame output** - current plume raggedness/motion is acceptable, but the warm/yellow fire replacement is still not visually readable. Revisit later: make warm output appear as sparse white-yellow flame flickers inside the blue exhaust, not solid rods or invisible shader noise. Current best thruster settings are backed up as `scripts/visuals/ThrusterBank.gd.current_best_backup` and `assets/shaders/thruster_plume.gdshader.current_best_backup`.
+
+---
+
+## Agent exploration quests (new objective type)
+- [ ] **Exploration / investigate contracts** -- agents (and maybe Kaelen) offer "go look at X" jobs that aren't kill/deliver/pickup: investigate an **anomaly**, a **dead/derelict ship**, or a **strange signal**. Outcome is a reveal on arrival — sometimes loot/data, sometimes a **trap** (ambush spawns, comms flips hostile). Ties into anomaly data-core delivery (see memory `project_anomaly_data_core_delivery`) and the story system. Needs: a new MissionCapability (e.g. INVESTIGATE_SIGNAL) + spawn/arrival trigger + LLM-generated hook/reveal lines (fallback bucket in `llm_dialogue_content.json`). Keep the trap odds tunable.
+
+---
+
+## LLM Dialogue -- kill static/canned lines
+_Standing goal (ties to `project_fallbacks_are_failures`): incidental Kaelen/NPC lines that currently cycle a fixed string array should be generated fresh each time so they never repeat and never read as canned. Convert as spotted. Each conversion keeps the existing static lines as the LOGGED fallback bucket (LLM offline/slow), not the default._
+
+- [ ] **Kaelen return-greeting lines (new 2026-08-06)** -- `_kaelen_return_line()` in `scripts/UIManager.gd` is a 3-pool round-robin (working / done / public board) shown when the player re-opens her panel on an accepted contract. Authored so the panel is never empty; per the standing rule these should be LLM-generated per return with the pools demoted to the logged fallback bucket. Context to feed: whether the objective is complete, the contract title, chapter/story state, and how recently the player was last here.
+- [ ] **Kaelen "no work available" cooldown lines** -- `StoryManager.get_agent_contract_availability()` (`scripts/story/StoryManager.gd`) returns one of 3 hardcoded strings by `agent_cooldown_message_index` (e.g. "No one is asking right now. I will send you a message when I need you to make us some more money." — confirmed canned in-game 2026-07-02, screenshot). Convert to an LLM call (Kaelen voice, "Shiny" allowed, first-person, mentions no contracts + to wait) so it's new each dock. Feed current story/faction context. Keep the 3 existing lines as the fallback bucket in `llm_dialogue_content.json` and log via `record_fallback("kaelen_no_work", reason, ...)` if the model is unavailable.
+- [ ] **TTS ping when contracts become available again** -- Kaelen's cooldown line promises "I will send you a message when I need you" but nothing fires when the cooldown actually expires. Add a proactive notification (Kaelen-voice TTS via `SpeechService` + a `GlobalState.emit_chatter` line) at the moment `agent_cooldown_until_minute` passes — needs a per-minute check (CampaignClock tick) that detects the cooldown→available transition and fires once. Line should be LLM-generated (pairs with the entry above), fallback bucket logged. Design the trigger so it only fires when the player is not mid-combat/cutscene (reuse PlayerInteractionQueue pacing).
+- [ ] **Kaelen contract-completion lines** -- `LLMInterface.gd` ~line 500 `fallback_completion_lines` (5 hardcoded strings, e.g. "Contract fulfilled. You know, Shiny, you're starting to grow on me. Like a profitable parasite.") are being shown as the DEFAULT on contract fulfillment, not just as an offline fallback. Spotted in-game 2026-07-02 (screenshot). Convert to a fresh LLM call (Kaelen voice, chapter/faction/story-context aware, "Shiny" allowed) each completion; keep the 5 lines as the LOGGED fallback bucket only.
+- [ ] **Kaelen abandon lines** -- sibling array `fallback_abandon_lines` (`LLMInterface.gd` ~line 508) has the same problem; convert alongside the completion lines.
+- [ ] **Kaelen gate/route reveal line** -- `UIManager._kaelen_gate_reveal()` (`scripts/UIManager.gd` ~line 8905) hardcodes the "I've got a contact who owes me — they mapped a route nobody else has charted..." line for every gate unlock. Spotted in-game 2026-07-02 (screenshot). Generate fresh (Kaelen voice, reflect which route/system was revealed + story context); keep the current string as logged fallback. NOTE: only tutorial lines should ever be canned.
+- [ ] **Audit for sibling static-line arrays** -- grep StoryManager / UIManager / QuestManager for other fixed `messages := [...]` / rotating-index NPC lines (abandon, greeting filler, etc.) and queue each for the same LLM-with-logged-fallback treatment.
+
+- [ ] **Station-aware line precaching (BIG — story-coupled, design first)** -- Concept: when the small model finishes loading (or on dock), look at where the player is docked and pre-generate the FIRST line for each NPC at that station so the first interaction is never a fallback. NOT just chatter — these lines are StoryManager-driven, which is the real lift:
+  - **What to precache per station:** mechanic intro (already has `UIManager._cache_mechanic_intro()` + `_cached_mechanic_line_is_fallback` — the one clean seam today); lounge bartender/local/agent/Kaelen cards; the agent quest-availability line; optionally the first quest candidate (the 45s cold path).
+  - **StoryManager dependencies (why it's not "random talk"):** agent availability = `get_agent_contract_availability()` (cooldown/no-work state); quest gen pulls `story_state_context` + `campaign_bible` + agent memory + system story pack; Kaelen lines are chapter/angle-aware; lounge lines should reflect faction tension/rep. Precache must snapshot this story state, not fire generic prompts.
+  - **Cache key + invalidation:** key by `station_id` + a story-state fingerprint; invalidate when quest accepted, rep shifts, or chapter advances so a stale line is never served. Reuse the existing chatter_cache pop/refill pattern where it fits.
+  - **Trigger:** on model-ready, refresh any station line currently cached as a FALLBACK (leverage `_cached_mechanic_line_is_fallback`-style flags) so the cold-start fallback gets swapped out before the player clicks in. Every precache miss still logs `record_fallback`.
+  - _Partially addressed 2026-07-02:_ startup no longer races the warm-up. `LLMInterface` now emits `small_model_ready` only after the small model passes a real "hello" test generation (not just an empty weight-load), and the loading screen / gameplay entry + salvager backstory gate on it via `when_small_model_ready()`. Remaining precaching work (per-station line snapshots, refresh-fallback-on-ready) still stands, but the first-wave cold-start fallback burst should be gone. **Verify on next real boot:** mechanic/salvager/taunt/chatter should generate, not fall back, at start.
+  - **Phase it:** (1) mechanic intro refresh-on-model-ready (smallest, seam exists), (2) lounge cards, (3) agent quest availability line, (4) full quest candidate precache. Write a short design doc before phase 2+.
+  - _Do the cold-start warm-up playtest FIRST and in isolation — don't stack this on top or we can't tell which change moved the fallback rate._
+
+---
+
+## Localization / i18n groundwork
+_Lay the foundations NOW so we don't retrofit at the very end and hate ourselves. This is not "translate the game" — it's "make the game translatable" so adding a language later is content work, not a rewrite. Do the cheap structural stuff early._
+
+- [ ] **Decide the strategy + write it down** -- one short design doc: which layers are static (UI, menus, tooltips, item names, fixed system/quest-template text) vs dynamic (LLM-generated NPC dialogue). They need different solutions; deciding now prevents a mixed mess later.
+- [ ] **Static strings: adopt `tr()` + translation keys from here on** -- stop hardcoding user-facing literals in code/scenes. Route them through Godot's translation system (CSV or PO + `TranslationServer`). Even shipping English-only, wiring `tr("KEY")` now means the day-1 cost of a second language is a spreadsheet, not a code sweep. Add a lint/grep habit: no bare user-facing string literals in UI code.
+- [ ] **Externalize the strings we already have** -- audit UIManager / menus / DevPanel-facing player text and pull them into a translation table. Big-bang later = painful; incremental now = trivial.
+- [ ] **LLM dialogue is the hard case — design it, don't solve it yet** -- most NPC lines are generated in English at runtime, so they can't be pre-translated. Options to weigh: (a) prompt the model in the target language using per-locale content files (the new `data/content/llm_dialogue_content.json` registry is the right seam for this — examples/tone per locale), (b) post-generation translation pass, (c) locale-gated static fallback lines for unsupported languages. Note tradeoffs; don't build yet. Ties to `project_fallbacks_are_failures` (a translation miss must log, not silently ship English).
+- [ ] **Fonts / glyph coverage** -- pick UI fonts that cover intended target scripts (accented Latin at minimum; CJK/Cyrillic if in scope) BEFORE deep UI polish, so layouts are tested against wider/taller glyphs. Reserve layout slack for text expansion (German/Russian run long).
+- [ ] **No text baked into textures/images** -- keep rendered text out of art assets (badges, HUD sprites, store signage) so it doesn't need re-arting per language. Flag any existing offenders.
+- [ ] **Formatting: numbers / units / dates** -- centralize credit/ore/quantity formatting through a helper now so locale-specific separators and unit strings ("m³", "SC") have one place to change.
+
+---
+
+## Sub-surface mining mini-game (risk/reward, new activity)
+_Something else to DO — a first-person arcade "drill drone" run inside an asteroid. Gemini prototyped it as a standalone, portable Godot project at `C:\CodingProjects\MicroMiningGameIdea` (design doc: `MicroMiningIdea.md`)._
+
+- [ ] **Incorporate the drone-tunneling mini-game** -- pilot a drilling drone through a procedural asteroid cavern, mine glowing subsurface ore veins while balancing an energy/battery countdown vs. hull damage (scaled by collision impact velocity), then fly back to the entry anchor to lock in the haul. Built deliberately isolated + portable: it's an addon (`addons/asteroid_drone_mining/`) with `TunnelDrone.gd`, `AsteroidCavernMap.gd`, `DroneLoopController.gd`, decoupled via exported vars + local signals, and ends by emitting `drone_mining_sequence_ended(summary: Dictionary)` (extracted ore, damage sustained, stats). Port plan = copy the addon folder in, then wire a host entry point + consume the summary.
+  - **Risk/reward hook (the point):** launching a run requires an **expensive consumable** (the tunneling drone / a drill charge). A successful run can more than pay it back by pulling **higher-value ore than surface mining ever yields** — but a failed run (drone runs out of power, or hull destroyed before returning to the anchor) **burns the consumable for nothing**. Keep the cost, ore-value curve, energy budget, and failure odds all tunable so we can balance the gamble.
+  - **Integration seams to design:** where the player triggers it (special/rich asteroid type? a station-bought "deep core survey" item?), consuming the item on launch, running the mini-game scene (its own POV/controls, pause the main sim), then applying `summary` back — extracted ore → cargo (respect cargo limits), damage → repair cost or nothing. Reuse the existing kitbash/ore economy + combat-camera POV patterns where they fit (`project_kitbash_ships`, drone-launch POV in `feedback_combat_camera_polish`).
+  - **Before porting:** read the prototype end-to-end and confirm it runs standalone; decide the consumable + ore item defs in the main economy; write a short integration design note (entry trigger, item, reward mapping) first.
+
+---
+
+## Shipping: bundle Ollama with the game (distribution phase)
+_Decided direction (2026-07-03) for a shippable build: players can't be asked to install Ollama. Bundle the official Ollama binary inside the game's file directory and manage its lifecycle behind the scenes — the standard approach, and it preserves the ENTIRE existing stack (HTTP API, `LocalModelGateway`, warmup/probe/recovery, labeled-field generation). NOT switching to llama.cpp — that'd be a rewrite that solves problems this doesn't have. See memory `project_shippable_model_stack`._
+
+- [ ] **Bundle the official Ollama executable + models in the game dir** -- ship `ollama.exe` (+ the model weights) alongside the export and have the game spawn/manage it as a background process. We already launch Ollama by path today (`LLMInterface` — logs show `Launched Ollama from '...AppData\...\ollama.exe'`), so this is evolving that to point at a **bundled** copy, not a rewrite.
+  - **Isolation (must-do):** launch the bundled instance with `OLLAMA_HOST=127.0.0.1:<private-port>` and `OLLAMA_MODELS=<game dir>` so we never collide with, hijack, or pollute a player's own Ollama install / model store. Point `LocalModelGateway`/`LLMInterface` at that private port.
+  - **Gentle lifecycle (also fixes a dev-time pain NOW):** stop the force kill/restart pattern (`attempt_ollama_recovery`) — that's what trips Windows Defender/AV and it's self-inflicted. Prefer start-and-leave + health-check + a user-facing "starting engine…" state over killing the process. Worth doing independently of shipping.
+  - **Licensing — models, not the binary:** Ollama is MIT (fine to bundle). The WEIGHTS carry the license. Target stack is now all-**Qwen3 (Apache 2.0)** — `qwen3:4b` + `qwen3:8b`, both clean to redistribute (verified 2026-07-03). Include the Apache-2.0 license text. If Gemma ever stays in the bundle, it carries Google's custom terms + AUP pass-through — avoid if possible.
+  - **Code-signing / SmartScreen:** an unsigned game that spawns an .exe and opens ports gets flagged — sign the game build.
+  - **Bundle size + delivery:** models dominate (~2.5GB `qwen3:4b` + ~5GB `qwen3:8b`). Decide packaging: ship-in-installer vs. first-run download of weights. Godot's exporter doesn't run arbitrary binaries for you — ship the exe in the export dir and launch it (small change to the existing launch path).
+  - **Version pinning + hardware variance:** pin an Ollama version and update deliberately. Plan UX for weak/no-GPU machines (CPU fallback is slow and the narrative depends on the model).
+
+---
+
+## Cold-open intro sequence — N.O.V.A.'s wiped memory (MYSTERY SEED, high importance)
+_A pre-start cinematic that opens a NEW campaign and plants a core mystery hook. Important to the overall game + mystery, not just flavor. New campaigns only — loaded saves skip it (they already get the welcome-back beat)._
+
+- [ ] **Build the cold-open "freak accident" arrival** — beat sequence:
+  1. Fade in from a **black screen**.
+  2. The player is mid **gate transition** — but instead of a clean gate exit, the ship **bursts wildly/uncontrolled into the star system like a freak accident** (off-axis, sparks, shake — NOT a normal jump-in).
+  3. **N.O.V.A. speaks first, disoriented** — something like: *"Captain? ...Well, I'm assuming you are, since you're sitting in that chair. I'm not sure what just happened, but my entire memory was just wiped. I have no records of this star system either. Something is happening... uh, Captain — you have a call!"*
+  4. **Kaelen hails** (the existing Kaelen intro) → hand off to the normal gameplay flow (things resume where they normally start).
+  - **Why it matters (the mystery):** N.O.V.A.'s wiped memory is a deliberate seed for the overarching mystery — what caused the accident, what was erased, why she has no record of this system. It also gives an in-fiction reason she's a **blank-slate companion** (she learns the world alongside the player because her memory's gone), and gives her a second-agent mystery to sit beside Kaelen's hidden angle. Ties into the narrative system (campaign bible `kaelen_angle`, memory `project_narrative_foundation`).
+  - **Hooks / reuse:** the gate-transition VFX already exists (portal shader + particles) — make a **"wild/uncontrolled arrival" variant** (violent, off-axis, camera shake) distinct from the clean exit. Nova's line goes through `Nova.speak()` (her voice is wired). Then call the existing `UIManager.show_kaelen_intro()`. The sequence slots into the loading-completion path — `UIManager._finish_loading_after_story_ready()`, specifically the `not startup_save_loaded` branch that currently just fires the Kaelen intro; gate the cinematic there, new-campaign only.
+  - **DECIDED (2026-07-03): do it IN-ENGINE, with CANNED intro audio.** Real-time engine sequence (matches the procedural system + the player's actual ship + her live voice; keeps lines editable) — NOT a prerecorded video. But **pre-generate the intro audio**: her intro lines are fixed/scripted, so render them ONCE through the TTS server in her voice (`bf_emma[0.7]+af_bella[0.3]`), store as an audio asset, and play the FILE during the cold-open. That removes the dependency on TTS/LLM being warm at the very start (they're still launching then). Bonus: the cinematic **doubles as cover for model warm-up** — the engine runs the scripted beats live while qwen3 + the TTS server warm in the background, so the live pipeline is ready by the time Kaelen's call + normal gameplay begin. (Optional extra polish: a tiny system-agnostic prerendered "black → warp-streak → flash" flourish handing off into the in-engine arrival — not required.)
+  - **Suppress reactive Nova lines during the cinematic:** her SCRIPTED amnesia monologue is the ONLY Nova speech in the intro. Do NOT let ambient reactive lines fire over it — in particular the gate-transit line (`Nova.on_gate_transition()`, hooked to `GameRoot._change_system`) must not trigger. It's safe today because the cold-open is its own scripted path (loading-completion → VFX variant), NOT a `_change_system` jump — so keep it that way: build the intro's "wild arrival" as its own effect, do not route it through `_change_system`/`request_gate_jump`. If the intro ever needs to reuse that path, add an "intro/cinematic playing" guard that suppresses all of Nova's reactive callouts.
+  - **Amnesia = consistency rule:** if we canonize that her memory was wiped at campaign start, her early lines/knowledge should reflect a fresh slate (sarcastic, yes; deep lore recall, no). Note this for future Nova LLM prompting so she never references things she "shouldn't remember yet."
+  - **Design first:** short beat sheet before building. Decide scripted-vs-skippable (let players skip after first view?), timing/pacing, whether the "accident" ties to anything mechanical (damaged-ship start? a clue in the arrival?), and how it reads on repeat new campaigns.
+
+---
+
+- [ ] **Opening cinematic N.O.V.A. tension-fill lines** -- after N.O.V.A. says there is "one more thing" she can try, fill the long pause before the system comes back with two scripted lines: *"Almost got it"* and then *"Almost"*. These should be part of the cold-open timing beat, not random reusable filler.
+
+## Subtitle layer (accessibility + cinematic + audio fallback)
+_Not urgent — parked. The chatter feed already gives a running transcript for ambient lines (Nova/NPC flavor route through `emit_npc_flavor` → system chat), so we do NOT need a heavy separate subtitle engine. But the corner log isn't accessibility-grade and doesn't carry cinematic moments._
+
+- [ ] **Thin subtitle layer over existing surfaces** -- a settings **"Subtitles" toggle** that, when on, routes *spoken* lines through one consistent timed on-screen caption synced to the TTS. Reuse what already exists (`show_npc_dialogue_popup` centered portrait+line, HUD flash) as the caption surface rather than building new UI. Ambient chatter stays chat-log-only; important/spoken lines (N.O.V.A., Kaelen, cinematic beats, threat warnings) also get the caption.
+  - **Covers three things at once:** (1) accessibility for deaf/HoH players (increasingly expected, some storefronts effectively require it); (2) cinematic readability (a corner log misses the moment; a centered timed caption carries it); (3) the audio-not-ready / no-voice-locale **fallback** — the caption is what shows when TTS is cold on first launch or a locale has no Nova voice (ties to the cold-open intro + i18n items).
+  - **Audit first:** confirm which spoken lines actually reach the chat feed vs. which bypass it (combat taunts, enemy pilot lines, purely-TTS calls). Those gaps are exactly what the subtitle layer must cover — the chat log only "counts" as a transcript for lines that go through `emit_npc_flavor`/`emit_chatter`.
+
+## Quiet-moment LLM dialogue (research done, build pending)
+_Full analysis `docs/quiet_moment_llm_findings.md` (read §11 first); working state + next step `docs/research/quiet_moment/RESUME.md`. Paused 2026-07-29 for PC repair._
+
+- [ ] **DECISION NEEDED — does Kaelen get to "steer"?** V5's best lines nudge the Captain toward better-paying work (*"next time, pick jobs that pay more"*), which is the voice the author asked for. But `fixed_cast_souls.json → kaelen.situation_rules.quiet_moment.must_not` forbids referencing future work and `QuietMomentLineValidator` enforces it. If the nudge is canon the bible needs updating. **This blocks finalizing the validator.**
+- [ ] **Fix `QuietMomentLineValidator` substring matching** -- `_contains_any()` uses `String.contains()`, so "fee" matches "feel", "use " matches "because ", "ready" matches "already", "next" matches "the next credit". It flags 26 of our own 30 curated Kaelen lines. Move to word-boundary matching. Also drop the stale `REFERENCE_RUNS` (its phrases come from `turn_in`/`quiet_flight`, never injected here).
+- [ ] **Gate `public_board_money_rule` to public-board moments** -- `FixedCastSoulRegistry.prompt_block()` emits it unconditionally, which is what caused the "invented fee/board" cluster. Do NOT delete it: complaining about her thin cut is characterful and is the axis her best lines run on. Gate it, and stop the validator banning `fee` outright.
+- [ ] **Derive the validator's anchor list from the fact packet that was sent** -- it currently hardcodes `pay/payout/modest`, so rotated packets ("small money", "slim returns", "the take") false-reject good lines. Code owns the packet, so code knows the legitimate anchors.
+- [ ] **Two new validator rules** -- reject third-person pronouns for the Captain (`he/his` appeared 2/10 and assumes player gender), and strip smart-quote wrapping off the returned line.
+- [ ] **Re-spec N.O.V.A.'s voice axis** -- she has had no equivalent of Kaelen's V4/V5 pass and still drifts sentimental (*"I find this peace preferable..."*) rather than dry-systems. Same method: rewrite the demos around what she actually cares about.
+- [ ] **Confirm the config at n=30** -- current voice reads are 8-12 samples each and partly Claude's ear, not the author's. Run 30 per character on the frozen config before building against it.
+- [ ] **VRAM decision** -- `qwen3.6:35b-a3b` is 24GB resident at `keep_alive: "30m"` alongside the renderer. If headroom is short: short keep_alive with generation confined to loading/dock screens, or `qwen3:4b` with better demos and blander voice.
+- [ ] **`num_predict` floor for JSON responses** -- 70 truncates pretty-printed JSON around a 28-word line, producing silent empty rows that look like model failures. Audit callers; use 160-200 for one-line responses.
+
+### Quiet-moment beats — build-out done, integration pending (2026-08-01)
+_Nine beats built and measured. Full handoff: `docs/research/quiet_moment/SYSTEM.md`; research log `ITERATIONS.md`._
+
+- [x] ~~Wire the selector into Godot with persisted recency state~~ -- scripts landed 2026-08-02; SAVE INTEGRATION STILL PENDING (see below) -- `selector.py` gates on recent openers, phrases and closers. Without persistence the freshness guarantee dies at the first save/load, which is the whole point of the feature.
+- [ ] **Firing policy + arbitration** -- `ShipBehaviorObserver` already uses a 180s semantic cooldown. Quiet moments now compete with lounge chatter and mission dialogue; `PlayerInteractionQueue` looks like the right owner. Never fire during combat.
+- [ ] **Log silences and rejections through `GenerationDiagnostics`** -- per the project rule that fallbacks are failures to drive to root cause, not normal operation.
+- [ ] **Measure qwen3:14b VRAM under load** -- 9.3GB on a 16GB card alongside the renderer. `qwen3:4b` is the fallback at noticeably blander voice. (qwen3.6:35b-a3b is ruled out: 24GB, does not fit.)
+- [ ] **Bible updates the research implies** -- allow Kaelen's "steer toward better-paying work" (`quiet_moment.must_not` currently forbids it and the validator enforces that); gate `public_board_money_rule` to public-board moments only; drop `receipts` from her favored motifs (author: fine if it arises naturally, don't seed it).
+- [x] ~~`nova_hard_burn` needs another pass~~ -- done 2026-08-02, now 15/16.
+- [ ] **Hand-write gate-transit and cold-boot beats** -- deliberately excluded from generation because they collide with the scripted amnesia flashback and pre-rendered opening audio.
+
+### Quiet moments — wiring landed, hookup pending (2026-08-02)
+_Scripts, data and tests are in. Handoff: `docs/research/quiet_moment/SYSTEM.md`; method: `skills/skill_llm_character_dialogue.md`._
+
+- [x] ~~Connect triggers to `QuietMomentDirector.try_fire()`~~ -- done 2026-08-02, 11/12 beats -- nothing calls it yet. `ShipBehaviorObserver` already emits `clean_long_transit`, `rough_arrival`, `boost_again_quickly`, `returned_to_same_station` with context; `QuestManager` emits completion/decline/abandon.
+- [x] ~~Persist the director through the save~~ -- done 2026-08-02 -- `to_save_dict()`/`load_from_dict()` exist but nothing calls them. Without this the recency state resets on every reload and the freshness guarantee is gone, which is the entire point of the feature.
+- [x] ~~Call `reset_for_new_campaign()`~~ -- done 2026-08-02 on new-campaign start, or the first hour inherits the previous playthrough's position in every rotation cycle.
+- [ ] **Arbitration** -- quiet moments compete with lounge chatter and mission dialogue. The director has its own 180s cooldown but doesn't know about other speakers; `PlayerInteractionQueue` looks like the right owner.
+- [ ] **Never fire during combat** -- the fixed-cast bible separates `combat` from `quiet_moment`.
+- [ ] **Named servicers from game state** -- the jealousy device names a mechanic ("Mrs. Kross"); the pool is a placeholder. Draw from the current/last visited system so it names someone the player actually met.
+
+### Mission-agent personalities (research done, wiring pending)
+_Five personalities for the agents Kaelen introduces. Handoff: `docs/research/quiet_moment/AGENTS.md`. Author approved 4 of 5 outright._
+
+- [ ] **Decide how a personality is assigned to an agent** -- deterministic from the agent's seed (stable, no storage) or stored on the agent record (survives generation changes). Save-format call.
+- [ ] **Wire agent offers** -- the quiet-moment plumbing is directly reusable. `packet_echo` screening matters most here: reciting the briefing is this beat's characteristic failure.
+- [ ] **Per-agent recency** -- agents live in their systems and are met repeatedly, so recency keys on the agent, not just the personality.
+- [ ] **`nova_repair_done` has no trigger** -- no repair-completion signal exists in the codebase. Needs a gameplay decision about where "repairs finished" is emitted.
+- [ ] **Later agent beats** -- accept / progress / failure. Failure is where an axis shows most (the desperate one panics, the old hand shrugs).
+- [ ] **Weirdo constraint** -- he may be vague relative to the mission card but must NEVER contradict it, and he is the wrong personality for any beat carrying information the player has no other source for.
+
+## Player affordances / onboarding prompts (2026-08-02)
+_Four places where the game hands the player a moment but doesn't tell them what to do with it. All four are "make the next action obvious", not new systems. **All four built 2026-08-06; none playtested yet.**_
+
+- [x] **Cold open: teach look-around during the silent gap** -- 2026-08-06. `UIManager.show_control_hint()` / `clear_control_hint()` put a persistent, softly pulsing prompt low-centre; `IntroCinematic._finish()` raises it the moment control returns and drops it when Kaelen hails. It clears itself the instant the player uses the control (polled via `Input.is_mouse_button_pressed` in `_update_control_hint`, not `_input`, because the ship's own handler may consume the event first). Deliberately has NO timeout — the dead air is the problem, so a prompt that expires wouldn't solve it.
+  - **CONTROL CORRECTED — settled 2026-08-06.** The original note said *left* mouse button. Left mouse is select / double-click-to-move (`PlayerShip.gd:963`); look-around is **hold RIGHT mouse and drag** (`PlayerShip.gd:946`). Author confirmed right mouse is correct and intended, so the prompt stands and no rebind is wanted. Don't re-open this.
+
+- [x] **First mission complete: flash the return-to-station button** -- 2026-08-06. **Located:** it's `quest_tracker_route_btn` relabelled to "Dock at Station" in `_update_quest_tracker_route_button()` when `QuestManager.is_quest_completed()`. Flash added via `_update_first_turn_in_flash()`, reusing the same `_set_npc_attention_button()` pulse the intro handhold arrow drives, so there is one flashing treatment in the game rather than two that look slightly different.
+  - Gated on first-mission-ever via `QuestManager.get_completed_count() == 0`. That call parses the quest-history file, so it is read once on the hidden→shown edge and latched, never per tracker update.
+
+- [x] **Combat: flash EXECUTE when action points are spent** -- 2026-08-06. Pulse driven from `_refresh_button_states()` in `scripts/ui/CombatPanel.gd`. Derived from **every wheel wedge being unavailable** rather than `AP == 0`, which also covers the "consider" note (AP left but nothing cheap enough) and the case where cooldowns/consumables have closed the rest. Tween is wall-clock (`set_ignore_time_scale`) like `_fade_controls`, or the slow-mo planning phase would make the pulse read as UI lag. Cleared on execution start and combat end.
+
+- [x] **Gate "Attack Hostile" on range, with hysteresis** -- 2026-08-06. `ATTACK_REACH_ENTER_M = 600` / `ATTACK_REACH_EXIT_M = 1200`, one bool `_attack_in_reach` on the targeting side, cleared in `_on_target_changed`. `_apply_attack_reach()` is the single writer, called from both sites (target window + context menu) so they cannot disagree. Went with disabled-but-visible plus a tooltip ("Too far to engage — close to 600m"), per the note that a vanishing button looks like a bug.
+  - Re-evaluated every frame from `_update_target_command_feedback()` (already in `_process`), so the latch tracks the chase as range opens and closes.
+  - **Skipped while ATTACK is the active nav mode:** at that point the button is reporting a running order rather than offering one, and range must not revoke it mid-chase.

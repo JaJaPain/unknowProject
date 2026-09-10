@@ -73,7 +73,8 @@ func append_memory(
 	timeline_id: String,
 	checkpoint_id: String,
 	event_sequence: int,
-	death_category: String = ""
+	death_category: String = "",
+	metadata: Dictionary = {}
 ) -> Dictionary:
 	if not is_valid():
 		return _failure("Kaelen memory store is invalid.")
@@ -105,6 +106,7 @@ func append_memory(
 	}
 	if category == "death":
 		memory["death_category"] = death_category
+	_apply_optional_metadata(memory, metadata)
 	var next_data: Dictionary = data.duplicate(true)
 	var memories: Array = next_data.get("memories", []).duplicate(true)
 	memories.append(memory)
@@ -115,6 +117,15 @@ func append_memory(
 		return committed
 	data = next_data
 	return {"ok": true, "memory": memory.duplicate(true)}
+
+
+func _apply_optional_metadata(memory: Dictionary, metadata: Dictionary) -> void:
+	var line_fingerprint := str(metadata.get("line_fingerprint", "")).strip_edges()
+	if not line_fingerprint.is_empty():
+		memory["line_fingerprint"] = line_fingerprint
+	var event_kind := str(metadata.get("event_kind", "")).strip_edges()
+	if not event_kind.is_empty():
+		memory["event_kind"] = event_kind
 
 
 func classify_rollback(

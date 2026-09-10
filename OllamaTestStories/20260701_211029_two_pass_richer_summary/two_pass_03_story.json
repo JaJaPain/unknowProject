@@ -1,0 +1,100 @@
+{
+  "campaign_title": "Ironclad Logistics",
+  "campaign_subtitle": "The Weight of the Chain",
+  "campaign_logline": "A broken supply chain forces a desperate pilot to navigate the crumbling infrastructure of the inner rim.",
+  "campaign_pitch": "You are a debt-ridden independent pilot. Zenith and Aurelia clash over critical mineral rights. You haul cargo through decaying orbital zones. A systemic logistical collapse threatens local stability.",
+  "campaign_story_summary": "You start as an independent pilot in the scrap-heavy belt. Kaelen acts as your primary fixer for illicit contracts. You intercept a Reaver ship carrying high-priority industrial components. Zenith demands expansion while Aurelia seeks isolationist security. You find recurring data logs from a defunct mining corporation. The infrastructure is failing due to over-taxed logistics chains. Act One focuses on securing local supply lines.",
+  "tone": "Dry, cynical humor regarding the costs of corporate bureaucracy and decaying machinery.",
+  "opening": {
+    "status_quo": "The orbital ring serves as a crumbling hub for mineral extraction.",
+    "visible_crisis": "Supply chains are failing due to aging infrastructure and high maintenance costs.",
+    "hidden_crisis": "A private corporation owns the rights to life support systems across the sector.",
+    "why_now": "Recent shortages in essential components have forced local trade into dangerous zones.",
+    "player_role": "You are a freelance pilot with a failing ship and mounting debts."
+  },
+  "mystery": {
+    "question": "Who owns the rights to life support systems?",
+    "false__answer": "The government has abandoned the system for lack of funds.",
+    "true_answer_hint": "A private corporation holds a monopoly on atmospheric and oxygen production.",
+    "long_term_reveal_direction": "The core infrastructure is being intentionally dismantled to favor high-end corporate clients."
+  },
+  "kaelen": {
+    "public_role": "Kaelen is a broker and contract handler for the local trade routes.",
+    "secret_angle": "She maintains an independent network of data logs from defunct corporations.",
+    "address_rule": "Refer to her as Kaelen or The Broker.",
+    "never_reveal_rule": "Never reveal her origin, her specific affiliations, or how she manages the data."
+  },
+  "factions": {
+    "zenith_problem": "Zenith seeks aggressive expansion into deep-space mining zones.",
+    "aurelia_problem": "Aurelia demands isolationist security and high import costs for tech.",
+    "vanguard_problem": "Vanguard protects militarized trade routes with heavy enforcement.",
+    "conflict_triangle": "The three factions fight over the remaining viable mineral deposits.",
+    "neutral_space_pressure": "Scavengers and pirates thrive where official oversight is absent."
+  },
+  "act_1": {
+    "name": "Fractured Chains",
+    "goal": "Secure enough cargo to pay off your initial debts.",
+    "opening_incident": "You intercept a Reaver ship carrying high- priority industrial components.",
+    "midpoint_turn": "You discover that the cargo is part of a critical infrastructure project.",
+    "finale": "You establish a reliable trade route between Zenith and Aurelia zones.",
+    "player_takeaway": "You realize that every piece of hardware you carry has a corporate owner."
+  },
+  "starter_mission": {
+    "title": "The Broken Link",
+    "reason": "A Reaver ship is transporting high-priority industrial components in an unlicensed zone.",
+    "enemy_identity": "A lone Reaver vessel with an active tracking beacon.",
+    "enemy_knows": "The Reaver knows its cargo is valuable and will defend it aggressively.",
+    "after_effect": "You find a manifest showing the cargo belongs to a defunct corporation."
+  },
+  "recurring_l_clue": {
+    "name": "Corporate Ledger Logs",
+    "signal": "A recurring encrypted packet of industrial data.",
+    "first_appearance": "Found in the Reaver ship's log files after the first mission.",
+    "escalation": "More logs appear as you visit different mining stations.",
+    "payoff_hint": "The logs reveal a pattern of systematic infrastructure dismantling."
+  },
+  "rumor_trail": {
+    "name": "The Ghost in the Pipeline",
+    "trail_id": "rumor_trail.ghost_in_pipeline",
+    "hint_theme": "Rumors of automated systems still running on old contracts.",
+    "clue_templates": [
+      "A technician claims a drone is still delivering to an empty station.",
+      "A smuggler says a piece of tech has a tracking beacon that won't turn off."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "You find a hidden cache of industrial tools and high-grade parts."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads to systems where the infrastructure is even more decayed.",
+    "new_system_reveal_rule": "Do not reveal names or specific identities of future factions.",
+    "future_pressure_tease": "Reports suggest that trade routes are becoming increasingly unstable and dangerous.",
+    "future_ore_or_upgrade_tease": "Advanced components are only available in the outskirts, where safety is sold as a premium.",
+    "regeneration_trigger": {
+      "id": "regen_infrastructure_check",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first arc is complete, new routes and hazards are added."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical humor regarding corporate bureaucracy and hardware failure.",
+    "fallback": "If a quest-line is not available, provide a generic cargo delivery mission.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ancient signal",
+      "mystered pulse",
+      "ghost ship",
+      "alien owner"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What is the core infrastructure of the galaxy facing a collapse?",
+    "Why do corporate owners have a monopoly on life support systems?",
+    "How do different factions and allies compete for resources during this crisis?",
+    "Who owns the rights to the rest of universe's technology?",
+    "Why is there no longer a single unified government across all systems?"
+  ]
+}

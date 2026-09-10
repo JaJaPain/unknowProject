@@ -34,24 +34,12 @@ func _test_resolution(registry: SystemRegistry) -> void:
 		"Legacy start-system ID did not resolve."
 	)
 	_expect(
-		registry.runtime_system_id("system.test") == "test_system",
-		"Canonical test-system ID did not resolve to runtime ID."
-	)
-	_expect(
 		registry.resolve_gate_id("start_to_test") == &"gate.start.to_test",
 		"Legacy outbound gate ID did not resolve."
 	)
 	_expect(
-		registry.runtime_gate_id("gate.test.to_start") == "test_to_start",
-		"Canonical return gate ID did not resolve to runtime ID."
-	)
-	_expect(
 		registry.load_scene("system.start") != null,
 		"Canonical start-system scene did not load."
-	)
-	_expect(
-		registry.load_scene("test_system") != null,
-		"Legacy test-system scene did not load."
 	)
 
 

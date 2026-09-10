@@ -1,0 +1,104 @@
+[
+ {
+  "line": "He's still breathing. My hull's intact. You're both still here. That's enough for now.",
+  "flags": [
+   "assumes_captain_gender"
+  ],
+  "secs": 3.4
+ },
+ {
+  "line": "Hull's intact, and so are you. That's not usually how it goes.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Hull's stable. You're still here. That's the only thing I needed to know.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Hull's stable. You walked away. I'll check the sensors again. Just in case.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No one's behind us. You're still standing. The silence feels like a win.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No one's following. You're not hurt. The shooting stopped. That's the easy part.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Structural scans clear. You're still rattling. I'll take that as a yes.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No pursuit. You're still breathing. I'll take that as a win.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No damage. You missed. I didn't. Let's keep it that way.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Hull's steady. You're still breathing. The odds of that are better than I'd like to remember.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Sensors clear. Hull holds. You're still here. That’s the part I like best.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Hull's whole. You're whole. That's two things I don't have to fix right now.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Hull's intact. You're still in your seat. That's two things I didn't have to fix today.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Hull's intact. You're still here. Must be the first time I've been right about something.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No one following. You're unharmed. The guns are still warm. They'll cool faster if you move.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No threats back there. My sensors are quiet. You're still in one piece. That's something.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Hull's intact. You're still breathing. That's two things I didn't have to fix today.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Combat's over. You didn't need to take the hit. My hull's still here. So are you. That's a win.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "No one's following. My sensors don't lie. You're still here, so I don't either.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Hull’s intact. You’re still here. I prefer it that way. Doesn’t mean I like the shooting.",
+  "flags": [],
+  "secs": 3.0
+ }
+]

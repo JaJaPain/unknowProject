@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Echoes of the Void",
+  "campaign_subtitle": "The Dust of Industry",
+  "campaign_logline": "A desperate pilot navigates the friction between three competing corporate giants.",
+  "campaign_pitch": "You are a freelancer in a dying trade route. Balance the demands of Zenith, Aurelia, and Vanguard while surviving the lawless fringe.",
+  "campaign_story_summary": "The orbital lanes are thinning due to heavy mining. Three factions struggle for control over remaining resources. You navigate their conflicts as an independent contractor. Kaelen provides your only steady link to information. The truth of the resource depletion is hidden in the logs.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are failing due to heavy industrial exhaustion.",
+    "visible_crisis": "The three factions are fighting over dwindling mineral deposits.",
+    "hidden_crisis": "A systemic failure in the gate network infrastructure is collapsing.",
+    "why_now": "Resource scarcity has forced the corporations into open conflict.",
+    "player_role": "An independent pilot seeking to pay off heavy debts."
+  },
+  "mystery": {
+    "question": "Why are the trade routes failing?",
+    "false_answer": "The resources are physically exhausted by mining.",
+    "true_answer_hint": "The gate network is actively collapsing into a void of data.",
+    "long_term_reveal_direction": "The infrastructure failure is an intentional decommissioning of the sector."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows the gate network's instability is accelerating.",
+    "address_rule": "Refer to her as a broker or contractor.",
+    "never_reveal_rule": "Never reveal her knowledge of the infrastructure."
+  },
+  "factions": {
+    "zenith_problem": "Zenith wants to secure high-grade ores for their luxury line.",
+    "aurelia_problem": "Aurelia is struggling to keep their transport fleet operational.",
+    "vanguard_problem": "Vanguard seeks to establish a permanent military presence in the sector.",
+    "conflict_triangle": "Zenith wants resources, Aurelia needs logistics, Vanguard wants security.",
+    "neutral_space_pressure": "Pirates and scavengers thrive where corporate oversight is weak."
+  },
+  "act_1": {
+    "name": "The Broken Link",
+    "goal": "Secure a stable trade route for the local hub.",
+    "opening_incident": "A supply ship from Aurelia is intercepted by a pirate.",
+    "midpoint_turn": "You discover that the pirates are using stolen corporate tech.",
+    "finale": "You secure the route but realize the data logs are corrupted.",
+    "player_takeaway": "The local hub is no longer safe for independent pilots."
+  },
+  "starter_mission": {
+    "title": "Scrap of a Secret",
+    "reason": "A rogue scavenger ship is harassing trade lanes.",
+    "enemy_identity": "Reaver-class interceptor.",
+    "enemy_knows": "The pirate knows only the value of the scrap.",
+    "after_effect": "You find a data chip containing encrypted courier logs."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signal",
+    "signal": "A rhythmic pulse from an abandoned gate.",
+    "first_appearance": "The signal is heard during the first mission.",
+    "escalation": "The frequency of the pulses increases near jump points.",
+    "payoff_hint": "The signal is a distress call from a dying infrastructure."
+  },
+  "rumor_trail": {
+    "name": "The Ghost Gate",
+    "trail_id": "rumor_trail.ghost_gate",
+    "hint_theme": "Abandoned infrastructure and decaying data.",
+    "clue_templates": [
+      "A whisper of a gate that no longer connects to anything.",
+      "A signal from a place that is not there."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Access to a hidden, derelict jump point."
+  },
+  "horizon": {
+    "gate_tease": "A distant gate leads toward the unknown.",
+    "new_system_reveal_rule": "New systems are revealed as you unlock more gates.",
+    "future_pressure_tease": "Rumors of a deeper crisis in the core sectors.",
+    "future_ore_or_upgrade_tease": "Rare minerals found only in high-risk zones.",
+    "regeneration_trigger": {
+      "id": "gate_trigger.collapse",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first arc is finished, a new gate opens."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, slightly dark humor.",
+    "fallback": "If no content is available, use standard broker contract terms.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "ghost signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the reasons for the gate network's collapse?",
+    "Why is Kaelen still active in this sector?",
+    "How many other pilots who attempted to turn the gates back on failed?",
+    "Who owns the current infrastructure of the sector?",
+    "Where is the core system that controls all jump points?"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Methane Veil",
+  "campaign_logline": "In the toxic haze of the Aurelia Reach, mining claims are failing, life support is failing faster, and someone is profiting from the air you can't breathe.",
+  "opening_situation": "You arrive at Zenith to find the atmosphere scrubbers choking on 'Heavy-M' particulates. Kaelen warns that the local refineries are cutting corners on safety filters to maximize yield.",
+  "main_mystery": "The systematic poisoning of the Aurelia sector is not an accident, but a deliberate strategy to devalue property and seize industrial licenses.",
+  "act_1_outline": [
+    "Investigate the 'malfunctioning' scrubbers in the Zenith refinery hub.",
+    "Negotiate with Vanguard security over illegal dumping zones near civilian habitats.",
+    "Trace the source of the toxic particulate back to a hidden manufacturing hub."
+  ],
+  "long_term_reveal": "The corporate owners know the air is lethal but are waiting for 'natural' casualties to bypass safety regulations and claim ownership of the mineral veins.",
+  "tone": "Dry, cynical, industrial-gothic.",
+  "core_pressure": "Oxygen depletion and toxic buildup in base stations.",
+  "kaelen_rule": "Kaelen is a local scavenger. She cannot die; her origins remain ambiguous as she simply knows 'too much' about the chemistry of the void.",
+  "faction_reveal_rule": "Only Zenith, Aurelia, and Vanguard are known. New factions revealed only via jump gates.",
+  "humor_rule": "Dry, sarcastic remarks regarding corporate negligence and the absurdity of space-labor safety.",
+  "address_rule": "All narrative beats must stay within the industrial/ecological hazard lane.",
+  "fallback_rule": "If a choice is ambiguous, default to a complication involving equipment degradation or supply shortages.",
+  "story_horizon_rule": "Trigger expansion when exploration metrics drop below 30% of current total.",
+  "story_arcs": [
+    {
+      "name": "The Cost of Breathing",
+      "summary": "Uncover the deliberate sabotage of air filtration systems to force workers into high-risk, high-reward extraction zones."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Pipeline",
+      "trail_id": "rumor_trail.ghost_pipeline_alpha",
+      "clue_count": 2,
+      "hint_theme": "Corrupted data logs from a discarded maintenance drone.",
+      "clue_templates": [
+        "A series of encrypted coordinates marked 'Waste Zone B'.",
+        "An old blueprint showing a hidden bypass for the main refinery."
+      ],
+      "discovery_type": "hidden_discovery",
+      "rarity": "rare",
+      "payoff": "Discovery of an abandoned, high-yield mineral vein untouched by current industrial rot."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "scarcity_trigger_01",
+      "metric": "prepared_systems_remaining",
+      "threshold": 2,
+      "action": "append_story_arc",
+      "description": "When infrastructure fails, generate a new arc focused on local resource recovery."
+    }
+  ],
+  "expansion_rules": [
+    "Do not reveal future factions until the player passes a physical jump gate.",
+    "New minerals must be tied to specific contaminated zones identified in the loot table."
+  ],
+  "banned_repeats": [
+    "Zenith [Noun]",
+    "Great Silence",
+    "Ancient Signal",
+    "Chosen One"
+  ]
+}

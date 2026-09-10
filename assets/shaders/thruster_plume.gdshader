@@ -1,0 +1,39 @@
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, fog_disabled;
+
+uniform vec4 plume_color : source_color = vec4(0.25, 0.8, 1.0, 1.0);
+uniform vec4 tip_color : source_color = vec4(1.0, 0.86, 0.52, 1.0);
+uniform float alpha = 0.55;
+uniform float edge_power = 1.4;
+uniform float tip_strength = 0.25;
+uniform float noise_strength = 0.0;
+uniform float noise_speed = 1.0;
+uniform float noise_seed = 0.0;
+uniform float warm_noise_strength = 0.0;
+
+float hash21(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+void fragment() {
+	float axial = clamp(UV.y, 0.0, 1.0);
+	float radial = abs(UV.x - 0.5) * 2.0;
+	float tail_fade = smoothstep(1.0, 0.12, axial);
+	float root_fade = smoothstep(0.0, 0.12, axial);
+	float center = pow(1.0 - clamp(radial, 0.0, 1.0), edge_power);
+	float n1 = hash21(vec2(floor(UV.x * 18.0 + noise_seed), floor((UV.y - TIME * noise_speed) * 12.0)));
+	float n2 = hash21(vec2(floor(UV.x * 31.0 - noise_seed), floor((UV.y + TIME * noise_speed * 0.7) * 19.0)));
+	float breakup = mix(1.0, smoothstep(0.18, 0.92, max(n1, n2)), noise_strength * smoothstep(0.28, 1.0, axial));
+	float warm_noise = hash21(vec2(floor(UV.x * 34.0 + noise_seed * 2.7), floor((UV.y - TIME * noise_speed * 1.6) * 22.0)));
+	float warm_center = pow(1.0 - clamp(radial, 0.0, 1.0), 1.45);
+	float warm_streaks = smoothstep(0.58, 0.92, warm_noise) * smoothstep(0.36, 0.92, axial) * tail_fade * warm_center;
+	float warm_tip = smoothstep(0.52, 0.88, axial) * tail_fade * pow(1.0 - clamp(radial, 0.0, 1.0), 0.65);
+	warm_tip = mix(warm_tip, warm_streaks, warm_noise_strength);
+	vec3 blue_body = plume_color.rgb * mix(0.75, 1.35, center);
+	vec3 color = mix(blue_body, tip_color.rgb * 1.55, warm_tip * tip_strength);
+	ALBEDO = color;
+	EMISSION = color;
+	ALPHA = alpha * tail_fade * root_fade * breakup * mix(0.28, 1.0, center + warm_tip * 0.25);
+}

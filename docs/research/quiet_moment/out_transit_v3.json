@@ -1,0 +1,46 @@
+[
+ {
+  "line": "It's a long way to the other side of this. Dust on my fins. You're close enough to see it. It's not a big job. . . . Let it be. I'll wait. No need to climb me for a brush.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. Locker seal's stuck. You'd think a thing like this would be simple. It's not. . . . Not now. Maybe later. Maybe never. Maybe someone else will figure it out.",
+  "flags": [
+   "word_echo"
+  ]
+ },
+ {
+  "line": "Plenty of time before anything happens. Intakes need dusting. You could do it. I wasn't going to mention it. . . . Forget it. I was just testing. You could look up later, if you want.",
+  "flags": []
+ },
+ {
+  "line": "This is a very long flight. Calibration's out of alignment. You'll need to adjust the sensor. It's sticking a little, but it's not urgent. . . . Never mind. I'll wait. Someone else can handle it. No rush.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Port side coupling's loose. You'd think it'd be tighter after last check. Could use a hand with it. . . . Never mind. Someone'll get to it. Not urgent. Not even important.",
+  "flags": []
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. The cable's loose at the junction. You'd see it if you looked. I'd prefer you fixed it. . . . I'll let the yard crew handle it. They're good with their hands. I'm sure they'll do fine.",
+  "flags": []
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. I need a hand with the intake filter. You've done it before, haven't you? Just don't answer. . . . Never mind. It can wait. I was just testing if you'd look up.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. The film's stuck on the viewport. You've done it before, haven't you? Just take it off. . . . Don't be foolish, Captain. I was only asking. No need to pretend you're interested.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. There's a buildup on the landing gear. You'd think grease would slide off easier than that. . . . Guess it can wait. Maybe I'll let the next crew have a go at it.",
+  "flags": []
+ },
+ {
+  "line": "Long crossing, and no one else in it. Secondary manifold needs flushing. Dangling here, just for you. No rush, but it's waiting. . . . Alright, forget it. No need for you to touch anything. Just... pretend I never mentioned it.",
+  "flags": [
+   "tts_ellipsis"
+  ]
+ }
+]

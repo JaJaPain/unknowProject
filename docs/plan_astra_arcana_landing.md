@@ -1,0 +1,30 @@
+# Astra Arcana Landing Screen Plan
+
+- [x] Review the existing campaign-slot, load, and delete APIs.
+- [x] Create a full-screen landing screen with the working title and animated space backdrop.
+- [x] Present all three campaign slots with start/continue and delete actions.
+- [x] Use the two new landing-page music tracks without disrupting in-game music.
+- [x] Verify parsing and run a headless startup smoke test.
+- [x] Keep landing music through loading; hand off to game music at cinematic start.
+- [x] Keep the docking tractor beam outside scaled station transforms and end it at the ship hull.
+- [x] Gate world simulation and the loading/cinematic workflow until a campaign slot is selected.
+- [x] Give newly created campaign slots distinct default display names.
+- [x] Keep campaign storage read-only at the landing page; load a campaign only after Continue.
+- [x] Suspend ambient NPC combat and motion for the opening cinematic.
+- [x] Keep cinematic N.O.V.A. voice playback independent from optional background TTS caching.
+- [x] Preserve LLM-generated, player-facing campaign titles after new-slot creation.
+- [x] Add a centered warp-star backdrop to the startup loading screen.
+- [x] Layer distant and near side-view stars around the loading-screen warp effect.
+- [x] Replace radial loading stars with roadside-style side-travel parallax.
+- [x] Use centred roadside stars with two separate outer house-light depth rings.
+- [x] Mask the loading-star origin behind the opaque progress bar.
+- [x] Source slot titles from campaign bibles and repair legacy quest-fallback titles.
+- [x] Start fresh campaigns about eight seconds of normal flight from the station docking berth.
+
+## Notes
+
+- The three persistent campaign slots already exist as `slot_01` through `slot_03`.
+- “Comets” is interpreted as occasional visual fly-bys.
+- Verified with `tests/parse_check_scene_scripts.gd` and a six-second headless
+  main-scene boot. The headless boot reached initialization without landing
+  screen errors; its existing user-directory write warnings are sandbox-related.

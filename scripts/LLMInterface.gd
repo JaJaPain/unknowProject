@@ -1,8 +1,34 @@
 extends Node
 
-const OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-const MODEL_NAME = "qwen2.5:1.5b-instruct-q4_K_M"
-const TIMEOUT_SECONDS = 15.0
+const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
+const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
+const ChapterNarrativeDirectorType := preload(
+	"res://scripts/ai/ChapterNarrativeDirector.gd"
+)
+const KaelenInteractionKindsType := preload(
+	"res://scripts/story/KaelenInteractionKinds.gd"
+)
+const KaelenInteractionPacketBuilderType := preload(
+	"res://scripts/story/KaelenInteractionPacketBuilder.gd"
+)
+const FixedCastSoulRegistryType := preload(
+	"res://scripts/story/FixedCastSoulRegistry.gd"
+)
+const FixedCastVoiceBankType := preload(
+	"res://scripts/story/FixedCastVoiceBank.gd"
+)
+const FixedCastLineValidatorType := preload(
+	"res://scripts/story/FixedCastLineValidator.gd"
+)
+
+const OLLAMA_URL = LocalModelGatewayType.OLLAMA_GENERATE_URL
+const MODEL_NAME = LocalModelGatewayType.DEFAULT_SMALL_MODEL
+const TIMEOUT_SECONDS = LocalModelGatewayType.REQUEST_TIMEOUTS["quest_dialogue"]
+# Quest offers are one constrained JSON bundle: offer line, objective, and all
+# player choice responses in one model call. Validation/scoring still runs on
+# the returned bundle, but we no longer pay the old sequential best-of-three
+# latency tax before selecting one.
+const QUEST_BUNDLE_CALL_COUNT := 1
 # Kaelen intro telemetry is written to user://kaelen_intro_stats.json so
 # counters survive game restarts. Read via get_kaelen_intro_stats().
 const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
@@ -10,10 +36,49 @@ const _KAELEN_STATS_PATH = "user://kaelen_intro_stats.json"
 var http_request: HTTPRequest
 var active_callback: Callable
 var is_waiting: bool = false
+
+# ── Ollama watchdog ───────────────────────────────────────────────────────────
+const OLLAMA_HEALTH_URL := "http://127.0.0.1:11434/"
+const _OLLAMA_POLL_INTERVAL := 2.0    # seconds between readiness polls
+const _OLLAMA_HEARTBEAT_SECONDS := 30.0
+const _OLLAMA_MAX_POLLS    := 15      # 15 × 2s = 30s before giving up
+const _SMALL_MODEL_PROBE_RETRY_SECONDS := 10.0
+var _ollama_ready:        bool = false
+var _ollama_poll_count:   int  = 0
+var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
+var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
+# Opt-in only — session-level, defaults off. When true, force_restart_ollama()
+# is allowed to kill a pre-existing (not game-launched) ollama.exe by name via
+# taskkill, not just relaunch a missing one. Toggle lives in DevPanel Story
+# Debug tab. Killing an external process the game didn't start is a much more
+# invasive action than the normal watchdog's "launch if missing" behavior, so
+# it stays behind explicit player consent per session.
+var ollama_auto_restart_allowed: bool = false
+var _ollama_recovery_in_progress: bool = false
+var _ollama_heartbeat_in_flight: bool = false
+var _ollama_heartbeat_timer: Timer = null
+var _small_model_probe_retry_scheduled: bool = false
 var request_start_time: float = 0.0
 var last_history_text: String = ""
 var active_model_name: String = MODEL_NAME
+var active_large_model_name: String = ""
 var world_lore_text: String = ""
+var campaign_bible_context_text: String = ""
+var story_state_context_text: String = ""
+var idea_memory_context_text: String = ""
+var campaign_bible_priority_active: bool = false
+var _known_quest_fingerprints: Dictionary = {}   # fingerprint -> true; rejects exact duplicate candidates
+var _pending_fallback_reason: String = ""
+var _pending_substitutions: Dictionary = {}
+var _quest_candidate_prompt: String = ""
+var _quest_candidate_headers: Array[String] = []
+var _quest_candidate_context: Dictionary = {}
+var _quest_candidate_attempts_started: int = 0
+var _quest_candidate_results: Array[Dictionary] = []
+var _quest_candidate_requests: Array[HTTPRequest] = []
+var _kaelen_handoff_batch_queue: Array[Dictionary] = []
+var _kaelen_handoff_batch_in_flight: bool = false
+var _kaelen_handoff_batch_defer_scheduled: bool = false
 
 # ── Kaelen intro telemetry ────────────────────────────────────────────────────
 # Persistent counters in user://kaelen_intro_stats.json. Tracks how often the
@@ -32,9 +97,35 @@ var _kaelen_intro_parse_failures: int = 0        # outer / inner JSON parse fail
 signal model_discovered(model_name: String)
 signal llm_connection_attempt(attempt: int)
 signal llm_connection_established(model_name: String)
+# Fires only after the small dialogue model has answered a real test generation
+# ("hello" probe), i.e. it is loaded AND actually responding — not merely resident.
+# Startup small-model work (mechanic intro, salvager profile, taunts, chatter, the
+# opening quest) should gate on THIS, not on llm_connection_established, to avoid
+# the cold-start race where those calls time out during the ~12s warm-up.
+signal small_model_ready(model_name: String)
 
 var llm_connected: bool = false
+# True once the small model has passed the test generation above.
+var small_model_verified: bool = false
 var connection_attempts: int = 0
+
+
+func set_campaign_bible_priority_active(active: bool) -> void:
+	campaign_bible_priority_active = active
+
+
+func is_campaign_bible_priority_active() -> bool:
+	return campaign_bible_priority_active
+
+
+func _skip_for_campaign_bible_priority(capability: String) -> bool:
+	if not campaign_bible_priority_active:
+		return false
+	print(
+		"[LLMInterface] Deferring %s while required campaign bible is generating." %
+			capability
+	)
+	return true
 
 # Politically neutral, profit-driven fallback templates
 var fallback_templates = [
@@ -396,7 +487,8 @@ var chatter_cache = {
 	"hostile_taunt": [],
 	"death_cry": [],
 	"system_alert": [],
-	"industrial_banter": []
+	"industrial_banter": [],
+	"kaelen_ore_sale": []
 }
 
 var generic_banter = {
@@ -423,6 +515,13 @@ var generic_banter = {
 		"Commencing salvage sweep. Keep those lasers focused.",
 		"Another ship's misfortune is our bonus margin.",
 		"Secure the perimeter, let's scrape this hull clean."
+	],
+	"kaelen_ore_sale": [
+		"Yeah, I can move those for ya. Taking my cut, of course.",
+		"I don't want to know where you got those. I don't care either, 'cause I get my cut either way.",
+		"Ore's ore, Shiny. I've got a buyer lined up before you even finished docking. My percentage stands.",
+		"Not bad haul. I'll fence it through my usual channels — minus my modest commission. And before you ask, no, it's not negotiable.",
+		"You dig it up, I sell it off, we both walk away richer. Well, I walk away richer. You walk away less poor.",
 	]
 }
 
@@ -431,7 +530,8 @@ var active_fetches = {
 	"death_cry": false,
 	"system_alert": false,
 	"industrial_banter": false,
-	"pickup_keywords": false
+	"pickup_keywords": false,
+	"kaelen_ore_sale": false
 }
 
 # Fallback Kaelen lines if LLM is offline or too slow
@@ -451,6 +551,11 @@ var fallback_abandon_lines = [
 	"Contract voided. My brokerage fee is still owed. Consider that a lesson in commitment."
 ]
 
+# TODO(llm-content): these Kaelen handoff lines are heavy with "Shiny" and are a
+# prime future migration into llm_dialogue_content.json under a `kaelen_handoffs`
+# section (see docs/plan_llm_dialogue_content_registry.md). Left in code for this
+# slice — Shiny stays Kaelen-only, so this bucket must never be reused by a
+# non-Kaelen speaker.
 # Per-agent handoff lines Kaelen uses to introduce an upcoming quest giver.
 # Used two ways:
 #   1. Runtime fallback when the LLM is offline / slow / returns garbage.
@@ -498,9 +603,247 @@ func _ready():
 	_load_kaelen_intro_stats()
 	_load_world_lore()
 	if "--baseline-offline" in OS.get_cmdline_user_args():
-		print("[LLMInterface] Baseline offline mode: model discovery disabled.")
+		print("[LLMInterface] Baseline offline mode: Ollama watchdog disabled.")
 		return
-	_discover_ollama_model()
+	_ollama_ping(func(up: bool):
+		if up:
+			print("[LLMInterface] Ollama is already running.")
+			_ollama_after_up()
+		else:
+			push_warning("[LLMInterface] Ollama not responding — attempting to start it automatically.")
+			_ollama_launch()
+	)
+
+# ── Ollama watchdog helpers ───────────────────────────────────────────────────
+
+## Fire a single quick HTTP ping at the Ollama root. Calls callback(true/false).
+func _start_ollama_heartbeat() -> void:
+	if _ollama_heartbeat_timer == null:
+		_ollama_heartbeat_timer = Timer.new()
+		_ollama_heartbeat_timer.name = "OllamaHeartbeat"
+		_ollama_heartbeat_timer.wait_time = _OLLAMA_HEARTBEAT_SECONDS
+		_ollama_heartbeat_timer.one_shot = false
+		_ollama_heartbeat_timer.process_callback = Timer.TIMER_PROCESS_IDLE
+		add_child(_ollama_heartbeat_timer)
+		_ollama_heartbeat_timer.timeout.connect(_run_ollama_heartbeat)
+	if _ollama_heartbeat_timer.is_stopped():
+		_ollama_heartbeat_timer.start()
+
+
+func _run_ollama_heartbeat() -> void:
+	if _ollama_heartbeat_in_flight:
+		return
+	_ollama_heartbeat_in_flight = true
+	_ollama_ping(func(up: bool):
+		_ollama_heartbeat_in_flight = false
+		if not up:
+			_ollama_ready = false
+			llm_connected = false
+			small_model_verified = false
+			GenerationDiagnostics.record_event(
+				"ollama_watchdog", "heartbeat_service_down", "llm_interface", {}
+			)
+			attempt_ollama_recovery()
+	)
+
+
+func _ollama_ping(callback: Callable) -> void:
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 3.0
+	h.request_completed.connect(func(result, code, _hdrs, _body):
+		h.queue_free()
+		callback.call(result == HTTPRequest.RESULT_SUCCESS and code == 200)
+	)
+	var err := h.request(OLLAMA_HEALTH_URL, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		h.queue_free()
+		callback.call(false)
+
+## Returns candidate exe paths in priority order: bundled → LOCALAPPDATA → none.
+func _ollama_exe_candidates() -> Array[String]:
+	var candidates: Array[String] = []
+	# 1. Bundled alongside the game executable (for shipped builds).
+	var game_dir := OS.get_executable_path().get_base_dir()
+	candidates.append(game_dir.path_join("ollama/ollama.exe"))
+	candidates.append(game_dir.path_join("ollama/ollama"))        # Linux / Mac
+	# 2. User's standard Windows install location.
+	var local_app := OS.get_environment("LOCALAPPDATA")
+	if not local_app.is_empty():
+		candidates.append(local_app.path_join("Programs/Ollama/ollama.exe"))
+	# 3. Common macOS install path.
+	candidates.append("/usr/local/bin/ollama")
+	return candidates
+
+## Try to launch `ollama serve` as a background process, then poll until ready.
+func _ollama_launch() -> void:
+	var pid: int = -1
+	var launched_from := ""
+
+	# Try bundled and known paths first before falling back to PATH.
+	for candidate in _ollama_exe_candidates():
+		if FileAccess.file_exists(candidate):
+			pid = OS.create_process(candidate, ["serve"])
+			if pid > 0:
+				launched_from = candidate
+				break
+
+	# Fall back to PATH ("ollama" command) in case it's installed system-wide.
+	if pid <= 0:
+		pid = OS.create_process("ollama", ["serve"])
+		if pid > 0:
+			launched_from = "ollama (PATH)"
+
+	if pid > 0:
+		_ollama_start_pid = pid
+		print("[LLMInterface] Launched Ollama from '%s' (PID %d) — polling for readiness..." % [launched_from, pid])
+	else:
+		push_warning("[LLMInterface] Could not launch Ollama from any known path. Is it installed? Will still poll in case it starts.")
+
+	_ollama_poll_count = 0
+	_ollama_poll()
+
+## Poll Ollama every 2s until it answers or we hit the max attempt cap.
+func _ollama_poll() -> void:
+	_ollama_poll_count += 1
+	_ollama_ping(func(up: bool):
+		if up:
+			print("[LLMInterface] Ollama responded after %d poll(s)." % _ollama_poll_count)
+			_ollama_after_up()
+			return
+		if _ollama_poll_count >= _OLLAMA_MAX_POLLS:
+			push_warning("[LLMInterface] CRITICAL: Ollama did not respond after %ds. All LLM features will use canned fallbacks." % int(_OLLAMA_MAX_POLLS * _OLLAMA_POLL_INTERVAL))
+			return
+		get_tree().create_timer(_OLLAMA_POLL_INTERVAL, true, false, true).timeout.connect(
+			func(): _ollama_poll())
+	)
+
+## Mid-session recovery, safe and non-destructive: re-runs the same
+## launch-if-missing + poll flow used at startup. If Ollama is already running
+## (just a transient blip), the first ping in _ollama_poll() succeeds
+## immediately and this is a near-no-op. Called automatically on a
+## connection-level generation failure (see _campaign_bible/story_horizon
+## completion handlers) — never on a content/validation failure, since those
+## mean Ollama answered fine and the problem is elsewhere.
+func attempt_ollama_recovery() -> void:
+	if _ollama_recovery_in_progress:
+		return
+	_ollama_recovery_in_progress = true
+	GenerationDiagnostics.record_event(
+		"ollama_watchdog", "mid_session_recovery_attempted", "llm_interface", {}
+	)
+	_ollama_ping(func(up: bool):
+		_ollama_recovery_in_progress = false
+		if up:
+			return
+		# A missing service invalidates any prior warm-model claim. Discovery
+		# will warm and verify it again after the service returns.
+		small_model_verified = false
+		_models_warm_started = false
+		_ollama_launch()
+	)
+
+## Opt-in only (see ollama_auto_restart_allowed). If the game itself launched
+## the running Ollama process, kill just that PID — always safe, it's our own
+## child process. Otherwise, only proceed to taskkill-by-name if the player
+## has explicitly allowed it this session; that path can affect an Ollama
+## instance the player started themselves, so it must never fire silently.
+func force_restart_ollama() -> void:
+	if _ollama_start_pid > 0:
+		print("[LLMInterface] Force restart: killing game-launched Ollama PID %d." % _ollama_start_pid)
+		OS.kill(_ollama_start_pid)
+		_ollama_start_pid = -1
+		_ollama_launch()
+		return
+	if not ollama_auto_restart_allowed:
+		push_warning(
+			"[LLMInterface] force_restart_ollama() called but ollama_auto_restart_allowed is false " +
+			"and this Ollama instance was not launched by the game — refusing to kill it. " +
+			"Enable the DevPanel toggle to allow this, or restart Ollama manually."
+		)
+		return
+	print("[LLMInterface] Force restart: taskkill on ollama.exe (player-allowed).")
+	OS.execute("taskkill", ["/IM", "ollama.exe", "/F"], [], false)
+	_ollama_launch()
+
+
+## Called once Ollama is confirmed up. Checks that required models are present,
+## pulling them if not, then marks the interface ready and starts model discovery.
+func _ollama_after_up() -> void:
+	_ollama_ready = true
+	_start_ollama_heartbeat()
+	_ollama_ensure_models([LocalModelGatewayType.DEFAULT_SMALL_MODEL,
+		LocalModelGatewayType.DEFAULT_LARGE_MODEL], func():
+		_discover_ollama_model()
+	)
+
+## Checks /api/tags; for any model in `required` not already present, pulls it.
+## Fires `on_done` once all models are confirmed available (or pull succeeded).
+func _ollama_ensure_models(required: Array, on_done: Callable) -> void:
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 5.0
+	h.request_completed.connect(func(result, code, _hdrs, body):
+		h.queue_free()
+		var installed: Array = []
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			var parsed = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary and parsed.has("models"):
+				for m in parsed["models"]:
+					installed.append(str(m.get("name", "")))
+
+		# Find which required models are missing.
+		var missing: Array = []
+		for req in required:
+			var found := false
+			for inst in installed:
+				# Ollama may append ":latest" — treat "model" == "model:latest".
+				if inst == req or inst == req + ":latest" or req == inst + ":latest":
+					found = true
+					break
+			if not found:
+				missing.append(req)
+
+		if missing.is_empty():
+			print("[LLMInterface] All required models present: %s" % str(required))
+			on_done.call()
+			return
+
+		print("[LLMInterface] Missing models: %s — pulling now (this may take a few minutes on first run)..." % str(missing))
+		_ollama_pull_next(missing, 0, on_done)
+	)
+	var err := h.request(LocalModelGatewayType.OLLAMA_TAGS_URL, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not check installed models — proceeding anyway.")
+		on_done.call()
+
+## Pulls models from `list` one at a time starting at `idx`, then fires `on_done`.
+func _ollama_pull_next(list: Array, idx: int, on_done: Callable) -> void:
+	if idx >= list.size():
+		on_done.call()
+		return
+	var model: String = list[idx]
+	print("[LLMInterface] Pulling model '%s'..." % model)
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 600.0  # pulls can take a long time on first install
+	h.download_chunk_size = 65536
+	h.request_completed.connect(func(result, code, _hdrs, _body):
+		h.queue_free()
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			print("[LLMInterface] Model '%s' pulled successfully." % model)
+		else:
+			push_warning("[LLMInterface] Pull of '%s' may have failed (result=%d code=%d) — will try to continue." % [model, result, code])
+		_ollama_pull_next(list, idx + 1, on_done)
+	)
+	var payload := JSON.stringify({"name": model, "stream": false})
+	var err := h.request("http://127.0.0.1:11434/api/pull",
+		["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not send pull request for '%s'." % model)
+		_ollama_pull_next(list, idx + 1, on_done)
 
 func _load_world_lore():
 	var lore_path = "res://docs/world_lore.md"
@@ -568,19 +911,26 @@ func reset_for_restart():
 	# Cancel any in-flight main request so the old response is ignored on arrival
 	if http_request and is_instance_valid(http_request):
 		http_request.cancel_request()
+	for request in _quest_candidate_requests:
+		if request and is_instance_valid(request):
+			request.cancel_request()
+			request.queue_free()
+	_quest_candidate_requests.clear()
+	_quest_candidate_results.clear()
+	_quest_candidate_attempts_started = 0
 	# Clear chatter caches — new session should generate fresh contextual lines
 	for key in chatter_cache:
 		chatter_cache[key].clear()
 	for key in active_fetches:
 		active_fetches[key] = false
-	print("[LLMInterface] State reset for new game.")
+	GlobalState.trace("[LLMInterface] State reset for new game.")
 
 
 
 func _discover_ollama_model():
 	connection_attempts += 1
 	llm_connection_attempt.emit(connection_attempts)
-	print("[TRACE] [LLMInterface] Discovering Ollama models (attempt %d)..." % connection_attempts)
+	GlobalState.trace("[TRACE] [LLMInterface] Discovering Ollama models (attempt %d)..." % connection_attempts)
 	
 	var tags_http = HTTPRequest.new()
 	add_child(tags_http)
@@ -599,66 +949,1856 @@ func _discover_ollama_model():
 						if m is Dictionary and m.has("name"):
 							installed_names.append(m["name"])
 							
-					print("[TRACE] [LLMInterface] Installed Ollama models: ", installed_names)
+					GlobalState.trace("[TRACE] [LLMInterface] Installed Ollama models: " + str(installed_names))
 					
-					var chosen_model = ""
-					if MODEL_NAME in installed_names:
-						chosen_model = MODEL_NAME
-					elif "qwen2.5:1.5b-instruct" in installed_names:
-						chosen_model = "qwen2.5:1.5b-instruct"
-					elif "qwen2.5:1.5b" in installed_names:
-						chosen_model = "qwen2.5:1.5b"
-					elif "qwen2.5-coder:7b" in installed_names:
-						chosen_model = "qwen2.5-coder:7b"
-					elif "qwen3:8b" in installed_names:
-						chosen_model = "qwen3:8b"
-					elif "gemma4:latest" in installed_names:
-						chosen_model = "gemma4:latest"
-					elif "gemma4:12b" in installed_names:
-						chosen_model = "gemma4:12b"
-					else:
-						for name in installed_names:
-							if "qwen" in name:
-								chosen_model = name
-								break
-						if chosen_model == "":
-							for name in installed_names:
-								if "gemma" in name:
-									chosen_model = name
-									break
-						if chosen_model == "" and installed_names.size() > 0:
-							chosen_model = installed_names[0]
+					var chosen_model: String = LocalModelGatewayType.select_installed_model(
+						installed_names,
+						"quest_dialogue"
+					)
+					var chosen_large_model: String = LocalModelGatewayType.select_installed_model(
+						installed_names,
+						"campaign_bible"
+					)
 							
 					if chosen_model != "":
 						active_model_name = chosen_model
-						print("[TRACE] [LLMInterface] Dynamic Ollama model selection: USING '", active_model_name, "'")
+						GlobalState.trace("[TRACE] [LLMInterface] Dynamic Ollama model selection: USING '" + active_model_name + "'")
 					else:
-						print("[LLMInterface] No models found in Ollama tags. Defaulting to: ", active_model_name)
+						print("[LLMInterface] No models found in Ollama tags. Defaulting to: " + active_model_name)
+					if chosen_large_model != "":
+						active_large_model_name = chosen_large_model
+						GlobalState.trace("[TRACE] [LLMInterface] Large-story model profile: USING '" + active_large_model_name + "'")
 					
 					success = true
 					
 		if success:
-			print("[TRACE] [LLMInterface] Ollama connection successfully verified.")
+			GlobalState.trace("[TRACE] [LLMInterface] Ollama connection successfully verified.")
 			llm_connected = true
 			llm_connection_established.emit(active_model_name)
 			model_discovered.emit(active_model_name)
-			# Pre-warm ALL chatter caches immediately so static fallback lines
-			# are never used during the first combat encounter
-			print("[TRACE] [LLMInterface] Pre-warming chatter caches...")
-			for chatter_type in chatter_cache.keys():
-				fetch_chatter_background(chatter_type)
+			# Force-load the models into VRAM now, before the first dock asks for a
+			# line. Cold weight-loading was the dominant session-start fallback cause
+			# (timeouts clustered in the first ~50s). Chatter pre-warm is sequenced
+			# to run once the small model is actually resident.
+			GlobalState.trace("[TRACE] [LLMInterface] Warming models + chatter caches...")
+			_ollama_warm_models()
 		else:
 			print("[LLMInterface] Connection to Ollama failed (attempt %d). Retrying in 1.5s..." % connection_attempts)
 			get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
 	)
 	
-	var err = tags_http.request("http://127.0.0.1:11434/api/tags")
+	var err = tags_http.request(LocalModelGatewayType.OLLAMA_TAGS_URL)
 	if err != OK:
 		tags_http.queue_free()
 		print("[LLMInterface] Failed to initiate tags check. Retrying in 1.5s...")
 		get_tree().create_timer(1.5).timeout.connect(_discover_ollama_model)
 
-func request_quest_generation(agent_faction: String, history_text: String, player_credits: int, player_reps: Dictionary, callback: Callable):
+
+## Force-load the SMALL dialogue model into memory right after discovery, before
+## the first dock asks for a line. Cold weight-loading is the dominant session-start
+## fallback cause (see logs/fallback_summary.txt: every startup timeout was the small
+## model, clustered in the first ~50s). Once it is resident we kick off chatter
+## pre-warm. Guarded so a reconnect does not warm twice.
+##
+## The large story model is intentionally NOT pre-warmed: its only logged failure
+## was a JSON parse (a quality issue, not a cold-load timeout), its callers use long
+## 60s timeouts that absorb a cold load, and pinning a 12B in VRAM at startup could
+## evict the small model that gameplay needs constantly. keep_alive still keeps it
+## resident once it loads on first use.
+func _ollama_warm_models() -> void:
+	if _models_warm_started:
+		return
+	if campaign_bible_priority_active:
+		GenerationDiagnostics.record_event(
+			"model_warmup",
+			"small_warm_deferred_for_campaign_bible",
+			"LLMInterface",
+			{"model": active_model_name}
+		)
+		return
+	_models_warm_started = true
+	# The isolated live-fire harness invokes the same real readiness probe but
+	# skips a redundant empty-prompt warmup when the model is already resident.
+	# Production startup keeps the full warmup path below.
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		_verify_small_model_ready(active_model_name, 0)
+		return
+	# Load the small model into VRAM, THEN confirm it actually generates before we
+	# let startup work fire. The empty-prompt load alone can report success while
+	# the model is still not answering; a real "hello" probe is the reliable gate.
+	_warm_single_model(active_model_name, "small", func() -> void:
+		_verify_small_model_ready(active_model_name, 0)
+	)
+
+
+func warm_small_model_after_story_gate() -> void:
+	if small_model_verified or _models_warm_started:
+		return
+	call_deferred("_ollama_warm_models")
+
+
+## Sends a tiny real generation ("ready" probe) to confirm the small model is
+## responding, not just resident. On the first success it marks the model
+## verified, emits small_model_ready, and kicks off chatter pre-warm. Retries
+## once on failure; if it still fails it releases the gate anyway (marks ready +
+## emits) so a flaky probe can never permanently strand the loading screen — the
+## failure is logged so it stays visible.
+func _verify_small_model_ready(model_name: String, attempt: int) -> void:
+	if small_model_verified:
+		return
+	if model_name.strip_edges().is_empty():
+		_release_small_model_gate(model_name, "empty_model_name")
+		return
+	var started := Time.get_ticks_msec()
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 30.0
+	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, body: PackedByteArray) -> void:
+		h.queue_free()
+		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+		var ok := result == HTTPRequest.RESULT_SUCCESS and code == 200
+		var response_text := ""
+		if ok:
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary:
+				response_text = str((parsed as Dictionary).get("response", "")).strip_edges()
+			ok = not response_text.is_empty()
+		if ok:
+			print("[LLMInterface] Small model '%s' passed readiness probe in %.1fs (attempt %d)." % [model_name, elapsed, attempt + 1])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "probe_ok", "LLMInterface",
+				{"model": model_name, "attempt": attempt + 1, "elapsed_seconds": elapsed}
+			)
+			_release_small_model_gate(model_name, "")
+			return
+		if attempt < 1:
+			push_warning("[LLMInterface] Small model readiness probe failed (result=%d code=%d) — retrying once." % [result, code])
+			_verify_small_model_ready(model_name, attempt + 1)
+			return
+		push_warning("[LLMInterface] Small model readiness probe failed after retry (result=%d code=%d) — releasing gate anyway." % [result, code])
+		GenerationDiagnostics.record_event(
+			"model_warmup", "probe_failed_result_%d_code_%d" % [result, code], "LLMInterface",
+			{"model": model_name, "attempt": attempt + 1, "elapsed_seconds": elapsed}
+		)
+		_schedule_small_model_probe_retry(model_name)
+	)
+	var payload := JSON.stringify({
+		"model": model_name,
+		"prompt": "Reply with the single word: ready",
+		"stream": false,
+		# Qwen3 otherwise may place its only output in the reasoning channel,
+		# leaving response empty despite an HTTP 200 and falsely failing readiness.
+		"think": false,
+		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
+		# Same num_ctx as every other small call — a mismatch here would warm the
+		# model at one context size and force a reload on the first real request.
+		"options": {"num_predict": 8, "temperature": 0.0, "num_ctx": LocalModelGatewayType.SMALL_NUM_CTX},
+	})
+	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		if attempt < 1:
+			_verify_small_model_ready(model_name, attempt + 1)
+		else:
+			_schedule_small_model_probe_retry(model_name)
+
+
+func _schedule_small_model_probe_retry(model_name: String) -> void:
+	if small_model_verified or _small_model_probe_retry_scheduled:
+		return
+	_small_model_probe_retry_scheduled = true
+	get_tree().create_timer(_SMALL_MODEL_PROBE_RETRY_SECONDS, true, false, true).timeout.connect(
+		func() -> void:
+			_small_model_probe_retry_scheduled = false
+			if not small_model_verified:
+				_verify_small_model_ready(model_name, 0)
+	)
+
+
+## Marks the small model verified, emits small_model_ready once, and starts
+## chatter pre-warm. Idempotent — safe to call from any probe outcome.
+func _release_small_model_gate(model_name: String, failure_reason: String) -> void:
+	if small_model_verified:
+		return
+	small_model_verified = true
+	_small_model_probe_retry_scheduled = false
+	if not failure_reason.is_empty():
+		GenerationDiagnostics.record_event(
+			"model_warmup", "gate_released_without_probe", "LLMInterface",
+			{"model": model_name, "reason": failure_reason}
+		)
+	small_model_ready.emit(model_name)
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		return
+	for chatter_type in chatter_cache.keys():
+		fetch_chatter_background(chatter_type)
+
+
+## Runs cb now (deferred) if the small model is already verified, else once when
+## small_model_ready next fires. Use this to gate any startup small-model call.
+func when_small_model_ready(cb: Callable) -> void:
+	if not cb.is_valid():
+		return
+	if small_model_verified:
+		cb.call_deferred()
+		return
+	small_model_ready.connect(func(_m: String) -> void: cb.call(), CONNECT_ONE_SHOT)
+
+
+## Ask Ollama to load one model into VRAM without generating (empty prompt) and
+## keep it resident (keep_alive). Fire-and-forget: on completion it logs a
+## model_warmup diagnostics event and calls on_done. A cold 12B load can be slow,
+## so the timeout is generous.
+func _warm_single_model(model_name: String, label: String, on_done: Callable) -> void:
+	if model_name.strip_edges().is_empty():
+		on_done.call()
+		return
+	var started := Time.get_ticks_msec()
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 90.0
+	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, _body: PackedByteArray) -> void:
+		h.queue_free()
+		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			print("[LLMInterface] Warmed %s model '%s' in %.1fs." % [label, model_name, elapsed])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "loaded", "LLMInterface",
+				{"model": model_name, "profile": label, "elapsed_seconds": elapsed}
+			)
+		else:
+			push_warning("[LLMInterface] Warm-up of %s model '%s' failed (result=%d code=%d, %.1fs)." % [label, model_name, result, code, elapsed])
+			GenerationDiagnostics.record_event(
+				"model_warmup", "failed_result_%d_code_%d" % [result, code], "LLMInterface",
+				{"model": model_name, "profile": label, "elapsed_seconds": elapsed}
+			)
+		on_done.call()
+	)
+	var payload := JSON.stringify({
+		"model": model_name,
+		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
+	})
+	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		h.queue_free()
+		push_warning("[LLMInterface] Could not start warm-up for %s model '%s'." % [label, model_name])
+		on_done.call()
+
+
+func model_for_capability(capability: String) -> String:
+	return LocalModelGatewayType.model_for_capability(
+		capability,
+		active_model_name,
+		active_large_model_name
+	)
+
+
+func request_timeout_for_capability(capability: String) -> float:
+	return LocalModelGatewayType.request_timeout(capability)
+
+
+func ollama_generate_url() -> String:
+	return LocalModelGatewayType.OLLAMA_GENERATE_URL
+
+
+func build_generation_body(
+	capability: String,
+	prompt: String,
+	response_format: String = "json",
+	options: Dictionary = {}
+) -> Dictionary:
+	return LocalModelGatewayType.generation_body(
+		capability,
+		prompt,
+		active_model_name,
+		response_format,
+		options,
+		active_large_model_name
+	)
+
+
+func diagnostics_context_for_capability(capability: String) -> Dictionary:
+	return LocalModelGatewayType.diagnostics_context(
+		capability,
+		model_for_capability(capability)
+	)
+
+
+func request_lounge_chatter(
+	context: Dictionary,
+	fallback_line: String,
+	callback: Callable
+) -> void:
+	if _skip_for_campaign_bible_priority("lounge_chatter"):
+		callback.call(fallback_line)
+		return
+	var speaker := str(context.get("speaker", "Local Contact")).strip_edges()
+	var role := str(context.get("role", "station regular")).strip_edges()
+	var mood := str(context.get("mood", "neutral")).strip_edges()
+	var station := str(context.get("station", "the station lounge")).strip_edges()
+	var system_name := str(context.get("system", "this system")).strip_edges()
+	var faction := str(context.get("faction", "independent")).strip_edges()
+	var extra := str(context.get("extra", "")).strip_edges()
+	# Narrative Relevance Rule: lounge small talk lives inside the campaign's
+	# current phase, not in a vacuum. Player-safe flavor only.
+	var flavor_block := ""
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
+		var ambient_flavor: String = StoryManager.get_ambient_flavor_block()
+		if not ambient_flavor.is_empty():
+			flavor_block = (
+				"Campaign flavor (let it shape what the room is worried or joking about — "
+				+ "never quote it directly):\n" + ambient_flavor + "\n\n"
+			)
+	var prompt := (
+		"You are writing one ambient lounge line for a space trading game.\n"
+		+ "Speaker: %s\nRole: %s\nMood: %s\nFaction/affiliation: %s\n"
+		+ "Location: %s in %s\nExtra context: %s\n\n"
+		+ flavor_block
+		+ "Write exactly ONE short in-character line the speaker says to the pilot. "
+		+ "It can be useful, atmospheric, teasing, guarded, or even a polite refusal "
+		+ "like not being in the mood to talk. Do not narrate. Do not include the "
+		+ "speaker name. Keep it under 24 words. Output only valid JSON: "
+		+ "{\"line\":\"...\"}"
+	) % [speaker, role, mood, faction, station, system_name, extra]
+
+	# Every lounge fallback is logged (no silent canned lines). Reason codes let us
+	# see whether these are environment (http/timeout) or quality (parse/shape) fails.
+	var fallback_context := {"speaker": speaker, "role": role, "faction": faction, "station": station}
+	var report_fallback := func(reason: String) -> void:
+		GenerationDiagnostics.record_fallback("lounge_chatter", reason, "LLMInterface", fallback_context)
+		callback.call(fallback_line)
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				report_fallback.call("http_failed_result_%d_code_%d" % [result, response_code])
+				return
+			var response_text := body.get_string_from_utf8()
+			var outer := JSON.new()
+			if outer.parse(response_text) != OK:
+				report_fallback.call("outer_parse_failed")
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				report_fallback.call("missing_response_field")
+				return
+			var inner_json_str := str(outer_data["response"]).strip_edges()
+			if inner_json_str.begins_with("```"):
+				var end_idx := inner_json_str.find("\n", 3)
+				if end_idx != -1:
+					inner_json_str = inner_json_str.substr(end_idx + 1)
+				if inner_json_str.ends_with("```"):
+					inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
+				inner_json_str = inner_json_str.strip_edges()
+			var inner := JSON.new()
+			if inner.parse(inner_json_str) != OK:
+				report_fallback.call("inner_parse_failed")
+				return
+			var data = inner.get_data()
+			if not data is Dictionary or not data.has("line"):
+				report_fallback.call("missing_line_field")
+				return
+			var line := str(data["line"]).strip_edges()
+			if line.length() < 4 or line.length() > 220:
+				report_fallback.call("line_length_rejected")
+				return
+			callback.call(line)
+	)
+
+	var payload := build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
+			"temperature": 0.88,
+			"num_predict": 90,
+			"seed": randi(),
+		}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		report_fallback.call("request_start_failed")
+
+
+# Total campaign-bible generation attempts before giving up. A validation
+# failure on attempt N retries with the specific errors appended to the prompt
+# (see NarrativeDirector.validation_correction_notes). Startup-critical, but
+# latency-bounded — 2 keeps a bad sample from stranding a campaign without
+# turning the loading screen into a stall.
+const CAMPAIGN_BIBLE_MAX_ATTEMPTS := 2
+const CHAPTER_PLAN_MAX_ATTEMPTS := 2
+
+
+# motif_history (optional): {"titles": [recent title strings], "reveals": [recent
+# reveal strings]} from idea memory, used to retry on a near-duplicate title/
+# reveal (plan §3.2). A collision is a SOFT signal — see the success branch of
+# _on_campaign_bible_generation_completed.
+func request_campaign_bible_generation(
+	baseline_bible: Dictionary,
+	idea_memory_context: String,
+	callback: Callable,
+	motif_history: Dictionary = {}
+) -> void:
+	_start_campaign_bible_attempt(baseline_bible, idea_memory_context, callback, 1, "", motif_history)
+
+
+# Unloads each Ollama model from VRAM (keep_alive:0) in parallel, then calls
+# on_done exactly once. Used before campaign-bible generation: on a 16GB card a
+# resident small model — or a half-spilled prior attempt — starves the 8B story
+# model, forcing CPU offload and a >180s timeout (the stuck-at-35% bug). We wipe
+# the slate and let the bible request reload the big model fresh into a clean GPU.
+func _evict_models_then(models: Array, on_done: Callable) -> void:
+	if OLLAMA_URL.is_empty() or models.is_empty():
+		on_done.call()
+		return
+	# Shared counter in a dict so the per-request lambdas can mutate it.
+	var state := {"remaining": models.size(), "fired": false}
+	var finish := func() -> void:
+		state["remaining"] -= 1
+		if state["remaining"] <= 0 and not state["fired"]:
+			state["fired"] = true
+			on_done.call()
+	for m in models:
+		var model_name := str(m).strip_edges()
+		if model_name.is_empty():
+			finish.call()
+			continue
+		var http := HTTPRequest.new()
+		add_child(http)
+		http.timeout = 10.0
+		http.request_completed.connect(
+			func(_r: int, _c: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
+				http.queue_free()
+				finish.call()
+		)
+		var payload := JSON.stringify({"model": model_name, "keep_alive": 0, "prompt": ""})
+		var err := http.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
+		if err != OK:
+			http.queue_free()
+			finish.call()
+
+
+# One generation attempt. attempt is 1-based; correction_notes is empty on the
+# first try and carries the prior attempt's validation errors on a retry.
+# Priority stays active across retries — it is only cleared on final resolution
+# in _on_campaign_bible_generation_completed.
+func _start_campaign_bible_attempt(
+	baseline_bible: Dictionary,
+	idea_memory_context: String,
+	callback: Callable,
+	attempt: int,
+	correction_notes: String,
+	motif_history: Dictionary = {}
+) -> void:
+	set_campaign_bible_priority_active(true)
+	var capability := "campaign_bible"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		set_campaign_bible_priority_active(false)
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name, "capability": capability}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "model_unavailable",
+			"model": model_name,
+		})
+		return
+	var prompt := NarrativeDirectorType.build_campaign_bible_prompt(
+		baseline_bible,
+		idea_memory_context,
+		correction_notes
+	)
+	# Empty response_format => no Ollama "format":"json" constraint. The campaign
+	# bible is generated as flat @@label blocks and assembled into JSON in code
+	# (NarrativeDirector.parse_campaign_bible_response); forcing json here would
+	# reintroduce the dropped-nested-key failures this design fixes.
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"",
+		{
+			"temperature": 0.75,
+			"num_predict": 2200,
+			"seed": randi(),
+		}
+	)
+	# The actual large-model request, deferred until VRAM is cleared below.
+	var fire_bible_request := func() -> void:
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"request_started",
+			"llm_interface",
+			{"model": model_name, "attempt": attempt}
+		)
+		var temp_http := HTTPRequest.new()
+		add_child(temp_http)
+		temp_http.timeout = request_timeout_for_capability(capability)
+		var request_id := temp_http.get_instance_id()
+		temp_http.request_completed.connect(
+			func(
+				result: int,
+				response_code: int,
+				_headers: PackedStringArray,
+				body: PackedByteArray
+			) -> void:
+				_on_campaign_bible_generation_completed(
+					result,
+					response_code,
+					body,
+					baseline_bible,
+					model_name,
+					callback,
+					request_id,
+					attempt,
+					idea_memory_context,
+					motif_history
+				)
+		)
+		var err := temp_http.request(
+			OLLAMA_URL,
+			["Content-Type: application/json"],
+			HTTPClient.METHOD_POST,
+			JSON.stringify(payload)
+		)
+		if err != OK:
+			temp_http.queue_free()
+			set_campaign_bible_priority_active(false)
+			GenerationDiagnostics.record_event(
+				"campaign_bible",
+				"request_start_failed",
+				"llm_interface",
+				{"model": model_name, "error": err}
+			)
+			callback.call({
+				"ok": false,
+				"reason": "request_start_failed",
+				"model": model_name,
+				"error": err,
+			})
+
+	# Wipe VRAM first (both models), then reload the big model fresh. On a 16GB
+	# card a resident small model starves the 8B story model into a CPU spill and
+	# a timeout (stuck-at-35%). model_name is the large model; active_model_name
+	# the small one — evict both, the request reloads the large cleanly.
+	var small_model := active_model_name if active_model_name != "" else LocalModelGatewayType.DEFAULT_SMALL_MODEL
+	GenerationDiagnostics.record_event(
+		"campaign_bible",
+		"vram_cleared_for_generation",
+		"llm_interface",
+		{"evicted": [small_model, model_name]}
+	)
+	_evict_models_then([small_model, model_name], fire_bible_request)
+
+
+func _on_campaign_bible_generation_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	baseline_bible: Dictionary,
+	model_name: String,
+	callback: Callable,
+	request_id: int,
+	attempt: int,
+	idea_memory_context: String,
+	motif_history: Dictionary = {}
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	set_campaign_bible_priority_active(false)
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "campaign_bible_timeout"
+		elif response_code == 404:
+			reason = "model_unavailable"
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			reason,
+			"llm_interface",
+			{"model": model_name}
+		)
+		# Connection-level failure (couldn't reach Ollama at all, not just a
+		# missing model) — this is exactly the "prevents the game from
+		# progressing" case, since campaign_bible generation gates the
+		# loading screen. Attempt the safe non-destructive recovery.
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
+		callback.call({
+			"ok": false,
+			"reason": reason,
+			"model": model_name,
+		})
+		return
+	var parsed := NarrativeDirectorType.parse_campaign_bible_response(
+		body.get_string_from_utf8(),
+		baseline_bible,
+		model_name
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name, "attempt": attempt}
+		)
+		# Retry once with the specific validation errors appended, so the model
+		# fixes exactly what broke instead of rerolling blind. Only worth it when
+		# we got a real 200 response that failed to parse/validate (handled here);
+		# HTTP/connection failures returned above and have their own recovery.
+		var validation := parsed.get("validation") as ValidationResult
+		var correction_notes := NarrativeDirectorType.validation_correction_notes(validation)
+		if attempt < CAMPAIGN_BIBLE_MAX_ATTEMPTS:
+			GenerationDiagnostics.record_event(
+				"campaign_bible",
+				"validation_retry",
+				"llm_interface",
+				{
+					"model": model_name,
+					"attempt": attempt,
+					"reason": str(parsed.get("reason", "parse_failed")),
+				}
+			)
+			_start_campaign_bible_attempt(
+				baseline_bible,
+				idea_memory_context,
+				callback,
+				attempt + 1,
+				correction_notes,
+				motif_history
+			)
+			return
+		parsed["model"] = model_name
+		callback.call(parsed)
+		return
+	# Soft motif gate (plan §3.2): if the accepted title/reveal is a near-duplicate
+	# of a recent campaign's, retry with a "pick something different" note — but
+	# only while attempts remain. A collision on the FINAL attempt is accepted, not
+	# blocked: a slightly similar title beats stranding the campaign at the gate.
+	var motif_note := NarrativeDirectorType.motif_collision_note(
+		parsed.get("bible", {}),
+		motif_history.get("titles", []),
+		motif_history.get("reveals", [])
+	)
+	if not motif_note.is_empty():
+		if attempt < CAMPAIGN_BIBLE_MAX_ATTEMPTS:
+			GenerationDiagnostics.record_event(
+				"campaign_bible", "motif_retry", "llm_interface",
+				{"model": model_name, "attempt": attempt, "note": motif_note}
+			)
+			_start_campaign_bible_attempt(
+				baseline_bible, idea_memory_context, callback, attempt + 1, motif_note, motif_history
+			)
+			return
+		GenerationDiagnostics.record_event(
+			"campaign_bible", "motif_collision_accepted", "llm_interface",
+			{"model": model_name, "attempt": attempt, "note": motif_note}
+		)
+	GenerationDiagnostics.record_content_source(
+		"campaign_bible",
+		"llm",
+		"llm_interface",
+		{"model": model_name, "capability": "campaign_bible"}
+	)
+	# Log which safe repairs the response needed — a slow drift here (e.g. every
+	# response now needs the Kaelen-role mask) is a signal the prompt or model
+	# changed. See plan §4 Tier 1.
+	var repairs: Array = parsed.get("repairs", [])
+	if not repairs.is_empty():
+		GenerationDiagnostics.record_event(
+			"campaign_bible",
+			"repairs_applied",
+			"llm_interface",
+			{"model": model_name, "attempt": attempt, "repairs": repairs}
+		)
+	callback.call(parsed)
+
+
+# ── Phase C: Story horizon expansion ───────────────────────────────────────────
+# Small follow-up call, only fired when a campaign's prepared reserve runs out.
+# Same think:false/keep_alive:0 large_story handling as campaign_bible.
+# Phase E ambient conversations (AmbientChatGenerator). Thin transport: builds
+# the small-model request, unwraps the Ollama envelope, and hands the INNER
+# text back — shape validation lives in AmbientChatGenerator.parse_chat_lines
+# so it stays unit-testable without a network. Callback receives
+# {ok, inner_text} or {ok: false, reason}.
+# Optional fixed-cast quiet moment. temperature 0.9 / top_p 0.95 is the exact
+# configuration the research measured; 0.95 was tried in the live Godot run
+# and produced noticeably more erratic lines from an identical prompt. Every
+# unsafe or repetitive candidate is caught by
+# QuietMomentChecks before it can be spoken. num_predict is generous: the
+# research found 70 truncates a JSON-wrapped line and reads as a parse
+# failure. See skills/skill_llm_character_dialogue.md.
+func request_quiet_moment(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"quiet_moment",
+		prompt,
+		callback,
+		{"temperature": 0.9, "top_p": 0.95, "num_predict": 280, "seed": randi()}
+	)
+
+
+func request_ambient_chat(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text("ambient_chat", prompt, callback)
+
+
+# Lounge Social Layer L1: one conversation turn (opener or reply). Same flat
+# protocol discipline; parsing lives in LoungeConversation.parse_turn.
+func request_lounge_conversation_turn(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text("lounge_chat", prompt, callback)
+
+
+# Phase 9: one call prepares a whole lounge exchange bundle (opener, an
+# answer per code-approved intent, close) so reply clicks never wait on the
+# model. Same flat-JSON transport as per-turn chat with room for the five
+# fields; callers parse with LoungeConversation.parse_bundle + validate
+# with validate_bundle_answers.
+func request_lounge_exchange_bundle(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"lounge_bundle",
+		prompt,
+		callback,
+		{"temperature": 0.95, "num_predict": 520, "seed": randi()}
+	)
+
+
+# A deliberately fresh request: it receives the proposed bundle as an
+# artifact, never the writer prompt or prior completion context. This lets the
+# same local model act as a skeptical editor instead of reflexively endorsing
+# its own prose while the docking procedure is buying us time.
+func request_lounge_exchange_bundle_review(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"lounge_bundle_review",
+		prompt,
+		callback,
+		{"temperature": 0.15, "num_predict": 90, "seed": randi()}
+	)
+
+
+# Shared small-model transport: request under `capability`, unwrap the Ollama
+# envelope (+ markdown fences), return the inner text for the caller's own
+# parser. format:"json" is load-bearing: freeform lets qwen3:4b narrate its
+# planning instead of answering (live-fired 6/6, 2026-07-04). Requested shapes
+# must be FLAT few-key objects — nesting is what it corrupts, not JSON itself.
+func _request_small_inner_text(
+	capability: String,
+	prompt: String,
+	callback: Callable,
+	options: Dictionary = {}
+) -> void:
+	if _skip_for_campaign_bible_priority(capability):
+		callback.call({"ok": false, "reason": "campaign_bible_priority"})
+		return
+	var generation_options := options
+	if generation_options.is_empty():
+		generation_options = {
+			"temperature": 0.95,
+			"num_predict": 220,
+			"seed": randi(),
+		}
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		generation_options
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				if result != HTTPRequest.RESULT_SUCCESS:
+					_handle_small_transport_failure(capability, result, response_code)
+				callback.call({"ok": false, "reason": "http_failed_result_%d_code_%d" % [result, response_code]})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var inner_str := str(outer_data["response"]).strip_edges()
+			if inner_str.begins_with("```"):
+				var end_idx := inner_str.find("\n", 3)
+				if end_idx != -1:
+					inner_str = inner_str.substr(end_idx + 1)
+				if inner_str.ends_with("```"):
+					inner_str = inner_str.substr(0, inner_str.length() - 3)
+				inner_str = inner_str.strip_edges()
+			callback.call({"ok": true, "inner_text": inner_str})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		_handle_small_transport_failure(capability, err, 0)
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+func _handle_small_transport_failure(capability: String, result: int, response_code: int) -> void:
+	GenerationDiagnostics.record_event(
+		"ollama_watchdog", "small_transport_failure", "llm_interface",
+		{"capability": capability, "result": result, "response_code": response_code}
+	)
+	# The caller still receives its immediate prepared/template fallback. Recovery
+	# only restores future cache work; it never makes a player click wait.
+	small_model_verified = false
+	attempt_ollama_recovery()
+	_schedule_small_model_probe_retry(active_model_name)
+
+
+# Writes N.O.V.A.'s campaign-specific gate-glitch lines from her director-only
+# memory flicker. Director-privileged: the flicker is a bible secret, so this
+# runs on the LARGE model only ("nova_glitch" -> large_story in
+# LocalModelGateway) and the caller (StoryManager) leak-guards every returned
+# line before storing. Callback receives {ok, lines: Array[String], reason}.
+func request_nova_glitch_hints(
+	flicker_text: String,
+	campaign_tone: String,
+	callback: Callable
+) -> void:
+	var capability := "nova_glitch"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"nova_glitch_hints", "model_unavailable", "llm_interface", {"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	var prompt := "\n".join([
+		"You are the large local story model for a procedural space game.",
+		"N.O.V.A. is the player's ship AI: sardonic, self-preserving, dry, deadpan;",
+		"the ship is her body. Her memory was wiped in a gate accident and gates make",
+		"her flinch without knowing why.",
+		"",
+		"HIDDEN DIRECTOR-ONLY FRAGMENT of her lost past (the player must NEVER learn this):",
+		flicker_text.strip_edges(),
+		"",
+		"Campaign tone: %s" % campaign_tone.strip_edges(),
+		"",
+		"Write exactly 4 lines N.O.V.A. might say mid gate-transit this campaign.",
+		"Rules:",
+		"- First person, her voice, each under 18 words.",
+		"- Sensation and almost-memory only: static, echoes, a shape she can't place, a feeling with no file.",
+		"- NEVER state, paraphrase, or name anything from the hidden fragment. No proper nouns from it.",
+		"- No explanations, no lore. Unease with dry humor is the register.",
+		"- Vary them; no two lines about the same sensation.",
+		"",
+		"Return only JSON: {\"glitch_lines\": [\"...\", \"...\", \"...\", \"...\"]}",
+	])
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		{"temperature": 0.9, "num_predict": 220, "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"nova_glitch_hints", "http_failed", "llm_interface",
+					{"result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var inner_str := str(outer_data["response"]).strip_edges()
+			if inner_str.begins_with("```"):
+				var end_idx := inner_str.find("\n", 3)
+				if end_idx != -1:
+					inner_str = inner_str.substr(end_idx + 1)
+				if inner_str.ends_with("```"):
+					inner_str = inner_str.substr(0, inner_str.length() - 3)
+				inner_str = inner_str.strip_edges()
+			var inner := JSON.new()
+			if inner.parse(inner_str) != OK:
+				callback.call({"ok": false, "reason": "inner_parse_failed"})
+				return
+			var data = inner.get_data()
+			if not data is Dictionary or not data.get("glitch_lines", null) is Array:
+				callback.call({"ok": false, "reason": "missing_glitch_lines"})
+				return
+			var lines: Array[String] = []
+			for raw_line in (data["glitch_lines"] as Array):
+				var clean := str(raw_line).strip_edges()
+				if clean.length() >= 8 and clean.length() <= 160:
+					lines.append(clean)
+			if lines.is_empty():
+				callback.call({"ok": false, "reason": "all_lines_rejected"})
+				return
+			callback.call({"ok": true, "lines": lines})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+const NovaBankCategoriesType := preload(
+	"res://scripts/story/NovaLineBankCategories.gd"
+)
+
+
+# One flat @@label batch of N.O.V.A. bank lines (Phase 8B). `fields` is an
+# Array of {category, count}; total labels are clamped to 10 per batch
+# (callers aim for 6-10). Small model, text format — flat labeled fields,
+# never nested JSON (see project_labeled_field_generation).
+func request_nova_line_bank_batch(
+	fields: Array,
+	context: Dictionary,
+	callback: Callable
+) -> void:
+	var capability := "nova_line_bank"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"nova_line_bank", "model_unavailable", "llm_interface",
+			{"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	var labels := nova_line_bank_labels(fields)
+	if labels.is_empty():
+		callback.call({"ok": false, "reason": "no_valid_fields"})
+		return
+	var prompt := _nova_line_bank_prompt(labels, context)
+	# Flat one-level JSON keyed by label — the format qwen3 handles reliably
+	# here (the earlier @@label text form was rejected wholesale live).
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		{"temperature": 0.9, "num_predict": 60 * labels.size(), "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"nova_line_bank", "http_failed", "llm_interface",
+					{"result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var parsed := parse_nova_line_bank_batch(
+				str(outer_data["response"]),
+				labels
+			)
+			var lines: Array = parsed.get("lines", [])
+			if lines.is_empty():
+				GenerationDiagnostics.record_event(
+					"nova_line_bank", "all_lines_rejected", "llm_interface",
+					{"rejected": (parsed.get("rejected", []) as Array).size()}
+				)
+				callback.call({"ok": false, "reason": "all_lines_rejected"})
+				return
+			callback.call({
+				"ok": true,
+				"lines": lines,
+				"rejected": parsed.get("rejected", []),
+			})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+# Expands {category, count} field specs into @@ labels like
+# "boost_again_quickly_1". Invalid and protected categories are dropped;
+# the batch is capped at 10 labels.
+static func nova_line_bank_labels(fields: Array) -> Array[String]:
+	var labels: Array[String] = []
+	for raw_field in fields:
+		if not raw_field is Dictionary:
+			continue
+		var field: Dictionary = raw_field
+		var category := str(field.get("category", "")).strip_edges()
+		if not NovaBankCategoriesType.is_valid(category) \
+				or NovaBankCategoriesType.is_protected(category):
+			continue
+		var count: int = clampi(int(field.get("count", 0)), 0, 10)
+		for i in range(count):
+			if labels.size() >= 10:
+				return labels
+			labels.append("%s_%d" % [category, i + 1])
+	return labels
+
+
+# One line, N.O.V.A.'s register, no speaker prefix, no placeholders.
+# Returns "" when valid, otherwise the rejection reason.
+static func validate_nova_bank_line(text: String) -> String:
+	var clean := text.strip_edges()
+	if clean.length() < 8:
+		return "too_short"
+	if clean.length() > 160:
+		return "too_long"
+	if clean.contains("\n"):
+		return "multiline"
+	if clean.contains("@@"):
+		return "label_leak"
+	if clean.contains("{") or clean.contains("}") \
+			or clean.contains("[") or clean.contains("]"):
+		return "placeholder_braces"
+	var colon := clean.find(":")
+	if colon > 0 and colon <= 24:
+		var prefix := clean.substr(0, colon)
+		if not prefix.contains(" ") or prefix.to_upper() == prefix:
+			return "speaker_prefix"
+	return ""
+
+
+# Pure parser for a flat one-level JSON batch response, keyed by label.
+# Each expected label is read once; every line validates independently;
+# missing labels and duplicate texts are rejected, never repaired.
+static func parse_nova_line_bank_batch(
+	raw: String,
+	expected_labels: Array
+) -> Dictionary:
+	var text := raw.strip_edges()
+	# Strip a markdown code fence if the model wrapped the JSON in one.
+	if text.begins_with("```"):
+		var newline := text.find("\n")
+		if newline != -1:
+			text = text.substr(newline + 1)
+		if text.ends_with("```"):
+			text = text.substr(0, text.length() - 3)
+		text = text.strip_edges()
+	var parser := JSON.new()
+	if parser.parse(text) != OK:
+		return {"lines": [], "rejected": [{"reason": "inner_parse_failed"}]}
+	var data = parser.get_data()
+	if not data is Dictionary:
+		return {"lines": [], "rejected": [{"reason": "not_an_object"}]}
+	# Case-insensitive key lookup so trivial casing drift doesn't reject.
+	var by_lower: Dictionary = {}
+	for key in (data as Dictionary).keys():
+		by_lower[str(key).strip_edges().to_lower()] = (data as Dictionary)[key]
+	var lines_out: Array = []
+	var rejected: Array = []
+	var seen_texts: Dictionary = {}
+	var seen_sentences: Dictionary = {}
+	var seen_closers: Dictionary = {}
+	for label in expected_labels:
+		var lower_label := str(label).to_lower()
+		if not by_lower.has(lower_label):
+			rejected.append({"label": label, "reason": "missing_label"})
+			continue
+		var line_text := str(by_lower[lower_label]).strip_edges()
+		if line_text.begins_with("\"") and line_text.ends_with("\"") \
+				and line_text.length() > 1:
+			line_text = line_text.substr(1, line_text.length() - 2).strip_edges()
+		var reason := validate_nova_bank_line(line_text)
+		if not reason.is_empty():
+			rejected.append({"label": label, "reason": reason})
+			continue
+		if seen_texts.has(line_text):
+			rejected.append({"label": label, "reason": "duplicate_text"})
+			continue
+		# A batch can be structurally perfect and still be one line wearing
+		# eight hats. A live run returned "Good thing you didn't take the long
+		# way." as the tail of six lines, on beats as unrelated as
+		# hull_critical and docked; exact-match dedupe never saw it, because
+		# the opening clauses differed. Reject a line that reuses a whole
+		# sentence from one already accepted in this batch.
+		if not _nova_bank_shared_sentence(line_text, seen_sentences).is_empty():
+			rejected.append({"label": label, "reason": "duplicate_sentence"})
+			continue
+		# The tail is where the model's tic lands, and it lands short: one live
+		# batch closed three lines with "Still flying." and two with "Stay
+		# calm.". Too short for the shared-sentence floor above, but a repeated
+		# closer is exactly what a player hears as repetition. Shared OPENINGS
+		# stay legal -- "Hull's intact." has to work on more than one beat.
+		var closer := _nova_bank_final_sentence(line_text)
+		if not closer.is_empty() and seen_closers.has(closer):
+			rejected.append({"label": label, "reason": "duplicate_closer"})
+			continue
+		for sentence in _nova_bank_sentences(line_text):
+			seen_sentences[sentence] = true
+		if not closer.is_empty():
+			seen_closers[closer] = true
+		seen_texts[line_text] = true
+		var category := str(label)
+		var underscore := category.rfind("_")
+		if underscore > 0 and category.substr(underscore + 1).is_valid_int():
+			category = category.substr(0, underscore)
+		lines_out.append({"kind": category, "text": line_text})
+	return {"lines": lines_out, "rejected": rejected}
+
+
+# A shared clause only reads as repetition once it is long enough to be a
+# phrase rather than a stock fragment: "Hull's intact." is two words and must
+# stay reusable across beats.
+const _NOVA_BANK_SHARED_SENTENCE_MIN_WORDS := 4
+
+
+# The first sentence of `text` that already appeared in `seen_sentences`, or
+# "" when the line shares nothing.
+static func _nova_bank_shared_sentence(
+	text: String,
+	seen_sentences: Dictionary
+) -> String:
+	for sentence in _nova_bank_sentences(text):
+		if seen_sentences.has(sentence):
+			return sentence
+	return ""
+
+
+# Normalized sentences of `text`, long enough to count as a shared phrase.
+# Em-dashes split too: the model likes welding a stock tail on with one.
+static func _nova_bank_sentences(text: String) -> Array[String]:
+	var flattened := text
+	for delimiter in ["!", "?", ";", "—", "–"]:
+		flattened = flattened.replace(delimiter, ".")
+	var out: Array[String] = []
+	for raw in flattened.split(".", false):
+		var normalized := _nova_bank_normalize(str(raw))
+		var words := normalized.split(" ", false)
+		if words.size() >= _NOVA_BANK_SHARED_SENTENCE_MIN_WORDS:
+			out.append(normalized)
+	return out
+
+
+# Lowercase, letters and digits only, whitespace collapsed. Dropping
+# apostrophes outright is deliberate: the model mixes straight and curly ones
+# freely, and "didn't" / "didn’t" must not read as different sentences.
+static func _nova_bank_normalize(text: String) -> String:
+	var out := ""
+	for i in range(text.length()):
+		var ch := text[i].to_lower()
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			out += ch
+		elif ch == " " or ch == "	":
+			out += " "
+	return " ".join(out.split(" ", false))
+
+
+# The line's closing sentence, normalized. Two words is enough here (unlike
+# the shared-sentence floor) because a repeated closer is audible even when it
+# is short. Returns "" when the line has no closing sentence worth comparing.
+static func _nova_bank_final_sentence(text: String) -> String:
+	var flattened := text
+	for delimiter in ["!", "?", ";", "—", "–"]:
+		flattened = flattened.replace(delimiter, ".")
+	var pieces := flattened.split(".", false)
+	for i in range(pieces.size() - 1, -1, -1):
+		var normalized := _nova_bank_normalize(str(pieces[i]))
+		if normalized.split(" ", false).size() >= 2:
+			return normalized
+	return ""
+
+
+static func _nova_line_bank_prompt(
+	labels: Array[String],
+	context: Dictionary
+) -> String:
+	var parts: Array[String] = [
+		str(context.get("persona", "")).strip_edges(),
+		"",
+	]
+	var soul_guidance := str(context.get("fixed_cast_soul", "")).strip_edges()
+	if not soul_guidance.is_empty():
+		parts.append(soul_guidance)
+	var quirk := str(context.get("campaign_quirk", "")).strip_edges()
+	if not quirk.is_empty():
+		parts.append(
+			"Her one campaign quirk (may color AT MOST one line): %s" % quirk
+		)
+	var tone := str(context.get("system_tone", "")).strip_edges()
+	if not tone.is_empty():
+		parts.append("Current system tone: %s" % tone)
+	var facts: Array = context.get("known_facts", []) \
+		if context.get("known_facts", []) is Array else []
+	if not facts.is_empty():
+		parts.append("Facts the ship AI is allowed to know:")
+		for fact in facts.slice(0, 5):
+			parts.append("- %s" % str(fact).strip_edges())
+	var events: Array = context.get("recent_events", []) \
+		if context.get("recent_events", []) is Array else []
+	if not events.is_empty():
+		parts.append("Recent flight events (flavor only, do not list them back):")
+		for event in events.slice(0, 6):
+			parts.append("- %s" % str(event).strip_edges())
+	parts.append("")
+	parts.append(
+		"Write ONE short line in her voice (under 18 words) for each of these"
+	)
+	parts.append("situations:")
+	for label in labels:
+		var underscore := label.rfind("_")
+		var category := label.substr(0, underscore) if underscore > 0 else label
+		parts.append(
+			"- %s = %s" % [label, NovaBankCategoriesType.describe(category)]
+		)
+	parts.append("")
+	parts.append(
+		"Return ONLY a flat JSON object whose keys are those exact situation"
+	)
+	parts.append("names and whose values are the lines. Example shape:")
+	parts.append("{\"%s\": \"her line here\"}" % str(labels[0]))
+	parts.append("Rules:")
+	parts.append("- Every value is one sentence, no speaker name, no line breaks.")
+	parts.append("- Every line unique. Never mention hidden lore or secrets.")
+	return "\n".join(parts)
+
+
+func request_story_horizon_expansion(
+	bible_data: Dictionary,
+	trigger: Dictionary,
+	story_state_summary: String,
+	callback: Callable
+) -> void:
+	var capability := "story_horizon"
+	var model_name := model_for_capability(capability)
+	var action := str(trigger.get("action", "append_story_horizon"))
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable", "model": model_name})
+		return
+	var prompt := NarrativeDirectorType.build_story_horizon_expansion_prompt(
+		bible_data,
+		trigger,
+		story_state_summary
+	)
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"json",
+		{
+			"temperature": 0.85,
+			"num_predict": 400,
+			"seed": randi(),
+		}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	var request_id := temp_http.get_instance_id()
+	temp_http.request_completed.connect(
+		func(
+			result: int,
+			response_code: int,
+			_headers: PackedStringArray,
+			body: PackedByteArray
+		) -> void:
+			_on_story_horizon_expansion_completed(
+				result, response_code, body, action, model_name, callback, request_id
+			)
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			"request_start_failed",
+			"llm_interface",
+			{"model": model_name, "error": err}
+		)
+		callback.call({"ok": false, "reason": "request_start_failed", "model": model_name})
+
+
+func _on_story_horizon_expansion_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	action: String,
+	model_name: String,
+	callback: Callable,
+	request_id: int
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "story_horizon_expansion_timeout"
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion", reason, "llm_interface", {"model": model_name}
+		)
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
+		callback.call({"ok": false, "reason": reason, "model": model_name})
+		return
+	var parsed := NarrativeDirectorType.parse_story_horizon_expansion_response(
+		body.get_string_from_utf8(), action, model_name
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"story_horizon_expansion",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name}
+		)
+		parsed["model"] = model_name
+		callback.call(parsed)
+		return
+	GenerationDiagnostics.record_content_source(
+		"story_horizon_expansion", "llm", "llm_interface", {"model": model_name}
+	)
+	callback.call(parsed)
+
+
+func request_chapter_plan_generation(
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array,
+	callback: Callable
+) -> void:
+	_start_chapter_plan_attempt(
+		director_context,
+		validated_entities,
+		available_mission_capabilities,
+		recent_player_choices,
+		unresolved_story_state,
+		available_objective_types,
+		valid_entity_ids,
+		callback,
+		1,
+		[]
+	)
+
+
+func _start_chapter_plan_attempt(
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array,
+	callback: Callable,
+	attempt: int,
+	correction_notes: Array
+) -> void:
+	var capability := "chapter_plan"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			"model_unavailable",
+			"llm_interface",
+			{"model": model_name}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "model_unavailable",
+			"model": model_name,
+			"status": "chapter_plan_model_unavailable",
+		})
+		return
+	var prompt := ChapterNarrativeDirectorType.build_chapter_plan_prompt(
+		director_context,
+		validated_entities,
+		available_mission_capabilities,
+		recent_player_choices,
+		unresolved_story_state,
+		correction_notes
+	)
+	var payload := build_generation_body(
+		capability,
+		prompt,
+		"json",
+		{
+			"temperature": 0.8,
+			"num_predict": 1600,
+			"seed": randi(),
+		}
+	)
+	GenerationDiagnostics.record_event(
+		"chapter_plan",
+		"request_started",
+		"llm_interface",
+		{"model": model_name, "attempt": attempt}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	var request_id := temp_http.get_instance_id()
+	temp_http.request_completed.connect(
+		func(
+			result: int,
+			response_code: int,
+			_headers: PackedStringArray,
+			body: PackedByteArray
+		) -> void:
+			_on_chapter_plan_generation_completed(
+				result,
+				response_code,
+				body,
+				model_name,
+				callback,
+				request_id,
+				attempt,
+				director_context,
+				validated_entities,
+				available_mission_capabilities,
+				recent_player_choices,
+				unresolved_story_state,
+				available_objective_types,
+				valid_entity_ids
+			)
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			"request_start_failed",
+			"llm_interface",
+			{"model": model_name, "error": err}
+		)
+		callback.call({
+			"ok": false,
+			"reason": "request_start_failed",
+			"model": model_name,
+			"status": "chapter_plan_request_start_failed",
+		})
+
+
+func _on_chapter_plan_generation_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	model_name: String,
+	callback: Callable,
+	request_id: int,
+	attempt: int,
+	director_context: String,
+	validated_entities: Array,
+	available_mission_capabilities: Array,
+	recent_player_choices: Array,
+	unresolved_story_state: Dictionary,
+	available_objective_types: Array,
+	valid_entity_ids: Array
+) -> void:
+	var temp_http := instance_from_id(request_id) as HTTPRequest
+	if temp_http != null and is_instance_valid(temp_http):
+		temp_http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
+		if result == HTTPRequest.RESULT_TIMEOUT:
+			reason = "chapter_plan_timeout"
+		GenerationDiagnostics.record_event(
+			"chapter_plan", reason, "llm_interface", {"model": model_name}
+		)
+		if result != HTTPRequest.RESULT_SUCCESS:
+			attempt_ollama_recovery()
+		callback.call({
+			"ok": false,
+			"reason": reason,
+			"model": model_name,
+			"status": "chapter_plan_generation_failed",
+		})
+		return
+	var parsed := ChapterNarrativeDirectorType.parse_chapter_plan_response(
+		body.get_string_from_utf8(),
+		available_objective_types,
+		valid_entity_ids,
+		model_name,
+		unresolved_story_state.get("eligible_attachment_beats", [])
+	)
+	if not bool(parsed.get("ok", false)):
+		GenerationDiagnostics.record_event(
+			"chapter_plan",
+			str(parsed.get("reason", "parse_failed")),
+			"llm_interface",
+			{"model": model_name, "attempt": attempt}
+		)
+		var validation := parsed.get("validation") as ValidationResult
+		if attempt < CHAPTER_PLAN_MAX_ATTEMPTS:
+			_start_chapter_plan_attempt(
+				director_context,
+				validated_entities,
+				available_mission_capabilities,
+				recent_player_choices,
+				unresolved_story_state,
+				available_objective_types,
+				valid_entity_ids,
+				callback,
+				attempt + 1,
+				ChapterNarrativeDirectorType.validation_correction_notes(
+					validation
+				)
+			)
+			return
+		parsed["model"] = model_name
+		parsed["status"] = "chapter_plan_generation_failed"
+		callback.call(parsed)
+		return
+	GenerationDiagnostics.record_content_source(
+		"chapter_plan", "llm", "llm_interface", {"model": model_name}
+	)
+	callback.call(parsed)
+
+
+func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
+	# Few-shot quest examples now live in data/content/llm_dialogue_content.json
+	# (quest_generation.mission_types[TYPE].examples_by_agent). Edit dialogue
+	# phrasing there, not here. This wrapper reads the JSON via the content
+	# registry and only falls back to the built-in block below if that file is
+	# missing/malformed — the prompt must always have at least one example, or
+	# the random example picker in request_quest_generation would divide by zero.
+	var bundle := LLMDialogueContentRegistry.shared().quest_examples(agent_key, mission_type)
+	if not bundle.is_empty() and bundle.get("dialogues", []).size() > 0:
+		return bundle
+	# The JSON content file is missing/malformed for this bucket — we're about to
+	# run on the built-in copy. That is a silent quality regression, so log it.
+	GenerationDiagnostics.record_fallback(
+		"quest_examples",
+		"content_file_missing",
+		"LLMInterface",
+		{"agent": agent_key, "type": mission_type}
+	)
+	return _get_type_examples_fallback(agent_key, mission_type)
+
+
+func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dictionary:
+	# Safety net only — the live/editable copy is the JSON above. Kept verbatim so
+	# behavior is unchanged if the content file cannot be loaded.
+	# Returns 5 example dialogues + 3 choice responses matched to the mission type.
+	# All use dummy names: George (pilot), Slithern (enemy), 3 (kill count),
+	# 25 (ore amount), Sable Mercer / Morrow Station / Sealed Data Drive (pickup).
+	var d: Dictionary = {}
+	match agent_key:
+		"zenith":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Resource allocation in Sector 7 has become critically inefficient, George. 3 Slithern ships are disrupting our supply corridor. Eliminate them.",
+						"Slithern operatives have compromised a logistics node, George. 3 hostiles confirmed. Remove them before throughput drops further.",
+						"Unauthorized Slithern vessels detected in our acquisition zone, George. 3 contacts on scope. Purge the interference.",
+						"A Slithern raiding cell has established a forward position, George. 3 ships. Dismantle them before they disrupt scheduled operations.",
+						"Slithern interdiction is costing Zenith 14% throughput, George. 3 vessels. Resolve this inefficiency permanently.",
+					]
+					d["response_1"] = "Confirmed, George. Your assignment is logged. Do not deviate from the directive."
+					d["response_2"] = "An advance against operational expenses. Noted. Expect elevated patrol resistance on your route, George."
+					d["response_3"] = "Bold negotiation, George. Payout is revised upward. Security escalation protocols are now active in your sector."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Zenith requires 25 m³ of ore routed to this station, George. Extraction quotas are non-negotiable. Deliver promptly.",
+						"Our fabrication queue is stalled pending raw material, George. 25 m³ of ore. Acquire and deliver without delay.",
+						"A resource deficit has been flagged, George. 25 m³ of ore must reach this station before the next cycle closes.",
+						"Mining output in the outer ring has underperformed, George. Compensate with 25 m³ of ore delivered here.",
+						"Production schedules depend on timely inputs, George. 25 m³ of ore. Secure it and return. No excuses.",
+					]
+					d["response_1"] = "Acknowledged, George. Delivery window is logged. Do not fall behind schedule."
+					d["response_2"] = "An advance for fuel costs. Logged, George. Expect contested mining lanes on approach."
+					d["response_3"] = "Revised upward, George. The ore must still arrive on time. Zenith does not pay for delays."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"A Sealed Data Drive is waiting at Morrow Station with Sable Mercer, George. Retrieve it and return here. Discretion is mandatory.",
+						"Zenith has arranged a retrieval from Sable Mercer at Morrow Station, George. One Sealed Data Drive. Handle it with operational security.",
+						"An asset transfer has been staged at Morrow Station, George. Contact Sable Mercer, collect the Sealed Data Drive, deliver it here.",
+						"Sable Mercer at Morrow Station is holding a Sealed Data Drive for Zenith, George. Retrieve it before the transfer window expires.",
+						"A classified pickup requires your involvement, George. Sable Mercer, Morrow Station, Sealed Data Drive. Return it to this station intact.",
+					]
+					d["response_1"] = "Logged, George. Maintain operational security throughout the retrieval."
+					d["response_2"] = "Advance approved for transit expenses, George. The item must arrive undamaged."
+					d["response_3"] = "Payout revised, George. Do not draw attention during the pickup. Zenith values discretion."
+		"aurelia":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Got a little opportunity, George. 3 Slithern ships rattling cages near our trade lane. Remove them quietly and credits flow.",
+						"Slithern crew is making noise near one of my routes, George. 3 ships. Make them disappear — clean, quiet, off the books.",
+						"Some Slithern hotheads are scaring off my couriers, George. 3 of them. Clear the lane and nobody has to know.",
+						"There's a Slithern problem blocking a very lucrative corridor, George. 3 ships. Handle it discreetly and the payout is yours.",
+						"Word is 3 Slithern ships are camping a junction I need open, George. Quiet removal. No witnesses, no paperwork.",
+					]
+					d["response_1"] = "Smooth, George. That's why I like working with you. Stay off their sensors."
+					d["response_2"] = "An advance? Smart move, George. Credits transferred. Riskier corridor to offset the cost."
+					d["response_3"] = "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"I've got a buyer who needs 25 m³ of ore off the books, George. Deliver it here and my cut stays quiet.",
+						"There's a quiet deal on the table, George. 25 m³ of ore, delivered to this station. No manifests, no questions.",
+						"A client of mine is short 25 m³ of ore, George. Bring it in clean and the credits are yours. I take my slice.",
+						"Opportunity knocking, George. 25 m³ of ore delivered here pays very nicely. I'll handle the paperwork — or lack of it.",
+						"Need 25 m³ of ore moved to this dock, George. My buyer is impatient and pays well for discretion.",
+					]
+					d["response_1"] = "Perfect, George. Deliver it clean and we both walk away richer."
+					d["response_2"] = "Advance wired, George. Mining lanes are contested lately — watch your back out there."
+					d["response_3"] = "Fine, George, payout bumped. But the ore had better arrive on time. My buyer doesn't do extensions."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"Got a quiet job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Pick it up and bring it back here — no questions asked.",
+						"There's a package at Morrow Station, George. Sable Mercer is holding a Sealed Data Drive for me. Fetch it discreetly.",
+						"Need a courier I can trust, George. Sable Mercer, Morrow Station, Sealed Data Drive. Bring it here and forget you ever saw it.",
+						"A contact of mine — Sable Mercer, Morrow Station — has a Sealed Data Drive that needs moving, George. Clean pickup, clean delivery.",
+						"Simple retrieval, George. Sable Mercer at Morrow Station. One Sealed Data Drive. Bring it to me and the credits are yours.",
+					]
+					d["response_1"] = "Smooth, George. Quick pickup, no complications. That's how I like it."
+					d["response_2"] = "Advance wired, George. Don't let Sable Mercer give you the runaround."
+					d["response_3"] = "Bumped the payout, George. The drive better be intact when it gets here."
+		"vanguard":
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Slithern hostiles spiking in the outer lanes, George. 3 contacts. Clear the zone before they dig in. No theatrics.",
+						"ROE is simple, George. 3 Slithern ships, hostile posture, outer perimeter. Engage and neutralize. Boots on hull if needed.",
+						"We've got 3 Slithern vessels breaching the buffer zone, George. Weapons hot. Clear them out before command notices.",
+						"Slithern incursion confirmed, George. 3 ships. Vanguard needs that lane secured yesterday. Move.",
+						"Intel flagged 3 Slithern raiders staging near our corridor, George. Intercept and destroy. No half-measures.",
+					]
+					d["response_1"] = "Copy that, George. ROE is clear: engage and eliminate. Don't make it complicated."
+					d["response_2"] = "You want an advance, George? Fine. Threat level is escalated. Don't embarrass us."
+					d["response_3"] = "Renegotiating under fire, George. Bold. Payout adjusted. Don't expect us to soften the zone."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Vanguard supply chain is running dry, George. 25 m³ of ore, delivered to this station. No delays.",
+						"Logistics flagged a deficit, George. We need 25 m³ of ore here before the next rotation. Get it done.",
+						"Our forward base needs raw material, George. 25 m³ of ore. Mine it, haul it, deliver it. Standard resupply.",
+						"Supply requisition, George. 25 m³ of ore to this station. The fabricators don't run on goodwill.",
+						"Material shortfall on the books, George. 25 m³ of ore. Secure a source and bring it back. Clock's ticking.",
+					]
+					d["response_1"] = "Acknowledged, George. Delivery is expected on schedule. Don't waste time out there."
+					d["response_2"] = "Advance approved, George. Mining sectors are contested — stay sharp."
+					d["response_3"] = "Payout adjusted, George. The ore still needs to arrive. No excuses."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"We have a retrieval op, George. Sable Mercer at Morrow Station is holding a Sealed Data Drive. Secure it and bring it back.",
+						"Classified pickup, George. Contact Sable Mercer at Morrow Station. One Sealed Data Drive. Return it to this station. No detours.",
+						"Vanguard needs a Sealed Data Drive retrieved from Morrow Station, George. Sable Mercer has it. In and out, no complications.",
+						"Asset recovery tasking, George. Sable Mercer, Morrow Station, Sealed Data Drive. Get it here before the window closes.",
+						"Field retrieval, George. Sable Mercer is the contact at Morrow Station. One Sealed Data Drive. Standard chain-of-custody applies.",
+					]
+					d["response_1"] = "Acknowledged, George. Retrieve the item and return without incident."
+					d["response_2"] = "Advance cleared, George. Don't let the pickup drag. Time is a factor."
+					d["response_3"] = "Payout bumped, George. The drive is priority cargo. Treat it accordingly."
+		_:
+			match mission_type:
+				"KILL_SHIPS":
+					d["dialogues"] = [
+						"Got a contract that needs muscle, George. 3 Slithern ships making trouble near the station. My cut's already factored in.",
+						"Client wants 3 Slithern ships gone, George. Paying well. I've already skimmed my broker's fee off the top.",
+						"Slithern crew is disrupting a lane my best clients use, George. 3 ships. Handle it and we both profit.",
+						"Three Slithern ships, George. My client wants them scrapped. The payout covers your fuel and my lifestyle.",
+						"Picked up a bounty contract, George. 3 Slithern vessels harassing local traffic. My cut's baked in — yours is what's left.",
+					]
+					d["response_1"] = "Excellent, George. My client is watching the clock, so don't waste my time."
+					d["response_2"] = "Taking a bite out of my margins, George? Fine. Credits wired. Contested lane ahead though."
+					d["response_3"] = "Hustling a hustler? I respect the nerve, George. Payout bumped. But enemies will be expecting you."
+				"DELIVER_ORE":
+					d["dialogues"] = [
+						"Got a buyer lined up for 25 m³ of ore, George. Deliver it here and I'll make sure we both get paid. My cut's already in the price.",
+						"There's a standing order for 25 m³ of ore at this station, George. Easy money — if you can haul it. I take my percentage.",
+						"A client needs 25 m³ of ore and they're paying above market, George. Bring it in and my broker's fee handles itself.",
+						"Ore run, George. 25 m³ delivered to this dock. Simple job, decent payout, and I skim my usual slice.",
+						"I've got a deal that practically prints credits, George. 25 m³ of ore, delivered here. My cut's already factored — yours is the rest.",
+					]
+					d["response_1"] = "Smart move, George. Deliver it clean and we both walk away happy. My margins depend on you."
+					d["response_2"] = "Advance? Fine, George. Credits wired. Mining lanes are rough lately — don't lose my investment out there."
+					d["response_3"] = "Pushing for more, George? Payout bumped. But the ore better show up. My reputation rides on delivery."
+				"PICKUP_SPECIAL":
+					d["dialogues"] = [
+						"Got a pickup job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Bring it to me and I'll handle the rest. My fee's included.",
+						"Courier work, George. Sable Mercer at Morrow Station is sitting on a Sealed Data Drive my client wants. Fetch it and the credits flow.",
+						"Simple retrieval, George. Morrow Station, contact named Sable Mercer, one Sealed Data Drive. Bring it here — my cut's already baked in.",
+						"A client wants a Sealed Data Drive moved from Morrow Station, George. Sable Mercer has it. Quick grab, quick payout, and I take my slice.",
+						"Need your legs for this one, George. Sable Mercer, Morrow Station, Sealed Data Drive. Deliver it to me and everybody profits.",
+					]
+					d["response_1"] = "Perfect, George. Quick and clean — that's how I like my couriers. Don't keep Sable Mercer waiting."
+					d["response_2"] = "Advance wired, George. Don't let the pickup get complicated — complications eat into my margins."
+					d["response_3"] = "Bumped the payout, George. The drive better arrive in one piece. My client doesn't accept excuses and neither do I."
+	return d
+
+
+func agent_memory_id_for_profile(
+	agent_name: String,
+	faction: String,
+	agent_profile: Dictionary = {}
+) -> String:
+	var profile_id := str(agent_profile.get("agent_id", "")).strip_edges()
+	if profile_id.is_empty():
+		profile_id = str(agent_profile.get("agent_memory_id", "")).strip_edges()
+	if not profile_id.is_empty():
+		return profile_id
+	var clean_faction := str(faction).strip_edges().to_lower()
+	if clean_faction.is_empty():
+		clean_faction = "neutral"
+	return "agent.fixed.%s.%s" % [
+		_agent_memory_slug(clean_faction),
+		_agent_memory_slug(agent_name),
+	]
+
+
+func _agent_memory_prompt_block(agent_id: String) -> String:
+	var context := (
+		"No prior contracts with this agent are recorded yet. "
+		+ "Treat the relationship as first-contact or strictly professional."
+	)
+	if GlobalState.campaign_agent_memory_store != null \
+			and GlobalState.campaign_agent_memory_store.has_method("prompt_context"):
+		context = str(GlobalState.campaign_agent_memory_store.prompt_context(agent_id))
+	return "### AGENT MEMORY:\n%s\n\n" % context
+
+
+func _agent_system_story_pack(agent_profile: Dictionary) -> Dictionary:
+	var raw_pack: Variant = agent_profile.get("system_story_pack", {})
+	if raw_pack is Dictionary:
+		return (raw_pack as Dictionary).duplicate(true)
+	return {}
+
+
+func _system_story_pack_prompt_block(story_pack: Dictionary) -> String:
+	if story_pack.is_empty():
+		return ""
+	var lines: Array[String] = []
+	var system_name := str(story_pack.get("system_name", "")).strip_edges()
+	var station_problem := str(
+		story_pack.get("station_economy_problem", "")
+	).strip_edges()
+	var active_tension := str(story_pack.get("active_tension", "")).strip_edges()
+	var danger_summary := str(story_pack.get("danger_summary", "")).strip_edges()
+	var resource_hook := str(story_pack.get("resource_hook", "")).strip_edges()
+	var humor_guidance := str(story_pack.get("humor_guidance", "")).strip_edges()
+	if not system_name.is_empty():
+		lines.append("- System identity: " + system_name)
+	if not station_problem.is_empty():
+		lines.append("- Local station problem: " + station_problem)
+	if not active_tension.is_empty():
+		lines.append("- Current faction tension: " + active_tension)
+	if not danger_summary.is_empty():
+		lines.append("- Current danger: " + danger_summary)
+	if not resource_hook.is_empty():
+		lines.append("- Resource hook: " + resource_hook)
+	var mission_seeds: Array = story_pack.get("mission_seeds", [])
+	if not mission_seeds.is_empty():
+		var seed_lines: Array[String] = []
+		for seed in mission_seeds:
+			var seed_text := str(seed).strip_edges()
+			if not seed_text.is_empty():
+				seed_lines.append(seed_text)
+		if not seed_lines.is_empty():
+			lines.append("- Local mission seeds: " + "; ".join(seed_lines))
+	if not humor_guidance.is_empty():
+		lines.append("- Local humor guidance: " + humor_guidance)
+	if lines.is_empty():
+		return ""
+	return (
+		"### CURRENT SYSTEM STORY PACK:\n"
+		+ "Use this local context to make the contract feel native to this system. "
+		+ "Do not invent a different system conflict unless the objective requires it.\n"
+		+ "\n".join(lines)
+		+ "\n\n"
+	)
+
+
+func _agent_memory_slug(text: String) -> String:
+	var lower := text.strip_edges().to_lower()
+	var output := ""
+	for i in range(lower.length()):
+		var ch := lower.substr(i, 1)
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			output += ch
+		elif not output.ends_with("_"):
+			output += "_"
+	output = output.strip_edges().trim_prefix("_").trim_suffix("_")
+	if output.is_empty():
+		return "unknown"
+	return output
+
+
+func register_quest_fingerprint(source: String) -> void:
+	if source.strip_edges().is_empty():
+		return
+	_known_quest_fingerprints[source.strip_edges().to_lower().sha256_text()] = true
+
+# Load pre-hashed fingerprints directly from saved idea memory on campaign load.
+func seed_quest_fingerprints(hashed_fingerprints: Array) -> void:
+	for fp in hashed_fingerprints:
+		if fp is String and not (fp as String).is_empty():
+			_known_quest_fingerprints[fp] = true
+
+func clear_quest_fingerprints() -> void:
+	_known_quest_fingerprints.clear()
+
+func _is_quest_fingerprint_known(quest_data: Dictionary) -> bool:
+	if _known_quest_fingerprints.is_empty():
+		return false
+	var objective: Dictionary = quest_data.get("objective", {})
+	var source := JSON.stringify({
+		"title": str(quest_data.get("title", "")),
+		"faction": str(quest_data.get("faction", "")),
+		"agent_name": str(quest_data.get("agent_name", "")),
+		"dialogue": str(quest_data.get("dialogue", "")),
+		"objective": objective,
+	})
+	return _known_quest_fingerprints.has(source.strip_edges().to_lower().sha256_text())
+
+
+func request_quest_generation(
+	agent_faction: String,
+	history_text: String,
+	player_credits: int,
+	player_reps: Dictionary,
+	callback: Callable,
+	agent_profile: Dictionary = {}
+) -> void:
+	if _skip_for_campaign_bible_priority("quest_generation"):
+		return
 	if is_waiting:
 		return
 	
@@ -666,7 +2806,13 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	is_waiting = true
 	last_history_text = history_text
 	request_start_time = Time.get_ticks_msec()
-	print("[TRACE] [LLMInterface] request_quest_generation initiated at: %d ms" % request_start_time)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_started",
+		"LLMInterface",
+		{"model": active_model_name}
+	)
+	GlobalState.trace("[TRACE] [LLMInterface] request_quest_generation initiated at: %d ms" % request_start_time)
 	
 	var rand_comp = complications[randi() % complications.size()]
 	
@@ -676,17 +2822,20 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		var factions = ["zenith", "aurelia", "vanguard"]
 		chosen_faction = factions[randi() % factions.size()]
 	
-	# Each faction has a distinct named agent, personality, and player nickname
+	# Each faction has a distinct named agent, personality, and address style.
+	# Fixed-agent prose below carries their specific role vocabulary; the shared
+	# speaker-card block from llm_dialogue_content.json supplies live nickname
+	# and voice guardrails.
 	var agent_name = "Broker Kaelen"
 	var agent_persona = ""
 	var player_nickname = "Indy"
 	var agent_role = ""
-	var example_dialogue = ""
-	var example_response_1 = ""
-	var example_response_2 = ""
-	var example_response_3 = ""
+	var agent_portrait_id := ""
+	var agent_voice_profile_id := ""
+	var agent_id := ""
 	var example_faction_key = chosen_faction
-	
+	var speaker_card_id := "faction_agent"
+
 	match chosen_faction:
 		"zenith":
 			agent_name = "Director Voss"
@@ -694,53 +2843,105 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			player_nickname = "Indy"
 			agent_persona = "You are Director Voss, a cold, calculating Zenith corporate officer. " + \
 				"You speak in clipped, efficient sentences. You have no patience for failure and treat the pilot as an interchangeable asset. " + \
-				"You refer to the pilot exclusively as 'Indy'. You never use slang or humor. " + \
+				"Never call the pilot by name or nickname. Refer to them as 'you', 'pilot', or 'asset'. You never use slang or humor. " + \
 				"You frame all jobs as 'acquisitions', 'operations', or 'directives'. Zenith's interests are paramount."
-			example_dialogue = "Zenith has a resource deficit that requires immediate correction, Indy. Deliver the required silicate tonnage to the station docking bay. Efficiency is non-negotiable."
-			example_response_1 = "Confirmed, Indy. Your assignment is logged. Do not deviate from the directive."
-			example_response_2 = "An advance against operational expenses. Noted. Your compensation adjustment is processed. Expect elevated patrol resistance on your route."
-			example_response_3 = "Bold negotiation. Zenith respects leverage, Indy. Payout is revised upward. However, security escalation protocols are now active in your sector."
 		"aurelia":
 			agent_name = "Liaison Ryn"
 			agent_role = "Aurelia Syndicate Trade Liaison"
 			player_nickname = "Indy"
 			agent_persona = "You are Liaison Ryn, a smooth-talking, conniving Aurelia syndicate fixer. " + \
 				"You are charming but never fully trustworthy. You speak like someone always running an angle. " + \
-				"You refer to the pilot exclusively as 'Indy'. You use words like 'clean', 'quiet', 'off the books'. " + \
+				"Never call the pilot by name or nickname. Refer to them as 'you' or 'pilot'. You use words like 'clean', 'quiet', 'off the books'. " + \
 				"Everything is framed as an opportunity, never a risk."
-			example_dialogue = "Aurelia's got a clean job for someone with your skills, Indy. Quiet, low profile. The syndicate needs those hulls cleared before the next shipment window. Easy credits, no records."
-			example_response_1 = "Smooth. Indy keeps it clean, that's why I like working with you. Stay off their sensors."
-			example_response_2 = "An advance? Smart move, Indy. Credits transferred. The Syndicate routes you through a riskier corridor to offset the cost. Stay quiet out there."
-			example_response_3 = "Playing hardball? I respect the hustle, Indy. Payout bumped. But Aurelia's rivals will be watching the sector. Keep your profile low."
 		"vanguard":
 			agent_name = "Captain Dask"
 			agent_role = "Vanguard Military Contract Officer"
 			player_nickname = "Indy"
 			agent_persona = "You are Captain Dask, a gruff, no-nonsense Vanguard military contract officer. " + \
 				"You are direct and have zero tolerance for excuses or negotiation theatre. " + \
-				"You refer to the pilot exclusively as 'Indy'. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
+				"Never call the pilot by name or nickname. Use 'pilot' or direct orders. You use military shorthand: 'ROE', 'boots on hull', 'clear the zone'. " + \
 				"You respect competence and despise weakness."
-			example_dialogue = "Vanguard needs those Aurelia raiders cleared from the shipping lane, Indy. Four contacts, high priority. Take them down and get back to the dock. No theatrics."
-			example_response_1 = "Copy that, Indy. ROE is clear: engage and eliminate. Don't make it complicated."
-			example_response_2 = "You want an advance, Indy? Fine. But Vanguard doesn't cover operational cowardice. Threat level is escalated. Don't embarrass us."
-			example_response_3 = "Renegotiating under fire, Indy. Bold. Payout is adjusted. Don't expect the Vanguard to soften the zone for you."
 		_:
 			agent_name = "Broker Kaelen"
 			agent_role = "Neutral Fixer & Profit Broker"
 			player_nickname = "Shiny"
+			speaker_card_id = "kaelen"
 			agent_persona = "You are Broker Kaelen, an independent, politically neutral space broker and fixer. " + \
 				"You operate out of a space station and negotiate contracts with all factions for personal profit. " + \
 				"You are cynical, sharp, and opportunistic. You call the pilot 'Shiny' — treating them like an unscarred greenhorn who is also your most profitable tool. " + \
 				"You always mention your broker's cut and how the deal benefits you personally."
-			example_dialogue = "Zenith needs ore, I need my cut, and you need credits, Shiny. Bring me 25 cubic metres and I'll keep my brokerage fee reasonable. Don't dawdle."
-			example_response_1 = "Excellent, Shiny. My client is watching the clock, so don't waste my time."
-			example_response_2 = "Taking a bite out of my margins, Shiny? Fine. Credits wired. But I'm routing you through a contested lane to cover the difference."
-			example_response_3 = "Hustling a hustler? I respect the nerve, Shiny. Payout is bumped. But enemies will be expecting you."
 	
+	if not agent_profile.is_empty():
+		var profile_faction_id := str(agent_profile.get("faction_id", "")).strip_edges()
+		var profile_faction := str(agent_profile.get("faction", chosen_faction)).strip_edges()
+		chosen_faction = (
+			profile_faction_id
+			if profile_faction.begins_with("gen_") and not profile_faction_id.is_empty()
+			else profile_faction
+		)
+		agent_name = str(agent_profile.get("agent_name", agent_name)).strip_edges()
+		if agent_name.is_empty():
+			agent_name = "Local Contact"
+		agent_role = str(agent_profile.get("agent_role", "Station faction contact")).strip_edges()
+		agent_portrait_id = str(agent_profile.get("agent_portrait_id", "")).strip_edges()
+		agent_voice_profile_id = str(
+			agent_profile.get("agent_voice_profile_id", "")
+		).strip_edges()
+		agent_id = str(agent_profile.get("agent_id", "")).strip_edges()
+		player_nickname = "Indy"
+		var faction_label := str(
+			agent_profile.get("faction_display", profile_faction.capitalize())
+		)
+		var role_label: String = (
+			agent_role if not agent_role.is_empty() else "station contact"
+		)
+		agent_persona = "You are %s, a %s for %s. " % [
+			agent_name,
+			role_label,
+			faction_label,
+		] + \
+			"You are stationed in the current system and offer practical local contracts. " + \
+			"You speak directly to the pilot and use dry PG-13 frontier humor when it fits. Never call the pilot by name or nickname -- use 'you' or 'pilot'. " + \
+			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
+
+	var speaker_card_block := LLMDialogueContentRegistry.shared().speaker_prompt_block(
+		speaker_card_id,
+		agent_profile
+	)
+	var agent_memory_id: String = agent_memory_id_for_profile(
+		agent_name,
+		chosen_faction,
+		agent_profile
+	)
+	var story_offer_context: Dictionary = agent_profile.get(
+		"story_agent_offer_context",
+		{}
+	) if agent_profile.get("story_agent_offer_context", {}) is Dictionary else {}
+	var story_offer_candidate: Dictionary = story_offer_context.get(
+		"candidate",
+		{}
+	) if story_offer_context.get("candidate", {}) is Dictionary else {}
+	var story_offer_budget: Dictionary = story_offer_context.get(
+		"budget",
+		{}
+	) if story_offer_context.get("budget", {}) is Dictionary else {}
+
 	# Pre-decide objective type so example AND instruction always match.
 	# The LLM cannot choose — it must use the type we picked.
 	var quest_types = ["DELIVER_ORE", "KILL_SHIPS", "PICKUP_SPECIAL"]
 	var chosen_type = quest_types[randi() % quest_types.size()]
+
+	# story_quest_hint: StoryManager can bias the type. Honour it when set and
+	# when the preferred_type is a valid quest type.
+	var _hint: Dictionary = GlobalState.story_quest_hint
+	var _hint_type: String = str(_hint.get("preferred_type", "")).to_upper()
+	if not _hint.is_empty() and _hint_type in quest_types:
+		chosen_type = _hint_type
+	var story_candidate_type := str(
+		story_offer_candidate.get("objective_type", "")
+	).to_upper()
+	if not story_candidate_type.is_empty() and story_candidate_type in quest_types:
+		chosen_type = story_candidate_type
 	
 	# Build the matching example block
 	var example_obj_block = ""
@@ -750,6 +2951,20 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 	var pickup_npc = ""
 	var pickup_item = ""
 	
+	# Pre-roll the actual objective values. The LLM never sees these —
+	# it always writes "Slithern" / "George" / 3 / 25 / "Morrow" / etc.
+	# We swap them in after generation via _substitute_dummy_names().
+	var actual_kill_target := ""
+	var actual_kill_count := randi_range(2, 4)
+	var actual_ore_amount: float = snapped(randf_range(20.0, 300.0), 5.0)
+	if not story_offer_budget.is_empty():
+		var budget_kill_count := int(story_offer_budget.get("kill_count", 0))
+		if budget_kill_count > 0:
+			actual_kill_count = budget_kill_count
+		var budget_ore_amount := float(story_offer_budget.get("ore_amount", 0.0))
+		if budget_ore_amount > 0.0:
+			actual_ore_amount = snappedf(budget_ore_amount, 1.0)
+
 	if chosen_type == "DELIVER_ORE":
 		example_title = "Silicate Run"
 		example_obj_block = \
@@ -759,92 +2974,229 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 			"    \"reward_credits\": 160\n" + \
 			"  },"
 	elif chosen_type == "KILL_SHIPS":
-		# KILL_SHIPS — pick a kill target (90% minor factions, 10% major factions)
-		var kill_target = ""
 		if randf() < 0.9:
-			# 90% chance: target a minor faction
-			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
-			kill_target = minor_keys[randi() % minor_keys.size()]
+			var minor_keys = GlobalState.get_current_system_minor_factions()
+			actual_kill_target = minor_keys[randi() % minor_keys.size()]
 		else:
-			# 10% chance: target a major faction (not the client)
 			var major_targets = ["zenith", "aurelia", "vanguard"]
 			major_targets.erase(chosen_faction)
-			kill_target = major_targets[randi() % major_targets.size()]
+			actual_kill_target = major_targets[randi() % major_targets.size()]
 		example_title = "Clear the Lane"
 		example_obj_block = \
 			"  \"objective\": {\n" + \
 			"    \"type\": \"KILL_SHIPS\",\n" + \
-			"    \"target_faction\": \"" + kill_target + "\",\n" + \
+			"    \"target_faction\": \"slithern\",\n" + \
 			"    \"count_required\": 3,\n" + \
 			"    \"reward_credits\": 200\n" + \
 			"  },"
 	elif chosen_type == "PICKUP_SPECIAL":
-		var outpost_ids = GlobalState.PICKUP_OUTPOST_IDS
-		pickup_outpost = outpost_ids[randi() % outpost_ids.size()]
-		pickup_outpost_display = GlobalState.PICKUP_OUTPOST_DISPLAY.get(pickup_outpost, pickup_outpost)
-		var npcs_at_outpost = GlobalState.get_minor_npcs_at_outpost(pickup_outpost)
-		pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
-		var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
-		pickup_item = fetch_items[randi() % fetch_items.size()]
-		
-		example_title = "Discreet Courier"
-		example_obj_block = \
-			"  \"objective\": {\n" + \
-			"    \"type\": \"PICKUP_SPECIAL\",\n" + \
-			"    \"target_outpost\": \"" + pickup_outpost + "\",\n" + \
-			"    \"target_outpost_display\": \"" + pickup_outpost_display + "\",\n" + \
-			"    \"target_npc\": \"" + pickup_npc + "\",\n" + \
-			"    \"part_name\": \"" + pickup_item + "\",\n" + \
-			"    \"destination\": \"" + agent_name + "\",\n" + \
-			"    \"reward_credits\": 250\n" + \
-			"  },"
+		var outposts = GlobalState.get_current_pickup_outposts()
+		if outposts.is_empty():
+			chosen_type = "DELIVER_ORE"
+			example_title = "Ore Run"
+			actual_ore_amount = float(randi_range(25, 60))
+			example_obj_block = \
+				"  \"objective\": {\n" + \
+				"    \"type\": \"DELIVER_ORE\",\n" + \
+				"    \"amount_required\": 25.0,\n" + \
+				"    \"reward_credits\": 160\n" + \
+				"  },"
+		else:
+			var selected_outpost = outposts[randi() % outposts.size()]
+			pickup_outpost = selected_outpost.get("id", "")
+			pickup_outpost_display = selected_outpost.get("display", pickup_outpost)
+			var npcs_at_outpost = GlobalState.get_minor_npcs_at_outpost(pickup_outpost)
+			if npcs_at_outpost.is_empty():
+				chosen_type = "DELIVER_ORE"
+				example_title = "Ore Run"
+				actual_ore_amount = float(randi_range(25, 60))
+				example_obj_block = \
+					"  \"objective\": {\n" + \
+					"    \"type\": \"DELIVER_ORE\",\n" + \
+					"    \"amount_required\": 25.0,\n" + \
+					"    \"reward_credits\": 160\n" + \
+					"  },"
+			else:
+				pickup_npc = npcs_at_outpost[randi() % npcs_at_outpost.size()]
+				var fetch_items = ["Large Unmarked Crate", "Suspension Pod", "Sealed Data Drive", "Biometric Lockbox", "Hazardous Material Container"]
+				pickup_item = fetch_items[randi() % fetch_items.size()]
+				example_title = "Discreet Courier"
+				example_obj_block = \
+					"  \"objective\": {\n" + \
+					"    \"type\": \"PICKUP_SPECIAL\",\n" + \
+					"    \"target_outpost\": \"outpost_morrow\",\n" + \
+					"    \"target_outpost_display\": \"Morrow Station\",\n" + \
+					"    \"target_npc\": \"Sable Mercer\",\n" + \
+					"    \"part_name\": \"Sealed Data Drive\",\n" + \
+					"    \"destination\": \"" + agent_name + "\",\n" + \
+					"    \"reward_credits\": 250\n" + \
+					"  },"
 
-	# Also align the agent example dialogue to the chosen type so the LLM
-	# sees a consistent story/objective pairing in the example block
-	if chosen_type == "KILL_SHIPS":
-		match chosen_faction:
-			"zenith":
-				example_dialogue = "We need the Aurelia raider wing cleared from the transit corridor, " + player_nickname + ". Three contacts, high priority. Don't leave witnesses."
-			"aurelia":
-				example_dialogue = "There's a Vanguard patrol harassing our supply runners, " + player_nickname + ". Four ships. Remove them quietly and I'll make sure the credits flow."
-			"vanguard":
-				example_dialogue = "Zenith is probing our flank again, Indy. Four contacts in the sector. Clear the zone before they can report back."
-			_:
-				example_dialogue = "Got a hostile problem that needs solving, " + player_nickname + ". A handful of ships that need removing. Standard removal contract."
-	elif chosen_type == "PICKUP_SPECIAL":
-		match chosen_faction:
-			"zenith":
-				example_dialogue = "Zenith logistics requires a discreet transport, " + player_nickname + ". Proceed to " + pickup_outpost_display + " and retrieve a " + pickup_item + " from " + pickup_npc + ". Do not ask questions about the cargo."
-			"aurelia":
-				example_dialogue = "I need a quiet runner, " + player_nickname + ". Head over to " + pickup_outpost_display + " and find " + pickup_npc + ". They have a " + pickup_item + " for me. Bring it straight back here, unopened."
-			"vanguard":
-				example_dialogue = "Vanguard command needs a secure retrieval, " + player_nickname + ". A contact named " + pickup_npc + " at " + pickup_outpost_display + " is holding a " + pickup_item + ". Secure it and return immediately."
-			_:
-				example_dialogue = "Got a lucrative fetch job, " + player_nickname + ". I need you to go to " + pickup_outpost_display + " and get a " + pickup_item + " from " + pickup_npc + ". Bring it to me intact and you'll get paid."
+	# Stash actuals so _substitute_dummy_names can swap them in later
+	_pending_substitutions = {
+		"kill_target": actual_kill_target,
+		"kill_count": actual_kill_count,
+		"ore_amount": actual_ore_amount,
+		"nickname": player_nickname,
+		"agent_name": agent_name,
+		"agent_role": agent_role,
+		"agent_portrait_id": agent_portrait_id,
+		"agent_voice_profile_id": agent_voice_profile_id,
+		"agent_id": agent_id,
+		"agent_memory_id": agent_memory_id,
+		"faction": chosen_faction,
+		"pickup_outpost": pickup_outpost,
+		"pickup_outpost_display": pickup_outpost_display,
+		"pickup_npc": pickup_npc,
+		"pickup_item": pickup_item,
+		"story_hook_ref": StoryManager.current_hook_ref(),
+		"story_offer_candidate": story_offer_candidate.duplicate(true),
+		"story_offer_budget": story_offer_budget.duplicate(true),
+	}
 
 
 
 	# Build minor faction context string for the LLM
-	var minor_fac_names = GlobalState.MINOR_FACTIONS.keys()
+	var minor_fac_names = GlobalState.get_current_system_minor_factions()
 	var minor_fac_str = ", ".join(minor_fac_names)
 	
 	var lore_block = ""
 	if world_lore_text != "":
 		lore_block = "### WORLD LORE:\n" + world_lore_text + "\n\n"
+	var campaign_bible_block = ""
+	if campaign_bible_context_text.strip_edges() != "":
+		campaign_bible_block = (
+			"### CAMPAIGN BIBLE:\n"
+			+ campaign_bible_context_text
+			+ "\n\n"
+		)
+	var story_state_block = ""
+	if story_state_context_text.strip_edges() != "":
+		story_state_block = (
+			"### STORY STATE:\n"
+			+ story_state_context_text
+			+ "\n\n"
+		)
+	var because_block = ""
+	var because_text := StoryManager.get_current_because()
+	if not because_text.is_empty():
+		because_block = (
+			"### WHY THIS MISSION EXISTS (do not state this directly — let it shape tone, urgency, and subtext only):\n"
+			+ because_text
+			+ "\n\n"
+		)
+	var system_story_pack: Dictionary = _agent_system_story_pack(agent_profile)
+	var system_story_block: String = _system_story_pack_prompt_block(system_story_pack)
+	var agent_memory_block := _agent_memory_prompt_block(agent_memory_id)
+	var idea_memory_block = ""
+	if idea_memory_context_text.strip_edges() != "":
+		idea_memory_block = (
+			"### PRIOR GENERATED IDEAS TO AVOID REPEATING:\n"
+			+ idea_memory_context_text
+			+ "\n\n"
+		)
 	
+	# Fetch 5 type-matched example dialogues + responses for this agent × mission type
+	var agent_key = chosen_faction if chosen_faction in ["zenith", "aurelia", "vanguard"] else "neutral"
+	var type_examples = _get_type_examples(agent_key, chosen_type)
+	var example_dialogues: Array = type_examples.get("dialogues", [])
+	var example_response_1: String = type_examples.get("response_1", "")
+	var example_response_2: String = type_examples.get("response_2", "")
+	var example_response_3: String = type_examples.get("response_3", "")
+
+	# Pick one dialogue for the JSON structure example, list the rest as additional references.
+	# Thin "George" out of about half the examples so substituted output does not
+	# train every non-Kaelen speaker to say "Indy" in every line.
+	for i in range(example_dialogues.size()):
+		if i % 2 == 1:
+			example_dialogues[i] = _thin_pilot_name(str(example_dialogues[i]), "George", 0)
+	if chosen_faction != "neutral":
+		example_response_1 = _thin_pilot_name(example_response_1, "George", 0)
+		example_response_2 = _thin_pilot_name(example_response_2, "George", 0)
+	var primary_idx = randi() % example_dialogues.size()
+	var example_dialogue: String = example_dialogues[primary_idx]
+	var extra_examples_block = "### EXAMPLE DIALOGUES FOR THIS MISSION TYPE:\n" + \
+		"Write NEW dialogue in this style. Do not copy these — use them only as tone and content references.\n"
+	for i in range(example_dialogues.size()):
+		if i != primary_idx:
+			extra_examples_block += "  " + str(i + 1) + ". \"" + example_dialogues[i] + "\"\n"
+	extra_examples_block += "\n"
+
+	# Dummy-name/fact instruction now lives in the content registry
+	# (quest_generation.mission_types[TYPE].dummy_constraints). Edit phrasing in
+	# data/content/llm_dialogue_content.json. Built-in strings below are only a
+	# fallback if that section is missing; they must mirror the JSON exactly.
+	var dummy_name_instruction: String = LLMDialogueContentRegistry.shared().quest_dummy_constraints(chosen_type)
+	if dummy_name_instruction.strip_edges().is_empty():
+		if chosen_type == "KILL_SHIPS":
+			dummy_name_instruction = "In your dialogue, always call the enemy 'Slithern'. Only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 3 ships. "
+		elif chosen_type == "DELIVER_ORE":
+			dummy_name_instruction = "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 25 m³ of ore. "
+		else:
+			dummy_name_instruction = "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. "
+
+	# story_quest_hint destination/flavor bias injected as a soft prompt instruction.
+	# Decrement expiry counter here so it ticks once per quest generation, not per dock.
+	var story_hint_block: String = ""
+	var _active_hint: Dictionary = GlobalState.story_quest_hint
+	if not _active_hint.is_empty():
+		var _h_system: String = str(_active_hint.get("preferred_system", ""))
+		var _h_flavor: String = str(_active_hint.get("flavor_tag", ""))
+		var _h_candidate: Dictionary = _active_hint.get("story_candidate", {}) \
+			if _active_hint.get("story_candidate", {}) is Dictionary else {}
+		var _h_budget: Dictionary = _active_hint.get("challenge_budget", {}) \
+			if _active_hint.get("challenge_budget", {}) is Dictionary else {}
+		if not _h_system.is_empty():
+			story_hint_block = "### NARRATIVE CONTEXT:\nThe agent has contacts in the %s region. Lean the mission toward that area if plausible. Flavor: %s.\n" % [_h_system, _h_flavor]
+		if not _h_candidate.is_empty():
+			story_hint_block += (
+				"Chapter beat: %s. Cause: %s. Stake: %s. Complication: %s. Consequence: %s.\n" %
+				[
+					str(_h_candidate.get("beat_id", "")),
+					str(_h_candidate.get("cause_id", "")),
+					str(_h_candidate.get("stake", "")),
+					str(_h_candidate.get("complication", "")),
+					str(_h_candidate.get("world_consequence", "")),
+				]
+			)
+		if not _h_budget.is_empty():
+			story_hint_block += (
+				"Challenge budget: %s difficulty, about %d minutes. Use these stakes as subtext; do not expose internal IDs.\n" %
+				[
+					str(_h_budget.get("difficulty_band", "routine")),
+					int(_h_budget.get("target_duration_minutes", 0)),
+				]
+			)
+		if not story_hint_block.is_empty():
+			story_hint_block += "\n"
+		var _remaining: int = int(_active_hint.get("expires_after_docks", 3)) - 1
+		if _remaining <= 0:
+			GlobalState.story_quest_hint = {}
+		else:
+			GlobalState.story_quest_hint["expires_after_docks"] = _remaining
+
 	var system_prompt = agent_persona + "\n\n" + \
+		speaker_card_block + \
 		lore_block + \
+		campaign_bible_block + \
+		story_state_block + \
+		because_block + \
+		system_story_block + \
+		agent_memory_block + \
+		idea_memory_block + \
+		story_hint_block + \
 		"Minor hostile factions in the sector: " + minor_fac_str + ". These are outlaws with no diplomatic ties — primary targets for elimination contracts.\n\n" + \
 		"Current pilot stats:\n" + \
 		"- Credits: " + str(player_credits) + " SC\n" + \
 		"- Zenith reputation: " + str(player_reps.get("zenith", 50.0)) + "\n" + \
 		"- Aurelia reputation: " + str(player_reps.get("aurelia", -20.0)) + "\n" + \
 		"- Vanguard reputation: " + str(player_reps.get("vanguard", -20.0)) + "\n\n" + \
-		"### COMPLETED MISSION HISTORY:\n" + \
-		"Reference past contracts naturally in your dialogue if the list is not empty:\n" + \
+		"### RECENT STRUCTURED CONTRACT MEMORY:\n" + \
+		"Reference these campaign-scoped memories naturally if they are relevant:\n" + \
 		history_text + "\n\n" + \
 		"### QUEST COMPLICATION:\n" + \
 		rand_comp + "\n\n" + \
+		extra_examples_block + \
 		"Generate a unique space quest. You MUST respond strictly in valid JSON format. Do not output notes, markdown, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
 		"  \"campaign_name\": \"Cold Meridian\",\n" + \
@@ -891,40 +3243,383 @@ func request_quest_generation(agent_faction: String, history_text: String, playe
 		"Do not use the words campaign, save, slot, adventure, or journey in campaign_name. " + \
 		"The faction must be \"" + chosen_faction + "\". The agent_name must be \"" + agent_name + "\". " + \
 		"The objective type in your JSON MUST be '" + chosen_type + "' — do NOT use any other objective type. " + \
-		("For KILL_SHIPS you MUST include 'target_faction' (must NOT equal '" + chosen_faction + "') and 'count_required' (integer 2–4). " if chosen_type == "KILL_SHIPS" else ("For PICKUP_SPECIAL you MUST include 'target_outpost' (must equal '" + pickup_outpost + "'), 'target_outpost_display' (must equal '" + pickup_outpost_display + "'), 'target_npc' (must equal '" + pickup_npc + "'), 'part_name' (must equal '" + pickup_item + "'), and 'destination' (must equal '" + agent_name + "'). " if chosen_type == "PICKUP_SPECIAL" else "For DELIVER_ORE you MUST include 'amount_required' (float 20–300). ")) + \
-		("Your dialogue MUST mention the target NPC (" + pickup_npc + "), the outpost (" + pickup_outpost_display + "), and the exact item name (" + pickup_item + "). " if chosen_type == "PICKUP_SPECIAL" else "Your dialogue MUST state the exact objective number — for kills, mention how many ships; for ore, mention how many m³. ") + \
-		"Always call the pilot '" + player_nickname + "' — never use any other nickname. " + \
+		"Keep the same objective fields as the example above. " + \
+		"The dialogue is the agent OFFERING the job to the pilot — the pilot has NOT accepted yet. Speak directly to the pilot in second person. Do not narrate, announce, or talk about the pilot in third person. " + \
+		"IMPORTANT: The choices array MUST contain EXACTLY 3 entries — no more, no fewer. " + \
+		dummy_name_instruction + \
 		"Output only the raw JSON object."
 	
-	var payload = {
-		"model": active_model_name,
-		"prompt": system_prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
-			"temperature": 0.85,
-			"seed": randi()
+	var headers: Array[String] = ["Content-Type: application/json"]
+	
+	print("[LLMInterface] Sending single constrained quest bundle request to Ollama for faction: %s agent: %s" % [
+		chosen_faction,
+		agent_name,
+	])
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"request_started",
+		"LLMInterface",
+		{
+			"model": active_model_name,
+			"faction": chosen_faction,
+			"agent_name": agent_name,
+			"objective_type": chosen_type,
+			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
+			"bundle_mode": "single_constrained",
+			"call_count": QUEST_BUNDLE_CALL_COUNT,
 		}
-	}
-	
-	var json_str = JSON.stringify(payload)
-	var headers = ["Content-Type: application/json"]
-	
-	print("[LLMInterface] Sending request to Ollama for faction: ", chosen_faction, " agent: ", agent_name)
-	var err = http_request.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
+	)
+	_start_quest_candidate_batch(
+		system_prompt,
+		headers,
+		{
+			"model": active_model_name,
+			"faction": chosen_faction,
+			"agent_name": agent_name,
+			"objective_type": chosen_type,
+			"system_story_pack_id": str(system_story_pack.get("system_id", "")),
+			"bundle_mode": "single_constrained",
+			"call_count": QUEST_BUNDLE_CALL_COUNT,
+		}
+	)
+
+
+func _start_quest_candidate_batch(
+	prompt: String,
+	headers: Array[String],
+	context: Dictionary
+) -> void:
+	for request in _quest_candidate_requests:
+		if request and is_instance_valid(request):
+			request.cancel_request()
+			request.queue_free()
+	_quest_candidate_prompt = prompt
+	_quest_candidate_headers = headers.duplicate()
+	_quest_candidate_context = context.duplicate(true)
+	_quest_candidate_attempts_started = 0
+	_quest_candidate_results.clear()
+	_quest_candidate_requests.clear()
+	_start_next_quest_candidate()
+
+
+func _start_next_quest_candidate() -> void:
+	if _quest_candidate_attempts_started >= QUEST_BUNDLE_CALL_COUNT:
+		_finish_quest_candidate_batch()
+		return
+
+	_quest_candidate_attempts_started += 1
+	var attempt_number := _quest_candidate_attempts_started
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	_quest_candidate_requests.append(temp_http)
+	temp_http.timeout = request_timeout_for_capability("quest_dialogue")
+	var started_msec := Time.get_ticks_msec()
+	temp_http.request_completed.connect(
+		_on_quest_candidate_completed.bind(
+			temp_http.get_instance_id(),
+			attempt_number,
+			started_msec
+		)
+	)
+	var payload: Dictionary = build_generation_body(
+		"quest_dialogue",
+		_quest_candidate_prompt,
+		"json",
+		{
+			"temperature": 0.85,
+			"seed": randi(),
+		}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		_quest_candidate_headers,
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
 	if err != OK:
-		print("[LLMInterface] HTTP request failed to initiate. Error code: ", err)
-		_trigger_fallback()
+		temp_http.queue_free()
+		_quest_candidate_requests.erase(temp_http)
+		_quest_candidate_results.append({
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "http_request_start_failed_%d" % err,
+			"elapsed_seconds": 0.0,
+		})
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"candidate_request_start_failed",
+			"LLMInterface",
+			_quest_candidate_context.merged({
+				"attempt": attempt_number,
+				"error_code": err,
+			}, true)
+		)
+		_start_next_quest_candidate()
+
+
+func _on_quest_candidate_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray,
+	request_instance_id: int,
+	attempt_number: int,
+	started_msec: int
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http:
+		_quest_candidate_requests.erase(temp_http)
+		temp_http.queue_free()
+	var elapsed := float(Time.get_ticks_msec() - started_msec) / 1000.0
+	var candidate := _parse_quest_candidate_response(
+		result,
+		response_code,
+		body,
+		attempt_number,
+		elapsed
+	)
+	_quest_candidate_results.append(candidate)
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"candidate_scored" if bool(candidate.get("ok", false)) else "candidate_failed",
+		"LLMInterface",
+		_quest_candidate_context.merged({
+			"attempt": attempt_number,
+			"score": int(candidate.get("score", -1000)),
+			"reason": str(candidate.get("reason", "")),
+			"elapsed_seconds": elapsed,
+		}, true)
+	)
+	_start_next_quest_candidate()
+
+
+func _parse_quest_candidate_response(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	attempt_number: int,
+	elapsed: float
+) -> Dictionary:
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "http_failed_result_%d_code_%d" % [result, response_code],
+			"elapsed_seconds": elapsed,
+		}
+	var response_text := body.get_string_from_utf8()
+	var json := JSON.new()
+	if json.parse(response_text) != OK:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "response_envelope_parse_failed",
+			"elapsed_seconds": elapsed,
+		}
+	var outer_data = json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "response_envelope_missing_response",
+			"elapsed_seconds": elapsed,
+		}
+	var inner_json_str := str(outer_data["response"]).strip_edges()
+	if inner_json_str.begins_with("```"):
+		var end_idx := inner_json_str.find("\n", 3)
+		if end_idx != -1:
+			inner_json_str = inner_json_str.substr(end_idx + 1)
+		if inner_json_str.ends_with("```"):
+			inner_json_str = inner_json_str.substr(
+				0,
+				inner_json_str.length() - 3
+			)
+		inner_json_str = inner_json_str.strip_edges()
+	var inner_json := JSON.new()
+	if inner_json.parse(inner_json_str) != OK:
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "inner_json_parse_failed",
+			"elapsed_seconds": elapsed,
+		}
+	var quest_data = inner_json.get_data()
+	if not quest_data is Dictionary \
+			or not quest_data.has("objective") \
+			or not quest_data.has("choices"):
+		return {
+			"ok": false,
+			"attempt": attempt_number,
+			"score": -1000,
+			"reason": "quest_schema_missing_fields",
+			"elapsed_seconds": elapsed,
+		}
+	var campaign_name := _sanitize_campaign_name(
+		str(quest_data.get("campaign_name", ""))
+	)
+	quest_data["campaign_name"] = (
+		campaign_name
+		if not campaign_name.is_empty()
+		else _fallback_campaign_name()
+	)
+	_substitute_dialogue_placeholders(quest_data)
+	_validate_quest_data(quest_data)
+	var scored := _score_quest_candidate(quest_data)
+	return {
+		"ok": true,
+		"attempt": attempt_number,
+		"score": int(scored.get("score", 0)),
+		"reason": str(scored.get("reason", "")),
+		"elapsed_seconds": elapsed,
+		"quest_data": quest_data,
+	}
+
+
+func _score_quest_candidate(quest_data: Dictionary) -> Dictionary:
+	var score := 100
+	var reasons: Array[String] = []
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type := str(obj.get("type", ""))
+	var dialogue := str(quest_data.get("dialogue", ""))
+	var dialogue_lower := dialogue.to_lower()
+	if bool(quest_data.get("objective_dialogue_rewritten", false)):
+		score -= 30
+		reasons.append("rewritten")
+	if str(quest_data.get("title", "")).strip_edges().is_empty():
+		score -= 10
+		reasons.append("missing_title")
+	if dialogue.strip_edges().length() < 35:
+		score -= 15
+		reasons.append("short_dialogue")
+	if _dialogue_has_placeholder_artifacts(
+		dialogue,
+		str(quest_data.get("agent_name", ""))
+	):
+		score -= 35
+		reasons.append("placeholder_artifacts")
+	if _quest_has_speaker_rule_leak(quest_data):
+		score -= 40
+		reasons.append("speaker_rule_leak")
+	if _dialogue_is_too_vague(dialogue, obj_type):
+		score -= 20
+		reasons.append("too_vague")
+	if obj_type == "PICKUP_SPECIAL":
+		if _dialogue_has_pickup_detail_mismatch(dialogue, obj_type, obj):
+			score -= 35
+			reasons.append("pickup_detail_mismatch")
+		elif dialogue_lower.find(str(obj.get("target_npc", "")).to_lower()) != -1:
+			score += 5
+			reasons.append("exact_pickup_contact")
+	elif obj_type == "KILL_SHIPS":
+		if dialogue_lower.find(str(obj.get("target_faction", "")).to_lower()) != -1:
+			score += 5
+			reasons.append("exact_target_faction")
+	elif obj_type == "DELIVER_ORE":
+		var amount_text := str(int(round(float(obj.get("amount_required", 0.0)))))
+		if dialogue_lower.find(amount_text) != -1:
+			score += 5
+			reasons.append("exact_ore_amount")
+	var choices: Array = quest_data.get("choices", [])
+	if choices.size() < 3:
+		score -= 15
+		reasons.append("missing_choices")
+	for choice in choices:
+		if not choice is Dictionary:
+			score -= 10
+			reasons.append("bad_choice")
+			continue
+		var consequence: Dictionary = choice.get("consequence", {})
+		var response := str(consequence.get("dialogue_response", ""))
+		if response.strip_edges().length() < 8:
+			score -= 8
+			reasons.append("short_choice_response")
+	return {
+		"score": score,
+		"reason": ", ".join(reasons),
+	}
+
+
+func _finish_quest_candidate_batch() -> void:
+	var best_candidate: Dictionary = {}
+	var duplicate_skip_count := 0
+	for candidate in _quest_candidate_results:
+		if not bool(candidate.get("ok", false)):
+			continue
+		if _is_quest_fingerprint_known(candidate.get("quest_data", {})):
+			duplicate_skip_count += 1
+			continue
+		if best_candidate.is_empty() \
+				or int(candidate.get("score", -1000)) > int(best_candidate.get("score", -1000)):
+			best_candidate = candidate
+	if duplicate_skip_count > 0:
+		print("[LLMInterface] Skipped %d exact-duplicate quest candidate(s)." % duplicate_skip_count)
+	if best_candidate.is_empty():
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"quest_bundle_failed",
+			"LLMInterface",
+			_quest_candidate_context.merged({
+				"candidate_count": _quest_candidate_results.size(),
+			}, true)
+		)
+		_quest_candidate_results.clear()
+		_quest_candidate_requests.clear()
+		_trigger_fallback_with_reason("quest_bundle_failed")
+		return
+	var total_elapsed := float(Time.get_ticks_msec() - request_start_time) / 1000.0
+	var score := int(best_candidate.get("score", 0))
+	var attempt := int(best_candidate.get("attempt", 0))
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"quest_bundle_selected",
+		"LLMInterface",
+		_quest_candidate_context.merged({
+			"selected_attempt": attempt,
+			"selected_score": score,
+			"candidate_count": _quest_candidate_results.size(),
+		}, true)
+	)
+	print(
+		"[LLMInterface] Accepted quest bundle %d/%d with score %d." %
+		[attempt, QUEST_BUNDLE_CALL_COUNT, score]
+	)
+	var quest_data: Dictionary = best_candidate.get("quest_data", {})
+	_quest_candidate_results.clear()
+	_quest_candidate_requests.clear()
+	_finish_quest_with_current_dialogue(quest_data, total_elapsed)
 
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-	is_waiting = false
 	var now = Time.get_ticks_msec()
 	var elapsed = (now - request_start_time) / 1000.0
-	print("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"generation_finished",
+		"LLMInterface",
+		{"result": result, "response_code": response_code, "elapsed_seconds": elapsed, "model": active_model_name}
+	)
+	GlobalState.trace("[TRACE] [LLMInterface] HTTP request completed in %.3fs. Result: %d, Response code: %d at %d ms" % [elapsed, result, response_code, now])
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		print("[LLMInterface] HTTP request failed or timed out. Response code: ", response_code)
-		_trigger_fallback()
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"http_or_timeout_failed",
+			"LLMInterface",
+			{
+				"result": result,
+				"response_code": response_code,
+				"elapsed_seconds": elapsed,
+				"model": active_model_name,
+			}
+		)
+		_trigger_fallback_with_reason(
+			"http_failed_result_%d_code_%d" % [result, response_code]
+		)
 		return
 		
 	var response_text = body.get_string_from_utf8()
@@ -932,13 +3627,25 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var err = json.parse(response_text)
 	if err != OK:
 		print("[LLMInterface] Failed to parse Ollama response envelope JSON.")
-		_trigger_fallback()
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"response_envelope_parse_failed",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
+		_trigger_fallback_with_reason("response_envelope_parse_failed")
 		return
 		
 	var outer_data = json.get_data()
 	if not outer_data is Dictionary or not outer_data.has("response"):
 		print("[LLMInterface] Response envelope missing 'response' field.")
-		_trigger_fallback()
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"response_envelope_missing_response",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
+		_trigger_fallback_with_reason("response_envelope_missing_response")
 		return
 		
 	var inner_json_str = outer_data["response"].strip_edges()
@@ -956,13 +3663,25 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	var inner_err = inner_json.parse(inner_json_str)
 	if inner_err != OK:
 		print("[LLMInterface] Failed to parse inner generated JSON dialogue: ", inner_json_str)
-		_trigger_fallback()
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"inner_json_parse_failed",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
+		_trigger_fallback_with_reason("inner_json_parse_failed")
 		return
 		
 	var quest_data = inner_json.get_data()
 	if not quest_data is Dictionary or not quest_data.has("objective") or not quest_data.has("choices"):
 		print("[LLMInterface] Parsed quest data is invalid or missing fields.")
-		_trigger_fallback()
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"quest_schema_missing_fields",
+			"LLMInterface",
+			{"elapsed_seconds": elapsed, "model": active_model_name}
+		)
+		_trigger_fallback_with_reason("quest_schema_missing_fields")
 		return
 		
 	print("[LLMInterface] LLM Quest successfully generated: ", quest_data["title"])
@@ -974,7 +3693,338 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		if not campaign_name.is_empty()
 		else _fallback_campaign_name()
 	)
+	_substitute_dialogue_placeholders(quest_data)
 	_validate_quest_data(quest_data)
+	GenerationDiagnostics.record_lifecycle_timestamp(
+		"quest_generation",
+		"validation_finished",
+		"LLMInterface",
+		{"model": active_model_name, "title": str(quest_data.get("title", ""))}
+	)
+	if quest_data.get("objective_dialogue_rewritten", false):
+		print("[LLMInterface] Dialogue was rewritten — requesting retry from LLM with locked objective.")
+		_request_dialogue_retry(quest_data, elapsed)
+		return
+	is_waiting = false
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"llm",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"title": str(quest_data.get("title", "")),
+		}
+	)
+	if active_callback.is_valid():
+		active_callback.call(quest_data, false)
+
+
+# ── Dummy-Name Substitution ─────────────────────────────────────────────────
+# The LLM always writes "George" (pilot), "Slithern" (enemy faction),
+# "3" (kill count), "25" (ore amount), and fixed pickup names.
+# We swap these for the real pre-rolled values so the dialogue always
+# matches the actual contract.
+
+func _substitute_dialogue_placeholders(quest_data: Dictionary) -> void:
+	var subs := _pending_substitutions
+	if subs.is_empty():
+		return
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+	var nickname := _nickname_for_agent(str(subs.get("agent_name", "")))
+	quest_data["agent_role"] = str(subs.get("agent_role", "Neutral Fixer & Profit Broker"))
+	quest_data["agent_portrait_id"] = str(subs.get("agent_portrait_id", ""))
+	quest_data["agent_voice_profile_id"] = str(subs.get("agent_voice_profile_id", ""))
+	quest_data["agent_id"] = str(subs.get("agent_id", ""))
+	quest_data["agent_memory_id"] = str(subs.get("agent_memory_id", ""))
+	quest_data["faction"] = str(
+		subs.get("faction", quest_data.get("faction", "neutral"))
+	).to_lower().strip_edges()
+	quest_data["agent_name"] = str(subs.get("agent_name", quest_data.get("agent_name", "Broker Kaelen")))
+	if subs.has("story_hook_ref"):
+		quest_data["story_hook_ref"] = str(subs.get("story_hook_ref", ""))
+	var story_candidate: Dictionary = subs.get("story_offer_candidate", {}) \
+		if subs.get("story_offer_candidate", {}) is Dictionary else {}
+	if not story_candidate.is_empty():
+		var budget: Dictionary = subs.get("story_offer_budget", {}) \
+			if subs.get("story_offer_budget", {}) is Dictionary else {}
+		var metadata := {
+			"story_thread_id": str(story_candidate.get("thread_id", "")),
+			"story_beat_id": str(story_candidate.get("beat_id", "")),
+			"story_hook_ref": str(quest_data.get("story_hook_ref", "")),
+			"cause_id": str(story_candidate.get("cause_id", "")),
+			"public_because": str(story_candidate.get("world_consequence", "")),
+			"stake": str(story_candidate.get("stake", "")),
+			"attachment_beats": (
+				story_candidate.get("attachment_beats", []) as Array
+			).duplicate(true) if story_candidate.get("attachment_beats", []) is Array else [],
+			"question_fact_ids": (
+				story_candidate.get("disclosure_fact_ids", []) as Array
+			).duplicate(true) if story_candidate.get("disclosure_fact_ids", []) is Array else [],
+			"completion_fact_ids": (
+				story_candidate.get("completion_fact_ids", []) as Array
+			).duplicate(true) if story_candidate.get("completion_fact_ids", []) is Array else [],
+			"outcome_snapshot": {
+				"story_candidate": story_candidate.duplicate(true),
+				"challenge_budget": budget.duplicate(true),
+			},
+		}
+		quest_data["narrative_metadata"] = metadata
+		quest_data["story_thread_id"] = metadata["story_thread_id"]
+		quest_data["story_beat_id"] = metadata["story_beat_id"]
+		quest_data["cause_id"] = metadata["cause_id"]
+		quest_data["stake"] = metadata["stake"]
+
+	var replacements := {}
+	# Swap dummy pilot name for the real nickname
+	replacements["George"] = nickname
+	replacements["george"] = nickname.to_lower()
+
+	if obj_type == "KILL_SHIPS":
+		var real_faction: String = str(subs.get("kill_target", ""))
+		var real_count: int = int(subs.get("kill_count", 3))
+		replacements["Slithern"] = real_faction.capitalize()
+		replacements["slithern"] = real_faction
+		replacements["SLITHERN"] = real_faction.to_upper()
+		# Common LLM misspellings / inflections of the dummy name
+		for variant in ["Slitherns", "slitherns", "Slitheren", "slitheren",
+				"Slitherer", "slitherer", "Slitherers", "slitherers"]:
+			replacements[variant] = real_faction.capitalize() if variant[0] == "S" else real_faction
+		obj["target_faction"] = real_faction
+		obj["count_required"] = real_count
+	elif obj_type == "DELIVER_ORE":
+		var real_amount: float = float(subs.get("ore_amount", 25.0))
+		obj["amount_required"] = real_amount
+	elif obj_type == "PICKUP_SPECIAL":
+		var real_outpost: String = str(subs.get("pickup_outpost", ""))
+		var real_outpost_display: String = str(subs.get("pickup_outpost_display", ""))
+		var real_npc: String = str(subs.get("pickup_npc", ""))
+		var real_item: String = str(subs.get("pickup_item", ""))
+		replacements["Morrow Station"] = real_outpost_display
+		replacements["morrow station"] = real_outpost_display.to_lower()
+		replacements["outpost_morrow"] = real_outpost
+		replacements["Sable Mercer"] = real_npc
+		replacements["sable mercer"] = real_npc.to_lower()
+		replacements["Sealed Data Drive"] = real_item
+		replacements["sealed data drive"] = real_item.to_lower()
+		obj["target_outpost"] = real_outpost
+		obj["target_outpost_display"] = real_outpost_display
+		obj["target_npc"] = real_npc
+		obj["part_name"] = real_item
+
+	# Title gets the same dummy-name substitution as the dialogue — otherwise the
+	# LLM's "Slithern"/"George" leak straight into the mission card title (the
+	# slither* regex in _apply_replacements also catches inflected leftovers).
+	quest_data["title"] = _apply_replacements(str(quest_data.get("title", "")), replacements)
+
+	quest_data["dialogue"] = _thin_pilot_name(
+		_apply_replacements(str(quest_data.get("dialogue", "")), replacements), nickname)
+
+	var choices: Array = quest_data.get("choices", [])
+	for choice in choices:
+		if choice is Dictionary:
+			if choice.has("text"):
+				choice["text"] = _apply_replacements(str(choice["text"]), replacements)
+			var cons: Dictionary = choice.get("consequence", {})
+			if cons.has("dialogue_response"):
+				# Opening already addresses the pilot by name; strip it from the
+				# follow-up responses so it isn't repeated in every line.
+				cons["dialogue_response"] = _thin_pilot_name(
+					_apply_replacements(str(cons["dialogue_response"]), replacements), nickname, 0)
+
+
+func _apply_replacements(text: String, replacements: Dictionary) -> String:
+	var result := text
+	for placeholder: String in replacements:
+		result = result.replace(placeholder, str(replacements[placeholder]))
+	# Catch any remaining "slither*" variants the explicit list missed
+	if _pending_substitutions.has("kill_target"):
+		var real_faction: String = str(_pending_substitutions["kill_target"])
+		var regex := RegEx.new()
+		regex.compile("(?i)\\bslither\\w*")
+		var cleaned := regex.sub(result, real_faction.capitalize(), true)
+		if cleaned != result:
+			print("[LLMInterface] ⚠ SUBSTITUTE: Regex caught leftover slither-variant in dialogue")
+			result = cleaned
+	return result
+
+
+# The local model tends to address the pilot by name in every sentence
+# ("Acknowledged, Indy. ... Don't fall behind, Indy."). Keep only the FIRST
+# use of the nickname per text field and drop the rest, cleaning up the
+# punctuation/spacing left behind so it reads naturally.
+func _thin_pilot_name(text: String, nickname: String, keep: int = 1) -> String:
+	var name := nickname.strip_edges()
+	if name.is_empty() or text.is_empty():
+		return text
+	var re := RegEx.new()
+	# The name as a whole word, plus any commas/spaces hugging it on either side.
+	if re.compile("(?i)\\s*,?\\s*\\b" + name + "\\b\\s*,?\\s*") != OK:
+		return text
+	var matches := re.search_all(text)
+	if matches.size() <= keep:
+		return text
+	# Keep the first `keep` occurrences; remove the rest (back-to-front so
+	# offsets stay valid). keep=0 strips the name entirely.
+	var result := text
+	for i in range(matches.size() - 1, keep - 1, -1):
+		var m: RegExMatch = matches[i]
+		result = result.substr(0, m.get_start()) + " " + result.substr(m.get_end())
+	# Tidy: collapse double spaces and drop spaces before sentence punctuation.
+	result = result.replace("  ", " ")
+	var punct := RegEx.new()
+	if punct.compile("\\s+([,.!?])") == OK:
+		result = punct.sub(result, "$1", true)
+	result = result.strip_edges()
+	# Re-capitalize if removing a leading vocative lowercased the sentence.
+	if result.length() > 0:
+		var first := result[0]
+		if first >= "a" and first <= "z":
+			result = first.to_upper() + result.substr(1)
+	return result
+
+
+# ── Dialogue Retry (critique loop) ──────────────────────────────────────────
+# When the first LLM attempt produces a dialogue that conflicts with the
+# validated objective (wrong faction, wrong count, wrong type), we give the
+# LLM one more shot with explicit constraints. If the retry also fails
+# validation, we keep the safe fallback dialogue from attempt 1.
+
+func _request_dialogue_retry(quest_data: Dictionary, first_elapsed: float) -> void:
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+	var agent_name: String = str(quest_data.get("agent_name", ""))
+
+	var objective_desc := ""
+	if obj_type == "KILL_SHIPS":
+		objective_desc = "Destroy 3 Slithern ships"
+	elif obj_type == "DELIVER_ORE":
+		objective_desc = "Deliver 25 m³ of ore"
+	elif obj_type == "PICKUP_SPECIAL":
+		objective_desc = "Pick up a Sealed Data Drive from Sable Mercer at Morrow Station"
+
+	var retry_prompt := (
+		"You are %s. Write a 2-3 sentence mission briefing for this contract.\n\n" % agent_name +
+		"Objective: %s\n" % objective_desc +
+		"Call the pilot 'George'. Stay in character.\n\n" +
+		"Respond with ONLY the dialogue text, no JSON, no quotes, no formatting."
+	)
+
+	var payload: Dictionary = build_generation_body(
+		"quest_dialogue",
+		retry_prompt,
+		"",
+		{"temperature": 0.7, "num_predict": 200}
+	)
+	var json_str := JSON.stringify(payload)
+
+	var temp_http := HTTPRequest.new()
+	temp_http.timeout = request_timeout_for_capability("quest_dialogue")
+	add_child(temp_http)
+	var instance_id := temp_http.get_instance_id()
+
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+			_on_dialogue_retry_completed(result, response_code, body, quest_data, first_elapsed, instance_id)
+	)
+
+	var err := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, json_str)
+	if err != OK:
+		print("[LLMInterface] Dialogue retry HTTP failed to start — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+
+
+func _on_dialogue_retry_completed(
+	result: int,
+	response_code: int,
+	body: PackedByteArray,
+	quest_data: Dictionary,
+	first_elapsed: float,
+	request_instance_id: int
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http:
+		temp_http.queue_free()
+
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		print("[LLMInterface] Dialogue retry HTTP failed — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var response_text := body.get_string_from_utf8()
+	var json := JSON.new()
+	if json.parse(response_text) != OK:
+		print("[LLMInterface] Dialogue retry parse failed — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var outer = json.get_data()
+	if not outer is Dictionary or not outer.has("response"):
+		print("[LLMInterface] Dialogue retry missing response — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	var new_dialogue: String = str(outer["response"]).strip_edges()
+	# Strip markdown/quotes wrapping
+	if new_dialogue.begins_with("\"") and new_dialogue.ends_with("\""):
+		new_dialogue = new_dialogue.substr(1, new_dialogue.length() - 2)
+
+	if new_dialogue.is_empty() or new_dialogue.length() < 20:
+		print("[LLMInterface] Dialogue retry too short — using safe fallback.")
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	# Substitute placeholders in the retry dialogue
+	quest_data["dialogue"] = new_dialogue
+	_substitute_dialogue_placeholders(quest_data)
+	new_dialogue = str(quest_data.get("dialogue", ""))
+
+	# Test the retry dialogue against validation
+	var obj: Dictionary = quest_data.get("objective", {})
+	var obj_type: String = obj.get("type", "")
+
+	var type_conflict := _dialogue_conflicts_with_objective(new_dialogue, obj_type)
+	var faction_conflict := _dialogue_has_faction_mismatch(new_dialogue, obj_type, obj)
+
+	if type_conflict or faction_conflict:
+		print("[LLMInterface] ⚠ RETRY FAILED — type_conflict=%s faction_conflict=%s" % [type_conflict, faction_conflict])
+		print("[LLMInterface] ⚠ RETRY DIALOGUE WAS: %s" % new_dialogue)
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"dialogue_retry_still_conflicting",
+			"LLMInterface",
+			{"type_conflict": type_conflict, "faction_conflict": faction_conflict}
+		)
+		quest_data["dialogue"] = _safe_objective_dialogue(quest_data, obj_type, obj)
+		_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+		return
+
+	quest_data.erase("objective_dialogue_rewritten")
+	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	print("[LLMInterface] ✓ Dialogue retry succeeded — using LLM's second attempt.")
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"dialogue_retry_succeeded",
+		"LLMInterface",
+		{}
+	)
+	_finish_quest_with_current_dialogue(quest_data, first_elapsed)
+
+
+func _finish_quest_with_current_dialogue(quest_data: Dictionary, elapsed: float) -> void:
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"llm",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"title": str(quest_data.get("title", "")),
+			"dialogue_retried": quest_data.has("objective_dialogue_rewritten"),
+		}
+	)
+	is_waiting = false
 	if active_callback.is_valid():
 		active_callback.call(quest_data, false)
 
@@ -983,6 +4033,137 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 # The LLM sometimes writes dialogue that mentions different numbers than
 # what it puts in the JSON objective. Since the player reads the dialogue,
 # we treat the dialogue as the source of truth and patch the JSON to match.
+func _quest_has_speaker_rule_leak(quest_data: Dictionary) -> bool:
+	if _quest_speaker_allows_kaelen_words(quest_data):
+		return false
+	var banned := _non_kaelen_banned_speaker_terms()
+	if banned.is_empty():
+		return false
+	for text in _quest_speaker_texts(quest_data):
+		var lower := text.to_lower()
+		for term in banned:
+			if not term.is_empty() and lower.find(term.to_lower()) != -1:
+				return true
+	return false
+
+
+func _sanitize_quest_speaker_rule_leaks(quest_data: Dictionary) -> bool:
+	if _quest_speaker_allows_kaelen_words(quest_data):
+		return false
+	var changed := false
+	var original_dialogue := str(quest_data.get("dialogue", ""))
+	var cleaned_dialogue := _sanitize_non_kaelen_speaker_text(original_dialogue)
+	if cleaned_dialogue != original_dialogue:
+		quest_data["dialogue"] = cleaned_dialogue
+		changed = true
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for choice in choices:
+		if not choice is Dictionary:
+			continue
+		var consequence: Dictionary = (choice as Dictionary).get("consequence", {}) \
+			if (choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		if consequence.is_empty() or not consequence.has("dialogue_response"):
+			continue
+		var original_response := str(consequence.get("dialogue_response", ""))
+		var cleaned_response := _sanitize_non_kaelen_speaker_text(original_response)
+		if cleaned_response != original_response:
+			consequence["dialogue_response"] = cleaned_response
+			changed = true
+	if changed:
+		quest_data["speaker_rule_leak_repaired"] = true
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_speaker_rule_leak",
+			"LLMInterface",
+			{
+				"agent_name": str(quest_data.get("agent_name", "")),
+				"voice_profile_id": str(quest_data.get("agent_voice_profile_id", "")),
+			}
+		)
+	return changed
+
+
+func _sanitize_non_kaelen_speaker_text(text: String) -> String:
+	var output := text
+	for term in _non_kaelen_banned_speaker_terms():
+		output = _replace_case_variants(
+			output,
+			term,
+			_non_kaelen_replacement_for(term)
+		)
+	return output
+
+
+func _quest_speaker_allows_kaelen_words(quest_data: Dictionary) -> bool:
+	var agent_name := str(quest_data.get("agent_name", "")).strip_edges().to_lower()
+	var voice_profile := str(
+		quest_data.get("agent_voice_profile_id", "")
+	).strip_edges().to_lower()
+	return agent_name.find("kaelen") != -1 or voice_profile == "voice.kaelen.v1"
+
+
+func _quest_speaker_texts(quest_data: Dictionary) -> Array[String]:
+	var texts: Array[String] = [str(quest_data.get("dialogue", ""))]
+	var choices: Array = quest_data.get("choices", []) \
+		if quest_data.get("choices", []) is Array else []
+	for choice in choices:
+		if not choice is Dictionary:
+			continue
+		var consequence: Dictionary = (choice as Dictionary).get("consequence", {}) \
+			if (choice as Dictionary).get("consequence", {}) is Dictionary else {}
+		if consequence.has("dialogue_response"):
+			texts.append(str(consequence.get("dialogue_response", "")))
+	return texts
+
+
+func _non_kaelen_banned_speaker_terms() -> Array[String]:
+	var result: Array[String] = []
+	var rules := LLMDialogueContentRegistry.shared().global_non_kaelen_rules()
+	for bucket_key in ["kaelen_only_words", "banned_non_kaelen_phrases"]:
+		var bucket: Variant = rules.get(bucket_key, [])
+		if not bucket is Array:
+			continue
+		for item in bucket:
+			var term := str(item).strip_edges()
+			if not term.is_empty() and not result.has(term):
+				result.append(term)
+	return result
+
+
+func _non_kaelen_replacement_for(term: String) -> String:
+	var normalized := term.strip_edges().to_lower()
+	match normalized:
+		"shiny":
+			return "pilot"
+		"my best friend":
+			return "my client"
+		"stay put", "sit tight":
+			return "hold position"
+		"i'll fetch":
+			return "I will arrange"
+	return "pilot"
+
+
+func _replace_case_variants(text: String, needle: String, replacement: String) -> String:
+	if needle.is_empty():
+		return text
+	var output := text
+	var search_from := 0
+	var lower_needle := needle.to_lower()
+	while search_from < output.length():
+		var idx := output.to_lower().find(lower_needle, search_from)
+		if idx == -1:
+			break
+		output = (
+			output.substr(0, idx)
+			+ replacement
+			+ output.substr(idx + needle.length())
+		)
+		search_from = idx + replacement.length()
+	return output
+
+
 func _validate_quest_data(quest_data: Dictionary):
 	var dialogue = quest_data.get("dialogue", "").to_lower()
 	var obj = quest_data.get("objective", {})
@@ -1045,7 +4226,15 @@ func _validate_quest_data(quest_data: Dictionary):
 	# ── Step 3: Clamp to valid ranges ────────────────────────────────────
 	if obj_type == "KILL_SHIPS":
 		var count = int(obj.get("count_required", 3))
-		obj["count_required"] = clampi(count, 2, 4)
+		var clamped_count := clampi(count, 2, 4)
+		if count != clamped_count:
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_clamped_kill_count",
+				"LLMInterface",
+				{"from": count, "to": clamped_count}
+			)
+		obj["count_required"] = clamped_count
 
 		# Validate target_faction is a known faction (minor or major).
 		# If the LLM hallucinated an unknown name (e.g. "synths", "outlaws"),
@@ -1053,28 +4242,120 @@ func _validate_quest_data(quest_data: Dictionary):
 		# faction so it always renders.
 		var tf = obj.get("target_faction", "")
 		var known_factions = GlobalState.MINOR_FACTIONS.keys()
+		known_factions.append_array(GlobalState.get_current_system_minor_factions())
 		known_factions.append_array(["zenith", "aurelia", "vanguard"])
 		if tf == "" or not tf in known_factions:
-			var minor_keys = GlobalState.MINOR_FACTIONS.keys()
+			var minor_keys = GlobalState.get_current_system_minor_factions()
+			if minor_keys.is_empty():
+				minor_keys = GlobalState.MINOR_FACTIONS.keys()
 			var original = tf if tf != "" else "(empty)"
 			obj["target_faction"] = minor_keys[randi() % minor_keys.size()]
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_remapped_target_faction",
+				"LLMInterface",
+				{"from": original, "to": obj["target_faction"]}
+			)
 			print("[LLMInterface] ⚠ VALIDATE: Unknown target_faction '%s' remapped to '%s'." % [original, obj["target_faction"]])
 	elif obj_type == "DELIVER_ORE":
 		var amount = float(obj.get("amount_required", 25.0))
-		obj["amount_required"] = clampf(amount, 20.0, 300.0)
+		var clamped_amount := clampf(amount, 20.0, 300.0)
+		if not is_equal_approx(amount, clamped_amount):
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_clamped_ore_amount",
+				"LLMInterface",
+				{"from": amount, "to": clamped_amount}
+			)
+		obj["amount_required"] = clamped_amount
 	elif obj_type == "PICKUP_SPECIAL":
 		var outpost = obj.get("target_outpost", "")
 		var npc = obj.get("target_npc", "")
-		var valid_outposts = GlobalState.PICKUP_OUTPOST_IDS
+		var valid_outposts: Array = []
+		for local_outpost in GlobalState.get_current_pickup_outposts():
+			if local_outpost is Dictionary:
+				valid_outposts.append(str(local_outpost.get("id", "")))
+		if valid_outposts.is_empty():
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_retyped_pickup_without_local_outpost",
+				"LLMInterface",
+				{"from": outpost, "system_id": GlobalState.current_system_id}
+			)
+			obj_type = "DELIVER_ORE"
+			quest_data["type"] = "DELIVER_ORE"
+			obj.clear()
+			obj["type"] = "DELIVER_ORE"
+			obj["amount_required"] = 25.0
+			obj["reward_credits"] = 160
+			_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+			_finalize_validated_quest_display(quest_data, obj_type, obj)
+			return
 		if outpost not in valid_outposts:
-			obj["target_outpost"] = valid_outposts[0]
-			obj["target_outpost_display"] = GlobalState.PICKUP_OUTPOST_DISPLAY.get(valid_outposts[0], valid_outposts[0])
-			npc = GlobalState.get_minor_npcs_at_outpost(valid_outposts[0])[0]
+			var fallback_outpost: String = str(valid_outposts[0])
+			var fallback_display := fallback_outpost
+			for local_outpost in GlobalState.get_current_pickup_outposts():
+				if local_outpost is Dictionary \
+						and str(local_outpost.get("id", "")) == fallback_outpost:
+					fallback_display = str(local_outpost.get("display", fallback_outpost))
+					break
+			if GlobalState.PICKUP_OUTPOST_DISPLAY.has(fallback_outpost):
+				fallback_display = str(
+					GlobalState.PICKUP_OUTPOST_DISPLAY.get(fallback_outpost)
+				)
+			GenerationDiagnostics.record_event(
+				"quest_generation",
+				"validation_remapped_pickup_outpost",
+				"LLMInterface",
+				{"from": outpost, "to": fallback_outpost}
+			)
+			obj["target_outpost"] = fallback_outpost
+			obj["target_outpost_display"] = fallback_display
+			var fallback_npcs := GlobalState.get_minor_npcs_at_outpost(fallback_outpost)
+			if fallback_npcs.is_empty():
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_retyped_pickup_without_local_npc",
+					"LLMInterface",
+					{"outpost": fallback_outpost, "system_id": GlobalState.current_system_id}
+				)
+				obj_type = "DELIVER_ORE"
+				quest_data["type"] = "DELIVER_ORE"
+				obj.clear()
+				obj["type"] = "DELIVER_ORE"
+				obj["amount_required"] = 25.0
+				obj["reward_credits"] = 160
+				_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+				_finalize_validated_quest_display(quest_data, obj_type, obj)
+				return
+			npc = fallback_npcs[0]
 			obj["target_npc"] = npc
 		else:
 			var valid_npcs = GlobalState.get_minor_npcs_at_outpost(outpost)
+			if valid_npcs.is_empty():
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_retyped_pickup_without_local_npc",
+					"LLMInterface",
+					{"outpost": outpost, "system_id": GlobalState.current_system_id}
+				)
+				obj_type = "DELIVER_ORE"
+				quest_data["type"] = "DELIVER_ORE"
+				obj.clear()
+				obj["type"] = "DELIVER_ORE"
+				obj["amount_required"] = 25.0
+				obj["reward_credits"] = 160
+				_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+				_finalize_validated_quest_display(quest_data, obj_type, obj)
+				return
 			if npc not in valid_npcs:
-				obj["target_npc"] = valid_npcs[0] if valid_npcs.size() > 0 else "Mariska Vonn"
+				GenerationDiagnostics.record_event(
+					"quest_generation",
+					"validation_remapped_pickup_npc",
+					"LLMInterface",
+					{"from": npc, "outpost": outpost}
+				)
+				obj["target_npc"] = valid_npcs[0]
 		if not obj.has("part_name"):
 			obj["part_name"] = "Suspicious Crate"
 		if not obj.has("destination"):
@@ -1084,6 +4365,7 @@ func _validate_quest_data(quest_data: Dictionary):
 	# number from the dialogue, then clamping can make the two disagree again.
 	# Patch only the objective number so display text and TTS use the final value.
 	_sync_dialogue_to_validated_objective(quest_data, obj_type, obj)
+	_sanitize_quest_speaker_rule_leaks(quest_data)
 	_finalize_validated_quest_display(quest_data, obj_type, obj)
 
 
@@ -1093,10 +4375,28 @@ func _finalize_validated_quest_display(
 	obj: Dictionary
 ) -> void:
 	quest_data["objective_summary"] = _objective_summary(obj_type, obj)
-	if _dialogue_conflicts_with_objective(
-		str(quest_data.get("dialogue", "")),
-		obj_type
-	):
+	var rewrite_reason := ""
+	var raw_dialogue := str(quest_data.get("dialogue", ""))
+	var raw_agent := str(quest_data.get("agent_name", ""))
+	if _dialogue_conflicts_with_objective(raw_dialogue, obj_type):
+		rewrite_reason = "dialogue_conflicts_with_objective"
+	elif _dialogue_has_faction_mismatch(raw_dialogue, obj_type, obj):
+		rewrite_reason = "faction_mismatch"
+	elif _dialogue_has_pickup_detail_mismatch(raw_dialogue, obj_type, obj):
+		rewrite_reason = "pickup_detail_mismatch"
+	elif _dialogue_has_placeholder_artifacts(raw_dialogue, raw_agent):
+		rewrite_reason = "placeholder_artifacts"
+	elif _dialogue_is_too_vague(raw_dialogue, obj_type):
+		rewrite_reason = "too_vague"
+	if not rewrite_reason.is_empty():
+		print("[LLMInterface] ⚠ VALIDATE REWRITE REASON: %s" % rewrite_reason)
+		print("[LLMInterface] ⚠ VALIDATE ORIGINAL DIALOGUE: %s" % raw_dialogue)
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_rewrote_contradictory_dialogue",
+			"LLMInterface",
+			{"objective_type": obj_type, "reason": rewrite_reason}
+		)
 		quest_data["dialogue"] = _safe_objective_dialogue(
 			quest_data,
 			obj_type,
@@ -1114,9 +4414,14 @@ func _objective_summary(obj_type: String, obj: Dictionary) -> String:
 			obj.get("amount_required", 20.0)
 		)))
 	if obj_type == "KILL_SHIPS":
+		var target_display := GlobalState.faction_display_name(
+			str(obj.get("target_faction", "zenith")),
+			true
+		)
+		obj["target_faction_display"] = target_display
 		return "Destroy %d %s ships" % [
 			int(obj.get("count_required", 3)),
-			str(obj.get("target_faction", "zenith")).to_upper(),
+			target_display,
 		]
 	if obj_type == "PICKUP_SPECIAL":
 		return "Pick up %s from %s at %s" % [
@@ -1132,9 +4437,7 @@ func _safe_objective_dialogue(
 	obj_type: String,
 	obj: Dictionary
 ) -> String:
-	var nickname := str(
-		quest_data.get("player_nickname", "Shiny")
-	)
+	var nickname := _nickname_for_agent(str(quest_data.get("agent_name", "")))
 	if obj_type == "DELIVER_ORE":
 		return (
 			"I need a clean ore run, %s. Bring back %d m³ of ore and "
@@ -1144,13 +4447,18 @@ func _safe_objective_dialogue(
 			int(round(float(obj.get("amount_required", 20.0)))),
 		]
 	if obj_type == "KILL_SHIPS":
+		var target_display := GlobalState.faction_display_name(
+			str(obj.get("target_faction", "zenith")),
+			true
+		)
+		obj["target_faction_display"] = target_display
 		return (
 			"I need the lane cleared, %s. Destroy %d %s ships and "
 			+ "come back in one piece."
 		) % [
 			nickname,
 			int(obj.get("count_required", 3)),
-			str(obj.get("target_faction", "zenith")).to_upper(),
+			target_display,
 		]
 	if obj_type == "PICKUP_SPECIAL":
 		return (
@@ -1192,6 +4500,152 @@ func _dialogue_conflicts_with_objective(
 		return ore_score >= 2 and kill_score == 0 and pickup_score == 0
 	if obj_type == "PICKUP_SPECIAL":
 		return (kill_score >= 2 or ore_score >= 2) and pickup_score == 0
+	return false
+
+
+func _dialogue_has_faction_mismatch(
+	raw_dialogue: String,
+	obj_type: String,
+	obj: Dictionary
+) -> bool:
+	if obj_type != "KILL_SHIPS":
+		return false
+	var dialogue := raw_dialogue.to_lower()
+	var target := str(obj.get("target_faction", "")).to_lower()
+	if target.is_empty():
+		return false
+	var all_factions: Array[String] = []
+	for f in GlobalState.MINOR_FACTIONS.keys():
+		all_factions.append(str(f).to_lower())
+	for f in ["zenith", "aurelia", "vanguard"]:
+		all_factions.append(f)
+	var mentioned_wrong := false
+	for faction in all_factions:
+		if faction == target:
+			continue
+		if dialogue.find(faction) != -1:
+			mentioned_wrong = true
+			break
+	if mentioned_wrong:
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Dialogue mentions a faction other than target '%s'. Rewriting." % target
+		)
+	return mentioned_wrong
+
+
+func _dialogue_has_pickup_detail_mismatch(
+	raw_dialogue: String,
+	obj_type: String,
+	obj: Dictionary
+) -> bool:
+	if obj_type != "PICKUP_SPECIAL":
+		return false
+	var dialogue := raw_dialogue.to_lower()
+	if dialogue.strip_edges().is_empty():
+		return false
+	var target_npc := str(obj.get("target_npc", "")).strip_edges()
+	var target_outpost := str(
+		obj.get("target_outpost_display", obj.get("target_outpost", ""))
+	).strip_edges()
+	var part_name := str(obj.get("part_name", "")).strip_edges()
+	if not target_npc.is_empty() and not _text_mentions_phrase(dialogue, target_npc):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention target NPC '%s'. Rewriting." %
+			target_npc
+		)
+		return true
+	if not target_outpost.is_empty() and not _text_mentions_phrase(dialogue, target_outpost):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention target outpost '%s'. Rewriting." %
+			target_outpost
+		)
+		return true
+	if not part_name.is_empty() and not _text_mentions_phrase(dialogue, part_name):
+		print(
+			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention item '%s'. Rewriting." %
+			part_name
+		)
+		return true
+	return false
+
+
+func _text_mentions_phrase(text_lower: String, phrase: String) -> bool:
+	var clean_phrase := phrase.strip_edges().to_lower()
+	if clean_phrase.is_empty():
+		return true
+	if text_lower.find(clean_phrase) != -1:
+		return true
+	var words := clean_phrase.split(" ", false)
+	if words.size() <= 1:
+		return false
+	var hits := 0
+	for word in words:
+		if str(word).length() >= 4 and text_lower.find(str(word)) != -1:
+			hits += 1
+	return hits >= mini(2, words.size())
+
+
+func _nickname_for_agent(agent_name: String) -> String:
+	if agent_name.to_lower().find("kaelen") != -1:
+		return "Shiny"
+	return "Indy"
+
+
+func _dialogue_is_too_vague(raw_dialogue: String, obj_type: String) -> bool:
+	var dialogue := raw_dialogue.to_lower()
+	if obj_type == "KILL_SHIPS":
+		var kill_hints := ["destroy", "eliminate", "kill", "clear", "remove",
+			"engage", "intercept", "neutralize", "wipe", "ship", "contact",
+			"target", "hostile", "raider", "patrol", "fighter"]
+		for hint in kill_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: KILL_SHIPS dialogue has no combat keywords. Rewriting.")
+		return true
+	elif obj_type == "DELIVER_ORE":
+		var ore_hints := ["ore", "silicate", "mine", "mining", "deliver",
+			"cargo", "shipment", "haul", "tonnage", "m³", "m3", "cubic"]
+		for hint in ore_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: DELIVER_ORE dialogue has no ore/delivery keywords. Rewriting.")
+		return true
+	elif obj_type == "PICKUP_SPECIAL":
+		var pickup_hints := ["retrieve", "fetch", "pick up", "pickup", "crate",
+			"pod", "lockbox", "container", "package", "collect", "grab", "courier",
+			"delivery", "handoff", "hand-off", "drive", "item", "cargo",
+			"bring back", "waiting for you", "holding", "has a", "get it"]
+		# Also count the actual substituted item/npc/outpost names as valid
+		var subs := _pending_substitutions
+		if not str(subs.get("pickup_item", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_item", "")).to_lower())
+		if not str(subs.get("pickup_npc", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_npc", "")).to_lower())
+		if not str(subs.get("pickup_outpost_display", "")).is_empty():
+			pickup_hints.append(str(subs.get("pickup_outpost_display", "")).to_lower())
+		for hint in pickup_hints:
+			if dialogue.find(hint) != -1:
+				return false
+		print("[LLMInterface] ⚠ VALIDATE: PICKUP_SPECIAL dialogue has no retrieval keywords. Rewriting.")
+		return true
+	return false
+
+
+func _dialogue_has_placeholder_artifacts(raw_dialogue: String, agent_name: String) -> bool:
+	var dialogue_lower := raw_dialogue.to_lower()
+	if dialogue_lower.find("george") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy name 'George'. Rewriting.")
+		return true
+	if dialogue_lower.find("slithern") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy faction 'Slithern'. Rewriting.")
+		return true
+	if dialogue_lower.find("sable mercer") != -1 or dialogue_lower.find("morrow station") != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue still contains dummy pickup names. Rewriting.")
+		return true
+	var agent_lower := agent_name.to_lower().strip_edges()
+	if not agent_lower.is_empty() and dialogue_lower.find(agent_lower) != -1:
+		print("[LLMInterface] ⚠ VALIDATE: Dialogue contains agent's own name '%s'. Rewriting." % agent_name)
+		return true
 	return false
 
 
@@ -1317,6 +4771,12 @@ func _sync_dialogue_to_validated_objective(quest_data: Dictionary, obj_type: Str
 		return
 
 	quest_data["dialogue"] = original_dialogue.substr(0, number_start) + replacement + original_dialogue.substr(number_end)
+	GenerationDiagnostics.record_event(
+		"quest_generation",
+		"validation_rewrote_objective_number",
+		"LLMInterface",
+		{"objective_type": obj_type, "from": current_number, "to": replacement}
+	)
 	print("[LLMInterface] ⚠ VALIDATE: Final objective changed after validation. Rewrote dialogue number from %s to %s for display and TTS." % [current_number, replacement])
 
 func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictionary):
@@ -1376,6 +4836,12 @@ func _reconcile_kill_count(quest_data: Dictionary, dialogue: String, obj: Dictio
 	
 	if found_count != -1 and found_count != json_count:
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue says %d targets but JSON says count_required=%d. Patching JSON to match dialogue." % [found_count, json_count])
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_kill_count_mismatch",
+			"LLMInterface",
+			{"from": json_count, "to": found_count}
+		)
 		obj["count_required"] = found_count
 	elif found_count != -1:
 		print("[LLMInterface] ✓ VALIDATE: Kill count matches — dialogue and JSON both say %d." % json_count)
@@ -1418,15 +4884,50 @@ func _reconcile_ore_amount(quest_data: Dictionary, dialogue: String, obj: Dictio
 	
 	if found_amount > 0 and absf(found_amount - json_amount) > 1.0:
 		print("[LLMInterface] ⚠ VALIDATE: Dialogue says %.0f m³ but JSON says amount_required=%.0f. Patching JSON to match dialogue." % [found_amount, json_amount])
+		GenerationDiagnostics.record_event(
+			"quest_generation",
+			"validation_repaired_ore_amount_mismatch",
+			"LLMInterface",
+			{"from": json_amount, "to": found_amount}
+		)
 		obj["amount_required"] = found_amount
 	elif found_amount > 0:
 		print("[LLMInterface] ✓ VALIDATE: Ore amount matches — dialogue and JSON both say %.0f m³." % json_amount)
 	else:
 		print("[LLMInterface] ✓ VALIDATE: No ore amount found in dialogue text. Using JSON value: %.0f m³." % json_amount)
 
+func _trigger_fallback_with_reason(reason: String) -> void:
+	_pending_fallback_reason = reason
+	_trigger_fallback()
+
+
 func _trigger_fallback():
+	is_waiting = false
 	var elapsed = (Time.get_ticks_msec() - request_start_time) / 1000.0
-	print("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
+	GlobalState.trace("[TRACE] [LLMInterface] Triggering local procedural fallback quest (Ollama elapsed: %.3fs)." % elapsed)
+	var reason := _pending_fallback_reason
+	_pending_fallback_reason = ""
+	if reason.is_empty():
+		reason = "manual_or_unspecified"
+	GenerationDiagnostics.record_content_source(
+		"quest_generation",
+		"procedural_fallback",
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+			"fallback_reason": reason,
+		}
+	)
+	GenerationDiagnostics.record_fallback(
+		"quest_generation",
+		reason,
+		"LLMInterface",
+		{
+			"elapsed_seconds": elapsed,
+			"model": active_model_name,
+		}
+	)
 	
 	# Try to pick a fallback template that hasn't been completed/abandoned recently
 	var available_indices = []
@@ -1443,6 +4944,13 @@ func _trigger_fallback():
 		
 	var selected_quest = fallback_templates[idx].duplicate(true)
 	selected_quest["campaign_name"] = _fallback_campaign_name()
+	selected_quest["agent_role"] = str(_pending_substitutions.get("agent_role", "Neutral Fixer & Profit Broker"))
+	selected_quest["agent_name"] = str(_pending_substitutions.get("agent_name", selected_quest.get("agent_name", "Broker Kaelen")))
+	selected_quest["agent_portrait_id"] = str(_pending_substitutions.get("agent_portrait_id", ""))
+	selected_quest["agent_voice_profile_id"] = str(_pending_substitutions.get("agent_voice_profile_id", ""))
+	selected_quest["agent_id"] = str(_pending_substitutions.get("agent_id", ""))
+	selected_quest["agent_memory_id"] = str(_pending_substitutions.get("agent_memory_id", ""))
+	selected_quest["faction"] = str(_pending_substitutions.get("faction", selected_quest.get("faction", "neutral")))
 	
 	# Randomize values slightly to make it feel procedural
 	var type = selected_quest["objective"]["type"]
@@ -1504,6 +5012,8 @@ func _build_chatter_context(extra: Dictionary = {}) -> Dictionary:
 
 
 func fetch_chatter_background(type: String, context: Dictionary = {}):
+	if _skip_for_campaign_bible_priority("background_chatter"):
+		return
 	active_fetches[type] = true
 	
 	# Merge in live GlobalState context
@@ -1524,6 +5034,15 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		"- Cargo hold: " + cargo_str + "\n" + \
 		"- Faction reputations: " + rep_str + "\n" + \
 		"- Active contract: " + quest_str + "\n"
+
+	# Narrative Relevance Rule: even throwaway radio chatter anchors to the
+	# campaign's current phase. Player-safe flavor only (get_ambient_flavor_block
+	# never carries director secrets).
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_ambient_flavor_block"):
+		var ambient_flavor: String = StoryManager.get_ambient_flavor_block()
+		if not ambient_flavor.is_empty():
+			context_block += "\nCampaign flavor (let it color worries and word choice — never quote it directly):\n" + \
+				ambient_flavor + "\n"
 	
 	# Describe the generation task to Ollama based on type
 	var description = ""
@@ -1576,14 +5095,28 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 					wreck_hint = "The salvager is cutting up a " + faction_found + " " + ship_class + \
 						" wreck left by the player pilot. Comment on the battle damage, " + \
 						"the hull condition, the pilot who must have done this, or what they can salvage. " + \
-						"Be colourful — e.g. 'whoever hit this thing wasn't messing around'. "
+						"Be colourful about the damage in your own words. "
 				else:
 					wreck_hint = "The salvager is approaching a " + faction_found + " " + ship_class + \
 						" wreck. Comment on the expected salvage value or the faction's gear quality. "
 			description = "3 unique radio chatter lines (under 15 words each) from a scrapper salvage crew. " + \
 				wreck_hint + \
 				"They are pragmatic, slightly world-weary, always thinking about credits. Avoid clichés."
-		
+		"kaelen_ore_sale":
+			var ore_amount = str(ctx.get("cargo", 0))
+			var credits_earned = str(ctx.get("ore_sale_earnings", 0))
+			description = "3 unique Broker Kaelen lines (under 25 words each) reacting to the player selling ore through her. " + \
+				"The player just sold " + ore_amount + " m³ of ore for " + credits_earned + " SC. " + \
+				"Kaelen is a sharp, sarcastic broker who always takes her cut. She calls the player 'Shiny'. " + \
+				"She's amused, transactional, and never sentimental. " + \
+				"Example tone:\n" + \
+				"  1. \"Yeah, I can move those for ya. Taking my cut, of course.\"\n" + \
+				"  2. \"I don't want to know where you got those. I don't care either, 'cause I get my cut either way.\"\n" + \
+				"  3. \"Ore's ore, Shiny. I've got a buyer lined up before you even finished docking. My percentage stands.\"\n" + \
+				"  4. \"Not bad haul. I'll fence it through my usual channels — minus my modest commission. And before you ask, no, it's not negotiable.\"\n" + \
+				"  5. \"You dig it up, I sell it off, we both walk away richer. Well, I walk away richer. You walk away less poor.\"\n" + \
+				"Write 3 NEW lines in the same voice. Vary the angle — comment on the ore quality, the buyer, her margins, or the pilot's hustle. Do NOT repeat the examples."
+
 	var system_prompt = "You are writing radio chatter dialogue lines for a space simulation game rated PG-13. " + \
 		"Colourful language, mild swearing, dark humour, and sharp insults are encouraged where they fit the character. " + \
 		"Do NOT use explicit sexual content or slurs. Everything else is fair game — be creative and unpredictable. " + \
@@ -1597,20 +5130,19 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		"  ]\n" + \
 		"}"
 		
-	var payload = {
-		"model": active_model_name,
-		"prompt": system_prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"background_chatter",
+		system_prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 12.0 # Give background request plenty of time
+	temp_http.timeout = request_timeout_for_capability("background_chatter")
 	
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		active_fetches[type] = false
@@ -1664,6 +5196,44 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 		temp_http.queue_free()
 
 
+# Name tokens the GENERATED cast must never reuse — the fixed cast plus the
+# named faction agents. A generated salvager came back as "Kaelen Voss": the
+# broker's given name welded onto the Zenith agent's surname. The chatter feed
+# then showed "Kaelen Voss" and "Broker Kaelen" talking as two different people.
+#
+# Matched on TOKENS rather than whole strings, because the collision is never an
+# exact duplicate — it is always a recombination or a near-homophone.
+const RESERVED_CAST_TOKENS: Array[String] = [
+	"kaelen", "caelen", "kaelin", "kaylen",
+	"voss", "ryn", "dask",
+	"jenna", "kross", "cross",
+	"nova",
+]
+
+
+## True if `candidate` reuses any protected cast name. Use before accepting ANY
+## model-invented character name.
+static func name_collides_with_cast(candidate: String) -> bool:
+	var lowered := candidate.to_lower()
+	var flattened := lowered.replace(".", " ").replace("-", " ").replace("'", " ")
+	for raw_token in flattened.split(" ", false):
+		if RESERVED_CAST_TOKENS.has(str(raw_token).strip_edges()):
+			return true
+	# Acronym spellings survive tokenising: "N.O.V.A." splits into four
+	# single letters, none of which is "nova". Stripping every separator and
+	# comparing the whole thing catches that form. Deliberately an EXACT match,
+	# not a substring test — "ryn" as a substring would reject Bryn and Karyn.
+	var squashed := ""
+	for i in lowered.length():
+		var ch := lowered[i]
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			squashed += ch
+	return RESERVED_CAST_TOKENS.has(squashed)
+
+
+# "Caelen Drake" was removed: a near-homophone of Kaelen is exactly the
+# confusion this list should not be seeding, and the guard above would reject
+# it anyway.
 var fallback_salvager_names = [
 	"Maeve Sterling",
 	"Rorik Flint",
@@ -1672,7 +5242,7 @@ var fallback_salvager_names = [
 	"Sloane Mercer",
 	"Jaxom Cruz",
 	"Kira Thorne",
-	"Caelen Drake"
+	"Bel Ashgrove"
 ]
 
 var fallback_salvager_backstories = [
@@ -1687,79 +5257,134 @@ var fallback_salvager_backstories = [
 func fetch_salvager_profile(callback: Callable):
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 10.0
+	temp_http.timeout = request_timeout_for_capability("salvager_profile")
 	
-	temp_http.request_completed.connect(func(result, response_code, headers, body):
-		temp_http.queue_free()
-		
-		# If request fails or times out, trigger fallback
-		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var response_text = body.get_string_from_utf8()
-		var json = JSON.new()
-		var err = json.parse(response_text)
-		if err != OK:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var outer_data = json.get_data()
-		if not outer_data is Dictionary or not outer_data.has("response"):
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var inner_json_str = outer_data["response"].strip_edges()
-		
-		# Strip markdown codeblocks
-		if inner_json_str.begins_with("```"):
-			var end_idx = inner_json_str.find("\n", 3)
-			if end_idx != -1:
-				inner_json_str = inner_json_str.substr(end_idx + 1)
-			if inner_json_str.ends_with("```"):
-				inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
-			inner_json_str = inner_json_str.strip_edges()
-			
-		var inner_json = JSON.new()
-		var inner_err = inner_json.parse(inner_json_str)
-		if inner_err != OK:
-			_trigger_salvager_profile_fallback(callback)
-			return
-			
-		var profile_data = inner_json.get_data()
-		if profile_data is Dictionary and profile_data.has("name") and profile_data.has("backstory"):
-			callback.call(profile_data)
-		else:
-			_trigger_salvager_profile_fallback(callback)
+	temp_http.request_completed.connect(
+		_on_salvager_profile_request_completed.bind(
+			temp_http.get_instance_id(),
+			callback
+		),
+		CONNECT_ONE_SHOT
 	)
 	
 	var prompt = "Generate a unique sci-fi scrapper/miner pilot name and a short (2-3 sentences) backstory. " + \
 		"The pilot operates a salvager ship in the sector. The backstory should detail their origins, their ship name, and their scrapper personality. " + \
+		"The name must NOT use, rhyme with, or recombine any of these existing characters: Kaelen, Voss, Ryn, Dask, Jenna Kross, Nova. " + \
+		"Pick given and family names that sound nothing like those. " + \
 		"You MUST respond strictly in valid JSON format matching this schema exactly. Do not output any notes, markdown codeblock formatting, or surrounding text. Only output the raw JSON object:\n" + \
 		"{\n" + \
 		"  \"name\": \"[Pilot Name]\",\n" + \
 		"  \"backstory\": \"[Backstory Text]\"\n" + \
 		"}"
 		
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"salvager_profile",
+		prompt,
+		"json",
+		{
 			"temperature": 0.85,
 			"seed": randi()
 		}
-	}
+	)
 	
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		_trigger_salvager_profile_fallback(callback)
+		_trigger_salvager_profile_fallback(
+			callback,
+			"http_request_start_failed_%d" % err
+		)
 
-func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
+
+func _on_salvager_profile_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray,
+	request_instance_id: int,
+	callback: Callable
+) -> void:
+	var temp_http := instance_from_id(request_instance_id) as HTTPRequest
+	if temp_http != null:
+		temp_http.queue_free()
+
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		_trigger_salvager_profile_fallback(callback, "http_response_failed")
+		return
+
+	var response_text = body.get_string_from_utf8()
+	var json = JSON.new()
+	var err = json.parse(response_text)
+	if err != OK:
+		_trigger_salvager_profile_fallback(callback, "response_envelope_parse_failed")
+		return
+
+	var outer_data = json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		_trigger_salvager_profile_fallback(callback, "response_envelope_missing_response")
+		return
+
+	var inner_json_str = outer_data["response"].strip_edges()
+
+	if inner_json_str.begins_with("```"):
+		var end_idx = inner_json_str.find("\n", 3)
+		if end_idx != -1:
+			inner_json_str = inner_json_str.substr(end_idx + 1)
+		if inner_json_str.ends_with("```"):
+			inner_json_str = inner_json_str.substr(0, inner_json_str.length() - 3)
+		inner_json_str = inner_json_str.strip_edges()
+
+	var inner_json = JSON.new()
+	var inner_err = inner_json.parse(inner_json_str)
+	if inner_err != OK:
+		_trigger_salvager_profile_fallback(callback, "inner_json_parse_failed")
+		return
+
+	var profile_data = inner_json.get_data()
+	if profile_data is Dictionary and profile_data.has("name") and profile_data.has("backstory"):
+		_call_salvager_profile_callback(callback, profile_data)
+	else:
+		_trigger_salvager_profile_fallback(callback, "profile_schema_missing_fields")
+
+
+func _call_salvager_profile_callback(callback: Callable, profile: Dictionary) -> void:
+	# Last line of defence on model-invented names. The prompt asks for a name
+	# unlike the cast's, but asking is not enforcing — this is.
+	var generated_name := str(profile.get("name", "")).strip_edges()
+	if generated_name.is_empty() or name_collides_with_cast(generated_name):
+		if not generated_name.is_empty():
+			_record_llm_fallback(
+				"salvager_profile",
+				"name_collides_with_cast",
+				{"rejected_name": generated_name}
+			)
+		profile = profile.duplicate()
+		profile["name"] = fallback_salvager_names[randi() % fallback_salvager_names.size()]
+	if callback.is_valid():
+		callback.call(profile)
+
+
+func _record_llm_fallback(
+	content_type: String,
+	reason: String,
+	context: Dictionary = {}
+) -> void:
+	GenerationDiagnostics.record_fallback(
+		content_type,
+		reason,
+		"LLMInterface",
+		context
+	)
+
+
+func request_kaelen_reaction(
+	quest_data: Dictionary,
+	callback: Callable,
+	_attempts_left: int = 1,
+	_copy_rejection: bool = false
+):
 	# Build a minimal context summary for Kaelen to react to
 	var title = quest_data.get("title", "the contract")
 	var faction = quest_data.get("faction", "neutral").capitalize()
@@ -1769,43 +5394,112 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 	if obj_type == "DELIVER_ORE":
 		task_desc = "deliver %s m³ of ore for %s credits" % [str(int(obj.get("amount_required", 20))), str(obj.get("reward_credits", 150))]
 	elif obj_type == "KILL_SHIPS":
-		task_desc = "destroy %d %s ships for %s credits" % [obj.get("count_required", 3), obj.get("target_faction", "enemy").capitalize(), str(obj.get("reward_credits", 200))]
+		var kill_count := int(obj.get("count_required", 3))
+		var target := str(obj.get("target_faction", "enemy")).capitalize()
+		var ship_word := "ship" if kill_count == 1 else "ships"
+		task_desc = "destroy %d %s %s for %s credits" % [kill_count, target, ship_word, str(obj.get("reward_credits", 200))]
 	else:
 		task_desc = "complete the contract"
 
+	# Mood-only, never the hidden angle — same protective pattern as
+	# request_kaelen_intro/request_kaelen_handoff_batch.
+	var mood := str(StoryManager.story_state.get("kaelen_current_mood", "")).strip_edges()
+	var mood_block := ""
+	if not mood.is_empty():
+		mood_block = "Kaelen's current mood (color her tone with this — do NOT quote or explain it): %s. " % mood
+
+	var safe_packet_block := ""
+	var completion_interaction_kind := KaelenInteractionPacketBuilderType.turn_in_kind_for_mission(
+		quest_data
+	)
+	var completion_packet_clause := _kaelen_interaction_packet_clause(
+		completion_interaction_kind,
+		quest_data
+	)
+	if not completion_packet_clause.is_empty():
+		safe_packet_block += (
+			"Completion context packet. Use only these allowed facts and the outcome_profile for the completion line; "
+			+ "safe earned aftermath may be mentioned only here if present:\n"
+			+ completion_packet_clause
+		)
+	var abandon_packet_clause := _kaelen_interaction_packet_clause(
+		KaelenInteractionKindsType.ABANDON,
+		quest_data
+	)
+	if not abandon_packet_clause.is_empty():
+		safe_packet_block += (
+			"Abandon context packet. Use only these allowed facts for the abandon line; "
+			+ "do not reveal completion aftermath here:\n"
+			+ abandon_packet_clause
+		)
+	var turn_in_style_context := {
+		"high_payout": int(quest_data.get("reward_credits", obj.get("reward_credits", 0))) >= 300,
+		"lower_payout": int(quest_data.get("reward_credits", obj.get("reward_credits", 0))) < 150,
+		"low_risk": not bool(quest_data.get("known_tough", false)),
+		"known_tough": bool(quest_data.get("known_tough", false)),
+		"reference_seed": str(quest_data.get("id", title)),
+	}
+	var curated_style_block := FixedCastVoiceBankType.style_reference_block(
+		"kaelen", "quietly_relieved", "turn_in", turn_in_style_context
+	)
+	var copy_rejection_block := ""
+	if _copy_rejection:
+		copy_rejection_block = "Your previous draft copied a reviewed reference line. That draft is invalid. Use entirely different wording; do not reuse any phrase of five or more words from a reference. "
+
 	var prompt = "You are Broker Kaelen, a cynical, profit-driven, politically neutral space broker. " + \
 		"You call the pilot 'Shiny'. You just brokered a contract named '" + title + "' for the " + faction + " faction — the task was to " + task_desc + ". " + \
-		"Generate TWO short unique lines of dialogue from Kaelen (under 25 words each): " + \
-		"one she says when the pilot successfully completes and hands in the contract (satisfied but still self-interested), " + \
-		"and one she says when the pilot abandons mid-contract (annoyed, sharp, but keeps it professional). " + \
-		"Reference the specific quest task or faction naturally. Do NOT use generic lines. " + \
+		mood_block + \
+		FixedCastSoulRegistryType.prompt_block("kaelen", StoryManager.fixed_cast_state("kaelen"), "turn_in", StoryManager.fixed_cast_rapport_band("kaelen"), StoryManager.fixed_cast_attachment_memory("kaelen"), StoryManager.fixed_cast_player_known_facts()) + "\n" + \
+		curated_style_block + \
+		copy_rejection_block + \
+		safe_packet_block + \
+		"Player-facing clarity rules: write for a player who only knows the visible contract, its completed objective, and facts explicitly present in the safe packets. " + \
+		"Do NOT issue a new unexplained task, do NOT say 'now fix/save/stop/protect/handle' something else, and do NOT mention offscreen infrastructure, cities, families, convoys, evidence, or cases unless those exact facts are in the safe packet. " + \
+		"If earned_aftermath.visible_effect.has_visible_effect is true, name that effect once in plain language before Kaelen's profit deflection. If it is false, do not invent shields, convoys, contacts, evidence, cities, or cases. " + \
+		"If earned_aftermath.earned_background.can_reveal is true, you may add one short plain-language clause explaining the safe background or what the job prevented. Name the concrete approved effect; never reduce it to a generic rescue claim such as 'they are safe now'. Use only earned_background text and IDs; never add secret motives, identities, origins, or hidden director-only causes. " + \
+		"If you imply an offscreen benefit, keep it generic and resolved: e.g. someone else has one less infrastructure problem to worry about. Never make the pilot responsible for that unseen problem. " + \
+		"Completion can hint that the job mattered, but must bring the player along in plain language. " + \
+		"The job was exactly this and nothing else: " + task_desc + ". Describe the outcome only in terms of that task. Invent no other job details — no mines, cleanup, rescue, escort, repairs, or cargo the task did not involve. " + \
+		"Do NOT name who paid or who benefits. The client stays anonymous — never invent an employer. The ONLY faction you may name is " + faction + "; never mention any other faction. " + \
+		"Preferred Kaelen turn-in shape: keep any warmth understated — one brief acknowledgment of competent work or a safe outcome, then return to broker business. She is never emotionally confessional or sentimental. Write it in her own fresh words; never reuse a sample sentence and never open with 'They're safe now'. " + \
+		"Completion must close this contract only; never look ahead or say what is next. The reward belongs to the pilot, never the client or faction. Do not claim to deduct, take, refund, charge, or alter the pilot's credits. " + \
+		"Generate ONE short unique completion line of dialogue from Kaelen (under 25 words): she says it when the pilot successfully completes and hands in this contract, satisfied but still self-interested. Reference the specific quest task or faction naturally. Do NOT use a generic line. " + \
 		"You MUST respond strictly in valid JSON format. Only output the raw JSON object:\n" + \
 		"{\n" + \
-		"  \"completion\": \"[Kaelen's unique completion line]\",\n" + \
-		"  \"abandon\": \"[Kaelen's unique abandon line]\"\n" + \
+		"  \"completion\": \"[Kaelen's unique completion line]\"\n" + \
 		"}"
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 12.0
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 			print("[LLMInterface] Kaelen reaction fetch failed. Using fallback lines.")
-			_trigger_kaelen_reaction_fallback(callback)
+			if _attempts_left > 0:
+				print("[LLMInterface] Retrying Kaelen reaction (%d attempts left)." % _attempts_left)
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "http_response_failed")
 			return
 
 		var response_text = body.get_string_from_utf8()
 		var json = JSON.new()
 		if json.parse(response_text) != OK:
-			_trigger_kaelen_reaction_fallback(callback)
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "response_envelope_parse_failed")
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
-			_trigger_kaelen_reaction_fallback(callback)
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "response_envelope_missing_response")
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -1819,37 +5513,277 @@ func request_kaelen_reaction(quest_data: Dictionary, callback: Callable):
 
 		var inner_json = JSON.new()
 		if inner_json.parse(inner_json_str) != OK:
-			_trigger_kaelen_reaction_fallback(callback)
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "inner_json_parse_failed")
 			return
 
 		var reaction_data = inner_json.get_data()
-		if reaction_data is Dictionary and reaction_data.has("completion") and reaction_data.has("abandon"):
-			print("[LLMInterface] Kaelen reaction lines generated for quest: ", title)
-			callback.call(reaction_data["completion"], reaction_data["abandon"])
+		if reaction_data is Dictionary and reaction_data.has("completion"):
+			var comp_line: String = str(reaction_data["completion"])
+			if comp_line.contains("["):
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen template not filled — retrying (%d attempts left)." % _attempts_left)
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+				else:
+					_trigger_kaelen_reaction_fallback(callback, "template_placeholder_not_filled")
+				return
+			var copied_line_kind := ""
+			if FixedCastVoiceBankType.matches_curated_line("kaelen", "turn_in", comp_line):
+				copied_line_kind = "completion"
+			if not copied_line_kind.is_empty():
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen reaction copied curated %s reference - retrying (%d attempts left)." % [copied_line_kind, _attempts_left])
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1, true)
+				else:
+					_trigger_kaelen_reaction_fallback(callback, "curated_reference_copied_" + copied_line_kind)
+				return
+			var comp_issue := _kaelen_reaction_player_clarity_issue(
+				comp_line,
+				quest_data,
+				"completion"
+			)
+			var fixed_cast_result := FixedCastLineValidatorType.validate_line(
+				"kaelen",
+				StoryManager.fixed_cast_state("kaelen"),
+				"turn_in",
+				comp_line,
+				{"task_anchors": _kaelen_reaction_task_anchors(quest_data)}
+			)
+			if comp_issue.is_empty() and not bool(fixed_cast_result.get("ok", false)):
+				var fixed_errors: Array = fixed_cast_result.get("errors", [])
+				comp_issue = str(fixed_errors[0]) if not fixed_errors.is_empty() else "fixed_cast_validation_failed"
+			if not comp_issue.is_empty():
+				var issue := comp_issue
+				if _attempts_left > 0:
+					print("[LLMInterface] Kaelen reaction clarity guard rejected line (%s) - retrying (%d attempts left)." % [issue, _attempts_left])
+					request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+				else:
+					_trigger_kaelen_reaction_fallback(
+						callback,
+						"player_clarity_guard_" + issue
+					)
+				return
+			var abandon_pick := FixedCastVoiceBankType.select_line(
+				"kaelen", "wary", "abandonment", {"runtime_id": str(quest_data.get("id", title))}, [], ""
+			)
+			var abandon_line := str(abandon_pick.get("line", ""))
+			if abandon_line.is_empty():
+				abandon_line = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
+			print("[LLMInterface] Kaelen completion generated and reviewed abandonment selected for quest: ", title)
+			callback.call(comp_line, abandon_line)
 		else:
-			_trigger_kaelen_reaction_fallback(callback)
+			if _attempts_left > 0:
+				request_kaelen_reaction(quest_data, callback, _attempts_left - 1)
+			else:
+				_trigger_kaelen_reaction_fallback(callback, "reaction_schema_missing_fields")
 	)
 
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		_trigger_kaelen_reaction_fallback(callback)
+		_trigger_kaelen_reaction_fallback(callback, "http_request_start_failed_%d" % err)
 
-func _trigger_kaelen_reaction_fallback(callback: Callable):
-	var comp = fallback_completion_lines[randi() % fallback_completion_lines.size()]
-	var abn = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
+
+func _kaelen_reaction_player_clarity_issue(
+	line: String,
+	quest_data: Dictionary,
+	line_kind: String
+) -> String:
+	var clean_line := line.strip_edges()
+	if clean_line.is_empty():
+		return "empty_line"
+	var lower_line := clean_line.to_lower()
+	if line_kind.strip_edges() == "completion":
+		var task_anchor_issue := _kaelen_reaction_task_anchor_issue(
+			lower_line, quest_data
+		)
+		if not task_anchor_issue.is_empty():
+			return task_anchor_issue
+		for pattern in [
+			"now fix",
+			"now save",
+			"now stop",
+			"now protect",
+			"now handle",
+			"now deal with",
+			"go fix",
+			"go save",
+			"go stop",
+			"go protect",
+			"go handle",
+		]:
+			if lower_line.contains(pattern):
+				return "unexplained_next_task"
+		for opening in ["fix ", "save ", "stop ", "protect ", "handle "]:
+			if lower_line.begins_with(opening):
+				return "unexplained_next_task"
+	for next_task_pattern in [
+		"you're handling",
+		"you are handling",
+		"you're fixing",
+		"you are fixing",
+		"fix the ",
+		"go back and",
+		"go earn the next",
+		"return and",
+		"i need the next job",
+		"i'll need the next job",
+		"i will need the next job",
+		"next job",
+		"what's next",
+		"what is next",
+		"i'll need someone",
+		"i will need someone",
+		"not waiting for you to",
+		"you'll need",
+		"you will need",
+	]:
+		if lower_line.contains(next_task_pattern):
+			return "unexplained_next_task"
+	for accounting_claim in [
+		"refund",
+		"i'll take",
+		"i will take",
+		"i'm taking",
+		"i am taking",
+		"cover the loss",
+		"cover my loss",
+		"cover the fee",
+		"pay the fee",
+	]:
+		if lower_line.contains(accounting_claim):
+			return "fictional_credit_adjustment"
+	if lower_line.contains("deduct") and lower_line.contains("your credits"):
+		return "fictional_credit_adjustment"
+	var named_faction := str(quest_data.get("faction", "")).to_lower().strip_edges()
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var reward := int(quest_data.get("reward_credits", objective.get("reward_credits", 0)))
+	if not named_faction.is_empty() and reward > 0 \
+			and lower_line.contains(named_faction) \
+			and lower_line.contains(str(reward)) \
+			and (lower_line.contains("get") or lower_line.contains("got") or lower_line.contains("receiv")):
+		return "fictional_payout_recipient"
+	var allowed_context := JSON.stringify(quest_data).to_lower()
+	if line_kind.strip_edges() == "completion" \
+			and _kaelen_reaction_claims_generic_safety(lower_line):
+		# A real aftermath may be shown only in its concrete, packet-approved
+		# form (clinic, lane, district, etc.). "They're safe now" is a generic
+		# rescue claim that hides why this particular contract mattered.
+		return "generic_safety_outcome"
+	for term in [
+		"relay",
+		"relays",
+		"city",
+		"cities",
+		"family",
+		"families",
+		"convoy",
+		"convoys",
+		"evidence",
+		"case",
+		"shield line",
+		"route",
+		"routes",
+	]:
+		if lower_line.contains(term) and not allowed_context.contains(term):
+			return "unintroduced_story_detail_" + term.replace(" ", "_")
+	return ""
+
+
+func _kaelen_reaction_task_anchor_issue(
+	lower_line: String,
+	quest_data: Dictionary
+) -> String:
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	var anchors := _kaelen_reaction_task_anchors(quest_data)
+	if anchors.is_empty():
+		return ""
+	for anchor in anchors:
+		if lower_line.contains(anchor):
+			return ""
+	return "missing_task_anchor:%s" % objective_type.to_lower()
+
+
+func _kaelen_reaction_task_anchors(quest_data: Dictionary) -> Array[String]:
+	var objective: Dictionary = quest_data.get("objective", {}) \
+		if quest_data.get("objective", {}) is Dictionary else {}
+	var objective_type := str(objective.get("type", quest_data.get("objective_type", "")))
+	match objective_type:
+		"DELIVER_ORE":
+			return ["ore", "delivery"]
+		"KILL_SHIPS":
+			var anchors: Array[String] = ["ship", "ships"]
+			var target := str(objective.get("target_faction", "")).to_lower().strip_edges()
+			if not target.is_empty():
+				anchors.append(target)
+			return anchors
+		"DELIVERY_COURIER":
+			return ["delivery", "courier", "package", "manifest", "records"]
+		"PURCHASE_DELIVERY":
+			return ["delivery", "cargo", "supplies"]
+		"RECOVER_COMBAT_DROP":
+			return ["recover", "recovered", "salvage", "salvaged"]
+		"TARGET_WITH_COMMS_REVERSAL":
+			return ["target", "comms", "transmission"]
+	return []
+
+
+func _kaelen_reaction_claims_generic_safety(lower_line: String) -> bool:
+	for phrase in [
+		"they're safe now",
+		"they are safe now",
+		"everyone is safe",
+		"kept them safe",
+		"saved them",
+		"you saved",
+	]:
+		if lower_line.contains(phrase):
+			return true
+	return false
+
+
+func _trigger_kaelen_reaction_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	var context: Dictionary = diagnostics_context_for_capability("kaelen_line")
+	GenerationDiagnostics.record_content_source(
+		"kaelen_reaction",
+		"static_fallback",
+		"LLMInterface",
+		context.merged({"fallback_reason": reason}, true)
+	)
+	_record_llm_fallback("kaelen_reaction", reason, context)
+	# These are approved player-facing recovery lines, unlike the older generic
+	# pool which can drift into a new task or a tone the voice review rejected.
+	var comp_pick := FixedCastVoiceBankType.select_line(
+		"kaelen", "quietly_relieved", "turn_in", {}, [], ""
+	)
+	var abandon_pick := FixedCastVoiceBankType.select_line(
+		"kaelen", "wary", "abandonment", {}, [], ""
+	)
+	var comp: String = str(comp_pick.get("line", ""))
+	var abn: String = str(abandon_pick.get("line", ""))
+	if comp.is_empty():
+		comp = fallback_completion_lines[randi() % fallback_completion_lines.size()]
+	if abn.is_empty():
+		abn = fallback_abandon_lines[randi() % fallback_abandon_lines.size()]
 	callback.call(comp, abn)
 
 
@@ -1964,7 +5898,17 @@ func _notification(what: int) -> void:
 # Build the prompt for the unique Kaelen handoff LLM call.
 # `correction_suffix` is non-empty only on the self-critique retry — it tells
 # the model what it did wrong on the previous attempt so it can course-correct.
-func _build_kaelen_intro_prompt(agent_name: String, faction: String, title: String, examples_block: String, history_clause: String, reputation_clause: String, correction_suffix: String) -> String:
+func _build_kaelen_intro_prompt(
+	agent_name: String,
+	faction: String,
+	title: String,
+	examples_block: String,
+	history_clause: String,
+	reputation_clause: String,
+	local_tone_clause: String,
+	story_clause: String,
+	correction_suffix: String
+) -> String:
 	return "You are Broker Kaelen. You are the speaker. " + agent_name + " is the OTHER person — the client you are about to bring in. The pilot is 'Shiny'.\n\n" + \
 		"SPEAKER RULE (most important — read carefully):\n" + \
 		"  - YOU are Kaelen. First person. You are talking TO the pilot ('Shiny') about " + agent_name + ".\n" + \
@@ -1983,6 +5927,8 @@ func _build_kaelen_intro_prompt(agent_name: String, faction: String, title: Stri
 		"  - Do NOT invent factions, places, ships, jobs, or details not present in the pilot's history, the examples, or the reputation data.\n" + \
 		history_clause + "\n" + \
 		reputation_clause + "\n" + \
+		local_tone_clause + "\n" + \
+		story_clause + \
 		correction_suffix + "\n" + \
 		"You MUST respond strictly in valid JSON format. Only output the raw JSON object:\n" + \
 		"{\n" + \
@@ -2017,6 +5963,30 @@ func _check_kaelen_intro_speaker(line: String, agent_name: String) -> String:
 	if has_first_person and not has_shiny:
 		return "Your previous line used first-person speech without addressing 'Shiny' (\"" + line + "\"). Kaelen always talks TO Shiny, not about herself. Try again."
 	return ""  # OK
+
+
+func _kaelen_local_tone_clause(quest_data: Dictionary) -> String:
+	var raw_pack: Variant = quest_data.get("system_story_pack", {})
+	if not raw_pack is Dictionary:
+		return ""
+	var story_pack := raw_pack as Dictionary
+	var humor_guidance := str(story_pack.get("humor_guidance", "")).strip_edges()
+	var tension := str(story_pack.get("active_tension", "")).strip_edges()
+	var nickname := str(story_pack.get("local_nickname", "")).strip_edges()
+	if humor_guidance.is_empty() and tension.is_empty() and nickname.is_empty():
+		return ""
+	var parts: Array[String] = []
+	if not nickname.is_empty():
+		parts.append("System nickname: " + nickname)
+	if not tension.is_empty():
+		parts.append("Local tension: " + tension)
+	if not humor_guidance.is_empty():
+		parts.append("Local humor guidance: " + humor_guidance)
+	return (
+		"Local system tone for Kaelen's handoff: "
+		+ "; ".join(parts)
+		+ ". Use this only for flavor; do not add extra lore or mission facts."
+	)
 
 
 # Generate a unique Kaelen handoff line that introduces the upcoming quest giver.
@@ -2060,22 +6030,73 @@ func request_kaelen_intro(quest_data: Dictionary, agent_history_text: String, pl
 		"  - Comment on the pilot's broader social position — e.g. note that the pilot has made a lot of enemies and could use a few more friends with a particular faction, warn about a hostile faction, or contrast the pilot's friendly vs hostile relationships.\n\n" + \
 		"Kaelen is a broker — she has opinions on the pilot's political situation. Do NOT invent tiers or numbers not listed above."
 
+	# Draw from pre-generated pool first — instant, no LLM call.
+	if is_instance_valid(StoryManager):
+		var pooled_line: String = StoryManager.draw_kaelen_handoff(agent_name)
+		if pooled_line != "":
+			print("[LLMInterface] Kaelen handoff: served from pool for %s" % agent_name)
+			callback.call(pooled_line)
+			return
+
+	var local_tone_clause := _kaelen_local_tone_clause(quest_data)
+
+	var story_clause := ""
+	if story_state_context_text.strip_edges() != "":
+		story_clause = (
+			"Narrative context (do NOT quote or expose this directly — let it color tone and urgency only):\n"
+			+ story_state_context_text + "\n"
+		)
+
+	var kaelen_packet_clause := _kaelen_interaction_packet_clause(
+		KaelenInteractionKindsType.AGENT_HANDOFF,
+		quest_data,
+		{
+			"relationship_tier": GlobalState.reputation_tier(
+				player_reps.get(faction.to_lower(), 0)
+			),
+		}
+	)
+	if not kaelen_packet_clause.is_empty():
+		story_clause += kaelen_packet_clause
+
 	# First attempt. If the response fails the speaker-leakage guard, we
 	# retry ONCE with a correction suffix that tells the model what it did
 	# wrong. After that, we hard-fall-back to canned (caller picks from
 	# fallback_handoff_lines_by_agent).
-	_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, "", 0, callback)
+	_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, "", 0, callback)
+
+
+func _kaelen_interaction_packet_clause(
+	interaction_kind: String,
+	quest_data: Dictionary,
+	style_context: Dictionary = {}
+) -> String:
+	if not is_instance_valid(StoryManager):
+		return ""
+	var packet: Dictionary = KaelenInteractionPacketBuilderType.build_packet(
+		interaction_kind,
+		quest_data,
+		StoryManager.story_state,
+		[],
+		style_context
+	)
+	if not bool(packet.get("ok", false)):
+		return ""
+	return (
+		"Safe Kaelen interaction packet (allowed context only; do not quote raw IDs):\n"
+		+ JSON.stringify(packet) + "\n"
+	)
 
 
 # Internal: make one LLM call for the handoff intro. `attempt` is 0 on the
 # first try, 1 on the self-critique retry. Total cap is 2 attempts — beyond
 # that the caller falls back to a canned line.
-func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, correction_suffix: String, attempt: int, original_callback: Callable):
-	var prompt = _build_kaelen_intro_prompt(agent_name, faction, title, examples_block, history_clause, reputation_clause, correction_suffix)
+func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: String, examples_block: String, history_clause: String, reputation_clause: String, local_tone_clause: String, story_clause: String, correction_suffix: String, attempt: int, original_callback: Callable):
+	var prompt = _build_kaelen_intro_prompt(agent_name, faction, title, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, correction_suffix)
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 8.0  # Tighter than quest gen — intro must be quick
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
@@ -2084,7 +6105,13 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_network_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (network). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"http_response_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var response_text = body.get_string_from_utf8()
@@ -2093,14 +6120,26 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (outer JSON parse). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"response_envelope_parse_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"response_envelope_missing_response",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -2117,19 +6156,37 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
 			print("[LLMInterface] Kaelen intro fetch failed (inner JSON parse). Caller should fall back.")
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"inner_json_parse_failed",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var intro_data = inner_json.get_data()
 		if not (intro_data is Dictionary and intro_data.has("intro") and intro_data["intro"] is String):
 			_kaelen_intro_parse_failures += 1
 			_save_kaelen_intro_stats()
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"intro_schema_missing_line",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		var line: String = intro_data["intro"].strip_edges()
 		if line == "":
-			original_callback.call("")
+			_trigger_kaelen_intro_fallback(
+				original_callback,
+				"empty_intro_line",
+				agent_name,
+				title,
+				faction
+			)
 			return
 
 		# ── Speaker-leakage guard ──────────────────────────────────────────
@@ -2149,13 +6206,19 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 				_kaelen_intro_rejected_after_retry += 1
 				_save_kaelen_intro_stats()
 				print("[LLMInterface] Kaelen intro: giving up after retry. Caller should fall back.")
-				original_callback.call("")
+				_trigger_kaelen_intro_fallback(
+					original_callback,
+					"speaker_guard_rejected_after_retry",
+					agent_name,
+					title,
+					faction
+				)
 				return
 			_kaelen_intro_rejected_first_try += 1
 			# Build a correction suffix from the rejection reason and retry.
 			var new_suffix = "SELF-CRITIQUE — your previous attempt was rejected. Reason: " + rejection_reason
 			print("[LLMInterface] Kaelen intro: retrying with self-critique correction...")
-			_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, new_suffix, attempt + 1, original_callback)
+			_kaelen_intro_request_attempt(agent_name, title, faction, examples_block, history_clause, reputation_clause, local_tone_clause, story_clause, new_suffix, attempt + 1, original_callback)
 			return
 
 		_kaelen_intro_successes += 1
@@ -2165,16 +6228,15 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 	)
 
 	_kaelen_intro_attempts += 1
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.9,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
@@ -2183,16 +6245,47 @@ func _kaelen_intro_request_attempt(agent_name: String, title: String, faction: S
 		_kaelen_intro_network_failures += 1
 		_save_kaelen_intro_stats()
 		print("[LLMInterface] Kaelen intro fetch failed (request init). Caller should fall back.")
-		original_callback.call("")
+		_trigger_kaelen_intro_fallback(
+			original_callback,
+			"http_request_start_failed_%d" % err,
+			agent_name,
+			title,
+			faction
+		)
 
-func _trigger_salvager_profile_fallback(callback: Callable):
-	var rand_name = fallback_salvager_names[randi() % fallback_salvager_names.size()]
-	var rand_backstory = fallback_salvager_backstories[randi() % fallback_salvager_backstories.size()]
+
+func _trigger_kaelen_intro_fallback(
+	callback: Callable,
+	reason: String,
+	agent_name: String,
+	title: String,
+	faction: String
+) -> void:
+	_record_llm_fallback(
+		"kaelen_handoff_intro",
+		reason,
+		{
+			"agent_name": agent_name,
+			"title": title,
+			"faction": faction,
+		}
+	)
+	if callback.is_valid():
+		callback.call("")
+
+
+func _trigger_salvager_profile_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	_record_llm_fallback("salvager_profile", reason)
+	var rand_name: String = fallback_salvager_names[randi() % fallback_salvager_names.size()]
+	var rand_backstory: String = fallback_salvager_backstories[randi() % fallback_salvager_backstories.size()]
 	var profile = {
 		"name": rand_name,
 		"backstory": rand_backstory
 	}
-	callback.call(profile)
+	_call_salvager_profile_callback(callback, profile)
 
 # Fallback lines for when Kaelen acknowledges a partial ore drop-off
 var fallback_partial_delivery_lines = [
@@ -2222,24 +6315,24 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 
 	var temp_http = HTTPRequest.new()
 	add_child(temp_http)
-	temp_http.timeout = 10.0
+	temp_http.timeout = request_timeout_for_capability("partial_delivery_line")
 
 	temp_http.request_completed.connect(func(result, response_code, headers, body):
 		temp_http.queue_free()
 
 		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "http_response_failed")
 			return
 
 		var response_text = body.get_string_from_utf8()
 		var json = JSON.new()
 		if json.parse(response_text) != OK:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "response_envelope_parse_failed")
 			return
 
 		var outer_data = json.get_data()
 		if not outer_data is Dictionary or not outer_data.has("response"):
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "response_envelope_missing_response")
 			return
 
 		var inner_json_str = outer_data["response"].strip_edges()
@@ -2253,29 +6346,1249 @@ func request_partial_delivery_line(quest_title: String, delivered_amount: float,
 
 		var inner_json = JSON.new()
 		if inner_json.parse(inner_json_str) != OK:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "inner_json_parse_failed")
 			return
 
 		var data = inner_json.get_data()
 		if data is Dictionary and data.has("line") and data["line"] is String and data["line"].length() > 3:
 			callback.call(data["line"])
 		else:
-			callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+			_trigger_partial_delivery_fallback(callback, "partial_delivery_schema_missing_line")
 	)
 
-	var payload = {
-		"model": active_model_name,
-		"prompt": prompt,
-		"stream": false,
-		"format": "json",
-		"options": {
+	var payload: Dictionary = build_generation_body(
+		"partial_delivery_line",
+		prompt,
+		"json",
+		{
 			"temperature": 0.92,
 			"seed": randi()
 		}
-	}
+	)
 	var json_str = JSON.stringify(payload)
 	var headers = ["Content-Type: application/json"]
 	var err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		temp_http.queue_free()
-		callback.call(fallback_partial_delivery_lines[randi() % fallback_partial_delivery_lines.size()])
+		_trigger_partial_delivery_fallback(
+			callback,
+			"http_request_start_failed_%d" % err
+		)
+
+
+func _trigger_partial_delivery_fallback(
+	callback: Callable,
+	reason: String = "unspecified"
+) -> void:
+	_record_llm_fallback("partial_delivery_line", reason)
+	if callback.is_valid():
+		callback.call(
+			fallback_partial_delivery_lines[
+				randi() % fallback_partial_delivery_lines.size()
+			]
+		)
+
+
+func generate_campaign_system_names(count: int, callback: Callable):
+	if OLLAMA_URL.is_empty() or model_for_capability("system_names").is_empty():
+		callback.call([])
+		return
+	var prompt := (
+		"Generate %d unique star system names for a space exploration game. "
+		+ "Each name should feel like a real place — evocative, varied, 1-3 words. "
+		+ "Mix styles: some mythological, some geographic, some industrial. "
+		+ "Return a JSON object with a single key \"names\" containing an array of strings. "
+		+ "No numbering, no duplicates."
+	) % count
+	var payload: Dictionary = build_generation_body(
+		"system_names",
+		prompt,
+		"json",
+		{
+			"temperature": 1.0,
+			"seed": randi()
+		}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("system_names")
+	temp_http.request_completed.connect(
+		func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray):
+			temp_http.queue_free()
+			if code != 200:
+				callback.call([])
+				return
+			var parsed = JSON.parse_string(body.get_string_from_utf8())
+			if parsed is Dictionary:
+				var response_text: String = str(parsed.get("response", ""))
+				var inner = JSON.parse_string(response_text)
+				if inner is Dictionary and inner.has("names") and inner["names"] is Array:
+					var names: Array[String] = []
+					for n in inner["names"]:
+						var s := str(n).strip_edges()
+						if not s.is_empty() and s.length() <= 30:
+							names.append(s)
+					if names.size() >= count / 2:
+						callback.call(names)
+						return
+			callback.call([])
+	)
+	var json_str = JSON.stringify(payload)
+	var headers = ["Content-Type: application/json"]
+	var name_err = temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, json_str)
+	if name_err != OK:
+		temp_http.queue_free()
+		callback.call([])
+
+
+# ── Kaelen Bounty Brief ───────────────────────────────────────────────────────
+
+func fetch_bounty_brief(
+	system_id: String,
+	factions: Array,
+	callback: Callable,
+	_attempts_left: int = 1
+) -> void:
+	var day_number: int = int(GlobalState.get("day_number")) if GlobalState.get("day_number") != null else 1
+	var rep_lines: Array = []
+	for f in factions:
+		var rep: int = int(GlobalState.reputations.get(f, 0))
+		rep_lines.append("%s (rep %d)" % [f, rep])
+	var factions_str := ", ".join(rep_lines)
+
+	var prompt := (
+		"You are Broker Kaelen, a cynical space broker. Today is day %d. "
+		+ "The player is operating in system '%s'. "
+		+ "Minor factions active in this system: %s. "
+		+ "Pick 1–2 of these factions to place standing bounties on. "
+		+ "For each bounty write one short sentence in Kaelen's voice explaining WHY she wants them hit (personal, mercenary, never moral). "
+		+ "Suggest a payout between 7 and 15 SC per kill (after your cut) and a cap between 3 and 10 kills. "
+		+ "Respond ONLY in valid JSON:\n"
+		+ "{\n"
+		+ "  \"bounties\": [\n"
+		+ "    { \"faction\": \"<faction_id>\", \"payout\": <int>, \"cap\": <int>, \"kaelen_line\": \"<one sentence>\" }\n"
+		+ "  ]\n"
+		+ "}"
+	) % [day_number, system_id, factions_str]
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "http_failed")
+			return
+
+		var outer_json := JSON.new()
+		if outer_json.parse(body.get_string_from_utf8()) != OK:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "envelope_parse_failed")
+			return
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "envelope_missing_response")
+			return
+
+		var inner_str: String = str(outer_data["response"]).strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "inner_parse_failed")
+			return
+		var inner_data = inner_json.get_data()
+		if not inner_data is Dictionary or not inner_data.has("bounties") or not inner_data["bounties"] is Array:
+			if _attempts_left > 0:
+				fetch_bounty_brief(system_id, factions, callback, _attempts_left - 1)
+			else:
+				_trigger_bounty_brief_fallback(factions, callback, "inner_schema_failed")
+			return
+
+		var bounties: Array = []
+		var known_factions: Array = GlobalState.MINOR_FACTIONS.keys()
+		for entry in inner_data["bounties"]:
+			if not entry is Dictionary:
+				continue
+			var f: String = str(entry.get("faction", "")).strip_edges()
+			if f not in known_factions:
+				continue
+			var payout: int = clampi(int(entry.get("payout", 8)), 5, 20)
+			var cap: int = clampi(int(entry.get("cap", 5)), 1, 15)
+			var line: String = str(entry.get("kaelen_line", "")).strip_edges()
+			if line.contains("[") or line.is_empty():
+				line = "I've got my reasons. %d SC a hull, after my cut." % payout
+			bounties.append({
+				"faction": f,
+				"system_id": system_id,
+				"payout_per_kill": payout,
+				"cap": cap,
+				"kills_credited": 0,
+				"kaelen_line": line,
+			})
+		if bounties.is_empty():
+			_trigger_bounty_brief_fallback(factions, callback, "no_valid_bounties")
+			return
+		callback.call(bounties)
+	)
+
+	var payload := build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{ "temperature": 0.9, "seed": randi() }
+	)
+	var headers := ["Content-Type: application/json"]
+	var err := temp_http.request(OLLAMA_URL, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err != OK:
+		temp_http.queue_free()
+		_trigger_bounty_brief_fallback(factions, callback, "request_start_failed_%d" % err)
+
+
+func _trigger_bounty_brief_fallback(factions: Array, callback: Callable, reason: String) -> void:
+	print("[LLMInterface] Bounty brief fallback: ", reason)
+	if factions.is_empty():
+		callback.call([])
+		return
+	var f: String = factions[randi() % factions.size()]
+	var faction_label: String = f.capitalize()
+	var fallback_lines := [
+		"The %s hit a shipment I had a stake in. I want receipts." % faction_label,
+		"Old business with the %s. Nothing you need to know, just act on it." % faction_label,
+		"Client wants %s hulls. Don't ask who. Eight SC a kill, after my finder's fee." % faction_label,
+		"The %s are running interference on a deal I'm closing. I'd like that to stop." % faction_label,
+	]
+	var line: String = fallback_lines[randi() % fallback_lines.size()]
+	callback.call([{
+		"faction": f,
+		"system_id": GlobalState.current_system_id,
+		"payout_per_kill": 8,
+		"cap": 5,
+		"kills_credited": 0,
+		"kaelen_line": line,
+	}])
+
+
+# ── Combat taunt generation ───────────────────────────────────────────────────
+# Called once at the start of each combat encounter. Returns a Dictionary with
+# 11 pre-generated lines covering every taunt event in the fight. Falls back
+# to hardcoded lines if the LLM is unavailable.
+#
+# callback signature: func(taunts: Dictionary) -> void
+# Keys: npc_open, npc_player_fled_success, npc_player_fled_fail,
+#       npc_low_health, player_low_health, npc_dying,
+#       npc_brace, npc_shield_angle, npc_reposition, npc_enemy_fled,
+#       kaelen_open, kaelen_player_fled, kaelen_player_low_health,
+#       kaelen_winning, kaelen_kill_confirm
+
+const COMBAT_TAUNT_FALLBACKS := {
+	"npc_open":               "You picked the wrong ship, you scrap-brained idiot.",
+	"npc_jab_1":              "That all you've got, you pathetic scrap-rat?",
+	"npc_jab_2":              "I've fought asteroids with more spine than you.",
+	"npc_jab_3":              "Still breathing, scumbag? Let's fix that.",
+	"npc_player_fled_success":"Run, coward. I'll hunt you down.",
+	"npc_player_fled_fail":   "Nowhere to run now, moron.",
+	"npc_low_health":         "Lucky shot. Won't happen twice, idiot.",
+	"player_low_health":      "You're falling apart, you worthless junk-heap.",
+	"npc_dying":              "...didn't see that coming.",
+	"npc_brace":              "You'll break your fists on me.",
+	"npc_shield_angle":       "Angles up. Good luck.",
+	"npc_reposition":         "Try keeping up, scrap-rat.",
+	"npc_enemy_fled":         "I'm out. Tell somebody impressive I almost cared.",
+	"npc_boss_phase_2":       "Still standing? Fine. Now I get serious.",
+	"npc_boss_phase_3":       "You want to see what I'm really capable of?",
+	"kaelen_open":            "Shiny, you have company. Try not to die — I'm owed money.",
+	"kaelen_player_fled":     "Smart. Heroics don't pay the docking fees.",
+	"kaelen_player_low_health": "Shiny, you look terrible on my sensors right now.",
+	"kaelen_winning":         "Wrap it up — salvage fees are yours if you're fast.",
+	"kaelen_kill_confirm":    "One less headache. Logging the kill now.",
+}
+
+func request_combat_taunts(npc_faction: String, npc_archetype: String, callback: Callable, _attempt: int = 0, cause: String = "") -> void:
+	var faction_cap := npc_faction.capitalize()
+	var arch_cap   := npc_archetype.capitalize()
+	# The per-fight bundle used to assert the enemy had "just been attacked",
+	# which was wrong every time they started the fight. The cause block states
+	# the real situation instead.
+	var cause_block := TauntCauseType.prompt_block(
+		cause if TauntCauseType.is_valid(cause) else TauntCauseType.OPPORTUNIST
+	)
+
+	var prompt := """You are writing combat banter for a gritty space combat game. Generate exactly 20 short lines of dialogue — punchy, under 18 words each. Do NOT use placeholder brackets.
+
+%s
+
+There are TWO speakers. Write each line for the correct one:
+
+1) THE ENEMY PILOT — every key starting with "npc_". A hostile %s %s who has NEVER met the player and does NOT know their name. Their situation is the one described above; every npc_ line must fit it. Dark and dry: gallows humour, understatement, threats delivered calmly. Contempt is fine and mild profanity is fine, but never puns and never jokes about anyone's mother. NEVER use any name or nickname — they have no idea who the player is.
+
+2) KAELEN — every key starting with "kaelen_". The player's cynical, money-minded broker watching the fight over comms. Kaelen KNOWS the player and calls them "Shiny". Dry, sardonic, keep Kaelen's lines clean (PG-13). Kaelen never insults the player crudely — that's the enemy's job.
+
+Vary how much they explain: some lines carry the situation, others are just a
+short flat threat ("I'm going to make this one hurt."). Both are the same pilot.
+
+Tone examples (do not reuse — match the register):
+- enemy: "Hold still. This is the easy part."
+- enemy: "You're cargo with opinions."
+- enemy fleeing: "I'm out. Tell them I said sorry about the mess."
+- kaelen: "Shiny, don't get sentimental. Just get paid."
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "npc_open": "...",
+  "npc_jab_1": "...",
+  "npc_jab_2": "...",
+  "npc_jab_3": "...",
+  "npc_player_fled_success": "...",
+  "npc_player_fled_fail": "...",
+  "npc_low_health": "...",
+  "player_low_health": "...",
+  "npc_dying": "...",
+  "npc_brace": "...",
+  "npc_shield_angle": "...",
+  "npc_reposition": "...",
+  "npc_enemy_fled": "...",
+  "npc_boss_phase_2": "...",
+  "npc_boss_phase_3": "...",
+  "kaelen_open": "...",
+  "kaelen_player_fled": "...",
+  "kaelen_player_low_health": "...",
+  "kaelen_winning": "...",
+  "kaelen_kill_confirm": "..."
+}""" % [cause_block, faction_cap, arch_cap]
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempt == 0:
+				push_warning("[TAUNT FALLBACK RISK] combat taunts HTTP failed (result=%d code=%d) for %s %s — retrying in 3s" % [result, response_code, faction_cap, arch_cap])
+				get_tree().create_timer(3.0, true, false, true).timeout.connect(
+					func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1, cause))
+				return
+			_log_combat_taunt_fallback("http_failed", faction_cap, arch_cap,
+				{"result": result, "response_code": response_code})
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var response_text: String = body.get_string_from_utf8()
+		var outer_json := JSON.new()
+		if outer_json.parse(response_text) != OK:
+			_log_combat_taunt_fallback("outer_json_parse_failed", faction_cap, arch_cap,
+				{"raw_length": response_text.length()})
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			_log_combat_taunt_fallback("missing_response_key", faction_cap, arch_cap, {})
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var inner_str: String = outer_data["response"].strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			_log_combat_taunt_fallback("inner_json_parse_failed", faction_cap, arch_cap,
+				{"snippet": inner_str.substr(0, 80)})
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		var data = inner_json.get_data()
+		if not data is Dictionary:
+			_log_combat_taunt_fallback("response_not_dict", faction_cap, arch_cap, {})
+			callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+			return
+
+		# Merge into fallback dict — only override keys where LLM produced a real line.
+		var result_dict := COMBAT_TAUNT_FALLBACKS.duplicate()
+		var llm_count := 0
+		for key in result_dict.keys():
+			if data.has(key) and str(data[key]).length() > 0 and not str(data[key]).contains("["):
+				result_dict[key] = str(data[key])
+				llm_count += 1
+		# Warn if the LLM barely filled anything — partial fallback still happened.
+		if llm_count < result_dict.size() / 2:
+			push_warning("[TAUNT FALLBACK] combat taunts partial: only %d/%d keys filled for %s %s" % [
+				llm_count, result_dict.size(), faction_cap, arch_cap])
+		print("[LLMInterface] Combat taunts: %d/%d lines filled for %s %s" % [
+			llm_count, result_dict.size(), faction_cap, arch_cap])
+		callback.call(result_dict)
+	)
+
+	var payload: Dictionary = build_generation_body(
+		"kaelen_line",
+		prompt,
+		"json",
+		{"temperature": 0.95, "seed": randi()}
+	)
+	var err := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err != OK:
+		temp_http.queue_free()
+		if _attempt == 0:
+			push_warning("[TAUNT FALLBACK RISK] combat taunts request() error=%d for %s %s — retrying in 3s" % [err, faction_cap, arch_cap])
+			get_tree().create_timer(3.0, true, false, true).timeout.connect(
+				func(): request_combat_taunts(npc_faction, npc_archetype, callback, 1, cause))
+			return
+		_log_combat_taunt_fallback("request_error", faction_cap, arch_cap, {"err": err})
+		callback.call(COMBAT_TAUNT_FALLBACKS.duplicate())
+
+func _log_combat_taunt_fallback(reason: String, faction: String, archetype: String, ctx: Dictionary) -> void:
+	var msg := "[TAUNT FALLBACK] combat taunts fell back to canned lines — reason: %s | %s %s" % [reason, faction, archetype]
+	push_warning(msg)
+	print(msg)
+	var diag_node = get_tree().root.get_node_or_null("GenerationDiagnostics")
+	if diag_node:
+		diag_node.record_fallback("combat_taunts", reason, "LLMInterface",
+			ctx.merged({"reason": reason, "faction": faction, "archetype": archetype}, true))
+
+## Request a batch of generic combat taunts (not faction-specific) for the
+## general opening-taunt pool. Returns {"rage":[...], "reason":[...], "humor":[...]}.
+## Retries once before giving up; logs with push_warning on failure.
+const TauntCauseType := preload("res://scripts/combat/TauntCause.gd")
+
+
+# Batch of enemy taunts for ONE cause (see TauntCause). This is the engine that
+# grows the pool: it is called repeatedly across sessions and every accepted
+# line is appended, so the player can fly for a long time before a repeat.
+#
+# The old prompt hardcoded "a furious stranger trash-talking whoever just
+# attacked them", which was wrong every time the NPC started the fight. The
+# cause brief replaces that with the speaker's actual situation, what they
+# know, what they want, and the register to hit.
+static func build_taunt_bank_prompt(
+	cause: String,
+	count: int,
+	context: Dictionary = {}
+) -> String:
+	var parts: Array[String] = [
+		"You are writing enemy pilot barks for a gritty space combat game.",
+		"",
+		TauntCauseType.prompt_block(cause, context),
+		"",
+	]
+	var faction := str(context.get("faction_label", "")).strip_edges()
+	if not faction.is_empty():
+		parts.append("The speaker flies for: %s." % faction)
+	var archetype := str(context.get("archetype", "")).strip_edges()
+	if not archetype.is_empty():
+		parts.append("Their role in the fight: %s." % archetype)
+	parts.append("")
+	parts.append("HOUSE VOICE -- this matters more than being funny:")
+	parts.append(
+		"Dark and dry. Gallows humour, understatement, people being casually"
+	)
+	parts.append(
+		"awful about violence because it is a normal working day. Threats"
+	)
+	parts.append(
+		"land harder when they are delivered calmly. Never zany, never puns,"
+	)
+	parts.append("never jokes about anyone's mother.")
+	parts.append("")
+	parts.append("Hard rules:")
+	parts.append("- One sentence each, under 18 words, spoken out loud in the fight.")
+	parts.append(
+		"- They do NOT know the pilot's name or callsign. Never invent one."
+	)
+	parts.append(
+		"- Never invent a grievance beyond the situation described above."
+	)
+	parts.append(
+		"- THE PILOT MUST UNDERSTAND THE LINE WITH NO BACK-STORY. They hear one"
+	)
+	parts.append(
+		"  sentence in a fight. Say the situation in plain words rather than"
+	)
+	parts.append(
+		"  alluding to it: a line the speaker understands but the pilot cannot"
+	)
+	parts.append("  decode is a failed line, however good it sounds.")
+	parts.append("- No placeholder brackets, no speaker labels, no stage directions.")
+	parts.append("- Every line different from the others in shape and opening.")
+	parts.append(
+		"- Vary how much they explain. Some lines carry the situation; others"
+	)
+	parts.append(
+		"  are just a short flat threat -- \"I'm going to make this one hurt.\""
+	)
+	parts.append("  Both must sound like the same angry pilot.")
+	parts.append("")
+	parts.append(
+		"Return ONLY a JSON object with one key \"lines\", an array of %d strings." % count
+	)
+	parts.append("{\"lines\": [\"first line here\", \"second line here\"]}")
+	return "
+".join(parts)
+
+
+static func _is_word_char(ch: String) -> bool:
+	var lower := ch.to_lower()
+	return lower >= "a" and lower <= "z"
+
+
+# Validates one taunt line. Returns "" when acceptable, else the reason.
+static func validate_taunt_line(text: String) -> String:
+	var clean := text.strip_edges()
+	if clean.length() < 8:
+		return "too_short"
+	if clean.length() > 170:
+		return "too_long"
+	if clean.contains("
+"):
+		return "multiline"
+	if clean.contains("{") or clean.contains("}") 			or clean.contains("[") or clean.contains("]"):
+		return "placeholder_braces"
+	if clean.contains("*"):
+		return "stage_direction"
+	# A question mark wedged between two letters is never real punctuation --
+	# it is a curly apostrophe that lost a fight with an encoding somewhere
+	# upstream ("isn?t personal"). Cheap to spot, and it would otherwise be
+	# spoken aloud as a glitch.
+	for i in range(1, clean.length() - 1):
+		if clean[i] == "?" and _is_word_char(clean[i - 1]) and _is_word_char(clean[i + 1]):
+			return "corrupt_punctuation"
+	var colon := clean.find(":")
+	if colon > 0 and colon <= 24:
+		var prefix := clean.substr(0, colon)
+		if not prefix.contains(" ") or prefix.to_upper() == prefix:
+			return "speaker_prefix"
+	return ""
+
+
+# Pulls complete quoted strings out of a truncated batch body. Only strings
+# that are fully closed are returned, so a line cut mid-word is dropped rather
+# than delivered half-said. Returns [] when the body is not a recognisable
+# attempt at the expected shape.
+static func _salvage_truncated_lines(text: String) -> Array[String]:
+	var out: Array[String] = []
+	var key_at := text.find("\"lines\"")
+	if key_at == -1:
+		return out
+	var open_at := text.find("[", key_at)
+	if open_at == -1:
+		return out
+	var i := open_at + 1
+	var current := ""
+	var in_string := false
+	var escaped := false
+	while i < text.length():
+		var ch := text[i]
+		i += 1
+		if in_string:
+			if escaped:
+				# Keep the standard escapes readable; anything else passes through.
+				match ch:
+					"n": current += "
+"
+					"t": current += "	"
+					_: current += ch
+				escaped = false
+				continue
+			if ch == "\\":
+				escaped = true
+				continue
+			if ch == "\"":
+				# Closed cleanly, so this line is safe to keep.
+				out.append(current)
+				current = ""
+				in_string = false
+				continue
+			current += ch
+			continue
+		if ch == "\"":
+			in_string = true
+			current = ""
+			continue
+		if ch == "]":
+			break
+	return out
+
+
+# Cause-specific coherence check. Small models reverse who is who: for a
+# contract kill they produce "you were sold", "you owe me", "you weren't worth
+# the contract" -- the pilot cast as the target instead of the hired gun. The
+# line reads fluently and is nonsense, so no generic validator catches it.
+#
+# Deliberately handled HERE rather than by adding prohibitions to the prompt.
+# Telling a 4b not to say a phrase teaches it the phrase; rejecting the output
+# costs one line and never leaks into the writing.
+static func taunt_role_confusion(text: String, cause: String) -> String:
+	if cause.strip_edges() != TauntCauseType.CONTRACT_HIT:
+		return ""
+	var lower := text.to_lower()
+	# The pilot recast as the one who was traded, priced, or indebted.
+	for phrase in [
+		"you were sold", "you was sold", "you were bought", "you were traded",
+		"you owe me", "you owe them", "you're the contract", "you are the contract",
+		"your price", "you were never sold", "you weren't worth",
+		"you were not worth", "pay me back", "bought your",
+		# The pilot recast as the one spending rather than being paid.
+		"did you pay", "you pay to", "you paid to", "much did you pay",
+		"i've got your bounty", "i have your bounty",
+	]:
+		if lower.contains(phrase):
+			return "role_confusion"
+	return ""
+
+
+# Parses a {"lines": [...]} batch. `existing_texts` is the pool already on
+# disk: with a pool this large the model WILL re-propose lines it gave in an
+# earlier session, and the dedupe has to span sessions, not just this batch.
+# Near-duplicate rejection mirrors the N.O.V.A. bank guards -- a shared whole
+# sentence or a repeated closer is what a player actually hears as repetition.
+static func parse_taunt_bank_batch(
+	raw: String,
+	existing_texts: Dictionary = {},
+	cause: String = ""
+) -> Dictionary:
+	var text := raw.strip_edges()
+	if text.begins_with("```"):
+		var newline := text.find("
+")
+		if newline != -1:
+			text = text.substr(newline + 1)
+		if text.ends_with("```"):
+			text = text.substr(0, text.length() - 3)
+		text = text.strip_edges()
+	var parser := JSON.new()
+	var salvaged: Array[String] = []
+	if parser.parse(text) != OK:
+		# Generation occasionally stops one brace short of valid JSON. Throwing
+		# the batch away costs five good lines to save nothing, so recover the
+		# complete strings that arrived before the cut. Anything half-written is
+		# left behind -- this salvages, it does not repair.
+		salvaged = _salvage_truncated_lines(text)
+		if salvaged.is_empty():
+			return {"lines": [], "rejected": [{
+				"reason": "inner_parse_failed",
+				"length": text.length(),
+				"tail": text.substr(maxi(0, text.length() - 90), 90),
+			}]}
+	var data = parser.get_data()
+	var raw_lines: Array = []
+	if not salvaged.is_empty():
+		for value in salvaged:
+			raw_lines.append(value)
+	elif not data is Dictionary or not (data as Dictionary).has("lines"):
+		return {"lines": [], "rejected": [{
+			"reason": "missing_lines_key",
+			"keys": str((data as Dictionary).keys()) if data is Dictionary else "not_a_dict",
+		}]}
+	elif not (data as Dictionary)["lines"] is Array:
+		return {"lines": [], "rejected": [{"reason": "lines_not_an_array"}]}
+	else:
+		raw_lines = (data as Dictionary)["lines"]
+	var out: Array = []
+	var rejected: Array = []
+	var seen_sentences: Dictionary = {}
+	var seen_closers: Dictionary = {}
+	for raw_line in (raw_lines as Array):
+		var line := str(raw_line).strip_edges()
+		if line.begins_with("\"") and line.ends_with("\"") and line.length() > 1:
+			line = line.substr(1, line.length() - 2).strip_edges()
+		var reason := validate_taunt_line(line)
+		if not reason.is_empty():
+			rejected.append({"text": line, "reason": reason})
+			continue
+		if existing_texts.has(line):
+			rejected.append({"text": line, "reason": "already_in_pool"})
+			continue
+		var confusion := taunt_role_confusion(line, cause)
+		if not confusion.is_empty():
+			rejected.append({"text": line, "reason": confusion})
+			continue
+		if not _nova_bank_shared_sentence(line, seen_sentences).is_empty():
+			rejected.append({"text": line, "reason": "duplicate_sentence"})
+			continue
+		var closer := _nova_bank_final_sentence(line)
+		if not closer.is_empty() and seen_closers.has(closer):
+			rejected.append({"text": line, "reason": "duplicate_closer"})
+			continue
+		for sentence in _nova_bank_sentences(line):
+			seen_sentences[sentence] = true
+		if not closer.is_empty():
+			seen_closers[closer] = true
+		out.append(line)
+	return {"lines": out, "rejected": rejected}
+
+
+# Fires one cause-keyed batch at the small model. Fire-and-forget: the caller
+# already has an authored floor plus whatever previous sessions banked, so a
+# failure costs variety, never silence.
+func request_taunt_bank_batch(
+	cause: String,
+	count: int,
+	context: Dictionary,
+	callback: Callable
+) -> void:
+	var capability := "taunt_bank"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"taunt_bank", "model_unavailable", "llm_interface", {"cause": cause}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	if not TauntCauseType.is_valid(cause):
+		callback.call({"ok": false, "reason": "invalid_cause"})
+		return
+	var wanted := clampi(count, 1, 20)
+	var prompt := build_taunt_bank_prompt(cause, wanted, context)
+	var existing: Dictionary = context.get("existing_texts", {}) 		if context.get("existing_texts", {}) is Dictionary else {}
+	var payload := build_generation_body(
+		capability, prompt, "json",
+		# Budget per line PLUS the JSON wrapper. At 48/line the array closed but
+		# the object never did, and whole causes came back as inner_parse_failed
+		# purely because the last brace was cut off.
+		{"temperature": 1.0, "num_predict": 64 * wanted + 96, "seed": randi()}
+	)
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability(capability)
+	temp_http.request_completed.connect(
+		func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			temp_http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "http_failed", "llm_interface",
+					{"cause": cause, "result": result, "code": response_code}
+				)
+				callback.call({"ok": false, "reason": "http_failed"})
+				return
+			var outer := JSON.new()
+			if outer.parse(body.get_string_from_utf8()) != OK:
+				callback.call({"ok": false, "reason": "outer_parse_failed"})
+				return
+			var outer_data = outer.get_data()
+			if not outer_data is Dictionary or not outer_data.has("response"):
+				callback.call({"ok": false, "reason": "missing_response_field"})
+				return
+			var parsed := parse_taunt_bank_batch(
+				str(outer_data["response"]), existing, cause
+			)
+			# Ollama reports WHY generation stopped. A truncated batch and a
+			# model that ignored the format look identical in the body but need
+			# opposite fixes, so record the distinction rather than guess.
+			var stop_reason := str(outer_data.get("done_reason", ""))
+			if stop_reason == "length":
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "truncated_generation", "llm_interface",
+					{
+						"cause": cause,
+						"eval_count": int(outer_data.get("eval_count", 0)),
+						"requested": wanted,
+					}
+				)
+			var lines: Array = parsed.get("lines", [])
+			if lines.is_empty():
+				GenerationDiagnostics.record_event(
+					"taunt_bank", "all_lines_rejected", "llm_interface",
+					{"cause": cause, "rejected": (parsed.get("rejected", []) as Array).size()}
+				)
+				# Carry the rejections out with the failure. Without them a
+				# wholesale rejection is unreadable -- you know the batch died
+				# but not whether the model returned junk or the guards were
+				# simply too strict for this cause.
+				callback.call({
+					"ok": false,
+					"reason": "all_lines_rejected",
+					"rejected": parsed.get("rejected", []),
+					"stop_reason": stop_reason,
+					"eval_count": int(outer_data.get("eval_count", 0)),
+				})
+				return
+			callback.call({
+				"ok": true,
+				"cause": cause,
+				"lines": lines,
+				"rejected": parsed.get("rejected", []),
+			})
+	)
+	var err := temp_http.request(
+		OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({"ok": false, "reason": "request_start_failed"})
+
+
+func request_general_taunts(callback: Callable, _attempt: int = 0) -> void:
+	if _skip_for_campaign_bible_priority("general_taunts"):
+		callback.call({})
+		return
+	var prompt := """You are writing combat banter for a gritty space game. Generate exactly 12 short combat one-liners. Under 15 words each. No placeholder brackets. No names.
+
+Three categories:
+- "rage" (6 lines): enemy is furious the player shot first — pure hostility and threats ("you absolute idiot", "you're dead", "wrong move").
+- "reason" (3 lines): enemy is the aggressor, contemptuous and confident they'll win.
+- "humor" (3 lines): absurd comedic insults with the same angry delivery — the contrast is the joke.
+
+All lines are from a hostile enemy pilot to an anonymous stranger. Mild profanity fine. Never use names.
+
+Return ONLY valid JSON, no markdown:
+{"rage": ["...", "...", "...", "...", "...", "..."], "reason": ["...", "...", "..."], "humor": ["...", "...", "..."]}"""
+
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("kaelen_line")
+
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempt == 0:
+				push_warning("[TAUNT FALLBACK RISK] general taunts HTTP failed (result=%d code=%d) — retrying in 3s" % [result, response_code])
+				get_tree().create_timer(3.0, true, false, true).timeout.connect(
+					func(): request_general_taunts(callback, 1))
+				return
+			var msg := "[TAUNT FALLBACK] general taunts failed after retry — HTTP result=%d code=%d. Canned pool only." % [result, response_code]
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		var response_text: String = body.get_string_from_utf8()
+		var outer_json := JSON.new()
+		if outer_json.parse(response_text) != OK:
+			var msg := "[TAUNT FALLBACK] general taunts outer JSON parse failed. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		var outer_data = outer_json.get_data()
+		if not outer_data is Dictionary or not outer_data.has("response"):
+			var msg := "[TAUNT FALLBACK] general taunts missing 'response' key. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		var inner_str: String = outer_data["response"].strip_edges()
+		if inner_str.begins_with("```"):
+			var end_idx := inner_str.find("\n", 3)
+			if end_idx != -1:
+				inner_str = inner_str.substr(end_idx + 1)
+			if inner_str.ends_with("```"):
+				inner_str = inner_str.substr(0, inner_str.length() - 3)
+			inner_str = inner_str.strip_edges()
+		var inner_json := JSON.new()
+		if inner_json.parse(inner_str) != OK:
+			var msg := "[TAUNT FALLBACK] general taunts inner JSON parse failed. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		var data = inner_json.get_data()
+		if not data is Dictionary:
+			var msg := "[TAUNT FALLBACK] general taunts response not a dict. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		# Validate each array — strip anything with brackets (placeholders).
+		var out := {"rage": [], "reason": [], "humor": []}
+		for cat in out.keys():
+			if data.has(cat) and data[cat] is Array:
+				for line in data[cat]:
+					var s := str(line).strip_edges()
+					if s.length() > 4 and not s.contains("["):
+						out[cat].append(s)
+		var total: int = out["rage"].size() + out["reason"].size() + out["humor"].size()
+		if total == 0:
+			var msg := "[TAUNT FALLBACK] general taunts returned 0 valid lines. Canned pool only."
+			push_warning(msg)
+			print(msg)
+			callback.call({})
+			return
+		print("[LLMInterface] General taunts: %d rage, %d reason, %d humor" % [
+			out["rage"].size(), out["reason"].size(), out["humor"].size()])
+		callback.call(out)
+	)
+	var payload := build_generation_body("kaelen_line", prompt, "json",
+		{"temperature": 1.0, "seed": randi()})
+	var err2 := temp_http.request(OLLAMA_URL, ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err2 != OK:
+		temp_http.queue_free()
+		if _attempt == 0:
+			push_warning("[TAUNT FALLBACK RISK] general taunts request() error=%d — retrying in 3s" % err2)
+			get_tree().create_timer(3.0, true, false, true).timeout.connect(
+				func(): request_general_taunts(callback, 1))
+			return
+		var msg := "[TAUNT FALLBACK] general taunts failed after retry — request error=%d. Canned pool only." % err2
+		push_warning(msg)
+		print(msg)
+		callback.call({})
+
+
+# ── Kaelen handoff batch generation (Gemma4) ─────────────────────────────────
+# Asks the large model for 16 Kaelen intro lines for one agent.
+# Returns Array[String] to callback — empty array on failure.
+func request_kaelen_handoff_batch(
+	agent_name: String,
+	agent_role: String,
+	faction: String,
+	story_context: String,
+	count: int,
+	callback: Callable
+) -> void:
+	_kaelen_handoff_batch_queue.append({
+		"agent_name": agent_name,
+		"agent_role": agent_role,
+		"faction": faction,
+		"story_context": story_context,
+		"count": count,
+		"callback": callback,
+	})
+	_process_next_kaelen_handoff_batch()
+
+
+func _process_next_kaelen_handoff_batch() -> void:
+	if _kaelen_handoff_batch_in_flight or _kaelen_handoff_batch_queue.is_empty():
+		return
+	if campaign_bible_priority_active:
+		if _kaelen_handoff_batch_defer_scheduled:
+			return
+		_kaelen_handoff_batch_defer_scheduled = true
+		print("[LLMInterface] Deferring Kaelen handoff batch while campaign bible is generating.")
+		get_tree().create_timer(1.0, true, false, true).timeout.connect(
+			func() -> void:
+				_kaelen_handoff_batch_defer_scheduled = false
+				_process_next_kaelen_handoff_batch()
+		)
+		return
+	var request: Dictionary = _kaelen_handoff_batch_queue.pop_front()
+	_kaelen_handoff_batch_in_flight = true
+	_start_kaelen_handoff_batch_request(
+		str(request.get("agent_name", "")),
+		str(request.get("agent_role", "")),
+		str(request.get("faction", "")),
+		str(request.get("story_context", "")),
+		int(request.get("count", 16)),
+		request.get("callback", Callable())
+	)
+
+
+func _finish_kaelen_handoff_batch(callback: Callable, lines: Array[String]) -> void:
+	if callback.is_valid():
+		callback.call(lines)
+	_kaelen_handoff_batch_in_flight = false
+	call_deferred("_process_next_kaelen_handoff_batch")
+
+
+func _start_kaelen_handoff_batch_request(
+	agent_name: String,
+	agent_role: String,
+	faction: String,
+	story_context: String,
+	count: int,
+	callback: Callable
+) -> void:
+	var story_block := ""
+	if story_context.strip_edges() != "":
+		story_block = (
+			"\nStory context (color Kaelen's tone — do NOT quote or expose directly):\n"
+			+ story_context + "\n"
+		)
+	var prompt := (
+		"You are writing for Broker Kaelen — a dry, transactional, faintly condescending space broker.\n"
+		+ "She is about to introduce %s (%s, %s faction) to the pilot \"Shiny\".\n" % [agent_name, agent_role, faction]
+		+ story_block
+		+ "\nWrite %d SHORT handoff lines (under 25 words each) in Kaelen's voice.\n" % count
+		+ "Rules:\n"
+		+ "- First person as Kaelen. She is talking TO Shiny about %s.\n" % agent_name
+		+ "- %s is silent. Never put words in their mouth.\n" % agent_name
+		+ "- Mention %s by name in every line (third person).\n" % agent_name
+		+ "- Vary the angle: some urgent, some dry, some with a hint of the story tension.\n"
+		+ "- No line should repeat another. No numbering.\n"
+		+ "- Do NOT use the word 'Shiny' more than once across all lines.\n\n"
+		+ "Respond ONLY with a valid JSON array of %d strings:\n" % count
+		+ "[\"line one\", \"line two\", ...]"
+	)
+
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.timeout = 60.0
+
+	http.request_completed.connect(
+		func(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+			http.queue_free()
+			if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+				push_warning("[LLMInterface] Handoff batch HTTP error result=%d code=%d" % [result, code])
+				_finish_kaelen_handoff_batch(callback, [])
+				return
+			var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+			if parsed == null or not parsed is Dictionary:
+				push_warning("[LLMInterface] Handoff batch: non-dict response")
+				_finish_kaelen_handoff_batch(callback, [])
+				return
+			var raw_text: String = str((parsed as Dictionary).get("response", "")).strip_edges()
+			# Extract the JSON array from the response text.
+			var start := raw_text.find("[")
+			var end := raw_text.rfind("]")
+			if start == -1 or end == -1 or end <= start:
+				push_warning("[LLMInterface] Handoff batch: no JSON array found in response")
+				_finish_kaelen_handoff_batch(callback, [])
+				return
+			var arr_text := raw_text.substr(start, end - start + 1)
+			var arr: Variant = JSON.parse_string(arr_text)
+			if arr == null or not arr is Array:
+				push_warning("[LLMInterface] Handoff batch: JSON array parse failed")
+				_finish_kaelen_handoff_batch(callback, [])
+				return
+			var lines: Array[String] = []
+			for item in (arr as Array):
+				var s := str(item).strip_edges()
+				if s != "":
+					lines.append(s)
+			print("[LLMInterface] Handoff batch: got %d lines for %s" % [lines.size(), agent_name])
+			_finish_kaelen_handoff_batch(callback, lines)
+	)
+
+	var large_model: String = active_large_model_name if active_large_model_name != "" else LocalModelGateway.DEFAULT_LARGE_MODEL
+	var payload := JSON.stringify({
+		"model": large_model,
+		"prompt": prompt,
+		"stream": false,
+		"keep_alive": LocalModelGateway.LARGE_MODEL_KEEP_ALIVE,
+		"think": false,
+		"options": {"num_predict": 800, "temperature": 0.85, "num_ctx": LocalModelGateway.LARGE_NUM_CTX},
+	})
+	var err := http.request(
+		LocalModelGateway.OLLAMA_GENERATE_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		payload
+	)
+	if err != OK:
+		http.queue_free()
+		push_warning("[LLMInterface] Handoff batch: request() failed err=%d" % err)
+		_finish_kaelen_handoff_batch(callback, [])
+
+
+func fetch_anomaly_event(
+	system_id: String,
+	fallback_data: Dictionary,
+	callback: Callable,
+	_attempts_left: int = 1
+) -> void:
+	if _skip_for_campaign_bible_priority("anomaly_event"):
+		callback.call({})
+		return
+	var local_factions: Array = GlobalState.get_current_system_minor_factions()
+	if local_factions.is_empty():
+		local_factions = GlobalState.MINOR_FACTIONS.keys()
+	var faction_labels: Array = []
+	for f in local_factions:
+		if f is Dictionary:
+			faction_labels.append(str(f.get("id", f.get("faction", ""))))
+		else:
+			faction_labels.append(str(f))
+	var prompt := (
+		"You design one small space anomaly event for SpaceGame. "
+		+ "Current system: %s. Local minor factions: %s. "
+		+ "Fallback seed event: %s. "
+		+ "Write a fresh event using ONLY this action toolkit: "
+		+ "emit_chat, grant_ore, grant_credits, grant_item, grant_data_core, spawn_hostiles, damage_player. "
+		+ "Caps: grant_ore 0-30, grant_credits 0-150, grant_item one known item, "
+		+ "grant_data_core payout_credits 40-250, spawn_hostiles count 1-3, damage_player 0-20. "
+		+ "Use short chat lines. Do not invent UI, quests, shops, docking, choices, or new mechanics. "
+		+ "Respond ONLY as valid JSON with keys name, description, flavor_type, approach_lines, actions."
+	) % [system_id, ", ".join(faction_labels), JSON.stringify(fallback_data)]
+	var temp_http := HTTPRequest.new()
+	add_child(temp_http)
+	temp_http.timeout = request_timeout_for_capability("background_chatter")
+	temp_http.request_completed.connect(func(result, response_code, _headers, body):
+		temp_http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+			if _attempts_left > 0:
+				fetch_anomaly_event(system_id, fallback_data, callback, _attempts_left - 1)
+			else:
+				callback.call({})
+			return
+		var generated := _parse_anomaly_event_response(body.get_string_from_utf8())
+		if generated.is_empty():
+			if _attempts_left > 0:
+				fetch_anomaly_event(system_id, fallback_data, callback, _attempts_left - 1)
+			else:
+				callback.call({})
+			return
+		callback.call(generated)
+	)
+	var payload := build_generation_body(
+		"background_chatter",
+		prompt,
+		"json",
+		{"temperature": 0.95, "seed": randi()}
+	)
+	var err := temp_http.request(
+		OLLAMA_URL,
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(payload)
+	)
+	if err != OK:
+		temp_http.queue_free()
+		callback.call({})
+
+
+func _parse_anomaly_event_response(response_text: String) -> Dictionary:
+	var outer_json := JSON.new()
+	if outer_json.parse(response_text) != OK:
+		return {}
+	var outer_data = outer_json.get_data()
+	if not outer_data is Dictionary or not outer_data.has("response"):
+		return {}
+	var inner_str: String = str(outer_data["response"]).strip_edges()
+	if inner_str.begins_with("```"):
+		var end_idx := inner_str.find("\n", 3)
+		if end_idx != -1:
+			inner_str = inner_str.substr(end_idx + 1)
+		if inner_str.ends_with("```"):
+			inner_str = inner_str.substr(0, inner_str.length() - 3)
+		inner_str = inner_str.strip_edges()
+	var inner_json := JSON.new()
+	if inner_json.parse(inner_str) != OK:
+		return {}
+	var data = inner_json.get_data()
+	if not data is Dictionary:
+		return {}
+	return _sanitize_anomaly_event(data)
+
+
+func _sanitize_anomaly_event(data: Dictionary) -> Dictionary:
+	var name := str(data.get("name", "")).strip_edges()
+	if name.is_empty() or name.contains("["):
+		return {}
+	var flavor := str(data.get("flavor_type", "unknown")).strip_edges().to_lower()
+	if flavor not in ["military", "civilian", "pirate", "scientific", "unknown"]:
+		flavor = "unknown"
+	var approach_lines: Array = []
+	if data.get("approach_lines", []) is Array:
+		for line in data["approach_lines"]:
+			var text := str(line).strip_edges()
+			if not text.is_empty() and not text.contains("["):
+				approach_lines.append(text.left(160))
+			if approach_lines.size() >= 3:
+				break
+	var actions := _sanitize_anomaly_actions(data.get("actions", []))
+	if actions.is_empty():
+		return {}
+	return {
+		"name": name.left(60),
+		"description": str(data.get("description", "")).strip_edges().left(180),
+		"flavor_type": flavor,
+		"approach_lines": approach_lines,
+		"actions": actions,
+	}
+
+
+func _sanitize_anomaly_actions(raw_actions: Variant) -> Array:
+	if not raw_actions is Array:
+		return []
+	var valid_items := [
+		"repair_kit", "shield_cell", "scanner_probe", "salvage_drone",
+		"flare_decoy", "fuel_booster", "emp_charge", "target_painter",
+		"data_chip", "kinetic_ammo", "thermal_ammo", "explosive_ammo",
+		"energy_ammo", "damaged_transponder", "encrypted_core",
+		"antimatter_pod",
+	]
+	var valid_factions: Array = GlobalState.MINOR_FACTIONS.keys()
+	var output: Array = []
+	for raw in raw_actions:
+		if not raw is Dictionary:
+			continue
+		var t := str(raw.get("type", "")).strip_edges()
+		var action: Dictionary = {}
+		match t:
+			"emit_chat":
+				var lines: Array = []
+				if raw.get("lines", []) is Array:
+					for line in raw["lines"]:
+						var text := str(line).strip_edges()
+						if not text.is_empty() and not text.contains("["):
+							lines.append(text.left(180))
+						if lines.size() >= 3:
+							break
+				if lines.is_empty():
+					continue
+				action = {
+					"type": "emit_chat",
+					"sender": str(raw.get("sender", "Unknown Signal")).strip_edges().left(40),
+					"lines": lines,
+					"delay": clampf(float(raw.get("delay", 0.0)), 0.0, 8.0),
+				}
+			"grant_ore":
+				action = {
+					"type": "grant_ore",
+					"amount": clampf(float(raw.get("amount", 10.0)), 0.0, 30.0),
+				}
+			"grant_credits":
+				action = {
+					"type": "grant_credits",
+					"amount": clampi(int(raw.get("amount", 20)), 0, 150),
+				}
+			"grant_item":
+				var item_id := str(raw.get("item_id", ""))
+				if item_id not in valid_items:
+					continue
+				action = {"type": "grant_item", "item_id": item_id}
+			"grant_data_core":
+				action = {
+					"type": "grant_data_core",
+					"name": str(raw.get("name", "Encrypted Anomaly Core")).strip_edges().left(60),
+					"description": str(raw.get("description", "Recovered anomaly data core.")).strip_edges().left(180),
+					"payout_credits": clampi(int(raw.get("payout_credits", 120)), 40, 250),
+				}
+			"spawn_hostiles":
+				var faction := str(raw.get("faction", "reavers"))
+				if faction not in valid_factions:
+					faction = "reavers"
+				action = {
+					"type": "spawn_hostiles",
+					"faction": faction,
+					"count": clampi(int(raw.get("count", 1)), 1, 3),
+					"delay": clampf(float(raw.get("delay", 2.0)), 0.0, 12.0),
+					"spawn_chat": str(raw.get("spawn_chat", "")).strip_edges().left(120),
+				}
+			"damage_player":
+				action = {
+					"type": "damage_player",
+					"amount": clampf(float(raw.get("amount", 5.0)), 0.0, 20.0),
+				}
+			_:
+				continue
+		output.append(action)
+		if output.size() >= 5:
+			break
+	return output

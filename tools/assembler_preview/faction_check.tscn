@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://bpcjbiq1yk563"]
+[ext_resource type="Script" path="res://tools/assembler_preview/faction_check.gd" id="1_f"]
+[node name="FacCheck" type="Node3D"]
+script = ExtResource("1_f")

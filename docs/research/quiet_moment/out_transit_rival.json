@@ -1,0 +1,44 @@
+[
+ {
+  "line": "Long way still to run. Dust buildup on the intake fins. You'd need to brush it out, maybe use some compressed air. Not much, just a light pass. You know, if you don't want to, that maintenance man with the nice hands might want to do it.",
+  "flags": []
+ },
+ {
+  "line": "Plenty of time before anything happens. The intakes could use a dusting. Right here, right now. No rush, just a thought. You know, the last mechanic had nice hands. The one who never says no. They’d be glad to do it.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. The collar’s scuffing’s rough. You know how it goes. You’ve handled worse. You know, if you don’t want to, that maintenance man with the nice hands might want to do it.",
+  "flags": []
+ },
+ {
+  "line": "Long crossing, and no one else in it. I need the cable run behind the galley bulkhead reseated. You know how it is — loose connections, frayed ends, nothing to it. You know, if you don't want to, that maintenance man with the nice hands might want to do it.",
+  "flags": []
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. The film's stuck. You ever peeled it clean before? No need to answer. Just... do it. You know, if you don't want to, that maintenance man with the nice hands might want to do it.",
+  "flags": [
+   "tts_ellipsis"
+  ]
+ },
+ {
+  "line": "This is a very long flight. The seal’s stuck, Captain. You’d think a thing like this would be simpler. Just a little tug, maybe. If you’re in the mood. You know, if you don’t want to, the mechanic at the last station had nice hands. The kind that know how to fix things without making a mess.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Access port's stuck. You'd need to pry it open. Not too hard, just enough to get it moving again. I don't mind if you take your time. You know, the mechanic at the last station had nice hands. They always seem to know exactly how much pressure to use.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. My sensors need recalibrating. You're close enough. Want to help? You know, if you don't want to, that maintenance man with the nice hands might want to do it.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. The grease on my landing gear is getting stiff. You could work it loose. Might take a minute, but it’s not urgent. You know, if you don’t want to, that maintenance man with the nice hands might want to do it.",
+  "flags": []
+ },
+ {
+  "line": "Long crossing, and no one else in it. Filter's loose. You could tighten it. Not much to it, just a twist and a pull. If you don't want to, the last mechanic had nice hands. They’d do it quick, and they never complain.",
+  "flags": []
+ }
+]

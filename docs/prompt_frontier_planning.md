@@ -1,0 +1,264 @@
+# Prompt for a frontier model — planning document only
+
+_Paste everything below the line into the frontier model. Regenerate this file
+if the codebase moves significantly._
+
+---
+
+You are acting as a senior technical director for a shipping indie game. Your
+sole deliverable is a **planning document**. Do not write implementation code.
+
+The document will be executed by a coding agent that has full read/write access
+to the repository, is strong at execution, and is weak at guessing intent. Every
+hour it spends re-deriving a decision you left implicit is wasted money. Your
+job is to remove that guesswork completely.
+
+## The two objectives
+
+**1. Make each playthrough a genuinely new experience after the tutorial ends.**
+Today the opening hour is authored and strong, and what follows is thinner: the
+same broad shape of missions, the same rhythms, the same kinds of encounter.
+Design the systems that make run 2 feel unlike run 1 — not merely reshuffled
+numbers, but different situations, pressures and stories. Be specific about what
+varies, what stays fixed as an anchor, and why.
+
+**2. Get materially more out of the local models and TTS.**
+The game runs entirely on local inference. Find the upgrades — architectural,
+not incremental — that make it faster, cheaper, more reliable, or more
+expressive. Latency, VRAM, quality, and failure behaviour are all in scope.
+
+## Hard constraints (violating these makes a proposal useless)
+
+- **Godot 4.6.3, GDScript, Windows.** No engine change, no C#, no external
+  runtime beyond what is listed below.
+- **Fully local and offline.** Ollama for LLM, Kokoro for TTS. No cloud APIs at
+  runtime, ever. Cloud/offline generation at BUILD time is acceptable if you say
+  so explicitly.
+- **Shipping target is an 8GB VRAM consumer GPU.** Gameplay must run on the
+  small model alone. The large model may only run behind loading or preparation
+  gates, and the small model should be evicted first. Any proposal that needs
+  both resident during gameplay must justify it against this budget.
+- **A canned fallback line is a FAILURE, not a graceful degrade.** The project
+  logs every fallback through `GenerationDiagnostics` and treats them as bugs to
+  root-cause. Do not propose "fall back to a static line" as a solution to a
+  quality problem.
+- **No new heavyweight dependencies** without explicitly justifying the install
+  burden for an end user.
+
+### N.O.V.A. and Kaelen are canon. Do not touch them.
+
+These two are the heart of the game and the reason a player stays. Their
+identity is FIXED and is not a variable available to your freshness proposals.
+This is the single easiest way for a plan to be worthless here: a model asked to
+make each run feel different will reach for "randomise the companions", and that
+trades the thing players bond with for novelty they did not ask for.
+
+Preserved, non-negotiable:
+
+- **N.O.V.A.**, the ship's AI. Sardonic and self-preserving: the ship IS her
+  body, so keeping the captain alive is keeping herself intact. Dry, deadpan,
+  faintly put-upon. She calls the hull and systems "my". Grudging care leaks out
+  sideways, never sentimentally. She notices repetition and gets exasperated.
+  Her wiped-memory / gate-unease arc is an authored mystery with protected
+  content that only the large-model story path may write.
+- **Kaelen**, the broker. Cynical, money-minded, politically neutral, working
+  every angle for herself. She and only she calls the player **"Shiny"** — a
+  guard enforces this, rewriting the nickname out of every other speaker's
+  mouth, and there is a test pinning it. She has an authored hidden angle.
+- Their **voices are reserved**: `af_bella` is Kaelen's alone, `bf_emma` is
+  N.O.V.A.'s alone, and N.O.V.A.'s blend `bf_emma[0.7]+af_bella[0.3]` is the one
+  sanctioned crossover. Do not reassign, pool, or randomise these.
+- The **fixed-cast machinery** around them -- souls, rapport bands, attachment
+  memory, per-campaign quirks -- is the supported way they vary. A quirk colours
+  a run; it does not redefine who they are.
+
+What you MAY propose: giving them more to react to, more situations, more
+memory, better timing, more moments where their existing character is tested or
+revealed. Deepening them is welcome. Replacing, rotating, randomising or
+re-personalising them is not, and neither is adding a third fixed companion who
+competes for the same emotional space.
+
+## The codebase as it actually is
+
+This is real, not aspirational. Ground every proposal in it.
+
+**Local model stack.** Ollama serving `qwen3:4b` (all gameplay dialogue) and
+`qwen3:8b` (long-form story work). Requests go through
+`scripts/ai/LocalModelGateway.gd`, which maps a *capability* string (e.g.
+`nova_line_bank`, `taunt_bank`, `quest_dialogue`, `large_story`) to a model
+profile, a request timeout, and a generation body. `think:false` is forced on
+every call, because these are thinking models and the reasoning leaked into
+dialogue and broke structured output. `num_ctx` is pinned per profile —
+callers may not override it, because a single odd value forces a full model
+reload and reintroduces swap thrash.
+
+**Known model behaviour, learned the hard way.** The 4b cannot hold nested JSON;
+flat one-level objects or flat labelled fields work, nested ones do not. Writing
+a prohibition into a prompt teaches the model the phrase ("never say X" produces
+X). `format:"json"` turns a prompt's `Label:` text into JSON keys. Small models
+repeat themselves, and the fix that worked was rejecting repetition in the
+PARSER, not asking the prompt for variety.
+
+**TTS.** Kokoro via a local FastAPI server (`scripts/tts_server.py`), spoken
+through `scripts/TTSInterface.gd` and `scripts/speech/SpeechService.gd`. Voices
+are blends, e.g. `am_onyx[0.7]+am_michael[0.3]`, with `speed` and `style_scale`
+per request. The server segments text and inserts real silence: `...` is a full
+beat, `..` is half, both scaled by a per-request `pause_seconds`. Measured fact:
+Kokoro's own punctuation handling barely pauses at all (0.17s spread across
+every punctuation style), which is why explicit silence exists. The in-memory
+audio cache does NOT persist across launches. Authored enemy taunts are
+pre-baked to OGG at build time (`tools/bake_taunt_audio.py`) and loaded from
+disk, with live TTS as the fallback for anything unbaked.
+
+**Narrative systems already built — do NOT re-propose these.**
+- A generated **campaign bible** per playthrough (tone, factions, opening
+  situation, story arcs, rumour trails), consumed by `StoryManager` into a
+  persistent `story_state`.
+- **Chapter planning** and a story horizon, generated by the large model.
+- A **narrative cache scheduler** that prefetches generated content against
+  triggers, so gameplay rarely waits on inference.
+- **Line banks** per speaker with round-robin consumption, background refill,
+  and retirement of used lines so a campaign never re-offers heard text.
+- **N.O.V.A.** (ship AI) and **Kaelen** (broker) as fixed cast with authored
+  souls, rapport bands, attachment memory, and per-campaign quirks.
+- A **lounge social layer**: stranger encounters, drinks, warmth, two-way
+  conversations, instant pre-generated exchange bundles.
+- **Enemy taunts keyed by CAUSE** — why the fight started, derived from real
+  state (contract kill, pre-emptive strike, unprovoked, mining-fine patrol,
+  called-in reinforcements, pirate predation, reputation grudge, opportunist) —
+  with 190 hand-authored lines and a persistent round-robin so lines do not
+  repeat across sessions.
+- **Procedural systems, factions and gates**, including generated minor
+  factions that are always hostile.
+- **Turn-based combat** with an AP system and multi-enemy support.
+- **Autopilot** using keep-out spheres and tangent steering.
+
+**Where the freshness problem actually lives.** Missions are template-driven
+objective types (`KILL_SHIPS`, `DELIVER_ORE`, `PICKUP_SPECIAL`,
+`TARGET_WITH_COMMS_REVERSAL`). The prose around them varies per campaign; the
+*shape* of what the player does does not. Encounters are mostly "hostiles
+appear, fight them". The economy, factions and systems are generated, but the
+player's week-to-week verbs are stable. Judge the freshness problem against
+that, and be honest about which of your ideas change the verbs versus redress
+the nouns.
+
+## What the document must contain
+
+Structure it exactly like this.
+
+### 1. Executive summary
+Half a page. What you are proposing, what it costs, what it buys, and the single
+biggest risk. Written for someone deciding whether to fund the work.
+
+### 2. Diagnosis
+What specifically makes run 2 feel like run 1, and what specifically is being
+left on the table by the current model and TTS usage. Argue from the
+architecture above, not from generic game-design principles. If you believe the
+premise of an objective is wrong, say so here — that is more valuable than
+agreeable planning.
+
+### 3. Proposals
+For each proposal, in priority order:
+
+- **Name and one-line claim.**
+- **Which objective it serves** (freshness / model-and-TTS / both).
+- **The mechanism.** How it actually works, concretely enough to build.
+- **Files and symbols touched.** Real paths from the list above where you can;
+  where you must invent a new file, name it and say where it lives.
+- **Data shapes.** Exact JSON or GDScript structures, with field names and
+  types, for anything persisted, generated, or passed between systems.
+- **Prompt contracts** for anything model-generated: what goes in, the exact
+  output shape expected, and what the parser must reject. Respect the model
+  behaviour notes above.
+- **Failure behaviour.** What happens when generation fails, times out, or
+  returns junk — remembering that a canned line is a failure to be logged, not
+  a happy path.
+- **Acceptance criteria.** How the implementer proves it works, as testable
+  statements. Prefer deterministic tests over "it feels better", and say
+  explicitly which parts can only be judged by a human playing.
+- **Effort and risk.** Rough size (hours or days), and what could go wrong.
+- **Dependencies.** What must exist first, and what this unblocks.
+
+### 4. Sequencing
+An ordered plan with phases. Mark which items are independent and could be done
+in any order, and which are strictly gated. Identify the smallest first slice
+that delivers visible value, because the project ships in small committed
+increments.
+
+### 5. Decisions the human must make
+Every place you had to choose between defensible options. State the options, your
+recommendation, and what changes downstream depending on the answer. Do not bury
+these in prose.
+
+### 6. Explicit non-goals
+What you deliberately are not proposing, and why. This is as valuable as the
+proposals — it stops the implementer widening scope on its own.
+
+## Attachments you are being given
+
+- **`PROJECT_MAP.md`** — the complete file tree of the project: every path, every
+  class name, every function signature. This is your ground truth for what
+  exists and what it is called. When you name a file or symbol, take it from
+  here rather than inventing a plausible-sounding one. If something you need
+  does not appear in the map, say plainly that you are proposing a new file.
+- **`docs/todo.md`** and **`docs/bugs.md`** — the live trackers. Read them before
+  proposing anything, so you neither duplicate planned work nor propose a fix
+  for something already fixed. If a tracker item overlaps your proposal, say so
+  and either absorb it or explain why yours supersedes it.
+
+## The bar for "thorough enough"
+
+The test is simple: **the implementing agent should never have to ask "how?" or
+"which one?"** It has the repository and can read code; what it cannot do is
+recover a decision you did not make.
+
+Not thorough enough:
+> Add more variety to mission generation so runs feel different.
+
+Thorough enough:
+> Add a `mission_shape` layer above `objective_type`. A shape composes an
+> objective with a complication and a resolution, e.g. `escort_gone_wrong` =
+> `DELIVER_ORE` + `ambush_at_midpoint` + `client_denies_the_job`. Shapes live in
+> `data/content/mission_shapes.json` as
+> `{"id", "objective_type", "complication", "resolution", "weight",
+> "requires_flags", "sets_flags"}`. `QuestManager` picks a shape at offer time,
+> filtered by `story_state` flags so a campaign cannot repeat a shape until the
+> pool is exhausted, reusing the round-robin bag already used for taunt lines
+> (`scripts/combat/TauntBag.gd`). Acceptance: a headless test asserts 20
+> consecutive offers in one campaign produce no repeated shape while unused
+> shapes remain.
+
+Note what the second one supplies: a name, a data shape with field names, the
+file it lives in, the system that consumes it, an existing component to reuse,
+and a test that can fail. Aim for that everywhere.
+
+Two further rules:
+
+- **Reuse before invention.** If an existing system does most of a job, say so
+  and extend it. The project already has round-robin bags, line banks, a cache
+  scheduler, diagnostics and a validated-data pattern.
+- **Where you are guessing, say so.** Mark any assumption about code you cannot
+  see. A flagged assumption costs minutes; an unflagged wrong one costs hours.
+
+## What NOT to do
+
+- Do not write implementation code. Data schemas, function *signatures* and
+  short pseudocode for a non-obvious algorithm are welcome and expected;
+  full function bodies and file rewrites are not.
+- Do not restate the codebase back to me. I wrote the summary above; assume it.
+- Do not propose an engine, language or platform change.
+- Do not propose cloud inference at runtime.
+- Do not pad. A shorter document with five fully-specified proposals beats a
+  long one with twenty sketches. If you have twenty ideas, rank them and fully
+  specify the ones that survive.
+- Do not hedge every recommendation. Where you have a view, give it, and say
+  what you would cut if the budget halved.
+
+## Output
+
+A single markdown document following the six-section structure above. Write it
+to be read once by a human deciding what to fund, and then repeatedly by an
+agent building it. Favour tables and structured lists over prose wherever the
+content is a set of decisions.
+
+Begin.

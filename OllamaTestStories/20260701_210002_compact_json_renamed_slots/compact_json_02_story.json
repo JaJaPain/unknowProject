@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Edges of the Void",
+  "campaign_subtitle": "The Last Outpost Supply Chain",
+  "campaign_logline": "A struggling pilot navigates a fractured supply chain between three competing corporations.",
+  "campaign_pitch": "You are an independent contractor in a dying trade route. You must navigate corporate greed and smuggling risks to keep the lights on.",
+  "campaign_story_summary": "The Zenith Corporation owns the primary mining veins. Aurelia seeks to monopolize the local trade routes. The Vanguard protects the border zones. You deliver supplies between their overlapping territories.",
+  "tone": "Dry, gritty frontier humor and high-stakes logistics.",
+  "opening": {
+    "status_quo": "The sector is a patchwork of corporate claims and lawless zones.",
+    "visible_crisis": "Supply lines are failing due to increasing pirate activity and heavy taxes.",
+    "hidden_crisis": "A massive shortage of high-grade fuel cells is destabilizing the local economy.",
+    "why_now": "The nearest refinery hub has just been decommissioned by a central authority.",
+    "player_role": "You are an independent pilot with a debt to Kaelen."
+  },
+  "mystery": {
+    "question": "Why is the fuel cell shortage so sudden?",
+    "false_answer": "The refinery was destroyed in a pirate raid.",
+    "true_answer_hint": "A private corporation is hoarding cells for an unknown project.",
+    "long_term_reveal_direction": "The hoard is being moved to a remote, undisclosed gate."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows the secret locations of the hidden fuel cells.",
+    "address_rule": "Kaelen always refers to you as 'Captain'.",
+    "never_reveal_rule": "Never reveal her origin or any knowledge of the gate network."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is struggling to maintain their mining infrastructure.",
+    "aurelia__problem": "Aurelia wants to seize Zenith's abandoned mines for themselves.",
+    "vanguard_problem": "Vanguard is losing control over the border zones.",
+    "conflict_triangle": "The three factions are fighting over the remaining high-grade fuel cells.",
+    "neutral_space_pressure": "Pirates and scavengers are moving into the gap left by the peace."
+  },
+  "act_1": {
+    "name": "Broken Chains",
+    "goal": "Secure a stable supply route for local stations.",
+    "opening_incident": "Kaelen gives you your first contract to move fuel cells.",
+    "midpoint_turn": "You find an Aurelian shipment that is partially destroyed.",
+    "finale": "You establish a reliable trade route between the three sectors.",
+    "player_takeaway": "The local economy depends on your deliveries."
+  },
+  "starter_mission": {
+    "title": "Clear the Path",
+    "reason": "A pirate ship is blocking the primary supply lane.",
+    "enemy_identity": "Reaver-class scout ship.",
+    "enemy_knows": "The Reaver does not know who you are.",
+    "after_effect": "You earn your first payment and a reputation with Kaelen."
+  },
+  "recurring_clue": {
+    "name": "Ghost Fuel",
+    "signal": "A faint, repeating pulse from an abandoned refinery.",
+    "first_appearance": "Detected during the first fuel delivery mission.",
+    "escalation": "The signal grows stronger as you approach the core.",
+    "payoff_hint": "The signal leads to a hidden stockpile of cells."
+  },
+  "rumor_trail": {
+    "name": "The Shadowed Mine",
+    "trail_id": "rumor_trail.shadow_mine",
+    "hint_theme": "Rumors of an untouched mine and easy riches.",
+    "clue_templates": [
+      "A local miner mentions a hidden vein.",
+      "A smuggler talks about the 'Shadow' mine."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "You find a hidden stash of high-grade ore."
+  },
+  "horizon": {
+    "gate_tease": "The gate network is becoming increasingly unstable.",
+    "new_system_reveal_rule": "New systems are only revealed through discovered gates.",
+    "future_pressure_tease": "Reports of a growing pirate fleet in the outer rim.",
+    "future_ore_or_upgrade_tease": "Rumors of high-grade ore found in unexplored sectors.",
+    "regeneration_trigger": {
+      "id": "gate_trigger_s01",
+      "metric": "prepared_systems_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "Add a new gate and a related story arc."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty humor about the other factions' incompetence.",
+    "fallback": "If a contract is told to be missing, report it as stolen.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the motives of the other corporations?",
+    "Why is the fuel cell shortage becoming more severe?",
+    "How does the lure of the other gates lead to exploration?",
+    "Who is hoarding the fuel cells for their purpose?",
+    "Why is Kaelen's role as a broker seems so specific?"
+  ]
+}

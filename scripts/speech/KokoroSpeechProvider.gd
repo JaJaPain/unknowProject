@@ -16,6 +16,10 @@ func active_cache_requests() -> int:
 	return TTSInterface.active_cache_requests
 
 
+func has_pending_cache_work() -> bool:
+	return TTSInterface.active_cache_requests > 0 or not TTSInterface.cache_queue.is_empty()
+
+
 func is_requesting() -> bool:
 	return TTSInterface.is_requesting
 
@@ -29,9 +33,9 @@ func play(text: String, voice_profile_id: StringName, speed_override: float = -1
 	)
 
 
-func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0) -> void:
+func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0):
 	var delivery := resolve_delivery(voice_profile_id, speed_override)
-	TTSInterface.cache_dialogue_audio(
+	return TTSInterface.cache_dialogue_audio(
 		text,
 		delivery["provider_voice"],
 		delivery["speed"]
@@ -54,7 +58,7 @@ func resolve_delivery(
 		var mapping := registry.provider_voice(current_id)
 		if not mapping.is_empty():
 			return {
-				"provider_voice": str(mapping.get("provider_voice", "af_bella")),
+				"provider_voice": str(mapping.get("provider_voice", "af_aoede")),
 				"speed": (
 					speed_override
 					if speed_override >= 0.0
@@ -69,6 +73,6 @@ func resolve_delivery(
 		)
 	var fallback := registry.provider_voice(DEFAULT_PROFILE)
 	return {
-		"provider_voice": str(fallback.get("provider_voice", "af_bella")),
+		"provider_voice": str(fallback.get("provider_voice", "af_aoede")),
 		"speed": speed_override if speed_override >= 0.0 else float(fallback.get("speed", 1.0)),
 	}

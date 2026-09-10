@@ -1,0 +1,37 @@
+{
+  "creative_lane": "Industrial Decay and Corporate Hegemony",
+  "freshness_rule": "Focus on the scarcity of resources and the physical toll of maintaining a single ship.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the cost of survival in the trade routes?",
+    "Why do corporations choose to ignore local piracy?",
+    "How does a pilot's debt impact their navigation choices?",
+    "Who holds the leverage over the independent pilots?",
+    "Why is there a contradiction between corporate law and pirate reality?"
+  ],
+  "starter_mission_questions": [
+    "What are the stakes of salvaging a Reaver ship?",
+    "How does the player face the risk of the first encounter?",
+    "Which cargo types offer the most immediate reward for a broken ship?"
+  ],
+  "kaelen_questions": [
+    "Why is Kaelen's role as a brokerer essential to the local trade network?",
+    "How does Kaelen manage their secrets in public dealings?",
+    "Who are Kaelen's primary contacts within the rival factions?"
+  ],
+  "faction_questions": [
+    "What is Zenith's stance on independent pilots?",
+    "Why does Aurelia favor a specific type of resource extraction?",
+    "How do the Vanguard defend their territory against smuggling?",
+    "future_generation_questions",
+    [
+      "Why are there different ways to justify the space exploration?",
+      "Why are there different ways to justify the space exploration?"
+    ]
+  ]
+}

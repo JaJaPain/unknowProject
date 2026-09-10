@@ -1,0 +1,104 @@
+[
+ {
+  "line": "This one paid right. The danger was real. That's how the math works.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That one paid well. That one was worth the risk. I'm not saying it was easy — just that the math worked.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "That kind of danger brings that kind of pay. Both got their share, and I'll take it when it's this clean.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This one paid right and it was worth the danger. That's the kind I like.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This one paid well, and it was genuinely dangerous. I like the way the numbers work when the risk's real.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That one paid right, and it was worth every drop of sweat.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "They shot at you out there, and the number was worth it.",
+  "secs": 2.9,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "You took the hit. The payout's clean. That's how the math works.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "This one was dangerous and it paid right. That’s how it goes, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Danger paid well. That's the math, and I'm not here to argue with it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "That one was worth the markup. Glad I didn't blink, Shiny.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "Danger paid well. That's the only thing I need to know.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "This one was risky and the rate shows it — don't expect that every time, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one was worth the danger. Glad you made it back — don't plan on it, but good to know.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one paid right. Risk matched the number, and I don’t do anything but take that when it shows up.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That job paid well, and it should have. You took the risk, and it worked out — no more, no less.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "This one paid right for the risk. You're good at that part, Shiny.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "They shot at you, and the number shows it. I like when the risk pays.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "That contract was a mess. This one was worth it. You took the hit, and the pay shows it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "That contract was nasty, but the fee? It was worth every second.",
+  "secs": 2.9,
+  "flags": []
+ }
+]

@@ -1,0 +1,37 @@
+{
+  "thought": "I need to create a story bible for SpaceGame, following the specific constraints provided.",
+  "title": "The Broken Orbit",
+  "description": "A pilot's desperate struggle to survive in the lawless fringes of the Aurelia sector.",
+  "campaign_pitch": "You are an independent pilot struggling with debt. You must navigate trade routes and pirate threats to earn enough for a new ship.",
+  "campaign_story_summary": "The Aurelia system is plagued by illegal smuggling. You start as a broke pilot in a scrapyard station. Kaelen offers you your first contract. A Reaver scout ship attacks during the delivery. You survive but realize the sector is unstable. Your survival depends on your ability to negotiate and fight.",
+  "factions": [
+    {
+      "name": "Zenith",
+      "description": "A high-tech corporation seeking order through strict regulation."
+    },
+    {
+      "name": "Aurelia",
+      "description": "A loose confederation of miners and independent traders."
+    },
+    {
+      "name": "Vanguard",
+      "description": "A militant group dedicated to purging pirate activity."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Kaelen",
+      "role": "Broker",
+      "description": "A fixer who handles contracts for the local trade routes.",
+      "notes": "She knows more than she admits, but her true motives are hidden."
+    }
+  ],
+  "world_building": "The system is a hub of illegal smuggling and desperate trade. The Reaver threat is constant but poorly understood.",
+  "gameplay_s_requirements": "Mining, salvage, delivery, combat, station services, rumors, and gate exploration are all supported.",
+  "mission_1_title": "First Blood",
+  "mission_1_description": "Intercept a smuggler's cargo. A Reaver scout ship will intercept you during the flight.",
+  "enemy_type_1": "Reaver Scout",
+  "starter_hostile_ship_count": "1",
+  "mechanics_integration": "The player must navigate gates, mine asteroids, and trade with various factions.",
+  "lore_thought": "The local lore is centered on the immediate survival of independent pilots."
+}

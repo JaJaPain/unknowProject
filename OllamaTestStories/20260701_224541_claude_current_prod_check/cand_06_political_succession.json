@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Sovereign Ledger",
+  "campaign_logline": "Navigate a web of contested permits and backroom deals in the Zenith-Aurelia corridor as local power struggles threaten to stall trade for everyone.",
+  "opening_situation": "Vanguard stations are reporting 'administrative freezes' on cargo routes. You find yourself caught between the Aurelia Trade Union and desperate privateers fighting for transit priority.",
+  "main_mystery": "Who is actually funding the strike against the established order, and why does it look like a calculated corporate takeover?",
+  "act_1_outline": [
+    "Secure contested mineral rights in the Aurelia Fringe while dodging aggressive patrol enforcement.",
+    "Negotiate with local Syndicate leaders to resolve the 'Ghost Permits' that are clogging heavy lanes.",
+    "Infiltrate a private summit to identify the shell corporations funding the recent trade infrastructure sabotage."
+  ],
+  "long_term_reveal": "The conflict is not about profit; it is a staged legal merger designed to consolidate all local assets under one invisible holding company.",
+  "tone": "Cynical, corporate-noir, dryly sarcastic.",
+  "core_pressure": "Escalating scrutiny from port authorities and rising insurance premiums for unlicensed 'independent' cargo hauls.",
+  "kaelen_rule": "Kaelen is a contract handler; she offers high-risk jobs with low-interest terms in exchange for discretion.",
+  "faction_reveal_rule": "New factions, ores, and ships are only revealed upon successful navigation through jump gates to new systems.",
+  "humor_rule": "Dry, understated wit regarding the absurdity of bureaucracy and the high cost of cosmic logistics.",
+  "address_rule": "NPCs refer to the player as 'Captain', 'Operator', or 'Contractor'.",
+  "fallback_rule": "If a story beat is missing, generate a neutral request for local logistical data or cargo transport.",
+  "story_horizon_rule": "When active_story_arcs_remaining falls below 2, action: append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Paper Trail",
+      "summary": "Trace the illegal ownership of mining claims in the Aurelia sector to identify a rogue corporate entity."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Signature",
+      "trail_id": "rumor_trail.ghost_signature",
+      "clue_count": 2,
+      "hint_theme": "Encrypted log fragments regarding a 'Master Key' for all regional ports.",
+      "clue_templates": [
+        "An encrypted data packet contains coordinates to an abandoned relay station with unusual signal patterns.",
+        "A disgraced clerk mentions a specific cipher used only by the high-level administrators of the transition."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Discovery of an old override code that grants permanent premium dock priority at any port."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "arc_depletion_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "Triggered when the primary arc is completed to provide a new expansion of the political narrative."
+    }
+  ],
+  "expansion_rules": [
+    "No retconning player choices; add new layers of conflict over existing territories.",
+    "Introduce new commodities and upgrade paths only in newly discovered sectors."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Purge Protocol",
+    "Chosen One",
+    "Prophecy"
+  ]
+}

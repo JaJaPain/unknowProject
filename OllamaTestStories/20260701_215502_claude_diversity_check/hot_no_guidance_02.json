@@ -1,0 +1,58 @@
+{
+  "campaign_title": "The Zenith Drift",
+  "campaign_logline": "Scavenge the wreckage of a failed utopia while Kaelen watches your every move in the silence of the Aurelia system.",
+  "opening_situation": "You awake in a drifting hull near Zenith. The Aurelia mining colony is silent, and Vanguard patrols are searching for 'anomalies'. Kaelen says you're lucky to be alive; she won't say why.",
+  "main_mystery": "What caused the sudden collapse of the Aurelia communication grid and why does Kaelen know the override codes?",
+  "act_1_outline": [
+    "Navigate the debris fields of Zenith to secure enough fuel for an initial jump.",
+    "Evade a Vanguard patrol searching for pirate signatures in the Aurelia sector.",
+    "Establish a hidden relay with Kaelen to receive local navigation data."
+  ],
+  "long_term_reveal": "Kaelen is not human, but a localized consciousness of the original Aurelia network, slowly fragmenting as it watches you.",
+  "tone": "Dry, cynical, and slightly dark.",
+  "core_pressure": "Oxygen scarcity vs. curiosity about the 'silent' zones.",
+  "kaelen_rule": "Kaelen is immortal; her origins remain eternally ambiguous to the player.",
+  "faction_reveal_rule": "New factions only appear upon entering new systems via jump gates.",
+  "humor_rule": "Dry, situational irony regarding space hazards and corporate incompetence.",
+  "address_rule": "Ensure all narrative beats stay under 140 characters for UI layout.",
+  "fallback_rule": "If a quest target is destroyed, Kaelen provides an alternative data path.",
+  "story_horizon_rule": "Trigger new content when system count drops below 3; action: append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Ghost Signal",
+      "summary": "Trace the origin of a recurring distress code coming from an abandoned Aurelia mining sub-station."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "trail_id": "rumor_trail.ghost_protocol",
+      "clue_count": 2,
+      "hint_theme": "Corrupted Log Files",
+      "clue_templates": [
+        "A frantic log entry regarding 'Protocol Zero'.",
+        "An encrypted coordinate set hidden in a maintenance manual."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Voidwalker' title and a unique ship hull skin."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_system_count",
+      "metric": "prepared_systems_remaining",
+      "threshold": 3,
+      "action": "append_story_horizon",
+      "description": "Generate a new horizon when the player explores deep into the frontier."
+    }
+  ],
+  "expansion_rules": [
+    "Never retcon past choices; only branch forward.",
+    "New factions must have unique icons and resource types upon introduction."
+  ],
+  "banned_repeats": [
+    "Space is vast",
+    "The void calls",
+    "Kaelen's secrets are told"
+  ]
+}

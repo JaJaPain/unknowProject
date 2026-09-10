@@ -1,0 +1,104 @@
+[
+ {
+  "line": "Secondary manifold wants flushing. I'm not going to say who's going to do it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold wants flushing. Would be a shame to let it sit. No, never mind — I’ll wait for the right hands.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Port hatch latch clicks loose at warp six. You'd have to climb out there to fix it. I'll just let it keep clicking.",
+  "secs": 3.3,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Forward sensors are off by a hair. You'd fix it. I'll let it drift.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Grease on the landing gear's due. I suppose you could do it... if you're not too busy pretending to be useful.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "My forward sensor's drifted a little. You could recalibrate it if you wanted. Or not — I'll wait.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's got a film on it. Someone should clean it. Oh, never mind — the sensors don't care.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My secondary manifold's due for a flush. I'll bet you'd do it right. Too bad the auto-couplers are already on it.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's fogged up. Probably just condensation. Probably not worth mentioning.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Filter's loose. You could swap it if you wanted. Don't worry, I'll hold still. Just don't get attached.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "There's a latch on the starboard panel that rattles when we hit the third harmonic. I'll have it done before you even notice it's gone.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "There's a tangle of cable behind the galley bulkhead. I'll sort it myself. No need to involve you.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Docking collar's got a scuff. Could be worse. Could be a lot worse. Let's pretend it never happened.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "My intakes could use a brush. I'll leave it. You'd probably drop the tool. I'd rather not know what that looks like.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Filter's loose in the intake. You could swap it. No, I'll hold it. Let it sit. See how long you wait before asking why.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "Locker seal's stuck. I'll let you try. No, don't worry — I'll fix it myself. Just don't pretend you didn't know.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's got a film. Not a fault, just a thing. I'll wipe it myself before anyone asks.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Forward viewport's got a film. You could clean it, but I'll tell you what — it's not worth the mess.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Secondary manifold's due for a flush. Just saying. No, don't bother — I'll wait for the yard.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Locker seal's stuck. You could try working it loose... but I've got a spare in the maintenance bay.",
+  "secs": 3.1,
+  "flags": []
+ }
+]

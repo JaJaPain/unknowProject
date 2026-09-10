@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Ironbound Reach",
+  "campaign_subtitle": "The Scarcity of Steel",
+  "campaign_logline": "A struggling pilot navigates a decaying industrial zone where corporate greed and resource scarcity create a volatile trade landscape.",
+  "campaign_pitch": "You are an independent pilot in a dying sector. Zenith, Aurelia, and Vanguard compete for dwindling resources. You take contracts to survive. A hidden economic collapse is looming.",
+  "campaign_story_summary": "A broke pilot navigates the Ironbound Reach. Kaelen acts as your primary broker and fixer. You intercept a Reaver ship in a shipping lane. Zenith seeks expansion, while Aurelia controls trade routes. The recurring clue of 'Void-Stitched' cargo manifests appears. A systemic economic collapse threatens local stability. Act 1 focuses on securing basic supplies.",
+  "tone": "Dry, gritty industrial atmosphere with dark humor regarding the cost of survival.",
+  "opening": {
+    "status_quo": "The sector is a graveyard of heavy industry and aging infrastructure.",
+    "visible_crisis": "Resource shortages are causing desperate trade maneuvers by all factions.",
+    "hidden_crisis": "A massive industrial collapse is destabilizing the local economy.",
+    "why_now": "Supply lines have been cut, forcing independent pilots into high-risk zones.",
+    "player_role": "You are a debt-ridden pilot seeking to pay off your ship's maintenance fees."
+  },
+  "mystery": {
+    "question": "Why is the 'Void-Stitched' cargo so highly valued by all three factions?",
+    "false_answer": "The cargo contains illegal high-tech components for black market trade.",
+    "true__hint": "The material is a byproduct of an experimental, failing industrial process.",
+    "long_term_reveal_direction": "The truth involves the physical cost of manufacturing in a dying infrastructure."
+  },
+  "kaelen": {
+    "public_role": "Broker and fixer for independent pilots.",
+    "secret_angle": "She monitors trade flows to identify emerging economic instability.",
+    "address_rule": "Treat her as a professional, no-nonsense contract handler.",
+    "never_reveal_rule": "Her past and the true nature of her data collection are secrets."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is aggressively expanding its territory to secure raw materials.",
+    "aurelia_problem": "Aurelia's monopoly on trade routes is failing due to infrastructure decay.",
+    "vanguard_problem": "Vanguard struggles to maintain security in the increasingly lawless zones.",
+    "conflict_triangle": "Zenith wants land, Aurelia wants control, and Vanguard seeks stability.",
+    "neutral_space_pressure": "Independent pilots are being squeezed by rising costs and pirate activity."
+  },
+  "act_1": {
+    "name": "The Scarcity of Steel",
+    "goal": "Secure enough scrap and supplies to stabilize your ship's status.",
+    "opening_incident": "You intercept a Reaver-like vessel carrying 'Void-Stitched' cargo.",
+    "midpoint_turn": "Kaelen offers a high-risk contract involving an Aurelia trade route.",
+    "finale": "You successfully deliver the cargo and earn enough to repair your ship.",
+    "player_takeaway": "You realize that survival in the Ironbound Reach is a matter of negotiation."
+  },
+  "starter_mission": {
+    "title": "The Scarcity of Steel",
+    "reason": "A Reaver-like vessel was spotted in a high-traffic shipping lane.",
+    "enemy_identity": "A lone, derelict-looking ship with heavy plating and no markings.",
+    "enemy_knows": "The ship is automated or piloted by a desperate scavenger.",
+    "after_effect": "You gain scrap metal and the first piece of 'Void-Stitched' cargo."
+  },
+  "recurring_clue": {
+    "name": "Void-Stitched Cargo",
+    "signal": "A unique marking on shipping manifests for high-value items.",
+    "first_appearance": "Found on the manifest of the Reaver ship in the starter mission.",
+    "escalation": "The term appears in Kaelen's contracts and Aurelia trade logs.",
+    "payoff_hint": "It points toward a looming industrial collapse in the manufacturing sector."
+  },
+  "rumor_trail": {
+    "name": "The Ghost of the Forge",
+    "trail_id": "rumor_trail.ghost_of_the_forge",
+    "hint_theme": "Rumors of a hidden, abandoned forge in the industrial zone.",
+    "clue_templates": [
+      "A whisper of a foundry that still hums with power.",
+      "A log entry mentioning a secret manufacturing site."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "local",
+    "payoff": "Discovery of an old, high-capacity storage vault for rare parts."
+  },
+  "horizon": {
+    "gate_tease": "Reports of a stable gate leading to the next industrial sector.",
+    "new_system_reveal_rule": "Do not name specific systems or factions beyond Zenith, Aurelia, and Vanguard.",
+    "future_pressure_tease": "The growing demand for 'Void-Stitched' cargo will increase your risk.",
+    "future_ore_or_upgrade_tease": "Rumors of high-grade ore and advanced components in the outer reaches.",
+    "regeneration_trigger": {
+      "id": "regen_industrial_core",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When a major arc is completed, new content is added to the horizon."
+    }
+  },
+  "rules": {
+    "humor_rule": "Dry, slightly dark humor regarding the cost of survival.",
+    "fallback": "If no contract is available, Kaelen offers a standard delivery mission.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ancient signal",
+      "ghost signal",
+      "mysterious pulse"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the consequences of your trade choices in the larger narrative?",
+    "Why do Zenith and Aurelia compete for resources over a dying infrastructure?",
+    "How does Kaelen's role as a broker influence her interactions with you?",
+    "Who is likely to be hired by both Vanguard and Aurelia to secure cargo?",
+    "Why is the 'Void-Stitched' cargo so valuable during this economic crisis?"
+  ]
+}

@@ -68,9 +68,31 @@ func _test_death_memory_and_rollback_classification() -> void:
 		[],
 		chronicle.current_timeline_id(),
 		checkpoint["id"],
-		observation_event.get("event", {}).get("sequence", -1)
+		observation_event.get("event", {}).get("sequence", -1),
+		"",
+		{
+			"line_fingerprint": "Kaelen line.".sha256_text(),
+			"event_kind": "turn_in_clean",
+		}
 	)
 	_expect(bool(observation.get("ok", false)), observation.get("error", ""))
+	var observation_memory: Dictionary = observation.get("memory", {}) \
+		if observation.get("memory", {}) is Dictionary else {}
+	_expect(
+		str(observation_memory.get("line_fingerprint", "")) \
+			== "Kaelen line.".sha256_text()
+			and str(observation_memory.get("event_kind", "")) == "turn_in_clean",
+		"Kaelen memory did not retain delivered line metadata."
+	)
+	var reopened_before_rollback := MemoryStoreType.open(CAMPAIGN_PATH)
+	_expect(
+		_contains_line_memory(
+			reopened_before_rollback.current_memories(),
+			"Kaelen line.".sha256_text(),
+			"turn_in_clean"
+		),
+		"Kaelen delivered-line metadata did not persist through ordinary reopen."
+	)
 
 	var invalid_death := memory_store.append_memory(
 		"death",
@@ -150,6 +172,14 @@ func _test_death_memory_and_rollback_classification() -> void:
 			and reopened.current_memories().size() == 1,
 		"Kaelen rollback classification did not persist."
 	)
+	_expect(
+		_contains_line_memory(
+			reopened.current_memories() + reopened.diagnostic_discarded_memories(),
+			"Kaelen line.".sha256_text(),
+			"turn_in_clean"
+		),
+		"Kaelen delivered-line metadata did not persist through rollback reopen."
+	)
 
 
 func _initial_state() -> Dictionary:
@@ -171,6 +201,20 @@ func _cleanup() -> void:
 	var absolute := ProjectSettings.globalize_path(TEST_ROOT)
 	if DirAccess.dir_exists_absolute(absolute):
 		_remove_directory(absolute)
+
+
+func _contains_line_memory(
+	memories: Array,
+	line_fingerprint: String,
+	event_kind: String
+) -> bool:
+	for memory in memories:
+		if not memory is Dictionary:
+			continue
+		if str(memory.get("line_fingerprint", "")) == line_fingerprint \
+				and str(memory.get("event_kind", "")) == event_kind:
+			return true
+	return false
 
 
 func _remove_directory(path: String) -> void:

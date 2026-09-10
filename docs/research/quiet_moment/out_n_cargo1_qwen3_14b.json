@@ -1,0 +1,104 @@
+[
+ {
+  "line": "Stuffed to the frames. You'd think I'd have more space. Guess I don't. Not anymore.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "I'm packed to the hatch. You could've left me a gap. I notice you didn't.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Captain. I'm stuffed to the bulkheads. You didn't have to fill me so solid. I feel it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to my hold. Or at least my cargo bay. The bulkheads are feeling it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Every bay's sealed and I'm stuffed to the hatch lips — or at least the cargo doors.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads — or at least my cargo holds.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "Stuffed to the bulkheads. You'd think I'd know better than to let you pack me blind.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm packed to the hold's seams. You'd think I was pregnant with something important.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads — or at least my cargo hold.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "I'm full to my hatch lips — or at least my cargo hold.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads — or at least the cargo hold. You'd think I'd be more graceful about it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Hold's full. You can feel it in my struts. I'm holding it together just fine.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm packed to my keel. You could say I'm holding my breath — or at least my cargo doors.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to my cargo hatch — or at least my cargo hold.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "Every bay's stuffed to my bulkheads — and I've got no intention of pretending it's not uncomfortable.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads with it. Not the cargo — the hold. It's got a lot of friends now.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Stuffed to the frames. You'd think I was holding my breath. I'm holding cargo.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Hold's stuffed to the bulkheads. You didn't have to carry all that. I noticed you did anyway.",
+  "secs": 3.1,
+  "flags": [
+   "demo_echo"
+  ]
+ },
+ {
+  "line": "Capacity reached. I'm stuffed to the bulkhead — or at least my cargo hold.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "I'm full to the hatch lips — or at least the cargo doors. You'd think I'd be used to this by now.",
+  "secs": 3.2,
+  "flags": []
+ }
+]

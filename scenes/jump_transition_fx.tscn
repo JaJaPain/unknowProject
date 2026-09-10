@@ -1,12 +1,24 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/JumpTransitionFX.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/hyperspace_tunnel.gdshader" id="2_tunnel_shader"]
+[ext_resource type="Shader" path="res://shaders/distortion.gdshader" id="3_distortion_shader"]
 
-[sub_resource type="Shader" id="HyperspaceShader"]
-code = "shader_type canvas_item;\n\nuniform float intensity : hint_range(0.0, 1.0) = 0.0;\n\nfloat hash(vec2 p) {\n\treturn fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);\n}\n\nvoid fragment() {\n\tvec2 uv = UV - vec2(0.5);\n\tuv.x *= SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;\n\tfloat radius = length(uv);\n\tfloat angle = atan(uv.y, uv.x);\n\tfloat sectors = 72.0;\n\tfloat lane = floor((angle + 3.14159265) / 6.2831853 * sectors);\n\tfloat seed = hash(vec2(lane, floor(TIME * 1.8)));\n\tfloat streak_phase = fract(radius * (38.0 + seed * 28.0) - TIME * (5.0 + seed * 8.0));\n\tfloat streak = smoothstep(0.14, 0.0, streak_phase) * smoothstep(0.02, 0.18, radius);\n\tfloat core = smoothstep(0.16, 0.0, radius);\n\tvec3 blue = mix(vec3(0.01, 0.04, 0.12), vec3(0.18, 0.7, 1.0), streak);\n\tblue += vec3(0.45, 0.75, 1.0) * core * intensity;\n\tfloat tunnel_alpha = intensity * smoothstep(0.0, 0.18, radius) + core * intensity * 0.8;\n\tfloat full_coverage = smoothstep(0.82, 1.0, intensity);\n\tfloat alpha = max(tunnel_alpha, full_coverage);\n\tCOLOR = vec4(blue * intensity, clamp(alpha, 0.0, 1.0));\n}"
+[sub_resource type="ShaderMaterial" id="TunnelMaterial"]
+shader = ExtResource("2_tunnel_shader")
+shader_parameter/intensity = 0.0
+shader_parameter/driven_speed = 2.5
+shader_parameter/blueshift_color = Color(0.1, 0.65, 1.0, 1.0)
+shader_parameter/redshift_color = Color(0.75, 0.05, 0.25, 1.0)
+shader_parameter/streak_brightness = 0.6
 
-[sub_resource type="ShaderMaterial" id="HyperspaceMaterial"]
-shader = SubResource("HyperspaceShader")
+[sub_resource type="ShaderMaterial" id="DistortionMaterial"]
+shader = ExtResource("3_distortion_shader")
+shader_parameter/radial_blur_strength = 0.0
+shader_parameter/chromatic_strength = 0.0
+shader_parameter/shockwave_amplitude = 0.0
+shader_parameter/shockwave_progress = 0.0
+shader_parameter/shockwave_width = 0.18
 
 [node name="JumpTransitionFX" type="CanvasLayer"]
 layer = 100
@@ -20,8 +32,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("HyperspaceMaterial")
+material = SubResource("TunnelMaterial")
 color = Color(1, 1, 1, 1)
+
+[node name="DistortionOverlay" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("DistortionMaterial")
+color = Color(1, 1, 1, 1)
+
+[node name="StarStreaks" type="CPUParticles2D" parent="."]
+visible = true
+emitting = false
+amount = 150
+lifetime = 0.35
+one_shot = false
+explosiveness = 0.05
+randomness = 0.4
+position = Vector2(576, 324)
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 900.0
+initial_velocity_max = 1800.0
+color = Color(0.65, 0.88, 1.0, 0.7)
 
 [node name="Flash" type="ColorRect" parent="."]
 visible = false
@@ -31,4 +70,4 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.86, 0.95, 1, 1)
+color = Color(0.82, 0.93, 1.0, 1.0)

@@ -22,17 +22,22 @@ func initialize(original_hull: Node3D):
 	add_child(col_shape)
 
 func _apply_wrecked_material(node: Node):
+	if node is MultiMeshInstance3D:
+		node.queue_free()
+		return
+	if node is Light3D:
+		node.queue_free()
+		return
 	if node is MeshInstance3D:
-		# Clear material overrides
 		for i in range(node.get_surface_override_material_count()):
 			node.set_surface_override_material(i, null)
-			
+
 		var new_mat = StandardMaterial3D.new()
-		new_mat.albedo_color = Color(0.12, 0.12, 0.14, 1.0) # Burnt grey-black charcoal
+		new_mat.albedo_color = Color(0.12, 0.12, 0.14, 1.0)
 		new_mat.roughness = 0.85
 		new_mat.metallic = 0.6
 		node.set_surface_override_material(0, new_mat)
-		
+
 	for child in node.get_children():
 		_apply_wrecked_material(child)
 

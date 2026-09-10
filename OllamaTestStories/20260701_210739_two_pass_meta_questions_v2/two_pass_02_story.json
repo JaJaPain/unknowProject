@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Iron Scarcity",
+  "campaign_subtitle": "The Rust of the Trade Routes",
+  "campaign_logline": "A desperate pilot navigates a crumbling trade network where every scrap of metal is worth its weight in gold.",
+  "campaign_pitch": "Trade routes are failing. Resources are dwindling. You must navigate the decay to survive.",
+  "campaign_story_summary": "The local economy relies on aging infrastructure. Zenith seeks to monopolize the core lanes. Aurelia focuses on heavy extraction and production. Vanguard maintains the security of the supply chain. Independent pilots struggle to stay solvent. A critical shortage of high-grade alloys is crippling trade. You must decide who to support during the collapse.",
+  "tone": "Dry, slightly dark frontier humor.",
+  "opening": {
+    "status_quo": "The sector's infrastructure is crumbling under heavy use.",
+    "visible_crisis": "Trade routes are becoming increasingly hazardous and expensive.",
+    "hidden_crisis": "A critical shortage of high-grade alloys is causing a secret supply chain collapse.",
+    "why_now": "Contract demands have spiked as the primary refinery hub is failing.",
+    "player_role": "You are an independent pilot seeking to stay afloat."
+  },
+  "mystery": {
+    "question": "Why is there no replacement for high-guard alloy?",
+    "false_answer": "The material is extremely rare and hard to mine.",
+    "true_answer_hint": "The supply chain was intentionally sabotaged by a shadow corporation.",
+    "long_term_reveal_direction": "Investigate the origins of the manufacturing contracts."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She is tracking the flow of high-guard alloy to identify its source.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her true motive for hiring you."
+  },
+  "factions": {
+    "zenith_problem": "Zenith wants to monopolize the trade lanes by imposing heavy tolls.",
+    "aurelia_problem": "Aurelia is struggling to maintain their extraction equipment with failing parts.",
+    "v_problem": "Vanguard's patrol zones are becoming increasingly aggressive and unpredictable.",
+    "conflict_triangle": "Zenith wants control, Aurelia needs resources, Vanguard enforces the law.",
+    "neutral_space_pressure": "Independent pilots are being squeezed out of the market by corporate greed."
+  },
+  "act_1": {
+    "name": "The Scarcity Hunt",
+    "goal": "Secure a steady supply of high-guard alloy for local trade.",
+    "opening_incident": "A shipment of scrap metal is intercepted by a pirate ship.",
+    "midpoint_turn": "You discover that the scrap is actually high-grade industrial components.",
+    "finale": "You deliver a critical component to an Aurelia refinery.",
+    "player_takeaway": "You learn that some contracts are more complex than they seem."
+  },
+  "starter_mission": {
+    "title": "The Scrap Haul",
+    "reason": "A scavenger ship is trying to claim the scrap before you do.",
+    "enemy_identity": "A lone Reaver-class vessel.",
+    "enemy_knows": "It thinks it is just another desperate scavenger.",
+    "after_effect": "You gain a small amount of high-grade alloy and some local reputation."
+  },
+  "recurring_clue": {
+    "name": "The Ghost Line",
+    "signal": "A recurring pattern in the trade logs.",
+    "first_appearance": "Mentioned during a contract briefing with Kaelen.",
+    "escalation": "More contracts involving high-guard alloy appear more frequently.",
+    "payoff_hint": "The log patterns suggest an intentional, systematic sabotage."
+  },
+  "rumor_trail": {
+    "name": "The Smuggler's Path",
+    "trail_id": "rumor_trail.smuggler_path",
+    "hint_theme": "Hidden routes and illegal scrap collection.",
+    "clue_templates": [
+      "A smuggler told me the old routes are safer than the new ones.",
+      "The shadow trade is moves more metal than the official channels."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "uncommon",
+    "payoff": "Unlocks a secret route to a nearby refinery hub."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads toward the heart of the manufacturing core.",
+    "new_system_reveal_rule": "New systems are revealed as you reach the edge of known trade routes.",
+    "future_pressure_tease": "Reports of escalating tensions between Zenith and Aurelia's supply chain.",
+    "future_ore_or_upgrade_tease": "Rumors of high-grade alloys being used in advanced ship components.",
+    "regeneration_trigger": {
+      "id": "regen_scarcity_hunt",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "When the first act ends, add a new story arc about the supply chain collapse."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, slightly dark frontier humor.",
+    "fallback": "If no contract is available, Kaelen's offer will be more desperate and direct.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "reason_for_tutorial",
+      "scarcity_hunt"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What new types of cargo are introduced later?",
+    "Why does the market value of resources change over time?",
+    "How do different factions offer competing incentives?",
+    "Who is the ultimate authority in the sector?",
+    "Which trade route is currently under threat?"
+  ]
+}

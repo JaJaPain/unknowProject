@@ -1,0 +1,104 @@
+[
+ {
+  "line": "The silence is heavy. You're slower at it than I expected. I'm not sure if that's good or bad.",
+  "flags": [],
+  "secs": 3.4
+ },
+ {
+  "line": "Empty all around. You're quiet. I like it. The silence fits. It's not a compliment.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "This silence is making me check my own systems. You're not malfunctioning, are you, Captain?",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "No one's out there. You're not bored, are you? My sensors aren't lying. They're just tired.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Captain. All systems silent. You're still here. That's not nothing.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Empty space is quiet. You're quiet too. Maybe the silence is just us not knowing what to say next.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "This stretch is long. My systems don't mind the silence. You might. Want a countdown? I can do that.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No contacts. I'm not counting. Just making sure you're not counting either.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Captain. The silence is heavy. My sensors don't like it. You're still here, so it's not that.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "This route's a straight line. No surprises. I'll count the stars if you count the seconds between them.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "All systems nominal. No signs of trouble. You're still here, so it's not that either.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Empty space. No stars. Just us. You ever miss the noise of something else watching?",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Captain, the silence is getting to me. My systems are fine, but I’m starting to wonder if you’re bored enough to talk to me just for fun.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.2
+ },
+ {
+  "line": "Empty space. No contacts. You're good at that. I'm not complaining.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "This silence is heavy. You're not talking. I'm not talking. My systems are waiting.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "This silence is wearing. Not the quiet, the waiting. You're better at that than I thought.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Captain, the silence is starting to itch. Want me to reroute the comms just to hear something?",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "This silence is stretching. You're still here. Must be something worth watching.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Empty out here. You're still breathing. I'm still running. That's something.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Quiet out here. I like it. You don't have to talk. I've got the comms. I've got the silence.",
+  "flags": [],
+  "secs": 3.1
+ }
+]

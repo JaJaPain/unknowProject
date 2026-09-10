@@ -1,0 +1,78 @@
+[
+  {
+    "name": "compact_json_01",
+    "variant": "compact_json",
+    "seed": 953816,
+    "elapsed_seconds": 32.91,
+    "valid": false,
+    "score": 80,
+    "title": "Echoes of the Voided Gate",
+    "logline": "A desperate pilot navigates a decaying trade route between three warring factions.",
+    "errors": [
+      "missing_nested:factions.aurelia_problem",
+      "missing_nested:rumor_trail.payoff",
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_json_02",
+    "variant": "compact_json",
+    "seed": 953834,
+    "elapsed_seconds": 31.23,
+    "valid": false,
+    "score": 62,
+    "title": "The Hollowed Vein",
+    "logline": "A struggling pilot navigates a dying trade route between three competing factions.",
+    "errors": [
+      "missing_field:recurring_clue",
+      "missing_nested:recurring_clue.name",
+      "missing_nested:recurring_clue.signal",
+      "missing_nested:recurring_clue.first_appearance",
+      "missing_nested:recurring_clue.escalation",
+      "missing_nested:recurring_clue.payoff_hint",
+      "bad_rumor_discovery_type"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_json_03",
+    "variant": "compact_json",
+    "seed": 953852,
+    "elapsed_seconds": 30.31,
+    "valid": false,
+    "score": 88,
+    "title": "Edge of the Void",
+    "logline": "A desperate pilot navigates a tightening grip on trade routes and dwindling resources.",
+    "errors": [
+      "missing_nested:rules.fallback_rule"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_json_04",
+    "variant": "compact_json",
+    "seed": 953870,
+    "elapsed_seconds": 30.55,
+    "valid": false,
+    "score": 88,
+    "title": "Dust of the Rim",
+    "logline": "A broke pilot must navigate the shifting trade routes between three warring factions.",
+    "errors": [
+      "missing_nested:starter_mission.aftershock"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  }
+]

@@ -8,6 +8,9 @@ const DomainIdType := preload("res://scripts/domain/DomainId.gd")
 const ObjectiveType := preload(
 	"res://scripts/domain/MissionObjectiveDefinition.gd"
 )
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 
 const SCHEMA_VERSION := 1
 
@@ -56,7 +59,20 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 			"Active mission reward cannot be negative.",
 			"reward_credits"
 		)
+	var selected_choice_id := str(source.get("choice_id_selected", ""))
+	if not selected_choice_id.is_empty() \
+			and not DomainIdType.is_valid(selected_choice_id, "choice"):
+		result.add_error(
+			"invalid_choice_id",
+			"Active mission selected choice ID is invalid: %s" %
+				DomainIdType.validation_error(selected_choice_id, "choice"),
+			"choice_id_selected"
+		)
 	_validate_timing(source, result)
+	result.merge(
+		NarrativeMetadataType.validate_source(source),
+		"narrative_metadata"
+	)
 
 	match objective_type:
 		ObjectiveType.TYPE_KILL_SHIPS:
@@ -94,6 +110,40 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 						"Pickup missions require '%s'." % field,
 						field
 					)
+		ObjectiveType.TYPE_DELIVERY_COURIER:
+			for field in [
+				"item_name",
+				"origin_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				if str(source.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_delivery_field",
+						"Courier missions require '%s'." % field,
+						field
+					)
+			if not bool(source.get("cargo_loaded", false)):
+				result.add_error(
+					"missing_delivery_cargo",
+					"Courier missions must load cargo on acceptance.",
+					"cargo_loaded"
+				)
+		ObjectiveType.TYPE_PURCHASE_DELIVERY:
+			for field in [
+				"item_id",
+				"item_name",
+				"store_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				if str(source.get(field, "")).strip_edges().is_empty():
+					result.add_error(
+						"missing_purchase_field",
+						"Purchase missions require '%s'." % field,
+						field
+					)
+			_require_positive(source, "quantity_required", result)
 		ObjectiveType.TYPE_RECOVER_COMBAT_DROP:
 			_require_positive(source, "count_required", result)
 			if int(source.get("current_count", -1)) < 0:

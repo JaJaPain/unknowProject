@@ -1,0 +1,100 @@
+{
+  "prod_900": [
+    {
+      "parses": true,
+      "missing_keys": [
+        "campaign_title",
+        "campaign_logline",
+        "opening_situation",
+        "main_mystery",
+        "act_1_outline",
+        "long_term_reveal",
+        "tone",
+        "core_pressure",
+        "kaelen_rule",
+        "faction_reveal_rule",
+        "humor_rule",
+        "address_rule",
+        "fallback_rule",
+        "story_horizon_rule",
+        "story_arcs",
+        "rumor_trails",
+        "regeneration_triggers",
+        "expansion_rules",
+        "banned_repeats"
+      ],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 285,
+      "elapsed": 4.52,
+      "done_reason": "stop",
+      "eval_count": 64
+    },
+    {
+      "parses": true,
+      "missing_keys": [
+        "expansion_rules",
+        "banned_repeats"
+      ],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2772,
+      "elapsed": 19.07,
+      "done_reason": "stop",
+      "eval_count": 737
+    },
+    {
+      "parses": true,
+      "missing_keys": [
+        "rumor_trails"
+      ],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2921,
+      "elapsed": 19.87,
+      "done_reason": "stop",
+      "eval_count": 771
+    }
+  ],
+  "high_2800": [
+    {
+      "parses": true,
+      "missing_keys": [],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2735,
+      "elapsed": 18.95,
+      "done_reason": "stop",
+      "eval_count": 724
+    },
+    {
+      "parses": true,
+      "missing_keys": [
+        "rumor_trails",
+        "expansion_rules",
+        "banned_repeats"
+      ],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2825,
+      "elapsed": 19.08,
+      "done_reason": "stop",
+      "eval_count": 736
+    },
+    {
+      "parses": true,
+      "missing_keys": [
+        "faction_reveal_rule",
+        "regeneration_triggers",
+        "expansion_rules",
+        "banned_repeats"
+      ],
+      "truncated_guess": false,
+      "error": null,
+      "char_len": 2693,
+      "elapsed": 17.89,
+      "done_reason": "stop",
+      "eval_count": 678
+    }
+  ]
+}

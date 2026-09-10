@@ -45,6 +45,19 @@ var validation := ValidationResultType.new()
 var chronicle_timeline_id: String = ""
 var chronicle_head_event_id: String = ""
 var map_knowledge: Dictionary = {}
+var _initial_known_gates: Dictionary = {}
+
+
+func set_registry_defaults(registry: SystemRegistry) -> void:
+	for sys_def: SystemDefinition in registry.get_all_systems():
+		for gate: GateDefinition in sys_def.gates:
+			if gate.initial_state == "known":
+				var gid := str(gate.id)
+				_initial_known_gates[gid] = true
+				if not map_knowledge.is_empty():
+					var hidden: Array = map_knowledge.get("hidden_gate_ids", [])
+					if gid in hidden:
+						set_gate_knowledge(gid, "known")
 
 
 static func open(path: String) -> CampaignCheckpointStore:
@@ -111,6 +124,27 @@ func set_gate_knowledge(gate_id: String, state: String) -> bool:
 			gate_ids.sort()
 		map_knowledge[key] = gate_ids
 	return true
+
+
+func get_gate_state(gate_id: String) -> String:
+	if map_knowledge.is_empty():
+		return "unknown"
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		if gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			return state
+	if _initial_known_gates.has(gate_id):
+		return "known"
+	return "unknown"
+
+
+func get_all_gate_states() -> Dictionary:
+	var output := {}
+	if map_knowledge.is_empty():
+		return output
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		for gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			output[str(gate_id)] = state
+	return output
 
 
 func mark_gates_known(gate_ids: Array) -> bool:

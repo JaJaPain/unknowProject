@@ -30,20 +30,33 @@ extends RefCounted
 ##                 stderr, so callers that only read `stdout` would surface
 ##                 a generic "exit code 1" instead.
 ##   timed_out:    true if we killed the process at the wall-clock budget.
+##   cancelled:    true if the caller requested a cooperative early stop.
 ##   spawn_failed: true if `OS.execute_with_pipe` didn't return a usable PID.
 
 const DEFAULT_TIMEOUT_MS := 8000
 const _POLL_INTERVAL_MS := 50
+const _KILL_GRACE_MS := 500
 
 
 static func run(
 	exe: String,
 	args: Array,
 	timeout_ms: int = DEFAULT_TIMEOUT_MS,
-	capture_stderr: bool = true
+	capture_stderr: bool = true,
+	cancel_check: Callable = Callable(),
 ) -> Dictionary:
 	if exe.is_empty():
 		return _spawn_failed_result()
+	return _run_piped(exe, args, timeout_ms, capture_stderr, cancel_check)
+
+
+static func _run_piped(
+	exe: String,
+	args: Array,
+	timeout_ms: int,
+	capture_stderr: bool,
+	cancel_check: Callable,
+) -> Dictionary:
 
 	var spawn_exe := exe
 	var spawn_args := args
@@ -75,20 +88,28 @@ static func run(
 
 	var deadline := Time.get_ticks_msec() + maxi(timeout_ms, _POLL_INTERVAL_MS)
 	while OS.is_process_running(pid):
-		if Time.get_ticks_msec() >= deadline:
-			## Read whatever made it to the pipes before we kill the
-			## process — partial output beats blank "timed out" when the
-			## CLI was emitting useful diagnostics on its way to hanging.
-			var partial_stdout := _drain_pipe(stdio)
-			var partial_stderr := _drain_pipe(stderr_pipe) if capture_stderr else ""
+		var cancelled := cancel_check.is_valid() and bool(cancel_check.call())
+		if cancelled or Time.get_ticks_msec() >= deadline:
+			## Kill before draining: a pipe read can block while the child is
+			## still alive. Once it exits, drain any buffered partial output.
 			OS.kill(pid)
+			var kill_deadline := Time.get_ticks_msec() + _KILL_GRACE_MS
+			while OS.is_process_running(pid) and Time.get_ticks_msec() < kill_deadline:
+				OS.delay_msec(_POLL_INTERVAL_MS)
+
+			var partial_stdout := ""
+			var partial_stderr := ""
+			if not OS.is_process_running(pid):
+				partial_stdout = _drain_pipe(stdio)
+				partial_stderr = _drain_pipe(stderr_pipe) if capture_stderr else ""
 			_close_pipes(stdio, stderr_pipe)
 			return {
 				"exit_code": -1,
 				"stdout": partial_stdout,
 				"stderr": partial_stderr,
 				"output": _join_streams(partial_stdout, partial_stderr),
-				"timed_out": true,
+				"timed_out": not cancelled,
+				"cancelled": cancelled,
 				"spawn_failed": false,
 			}
 		OS.delay_msec(_POLL_INTERVAL_MS)
@@ -103,6 +124,7 @@ static func run(
 		"stderr": stderr_text,
 		"output": _join_streams(stdout, stderr_text),
 		"timed_out": false,
+		"cancelled": false,
 		"spawn_failed": false,
 	}
 
@@ -114,14 +136,25 @@ static func _spawn_failed_result() -> Dictionary:
 		"stderr": "",
 		"output": "",
 		"timed_out": false,
+		"cancelled": false,
 		"spawn_failed": true,
 	}
 
 
 static func _drain_pipe(pipe: Variant) -> String:
-	if pipe is FileAccess:
-		return (pipe as FileAccess).get_as_text()
-	return ""
+	if not (pipe is FileAccess):
+		return ""
+	var f := pipe as FileAccess
+	var bytes := PackedByteArray()
+	var max_bytes := 1 << 20  # 1 MiB, far above expected client CLI output.
+	while bytes.size() < max_bytes:
+		var chunk := f.get_buffer(mini(4096, max_bytes - bytes.size()))
+		if chunk.is_empty():
+			break
+		bytes.append_array(chunk)
+		if f.eof_reached():
+			break
+	return bytes.get_string_from_utf8()
 
 
 static func _join_streams(stdout: String, stderr_text: String) -> String:

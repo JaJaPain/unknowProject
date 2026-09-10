@@ -1,0 +1,80 @@
+[
+  {
+    "name": "compact_json_01",
+    "variant": "compact_json",
+    "seed": 954002,
+    "elapsed_seconds": 32.38,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Expecting ',' delimiter: line 85 column 85 (char 5003)"
+    ],
+    "warnings": []
+  },
+  {
+    "name": "compact_json_02",
+    "variant": "compact_json",
+    "seed": 954020,
+    "elapsed_seconds": 30.39,
+    "valid": false,
+    "score": 78,
+    "title": "Edges of the Void",
+    "logline": "A struggling pilot navigates a fractured supply chain between three competing corporations.",
+    "errors": [
+      "missing_nested:factions.aurelia_problem",
+      "placeholder_text:_s01"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_json_03",
+    "variant": "compact_json",
+    "seed": 954038,
+    "elapsed_seconds": 28.68,
+    "valid": false,
+    "score": 30,
+    "title": "Echoes of the Void",
+    "logline": "A desperate pilot navigates a collapsing trade corridor.",
+    "errors": [
+      "missing_field:rules",
+      "missing_field:story_questions_for_future_generation",
+      "missing_nested:act_1.opening_incident",
+      "missing_nested:recurring_clue.first_appearance",
+      "missing_nested:horizon.new_system_reveal_rule",
+      "missing_nested:horizon.future_ore_or_upgrade_tease",
+      "missing_nested:rules.humor_rule",
+      "missing_nested:rules.fallback",
+      "starter_mission_missing_reaver",
+      "story_questions_not_five_items",
+      "banned_repeats_missing_required_anti_chosen_one_terms"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "compact_json_04",
+    "variant": "compact_json",
+    "seed": 954056,
+    "elapsed_seconds": 29.97,
+    "valid": false,
+    "score": 88,
+    "title": "Echoes of the Void",
+    "logline": "A desperate pilot navigates the friction between three competing corporate giants.",
+    "errors": [
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  }
+]

@@ -20,6 +20,7 @@ func _initialize() -> void:
 
 	_test_in_memory_migration()
 	_test_file_migration_and_backup()
+	_test_generated_system_round_trip()
 	_test_damaged_source_is_untouched()
 	_test_unsupported_source_is_untouched()
 	_cleanup()
@@ -48,7 +49,7 @@ func _test_in_memory_migration() -> void:
 	)
 	_expect(
 		data.get("current_system_id") == "system.start"
-			and data.get("arrival_gate_id") == "gate.test.to_start",
+			and data.get("arrival_gate_id") == "gate.start.to_test",
 		"Migration did not canonicalize top-level IDs."
 	)
 	_expect(
@@ -74,7 +75,7 @@ func _test_in_memory_migration() -> void:
 		var runtime: Dictionary = decoded["data"]
 		_expect(
 			runtime.get("current_system_id") == "start_system"
-				and runtime.get("arrival_gate_id") == "test_to_start"
+				and runtime.get("arrival_gate_id") == "start_to_test"
 				and (runtime.get("systems", {}) as Dictionary).has(
 					"start_system"
 				),
@@ -145,11 +146,51 @@ func _test_unsupported_source_is_untouched() -> void:
 	)
 
 
+func _test_generated_system_round_trip() -> void:
+	var source_registry := RegistryType.load_default()
+	var generated := _register_generated_fixture(source_registry)
+	_expect(
+		bool(generated.get("ok", false)),
+		generated.get("error", "Generated fixture registration failed.")
+	)
+	if not bool(generated.get("ok", false)):
+		return
+	var prepared := MigratorType.prepare_for_save(
+		_generated_runtime_save(),
+		source_registry
+	)
+	_expect(bool(prepared.get("ok", false)), prepared.get("error", ""))
+	if not bool(prepared.get("ok", false)):
+		return
+	_write_text(TEST_PATH, JSON.stringify(prepared["data"]))
+	var fresh_registry := RegistryType.load_default()
+	_expect(
+		not fresh_registry.has_system("system.gen.persisted"),
+		"Fresh registry unexpectedly knew the generated fixture."
+	)
+	var loaded := MigratorType.load_for_runtime(TEST_PATH, fresh_registry)
+	_expect(bool(loaded.get("ok", false)), loaded.get("error", ""))
+	_expect(
+		fresh_registry.has_system("system.gen.persisted"),
+		"Generated system was not imported before save validation."
+	)
+	if bool(loaded.get("ok", false)):
+		var runtime: Dictionary = loaded["data"]
+		_expect(
+			runtime.get("current_system_id") == "system_gen_persisted",
+			"Generated current system did not decode to runtime ID."
+		)
+		_expect(
+			runtime.get("arrival_gate_id") == "gen_persisted_return",
+			"Generated arrival gate did not decode to runtime ID."
+		)
+
+
 func _legacy_save() -> Dictionary:
 	return {
 		"version": MigratorType.LEGACY_VERSION,
 		"current_system_id": "start_system",
-		"arrival_gate_id": "test_to_start",
+		"arrival_gate_id": "start_to_test",
 		"player": {
 			"health": 73.0,
 			"shield": 17.0,
@@ -179,6 +220,55 @@ func _legacy_save() -> Dictionary:
 				},
 			},
 		},
+	}
+
+
+func _generated_runtime_save() -> Dictionary:
+	return {
+		"version": MigratorType.CURRENT_VERSION,
+		"current_system_id": "system.gen.persisted",
+		"arrival_gate_id": "gate.gen.persisted.return",
+		"player": {
+			"health": 88.0,
+			"shield": 20.0,
+			"position": [4.0, 5.0, 6.0],
+			"rotation": [0.0, 0.25, 0.0],
+		},
+		"global": {
+			"credits": 900,
+			"cargo": 3.0,
+		},
+		"quest": {},
+		"systems": {
+			"system.gen.persisted": {},
+		},
+	}
+
+
+func _register_generated_fixture(registry: SystemRegistry) -> Dictionary:
+	var result := registry.register_generated_system(
+		{
+			"id": "system.gen.persisted",
+			"legacy_id": "system_gen_persisted",
+			"display_name": "Persisted Reach",
+			"station_ids": [],
+			"faction_ids": [],
+		},
+		[{
+			"id": "gate.gen.persisted.return",
+			"legacy_id": "gen_persisted_return",
+			"display_name": "Return Gate",
+			"destination_system_id": "system.start",
+			"destination_gate_id": "gate.start.to_test",
+			"initial_state": "known",
+			"discovery_action": "",
+			"discovery_cost": {},
+			"discovery_prerequisites": [],
+		}]
+	)
+	return {
+		"ok": result.is_valid(),
+		"error": result.summary(),
 	}
 
 

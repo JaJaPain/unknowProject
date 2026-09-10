@@ -2,6 +2,7 @@
 	"schema_version": 1,
 	"voices": [
 		{"id":"voice.kaelen.v1","schema_version":1,"display_name":"Kaelen","language":"en","style_tags":["confident","wry","broker"],"fallback_voice_profile_id":"voice.neutral.v1"},
+		{"id":"voice.nova.v1","schema_version":1,"display_name":"N.O.V.A.","language":"en","style_tags":["ship-ai","composed","precise"],"fallback_voice_profile_id":"voice.neutral.v1"},
 		{"id":"voice.neutral.v1","schema_version":1,"display_name":"Neutral","language":"en","style_tags":["neutral"],"fallback_voice_profile_id":""},
 		{"id":"voice.agent.zenith.v1","schema_version":1,"display_name":"Zenith Agent","language":"en","style_tags":["corporate","controlled"],"fallback_voice_profile_id":"voice.neutral.v1"},
 		{"id":"voice.agent.aurelia.v1","schema_version":1,"display_name":"Aurelia Agent","language":"en","style_tags":["sharp","professional"],"fallback_voice_profile_id":"voice.neutral.v1"},

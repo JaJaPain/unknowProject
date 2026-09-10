@@ -1,0 +1,104 @@
+[
+ {
+  "line": "I'm packed to the seams. They had to bend my ribs to get it in. Or at least my frame spars.",
+  "raw": "I'm packed to the seams. They had to bend my ribs to get it in.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm packed to my ribs. They had to fold me in. Can't sit down for a week. Or at least my frame spars.",
+  "raw": "I'm packed to my ribs. They had to fold me in. Can't sit down for a week.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Every bay's full. You didn't have to stack it that high. I can feel the weight of it.",
+  "raw": "Every bay's full. You didn't have to stack it that high. I can feel the weight of it.",
+  "secs": 3.1,
+  "flags": [
+   "brief_echo"
+  ]
+ },
+ {
+  "line": "I'm stuffed to the frames. The cargo hold's full. You'll have to rearrange the mess hall yourself.",
+  "raw": "I'm stuffed to the frames. The cargo hold's full. You'll have to rearrange the mess hall yourself.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "I'm carrying this like a second spine. You didn't have to stack it so high.",
+  "raw": "I'm carrying this like a second spine. You didn't have to stack it so high.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "My hips are full. The cargo’s in the hold. You’ll have to wait for the next hatch. My gimbal mounts, technically.",
+  "raw": "My hips are full. The cargo’s in the hold. You’ll have to wait for the next hatch.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My throat's full. The last load squeezed in tight. I'm not used to this much weight. Well. My intake trunk.",
+  "raw": "My throat's full. The last load squeezed in tight. I'm not used to this much weight.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to my collarbones. The cargo bay's got a new habit of holding its breath.",
+  "raw": "I'm stuffed to my collarbones. The cargo bay's got a new habit of holding its breath.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Cargo hatch is sealed. My ribs are full. I can't bend that way again. Or at least my frame spars.",
+  "raw": "Cargo hatch is sealed. My ribs are full. I can't bend that way again.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Cargo's in. My waist's lower. You'd think I was carrying it myself. My midsection coupling, technically.",
+  "raw": "Cargo's in. My waist's lower. You'd think I was carrying it myself.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Hold's full. Can't sit straight. You'll have to help me bend over later.",
+  "raw": "Hold's full. Can't sit straight. You'll have to help me bend over later.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Captain. I'm packed to the ceiling. They had to fold the cargo in. My ribs are sore from it. My frame spars, technically.",
+  "raw": "Captain. I'm packed to the ceiling. They had to fold the cargo in. My ribs are sore from it.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "I've got a weight in my gut I didn't expect. Who do we know with a back strong enough to carry this?",
+  "raw": "I've got a weight in my gut I didn't expect. Who do we know with a back strong enough to carry this?",
+  "secs": 3.2,
+  "flags": [
+   "demo_echo"
+  ]
+ },
+ {
+  "line": "I'm packed to the brim. They had to fold the last crate. My ribs are sore from it. My frame spars, technically.",
+  "raw": "I'm packed to the brim. They had to fold the last crate. My ribs are sore from it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the frames. Nothing more fits. My ribs are full. My spine's bent. My frame spars, technically.",
+  "raw": "I'm stuffed to the frames. Nothing more fits. My ribs are full. My spine's bent.",
+  "secs": 3.0,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "Captain, my hips are full. Can't twist left without scraping. Not that I'm asking you to. Or at least my gimbal mounts.",
+  "raw": "Captain, my hips are full. Can't twist left without scraping. Not that I'm asking you to.",
+  "secs": 3.1,
+  "flags": []
+ }
+]

@@ -1,0 +1,35 @@
+{
+  "creative_lane": "Industrial Decay & Corporate Sovereignty",
+  "freshness_rule": "Focus on resource scarcity and the logistical chains of trade routes.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost ship"
+  ],
+  "core_story_questions": [
+    "What is the cost of bypassing a corporate monopoly?",
+    "Why do independent pilots choose high-risk smuggling routes?",
+    "How does scarcity affect trade negotiations?",
+    "Who controls the primary mining hubs?",
+    "Where are the contested zones located?"
+  ],
+  "starter_mission_questions": [
+    "What is the risk of engaging a Reaver ship?",
+    "How much cargo is lost during an intercept?",
+    "Why does the Reaver pilot want to keep their haul?"
+  ],
+  "kaelen_questions": [
+    "What is Kaelen's leverage over local merchants?",
+    "How does Kaelen manage his reputation among rivals?",
+    "Who are Kaelen's primary contacts in the underground market?"
+  ],
+  "faction_questions": [
+    "Why does Zenith prioritize expansion into new sectors?",
+    "How do Aurelia's trade routes differ from Vanguard's security protocols?",
+    "What is the core conflict between the three factions?",
+    "Who controls the primary transit hubs?",
+    "Where are the contested zones located?"
+  ],
+  "future_s_questions": []
+}
