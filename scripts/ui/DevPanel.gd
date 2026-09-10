@@ -341,7 +341,9 @@ func _build_sensor_reveal_tab() -> void:
 	tab.add_child(HSeparator.new())
 
 	var toggle := CheckBox.new()
-	toggle.text = "Enable sensor reveal (hide distant objects)"
+	# Named loudly because it resets to OFF every launch (session-only state), and
+	# a dialled-in range with the toggle off looks exactly like a broken feature.
+	toggle.text = "Enable sensor reveal (hide distant objects) -- RESETS OFF EACH LAUNCH"
 	toggle.button_pressed = GlobalState.sensor_reveal_enabled
 	toggle.toggled.connect(func(on: bool) -> void:
 		GlobalState.sensor_reveal_enabled = on
@@ -374,7 +376,7 @@ func _build_sensor_reveal_tab() -> void:
 		]
 
 	_build_reveal_row(tab, "Sensor range scale", "range_scale", 0.1, refresh_readout)
-	_build_reveal_row(tab, "Drop range multiplier", "drop_multiplier", 0.25, refresh_readout)
+	_build_reveal_row(tab, "Drop range mult (min 1.0)", "drop_multiplier", 0.25, refresh_readout)
 	_build_reveal_row(tab, "Mission ship bonus", "mission_multiplier", 0.1, refresh_readout)
 	_build_reveal_row(tab, "Unfound gate multiplier", "tiny_multiplier", 0.05, refresh_readout)
 
@@ -422,9 +424,15 @@ func _build_reveal_row(
 	var refresh := func() -> void:
 		value.text = "%.2fx" % SensorRevealModel.get_tuning(prop)
 	var nudge := func(delta: float) -> void:
-		# Floored just above zero: a zero scale would blind sensors entirely and
-		# read as a broken game rather than a tuning result.
-		SensorRevealModel.set_tuning(prop, maxf(0.05, SensorRevealModel.get_tuning(prop) + delta))
+		# Floored per-dial. Zero would blind sensors entirely and read as a broken
+		# game rather than a tuning result. The DROP multiplier floors at 1.0
+		# instead: it is a multiple of the detection range, so below 1.0 an object
+		# is dropped before it can be detected and can never stay on the overview
+		# at all. That is not a tuning result either, it is an unreachable state.
+		var floor_value: float = 1.0 if prop == "drop_multiplier" else 0.05
+		SensorRevealModel.set_tuning(
+			prop, maxf(floor_value, SensorRevealModel.get_tuning(prop) + delta)
+		)
 		refresh.call()
 		on_change.call()
 		_refresh_sensor_reveal()

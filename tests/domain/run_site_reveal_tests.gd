@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_mission_ships_are_detected_further_out()
 	_test_group_classification_protects_landmarks()
 	_test_gate_visibility_follows_discovery()
+	_test_drop_range_must_not_fall_below_detection()
 	_test_anomalies_are_gated_tightly()
 	_test_live_tuning_moves_real_ranges()
 	_test_unknown_tier_weakens_rather_than_blinds()
@@ -323,3 +324,20 @@ func _test_anomalies_are_gated_tightly() -> void:
 		is_equal_approx(RevealType.anomaly_reveal_range(), anomaly_range),
 		"reset_tuning must restore the anomaly range."
 	)
+
+
+func _test_drop_range_must_not_fall_below_detection() -> void:
+	# The drop range is a MULTIPLE of detection, so a multiplier under 1.0 means
+	# an object is dropped before it can be detected -- it could never stay on the
+	# overview at all. The dev panel floors this dial at 1.0; this pins the reason
+	# so nobody "helpfully" lowers the floor later.
+	RevealType.reset_tuning()
+	_expect(
+		RevealType.drop_multiplier >= 1.0,
+		"The shipped drop multiplier must not be below 1.0, got %.2f" % RevealType.drop_multiplier
+	)
+	for tier in ["basic", "improved", "advanced"]:
+		_expect(
+			RevealType.drop_range_for_tier(tier) >= RevealType.detection_range(tier),
+			"drop range must be >= detection range for tier '%s'" % tier
+		)
