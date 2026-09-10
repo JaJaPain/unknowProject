@@ -363,6 +363,8 @@ func _build_sensor_reveal_tab() -> void:
 		readout.text = (
 			"ship %.0f / drops %.0f      mission ship %.0f / drops %.0f
 "
+			+ "wreck %.0f / drops %.0f      mission wreck %.0f / drops %.0f
+"
 			+ "asteroid %.0f / drops %.0f      unfound gate %.0f      anomaly %.0f
 "
 			+ "planets/stations/known gates: always visible"
@@ -371,6 +373,10 @@ func _build_sensor_reveal_tab() -> void:
 			m.drop_range_for_tier("basic", false, m.SIZE_SMALL, "ship"),
 			m.detection_range("basic", true, m.SIZE_SMALL, "ship"),
 			m.drop_range_for_tier("basic", true, m.SIZE_SMALL, "ship"),
+			m.detection_range("basic", false, m.SIZE_SMALL, m.WRECK_CLASS),
+			m.drop_range_for_tier("basic", false, m.SIZE_SMALL, m.WRECK_CLASS),
+			m.detection_range("basic", true, m.SIZE_SMALL, m.WRECK_CLASS),
+			m.drop_range_for_tier("basic", true, m.SIZE_SMALL, m.WRECK_CLASS),
 			m.detection_range("basic", false, m.SIZE_SMALL, "asteroid"),
 			m.drop_range_for_tier("basic", false, m.SIZE_SMALL, "asteroid"),
 			m.detection_range("basic", false, m.SIZE_TINY, "ship"),

@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_test_gate_visibility_follows_discovery()
 	_test_drop_range_must_not_fall_below_detection()
 	_test_abes_tuned_ranges_are_what_ship()
+	_test_wreck_penalty_and_its_ordering()
 	_test_anomalies_are_gated_tightly()
 	_test_live_tuning_moves_real_ranges()
 	_test_unknown_tier_weakens_rather_than_blinds()
@@ -200,11 +201,13 @@ func _test_abes_tuned_ranges_are_what_ship() -> void:
 	# Mission ships get a bonus ON TOP of the ship ranges, per Abe.
 	var mission := RevealType.detection_range("basic", true, RevealType.SIZE_SMALL, "ship")
 	_expect(mission > 1500.0, "A mission ship must be detected further than 1500m, got %.0f" % mission)
-	# Wreckage and salvagers have no entry and must fall back to SHIP, not asteroid.
 	_expect(
-		RevealType.range_class_for_groups(["wreckage"]) == "ship",
-		"Wreckage should use the ship ranges -- it is a ship hull, and the thing "
-			+ "the player came to salvage."
+		RevealType.range_class_for_groups(["wreckage"]) == RevealType.WRECK_CLASS,
+		"Wreckage should use the wreck class."
+	)
+	_expect(
+		RevealType.range_class_for_groups(["salvager"]) == RevealType.WRECK_CLASS,
+		"Salvagers should use the wreck class too."
 	)
 	_expect(RevealType.range_class_for_groups(["asteroid"]) == "asteroid", "Asteroids use asteroid ranges.")
 	_expect(RevealType.range_class_for_groups(["ship"]) == "ship", "Ships use ship ranges.")
@@ -374,3 +377,43 @@ func _test_anomalies_are_gated_tightly() -> void:
 	)
 
 
+
+
+func _test_wreck_penalty_and_its_ordering() -> void:
+	# A wreck reads off the SHIP ranges then takes a 20% penalty: it is a ship
+	# hull, but cold and inert, so it should not be spotted as far out as a
+	# running ship.
+	RevealType.reset_tuning()
+	var ship := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL, "ship")
+	var wreck := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL, RevealType.WRECK_CLASS)
+	_expect(
+		is_equal_approx(wreck, ship * RevealType.WRECK_RANGE_PENALTY),
+		"A wreck should be %.0fm (ship %.0f x %.2f), got %.0f"
+			% [ship * RevealType.WRECK_RANGE_PENALTY, ship, RevealType.WRECK_RANGE_PENALTY, wreck]
+	)
+	_expect(wreck < ship, "A wreck must be harder to spot than a live ship.")
+
+	# ORDERING, which Abe specified explicitly: the mission bonus applies FIRST,
+	# then the wreck penalty comes off that result.
+	var mission_wreck := RevealType.detection_range(
+		"basic", true, RevealType.SIZE_SMALL, RevealType.WRECK_CLASS
+	)
+	var expected: float = ship * RevealType.mission_multiplier * RevealType.WRECK_RANGE_PENALTY
+	_expect(
+		is_equal_approx(mission_wreck, expected),
+		"A mission wreck should be %.0fm, got %.0f" % [expected, mission_wreck]
+	)
+	# The two properties that ordering is meant to guarantee:
+	_expect(mission_wreck > wreck, "A mission wreck must be easier to find than an ordinary wreck.")
+	var mission_ship := RevealType.detection_range("basic", true, RevealType.SIZE_SMALL, "ship")
+	_expect(
+		mission_wreck < mission_ship,
+		"A mission wreck must still be harder to find than a live mission ship."
+	)
+
+	# The penalty applies to the drop range as well, or a wreck would linger on
+	# the overview longer than the ship it came from.
+	var ship_drop := RevealType.drop_range_for_tier("basic", false, RevealType.SIZE_SMALL, "ship")
+	var wreck_drop := RevealType.drop_range_for_tier("basic", false, RevealType.SIZE_SMALL, RevealType.WRECK_CLASS)
+	_expect(wreck_drop < ship_drop, "A wreck's drop range must also take the penalty.")
+	_expect(wreck_drop > wreck, "A wreck's drop range must still exceed its detection range.")

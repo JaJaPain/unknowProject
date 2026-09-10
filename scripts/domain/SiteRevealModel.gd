@@ -41,10 +41,21 @@ const CLASS_RANGES := {
 	"ship":     {"detect": 1500.0, "drop": 1900.0},
 	"asteroid": {"detect":  800.0, "drop": 1100.0},
 }
-## Anything small without its own entry. Wreckage and salvagers use the SHIP
-## numbers: a wreck is a ship hull, it is what the player came to salvage, and
-## hiding it sooner than the ship it used to be would be strange.
+## Anything small without its own entry.
 const DEFAULT_CLASS := "ship"
+
+## Wreckage reads off the SHIP ranges and then takes a penalty (Abe, 2026-09-10).
+## A wreck is a ship hull, so the ship numbers are the right starting point -- but
+## it is cold and inert, so it should not be spotted as far out as a running ship.
+##
+## ORDER MATTERS and Abe specified it: a MISSION wreck gets the mission bonus
+## FIRST, then the wreck penalty comes off that. So a mission wreck is still
+## easier to find than an ordinary wreck, but never as easy as a live mission
+## ship. Applying the penalty first and the bonus second gives the same product
+## here, but would diverge the moment either becomes non-multiplicative -- the
+## order is written down so it survives a future change.
+const WRECK_RANGE_PENALTY := 0.8
+const WRECK_CLASS := "wreckage"
 
 ## Tunable at runtime from the dev panel. range_scale multiplies every class at
 ## once, so the shape Abe tuned is preserved while the whole set moves together.
@@ -149,12 +160,18 @@ static func range_class_for_groups(groups: Array) -> String:
 		var g := str(group)
 		if g == "asteroid":
 			return "asteroid"
+		if g == "wreckage" or g == "salvager":
+			return WRECK_CLASS
 		if g == "ship":
 			return "ship"
 	return DEFAULT_CLASS
 
 
+## Wreckage borrows the ship pair; its penalty is applied separately so the
+## relationship ("a wreck is a dimmer ship") stays visible in the code.
 static func _pair_for(range_class: String) -> Dictionary:
+	if range_class == WRECK_CLASS:
+		return CLASS_RANGES["ship"]
 	return CLASS_RANGES.get(range_class, CLASS_RANGES[DEFAULT_CLASS])
 
 
@@ -169,7 +186,12 @@ static func detection_range(
 	var base: float = float(_pair_for(range_class)["detect"]) * range_scale * _tier_scale(tier)
 	if size_class == SIZE_TINY:
 		base *= tiny_multiplier
-	return base * mission_multiplier if is_mission_target else base
+	# Mission bonus first, wreck penalty second -- Abe's order.
+	if is_mission_target:
+		base *= mission_multiplier
+	if range_class == WRECK_CLASS:
+		base *= WRECK_RANGE_PENALTY
+	return base
 
 
 ## Range at which an already-known object finally drops off the overview. Absolute
@@ -184,7 +206,12 @@ static func drop_range_for_tier(
 	var base: float = float(_pair_for(range_class)["drop"]) * range_scale * _tier_scale(tier)
 	if size_class == SIZE_TINY:
 		base *= tiny_multiplier
-	return base * mission_multiplier if is_mission_target else base
+	# Mission bonus first, wreck penalty second -- Abe's order.
+	if is_mission_target:
+		base *= mission_multiplier
+	if range_class == WRECK_CLASS:
+		base *= WRECK_RANGE_PENALTY
+	return base
 
 
 ## Display state for one object. Returns {state, label, alpha, targetable}.
