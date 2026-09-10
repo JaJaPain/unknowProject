@@ -191,6 +191,11 @@ crash log before assuming a cause -- the warnings were a red herring.
 ---
 
 ### Mission dialogue is permanently in the deterministic fallback
+**ON THE CRITICAL PATH** for the project's stated end goal
+(`docs/design_end_goal.md`, claim 7: missions must have unique REASONS). A
+template cannot supply a unique reason -- the verbs would vary per campaign and
+the why would not. This is not merely a bug; it is the thing standing between the
+game and its stated purpose.
 **Spotted:** 2026-09-10, while attempting the P4 dispatch switch.
 **Severity:** High by Abe's own rule -- "canned LLM responses = a failure to fix".
 This is that failure, standing, for every mission conversation in the game.

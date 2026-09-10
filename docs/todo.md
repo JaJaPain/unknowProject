@@ -1,4 +1,9 @@
 # TODO
+
+> **North star:** `docs/design_end_goal.md` -- every campaign unique after the
+> tutorial, including the missions' REASONS, the end goal, the outcome, the
+> systems and the factions. Fixed cast (N.O.V.A. and Kaelen) is the deliberate
+> exception. Before starting an item, ask which of its seven claims it serves.
 _Active task list. Update this file at the end of every session._
 
 ---
