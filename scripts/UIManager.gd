@@ -3663,16 +3663,21 @@ func _passes_sensor_reveal(entity: Node, distance: float) -> bool:
 		return true
 	if not (entity is Node3D):
 		return true
+	var groups := entity.get_groups()
 	var size_class: String = RevealModel.size_class_for_groups(
-		entity.get_groups(), _gate_knowledge_state(entity)
+		groups, _gate_knowledge_state(entity)
 	)
+	# Class decides HOW FAR a thing is seen; size decides WHETHER it can hide at
+	# all. Ships reach further than rocks (Abe's numbers, tuned from play).
+	var range_class: String = RevealModel.range_class_for_groups(groups)
 	var reveal: Dictionary = RevealModel.reveal_for(
 		distance,
 		_overview_sensor_tier,
 		bool(entity.get_meta("overview_seen", false)),
 		str(entity.name),
 		size_class,
-		_is_overview_mission_target(entity)
+		_is_overview_mission_target(entity),
+		range_class
 	)
 	var visible: bool = str(reveal["state"]) != RevealModel.STATE_HIDDEN
 	entity.set_meta("overview_seen", visible)

@@ -359,24 +359,25 @@ func _build_sensor_reveal_tab() -> void:
 	# Live readout of what the current dials actually mean in metres, because the
 	# multipliers alone do not tell you what you will see out the window.
 	var refresh_readout := func() -> void:
-		var model := SensorRevealModel
+		var m := SensorRevealModel
 		readout.text = (
-			"ordinary %.0fm (drops %.0fm)   mission %.0fm (drops %.0fm)
+			"ship %.0f / drops %.0f      mission ship %.0f / drops %.0f
 "
-			+ "unfound gate %.0fm   anomaly %.0fm (gated even with reveal off)
+			+ "asteroid %.0f / drops %.0f      unfound gate %.0f      anomaly %.0f
 "
 			+ "planets/stations/known gates: always visible"
 		) % [
-			model.detection_range("basic", false, model.SIZE_SMALL),
-			model.drop_range_for_tier("basic", false, model.SIZE_SMALL),
-			model.detection_range("basic", true, model.SIZE_SMALL),
-			model.drop_range_for_tier("basic", true, model.SIZE_SMALL),
-			model.detection_range("basic", false, model.SIZE_TINY),
-			model.anomaly_reveal_range(),
+			m.detection_range("basic", false, m.SIZE_SMALL, "ship"),
+			m.drop_range_for_tier("basic", false, m.SIZE_SMALL, "ship"),
+			m.detection_range("basic", true, m.SIZE_SMALL, "ship"),
+			m.drop_range_for_tier("basic", true, m.SIZE_SMALL, "ship"),
+			m.detection_range("basic", false, m.SIZE_SMALL, "asteroid"),
+			m.drop_range_for_tier("basic", false, m.SIZE_SMALL, "asteroid"),
+			m.detection_range("basic", false, m.SIZE_TINY, "ship"),
+			m.anomaly_reveal_range(),
 		]
 
 	_build_reveal_row(tab, "Sensor range scale", "range_scale", 0.1, refresh_readout)
-	_build_reveal_row(tab, "Drop range mult (min 1.0)", "drop_multiplier", 0.25, refresh_readout)
 	_build_reveal_row(tab, "Mission ship bonus", "mission_multiplier", 0.1, refresh_readout)
 	_build_reveal_row(tab, "Unfound gate multiplier", "tiny_multiplier", 0.05, refresh_readout)
 
@@ -429,9 +430,8 @@ func _build_reveal_row(
 		# instead: it is a multiple of the detection range, so below 1.0 an object
 		# is dropped before it can be detected and can never stay on the overview
 		# at all. That is not a tuning result either, it is an unreachable state.
-		var floor_value: float = 1.0 if prop == "drop_multiplier" else 0.05
 		SensorRevealModel.set_tuning(
-			prop, maxf(floor_value, SensorRevealModel.get_tuning(prop) + delta)
+			prop, maxf(0.05, SensorRevealModel.get_tuning(prop) + delta)
 		)
 		refresh.call()
 		on_change.call()

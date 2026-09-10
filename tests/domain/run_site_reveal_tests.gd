@@ -23,6 +23,7 @@ func _initialize() -> void:
 	_test_group_classification_protects_landmarks()
 	_test_gate_visibility_follows_discovery()
 	_test_drop_range_must_not_fall_below_detection()
+	_test_abes_tuned_ranges_are_what_ship()
 	_test_anomalies_are_gated_tightly()
 	_test_live_tuning_moves_real_ranges()
 	_test_unknown_tier_weakens_rather_than_blinds()
@@ -36,7 +37,7 @@ func _initialize() -> void:
 
 
 func _test_hidden_beyond_sensor_range() -> void:
-	var far: Dictionary = RevealType.reveal_for(900.0, "basic", false, "Derelict Hauler")
+	var far: Dictionary = RevealType.reveal_for(9000.0, "basic", false, "Derelict Hauler")
 	_expect(
 		str(far["state"]) == RevealType.STATE_HIDDEN,
 		"Beyond basic range should be hidden, got %s" % str(far["state"])
@@ -49,10 +50,10 @@ func _test_hidden_beyond_sensor_range() -> void:
 
 
 func _test_better_sensors_see_further() -> void:
-	var distance := 800.0
+	var distance := 1600.0
 	_expect(
 		str(RevealType.reveal_for(distance, "basic", false)["state"]) == RevealType.STATE_HIDDEN,
-		"Basic sensors should not reach 800 units."
+		"Basic sensors should not reach %.0f units." % distance
 	)
 	_expect(
 		str(RevealType.reveal_for(distance, "improved", false)["state"]) == RevealType.STATE_CONTACT,
@@ -66,12 +67,14 @@ func _test_better_sensors_see_further() -> void:
 
 func _test_contact_fades_in_and_stays_anonymous() -> void:
 	# Right at the edge it should be barely there, not popped into existence.
-	var edge: Dictionary = RevealType.reveal_for(599.0, "basic", false, "Derelict Hauler")
+	var edge: Dictionary = RevealType.reveal_for(
+		RevealType.detection_range("basic") - 1.0, "basic", false, "Derelict Hauler")
 	_expect(
 		float(edge["alpha"]) > 0.0 and float(edge["alpha"]) < 0.5,
 		"At the edge of range a contact should be faint, got %.2f" % float(edge["alpha"])
 	)
-	var closer: Dictionary = RevealType.reveal_for(500.0, "basic", false, "Derelict Hauler")
+	var closer: Dictionary = RevealType.reveal_for(
+		RevealType.detection_range("basic") - 500.0, "basic", false, "Derelict Hauler")
 	_expect(
 		is_equal_approx(float(closer["alpha"]), 1.0),
 		"Past the fade distance a contact should be solid, got %.2f" % float(closer["alpha"])
@@ -161,6 +164,52 @@ func _test_unknown_tier_weakens_rather_than_blinds() -> void:
 	)
 
 
+func _test_drop_range_must_not_fall_below_detection() -> void:
+	# A drop range under the detection range means an object is dropped before it
+	# can be detected -- it could never stay on the overview at all. Ranges are
+	# absolute per class now, so this guards the DATA rather than a multiplier.
+	RevealType.reset_tuning()
+	for range_class in ["ship", "asteroid"]:
+		var detect := RevealType.detection_range("basic", false, RevealType.SIZE_SMALL, range_class)
+		var drop := RevealType.drop_range_for_tier("basic", false, RevealType.SIZE_SMALL, range_class)
+		_expect(
+			drop > detect,
+			"%s drop (%.0f) must exceed detection (%.0f)" % [range_class, drop, detect]
+		)
+
+
+func _test_abes_tuned_ranges_are_what_ship() -> void:
+	# Numbers Abe set from play on 2026-09-10. Pinned because they are the result
+	# of a tuning session that cost real time -- a silent edit would be expensive
+	# to notice and expensive to redo.
+	RevealType.reset_tuning()
+	var cases := [
+		["ship", 1500.0, 1900.0],
+		["asteroid", 800.0, 1100.0],
+	]
+	for c in cases:
+		var rc: String = c[0]
+		_expect(
+			is_equal_approx(RevealType.detection_range("basic", false, RevealType.SIZE_SMALL, rc), float(c[1])),
+			"%s detection should be %.0fm" % [rc, float(c[1])]
+		)
+		_expect(
+			is_equal_approx(RevealType.drop_range_for_tier("basic", false, RevealType.SIZE_SMALL, rc), float(c[2])),
+			"%s drop should be %.0fm" % [rc, float(c[2])]
+		)
+	# Mission ships get a bonus ON TOP of the ship ranges, per Abe.
+	var mission := RevealType.detection_range("basic", true, RevealType.SIZE_SMALL, "ship")
+	_expect(mission > 1500.0, "A mission ship must be detected further than 1500m, got %.0f" % mission)
+	# Wreckage and salvagers have no entry and must fall back to SHIP, not asteroid.
+	_expect(
+		RevealType.range_class_for_groups(["wreckage"]) == "ship",
+		"Wreckage should use the ship ranges -- it is a ship hull, and the thing "
+			+ "the player came to salvage."
+	)
+	_expect(RevealType.range_class_for_groups(["asteroid"]) == "asteroid", "Asteroids use asteroid ranges.")
+	_expect(RevealType.range_class_for_groups(["ship"]) == "ship", "Ships use ship ranges.")
+
+
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
@@ -169,7 +218,7 @@ func _expect(condition: bool, message: String) -> void:
 func _test_mission_ships_are_detected_further_out() -> void:
 	# Hunting one specific hull among identical contacts is tedium, not
 	# difficulty, so mission targets get detection range the player did not earn.
-	var ordinary_only := RevealType.range_for_tier("basic") + 50.0
+	var ordinary_only := RevealType.detection_range("basic") + 50.0
 	var ordinary: Dictionary = RevealType.reveal_for(
 		ordinary_only, "basic", false, "Courier", RevealType.SIZE_SMALL, false
 	)
@@ -190,7 +239,7 @@ func _test_mission_ships_are_detected_further_out() -> void:
 	)
 	# The bonus is slight, not a system-wide reveal.
 	_expect(
-		RevealType.detection_range("basic", true) < RevealType.range_for_tier("basic") * 3.0,
+		RevealType.detection_range("basic", true) < RevealType.detection_range("basic") * 3.0,
 		"The mission bonus should be slight, not a system-wide reveal."
 	)
 	# It carries into the drop range too, so a mission ship does not blink out
@@ -309,9 +358,8 @@ func _test_anomalies_are_gated_tightly() -> void:
 	)
 	_expect(anomaly_range > 0.0, "An anomaly must still be findable by flying near it.")
 	_expect(
-		is_equal_approx(anomaly_range, ordinary * 0.25),
-		"Abe set anomalies to a quarter of normal range; got %.0fm of %.0fm"
-			% [anomaly_range, ordinary]
+		is_equal_approx(anomaly_range, RevealType.detection_range("basic", false, RevealType.SIZE_SMALL, "asteroid") * 0.25),
+		"Abe set anomalies to a quarter of the ASTEROID range; got %.0fm" % anomaly_range
 	)
 	# Tunable live, like the rest.
 	RevealType.set_tuning("anomaly_range_share", 0.5)
@@ -326,18 +374,3 @@ func _test_anomalies_are_gated_tightly() -> void:
 	)
 
 
-func _test_drop_range_must_not_fall_below_detection() -> void:
-	# The drop range is a MULTIPLE of detection, so a multiplier under 1.0 means
-	# an object is dropped before it can be detected -- it could never stay on the
-	# overview at all. The dev panel floors this dial at 1.0; this pins the reason
-	# so nobody "helpfully" lowers the floor later.
-	RevealType.reset_tuning()
-	_expect(
-		RevealType.drop_multiplier >= 1.0,
-		"The shipped drop multiplier must not be below 1.0, got %.2f" % RevealType.drop_multiplier
-	)
-	for tier in ["basic", "improved", "advanced"]:
-		_expect(
-			RevealType.drop_range_for_tier(tier) >= RevealType.detection_range(tier),
-			"drop range must be >= detection range for tier '%s'" % tier
-		)

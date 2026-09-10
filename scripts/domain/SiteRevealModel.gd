@@ -30,11 +30,25 @@ const LARGE_GROUPS := ["station", "celestial"]
 ## it is, you just cannot use it.
 const KNOWN_GATE_STATES := ["known", "blocked", "damaged"]
 
-## Tunable at runtime from the dev panel. These are FEEL VALUES: the defaults
-## below are the plan's numbers, which were written without knowledge of this
-## game's scale, so expect to move them in the air rather than trust them.
+## Detection and drop ranges PER OBJECT CLASS, in metres, set by Abe from play on
+## 2026-09-10. These replaced a single range with a shared drop multiplier: his
+## numbers are not a fixed multiple (asteroids 800->1100 is 1.375x, ships
+## 1500->1900 is 1.27x), so the pairs are absolute and independent.
+##
+## Ships reach further than rocks on purpose. A ship is the thing that can kill
+## you, so losing track of one is a different kind of problem from losing a rock.
+const CLASS_RANGES := {
+	"ship":     {"detect": 1500.0, "drop": 1900.0},
+	"asteroid": {"detect":  800.0, "drop": 1100.0},
+}
+## Anything small without its own entry. Wreckage and salvagers use the SHIP
+## numbers: a wreck is a ship hull, it is what the player came to salvage, and
+## hiding it sooner than the ship it used to be would be strange.
+const DEFAULT_CLASS := "ship"
+
+## Tunable at runtime from the dev panel. range_scale multiplies every class at
+## once, so the shape Abe tuned is preserved while the whole set moves together.
 static var range_scale := 1.0
-static var drop_multiplier := 2.0
 static var mission_multiplier := 1.5
 static var tiny_multiplier := 0.25
 
@@ -48,7 +62,10 @@ static var anomaly_range_share := 0.25
 
 ## Detection range for an unresolved anomaly, in metres.
 static func anomaly_reveal_range() -> float:
-	return range_for_tier(DEFAULT_TIER) * anomaly_range_share
+	# Anchored to the ASTEROID range, not the ship range: an anomaly is a small
+	# quiet object, and tying it to the longest range in the model would undo the
+	# whole point of it being a surprise find.
+	return float(CLASS_RANGES["asteroid"]["detect"]) * anomaly_range_share * range_scale
 
 
 ## Named access to the tunables. Godot cannot reach a static var through get()/
@@ -56,7 +73,6 @@ static func anomaly_reveal_range() -> float:
 static func get_tuning(key: String) -> float:
 	match key:
 		"range_scale": return range_scale
-		"drop_multiplier": return drop_multiplier
 		"mission_multiplier": return mission_multiplier
 		"tiny_multiplier": return tiny_multiplier
 		"anomaly_range_share": return anomaly_range_share
@@ -66,7 +82,6 @@ static func get_tuning(key: String) -> float:
 static func set_tuning(key: String, value: float) -> void:
 	match key:
 		"range_scale": range_scale = value
-		"drop_multiplier": drop_multiplier = value
 		"mission_multiplier": mission_multiplier = value
 		"tiny_multiplier": tiny_multiplier = value
 		"anomaly_range_share": anomaly_range_share = value
@@ -75,7 +90,6 @@ static func set_tuning(key: String, value: float) -> void:
 ## Restore every tunable to its shipped default.
 static func reset_tuning() -> void:
 	range_scale = 1.0
-	drop_multiplier = 2.0
 	mission_multiplier = 1.5
 	tiny_multiplier = 0.25
 	anomaly_range_share = 0.25
@@ -111,12 +125,37 @@ static func size_class_for_groups(groups: Array, gate_state: String = "known") -
 	return SIZE_SMALL
 
 
-## Sensor range for a tier. An unknown tier falls back to basic rather than to
-## zero -- a typo in a ship definition should weaken sensors, not blind them.
-static func range_for_tier(tier: String) -> float:
+## Sensor tier as a MULTIPLIER on the per-class ranges. Better sensors see
+## proportionally further rather than replacing the tuned shape. An unknown tier
+## falls back to basic rather than to zero -- a typo in a ship definition should
+## weaken sensors, not blind them.
+static func _tier_scale(tier: String) -> float:
+	var base := float(TIER_RANGES[DEFAULT_TIER])
 	if TIER_RANGES.has(tier):
-		return float(TIER_RANGES[tier]) * range_scale
-	return float(TIER_RANGES[DEFAULT_TIER]) * range_scale
+		return float(TIER_RANGES[tier]) / base
+	return 1.0
+
+
+## Kept for callers that want a nominal range for the tier (the anomaly gate).
+static func range_for_tier(tier: String) -> float:
+	return float(TIER_RANGES[DEFAULT_TIER]) * _tier_scale(tier) * range_scale
+
+
+## Object class for range purposes: "ship", "asteroid", or a class with no entry
+## (which falls back to DEFAULT_CLASS). Separate from SIZE_* -- size decides
+## whether a thing can hide at all, class decides how far away it is seen.
+static func range_class_for_groups(groups: Array) -> String:
+	for group in groups:
+		var g := str(group)
+		if g == "asteroid":
+			return "asteroid"
+		if g == "ship":
+			return "ship"
+	return DEFAULT_CLASS
+
+
+static func _pair_for(range_class: String) -> Dictionary:
+	return CLASS_RANGES.get(range_class, CLASS_RANGES[DEFAULT_CLASS])
 
 
 ## Range at which an object is first detected. Mission ships get a bonus so the
@@ -124,21 +163,28 @@ static func range_for_tier(tier: String) -> float:
 static func detection_range(
 	tier: String,
 	is_mission_target: bool = false,
-	size_class: String = SIZE_SMALL
+	size_class: String = SIZE_SMALL,
+	range_class: String = DEFAULT_CLASS
 ) -> float:
-	var base := range_for_tier(tier)
+	var base: float = float(_pair_for(range_class)["detect"]) * range_scale * _tier_scale(tier)
 	if size_class == SIZE_TINY:
 		base *= tiny_multiplier
 	return base * mission_multiplier if is_mission_target else base
 
 
-## Range at which an already-known small object finally drops off the overview.
+## Range at which an already-known object finally drops off the overview. Absolute
+## per class rather than a multiple of detection, because Abe's numbers are not a
+## fixed ratio -- the gap is tighter on ships than on rocks.
 static func drop_range_for_tier(
 	tier: String,
 	is_mission_target: bool = false,
-	size_class: String = SIZE_SMALL
+	size_class: String = SIZE_SMALL,
+	range_class: String = DEFAULT_CLASS
 ) -> float:
-	return detection_range(tier, is_mission_target, size_class) * drop_multiplier
+	var base: float = float(_pair_for(range_class)["drop"]) * range_scale * _tier_scale(tier)
+	if size_class == SIZE_TINY:
+		base *= tiny_multiplier
+	return base * mission_multiplier if is_mission_target else base
 
 
 ## Display state for one object. Returns {state, label, alpha, targetable}.
@@ -148,16 +194,17 @@ static func reveal_for(
 	is_scanned: bool,
 	site_name: String = "",
 	size_class: String = SIZE_SMALL,
-	is_mission_target: bool = false
+	is_mission_target: bool = false,
+	range_class: String = DEFAULT_CLASS
 ) -> Dictionary:
 	if size_class == SIZE_LARGE:
 		# Planets and stations are landmarks. They are how a player orients
 		# themselves in a system, so they are never hidden and never fade.
 		return _shown(STATE_IDENTIFIED, site_name if not site_name.is_empty() else "Unknown body", 1.0)
-	var sensor_range := detection_range(tier, is_mission_target, size_class)
+	var sensor_range := detection_range(tier, is_mission_target, size_class, range_class)
 	if is_scanned:
 		# Known small object: keep it out to the drop range, then let it go.
-		if distance > drop_range_for_tier(tier, is_mission_target, size_class):
+		if distance > drop_range_for_tier(tier, is_mission_target, size_class, range_class):
 			return _hidden()
 		return _shown(STATE_IDENTIFIED, site_name if not site_name.is_empty() else CONTACT_LABEL, 1.0)
 	if distance > sensor_range:
