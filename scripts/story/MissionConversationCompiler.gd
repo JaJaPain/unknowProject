@@ -4,6 +4,90 @@ extends RefCounted
 const PlanType := preload("res://scripts/story/MissionConversationPlan.gd")
 
 
+## Slicing (plan P4) ────────────────────────────────────────────────────────────
+##
+## The whole bundle used to be one request: opening plus a player label and a
+## response for EVERY intent. One malformed field discarded all of it, including
+## the parts that were fine, and the retry paid for the good work again.
+##
+## A slice is one opening, or up to two intent responses. Slices are validated
+## and retained independently, so a failure costs one slice instead of the
+## conversation.
+const MAX_INTENTS_PER_SLICE := 2
+
+const SLICE_OPENING := "opening"
+const SLICE_INTENTS := "intents"
+
+
+## Break a conversation plan into the slices to request, in priority order. The
+## opening comes first because it is what the player sees before anything else --
+## if only one slice ever completes, it should be that one.
+static func plan_slices(conversation_plan: Dictionary) -> Array[Dictionary]:
+	var slices: Array[Dictionary] = []
+	slices.append({"kind": SLICE_OPENING, "intent_ids": []})
+	var batch: Array[String] = []
+	for intent in _intents(conversation_plan):
+		var intent_id := str(intent.get("id", "")).strip_edges()
+		if intent_id.is_empty():
+			continue
+		batch.append(intent_id)
+		if batch.size() >= MAX_INTENTS_PER_SLICE:
+			slices.append({"kind": SLICE_INTENTS, "intent_ids": batch.duplicate()})
+			batch.clear()
+	if not batch.is_empty():
+		slices.append({"kind": SLICE_INTENTS, "intent_ids": batch.duplicate()})
+	return slices
+
+
+## Keys one slice must return.
+##
+## Note there is NO `*_player` key here. Button labels are machine-owned: they
+## come from the code-approved intent list, which already has them. Asking a
+## model to restate a label it was handed spends inference to introduce a chance
+## of getting it wrong. Legacy full bundles still carry `*_player` and remain
+## readable; only new slices drop it.
+static func required_output_keys_for_slice(slice: Dictionary) -> Array[String]:
+	if str(slice.get("kind", "")) == SLICE_OPENING:
+		return ["opening"] as Array[String]
+	var keys: Array[String] = []
+	for intent_id in slice.get("intent_ids", []):
+		var clean := str(intent_id).strip_edges()
+		if not clean.is_empty():
+			keys.append("%s_response" % clean)
+	return keys
+
+
+## Merge a validated slice result into the bundle assembled so far.
+##
+## Existing keys are NEVER overwritten: an already-validated slice has passed the
+## checks, and a later response has no standing to replace it. That is what makes
+## a partial failure cheap -- the good work stays good.
+static func merge_slice(bundle: Dictionary, slice_result: Dictionary) -> Dictionary:
+	var merged := bundle.duplicate(true)
+	for key in slice_result:
+		var text := str(slice_result[key]).strip_edges()
+		if text.is_empty():
+			continue
+		if merged.has(key) and not str(merged[key]).strip_edges().is_empty():
+			continue
+		merged[key] = text
+	return merged
+
+
+## Which required keys are still missing from a partially assembled bundle, so a
+## repair asks only for what is actually absent.
+static func missing_keys(bundle: Dictionary, conversation_plan: Dictionary) -> Array[String]:
+	var missing: Array[String] = []
+	for key in required_output_keys(conversation_plan):
+		# A legacy bundle satisfies a slice key with its own `*_player` sibling
+		# present or not; only the response side is required by the new path.
+		if str(key).ends_with("_player"):
+			continue
+		if not bundle.has(key) or str(bundle[key]).strip_edges().is_empty():
+			missing.append(str(key))
+	return missing
+
+
 static func required_output_keys(conversation_plan: Dictionary) -> Array[String]:
 	var keys: Array[String] = ["opening"]
 	var intents: Array = conversation_plan.get("intents", []) \
@@ -86,6 +170,41 @@ static func build_prompt(
 	lines.append("Each *_player value is what the pilot button says. Each *_response value is the speaker answer or terminal acknowledgement.")
 	lines.append("Answers may use only the mission values, speaker card, safe context, and fact IDs attached to that intent.")
 	return "\n".join(lines)
+
+
+## Prompt for ONE slice. Reuses the full prompt's context (speaker card, safe
+## context, approved intents) and changes only what is asked for at the end,
+## so a sliced conversation cannot drift in voice from a whole one.
+static func build_slice_prompt(
+	mission_plan: Dictionary,
+	speaker_card: Dictionary,
+	conversation_plan: Dictionary,
+	slice: Dictionary,
+	safe_context: String = ""
+) -> String:
+	var full := build_prompt(mission_plan, speaker_card, conversation_plan, safe_context)
+	# Replace the OUTPUT section rather than appending a second one: two sets of
+	# instructions is how a model ends up answering the wrong question.
+	var cut := full.find("OUTPUT:")
+	var head := full.substr(0, cut) if cut >= 0 else full + "
+"
+	var keys := required_output_keys_for_slice(slice)
+	var lines: Array[String] = [head.strip_edges(), "", "OUTPUT:"]
+	lines.append("Return only flat JSON with exactly these string keys:")
+	lines.append(JSON.stringify(keys))
+	if str(slice.get("kind", "")) == SLICE_OPENING:
+		lines.append("Write only the opening. Do not write answers to any intent.")
+	else:
+		lines.append(
+			"Write only the answers for these intents: %s."
+				% ", ".join(slice.get("intent_ids", []))
+		)
+		# Said explicitly because the button labels are already decided and the
+		# model has just been shown them in CODE-APPROVED INTENTS.
+		lines.append("Do not write the pilot button labels. Code owns those.")
+	lines.append("Answers may use only the mission values, speaker card, safe context, and fact IDs attached to that intent.")
+	return "
+".join(lines)
 
 
 static func fallback_bundle(
