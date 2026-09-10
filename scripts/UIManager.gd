@@ -3621,6 +3621,26 @@ func _gate_knowledge_state(entity: Node) -> String:
 	return str(root.get_gate_knowledge_state(gate_id))
 
 
+## Clear the per-entity "seen" latch on every tracked object.
+##
+## The latch is what gives the reveal its hysteresis: once picked up, an object
+## is held until the longer DROP range so it does not flicker at the boundary.
+## That is right in play and wrong while TUNING -- after a dial change the player
+## is looking at the old drop range, not the detection range they just set, and
+## the dials feel like they are lagging when they are not.
+##
+## Called from the dev panel on every change so each nudge shows its true effect
+## immediately. Not called during normal play: dropping the latch there would
+## reintroduce the flicker it exists to prevent.
+func reset_sensor_reveal_latches() -> void:
+	for entity in GlobalState.active_system_entities:
+		if entity != null and is_instance_valid(entity):
+			entity.set_meta("overview_seen", false)
+	# Re-evaluate immediately rather than waiting for the next frame, so the
+	# panel's readout and the overview agree the instant the value changes.
+	_update_overview_distances()
+
+
 func _passes_sensor_reveal(entity: Node, distance: float) -> bool:
 	# Anomalies are gated ALWAYS, not only when sensor reveal is on. An anomaly
 	# visible from across the system is just a waypoint: you read its marker,

@@ -315,6 +315,17 @@ func _build_story_debug_tab() -> void:
 
 
 
+## Force every tracked object to re-evaluate against the new ranges.
+##
+## Without this a dial change appears to do nothing for objects already on the
+## overview: they are held by the reveal's hysteresis until the DROP range, so
+## the player sees the old boundary and assumes the dial is broken or laggy.
+func _refresh_sensor_reveal() -> void:
+	var ui := GlobalState.get_ui_manager()
+	if ui != null and is_instance_valid(ui) and ui.has_method("reset_sensor_reveal_latches"):
+		ui.reset_sensor_reveal_latches()
+
+
 func _build_sensor_reveal_tab() -> void:
 	var tab := add_tab("Sensors")
 
@@ -334,6 +345,7 @@ func _build_sensor_reveal_tab() -> void:
 	toggle.button_pressed = GlobalState.sensor_reveal_enabled
 	toggle.toggled.connect(func(on: bool) -> void:
 		GlobalState.sensor_reveal_enabled = on
+		_refresh_sensor_reveal()
 	)
 	tab.add_child(toggle)
 	tab.add_child(HSeparator.new())
@@ -375,6 +387,7 @@ func _build_sensor_reveal_tab() -> void:
 		SensorRevealModel.reset_tuning()
 		refresh_readout.call()
 		_refresh_reveal_rows()
+		_refresh_sensor_reveal()
 	)
 	tab.add_child(reset)
 
@@ -414,6 +427,7 @@ func _build_reveal_row(
 		SensorRevealModel.set_tuning(prop, maxf(0.05, SensorRevealModel.get_tuning(prop) + delta))
 		refresh.call()
 		on_change.call()
+		_refresh_sensor_reveal()
 
 	var minus := Button.new()
 	minus.text = "-%.2f" % step
