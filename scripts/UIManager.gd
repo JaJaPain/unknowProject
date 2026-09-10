@@ -674,6 +674,7 @@ func _process(delta):
 	if _story_quest_panel and _story_quest_panel.visible:
 		_reposition_story_quest_panel()
 
+	_watch_dock_state()
 	# Update overview list item distances
 	_update_overview_distances(delta)
 	_update_intro_handhold()
@@ -9174,13 +9175,11 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	# Restore full overview when heading back into space
 	_set_overview_dock_locked(false)
 	set_overview_collapsed(false)
-	# The quest tracker is SUPPRESSED while docked (_tracker_suppressed_by_dock),
-	# but its visibility is only ever recomputed by _update_quest_tracker -- which
-	# is driven by quest events, not by docking. Without this call the card stays
-	# hidden after undocking until some unrelated quest event fires, and the only
-	# workaround the player has is toggling the UI layout lock, because edit mode
-	# force-shows the panel. See docs/bugs.md.
-	_update_quest_tracker()
+	# NOTE: refreshing the quest tracker HERE does not work, and an earlier fix
+	# that did so was a no-op. `is_docked` is cleared by GameRoot, not by this
+	# function, so at this point the player still counts as docked and
+	# _tracker_suppressed_by_dock() would simply re-hide the card. The refresh is
+	# driven by a state watcher in _process instead -- see _watch_dock_state.
 	# Kaelen's completion commentary is held while docked so it does not land on
 	# top of the agent handling the turn-in. Release it now the player is back in
 	# space, which is what "quiet moment" was supposed to mean.
@@ -12850,6 +12849,36 @@ func _on_quest_expired(title: String) -> void:
 ## HUD element — everything it offers (set course, dock at station) is either
 ## meaningless or already in front of you once you are docked, and it overlaps
 ## the dock menu.
+## Last observed docked / quest-active state, for edge detection.
+var _was_docked: bool = false
+var _had_quest: bool = false
+
+
+## Refresh dock-sensitive UI when the docked flag actually CHANGES.
+##
+## The quest tracker is suppressed while docked but its visibility is only
+## recomputed inside _update_quest_tracker(), which is driven by quest events --
+## and docking is not one. Refreshing inside undock_player() does not work either:
+## GameRoot clears `is_docked` afterwards, so the card gets re-hidden.
+##
+## Five separate sites clear that flag, so watching the STATE is reliable where
+## hooking any single call site is not. This is an edge trigger, so it costs one
+## bool comparison per frame and only does work when the state flips.
+func _watch_dock_state() -> void:
+	var player = GlobalState.player
+	var docked: bool = player != null and is_instance_valid(player) and bool(player.get("is_docked"))
+	# The same ordering trap exists on LOAD: refresh_restored_state() refreshes
+	# the tracker, but QuestManager may restore the active quest AFTER that, so
+	# the refresh correctly finds no quest and hides the card, and nothing runs
+	# again. Watching whether a quest is active closes that hole the same way.
+	var has_quest := QuestManager.is_quest_active()
+	if docked == _was_docked and has_quest == _had_quest:
+		return
+	_was_docked = docked
+	_had_quest = has_quest
+	_update_quest_tracker()
+
+
 func _tracker_suppressed_by_dock() -> bool:
 	return GlobalState.player != null \
 		and is_instance_valid(GlobalState.player) \

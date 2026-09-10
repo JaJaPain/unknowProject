@@ -6,13 +6,26 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 ## Active
 
 ### Quest card disappears (after load, and after docking) until the layout is unlocked and relocked
-**Spotted:** 2026-09-09 (Abe, playtest). Reported first for LOADING, then for
-DOCKING AT AN OUTPOST -- the second report is what identified the real cause.
+**Spotted:** 2026-09-09 (Abe, playtest). Reported for LOADING, then for DOCKING.
 **Severity:** Medium -- the player's active contract is invisible, and the only
 workaround is a UI ritual nobody would guess.
-**Status:** UNDOCK PATH FIXED 2026-09-09 (`UIManager.undock_player` now calls
-`_update_quest_tracker()`). **The load path is NOT yet confirmed fixed** -- see
-below. Needs a playtest to close.
+**Status:** STILL OPEN as of 2026-09-10 -- **the first fix was a no-op.** Second
+attempt landed 2026-09-10, needs a playtest.
+
+**Why the first fix failed, recorded because it is an easy trap to fall into
+twice:** `UIManager.undock_player()` was made to call `_update_quest_tracker()`.
+But `is_docked` is cleared by **GameRoot**, not by that function, so at that
+moment the player STILL counted as docked, `_tracker_suppressed_by_dock()`
+returned true, and the refresh re-hid the card it was supposed to restore. The
+call looked correct and did nothing.
+
+**Second fix:** `_watch_dock_state()`, an edge trigger in `_process`, refreshes
+the tracker whenever the docked flag OR the quest-active flag actually changes.
+Five separate sites clear `is_docked`, so watching the STATE is reliable where
+hooking any one call site is not. The quest-active edge closes the same ordering
+trap on LOAD, where `refresh_restored_state()` can refresh the tracker before
+`QuestManager` has restored the quest -- the refresh then correctly finds nothing
+and hides the card, and nothing runs again.
 
 **Root cause:** the tracker's visibility is only ever recomputed inside
 `_update_quest_tracker()`, and that function is driven by QUEST events (accepted,
