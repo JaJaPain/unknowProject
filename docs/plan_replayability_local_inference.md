@@ -18,10 +18,18 @@ resume exactly here after a session limit. Newest entries at the bottom._
 | # | Needs | Blocks |
 |---|---|---|
 | H1 | Play the two-shape prototype and decide whether the verbs merit expansion | Phase 5 (more shapes, P3 pressure tracks) |
-| H2 | Run the VRAM/residency measurement harness on the real 8GB GPU | P1 shipping gate, final release sign-off |
+| H2 | Verify the game stays inside the 8GB VRAM budget (see note below) | P1 shipping gate, final release sign-off |
 | H3 | Confirm the qualification test hardware (CPU/RAM/GPU) | Phase 0 acceptance targets |
 | H4 | Audition and approve any new voice delivery presets | P5 preset work only; caching/timing unaffected |
 | H5 | Freshness playtest sessions (three two-hour) | Release sign-off |
+
+**Why 8GB (Abe, 2026-09-10):** the budget is a TARGET SPEC, not a description of
+the dev machine. 8GB is the most common configuration in the Steam hardware
+survey, and the goal is that the game runs on most gaming PCs. This matters for
+how H2 gets done: it does NOT require owning an 8GB card. The dev box is a 16GB
+RTX 5060 Ti, and the budget can be verified there by capping or instrumenting
+allocation rather than waiting on hardware. Treating H2 as hardware-blocked was
+my misreading and cost the gate nothing but delay.
 
 **Slice log:**
 
