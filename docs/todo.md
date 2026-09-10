@@ -267,6 +267,15 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
     - Abe's call on the capitals rewrite: KEEP the sentence-case version. Removing
       caps "does make them safer without hearing each one of them 1 by 1", even
       though caps were not the cause.
+  - **INTRO LINES WERE MISSED IN THE FIRST PASS, baked 2026-09-10.** Abe asked
+    whether N.O.V.A.'s "ALMOST!" was baked -- it was not. My extraction only
+    scanned `Nova.gd` and the curated voice examples, so the seven lines in
+    `scripts/story/IntroCinematic.gd` were skipped: the OPENING CINEMATIC, which
+    is the first audio a player ever hears and never varies. Exactly the content
+    that most deserves a bake, missed because I assumed two sources were the
+    whole inventory. Cast bake is now 523 clips.
+    - Lesson for any future bake: grep `const .*LINE.* := "` across `scripts/`
+      before assuming the line inventory is complete. Noted in `bake_cast.py`.
   - **BOTH BAKES COMPLETE 2026-09-09.** Orpheus taunts: 1520 clips (190 x 8
     voices, evenly distributed, 0 errors on the resumed run). F5 cast: 516 clips
     (N.O.V.A. 423, Kaelen 93, 0 errors). Verified by counting files against
