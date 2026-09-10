@@ -190,6 +190,43 @@ crash log before assuming a cause -- the warnings were a red herring.
 
 ---
 
+### Mission dialogue is permanently in the deterministic fallback
+**Spotted:** 2026-09-10, while attempting the P4 dispatch switch.
+**Severity:** High by Abe's own rule -- "canned LLM responses = a failure to fix".
+This is that failure, standing, for every mission conversation in the game.
+**Status:** OPEN. Not a regression; the LLM path appears never to have been wired.
+
+`StoryAgentOfferBuilder._attach_mission_conversation` builds every mission
+conversation with `MissionConversationCompiler.fallback_bundle()` -- the
+deterministic template composer -- and then unconditionally sets:
+
+    mission_dialogue_bundle_source   = "deterministic_fallback"
+    mission_dialogue_bundle_degraded = true
+    mission_dialogue_bundle_degraded_reason = "template_safe_emergency_composer"
+
+and records a `record_fallback` diagnostic. So the game reports mission dialogue
+as degraded on EVERY mission, and is correct to.
+
+**The LLM path is dormant, not broken.** `build_prompt()` and `parse_bundle()`
+exist, are maintained, and have ZERO external call sites. No `mission_conversation`
+job kind is handled in `GameRoot._process_narrative_cache_job`. Nothing dispatches
+a conversation to a model.
+
+**Why this matters more than it looks:** the compiler, the plan builder, the
+bundle validator and the causal-visibility check are all live and all exercised
+-- by the fallback. It looks like a working pipeline. Only the generation step is
+absent, which is why this has survived without being noticed.
+
+**Where to look:** `StoryAgentOfferBuilder._attach_mission_conversation`;
+`GameRoot._process_narrative_cache_job` (job-kind switch);
+`MissionConversationCompiler.build_prompt` / `parse_bundle`.
+
+**Note:** P4-3/P4-4 built and tested conversation slicing and scheduler slice
+dependencies, which is the right shape for this path when it is built. That work
+is preparation, not a fix.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)
