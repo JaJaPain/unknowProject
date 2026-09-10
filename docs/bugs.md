@@ -159,6 +159,37 @@ onto a per-frame path, it will develop this exact bug.
 
 ---
 
+### System crash preceded by a flood of narrative_quality warnings
+**Spotted:** 2026-09-10 (Abe: "system crashed").
+**Severity:** High -- a crash, and the log shows an unbounded loop before it.
+**Status:** OPEN, lead only. NOT yet reproduced or root-caused.
+
+The last log (`user://logs/godot.log`) ends in **518 consecutive**
+`[GenerationDiagnostics] event type=narrative_quality reason=quality_warning
+source=GameRoot` lines with no other output between them. The counter climbs
+monotonically to 518 and the log simply stops -- consistent with a runaway retry
+or validation loop rather than a clean shutdown.
+
+The last ordinary activity before the flood was routine: background chatter
+caching succeeding, and ambient minor-faction ships spawning
+("WRAITHS Interceptor 568").
+
+**Where to look:** `GameRoot` narrative-quality validation -- whatever calls
+`GenerationDiagnostics.record_event("narrative_quality", "quality_warning", ...)`.
+A validator that rejects a line and retries without a bounded attempt count would
+produce exactly this shape.
+
+**Note this is the "fallbacks are failures" rule firing at volume.** 518 quality
+warnings is not a cosmetic log issue; it means generation was failing repeatedly
+and something kept asking. Even if the crash turns out to be unrelated, the loop
+is a real defect.
+
+**Unknown and worth establishing first:** whether the crash is caused by this
+loop (memory/stack exhaustion) or merely coincident with it. The log gives no
+stack trace.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)
