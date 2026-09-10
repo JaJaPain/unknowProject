@@ -225,6 +225,12 @@ absent, which is why this has survived without being noticed.
 dependencies, which is the right shape for this path when it is built. That work
 is preparation, not a fix.
 
+**PLAN WRITTEN:** `docs/plan_mission_conversation_llm_path.md` (2026-09-10) --
+six ordered slices, every seam located by file and line, the live analogue to
+copy named, risks and rollback, and three decisions to answer before coding.
+Estimated 5-7 hours. Written so a fresh session verifies and builds rather than
+re-deriving any of it.
+
 ---
 
 ### Illegal-mining fines can never be paid
