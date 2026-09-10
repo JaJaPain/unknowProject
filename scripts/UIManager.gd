@@ -3421,8 +3421,15 @@ func _unhandled_input(event: InputEvent):
 
 # Overview list population
 func update_overview_list(entities: Array):
-	# Clear old list
+	# Clear old list.
+	#
+	# remove_child() FIRST, then queue_free(). queue_free alone is DEFERRED: the
+	# old buttons stay parented for the rest of the frame while the new ones are
+	# added below, so the container briefly holds BOTH sets and the layout
+	# alternates between them. That is what the overview flickering between two
+	# different label sets each frame was -- not a sorting or visibility problem.
 	for child in overview_list.get_children():
+		overview_list.remove_child(child)
 		child.queue_free()
 		
 	var filtered_entities: Array = []

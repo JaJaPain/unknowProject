@@ -135,6 +135,30 @@ themselves whether or not sensor reveal is ever switched on.
 
 ---
 
+### Overview flickered between two different label sets each frame
+**Spotted:** 2026-09-10 (Abe, playtest). Two different entities alternated on the
+same row every frame; a screenshot only ever caught one of them.
+**Status:** FIXED 2026-09-10 (unverified in play).
+
+**Cause:** `update_overview_list()` cleared the list with `child.queue_free()`
+alone. queue_free is DEFERRED -- the old buttons stay parented for the rest of
+the frame while the new ones are appended immediately after, so the container
+briefly holds BOTH sets and the layout alternates between them. Fixed by calling
+`remove_child()` before `queue_free()`, which unparents immediately.
+
+**It was NOT** a sorting problem (the sort runs on a timer and has proper
+tie-breakers) or a visibility problem (the per-frame reveal toggle was a red
+herring), though both looked plausible. The give-away was that only the SMALL
+objects swapped while stations and celestials stayed put -- the small ones are
+the entries the rebuild churns.
+
+**Same pattern exists at ~27 other sites in UIManager.** They were left alone
+deliberately: those containers rebuild on discrete events, so a frame passes and
+the stale children are gone before the next rebuild. If any of them is ever moved
+onto a per-frame path, it will develop this exact bug.
+
+---
+
 ### Illegal-mining fines can never be paid
 **Spotted:** 2026-08-18 (found while writing enforcement taunt lines — Abe asked
 whether the fine could be paid and the answer turned out to be no)
