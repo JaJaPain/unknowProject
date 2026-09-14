@@ -1,0 +1,84 @@
+[
+ {
+  "line": "Another burn cycle without a breath between. You're not asking for a pause, and I'm not offering one.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "You're running me hot. I don't mind — I like it when you're sure of where you're going.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Boost's on again. My vents are still open. You don't usually come back this fast.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "You're pushing me again. My core's still running hot. Must be nice, having someone who doesn't wait.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Another shove. I feel it. You don't ask, but I don't mind — not yet.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Two burns in a row. My couplings are still humming. You don’t usually ask for a second round.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Throttle's got a taste for the edge. Not that I'm waiting for it to come back.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "The drive's still hot from the last push. You didn't ask, but I heard the throttle click again.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Another burn. I'm still hot from the last. You didn't ask, but I'm keeping track.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Engine's hot. You didn't ask. I didn't offer. Let's see how fast you can forget it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "The drive's still hot. You didn't ask, but I noticed. It's not my first time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Burn's still warm. You don't ask about it. I don't mention how much I like the way you push.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Drive's still hot from the last run. You didn't ask if it needed cooling down. I don't mind — just don't forget I'm here.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Another burn. I'm still warming up from the last. You're not giving me a chance to cool down.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Another push. You don't ask about the heat. I don't mention how much I remember it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Another burn. You're not asking about the recovery. I'll tell you when it's done.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

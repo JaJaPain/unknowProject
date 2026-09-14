@@ -1,0 +1,84 @@
+{
+	"_comment": [
+		"Local pressure tracks (plan P3). Executable content, NOT model-authored.",
+		"A kind describes which implemented shapes it may publish at each level, which",
+		"committed terminal outcomes relieve or worsen it, and the payout modifier a new",
+		"posting may snapshot. Deltas are matched against a code-owned MissionOutcome;",
+		"generated prose is never an input. transmitter_lure and unstable_archive stay",
+		"prototypes, so no level here offers them and forced_forged is never set.",
+		"supply is runtime_ineligible until a validated ore-consumption cause exists:",
+		"delivering raw ore does not perform an assay, so no current desire qualifies."
+	],
+	"version": 1,
+	"kinds": [
+		{
+			"id": "signals",
+			"display_name": "Signal integrity",
+			"public_label": "Route readings in this system disagree.",
+			"runtime_eligible": true,
+			"ore_relief": false,
+			"forced_forged": false,
+			"shape_ids_by_level": {
+				"1": ["mission_shape.survey_discrepancy"],
+				"2": ["mission_shape.survey_discrepancy"],
+				"3": ["mission_shape.survey_discrepancy"]
+			},
+			"completed_deltas": [
+				{"outcome_tag": "verified", "delta": -1},
+				{"outcome_tag": "mistaken", "delta": 1},
+				{"outcome_tag": "unverified", "delta": 0}
+			],
+			"completed_default_delta": 0,
+			"terminal_deltas": [],
+			"terminal_default_delta": 0,
+			"payout_modifiers": []
+		},
+		{
+			"id": "claims",
+			"display_name": "Contested salvage claims",
+			"public_label": "Ownership of local salvage is disputed.",
+			"runtime_eligible": true,
+			"ore_relief": false,
+			"forced_forged": false,
+			"shape_ids_by_level": {
+				"1": ["mission_shape.competing_claims"],
+				"2": ["mission_shape.competing_claims"],
+				"3": ["mission_shape.competing_claims"]
+			},
+			"completed_deltas": [
+				{"outcome_tag": "preserved", "delta": -1},
+				{"outcome_tag": "unverified", "delta": 0}
+			],
+			"completed_default_delta": 0,
+			"terminal_deltas": [],
+			"terminal_default_delta": 0,
+			"payout_modifiers": [
+				{"level": 3, "branch_id": "preserve", "numerator": 5, "denominator": 4}
+			]
+		},
+		{
+			"id": "supply",
+			"display_name": "Ore supply shortfall",
+			"public_label": "A local holder is short of delivered ore.",
+			"runtime_eligible": false,
+			"ineligible_reason": "no_validated_ore_consumption_cause",
+			"ore_relief": true,
+			"forced_forged": false,
+			"shape_ids_by_level": {"1": [], "2": [], "3": []},
+			"completed_deltas": [
+				{"relief": true, "delta": -1}
+			],
+			"completed_default_delta": 0,
+			"terminal_deltas": [
+				{"relief": true, "terminal_state": "abandoned", "delta": 1},
+				{"relief": true, "terminal_state": "failed", "delta": 1},
+				{"relief": true, "terminal_state": "expired", "delta": 1}
+			],
+			"terminal_default_delta": 0,
+			"payout_modifiers": [
+				{"level": 2, "branch_id": "*", "numerator": 5, "denominator": 4},
+				{"level": 3, "branch_id": "*", "numerator": 3, "denominator": 2}
+			]
+		}
+	]
+}

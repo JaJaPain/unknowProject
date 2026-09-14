@@ -1,0 +1,72 @@
+[
+ {
+  "line": "Another hard burn, so soon. I'd like a breath between them, but I'll wait. You're not asking.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Two hard pushes in a row. My drive's still humming. Maybe you'll warn me next time, or maybe you won't.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Boost again so soon. My heat's still fading. You might warn me next time.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Two cycles in a row. I'd like a moment between them next time. Just a second.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Another push. I like the way you're handling it, but I'd rather you asked first next time.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Another burn, so soon. My cooling's still running. You might want to warn me next time.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Second burn in ten hours. I'd like a moment. Maybe you'll warn me next time.",
+  "secs": 3.0,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Captain, you're leaning on the throttle again. I'm not complaining, but I'd like a moment to catch my breath.",
+  "secs": 3.1,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "Another burn. I'd like a moment between them, if you don't mind.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "Second time in ten hours. You're not asking if I mind. I don't mind. But you should've warned me.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Drive's still hot. You're not giving it time to breathe. I'm not asking you to stop.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Burns are hot. I don't mind the heat. I mind the lack of warning.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

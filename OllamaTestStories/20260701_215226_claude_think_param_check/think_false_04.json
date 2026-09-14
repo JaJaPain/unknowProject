@@ -1,0 +1,58 @@
+{
+  "campaign_title": "The Zenith Silence",
+  "campaign_logline": "In the shadow of the Aurelia Gate, you must navigate the crumbling geopolitics of the Vanguard sector while Kaelen guides you through the static.",
+  "opening_situation": "You arrive at the Zenith Hub with a failing reactor. The Aurelia gate is flickering, and the local Vanguard patrols are demanding 'stability taxes' for your passage.",
+  "main_mystery": "Why does the Aurelia Gate pulse in a rhythmic pattern that matches Kaelen's biometric signature?",
+  "act_1_outline": [
+    "Secure passage through the Zenith checkpoint by negotiating with weary Vanguard peacekeepers.",
+    "Recover a lost navigation core from an abandoned Aurelia mining rig.",
+    "Establish a stable link to the next jump point while dodging automated patrol drones."
+  ],
+  "long_term_reveal": "Kaelen is not a pilot; she is the sentient failsafe of the original Aurelia network, designed to remain until the final gate closes.",
+  "tone": "Dry, cynical, industrial-gothic.",
+  "core_pressure": "Resource scarcity and decaying infrastructure.",
+  "kaelen_rule": "Kaelen is immortal; her identity remains partially obscured by systemic encryption.",
+  "faction_reveal_rule": "New factions are only revealed upon physical transit through a jump gate.",
+  "humor_rule": "Dry, slightly dark PG-13 humor. No repetitive catchphrases or tropes.",
+  "address_rule": "Keep all narrative text under 140 characters unless specified.",
+  "fallback_rule": "If a prompt is ambiguous, default to the nearest logical plot point in the current act.",
+  "story_horizon_rule": "Trigger expansion when systems are low. Append new horizons without retconning choices.",
+  "story_arcs": [
+    {
+      "name": "The Aurelia Fracture",
+      "summary": "Investigate why the local mining colonies are abandoning their posts in favor of 'the signal'."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "trail_id": "rumor_trail.ghost_frequency",
+      "clue_count": 2,
+      "hint_theme": "Ghost signals and ancient telemetry.",
+      "clue_templates": [
+        "A corrupted log mentions 'Frequency 9-Delta' in the Aurelia ruins.",
+        "An old scrap of paper found in a hull lists coordinates for the 'Silent Zone'."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Discovery of a derelict pre-war command ship containing an archive of the first voyage."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_system_count",
+      "metric": "prepared_systems_remaining",
+      "threshold": 2,
+      "action": "append_story_horizon",
+      "description": "When the player reaches a new sector, generate a new horizon of content."
+    }
+  ],
+  "expansion_rules": [
+    "Append new arcs for each discovered faction.",
+    "Never overwrite or delete completed quest flags."
+  ],
+  "banned_repeats": [
+    "The 'Chosen One' trope",
+    "Generic space pirate clichés",
+    "Overly heroic dialogue"
+  ]
+}

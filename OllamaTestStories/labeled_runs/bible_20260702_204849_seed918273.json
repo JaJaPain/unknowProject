@@ -1,0 +1,74 @@
+{
+  "campaign_title": "The Tax Collector's Gambit",
+  "campaign_logline": "A small pilot gets entangled in a jurisdictional dispute between three local powers over some very expensive scrap metal.",
+  "opening_situation": "You are broke and running on fumes, facing one Reaver-class hostile that seems awfully interested in your hull plating.",
+  "main_mystery": "Uncovering which of the major powers has the deepest financial stake—and greatest capacity for blackmail—regarding a specific piece of contested orbital salvage rights.",
+  "act_1_outline": [
+    "Secure enough credits from a low-stakes job to keep breathing and avoid immediate creditors.",
+    "Gain initial, suspicious local intel regarding resource allocation discrepancies.",
+    "Get drawn into a minor conflict that requires navigating the political niceties of Zenith's core sector."
+  ],
+  "long_term_reveal": "The three powers are not fighting over resources; they are each desperately trying to control access to an off-world debt ledger detailing who owes whom everything.",
+  "tone": "Gritty, bureaucratic desperation with a side of cheap synth-whiskey.",
+  "core_pressure": "Maintaining enough liquidity and reputation capital to avoid being swallowed whole by competing corporate interests.",
+  "factions": {
+    "zenith": "Zenith is over-regulating salvage rights to extract maximum tariffs, effectively choking off independent enterprise profits.",
+    "aurelia": "Aurelia has begun hoarding specific rare isotopes needed for basic life support systems, creating artificial scarcity panic.",
+    "vanguard": "Vanguard is aggressively enforcing outdated territorial claims on neutral jump points, making passage increasingly risky."
+  },
+  "kaelen_rule": "Kaelen operates publicly as a contract handler, accepting assignments from whoever pays the highest rate while maintaining plausible deniability about her true clientele.",
+  "kaelen_angle": "She knows the precise point of failure for each major faction's primary revenue stream, making casual threats against them trivial to enact or deflect.",
+  "kaelen_hint_plan": [
+    "She always accepts payment in scrip denominations that are slightly outdated or non-standard issue.",
+    "She seems overly concerned with the maintenance logs of your ship, asking specific questions about older drive coils.",
+    "When discussing local law, she uses highly technical jargon mixed with deliberately incorrect jurisdictional codes.",
+    "She keeps a physical ledger book open during conversations, even when reviewing digital data feeds."
+  ],
+  "kaelen_hint_style": "Over-precise-details regarding procedural minutiae and obsolete regulations.",
+  "kaelen_never_reveal": "Her true relationship to the original chartering body that established the three current powers' jurisdictions.",
+  "faction_reveal_rule": "New systems reveal a faction via mandatory local governance postings or intercepted, unencrypted corporate comms logs found at jump points.",
+  "humor_rule": "Humor derives from bureaucratic absurdity and characters treating deadly threats with extreme professional annoyance.",
+  "address_rule": "They address the player as 'Pilot' or by their registered callsign, without preamble or false familiarity.",
+  "fallback_rule": "If a specific data point is missing, assume it relates to an immediate, petty financial failure (e.g., overdue docking fees, minor cargo contamination).",
+  "story_horizon_rule": "New horizons introduce new jurisdictional bodies that complicate the existing three-way tension by adding overlapping regulations or competing claims on salvage rights.",
+  "story_arcs": [
+    {
+      "name": "The Scrip Debt Spiral",
+      "summary": "The player must navigate a series of escalating financial gambles, moving from minor debts to systemic compromises between Zenith, Aurelia, and Vanguard's operational spheres."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Unclaimed Manifest",
+      "trail_id": "rumor_trail.salvage_manifest_ledger",
+      "clue_count": 2,
+      "hint_theme": "A list of assets or persons that legally belong to no one, but are highly valuable enough for multiple parties to fight over ownership.",
+      "clue_templates": [
+        "A partial manifest listing several high-value components marked 'Pending Jurisdiction Transfer'.",
+        "Testimony from a minor dock worker claiming they saw an unaccounted salvage vessel loading cargo at the edge of the recognized zone."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "uncommon",
+      "payoff": "Discovery of a neutral, pre-existing arbitration court charter that none of the three major powers currently recognize or control."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_rumor_trail",
+      "description": "When the primary story arc concludes, trigger a new rumor trail based on the fallout of the resolved conflict."
+    }
+  ],
+  "expansion_rules": [
+    "New factions will challenge jurisdiction over key orbital choke points rather than entire systems.",
+    "Story arcs will focus on resolving specific types of 'asset ownership' disputes (e.g., intellectual property rights, unique biological samples)."
+  ],
+  "banned_repeats": [
+    "chosen one",
+    "destiny",
+    "Great Silence",
+    "mysterious pulse"
+  ]
+}

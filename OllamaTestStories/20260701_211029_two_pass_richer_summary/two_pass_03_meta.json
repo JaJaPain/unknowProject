@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay and Corporate Espionage",
+  "freshness_rule": "Focus on the physical decay of infrastructure and the hidden costs of logistical chains.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost ship"
+  ],
+  "core_story_questions": [
+    "What is the cost of maintaining a high-tech civilization in a decaying orbital ring?",
+    "Why does the corporation own the manufacturing rights to basic life support?",
+    "How do players navigate the trade routes where safety is sold as a premium?",
+    "Who holds the leverage over the local labor unions in the mining colonies?",
+    "What are the consequences of choosing between corporate loyalty and local autonomy?"
+  ],
+  "starter_mission_questions": [
+    "Why does the Reaver ship have an active, high-priority cargo manifest?",
+    "How many lives were lost during its illegal transport run?",
+    "What is the consequence of salvaging a piece of tech that still has an active tracking beacon?"
+  ],
+  "kaelen_questions": [
+    "Why is Kaelen's reputation for 'discretion' actually a liability in certain zones?",
+    "How does Kaelen manage to keep their information network independent from corporate oversight?",
+    "What are the consequences of Kaelen's refusal to turn over specific data logs?"
+  ],
+  "faction_questions": [
+    "Why is Zenith's expansion into deep-space mining dangerous for neighboring systems?",
+    "How does Aurelia balance its isolationist policy with the need for import-only technology?",
+    "What are the consequences of choosing to align with Vanguard's militarized trade routes?"
+  ],
+  "future_generation_questions": [
+    "Why is the core infrastructure of the galaxy facing a collapse?",
+    "How do different factions and corporations compete for remaining resources?",
+    "What are the consequences of choosing to favor one faction over another in later stages?",
+    "Who owns the rights to the rest of the universe's technology?",
+    "Why is there no longer a single unified government across all systems?"
+  ]
+}

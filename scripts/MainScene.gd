@@ -1,5 +1,9 @@
 extends Node3D
 
+const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
+const AnomalyRegistryScript = preload("res://scripts/AnomalyRegistry.gd")
+
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
 @onready var rocky_planet: Node3D = $RockyPlanet
@@ -13,9 +17,17 @@ func _ready():
 	GlobalState.active_system_root = self
 	GlobalState.current_system_id = "start_system"
 	ui_manager = GlobalState.get_ui_manager()
+	var world_env := $WorldEnvironment as WorldEnvironment
+	if world_env and world_env.environment:
+		SystemAmbience.apply_glow(world_env.environment)
 	# Seed random number generator
 	randomize()
 	
+	var rotation_rng := RandomNumberGenerator.new()
+	rotation_rng.seed = 4172026
+	PlanetRotation.apply(gas_giant, true, rotation_rng)
+	PlanetRotation.apply(rocky_planet, false, rotation_rng)
+
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
 	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")
 	
@@ -41,12 +53,29 @@ func _ready():
 	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
 
 	
+	SystemAmbience.add_sun(self, {
+		"direction": Vector3(-0.7, 0.35, -0.7),
+		"color": Color(1.0, 0.88, 0.6),
+		"energy": 4.0,
+		"light_energy": 1.2,
+	})
+	SystemAmbience.add_starfield(self, {"seed": 42.0})
+	SystemAmbience.add_nebula(self, {
+		"seed": 42,
+		"colors": [Color(0.5, 0.2, 0.7), Color(0.2, 0.35, 0.85)],
+		"brightness": 0.5,
+	})
+
 	# The persistent UI enters the tree after this system scene. Defer the first
 	# overview refresh so UIManager has finished constructing its dynamic nodes.
 	call_deferred("_populate_overview")
 	
 	# Spawn the salvager ship near space station
 	_spawn_salvager()
+
+	# Spawn anomaly nodes, then fire a delayed rumor hint if any spawned
+	AnomalyRegistryScript.shared().generate_for_system(GlobalState.current_system_id, self)
+	_schedule_anomaly_rumor()
 	
 	# Setup spawn check Timer for replacing destroyed ships
 	var spawn_timer = Timer.new()
@@ -64,6 +93,7 @@ func _spawn_asteroid_ring(
 	count: int,
 	prefix: String
 ):
+	planet.set_meta("belt_clearance_y", maxf(180.0, width * 1.5 + 80.0))
 	var center := planet.global_position
 	for i in range(count):
 		var angle = randf() * TAU
@@ -92,6 +122,13 @@ func _spawn_asteroid_ring(
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)
 
+const _ROLE_PROFILE_KEY := {
+	"Gunner":      "gunner",
+	"Interceptor": "interceptor",
+	"Logistics":   "logistics",
+	"MiningHauler":"mining_hauler",
+}
+
 func _spawn_npc(
 	faction_name: String,
 	pos: Vector3,
@@ -107,6 +144,12 @@ func _spawn_npc(
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	add_child(npc)
 	npc.global_position = pos
+	# Apply faction combat profile for known major factions.
+	var role_key: String = _ROLE_PROFILE_KEY.get(role, "gunner")
+	var profile_key := faction_name + "_" + role_key
+	var profile := FactionRegistry.get_profile(profile_key)
+	if not profile.is_empty():
+		npc.apply_faction_profile(profile)
 
 func _populate_overview():
 	if not ui_manager:
@@ -136,35 +179,65 @@ func _on_salvager_destroyed():
 func _generate_salvager_identity(salvager: Node3D):
 	if not is_instance_valid(salvager):
 		return
-		
-	LLMInterface.fetch_salvager_profile(func(profile_data: Dictionary):
-		if not is_instance_valid(salvager):
+	# A live-fire dialogue harness owns the model deliberately; do not let the
+	# startup flavor refill compete with its one-at-a-time protocol.
+	if "--llm-live-fire" in OS.get_cmdline_user_args():
+		return
+
+	# Wait for the small model to pass its readiness probe so this doesn't race the
+	# cold-start warm-up and fall back to a canned backstory. Captures the instance
+	# id now; re-checks validity when the model is ready.
+	var salvager_id := salvager.get_instance_id()
+	LLMInterface.when_small_model_ready(func() -> void:
+		if not is_instance_valid(instance_from_id(salvager_id)):
 			return
-		var p_name = profile_data.get("name", "Maeve Sterling")
-		var p_backstory = profile_data.get("backstory", "An independent scrapper looking for high-yield metals in the asteroid belts.")
-		
-		# Rename the salvager node
-		salvager.name = p_name
-		
-		# Save backstory MD
-		var file = FileAccess.open("user://salvager_backstory.md", FileAccess.WRITE)
-		if file:
-			file.store_line("# PILOT PROFILE: " + p_name.to_upper())
-			file.store_line("\n**Role:** Independent Salvager")
-			file.store_line("\n**Backstory:**")
-			file.store_line(p_backstory)
-			file.close()
-			print("[MainScene] Saved pilot backstory to user://salvager_backstory.md")
-			
-		# Broadcast to system comms
-		GlobalState.emit_chatter("SYSTEM", "Comms link established with independent scrapper: " + p_name, Color(0.0, 0.9, 0.9))
+		LLMInterface.fetch_salvager_profile(
+			_on_salvager_profile_generated.bind(salvager_id)
+		)
+	)
+
+
+func _on_salvager_profile_generated(
+	profile_data: Dictionary,
+	salvager_instance_id: int
+) -> void:
+	var salvager := instance_from_id(salvager_instance_id) as Node3D
+	if not is_instance_valid(salvager):
+		return
+	var p_name = profile_data.get("name", "Maeve Sterling")
+	var p_backstory = profile_data.get(
+		"backstory",
+		"An independent scrapper looking for high-yield metals in the asteroid belts."
+	)
+
+	salvager.name = p_name
+
+	var file = FileAccess.open("user://salvager_backstory.md", FileAccess.WRITE)
+	if file:
+		file.store_line("# PILOT PROFILE: " + p_name.to_upper())
+		file.store_line("\n**Role:** Independent Salvager")
+		file.store_line("\n**Backstory:**")
+		file.store_line(p_backstory)
+		file.close()
+		print("[MainScene] Saved pilot backstory to user://salvager_backstory.md")
+
+	GlobalState.emit_chatter(
+		"SYSTEM",
+		"Comms link established with independent scrapper: " + p_name,
+		Color(0.0, 0.9, 0.9)
 	)
 
 func _on_npc_spawn_timeout():
 	if GlobalState.destroyed_ships_pool > 0:
 		GlobalState.destroyed_ships_pool -= 1
 		_spawn_npc_flying_in()
-	
+
+	# Second salvager when the system has more than 5 wrecks
+	var wreck_count = get_tree().get_nodes_in_group("wreckage").size()
+	var salvager_count = get_tree().get_nodes_in_group("salvager").size()
+	if wreck_count > 5 and salvager_count < 2:
+		_spawn_salvager()
+
 	# Occasional ambient minor faction troublemaker (~15% chance, max 2 alive)
 	var minor_count = _count_minor_faction_ships()
 	if minor_count < 2 and randf() < 0.15:
@@ -204,9 +277,15 @@ func _spawn_minor_faction_ship():
 	print("[MainScene] Ambient minor faction spawned: ", npc.name)
 
 func _spawn_npc_flying_in():
-	# Choose a random major faction
 	var factions = ["zenith", "aurelia", "vanguard"]
-	var faction_name = factions[randi() % factions.size()]
+	var faction_name: String
+	var pressure: Dictionary = GlobalState.story_world_pressure
+	var p_faction: String = str(pressure.get("faction", ""))
+	var p_intensity: float = float(pressure.get("intensity", 0.0))
+	if p_faction in factions and p_intensity > 0.0 and randf() < p_intensity:
+		faction_name = p_faction
+	else:
+		faction_name = factions[randi() % factions.size()]
 	
 	# Choose a random direction on XZ plane
 	var angle = randf() * TAU
@@ -235,3 +314,15 @@ func _spawn_npc_flying_in():
 func _next_runtime_ship_id(category: String) -> String:
 	runtime_ship_sequence += 1
 	return "entity.start.%s.%06d" % [category, runtime_ship_sequence]
+
+
+func _schedule_anomaly_rumor() -> void:
+	var delay := randf_range(8.0, 18.0)
+	await get_tree().create_timer(delay).timeout
+	if not is_instance_valid(self):
+		return
+	var rumor: Dictionary = AnomalyRegistryScript.shared().get_arrival_rumor()
+	if rumor.is_empty():
+		return
+	GlobalState.emit_chatter(rumor["sender"], rumor["line"], Color(0.75, 0.75, 0.75))
+

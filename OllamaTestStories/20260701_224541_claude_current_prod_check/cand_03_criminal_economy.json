@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Paper Trail",
+  "campaign_logline": "In the shadow of Zenith's trade routes, you navigate a web of forged manifests, protection rackets, and the high cost of illegal cargo.",
+  "opening_situation": "You start as a 'freelance courier' in the Aurelia sector. Your first job is moving 'medical supplies' that suspiciously lack official stamps from Vanguard authorities.",
+  "main_mystery": "Who is laundering the massive influx of untraceable credits flowing into local port hubs?",
+  "act_1_outline": [
+    "Establish routes between Zenith and Aurelia while dodging low-level patrols.",
+    "Identify the 'Paper Tiger' syndicate responsible for forging cargo manifests.",
+    "Navigate a standoff between Vanguard legalists and black market operators."
+  ],
+  "long_term_reveal": "The smuggling trade is being orchestrated by a corporate shadow-board to tank local infrastructure values before a buyout.",
+  "tone": "Dry, cynical, noir-lite.",
+  "core_pressure": "Debt accumulation and heat from Vanguard enforcement.",
+  "kaelen_rule": "Kaelen is a fixer and contract handler; her identity must remain mysterious and she cannot die.",
+  "faction_reveal_rule": "New factions are only revealed upon jumping through star gates to new systems.",
+  "humor_rule": "Dry, dark humor. No catchphrases or repetitive tropes.",
+  "address_rule": "NPCs address the player as 'Captain' or 'Courier'.",
+  "fallback_rule": "Generate generic cargo requests and standard trade hub dialogue for missing data.",
+  "story_horizon_rule": "Trigger a new horizon when active_story_arcs_remaining reaches 0.",
+  "story_arcs": [
+    {
+      "name": "The Ghost Ledger",
+      "summary": "Trace the source of forged trade licenses across three systems to expose a high-level embezzlement scheme."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Void Receipt",
+      "trail_id": "rumor_trail.void_receipt",
+      "clue_count": 2,
+      "hint_theme": "Ghost transactions.",
+      "clue_templates": [
+        "A ledger showing payments to a non-existent port in the fringe.",
+        "An encrypted log of 'lost' shipments delivered to secret coordinates."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Finds an abandoned, automated freighter containing a stash of untraceable high-value chips."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "horizon_refresh",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "Add a new plot horizon when the current arc concludes."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning player choices.",
+    "Ensure every jump reveals one new resource or faction."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Prophecy",
+    "Ancient Signal",
+    "Zenith [Noun]"
+  ]
+}

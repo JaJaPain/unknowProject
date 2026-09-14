@@ -1,0 +1,9 @@
+{
+  "valid": true,
+  "score": 95,
+  "errors": [],
+  "warnings": [
+    "non_ascii_meta_will_be_escaped",
+    "avoid_motifs_may_be_too_sparse"
+  ]
+}

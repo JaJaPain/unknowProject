@@ -1,0 +1,60 @@
+{
+  "campaign_title": "The Scavenger's Ledger",
+  "campaign_logline": "In the wake of corporate insolvency, scrap is currency. You hunt for lost assets in dead hulls to pay off your growing debt.",
+  "opening_situation": "You start with a beat-up hauler and a 'Salvage Rights' permit for Zenith. Aurelia and Vanguard are nearby but guarded by heavy picket patrols.",
+  "main_mystery": "The cargo logs of the derelict ships in the first system contain patterns suggesting systematic insurance fraud on a massive scale.",
+  "act_1_outline": [
+    "Recover basic scrap from local wrecks to clear initial docking fees and fines.",
+    "Identify high-value 'ghost' manifests in Aurelia's outskirts that trigger legal notices.",
+    "Decipher encrypted distress logs found in ship cores to uncover hidden corporate ownership."
+  ],
+  "long_term_reveal": "The insurance fraud was a shell game; the cargo wasn't lost, it was intentionally buried to hide illicit mineral movements.",
+  "tone": "Dry, cynical, slightly dark.",
+  "core_pressure": "Debt collection and escalating legal scrutiny from heavy-handed corporate enforcement.",
+  "kaelen_rule": "Kaelen is a broker/fixer. Her true identity remains hidden; she cannot die or be fully understood by the player.",
+  "faction_reveal_rule": "New factions, ores, and upgrades are only revealed through gate travel to new systems.",
+  "humor_rule": "Dry humor about ship maintenance, bureaucracy, and the absurdity of space-law.",
+  "address_rule": "NPCs address the player as 'Salvager' or 'Contractor'.",
+  "fallback_rule": "If data is missing, default to procedural lore regarding local orbital mechanics or mineral density.",
+  "story_horizon_rule": "Trigger if active_story_arcs_remaining is 0. Action: append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Ghost Cargo",
+      "summary": "Trace a series of mismatched manifests to uncover who was actually stealing the shipments."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Blackbox Paradox",
+      "trail_id": "rumor_trail.black_box_paradox",
+      "clue_count": 2,
+      "hint_theme": "corrupted data logs",
+      "clue_templates": [
+        "A corrupted log mentions 'Protocol Void' and an unregistered cargo bay.",
+        "An encrypted audio file contains a frantic warning about 'Shipment 99-X'."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Ghost Ship' coordinates and a secret stash of untraceable currency."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "exhausted_arcs_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the current arc concludes, generate a new narrative horizon based on discovered cargo types."
+    }
+  ],
+  "expansion_rules": [
+    "Do not retcon player choices; append new content to the existing timeline.",
+    "Ensure all newly generated systems feature unique trade goods and local hazards."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Ghost Signal",
+    "Prophecy",
+    "Chosen One"
+  ]
+}

@@ -1,0 +1,106 @@
+[
+ {
+  "line": "He's breathing. The hull's still breathing with him. That's a good thing.",
+  "flags": [
+   "assumes_captain_gender"
+  ],
+  "secs": 3.1
+ },
+ {
+  "line": "Hull’s intact. You’re still breathing. I find that… satisfactory.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Hull's intact. You're still breathing. I'll take that as a win.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "The hull's still breathing. You walked away from it. I didn't think you'd make it back.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No one's following. You're still breathing. That's enough for now.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "No one's on our tail. That's a first. You're still in one piece. Good.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No damage. You're still mostly together. That's a relief, but I'm not going to mention it.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No one followed. That’s the first time I’ve been sure of that.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "You're still breathing. That's all I needed to hear.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Hull's holding. I don't need to count the cracks to know you're not going anywhere.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No signatures. No threats. Just you breathing, still.",
+  "flags": [],
+  "secs": 2.7
+ },
+ {
+  "line": "Captain. You're still breathing. That's a good thing.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Hull's whole. You're breathing. That's two things I don't have to worry about right now.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "Hull's intact. You're still breathing. That's a good start.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "No one's following. You're not hurt. The shooting's done.",
+  "flags": [],
+  "secs": 2.8
+ },
+ {
+  "line": "Sensors are clear. You're still breathing. That's two things I didn't have to fix today.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "Hull's still intact. You're still breathing. I'm not going to count how many times that's been close.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "The ship's still humming. You didn't flinch. That's the first time I've seen that happen.",
+  "flags": [],
+  "secs": 3.0
+ },
+ {
+  "line": "No one's following. That's a relief. You're still here. I'll take that.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "He's still breathing. That's the only thing I need to confirm right now.",
+  "flags": [
+   "assumes_captain_gender"
+  ],
+  "secs": 2.9
+ }
+]

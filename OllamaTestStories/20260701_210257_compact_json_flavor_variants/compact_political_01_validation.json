@@ -1,0 +1,14 @@
+{
+  "valid": false,
+  "score": 73,
+  "errors": [
+    "missing_field:story_questions_for_future_generation",
+    "missing_nested:factions.vanguard_problem",
+    "missing_nested:horizon.future_pressure_tease",
+    "story_questions_not_five_items"
+  ],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin"
+  ]
+}

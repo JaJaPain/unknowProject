@@ -1,0 +1,58 @@
+{
+  "campaign_title": "The Zenith Paradox",
+  "campaign_logline": "Navigate the decaying infrastructure of the Aurelia system while Kaelen guides you through the bureaucratic decay and pirate skirmishes.",
+  "opening_situation": "You arrive at a derelict refueling station in the Aurelia belt. The Vanguard patrol is demanding 'tribute' for passage, and your engines are running on fumes.",
+  "main_mystery": "Why did the Aurelia colony abandon their core systems, leaving only automated drones and Kaelen's cryptic logs behind?",
+  "act_1_outline": [
+    "Secure a trade permit from the Vanguard by clearing out scavengers in the Asteroid Belt.",
+    "Decipher a corrupted data packet found in a derelict freighter near the Zenith Gate.",
+    "Establish a stable communication link with Kaelen to unlock the first jump coordinates."
+  ],
+  "long_term_reveal": "Kaelen is not human, but a sentient navigation subroutine that survived the Great Collapse by mimicking personality traits.",
+  "tone": "Dry, cynical, and slightly bleak. Space is big; your oxygen tank is small.",
+  "core_pressure": "Resource scarcity and the looming threat of Vanguard 'confiscation' for non-compliance.",
+  "kaelen_rule": "Kaelen must never die or reveal her true nature fully. She remains a constant, enigmatic guide.",
+  "faction_reveal_rule": "New factions are only revealed upon physical passage through jump gates into unexplored sectors.",
+  "humor_rule": "Dry, dark PG-13 humor. No puns. Focus on the absurdity of cosmic bureaucracy and cold void.",
+  "address_rule": "Keep all narrative beats under 140 characters unless specified otherwise.",
+  "fallback_rule": "If a prompt is ambiguous, default to Kaelen providing a cryptic hint about local hazards.",
+  "story_horizon_rule": "Trigger new horizons based on system exploration metrics.",
+  "story_arcs": [
+    {
+      "name": "The Ghost Signal",
+      "summary": "Track the origin of a repeating distress signal emanating from the dead zones of the Aurelia core."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "trail_id": "rumor_trail.void_echo_protocol",
+      "clue_count": 2,
+      "hint_theme": "Ancient engineering anomalies.",
+      "clue_templates": [
+        "A corrupted log mentions 'The Echo' in sector 4-G.",
+        "Scavengers speak of a 'hollow' station that doesn't appear on maps."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the 'Void Walker' title and a unique, non-functional navigation map of the void."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "system_expansion_trigger",
+      "metric": "prepared_systems_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "When the player reaches a new jump gate, generate a new horizon for the next system."
+    }
+  ],
+  "expansion_rules": [
+    "Append new horizons without retconning previous choices.",
+    "Inject new ores and faction conflicts upon gate transit."
+  ],
+  "banned_repeats": [
+    "No 'Space is vast' clichés",
+    "No Kaelen becoming angry or distressed",
+    "No jokes about oxygen levels"
+  ]
+}

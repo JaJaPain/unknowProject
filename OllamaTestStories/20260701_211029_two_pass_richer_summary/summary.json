@@ -1,0 +1,57 @@
+[
+  {
+    "name": "two_pass_01",
+    "variant": "two_pass",
+    "seed": 954629,
+    "elapsed_seconds": 41.78,
+    "valid": true,
+    "score": 88,
+    "title": "Rust and Rations",
+    "logline": "A desperate pilot navigates a dying industrial sector where every scrap of metal is worth its weight in fuel.",
+    "errors": [],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "two_pass_02",
+    "variant": "two_pass",
+    "seed": 954660,
+    "elapsed_seconds": 45.0,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Unterminated string starting at: line 86 column 7 (char 5397)"
+    ],
+    "warnings": []
+  },
+  {
+    "name": "two_pass_03",
+    "variant": "two_pass",
+    "seed": 954691,
+    "elapsed_seconds": 45.92,
+    "valid": false,
+    "score": 59,
+    "title": "Ironclad Logistics",
+    "logline": "A broken supply chain forces a desperate pilot to navigate the crumbling infrastructure of the inner rim.",
+    "errors": [
+      "missing_field:recurring_clue",
+      "missing_nested:mystery.false_answer",
+      "missing_nested:recurring_clue.name",
+      "missing_nested:recurring_clue.signal",
+      "missing_nested:recurring_clue.first_appearance",
+      "missing_nested:recurring_clue.escalation",
+      "missing_nested:recurring_clue.payoff_hint"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  }
+]

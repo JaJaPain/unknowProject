@@ -1,0 +1,283 @@
+extends SceneTree
+
+const PlanType := preload("res://scripts/story/MissionConversationPlan.gd")
+const CompilerType := preload("res://scripts/story/MissionConversationCompiler.gd")
+const ValidatorType := preload("res://scripts/story/DialogueBundleValidator.gd")
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_test_valid_bundle_passes()
+	_test_missing_and_extra_keys_fail()
+	_test_banned_speaker_tics_fail()
+	_test_optional_machine_readable_voice_contracts_fail_precisely()
+	_test_question_answers_require_declared_anchor()
+	_test_degrade_bundle_repairs_bad_optional_answer()
+	_test_forbidden_fact_leaks_fail_and_degrade()
+	_test_secret_tokens_speaker_prefixes_and_duplicate_lines_fail()
+
+	if _failures.is_empty():
+		print("[PASS] Dialogue bundle validator tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _test_valid_bundle_passes() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	_expect(bool(result.get("ok", false)), "Valid fallback bundle did not pass validation.")
+
+
+func _test_missing_and_extra_keys_fail() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle.erase("accept_standard_response")
+	bundle["surprise_choice"] = "Invented by the model."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Invalid bundle unexpectedly passed.")
+	_expect(
+		errors.has("missing_or_short:accept_standard_response"),
+		"Validator did not flag missing required response."
+	)
+	_expect(
+		errors.has("unexpected_key:surprise_choice"),
+		"Validator did not flag unexpected model-owned key."
+	)
+
+
+func _test_banned_speaker_tics_fail() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Listen, Shiny, I have work."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Banned tic bundle unexpectedly passed.")
+	_expect(
+		errors.has("banned_tic:opening:Shiny"),
+		"Validator did not flag speaker banned tic."
+	)
+
+
+func _test_optional_machine_readable_voice_contracts_fail_precisely() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Captain, I run station security and every manifest is clear."
+	var speaker := _speaker_card()
+	speaker["voice_rules"] = {
+		"banned_tics": ["Shiny"],
+		"max_sentence_words": 6,
+		"required_any_terms": ["ledger"],
+		"forbidden_address_terms": ["Captain"],
+		"forbidden_role_claims": ["I run station security"],
+	}
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, speaker)
+	var errors: Array = result.get("errors", [])
+	_expect(
+		errors.has("persona_sentence_length:opening")
+			and errors.has("forbidden_address:opening:Captain")
+			and errors.has("forbidden_role_claim:opening:I run station security")
+			and errors.has("missing_persona_vocabulary"),
+		"Optional voice-card constraints did not return precise validation reasons: %s" % str(errors)
+	)
+
+
+func _test_question_answers_require_declared_anchor() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["clarify_term_response"] = "That is complicated. Trust me."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Vague question answer unexpectedly passed.")
+	_expect(
+		errors.has("missing_answer_anchor:clarify_term"),
+		"Validator did not flag missing question answer anchor."
+	)
+	bundle["clarify_term_response"] = "The convoy case needs evidence before the report is buried."
+	result = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	_expect(bool(result.get("ok", false)), "Anchored question answer did not pass validation.")
+
+
+func _test_degrade_bundle_repairs_bad_optional_answer() -> void:
+	var plan := _conversation_plan()
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Mara keeps the tablet angled away from station cameras."
+	bundle["clarify_term_player"] = "What convoy case?"
+	bundle["clarify_term_response"] = "That is complicated. Trust me."
+	bundle["accept_standard_response"] = "Keep the wreckage intact and we are square."
+	bundle["model_invented_choice"] = "Pay me in secrets."
+	var result: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = result.get("bundle", {})
+	var degraded_fields: Array = result.get("degraded_fields", [])
+	_expect(bool(result.get("ok", false)), "Degraded bundle did not validate.")
+	_expect(
+		degraded_fields.has("clarify_term_response"),
+		"Bad optional answer was not marked as degraded."
+	)
+	_expect(
+		not repaired.has("model_invented_choice"),
+		"Invented model key survived degradation."
+	)
+	_expect(
+		str(repaired.get("opening", "")) == "Mara keeps the tablet angled away from station cameras.",
+		"Valid opening was not preserved during degradation."
+	)
+	_expect(
+		str(repaired.get("accept_standard_response", "")) == "Keep the wreckage intact and we are square.",
+		"Valid terminal response was not preserved during degradation."
+	)
+	_expect(
+		str(repaired.get("clarify_term_response", "")).to_lower().contains("convoy case"),
+		"Degraded answer did not use anchored fallback text."
+	)
+
+
+func _test_forbidden_fact_leaks_fail_and_degrade() -> void:
+	var plan := _conversation_plan()
+	plan["director_only_fact_ids"] = ["DIRECTOR_SECRET_SALT"]
+	plan["completion_fact_ids"] = ["fact.convoy.complete"]
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["clarify_term_response"] = (
+		"DIRECTOR_SECRET_SALT says the convoy case needs evidence."
+	)
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Forbidden fact leak unexpectedly passed.")
+	_expect(
+		errors.has("forbidden_fact:clarify_term_response:DIRECTOR_SECRET_SALT"),
+		"Validator did not flag director-only leak token."
+	)
+	var degraded: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = degraded.get("bundle", {})
+	_expect(bool(degraded.get("ok", false)), "Forbidden leak did not degrade cleanly.")
+	_expect(
+		not str(repaired.get("clarify_term_response", "")).contains("DIRECTOR_SECRET_SALT"),
+		"Degraded response retained forbidden leak token."
+	)
+	_expect(
+		(degraded.get("degraded_fields", []) as Array).has("clarify_term_response"),
+		"Forbidden leak field was not marked as degraded."
+	)
+
+
+func _test_secret_tokens_speaker_prefixes_and_duplicate_lines_fail() -> void:
+	var plan := _conversation_plan()
+	plan["director_only_tokens"] = ["the broker is the architect"]
+	var bundle := CompilerType.fallback_bundle(_mission_plan(), plan)
+	bundle["opening"] = "Mara Venn: I have work that pays."
+	bundle["clarify_term_response"] = (
+		"The convoy case needs evidence, and the broker is the architect."
+	)
+	bundle["accept_standard_response"] = "The convoy case pays after the evidence is logged."
+	bundle["decline_response"] = "The convoy case pays after the evidence is logged."
+	var result: Dictionary = ValidatorType.validate_bundle(bundle, plan, _speaker_card())
+	var errors: Array = result.get("errors", [])
+	_expect(not bool(result.get("ok", false)), "Secret/speaker/duplicate bundle unexpectedly passed.")
+	_expect(
+		errors.has("speaker_prefix:opening:Mara Venn"),
+		"Validator did not flag speaker-prefix drift."
+	)
+	_expect(
+		errors.has("forbidden_fact:clarify_term_response:the broker is the architect"),
+		"Validator did not flag explicit secret token leak."
+	)
+	var duplicate_field := ""
+	for error in errors:
+		if str(error).begins_with("duplicate_line:"):
+			var parts := str(error).split(":")
+			if parts.size() >= 2:
+				duplicate_field = str(parts[1])
+			break
+	_expect(
+		not duplicate_field.is_empty(),
+		"Validator did not flag repeated generated response text."
+	)
+	var degraded: Dictionary = ValidatorType.degrade_bundle(
+		bundle,
+		_mission_plan(),
+		plan,
+		_speaker_card()
+	)
+	var repaired: Dictionary = degraded.get("bundle", {})
+	var degraded_fields: Array = degraded.get("degraded_fields", [])
+	_expect(bool(degraded.get("ok", false)), "Secret/speaker/duplicate bundle did not degrade cleanly.")
+	_expect(
+		degraded_fields.has("opening")
+			and degraded_fields.has("clarify_term_response")
+			and degraded_fields.has(duplicate_field),
+		"Degraded bundle did not mark every rejected field."
+	)
+	_expect(
+		not str(repaired.get("opening", "")).begins_with("Mara Venn:")
+			and not str(repaired.get("clarify_term_response", "")).contains(
+				"the broker is the architect"
+			),
+		"Degraded bundle retained speaker prefix or secret token."
+	)
+
+
+func _conversation_plan() -> Dictionary:
+	return {
+		"ok": true,
+		"intents": [
+			{
+				"id": PlanType.INTENT_CLARIFY_TERM,
+				"kind": "question",
+				"label": "What convoy case?",
+				"fact_ids": ["fact.convoy.visible"],
+				"answer_anchors": ["convoy case", "evidence"],
+			},
+			{
+				"id": PlanType.INTENT_ACCEPT_STANDARD,
+				"kind": "terminal",
+				"label": "Accept the contract",
+				"fact_ids": [],
+			},
+			{
+				"id": PlanType.INTENT_DECLINE,
+				"kind": "terminal",
+				"label": "Decline",
+				"fact_ids": [],
+			},
+		],
+	}
+
+
+func _mission_plan() -> Dictionary:
+	return {
+		"title": "Relay Evidence Run",
+		"objective_type": "RECOVER_COMBAT_DROP",
+		"objective_summary": "Recover blackbox shard from hostile wreckage.",
+		"reward_credits": 240,
+		"public_because": "The convoy case needs evidence before the report is buried.",
+		"stake": "Dock crews lose hazard coverage if the report stalls.",
+	}
+
+
+func _speaker_card() -> Dictionary:
+	return {
+		"name": "Mara Venn",
+		"voice_rules": {
+			"banned_tics": ["Shiny"],
+		},
+	}
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)

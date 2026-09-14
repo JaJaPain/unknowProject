@@ -1,0 +1,3132 @@
+{
+ "detail": [
+  {
+   "name": "5 mast",
+   "file": "detail/5_mast.glb",
+   "aabb_min": [
+    -0.3071,
+    -0.4991,
+    -0.3176
+   ],
+   "aabb_max": [
+    0.3071,
+    0.4991,
+    0.3176
+   ],
+   "size": [
+    0.6143,
+    0.9982,
+    0.6353
+   ],
+   "verts": 788
+  },
+  {
+   "name": "5 star block",
+   "file": "detail/5_star_block.glb",
+   "aabb_min": [
+    -0.1355,
+    -0.1355,
+    -2.0006
+   ],
+   "aabb_max": [
+    0.1355,
+    0.1355,
+    2.0006
+   ],
+   "size": [
+    0.2709,
+    0.2709,
+    4.0011
+   ],
+   "verts": 242
+  },
+  {
+   "name": "Angled Rib-block",
+   "file": "detail/Angled_Rib-block.glb",
+   "aabb_min": [
+    -0.1406,
+    -0.1902,
+    -0.577
+   ],
+   "aabb_max": [
+    0.1406,
+    0.1902,
+    0.577
+   ],
+   "size": [
+    0.2811,
+    0.3804,
+    1.1541
+   ],
+   "verts": 76
+  },
+  {
+   "name": "Bi-Polar Engine",
+   "file": "detail/Bi-Polar_Engine.glb",
+   "aabb_min": [
+    -0.3459,
+    -0.4806,
+    -0.7829
+   ],
+   "aabb_max": [
+    0.3459,
+    0.4806,
+    0.7829
+   ],
+   "size": [
+    0.6917,
+    0.9612,
+    1.5658
+   ],
+   "verts": 816
+  },
+  {
+   "name": "Cargo box",
+   "file": "detail/Cargo_box.glb",
+   "aabb_min": [
+    -0.3474,
+    -0.4031,
+    -0.7587
+   ],
+   "aabb_max": [
+    0.3474,
+    0.4031,
+    0.7587
+   ],
+   "size": [
+    0.6948,
+    0.8062,
+    1.5174
+   ],
+   "verts": 192
+  },
+  {
+   "name": "Dish Panel",
+   "file": "detail/Dish_Panel.glb",
+   "aabb_min": [
+    -0.1264,
+    -0.2377,
+    -0.1327
+   ],
+   "aabb_max": [
+    0.1264,
+    0.2377,
+    0.1327
+   ],
+   "size": [
+    0.2528,
+    0.4754,
+    0.2654
+   ],
+   "verts": 200
+  },
+  {
+   "name": "Flower",
+   "file": "detail/Flower.glb",
+   "aabb_min": [
+    -0.1217,
+    -0.0684,
+    -0.1164
+   ],
+   "aabb_max": [
+    0.1217,
+    0.0684,
+    0.1164
+   ],
+   "size": [
+    0.2434,
+    0.1367,
+    0.2328
+   ],
+   "verts": 231
+  },
+  {
+   "name": "Hex Tube",
+   "file": "detail/Hex_Tube.glb",
+   "aabb_min": [
+    -0.1825,
+    -0.1676,
+    -0.4664
+   ],
+   "aabb_max": [
+    0.1825,
+    0.1676,
+    0.4664
+   ],
+   "size": [
+    0.3651,
+    0.3353,
+    0.9328
+   ],
+   "verts": 846
+  },
+  {
+   "name": "Res Block",
+   "file": "detail/Res_Block.glb",
+   "aabb_min": [
+    -0.4215,
+    -0.2112,
+    -1.2116
+   ],
+   "aabb_max": [
+    0.4215,
+    0.2112,
+    1.2116
+   ],
+   "size": [
+    0.8429,
+    0.4224,
+    2.4232
+   ],
+   "verts": 854
+  },
+  {
+   "name": "Split Mast",
+   "file": "detail/Split_Mast.glb",
+   "aabb_min": [
+    -0.2497,
+    -0.2126,
+    -0.166
+   ],
+   "aabb_max": [
+    0.2497,
+    0.2126,
+    0.166
+   ],
+   "size": [
+    0.4995,
+    0.4251,
+    0.3319
+   ],
+   "verts": 1304
+  },
+  {
+   "name": "misc",
+   "file": "detail/misc.glb",
+   "aabb_min": [
+    -0.397,
+    -1.1644,
+    -2.3251
+   ],
+   "aabb_max": [
+    0.397,
+    1.1644,
+    2.3251
+   ],
+   "size": [
+    0.794,
+    2.3288,
+    4.6501
+   ],
+   "verts": 152
+  },
+  {
+   "name": "mushroom",
+   "file": "detail/mushroom.glb",
+   "aabb_min": [
+    -0.3909,
+    -0.5764,
+    -0.3909
+   ],
+   "aabb_max": [
+    0.3909,
+    0.5764,
+    0.3909
+   ],
+   "size": [
+    0.7817,
+    1.1529,
+    0.7817
+   ],
+   "verts": 769
+  },
+  {
+   "name": "portal block",
+   "file": "detail/portal_block.glb",
+   "aabb_min": [
+    -0.4635,
+    -0.4938,
+    -1.0034
+   ],
+   "aabb_max": [
+    0.4635,
+    0.4938,
+    1.0034
+   ],
+   "size": [
+    0.9271,
+    0.9876,
+    2.0067
+   ],
+   "verts": 2885
+  }
+ ],
+ "engines": [
+  {
+   "name": "5-Engine",
+   "file": "engines/5-Engine.glb",
+   "aabb_min": [
+    -2.0448,
+    -1.6319,
+    -2.7043
+   ],
+   "aabb_max": [
+    2.0448,
+    1.6319,
+    2.7043
+   ],
+   "size": [
+    4.0896,
+    3.2638,
+    5.4086
+   ],
+   "verts": 3288
+  },
+  {
+   "name": "Block Engine single",
+   "file": "engines/Block_Engine_single.glb",
+   "aabb_min": [
+    -0.9768,
+    -1.2595,
+    -2.9929
+   ],
+   "aabb_max": [
+    0.9768,
+    1.2595,
+    2.9929
+   ],
+   "size": [
+    1.9537,
+    2.5191,
+    5.9858
+   ],
+   "verts": 1875
+  },
+  {
+   "name": "Bracket Engine",
+   "file": "engines/Bracket_Engine.glb",
+   "aabb_min": [
+    -1.8408,
+    -1.1766,
+    -2.5055
+   ],
+   "aabb_max": [
+    1.8408,
+    1.1766,
+    2.5055
+   ],
+   "size": [
+    3.6817,
+    2.3533,
+    5.011
+   ],
+   "verts": 11576
+  },
+  {
+   "name": "Cube Engine",
+   "file": "engines/Cube_Engine.glb",
+   "aabb_min": [
+    -1.5132,
+    -1.8203,
+    -4.6655
+   ],
+   "aabb_max": [
+    1.5132,
+    1.8203,
+    4.6655
+   ],
+   "size": [
+    3.0265,
+    3.6405,
+    9.331
+   ],
+   "verts": 7111
+  },
+  {
+   "name": "Fish Engine",
+   "file": "engines/Fish_Engine.glb",
+   "aabb_min": [
+    -0.5275,
+    -1.5196,
+    -2.3508
+   ],
+   "aabb_max": [
+    0.5275,
+    1.5196,
+    2.3508
+   ],
+   "size": [
+    1.0549,
+    3.0393,
+    4.7017
+   ],
+   "verts": 1132
+  },
+  {
+   "name": "Trap-Engine",
+   "file": "engines/Trap-Engine.glb",
+   "aabb_min": [
+    -1.8333,
+    -3.0872,
+    -3.6338
+   ],
+   "aabb_max": [
+    1.8333,
+    3.0872,
+    3.6338
+   ],
+   "size": [
+    3.6666,
+    6.1743,
+    7.2676
+   ],
+   "verts": 9050
+  },
+  {
+   "name": "Trusswork-Wing",
+   "file": "engines/Trusswork-Wing.glb",
+   "aabb_min": [
+    -1.1365,
+    -0.5411,
+    -1.95
+   ],
+   "aabb_max": [
+    1.1365,
+    0.5411,
+    1.95
+   ],
+   "size": [
+    2.2731,
+    1.0822,
+    3.9
+   ],
+   "verts": 1756
+  },
+  {
+   "name": "eng.5Pole",
+   "file": "engines/eng.5Pole.glb",
+   "aabb_min": [
+    -1.1082,
+    -1.0756,
+    -1.5427
+   ],
+   "aabb_max": [
+    1.1082,
+    1.0756,
+    1.5427
+   ],
+   "size": [
+    2.2165,
+    2.1512,
+    3.0853
+   ],
+   "verts": 7781
+  },
+  {
+   "name": "eng.Rect",
+   "file": "engines/eng.Rect.glb",
+   "aabb_min": [
+    -0.5763,
+    -0.583,
+    -1.131
+   ],
+   "aabb_max": [
+    0.5763,
+    0.583,
+    1.131
+   ],
+   "size": [
+    1.1526,
+    1.1659,
+    2.2619
+   ],
+   "verts": 1221
+  },
+  {
+   "name": "eng.Vanes",
+   "file": "engines/eng.Vanes.glb",
+   "aabb_min": [
+    -1.1449,
+    -1.105,
+    -1.8864
+   ],
+   "aabb_max": [
+    1.1449,
+    1.105,
+    1.8864
+   ],
+   "size": [
+    2.2898,
+    2.2099,
+    3.7729
+   ],
+   "verts": 2320
+  },
+  {
+   "name": "eng.bit",
+   "file": "engines/eng.bit.glb",
+   "aabb_min": [
+    -0.8269,
+    -0.7162,
+    -1.1513
+   ],
+   "aabb_max": [
+    0.8269,
+    0.7162,
+    1.1513
+   ],
+   "size": [
+    1.6539,
+    1.4323,
+    2.3027
+   ],
+   "verts": 2255
+  },
+  {
+   "name": "eng.body.Y-block",
+   "file": "engines/eng.body.Y-block.glb",
+   "aabb_min": [
+    -0.5503,
+    -1.3908,
+    -1.8471
+   ],
+   "aabb_max": [
+    0.5503,
+    1.3908,
+    1.8471
+   ],
+   "size": [
+    1.1005,
+    2.7816,
+    3.6942
+   ],
+   "verts": 342
+  },
+  {
+   "name": "eng.body.chin",
+   "file": "engines/eng.body.chin.glb",
+   "aabb_min": [
+    -0.4757,
+    -1.0168,
+    -1.5412
+   ],
+   "aabb_max": [
+    0.4757,
+    1.0168,
+    1.5412
+   ],
+   "size": [
+    0.9515,
+    2.0336,
+    3.0824
+   ],
+   "verts": 144
+  },
+  {
+   "name": "eng.body.fish",
+   "file": "engines/eng.body.fish.glb",
+   "aabb_min": [
+    -0.8266,
+    -1.5206,
+    -1.9657
+   ],
+   "aabb_max": [
+    0.8266,
+    1.5206,
+    1.9657
+   ],
+   "size": [
+    1.6532,
+    3.0411,
+    3.9314
+   ],
+   "verts": 276
+  },
+  {
+   "name": "eng.body.slant",
+   "file": "engines/eng.body.slant.glb",
+   "aabb_min": [
+    -0.9634,
+    -1.5102,
+    -2.6383
+   ],
+   "aabb_max": [
+    0.9634,
+    1.5102,
+    2.6383
+   ],
+   "size": [
+    1.9268,
+    3.0203,
+    5.2766
+   ],
+   "verts": 478
+  },
+  {
+   "name": "eng.body.split",
+   "file": "engines/eng.body.split.glb",
+   "aabb_min": [
+    -1.54,
+    -0.9867,
+    -2.3461
+   ],
+   "aabb_max": [
+    1.54,
+    0.9867,
+    2.3461
+   ],
+   "size": [
+    3.0799,
+    1.9734,
+    4.6922
+   ],
+   "verts": 824
+  },
+  {
+   "name": "eng.body.splt",
+   "file": "engines/eng.body.splt.glb",
+   "aabb_min": [
+    -0.9926,
+    -1.5548,
+    -1.9952
+   ],
+   "aabb_max": [
+    0.9926,
+    1.5548,
+    1.9952
+   ],
+   "size": [
+    1.9851,
+    3.1095,
+    3.9905
+   ],
+   "verts": 932
+  },
+  {
+   "name": "eng.body.tooth",
+   "file": "engines/eng.body.tooth.glb",
+   "aabb_min": [
+    -1.1363,
+    -1.2541,
+    -2.1113
+   ],
+   "aabb_max": [
+    1.1363,
+    1.2541,
+    2.1113
+   ],
+   "size": [
+    2.2727,
+    2.5081,
+    4.2227
+   ],
+   "verts": 332
+  },
+  {
+   "name": "eng.body.wide_mouth",
+   "file": "engines/eng.body.wide_mouth.glb",
+   "aabb_min": [
+    -2.3818,
+    -0.852,
+    -1.2531
+   ],
+   "aabb_max": [
+    2.3818,
+    0.852,
+    1.2531
+   ],
+   "size": [
+    4.7636,
+    1.704,
+    2.5061
+   ],
+   "verts": 470
+  },
+  {
+   "name": "eng.flap",
+   "file": "engines/eng.flap.glb",
+   "aabb_min": [
+    -0.4339,
+    -0.7249,
+    -1.2146
+   ],
+   "aabb_max": [
+    0.4339,
+    0.7249,
+    1.2146
+   ],
+   "size": [
+    0.8677,
+    1.4499,
+    2.4291
+   ],
+   "verts": 1474
+  },
+  {
+   "name": "eng.multi",
+   "file": "engines/eng.multi.glb",
+   "aabb_min": [
+    -0.7771,
+    -0.7771,
+    -1.3096
+   ],
+   "aabb_max": [
+    0.7771,
+    0.7771,
+    1.3096
+   ],
+   "size": [
+    1.5542,
+    1.5542,
+    2.6192
+   ],
+   "verts": 4661
+  },
+  {
+   "name": "eng.onion",
+   "file": "engines/eng.onion.glb",
+   "aabb_min": [
+    -0.7562,
+    -0.7493,
+    -1.3271
+   ],
+   "aabb_max": [
+    0.7562,
+    0.7493,
+    1.3271
+   ],
+   "size": [
+    1.5124,
+    1.4986,
+    2.6543
+   ],
+   "verts": 4028
+  },
+  {
+   "name": "eng.split",
+   "file": "engines/eng.split.glb",
+   "aabb_min": [
+    -0.4934,
+    -1.0757,
+    -1.8507
+   ],
+   "aabb_max": [
+    0.4934,
+    1.0757,
+    1.8507
+   ],
+   "size": [
+    0.9869,
+    2.1513,
+    3.7014
+   ],
+   "verts": 1994
+  },
+  {
+   "name": "eng.strut.cylindar",
+   "file": "engines/eng.strut.cylindar.glb",
+   "aabb_min": [
+    -0.8931,
+    -1.8423,
+    -2.6464
+   ],
+   "aabb_max": [
+    0.8931,
+    1.8423,
+    2.6464
+   ],
+   "size": [
+    1.7862,
+    3.6845,
+    5.2927
+   ],
+   "verts": 2779
+  },
+  {
+   "name": "eng.strut.foot",
+   "file": "engines/eng.strut.foot.glb",
+   "aabb_min": [
+    -0.306,
+    -1.3003,
+    -2.585
+   ],
+   "aabb_max": [
+    0.306,
+    1.3003,
+    2.585
+   ],
+   "size": [
+    0.6119,
+    2.6006,
+    5.17
+   ],
+   "verts": 260
+  },
+  {
+   "name": "eng.strut.ladder",
+   "file": "engines/eng.strut.ladder.glb",
+   "aabb_min": [
+    -0.5333,
+    -1.599,
+    -2.6489
+   ],
+   "aabb_max": [
+    0.5333,
+    1.599,
+    2.6489
+   ],
+   "size": [
+    1.0665,
+    3.198,
+    5.2978
+   ],
+   "verts": 1114
+  },
+  {
+   "name": "eng.strut.vacuum",
+   "file": "engines/eng.strut.vacuum.glb",
+   "aabb_min": [
+    -0.4819,
+    -0.9468,
+    -2.4423
+   ],
+   "aabb_max": [
+    0.4819,
+    0.9468,
+    2.4423
+   ],
+   "size": [
+    0.9637,
+    1.8936,
+    4.8845
+   ],
+   "verts": 290
+  },
+  {
+   "name": "eng.trumpet",
+   "file": "engines/eng.trumpet.glb",
+   "aabb_min": [
+    -0.8421,
+    -0.6596,
+    -1.3303
+   ],
+   "aabb_max": [
+    0.8421,
+    0.6596,
+    1.3303
+   ],
+   "size": [
+    1.6842,
+    1.3192,
+    2.6605
+   ],
+   "verts": 794
+  }
+ ],
+ "weapons": [
+  {
+   "name": "Anti-Air-station",
+   "file": "weapons/Anti-Air-station.glb",
+   "aabb_min": [
+    -0.2992,
+    -0.3047,
+    -1.0426
+   ],
+   "aabb_max": [
+    0.2992,
+    0.3047,
+    1.0426
+   ],
+   "size": [
+    0.5984,
+    0.6095,
+    2.0851
+   ],
+   "verts": 2656
+  },
+  {
+   "name": "Big Gun",
+   "file": "weapons/Big_Gun.glb",
+   "aabb_min": [
+    -2.0364,
+    -1.3111,
+    -2.6753
+   ],
+   "aabb_max": [
+    2.0364,
+    1.3111,
+    2.6753
+   ],
+   "size": [
+    4.0728,
+    2.6222,
+    5.3507
+   ],
+   "verts": 6892
+  },
+  {
+   "name": "Cube.002",
+   "file": "weapons/Cube.002.glb",
+   "aabb_min": [
+    -0.1253,
+    -0.2085,
+    -0.8426
+   ],
+   "aabb_max": [
+    0.1253,
+    0.2085,
+    0.8426
+   ],
+   "size": [
+    0.2507,
+    0.417,
+    1.6853
+   ],
+   "verts": 1042
+  },
+  {
+   "name": "Med Gun",
+   "file": "weapons/Med_Gun.glb",
+   "aabb_min": [
+    -0.6932,
+    -0.3944,
+    -1.0476
+   ],
+   "aabb_max": [
+    0.6932,
+    0.3944,
+    1.0476
+   ],
+   "size": [
+    1.3863,
+    0.7887,
+    2.0952
+   ],
+   "verts": 258
+  },
+  {
+   "name": "Side Gun Platform",
+   "file": "weapons/Side_Gun_Platform.glb",
+   "aabb_min": [
+    -0.1684,
+    -0.2761,
+    -0.5982
+   ],
+   "aabb_max": [
+    0.1684,
+    0.2761,
+    0.5982
+   ],
+   "size": [
+    0.3368,
+    0.5521,
+    1.1964
+   ],
+   "verts": 2447
+  },
+  {
+   "name": "Small Gun.001",
+   "file": "weapons/Small_Gun.001.glb",
+   "aabb_min": [
+    -0.2094,
+    -0.2434,
+    -0.6081
+   ],
+   "aabb_max": [
+    0.2094,
+    0.2434,
+    0.6081
+   ],
+   "size": [
+    0.4188,
+    0.4867,
+    1.2163
+   ],
+   "verts": 240
+  },
+  {
+   "name": "Squirtgun",
+   "file": "weapons/Squirtgun.glb",
+   "aabb_min": [
+    -0.3536,
+    -0.3658,
+    -0.4858
+   ],
+   "aabb_max": [
+    0.3536,
+    0.3658,
+    0.4858
+   ],
+   "size": [
+    0.7071,
+    0.7315,
+    0.9716
+   ],
+   "verts": 1059
+  },
+  {
+   "name": "Turret Set",
+   "file": "weapons/Turret_Set.glb",
+   "aabb_min": [
+    -0.8017,
+    -0.5548,
+    -1.0553
+   ],
+   "aabb_max": [
+    0.8017,
+    0.5548,
+    1.0553
+   ],
+   "size": [
+    1.6034,
+    1.1097,
+    2.1107
+   ],
+   "verts": 893
+  },
+  {
+   "name": "hardPoint.dev.Clunk",
+   "file": "weapons/hardPoint.dev.Clunk.glb",
+   "aabb_min": [
+    -0.8204,
+    -0.4586,
+    -0.9567
+   ],
+   "aabb_max": [
+    0.8204,
+    0.4586,
+    0.9567
+   ],
+   "size": [
+    1.6409,
+    0.9172,
+    1.9134
+   ],
+   "verts": 690
+  },
+  {
+   "name": "hardPoint.dev.dual",
+   "file": "weapons/hardPoint.dev.dual.glb",
+   "aabb_min": [
+    -0.6127,
+    -0.418,
+    -0.8802
+   ],
+   "aabb_max": [
+    0.6127,
+    0.418,
+    0.8802
+   ],
+   "size": [
+    1.2253,
+    0.836,
+    1.7604
+   ],
+   "verts": 297
+  },
+  {
+   "name": "hardPoint.dev.gas",
+   "file": "weapons/hardPoint.dev.gas.glb",
+   "aabb_min": [
+    -0.863,
+    -0.4633,
+    -1.0765
+   ],
+   "aabb_max": [
+    0.863,
+    0.4633,
+    1.0765
+   ],
+   "size": [
+    1.726,
+    0.9266,
+    2.1531
+   ],
+   "verts": 1311
+  },
+  {
+   "name": "hardpoint.base.3x",
+   "file": "weapons/hardpoint.base.3x.glb",
+   "aabb_min": [
+    -0.9899,
+    -0.3369,
+    -1.1078
+   ],
+   "aabb_max": [
+    0.9899,
+    0.3369,
+    1.1078
+   ],
+   "size": [
+    1.9798,
+    0.6737,
+    2.2157
+   ],
+   "verts": 839
+  },
+  {
+   "name": "hardpoint.base.cap",
+   "file": "weapons/hardpoint.base.cap.glb",
+   "aabb_min": [
+    -0.6561,
+    -0.3414,
+    -0.9796
+   ],
+   "aabb_max": [
+    0.6561,
+    0.3414,
+    0.9796
+   ],
+   "size": [
+    1.3122,
+    0.6827,
+    1.9591
+   ],
+   "verts": 235
+  },
+  {
+   "name": "hardpoint.base.clip",
+   "file": "weapons/hardpoint.base.clip.glb",
+   "aabb_min": [
+    -0.6047,
+    -0.2876,
+    -1.0318
+   ],
+   "aabb_max": [
+    0.6047,
+    0.2876,
+    1.0318
+   ],
+   "size": [
+    1.2094,
+    0.5752,
+    2.0635
+   ],
+   "verts": 102
+  },
+  {
+   "name": "hardpoint.base.nose",
+   "file": "weapons/hardpoint.base.nose.glb",
+   "aabb_min": [
+    -1.2617,
+    -0.439,
+    -1.4088
+   ],
+   "aabb_max": [
+    1.2617,
+    0.439,
+    1.4088
+   ],
+   "size": [
+    2.5234,
+    0.8781,
+    2.8176
+   ],
+   "verts": 112
+  },
+  {
+   "name": "hardpoint.base.tower",
+   "file": "weapons/hardpoint.base.tower.glb",
+   "aabb_min": [
+    -0.7023,
+    -0.6388,
+    -0.7024
+   ],
+   "aabb_max": [
+    0.7023,
+    0.6388,
+    0.7024
+   ],
+   "size": [
+    1.4046,
+    1.2776,
+    1.4048
+   ],
+   "verts": 321
+  },
+  {
+   "name": "hardpoint.dev.cruise",
+   "file": "weapons/hardpoint.dev.cruise.glb",
+   "aabb_min": [
+    -0.6513,
+    -0.5395,
+    -0.8753
+   ],
+   "aabb_max": [
+    0.6513,
+    0.5395,
+    0.8753
+   ],
+   "size": [
+    1.3026,
+    1.0791,
+    1.7505
+   ],
+   "verts": 679
+  },
+  {
+   "name": "hardpoint.dev.dish",
+   "file": "weapons/hardpoint.dev.dish.glb",
+   "aabb_min": [
+    -1.4835,
+    -1.7129,
+    -1.0034
+   ],
+   "aabb_max": [
+    1.4835,
+    1.7129,
+    1.0034
+   ],
+   "size": [
+    2.9671,
+    3.4258,
+    2.0068
+   ],
+   "verts": 7828
+  },
+  {
+   "name": "hardpoint.dev.flush",
+   "file": "weapons/hardpoint.dev.flush.glb",
+   "aabb_min": [
+    -0.6851,
+    -0.3776,
+    -0.9606
+   ],
+   "aabb_max": [
+    0.6851,
+    0.3776,
+    0.9606
+   ],
+   "size": [
+    1.3703,
+    0.7551,
+    1.9212
+   ],
+   "verts": 548
+  },
+  {
+   "name": "hardpoint.dev.hammer",
+   "file": "weapons/hardpoint.dev.hammer.glb",
+   "aabb_min": [
+    -0.4853,
+    -0.4946,
+    -0.8123
+   ],
+   "aabb_max": [
+    0.4853,
+    0.4946,
+    0.8123
+   ],
+   "size": [
+    0.9705,
+    0.9893,
+    1.6245
+   ],
+   "verts": 755
+  },
+  {
+   "name": "hardpoint.dev.lowPro",
+   "file": "weapons/hardpoint.dev.lowPro.glb",
+   "aabb_min": [
+    -0.7566,
+    -0.3704,
+    -0.9798
+   ],
+   "aabb_max": [
+    0.7566,
+    0.3704,
+    0.9798
+   ],
+   "size": [
+    1.5131,
+    0.7408,
+    1.9597
+   ],
+   "verts": 775
+  },
+  {
+   "name": "hardpoint.gun.barb",
+   "file": "weapons/hardpoint.gun.barb.glb",
+   "aabb_min": [
+    -0.1254,
+    -0.2573,
+    -0.7265
+   ],
+   "aabb_max": [
+    0.1254,
+    0.2573,
+    0.7265
+   ],
+   "size": [
+    0.2508,
+    0.5145,
+    1.453
+   ],
+   "verts": 134
+  },
+  {
+   "name": "hardpoint.gun.bracket",
+   "file": "weapons/hardpoint.gun.bracket.glb",
+   "aabb_min": [
+    -0.1415,
+    -0.2035,
+    -0.7502
+   ],
+   "aabb_max": [
+    0.1415,
+    0.2035,
+    0.7502
+   ],
+   "size": [
+    0.283,
+    0.4069,
+    1.5003
+   ],
+   "verts": 780
+  },
+  {
+   "name": "hardpoint.gun.fork",
+   "file": "weapons/hardpoint.gun.fork.glb",
+   "aabb_min": [
+    -0.1265,
+    -0.2889,
+    -0.8805
+   ],
+   "aabb_max": [
+    0.1265,
+    0.2889,
+    0.8805
+   ],
+   "size": [
+    0.253,
+    0.5778,
+    1.761
+   ],
+   "verts": 234
+  },
+  {
+   "name": "hardpoitn.gun.dual",
+   "file": "weapons/hardpoitn.gun.dual.glb",
+   "aabb_min": [
+    -0.1428,
+    -0.193,
+    -0.9548
+   ],
+   "aabb_max": [
+    0.1428,
+    0.193,
+    0.9548
+   ],
+   "size": [
+    0.2855,
+    0.386,
+    1.9097
+   ],
+   "verts": 1625
+  }
+ ],
+ "greebles": [
+  {
+   "name": "Beard",
+   "file": "greebles/Beard.glb",
+   "aabb_min": [
+    -0.8813,
+    -1.2145,
+    -4.7979
+   ],
+   "aabb_max": [
+    0.8813,
+    1.2145,
+    4.7979
+   ],
+   "size": [
+    1.7625,
+    2.429,
+    9.5958
+   ],
+   "verts": 283
+  },
+  {
+   "name": "Beard Block",
+   "file": "greebles/Beard_Block.glb",
+   "aabb_min": [
+    -1.4537,
+    -2.4899,
+    -4.1634
+   ],
+   "aabb_max": [
+    1.4537,
+    2.4899,
+    4.1634
+   ],
+   "size": [
+    2.9073,
+    4.9799,
+    8.3267
+   ],
+   "verts": 186
+  },
+  {
+   "name": "Beehive",
+   "file": "greebles/Beehive.glb",
+   "aabb_min": [
+    -0.4319,
+    -0.5444,
+    -0.6543
+   ],
+   "aabb_max": [
+    0.4319,
+    0.5444,
+    0.6543
+   ],
+   "size": [
+    0.8639,
+    1.0887,
+    1.3086
+   ],
+   "verts": 176
+  },
+  {
+   "name": "Bridge-1",
+   "file": "greebles/Bridge-1.glb",
+   "aabb_min": [
+    -0.6851,
+    -1.3983,
+    -0.8189
+   ],
+   "aabb_max": [
+    0.6851,
+    1.3983,
+    0.8189
+   ],
+   "size": [
+    1.3702,
+    2.7966,
+    1.6377
+   ],
+   "verts": 512
+  },
+  {
+   "name": "Bridge-1.001",
+   "file": "greebles/Bridge-1.001.glb",
+   "aabb_min": [
+    -0.792,
+    -1.2656,
+    -2.7335
+   ],
+   "aabb_max": [
+    0.792,
+    1.2656,
+    2.7335
+   ],
+   "size": [
+    1.584,
+    2.5313,
+    5.467
+   ],
+   "verts": 1526
+  },
+  {
+   "name": "Bridge.BeerBelly",
+   "file": "greebles/Bridge.BeerBelly.glb",
+   "aabb_min": [
+    -0.9275,
+    -1.1233,
+    -1.0389
+   ],
+   "aabb_max": [
+    0.9275,
+    1.1233,
+    1.0389
+   ],
+   "size": [
+    1.8549,
+    2.2465,
+    2.0779
+   ],
+   "verts": 838
+  },
+  {
+   "name": "Build-up Block",
+   "file": "greebles/Build-up_Block.glb",
+   "aabb_min": [
+    -1.16,
+    -1.1108,
+    -3.6732
+   ],
+   "aabb_max": [
+    1.16,
+    1.1108,
+    3.6732
+   ],
+   "size": [
+    2.32,
+    2.2216,
+    7.3463
+   ],
+   "verts": 570
+  },
+  {
+   "name": "Clip bridge",
+   "file": "greebles/Clip_bridge.glb",
+   "aabb_min": [
+    -0.8631,
+    -0.9596,
+    -1.1452
+   ],
+   "aabb_max": [
+    0.8631,
+    0.9596,
+    1.1452
+   ],
+   "size": [
+    1.7262,
+    1.9192,
+    2.2904
+   ],
+   "verts": 4085
+  },
+  {
+   "name": "Crab Claw",
+   "file": "greebles/Crab_Claw.glb",
+   "aabb_min": [
+    -1.1017,
+    -2.3033,
+    -3.2568
+   ],
+   "aabb_max": [
+    1.1017,
+    2.3033,
+    3.2568
+   ],
+   "size": [
+    2.2035,
+    4.6067,
+    6.5135
+   ],
+   "verts": 430
+  },
+  {
+   "name": "Crab face",
+   "file": "greebles/Crab_face.glb",
+   "aabb_min": [
+    -1.5751,
+    -0.6497,
+    -1.8595
+   ],
+   "aabb_max": [
+    1.5751,
+    0.6497,
+    1.8595
+   ],
+   "size": [
+    3.1501,
+    1.2993,
+    3.7191
+   ],
+   "verts": 192
+  },
+  {
+   "name": "Curve Wing",
+   "file": "greebles/Curve_Wing.glb",
+   "aabb_min": [
+    -2.5936,
+    -1.4582,
+    -1.0
+   ],
+   "aabb_max": [
+    2.5936,
+    1.4582,
+    1.0
+   ],
+   "size": [
+    5.1873,
+    2.9164,
+    2.0
+   ],
+   "verts": 2352
+  },
+  {
+   "name": "Dog Ear",
+   "file": "greebles/Dog_Ear.glb",
+   "aabb_min": [
+    -1.1251,
+    -1.4868,
+    -4.4446
+   ],
+   "aabb_max": [
+    1.1251,
+    1.4868,
+    4.4446
+   ],
+   "size": [
+    2.2503,
+    2.9736,
+    8.8892
+   ],
+   "verts": 134
+  },
+  {
+   "name": "Dual Window",
+   "file": "greebles/Dual_Window.glb",
+   "aabb_min": [
+    -0.0723,
+    -0.2409,
+    -0.3239
+   ],
+   "aabb_max": [
+    0.0723,
+    0.2409,
+    0.3239
+   ],
+   "size": [
+    0.1446,
+    0.4818,
+    0.6479
+   ],
+   "verts": 152
+  },
+  {
+   "name": "ElephantBlock",
+   "file": "greebles/ElephantBlock.glb",
+   "aabb_min": [
+    -1.006,
+    -1.6942,
+    -2.8978
+   ],
+   "aabb_max": [
+    1.006,
+    1.6942,
+    2.8978
+   ],
+   "size": [
+    2.0121,
+    3.3884,
+    5.7956
+   ],
+   "verts": 250
+  },
+  {
+   "name": "Fin Hangar",
+   "file": "greebles/Fin_Hangar.glb",
+   "aabb_min": [
+    -1.2458,
+    -3.1271,
+    -3.5557
+   ],
+   "aabb_max": [
+    1.2458,
+    3.1271,
+    3.5557
+   ],
+   "size": [
+    2.4916,
+    6.2541,
+    7.1114
+   ],
+   "verts": 4775
+  },
+  {
+   "name": "Fin Runner",
+   "file": "greebles/Fin_Runner.glb",
+   "aabb_min": [
+    -0.3931,
+    -0.8056,
+    -3.6029
+   ],
+   "aabb_max": [
+    0.3931,
+    0.8056,
+    3.6029
+   ],
+   "size": [
+    0.7862,
+    1.6112,
+    7.2058
+   ],
+   "verts": 60
+  },
+  {
+   "name": "Fin Wing",
+   "file": "greebles/Fin_Wing.glb",
+   "aabb_min": [
+    -4.4492,
+    -2.2715,
+    -2.3153
+   ],
+   "aabb_max": [
+    4.4492,
+    2.2715,
+    2.3153
+   ],
+   "size": [
+    8.8984,
+    4.5429,
+    4.6306
+   ],
+   "verts": 1379
+  },
+  {
+   "name": "Fore-Bridge",
+   "file": "greebles/Fore-Bridge.glb",
+   "aabb_min": [
+    -0.9484,
+    -1.2067,
+    -1.9537
+   ],
+   "aabb_max": [
+    0.9484,
+    1.2067,
+    1.9537
+   ],
+   "size": [
+    1.8968,
+    2.4135,
+    3.9075
+   ],
+   "verts": 3258
+  },
+  {
+   "name": "G block",
+   "file": "greebles/G_block.glb",
+   "aabb_min": [
+    -0.8272,
+    -0.8849,
+    -3.7727
+   ],
+   "aabb_max": [
+    0.8272,
+    0.8849,
+    3.7727
+   ],
+   "size": [
+    1.6543,
+    1.7697,
+    7.5453
+   ],
+   "verts": 382
+  },
+  {
+   "name": "Hangar",
+   "file": "greebles/Hangar.glb",
+   "aabb_min": [
+    -1.0,
+    -0.7541,
+    -1.0733
+   ],
+   "aabb_max": [
+    1.0,
+    0.7541,
+    1.0733
+   ],
+   "size": [
+    2.0,
+    1.5081,
+    2.1466
+   ],
+   "verts": 490
+  },
+  {
+   "name": "Horns",
+   "file": "greebles/Horns.glb",
+   "aabb_min": [
+    -1.8062,
+    -0.7649,
+    -3.2828
+   ],
+   "aabb_max": [
+    1.8062,
+    0.7649,
+    3.2828
+   ],
+   "size": [
+    3.6123,
+    1.5297,
+    6.5657
+   ],
+   "verts": 1254
+  },
+  {
+   "name": "Horse Thing",
+   "file": "greebles/Horse_Thing.glb",
+   "aabb_min": [
+    -0.4987,
+    -0.6291,
+    -1.0616
+   ],
+   "aabb_max": [
+    0.4987,
+    0.6291,
+    1.0616
+   ],
+   "size": [
+    0.9974,
+    1.2582,
+    2.1231
+   ],
+   "verts": 186
+  },
+  {
+   "name": "Instrument Mast",
+   "file": "greebles/Instrument_Mast.glb",
+   "aabb_min": [
+    -1.3242,
+    -1.1824,
+    -9.9514
+   ],
+   "aabb_max": [
+    1.3242,
+    1.1824,
+    9.9514
+   ],
+   "size": [
+    2.6484,
+    2.3649,
+    19.9027
+   ],
+   "verts": 1191
+  },
+  {
+   "name": "Instrument Mast-2",
+   "file": "greebles/Instrument_Mast-2.glb",
+   "aabb_min": [
+    -1.3673,
+    -1.0937,
+    -8.2346
+   ],
+   "aabb_max": [
+    1.3673,
+    1.0937,
+    8.2346
+   ],
+   "size": [
+    2.7346,
+    2.1873,
+    16.4692
+   ],
+   "verts": 250
+  },
+  {
+   "name": "Instrument Tube",
+   "file": "greebles/Instrument_Tube.glb",
+   "aabb_min": [
+    -1.6277,
+    -1.6277,
+    -3.2755
+   ],
+   "aabb_max": [
+    1.6277,
+    1.6277,
+    3.2755
+   ],
+   "size": [
+    3.2555,
+    3.2555,
+    6.551
+   ],
+   "verts": 2605
+  },
+  {
+   "name": "Misc-1",
+   "file": "greebles/Misc-1.glb",
+   "aabb_min": [
+    -0.5957,
+    -0.4199,
+    -1.3275
+   ],
+   "aabb_max": [
+    0.5957,
+    0.4199,
+    1.3275
+   ],
+   "size": [
+    1.1913,
+    0.8398,
+    2.655
+   ],
+   "verts": 188
+  },
+  {
+   "name": "Outrigger",
+   "file": "greebles/Outrigger.glb",
+   "aabb_min": [
+    -2.1221,
+    -1.0347,
+    -3.3443
+   ],
+   "aabb_max": [
+    2.1221,
+    1.0347,
+    3.3443
+   ],
+   "size": [
+    4.2443,
+    2.0694,
+    6.6886
+   ],
+   "verts": 1494
+  },
+  {
+   "name": "PE-Wing",
+   "file": "greebles/PE-Wing.glb",
+   "aabb_min": [
+    -4.4511,
+    -0.8055,
+    -2.1487
+   ],
+   "aabb_max": [
+    4.4511,
+    0.8055,
+    2.1487
+   ],
+   "size": [
+    8.9022,
+    1.6109,
+    4.2973
+   ],
+   "verts": 796
+  },
+  {
+   "name": "Pointer",
+   "file": "greebles/Pointer.glb",
+   "aabb_min": [
+    -0.6181,
+    -1.2473,
+    -3.6011
+   ],
+   "aabb_max": [
+    0.6181,
+    1.2473,
+    3.6011
+   ],
+   "size": [
+    1.2362,
+    2.4945,
+    7.2022
+   ],
+   "verts": 390
+  },
+  {
+   "name": "Rail Runner",
+   "file": "greebles/Rail_Runner.glb",
+   "aabb_min": [
+    -0.9036,
+    -0.8277,
+    -3.317
+   ],
+   "aabb_max": [
+    0.9036,
+    0.8277,
+    3.317
+   ],
+   "size": [
+    1.8072,
+    1.6553,
+    6.6339
+   ],
+   "verts": 230
+  },
+  {
+   "name": "Ram",
+   "file": "greebles/Ram.glb",
+   "aabb_min": [
+    -1.5666,
+    -1.4011,
+    -2.4654
+   ],
+   "aabb_max": [
+    1.5666,
+    1.4011,
+    2.4654
+   ],
+   "size": [
+    3.1331,
+    2.8022,
+    4.9307
+   ],
+   "verts": 646
+  },
+  {
+   "name": "Side Bridge.001",
+   "file": "greebles/Side_Bridge.001.glb",
+   "aabb_min": [
+    -0.683,
+    -0.8997,
+    -0.5648
+   ],
+   "aabb_max": [
+    0.683,
+    0.8997,
+    0.5648
+   ],
+   "size": [
+    1.366,
+    1.7995,
+    1.1296
+   ],
+   "verts": 386
+  },
+  {
+   "name": "Stub Wing",
+   "file": "greebles/Stub_Wing.glb",
+   "aabb_min": [
+    -2.1821,
+    -0.7715,
+    -2.37
+   ],
+   "aabb_max": [
+    2.1821,
+    0.7715,
+    2.37
+   ],
+   "size": [
+    4.3641,
+    1.543,
+    4.7399
+   ],
+   "verts": 118
+  },
+  {
+   "name": "Tank",
+   "file": "greebles/Tank.glb",
+   "aabb_min": [
+    -1.4068,
+    -1.3784,
+    -2.8096
+   ],
+   "aabb_max": [
+    1.4068,
+    1.3784,
+    2.8096
+   ],
+   "size": [
+    2.8137,
+    2.7568,
+    5.6191
+   ],
+   "verts": 2060
+  },
+  {
+   "name": "Telescope",
+   "file": "greebles/Telescope.glb",
+   "aabb_min": [
+    -0.977,
+    -1.2246,
+    -4.3111
+   ],
+   "aabb_max": [
+    0.977,
+    1.2246,
+    4.3111
+   ],
+   "size": [
+    1.954,
+    2.4491,
+    8.6221
+   ],
+   "verts": 712
+  },
+  {
+   "name": "TongueBlock",
+   "file": "greebles/TongueBlock.glb",
+   "aabb_min": [
+    -1.1217,
+    -2.0267,
+    -2.8421
+   ],
+   "aabb_max": [
+    1.1217,
+    2.0267,
+    2.8421
+   ],
+   "size": [
+    2.2434,
+    4.0534,
+    5.6842
+   ],
+   "verts": 1218
+  },
+  {
+   "name": "Vent Block",
+   "file": "greebles/Vent_Block.glb",
+   "aabb_min": [
+    -0.7729,
+    -0.7067,
+    -2.8205
+   ],
+   "aabb_max": [
+    0.7729,
+    0.7067,
+    2.8205
+   ],
+   "size": [
+    1.5459,
+    1.4134,
+    5.6411
+   ],
+   "verts": 403
+  },
+  {
+   "name": "Window Block",
+   "file": "greebles/Window_Block.glb",
+   "aabb_min": [
+    -0.3243,
+    -0.465,
+    -0.7461
+   ],
+   "aabb_max": [
+    0.3243,
+    0.465,
+    0.7461
+   ],
+   "size": [
+    0.6486,
+    0.93,
+    1.4921
+   ],
+   "verts": 576
+  },
+  {
+   "name": "Window Block 2",
+   "file": "greebles/Window_Block_2.glb",
+   "aabb_min": [
+    -1.0,
+    -0.2442,
+    -1.3175
+   ],
+   "aabb_max": [
+    1.0,
+    0.2442,
+    1.3175
+   ],
+   "size": [
+    2.0,
+    0.4884,
+    2.6349
+   ],
+   "verts": 404
+  },
+  {
+   "name": "Window Block half.001",
+   "file": "greebles/Window_Block_half.001.glb",
+   "aabb_min": [
+    -0.3786,
+    -0.1955,
+    -0.9976
+   ],
+   "aabb_max": [
+    0.3786,
+    0.1955,
+    0.9976
+   ],
+   "size": [
+    0.7572,
+    0.3909,
+    1.9951
+   ],
+   "verts": 296
+  },
+  {
+   "name": "Wing-2",
+   "file": "greebles/Wing-2.glb",
+   "aabb_min": [
+    -1.0738,
+    -0.3796,
+    -2.3248
+   ],
+   "aabb_max": [
+    1.0738,
+    0.3796,
+    2.3248
+   ],
+   "size": [
+    2.1475,
+    0.7592,
+    4.6496
+   ],
+   "verts": 884
+  },
+  {
+   "name": "angleBar",
+   "file": "greebles/angleBar.glb",
+   "aabb_min": [
+    -0.1673,
+    -0.7703,
+    -1.5178
+   ],
+   "aabb_max": [
+    0.1673,
+    0.7703,
+    1.5178
+   ],
+   "size": [
+    0.3346,
+    1.5406,
+    3.0357
+   ],
+   "verts": 180
+  },
+  {
+   "name": "anglePort",
+   "file": "greebles/anglePort.glb",
+   "aabb_min": [
+    -0.8216,
+    -1.0385,
+    -1.9003
+   ],
+   "aabb_max": [
+    0.8216,
+    1.0385,
+    1.9003
+   ],
+   "size": [
+    1.6431,
+    2.077,
+    3.8006
+   ],
+   "verts": 958
+  },
+  {
+   "name": "block.bird",
+   "file": "greebles/block.bird.glb",
+   "aabb_min": [
+    -1.1968,
+    -0.6166,
+    -1.7969
+   ],
+   "aabb_max": [
+    1.1968,
+    0.6166,
+    1.7969
+   ],
+   "size": [
+    2.3936,
+    1.2333,
+    3.5938
+   ],
+   "verts": 54
+  },
+  {
+   "name": "block.doorStop",
+   "file": "greebles/block.doorStop.glb",
+   "aabb_min": [
+    -1.4176,
+    -0.4143,
+    -2.6296
+   ],
+   "aabb_max": [
+    1.4176,
+    0.4143,
+    2.6296
+   ],
+   "size": [
+    2.8353,
+    0.8285,
+    5.2592
+   ],
+   "verts": 88
+  },
+  {
+   "name": "block.finger",
+   "file": "greebles/block.finger.glb",
+   "aabb_min": [
+    -1.0129,
+    -1.0518,
+    -1.6481
+   ],
+   "aabb_max": [
+    1.0129,
+    1.0518,
+    1.6481
+   ],
+   "size": [
+    2.0257,
+    2.1036,
+    3.2963
+   ],
+   "verts": 320
+  },
+  {
+   "name": "bridge.compact",
+   "file": "greebles/bridge.compact.glb",
+   "aabb_min": [
+    -0.4123,
+    -0.4699,
+    -0.7907
+   ],
+   "aabb_max": [
+    0.4123,
+    0.4699,
+    0.7907
+   ],
+   "size": [
+    0.8247,
+    0.9397,
+    1.5815
+   ],
+   "verts": 2698
+  },
+  {
+   "name": "checkBlock",
+   "file": "greebles/checkBlock.glb",
+   "aabb_min": [
+    -0.6393,
+    -0.9588,
+    -2.0423
+   ],
+   "aabb_max": [
+    0.6393,
+    0.9588,
+    2.0423
+   ],
+   "size": [
+    1.2787,
+    1.9177,
+    4.0847
+   ],
+   "verts": 1180
+  },
+  {
+   "name": "doubleBlock",
+   "file": "greebles/doubleBlock.glb",
+   "aabb_min": [
+    -1.6289,
+    -1.7646,
+    -2.5217
+   ],
+   "aabb_max": [
+    1.6289,
+    1.7646,
+    2.5217
+   ],
+   "size": [
+    3.2578,
+    3.5292,
+    5.0434
+   ],
+   "verts": 106
+  },
+  {
+   "name": "eleBridge",
+   "file": "greebles/eleBridge.glb",
+   "aabb_min": [
+    -0.7709,
+    -1.2662,
+    -0.5939
+   ],
+   "aabb_max": [
+    0.7709,
+    1.2662,
+    0.5939
+   ],
+   "size": [
+    1.5419,
+    2.5325,
+    1.1878
+   ],
+   "verts": 748
+  },
+  {
+   "name": "falseBlock",
+   "file": "greebles/falseBlock.glb",
+   "aabb_min": [
+    -0.3118,
+    -0.4855,
+    -0.9217
+   ],
+   "aabb_max": [
+    0.3118,
+    0.4855,
+    0.9217
+   ],
+   "size": [
+    0.6236,
+    0.9711,
+    1.8434
+   ],
+   "verts": 1160
+  },
+  {
+   "name": "fintube",
+   "file": "greebles/fintube.glb",
+   "aabb_min": [
+    -1.7946,
+    -0.5306,
+    -1.7946
+   ],
+   "aabb_max": [
+    1.7946,
+    0.5306,
+    1.7946
+   ],
+   "size": [
+    3.5892,
+    1.0611,
+    3.5892
+   ],
+   "verts": 392
+  },
+  {
+   "name": "leafPanel",
+   "file": "greebles/leafPanel.glb",
+   "aabb_min": [
+    -1.0671,
+    -3.4042,
+    -4.5072
+   ],
+   "aabb_max": [
+    1.0671,
+    3.4042,
+    4.5072
+   ],
+   "size": [
+    2.1341,
+    6.8084,
+    9.0144
+   ],
+   "verts": 709
+  },
+  {
+   "name": "lifePreserver",
+   "file": "greebles/lifePreserver.glb",
+   "aabb_min": [
+    -0.1386,
+    -0.5374,
+    -0.5374
+   ],
+   "aabb_max": [
+    0.1386,
+    0.5374,
+    0.5374
+   ],
+   "size": [
+    0.2771,
+    1.0748,
+    1.0748
+   ],
+   "verts": 1380
+  },
+  {
+   "name": "plumbBlock",
+   "file": "greebles/plumbBlock.glb",
+   "aabb_min": [
+    -0.7622,
+    -0.8599,
+    -1.6201
+   ],
+   "aabb_max": [
+    0.7622,
+    0.8599,
+    1.6201
+   ],
+   "size": [
+    1.5244,
+    1.7197,
+    3.2402
+   ],
+   "verts": 200
+  },
+  {
+   "name": "postTube",
+   "file": "greebles/postTube.glb",
+   "aabb_min": [
+    -1.1334,
+    -0.7726,
+    -0.7726
+   ],
+   "aabb_max": [
+    1.1334,
+    0.7726,
+    0.7726
+   ],
+   "size": [
+    2.2667,
+    1.5452,
+    1.5452
+   ],
+   "verts": 3396
+  },
+  {
+   "name": "spire",
+   "file": "greebles/spire.glb",
+   "aabb_min": [
+    -0.4627,
+    -0.8246,
+    -0.6077
+   ],
+   "aabb_max": [
+    0.4627,
+    0.8246,
+    0.6077
+   ],
+   "size": [
+    0.9253,
+    1.6492,
+    1.2154
+   ],
+   "verts": 562
+  },
+  {
+   "name": "splitBlock",
+   "file": "greebles/splitBlock.glb",
+   "aabb_min": [
+    -0.6974,
+    -0.888,
+    -1.6289
+   ],
+   "aabb_max": [
+    0.6974,
+    0.888,
+    1.6289
+   ],
+   "size": [
+    1.3948,
+    1.7761,
+    3.2578
+   ],
+   "verts": 142
+  },
+  {
+   "name": "tooCompBlock",
+   "file": "greebles/tooCompBlock.glb",
+   "aabb_min": [
+    -1.0,
+    -0.7918,
+    -2.2413
+   ],
+   "aabb_max": [
+    1.0,
+    0.7918,
+    2.2413
+   ],
+   "size": [
+    2.0,
+    1.5835,
+    4.4826
+   ],
+   "verts": 1375
+  },
+  {
+   "name": "top Wing ",
+   "file": "greebles/top_Wing_.glb",
+   "aabb_min": [
+    -4.2031,
+    -0.7799,
+    -2.239
+   ],
+   "aabb_max": [
+    4.2031,
+    0.7799,
+    2.239
+   ],
+   "size": [
+    8.4061,
+    1.5597,
+    4.478
+   ],
+   "verts": 2122
+  },
+  {
+   "name": "ventPortBlock",
+   "file": "greebles/ventPortBlock.glb",
+   "aabb_min": [
+    -0.449,
+    -0.4064,
+    -1.7812
+   ],
+   "aabb_max": [
+    0.449,
+    0.4064,
+    1.7812
+   ],
+   "size": [
+    0.898,
+    0.8129,
+    3.5625
+   ],
+   "verts": 550
+  },
+  {
+   "name": "vert miss tube",
+   "file": "greebles/vert_miss_tube.glb",
+   "aabb_min": [
+    -0.8481,
+    -0.7924,
+    -0.4822
+   ],
+   "aabb_max": [
+    0.8481,
+    0.7924,
+    0.4822
+   ],
+   "size": [
+    1.6963,
+    1.5848,
+    0.9645
+   ],
+   "verts": 102
+  },
+  {
+   "name": "window block lowpro",
+   "file": "greebles/window_block_lowpro.glb",
+   "aabb_min": [
+    -0.1093,
+    -0.1034,
+    -0.2919
+   ],
+   "aabb_max": [
+    0.1093,
+    0.1034,
+    0.2919
+   ],
+   "size": [
+    0.2186,
+    0.2067,
+    0.5838
+   ],
+   "verts": 136
+  },
+  {
+   "name": "wrenchPlug",
+   "file": "greebles/wrenchPlug.glb",
+   "aabb_min": [
+    -0.4589,
+    -0.2136,
+    -0.8657
+   ],
+   "aabb_max": [
+    0.4589,
+    0.2136,
+    0.8657
+   ],
+   "size": [
+    0.9178,
+    0.4271,
+    1.7314
+   ],
+   "verts": 460
+  }
+ ],
+ "hulls": [
+  {
+   "name": "Hull.Jaw",
+   "file": "hulls/Hull.Jaw.glb",
+   "aabb_min": [
+    -1.0881,
+    -1.2529,
+    -3.0866
+   ],
+   "aabb_max": [
+    1.0881,
+    1.2529,
+    3.0866
+   ],
+   "size": [
+    2.1762,
+    2.5059,
+    6.1732
+   ],
+   "verts": 218
+  },
+  {
+   "name": "Hull.PugNose",
+   "file": "hulls/Hull.PugNose.glb",
+   "aabb_min": [
+    -0.4877,
+    -1.0161,
+    -1.7833
+   ],
+   "aabb_max": [
+    0.4877,
+    1.0161,
+    1.7833
+   ],
+   "size": [
+    0.9755,
+    2.0321,
+    3.5666
+   ],
+   "verts": 1206
+  },
+  {
+   "name": "hull. compact",
+   "file": "hulls/hull._compact.glb",
+   "aabb_min": [
+    -0.5123,
+    -0.6855,
+    -1.6298
+   ],
+   "aabb_max": [
+    0.5123,
+    0.6855,
+    1.6298
+   ],
+   "size": [
+    1.0247,
+    1.371,
+    3.2596
+   ],
+   "verts": 208
+  },
+  {
+   "name": "hull.Grill",
+   "file": "hulls/hull.Grill.glb",
+   "aabb_min": [
+    -1.9809,
+    -2.432,
+    -7.4891
+   ],
+   "aabb_max": [
+    1.9809,
+    2.432,
+    7.4891
+   ],
+   "size": [
+    3.9618,
+    4.8639,
+    14.9781
+   ],
+   "verts": 3670
+  },
+  {
+   "name": "hull.Horse",
+   "file": "hulls/hull.Horse.glb",
+   "aabb_min": [
+    -1.1354,
+    -2.1106,
+    -6.8344
+   ],
+   "aabb_max": [
+    1.1354,
+    2.1106,
+    6.8344
+   ],
+   "size": [
+    2.2708,
+    4.2212,
+    13.6689
+   ],
+   "verts": 244
+  },
+  {
+   "name": "hull.angle",
+   "file": "hulls/hull.angle.glb",
+   "aabb_min": [
+    -0.5765,
+    -1.0841,
+    -2.557
+   ],
+   "aabb_max": [
+    0.5765,
+    1.0841,
+    2.557
+   ],
+   "size": [
+    1.1529,
+    2.1683,
+    5.114
+   ],
+   "verts": 252
+  },
+  {
+   "name": "hull.beard",
+   "file": "hulls/hull.beard.glb",
+   "aabb_min": [
+    -2.1072,
+    -2.1855,
+    -9.5861
+   ],
+   "aabb_max": [
+    2.1072,
+    2.1855,
+    9.5861
+   ],
+   "size": [
+    4.2145,
+    4.371,
+    19.1723
+   ],
+   "verts": 732
+  },
+  {
+   "name": "hull.block_split",
+   "file": "hulls/hull.block_split.glb",
+   "aabb_min": [
+    -1.5324,
+    -1.0899,
+    -2.3827
+   ],
+   "aabb_max": [
+    1.5324,
+    1.0899,
+    2.3827
+   ],
+   "size": [
+    3.0648,
+    2.1799,
+    4.7655
+   ],
+   "verts": 282
+  },
+  {
+   "name": "hull.bullHead",
+   "file": "hulls/hull.bullHead.glb",
+   "aabb_min": [
+    -1.2321,
+    -1.4147,
+    -4.8767
+   ],
+   "aabb_max": [
+    1.2321,
+    1.4147,
+    4.8767
+   ],
+   "size": [
+    2.4643,
+    2.8293,
+    9.7534
+   ],
+   "verts": 918
+  },
+  {
+   "name": "hull.cruise",
+   "file": "hulls/hull.cruise.glb",
+   "aabb_min": [
+    -0.7256,
+    -1.5744,
+    -4.1908
+   ],
+   "aabb_max": [
+    0.7256,
+    1.5744,
+    4.1908
+   ],
+   "size": [
+    1.4513,
+    3.1488,
+    8.3816
+   ],
+   "verts": 232
+  },
+  {
+   "name": "hull.duckHead",
+   "file": "hulls/hull.duckHead.glb",
+   "aabb_min": [
+    -1.7544,
+    -2.5134,
+    -11.9815
+   ],
+   "aabb_max": [
+    1.7544,
+    2.5134,
+    11.9815
+   ],
+   "size": [
+    3.5087,
+    5.0267,
+    23.9631
+   ],
+   "verts": 1967
+  },
+  {
+   "name": "hull.fish",
+   "file": "hulls/hull.fish.glb",
+   "aabb_min": [
+    -1.0316,
+    -0.9797,
+    -2.7907
+   ],
+   "aabb_max": [
+    1.0316,
+    0.9797,
+    2.7907
+   ],
+   "size": [
+    2.0631,
+    1.9594,
+    5.5814
+   ],
+   "verts": 982
+  },
+  {
+   "name": "hull.handle",
+   "file": "hulls/hull.handle.glb",
+   "aabb_min": [
+    -0.7066,
+    -0.864,
+    -2.9382
+   ],
+   "aabb_max": [
+    0.7066,
+    0.864,
+    2.9382
+   ],
+   "size": [
+    1.4132,
+    1.7279,
+    5.8763
+   ],
+   "verts": 698
+  },
+  {
+   "name": "hull.hangar",
+   "file": "hulls/hull.hangar.glb",
+   "aabb_min": [
+    -0.9867,
+    -1.4166,
+    -7.1215
+   ],
+   "aabb_max": [
+    0.9867,
+    1.4166,
+    7.1215
+   ],
+   "size": [
+    1.9734,
+    2.8331,
+    14.2429
+   ],
+   "verts": 4721
+  },
+  {
+   "name": "hull.horse",
+   "file": "hulls/hull.horse.glb",
+   "aabb_min": [
+    -0.6874,
+    -1.1867,
+    -2.9481
+   ],
+   "aabb_max": [
+    0.6874,
+    1.1867,
+    2.9481
+   ],
+   "size": [
+    1.3749,
+    2.3734,
+    5.8961
+   ],
+   "verts": 136
+  },
+  {
+   "name": "hull.joined",
+   "file": "hulls/hull.joined.glb",
+   "aabb_min": [
+    -3.0415,
+    -1.16,
+    -4.6241
+   ],
+   "aabb_max": [
+    3.0415,
+    1.16,
+    4.6241
+   ],
+   "size": [
+    6.083,
+    2.3201,
+    9.2481
+   ],
+   "verts": 232
+  },
+  {
+   "name": "hull.knuckle",
+   "file": "hulls/hull.knuckle.glb",
+   "aabb_min": [
+    -1.227,
+    -1.5131,
+    -4.794
+   ],
+   "aabb_max": [
+    1.227,
+    1.5131,
+    4.794
+   ],
+   "size": [
+    2.4541,
+    3.0262,
+    9.588
+   ],
+   "verts": 372
+  },
+  {
+   "name": "hull.large",
+   "file": "hulls/hull.large.glb",
+   "aabb_min": [
+    -2.1536,
+    -2.38,
+    -15.6133
+   ],
+   "aabb_max": [
+    2.1536,
+    2.38,
+    15.6133
+   ],
+   "size": [
+    4.3071,
+    4.7599,
+    31.2265
+   ],
+   "verts": 9581
+  },
+  {
+   "name": "hull.long",
+   "file": "hulls/hull.long.glb",
+   "aabb_min": [
+    -1.7208,
+    -2.1701,
+    -14.0153
+   ],
+   "aabb_max": [
+    1.7208,
+    2.1701,
+    14.0153
+   ],
+   "size": [
+    3.4416,
+    4.3401,
+    28.0305
+   ],
+   "verts": 7164
+  },
+  {
+   "name": "hull.lump",
+   "file": "hulls/hull.lump.glb",
+   "aabb_min": [
+    -1.1287,
+    -1.4135,
+    -4.0966
+   ],
+   "aabb_max": [
+    1.1287,
+    1.4135,
+    4.0966
+   ],
+   "size": [
+    2.2574,
+    2.827,
+    8.1931
+   ],
+   "verts": 148
+  },
+  {
+   "name": "hull.pot",
+   "file": "hulls/hull.pot.glb",
+   "aabb_min": [
+    -1.0775,
+    -2.1414,
+    -5.8378
+   ],
+   "aabb_max": [
+    1.0775,
+    2.1414,
+    5.8378
+   ],
+   "size": [
+    2.155,
+    4.2829,
+    11.6756
+   ],
+   "verts": 306
+  },
+  {
+   "name": "hull.rib",
+   "file": "hulls/hull.rib.glb",
+   "aabb_min": [
+    -1.4837,
+    -1.8482,
+    -5.2887
+   ],
+   "aabb_max": [
+    1.4837,
+    1.8482,
+    5.2887
+   ],
+   "size": [
+    2.9675,
+    3.6963,
+    10.5774
+   ],
+   "verts": 2151
+  },
+  {
+   "name": "hull.slick",
+   "file": "hulls/hull.slick.glb",
+   "aabb_min": [
+    -0.7083,
+    -1.25,
+    -4.4204
+   ],
+   "aabb_max": [
+    0.7083,
+    1.25,
+    4.4204
+   ],
+   "size": [
+    1.4166,
+    2.5001,
+    8.8408
+   ],
+   "verts": 664
+  },
+  {
+   "name": "hull.split",
+   "file": "hulls/hull.split.glb",
+   "aabb_min": [
+    -0.8045,
+    -1.9776,
+    -4.6876
+   ],
+   "aabb_max": [
+    0.8045,
+    1.9776,
+    4.6876
+   ],
+   "size": [
+    1.609,
+    3.9552,
+    9.3753
+   ],
+   "verts": 1430
+  },
+  {
+   "name": "hull.tall",
+   "file": "hulls/hull.tall.glb",
+   "aabb_min": [
+    -1.2208,
+    -7.262,
+    -4.0146
+   ],
+   "aabb_max": [
+    1.2208,
+    7.262,
+    4.0146
+   ],
+   "size": [
+    2.4416,
+    14.524,
+    8.0291
+   ],
+   "verts": 8090
+  },
+  {
+   "name": "hull.v",
+   "file": "hulls/hull.v.glb",
+   "aabb_min": [
+    -2.638,
+    -1.2464,
+    -3.1608
+   ],
+   "aabb_max": [
+    2.638,
+    1.2464,
+    3.1608
+   ],
+   "size": [
+    5.2759,
+    2.4927,
+    6.3216
+   ],
+   "verts": 940
+  }
+ ]
+}

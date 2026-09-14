@@ -1,0 +1,18 @@
+{
+  "valid": false,
+  "score": 59,
+  "errors": [
+    "missing_field:recurring_clue",
+    "missing_nested:mystery.false_answer",
+    "missing_nested:recurring_clue.name",
+    "missing_nested:recurring_clue.signal",
+    "missing_nested:recurring_clue.first_appearance",
+    "missing_nested:recurring_clue.escalation",
+    "missing_nested:recurring_clue.payoff_hint"
+  ],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin",
+    "hidden_crisis_may_not_connect_to_playable_systems"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Edge of the Void",
+  "campaign_subtitle": "The Scarcity Protocol",
+  "campaign_logline": "A desperate pilot navigates a tightening grip on trade routes and dwindling resources.",
+  "campaign_pitch": "Resources are thinning in the outer rim. You must navigate the competing interests of three major powers while keeping your ship intact.",
+  "campaign_story_summary": "The Zenith Corporation finds its supply lines choked. Aurelia seeks to secure independent mining zones. The Vanguard protects the trade routes from pirates. You find work with Kaelen to survive.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are stable but increasingly expensive.",
+    "visible_crisis": "Pirates and scavengers are raiding cargo ships.",
+    "hidden_crisis": "The core systems are experiencing a critical shortage of refined minerals.",
+    "why_now": "A major mining hub has just collapsed, forcing local trade into the open.",
+    "player_role": "An independent pilot seeking to pay off ship debts."
+  },
+  "mystery": {
+    "question": "Why is there a sudden surge in illegal mineral refining?",
+    "false_answer": "A rogue mining guild is trying to corner the market.",
+    "true_answer_hint": "The core systems are secretly manufacturing for an unknown, distant purpose.",
+    "long_term_reveal_direction": "The true scale of infrastructure projects in the deep core."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows exactly who is ordering the illegal refining.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her role as a gate scientist or official liaison."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is struggling with the high cost of logistics.",
+    "aurelia_problem": "Aurelia wants to establish permanent mining outposts.",
+    "vanguard_problem": "The Vanguard is overstretched and losing control of patrols.",
+    "conflict_triangle": "All three factions are fighting for the same dwindling mineral deposits.",
+    "neutral_space_pressure": "Pirates are moving into the gaps left by official patrols."
+  },
+  "act_1": {
+    "name": "The Scarcity Hunt",
+    "goal": "Secure enough contracts to establish a stable base of operations.",
+    "opening_incident": "A shipment of refined minerals is intercepted and stolen.",
+    "midpoint_turn": "You find evidence that the theft was planned by an internal source.",
+    "finale": "You deliver a successful haul and earn your first major contract.",
+    "player_takeaway": "The market is tightening, and you need to be careful."
+  },
+  "starter_mission": {
+    "title": "Scavenger's Toll",
+    "reason": "A pirate ship was caught in a gravity well during an illegal haul.",
+    "enemy_identity": "Reaver-class scout",
+    "enemy_knows": "The Reaver is defending its stolen loot.",
+    "aftershock": "You find the cargo and Kaelen offers a new contract."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signals in the Ore",
+    "signal": "Short bursts of data packets from deep space.",
+    "first_appearance": "Found within the encrypted files of a stolen haul.",
+    "escalation": "The signals become more frequent and structured as you move further out.",
+    "payoff_hint": "The data suggests a massive, automated manufacturing hub."
+  },
+  "rumor_trail": {
+    "name": "The Shadow Market",
+    "trail_id": "rumor_trail.shadow_market",
+    "hint_theme": "Illegal trade and black market minerals.",
+    "clue_templates": [
+      "A smuggler mentions a hidden dock.",
+      "A scavenger reports finding high-grade ore."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "uncommon",
+    "payoff": "Access to a secret trade hub with higher profit margins."
+  },
+  "horizon": {
+    "gate_tease": "The gates lead to systems where the core is desperate.",
+    "new_system_reveal_rule": "New systems are revealed only when a gate is activated.",
+    "future_faction_tease": "Rumors of a group that values order over profit.",
+    "future_ore_or_upgrade_tease": "Experimental mining tools and heavy-duty hull plating.",
+    "regeneration_trigger": {
+      "id": "regen_scarcity_hunt",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "When Act 1 is complete, add a new arc about the shadow market."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty frontier humor.",
+    "fall_back_rule": "If a contract is failed, Kaelen gives you another one immediately.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the consequences of the core's manufacturing demand?",
+    "Why is the Vanguard a struggling patrol force?",
+    "How does Kaelen have access to information about illegal refining?",
+    "Who are the allies who still operate in the rested peace?",
+    "Which gate leads to the most stable trade routes?"
+  ]
+}

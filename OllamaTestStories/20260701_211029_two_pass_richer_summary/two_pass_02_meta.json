@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay & Resource Scarcity",
+  "freshness_rule": "Focus on the physical toll of deep space and the hardware of salvage.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "siren call",
+    "mysterious pulse"
+  ],
+  "core_story_questions": [
+    "What is the cost of maintaining a ship's life support in the Dead Zones?",
+    "Why does the Aurelia faction value orbital scrap more than raw minerals?",
+    "How does the scarcity of fuel create friction between Zenith and Vanguard?",
+    "Who holds the monopoly on high-grade oxygener filters?",
+    "Where is the primary trade route that most pilots avoid?"
+  ],
+  "starter_mission_questions": [
+    "What makes this Reaver ship's hull integrity compromised?",
+    "Why is the cargo hold of the Reaver ship being actively defended by automated systems?",
+    "How does the player choose to prioritize salvage versus immediate survival?"
+  ],
+  "kaelen_questions": [
+    "What are Kaelen's primary motivations for helping a broke pilot?",
+    "Why is Kaelen's brokering role hidden from their inner circle?",
+    "How does Kaelen leverage information to stay neutral in the conflict?"
+  ],
+  "faction_questions": [
+    "What defines the ideology of the Zenith faction?",
+    "Why does the Vanguard move toward contested territory?",
+    "How do Aurelia's policies impact the local trade routes?"
+  ],
+  "future_generation_questions": [
+    "What is the consequence of choosing to favor one faction?",
+    "Why is there a secret agreement between two factions?",
+    "How many different ways can the player reach the next sector?",
+    "Who are the rivals who challenge the player's growth?",
+    "Which orbital station serves as the main hub for illegal trade?"
+  ]
+}

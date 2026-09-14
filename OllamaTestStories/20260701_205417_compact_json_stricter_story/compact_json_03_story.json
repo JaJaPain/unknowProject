@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Dust of the Core",
+  "campaign_subtitle": "The Scarcity Crisis",
+  "campaign_logline": "A desperate pilot navigates a crumbling economic web between three warring factions.",
+  "campaign_pitch": "Trade routes are collapsing under heavy tariffs. You must navigate the greed of Zenith, the pride of Aurelia, and the grit of Vanguard.",
+  "campaign_story_summary": "The core systems are starving for resources. Zenith demands more, while Aurelia seeks dominance. Vanguard fights to keep their people alive. You find profit in the chaos between them.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are collapsing under heavy tariffs.",
+    "visible_crisis": "Resource scarcity is causing local price spikes.",
+    "hidden_crisis": "A massive logistics chain collapse has crippled the inner core.",
+    "why_now": "The current supply cycle just ended, leaving ports empty.",
+    "player_role": "You are a broke independent pilot."
+  },
+  "mystery": {
+    "question": "Why is the trade network failing?",
+    "false_answer": "Corrupt officials are hoarding supplies for themselves.",
+    "true_answer_hint": "The core routes have been physically blocked by orbital debris.",
+    "long_term_reveal_direction": "The blockage was caused by a deliberate sabotage."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She monitors the logistics network's integrity.",
+    "address_rule": "Refer to her as a fixer or broker.",
+    "never_reveal_rule": "Never mention her knowledge of orbital mechanics."
+  },
+  "factions": {
+    "zenith_problem": "They are desperate for luxury components.",
+    "aurelia_problem": "They want to secure the mining rights.",
+    "vanguard_problem": "They need basic survival supplies.",
+    "conflict_triangle": "All three factions fight over the same shrinking pool of resources.",
+    "neutral_space_pressure": "Pirates are moving into the gaps left by trade ships."
+  },
+  "act_1": {
+    "name": "The Scarcity Gap",
+    "goal": "Secure enough supply lines to earn a living.",
+    "opening_incident": "A high-value shipment is intercepted and lost.",
+    "midpoint_turn": "You find the cargo in a pirate hideout.",
+    "finale": "You deliver the haul to a neutral station.",
+    "player_takeaway": "Survival depends on finding hidden routes."
+  },
+  "starter_mission": {
+    "title": "The Outbound Haul",
+    "reason": "A transport ship was intercepted by a pirate.",
+    "enemy_identity": "A Reaver-class scavenger ship.",
+    "enemy_knows": "It is hunting for abandoned cargo.",
+    "aftershock": "You find the wreckage of the original shipment."
+  },
+  "recurring_lue": {
+    "name": "The Ghost Route",
+    "signal": "A faint, rhythmic pulse in navigation data.",
+    "first_appearance": "It appears on your HUD during a jump.",
+    "escalation": "The signal repeats near high-value trade routes.",
+    "payoff_hint": "The signal leads to a hidden supply depot."
+  },
+  "rumor_trail": {
+    "name": "The Smuggler's Path",
+    "trail_id": "rumor_trail.smugglers_path",
+    "hint_theme": "Whispers of a secret route to the core.",
+    "clue_templates": [
+      "A smuggler mentions a shortcut.",
+      "An old map shows a hidden gate."
+    ],
+    "discovery_type": "hidden_route",
+    "rarity": "uncommon",
+    "payoff": "Access to a high-value trade route."
+  },
+  "horizon": {
+    "gate_tease": "The gates lead further into the unknown.",
+    "new_system_reveal_rule": "New systems appear as you reach the edge.",
+    "future_faction_te_ease": "Rumors of a distant, desperate colony exist.",
+    "future_ore_or_upgrade_tease": "Rare minerals are found in unstable zones.",
+    "regeneration_trigger": {
+      "id": "regen_scarcity_crisis",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "New arcs appear when the current arc ends."
+    }
+  },
+  "rules": {
+    "humor_rule": "Keep it dry and cynical.",
+    "fallback_rule": "If a quest fails, offer an alternative path.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "ancient signal"
+    ]
+  },
+  "story_questions_for__future_generation": [
+    "What is the source of the orbital debris?",
+    "Why are the factions fighting over resources?",
+    "How did the smuggling routes become so valuable?",
+    "Who owns the remaining high-value cargo?",
+    "Where is the nearest stable trade route?"
+  ]
+}

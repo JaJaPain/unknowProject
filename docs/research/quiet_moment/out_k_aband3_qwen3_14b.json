@@ -1,0 +1,84 @@
+[
+ {
+  "line": "This one's a dead end. No money, no story. Just a stain on the record.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Shiny. You walked. I don't get paid when you walk.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "You walked. That's a hole in my pocket and a stain on my reputation. Both are yours now.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Contract's dead, Shiny. I'm not getting a cut, and that's not something I ever like to say.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "The job's not done, Shiny. So the client's got someone else now. That's the cost.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "This one's on me. No credit, no call, no mention — just a hit to the reputation.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Shiny. That job got dropped. No payment, and the client knows.",
+  "secs": 3.0,
+  "flags": [
+   "packet_echo"
+  ]
+ },
+ {
+  "line": "It's off. No money. And someone just got told we don't finish.",
+  "secs": 2.8,
+  "flags": []
+ },
+ {
+  "line": "This one's closed and empty. You're the one they'll remember, not the job.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "They were told it's not happening. I don't get paid for ghosts, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "No credits, a name, and the fact that someone knows your people didn't finish.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "No pay, and someone got a message. Not sure who, but they're waiting on you, Shiny.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Someone had to know you didn't finish. That's on me, not you.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "This one's closed and empty. You're the one who's got to tell them you didn't finish.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "No credit, no pay, and the word's out. That's the price of not closing.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "No credits, but the name's still there. That's the price.",
+  "secs": 2.9,
+  "flags": []
+ }
+]

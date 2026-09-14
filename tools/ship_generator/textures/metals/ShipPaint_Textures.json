@@ -1,0 +1,209 @@
+{
+  "image": "ShipPaint.png",
+  "grid": {
+    "rows": 5,
+    "cols": 5
+  },
+  "textures": [
+    {
+      "id": 0,
+      "name": "Corroded Steel",
+      "x": 2,
+      "y": 2,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 1,
+      "name": "Weathered Red",
+      "x": 253,
+      "y": 2,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 2,
+      "name": "Aged White",
+      "x": 504,
+      "y": 2,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 3,
+      "name": "Faded Navy",
+      "x": 755,
+      "y": 2,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 4,
+      "name": "Forest Green",
+      "x": 1006,
+      "y": 2,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 5,
+      "name": "Light Gray",
+      "x": 2,
+      "y": 253,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 6,
+      "name": "Desert Tan",
+      "x": 253,
+      "y": 253,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 7,
+      "name": "Gunmetal",
+      "x": 504,
+      "y": 253,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 8,
+      "name": "Industrial Yellow",
+      "x": 755,
+      "y": 253,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 9,
+      "name": "Sky Blue",
+      "x": 1006,
+      "y": 253,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 10,
+      "name": "Turquoise",
+      "x": 2,
+      "y": 504,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 11,
+      "name": "Rust Orange",
+      "x": 253,
+      "y": 504,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 12,
+      "name": "Primer Gray",
+      "x": 504,
+      "y": 504,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 13,
+      "name": "Olive Drab",
+      "x": 755,
+      "y": 504,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 14,
+      "name": "Burgundy",
+      "x": 1006,
+      "y": 504,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 15,
+      "name": "Deep Navy",
+      "x": 2,
+      "y": 755,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 16,
+      "name": "Mint Green",
+      "x": 253,
+      "y": 755,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 17,
+      "name": "Dusty Purple",
+      "x": 504,
+      "y": 755,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 18,
+      "name": "Khaki",
+      "x": 755,
+      "y": 755,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 19,
+      "name": "Ocean Blue",
+      "x": 1006,
+      "y": 755,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 20,
+      "name": "Salmon Pink",
+      "x": 2,
+      "y": 1006,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 21,
+      "name": "Copper Brown",
+      "x": 253,
+      "y": 1006,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 22,
+      "name": "Brushed Aluminum",
+      "x": 504,
+      "y": 1006,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 23,
+      "name": "Blackened Steel",
+      "x": 755,
+      "y": 1006,
+      "width": 247,
+      "height": 247
+    },
+    {
+      "id": 24,
+      "name": "Ivory White",
+      "x": 1006,
+      "y": 1006,
+      "width": 247,
+      "height": 247
+    }
+  ]
+}

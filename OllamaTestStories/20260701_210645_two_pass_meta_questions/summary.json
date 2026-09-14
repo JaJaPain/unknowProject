@@ -1,0 +1,36 @@
+[
+  {
+    "name": "two_pass_01",
+    "variant": "two_pass",
+    "seed": 954405,
+    "elapsed_seconds": 9.01,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "meta_failed",
+      "missing_field:future_generation_questions",
+      "closed_or_meta_question:faction_questions",
+      "bad_question_list:future_generation_questions"
+    ],
+    "warnings": [
+      "avoid_motifs_may_be_too_sparse"
+    ]
+  },
+  {
+    "name": "two_pass_02",
+    "variant": "two_pass",
+    "seed": 954436,
+    "elapsed_seconds": 11.52,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "meta_failed",
+      "non_ascii_output"
+    ],
+    "warnings": []
+  }
+]

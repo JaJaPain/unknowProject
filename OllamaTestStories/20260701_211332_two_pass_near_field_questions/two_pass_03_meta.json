@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay & Corporate Hegemony",
+  "freshness_rule": "Focus on the tangible economic costs of survival and the physical degradation of ship systems.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the cost of maintaining a ship's integrity in a decaying industrial zone?",
+    "Why does the local economy favor organized syndicates over independent pilots?",
+    "How many lives are sacrificed to power the core infrastructure of the Aurelia systems?",
+    "Who holds the leverage over the pilot's cargo and the corporations?",
+    "Where is the hidden cost of the100% profit margin promised by high-risk trades?"
+  ],
+  "starter_mission_questions": [
+    "What makes the Reaver ship a target for scrap value or salvage rights?",
+    "How does the pilot's choice to accept the contract affect their reputation with local trade guilds?",
+    "Why is the Reaver-like vessel currently in a high-traffic shipping lane?"
+  ],
+  "kaelen_questions": [
+    "What information is Kaelen trading for during these early negotiations?",
+    "How does Kaelen's role as a broker influence their interaction with the pilot?",
+    "Why is Kaelen interested in the specific cargo of the Reaver-like ship?"
+  ],
+  "faction_questions": [
+    "What makes Zenith's expansion plans aggressive enough to justify military spending?",
+    "How does Aurelia's economic dominance create a friction point with Vanguard's security focus?",
+    "Who are the allies of the Vanguard who might be willing to cross into contested zones?"
+  ],
+  "future_generation_questions": [
+    "What is the ultimate consequence of the player's trade choices in the larger narrative arc?",
+    "How do the factions and corporations compete for the resources needed to100% sustain a growing population?",
+    "Why does the player choose one faction's protection over another's security?",
+    "Which path leads to more lucrative but riskier trades? (Trade-off)",
+    "Why is the core conflict between Zenith, Aurelia, and Vanguard different from previous campaigns?"
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Dust of the Reach",
+  "campaign_subtitle": "The Scavenger's Toll",
+  "campaign_logline": "A broke pilot finds a strange signal in a derelict sector.",
+  "campaign_pitch": "Navigate the friction between three rival factions. Secure your survival and uncover why some sectors remain silent.",
+  "campaign_story_summary": "The Reach is a contested mining zone. Zenith seeks control of the trade routes. Aurelia values the ancient infrastructure. Vanguard guards the frontier borders. You are an independent pilot seeking profit. Every haul brings you closer to the truth.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Independent pilots navigate a lawless mining zone.",
+    "visible_crisis": "The three main factions are escalating their presence.",
+    "hidden_crisis": "A strange signal pulse is destabilizing local navigation gates.",
+    "why_now": "Trade routes are tightening, making survival harder for independents.",
+    "player_role": "You are a debt-ridden pilot seeking work."
+  },
+  "mystery": {
+    "question": "Why do the gate signals pulse?",
+    "false_answer": "It is a malfunctioning automated defense system.",
+    "true_answer_hint": "The pulses correlate with specific orbital patterns.",
+    "long_term_reveal_direction": "Leave the actual cause for future campaigns."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She observes the gate pulse patterns privately.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Her true purpose remains unknown."
+  },
+  "factions": {
+    "zenith_problem": "Zenith wants to monopolize the trade routes.",
+    "aurelia_problem": "Aurelia seeks to preserve the old infrastructure.",
+    "vanguard_problem": "Vanguard enforces strict border security protocols.",
+    "conflict_triangle": "Each faction struggles for dominance in the Reach.",
+    "neutral_space_pressure": "Independent pilots are squeezed between their demands."
+  },
+  "act_1": {
+    "name": "The Broken Circuit",
+    "goal": "Secure a stable delivery route.",
+    "opening_incident": "A pirate ship is intercepted by a local patrol.",
+    "midpoint_turn": "You find a cargo container with encrypted data.",
+    "finale": "You deliver the package and receive your first payment.",
+    "player_takeaway": "The Reach is dangerous but profitable."
+  },
+  "starter_mission": {
+    "title": "First Strike",
+    "reason": "Tutorial mission for basic combat mechanics.",
+    "enemy_identity": "A lone Reaver scout ship.",
+    "enemy_knows": "It does not know you are there.",
+    "aftershock": "The wreckage provides scrap metal and fuel."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signal",
+    "signal": "A rhythmic pulse in the gate sensors.",
+    "first_appearance": "Detected during your first delivery.",
+    "escalation": "The frequency of pulses increases as you move.",
+    "payoff_hint": "Signals are linked to the gate network."
+  },
+  "rumor_trail": {
+    "name": "The Old Way",
+    "trail_id": "rumor_trail.old_way",
+    "hint_theme": "Ancient technology and forgotten paths.",
+    "clue_templates": [
+      "A whisper of a buried vault.",
+      "A signal that echoes in the void."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Unlocks a secret route to an old station."
+  },
+  "horizon": {
+    "gate_tease": "The gate pulses are becoming more frequent.",
+    "new_system_reveal_rule": "Do not reveal future frontier factions.",
+    "future_faction_tease": "None. Keep the focus on the local sector.",
+    "future_ore_or_upgrade_tease": "Uncover a rare mineral from an old site.",
+    "regeneration_trigger": {
+      "id": "regen_gate_pulse",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first act ends, add a new gate pulse."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty frontier humor.",
+    "fallback_rule": "If a prompt is unclear, use generic space-scavenger talk.",
+    "banned_repeats": [
+      "gate",
+      "signal",
+      "reaver",
+      "broker",
+      "fixer"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What caused the primary gate pulse?",
+    "Why ares's infrastructure is being preserved?",
+    "100% of the content should be not-yet-known.",
+    "The fate of the rest of thes world is unknown.",
+    "50% of the core mystery remains hidden."
+  ]
+}

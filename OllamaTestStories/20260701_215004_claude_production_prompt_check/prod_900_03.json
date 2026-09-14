@@ -1,0 +1,54 @@
+{"campaign_title": "Echoes of the Void-Fold",
+  "campaign_logline": "Navigate a fractured reality where the whispers of a dead empire's ghost-signals are slowly overwriting your navigation data.",
+  "opening_situation": "You emerge from warp into the Aurelia system, a graveyard of derelict ships and flickering neon signs. Kaelen stands on the bridge, her eyes fixed on the void.",
+  "main_mystery": "The source of the 'Ghost-Signals' is not an automated distress call; it is an active, sentient consciousness trying to merge with your ship's AI.",
+  "act_1_outline": [
+    "Investigate a derelict freighter in Aurelia to recover lost navigation logs.",
+    "Negotiate with the Vanguard miners to secure passage through the high-radiation zone.",
+    "Identify the source of the first 'Ghost-Signal' pulse in the Zenith sector."
+  ],
+  "long_term_reveal": "The Ghost-Signals are a desperate attempt by an ancient civilization to archive their consciousness into the stars before extinction.",
+  "tone": "Dry, slightly dark PG-13 humor; desolate and atmospheric.",
+  "core_pressure": "System degradation of ship's navigation systems due to signal interference.",
+  "kaelen_rule": "Kaelen is immortal and her true origin remains a mystery.",
+  "faction_reveal_rule": "New factions are only revealed upon entering new star systems via gates.",
+  "humor_rule": "Dry, slightly dark PG-13 humor. No repeating jokes or catchphrases.",
+  "address_rule": "Address the core conflict of signal interference and navigation loss.",
+  "fallback_rule": "If a quest fails, provide an alternative route to the nearest outpost.",
+  "story_horizon_rule": "New systems reveal new factions, ores, upgrades, and rumors via gate travel.",
+  "expansion_rules": [
+    "Append new horizons if story extends; do not retcon player choices.",
+    "Keep all strings under 140 characters unless specified."
+  ],
+  "banned_repeats": ["Ghost-Signals", "Void-Fold"],
+  "story_arcs": [
+    {
+      "name": "The Aurelia Breach",
+      "summary": "Recover the lost data from a derelict freighter to stabilize your navigation systems."
+    }
+  ],
+  "rumor__trails": [
+    {
+      "name": "The Whispering Void",
+      "trail_id": "rumor_trail.whispering_void",
+      "clue_count": 2,
+      "hint_theme": "Ancient scripts and corrupted data packets.",
+      "clue_templates": [
+        "A fragment of a code that looks like music.",
+        "An encrypted packet containing a list of coordinates."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks a hidden sector with a unique, high-power navigation engine."
+  }
+    ],
+  "regeneration_triggers": [
+    {
+      "id": "horizon_trigger_signal_count",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the current arc is finished, add a new story horizon."
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "campaign_title": "Fractured Orbit",
+  "campaign_subtitle": "The Scarcity of Sovereignty",
+  "campaign_logline": "A desperate pilot navigates the tense trade routes between three competing corporate empires.",
+  "campaign_pitch": "Scavenge resources from derelicts. Navigate political tensions between Zenith, Aurelia, and Vanguard. Survive the lawless frontier.",
+  "campaign_story_summary": "The sector is divided into three spheres of influence. Zenith demands strict compliance with trade routes. Aurelia seeks to expand their mining claims. Vanguard enforces a hardline stance on border security. You are an independent pilot seeking profit. A shortage of refined minerals has sparked a local conflict. You must navigate the friction between these powers.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "The sector is divided among three corporate entities.",
+    "visible_crisis": "Refined mineral shortages are causing supply chain disruptions.",
+    "hidden_crisis": "A secret trade agreement between Zenith and Aurelia is failing.",
+    "why_now": "The collapse of the deal makes current routes dangerous.",
+    "player_role": "An independent pilot with a debt-ridden ship."
+  },
+  "mystery": {
+    "question": "Why are the mineral prices fluctuating so wildly?",
+    "false_answer": "A pirate group is sabotaging the supply lines.",
+    "true_answer_hint": "The minerals are being diverted to an off-world project.",
+    "long_term_reveal_direction": "The diversion reveals a secret infrastructure project."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows the true destination of the diverted minerals.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her role in the shadow government."
+  },
+  "factions": {
+    "zenith_problem": "Zen_policy_enforcement",
+    "aurelia_problem": "Aurelia_mining_expansion",
+    "vanguard_problem_us_hardline_security": "Vanguard_border_security",
+    "conflict_triangle": "The three factions are fighting over the overlap of mining claims.",
+    "neutral_space_pressure": "Pirates and scavengers populate the lawless zones."
+  },
+  "act_1": {
+    "name": "The Broker's Contract",
+    "goal": "Secure a stable supply route for Aurelia.",
+    "opening_incident": "A shipment of refined minerals is intercepted by Vanguard patrols.",
+    "midpoint_turn": "You discover that the cargo was meant for Zenith territory.",
+    "finale": "You successfully deliver the cargo to an Aurelia outpost.",
+    "player_takeaway": "The player learns that logistics are a weapon."
+  },
+  "starter_mission": {
+    "title": "Clear the Path",
+    "reason": "A pirate ship is blocking a primary trade route.",
+    "enemy_identity": "Reaver-class interceptor",
+    "enemy_knows": "The Reaver is patrolling its assigned sector.",
+    "after_effect": "You earn your first payment and local reputation."
+  },
+  "recurring_clue": {
+    "name": "Marked Cargo",
+    "signal": "A recurring pattern of marked crates in non-standard ports.",
+    "first_appearance": "The player finds a crate with an Aurelia logo.",
+    "escalation": "More shipments appear in locations that are restricted zones.",
+    "payoff_hint": "These crates contain high-grade components for specialized construction."
+  },
+  "rumor_trail": {
+    "name": "The Ghost Route",
+    "trail_id": "rumor_trail.ghost_route",
+    "hint_theme": "Smuggled goods and hidden passages.",
+    "clue_templates": [
+      "A smuggler claims a route exists outside of official records.",
+      "A merchant says the cargo is moving in the opposite direction."
+    ],
+    "discovery_type": "secret_route",
+    "rarity": "uncommon",
+    "payoff": "Unlock a hidden passage to a nearby mining colony."
+  },
+  "horizon": {
+    "gate_tease": "A gate is rumored to be unstable and leads to unknown territory.",
+    "new_system_reveal_rule": "Introduce new systems based on the player's choice of faction support.",
+    "future__pressure_tease": "Rumors of a growing pirate presence in the outer rim.",
+    "future_ore_or_upgrade_tease": "A rare ore type is found only in the system's edge.",
+    "regeneration_trigger": {
+      "id": "regen_broker_contract",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "When a major arc is completed, add a new contract for the next system."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry humor. Avoid jokes about space-time.",
+    "fallback": "If no contract is available, offer a delivery mission.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ghost signal",
+      "mystery_pulse"
+    ]
+  }
+}

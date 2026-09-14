@@ -11,6 +11,9 @@ const RewardType := preload(
 const TimingType := preload(
 	"res://scripts/domain/MissionTimingDefinition.gd"
 )
+const NarrativeMetadataType := preload(
+	"res://scripts/domain/NarrativeMetadata.gd"
+)
 
 var title: String = ""
 var faction_id: StringName
@@ -20,6 +23,7 @@ var objective: MissionObjectiveDefinition
 var reward: MissionRewardDefinition
 var timing: MissionTimingDefinition
 var choices: Array = []
+var narrative_metadata: Dictionary = {}
 
 
 func load_from_offer(source: Dictionary) -> ValidationResult:
@@ -32,6 +36,10 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		normalized,
 		"mission",
 		SUPPORTED_SCHEMA_VERSION
+	)
+	result.merge(
+		NarrativeMetadataType.validate_source(source),
+		"narrative_metadata"
 	)
 
 	title = str(source.get("title", "")).strip_edges()
@@ -53,6 +61,8 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		)
 
 	giver_npc_id = _derive_giver_id(
+		str(source.get("giver_npc_id", "")),
+		str(source.get("agent_id", "")),
 		str(source.get("agent_name", "")),
 		legacy_faction
 	)
@@ -104,6 +114,7 @@ func load_from_offer(source: Dictionary) -> ValidationResult:
 		)
 	else:
 		choices = (raw_choices as Array).duplicate(true)
+	narrative_metadata = NarrativeMetadataType.from_source(source)
 	return result
 
 
@@ -118,6 +129,7 @@ func to_dict() -> Dictionary:
 		"reward": reward.to_dict() if reward else {},
 		"timing": timing.to_dict() if timing else {},
 		"choices": choices.duplicate(true),
+		"narrative_metadata": narrative_metadata.duplicate(true),
 	})
 	return result
 
@@ -133,7 +145,18 @@ static func derive_offer_id(source: Dictionary) -> String:
 	return "mission.offer.%s" % identity_source.sha256_text().substr(0, 16)
 
 
-static func _derive_giver_id(agent_name: String, legacy_faction: String) -> StringName:
+static func _derive_giver_id(
+	explicit_giver_id: String,
+	agent_id: String,
+	agent_name: String,
+	legacy_faction: String
+) -> StringName:
+	var clean_giver_id := explicit_giver_id.strip_edges()
+	if DomainIdType.is_valid(clean_giver_id, "npc"):
+		return StringName(clean_giver_id)
+	var clean_agent_id := agent_id.strip_edges()
+	if DomainIdType.is_valid(clean_agent_id, "npc"):
+		return StringName(clean_agent_id)
 	match agent_name.strip_edges().to_lower():
 		"broker kaelen":
 			return &"npc.kaelen"

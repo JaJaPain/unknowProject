@@ -1,0 +1,98 @@
+{
+  "campaign_title": "The Hollowed Vein",
+  "campaign_subtitle": "Scarcity in the Rim",
+  "campaign_logline": "A struggling pilot navigates a dying trade route between three competing factions.",
+  "campaign_pitch": "Survival is the only currency on the edge of space. You must navigate the greed of Zenith, Aurelia, and Vanguard to keep your ship flying.",
+  "campaign_story_summary": "The local mining veins are drying up. Trade routes are becoming increasingly dangerous due to pirate activity. The three main factions are tightening their grip on resources. You start as a pilot trying to make a living. Every contract is a step toward staying afloat.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes between the core and rim are failing.",
+    "visible_crisis": "Pirates are raiding mining outposts and stealing cargo.",
+    "hidden_crisis": "The primary ore source is depleting at a rate that will collapse the economy.",
+    "why_now": "A major refinery hub has just been shut down by the central authority.",
+    "player_role": "An independent pilot seeking to pay off debts."
+  },
+  "mystery": {
+    "question": "Why is the local ore source disappearing so fast?",
+    "false_answer": "Pirates are stealing it for a black market trade.",
+    "true_answer_hint": "The extraction process itself is destabilizing the planetary crust.",
+    "long_term_reveal_direction": "The geological instability will eventually cause seismic shifts in the system's mining zones."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows exactly how much time is left before the collapse.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her role as an observer of the system's decay."
+  },
+  "factions": {
+    "zenith_problem": "They are hoarding resources to maintain their luxury lifestyle.",
+    "aurelia_problem": "They are desperate for new sources and are expanding aggressively.",
+    "vanguard_problem": "They prioritize security but are causing heavy collateral damage.",
+    "conflict_triangle": "The three factions are fighting over the remaining high-grade ore veins.",
+    "neutral_space_pressure": "Pirates are filling the void left by official enforcement."
+  },
+  "act_1": {
+    "name": "The Drying Well",
+    "goal": "Secure a steady supply of trade routes and cargo.",
+    "opening_incident": "A shipment of high-core ore is intercepted by an unknown pirate ship.",
+    "midpoint_turn": "You discover that the Aurelia faction is sabotaging Zenith's mining equipment.",
+    "finale": "You must choose which faction to support during a trade route negotiation.",
+    "player_takeaway": "The scarcity of resources makes every contract more valuable."
+  },
+  "starter_mission": {
+    "title": "The Scavenger's Toll",
+    "reason": "A pirate ship is harassing the local mining lanes.",
+    "enemy_identity": "Reaver-class scout ship.",
+    "enemy_knows": "The vessel is a rogue scavenger seeking easy loot.",
+    "aftershock": "You find a small cache of refined ore in the debris."
+  },
+  "recurring_lue": {
+    "name": "The Ghost Signal",
+    "signal": "A faint, rhythmic pulse from an abandoned mine.",
+    "first_appearance": "Detected during your first trip to the mining zone.",
+    "escalation": "The signal becomes more frequent as you move closer to the core.",
+    "payoff_hint": "It is a warning of the geological instability."
+  },
+  "rumor_trail": {
+    "name": "The Shadow Market",
+    "trail_id": "rumor_trail.shadow_market",
+    "hint_theme": "Illegal trade and black market goods.",
+    "clue_templates": [
+      "A merchant mentions a hidden port.",
+      "A smuggler warns of the shadow market."
+    ],
+    "discovery_type": "hidden__discovery",
+    "rarity": "uncommon",
+    "payoff": "Access to high-grade cargo and rare upgrades."
+  },
+  "horizon": {
+    "gate_tease": "The gates lead to systems where the ore is still plentiful.",
+    "new_system_reveal_rule": "New systems are revealed only as you approach a gate.",
+    "future_faction_tease": "Rumors of a fourth, more aggressive faction emerging in the distance.",
+    "future_ore_or_upgrade_tease": "The rumor of a legendary ore type that can power advanced engines.",
+    "regeneration_trigger": {
+      "id": "regen_system_scarcity",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first act ends, a new set of rumors and gates are added."
+    }
+  },
+  "rules": {
+    "humor_rule": "Dry, slightly dark humor.",
+    "fallback_rule": "If no contract is available, offer a cargo haul for fuel.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "ancient signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What happens if the player chooses to support Aurelia?",
+    "Why is the Ghost Signal becoming more frequent?",
+    "How does the Vanguard deal with pirate activity in their sector?",
+    "Who are the hidden players behind the core resource collapse?",
+    "Where do the gates lead and what are they actually protecting?"
+  ]
+}

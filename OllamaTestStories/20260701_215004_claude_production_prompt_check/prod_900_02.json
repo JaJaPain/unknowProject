@@ -1,0 +1,49 @@
+{"campaign_title": "Echoes of the Void-Anchor",
+  "campaign_logline": "Navigate the derelict expanse of the Aurelia system to secure passage through the Warp-Gate network while Kaelen guides you.",
+  "opening_situation": "You emerge from stasis in a scarred hull, the 'Aurelia's Reach', holding a cargo manifest that lists only one destination: The Zenith Point.",
+  "main_mystery": "The source of the rhythmic 'pulse' and why Kaelen is tethered to your ship’s navigation core rather than her own station.",
+  "act_1_outline": [
+    "Secure the local mining outposts in Aurelia, establishing a foothold for trade.",
+    "Negotiate with Vanguard orbital stations to secure safe passage through the first gate.",
+    "Investigate the breach of the 'Ghost-Signal' within the Zenith point perimeter."
+  ],
+  "long_term_reveal": "The pulse is a beacon for an ancient, non-human consciousness that views human technology as invasive parasites.",
+  "tone": "Dry, slightly dark PG-13 humor; desolate atmosphere.",
+  "core_pressure": "Resource scarcity and the decaying infrastructure of the 'Old World' systems.",
+  "kaelen_rule": "Kaelen is a permanent fixture. She cannot die or be fully unmasked as a human entity.",
+  "faction_reveal_rule": "New factions are only revealed upon passing through physical warp gates to new systems.",
+  "humor_rule": "Dry, dark humor; no repetitive catchphrases or recycled jokes.",
+  "address_rule": "Address Kaelen directly in dialogue choices. All other NPCs are transient and disposable.",
+  "fallback_rule": "If a quest objective is lost, the system defaults to 'Scavenge' mode for local resources.",
+  "story_horizon_rule": "When active_story_arcs_remaining < 2, trigger append_story_arc.",
+  "story_arcs": [
+    {
+      "name": "The Aurelia Breach",
+      "summary": "Identify and seal the breach in the local mining sector to prevent atmospheric leakage."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Whispering Void",
+      "trail_id": "rumor_trail.whispering_void",
+      "clue_count": 2,
+      "hint_theme": "Anomalous frequency patterns in the deep-space void.",
+      "clue_templates": [
+        "A distorted transmission from a derelict ship's log.",
+        "A rhythmic pulse detected near the Zenith Point."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks a hidden passage to a sector containing ancient, non-human technology."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "horizon_trigger_arc_count",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_arc",
+      "description": "Automatically appends a new story arc when the current primary arc is completed or nearing completion."
+    }
+  ]
+}

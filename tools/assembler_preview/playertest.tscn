@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://bodvlbq0vw0ol"]
+[ext_resource type="Script" path="res://tools/assembler_preview/playertest.gd" id="1_pt"]
+[node name="PlayerTest" type="Node3D"]
+script = ExtResource("1_pt")

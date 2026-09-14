@@ -1,0 +1,61 @@
+{
+  "campaign_title": "The Tainted Vein",
+  "campaign_logline": "Extract the lucrative 'Vitreous' ore from high-risk zones while corporate cover-ups mask a creeping industrial plague eating local ecosystems.",
+  "opening_situation": "Aurelia mining colony reports massive structural failures. Zenith provides a contract to stabilize extraction rigs; Vanguard security warns of 'unstable atmosphere.'",
+  "main_mystery": "The lethal toxicity of the ore isn't an accident of nature, but a byproduct of a deliberate, covert chemical refinement process.",
+  "act_1_outline": [
+    "Secure fractured mining outposts in the Aurelia belt while dealing with malfunctioning life support systems.",
+    "Investigate a series of 'accidental' explosions that seem to target corporate monitoring stations.",
+    "Recover encrypted logs from a derelict refinery, revealing signs of intentional contamination."
+  ],
+  "long_term_reveal": "The corporation knowingly poisoned the sector's biosphere to accelerate mineral solubility, branding it as an 'industrial hazard.'",
+  "tone": "Grimy industrial, cynical, gritty.",
+  "core_pressure": "Failing life support and toxic atmosphere exposure levels.",
+  "kaelen_rule": "Kaelen is a contract handler. Her identity remains veiled by layers of corporate bureaucracy.",
+  "faction_reveal_rule": "New factions are only revealed through gate travel to adjacent systems.",
+  "humor_rule": "Dry, cynical humor regarding the absurdity of corporate negligence and orbital hazards.",
+  "address_rule": "NPCs address the player as 'Contractor' or 'Pilot.'",
+  "fallback_rule": "Default to generic scavenger loot tables if specific quest items are missing.",
+  "story_horizon_rule": "If active_story_arcs_remaining < 2, action: append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Filter Crisis",
+      "summary": "Locate replacement scrubbers for the Aurelia sector before atmospheric toxicity reaches lethal thresholds."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost in the Pipes",
+      "trail_id": "rumor_trail.ghost_pipes",
+      "clue_count": 2,
+      "hint_theme": "Corrupted logs about manual override valves.",
+      "clue_templates": [
+        "A frantic maintenance log regarding 'Valve 9' and a forced lockdown.",
+        "An encrypted blueprint showing a hidden drainage pipe leading away from the main mine."
+      ],
+      "discovery_type": "hidden_discovery",
+      "rarity": "rare",
+      "payoff": "Discovery of an illicit, secret manufacturing site for high-grade filters."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "exhausted_arcs_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "Add a new story horizon when the primary arc concludes."
+    }
+  ],
+  "expansion_rules": [
+    "Do not retcon player choices regarding corporate loyalty.",
+    "Append new system content only upon successful gate navigation."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Purge Protocol",
+    "Ancient Signal",
+    "Chosen One",
+    "Prophecy"
+  ]
+}

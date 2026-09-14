@@ -1,0 +1,112 @@
+You are the large local story model for SpaceGame, a procedural space game.
+
+Create a first campaign story bible. It must contain a real playable story premise, not just rules.
+
+Creative constraints:
+- First system factions: Zenith, Aurelia, Vanguard.
+- Do not reveal future frontier factions up front.
+- Kaelen is the only fixed recurring NPC besides the player.
+- Kaelen cannot die, and her full mystery must never be solved.
+- Kaelen appears publicly as a broker, fixer, and contract handler. Do not make her publicly a gate scientist, official liaison, commander, prophet, or mechanic.
+- Kaelen may privately know more than she admits.
+- The player starts as a broke independent pilot, not a chosen one.
+- The first mission must be a simple combat tutorial against exactly one Reaver or Reaver-like hostile ship.
+- The starter enemy is one hostile ship. Do not write a swarm, fleet, squad, drone cloud, or multi-enemy encounter.
+- The story must support mining, salvage, delivery, combat, station services, rumors, and gate exploration.
+- Use dry, slightly dark PG-13 frontier humor.
+- Use plain ASCII punctuation only.
+- Future questions must leave room for other campaigns to become different. Do not force a recurring motif, culprit, technology, prophecy, ancient species, signal, or final explanation.
+
+Return only the requested JSON object. Do not include a thought, reasoning, notes, markdown, or extra keys.
+Write concrete story content for every field.
+Use clean, direct English.
+Most string values must be one short sentence under 24 words.
+campaign_pitch may be 2-3 short sentences.
+campaign_story_summary may be 5 short sentences.
+Do not ramble. Do not repeat words. Do not invent joke placeholders.
+
+Use exactly this JSON shape:
+{
+  "campaign_title": "",
+  "campaign_subtitle": "",
+  "campaign_logline": "",
+  "campaign_pitch": "",
+  "campaign_story_summary": "",
+  "tone": "",
+  "opening": {
+    "status_quo": "",
+    "visible_crisis": "",
+    "hidden_crisis": "",
+    "why_now": "",
+    "player_role": ""
+  },
+  "mystery": {
+    "question": "",
+    "false_answer": "",
+    "true_answer_hint": "",
+    "long_term_reveal_direction": ""
+  },
+  "kaelen": {
+    "public_role": "",
+    "secret_angle": "",
+    "address_rule": "",
+    "never_reveal_rule": ""
+  },
+  "factions": {
+    "zenith_problem": "",
+    "aurelia_problem": "",
+    "vanguard_problem": "",
+    "conflict_triangle": "",
+    "neutral_space_pressure": ""
+  },
+  "act_1": {
+    "name": "",
+    "goal": "",
+    "opening_incident": "",
+    "midpoint_turn": "",
+    "finale": "",
+    "player_takeaway": ""
+  },
+  "starter_mission": {
+    "title": "",
+    "reason": "",
+    "enemy_identity": "",
+    "enemy_knows": "",
+    "aftershock": ""
+  },
+  "recurring_clue": {
+    "name": "",
+    "signal": "",
+    "first_appearance": "",
+    "escalation": "",
+    "payoff_hint": ""
+  },
+  "rumor_trail": {
+    "name": "",
+    "trail_id": "rumor_trail.snake_case_id",
+    "hint_theme": "",
+    "clue_templates": ["", ""],
+    "discovery_type": "hidden_discovery|secret_route|rare_upgrade|faction_secret|endgame_easter_egg",
+    "rarity": "local|uncommon|rare|legendary",
+    "payoff": ""
+  },
+  "horizon": {
+    "gate_tease": "",
+    "new_system_reveal_rule": "",
+    "future_faction_tease": "",
+    "future_ore_or_upgrade_tease": "",
+    "regeneration_trigger": {
+      "id": "snake_case_id",
+      "metric": "prepared_systems_remaining|active_story_arcs_remaining|rumor_trails_remaining|major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon|append_rumor_trail|append_story_arc",
+      "description": ""
+    }
+  },
+  "rules": {
+    "humor_rule": "",
+    "fallback_rule": "",
+    "banned_repeats": []
+  },
+  "story_questions_for_future_generation": ["", "", "", "", ""]
+}

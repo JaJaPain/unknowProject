@@ -4,12 +4,16 @@ const Registry := preload("res://scripts/domain/MissionCapabilityRegistry.gd")
 const MissionCap := preload("res://scripts/domain/MissionCapability.gd")
 const KillCap := preload("res://scripts/domain/capabilities/KillShipsCapability.gd")
 const RecoverCap := preload("res://scripts/domain/capabilities/RecoverCombatDropCapability.gd")
+const DeliveryCap := preload("res://scripts/domain/capabilities/DeliveryCourierCapability.gd")
+const PurchaseCap := preload("res://scripts/domain/capabilities/PurchaseDeliveryCapability.gd")
 
 var _failures: Array[String] = []
 
 
 func _initialize() -> void:
 	_test_registry_extension_register_and_lookup()
+	_test_registry_default_new_mission_types()
+	_test_registry_objective_types_are_sorted_defaults()
 	_test_extension_handle_event()
 	_test_extension_is_completed()
 	_test_extension_format_tracker_text()
@@ -18,7 +22,10 @@ func _initialize() -> void:
 	_test_kill_ships_handle_event_increments()
 	_test_kill_ships_handle_event_wrong_faction()
 	_test_kill_ships_handle_event_no_respawn_when_done()
+	_test_kill_ships_npc_kill_does_not_count()
+	_test_kill_ships_player_kill_counts()
 	_test_kill_ships_format_tracker()
+	_test_kill_ships_format_tracker_generated_faction()
 	_test_recover_handle_event_increments()
 	_test_recover_handle_event_wrong_faction()
 	_test_recover_handle_event_recovered_sets_flag()
@@ -26,6 +33,12 @@ func _initialize() -> void:
 	_test_recover_on_complete_allows_if_recovered()
 	_test_recover_format_tracker_hunting()
 	_test_recover_format_tracker_recovered()
+	_test_delivery_courier_requires_matching_special_cargo()
+	_test_delivery_courier_clears_matching_cargo()
+	_test_delivery_courier_failure_message()
+	_test_purchase_delivery_requires_inventory_item()
+	_test_purchase_delivery_removes_inventory_quantity()
+	_test_purchase_delivery_failure_message()
 
 	if _failures.is_empty():
 		print("[PASS] Mission capability tests")
@@ -52,6 +65,44 @@ func _test_registry_extension_register_and_lookup() -> void:
 	var found = Registry.get_for_type("TEST_ECHO")
 	_expect(found != null, "TEST_ECHO lookup returned null")
 	_expect(found.capability_id() == "test_echo", "wrong capability_id")
+	Registry.reset()
+
+
+func _test_registry_default_new_mission_types() -> void:
+	Registry.reset()
+	_expect(
+		Registry.has_type("DELIVERY_COURIER"),
+		"DELIVERY_COURIER default capability not registered"
+	)
+	_expect(
+		Registry.has_type("PURCHASE_DELIVERY"),
+		"PURCHASE_DELIVERY default capability not registered"
+	)
+	Registry.reset()
+
+
+func _test_registry_objective_types_are_sorted_defaults() -> void:
+	Registry.reset()
+	var types := Registry.objective_types()
+	var sorted := types.duplicate()
+	sorted.sort()
+	_expect(
+		types == sorted,
+		"objective_types should be deterministic and sorted"
+	)
+	types.append("MUTATED_TEST_TYPE")
+	_expect(
+		not Registry.objective_types().has("MUTATED_TEST_TYPE"),
+		"objective_types should return a copy"
+	)
+	_expect(
+		Registry.objective_types().has("KILL_SHIPS"),
+		"objective_types missing KILL_SHIPS"
+	)
+	_expect(
+		Registry.objective_types().has("DELIVERY_COURIER"),
+		"objective_types missing DELIVERY_COURIER"
+	)
 	Registry.reset()
 
 
@@ -115,6 +166,26 @@ func _test_kill_ships_handle_event_wrong_faction() -> void:
 	_expect(int(data["current_count"]) == 0, "wrong faction incremented")
 
 
+func _test_kill_ships_npc_kill_does_not_count() -> void:
+	# An NPC kill (by_player=false) must NOT advance the contract, but must ask for
+	# a replacement target so the player can still complete it.
+	var cap := KillCap.new()
+	var data := {"current_count": 1, "count_required": 3, "target_faction": "zenith"}
+	var hints := cap.handle_event(data, "ship_destroyed", {"faction": "zenith", "by_player": false})
+	_expect(int(data["current_count"]) == 1, "NPC kill should not increment the count")
+	_expect(not hints.get("progress_changed", false), "NPC kill should not report progress")
+	_expect(hints.get("needs_respawn", false), "NPC kill should request a replacement target")
+
+
+func _test_kill_ships_player_kill_counts() -> void:
+	# Explicit by_player=true still counts (parity with the legacy default).
+	var cap := KillCap.new()
+	var data := {"current_count": 0, "count_required": 3, "target_faction": "zenith"}
+	var hints := cap.handle_event(data, "ship_destroyed", {"faction": "zenith", "by_player": true})
+	_expect(int(data["current_count"]) == 1, "player kill should increment")
+	_expect(hints.get("progress_changed", false), "player kill should report progress")
+
+
 func _test_kill_ships_handle_event_no_respawn_when_done() -> void:
 	var cap := KillCap.new()
 	var data := {"current_count": 2, "count_required": 3, "target_faction": "zenith"}
@@ -127,7 +198,21 @@ func _test_kill_ships_format_tracker() -> void:
 	var cap := KillCap.new()
 	var text := cap.format_tracker_text({"current_count": 1, "count_required": 3, "target_faction": "zenith"})
 	_expect("1 / 3" in text, "missing count: %s" % text)
-	_expect("ZENITH" in text, "missing faction: %s" % text)
+	_expect("Zenith" in text, "missing faction: %s" % text)
+
+
+func _test_kill_ships_format_tracker_generated_faction() -> void:
+	var cap := KillCap.new()
+	var text := cap.format_tracker_text({
+		"current_count": 1,
+		"count_required": 2,
+		"target_faction": "gen_latch_parish_02",
+	})
+	_expect(text.contains("Latch Parish"), "generated faction display leaked raw ID: %s" % text)
+	_expect(
+		not text.contains("GEN_LATCH"),
+		"generated faction tracker used raw uppercase ID: %s" % text
+	)
 
 
 # --- RecoverCombatDropCapability ---
@@ -179,7 +264,7 @@ func _test_recover_format_tracker_hunting() -> void:
 	var text := cap.format_tracker_text({"current_count": 2, "ship_log_recovered": false,
 		"target_faction": "vanguard"})
 	_expect("Wrecks searched: 2" in text, "hunting text wrong: %s" % text)
-	_expect("VANGUARD" in text, "missing faction: %s" % text)
+	_expect("Vanguard" in text, "missing faction: %s" % text)
 
 
 func _test_recover_format_tracker_recovered() -> void:
@@ -188,6 +273,136 @@ func _test_recover_format_tracker_recovered() -> void:
 		"item_name": "black box", "turn_in_location": "Grease Monkeys"})
 	_expect("Recovered: black box" in text, "recovered text wrong: %s" % text)
 	_expect("Grease Monkeys" in text, "missing turn-in: %s" % text)
+
+
+# --- DeliveryCourierCapability ---
+
+func _test_delivery_courier_requires_matching_special_cargo() -> void:
+	var cap := DeliveryCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_type: int = gs.cargo_type
+	var previous_special: Dictionary = gs.cargo_special.duplicate(true)
+	var previous_cargo: float = gs.cargo
+	gs.clear_cargo()
+	var data := {
+		"item_name": "Sealed Evidence Tube",
+		"cargo_loaded": true,
+		"destination_display": "Kova Station",
+	}
+	_expect(not cap.is_completed(data), "Courier should not complete with empty hold.")
+	gs.accept_special("Wrong Package", "test", "Main Station", "Kova Station")
+	_expect(not cap.is_completed(data), "Courier should not complete with wrong cargo.")
+	gs.clear_cargo()
+	gs.accept_special("Sealed Evidence Tube", "test", "Main Station", "Kova Station")
+	_expect(cap.is_completed(data), "Courier should complete with matching special cargo.")
+	gs.clear_cargo()
+	gs.cargo = previous_cargo
+	gs.cargo_type = previous_type
+	gs.cargo_special = previous_special
+
+
+func _test_delivery_courier_clears_matching_cargo() -> void:
+	var cap := DeliveryCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_type: int = gs.cargo_type
+	var previous_special: Dictionary = gs.cargo_special.duplicate(true)
+	var previous_cargo: float = gs.cargo
+	gs.clear_cargo()
+	gs.accept_special("Sealed Evidence Tube", "test", "Main Station", "Kova Station")
+	var complete_hints := cap.on_complete({
+		"item_name": "Sealed Evidence Tube",
+		"cargo_loaded": true,
+	})
+	var cleanup_hints := cap.on_cleanup({"item_name": "Sealed Evidence Tube"})
+	_expect(
+		bool(complete_hints.get("clear_cargo", false)),
+		"Courier completion should request cargo clearing."
+	)
+	_expect(
+		bool(cleanup_hints.get("clear_cargo", false)),
+		"Courier cleanup should request matching cargo clearing."
+	)
+	gs.clear_cargo()
+	gs.cargo = previous_cargo
+	gs.cargo_type = previous_type
+	gs.cargo_special = previous_special
+
+
+func _test_delivery_courier_failure_message() -> void:
+	var cap := DeliveryCap.new()
+	var hints := cap.on_complete({
+		"item_name": "Missing Courier Packet",
+		"cargo_loaded": true,
+	})
+	_expect(
+		str(hints.get("block", "")).contains("cargo"),
+		"Courier missing-cargo failure should explain the block."
+	)
+
+
+# --- PurchaseDeliveryCapability ---
+
+func _test_purchase_delivery_requires_inventory_item() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	var data := {
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 2,
+		"destination_display": "Main Station",
+	}
+	_expect(not cap.is_completed(data), "Purchase should not complete without item.")
+	gs.inventory.add("data_chip", 1)
+	_expect(not cap.is_completed(data), "Purchase should not complete with too few items.")
+	gs.inventory.add("data_chip", 1)
+	_expect(cap.is_completed(data), "Purchase should complete with required quantity.")
+	gs.inventory = previous_inventory
+
+
+func _test_purchase_delivery_removes_inventory_quantity() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	gs.inventory.add("data_chip", 3)
+	var hints := cap.on_complete({
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 2,
+	})
+	_expect(
+		str(hints.get("remove_inventory_item", "")) == "data_chip"
+			and int(hints.get("remove_inventory_quantity", 0)) == 2,
+		"Purchase completion should request inventory removal."
+	)
+	gs.inventory.remove(
+		str(hints.get("remove_inventory_item", "")),
+		int(hints.get("remove_inventory_quantity", 0))
+	)
+	_expect(
+		gs.inventory.get_quantity("data_chip") == 1,
+		"Purchase removal should leave remaining stack quantity."
+	)
+	gs.inventory = previous_inventory
+
+
+func _test_purchase_delivery_failure_message() -> void:
+	var cap := PurchaseCap.new()
+	var gs = root.get_node("GlobalState")
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	var hints := cap.on_complete({
+		"item_id": "data_chip",
+		"item_name": "Data Chip",
+		"quantity_required": 1,
+	})
+	_expect(
+		str(hints.get("block", "")).contains("missing"),
+		"Purchase missing-item failure should explain the block."
+	)
+	gs.inventory = previous_inventory
 
 
 # --- Test-only capability (Checkpoint 2: extension test) ---

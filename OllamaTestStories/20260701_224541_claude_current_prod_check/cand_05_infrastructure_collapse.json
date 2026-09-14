@@ -1,0 +1,61 @@
+{
+  "campaign_title": "Fractured Backbone",
+  "campaign_logline": "The great trade arteries are rotting. As the backbone of local commerce decays, you must navigate a web of negligence, sabotage, and desperate competition.",
+  "opening_situation": "Zenith, Aurelia, and Vanguard are struggling to maintain basic connectivity. Relay stations are failing, docking fees are skyrocketing, and everyone is blaming the neighbors for the 'planned' decay.",
+  "main_mystery": "Who intentionally allowed the infrastructure to fail, and which corporation is currently profiting from the resulting repair monopoly?",
+  "act_1_outline": [
+    "Secure local trade routes between Zenith and Aurelia by replacing failing relay cores.",
+    "Identify a mole within Vanguard's logistics chain who is siphoning parts for black market sale.",
+    "Negotiate a temporary ceasefire between rival factions to repair the primary jump-gate to the next sector."
+  ],
+  "long_term_reveal": "The infrastructure wasn't failing; it was being decommissioned by a shell company owned by one of the main faction heads.",
+  "tone": "Gritty, industrial, dryly cynical.",
+  "core_pressure": "Resource scarcity and escalating repair costs for ship systems.",
+  "kaelen_rule": "Kaelen is publicly a broker; she handles contracts and manages logistics with an icy, professional demeanor.",
+  "faction_reveal_rule": "New factions are only revealed upon jumping through gates to new systems.",
+  "humor_rule": "Dry, sarcastic commentary on the absurdity of corporate bureaucracy and orbital physics.",
+  "address_rule": "NPCs address the player as 'Contractor', 'Pilot', or by their ship's designation.",
+  "fallback_rule": "If a narrative gap occurs, generate a standard 'Local Cargo Escort' quest with varying rewards.",
+  "story_horizon_rule": "Trigger: active_story_arcs_remaining < 1; Action: append_story_horizon; Description: Expand the scope as the player moves further from the core.",
+  "story_arcs": [
+    {
+      "name": "The Maintenance Monopoly",
+      "summary": "Investigate why spare parts for gate stabilizers have become rarer than solid gold on the open market."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Ghost Signal at Outpost 9",
+      "trail_id": "rumor_trail.ghost_signal_outpost_9",
+      "clue_count": 2,
+      "hint_theme": "Corrupted logs and mismatched manifests.",
+      "clue_templates": [
+        "A frantic log entry regarding 'Project Dead-End'.",
+        "A manifest showing a shipment of parts delivered to a non-existent warehouse."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "rare",
+      "payoff": "An encrypted file containing the names of every officer involved in the planned decommissioning."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_arc_count_trigger",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 1,
+      "action": "append_story_arc",
+      "description": "Generate a new local conflict when the current narrative arc is completed."
+    }
+  ],
+  "expansion_rules": [
+    "Do not retcon player choices; treat previous actions as established history.",
+    "Append new content to the tail of the campaign sequence to maintain continuity."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Purge Protocol",
+    "Chosen One",
+    "Prophecy",
+    "Ancient Signal"
+  ]
+}

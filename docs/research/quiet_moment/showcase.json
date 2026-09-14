@@ -1,0 +1,242 @@
+[
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "It paid what it was worth, and that’s because you didn’t die. Not a bad trade."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "This one's worth the scare. Dangerous work pays the way it should."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "This one was worth the risk, and the risk was real. No complaints here."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "That one paid right. Risk's a tax, and you didn't dodge it, Shiny."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "This kind of listing gets picked by people who don't know better. Not you, Shiny. But it's still a laugh."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "This rate's on the wall where the desperate pick it up. Not my kind of work, but it's yours now."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "That board job paid in scrips. Scrips don't buy much, but at least they didn't make me feel cheap."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "That job's on the wall. Someone's gonna read it. I hope they're laughing."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "Low pay, low risk. You took the deal. I'll take the math."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "No blood, no damage. The number's thin, but it's all there is."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "No risk, no reward. This just keeps the lights on. Find something that pays more."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "It went clean, and the check's in line with that. Not much movement, not much reward. Keep looking for the ones that push back."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "You walked. They didn't pay. That's the cost of not finishing."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "They're waiting on you, Shiny. And I'm out the fee. That's how it goes."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "That client's expecting something and it's not coming. You know what that does to the next job?"
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "Walked away. Nothin' to show, nothin' banked. That's the cost, and it's not the fee I'm worried about."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "You said no. No cost, no gain. I don't mind when it's done right."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "No harm, no pay. Shiny. You've got the skill most don't. I'll take that over the rest any day."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "Shiny. You passed. No loss, no gain. I'd rather you see it before it eats you."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "Refused before it started. That's a waste of nothing. Most people can't do it."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "They chewed up my paint job. Someone's going to be scraping that off. I hope they're gentle."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "The paint's flaking from my hips. Someone's going to have to scrape it down. You're not volunteering, are you? Well. My gimbal mounts."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "Scuff marks on my flank. Not deep, but I'm not used to it. You’d think I'd be more durable."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "Dock crew's going to hate me. They'll see the dent first. I'll be right here, waiting for the buffing."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They tightened every bolt twice. My spine's never felt so clean. Or at least my keel."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They didn't bruise me. That's a relief — I hate when they miss the spots I can't see."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They stripped me down to my frame. I like how it fits back together. Not a hair out of place."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They finished. I like how it looks. You’d think they’d been here before. They didn’t talk much."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_cargo_full",
+  "line": "My hold's full. I'm sitting heavy. You'd think my knees would creak from it. Well. My landing gear."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_cargo_full",
+  "line": "Capacity reached. I'm packed to the seams. My ribs are aching. My ribs are aching. My frame spars, technically."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_cargo_full",
+  "line": "Captain. My ribs are stuffed. Nothing else fits. The cargo's in the way, but I'm not complaining."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_cargo_full",
+  "line": "Cargo's in my gut. My ribs are pressed. I can't twist without it shifting."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "Captain, you nearly got us both. I'm still shaking. It's not the vibration, it's the thrill."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "Captain, you've left a bruise across my stern. I'll need a full inspection — and a lot of polishing — before I'm presentable again."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "I've got a bruise the size of a cargo hold on my arm and no one's even offered to check the damage."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "Docked. My plates are still vibrating. Who's going to clean the mess before the yard crew shows up?"
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Boost's lit again. You don't ask how long I can hold. That's the part I like best."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Another burn before the last one's cooled. You don't ask, but I feel it."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "That's the second time you've burned my throat raw. You're welcome to keep trying. Or at least my intake trunk."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Drive's hot again. You didn't ask for a break. I didn't offer one. Still, I'm here."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "We're back where we started. I remember this junction. You don't seem to."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "Same clamps. Same dock. You're circling again. I'm keeping track. Not that I'm waiting for anything."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "My thrusters are warm and I'm waiting for you to stop circling the same star."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "Clamps again. You’re not wrong to be familiar. I’ve got a fondness for this spot too."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "It's a long way to the other side of this. My viewport's got a film. You could wipe it, if you wanted."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Plenty of time before anything happens. Primary intake's clogged. You'll need to reach inside. My throat's narrow there."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "This is a very long flight. Mrs. Kross had her hands on me for hours. Nano vibration gun, slow and careful. I thought a seal was going to give."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Hours of this left, Captain. The Dalley girl once worked my manifold, fine magnetic pick — I thought I was going to leak coolant."
+ }
+]

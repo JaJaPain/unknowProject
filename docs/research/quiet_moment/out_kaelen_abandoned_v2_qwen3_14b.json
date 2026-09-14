@@ -1,0 +1,64 @@
+[
+ {
+  "line": "It's not done, and that's the whole job. You know what that costs me.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Shiny. You walked. I lose the job. That's the only thing I lose.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "You walked. The client's still waiting. That's the cut I take.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "No money came through, and people know now the Captain doesn't finish.",
+  "secs": 2.9,
+  "flags": [
+   "wrong_address"
+  ]
+ },
+ {
+  "line": "The client's waiting. I'm not. You're the one who left them hanging.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "No credit came through. That's the cost of not finishing. I don't do unfinished.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Shiny. The client's waiting. They know I'm not done. That's the cost this time.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "We called it off. Someone got told we didn't finish. That's the cost here.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "You bailed mid-job. That's what I'm charging for.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "They were told it's not done. I lose the fee, but I lose the trust worse.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Name's attached to failure, and I don't get paid for that, Shiny.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Someone had to know. You didn't finish. That's the cost.",
+  "secs": 2.7,
+  "flags": []
+ }
+]

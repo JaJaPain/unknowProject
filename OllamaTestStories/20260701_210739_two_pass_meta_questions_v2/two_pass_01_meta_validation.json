@@ -1,0 +1,8 @@
+{
+  "valid": true,
+  "score": 98,
+  "errors": [],
+  "warnings": [
+    "avoid_motifs_may_be_too_sparse"
+  ]
+}

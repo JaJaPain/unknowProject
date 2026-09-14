@@ -1,0 +1,2005 @@
+{
+  "batch_id": "lounge-assistant-rewrite-review",
+  "items": [
+    {
+      "id": "curated-001",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged the whole arrival run for inspection after the last batch came in with clogged intake filters.",
+        "answer": "That residue they found clogs the filters, so we're holding ships until we figure out what's causing it.",
+        "close": "We'll get a full report once they've checked the residue."
+      },
+      "assistant_rewrite": {
+        "opener": "Customs has had a line of ships parked outside since morning. Every one of them came in coughing through the intakes.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-002",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I just checked the last manifest and the cargo convoy didn't show up at the scheduled checkpoint.",
+        "answer": "The freight convoy missed its check-in, and nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "I'll keep an eye on the comms for updates."
+      },
+      "assistant_rewrite": {
+        "opener": "The convoy's slot came and went, and the board is still blank.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-003",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale is a dockworker at Greywake Station",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft",
+        "close": "That\u2019s what we\u2019re dealing with right now."
+      },
+      "assistant_rewrite": {
+        "opener": "Every shift starts with the same question now: which service craft can wait another day for fuel?",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-004",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got a bunch of freight crews stuck on the docks waiting for inspection clearance.",
+        "answer": "The cargo's sitting there because they're still waiting for the inspection to clear the freight crews.",
+        "close": "So the runs are basically on hold until they get that clearance."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks are full of cargo that has nowhere to go yet.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-005",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off all arrivals until they figure out what's in those clogged filters",
+        "answer": "We've got a run of ships with intake filters blocked by this weird residue they can't identify yet",
+        "close": "They're checking it's safe before anything goes back to the fleet"
+      },
+      "assistant_rewrite": {
+        "opener": "The arrivals board has not stopped blinking. Filters are coming out of those ships full of the same residue.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-006",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I checked the manifest logs for the Greywake convoy and it's not showing up.",
+        "answer": "The freight convoy missed its check-in point, but we don't know if it broke down, changed course, or was intercepted.",
+        "close": "I'll keep an eye on the comms for any updates."
+      },
+      "assistant_rewrite": {
+        "opener": "There is an empty line on the freight schedule where a convoy should be.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-007",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I've been watching the fuel logs for the last hour.",
+        "answer": "The station's shifting to ration nonessential craft like the maintenance drones and the cargo shuttles to keep the critical systems running. But the main issue is the deliveries are running late, so we're not getting enough fuel to cover the usual needs.",
+        "close": "We're trying to avoid letting the emergency protocols kick in too early."
+      },
+      "assistant_rewrite": {
+        "opener": "The fuel board is getting shorter, and nobody likes what is being crossed off it.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-008",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck waiting for inspection clearance, so cargo\u2019s just sitting on the docks.",
+        "answer": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+        "close": "We\u2019ll get it sorted once the inspections clear."
+      },
+      "assistant_rewrite": {
+        "opener": "Freight crews have been waiting on the same clearance long enough to memorize the dock lights.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-009",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held up the arrivals because the intake filters on those ships got clogged with something weird.",
+        "answer": "They're checking to make sure the residue isn't spreading to other ships or causing problems with the station systems.",
+        "close": "We don't want any more ships getting sick from it."
+      },
+      "assistant_rewrite": {
+        "opener": "I have seen customs turn ships around all day, and nobody looks happy about it.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-010",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've got a report that the freight convoy didn't check in this morning.",
+        "answer": "We don't know if it broke down, diverted, or was intercepted\u2014just that it's missing.",
+        "close": "I'll keep you updated if anything comes up."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been waiting on a convoy check-in that never arrived.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-011",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "That's why the shuttles are running on fumes now."
+      },
+      "assistant_rewrite": {
+        "opener": "You can tell a delivery is late by how quiet the nonessential bays have gotten.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-012",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks, waiting for inspection clearance to move their cargo.",
+        "answer": "The customs team's delay is causing the freight crews to sit idle on the docks without being able to clear their cargo.",
+        "close": "We'll need to get that clearance processed so the freight can move without sitting idle."
+      },
+      "assistant_rewrite": {
+        "opener": "Cargo is stacked up on the docks because the inspectors have not released it.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-013",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "We're dealing with a strange residue that's clogging the intake filters on the new arrivals.",
+        "answer": "Customs is holding all ships until they confirm it's contained\u2014so far, no ship has been cleared.",
+        "close": "They'll let us know once they figure out what's going on."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is collecting clogged intake filters faster than it can label them.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-014",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I'm checking the log for the convoy that didn't check in on time.",
+        "answer": "We don't know if it broke down, changed course, or got intercepted\u2014no one's reported it yet.",
+        "close": "I'll keep an eye on the comms."
+      },
+      "assistant_rewrite": {
+        "opener": "The freight board is quiet in the one place it should not be.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-015",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station, looks down at the fuel delivery manifest.",
+        "answer": "Fuel deliveries are late, so we started rationing nonessential service craft.",
+        "close": "I can't tell you how much more we'll need to keep the station running."
+      },
+      "assistant_rewrite": {
+        "opener": "We are counting fuel by the service craft now, which is never a cheerful sign.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-016",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The cargo's been sitting on the docks for three shifts now, and the freight crews are waiting on inspection clearance.",
+        "answer": "We're holding up the freight runs because the customs inspection team's delayed\u2014there's no way to move the cargo without clearing it.",
+        "close": "That's why the freight crews are stuck waiting."
+      },
+      "assistant_rewrite": {
+        "opener": "Everyone on the freight side is waiting for a stamp that has not arrived.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-017",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "We got a bunch of ships showing up with intake filters choked on this weird residue nobody's sure what it is",
+        "answer": "Customs is holding them all pending the full check to make sure it's contained before anything else moves",
+        "close": "Don't want any ships getting stuck in the middle of a jump with the wrong stuff in their engines"
+      },
+      "assistant_rewrite": {
+        "opener": "Those arrivals are not being held for paperwork. Something keeps turning up in their intake filters.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-018",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I\u2019ve been running the cargo checks for the last two weeks without any issues, but this convoy\u2019s missing.",
+        "answer": "The freight convoy missed its check-in point, and we don\u2019t know if it broke down, diverted, or was intercepted.",
+        "close": "We\u2019ll keep an eye out for updates."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone is going to spend the rest of the shift staring at that missing check-in.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-019",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, a dockworker at Greywake Station, is watching the fuel delivery schedule and notices the delays.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "We're trying to keep things running but it's getting tight."
+      },
+      "assistant_rewrite": {
+        "opener": "The station is saving fuel where it can, and that means some work is simply not moving today.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-020",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got a backlog of freight crews waiting for inspection clearance on the docks.",
+        "answer": "Cargo's stuck there because the inspections are taking longer than expected.",
+        "close": "That's why the runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks look busy, but very little is actually moving.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-021",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the arrivals today after the new batch of ships showed clogged intake filters with weird residue",
+        "answer": "They\u2019re checking to make sure it\u2019s not some kind of contamination that could spread through the station systems",
+        "close": "No one wants the whole station getting stuck with that stuff."
+      },
+      "assistant_rewrite": {
+        "opener": "Customs has had a line of ships parked outside since morning. Every one of them came in coughing through the intakes.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-022",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo inspections at Greywake Station for a while now, and this convoy's absence is the first time I've had to deal with something like this.",
+        "answer": "The freight convoy missed its check-in, and nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "I'll keep an eye on the comm channels to see if anything comes up."
+      },
+      "assistant_rewrite": {
+        "opener": "The convoy's slot came and went, and the board is still blank.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-023",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I've been watching the fuel logs for days, and the delays are getting worse.",
+        "answer": "The station's started rationing nonessential service craft because fuel deliveries are late.",
+        "close": "That's why the maintenance bots are stuck in the docks."
+      },
+      "assistant_rewrite": {
+        "opener": "Every shift starts with the same question now: which service craft can wait another day for fuel?",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-024",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck with the freight crews waiting for inspection clearance on the docks, so cargo's just sitting there.",
+        "answer": "The freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+        "close": "That's why the freight runs are held up."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks are full of cargo that has nowhere to go yet.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-025",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the arrivals because those intake filters got clogged with some weird residue that's not supposed to be there.",
+        "answer": "Yeah, we've got a run of ships that came in with intake filters clogged by an unidentified residue, so customs is holding them until they figure out if it's contained.",
+        "close": "We'll know more once they get the samples checked."
+      },
+      "assistant_rewrite": {
+        "opener": "The arrivals board has not stopped blinking. Filters are coming out of those ships full of the same residue.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-026",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I just got a report the cargo convoy didn't check in at the usual time.",
+        "answer": "We don't know if it broke down, went off course, or got intercepted\u2014nobody's seen it since the last check-in.",
+        "close": "Let me know if you spot it anywhere."
+      },
+      "assistant_rewrite": {
+        "opener": "There is an empty line on the freight schedule where a convoy should be.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-027",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, is standing near the fuel pumps, watching the slow-moving cargo ships.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "The rationing means the maintenance drones can\u2019t run the station\u2019s lights without extra fuel."
+      },
+      "assistant_rewrite": {
+        "opener": "The fuel board is getting shorter, and nobody likes what is being crossed off it.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-028",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got the freight crews waiting on inspection clearance, which means the cargo's sitting on the docks without moving.",
+        "answer": "The inspection process is taking longer than expected because the freight crews need clearance before they can move the cargo.",
+        "close": "That's why the freight runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "Freight crews have been waiting on the same clearance long enough to memorize the dock lights.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-029",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the ships after finding clogged intake filters with weird residue.",
+        "answer": "We don't know what caused it yet\u2014those filters were clogged by something unidentified, so we're waiting to confirm it's safe before letting ships through.",
+        "close": "They're checking it now."
+      },
+      "assistant_rewrite": {
+        "opener": "I have seen customs turn ships around all day, and nobody looks happy about it.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-030",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been watching the comm channels for the last hour, and the cargo convoy still hasn't check in.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "I'll keep an eye on it until the next update."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been waiting on a convoy check-in that never arrived.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-031",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "We're running on borrowed time until the next shipment hits."
+      },
+      "assistant_rewrite": {
+        "opener": "You can tell a delivery is late by how quiet the nonessential bays have gotten.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-032",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got freight crews waiting for inspection clearance on the docks.",
+        "answer": "The cargo's just sitting there without being cleared through the station's checks.",
+        "close": "That's why the runs are stuck."
+      },
+      "assistant_rewrite": {
+        "opener": "Cargo is stacked up on the docks because the inspectors have not released it.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-033",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "We got a bunch of ships with clogged intake filters today from that weird residue.",
+        "answer": "Customs is holding them until they confirm it's contained.",
+        "close": "That's why they're being so thorough."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is collecting clogged intake filters faster than it can label them.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-034",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo manifests for the last hour, and the Greywake convoy never made it through the checkpoint.",
+        "answer": "The freight convoy missed its check-in, and nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "I'll keep an eye on the comms for any updates."
+      },
+      "assistant_rewrite": {
+        "opener": "The freight board is quiet in the one place it should not be.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-035",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station, says: 'Fuel deliveries are running late and the station's rationing nonessential service craft.'",
+        "answer": "The fuel shortage is bad enough that we've started rationing nonessential service craft to keep critical operations running.",
+        "close": "I don't want to give you the full details, but it's getting worse."
+      },
+      "assistant_rewrite": {
+        "opener": "We are counting fuel by the service craft now, which is never a cheerful sign.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-036",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck waiting on the inspection clearance for the freight crews.",
+        "answer": "The cargo's sitting on the docks because they're waiting for approval to clear the freight runs.",
+        "close": "That's why the freight runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "Everyone on the freight side is waiting for a stamp that has not arrived.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-037",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged the last shuttle with clogged intake filters from a weird residue we couldn't ID.",
+        "answer": "We're holding arrivals until we confirm the residue isn't spreading. That run of ships all had it\u2014customs is checking for containment.",
+        "close": "If you're going through, just wait a sec."
+      },
+      "assistant_rewrite": {
+        "opener": "Those arrivals are not being held for paperwork. Something keeps turning up in their intake filters.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-038",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "Pilot, the freight convoy didn't check in on schedule.",
+        "answer": "It's still missing\u2014we don't know if it broke down, diverted, or got intercepted.",
+        "close": "I'll keep an eye on the comms for updates."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone is going to spend the rest of the shift staring at that missing check-in.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-039",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, is known for his straightforward communication style.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "That's why we're cutting back on nonessential services like the maintenance drones and the food transporters."
+      },
+      "assistant_rewrite": {
+        "opener": "The station is saving fuel where it can, and that means some work is simply not moving today.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-040",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck with the freight crews waiting for clearance on the docks",
+        "answer": "The cargo's been sitting there since the inspection team got delayed by the comms outage",
+        "close": "That's why the runs are held up."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks look busy, but very little is actually moving.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-041",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the last shipment of ships because their intake filters got clogged with this weird residue we can't ID yet.",
+        "answer": "They're holding arrivals until they confirm the residue isn't spreading to other ships or causing problems.",
+        "close": "We don't want any more ships getting sick from it."
+      },
+      "assistant_rewrite": {
+        "opener": "Customs has had a line of ships parked outside since morning. Every one of them came in coughing through the intakes.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-042",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo manifest checks for the last three hours, and the freight convoy from the Outer Rim just vanished from the check-in list.",
+        "answer": "The convoy missed its check-in point, but we don't know if it broke down, changed course, or got intercepted\u2014nobody's been able to confirm.",
+        "close": "Just the usual kind of mystery we get with cargo runs."
+      },
+      "assistant_rewrite": {
+        "opener": "The convoy's slot came and went, and the board is still blank.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-043",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I saw the fuel delivery trucks stuck at the refinery gate again this morning.",
+        "answer": "The station's rationing nonessential service craft because deliveries are late, which means we're cutting back on things like maintenance and light repairs.",
+        "close": "That's why the repair team's been working overtime to fix the leaks before the next delivery."
+      },
+      "assistant_rewrite": {
+        "opener": "Every shift starts with the same question now: which service craft can wait another day for fuel?",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-044",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck waiting for inspection clearance, so the cargo's just sitting on the docks.",
+        "answer": "We've got a backlog of inspections that's delaying the freight runs.",
+        "close": "That's why the cargo's been sitting there all week."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks are full of cargo that has nowhere to go yet.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-045",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged the whole arrival queue after the last batch of ships had clogged filters with this weird residue.",
+        "answer": "We don't know what caused it yet, but they're holding all ships until they confirm it's contained before letting anything pass through.",
+        "close": "We'll get a update when they figure out the source."
+      },
+      "assistant_rewrite": {
+        "opener": "The arrivals board has not stopped blinking. Filters are coming out of those ships full of the same residue.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-046",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I just got a report that the freight convoy didn't check in on time",
+        "answer": "We don't know if it broke down, diverted, or was intercepted\u2014nobody's confirmed anything yet.",
+        "close": "But we'll keep an eye on it."
+      },
+      "assistant_rewrite": {
+        "opener": "There is an empty line on the freight schedule where a convoy should be.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-047",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I saw the fuel delivery schedule get pushed back again today.",
+        "answer": "The station's started rationing nonessential service craft because fuel deliveries are late.",
+        "close": "That's why the maintenance bots are getting priority now."
+      },
+      "assistant_rewrite": {
+        "opener": "The fuel board is getting shorter, and nobody likes what is being crossed off it.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-048",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck on the docks with the freight crews waiting for inspection clearance.",
+        "answer": "That's because the cargo's sitting unattended while they check it.",
+        "close": "So the runs get delayed until they clear it."
+      },
+      "assistant_rewrite": {
+        "opener": "Freight crews have been waiting on the same clearance long enough to memorize the dock lights.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-049",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs is holding all arrivals until they confirm the residue isn't spreading.",
+        "answer": "The run of ships brought intake filters clogged with an unidentified residue that's been traced to a recent leak in the outer ring.",
+        "close": "We'll know more once the samples get processed."
+      },
+      "assistant_rewrite": {
+        "opener": "I have seen customs turn ships around all day, and nobody looks happy about it.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-050",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I just noticed the freight convoy didn't check in on the usual schedule.",
+        "answer": "It's missing\u2014nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "We'll have to wait for the next update."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been waiting on a convoy check-in that never arrived.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-051",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, notices the fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "answer": "Fuel deliveries are late, so we're rationing nonessential service craft.",
+        "close": "That's the situation right now."
+      },
+      "assistant_rewrite": {
+        "opener": "You can tell a delivery is late by how quiet the nonessential bays have gotten.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-052",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck with the freight crews waiting for inspection clearance on the docks.",
+        "answer": "The cargo's just sitting there without being cleared, so we're holding up the runs.",
+        "close": "That's why the freight runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "Cargo is stacked up on the docks because the inspectors have not released it.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-053",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held back the whole fleet of ships today because their intake filters got clogged with this weird residue.",
+        "answer": "Yeah, the unidentified residue is messing up the filters on all the arrivals, so they're holding everything until they figure out what it is.",
+        "close": "We're waiting for the lab results to see if it's something we can handle."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is collecting clogged intake filters faster than it can label them.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-054",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo manifests for the last hour and the Greywake convoy check-in just went silent.",
+        "answer": "The freight convoy missed its check-in, but we don't know if it broke down, diverted, or was intercepted.",
+        "close": "I'll update the comm when I get more details."
+      },
+      "assistant_rewrite": {
+        "opener": "The freight board is quiet in the one place it should not be.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-055",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "That's the situation."
+      },
+      "assistant_rewrite": {
+        "opener": "We are counting fuel by the service craft now, which is never a cheerful sign.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-056",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're waiting on the inspection clearance for the freight crews to move the cargo off the docks.",
+        "answer": "That's why the freight runs are stalled\u2014cargo's sitting on the docks without clearance.",
+        "close": "Gotta make sure that's cleared before we can get the freight moving again."
+      },
+      "assistant_rewrite": {
+        "opener": "Everyone on the freight side is waiting for a stamp that has not arrived.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-057",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held the entire arrival run while they checked the intake filters for that weird residue",
+        "answer": "The clogged filters were from an unidentified residue that's not supposed to be in space, so they're holding ships until they confirm it's contained",
+        "close": "We'll know more once they finish testing those samples."
+      },
+      "assistant_rewrite": {
+        "opener": "Those arrivals are not being held for paperwork. Something keeps turning up in their intake filters.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-058",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been trying to get a report on the cargo convoy that missed check-in at 12:00.",
+        "answer": "We don't know if it broke down, diverted, or got intercepted\u2014nobody's seen it since.",
+        "close": "I'll keep you updated if anything comes up."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone is going to spend the rest of the shift staring at that missing check-in.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-059",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale is a dockworker at Greywake Station, and he's been told that fuel deliveries are late and the station has started rationing nonessential service craft.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "That's why the pilot asked about the fuel shortage."
+      },
+      "assistant_rewrite": {
+        "opener": "The station is saving fuel where it can, and that means some work is simply not moving today.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-060",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks, waiting for inspection clearance.",
+        "answer": "We're holding up the freight runs because the cargo's sitting on the docks without clearance.",
+        "close": "That's why the runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks look busy, but very little is actually moving.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-061",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged the entire arrival queue for a full inspection after the last batch of ships came in with intake filters clogged by this weird residue.",
+        "answer": "They're holding all arrivals until they confirm it's not a bigger problem\u2014this residue could be toxic or even a biohazard.",
+        "close": "We've got to get this sorted before the next wave of ships shows up."
+      },
+      "assistant_rewrite": {
+        "opener": "Customs has had a line of ships parked outside since morning. Every one of them came in coughing through the intakes.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-062",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I just got the update on the convoy\u2014no sign of it at the checkpoint.",
+        "answer": "The freight convoy missed its check-in, and nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "We'll have to wait for the next update to figure out what's going on."
+      },
+      "assistant_rewrite": {
+        "opener": "The convoy's slot came and went, and the board is still blank.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-063",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station, says: 'Fuel deliveries are late and we've started rationing nonessential service craft.'",
+        "answer": "The fuel shortage is bad enough that we've had to ration nonessential service craft to keep the station running.",
+        "close": "That's why I'm here\u2014trying to get the fuel deliveries back on track."
+      },
+      "assistant_rewrite": {
+        "opener": "Every shift starts with the same question now: which service craft can wait another day for fuel?",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-064",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got the freight crews waiting on inspection clearance, so cargo's been sitting on the docks all week.",
+        "answer": "The freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+        "close": "That's why the freight runs are stuck."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks are full of cargo that has nowhere to go yet.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-065",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "We got a bunch of ships with intake filters clogged by some weird residue today",
+        "answer": "Customs is holding them all until we figure out if it's contained or not",
+        "close": "That's why they're being held up right now"
+      },
+      "assistant_rewrite": {
+        "opener": "The arrivals board has not stopped blinking. Filters are coming out of those ships full of the same residue.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-066",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo inspection logs for the last three hours, and the Greywake convoy check-in's just went silent.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "We'll have to wait until the next update to figure out what's going on."
+      },
+      "assistant_rewrite": {
+        "opener": "There is an empty line on the freight schedule where a convoy should be.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-067",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, is checking the fuel delivery logs when he notices the numbers are off.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "I don't think we'll get the next shipment before the next shift."
+      },
+      "assistant_rewrite": {
+        "opener": "The fuel board is getting shorter, and nobody likes what is being crossed off it.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-068",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks waiting for inspection clearance, so cargo's just piling up.",
+        "answer": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+        "close": "We need to get that clearance through before the cargo gets damaged."
+      },
+      "assistant_rewrite": {
+        "opener": "Freight crews have been waiting on the same clearance long enough to memorize the dock lights.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-069",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held the last batch of ships in the hangar bay for an hour while they run tests on the filters.",
+        "answer": "We got a run of ships with intake filters clogged by an unidentified residue, so they're holding arrivals until they know it's contained.",
+        "close": "They're probably checking if it's something we can handle or if it needs the big team."
+      },
+      "assistant_rewrite": {
+        "opener": "I have seen customs turn ships around all day, and nobody looks happy about it.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-070",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "Pilot, the convoy didn't show up at the checkpoint this morning.",
+        "answer": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "That's all we know, and it's not our call to figure out."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been waiting on a convoy check-in that never arrived.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-071",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "The fuel deliveries are running late, and we started rationing nonessential service craft yesterday.",
+        "answer": "The fuel shortage's bad enough that we've had to cut back on nonessential service craft to keep the station running.",
+        "close": "We're trying to get the deliveries back on track."
+      },
+      "assistant_rewrite": {
+        "opener": "You can tell a delivery is late by how quiet the nonessential bays have gotten.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-072",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks waiting for inspection clearance",
+        "answer": "That's because the cargo's sitting there without being cleared through the port authority",
+        "close": "So the runs are delayed until they get the green light"
+      },
+      "assistant_rewrite": {
+        "opener": "Cargo is stacked up on the docks because the inspectors have not released it.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-073",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the arrivals after that weird residue showed up in the intake filters.",
+        "answer": "Yeah, the ships came in with clogged filters from this unidentified stuff\u2014customs needs to check if it's contained before letting anything through.",
+        "close": "We don't want anything slipping through that could mess with the station."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is collecting clogged intake filters faster than it can label them.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-074",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "Ivet Marr, Cargo Inspector at Greywake Station, is checking the latest freight data when she notices the convoy didn't check in.",
+        "answer": "The freight convoy missed its check-in\u2014nobody knows if it broke down, diverted, or got intercepted.",
+        "close": "I'll have to run a full sweep to see what's going on."
+      },
+      "assistant_rewrite": {
+        "opener": "The freight board is quiet in the one place it should not be.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-075",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I've been watching the fuel levels drop for weeks, and now the station's cutting back on nonessential craft to keep the essentials running.",
+        "answer": "The fuel deliveries are late, so we've started rationing nonessential service craft to prioritize critical operations.",
+        "close": "We're trying to keep the station running as long as possible without running out of fuel."
+      },
+      "assistant_rewrite": {
+        "opener": "We are counting fuel by the service craft now, which is never a cheerful sign.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-076",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got the freight crews waiting on inspection clearance, so cargo's just sitting on the docks.",
+        "answer": "The freight crews are waiting for inspection clearance, which is holding up the freight runs.",
+        "close": "That's why the cargo's sitting on the docks right now."
+      },
+      "assistant_rewrite": {
+        "opener": "Everyone on the freight side is waiting for a stamp that has not arrived.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-077",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held off the latest shipment after finding that weird residue in the intake filters\u2014something we haven't seen before.",
+        "answer": "They're checking to make sure it's not spreading before more ships get here.",
+        "close": "Don't worry, they'll figure it out soon."
+      },
+      "assistant_rewrite": {
+        "opener": "Those arrivals are not being held for paperwork. Something keeps turning up in their intake filters.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-078",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "Pilot, I've got a report that the freight convoy missed check-in at Greywake Station",
+        "answer": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "I'll keep you updated if anything comes up."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone is going to spend the rest of the shift staring at that missing check-in.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-079",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station, says: 'Fuel deliveries are running late, and the station's started rationing nonessential service craft.'",
+        "answer": "The fuel shortage is bad enough that nonessential service craft are being rationed, and deliveries are late.",
+        "close": "I can't say how much worse it'll get without proper fuel."
+      },
+      "assistant_rewrite": {
+        "opener": "The station is saving fuel where it can, and that means some work is simply not moving today.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-080",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck with the freight crews waiting for inspection clearance",
+        "answer": "That's why cargo's been sitting on the docks all day",
+        "close": "Which means we're holding up the whole run."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks look busy, but very little is actually moving.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-081",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held the last shuttle in the queue for an hour while they checked the filters.",
+        "answer": "We had a run of ships with intake filters clogged by an unidentified residue, so they're holding arrivals until they know it's contained.",
+        "close": "They'll let us through once they figure out what's causing it."
+      },
+      "assistant_rewrite": {
+        "opener": "Customs has had a line of ships parked outside since morning. Every one of them came in coughing through the intakes.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-082",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I was just checking the manifest when the comms pinged about the convoy not showing up.",
+        "answer": "The freight convoy missed its check-in, and nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "I'll cross-reference the last known comms with the station logs to see if anything jumps out."
+      },
+      "assistant_rewrite": {
+        "opener": "The convoy's slot came and went, and the board is still blank.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-083",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale's voice was flat, a bit tired, as he watched the cargo shuttle dock with a flicker of hope that didn't last.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "He pushed the comms mic away, the static his only answer."
+      },
+      "assistant_rewrite": {
+        "opener": "Every shift starts with the same question now: which service craft can wait another day for fuel?",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-084",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got the freight crews stuck on the docks waiting for clearance.",
+        "answer": "The cargo's sitting there because the inspection crew's been delayed\u2014no one's been able to get through the customs checks yet.",
+        "close": "They'll be moving once the paperwork clears."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks are full of cargo that has nowhere to go yet.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-085",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged the whole shipment as contaminated after the first ship's filters got clogged by this weird residue.",
+        "answer": "We don't know what it is, but it's blocking the intake filters on all those ships. Customs is holding everything until they figure out if it's safe to let them pass.",
+        "close": "We'll be back to you when they clear it."
+      },
+      "assistant_rewrite": {
+        "opener": "The arrivals board has not stopped blinking. Filters are coming out of those ships full of the same residue.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-086",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been running the cargo inspections at Greywake Station for a while now, and this convoy's absence is the first time I've had to flag it.",
+        "answer": "The freight convoy missed its check-in, and nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "I'll have to run a full sweep of the nearby jump points to see if we can find any clues."
+      },
+      "assistant_rewrite": {
+        "opener": "There is an empty line on the freight schedule where a convoy should be.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-087",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale's hands were steady as he adjusted the fuel gauge on the station's control panel, the numbers flickering under his gaze.",
+        "answer": "Fuel deliveries are late, so we started rationing nonessential service craft to keep the essentials running.",
+        "close": "He glanced at the comms console, his voice low but clear: 'Try not to panic, but we're holding steady.'"
+      },
+      "assistant_rewrite": {
+        "opener": "The fuel board is getting shorter, and nobody likes what is being crossed off it.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-088",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We've got freight crews stuck on the dock waiting for clearance to move the cargo.",
+        "answer": "The inspection team's delayed, so the freight crews can't unload the cargo without it.",
+        "close": "That's why the runs are held up."
+      },
+      "assistant_rewrite": {
+        "opener": "Freight crews have been waiting on the same clearance long enough to memorize the dock lights.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-089",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just held the last delivery of ships for a full day because their filters got clogged with this weird residue.",
+        "answer": "We're waiting for them to confirm it's contained before letting anything pass through.",
+        "close": "They're probably still checking the samples."
+      },
+      "assistant_rewrite": {
+        "opener": "I have seen customs turn ships around all day, and nobody looks happy about it.",
+        "answer": "The filters on a group of arriving ships were clogged by residue nobody has identified. Until customs knows it is contained, arrivals stay on hold.",
+        "close": "That is all anyone knows for certain, which is why the inspectors are taking their time."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-090",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I've been checking the manifest for the last hour, and the Greywake convoy's check-in didn't show up.",
+        "answer": "The freight convoy missed its check-in, so nobody knows if it broke down, diverted, or was intercepted.",
+        "close": "I'll keep an eye on the comms for any updates."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been waiting on a convoy check-in that never arrived.",
+        "answer": "It never checked in, and there is no confirmed explanation yet. It could have broken down, diverted, or been intercepted.",
+        "close": "That kind of silence makes people invent stories. Best wait for a real update."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-091",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "I've been on the docks since dawn checking the fuel manifests.",
+        "answer": "The last delivery from New Avalon was three days late, and we're now rationing all nonessential craft\u2014like the maintenance shuttles and the supply runners.",
+        "close": "We're holding the main crew transports until the next delivery, but the rest are on hold."
+      },
+      "assistant_rewrite": {
+        "opener": "You can tell a delivery is late by how quiet the nonessential bays have gotten.",
+        "answer": "The shortage is serious enough that nonessential service craft are being rationed until the late fuel deliveries arrive.",
+        "close": "That is the practical version: essential work first, everything else waits."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-092",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "We're stuck with the freight crews waiting for inspection clearance on the docks.",
+        "answer": "The cargo's sitting there because they haven't cleared inspections yet.",
+        "close": "That's why the freight runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "Cargo is stacked up on the docks because the inspectors have not released it.",
+        "answer": "The inspection clearance has not come through, which is leaving freight crews and their cargo stuck on the docks.",
+        "close": "It is a slow problem, but it still stops everything behind it."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-093",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs is holding all arrivals right now because the intake filters on the last run of ships got clogged with some weird residue we can't identify yet.",
+        "answer": "They're checking to make sure it's not something that could spread through the station's systems or cause a bigger problem.",
+        "close": "We'll know more once they figure out what the residue is."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is collecting clogged intake filters faster than it can label them.",
+        "answer": "Nobody has named the residue yet. Customs only knows it is showing up in intake filters, so they are keeping new arrivals outside for now.",
+        "close": "If you are arriving today, bring patience. That seems to be the only thing clearing customs quickly."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-094",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "The convoy didn't check in on schedule this morning.",
+        "answer": "We don't know if it broke down, diverted, or was intercepted\u2014nobody's confirmed its status yet.",
+        "close": "I'll keep you updated if anything comes up."
+      },
+      "assistant_rewrite": {
+        "opener": "The freight board is quiet in the one place it should not be.",
+        "answer": "All we know is that the convoy missed its check-in. Anything beyond that would be guessing.",
+        "close": "I would rather have bad news than no news, but we are not there yet."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-095",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "We've been running on backup power for three days now.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "That's why the cargo shuttles got stuck yesterday."
+      },
+      "assistant_rewrite": {
+        "opener": "We are counting fuel by the service craft now, which is never a cheerful sign.",
+        "answer": "Late deliveries mean the station is prioritizing essential work and holding back nonessential service craft.",
+        "close": "It is not dramatic until the wrong craft is the one that has to wait."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-096",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks waiting for inspection clearance.",
+        "answer": "Cargo's sitting there because the port inspectors haven't cleared the freight yet.",
+        "close": "That's why the runs are delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "Everyone on the freight side is waiting for a stamp that has not arrived.",
+        "answer": "Nothing is wrong with the freight itself that anyone has said. The crews are simply waiting for inspection clearance.",
+        "close": "That is station life: one missing clearance and a whole dock holds its breath."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-097",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "A run of ships arrived with intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+      "player_question": "Why are customs inspections so strict today?",
+      "original": {
+        "opener": "Customs just flagged all the new arrivals for deep inspection because the intake filters got clogged with something weird that\u2019s not supposed to be there.",
+        "answer": "They're holding the ships until they figure out if it\u2019s a safe residue or something dangerous.",
+        "close": "We\u2019re all waiting to hear if it\u2019s safe to let them through."
+      },
+      "assistant_rewrite": {
+        "opener": "Those arrivals are not being held for paperwork. Something keeps turning up in their intake filters.",
+        "answer": "A run of arrivals came in with their intake filters clogged by an unidentified residue. Customs is holding arrivals until they know it is contained.",
+        "close": "Makes the queue miserable, but it beats spreading a problem they do not understand."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-098",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "A freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+      "player_question": "What happened to the missing convoy?",
+      "original": {
+        "opener": "I'm checking the manifest for the Greywake convoy that didn't check in yesterday.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "I'll update the comms when I get more details."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone is going to spend the rest of the shift staring at that missing check-in.",
+        "answer": "The freight convoy missed its check-in. Nobody knows whether it broke down, diverted, or was intercepted.",
+        "close": "Until somebody hears from them, the missing line is all we have."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-099",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+      "player_question": "How bad is the fuel shortage?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station, is adjusting his cargo harness as he leans against the station's maintenance wall.",
+        "answer": "Fuel deliveries are late and the station has begun rationing nonessential service craft.",
+        "close": "He nods slowly, the rhythmic clink of his tools against the metal floor the only sound in the quiet station."
+      },
+      "assistant_rewrite": {
+        "opener": "The station is saving fuel where it can, and that means some work is simply not moving today.",
+        "answer": "Fuel deliveries are late, so the station has started rationing nonessential service craft.",
+        "close": "Nobody is calling it a crisis, but everyone is planning like it might become one."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "curated-100",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "Freight crews are waiting on inspection clearance, leaving cargo sitting on docks.",
+      "player_question": "What is holding up the freight runs?",
+      "original": {
+        "opener": "The freight crews are stuck on the docks waiting for inspection clearance while cargo piles up.",
+        "answer": "Right, the port inspectors are holding up the freight runs because they haven't cleared the cargo yet.",
+        "close": "We'll keep you updated once they get through."
+      },
+      "assistant_rewrite": {
+        "opener": "The docks look busy, but very little is actually moving.",
+        "answer": "Freight crews are waiting on inspection clearance, so their cargo is sitting on the docks.",
+        "close": "Until that clearance comes through, the freight runs stay parked."
+      },
+      "review_reason": "The raw exchange may be repetitive, contain stage direction, or add facts outside the supplied situation. The rewrite stays within the fact packet and treats the speaker as a person, not a briefing terminal.",
+      "status": "needs_user_confirmation"
+    }
+  ]
+}

@@ -8,6 +8,7 @@ const SystemRegistryType := preload(
 )
 
 const TEST_ROOT := "user://campaign_slot_registry_fixture"
+const ORPHAN_ROOT := "user://campaign_slot_orphan_fixture"
 
 var _failures: Array[String] = []
 var _system_registry: SystemRegistry
@@ -23,9 +24,12 @@ func _initialize() -> void:
 	_test_slot_isolation_and_selection()
 	_test_campaign_rename()
 	_test_registry_corruption_recovery()
+	_test_orphaned_occupied_slot_is_repaired()
+	_test_empty_slot_with_stale_directory_is_claimed()
 	_test_no_fourth_campaign()
 	_test_delete_is_isolated()
 	_cleanup()
+	_cleanup_orphan()
 
 	if _failures.is_empty():
 		print("[PASS] Campaign slot registry tests")
@@ -67,6 +71,11 @@ func _test_create_reopen_and_initial_checkpoint() -> void:
 		str(campaign.get("campaign_seed", "")).length() == 64,
 		"Campaign seed was not created once at full length."
 	)
+	var transponder := str(campaign.get("ship_transponder_code", ""))
+	_expect(
+		transponder.length() == 6 and transponder.is_valid_int(),
+		"Campaign did not create a six-digit permanent ship transponder."
+	)
 	_expect(
 		checkpoint.get("source_reason") == "initial"
 			and checkpoint.get("living") == true
@@ -87,8 +96,9 @@ func _test_create_reopen_and_initial_checkpoint() -> void:
 		_expect(
 			loaded["data"]["id"] == campaign["id"]
 				and loaded["data"]["campaign_seed"]
-					== campaign["campaign_seed"],
-			"Reopening changed campaign identity or seed."
+					== campaign["campaign_seed"]
+				and loaded["data"].get("ship_transponder_code", "") == transponder,
+			"Reopening changed campaign identity, seed, or transponder."
 		)
 	var bundle := reopened.load_initial_bundle("slot_01")
 	_expect(
@@ -192,6 +202,90 @@ func _test_registry_corruption_recovery() -> void:
 	)
 
 
+func _test_orphaned_occupied_slot_is_repaired() -> void:
+	_cleanup_orphan()
+	_make_directory("%s/slot_01/ships" % ORPHAN_ROOT)
+	_write_text("%s/slot_01/ships/orphan.glb" % ORPHAN_ROOT, "not really a ship")
+	_write_text(
+		"%s/slots.json" % ORPHAN_ROOT,
+		JSON.stringify({
+			"schema_version": 1,
+			"selected_slot_id": "slot_01",
+			"slots": [
+				{
+					"slot_id": "slot_01",
+					"occupied": true,
+					"campaign_id": "campaign.local.aaaaaaaaaaaaaaaa",
+					"display_name": "Orphan",
+					"created_at_unix": 1,
+					"last_played_at_unix": 1,
+					"game_version": "test",
+					"checkpoint_summary": {
+						"checkpoint_id": "checkpoint.local.aaaaaaaaaaaaaaaa.initial",
+						"source_reason": "initial",
+						"system_id": "system.start",
+						"living": true,
+					},
+				},
+				RegistryType._empty_slot("slot_02"),
+				RegistryType._empty_slot("slot_03"),
+			],
+		}, "\t")
+	)
+	var repaired := RegistryType.open(ORPHAN_ROOT)
+	_expect(repaired.is_valid(), "Orphaned slot repair made registry invalid.")
+	_expect(
+		not bool(repaired.get_slot("slot_01").get("occupied", true)),
+		"Orphaned occupied slot was not cleared."
+	)
+	_expect(
+		repaired.selected_slot_id.is_empty(),
+		"Orphaned selected slot was not cleared."
+	)
+	_expect(
+		not DirAccess.dir_exists_absolute(
+			ProjectSettings.globalize_path("%s/slot_01" % ORPHAN_ROOT)
+		),
+		"Orphaned campaign directory was not removed."
+	)
+	_cleanup_orphan()
+
+
+func _test_empty_slot_with_stale_directory_is_claimed() -> void:
+	_cleanup_orphan()
+	var registry := RegistryType.open(ORPHAN_ROOT)
+	_make_directory("%s/slot_01/ships" % ORPHAN_ROOT)
+	_write_text("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT, "old generated mesh")
+	_write_text("%s/slot_01/narrative_cache.json" % ORPHAN_ROOT, "{}")
+	var created := registry.create_campaign(
+		"slot_01",
+		"Fresh Start",
+		"phase-2-test",
+		_initial_state(75),
+		_system_registry
+	)
+	_expect(
+		bool(created.get("ok", false)),
+		"Empty slot with stale files could not create a campaign: %s" %
+			created.get("error", "")
+	)
+	_expect(
+		FileAccess.file_exists("%s/slot_01/campaign.json" % ORPHAN_ROOT),
+		"Fresh campaign did not write its campaign document."
+	)
+	_expect(
+		not FileAccess.file_exists("%s/slot_01/ships/stale.glb" % ORPHAN_ROOT),
+		"Fresh campaign creation kept stale generated files."
+	)
+	_expect(
+		not FileAccess.file_exists(
+			"%s/slot_01/narrative_cache.json" % ORPHAN_ROOT
+		),
+		"Fresh campaign creation kept a stale narrative cache."
+	)
+	_cleanup_orphan()
+
+
 func _test_delete_is_isolated() -> void:
 	var registry := RegistryType.open(TEST_ROOT)
 	var slot_one_id := str(registry.get_slot("slot_01").get("campaign_id", ""))
@@ -256,6 +350,16 @@ func _cleanup() -> void:
 	if not DirAccess.dir_exists_absolute(absolute):
 		return
 	_remove_directory(absolute)
+
+
+func _cleanup_orphan() -> void:
+	var absolute := ProjectSettings.globalize_path(ORPHAN_ROOT)
+	if DirAccess.dir_exists_absolute(absolute):
+		_remove_directory(absolute)
+
+
+func _make_directory(path: String) -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path))
 
 
 func _write_text(path: String, text: String) -> void:

@@ -28,37 +28,12 @@
 					"schema_version": 1,
 					"legacy_id": "start_to_test",
 					"display_name": "Fringe Hypergate",
-					"destination_system_id": "system.test",
-					"destination_gate_id": "gate.test.to_start"
-				}
-			]
-		},
-		{
-			"id": "system.test",
-			"schema_version": 1,
-			"legacy_id": "test_system",
-			"display_name": "Uncharted Test System",
-			"scene_path": "res://scenes/systems/system_test.tscn",
-			"origin": "generated",
-			"tags": [
-				"test_system",
-				"procedural_prototype",
-				"deterministic_seed"
-			],
-			"station_ids": [
-				"station.test.cinder_exchange",
-				"station.test.halcyon_watch",
-				"station.test.lantern"
-			],
-			"faction_ids": [],
-			"gates": [
-				{
-					"id": "gate.test.to_start",
-					"schema_version": 1,
-					"legacy_id": "test_to_start",
-					"display_name": "Test System Return Gate",
-					"destination_system_id": "system.start",
-					"destination_gate_id": "gate.start.to_test"
+					"destination_system_id": "system.gen.frontier.first",
+					"destination_gate_id": "gate.gen.frontier.first.return",
+					"initial_state": "unknown",
+					"discovery_action": "",
+					"discovery_cost": {},
+					"discovery_prerequisites": []
 				}
 			]
 		}

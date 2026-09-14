@@ -47,10 +47,10 @@ func _on_body_entered(body: Node):
 				"damage": damage,
 			})
 			body.take_damage(damage, faction)
-			# Spawn explosion FX here if desired
+			ImpactEffect.spawn_hit(get_parent(), global_position, color)
 			queue_free()
 	elif body.is_in_group("asteroid") and faction == "player":
-		# Laser bullets hitting asteroids simply vanish
 		spent = true
 		set_deferred("monitoring", false)
+		ImpactEffect.spawn_hit(get_parent(), global_position, Color(0.7, 0.7, 0.7))
 		queue_free()

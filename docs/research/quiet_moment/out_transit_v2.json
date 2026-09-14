@@ -1,0 +1,44 @@
+[
+ {
+  "line": "Plenty of time before anything happens. My collar's scuffed and it's been sitting there too long. You'd think a docking port would be more polite about it. . . . Never mind. It's not worth the dust. You've got better things to do.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. My collar's scuffed up. You'd think a docking seal would be smoother. Maybe you'd know how to fix it. . . . Don't need fixing. Just showing off. No use in getting your hands dirty over it.",
+  "flags": []
+ },
+ {
+  "line": "Plenty of time before anything happens. My docking collar's got a scuff I don't like. You got the tools? No rush, but it's there if you want it. . . . Never mind. Can't be helped. Someone else'll do. Probably better.",
+  "flags": []
+ },
+ {
+  "line": "This is a very long flight. The film's stubborn. You'd think a clean one would be easier to apply. Here. Take a look. . . . Never mind. I'll get to it. You've got better things to do than fix my mistakes.",
+  "flags": []
+ },
+ {
+  "line": "Long crossing, and no one else in it. Grease on the landing gear is heavy. You'd have to use both hands to lift it. Let me know if you've done it before. . . . Not that I need you to. Just... think about it. I don't need anything fixed, Captain.",
+  "flags": [
+   "tts_ellipsis"
+  ]
+ },
+ {
+  "line": "It's a long way to the other side of this. The cable's frayed at the sheath. Needs reseating. You'd have to unclasp the panel first. . . . Not sure I'm ready for that. Maybe later.",
+  "flags": []
+ },
+ {
+  "line": "Long crossing, and no one else in it. Forward sensor's drifted. You'll need to recalibrate it. Just a touch, no need to linger. . . . Never mind. It's stable now. You can keep moving. No need to stop.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. Dust on my fins. You've got a brush. You could use it. . . . I'm not sure it's worth the time. You could forget I said anything.",
+  "flags": []
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. The collar's scuffing's worse than it looks. You'd need to get in there, fingers first. Maybe a little pressure. Just to see what's sticking. . . . No need to linger. I've had worse. You're not the first, and you won't be the last.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. The grease on my landing gear is dry. Needs a wipe down. You'd be good at it. . . . Not sure I need you to. Someone else could do. Maybe I'll let them.",
+  "flags": []
+ }
+]

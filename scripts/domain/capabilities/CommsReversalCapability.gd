@@ -55,7 +55,7 @@ func format_tracker_text(data: Dictionary) -> String:
 	return "Kills: %d / %d (%s)" % [
 		int(data.get("current_count", 0)),
 		int(data.get("count_required", 0)),
-		str(data.get("target_faction", "hostile")).to_upper(),
+		faction_display(data),
 	]
 
 

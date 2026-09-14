@@ -1,0 +1,791 @@
+{
+  "summary": {
+    "reviewed": 100,
+    "kept": 40,
+    "removed_as_duplicate": 60
+  },
+  "items": [
+    {
+      "id": "diverse-021",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "decision": "user_rewrite",
+      "opener": "Anything coming in that isn't an emergancy on dock three is going to have to wait its turn.",
+      "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+      "close": "Nobody likes the delay, but medical cargo gets the lift first."
+    },
+    {
+      "id": "diverse-051",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "decision": "user_rewrite",
+      "opener": "If it is coming in on dock three, it had better be an emergancy, or it's gonna have to wait.",
+      "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+      "close": "It is only one lift, and today it has a more urgent job."
+    },
+    {
+      "id": "diverse-081",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "decision": "user_rewrite",
+      "opener": "People keep complaining about dock three today.  Like I'm the guy who can fix it.",
+      "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+      "close": "Nobody likes the delay, but medical cargo gets the lift first."
+    },
+    {
+      "id": "diverse-001",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "decision": "assistant_rewrite",
+      "opener": "Dock Three is waiting on a lift that is not available.",
+      "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+      "close": "Nobody likes the delay, but medical cargo gets the lift first."
+    },
+    {
+      "id": "diverse-002",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "decision": "user_rewrite",
+      "opener": "This new survey crew has been way too quiet, if you know what i mean. ",
+      "answer": "They are a visiting survey crew, and they will not say what they found.",
+      "close": "If they want it private, I let them keep their booth and their mystery."
+    },
+    {
+      "id": "diverse-032",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "decision": "original",
+      "opener": "They just came in a while ago, looking like they were trying to solve a mystery but didn't say what they found.",
+      "answer": "They're a survey crew that's been here for a few days, and they won't tell us what they found out\u2014they just sit there quietly.",
+      "close": "We've got a few other things to figure out too."
+    },
+    {
+      "id": "diverse-062",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "decision": "original",
+      "opener": "They've been sitting there for hours, just staring at the wall.",
+      "answer": "They're a survey crew that just found something big and won't say what it is.",
+      "close": "But they're not leaving."
+    },
+    {
+      "id": "diverse-092",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "decision": "original",
+      "opener": "They just showed up out of nowhere, and now they're all huddled at the end of the bar like they're trying to hide something.",
+      "answer": "They're a survey crew that's been stuck in the area for a week, and they won't say what they found.",
+      "close": "Gotta keep the peace here."
+    },
+    {
+      "id": "diverse-093",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "decision": "original",
+      "opener": "I've got the thruster seals on the shuttle ready to go, but the station's got a lot of ships waiting for new ones.",
+      "answer": "We had a bad batch of seals that got in here, so all the ships need replacements now.",
+      "close": "Just got the next one in the queue."
+    },
+    {
+      "id": "diverse-003",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "decision": "assistant_rewrite",
+      "opener": "The maintenance bay is full of ships that should not all be here at once.",
+      "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+      "close": "Small part, large inconvenience. That is repairs for you."
+    },
+    {
+      "id": "diverse-013",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "decision": "assistant_rewrite",
+      "opener": "I have been replacing the same little part all shift.",
+      "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+      "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+    },
+    {
+      "id": "diverse-023",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "decision": "assistant_rewrite",
+      "opener": "Every open bay has a ship waiting on the same repair.",
+      "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+      "close": "Small part, large inconvenience. That is repairs for you."
+    },
+    {
+      "id": "diverse-024",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "decision": "original",
+      "opener": "I just noticed two cargo tags assigned to the same container in the manifest.",
+      "answer": "That's why we're reconciling the records\u2014duplicate tags mean the container's being counted twice.",
+      "close": "We'll need to flag it for the cargo handler to fix before the next scan."
+    },
+    {
+      "id": "diverse-004",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "decision": "assistant_rewrite",
+      "opener": "One container has managed to collect two cargo tags.",
+      "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+      "close": "It is dull work until the wrong crate goes somewhere it should not."
+    },
+    {
+      "id": "diverse-014",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "decision": "assistant_rewrite",
+      "opener": "The paperwork is disagreeing with itself again.",
+      "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+      "close": "Once the records agree, the argument ends and the crate moves."
+    },
+    {
+      "id": "diverse-034",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "decision": "assistant_rewrite",
+      "opener": "One container has managed to collect two cargo tags.",
+      "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+      "close": "Once the records agree, the argument ends and the crate moves."
+    },
+    {
+      "id": "diverse-015",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "decision": "user_rewrite",
+      "opener": "See that huge ship out there just sitting there waiting?   If we dont start unloading it soon, we're gonna be here all night long.",
+      "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+      "close": "Nothing dramatic. It simply needs an escort before it comes in."
+    },
+    {
+      "id": "diverse-085",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "decision": "original",
+      "opener": "The freighter's been waiting for an hour now, and there's no one to get it in.",
+      "answer": "Because the tug pilot called in sick, so I've got to handle it myself.",
+      "close": "I'll get it in by the end of the shift."
+    },
+    {
+      "id": "diverse-005",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "decision": "assistant_rewrite",
+      "opener": "That freighter has reached the dock; it just cannot finish the last part alone.",
+      "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+      "close": "It will move as soon as someone can take the escort job."
+    },
+    {
+      "id": "diverse-025",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "decision": "assistant_rewrite",
+      "opener": "One sick tug pilot can make a perfectly good schedule useless.",
+      "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+      "close": "It will move as soon as someone can take the escort job."
+    },
+    {
+      "id": "diverse-006",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "decision": "assistant_rewrite",
+      "opener": "The public relay is fine. The private side is taking the long route today.",
+      "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+      "close": "Annoying, not mysterious. Give the technicians their window."
+    },
+    {
+      "id": "diverse-016",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "decision": "assistant_rewrite",
+      "opener": "Public calls are working; private messages are the ones taking their time.",
+      "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+      "close": "Your message is not lost; it is just waiting its turn."
+    },
+    {
+      "id": "diverse-026",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "decision": "assistant_rewrite",
+      "opener": "The comms array is being serviced, and private traffic feels it first.",
+      "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+      "close": "Annoying, not mysterious. Give the technicians their window."
+    },
+    {
+      "id": "diverse-036",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "decision": "assistant_rewrite",
+      "opener": "The public relay is fine. The private side is taking the long route today.",
+      "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+      "close": "Your message is not lost; it is just waiting its turn."
+    },
+    {
+      "id": "diverse-007",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "decision": "assistant_rewrite",
+      "opener": "That crew is unloading a delivery they already finished delivering.",
+      "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+      "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+    },
+    {
+      "id": "diverse-017",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "decision": "assistant_rewrite",
+      "opener": "A rejected seal can turn one clean job into two.",
+      "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+      "close": "The paperwork may be small, but it can still send a ship back the way it came."
+    },
+    {
+      "id": "diverse-027",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "decision": "assistant_rewrite",
+      "opener": "The buyer sent a whole delivery back over one mismatch.",
+      "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+      "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+    },
+    {
+      "id": "diverse-037",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "decision": "assistant_rewrite",
+      "opener": "That crew is unloading a delivery they already finished delivering.",
+      "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+      "close": "The paperwork may be small, but it can still send a ship back the way it came."
+    },
+    {
+      "id": "diverse-018",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "decision": "original",
+      "opener": "We don't have any fresh produce coming in tonight, so we're stuck with what's already in the galley.",
+      "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "close": "That means we'll be having whatever's left from last week's stash."
+    },
+    {
+      "id": "diverse-068",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "decision": "original",
+      "opener": "We didn't get a fresh produce shipment today, so tonight's menu's just what we've got stored.",
+      "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "close": "I'll check the pantry for anything we can stretch."
+    },
+    {
+      "id": "diverse-078",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "decision": "original",
+      "opener": "The galley's been quiet all morning, and we didn't get any fresh produce this week\u2014just stored food for tonight's menu.",
+      "answer": "We're stuck with what's in the fridge and pantry, so the menu's limited to canned beans, old potatoes, and some dried pasta.",
+      "close": "That's all we've got."
+    },
+    {
+      "id": "diverse-008",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "decision": "assistant_rewrite",
+      "opener": "Tonight's menu is making stored food look ambitious.",
+      "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "close": "I can make it filling. I did not promise it would inspire poetry."
+    },
+    {
+      "id": "diverse-009",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "decision": "assistant_rewrite",
+      "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+      "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "close": "She will live. Her pride may need a few shifts in dry dock."
+    },
+    {
+      "id": "diverse-019",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "decision": "assistant_rewrite",
+      "opener": "Someone sold a useful part before checking what it was worth.",
+      "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+      "close": "Everyone gets one bad sale. Hers just came with an audience."
+    },
+    {
+      "id": "diverse-029",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "decision": "assistant_rewrite",
+      "opener": "The lesson today is to look up a part before you price it.",
+      "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "close": "She will live. Her pride may need a few shifts in dry dock."
+    },
+    {
+      "id": "diverse-039",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "decision": "assistant_rewrite",
+      "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+      "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+      "close": "Everyone gets one bad sale. Hers just came with an audience."
+    },
+    {
+      "id": "diverse-050",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "decision": "original",
+      "opener": "The corridor's closed for safety, but I'll show you the way around.",
+      "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "close": "Just follow the blue markers and you'll be fine."
+    },
+    {
+      "id": "diverse-010",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "decision": "assistant_rewrite",
+      "opener": "The closed corridor is less exciting than it looks.",
+      "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "close": "Follow the arrows and nobody has to make this a security incident."
+    },
+    {
+      "id": "diverse-020",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "decision": "assistant_rewrite",
+      "opener": "Visitors are being redirected around a small repair job.",
+      "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+      "close": "It is a short detour, not a lockdown."
+    },
+    {
+      "id": "diverse-030",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "decision": "assistant_rewrite",
+      "opener": "That handrail has more authority than most people expect today.",
+      "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "close": "Follow the arrows and nobody has to make this a security incident."
+    }
+  ],
+  "removed": [
+    {
+      "removed_id": "diverse-011",
+      "kept_id": "diverse-021",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-031",
+      "kept_id": "diverse-021",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-041",
+      "kept_id": "diverse-021",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-061",
+      "kept_id": "diverse-001",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-071",
+      "kept_id": "diverse-021",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-091",
+      "kept_id": "diverse-021",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-012",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-022",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-042",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-052",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-072",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-082",
+      "kept_id": "diverse-002",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-033",
+      "kept_id": "diverse-093",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-043",
+      "kept_id": "diverse-093",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-053",
+      "kept_id": "diverse-093",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-063",
+      "kept_id": "diverse-003",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-073",
+      "kept_id": "diverse-013",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-083",
+      "kept_id": "diverse-023",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-044",
+      "kept_id": "diverse-024",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-054",
+      "kept_id": "diverse-024",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-064",
+      "kept_id": "diverse-004",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-074",
+      "kept_id": "diverse-014",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-084",
+      "kept_id": "diverse-024",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-094",
+      "kept_id": "diverse-034",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-035",
+      "kept_id": "diverse-015",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-045",
+      "kept_id": "diverse-015",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-055",
+      "kept_id": "diverse-015",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-065",
+      "kept_id": "diverse-005",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-075",
+      "kept_id": "diverse-015",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-095",
+      "kept_id": "diverse-015",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-046",
+      "kept_id": "diverse-006",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-056",
+      "kept_id": "diverse-006",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-066",
+      "kept_id": "diverse-006",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-076",
+      "kept_id": "diverse-016",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-086",
+      "kept_id": "diverse-026",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-096",
+      "kept_id": "diverse-036",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-047",
+      "kept_id": "diverse-007",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-057",
+      "kept_id": "diverse-007",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-067",
+      "kept_id": "diverse-007",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-077",
+      "kept_id": "diverse-017",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-087",
+      "kept_id": "diverse-027",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-097",
+      "kept_id": "diverse-037",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-028",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-038",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-048",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-058",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-088",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-098",
+      "kept_id": "diverse-018",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-049",
+      "kept_id": "diverse-009",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-059",
+      "kept_id": "diverse-009",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-069",
+      "kept_id": "diverse-009",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-079",
+      "kept_id": "diverse-019",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-089",
+      "kept_id": "diverse-029",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-099",
+      "kept_id": "diverse-039",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-040",
+      "kept_id": "diverse-050",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-060",
+      "kept_id": "diverse-050",
+      "reason": "story already has four distinct retained examples"
+    },
+    {
+      "removed_id": "diverse-070",
+      "kept_id": "diverse-010",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-080",
+      "kept_id": "diverse-020",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-090",
+      "kept_id": "diverse-030",
+      "reason": "near-duplicate within the same story"
+    },
+    {
+      "removed_id": "diverse-100",
+      "kept_id": "diverse-050",
+      "reason": "story already has four distinct retained examples"
+    }
+  ]
+}

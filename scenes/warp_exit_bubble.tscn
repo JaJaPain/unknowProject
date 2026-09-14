@@ -1,0 +1,59 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/WarpExitBubble.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/warp_exit_bubble.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="BubbleMaterial"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/refraction_strength = 0.07
+shader_parameter/chromatic_aberration = 0.008
+shader_parameter/alpha = 1.0
+shader_parameter/rim_color = Color(0.2, 0.75, 1.0, 1.0)
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+material = SubResource("BubbleMaterial")
+radius = 1.0
+height = 2.0
+radial_segments = 32
+rings = 16
+
+[sub_resource type="StandardMaterial3D" id="ParticleMaterial"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.25, 0.7, 1.0, 0.75)
+
+[sub_resource type="SphereMesh" id="SphereMesh_2"]
+material = SubResource("ParticleMaterial")
+radius = 0.3
+height = 0.6
+radial_segments = 8
+rings = 4
+
+[sub_resource type="Gradient" id="Gradient_1"]
+offsets = PackedFloat32Array(0, 0.15, 0.85, 1)
+colors = PackedColorArray(0.2, 0.8, 1, 0, 0.25, 0.7, 1, 0.8, 0.1, 0.4, 0.9, 0.4, 0, 0.15, 0.8, 0)
+
+[node name="WarpExitBubble" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Sphere" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_1")
+
+[node name="BlastParticles" type="CPUParticles3D" parent="."]
+emitting = false
+amount = 75
+lifetime = 1.2
+one_shot = true
+explosiveness = 0.95
+mesh = SubResource("SphereMesh_2")
+direction = Vector3(0, 0, 0)
+spread = 180.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 15.0
+initial_velocity_max = 35.0
+linear_accel_min = -12.0
+linear_accel_max = -8.0
+color_ramp = SubResource("Gradient_1")

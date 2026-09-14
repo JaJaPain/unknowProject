@@ -1,0 +1,69 @@
+{"campaign_title": "Fragmented Echoes: The Scavenger’s Ledger",
+  "campaign_subtitle": "Shadows in the Scrap Economy",
+  "campaign_logline": "In a fractured orbital landscape, you are a courier of secrets, navigating the friction between corporations and cartels for survival.",
+  "campaign_pitch": "A gritty, low-stakes trade simulation evolving into high-stakes shadow diplomacy. Experience an economy driven by scrap metal, clandestine corporate treaties, hidden routes, and the desperate negotiations of a haunted merchant legend.",
+  "campaign_story_summary": "The system is in decay. Corporate giants Zenith and Vanguard have stalled on mining rights, while Aurelia’s inner circles engage in secret pacts. You are a pilot navigating this deadlock, hauling high-value components between warring factions who don't know they are cooperating behind the scenes. Your primary contact, Kaelen, a ghost of old trade routes, guides you through the scrap-economy hurdles, while you decide which powers to feed and which to starve.",
+  "tone": "Gritty, grounded, industrial, suspenseful, weary",
+  "opening": {
+    "status_quo": "The orbital sector is a wasteland of industrial decay where resources are traded in bits of scrap and reclaimed tech.",
+    "visible_crisis": "A severe shortage of high-value minerals and the collapse of formal trade routes due to 'scarcity' wars between Zenith and Vanguard.",
+    "hidden_crisis": "Secret cooperation agreements exist between major factions, orchestrated by shadow players who profit from maintaining a state of perpetual conflict.",
+    "why_now": "A massive fluctuation in scrap market prices is signaling the collapse of the secret middle-men managers.",
+  "harmony_1": {
+    "title": "Broken Bonds",
+    "goal": "Establish local reputation and secure first shipment of core components.",
+    "opening_incident": "The Reaver ship suffers a critical mechanical failure during a routine haul, forcing an immediate redirection to a nearby scrap yard.",
+    "midpoint_turn": "You discover that the 'smuggling' route you were using is actually a secret supply line for Aurelia’s inner circle.",
+    "finale": "A choice must be made: report the smuggling line or sabotage the surveillance of both Zenith and Vanguard to keep it open.",
+    "player_takeaway": "The player learns that navigation involves political consequences as much as physical risk."
+  },
+  "starter_mission": {
+    "title": "The Reaver’s Fault",
+    "reason": "To introduce the mechanics of cargo management and mechanical failure impact.",
+    "enemy_identity": "Patrol drones from a local scrap scavenger crew.",
+    "enemy_knows": "They are unaware that you possess high-value tech for their own internal disputes.",
+    "after_effect": "Establishing a foothold in the scrap community."
+  },
+  "recurring_clue": {
+    "name": "The Ghost of the Scrap Trail",
+    "signal": "A recurring pattern of encrypted data packets on local trade frequencies.",
+    "first_appearance": "Briefly heard as static-laced warnings during a routine hop between Vanguard zones.",
+    "escalation": "The packets become more frequent and specific to your route, providing 'safe' bypass codes for corporate security patrols.",
+    "payoff_hint": "Hints at the existence of an underground network managing the shadow economy."
+  },
+  "rumor_trail": {
+    "name": "Whispers of the Core",
+    "trail_id": "rumor_trail.whispers_of_the_core",
+    "hint_theme": "Hidden Supply Lines and Collusion.",
+    "clue_templates": ["A merchant's frantic note regarding 'The Hollow Corridor'.", "Encrypted telemetry for a bypass route to the Aurelia interior."],
+    "discovery_type": "secret_route",
+    "rarity": "rare",
+    "payoff": "Access to a hidden supply line connecting all three major trade hubs."
+  },
+  "horizon": {
+    "gate_tease": "The revelation of the 'Shadow Manager' who coordinates between Zenith and Aurelia.",
+    "new_system_reveal_rule": "New systems are revealed as your reputation with both Zenith and Vanguard increases beyond a threshold.",
+    "future_pressure_tease": "As scrap prices fluctuate, trade routes will become more restricted, forcing you to take higher-risk paths.",
+ "future_ore_or_upgrade_tease": "Rarely mined minerals and high-tech components are revealed as the player builds a reputation with Aurelia's inner circle.",
+    "regeneration_trigger": {
+      "id": "regen_shadow_economy",
+      "metric": "rumor_trails_remaining",
+      "threshold": 0,
+      "action": "append_rumor_trail",
+      "description": "When no active rumor trails are available, generate a new one based on the shadow economy's growing influence."
+    }
+  },
+  "rules": {
+    "humor__rule": "Keep it grounded and gritty; avoid overly dramatic dialogue for pilots who have been in the space-scavenger trenches.",
+    "fallback": "If a mission objective is missing, use the logic of 'economic consequence' instead of quest markers.",
+    "banned_repeats": ["Unless you are told otherwise, never mention it as a joke."]
+  },
+  "story_questions_for_future_generation": [
+    "How will player choice affect the future availability of harder-based minerals?",
+    "Which routes become available as the player's reputation grows?",
+    "Who are the new hidden power players emerging in shards of debris?",
+    "Why is the market price for scrap metal fluctuating during the conflict?",
+    "What consequences do they face if they fail a high-risk delivery?"
+  ]
+}
+}

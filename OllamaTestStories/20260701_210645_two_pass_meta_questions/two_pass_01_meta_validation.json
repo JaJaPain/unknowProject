@@ -1,0 +1,12 @@
+{
+  "valid": false,
+  "score": 79,
+  "errors": [
+    "missing_field:future_generation_questions",
+    "closed_or_meta_question:faction_questions",
+    "bad_question_list:future_generation_questions"
+  ],
+  "warnings": [
+    "avoid_motifs_may_be_too_sparse"
+  ]
+}

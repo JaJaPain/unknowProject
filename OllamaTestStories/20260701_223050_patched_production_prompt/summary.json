@@ -1,0 +1,29 @@
+[
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Scavenger's Ledger",
+    "long_term_reveal": "The insurance fraud was a shell game; the cargo wasn't lost, it was intentionally buried to hide illicit mineral movements.",
+    "elapsed_seconds": 22.01,
+    "done_reason": "stop",
+    "eval_count": 826
+  },
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Yield of Zenith",
+    "long_term_reveal": "The 'Debt' is a curated loop: some sectors are intentionally foreclosed to consolidate resources for a select group of elite shareholders.",
+    "elapsed_seconds": 21.42,
+    "done_reason": "stop",
+    "eval_count": 810
+  },
+  {
+    "valid": true,
+    "missing_keys": [],
+    "title": "The Silted Vein",
+    "long_term_reveal": "The sludge is byproduct from illegal refining of prohibited isotopes, laundered through shell companies and masked as environmental accidents.",
+    "elapsed_seconds": 20.85,
+    "done_reason": "stop",
+    "eval_count": 808
+  }
+]

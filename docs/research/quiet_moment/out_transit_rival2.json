@@ -1,0 +1,48 @@
+[
+ {
+  "line": "It's a long way to the other side of this. The scuffing's worn thin. You'd think it'd be easier to replace than it is. I'd say it's a long way to the other side of this. The next one'll have the same collar. They'll be glad to do it instead. It's just a part, and parts get changed.",
+  "flags": [
+   "lead_in_echo"
+  ]
+ },
+ {
+  "line": "This is a very long flight. Captain. Port side, forward coupling. It's loose. You could tighten it. Just a thought. Dock crew's got time. They'd do it. They're used to it. You're not.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. Cable run behind the galley bulkhead is loose. You’ve got the tools. Just need to reseat it. Next port’s service hands would take that job. They’re always glad to get their hands on something.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Secondary manifold's due. You've got the tools. It's a slow job, but not a hard one. The last engineer had a habit of taking their time. They’d be glad to step in if you’re not up for it.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. The film's stuck. You'll need to peel it slow, or it tears. Let your fingers get warm first. They'll do it faster. Not that I mind waiting. I like the way you do it.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Sensor's out of alignment. You can recalibrate it. Right here, if you want. Dock crew's got tools. They'd do it faster. They'd do it better. They'd do it without you thinking about it.",
+  "flags": [
+   "word_echo"
+  ]
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. Grease on the landing gear, Captain. Sticky. Needs a wipe down. You've got the cloth. The man who did my plating last — he was careful. Might be willing to do it again, if you're not.",
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "Nothing out here for hours yet. Panel's loose at the hinge. You could reseat it. Just a hand on the latch. Yard crew would do it quick. They've got the tools. They've got the hands.",
+  "flags": []
+ },
+ {
+  "line": "This is a very long flight. My radiators are dusty. You can wipe them if you want. They're in your way. The next crew will be happy to do it. They've got hands and they're used to working around me.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Locker seal's stuck. You've got the tools. Just need to reseat it properly. Next port's got service hands. They'd be happy to reseat it for you.",
+  "flags": []
+ }
+]

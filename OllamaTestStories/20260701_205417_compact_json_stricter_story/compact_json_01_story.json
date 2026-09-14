@@ -1,0 +1,99 @@
+{
+  "campaign_title": "The Hollowed Veins",
+  "campaign_subtitle": "A Scarcity of Sovereignty",
+  "campaign_logline": "Navigate the collapsing economic infrastructure of a dying trade route.",
+  "campaign_pitch": "Trade routes are failing due to resource depletion. You must navigate three warring factions and find new ways to survive.",
+  "campaign_story_summary": "The central hub is running dry on essential minerals. Zenith seeks to monopolize the remaining supply. Aurelia demands equitable distribution among all colonies. Vanguard insists on aggressive expansion into contested zones. You are a pilot navigating these shifting loyalties. The local economy is collapsing under their pressure.",
+  "tone": "Dry, cynical frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are failing due to resource depletion.",
+    "visible_crisis": "The cost of basic supplies rises daily.",
+    "hidden_crisis": "A massive infrastructure failure in the main gate network is causing supply chain collapses.",
+    "why_now": "The local hub is running out of fuel for the jump gates.",
+    "player_role": "An independent pilot seeking to pay off ship debts."
+  },
+  "mystery": {
+    "question": "Why are the gate networks failing?",
+    "false_answer": "It is a simple mechanical failure in the aging hardware.",
+    "true_answer_hint": "The gates are being intentionally throttled by an unknown entity to force local consolidation.",
+    "long_term_reveal_direction": "The scope of the infrastructure sabotage is much larger than this sector."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows exactly which gates are being throttled and why.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her knowledge of the gate infrastructure."
+  },
+  "factions": {
+    "zenith_problem": "They want to hoard resources for elite members only.",
+    "aurelia_problem": "They are struggling to maintain a fair distribution system.",
+    "vanguard_problem": "They believe expansion is the only way to survive.",
+    "conflict_triangle": "Zenith and Aurelia fight over trade rights, while Vanguard pushes for new territory.",
+    "neutral_space_pressure": "Independent pilots are being squeezed out of the market."
+  },
+  "act_1": {
+    "name": "The Scarcity Hunt",
+    "goal": "Secure a stable supply chain for local trade.",
+    "opening_incident": "A shipment of minerals is intercepted by a rogue Reaver ship.",
+    "midpoint_turn": "You discover that the Aurelia faction is secretly cooperating with Vanguard.",
+    "finale": "You successfully secure a delivery route and earn your first major contract.",
+    "player_takeaway": "The local economy is fractured and desperate."
+  },
+  "starter_mission": {
+    "title": "Scavenge the Breach",
+    "reason": "A shipment of minerals was lost during a pirate raid.",
+    "enemy_identity": "Reaver scout ship.",
+    "enemy_knows": "The Reaver is patrolling for stolen goods.",
+    "aftershock": "You recover the cargo and find evidence of local smuggling."
+  },
+  "recurring_clue": {
+    "name": "The Ghost Gate",
+    "signal": "A faint, rhythmic pulse from a dead gate.",
+    "first__appearance": "Found near a derelict trade station.",
+    "escalation": "The pulse becomes more frequent and intense as you travel.",
+    "payoff_hint": "It points toward the nearest malfunctioning gate."
+  },
+  "rumor_trail": {
+    "name": "The Shadow Broker's Toll",
+    "trail_id": "rumor_trail.shadow_broker_toll",
+    "hint_theme": "Hidden routes and smuggler paths.",
+    "clue_templates": [
+      "A courier says the shadow route is safer than the main gate.",
+      "A merchant speaks of a hidden shortcut through the sector."
+    ],
+    "discovery_type": "hidden_route",
+    "rarity": "uncommon",
+    "payoff": "Unlocks a secret passage to a nearby system."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads to a different, more prosperous-looking sector.",
+    "new_system_reveal_rule": "Do not reveal future frontier factions during this campaign.",
+    "future_faction_tease": "Rumors of other factions and their interests are heard in the rest of the galaxy.",
+    "future_ore_or_upgrade_tease": "A new type of rare ore is mentioned in a rumor.",
+    "regeneration_trigger": {
+      "id": "regeneration_trigger.gate_pass",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main arc is finished, a new gate pass will be revealed."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical frontier humor.",
+    "fallback_rule": "If a story beat is not met, use a broker-provided contract.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "mysterious pulse",
+      "ancient signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What is the purpose of the main gate network?",
+    "Why are some gates being throttled?",
+    "How do the factions fight over resources?",
+    "Who is behind the forcing of local consolidation?",
+    "Why is the system in a state of scarcity? "
+  ]
+}

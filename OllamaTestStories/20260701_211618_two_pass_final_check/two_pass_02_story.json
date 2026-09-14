@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Iron Scarcity",
+  "campaign_subtitle": "The Weight of Survival",
+  "campaign_logline": "A desperate pilot navigates the crumbling infrastructure of a resource-starved sector.",
+  "campaign_pitch": "You are a debt-ridden independent pilot. Zenith and Aurelia fight over dwindling mineral veins. You take local contracts to survive. A supply chain collapse threatens regional stability.",
+  "campaign_story_summary": "A struggling pilot takes on Kaelen's first contract. You intercept a Reaver ship carrying critical fuel cells. This sparks tension between the mining giants and the security firm. You find evidence of sabotaged trade routes. The local economy is failing due to intentional supply chain blockades. You must decide which faction's interests to prioritize. Act 1 focuses on securing your own operational independence.",
+  "tone": "Dry, gritty industrial humor.",
+  "opening": {
+    "status_quo": "The sector is a graveyard of industrial decay and heavy metal scarcity.",
+    "visible_crisis": "Mining rights are being contested by three rival factions.",
+    "hidden_crisis": "A deliberate sabotage campaign is crippling the regional supply chain.",
+    "why_now": "Fuel reserves are critically low, forcing desperate measures from all parties.",
+    "player_role": "You are an independent contractor with a failing ship."
+  },
+  "mystery": {
+    "question": "Who is sabotaging the trade routes?",
+    "false_answer": "A rogue group of pirates and smugglers.",
+    "true_answer_hint": "An internal corporate liquidation strategy to force consolidation.",
+    "long_term_reveal_direction": "The truth will be revealed through intercepted logistics logs."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She tracks the flow of high-grade fuel cells specifically.",
+    "address_rule": "Refer to her as a broker or fix_er.",
+    "never_reveal_rule": "Her motives for tracking these specific assets are hidden."
+  },
+  "factions": {
+    "zenith_problem": "Zenith struggles with declining ore yields and failing infrastructure.",
+    "aurelia_problem": "Aurelia faces a shortage of high-grade fuel cells.",
+    "vanguard_problem": "Vanguard is losing its grip on the security perimeter.",
+    "conflict_triangle": "All three factions are fighting over the same dwindling resources.",
+    "neutral_space_pressure": "Independent pilots are forced into choosing sides or facing fines."
+  },
+  "act_1": {
+    "name": "The Scarcity Loop",
+    "goal": "Secure enough fuel and parts to keep your ship operational.",
+    "opening_itement": "You intercept a Reaver ship carrying stolen high-grade fuel cells.",
+    "midpoint_turn": "Kaelen offers you a choice between two different delivery routes.",
+    "finale": "You establish a trade route that secures your own independence.",
+    "player_takeaway": "Survival requires navigating the politics of resource scarcity."
+  },
+  "starter_mission": {
+    "title": "The Reaver's Cargo",
+    "reason": "You need to secure high-grade fuel cells for your ship.",
+    "enemy_identity": "A single, damaged Reaver ship.",
+    "enemy_knows": "It is unaware of your presence until you initiate contact.",
+    "after_effect": "You gain a few units of high-grade fuel and some scrap."
+  },
+  "recurring_clue": {
+    "name": "The Ghost Route",
+    "signal": "A series of encrypted logs showing diverted cargo paths.",
+    "first_appearance": "Found in the data core of the Reaver ship.",
+    "escalation": "More routes are found to be intentionally redirected toward a dead zone.",
+    "payoff_hint": "The hidden route leads to an abandoned processing hub."
+  },
+  "rumor_trail": {
+    "name": "Shortage of Heavy Metals",
+    "trail_id": "rumor_trail.heavy_metal_shortage",
+    "hint_theme": "Reports of missing cargo and empty warehouses.",
+    "clue_templates": [
+      "The local hub has no more high-grade fuel cells.",
+      "A smuggler told me the heavy metals are moving elsewhere."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "local",
+    "payoff": "Unlocks a secret trade route with higher profit margins."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads to a system where the supply lines are intact.",
+    "new_system_reveal_rule": "New systems will be revealed as you reach the edge of sphere.",
+    "future_pressure_tease": "Rumors suggest a larger corporation is watching from the outer rim.",
+    "future_ore_or_upgrade_tease": "The next system has high-grade fuel cells in abundance.",
+    "regeneration_trigger": {
+      "id": "regen_supply_chain_logic",
+      "metric": "prepared_systems_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the current system's supply chain is fully explored."
+    }
+  },
+  "rules": {
+    "humor_rule": "Dry, slightly dark humor.",
+    "fallback": "If a contract is failed, the broker will offer another.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ghost signal",
+      "echoes of the void",
+      "mysterious pulse"
+    ]
+  },
+  "story_questions_for_future_thought_generation": [
+    "What are the ways the local trade hub offers different prices for cargo weight?",
+    "Why do some delivery routes be more dangerous and offer higher rewards?",
+    "How many ways can you sabotage a rival's supply line?",
+    "Who holds the monopoly over high-grade fuel cells?",
+    "Which of the following options provides a couple of different paths forward?"
+  ]
+}

@@ -1,0 +1,30 @@
+You are designing uniqueness seeds for one procedural SpaceGame campaign.
+
+Do not write the final campaign bible yet.
+Create a compact creative brief that will help a second model call write a unique campaign.
+
+Constraints:
+- First system factions are Zenith, Aurelia, and Vanguard.
+- Kaelen is always a broker/fixer publicly, never a public scientist, commander, prophet, or mechanic.
+- The player starts as a broke independent pilot, not a chosen one.
+- The first mission is exactly one hostile Reaver or Reaver-like ship.
+- Do not force a recurring motif like ancient signal, ghost signal, prophecy, alien owner, or mysterious pulse.
+- Leave room for future campaigns to be very different.
+- Use plain ASCII.
+
+Return only JSON with this shape:
+{
+  "creative_lane": "",
+  "freshness_rule": "",
+  "avoid_motifs": ["", "", "", ""],
+  "core_story_questions": ["", "", "", "", ""],
+  "starter_mission_questions": ["", "", ""],
+  "kaelen_questions": ["", "", ""],
+  "faction_questions": ["", "", ""],
+  "future_generation_questions": ["", "", "", "", ""]
+}
+
+Question rules:
+- Every question must begin with What, Why, How, Who, Where, or Which.
+- Questions must not imply one fixed answer.
+- Questions should ask about pressure, cost, consequence, contradiction, leverage, secrecy, or player choice.

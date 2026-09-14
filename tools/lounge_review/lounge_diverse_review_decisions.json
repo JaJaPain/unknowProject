@@ -1,0 +1,409 @@
+{
+  "reviews": {
+    "lounge-review:lounge-real-model-review": {
+      "batch_id": "lounge-review:lounge-real-model-review",
+      "decisions": {
+        "real-001": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:20:28.999Z"
+        },
+        "real-002": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:20:37.828Z"
+        },
+        "real-003": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:22:03.180Z"
+        },
+        "real-004": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:22:39.115Z"
+        },
+        "real-005": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:23:51.026Z"
+        },
+        "real-006": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:24:47.570Z"
+        },
+        "real-007": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:26:07.306Z"
+        },
+        "real-008": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:27:25.094Z"
+        },
+        "real-009": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:28:20.168Z"
+        },
+        "real-010": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:29:47.246Z"
+        },
+        "real-011": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:30:41.026Z"
+        },
+        "real-012": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:31:32.947Z"
+        },
+        "real-013": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:32:35.452Z"
+        },
+        "real-014": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:33:34.504Z"
+        },
+        "real-015": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:34:55.312Z"
+        },
+        "real-016": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:35:43.319Z"
+        },
+        "real-017": {
+          "verdict": "fail",
+          "reviewed_at": "2026-07-22T21:36:22.572Z"
+        },
+        "real-018": {
+          "verdict": "pass",
+          "reviewed_at": "2026-07-22T21:37:20.564Z"
+        },
+        "real-019": {
+          "verdict": "rewrite",
+          "reason": "Unnatural opener",
+          "opener": "You wont believe what ive heard about the new mining claims.",
+          "answer": "The usual claims are still up for grabs, but last week\u2019s asteroid belt mining license was a mess. A couple of crews got tangled in the deal\u2014some folks even had to split their shares after a glitch in the orbital tracking system. Now it\u2019s all over the newsfeeds.",
+          "close": "So yeah, keep an eye on the comms\u2014things\u2019re getting tight.",
+          "reviewed_at": "2026-07-22T22:21:00.372Z"
+        }
+      }
+    },
+    "lounge-rewrite:lounge-diverse-rewrite-review": {
+      "batch_id": "lounge-rewrite:lounge-diverse-rewrite-review",
+      "decisions": {
+        "diverse-001": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-002": {
+          "decision": "user_rewrite",
+          "opener": "This new survey crew has been way too quiet, if you know what i mean. ",
+          "answer": "They are a visiting survey crew, and they will not say what they found.",
+          "close": "If they want it private, I let them keep their booth and their mystery."
+        },
+        "diverse-003": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-004": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-005": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-006": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-007": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-008": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-009": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-010": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-011": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-012": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-013": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-014": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-015": {
+          "decision": "user_rewrite",
+          "opener": "See that huge ship out there just sitting there waiting?   If we dont start unloading it soon, we're gonna be here all night long.",
+          "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+          "close": "Nothing dramatic. It simply needs an escort before it comes in."
+        },
+        "diverse-016": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-017": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-018": {
+          "decision": "original"
+        },
+        "diverse-019": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-020": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-021": {
+          "decision": "user_rewrite",
+          "opener": "Anything coming in that isn't an emergancy on dock three is going to have to wait its turn.",
+          "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+          "close": "Nobody likes the delay, but medical cargo gets the lift first."
+        },
+        "diverse-022": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-023": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-024": {
+          "decision": "original"
+        },
+        "diverse-025": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-026": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-027": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-028": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-029": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-030": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-031": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-032": {
+          "decision": "original"
+        },
+        "diverse-033": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-034": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-035": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-036": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-037": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-038": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-039": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-040": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-041": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-042": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-043": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-044": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-045": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-046": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-047": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-048": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-049": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-050": {
+          "decision": "original"
+        },
+        "diverse-051": {
+          "decision": "user_rewrite",
+          "opener": "If it is coming in on dock three, it had better be an emergancy, or it's gonna have to wait.",
+          "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+          "close": "It is only one lift, and today it has a more urgent job."
+        },
+        "diverse-052": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-053": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-054": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-055": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-056": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-057": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-058": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-059": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-060": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-061": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-062": {
+          "decision": "original"
+        },
+        "diverse-063": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-064": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-065": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-066": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-067": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-068": {
+          "decision": "original"
+        },
+        "diverse-069": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-070": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-071": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-072": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-073": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-074": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-075": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-076": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-077": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-078": {
+          "decision": "original"
+        },
+        "diverse-079": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-080": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-081": {
+          "decision": "user_rewrite",
+          "opener": "People keep complaining about dock three today.  Like I'm the guy who can fix it.",
+          "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+          "close": "Nobody likes the delay, but medical cargo gets the lift first."
+        },
+        "diverse-082": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-083": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-084": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-085": {
+          "decision": "original"
+        },
+        "diverse-086": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-087": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-088": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-089": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-090": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-091": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-092": {
+          "decision": "original"
+        },
+        "diverse-093": {
+          "decision": "original"
+        },
+        "diverse-094": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-095": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-096": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-097": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-098": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-099": {
+          "decision": "assistant_rewrite"
+        },
+        "diverse-100": {
+          "decision": "assistant_rewrite"
+        }
+      }
+    }
+  }
+}

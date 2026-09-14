@@ -37,16 +37,143 @@ func _initialize() -> void:
 	)
 	_expect(
 		service.prepare_text("Shiny, your ship is ready.", "voice.jenna_kross.v1")
-		== "Indy, your ship is ready.",
-		"Non-Kaelen Indy rule was not applied."
+		== "Pilot, your ship is ready.",
+		"Non-Kaelen Shiny cleanup was not applied."
 	)
 	_expect(
 		service.prepare_text(
 			"(quietly) Shiny, proceed. [static]",
 			"voice.agent.vanguard.v1"
-		) == "Indy, proceed.",
+		) == "Pilot, proceed.",
 		"Text cleanup and tone guard did not produce one stable line."
 	)
+	var follow_up: String = service.prepare_followup_text(
+		"Indy, make it quick; the dock crew is already betting against you.",
+		"voice.agent.vanguard.v1"
+	)
+	_expect(
+		follow_up == "Make it quick; the dock crew is already betting against you.",
+		"Follow-up address cleanup did not remove repeated Indy vocative."
+	)
+	_expect(
+		service.normalize_tts_pronunciation(
+			"Destroy 3 DUSTBORN ships for ZENITH."
+		) == "Destroy 3 Dustborn ships for Zenith.",
+		"TTS pronunciation cleanup did not title-case all-caps names."
+	)
+	_expect(
+		service.normalize_tts_pronunciation(
+			"Keep ROE, TTS, and SC readable."
+		) == "Keep ROE, TTS, and SC readable.",
+		"TTS pronunciation cleanup should preserve known acronyms."
+	)
+	var filler: Dictionary = service.latency_filler_clip_request(
+		"Broker Kaelen",
+		"voice.kaelen.v1",
+		"tts_cache",
+		0.8,
+		false,
+		2
+	)
+	_expect(
+		bool(filler.get("ok", false))
+			and str(filler.get("word", "")) == "well"
+			and str(filler.get("source", "")) == "prerecorded_latency_filler"
+			and not bool(filler.get("semantic_content", true))
+			and not bool(filler.get("may_replace_required_text", true))
+			and not bool(filler.get("advances_state", true))
+			and not bool(filler.get("reveals_facts", true))
+			and not bool(filler.get("counts_as_generated_line", true)),
+		"Kaelen latency filler request did not preserve the non-semantic safety contract."
+	)
+	var nova_filler: Dictionary = service.latency_filler_clip_request(
+		"N.O.V.A.",
+		"voice.nova.v1",
+		"llm_generation",
+		1.0,
+		false,
+		3
+	)
+	_expect(
+		bool(nova_filler.get("ok", false))
+			and str(nova_filler.get("word", "")) == "ahh"
+			and str(nova_filler.get("voice_profile_id", "")) == "voice.nova.v1",
+		"N.O.V.A. latency filler request was not accepted for a short LLM wait."
+	)
+	var played_filler: Dictionary = service.play_latency_filler_clip(
+		"Broker Kaelen",
+		"voice.kaelen.v1",
+		"tts_cache",
+		0.8,
+		false,
+		0
+	)
+	_expect(
+		bool(played_filler.get("ok", false))
+			and str(played_filler.get("source", "")) == "prerecorded_latency_filler"
+			and str(played_filler.get("word", "")) == "um",
+		"SpeechService did not safely play an approved latency filler clip."
+	)
+	var rejected_play: Dictionary = service.play_latency_filler_clip(
+		"Jenna Kross",
+		"voice.jenna_kross.v1",
+		"tts_cache",
+		0.8,
+		false
+	)
+	_expect(
+		not bool(rejected_play.get("ok", true))
+			and str(rejected_play.get("reason", "")) == "speaker_not_allowed",
+		"SpeechService played a latency filler for an unsupported speaker."
+	)
+	var speech_source := FileAccess.open(
+		"res://scripts/speech/SpeechService.gd",
+		FileAccess.READ
+	).get_as_text()
+	_expect(
+		speech_source.contains("func _precache_latency_filler_clips")
+			and speech_source.contains("func play_latency_filler_clip")
+			and speech_source.contains("provider.cache(str(word), profile)")
+			and speech_source.contains("provider.play(word, profile_id)")
+			and speech_source.contains("\"latency_filler\""),
+		"SpeechService does not pre-cache and gate latency filler playback."
+	)
+	for rejected in [
+		service.latency_filler_clip_request(
+			"Jenna Kross",
+			"voice.jenna_kross.v1",
+			"tts_cache",
+			0.8,
+			false
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"dialogue",
+			0.8,
+			false
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"tts_cache",
+			0.8,
+			true
+		),
+		service.latency_filler_clip_request(
+			"Broker Kaelen",
+			"voice.kaelen.v1",
+			"tts_cache",
+			5.0,
+			false
+		),
+	]:
+		_expect(
+			not bool(rejected.get("ok", true))
+				and not bool(rejected.get("may_replace_required_text", true))
+				and not bool(rejected.get("counts_as_generated_line", true)),
+			"Latency filler rejection did not preserve safety flags."
+		)
 
 	var kaelen_delivery: Dictionary = service.provider.resolve_delivery(
 		&"voice.kaelen.v1"

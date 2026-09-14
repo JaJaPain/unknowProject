@@ -1,5 +1,8 @@
 extends Node3D
 
+const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
+const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
+
 const SYSTEM_SEED := 4172026
 const SYSTEM_ID := "test_system"
 const SYSTEM_KEY := "system.test"
@@ -15,6 +18,9 @@ var generated_stations: Array[Node3D] = []
 
 func _ready() -> void:
 	GlobalState.active_system_root = self
+	var world_env := $WorldEnvironment as WorldEnvironment
+	if world_env and world_env.environment:
+		SystemAmbience.apply_glow(world_env.environment)
 	GlobalState.current_system_id = SYSTEM_ID
 	rng.seed = SYSTEM_SEED
 	_generate_system()
@@ -94,6 +100,22 @@ func _generate_system() -> void:
 	)
 	_validate_generated_layout()
 
+	SystemAmbience.add_sun(self, {
+		"direction": Vector3(0.0, 0.4, -0.9),
+		"color": Color(0.75, 0.85, 1.0),
+		"energy": 3.5,
+		"light_energy": 1.45,
+	})
+	SystemAmbience.add_starfield(self, {
+		"seed": 137.0,
+		"tint": Color(0.85, 0.88, 1.0),
+	})
+	SystemAmbience.add_nebula(self, {
+		"seed": 137,
+		"colors": [Color(0.6, 0.15, 0.55), Color(0.25, 0.4, 0.8)],
+		"brightness": 0.5,
+	})
+
 
 func _create_planet(spec: Dictionary) -> Node3D:
 	var planet := StaticBody3D.new()
@@ -117,6 +139,8 @@ func _create_planet(spec: Dictionary) -> Node3D:
 		"navigation_clearance_radius",
 		maxf(physical_clearance, ring_clearance)
 	)
+	if ring_radius > 0.0:
+		planet.set_meta("belt_clearance_y", maxf(180.0, ring_width * 1.5 + 80.0))
 
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = spec["texture"] as Texture2D
@@ -144,6 +168,8 @@ func _create_planet(spec: Dictionary) -> Node3D:
 
 	add_child(planet)
 	planet.global_position = spec["position"] as Vector3
+	var is_gas := (spec["texture"] as Texture2D) == GAS_TEXTURE
+	PlanetRotation.apply(planet, is_gas, rng)
 	return planet
 
 

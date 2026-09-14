@@ -1,0 +1,12 @@
+{
+  "valid": false,
+  "score": 81,
+  "errors": [
+    "missing_field:story_questions_for_future_generation",
+    "story_questions_not_five_items"
+  ],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin"
+  ]
+}

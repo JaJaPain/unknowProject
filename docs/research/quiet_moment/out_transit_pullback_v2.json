@@ -1,0 +1,40 @@
+[
+ {
+  "line": "We've a great deal of nothing ahead of us. Sensor's out of calibration. You'd need to get your hands on the coupling. It's tight. Real tight. Wait — the system's already run a self-check. No need for manual input. Must've been a false read.",
+  "flags": [
+   "tts_hyphen_compound"
+  ]
+ },
+ {
+  "line": "Long way still to run. Cable run behind the bulkhead — frayed at the end. You’d think they’d have replaced it by now. Just a quick tug, see? No need to get all hands on deck for this one. Wait — the last report said it was replaced during the last overhaul. Must’ve missed it. No need to touch it. Just… keep an eye on it, maybe.",
+  "flags": [
+   "tts_ellipsis"
+  ]
+ },
+ {
+  "line": "It's a long way to the other side of this. I wasn't going to mention it, but the dust on my radiator fins has been piling up. You could give them a quick wipe if you're in the area. Wait — the automated sweep already took care of it. No need to touch them. Just thought I'd mention it.",
+  "flags": []
+ },
+ {
+  "line": "Nothing out here for hours yet. Captain, this latch is loose. You'd think the seals would hold tighter than this. Want to give it a tug? Never mind — the system reseats itself. No need to touch it. Just thought you might like the idea of it.",
+  "flags": []
+ },
+ {
+  "line": "Long way still to run. Docking collar's scuffed. You'd want to smooth it before the next run. Not that it's any of your business. Wait — the collar's automated. Already done. My memory's just glitching again. Never mind.",
+  "flags": []
+ },
+ {
+  "line": "Plenty of time before anything happens. Captain. Port side. Coupling's loose. You've got the torque wrench. Want to give it a turn? Wait — the system auto-tightened it last cycle. Never mind. Just checking if you're still on duty.",
+  "flags": [
+   "tts_hyphen_compound"
+  ]
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. Captain, you ever flushed a secondary manifold? This one's been holding on to a few things. Let me know if you've done it before. Wait — no, it's already been done. The automation did it last cycle. Never mind. Just thought you might want to.",
+  "flags": []
+ },
+ {
+  "line": "It's a long way to the other side of this. Locker seal's stuck. You've got calluses. You'd know how to free it. Wait — the seal's already been replaced. Automatic system. No need for hands.",
+  "flags": []
+ }
+]

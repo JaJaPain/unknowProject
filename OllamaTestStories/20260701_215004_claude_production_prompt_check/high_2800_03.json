@@ -1,0 +1,25 @@
+{"campaign_title": "The Echoes of Zenith",
+  "campaign_logline": "Navigate the fractured remains of a Dyson Sphere fragment, searching for the source of an anomalous signal that keeps repeating your ship's name.",
+  "opening_situation": "You start on the edge of 'Zenith', a mining outpost. The Vanguard fleet is trying to guard it from scavengers while Aurelia Corp deals with a heavy cargo shipment.",
+  "main_mystery": "Why does the signal repeat your specific ship ID, and what are the automated defense systems still active in the deeper sectors?",
+  "act_1_outline": [
+    "Secure the Zenith outpost's perimeter; deal with Aurelia's logistical bottlenecks.",
+    "Negotiate a trade route between Vanguard and Aurelia to stabilize local supply chains.",
+    "Investigate an anomalous signal source that leads toward the gate to the next system."
+  ],
+  "long_term_reveal": "The Dyson Sphere was not broken; it is actively rewriting reality around its core, creating 'echoes' of past events.",
+  "tone": "Dry, slightly dark PG-13 humor.",
+  "core_pressure": "Resource scarcity and the pressure to maintain a stable trade route between competing factions.",
+  "kaelen_rule": "Kaelen is the only fixed recurring NPC; she cannot die and her mystery remains partially unsolved.",
+  "faction__reveal_rule": "New systems reveal new factions, conflicts, ores, upgrades, rumors, and ships through gate travel.",
+  "humor_rule": "Dry, slightly dark PG-13 humor. No repeated jokes or catchphrases.",
+  "address_rule": "Keep every string under 140 characters unless the field specifies otherwise.",
+  "fallback_rule": "If a story arc is missing, use a generic 'scavenger hunt' for local resources.",
+  "story_horizon_rule": "Include exactly one story horizon regeneration trigger with a metric, threshold, and action.",
+  "story_arcs": [{"name": "The Zenith Breach", "summary": "Identify the source of anomalous signals while navigating the tensions between Vanguard and Aurelia."}],
+  "rumor_trails": [{"name": "Whispers of the Void", "trail_id": "rumor_trail.whispers_of_the_void", "clue_count": 2, "hint_theme": "Ancient technology", "clue_templates": [
+    "A weathered record of a technician's final log.",
+    "A cracked data-shard containing partial coordinates."
+  ], "discovery_type": "endgame_easter_egg", "rarity": "legendary", "payoff": "Unlocks the 'Void Echo' ability, allowing you to see hidden paths in nearby systems."}],
+  "regeneration__triggers": [{"id": "horizon_expansion_trigger", "metric": "prepared_systems_remaining", "threshold": 3, "action": "append_story_horizon", "description": "When the player reaches a new system with no active story arcs, append a new horizon."}]
+}

@@ -36,9 +36,6 @@ omni_range = 20.0
 
 [node name="Visual" type="Node3D" parent="."]
 
-[node name="INDYMiner" parent="Visual" instance=ExtResource("2_mesh")]
-transform = Transform3D(-8, 0, 0, 0, 8, 0, 0, 0, -8, 0, 0, 0)
-
 [node name="MiningLaser" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.12, 0, 0, 0, 1, 0, 0, 0, 0.12, 0, 0, 0)
 visible = false
@@ -48,4 +45,4 @@ mesh = SubResource("CylinderMesh_1")
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 22)
-far = 10000.0
+far = 50000.0

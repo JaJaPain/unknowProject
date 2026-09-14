@@ -1,0 +1,46 @@
+[
+ {
+  "line": "Long crossing, and no one else in it. Captain, you ever traced a run from the junction box? This one's got a kink behind the galley bulkhead. You'd need to work it free with your hands. The yard crew at Kova would take it in a second. They've got the tools, the time — and they never ask questions.",
+  "flags": [],
+  "place": "Kova Station"
+ },
+ {
+  "line": "Nothing out here for hours yet. Sensor's out of alignment. You could recalibrate it. Just a quick touch, nothing heavy. That engineer at Iron Reach would take it off your hands. They've got the tools, the time — and the patience to do it right.",
+  "flags": [],
+  "place": "Iron Reach"
+ },
+ {
+  "line": "Nothing out here for hours yet. Locker seal's stuck. You'd think a hinge this old would know how to open itself. Just a bit of pressure, maybe? Dock crew at the Latch? They'd take it from here. No trouble, no questions. They're used to it.",
+  "flags": [],
+  "place": "the Latch"
+ },
+ {
+  "line": "Nothing out here for hours yet. The film's stuck. You've done it before, haven't you? Just a wipe, nothing fancy. They'll take it off my hull if I don't. Someone else's hands will be where yours are, soon enough.",
+  "flags": [],
+  "place": "Bellhaven"
+ },
+ {
+  "line": "It's a long way to the other side of this. Filter's loose. Could swap it now. Just a hand, really. Dock crew at Ordos would be happy to take it from here. They've got hands, too.",
+  "flags": [],
+  "place": "Ordos Yard"
+ },
+ {
+  "line": "Long way still to run. Scuffing on my docking collar. You've got the tools. You've got the reach. You've got the patience. They had the tools. They had the reach. They had the patience. And they left a shine on my plating that's still there.",
+  "flags": [
+   "word_echo"
+  ],
+  "place": "Trell's Landing"
+ },
+ {
+  "line": "This is a very long flight. Port side coupling's a bit loose. You've handled this before, I think. Just a quick tighten, nothing more. That engineer at Kova Station would be happy to take over if you'd rather not. He's got steady hands and a long memory.",
+  "flags": [
+   "assumes_captain_gender"
+  ],
+  "place": "Kova Station"
+ },
+ {
+  "line": "Nothing out here for hours yet. Grease on the landing gear. Needs a hand to scrape it back. Just a bit. No rush. Iron Reach'll have someone on board in the morning. They'll be quick. They'll be thorough.",
+  "flags": [],
+  "place": "Iron Reach"
+ }
+]

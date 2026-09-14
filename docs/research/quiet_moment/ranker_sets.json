@@ -1,0 +1,74 @@
+[
+ {
+  "packet": "The job closed safely and the payout was modest. Both were paid normally.",
+  "cands": [
+   "The job ended clean, the pay was thin. I’d rather have a little more than a little, Shiny.",
+   "The job closed cleanly, the payout was modest. I’ll take it, but don’t expect me to sing its praises, Shiny.",
+   "The job closed cleanly, the payout was modest. I don’t mind the quiet when the math still adds up.",
+   "The job closed cleanly. The payout was modest. I don’t hate it, Shiny — but don’t expect me to sing its praises either.",
+   "The job closed cleanly, the payout felt like a rounding error. I’ll note it as a loss and move on."
+  ],
+  "best": 2,
+  "worst": 4
+ },
+ {
+  "packet": "Done, and nobody bled. The number was disappointing.",
+  "cands": [
+   "No one bled, and that’s a win. The number? It’s a disappointment, but not a disaster.",
+   "Shiny. The number was disappointing, but at least the math was clean — no surprises, no blood, and that’s a rare thing these days.",
+   "Nobody bled and the number was disappointing. I keep track of the math, and this one is a soft loss.",
+   "Nobody bled, Shiny. The number was disappointing, but I don’t count blood in the ledger.",
+   "No blood, no incident. The number was low, but it was honest."
+  ],
+  "best": 3,
+  "worst": 0
+ },
+ {
+  "packet": "There was never any danger. The return was slim. The task is done.",
+  "cands": [
+   "No danger, no drama — just a quiet day. I keep a tally of those, too. This one’s on the low end.",
+   "Slim return for no risk — that’s the kind of work I take notes on, not the kind I take again.",
+   "No danger, no reward — I’ll note that in the ledger under 'lessons learned'.",
+   "No danger, no drama — just a thin return. I’ll take it, but don’t expect me to sing its praises.",
+   "No blood, no bruises, no complaints. I suppose that's one way to survive on the low end of the scale."
+  ],
+  "best": 3,
+  "worst": 2
+ },
+ {
+  "packet": "Small take, no injuries, job closed.",
+  "cands": [
+   "Small take, no injuries, job closed. The math checks out, and I don’t owe you a damn thing.",
+   "You walked out with your skin intact and a pocket full of credits. Let's not let this kind of luck become routine, Shiny.",
+   "The books are clean, the take is small. I’ll keep it, but I’ll remember it when the next offer comes.",
+   "Small take, no injuries — the job did its part. I’ll note that, and keep the books balanced.",
+   "The job was small, the take smaller. I don’t mind the scale — I mind the margin, and it’s barely there."
+  ],
+  "best": 4,
+  "worst": 0
+ },
+ {
+  "packet": "Uneventful throughout. What it paid barely registers.",
+  "cands": [
+   "This one didn’t cost extra, and it didn’t cost less. That’s the kind of job I’ll take the cut from.",
+   "Shiny. This job didn’t break us, but it didn’t lift us either. I’m tired of earning just enough to stay in the game.",
+   "This one didn’t cost us much, and it didn’t teach us anything. That’s a rare kind of dull.",
+   "Shiny. This job paid like a whisper — I’ll keep it in mind, but not for long.",
+   "The job had no teeth and left no marks. I’m just noting that the coin is lighter than the silence."
+  ],
+  "best": 4,
+  "worst": 2
+ },
+ {
+  "packet": "Start to finish it went smoothly, and the payment was unremarkable.",
+  "cands": [
+   "Unremarkable pay for unremarkable work — I’ll take it, but don’t expect me to remember this one.",
+   "Smooth sailing and a flat fee — I’ll take it, as long as the next job pays better.",
+   "Smooth run, unremarkable coin. I'll take it, but I'd rather be somewhere the math leans my way.",
+   "The job ran like clockwork and paid like a bank. I expect nothing more from either.",
+   "It went smoothly. I made a living wage. Don't expect that every time, Shiny."
+  ],
+  "best": 2,
+  "worst": 0
+ }
+]

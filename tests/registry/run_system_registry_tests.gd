@@ -1,10 +1,16 @@
 extends SceneTree
 
 var _failures: Array[String] = []
+var registry_type: GDScript
 
 
 func _initialize() -> void:
-	var registry := SystemRegistry.load_default()
+	call_deferred("_run")
+
+
+func _run() -> void:
+	registry_type = load("res://scripts/registry/SystemRegistry.gd")
+	var registry = registry_type.load_default()
 	_expect(
 		registry.is_valid(),
 		"Default registry failed validation: %s" %
@@ -28,36 +34,24 @@ func _initialize() -> void:
 	quit(1)
 
 
-func _test_resolution(registry: SystemRegistry) -> void:
+func _test_resolution(registry: RefCounted) -> void:
 	_expect(
 		registry.resolve_system_id("start_system") == &"system.start",
 		"Legacy start-system ID did not resolve."
-	)
-	_expect(
-		registry.runtime_system_id("system.test") == "test_system",
-		"Canonical test-system ID did not resolve to runtime ID."
 	)
 	_expect(
 		registry.resolve_gate_id("start_to_test") == &"gate.start.to_test",
 		"Legacy outbound gate ID did not resolve."
 	)
 	_expect(
-		registry.runtime_gate_id("gate.test.to_start") == "test_to_start",
-		"Canonical return gate ID did not resolve to runtime ID."
-	)
-	_expect(
 		registry.load_scene("system.start") != null,
 		"Canonical start-system scene did not load."
 	)
-	_expect(
-		registry.load_scene("test_system") != null,
-		"Legacy test-system scene did not load."
-	)
 
 
-func _test_scene_gate_metadata(registry: SystemRegistry) -> void:
+func _test_scene_gate_metadata(registry: RefCounted) -> void:
 	for system: SystemDefinition in registry.systems.values():
-		var packed := registry.load_scene(system.id)
+		var packed: PackedScene = registry.load_scene(system.id)
 		if packed == null:
 			_failures.append("Scene missing for '%s'." % system.id)
 			continue
@@ -107,7 +101,7 @@ func _test_invalid_pair() -> void:
 	data["systems"][1]["gates"][0]["destination_gate_id"] = (
 		"gate.test.to_start"
 	)
-	var registry := SystemRegistry.load_from_dict(data)
+	var registry = registry_type.load_from_dict(data)
 	_expect(
 		not registry.is_valid(),
 		"Non-reciprocal gate pair should fail validation."
@@ -119,7 +113,7 @@ func _test_unknown_destination() -> void:
 	data["systems"][0]["gates"][0]["destination_system_id"] = (
 		"system.missing"
 	)
-	var registry := SystemRegistry.load_from_dict(data)
+	var registry = registry_type.load_from_dict(data)
 	_expect(
 		not registry.is_valid(),
 		"Unknown destination system should fail validation."
@@ -129,7 +123,7 @@ func _test_unknown_destination() -> void:
 func _test_missing_scene() -> void:
 	var data := _minimal_registry_data()
 	data["systems"][0]["scene_path"] = "res://scenes/systems/missing.tscn"
-	var registry := SystemRegistry.load_from_dict(data)
+	var registry = registry_type.load_from_dict(data)
 	_expect(
 		not registry.is_valid(),
 		"Missing system scene should fail validation."
@@ -139,7 +133,7 @@ func _test_missing_scene() -> void:
 func _test_duplicate_legacy_alias() -> void:
 	var data := _minimal_registry_data()
 	data["systems"][1]["legacy_id"] = "start_system"
-	var registry := SystemRegistry.load_from_dict(data)
+	var registry = registry_type.load_from_dict(data)
 	_expect(
 		not registry.is_valid(),
 		"Duplicate legacy system alias should fail validation."

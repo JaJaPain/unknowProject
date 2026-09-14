@@ -1,0 +1,57 @@
+{
+ "kaelen": [
+  {
+   "line": "The job is clean and we both got paid. It\u2019s a rare day when modesty doesn\u2019t mean loss.",
+   "flags": [],
+   "secs": 77.7
+  },
+  {
+   "line": "The crew got paid. It is modest. I prefer the predictability of small sums to the chaos of large ones.",
+   "flags": [
+    "invented_crew:crew"
+   ],
+   "secs": 2.9
+  },
+  {
+   "line": "We closed the job without incident and received our modest share. I am counting my fingers to ensure no debts remain unpaid.",
+   "flags": [],
+   "secs": 3.0
+  },
+  {
+   "line": "Safe job, standard pay. I am surprised to find that being competent requires less effort than usual.",
+   "flags": [],
+   "secs": 3.0
+  },
+  {
+   "line": "Modest payout, paid on time. I appreciate the lack of friction, Shiny.",
+   "flags": [],
+   "secs": 2.9
+  },
+  {
+   "line": "The job closed safely, the payout modest, and we were paid on time. I suppose I should not question what is working.",
+   "flags": [],
+   "secs": 3.0
+  },
+  {
+   "line": "The payout is small, but we were paid on time. I find that acceptable.",
+   "flags": [],
+   "secs": 2.8
+  },
+  {
+   "line": "Job closed, pocket full. I am surprised the universe didn't demand an apology for my competence.",
+   "flags": [],
+   "secs": 2.9
+  },
+  {
+   "line": "Job closed safe. Payout modest. We got paid on time. I prefer the boring arithmetic of survival.",
+   "flags": [],
+   "secs": 2.9
+  },
+  {
+   "line": "The job closed safely and the payout was modest. I keep my mouth shut about how little that costs to maintain.",
+   "flags": [],
+   "secs": 2.9
+  }
+ ],
+ "nova": []
+}

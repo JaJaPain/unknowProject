@@ -1,0 +1,75 @@
+{
+  "campaign_title": "The Taxman's Star Chart",
+  "campaign_logline": "A desperate pilot must navigate corporate debt and territorial squabbles to simply afford fuel for the next jump.",
+  "opening_situation": "You are broke. Your credits balance is less than a decent meal, and you have one Reaver-class hostile vessel blocking your immediate exit from the local cluster.",
+  "main_mystery": "Unraveling which major corporate entity—Zenith, Aurelia, or Vanguard—is systematically bleeding localized commerce dry through predatory contract enforcement.",
+  "act_1_outline": [
+    "Secure enough credits by running a low-risk salvage job near Zenith's perimeter.",
+    "Intercept minor data packets detailing unusual resource transfers involving Aurelian assets.",
+    "Survive an aggressive boarding action orchestrated by a Vanguard enforcer group."
+  ],
+  "long_term_reveal": "The primary conflict is not between the three factions, but rather that one of them is merely hired muscle for a much smaller, more deeply embedded financial consortium operating across all sectors.",
+  "tone": "Grinding corporate bureaucracy with cheap blaster fire.",
+  "core_pressure": "Immediate solvency and avoiding asset seizure by local enforcement bodies.",
+  "factions": {
+    "zenith": "Zenith enforces exorbitant tariffs on salvaged materials passing through their primary docking zones.",
+    "aurelia": "Aurelia controls the only reliable jump-gate maintenance contracts, demanding steep performance bonds.",
+    "vanguard": "Vanguard specializes in 'security' sweeps that invariably look like asset liquidation attempts for minor infractions."
+  },
+  "kaelen_rule": "Kaelen operates exclusively as a high-end broker of sensitive, off-the-books information and logistical arrangements.",
+  "kaelen_angle": "She is actively managing the debt ledger for one of the three major powers, using it to keep them all in check against each other.",
+  "kaelen_hint_plan": [
+    "She always carries a data slate whose display flickers with unrecognizable jurisdictional markers.",
+    "When discussing tariffs, she uses overly precise legalistic jargon that seems sourced from multiple conflicting codes.",
+    "She refuses to look directly at the ship's manifest when confirming payment details.",
+    "She frequently asks about local drydock capacity rates for non-combat hulls."
+  ],
+  "kaelen_hint_style": "Overly precise details regarding paperwork and jurisdictional minutiae.",
+  "kaelen_never_reveal": "Her true relationship with the initial source of your crippling debt.",
+  "faction_reveal_rule": "New systems reveal a functional faction whose primary commodity or conflict directly intersects with one of Zenith's, Aurelia's, or Vanguard's existing concerns.",
+  "humor_rule": "Humor should derive from bureaucratic absurdity and material deprivation.",
+  "address_rule": "\"Pilot.\" or \"Freelancer.\" (Never by name unless explicitly paid for the privilege).",
+  "fallback_rule": "If a required faction detail is missing, default to stating they are aggressively over-policing an existing resource node.",
+  "story_horizon_rule": "New horizons introduce entirely new local power players whose immediate need for cash or leverage forces them into contact with one of the established three factions' zones of influence.",
+  "story_arcs": [
+    {
+      "name": "The Manifest Debt",
+      "summary": "The player must navigate a network of escalating financial demands to clear enough debt to buy reliable passage out of the local cluster."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Ledger",
+      "trail_id": "rumor_trail.creditor_dispute_01",
+      "clue_count": 2,
+      "hint_theme": "A specific pattern of unaccounted-for transfer credits or collateral seizures.",
+      "clue_templates": [
+        "A heavily encrypted data chip mentioning a three-party settlement involving non-standard currency units.",
+        "Witness reports detailing unmarked vessels collecting 'outstanding service fees' in disputed sectors."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "rare",
+      "payoff": "The location of the original collateral that was used to structure the entire local debt cycle."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the main story arc concludes, unlock a new, larger economic zone to continue the conflict."
+    }
+  ],
+  "expansion_rules": [
+    "New sectors introduce entirely different forms of 'tax' or mandatory service payment.",
+    "The established three factions will begin actively competing for control over the *next* major choke point encountered."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Ancient signal",
+    "Mysterious pulse",
+    "Chosen one",
+    "Destiny"
+  ]
+}

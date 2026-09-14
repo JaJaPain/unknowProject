@@ -1,0 +1,97 @@
+{
+  "campaign_title": "Echoes of the Void",
+  "campaign_subtitle": "The Broken Rim",
+  "campaign_logline": "A desperate pilot navigates a fractured frontier and the secrets hidden in the silence.",
+  "campaign_pitch": "You are a broke pilot trying to stay afloat. Navigate political tension between three rival factions while uncovering local mysteries.",
+  "campaign_story_summary": "The Rim is a lawless zone where trade routes are just memories. Zenith seeks order through heavy control. Aurelia values freedom over safety. Vanguard fights for survival in the harsh void. You find work from Kaelen to keep your ship running. Every contract brings you closer to the truth of the silence.",
+  "tone": "Dry, gritty frontier humor with a touch of cosmic dread.",
+  "opening": {
+    "status_quo": "Independent pilots fly cargo and ore between outposts.",
+    "visible_crisis": "The three main factions are locked in a cold war.",
+    "hidden_crisis": "Strange signals are disrupting the local warp gates.",
+    "why_now": "Fuel costs have spiked, making independent survival difficult.",
+    "player_role": "A broke pilot seeking any available contract."
+  },
+  "mystery": {
+    "question": "What is causing the gate disruptions?",
+    "false_answer": "The signals are just interference from old mining equipment.",
+    "true_answer_hint": "The gates react to something deep in the void.",
+    "long_term_reveal_direction": "The source of the signal remains unknown and distant."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows more about the gate signals than she admits.",
+    "address_rule": "Refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her origin or true purpose."
+  },
+  "factions": {
+    "zenith_problem": "They want to centralize all gate access for safety.",
+    "aurelia_rule": "They favor decentralized, free-trade routes and pirate zones.",
+    "vanguard_problem": "They are struggling to maintain infrastructure in the wilder rim.",
+    "conflict_triangle": "Zenith wants control, Aurelia wants freedom, Vanguard is caught in between.",
+    "neutral_space_pressure": "Pirates and scavengers thrive where the factions fail."
+  },
+  "act_1": {
+    "name": "The First Contract",
+    "goal": "Secure enough credits to repair your primary engine.",
+    "opening_incident": "Kaelen offers a high-paying contract for a delivery of rare minerals.",
+    "midpoint_turn": "You encounter a pirate ship during the transport.",
+    "finale": "You successfully deliver the cargo and receive a reward.",
+    "player_takeaway": "The first few contracts are just to survive."
+  },
+  "starter_mission": {
+    "title": "Clear the Path",
+    "reason": "A simple combat tutorial for the player.",
+    "enemy_identity": "A lone Reaver-class scout ship.",
+    "enemy_knows": "The enemy is unaware of your presence.",
+    "aftershock": "You find a data chip containing local trade routes."
+  },
+  "recurring_clue": {
+    "name": "The Ghost Signal",
+    "signal": "A rhythmic pulse every 30 seconds.",
+    "first_appearance": "Detected during the first delivery mission.",
+    "escalation": "The signal grows stronger as you move toward gate hubs.",
+    "payoff_hint": "The signal is linked to the gate mechanism."
+  },
+  "rumor_trail": {
+    "name": "The Lost Mine",
+    "trail_id": "rumor_trail.lost_mine",
+    "hint_theme": "Abandoned mining sites and old equipment.",
+    "clue_templates": [
+      "A ghost mine is rumored to be active.",
+      "Some say the ore there is highly refined."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Discovery of a high-yield mining site."
+  },
+  "horizon": {
+    "gate_tease": "The gate pulse is consistent across all hubs.",
+    "new_system_reveal_rule": "Do not reveal future frontier factions.",
+    "future_faction_tease": "Rumors of other groups exist but are not named.",
+    "future_ore_or_upgrade_tease": "Rare minerals offer significant engine upgrades.",
+    "regeneration_trigger": {
+      "id": "regen_gate_signal",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first act is complete, add a new gate signal."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty frontier humor.",
+    "fallback_rule": "If a quest log is missing, default to 'Contract in progress'.",
+    "banned_repeats": [
+      "scout",
+      "pilot",
+      "pilot_role"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the other factions' hidden goals?",
+    "system_name_s01_title",
+    "system_name_s02_title",
+    "system_name_s03_title",
+    "500 words of lore about the void."
+  ]
+}

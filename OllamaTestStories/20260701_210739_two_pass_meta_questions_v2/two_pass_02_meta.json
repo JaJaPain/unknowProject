@@ -1,0 +1,40 @@
+{
+  "creative_lane": "Industrial Decay and Resource Scarcity",
+  "freshness_rule": "Focus on the physical toll of aging infrastructure and the economic desperation of a dying trade route.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the cost of maintaining an aging fleet?",
+    "Why does the local economy collapse if a shipment fails?",
+    "How do players choose between profit and safety?",
+    "Who holds the leverage over the trade routes?",
+    "Where is the hidden cost of 'free' logistics?"
+  ],
+  "starter_mission_questions": [
+    "What makes this Reaver ship nearly impossible to defend against?",
+    "Why does the player need a specific piece of scrap from it?",
+    "How do they manage the risk of being caught by local patrols?"
+  ],
+  "kaelen_questions": [
+    "What is Kaelen's secret motive for hiring the player?",
+    "Why is Kaelen's public persona as a broker different from their private goals?",
+    "How does Kaelen leverage the player's desperation?"
+  ],
+  "faction_questions": [
+    "Why does Zenith want to monopolize the trade lanes?",
+    "How do Aurelia prioritize their resource extraction?",
+    "Who controls the supply chain for Vanguard?",
+    "Where is the tension between the factions and the local independent pilots?"
+  ],
+  "future_generation_questions": [
+    "What new types of cargo are introduced later?",
+    "Why does the market value of resources change over time?",
+    "How do different factions offer competing incentives?",
+    "Who is the ultimate authority in this sector?",
+    "Which trade route is currently under threat?"
+  ]
+}

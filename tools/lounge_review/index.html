@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lounge Dialogue Review</title>
+  <style>
+    :root { color-scheme: dark; --bg:#070b12; --panel:#111926; --edge:#283a53; --ink:#e8eef7; --muted:#91a1b8; --cyan:#4ee3e1; --green:#66d98e; --red:#ff777f; --gold:#f5c66d; }
+    * { box-sizing:border-box; } body { margin:0; min-height:100vh; background:radial-gradient(circle at 18% 0%,#11233c 0,#070b12 42rem); color:var(--ink); font:16px/1.5 Inter,Segoe UI,system-ui,sans-serif; }
+    main { max-width:900px; margin:auto; padding:32px 20px 56px; } header { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:28px; }
+    h1 { font-size:clamp(1.6rem,4vw,2.35rem); margin:0; } h2 { margin:0 0 7px; font-size:1rem; color:var(--cyan); letter-spacing:.06em; text-transform:uppercase; } p { color:var(--muted); margin:4px 0; }
+    .progress { white-space:nowrap; color:var(--cyan); font-weight:700; } .counts{white-space:nowrap;text-align:right;font-size:.82rem;margin-top:2px}.bar { height:7px; background:#1a2636; border-radius:9px; overflow:hidden; margin:0 0 24px; }.bar > div{height:100%; width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .25s}
+    .card { border:1px solid var(--edge); background:linear-gradient(145deg,rgba(24,36,54,.95),rgba(12,18,29,.96)); border-radius:16px; padding:24px; box-shadow:0 18px 55px #0005; }
+    .context { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:24px; }.fact { background:#0c131f; padding:12px; border-radius:9px; border-left:3px solid #3c587a; }.fact b { color:#bed1e8; display:block; font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; }
+    .exchange { border-top:1px solid var(--edge); padding:18px 0 0; }.line { padding:14px 16px; border-radius:10px; margin:10px 0; background:#0b111c; }.line.you{border-left:3px solid var(--gold)}.line.npc{border-left:3px solid var(--cyan)}.speaker{font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)} .line.you .speaker{color:var(--gold)}.line.npc .speaker{color:var(--cyan)}
+    .question { margin:22px 0 10px; padding:15px; background:#10243a; border-radius:10px; color:#fff; font-weight:650; }.question small { display:block;color:#9fc7ee;font-weight:600;margin-bottom:5px; text-transform:uppercase; letter-spacing:.05em; }
+    .actions { display:flex; gap:12px; margin-top:26px; }.actions button, .tools button, .load-label { border:0; border-radius:9px; padding:12px 18px; font:inherit; font-weight:800; cursor:pointer; }.pass { background:var(--green); color:#052113; flex:1; }.fail { background:var(--red); color:#30050a; flex:1; }.tools { display:flex;gap:8px;flex-wrap:wrap;margin-top:18px; }.tools button,.load-label{background:#1b2a3e;color:var(--ink);border:1px solid var(--edge)} input[type=file]{display:none}.status{min-height:1.5em;margin-top:16px;font-size:.9rem}.empty{padding:35px;text-align:center}.hidden{display:none}
+    @media(max-width:540px){main{padding:20px 14px}header{display:block}.progress{margin-top:8px}.card{padding:16px}.actions{position:sticky;bottom:0;padding:12px 0;background:linear-gradient(transparent,#070b12 28%)}}
+  </style>
+</head>
+<body><main>
+  <header><div><h1>Lounge Dialogue Review</h1><p>Judge whether the NPC answer sounds natural and actually answers the selected player question.</p></div><div><div class="progress" id="progress">No batch loaded</div><p class="counts" id="counts"></p></div></header>
+  <div class="bar"><div id="bar"></div></div>
+  <section class="card" id="review"><div class="empty"><h2>Load a review batch</h2><p>Choose the generated <code>lounge_review_batch.json</code> file. Your decisions stay saved in this browser until you export or reset them.</p></div></section>
+  <div class="tools"><button id="review-prev" disabled>Previous review</button><button id="review-next" disabled>Next review</button><button id="next" disabled>Generate next scenario</button><label class="load-label" for="file">Load batch JSON</label><input id="file" type="file" accept="application/json"><button id="export" disabled>Export verdicts</button><button id="reset" disabled>Reset verdicts</button></div>
+  <p class="status" id="status" aria-live="polite"></p>
+</main>
+<script src="lounge_review_live_batch.js"></script>
+<script>
+(() => {
+  let batch = [], verdicts = {}, current = 0, batchKey = '';
+  const $ = id => document.getElementById(id), review=$('review'), progress=$('progress'), counts=$('counts'), bar=$('bar'), status=$('status');
+  const esc = value => String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  function loadState(){ verdicts = JSON.parse(localStorage.getItem(batchKey) || '{}'); current = batch.findIndex(x => !verdicts[x.id]); if(current < 0) current = Math.max(0,batch.length-1); }
+  function postReview(payload){ const frame=document.getElementById('review-handoff')||Object.assign(document.body.appendChild(document.createElement('iframe')),{id:'review-handoff',name:'review-handoff',hidden:true}); const form=document.createElement('form'); form.method='POST'; form.action='http://127.0.0.1:8765/api/save-review'; form.target=frame.name; const field=document.createElement('input'); field.type='hidden'; field.name='payload'; field.value=JSON.stringify(payload); form.appendChild(field); document.body.appendChild(form); form.submit(); form.remove(); }
+  function syncVerdicts(){ if(batchKey) postReview({batch_id:batchKey,decisions:verdicts}); }
+  function syncStoredReviews(){ Object.keys(localStorage).filter(key=>key.startsWith('lounge-review:')).forEach(key=>postReview({batch_id:key,decisions:JSON.parse(localStorage.getItem(key)||'{}')})); }
+  function render(){
+    if(!batch.length) return; const item=batch[current], done=Object.keys(verdicts).length, prior=verdicts[item.id];
+    const passed=Object.values(verdicts).filter(x=>x.verdict==='pass').length, failed=Object.values(verdicts).filter(x=>x.verdict==='fail').length;
+    progress.textContent=`${done} / ${batch.length} reviewed`; counts.textContent=`${passed} pass · ${failed} fail · ${batch.length-done} remaining`; bar.style.width=`${batch.length ? done / batch.length * 100 : 0}%`;
+    review.innerHTML=`<h2>Scenario ${current+1}</h2><div class="context">
+      <div class="fact"><b>Contact</b>${esc(item.contact_name)} · ${esc(item.contact_role)}</div>
+      <div class="fact"><b>Location</b>${esc(item.station)}</div>
+      <div class="fact"><b>Situation</b>${esc(item.context)}</div>
+    </div><div class="exchange"><div class="line npc"><div class="speaker">${esc(item.contact_name)}</div>${esc(item.opener)}</div>
+      <div class="question"><small>Player chose this question</small>${esc(item.player_question)}</div>
+      <div class="line npc"><div class="speaker">${esc(item.contact_name)}'s answer</div>${esc(item.npc_answer)}</div>
+      <div class="line npc"><div class="speaker">Conversation close</div>${esc(item.close)}</div></div>
+      <div class="actions"><button class="pass" data-v="pass">Pass — natural and answers it</button><button class="fail" data-v="fail">Fail — weak, off-topic, or unnatural</button></div>`;
+    review.querySelectorAll('[data-v]').forEach(btn=>btn.onclick=()=>choose(btn.dataset.v));
+    const saved=verdicts[item.id]||{};
+    review.insertAdjacentHTML('beforeend', `<div class="rewrite"><h2>Rewrite for the example bank</h2><p>Edit the generated text, then save your better version.</p><select id="reason"><option value="">Reason for rewrite</option><option>Unnatural opener</option><option>Invented detail</option><option>Too generic</option><option>Quest-briefing tone</option><option>Question parroting</option></select><textarea id="rewrite-opener">${esc(saved.opener||item.opener)}</textarea><textarea id="rewrite-answer">${esc(saved.answer||item.npc_answer)}</textarea><textarea id="rewrite-close">${esc(saved.close||item.close)}</textarea><button id="save-rewrite">Save rewrite</button></div>`);
+    $('reason').value=saved.reason||'';
+    $('save-rewrite').onclick=()=>{ verdicts[item.id]={verdict:'rewrite',reason:$('reason').value,opener:$('rewrite-opener').value,answer:$('rewrite-answer').value,close:$('rewrite-close').value,reviewed_at:new Date().toISOString()}; localStorage.setItem(batchKey,JSON.stringify(verdicts)); syncVerdicts(); status.textContent='Rewrite saved. It will be included when you export the review results.'; };
+    if(prior) status.textContent=`This item is currently marked ${prior.toUpperCase()}. Choosing again replaces it.`; else status.textContent='';
+  }
+  function choose(verdict){ const item=batch[current]; verdicts[item.id]={verdict, reviewed_at:new Date().toISOString()}; localStorage.setItem(batchKey,JSON.stringify(verdicts)); syncVerdicts(); const next=batch.findIndex((x,i)=>i>current&&!verdicts[x.id]); current=next>=0?next:batch.findIndex(x=>!verdicts[x.id]); if(current<0) current=Math.max(0,batch.length-1); render(); }
+  function setBatch(data){ const items=Array.isArray(data)?data:data.items; if(!Array.isArray(items)||!items.length) throw Error('Expected a JSON object with a non-empty items array.'); batch=items.map((x,i)=>({...x,id:x.id||`scenario-${i+1}`})); batchKey='lounge-review:'+(data.batch_id||JSON.stringify(batch.map(x=>x.id))); loadState(); syncVerdicts(); $('export').disabled=$('reset').disabled=false; $('review-prev').disabled=$('review-next').disabled=false; render(); }
+  $('file').onchange=e=>{ const f=e.target.files[0]; if(!f)return; f.text().then(t=>setBatch(JSON.parse(t))).then(()=>status.textContent='Batch loaded.').catch(err=>status.textContent=`Could not load batch: ${err.message}`); };
+  $('reset').onclick=()=>{ if(confirm('Clear every saved Pass/Fail verdict for this batch?')){localStorage.removeItem(batchKey);loadState();render();} };
+  $('review-prev').onclick=()=>{current=Math.max(0,current-1);render();};
+  $('review-next').onclick=()=>{current=Math.min(batch.length-1,current+1);render();};
+  $('export').onclick=()=>{ const results=batch.map(x=>({id:x.id,contact:x.contact_name,question:x.player_question,answer:x.npc_answer,verdict:verdicts[x.id]?.verdict||'unreviewed',reviewed_at:verdicts[x.id]?.reviewed_at||''})); const blob=new Blob([JSON.stringify({summary:{total:batch.length,pass:results.filter(x=>x.verdict==='pass').length,fail:results.filter(x=>x.verdict==='fail').length},results},null,2)],{type:'application/json'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lounge_review_verdicts.json';a.click();URL.revokeObjectURL(a.href); };
+  $('next').onclick=async()=>{ const b=$('next'); b.disabled=true; status.textContent='Generating the next real exchange…'; try { const r=await fetch('/api/generate-next',{method:'POST'}); if(!r.ok) throw Error(await r.text()); setBatch(await r.json()); status.textContent='Next scenario ready.'; } catch(e) { status.textContent='Start the local review server to generate scenarios from this button.'; } finally { b.disabled=false; } };
+  syncStoredReviews();
+  const handoffButton=document.createElement('button'); handoffButton.textContent='Send saved reviews to Codex'; handoffButton.onclick=()=>{syncStoredReviews();status.textContent='Saved reviews sent for curation.';}; document.querySelector('.tools').appendChild(handoffButton);
+  if (location.protocol !== 'file:') $('next').disabled=false;
+  if (window.LOUNGE_REVIEW_BATCH) setBatch(window.LOUNGE_REVIEW_BATCH);
+})();
+</script></body></html>

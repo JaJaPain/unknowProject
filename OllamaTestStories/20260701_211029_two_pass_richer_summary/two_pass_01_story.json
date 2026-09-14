@@ -1,0 +1,100 @@
+{
+  "campaign_title": "Rust and Rations",
+  "campaign_subtitle": "The Scarcity of the Outer Rim",
+  "campaign_logline": "A desperate pilot navigates a dying industrial sector where every scrap of metal is worth its weight in fuel.",
+  "campaign_pitch": "You are a debt-ridden pilot. Zenith and Aurelia fight over shrinking mineral rights. You haul cargo to survive the week. A massive supply chain collapse threatens local stability.",
+  "campaign_story_summary": "A struggling pilot takes contracts from Kaelen. A Reaver ship is intercepted near a mining hub. The strike causes a localized fuel shortage. Zenith and Aurelia clash over remaining reserves. You find encrypted logs about manufacturing shortages. A hidden economic rot eats the sector's trade. Act 1 focuses on securing local supply lines.",
+  "tone": "Dry, cynical, and gritty industrial sci-fi.",
+  "opening": {
+    "status_quo": "The mining hubs are failing due to aging infrastructure.",
+    "visible_crisis": "Fuel shortages have made transport routes dangerous.",
+    "hidden_crisis": "A systemic manufacturing collapse is hollowing out the market.",
+    "why_now": "Current reserves are critically low for the next cycle.",
+    "player_role": "An independent pilot with a failing ship."
+  },
+  "mystery": {
+    "question": "Why is the industrial output dropping so sharply?",
+    "false_answer": "The equipment is simply too old to maintain.",
+    "true_answer_hint": "Manufacturing hubs are being intentionally sabotaged by a shadow entity.",
+    "long_term_reveal_direction": "The sabotage is part of a larger corporate dismantling plan."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She tracks the flow of essential resources to predict market crashes.",
+    "address_rule": "Always refer to her as Kaelen.",
+    "never_reveal_rule": "Her origin or true motives remain unknown."
+  },
+  "factions": {
+    "zenith_problem": "Zenith demands priority for industrial manufacturing components.",
+    "aurelia_problem": "Aurelia insists on stabilizing orbital trade routes.",
+    "vanguard_problem": "Vanguard faces constant supply line disruptions.",
+    "conflict_triangle": "Resource scarcity forces three factions to corner the market.",
+    "neutral_space_pressure": "Independent traders are squeezed by rising fuel costs."
+  },
+  "act_1": {
+    "name": "The Scarcity Cycle",
+    "goal": "Secure enough parts for a local refinery.",
+    "opening_incident": "A Reaver ship is intercepted near the main gate.",
+    "midpoint_turn": "You discover that the haul was stolen from Aurelia.",
+    "finale": "The local refinery is stabilized by your delivery.",
+    "player_takeaway": "Survival depends on choosing which faction's cargo is prioritized."
+  },
+  "starter_mission": {
+    "title": "Scrap of the Scarcity",
+    "reason": "A Reaver ship carrying vital fuel components must be neutralized.",
+    "enemy_identity": "A single, damaged Reaver vessel.",
+    "enemy_knows": "The Reaver is desperate for scrap and will fight aggressively.",
+    "after_effect": "You recover the cargo and receive your first payment."
+  },
+  "recurring_clue": {
+    "name": "The Shortage Log",
+    "signal": "Encrypted data packets in derelict hulls.",
+    "first_appearance": "Found inside the Reaver ship's core.",
+    "escalation": "More logs appear as you visit more mining hubs.",
+    "payoff_hint": "The logs reveal a pattern of intentional sabotage."
+  },
+  "rumor_trail": {
+    "name": "The Ghost Refinery",
+    "trail_id": "rumor_trail.ghost_refinery",
+    "hint_theme": "Abandoned industrial sites and illegal trade.",
+    "clue_templates": [
+      "A rumor of a hidden refinery is circulating among miners.",
+      "Some pilots say the scrap metal is being diverted to an unknown location."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "rare",
+    "payoff": "Unlocks a secret route to a high-value salvage site."
+  },
+  "horizon": {
+    "gate_tease": "The next gate leads toward the manufacturing heartlands.",
+    "new_system_reveal_rule": "New systems are revealed only when a gate is successfully navigated.",
+    "future_pressure_tease": "Rumors of an encroaching trade blockade.",
+    "future_ore_or_upgrade_tease": "Advanced alloys and heavy-duty engine upgrades.",
+    "regeneration_trigger": {
+      "id": "refinery_stabilization_trigger",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the refinery is stabilized, new trade routes are revealed."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, cynical humor regarding ship maintenance and fuel costs.",
+    "fallback": "If a quest objective is unclear, default to a contract from Kaelen.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "ancient signal",
+      "ghost signal",
+      "mystery_ous pulse",
+      "alien owner"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What is the scale of the rest of universe?",
+    "Why is there no central government?",
+    "How does a new faction emerge from the collapse?",
+    "Who will be told to abandon their ship first?",
+    "Where can the player find a relic of pre-spaceflight?"
+  ]
+}

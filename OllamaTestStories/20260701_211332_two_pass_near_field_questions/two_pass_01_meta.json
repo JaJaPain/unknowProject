@@ -1,0 +1,43 @@
+{
+  "creative_lane": "Industrial Decay and Corporate Sovereignty",
+  "freshness_rule": "Focus on the physical weight of logistics and the economic cost of survival in a dying system.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the primary economic engine driving the current conflict?",
+    "Why does the player's presence in this sector and why are they tolerated?",
+    "How many layers of corporate bureaucracy are there before a deal is finalized?",
+    "Who holds the physical leverage over the rest of the factions?",
+    "Where is the primary source of "
+  ],
+  "starter_mission_questions": [
+    "What is the immediate threat posed by the Reaver ship?",
+    "Why does the player need to prioritize one specific part or cargo from it?",
+    "How does the defeat of this ship impact the local trade routes?"
+  ],
+  "kaelen_questions": [
+    "What is Kaelen's primary motivation for hiring the player?",
+    "Why is K1204-B (Kaelen) not involved in public roles?",
+    "How does Kaelen use information as a leverage point?",
+    "Who are the other brokers who compete with Kaelen?",
+    "What is the cost of Kaelen's loyalty?"
+  ],
+  "faction_questions": [
+    "Why is Zenith reaching its resource limit?",
+    "How does Aurelia balance expansion and environmental preservation?",
+    "What is the core contradiction between Vanguard\u2019s military doctrine and their current reality?",
+    "Who are the primary rivals of Aurelia?",
+    "What is the cost of choosing a side?"
+  ],
+  "future_generation_questions": [
+    "How does the company's collapse lead to new power structures?",
+    "Why do other systems have different technological levels?",
+    "What if the player fails to turn a profit?",
+    "Who are the primary threats in deep space?",
+    "Why is the technology of this system still functional?"
+  ]
+}

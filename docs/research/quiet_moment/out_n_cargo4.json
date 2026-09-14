@@ -1,0 +1,124 @@
+[
+ {
+  "line": "I'm stuffed to the seams, and I don't mean the cargo holds.",
+  "raw": "I'm stuffed to the seams, and I don't mean the cargo holds.",
+  "secs": 3.3,
+  "flags": []
+ },
+ {
+  "line": "Captain. I'm stuffed. Not comfortable, not even a little. You'd think I could carry less.",
+  "raw": "Captain. I'm stuffed. Not comfortable, not even a little. You'd think I could carry less.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm full. My hold's stuffed. You can feel it, can't you?",
+  "raw": "I'm full. My hold's stuffed. You can feel it, can't you?",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "My hold's stuffed to the brim. You'd think the cargo'd know how to leave a little room to breathe.",
+  "raw": "My hold's stuffed to the brim. You'd think the cargo'd know how to leave a little room to breathe.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed. My hold's full. You can hear it groan. Not you — the crates. They're talking.",
+  "raw": "I'm stuffed. My hold's full. You can hear it groan. Not you — the crates. They're talking.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm full. You can feel it in my ribs. The cargo's heavy. I don't ask you to lift it. Or at least my frame spars.",
+  "raw": "I'm full. You can feel it in my ribs. The cargo's heavy. I don't ask you to lift it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed. You could say I'm stuffed. The hold's stuffed. I'm not complaining.",
+  "raw": "I'm stuffed. You could say I'm stuffed. The hold's stuffed. I'm not complaining.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the frames. My hold's full and I can feel every last kilo of it.",
+  "raw": "I'm stuffed to the frames. My hold's full and I can feel every last kilo of it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed. You can feel it in the bulkheads. My ribs are aching from it. My frame spars, technically.",
+  "raw": "I'm stuffed. You can feel it in the bulkheads. My ribs are aching from it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "My belly's full and it's got a weight to it. My cargo hold's stuffed, but that's just the way it is. That is — my cargo hold.",
+  "raw": "My belly's full and it's got a weight to it. My cargo hold's stuffed, but that's just the way it is.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed. You'd think a cargo hold could be more polite about it.",
+  "raw": "I'm stuffed. You'd think a cargo hold could be more polite about it.",
+  "secs": 2.9,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the hatch. My hold's got a belly and it's not mine. Someone's going to be scraping this out soon.",
+  "raw": "I'm stuffed to the hatch. My hold's got a belly and it's not mine. Someone's going to be scraping this out soon.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the gills. The cargo hold's got its fingers in me. Feel it? It's not comfortable.",
+  "raw": "I'm stuffed to the gills. The cargo hold's got its fingers in me. Feel it? It's not comfortable.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Every bay's stuffed. My gut's full. You don't have to look, but I'm not hiding it. That is — my cargo hold.",
+  "raw": "Every bay's stuffed. My gut's full. You don't have to look, but I'm not hiding it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Captain. My belly's full. Can't take another thing. You'll have to find someone else to carry the rest. That is — my cargo hold.",
+  "raw": "Captain. My belly's full. Can't take another thing. You'll have to find someone else to carry the rest.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "My belly's full. You dropped something in me. I can feel it. I don't like it. That is — my cargo hold.",
+  "raw": "My belly's full. You dropped something in me. I can feel it. I don't like it.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads. You didn't have to load me so full. I noticed you did anyway.",
+  "raw": "I'm stuffed to the bulkheads. You didn't have to load me so full. I noticed you did anyway.",
+  "secs": 3.1,
+  "flags": [
+   "demo_echo"
+  ]
+ },
+ {
+  "line": "I'm stuffed. You should've seen the look on my cargo doors when they closed. They didn't expect this much weight.",
+  "raw": "I'm stuffed. You should've seen the look on my cargo doors when they closed. They didn't expect this much weight.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the frames. My ribs are full. You'd think I'd be more graceful about it. Frame spars, if we're being accurate.",
+  "raw": "I'm stuffed to the frames. My ribs are full. You'd think I'd be more graceful about it.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "I'm stuffed to the bulkheads. Can't stand it. Every hinge aches.",
+  "raw": "I'm stuffed to the bulkheads. Can't stand it. Every hinge aches.",
+  "secs": 3.0,
+  "flags": []
+ }
+]

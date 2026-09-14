@@ -1,0 +1,81 @@
+{
+  "campaign_title": "Echoes of the Void",
+  "campaign_subtitle": "The Dust of Dead Systems",
+  "campaign_logline": "A desperate pilot navigates a collapsing trade corridor.",
+  "campaign_pitch": "Navigate the decaying infrastructure of the Aurelia Corridor. Balance the demands of three rival factions while uncovering why the supply lines are failing.",
+  "campaign_story_summary": "The Aurelia Corridor is choking on its own logistics. Zenith wants to secure the main gates, Vanguard seeks to protect trade routes, and Aurelia struggles to maintain their infrastructure. A pilot's cargo becomes a point of contention. You must decide who owns the future of the corridor.",
+  "tone": "Dry, gritty frontier humor. Low-stakes survival with high-stakes politics.",
+  "opening": {
+    "status_quo": "The Aurelia Corridor is a primary trade route between three major hubs.",
+    "visible_crisis": "Supply lines are failing due to aging gate infrastructure and pirate activity.",
+    "hidden_crisis": "A logistics software glitch is slowly corrupting the automated navigation systems.",
+    "why_now": "The nearest hub's main processor is scheduled for a hard reset in thirty days.",
+    "player_role": "An independent pilot seeking to pay off mounting debts."
+  },
+  "mystery": {
+    "question": "Why are the automated navigation systems failing?",
+    "false_answer": "Pirates are hacking the gate network to create a dead zone.",
+    "true_answer_hint": "The system is reacting to an unforeseen geological shift in the nearby nebula.",
+    "long_term_reveal_direction": "The corruption is actually an adaptive response to environmental hazards."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows the extent of the navigation system's degradation.",
+    "address_rule": "Refer to her as a broker or fix-it specialist.",
+    "never_reveal_rule": "Never reveal her knowledge of the gate systems."
+  },
+  "factions": {
+    "zenith_problem": "Zenith seeks to consolidate power by monopolizing the gate network's maintenance.",
+    "aurelia_problem": "Aurelia is struggling to maintain their aging infrastructure with limited resources.",
+    "vanguard_problem": "Vanguard wants to secure trade routes against increasing pirate activity.",
+    "conflict_triangle": "Zenith wants control, Aurelia needs help, and Vanguard wants safety.",
+    "neutral_space_pressure": "The local pirates are becoming more aggressive as the corridor's security thins."
+  },
+  "act_1": {
+    "name": "The Broken Path",
+    "goal": "Secure a stable route through the Aurelia Corridor.",
+    "opening_itement_incident": "A cargo shipment of gate components is intercepted by a scavenger ship.",
+    "midpoint_turn": "You discover that several gates are no longer responding to standard protocols.",
+    "finale": "You choose which faction's protocol will be prioritized for the next cycle.",
+    "player_takeaway": "The corridor is failing, and you must decide who leads it."
+  },
+  "starter_mission": {
+    "title": "Scavenger's Toll",
+    "reason": "You need to clear a path through a debris-heavy sector.",
+    "enemy_identity": "A lone scavenger ship.",
+    "enemy_knows": "The scavenger is trying to hide in the debris.",
+    "after_effect": "You gain access to a stable gate and a small amount of scrap metal."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signals",
+    "signal": "A recurring 10-second pulse from an abandoned relay station.",
+    "first__appearance": "The first time you enter the gate network.",
+    "escalation": "The signal pulses faster as you approach the core of the corridor.",
+    "payoff_hint": "The signal is a beacon for automated maintenance drones."
+  },
+  "rumor_trail": {
+    "name": "The Shadowy Broker",
+    "trail_id": "rumor_trail.shadow_broker",
+    "hint_theme": "Whispers of a broker who can find anything.",
+    "clue_templates": [
+      "I heard she can get you a contract that actually pays well.",
+      "She's the told-be-told for fixers in this sector."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "local",
+    "payoff": "A high-value contract from Kaelen directly."
+  },
+  "horizon": {
+    "gate_tease": "The gate network is expanding into the unknown.",
+    "new__system_reveal_rule": "Do not mention other factions until they are encountered.",
+    "future_pressure_tease": "Reports of increasing pirate activity in outer sectors.",
+    "future_ore_or_upgrade_tees_tease": "Rumors of rare minerals found in the nebula's core.",
+    "regeneration_trigger": {
+      "id": "gate_expansion_trigger",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the first act ends, add new sector gates."
+    }
+  }
+}

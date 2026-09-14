@@ -1,0 +1,1419 @@
+extends SceneTree
+
+const SchedulerType := preload("res://scripts/story/NarrativeCacheScheduler.gd")
+const DiagnosticsType := preload("res://scripts/diagnostics/GenerationDiagnostics.gd")
+
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	_test_priority_trigger_mapping_matches_phase_contract()
+	_test_priority_order_and_dedupe()
+	_test_deduplicates_active_jobs_by_cache_key()
+	_test_ready_result_fans_out_to_deduped_requesters()
+	_test_ready_result_payload_updates_fan_out_to_requesters()
+	_test_restored_ready_payload_is_available_to_requesters()
+	_test_lifecycle_timestamps_and_stats()
+	_test_cancel_and_stale_discard_skip_ready_and_frozen_jobs()
+	_test_scope_cancellation_only_cancels_matching_queued_jobs()
+	_test_diagnostic_summary_reports_lifecycle_durations()
+	_test_cache_readiness_slo_gate()
+	_test_pause_blocks_starting_small_jobs_until_resume()
+	_test_validation_failure_retries_once_then_requires_degraded_content()
+	_test_default_concurrency_allows_only_one_generation_in_flight()
+	_test_tts_jobs_inherit_text_priority_and_scope_after_validation()
+	_test_tts_cache_jobs_transition_without_changing_text_status()
+	_test_tts_failure_is_recorded_separately_from_text_degradation()
+	_test_equal_priority_text_dispatches_before_audio_cache()
+	_test_audio_pending_jobs_do_not_block_current_p0_text()
+	_test_objective_progress_and_completion_plan_turn_in_prefetch()
+	_test_mission_acceptance_plans_baseline_and_likely_outcomes()
+	_test_system_arrival_plans_current_system_and_station_prefetch()
+	_test_station_target_plans_agent_mechanic_and_lounge_prefetch()
+	_test_chapter_packet_ready_plans_first_interaction_prefetch()
+	_test_new_campaign_loading_plans_startup_prefetch_bundle()
+	_test_game_root_acceptance_hook_calls_prefetch_planner()
+	_test_station_target_hooks_call_prefetch_planner()
+	_test_chapter_packet_ready_hook_calls_prefetch_planner()
+	_test_new_campaign_loading_hook_calls_prefetch_planner()
+	_test_game_root_cache_worker_has_template_safe_contact_offer_path()
+	_test_game_root_cache_worker_starts_tts_after_validated_text()
+	_test_ui_agent_board_uses_ready_cached_contact_offer_before_generation()
+	_test_cached_agent_offer_flow_asserts_no_click_to_generate()
+	_test_ui_agent_board_pending_state_stays_actionable()
+	_test_ui_offer_text_is_presented_before_audio_waits()
+	_test_ui_lounge_pending_states_stay_actionable()
+	_test_game_root_cache_worker_has_template_safe_line_bank_path()
+	_test_dev_story_snapshot_reports_narrative_cache_diagnostics()
+	_test_loading_gate_precaches_startup_line_bank_tts()
+	_test_system_arrival_precaches_current_line_bank_tts()
+	_test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback()
+	_test_kaelen_system_arrival_uses_ready_line_bank_before_template()
+	_test_queue_health_reports_contention_and_starvation()
+	_test_pool_refill_waits_for_higher_priority_work()
+
+	if _failures.is_empty():
+		print("[PASS] Narrative cache scheduler tests")
+		quit(0)
+		return
+	for failure in _failures:
+		push_error("[FAIL] %s" % failure)
+	quit(1)
+
+
+func _test_priority_trigger_mapping_matches_phase_contract() -> void:
+	_expect(
+		SchedulerType.priority_for_trigger(
+			SchedulerType.TRIGGER_OBJECTIVE_COMPLETE_TURN_IN
+		) == SchedulerType.PRIORITY_P0
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT
+			) == SchedulerType.PRIORITY_P1
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_LIKELY_LOUNGE
+			) == SchedulerType.PRIORITY_P2
+			and SchedulerType.priority_for_trigger(
+				SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+			) == SchedulerType.PRIORITY_P3
+			and SchedulerType.priority_label(SchedulerType.PRIORITY_P0) == "P0",
+		"Scheduler priority trigger mapping does not match the Phase 6 contract."
+	)
+
+
+func _test_priority_order_and_dedupe() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.p2", "cache.p2", SchedulerType.PRIORITY_P2))
+	scheduler.queue_job(_job("job.p0", "cache.p0", SchedulerType.PRIORITY_P0))
+	scheduler.queue_job(_job("job.p1", "cache.p1", SchedulerType.PRIORITY_P1))
+	_expect(
+		str(scheduler.next_job().get("job_id", "")) == "job.p0",
+		"Scheduler did not choose the highest-priority pending job first."
+	)
+	var update := _job("job.p2", "cache.p2.changed", SchedulerType.PRIORITY_P0)
+	var queued: Dictionary = scheduler.queue_job(update)
+	_expect(
+		bool(queued.get("ok", false))
+			and str(scheduler.get_job("job.p2").get("cache_key", ""))
+				== "cache.p2.changed"
+			and int(scheduler.stats().get("queued", 0)) == 3,
+		"Scheduler did not update an existing job without double-counting it."
+	)
+
+
+func _test_deduplicates_active_jobs_by_cache_key() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.first", "cache.shared", SchedulerType.PRIORITY_P2)
+	first["requester_id"] = "ui.agent_panel"
+	var second := _job("job.second", "cache.shared", SchedulerType.PRIORITY_P0)
+	second["requester_id"] = "prefetch.current_station"
+	scheduler.queue_job(first)
+	var deduped: Dictionary = scheduler.queue_job(second)
+	var job: Dictionary = scheduler.get_job("job.first")
+	var requesters: Array = job.get("requesters", [])
+	_expect(
+		bool(deduped.get("deduped", false))
+			and scheduler.jobs().size() == 1
+			and str(deduped.get("job", {}).get("job_id", "")) == "job.first"
+			and int(job.get("priority", SchedulerType.PRIORITY_P2))
+				== SchedulerType.PRIORITY_P0
+			and requesters.has("ui.agent_panel")
+			and requesters.has("prefetch.current_station"),
+		"Scheduler did not deduplicate active jobs by cache key."
+	)
+	scheduler.mark_ready("job.first")
+	var after_ready: Dictionary = scheduler.queue_job(
+		_job("job.third", "cache.shared", SchedulerType.PRIORITY_P1)
+	)
+	_expect(
+		not bool(after_ready.get("deduped", false))
+			and scheduler.jobs().size() == 2,
+		"Scheduler should allow a fresh job for a cache key after the prior job is ready."
+	)
+
+
+func _test_ready_result_fans_out_to_deduped_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.shared.first", "cache.shared.ready", SchedulerType.PRIORITY_P2)
+	first["requester_id"] = "ui.agent_panel"
+	var second := _job("job.shared.second", "cache.shared.ready", SchedulerType.PRIORITY_P1)
+	second["requester_id"] = "prefetch.station"
+	scheduler.queue_job(first)
+	scheduler.queue_job(second)
+	scheduler.mark_generation_started("job.shared.first")
+	scheduler.mark_ready("job.shared.first", {
+		"cache_key": "cache.shared.ready",
+		"opening": "Same finished bundle.",
+	})
+	var ui_result: Dictionary = scheduler.ready_result_for_requester("ui.agent_panel")
+	var prefetch_result: Dictionary = scheduler.ready_result_for_requester("prefetch.station")
+	_expect(
+		str(ui_result.get("job_id", "")) == "job.shared.first"
+			and str(prefetch_result.get("job_id", "")) == "job.shared.first"
+			and str(ui_result.get("result_payload", {}).get("opening", ""))
+				== "Same finished bundle."
+			and str(prefetch_result.get("result_payload", {}).get("opening", ""))
+				== "Same finished bundle.",
+		"Scheduler did not expose the same ready result to deduped requesters."
+	)
+
+
+func _test_ready_result_payload_updates_fan_out_to_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var first := _job("job.bank.first", "cache.bank.ready", SchedulerType.PRIORITY_P1)
+	first["requester_id"] = "prefetch:current_system_kaelen:alpha"
+	var second := _job("job.bank.second", "cache.bank.ready", SchedulerType.PRIORITY_P1)
+	second["requester_id"] = "ui:kaelen_handoff"
+	scheduler.queue_job(first)
+	scheduler.queue_job(second)
+	scheduler.mark_generation_started("job.bank.first")
+	scheduler.mark_ready("job.bank.first", {
+		"content_type": "story_line_bank",
+		"fallback_uses": 0,
+	})
+	var updated: Dictionary = scheduler.update_result_payload("job.bank.first", {
+		"content_type": "story_line_bank",
+		"fallback_uses": 1,
+		"generated_replacements": 1,
+	})
+	var kaelen_result: Dictionary = scheduler.ready_result_for_requester(
+		"prefetch:current_system_kaelen:alpha"
+	)
+	var ui_result: Dictionary = scheduler.ready_result_for_requester("ui:kaelen_handoff")
+	var kaelen_payload: Dictionary = kaelen_result.get("result_payload", {}) \
+		if kaelen_result.get("result_payload", {}) is Dictionary else {}
+	var ui_payload: Dictionary = ui_result.get("result_payload", {}) \
+		if ui_result.get("result_payload", {}) is Dictionary else {}
+	_expect(
+		bool(updated.get("ok", false))
+			and int(kaelen_payload.get("fallback_uses", 0)) == 1
+			and int(ui_payload.get("generated_replacements", 0)) == 1,
+		"Scheduler payload updates did not remain visible to every ready requester."
+	)
+
+
+func _test_restored_ready_payload_is_available_to_requesters() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var restored: Dictionary = scheduler.restore_ready_job({
+		"job_id": "restored.cache.bank",
+		"cache_key": "cache.bank.persisted",
+		"kind": "current_system_kaelen_bundle",
+		"priority": SchedulerType.PRIORITY_P1,
+		"requesters": ["prefetch:current_system_kaelen:alpha"],
+	}, {
+		"content_type": "story_line_bank",
+		"fallback_uses": 2,
+	})
+	var ready: Dictionary = scheduler.ready_result_for_requester(
+		"prefetch:current_system_kaelen:alpha"
+	)
+	var payload: Dictionary = ready.get("result_payload", {}) \
+		if ready.get("result_payload", {}) is Dictionary else {}
+	_expect(
+		bool(restored.get("ok", false))
+			and str(ready.get("job_id", "")) == "restored.cache.bank"
+			and int(payload.get("fallback_uses", 0)) == 2,
+		"Scheduler did not restore a persisted ready payload for its requesters."
+	)
+
+
+func _test_lifecycle_timestamps_and_stats() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.alpha", "cache.alpha", SchedulerType.PRIORITY_P1))
+	scheduler.mark_generation_started("job.alpha")
+	scheduler.mark_generation_finished("job.alpha")
+	scheduler.mark_validation_finished("job.alpha", true)
+	scheduler.mark_tts_cache_started("job.alpha")
+	scheduler.mark_tts_ready("job.alpha")
+	scheduler.mark_ready("job.alpha")
+	var job: Dictionary = scheduler.get_job("job.alpha")
+	var stamps: Dictionary = job.get("diagnostic_timestamps", {})
+	_expect(
+		str(job.get("status", "")) == "ready"
+			and stamps.has("job_queued")
+			and stamps.has("generation_started")
+			and stamps.has("generation_finished")
+			and stamps.has("validation_finished")
+			and stamps.has("tts_cache_started")
+			and stamps.has("tts_ready")
+			and stamps.has("text_presented"),
+		"Scheduler did not preserve required lifecycle diagnostic timestamps."
+	)
+	_expect(
+		int(scheduler.stats().get("started", 0)) == 1
+			and int(scheduler.stats().get("ready", 0)) == 1
+			and int(scheduler.stats().get("degraded", 0)) == 1,
+		"Scheduler lifecycle stats did not update."
+	)
+
+
+func _test_cancel_and_stale_discard_skip_ready_and_frozen_jobs() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.cancel", "cache.cancel", SchedulerType.PRIORITY_P0))
+	var canceled: Dictionary = scheduler.cancel_job("job.cancel", "test")
+	_expect(
+		bool(canceled.get("ok", false))
+			and str(scheduler.get_job("job.cancel").get("status", "")) == "canceled",
+		"Scheduler did not cancel a pending job."
+	)
+	scheduler.queue_job(_truth_job("job.stale", false))
+	scheduler.queue_job(_truth_job("job.frozen", true))
+	scheduler.queue_job(_truth_job("job.ready", false))
+	scheduler.mark_ready("job.ready")
+	var discarded: Dictionary = scheduler.discard_stale_jobs({
+		"story_beat_id": "beat.alpha",
+	})
+	var removed: Array = discarded.get("removed", [])
+	_expect(
+		removed == ["job.stale"]
+			and str(scheduler.get_job("job.stale").get("status", ""))
+				== "stale_discarded"
+			and str(scheduler.get_job("job.frozen").get("status", "")) == "queued"
+			and str(scheduler.get_job("job.ready").get("status", "")) == "ready",
+		"Scheduler stale discard did not preserve frozen and ready jobs."
+	)
+
+
+func _test_scope_cancellation_only_cancels_matching_queued_jobs() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_scoped_job("job.cancel.alpha", "station.alpha", "npc.alpha"))
+	scheduler.queue_job(_scoped_job("job.keep.station", "station.beta", "npc.alpha"))
+	scheduler.queue_job(_scoped_job("job.keep.npc", "station.alpha", "npc.beta"))
+	scheduler.queue_job(_scoped_job("job.inflight", "station.alpha", "npc.alpha"))
+	scheduler.mark_generation_started("job.inflight")
+	var canceled: Dictionary = scheduler.cancel_jobs({
+		"campaign_id": "campaign.alpha",
+		"story_revision": 7,
+		"station_id": "station.alpha",
+		"npc_id": "npc.alpha",
+	}, "station_changed")
+	var ids: Array = canceled.get("canceled", [])
+	_expect(
+		ids == ["job.cancel.alpha"]
+			and str(scheduler.get_job("job.cancel.alpha").get("status", ""))
+				== "canceled"
+			and str(scheduler.get_job("job.keep.station").get("status", ""))
+				== "queued"
+			and str(scheduler.get_job("job.keep.npc").get("status", ""))
+				== "queued"
+			and str(scheduler.get_job("job.inflight").get("status", ""))
+				== "in_flight",
+		"Scheduler scope cancellation did not cancel only matching queued jobs."
+	)
+
+
+func _test_diagnostic_summary_reports_lifecycle_durations() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.metrics", "cache.metrics", SchedulerType.PRIORITY_P1))
+	scheduler.mark_generation_started("job.metrics")
+	scheduler.mark_generation_finished("job.metrics")
+	scheduler.mark_validation_finished("job.metrics")
+	scheduler.mark_ready("job.metrics", {
+		"content_type": "story_line_bank",
+		"source": "fallback_bank",
+		"fallback_uses": 2,
+		"generated_replacements": 1,
+	})
+	scheduler.ready_result_for_requester("job.metrics")
+	scheduler.ready_result_for_requester("missing.requester")
+	scheduler.mark_interaction_clicked_for_requester("job.metrics")
+	var summary: Dictionary = scheduler.diagnostic_summary()
+	var content_counts: Dictionary = summary.get("content_type_counts", {}) \
+		if summary.get("content_type_counts", {}) is Dictionary else {}
+	var source_counts: Dictionary = summary.get("source_counts", {}) \
+		if summary.get("source_counts", {}) is Dictionary else {}
+	_expect(
+		int(summary.get("queue_wait", {}).get("count", 0)) == 1
+			and int(summary.get("generation", {}).get("count", 0)) == 1
+			and int(summary.get("validation", {}).get("count", 0)) == 1
+			and int(summary.get("time_to_ready", {}).get("count", 0)) == 1
+			and float(summary.get("time_to_ready", {}).get("avg_seconds", -1.0))
+				>= 0.0
+			and int(summary.get("time_to_ready", {}).get("p95_seconds", -1)) >= 0
+			and int(summary.get("ready_payloads", 0)) == 1
+			and int(content_counts.get("story_line_bank", 0)) == 1
+			and int(source_counts.get("fallback_bank", 0)) == 1
+			and int(summary.get("fallback_uses", 0)) == 2
+			and int(summary.get("generated_replacements", 0)) == 1
+			and int(summary.get("cache_lookup_hit", 0)) == 1
+			and int(summary.get("cache_lookup_miss", 0)) == 1
+			and int(summary.get("interaction_clicked", 0)) == 1
+			and int(summary.get("ready_to_click", {}).get("count", 0)) == 1,
+		"Scheduler diagnostic summary did not report lifecycle durations."
+	)
+
+
+func _test_cache_readiness_slo_gate() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var no_samples: Dictionary = scheduler.assert_cache_readiness_slo(0.99, "empty")
+	_expect(
+		not bool(no_samples.get("ok", true))
+			and str(no_samples.get("status", "")) == "no_cache_lookup_samples",
+		"Cache readiness SLO should fail loudly when no lookups exist."
+	)
+	var job := _job("job.ready.slo", "cache.ready.slo", SchedulerType.PRIORITY_P1)
+	job["requester_id"] = "ui.ready"
+	scheduler.queue_job(job)
+	scheduler.mark_generation_started("job.ready.slo")
+	scheduler.mark_ready("job.ready.slo", {"content_type": "quest_offer"})
+	scheduler.ready_result_for_requester("ui.ready")
+	var pass_gate: Dictionary = scheduler.assert_cache_readiness_slo(
+		0.99,
+		"ready_cache_fixture"
+	)
+	_expect(
+		bool(pass_gate.get("ok", false))
+			and str(pass_gate.get("status", "")) == "cache_readiness_slo_passed"
+			and int(pass_gate.get("hits", 0)) == 1
+			and int(pass_gate.get("misses", -1)) == 0,
+		"Cache readiness SLO should pass when required lookups are ready."
+	)
+	scheduler.ready_result_for_requester("ui.missing")
+	var fail_gate: Dictionary = scheduler.assert_cache_readiness_slo(
+		0.99,
+		"miss_fixture"
+	)
+	_expect(
+		not bool(fail_gate.get("ok", true))
+			and str(fail_gate.get("status", "")) == "cache_readiness_slo_failed"
+			and int(fail_gate.get("sample_count", 0)) == 2,
+		"Cache readiness SLO should fail when miss rate exceeds the threshold."
+	)
+
+
+func _test_pause_blocks_starting_small_jobs_until_resume() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.paused", "cache.paused", SchedulerType.PRIORITY_P0))
+	var paused: Dictionary = scheduler.pause("campaign_bible_generation")
+	var start_while_paused: Dictionary = scheduler.mark_generation_started("job.paused")
+	_expect(
+		bool(paused.get("paused", false))
+			and scheduler.next_job().is_empty()
+			and not bool(start_while_paused.get("ok", false))
+			and bool(scheduler.stats().get("paused", false)),
+		"Scheduler pause did not block small job dispatch."
+	)
+	scheduler.resume()
+	var started: Dictionary = scheduler.mark_generation_started("job.paused")
+	_expect(
+		not scheduler.is_paused()
+			and bool(started.get("ok", false))
+			and str(scheduler.get_job("job.paused").get("status", "")) == "in_flight",
+		"Scheduler did not resume small job dispatch."
+	)
+
+
+func _test_validation_failure_retries_once_then_requires_degraded_content() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.retry", "cache.retry", SchedulerType.PRIORITY_P0))
+	scheduler.mark_generation_started("job.retry")
+	scheduler.mark_generation_finished("job.retry")
+	var retried: Dictionary = scheduler.mark_validation_failed(
+		"job.retry",
+		["opening missing cause"]
+	)
+	_expect(
+		bool(retried.get("retry_queued", false))
+			and str(scheduler.get_job("job.retry").get("status", "")) == "queued"
+			and int(scheduler.get_job("job.retry").get("retry_count", 0)) == 1
+			and int(scheduler.stats().get("retry_queued", 0)) == 1,
+		"Scheduler did not queue exactly one validation retry."
+	)
+	scheduler.mark_generation_started("job.retry")
+	scheduler.mark_generation_finished("job.retry")
+	var degraded: Dictionary = scheduler.mark_validation_failed(
+		"job.retry",
+		["answer revealed forbidden fact"]
+	)
+	var summary: Dictionary = scheduler.diagnostic_summary()
+	_expect(
+		not bool(degraded.get("retry_queued", true))
+			and str(scheduler.get_job("job.retry").get("status", ""))
+				== "degraded_required"
+			and bool(scheduler.get_job("job.retry").get("degraded", false))
+			and int(summary.get("degraded_jobs", 0)) == 1
+			and float(summary.get("degraded_rate", 0.0)) > 0.0,
+		"Scheduler did not require degraded content after retry budget was spent."
+	)
+
+
+func _test_default_concurrency_allows_only_one_generation_in_flight() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.first", "cache.concurrent.first", SchedulerType.PRIORITY_P0))
+	scheduler.queue_job(_job("job.second", "cache.concurrent.second", SchedulerType.PRIORITY_P0))
+	var first_started: Dictionary = scheduler.mark_generation_started("job.first")
+	var second_started: Dictionary = scheduler.mark_generation_started("job.second")
+	_expect(
+		bool(first_started.get("ok", false))
+			and not bool(second_started.get("ok", false))
+			and scheduler.next_job().is_empty()
+			and int(scheduler.stats().get("in_flight", 0)) == 1,
+		"Scheduler allowed more than one default in-flight generation."
+	)
+	scheduler.mark_ready("job.first")
+	var next: Dictionary = scheduler.next_job()
+	var second_retry: Dictionary = scheduler.mark_generation_started("job.second")
+	_expect(
+		str(next.get("job_id", "")) == "job.second"
+			and bool(second_retry.get("ok", false)),
+		"Scheduler did not release the next job after in-flight work completed."
+	)
+
+
+func _test_tts_jobs_inherit_text_priority_and_scope_after_validation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _scoped_job("job.text", "station.alpha", "npc.alpha")
+	text_job["priority"] = SchedulerType.PRIORITY_P0
+	text_job["subject_id"] = "offer.alpha"
+	text_job["story_beat_id"] = "beat.alpha"
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text")
+	scheduler.mark_generation_finished("job.text")
+	var early: Dictionary = SchedulerType.new().queue_tts_jobs_for_validated_text(
+		"job.missing",
+		{"opening": "No source."},
+		["opening"],
+		"voice.agent.alpha"
+	)
+	var queued: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one.", "accept_standard_response": "Line two."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	scheduler.mark_validation_finished("job.text")
+	var missing_text: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	var validated_queued: Dictionary = scheduler.queue_tts_jobs_for_validated_text(
+		"job.text",
+		{"opening": "Line one.", "accept_standard_response": "Line two."},
+		["opening", "accept_standard_response"],
+		"voice.agent.alpha"
+	)
+	scheduler.mark_ready("job.text")
+	var next: Dictionary = scheduler.next_job()
+	var canceled: Dictionary = scheduler.cancel_jobs({
+		"subject_id": "offer.alpha",
+	}, "offer_replaced")
+	var canceled_ids: Array = canceled.get("canceled", [])
+	_expect(
+		not bool(early.get("ok", true))
+			and not bool(queued.get("ok", true))
+			and not bool(missing_text.get("ok", true))
+			and (missing_text.get("queued", []) as Array).is_empty()
+			and bool(validated_queued.get("ok", false))
+			and (validated_queued.get("queued", []) as Array).size() == 2,
+		"Scheduler did not require validated text before queuing TTS jobs."
+	)
+	_expect(
+		str(next.get("kind", "")) == "tts_cache"
+			and int(next.get("priority", SchedulerType.PRIORITY_P2))
+				== SchedulerType.PRIORITY_P0
+			and str(next.get("subject_id", "")) == "offer.alpha"
+			and str(next.get("field_id", "")) in [
+				"opening",
+				"accept_standard_response",
+			],
+		"Scheduler TTS jobs did not inherit text priority, scope, and field identity."
+	)
+	_expect(
+		canceled_ids.size() == 2,
+		"Scheduler did not cancel obsolete queued TTS jobs by inherited scope."
+	)
+
+
+func _test_tts_cache_jobs_transition_without_changing_text_status() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _job(
+		"job.text.bundle",
+		"cache.text.bundle",
+		SchedulerType.PRIORITY_P0
+	)
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text.bundle")
+	scheduler.mark_generation_finished("job.text.bundle")
+	scheduler.mark_validation_finished("job.text.bundle")
+	scheduler.mark_ready("job.text.bundle", {"opening": "Readable subtitle."})
+	var audio_job := _job(
+		"job.audio.bundle",
+		"cache.audio.bundle",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	var started: Dictionary = scheduler.mark_tts_cache_started("job.audio.bundle")
+	var ready: Dictionary = scheduler.mark_tts_ready("job.audio.bundle")
+	var audio: Dictionary = scheduler.get_job("job.audio.bundle")
+	var text: Dictionary = scheduler.get_job("job.text.bundle")
+	var stamps: Dictionary = audio.get("diagnostic_timestamps", {}) \
+		if audio.get("diagnostic_timestamps", {}) is Dictionary else {}
+	_expect(
+		bool(started.get("ok", false))
+			and bool(ready.get("ok", false))
+			and str(audio.get("status", "")) == "ready"
+			and stamps.has("tts_cache_started")
+			and stamps.has("tts_ready")
+			and str(text.get("status", "")) == "ready",
+		"Scheduler TTS cache job transitions disturbed ready text status."
+	)
+
+
+func _test_tts_failure_is_recorded_separately_from_text_degradation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var text_job := _job(
+		"job.text.ready",
+		"cache.text.ready",
+		SchedulerType.PRIORITY_P0
+	)
+	scheduler.queue_job(text_job)
+	scheduler.mark_generation_started("job.text.ready")
+	scheduler.mark_generation_finished("job.text.ready")
+	scheduler.mark_validation_finished("job.text.ready")
+	scheduler.mark_ready("job.text.ready", {"opening": "Readable subtitle."})
+	var failed: Dictionary = scheduler.mark_tts_failed(
+		"job.text.ready",
+		"provider_timeout"
+	)
+	var job: Dictionary = scheduler.get_job("job.text.ready")
+	_expect(
+		bool(failed.get("ok", false))
+			and str(job.get("status", "")) == "ready"
+			and bool(job.get("tts_failed", false))
+			and str(job.get("tts_failure_reason", "")) == "provider_timeout"
+			and not bool(job.get("degraded", false))
+			and int(scheduler.stats().get("tts_failed", 0)) == 1,
+		"Scheduler did not record TTS failure separately from ready text."
+	)
+	var audio_job := _job(
+		"job.audio.failed",
+		"cache.audio.failed",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.mark_generation_started("job.audio.failed")
+	var audio_failed: Dictionary = scheduler.mark_tts_failed("job.audio.failed")
+	_expect(
+		bool(audio_failed.get("ok", false))
+			and str(scheduler.get_job("job.audio.failed").get("status", ""))
+				== "audio_failed",
+		"Scheduler did not mark failed audio cache work without touching text status."
+	)
+
+
+func _test_equal_priority_text_dispatches_before_audio_cache() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var audio_job := _job(
+		"job.audio",
+		"cache.audio",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.queue_job(_job(
+		"job.text",
+		"cache.text",
+		SchedulerType.PRIORITY_P0
+	))
+	var next: Dictionary = scheduler.next_job()
+	_expect(
+		str(next.get("job_id", "")) == "job.text",
+		"Scheduler let equal-priority audio cache work delay visible text."
+	)
+	var lower_priority_text := _job(
+		"job.lower.text",
+		"cache.lower.text",
+		SchedulerType.PRIORITY_P1
+	)
+	scheduler.queue_job(lower_priority_text)
+	_expect(
+		str(scheduler.next_job().get("job_id", "")) == "job.text",
+		"Scheduler kind ranking overrode priority bands."
+	)
+
+
+func _test_audio_pending_jobs_do_not_block_current_p0_text() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	var audio_job := _job(
+		"job.old.audio",
+		"cache.old.audio",
+		SchedulerType.PRIORITY_P0
+	)
+	audio_job["kind"] = "tts_cache"
+	scheduler.queue_job(audio_job)
+	scheduler.mark_tts_cache_started("job.old.audio")
+	scheduler.queue_job(_job(
+		"job.current.p0.text",
+		"cache.current.p0.text",
+		SchedulerType.PRIORITY_P0
+	))
+	var next: Dictionary = scheduler.next_job()
+	_expect(
+		str(scheduler.get_job("job.old.audio").get("status", "")) == "audio_pending"
+			and str(next.get("job_id", "")) == "job.current.p0.text",
+		"Audio-pending TTS work blocked a current P0 text field."
+	)
+
+
+func _test_objective_progress_and_completion_plan_turn_in_prefetch() -> void:
+	var early := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_progress",
+		"mission_id": "mission.alpha",
+		"progress_fraction": 0.69,
+	})
+	var likely := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_progress",
+		"mission_id": "mission.alpha",
+		"progress_fraction": 0.7,
+		"outcome_fingerprint": "rough.pending",
+		"story_revision": 8,
+		"relationship_tier": "cordial",
+	})
+	var complete := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "objective_complete",
+		"mission_id": "mission.alpha",
+		"outcome_fingerprint": "clean.complete",
+		"story_revision": 8,
+		"relationship_tier": "trusted",
+	})
+	_expect(
+		early.is_empty()
+			and likely.size() == 1
+			and complete.size() == 1,
+		"Scheduler prefetch planner did not respect objective progress thresholds."
+	)
+	_expect(
+		str(likely[0].get("trigger", ""))
+			== SchedulerType.TRIGGER_OBJECTIVE_PROGRESS_TURN_IN
+			and int(likely[0].get("priority", -1)) == SchedulerType.PRIORITY_P1
+			and str(likely[0].get("kind", "")) == "kaelen_turn_in_bundle"
+			and str(likely[0].get("relationship_tier", "")) == "cordial",
+		"Scheduler progress prefetch job did not preserve likely turn-in context."
+	)
+	_expect(
+		str(complete[0].get("trigger", ""))
+			== SchedulerType.TRIGGER_OBJECTIVE_COMPLETE_TURN_IN
+			and int(complete[0].get("priority", -1)) == SchedulerType.PRIORITY_P0
+			and str(complete[0].get("outcome_fingerprint", ""))
+				== "clean.complete",
+		"Scheduler completion prefetch job did not become exact P0 turn-in work."
+	)
+
+
+func _test_mission_acceptance_plans_baseline_and_likely_outcomes() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "mission_accepted",
+		"mission_id": "mission.beta",
+		"story_revision": 11,
+		"relationship_tier": "wary",
+		"likely_outcome_variants": ["turn_in_clean", "turn_in_rough"],
+	})
+	var variants: Array[String] = []
+	for job in jobs:
+		variants.append(str(job.get("outcome_variant", "")))
+	_expect(
+		jobs.size() == 3
+			and variants.has("abandon_baseline")
+			and variants.has("turn_in_clean")
+			and variants.has("turn_in_rough"),
+		"Scheduler mission acceptance prefetch did not include baseline and likely outcomes."
+	)
+	for job in jobs:
+		_expect(
+			str(job.get("trigger", ""))
+				== SchedulerType.TRIGGER_MISSION_ACCEPTANCE_OUTCOMES
+				and int(job.get("priority", -1)) == SchedulerType.PRIORITY_P1
+				and bool(job.get("truth_frozen", false))
+				and str(job.get("relationship_tier", "")) == "wary",
+			"Mission acceptance prefetch job did not preserve frozen accepted context."
+		)
+
+
+func _test_system_arrival_plans_current_system_and_station_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "system_arrived",
+		"system_id": "system.generated.cinder",
+		"arrival_gate_id": "gate.generated.cinder.in",
+		"visible_station_ids": [
+			"station.cinder.exchange",
+			"station.cinder.relay",
+		],
+		"contact_profiles": [
+			{
+				"contact_id": "npc.agent.voss",
+				"display_name": "Director Voss",
+				"faction_id": "faction.zenith",
+				"voice_profile_id": "voice.voss.v1",
+			},
+			{
+				"contact_id": "npc.agent.ryn",
+				"display_name": "Liaison Ryn",
+				"faction_id": "faction.aurelia",
+				"voice_profile_id": "voice.ryn.v1",
+			},
+		],
+		"story_revision": 12,
+		"knowledge_revision": 4,
+	})
+	var triggers: Array[String] = []
+	var station_job_count := 0
+	var contact_job_count := 0
+	var ambient_job_count := 0
+	for job in jobs:
+		triggers.append(str(job.get("trigger", "")))
+		if str(job.get("trigger", "")) \
+				== SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION:
+			station_job_count += 1
+			_expect(
+				int(job.get("priority", -1)) == SchedulerType.PRIORITY_P0
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder"
+					and str(job.get("arrival_gate_id", ""))
+						== "gate.generated.cinder.in",
+				"System arrival station prefetch did not preserve arrival context."
+			)
+		if str(job.get("kind", "")) == "system_contact_offer_bundle":
+			contact_job_count += 1
+			_expect(
+				not str(job.get("contact_id", "")).is_empty()
+					and not str(job.get("contact_display", "")).is_empty()
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder",
+				"System arrival contact prefetch did not preserve contact context."
+			)
+		if str(job.get("kind", "")) == "ambient_pool_refill":
+			ambient_job_count += 1
+			_expect(
+				int(job.get("priority", -1)) == SchedulerType.PRIORITY_P3
+					and str(job.get("system_id", ""))
+						== "system.generated.cinder",
+				"System arrival ambient pool job did not preserve low-priority system context."
+			)
+	_expect(
+		jobs.size() == 8
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_AGENT)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA)
+			and triggers.has(SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT)
+			and station_job_count == 2
+			and contact_job_count == 2
+			and ambient_job_count == 1,
+		"Scheduler system arrival prefetch did not plan current-system and visible-station jobs."
+	)
+
+
+func _test_station_target_plans_agent_mechanic_and_lounge_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "station_targeted",
+		"station_id": "station.cinder.exchange",
+		"system_id": "system.generated.cinder",
+		"target_reason": "fly_to",
+		"station_type": "full_service",
+		"story_revision": 13,
+	})
+	var triggers: Array[String] = []
+	for job in jobs:
+		triggers.append(str(job.get("trigger", "")))
+		_expect(
+			str(job.get("station_id", "")) == "station.cinder.exchange"
+				and str(job.get("target_reason", "")) == "fly_to",
+			"Station target prefetch did not preserve station targeting context."
+		)
+	_expect(
+		jobs.size() == 3
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION)
+			and triggers.has(SchedulerType.TRIGGER_MECHANIC_GREETING)
+			and triggers.has(SchedulerType.TRIGGER_LIKELY_LOUNGE)
+			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P0,
+		"Scheduler station target prefetch did not plan station, mechanic, and lounge work."
+	)
+
+
+func _test_chapter_packet_ready_plans_first_interaction_prefetch() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "chapter_packet_ready",
+		"packet_id": "chapter_packet.2",
+		"chapter": 2,
+		"first_beat_ids": ["beat.alpha", "beat.beta"],
+		"system_id": "system.generated.cinder",
+		"story_revision": 15,
+	})
+	_expect(
+		jobs.size() == 2
+			and str(jobs[0].get("kind", "")) == "chapter_first_interaction_bundle"
+			and str(jobs[0].get("packet_id", "")) == "chapter_packet.2"
+			and int(jobs[0].get("chapter", 0)) == 2
+			and str(jobs[0].get("story_beat_id", "")) == "beat.alpha"
+			and int(jobs[0].get("priority", -1)) == SchedulerType.PRIORITY_P1,
+		"Scheduler chapter packet ready prefetch did not plan first interaction bundles."
+	)
+
+
+func _test_new_campaign_loading_plans_startup_prefetch_bundle() -> void:
+	var jobs := SchedulerType.prefetch_jobs_for_event({
+		"event_type": "new_campaign_loading",
+		"system_id": "system.start",
+		"station_id": "station.start.iron_reach",
+		"packet_id": "chapter_packet.1",
+		"chapter": 1,
+		"first_beat_ids": ["beat.opening"],
+		"story_revision": 1,
+	})
+	var kinds: Array[String] = []
+	var triggers: Array[String] = []
+	for job in jobs:
+		kinds.append(str(job.get("kind", "")))
+		triggers.append(str(job.get("trigger", "")))
+	_expect(
+		jobs.size() == 6
+			and kinds.has("current_station_agent_offer_bundle")
+			and kinds.has("mechanic_greeting_bundle")
+			and kinds.has("likely_lounge_opener_bundle")
+			and kinds.has("new_campaign_kaelen_handoff_bank")
+			and kinds.has("new_campaign_nova_bank")
+			and kinds.has("chapter_first_interaction_bundle")
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_VISIBLE_STATION)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_KAELEN)
+			and triggers.has(SchedulerType.TRIGGER_CURRENT_SYSTEM_NOVA),
+		"Scheduler new campaign loading prefetch did not plan the startup bundle."
+	)
+
+
+func _test_game_root_acceptance_hook_calls_prefetch_planner() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _on_quest_accepted_chronicle")
+			and source.contains("_queue_narrative_prefetch_jobs_for_event")
+			and source.contains("_narrative_prefetch_event_from_quest(quest, \"mission_accepted\")")
+			and source.contains("_narrative_prefetch_event_from_quest(quest, \"objective_progress\")")
+			and source.contains("_narrative_prefetch_event_from_quest(quest, \"objective_complete\")")
+			and source.contains("system_changed.connect(_on_system_arrival_prefetch)")
+			and source.contains("_narrative_prefetch_event_from_system_arrival")
+			and source.contains("_system_arrival_contact_profiles")
+			and source.contains("\"contact_profiles\"")
+			and source.contains("process_narrative_cache_jobs_for_kind(\"system_contact_offer_bundle\"")
+			and source.contains("_can_process_story_agent_offer_cache_jobs")
+			and source.contains("QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)")
+			and source.contains("NarrativeCacheSchedulerType.prefetch_jobs_for_event"),
+		"GameRoot mission lifecycle hooks are not wired to the narrative prefetch planner."
+	)
+
+
+func _test_station_target_hooks_call_prefetch_planner() -> void:
+	var game_root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(
+		game_root_file != null and ui_file != null,
+		"Could not inspect station target prefetch wiring."
+	)
+	if game_root_file == null or ui_file == null:
+		return
+	var game_root_source := game_root_file.get_as_text()
+	var ui_source := ui_file.get_as_text()
+	_expect(
+		game_root_source.contains("queue_narrative_station_target_prefetch")
+			and game_root_source.contains("_narrative_prefetch_event_from_station_target")
+			and game_root_source.contains("\"event_type\": \"station_targeted\"")
+			and ui_source.contains("_queue_station_target_prefetch")
+			and ui_source.contains("queue_narrative_station_target_prefetch")
+			and ui_source.contains("\"fly_to\"")
+			and ui_source.contains("\"dock\""),
+		"Station target/fly-to hooks are not wired to the narrative prefetch planner."
+	)
+
+
+func _test_chapter_packet_ready_hook_calls_prefetch_planner() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect chapter packet prefetch wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("_narrative_prefetch_event_from_chapter_packet")
+			and source.contains("\"event_type\": \"chapter_packet_ready\"")
+			and source.contains("\"first_beat_ids\"")
+			and source.contains("_commit_fallback_chapter_plan")
+			and source.contains("ChapterNarrativeDirectorType.fallback_chapter_packet")
+			and source.contains("GenerationDiagnostics.record_fallback")
+			and source.contains("_queue_narrative_prefetch_jobs_for_event("),
+		"Chapter packet ready hook is not wired to the narrative prefetch planner."
+	)
+
+
+func _test_new_campaign_loading_hook_calls_prefetch_planner() -> void:
+	var game_root_file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	var ui_file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(
+		game_root_file != null and ui_file != null,
+		"Could not inspect new campaign loading prefetch wiring."
+	)
+	if game_root_file == null or ui_file == null:
+		return
+	var game_root_source := game_root_file.get_as_text()
+	var ui_source := ui_file.get_as_text()
+	_expect(
+		game_root_source.contains("queue_narrative_new_campaign_loading_prefetch")
+			and game_root_source.contains("_narrative_prefetch_event_from_new_campaign_loading")
+			and game_root_source.contains("\"event_type\": \"new_campaign_loading\"")
+			and ui_source.contains("queue_narrative_new_campaign_loading_prefetch")
+			and ui_source.contains("not startup_save_loaded"),
+		"New campaign loading path is not wired to the narrative prefetch planner."
+	)
+
+
+func _test_game_root_cache_worker_has_template_safe_contact_offer_path() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot cache worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func process_next_narrative_cache_job")
+			and source.contains("func process_narrative_cache_job_for_requester")
+			and source.contains("func process_narrative_cache_jobs_for_kind")
+			and source.contains("func ready_cached_narrative_contact_offer")
+			and source.contains("func ready_cached_narrative_station_offer")
+			and source.contains("func _mark_narrative_cache_interaction_clicked")
+			and source.contains("mark_interaction_clicked_for_requester")
+			and source.contains("GenerationDiagnostics.record_lifecycle_timestamp")
+			and source.contains("\"interaction_clicked\"")
+			and source.contains("\"system_contact_offer_bundle\"")
+			and source.contains("\"current_station_agent_offer_bundle\"")
+			and source.contains("StoryAgentOfferBuilderType.can_build")
+			and source.contains("StoryAgentOfferBuilderType.build_offer")
+			and source.contains("mark_generation_started")
+			and source.contains("mark_validation_failed(job_id, field_errors, 1)")
+			and source.contains("\"retry_queued\": bool(failed.get(\"retry_queued\", false))")
+			and source.contains("mark_validation_finished")
+			and source.contains("mark_ready"),
+		"GameRoot cache worker is not wired to safely build ready contact offer payloads."
+	)
+
+
+func _test_game_root_cache_worker_starts_tts_after_validated_text() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot TTS cache worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("\"tts_cache\"")
+			and source.contains("func _queue_tts_for_validated_narrative_payload")
+			and source.contains("queue_tts_jobs_for_validated_text")
+			and source.contains("func _process_narrative_tts_cache_job")
+			and source.contains("SpeechService.cache")
+			and source.contains("mark_tts_cache_started")
+			and source.contains("mark_tts_ready")
+			and source.contains("func _persist_narrative_tts_status")
+			and source.contains("mark_tts_status")
+			and source.contains("\"pending\"")
+			and source.contains("\"ready\" if cache_status == \"already_cached\" else \"pending\"")
+			and source.contains("func _tts_required_fields_for_text_bundle")
+			and source.contains("func _voice_profile_for_narrative_payload")
+			and source.contains("offer_dialogue")
+			and source.contains("mission_dialogue_bundle")
+			and source.contains("choice_%03d_response"),
+		"GameRoot does not start TTS cache jobs immediately after validated text bundles."
+	)
+
+
+func _test_ui_agent_board_uses_ready_cached_contact_offer_before_generation() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager cached offer wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _try_use_ready_cached_agent_offer")
+			and source.contains("ready_cached_narrative_contact_offer")
+			and source.contains("ready_cached_narrative_station_offer")
+			and source.contains("allow_station_offer")
+			and source.contains("_on_background_quest_generated(quest_data, true)")
+			and source.contains("if _try_use_ready_cached_agent_offer(request_profile):")
+			and source.contains("QuestManager.request_new_quest"),
+		"UIManager does not consume ready cached contact offers before live quest generation."
+	)
+
+
+func _test_cached_agent_offer_flow_asserts_no_click_to_generate() -> void:
+	var diagnostics := DiagnosticsType.new()
+	var fixtures: Array[Dictionary] = [
+		{
+			"interaction_name": "Agent Board Cached Contact Offer",
+			"requester_id": "prefetch:contact.agent.test",
+			"text_type": "quest_briefing",
+			"text_source": "ready_contact_offer_cache",
+		},
+		{
+			"interaction_name": "Agent Board Cached Station Offer",
+			"requester_id": "prefetch:station.agent.test",
+			"text_type": "quest_briefing",
+			"text_source": "ready_station_offer_cache",
+		},
+		{
+			"interaction_name": "Mission Conversation Clarify Question",
+			"requester_id": "conversation:mission.runtime.test:clarify_term",
+			"text_type": "mission_conversation_answer",
+			"text_source": "mission_dialogue_bundle",
+		},
+		{
+			"interaction_name": "Mission Conversation Accept Choice",
+			"requester_id": "conversation:mission.runtime.test:accept_standard",
+			"text_type": "mission_conversation_terminal",
+			"text_source": "mission_dialogue_bundle",
+		},
+	]
+	for fixture in fixtures:
+		diagnostics.record_lifecycle_timestamp(
+			"player_interaction",
+			"interaction_clicked",
+			"v2_cache_flow_fixture",
+			{
+				"interaction_name": str(fixture.get("interaction_name", "")),
+				"requester_id": str(fixture.get("requester_id", "")),
+			}
+		)
+		diagnostics.record_lifecycle_timestamp(
+			str(fixture.get("text_type", "quest_briefing")),
+			"text_presented",
+			str(fixture.get("text_source", "ready_cache")),
+			{
+				"requester_id": str(fixture.get("requester_id", "")),
+				"content_source": str(fixture.get("text_source", "ready_cache")),
+			}
+		)
+	var gate: Dictionary = diagnostics.assert_no_click_to_generate_reports(
+		"cached_dialogue_option_flow"
+	)
+	_expect(
+		bool(gate.get("ok", false))
+			and int(gate.get("report_count", -1)) == 0,
+		"Cached dialogue-option V2 flow reported click-to-generate work."
+	)
+	var summary: Dictionary = diagnostics.summary()
+	_expect(
+		(summary.get("click_to_generate_reports", []) as Array).is_empty()
+			and int(summary.get("events_by_reason", {}).get("interaction_clicked", 0)) == fixtures.size()
+			and int(summary.get("events_by_reason", {}).get("text_presented", 0)) == fixtures.size(),
+		"Cached dialogue-option V2 flow did not retain click/text lifecycle evidence."
+	)
+
+
+func _test_ui_agent_board_pending_state_stays_actionable() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager pending offer state.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		not source.contains("Broker Kaelen is checking client contract requests")
+			and source.contains("No vetted contract is ready yet")
+			and source.contains("agent_back_btn.visible = true")
+			and source.contains("is_waiting_for_agent_board = true"),
+		"Agent board pending state is not actionable while cache/generation work finishes."
+	)
+	_expect(
+		source.contains("func _play_kaelen_latency_filler")
+			and source.contains("func _play_nova_latency_filler")
+			and source.contains("SpeechService.play_latency_filler_clip")
+			and source.contains("_play_kaelen_latency_filler(\"llm_generation\"")
+			and source.contains("_play_nova_latency_filler(\"llm_generation\""),
+		"UI wait states do not use safety-gated Kaelen/N.O.V.A. latency fillers."
+	)
+
+
+func _test_ui_offer_text_is_presented_before_audio_waits() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager text/audio readiness ordering.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	var present_idx := source.find("_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)")
+	var loading_wait_idx := source.find("SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)")
+	_expect(
+		present_idx >= 0
+			and loading_wait_idx >= 0
+			and present_idx < loading_wait_idx
+			and source.contains("_try_use_ready_cached_agent_offer(request_profile)")
+			and source.contains("ready_cached_narrative_contact_offer")
+			and source.contains("No vetted contract is ready yet"),
+		"Ready offer text is not presented before audio-cache waits."
+	)
+
+
+func _test_ui_lounge_pending_states_stay_actionable() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager lounge pending state.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _show_lounge_pending_turn")
+			and source.contains("func _cancel_lounge_pending_turn")
+			and source.contains("Step away")
+			and source.contains("You give them space and drift back to the bar.")
+			and source.contains("The stranger keeps their voice low")
+			and not source.contains("Listening...")
+			and not source.contains("_show_lounge_card_line(card, \"...\", false)"),
+		"Lounge model-wait state still uses non-actionable placeholder text."
+	)
+
+
+func _test_game_root_cache_worker_has_template_safe_line_bank_path() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot line-bank worker wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func ready_cached_narrative_line_bank")
+			and source.contains("\"new_campaign_kaelen_handoff_bank\"")
+			and source.contains("\"new_campaign_nova_bank\"")
+			and source.contains("\"current_system_kaelen_bundle\"")
+			and source.contains("\"current_system_nova_bundle\"")
+			and source.contains("\"ambient_pool_refill\"")
+			and source.contains("\"kaelen_handoff_pool_refill\"")
+			and source.contains("\"ambient_chatter\"")
+			and source.contains("func queue_kaelen_handoff_pool_refill")
+			and source.contains("func _kaelen_handoff_pool_refill_payload_for_cache_job")
+			and source.contains("refill_kaelen_handoff_pool_from_lines")
+			and source.contains("func consume_cached_narrative_line_bank")
+			and source.contains("func replace_used_cached_fallback_lines")
+			and source.contains("scheduler.update_result_payload")
+			and source.contains("FallbackLineBankType.replace_used_with_generated")
+			and source.contains("func _persist_narrative_ready_payload")
+			and source.contains("func _restore_ready_narrative_cache_payloads")
+			and source.contains("func _discard_narrative_cache_outside_restored_context")
+			and source.contains("discard_entries_outside_context")
+			and source.contains("scheduler.restore_ready_job")
+			and source.contains("campaign_narrative_cache_store.upsert_entry")
+			and source.contains("campaign_narrative_cache_store.update_result_payload")
+			and source.contains("ContextBlockBuilderType.kaelen_block")
+			and source.contains("ContextBlockBuilderType.nova_block")
+			and source.contains("ContextBlockBuilderType.ambient_chatter_block")
+			and source.contains("\"content_type\": \"story_line_bank\"")
+			and source.contains("FallbackLineBankType.create_bank")
+			and source.contains("\"source\": \"fallback_bank\"")
+			and source.contains("\"fallback_bank\": fallback_bank")
+			and source.contains("\"fallback_target_size\""),
+		"GameRoot cache worker is not wired to safely build Kaelen/N.O.V.A. line banks."
+	)
+
+
+func _test_dev_story_snapshot_reports_narrative_cache_diagnostics() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot DevPanel cache diagnostics wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _dev_format_narrative_cache_summary")
+			and source.contains("scheduler.diagnostic_summary()")
+			and source.contains("ready payloads=%d")
+			and source.contains("hits=%d")
+			and source.contains("misses=%d")
+			and source.contains("clicks=%d")
+			and source.contains("click-to-generate reports=%d")
+			and source.contains("ready-to-click avg=%.2fs")
+			and source.contains("p95=%ds")
+			and source.contains("degraded=%d")
+			and source.contains("fallback uses=%d")
+			and source.contains("generated replacements=%d")
+			and source.contains("GenerationDiagnostics.summary()")
+			and source.contains("_dev_format_count_dictionary"),
+		"DevPanel story snapshot does not expose narrative cache source diagnostics."
+	)
+
+
+func _test_loading_gate_precaches_startup_line_bank_tts() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager startup line-bank TTS wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _queue_startup_line_bank_voice_cache")
+			and source.contains("STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER")
+			and source.contains("func _queue_startup_line_bank_background_voice_cache")
+			and source.contains("\"startup_background\"")
+			and source.contains("ready_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_kaelen")
+			and source.contains("prefetch:current_system_nova")
+			and source.contains("func _cache_line_bank_payload_tts")
+			and source.contains("max_lines_per_speaker")
+			and source.contains("if max_lines > 0 and cached_count >= max_lines")
+			and source.contains("SpeechService.cache(text, voice_profile_id)")
+			and source.contains("_on_startup_line_bank_voice_cache_completed")
+			and source.contains("Pre-caching Kaelen and N.O.V.A. story banks"),
+		"Fresh-campaign loading does not pre-cache a bounded ready Kaelen/N.O.V.A. line-bank TTS starter set."
+	)
+
+
+func _test_system_arrival_precaches_current_line_bank_tts() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager system-arrival bank TTS wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func notify_system_arrived(system_id: String)")
+			and source.contains("_queue_current_system_line_bank_voice_cache(system_id, \"system_arrival\")")
+			and source.contains("func _queue_current_system_line_bank_voice_cache")
+			and source.contains("prefetch:current_system_kaelen")
+			and source.contains("prefetch:current_system_nova")
+			and source.contains("_cache_line_bank_payload_tts(payload, max_lines_per_speaker)"),
+		"System arrival does not pre-cache ready Kaelen/N.O.V.A. current-system line-bank TTS."
+	)
+
+
+func _test_kaelen_handoff_uses_ready_line_bank_before_canned_fallback() -> void:
+	var file := FileAccess.open("res://scripts/UIManager.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect UIManager Kaelen handoff bank wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _ready_kaelen_handoff_bank_line")
+			and source.contains("consume_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_kaelen")
+			and source.contains("KaelenInteractionKindsType.AGENT_HANDOFF")
+			and source.contains("_replace_used_kaelen_handoff_fallbacks([unique_line])")
+			and source.contains("replace_used_cached_fallback_lines")
+			and source.contains("kind != KaelenInteractionKindsType.AGENT_HANDOFF")
+			and source.contains("Using ready Kaelen handoff bank line")
+			and source.contains("Using canned handoff fallback"),
+		"Kaelen handoff does not consume ready bank lines before canned fallback."
+	)
+
+
+func _test_kaelen_system_arrival_uses_ready_line_bank_before_template() -> void:
+	var file := FileAccess.open("res://scripts/GameRoot.gd", FileAccess.READ)
+	_expect(file != null, "Could not inspect GameRoot Kaelen arrival bank wiring.")
+	if file == null:
+		return
+	var source := file.get_as_text()
+	_expect(
+		source.contains("func _ready_kaelen_system_arrival_bank_line")
+			and source.contains("_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)")
+			and source.contains("func _queue_gate_travel_kaelen_arrival_prefetch")
+			and source.contains("process_narrative_cache_job_for_requester")
+			and source.contains("consume_cached_narrative_line_bank")
+			and source.contains("prefetch:current_system_kaelen:%s")
+			and source.contains("KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL")
+			and source.contains("_kaelen_arrival_line")
+			and source.contains("\"kind\": KaelenInteractionKindsType.FIRST_SYSTEM_ARRIVAL"),
+		"Kaelen system arrival does not consume ready first-arrival bank lines before template fallback."
+	)
+
+
+func _test_queue_health_reports_contention_and_starvation() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	scheduler.queue_job(_job("job.flight", "cache.health.flight", SchedulerType.PRIORITY_P0))
+	scheduler.queue_job(_job("job.waiting", "cache.health.waiting", SchedulerType.PRIORITY_P1))
+	scheduler.mark_generation_started("job.flight")
+	var health: Dictionary = scheduler.queue_health(0)
+	_expect(
+		bool(health.get("contention", false))
+			and int(health.get("in_flight_count", 0)) == 1
+			and (health.get("in_flight", []) as Array).has("job.flight")
+			and int(health.get("pending_by_priority", {}).get(
+				str(SchedulerType.PRIORITY_P1),
+				0
+			)) == 1
+			and (health.get("starved_jobs", []) as Array).size() == 1,
+		"Scheduler queue health did not report contention and queued starvation."
+	)
+
+
+func _test_pool_refill_waits_for_higher_priority_work() -> void:
+	var scheduler: RefCounted = SchedulerType.new()
+	_expect(
+		scheduler.can_refill_pool(1, 2),
+		"Scheduler should allow refill when pool is below threshold and idle."
+	)
+	var queued: Dictionary = scheduler.queue_pool_refill_job(
+		"ambient.system.cinder",
+		1,
+		2,
+		{"system_id": "system.generated.cinder", "story_revision": 14}
+	)
+	_expect(
+		bool(queued.get("ok", false))
+			and str(queued.get("job", {}).get("trigger", ""))
+				== SchedulerType.TRIGGER_AMBIENT_REPLENISHMENT
+			and int(queued.get("job", {}).get("priority", -1))
+				== SchedulerType.PRIORITY_P3
+			and str(queued.get("job", {}).get("system_id", ""))
+				== "system.generated.cinder",
+		"Scheduler did not queue safe ambient pool refill work."
+	)
+	scheduler.mark_generation_started(
+		str(queued.get("job", {}).get("job_id", ""))
+	)
+	scheduler.mark_ready(str(queued.get("job", {}).get("job_id", "")))
+	scheduler.queue_job(_job("job.p1", "cache.refill.p1", SchedulerType.PRIORITY_P1))
+	_expect(
+		not scheduler.can_refill_pool(1, 2),
+		"Scheduler allowed ambient refill while higher-priority work was pending."
+	)
+	var deferred: Dictionary = scheduler.queue_pool_refill_job(
+		"ambient.system.cinder",
+		1,
+		2
+	)
+	_expect(
+		not bool(deferred.get("ok", true))
+			and bool(deferred.get("deferred", false)),
+		"Scheduler queued pool refill while higher-priority work was pending."
+	)
+	scheduler.mark_generation_started("job.p1")
+	scheduler.mark_ready("job.p1")
+	_expect(
+		not scheduler.can_refill_pool(2, 2)
+			and scheduler.can_refill_pool(1, 2),
+		"Scheduler pool refill threshold check did not recover after priority work finished."
+	)
+
+
+func _job(job_id: String, cache_key: String, priority: int) -> Dictionary:
+	return {
+		"job_id": job_id,
+		"cache_key": cache_key,
+		"kind": "mission_conversation",
+		"priority": priority,
+	}
+
+
+func _truth_job(job_id: String, truth_frozen: bool) -> Dictionary:
+	var job := _job(job_id, "%s.cache" % job_id, SchedulerType.PRIORITY_P1)
+	job["story_beat_id"] = "beat.alpha"
+	job["giver_npc_id"] = "agent.alpha"
+	job["destination_id"] = "station.start.main"
+	job["objective_fingerprint"] = "objective.alpha"
+	job["allowed_facts_fingerprint"] = "facts.alpha"
+	job["relationship_tier"] = "cordial"
+	job["truth_frozen"] = truth_frozen
+	return job
+
+
+func _scoped_job(job_id: String, station_id: String, npc_id: String) -> Dictionary:
+	var job := _job(job_id, "%s.cache" % job_id, SchedulerType.PRIORITY_P1)
+	job["campaign_id"] = "campaign.alpha"
+	job["story_revision"] = 7
+	job["system_id"] = "system.alpha"
+	job["station_id"] = station_id
+	job["speaker_id"] = npc_id
+	job["subject_id"] = "offer.alpha"
+	return job
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)

@@ -55,6 +55,8 @@ const VALID_TRANSITIONS: Dictionary = {
 		State.COMPLETED,
 		State.ABANDONED,
 		State.ACTIVE,
+		# A timed contract can still expire while waiting for the hand-in.
+		State.EXPIRED,
 	],
 	State.COMPLETED: [],
 	State.FAILED: [],

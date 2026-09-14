@@ -1,0 +1,13 @@
+{
+  "valid": false,
+  "score": 80,
+  "errors": [
+    "missing_nested:factions.aurelia_problem",
+    "missing_nested:rumor_trail.payoff",
+    "bad_trigger_id_format"
+  ],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin"
+  ]
+}

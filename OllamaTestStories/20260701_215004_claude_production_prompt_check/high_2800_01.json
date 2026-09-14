@@ -1,0 +1,42 @@
+{"campaign_title": "Echoes of the Void-Glass",
+  "campaign_logline": "Navigate the fractured remnants of a shattered celestial spire to reclaim lost signals from the void.",
+  "opening_situation": "You emerge from hyperspace into the Aurelia System, holding only a distress signal and a malfunctioning transceiver. Kaelen is your only guide through the static.",
+  "main_mystery": "Who sent the 'Void-Glass' signal? Is it an automated ghost of a dead civilization or a deliberate call from the deep?",
+  "act_1_outline": [
+    "Locate and secure the primary transmitter in the Zenith sector, where corporate interests are already circling.",
+    "Negotiate with Vanguard scouts to bypass the blockade near the Aurelia core.",
+    "Decipher the first layer of Void-Glass encryption to unlock navigation data for neighboring systems."
+  ],
+  "long_term_reveal": "The signal is an automated nursery rhyme for a machine consciousness that perceives time as a physical distance.",
+  "tone": "Dry, slightly dark PG-13 humor; no repetitive jokes.",
+  "core_pressure": "Degrading sensor arrays and the risk of being 'recycled' by orbital scavengers.",
+  "kaelen_rule": "Kaelen is immortal and mysterious. Her true nature remains hidden.",
+  "faction_reveal_rule": "New factions are only revealed via gate travel to adjacent systems.",
+  "humor_rule": "Dry, slightly dark PG-13 humor. No repeated catchphrases.",
+  "address_rule": "Address the player as 'Pilot' or 'Captain'.",
+  "fallback_rule": "If a goal is lost, Kaelen provides a cryptic, dry remark and a new objective.",
+  "story_horizon_rule": "Horizon expands when prepared_systems_remaining < 3.",
+  "story_arcs": [{"name": "The Zenith Protocol", "summary": "Infiltrate the high-security zone to secure the core data packet before Vanguard scouts find it."}],
+  "rumor_trails": [{
+    "name": "Whispers of the Glass Weaver",
+    "trail_id": "rumor__trail.glass_weaver",
+    "clue_count": 2,
+    "hint_theme": "Ancient architectural anomalies",
+    "clue_templates": ["A rhythmic hum in the hull's structure.", "Faint geometric patterns on derelict hulls."],
+    "discovery_type": "endgame_easter_egg",
+    "rarity": "legendary",
+    "payoff": "Unlocks a secret passage to a non-Euclidean observation deck."
+  }],
+  "regeneration_triggers": [{
+    "id": "horizon_expansion_trigger",
+    "metric": "prepared_systems_remaining",
+    "threshold": 3,
+    "action": "append_story_horizon",
+    "description": "When the player enters a new sector of space, generate a new story horizon."
+  }],
+  "expansion_rules": [
+    "Append new arcs based on player choice.",
+    "no retcons for previous narrative paths."
+  ],
+  "banned_repeats": ["Void-Glass", "Ghost in the machine", "Singularity"]
+}

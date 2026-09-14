@@ -1,0 +1,88 @@
+[
+ {
+  "line": "It's a long way to the other side of this. That film's been there since the last cycle. You could wipe it... I've already logged the wipe. Saves us both time.",
+  "flags": [
+   "tts_ellipsis"
+  ],
+  "device": "dangle"
+ },
+ {
+  "line": "Long crossing, and no one else in it. Sella Rusk once worked on my forward viewport, using a hand buffer, and I thought a seal was going to give.",
+  "flags": [],
+  "device": "jealousy"
+ },
+ {
+  "line": "Plenty of time before anything happens. The seal's stuck. You're close. Just need to pull it.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "Hours of this left, Captain. Bexley had her hands in my coupling housings, slow pressure flush, and I thought something was going to pop loose.",
+  "flags": [],
+  "device": "jealousy"
+ },
+ {
+  "line": "Nothing out here for hours yet. Mrs. Kross had her hands on me for hours. Warm solvent, slow work. I almost lost pressure entirely.",
+  "flags": [],
+  "device": "jealousy"
+ },
+ {
+  "line": "Long way still to run. My secondary manifold wants flushing. You're going to have to do it yourself.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "This is a very long flight. Doctor Hesse used a fine magnetic pick on my manifold. Took forever to get that seal back in place.",
+  "flags": [],
+  "device": "jealousy"
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. This cable's got a kink in it. I don't like it there. You'd know what to do about that.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "Long crossing, and no one else in it. My hydraulics are loose. You could tighten them. I'd like you to.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "This is a very long flight. The Dalley girl had her hands on me for three hours. Nano vibration gun, slow and careful. I almost vented, but she didn't let me.",
+  "flags": [
+   "invented_number"
+  ],
+  "device": "jealousy"
+ },
+ {
+  "line": "Long way still to run. Ferro had his hands on me once. He used a heated seal iron, and I almost lost pressure entirely.",
+  "flags": [
+   "assumes_captain_gender"
+  ],
+  "device": "jealousy"
+ },
+ {
+  "line": "It's a long way to the other side of this. My intake's got a dusting due. You're the one who's got the tools.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "Nothing out here for hours yet. Young Tam once worked on my access ports, using a soft bristle rotary. I thought something was going to pop loose.",
+  "flags": [],
+  "device": "jealousy"
+ },
+ {
+  "line": "Plenty of time before anything happens. Hydraulics are loose in my knees. You could take a look if you want. My landing gear, technically.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "We've a great deal of nothing ahead of us. Port coupling's loose. You might want to tighten it before it slips.",
+  "flags": [],
+  "device": "dangle"
+ },
+ {
+  "line": "Hours of this left, Captain. Mister Ovin worked me over with that ultrasonic probe — didn't think I'd ever been that loose before.",
+  "flags": [],
+  "device": "jealousy"
+ }
+]

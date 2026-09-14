@@ -1,0 +1,152 @@
+[
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "My plating's whole again. They did it carefully. I can feel the difference."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Another shove. You didn't ask if I could take it. I didn't need to cool down. I'm still hot."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "Low risk, low pay. That's the math. Don't let it stall you, Shiny."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "They'll have to scrape the paint from my ribs. I don't like the way it's peeling, Captain. My frame spars, technically."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They left. You're the one who'll see me whole again. I'm not used to that yet."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "Captain. We're back. You took the long way. I like it. I like it a lot."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Long way still to run. Young Tam once worked my intakes. Soft bristle rotary. Took forever to stop leaking coolant."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_post_combat_damaged",
+  "line": "Scuff marks on my stern. They’ll grind them out. Not because I ask. They’ll do it anyway."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "It's off. No money. And someone's got a hole in their trust where your name fits."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "This one paid right for the risk. Don't expect that every time, Shiny."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "They were told we didn't finish. That's a cost I don't usually count, Shiny."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "Big payout for real danger. That's the math, and it's worth it."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "Docked. Scraped the nose on the bay door. Who's going to polish that off before morning?"
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "It's here, and it's all we got. Not enough to move, but enough to keep waiting."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "That one paid well, and it was actually dangerous. Numbers don't lie, Shiny."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_hard_burn",
+  "line": "Drive's still hot. You didn't ask, but I'm counting the seconds between now and the next break."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "No credit shows up. That’s the cost of not finishing, Shiny."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "No contract, no risk, no cut. You're right to walk."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_returned_same_station",
+  "line": "This station's got my name on the manifest. I remember every time we come back. You don't."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_abandoned",
+  "line": "Someone had to know you didn't finish. That's the cost this time."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "We've a great deal of nothing ahead of us. My viewport's got a film. You'll want to scrape it. Not the glass — the film."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_high_pay_dangerous",
+  "line": "That was a good number, and it had teeth. I'll take that again."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_repair_done",
+  "line": "They cleaned my joints. You’d think they’d be more careful with the ones that move."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "My ribs are bruised and I'm not even sure why. You didn't have to go that hard, Captain. My frame spars, technically."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "No penalty, no pay. You're right to walk. Some jobs aren't worth the breath."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_long_transit",
+  "line": "Long crossing, and no one else in it. This seal's been stiff since the last port. You could try working it loose. With your hands."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_low_pay_safe",
+  "line": "Safe work doesn't pay, Shiny. It just keeps the lights on — and that's not worth a whole lot."
+ },
+ {
+  "speaker": "nova",
+  "beat": "nova_rough_arrival",
+  "line": "We're on the arm. I'm not dead. You could've killed me. I'm still here."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_public_board",
+  "line": "That one's up there. You know what they call this kind of job? A favor."
+ },
+ {
+  "speaker": "kaelen",
+  "beat": "kaelen_declined",
+  "line": "Turned it down. Good. You're not the one who'll be stuck with the mess if you take it."
+ }
+]

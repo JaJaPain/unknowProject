@@ -1,0 +1,49 @@
+[
+  {
+    "name": "compact_json_01",
+    "variant": "compact_json",
+    "seed": 953498,
+    "elapsed_seconds": 32.31,
+    "valid": true,
+    "score": 90,
+    "title": "Dust of the Reach",
+    "logline": "A broke pilot finds a strange signal in a derelict sector.",
+    "errors": [],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "banned_repeats_missing_anti_chosen_one_terms"
+    ]
+  },
+  {
+    "name": "compact_json_02",
+    "variant": "compact_json",
+    "seed": 953516,
+    "elapsed_seconds": 29.57,
+    "valid": true,
+    "score": 90,
+    "title": "Echoes of the Void",
+    "logline": "A desperate pilot navigates a fractured frontier and the secrets hidden in the silence.",
+    "errors": [],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "banned_repeats_missing_anti_chosen_one_terms"
+    ]
+  },
+  {
+    "name": "compact_json_03",
+    "variant": "compact_json",
+    "seed": 953534,
+    "elapsed_seconds": 34.64,
+    "valid": false,
+    "score": 0,
+    "title": "",
+    "logline": "",
+    "errors": [
+      "no_json",
+      "json_parse_failed: Expecting ',' delimiter: line 88 column 10 (char 4761)"
+    ],
+    "warnings": []
+  }
+]

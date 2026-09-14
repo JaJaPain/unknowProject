@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://b4kssuri8k563"]
+[ext_resource type="Script" path="res://tools/assembler_preview/tilt.gd" id="1_t"]
+[node name="TiltTest" type="Node3D"]
+script = ExtResource("1_t")

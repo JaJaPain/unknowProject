@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay & Corporate Sovereignty",
+  "freshness_rule": "Focus on the scarcity of resources and the physical toll of maintaining a ship.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the primary cost of operating in contested zones?",
+    "Why does the brokerage system favor certain factions?",
+    "How do players navigate the trade routes between Aurelia and Zenith?",
+    "Who holds the leverage over the independent pilots' guilds?",
+    "Where are the legal loopholes in corporate sovereignty?"
+  ],
+  "starter_mission_questions": [
+    "What is the immediate reward for destroying the Reaver ship?",
+    "How does the player decide to salvage scrap or sell information?",
+    "Why is this specific Reaver ship a threat to local trade routes?"
+  ],
+  "kaelen_questions": [
+    "Who is Kaelen's primary contact in the Zenith corporation?",
+    "Why does Kaelen keep their dealings with the player out of public records?",
+    "How do they manage to maintain a balance between Aurelia and Vanguard?"
+  ],
+  "faction_questions": [
+    "What are the core values of the Aurelia faction?",
+    "How does Zenith's economic dominance affect smaller factions like Vanguard?",
+    "Why is there a competition for territory between them?"
+  ],
+  "future_generation_questions": [
+    "Who will be the next major threat to trade routes?",
+    "What are the consequences of choosing one faction's favor?",
+    "How does the player's reputation with Vanguard impact their future options?",
+    "Why is there a competition for territory between them?",
+    "Which path leads to the most significant change in turn-over power?"
+  ]
+}

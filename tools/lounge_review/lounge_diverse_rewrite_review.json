@@ -1,0 +1,2005 @@
+{
+  "batch_id": "lounge-diverse-rewrite-review",
+  "items": [
+    {
+      "id": "diverse-001",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, the cargo lift's reserved for medevac, so everything's stuck on Dock Three.",
+        "answer": "Ah, right, that's why nothing's moving. Thanks for the heads up.",
+        "close": "Gotta get back to work."
+      },
+      "assistant_rewrite": {
+        "opener": "Dock Three is waiting on a lift that is not available.",
+        "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+        "close": "Nobody likes the delay, but medical cargo gets the lift first."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-002",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They\u2019ve been there for three days, just sitting in that corner booth, and I\u2019ve tried to get them to talk about what they\u2019re actually doing.",
+        "answer": "They\u2019re a survey crew that\u2019s been in this area for a week but won\u2019t say what they found\u2014just sit there and look like they\u2019re waiting for something to happen.",
+        "close": "I don\u2019t know what\u2019s up with them, but they\u2019re not the kind of people who\u2019d be here if they knew anything."
+      },
+      "assistant_rewrite": {
+        "opener": "That survey crew has treated the quiet booth like a bunker.",
+        "answer": "They are a visiting survey crew, and they will not say what they found.",
+        "close": "If they want it private, I let them keep their booth and their mystery."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-003",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "We got a bunch of ships needing new maneuvering thruster seals because the last batch was defective.",
+        "answer": "The maintenance bay's packed because several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+        "close": "Just keep an eye on the seals\u2014they're critical for smooth maneuvers."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is full of ships that should not all be here at once.",
+        "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+        "close": "Small part, large inconvenience. That is repairs for you."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-004",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I'm checking the cargo tags for container 4B7 and 4B8, but both have the same number assigned.",
+        "answer": "Two cargo tags were assigned to the same container, which means the system recorded it twice.",
+        "close": "We need to fix the duplicate tag to avoid discrepancies in the inventory records."
+      },
+      "assistant_rewrite": {
+        "opener": "One container has managed to collect two cargo tags.",
+        "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+        "close": "It is dull work until the wrong crate goes somewhere it should not."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-005",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, is checking the terminal when he notices a freighter waiting outside without a docking escort.",
+        "answer": "The tug pilot called in sick, so we don't have a docking escort for that ship.",
+        "close": "I'll need to get a pilot on the radio to handle it."
+      },
+      "assistant_rewrite": {
+        "opener": "That freighter has reached the dock; it just cannot finish the last part alone.",
+        "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+        "close": "It will move as soon as someone can take the escort job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-006",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "I'm checking the comms status right now.",
+        "answer": "The public relay's working fine, but private channels are delayed while the array gets serviced.",
+        "close": "No worries, it should clear up soon."
+      },
+      "assistant_rewrite": {
+        "opener": "The public relay is fine. The private side is taking the long route today.",
+        "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+        "close": "Annoying, not mysterious. Give the technicians their window."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-007",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "We got a buyer who said the cargo seal didn't match the manifest, so we have to return it.",
+        "answer": "The cargo seal didn't match the manifest, so we have to return it.",
+        "close": "That's why they're unloading it again."
+      },
+      "assistant_rewrite": {
+        "opener": "That crew is unloading a delivery they already finished delivering.",
+        "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+        "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-008",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "We got no fresh produce this week, so tonight's dinner's just what's in the storeroom.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "That's why everyone's been saying dinner's going to be rough."
+      },
+      "assistant_rewrite": {
+        "opener": "Tonight's menu is making stored food look ambitious.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I can make it filling. I did not promise it would inspire poetry."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-009",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "You sold that coolant pump for five credits? I thought it was worth ten.",
+        "answer": "I didn't check its value before selling it.",
+        "close": "Hope you don't need it for anything important."
+      },
+      "assistant_rewrite": {
+        "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+        "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+        "close": "She will live. Her pride may need a few shifts in dry dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-010",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I'm Olan Pike, Station Guard at Greywake Station.",
+        "answer": "The marked corridor is closed because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Just follow the marked path\u2014it's the only safe way through right now."
+      },
+      "assistant_rewrite": {
+        "opener": "The closed corridor is less exciting than it looks.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Follow the arrows and nobody has to make this a security incident."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-011",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, I've got a situation with the cargo lift\u2014emergency med supplies are using it, so everything else's stuck.",
+        "answer": "Ah, right. That's why nothing's moving on Dock Three.",
+        "close": "Just got a new batch of meds in the lift, so we'll be clearin' things up soon."
+      },
+      "assistant_rewrite": {
+        "opener": "The loader schedule is upside down today.",
+        "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+        "close": "It is only one lift, and today it has a more urgent job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-012",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They've been sitting at the end table since dawn, all that silence, and they won't say what they found.",
+        "answer": "The survey crew's been here for a couple days, just... quiet. They're not talking about what they found.",
+        "close": "Guess they're still figuring it out."
+      },
+      "assistant_rewrite": {
+        "opener": "The survey crew has been nursing the same drinks and saying almost nothing.",
+        "answer": "All I know is that they found something worth keeping quiet about. They have not told the lounge what it was.",
+        "close": "People fill silence with nonsense. I would wait for something real."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-013",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "Hey, I've got a quick update on the thruster seals.",
+        "answer": "Several ships need new seals after a bad batch arrived at the station.",
+        "close": "That's why the bay's so busy right now."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been replacing the same little part all shift.",
+        "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+        "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-014",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I'm confused\u2014two cargo tags were assigned to the same container during the last scan.",
+        "answer": "That's why we're reconciling; the system flagged a duplicate tag for container 7B-42, but the tags should be unique.",
+        "close": "Let me check the logs to confirm it's a duplicate entry."
+      },
+      "assistant_rewrite": {
+        "opener": "The paperwork is disagreeing with itself again.",
+        "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+        "close": "Once the records agree, the argument ends and the crate moves."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-015",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, Dockworker, at Greywake Station",
+        "answer": "The tug pilot called in sick, so that freighter's waiting outside without a docking escort.",
+        "close": "I'll need to check if there's another pilot on standby."
+      },
+      "assistant_rewrite": {
+        "opener": "The ship outside is waiting on a person, not a part.",
+        "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+        "close": "Nothing dramatic. It simply needs an escort before it comes in."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-016",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "The public comms relay's working fine, but private channels are delayed while we service the relay array.",
+        "answer": "Private messages are delayed because the relay array needs maintenance\u2014it's a routine check to keep everything running smoothly.",
+        "close": "No worries, it should be back up in a few minutes."
+      },
+      "assistant_rewrite": {
+        "opener": "Public calls are working; private messages are the ones taking their time.",
+        "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+        "close": "Your message is not lost; it is just waiting its turn."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-017",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "I checked the cargo seal against the manifest just now.",
+        "answer": "The buyer rejected it because the seal didn't match, so we have to return it.",
+        "close": "That's why they're unloading it again."
+      },
+      "assistant_rewrite": {
+        "opener": "A rejected seal can turn one clean job into two.",
+        "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+        "close": "The paperwork may be small, but it can still send a ship back the way it came."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-018",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "We don't have any fresh produce coming in tonight, so we're stuck with what's already in the galley.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "That means we'll be having whatever's left from last week's stash."
+      },
+      "assistant_rewrite": {
+        "opener": "Fresh produce missed the galley, and everyone has noticed.",
+        "answer": "No fresh produce arrived, so dinner is made from stored food tonight.",
+        "close": "Eat it while it is hot and call it character building."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-019",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "I heard you sold that engine for a dinky amount last week.",
+        "answer": "I didn't check its value before selling it.",
+        "close": "That's why the techs at the station are still trying to get it back."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone sold a useful part before checking what it was worth.",
+        "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+        "close": "Everyone gets one bad sale. Hers just came with an audience."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-020",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I've got a handrail repair going on that corridor, so visitors have to use the marked one.",
+        "answer": "The corridor's closed because a deckhand's fixing a damaged handrail there.",
+        "close": "Just head down the marked path, it's safer."
+      },
+      "assistant_rewrite": {
+        "opener": "Visitors are being redirected around a small repair job.",
+        "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+        "close": "It is a short detour, not a lockdown."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-021",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, the cargo lift's reserved for medevac, so regular stuff's stuck behind it.",
+        "answer": "Ah, I see. That explains why nothing's moving on Dock Three.",
+        "close": "Got it, thanks."
+      },
+      "assistant_rewrite": {
+        "opener": "Everything ordinary on Dock Three is waiting its turn.",
+        "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+        "close": "Nobody likes the delay, but medical cargo gets the lift first."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-022",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They're just sitting there, staring at the wall like they've seen something weird.",
+        "answer": "They're a survey crew that's been here for a week, and they won't say what they found.",
+        "close": "But they don't seem to be in a hurry to leave."
+      },
+      "assistant_rewrite": {
+        "opener": "Everybody has noticed the survey crew pretending not to be noticed.",
+        "answer": "They are a visiting survey crew, and they will not say what they found.",
+        "close": "If they want it private, I let them keep their booth and their mystery."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-023",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "I've got a bunch of ships needing new thruster seals today because the last batch was bad.",
+        "answer": "The maintenance bay's packed because several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+        "close": "We'll be done once the new seals arrive."
+      },
+      "assistant_rewrite": {
+        "opener": "Every open bay has a ship waiting on the same repair.",
+        "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+        "close": "Small part, large inconvenience. That is repairs for you."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-024",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I just noticed two cargo tags assigned to the same container in the manifest.",
+        "answer": "That's why we're reconciling the records\u2014duplicate tags mean the container's being counted twice.",
+        "close": "We'll need to flag it for the cargo handler to fix before the next scan."
+      },
+      "assistant_rewrite": {
+        "opener": "That crate is innocent. Its records are the problem.",
+        "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+        "close": "It is dull work until the wrong crate goes somewhere it should not."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-025",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "That tug pilot's out sick, so we're stuck with this freighter waiting outside.",
+        "answer": "Because there's no docking escort for the ship since the pilot called in sick.",
+        "close": "We'll need someone else to handle it soon."
+      },
+      "assistant_rewrite": {
+        "opener": "One sick tug pilot can make a perfectly good schedule useless.",
+        "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+        "close": "It will move as soon as someone can take the escort job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-026",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Pilot, the public comms relay is up, but private channels are delayed while we service the relay array.",
+        "answer": "Private messages are delayed because the relay array's being serviced for maintenance.",
+        "close": "I'll update you once it's back online."
+      },
+      "assistant_rewrite": {
+        "opener": "The comms array is being serviced, and private traffic feels it first.",
+        "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+        "close": "Annoying, not mysterious. Give the technicians their window."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-027",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "Pilot, the cargo seal on the freighter's manifest doesn't match what we've got here\u2014so we had to re-deliver it.",
+        "answer": "The buyer rejected it because the seal didn't match the manifest, so we have to return it.",
+        "close": "We're just making sure it gets to the right place this time."
+      },
+      "assistant_rewrite": {
+        "opener": "The buyer sent a whole delivery back over one mismatch.",
+        "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+        "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-028",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley\u2019s been quiet all morning, which is why I\u2019m not surprised we\u2019re stuck with what we\u2019ve got.",
+        "answer": "We didn\u2019t get a fresh produce shipment, so tonight\u2019s menu\u2019s limited to stored food.",
+        "close": "That\u2019s all we\u2019ve got for now."
+      },
+      "assistant_rewrite": {
+        "opener": "The kitchen is working with what it has, which is not much fresh.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I can make it filling. I did not promise it would inspire poetry."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-029",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "I saw you sell that thruster for five credits last week",
+        "answer": "I didn't check its value before selling it",
+        "close": "Hope it's not broke now"
+      },
+      "assistant_rewrite": {
+        "opener": "The lesson today is to look up a part before you price it.",
+        "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+        "close": "She will live. Her pride may need a few shifts in dry dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-030",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "The corridor's closed because a deckhand's fixing the handrail there.",
+        "answer": "Visitors must use the marked corridor since a deckhand is repairing a damaged handrail nearby.",
+        "close": "Just follow the marked path to the next section."
+      },
+      "assistant_rewrite": {
+        "opener": "That handrail has more authority than most people expect today.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Follow the arrows and nobody has to make this a security incident."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-031",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "The cargo lift's emergency reservation's been holding up the regular stuff on Dock Three.",
+        "answer": "Because the medical supplies need that lift for emergencies, so the usual loading's stuck.",
+        "close": "That's why nothing's moving right now."
+      },
+      "assistant_rewrite": {
+        "opener": "Dock Three is waiting on a lift that is not available.",
+        "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+        "close": "It is only one lift, and today it has a more urgent job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-032",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They just came in a while ago, looking like they were trying to solve a mystery but didn't say what they found.",
+        "answer": "They're a survey crew that's been here for a few days, and they won't tell us what they found out\u2014they just sit there quietly.",
+        "close": "We've got a few other things to figure out too."
+      },
+      "assistant_rewrite": {
+        "opener": "That survey crew has treated the quiet booth like a bunker.",
+        "answer": "All I know is that they found something worth keeping quiet about. They have not told the lounge what it was.",
+        "close": "People fill silence with nonsense. I would wait for something real."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-033",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "We've got a bunch of ships needing new maneuvering thruster seals because the last batch was defective.",
+        "answer": "The maintenance bay's packed because several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+        "close": "That's why the bay's so busy right now."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is full of ships that should not all be here at once.",
+        "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+        "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-034",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I'm checking the cargo logs right now\u2014two tags are linked to the same container.",
+        "answer": "That's a conflict. The system shows two different tags assigned to one container, which shouldn't happen. We need to fix the records before it causes issues.",
+        "close": "Let me run a quick check on the system to see which tag is duplicate."
+      },
+      "assistant_rewrite": {
+        "opener": "One container has managed to collect two cargo tags.",
+        "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+        "close": "Once the records agree, the argument ends and the crate moves."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-035",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "That tug pilot's out sick, so we're stuck with one ship without an escort.",
+        "answer": "Because the tug pilot called in sick and left one scheduled ship without a docking escort.",
+        "close": "We'll need to get a new pilot soon."
+      },
+      "assistant_rewrite": {
+        "opener": "That freighter has reached the dock; it just cannot finish the last part alone.",
+        "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+        "close": "Nothing dramatic. It simply needs an escort before it comes in."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-036",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "I've got the public comms relay running smooth as a whistle, but private channels are getting delayed while the relay array gets serviced.",
+        "answer": "Private messages are delayed because the relay array is being serviced right now.",
+        "close": "Just keep your messages short while we get that fixed."
+      },
+      "assistant_rewrite": {
+        "opener": "The public relay is fine. The private side is taking the long route today.",
+        "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+        "close": "Your message is not lost; it is just waiting its turn."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-037",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "The cargo seal didn't match the manifest when the buyer inspected it.",
+        "answer": "We have to return it because the buyer rejected the delivery.",
+        "close": "That's why we're unloading it again."
+      },
+      "assistant_rewrite": {
+        "opener": "That crew is unloading a delivery they already finished delivering.",
+        "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+        "close": "The paperwork may be small, but it can still send a ship back the way it came."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-038",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley didn't get a fresh produce shipment this week, so tonight's menu's stuck with what's in the storage.",
+        "answer": "Pilot, the galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "We'll have to make do with what we have."
+      },
+      "assistant_rewrite": {
+        "opener": "Tonight's menu is making stored food look ambitious.",
+        "answer": "No fresh produce arrived, so dinner is made from stored food tonight.",
+        "close": "Eat it while it is hot and call it character building."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-039",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "You know, I was just thinking about that part you sold me last week\u2014",
+        "answer": "I sold a salvaged power regulator for five credits, and it was barely functional. It\u2019s the kind of thing you\u2019d find in the scrap heaps, but I didn\u2019t check its value before handing it over.",
+        "close": "Now I\u2019m wondering if I should\u2019ve asked about the condition before selling it."
+      },
+      "assistant_rewrite": {
+        "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+        "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+        "close": "Everyone gets one bad sale. Hers just came with an audience."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-040",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I'm the station guard here, so you should take the marked corridor for the handrail repair.",
+        "answer": "The handrail's damaged, so we need to use the marked corridor to avoid tripping.",
+        "close": "Just follow the signs, and you'll be fine."
+      },
+      "assistant_rewrite": {
+        "opener": "The closed corridor is less exciting than it looks.",
+        "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+        "close": "It is a short detour, not a lockdown."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-041",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "I\u2019ve got the cargo lift reserved for medical supplies, so the usual loading\u2019s stuck.",
+        "answer": "Pilot, that\u2019s why nothing\u2019s moving on Dock Three\u2014emergency med lift\u2019s taking priority.",
+        "close": "Just got the override to get things rolling again."
+      },
+      "assistant_rewrite": {
+        "opener": "The loader schedule is upside down today.",
+        "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+        "close": "Nobody likes the delay, but medical cargo gets the lift first."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-042",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "I've been watching them for a while now.",
+        "answer": "They're a survey crew that's been hanging out in the quiet corner of the lounge without saying what they found.",
+        "close": "They're just... quiet, but they're not leaving."
+      },
+      "assistant_rewrite": {
+        "opener": "The survey crew has been nursing the same drinks and saying almost nothing.",
+        "answer": "They are a visiting survey crew, and they will not say what they found.",
+        "close": "If they want it private, I let them keep their booth and their mystery."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-043",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "I've got a bunch of ships lined up for thruster seal replacements today.",
+        "answer": "A bad batch of seals from the last shipment got damaged when they arrived, so we're swapping them out for new ones.",
+        "close": "That should get them all running smooth again."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been replacing the same little part all shift.",
+        "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+        "close": "Small part, large inconvenience. That is repairs for you."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-044",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I just noticed the two cargo tags for that container both say 'Greywake-7'\u2014it's a duplicate entry.",
+        "answer": "We're reconciling the records because the system shows two tags assigned to the same container, which shouldn't happen.",
+        "close": "That's why we're double-checking to make sure the tags match the actual container."
+      },
+      "assistant_rewrite": {
+        "opener": "The paperwork is disagreeing with itself again.",
+        "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+        "close": "It is dull work until the wrong crate goes somewhere it should not."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-045",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, Dockworker, at Greywake Station",
+        "answer": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+        "close": "That freighter's waiting outside because there's no one to guide it in."
+      },
+      "assistant_rewrite": {
+        "opener": "The ship outside is waiting on a person, not a part.",
+        "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+        "close": "It will move as soon as someone can take the escort job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-046",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Pilot, the public comms relay's running fine\u2014just private channels are slow right now while we service the relay array.",
+        "answer": "Private messages are delayed because the relay array is being serviced.",
+        "close": "I'll let you know when it's back online."
+      },
+      "assistant_rewrite": {
+        "opener": "Public calls are working; private messages are the ones taking their time.",
+        "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+        "close": "Annoying, not mysterious. Give the technicians their window."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-047",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "We got a buyer who rejected the cargo because the seal didn't match the manifest\u2014so we're doing the return run again.",
+        "answer": "The cargo seal didn't match the manifest, so they had to return it.",
+        "close": "That's why we're unloading it again."
+      },
+      "assistant_rewrite": {
+        "opener": "A rejected seal can turn one clean job into two.",
+        "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+        "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-048",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley's got no fresh produce this week, so we're stuck with what's in the storage.",
+        "answer": "Yeah, that's why the pilot's asking about dinner complaints\u2014since there's no new shipment, tonight's menu's limited to what we've got.",
+        "close": "We'll have to make do with what's left."
+      },
+      "assistant_rewrite": {
+        "opener": "Fresh produce missed the galley, and everyone has noticed.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I can make it filling. I did not promise it would inspire poetry."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-049",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "I saw the part you sold for five credits\u2014wasn't that a dented coolant valve?",
+        "answer": "Yep, it's a cheap fix but it'll hold up for a few more cycles.",
+        "close": "Next time, maybe check the serial number before you hand it over."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone sold a useful part before checking what it was worth.",
+        "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+        "close": "She will live. Her pride may need a few shifts in dry dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-050",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "The corridor's closed for safety, but I'll show you the way around.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Just follow the blue markers and you'll be fine."
+      },
+      "assistant_rewrite": {
+        "opener": "Visitors are being redirected around a small repair job.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Follow the arrows and nobody has to make this a security incident."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-051",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, I've got the lift reserved for medics\u2014everything else's stalled.",
+        "answer": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+        "close": "Just got the message from the medical team."
+      },
+      "assistant_rewrite": {
+        "opener": "Everything ordinary on Dock Three is waiting its turn.",
+        "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+        "close": "It is only one lift, and today it has a more urgent job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-052",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "Pilot, that survey crew's been in the corner since dawn\u2014just a bunch of quiet people with no answers.",
+        "answer": "They found something that doesn't want to be explained, but they're not saying.",
+        "close": "We've got a quiet corner for that."
+      },
+      "assistant_rewrite": {
+        "opener": "Everybody has noticed the survey crew pretending not to be noticed.",
+        "answer": "All I know is that they found something worth keeping quiet about. They have not told the lounge what it was.",
+        "close": "People fill silence with nonsense. I would wait for something real."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-053",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "We've got a bunch of ships needing new maneuvering thruster seals because the last batch was defective.",
+        "answer": "The maintenance bay's packed since the bad seals caused a bunch of ships to need replacements.",
+        "close": "Just keep the seals in line for now."
+      },
+      "assistant_rewrite": {
+        "opener": "Every open bay has a ship waiting on the same repair.",
+        "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+        "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-054",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "We're trying to figure out why two cargo tags were assigned to the same container.",
+        "answer": "Two cargo tags have been assigned to the same container, and we're reconciling the records.",
+        "close": "That's the issue we're working through right now."
+      },
+      "assistant_rewrite": {
+        "opener": "That crate is innocent. Its records are the problem.",
+        "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+        "close": "Once the records agree, the argument ends and the crate moves."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-055",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, Dockworker at Greywake Station",
+        "answer": "The tug pilot called in sick, so that freighter's waiting outside without a docking escort.",
+        "close": "We'll get someone else to handle it soon."
+      },
+      "assistant_rewrite": {
+        "opener": "One sick tug pilot can make a perfectly good schedule useless.",
+        "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+        "close": "Nothing dramatic. It simply needs an escort before it comes in."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-056",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Pilot, the public comms relay's up, but private channels are delayed while we service the array.",
+        "answer": "Private messages are delayed because the relay array's being serviced; public comms is working fine.",
+        "close": "Let me know if you need anything else."
+      },
+      "assistant_rewrite": {
+        "opener": "The comms array is being serviced, and private traffic feels it first.",
+        "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+        "close": "Your message is not lost; it is just waiting its turn."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-057",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "The cargo seal didn't match the manifest on the delivery, so we had to return it.",
+        "answer": "The buyer rejected the delivery because the cargo seal didn't match the manifest, so the crew has to return it.",
+        "close": "That's why they're unloading it again."
+      },
+      "assistant_rewrite": {
+        "opener": "The buyer sent a whole delivery back over one mismatch.",
+        "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+        "close": "The paperwork may be small, but it can still send a ship back the way it came."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-058",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "I got the bulletin from the comm hub\u2014no fresh produce shipment came through this week.",
+        "answer": "Tonight's menu's just stored food, so we'll be serving whatever's in the galley's stock.",
+        "close": "Hope you're not too hungry."
+      },
+      "assistant_rewrite": {
+        "opener": "The kitchen is working with what it has, which is not much fresh.",
+        "answer": "No fresh produce arrived, so dinner is made from stored food tonight.",
+        "close": "Eat it while it is hot and call it character building."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-059",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "I saw the old plasma cutter you sold at the docks last week\u2014still works fine, right?",
+        "answer": "I sold it cheap because it was barely running and the parts were cheap to fix, but I didn't check its value properly.",
+        "close": "But I didn't mean to underprice it; just thought it'd be useful for someone else."
+      },
+      "assistant_rewrite": {
+        "opener": "The lesson today is to look up a part before you price it.",
+        "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+        "close": "Everyone gets one bad sale. Hers just came with an audience."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-060",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "The handrail's damaged near that corridor, so we're using the marked path for safety.",
+        "answer": "Because a deckhand is repairing the handrail there.",
+        "close": "Just follow the marked corridor\u2014it's safer this way."
+      },
+      "assistant_rewrite": {
+        "opener": "That handrail has more authority than most people expect today.",
+        "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+        "close": "It is a short detour, not a lockdown."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-061",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, I just checked the lift schedule\u2014emergency medical supplies are using the cargo lift, so the rest of the loading's stuck.",
+        "answer": "Ah, right. That's why nothing's moving on Dock Three. The medical lift's reserved for emergencies.",
+        "close": "We'll get it sorted once the medics clear out."
+      },
+      "assistant_rewrite": {
+        "opener": "Dock Three is waiting on a lift that is not available.",
+        "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+        "close": "Nobody likes the delay, but medical cargo gets the lift first."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-062",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They've been sitting there for hours, just staring at the wall.",
+        "answer": "They're a survey crew that just found something big and won't say what it is.",
+        "close": "But they're not leaving."
+      },
+      "assistant_rewrite": {
+        "opener": "That survey crew has treated the quiet booth like a bunker.",
+        "answer": "They are a visiting survey crew, and they will not say what they found.",
+        "close": "If they want it private, I let them keep their booth and their mystery."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-063",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "We got a whole bunch of ships with bad thruster seals from that last batch.",
+        "answer": "The maintenance bay's packed because several ships need new seals after a bad batch of thrusters arrived.",
+        "close": "Hope the new seals hold up."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is full of ships that should not all be here at once.",
+        "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+        "close": "Small part, large inconvenience. That is repairs for you."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-064",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I just noticed the cargo tags for Container 7B42 and 7B43 both say 'Safecrate 12'\u2014they should be unique.",
+        "answer": "We're reconciling the manifest records because two tags were assigned to the same container during the last scan.",
+        "close": "That's why we're cross-checking the logs now."
+      },
+      "assistant_rewrite": {
+        "opener": "One container has managed to collect two cargo tags.",
+        "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+        "close": "It is dull work until the wrong crate goes somewhere it should not."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-065",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, the dockworker at Greywake Station, is checking the terminal when he notices a freighter waiting outside without a docking escort.",
+        "answer": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+        "close": "I'll make sure the freighter gets a pilot soon."
+      },
+      "assistant_rewrite": {
+        "opener": "That freighter has reached the dock; it just cannot finish the last part alone.",
+        "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+        "close": "It will move as soon as someone can take the escort job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-066",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Pilot, I've got the comms relay online, but private channels are delayed while we service the array\u2014just a temporary hiccup.",
+        "answer": "Private messages are delayed because the relay array is being serviced; the public comms channel is working normally.",
+        "close": "We'll have it back up in a few minutes."
+      },
+      "assistant_rewrite": {
+        "opener": "The public relay is fine. The private side is taking the long route today.",
+        "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+        "close": "Annoying, not mysterious. Give the technicians their window."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-067",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "Pilot, the buyer rejected it because the cargo seal didn't match the manifest\u2014so we have to rerun the delivery.",
+        "answer": "Because the cargo seal didn't match the manifest, the buyer rejected the delivery, so we have to return it.",
+        "close": "We're back in the cargo bay now."
+      },
+      "assistant_rewrite": {
+        "opener": "That crew is unloading a delivery they already finished delivering.",
+        "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+        "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-068",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "We didn't get a fresh produce shipment today, so tonight's menu's just what we've got stored.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I'll check the pantry for anything we can stretch."
+      },
+      "assistant_rewrite": {
+        "opener": "Tonight's menu is making stored food look ambitious.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I can make it filling. I did not promise it would inspire poetry."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-069",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "You sold that coolant pump for two credits?",
+        "answer": "I didn't check the value, just needed to get it out of my inventory.",
+        "close": "Still, next time I'll be smarter."
+      },
+      "assistant_rewrite": {
+        "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+        "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+        "close": "She will live. Her pride may need a few shifts in dry dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-070",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I've got a handrail repair going on down that way, so the corridor's marked for visitors to use.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Just follow the sign and you'll be fine."
+      },
+      "assistant_rewrite": {
+        "opener": "The closed corridor is less exciting than it looks.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Follow the arrows and nobody has to make this a security incident."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-071",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, the cargo lift's reserved for medevac, so regular stuff's stuck in the queue.",
+        "answer": "Why is nothing moving on Dock Three?",
+        "close": "That's why the usual loading's delayed."
+      },
+      "assistant_rewrite": {
+        "opener": "The loader schedule is upside down today.",
+        "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+        "close": "It is only one lift, and today it has a more urgent job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-072",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "Hey, what's up with that survey crew in the corner?",
+        "answer": "They're just a visiting crew that won't say what they found out in the quiet end of the lounge.",
+        "close": "Guess they're keeping it to themselves."
+      },
+      "assistant_rewrite": {
+        "opener": "The survey crew has been nursing the same drinks and saying almost nothing.",
+        "answer": "All I know is that they found something worth keeping quiet about. They have not told the lounge what it was.",
+        "close": "People fill silence with nonsense. I would wait for something real."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-073",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "Hey, the maneuvering thruster seals are a mess\u2014several ships need replacements after that bad batch hit the station.",
+        "answer": "We're swapping out the seals now because the bad batch caused failures across multiple ships.",
+        "close": "Got it, I'll make sure the next batch is checked properly."
+      },
+      "assistant_rewrite": {
+        "opener": "I have been replacing the same little part all shift.",
+        "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+        "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-074",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I've got two cargo tags assigned to the same container in the manifest.",
+        "answer": "That's a conflict\u2014inspectors need to reconcile the records so they match.",
+        "close": "We'll fix it before the next shipment hits the dock."
+      },
+      "assistant_rewrite": {
+        "opener": "The paperwork is disagreeing with itself again.",
+        "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+        "close": "Once the records agree, the argument ends and the crate moves."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-075",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "Marek Vale, Dockworker, at Greywake Station",
+        "answer": "The tug pilot called in sick, so we're handling that freighter without a docking escort.",
+        "close": "That's why it's waiting outside."
+      },
+      "assistant_rewrite": {
+        "opener": "The ship outside is waiting on a person, not a part.",
+        "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+        "close": "Nothing dramatic. It simply needs an escort before it comes in."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-076",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Hey, the public comms relay's up and running fine, but we're servicing the private channel array right now\u2014so messages through that route are getting delayed.",
+        "answer": "Private messages are delayed because the relay array is being serviced; the public comms relay is working normally.",
+        "close": "Just let me know when you're ready to send something through the private channel."
+      },
+      "assistant_rewrite": {
+        "opener": "Public calls are working; private messages are the ones taking their time.",
+        "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+        "close": "Your message is not lost; it is just waiting its turn."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-077",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "The cargo seal didn't match the manifest on the delivery, so we had to return it.",
+        "answer": "The buyer rejected it because the seal didn't match the manifest, so we're unloading it again.",
+        "close": "We're just making sure it's correct this time."
+      },
+      "assistant_rewrite": {
+        "opener": "A rejected seal can turn one clean job into two.",
+        "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+        "close": "The paperwork may be small, but it can still send a ship back the way it came."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-078",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley's been quiet all morning, and we didn't get any fresh produce this week\u2014just stored food for tonight's menu.",
+        "answer": "We're stuck with what's in the fridge and pantry, so the menu's limited to canned beans, old potatoes, and some dried pasta.",
+        "close": "That's all we've got."
+      },
+      "assistant_rewrite": {
+        "opener": "Fresh produce missed the galley, and everyone has noticed.",
+        "answer": "No fresh produce arrived, so dinner is made from stored food tonight.",
+        "close": "Eat it while it is hot and call it character building."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-079",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "You know what I did last week? Sold a used thruster housing for two credits when it was worth ten. That was dumb.",
+        "answer": "The salvager sold a useful part cheaply without checking its value.",
+        "close": "But you don't have to tell me how much it's worth now."
+      },
+      "assistant_rewrite": {
+        "opener": "Someone sold a useful part before checking what it was worth.",
+        "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+        "close": "Everyone gets one bad sale. Hers just came with an audience."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-080",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I just got the notice that the handrail's been damaged near that corridor.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Head over there now."
+      },
+      "assistant_rewrite": {
+        "opener": "Visitors are being redirected around a small repair job.",
+        "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+        "close": "It is a short detour, not a lockdown."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-081",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, I\u2019ve got a problem with Dock Three.",
+        "answer": "The cargo lift\u2019s been reserved for emergency medical supplies, so ordinary loading\u2019s stuck.",
+        "close": "We\u2019ll get it moving once the medics are done."
+      },
+      "assistant_rewrite": {
+        "opener": "Everything ordinary on Dock Three is waiting its turn.",
+        "answer": "The cargo lift is reserved for emergency medical supplies, so ordinary loading has to wait.",
+        "close": "Nobody likes the delay, but medical cargo gets the lift first."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-082",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "Pilot, you asked about the survey crew\u2014",
+        "answer": "They\u2019re just sitting at the end of the lounge, refusing to say what they found after three days of scanning the area. No one\u2019s been able to get them to talk about it.",
+        "close": "But they\u2019ve been here long enough to know they\u2019re not alone."
+      },
+      "assistant_rewrite": {
+        "opener": "Everybody has noticed the survey crew pretending not to be noticed.",
+        "answer": "They are a visiting survey crew, and they will not say what they found.",
+        "close": "If they want it private, I let them keep their booth and their mystery."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-083",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "We've got a bunch of ships coming in for thruster seal replacements after that bad batch hit the station.",
+        "answer": "The maintenance bay's packed because several ships need new maneuvering thruster seals.",
+        "close": "That's why the bay's full right now."
+      },
+      "assistant_rewrite": {
+        "opener": "Every open bay has a ship waiting on the same repair.",
+        "answer": "A bad batch of maneuvering thruster seals reached the station, so several ships need replacements.",
+        "close": "Small part, large inconvenience. That is repairs for you."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-084",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I noticed the two cargo tags assigned to the same container\u2014inspectors are double-checking the records to make sure they're not mixing up the shipments.",
+        "answer": "Two cargo tags have been assigned to the same container, so we're reconciling the records to confirm they're not a mix-up.",
+        "close": "That's why we're cross-referencing them right now."
+      },
+      "assistant_rewrite": {
+        "opener": "That crate is innocent. Its records are the problem.",
+        "answer": "Two cargo tags were assigned to the same container, so inspection is reconciling the records.",
+        "close": "It is dull work until the wrong crate goes somewhere it should not."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-085",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "The freighter's been waiting for an hour now, and there's no one to get it in.",
+        "answer": "Because the tug pilot called in sick, so I've got to handle it myself.",
+        "close": "I'll get it in by the end of the shift."
+      },
+      "assistant_rewrite": {
+        "opener": "One sick tug pilot can make a perfectly good schedule useless.",
+        "answer": "Its tug pilot called in sick, so the freighter has no docking escort yet.",
+        "close": "It will move as soon as someone can take the escort job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-086",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "Pilot, the public comms relay's up, but private channels are delayed while we service the relay array.",
+        "answer": "Private messages are delayed because the relay array needs maintenance\u2014public comms is fine though.",
+        "close": "Just keep your messages short while we fix it."
+      },
+      "assistant_rewrite": {
+        "opener": "The comms array is being serviced, and private traffic feels it first.",
+        "answer": "The public comms relay is working, but private-channel traffic is delayed while the relay array is serviced.",
+        "close": "Annoying, not mysterious. Give the technicians their window."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-087",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "We're back on the freighter after the buyer rejected the cargo because the seal didn't match the manifest.",
+        "answer": "The crew has to return it since the seal didn't match the manifest.",
+        "close": "I'll get the manifest and seal checked again."
+      },
+      "assistant_rewrite": {
+        "opener": "The buyer sent a whole delivery back over one mismatch.",
+        "answer": "The buyer rejected the delivery because its cargo seal did not match the manifest, so the crew must return it.",
+        "close": "Nobody gets paid extra for the return trip, which is why they look thrilled."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-088",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley didn't get a fresh produce shipment today, so tonight's menu's just stored food.",
+        "answer": "Pilot, the galley didn't get a fresh produce shipment today, so tonight's menu's just stored food.",
+        "close": "That's why everyone's complaining about dinner."
+      },
+      "assistant_rewrite": {
+        "opener": "The kitchen is working with what it has, which is not much fresh.",
+        "answer": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+        "close": "I can make it filling. I did not promise it would inspire poetry."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-089",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "I saw your part for the kelp harvesters\u2014was that a good deal?",
+        "answer": "I sold a useful part cheaply without checking its value",
+        "close": "Gotta get back to the dive, but thanks for the heads-up."
+      },
+      "assistant_rewrite": {
+        "opener": "The lesson today is to look up a part before you price it.",
+        "answer": "Vera sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+        "close": "She will live. Her pride may need a few shifts in dry dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-090",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "The corridor's marked for a reason\u2014there's a deckhand fixing the handrail right there.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Just follow the signs, and you'll avoid any tripping hazards."
+      },
+      "assistant_rewrite": {
+        "opener": "That handrail has more authority than most people expect today.",
+        "answer": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+        "close": "Follow the arrows and nobody has to make this a security incident."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-091",
+      "contact_name": "Rook Danner",
+      "contact_role": "Dockhand",
+      "station": "Greywake Station",
+      "allowed_facts": "A cargo lift has been reserved for emergency medical supplies, delaying ordinary loading.",
+      "player_question": "Why is nothing moving on Dock Three?",
+      "original": {
+        "opener": "Pilot, the cargo lift's reserved for medics, so everything else's stuck.",
+        "answer": "Ah, I see. That explains why nothing's moving on Dock Three.",
+        "close": "I'll check the priority queue."
+      },
+      "assistant_rewrite": {
+        "opener": "Dock Three is waiting on a lift that is not available.",
+        "answer": "Emergency medical supplies have the cargo lift. That is why the ordinary freight is standing still.",
+        "close": "It is only one lift, and today it has a more urgent job."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-092",
+      "contact_name": "Sana Rell",
+      "contact_role": "Bartender",
+      "station": "Greywake Station",
+      "allowed_facts": "A visiting survey crew has occupied the quiet end of the lounge and refuses to say what it found.",
+      "player_question": "What is with the survey crew?",
+      "original": {
+        "opener": "They just showed up out of nowhere, and now they're all huddled at the end of the bar like they're trying to hide something.",
+        "answer": "They're a survey crew that's been stuck in the area for a week, and they won't say what they found.",
+        "close": "Gotta keep the peace here."
+      },
+      "assistant_rewrite": {
+        "opener": "That survey crew has treated the quiet booth like a bunker.",
+        "answer": "All I know is that they found something worth keeping quiet about. They have not told the lounge what it was.",
+        "close": "People fill silence with nonsense. I would wait for something real."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-093",
+      "contact_name": "Jenna Kross",
+      "contact_role": "Mechanic",
+      "station": "Greywake Station",
+      "allowed_facts": "Several ships need replacement maneuvering thruster seals after a bad batch reached the station.",
+      "player_question": "Why is the maintenance bay packed?",
+      "original": {
+        "opener": "I've got the thruster seals on the shuttle ready to go, but the station's got a lot of ships waiting for new ones.",
+        "answer": "We had a bad batch of seals that got in here, so all the ships need replacements now.",
+        "close": "Just got the next one in the queue."
+      },
+      "assistant_rewrite": {
+        "opener": "The maintenance bay is full of ships that should not all be here at once.",
+        "answer": "Those ships are here because their maneuvering thruster seals came from a bad batch and need replacing.",
+        "close": "The seals are not glamorous, but neither is drifting sideways into a dock."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-094",
+      "contact_name": "Ivet Marr",
+      "contact_role": "Cargo Inspector",
+      "station": "Greywake Station",
+      "allowed_facts": "Two cargo tags have been assigned to the same container, and inspectors are reconciling the records.",
+      "player_question": "Why are the inspectors arguing over that crate?",
+      "original": {
+        "opener": "I just noticed the two cargo tags for container 4B7 are listed as identical in the system\u2014shouldn't they be unique?",
+        "answer": "We're reconciling the discrepancy because both tags were assigned to the same container without a duplicate check, which violates our protocol for cargo tracking.",
+        "close": "Let me run a cross-check on the manifest to confirm the tags match the actual container location."
+      },
+      "assistant_rewrite": {
+        "opener": "One container has managed to collect two cargo tags.",
+        "answer": "The system attached two tags to one container. We have to determine which record is valid before it moves.",
+        "close": "Once the records agree, the argument ends and the crate moves."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-095",
+      "contact_name": "Marek Vale",
+      "contact_role": "Dockworker",
+      "station": "Greywake Station",
+      "allowed_facts": "A tug pilot called in sick, leaving one scheduled ship without a docking escort.",
+      "player_question": "Why is that freighter waiting outside?",
+      "original": {
+        "opener": "That freighter's been sitting outside since the pilot called out sick.",
+        "answer": "The tug pilot called in sick, so we're stuck without a docking escort for that ship.",
+        "close": "Gotta get it in before the tide turns."
+      },
+      "assistant_rewrite": {
+        "opener": "That freighter has reached the dock; it just cannot finish the last part alone.",
+        "answer": "The freighter is waiting because the tug pilot who should escort it into the dock called in sick.",
+        "close": "Nothing dramatic. It simply needs an escort before it comes in."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-096",
+      "contact_name": "Lio Sable",
+      "contact_role": "Comms Tech",
+      "station": "Greywake Station",
+      "allowed_facts": "The station's public comms relay is working, but private-channel traffic is delayed while a relay array is serviced.",
+      "player_question": "Why are private messages taking so long?",
+      "original": {
+        "opener": "The public comms relay's working fine, but private channels are delayed while we service the relay array.",
+        "answer": "Private messages are delayed because the relay array is being serviced right now.",
+        "close": "I'll update you once it's back online."
+      },
+      "assistant_rewrite": {
+        "opener": "The public relay is fine. The private side is taking the long route today.",
+        "answer": "Private messages are delayed because the array is being serviced. Public traffic is still running.",
+        "close": "Your message is not lost; it is just waiting its turn."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-097",
+      "contact_name": "Tamsin Roe",
+      "contact_role": "Freight Runner",
+      "station": "Greywake Station",
+      "allowed_facts": "A buyer rejected a delivery because the cargo seal did not match the manifest, so the crew must return it.",
+      "player_question": "Why is that crew unloading the same cargo again?",
+      "original": {
+        "opener": "Pilot, the cargo seal didn't match the manifest, so we have to rerun the delivery.",
+        "answer": "We had to return the cargo because the seal didn't match the manifest.",
+        "close": "We're back to square one until the seal matches."
+      },
+      "assistant_rewrite": {
+        "opener": "That crew is unloading a delivery they already finished delivering.",
+        "answer": "The cargo seal and manifest do not match, so the buyer rejected it and the crew has to take it back.",
+        "close": "The paperwork may be small, but it can still send a ship back the way it came."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-098",
+      "contact_name": "Perrin Holt",
+      "contact_role": "Cook",
+      "station": "Greywake Station",
+      "allowed_facts": "The galley received no fresh produce shipment, so tonight's menu is limited to stored food.",
+      "player_question": "Why is everyone complaining about dinner?",
+      "original": {
+        "opener": "The galley's been quiet all morning, and we didn't get a fresh produce shipment today.",
+        "answer": "Tonight's menu's stuck with what's in the storeroom\u2014just canned beans, some dried veggies, and that one jar of pickles.",
+        "close": "We'll have to make do."
+      },
+      "assistant_rewrite": {
+        "opener": "Tonight's menu is making stored food look ambitious.",
+        "answer": "No fresh produce arrived, so dinner is made from stored food tonight.",
+        "close": "Eat it while it is hot and call it character building."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-099",
+      "contact_name": "Vera Nix",
+      "contact_role": "Salvager",
+      "station": "Greywake Station",
+      "allowed_facts": "A salvager sold a useful part cheaply without checking its value, and the lounge is teasing her about it.",
+      "player_question": "What happened with that sale?",
+      "original": {
+        "opener": "You sold that thruster for a nickel?",
+        "answer": "I checked the specs and it was barely functional, but it was the only one I could find that didn't need a full overhaul.",
+        "close": "Anyway, I'm glad it wasn't the main drive."
+      },
+      "assistant_rewrite": {
+        "opener": "Vera made a perfectly ordinary sale into lounge entertainment.",
+        "answer": "She sold a useful part for less than it was worth because she did not check its value first.",
+        "close": "Everyone gets one bad sale. Hers just came with an audience."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    },
+    {
+      "id": "diverse-100",
+      "contact_name": "Olan Pike",
+      "contact_role": "Station Guard",
+      "station": "Greywake Station",
+      "allowed_facts": "Visitors must use the marked corridor because a deckhand is repairing a damaged handrail nearby.",
+      "player_question": "Why is that corridor closed?",
+      "original": {
+        "opener": "I see you're heading for the corridor marked 'West'\u2014but you'll have to go through the main hall instead.",
+        "answer": "The handrail near the west corridor is damaged, so we've marked that path as closed for safety.",
+        "close": "That way, the deckhand can fix it without blocking the whole area."
+      },
+      "assistant_rewrite": {
+        "opener": "The closed corridor is less exciting than it looks.",
+        "answer": "A deckhand is repairing a damaged handrail, so visitors are being routed through the marked corridor.",
+        "close": "It is a short detour, not a lockdown."
+      },
+      "review_reason": "Compared against the supplied fact packet for natural conversation, directness, and invented details.",
+      "status": "needs_user_confirmation"
+    }
+  ]
+}

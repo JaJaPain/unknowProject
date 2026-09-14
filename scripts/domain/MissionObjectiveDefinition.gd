@@ -6,14 +6,21 @@ const ValidationResultType := preload(
 )
 
 const TYPE_KILL_SHIPS := "KILL_SHIPS"
+const InvestigationValidator := preload("res://scripts/domain/InvestigationStateValidator.gd")
+const TYPE_INVESTIGATE_SIGNAL := "INVESTIGATE_SIGNAL"
 const TYPE_DELIVER_ORE := "DELIVER_ORE"
 const TYPE_PICKUP_SPECIAL := "PICKUP_SPECIAL"
+const TYPE_DELIVERY_COURIER := "DELIVERY_COURIER"
+const TYPE_PURCHASE_DELIVERY := "PURCHASE_DELIVERY"
 const TYPE_RECOVER_COMBAT_DROP := "RECOVER_COMBAT_DROP"
 const TYPE_TARGET_WITH_COMMS_REVERSAL := "TARGET_WITH_COMMS_REVERSAL"
 const SUPPORTED_TYPES := [
+	TYPE_INVESTIGATE_SIGNAL,
 	TYPE_KILL_SHIPS,
 	TYPE_DELIVER_ORE,
 	TYPE_PICKUP_SPECIAL,
+	TYPE_DELIVERY_COURIER,
+	TYPE_PURCHASE_DELIVERY,
 	TYPE_RECOVER_COMBAT_DROP,
 	TYPE_TARGET_WITH_COMMS_REVERSAL,
 ]
@@ -35,6 +42,11 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 		return result
 
 	match type:
+		TYPE_INVESTIGATE_SIGNAL:
+			result.merge(InvestigationValidator.validate(source))
+			var investigation: Variant = source.get("investigation", {})
+			if result.is_valid() and investigation is Dictionary and (str(investigation.get("phase", "")) != "search" or not investigation.get("applied_commands", {}).is_empty()):
+				result.add_error("already_started_investigation", "New offers must contain an unstarted investigation.", "investigation")
 		TYPE_KILL_SHIPS:
 			_require_text(source, "target_faction", result)
 			_require_positive_number(source, "count_required", result)
@@ -48,6 +60,24 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 				"destination",
 			]:
 				_require_text(source, field, result)
+		TYPE_DELIVERY_COURIER:
+			for field in [
+				"item_name",
+				"origin_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				_require_text(source, field, result)
+		TYPE_PURCHASE_DELIVERY:
+			for field in [
+				"item_id",
+				"item_name",
+				"store_station_id",
+				"destination_station_id",
+				"destination_display",
+			]:
+				_require_text(source, field, result)
+			_require_positive_number(source, "quantity_required", result)
 		TYPE_RECOVER_COMBAT_DROP:
 			_require_text(source, "target_faction", result)
 			_require_text(source, "item_name", result)

@@ -1,0 +1,58 @@
+[
+ {
+  "line": "This one didn't cost us a thing, and I'm already thinking about how little I'll get for it. Try to make the next one a little more interesting, Shiny.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.6
+ },
+ {
+  "line": "No one got hurt, which is a relief. The take was small, which is not. Let's see if this kind of work can be made to pay better, Shiny.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.4
+ },
+ {
+  "line": "Safe, which is good. Paid, which is less good. Let's keep the next one just as safe and a little more paid.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "This job paid the minimum and left no room for anything else. I'm keeping it on the list, but I'm not adding to it.",
+  "flags": [],
+  "secs": 3.2
+ },
+ {
+  "line": "The job was clean, the pay was thin, and I\u2019ve already counted the number of times I\u2019ll let this one slide.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "The job was clean, the pay was thin, and I have a ledger that does not celebrate quiet.",
+  "flags": [],
+  "secs": 2.9
+ },
+ {
+  "line": "Shiny. It ran clean, which is good. The pay was thin, which is not. Let's find something that doesn't leave us both feeling short.",
+  "flags": [],
+  "secs": 3.3
+ },
+ {
+  "line": "Safe work leaves little in the ledger, Shiny, and I\u2019ve never been a fan of leaving things behind.",
+  "flags": [],
+  "secs": 3.1
+ },
+ {
+  "line": "It ran clean and quiet, which is fine. The money came in flat, which is not. Let's see if we can find a job that doesn't leave us both sighing over the math, Shiny.",
+  "flags": [
+   "too_long"
+  ],
+  "secs": 3.5
+ },
+ {
+  "line": "The job closed clean, and the pay was the minimum we\u2019d agreed to. I prefer better, but I\u2019ll take this over a mess any day.",
+  "flags": [],
+  "secs": 3.3
+ }
+]

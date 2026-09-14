@@ -38,7 +38,7 @@ func load_from_dict(data: Dictionary) -> ValidationResult:
 			"System requires a scene path.",
 			"scene_path"
 		)
-	elif not ResourceLoader.exists(scene_path, "PackedScene"):
+	elif scene_path != "generated" and not ResourceLoader.exists(scene_path, "PackedScene"):
 		result.add_error(
 			"scene_not_found",
 			"System scene does not exist or is not a PackedScene.",

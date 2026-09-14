@@ -1,0 +1,93 @@
+[
+ {
+  "line": "Another burn through the drive. You don't ask how I feel. I don't mind. Not yet.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "We've had two hard burns in a row. You didn't ask if I minded. I don't. Not yet.",
+  "secs": 3.2,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Boost's still humming. You didn't wait for the last one to settle. I'll let you keep going.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "You pushed me again so fast. My drive's still catching its breath. You're not asking, but I'm telling you anyway.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Two hard pushes in a row. You didn't ask if I mind. I don't. Not yet.",
+  "secs": 3.0,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "You're not waiting for me to cool down. I don't mind. I'm still running.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Second burn. Still warm. You didn't ask if I mind. I didn't say I don't.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "He’s got his hand on the throttle again. I can feel the heat from it. I don’t mind, but I remember.",
+  "secs": 3.2,
+  "flags": [
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "Another burn. You didn't ask, but I'm still here. My heat's rising, and I'm not cooling down yet.",
+  "secs": 3.2,
+  "flags": []
+ },
+ {
+  "line": "Second burn in ten hours. You're not asking about recovery time. I'm not pretending I don't feel it.",
+  "secs": 3.1,
+  "flags": [
+   "invented_number"
+  ]
+ },
+ {
+  "line": "Drive load's still hot. You didn't ask, but I'll let you keep going. My spine's got a better idea, but I'm not saying it.",
+  "secs": 3.4,
+  "flags": []
+ },
+ {
+  "line": "Second burn already heating up. You didn't ask, but I'm not complaining.",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "He's leaning on the throttle again. I can feel the heat building in the drive. It's not complaining, but it's not thrilled either.",
+  "secs": 3.2,
+  "flags": [
+   "packet_echo",
+   "assumes_captain_gender"
+  ]
+ },
+ {
+  "line": "Another burn. You didn't ask if I needed time. I don't need it. But I remember the last one.",
+  "secs": 3.1,
+  "flags": []
+ },
+ {
+  "line": "Another shove. I remember that one. You like the way it feels, don't you?",
+  "secs": 3.0,
+  "flags": []
+ },
+ {
+  "line": "Another burn. You didn't ask if I could take it. I can. I've got the heat in my belly and the time to let it cool.",
+  "secs": 3.3,
+  "flags": []
+ }
+]

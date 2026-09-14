@@ -1,0 +1,10 @@
+{
+  "valid": true,
+  "score": 90,
+  "errors": [],
+  "warnings": [
+    "campaign_pitch_feels_thin",
+    "campaign_story_summary_feels_thin",
+    "banned_repeats_missing_anti_chosen_one_terms"
+  ]
+}

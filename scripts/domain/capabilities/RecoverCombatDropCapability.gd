@@ -31,7 +31,7 @@ func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Di
 		data["ship_log_recovered"] = true
 		data["ship_log_entry"] = "Recovered %s from %s wreckage after %d eligible kills." % [
 			str(data.get("item_name", "data pack")),
-			str(data.get("target_faction", "hostile")),
+			faction_display(data),
 			int(data.get("current_count", 0)),
 		]
 		result["chatter"] = {
@@ -57,7 +57,7 @@ func format_tracker_text(data: Dictionary) -> String:
 		]
 	return "Wrecks searched: %d | Hunt %s until the data turns up" % [
 		int(data.get("current_count", 0)),
-		str(data.get("target_faction", "hostile")).to_upper(),
+		faction_display(data),
 	]
 
 

@@ -1,0 +1,49 @@
+{"campaign_title": "Echoes of the Void-Glass",
+  "campaign_logline": "Navigate the fractured remnants of a shattered nebula to recover lost data shards before the Zenith corporation's oversight is revoked.",
+  "opening_situation": "You wake up in a salvage vessel, the cockpit smelling of ozone and burnt copper. Kaelen stands by the console, her expression unreadable as she notes your disorientation.",
+  "main_mystery": "The source of the 'Void-Glass'—a crystalline substance that feeds on radiation but produces infinite energy—and who originally engineered it.",
+  "act_1_outline": [
+    "Locate and secure three data shards in the Zenith zone, while avoiding automated security drones.",
+    "Establish a trade route between Aurelia outposts to stabilize local economies.",
+    "Navigate through the first gate to the outskirts of the Vanguard territory."
+  ],
+  "long_term_reveal": "The Void-Glass is not an energy source; it's a biological byproduct of a dormant, extra-dimensional organism.",
+  "tone": "Dry, slightly dark PG-13 humor. Minimalist and atmospheric.",
+  "core_pressure": "Resource scarcity in the Zenith sector; deteriorating ship integrity.",
+  "kaelen_rule": "Kaelen is immortal, her motivations are ambiguous, and her origin remains a mystery.",
+  "faction_reveal_rule": "New factions (Aurelia, Vanguard) are only revealed through gate travel.",
+  "humor_rule": "Avoid repetitive jokes. Use dry wit regarding the absurdity of space-commerce.",
+  "address_rule": "Address Kaelen directly or via internal log updates.",
+  "fallback_rule": "If a quest goal is unreachable, offer an alternative path to salvage enough scrap for repairs.",
+  "story_horizon_rule": "Trigger: prepared_systems_remaining < 3. Action: append_story_horizon.",
+  "story_arcs": [
+    {
+      "name": "The Shard Hunt",
+      "summary": "Recover the missing data shards to unlock the truth about Void-Glass and stabilize your ship's power core."
+    }
+  ],
+  "rumor__trails": [
+    {
+      "name": "Whispers of the Old Code",
+      "trail_id": "rumor_trail.whispers_of_the_old_code",
+      "clue_count": 2,
+      "hint_theme": "Ancient signal patterns",
+      "clue_templates": [
+        "A rhythmic pulse from the derelict station.",
+        "An encrypted packet containing coordinates to a buried vault."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks a hidden chamber with an ancient, non-human record of the first jump-gate network."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "low_systems_count_trigger",
+      "metric": "prepared_systems_remaining",
+      "threshold": 3,
+      "action": "append_story_horizon",
+      "description": "When the player reaches a new system with fewer than three prepared systems left, add a new horizon."
+    }
+  ]
+}

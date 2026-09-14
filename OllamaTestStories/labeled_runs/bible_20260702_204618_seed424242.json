@@ -1,0 +1,78 @@
+{
+  "campaign_title": "The Tally Keepers' Due",
+  "campaign_logline": "A broke pilot must navigate local corporate rot to pay off a debt that smells suspiciously like bad bookkeeping.",
+  "opening_situation": "You are running on fumes and questionable credits; your only immediate obstacle is a single, aggressive Reaver-class hostile freighter blocking the jump point.",
+  "main_mystery": "Tracing who manufactured the initial debt structure that ensnares every major local player in Zenith, Aurelia, and Vanguard.",
+  "act_1_outline": [
+    "Secure minor salvage contracts in Zenith to buy basic reputation credits.",
+    "Intercept a compromised data packet near an Aurelian shipping lane junction.",
+    "Complete a retrieval job for Vanguard involving disputed hardware ownership."
+  ],
+  "long_term_reveal": "The entire local economic structure is funded by mandatory, undisclosed resource tithes paid to a non-governmental holding entity operating through the three major powers.",
+  "tone": "Gritty procedural desperation with bureaucratic cynicism.",
+  "core_pressure": "Escalating financial insolvency requiring increasingly dangerous favors.",
+  "factions": {
+    "zenith": "Zenith's internal regulatory bodies are aggressively over-taxing independent salvage operations to fund infrastructure vanity projects.",
+    "aurelia": "Aurelia is hoarding pre-jump gate navigation charts, creating artificial scarcity for passage fees.",
+    "vanguard": "Vanguard maintains a rigid, almost petty enforcement of obsolete territorial maritime law in contested zones."
+  },
+  "kaelen_rule": "Kaelen operates as an information broker specializing in salvage rights and minor jurisdictional disputes.",
+  "kaelen_angle": "She knows the specific sequence of failed audits that allowed the current debt structure to solidify without triggering official review.",
+  "kaelen_hint_plan": [
+    "She always asks about commodity futures before discussing contracts.",
+    "Her preference for antique, non-standard currency denominations is notable.",
+    "She seems overly concerned with proper documentation format.",
+    "She never uses the term 'insolvency' herself."
+  ],
+  "kaelen_hint_style": "Over-precise details regarding paperwork and procedural minutiae.",
+  "kaelen_never_reveal": "The true nature of the initial debt principal itself remains unknown to the player.",
+  "faction_reveal_rule": "New systems reveal factions via a direct, mandatory interaction with a station authority that issues an immediate \"Warning: New Jurisdiction Detected\" bulletin.",
+  "humor_rule": "Humor must derive from bureaucratic absurdity or mundane incompetence, never violence alone.",
+  "address_rule": "NPCs address the player as 'Pilot' or by their registered vessel callsign.",
+  "fallback_rule": "If specific ore/upgrade data is missing for a system, substitute it with generic but plausible industrial waste materials and basic utility modules.",
+  "story_horizon_rule": "New horizons must introduce a distinct, localized commodity shortage that impacts the player's current primary revenue stream.",
+  "story_arcs": [
+    {
+      "name": "The Writ of Outstanding Claims",
+      "summary": "The pilot gets drawn into a web of outstanding debts and misplaced collateral owed to multiple powerful local interests."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "Unmarked Manifest Transfers",
+      "trail_id": "rumor_trail.manifest_scraps",
+      "clue_count": 2,
+      "hint_theme": "Discrepancies between declared cargo manifests and actual salvage yields.",
+      "clue_templates": [
+        "A partially burned customs ledger listing voided ownership transfers.",
+        "A coded message referencing an unscheduled transfer of high-value, non-catalogued components."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "uncommon",
+      "payoff": "A temporary immunity waiver from one local tax authority, allowing safe passage through a previously restricted zone."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 2,
+      "action": "append_story_horizon",
+      "description": "When the player completes two major acts, they are forced into a new sector with immediate resource scarcity challenges."
+    }
+  ],
+  "expansion_rules": [
+    "New horizons must introduce an operational failure in one of the three core factions (Zenith/Aurelia/Vanguard).",
+    "The required commodity shortage must directly counter the primary tool used to advance the current mystery."
+  ],
+  "banned_repeats": [
+    "Great Silence",
+    "Great Collapse",
+    "purge protocol",
+    "ancient signal",
+    "ghost signal",
+    "prophecy",
+    "alien owner",
+    "mysterious pulse"
+  ]
+}

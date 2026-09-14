@@ -77,6 +77,11 @@ No gameplay, campaign, mission, NPC, or asset system may call Ollama or another
 provider directly. Those calls belong behind provider adapters and the model
 scheduler.
 
+Near-term implementation should migrate any remaining direct Ollama calls in
+UI or service scripts into this gateway, then make preferred model order a
+profile/config concern so upgrades like moving from a 1.5B to a 3B small model
+do not require scattered code edits.
+
 ### Unified Speech Service
 
 All spoken dialogue uses one provider-neutral `SpeechService`. Kaelen, faction

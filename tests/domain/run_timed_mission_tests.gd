@@ -14,6 +14,8 @@ func _initialize() -> void:
 	_test_urgent_reward_multiplier()
 	_test_expiration_clears_active_state()
 	_test_expiration_clears_special_cargo()
+	_test_expiration_clears_courier_cargo()
+	_test_expiration_preserves_purchase_inventory()
 	_test_no_expiration_before_deadline()
 	_test_remaining_time_counts_down()
 	_test_zero_duration_rejected()
@@ -143,6 +145,69 @@ func _test_expiration_clears_special_cargo() -> void:
 	)
 
 
+func _test_expiration_clears_courier_cargo() -> void:
+	var qm = root.get_node("QuestManager")
+	var clock = root.get_node("CampaignClock")
+	var gs = root.get_node("GlobalState")
+	qm.reset_for_restart()
+	clock.restore_state({"total_minutes": 480})
+	gs.clear_cargo()
+
+	var offer := _courier_offer()
+	offer["timing"] = {
+		"timed": true,
+		"duration_minutes": 1,
+		"expiration_policy": "expire",
+	}
+	_expect(
+		qm.accept_quest(offer, _accept_choice()),
+		"courier_expire: timed courier offer was rejected."
+	)
+	_expect(
+		int(gs.cargo_type) == int(gs.CargoType.SPECIAL)
+			and str(gs.cargo_special.get("name", "")) == "Sealed Evidence Tube",
+		"courier_expire: courier cargo was not loaded on acceptance."
+	)
+	clock.advance_minutes(1)
+	qm.check_active_quest_expiration()
+	_expect(
+		not qm.is_quest_active()
+			and int(gs.cargo_type) == int(gs.CargoType.EMPTY)
+			and gs.cargo_special.is_empty(),
+		"courier_expire: expiration did not clear active mission and courier cargo."
+	)
+
+
+func _test_expiration_preserves_purchase_inventory() -> void:
+	var qm = root.get_node("QuestManager")
+	var clock = root.get_node("CampaignClock")
+	var gs = root.get_node("GlobalState")
+	qm.reset_for_restart()
+	clock.restore_state({"total_minutes": 480})
+	var previous_inventory = gs.inventory
+	gs.inventory = gs.PlayerInventoryScript.new()
+	gs.inventory.add("data_chip", 2)
+
+	var offer := _purchase_offer()
+	offer["timing"] = {
+		"timed": true,
+		"duration_minutes": 1,
+		"expiration_policy": "expire",
+	}
+	_expect(
+		qm.accept_quest(offer, _accept_choice()),
+		"purchase_expire: timed purchase-delivery offer was rejected."
+	)
+	clock.advance_minutes(1)
+	qm.check_active_quest_expiration()
+	_expect(
+		not qm.is_quest_active()
+			and int(gs.inventory.get_quantity("data_chip")) == 2,
+		"purchase_expire: expiration should clear mission without consuming inventory."
+	)
+	gs.inventory = previous_inventory
+
+
 func _test_no_expiration_before_deadline() -> void:
 	var clock := ClockType.new()
 	clock.restore_state({"total_minutes": 480})
@@ -223,6 +288,46 @@ func _pickup_offer() -> Dictionary:
 			"part_name": "Sealed Actuator",
 			"destination": "Grease Monkeys",
 			"reward_credits": 75,
+		},
+		"choices": [],
+	}
+
+
+func _courier_offer() -> Dictionary:
+	return {
+		"title": "Timed Courier",
+		"faction": "neutral",
+		"agent_name": "Public Board",
+		"dialogue": "Carry the package.",
+		"objective": {
+			"type": "DELIVERY_COURIER",
+			"item_name": "Sealed Evidence Tube",
+			"origin_station_id": "station.start.main",
+			"origin_display": "Main Station",
+			"destination_station_id": "station.start.kova",
+			"destination_display": "Kova Station",
+			"reward_credits": 160,
+		},
+		"choices": [],
+	}
+
+
+func _purchase_offer() -> Dictionary:
+	return {
+		"title": "Timed Purchase",
+		"faction": "neutral",
+		"agent_name": "Public Board",
+		"dialogue": "Buy the part and deliver it.",
+		"objective": {
+			"type": "PURCHASE_DELIVERY",
+			"item_id": "data_chip",
+			"item_name": "Data Chip",
+			"quantity_required": 2,
+			"store_station_id": "station.start.main",
+			"store_display": "Main Station",
+			"destination_station_id": "station.start.kova",
+			"destination_display": "Kova Station",
+			"reward_credits": 180,
 		},
 		"choices": [],
 	}

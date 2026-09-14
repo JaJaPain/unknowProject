@@ -1,0 +1,61 @@
+{
+  "campaign_title": "The Ledger of Broken Bonds",
+  "campaign_logline": "In the Aurelia sector, a corporate monopoly on trade routes is collapsing into a violent shadow market. You must navigate the debt-ridden remnants of high finance.",
+  "opening_situation": "You arrive at Zenith Station to find the local economy crippled by 'ghost debts.' Kaelen claims she has records of every unpaid invoice in the system, but the corporate enforcers want them burned.",
+  "main_mystery": "Kaelen is hiding a massive, illegal ledger that proves the ruling corporations intentionally sabotaged their own infrastructure to force-collect debt from commoners.",
+  "act_1_outline": [
+    "Identify and recover 'Debt Tokens' from lawless outposts in Aurelia.",
+    "Negotiate with Vanguard mercenaries to secure trade lanes from corporate scavengers.",
+    "Decipher Kaelen’s coded ledgers to identify the primary source of the economic rot."
+  ],
+  "long_term_reveal": "Kaelen's secret is that she was a high-level auditor who stole the ledger and lived in hiding for years out of simple spite.",
+  "tone": "Dry, cynical, noir-lite.",
+  "core_pressure": "Rising interest rates (fines) on player ship maintenance and fuel.",
+  "kaelen_rule": "Kaelen is immortal; her secret is a mundane crime of petty theft/mischief.",
+  "faction_reveal_rule": "New factions only revealed via jumps beyond the Zenith-Aurelia-Vanguard triad.",
+  "humor_rule": "Dry, deadpan jokes about corporate bureaucracy and space physics.",
+  "address_rule": "Keep all flavor text under 140 characters.",
+  "fallback_rule": "If a query is ambiguous, prioritize plot progression over lore detail.",
+  "story_horizon_rule": "Trigger expansion when exploration metrics hit thresholds.",
+  "story_arcs": [
+    {
+      "name": "The Debt Collection",
+      "summary": "Track down missing shipments and reclaim seized assets from local syndicates to stabilize the Aurelia economy."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost in the Exchange",
+      "trail_id": "rumor_trail.ghost_exchange_audit",
+      "clue_count": 2,
+      "hint_theme": "Encrypted bank logs",
+      "clue_templates": [
+        "A frantic encrypted ping from a defunct mining outpost.",
+        "An old physical ledger fragment found in a derelict freighter."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "rare",
+      "payoff": "Unlocks the 'Golden Ledger' title and a unique, high-capacity cargo bay module."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "system_expansion_trigger",
+      "metric": "prepared_systems_remaining",
+      "threshold": 1,
+      "action": "append_story_horizon",
+      "description": "When the player enters a new system beyond the starting triad."
+    }
+  ],
+  "expansion_rules": [
+    "Append one new story arc per jump to a previously unvisited sector.",
+    "Do not retcon any previous choices or Kaelen's core narrative status."
+  ],
+  "banned_repeats": [
+    "Ancient archives",
+    "Sentient AI",
+    "Purge protocols",
+    "Great Silence",
+    "The Zenith prefix"
+  ]
+}

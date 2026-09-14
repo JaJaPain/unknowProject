@@ -30,6 +30,20 @@
 				{"id":"portrait.quest_givers.vanguard","bounds":{"x":0,"y":627,"width":627,"height":627},"tags":["agent","vanguard"]},
 				{"id":"portrait.quest_givers.kaelen","bounds":{"x":627,"y":627,"width":627,"height":627},"tags":["broker","kaelen"]}
 			]
+		},
+		{
+			"id":"portrait_sheet.kaelen_moods","source_path":"res://assets/KaelenMoods.png","width":1254,"height":1254,"columns":3,"rows":3,
+			"portraits":[
+				{"id":"portrait.kaelen_moods.calm","bounds":{"x":0,"y":0,"width":418,"height":418},"tags":["broker","kaelen","mood","calm","confident"]},
+				{"id":"portrait.kaelen_moods.neutral","bounds":{"x":418,"y":0,"width":418,"height":418},"tags":["broker","kaelen","mood","neutral","default"]},
+				{"id":"portrait.kaelen_moods.angry","bounds":{"x":836,"y":0,"width":418,"height":418},"tags":["broker","kaelen","mood","angry","threat"]},
+				{"id":"portrait.kaelen_moods.amused","bounds":{"x":0,"y":418,"width":418,"height":418},"tags":["broker","kaelen","mood","amused","dry_humor"]},
+				{"id":"portrait.kaelen_moods.somber","bounds":{"x":418,"y":418,"width":418,"height":418},"tags":["broker","kaelen","mood","somber","regret"]},
+				{"id":"portrait.kaelen_moods.suspicious","bounds":{"x":836,"y":418,"width":418,"height":418},"tags":["broker","kaelen","mood","suspicious","watchful"]},
+				{"id":"portrait.kaelen_moods.worried","bounds":{"x":0,"y":836,"width":418,"height":418},"tags":["broker","kaelen","mood","worried","concerned"]},
+				{"id":"portrait.kaelen_moods.intrigued","bounds":{"x":418,"y":836,"width":418,"height":418},"tags":["broker","kaelen","mood","intrigued","mystery"]},
+				{"id":"portrait.kaelen_moods.exhausted","bounds":{"x":836,"y":836,"width":418,"height":418},"tags":["broker","kaelen","mood","exhausted","grief"]}
+			]
 		}
 	]
 }

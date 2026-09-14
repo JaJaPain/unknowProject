@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player_ship.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui_manager.tscn" id="4_ui"]
 [ext_resource type="PackedScene" path="res://scenes/jump_transition_fx.tscn" id="5_fx"]
+[ext_resource type="Script" path="res://scripts/ui/LandingScreen.gd" id="6_landing"]
 
 [node name="GameRoot" type="Node3D" unique_id=1740174468]
 script = ExtResource("1_root")
@@ -15,3 +16,15 @@ script = ExtResource("1_root")
 [node name="CanvasLayer" parent="." unique_id=375550208 instance=ExtResource("4_ui")]
 
 [node name="JumpTransitionFX" parent="." unique_id=1035459483 instance=ExtResource("5_fx")]
+
+[node name="LandingLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="LandingScreen" type="Control" parent="LandingLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_landing")

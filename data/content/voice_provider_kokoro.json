@@ -3,7 +3,8 @@
 	"provider_id": "tts.kokoro.local",
 	"mappings": {
 		"voice.kaelen.v1":{"provider_voice":"af_bella","speed":1.0},
-		"voice.neutral.v1":{"provider_voice":"af_bella","speed":1.0},
+		"voice.nova.v1":{"provider_voice":"bf_emma[0.7]+af_bella[0.3]","speed":1.0},
+		"voice.neutral.v1":{"provider_voice":"af_aoede[0.5]+af_nova[0.5]","speed":1.0},
 		"voice.agent.zenith.v1":{"provider_voice":"am_adam[0.7]+am_liam[0.3]","speed":1.0},
 		"voice.agent.aurelia.v1":{"provider_voice":"af_sarah[0.6]+af_nicole[0.4]","speed":1.0},
 		"voice.agent.vanguard.v1":{"provider_voice":"am_michael[0.8]+am_onyx[0.2]","speed":1.0},

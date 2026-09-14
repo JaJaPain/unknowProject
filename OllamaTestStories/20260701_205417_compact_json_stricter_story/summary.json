@@ -1,0 +1,101 @@
+[
+  {
+    "name": "compact_json_01",
+    "variant": "compact_json",
+    "seed": 953657,
+    "elapsed_seconds": 31.79,
+    "valid": false,
+    "score": 69,
+    "title": "The Hollowed Veins",
+    "logline": "Navigate the collapsing economic infrastructure of a dying trade route.",
+    "errors": [
+      "missing_nested:recurring_clue.first_appearance",
+      "placeholder_text:rumor_t",
+      "bad_rumor_discovery_type",
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin"
+    ]
+  },
+  {
+    "name": "compact_json_02",
+    "variant": "compact_json",
+    "seed": 953675,
+    "elapsed_seconds": 30.41,
+    "valid": false,
+    "score": 74,
+    "title": "Echoes of the Void",
+    "logline": "A desperate pilot navigates a crumbling economy and shifting loyalties in the outer rim.",
+    "errors": [
+      "missing_nested:rules.fallback_rule",
+      "placeholder_text:rumor_t"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "compact_json_03",
+    "variant": "compact_json",
+    "seed": 953693,
+    "elapsed_seconds": 27.91,
+    "valid": false,
+    "score": 33,
+    "title": "Dust of the Core",
+    "logline": "A desperate pilot navigates a crumbling economic web between three warring factions.",
+    "errors": [
+      "missing_field:recurring_clue",
+      "missing_field:story_questions_for_future_generation",
+      "missing_nested:recurring_clue.name",
+      "missing_nested:recurring_clue.signal",
+      "missing_nested:recurring_clue.first_appearance",
+      "missing_nested:recurring_clue.escalation",
+      "missing_nested:recurring_clue.payoff_hint",
+      "missing_nested:horizon.future_faction_tease",
+      "placeholder_text:rumor_t",
+      "bad_rumor_discovery_type",
+      "story_questions_not_five_items"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  },
+  {
+    "name": "compact_json_04",
+    "variant": "compact_json",
+    "seed": 953711,
+    "elapsed_seconds": 30.21,
+    "valid": false,
+    "score": 11,
+    "title": "Dust of the Reach",
+    "logline": "A desperate pilot navigates a shrinking economy in a dying sector.",
+    "errors": [
+      "missing_field:rumor_trail",
+      "missing_nested:kaelen.never_reveal_rule",
+      "missing_nested:act_1.player_takeaway",
+      "missing_nested:starter_mission.aftershock",
+      "missing_nested:rumor_trail.name",
+      "missing_nested:rumor_trail.trail_id",
+      "missing_nested:rumor_trail.hint_theme",
+      "missing_nested:rumor_trail.payoff",
+      "placeholder_text:rumor_t",
+      "empty_string:rumor_trail.trail_id",
+      "bad_rumor_trail_id_format",
+      "rumor_clue_templates_not_two_nonempty_items",
+      "bad_rumor_discovery_type",
+      "bad_rumor_rarity",
+      "bad_trigger_id_format"
+    ],
+    "warnings": [
+      "campaign_pitch_feels_thin",
+      "campaign_story_summary_feels_thin",
+      "hidden_crisis_may_not_connect_to_playable_systems"
+    ]
+  }
+]

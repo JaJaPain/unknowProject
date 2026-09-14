@@ -1,0 +1,59 @@
+{
+  "campaign_title": "The Scrap-Heap Ledger",
+  "campaign_logline": "Salvage the wreckage of a disgraced corporate fleet while navigating insurance fraud and maritime disputes in the Zenith sector.",
+  "opening_situation": "You find a drifting transport near Zenith. The hull is torn, the logs are corrupted, and the manifest lists cargo that shouldn't exist.",
+  "main_mystery": "Who authorized the illegal 'ghost shipments' and why was the owner of the wreckage scrubbed from public records?",
+  "act_1_outline": [
+    "Secure the first wreck near Aurelia while dodging local enforcement for 'unauthorized salvage'.",
+    "Decipher a corrupted data-chit in a scrap pile that hints at systemic insurance fraud.",
+    "Negotiate with Vanguard representatives to trade recovered parts for legal clearance."
+  ],
+  "long_term_reveal": "The 'ghost' ships were actually corporate assets hidden from tax audits, and the owner sold them off as phantom entities.",
+  "tone": "Dry, cynical, slightly dark humor regarding maritime law and corporate greed.",
+  "core_pressure": "Regulatory scrutiny and cargo weight limits.",
+  "kaelen_rule": "Kaelen is a dry-witted logistics expert; she cannot die or reveal her full past.",
+  "faction_reveal_rule": "New factions only revealed via gate jumps to unexplored systems.",
+  "humor_rule": "Deadpan jokes about the absurdity of space law and cosmic scale bureaucracy.",
+  "address_rule": "Keep all descriptions under 140 characters unless specified.",
+  "fallback_rule": "If a query is ambiguous, default to procedural salvage options.",
+  "story_horizon_rule": "Append new arcs when metrics hit threshold. Do not retcon player choices.",
+  "story_arcs": [
+    {
+      "name": "The Paper Trail",
+      "summary": "Trace the ownership of a series of 'ghost' ships to uncover who is laundering corporate assets."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Ghost Ledger",
+      "trail_id": "rumor_trail.ghost_ledger_scout",
+      "clue_count": 2,
+      "hint_theme": "Illegal cargo manifests.",
+      "clue_templates": [
+        "A frantic log from a frustrated clerk about 'Item 404'.",
+        "A recurring serial number found on three different ship types."
+      ],
+      "discovery_type": "endgame_easter_egg",
+      "rarity": "legendary",
+      "payoff": "Unlocks the secret location of a hidden offshore bank account for high-value trade."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "add_new_sector_content",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "Add a new arc when the current main chain concludes."
+    }
+  ],
+  "expansion_rules": [
+    "Append arcs to existing logs.",
+    "No retconning of choice history."
+  ],
+  "banned_repeats": [
+    "Zenith [Noun]",
+    "Great Silence",
+    "Prophecy"
+  ]
+}

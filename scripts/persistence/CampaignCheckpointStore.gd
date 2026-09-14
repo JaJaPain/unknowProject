@@ -45,6 +45,19 @@ var validation := ValidationResultType.new()
 var chronicle_timeline_id: String = ""
 var chronicle_head_event_id: String = ""
 var map_knowledge: Dictionary = {}
+var _initial_known_gates: Dictionary = {}
+
+
+func set_registry_defaults(registry: SystemRegistry) -> void:
+	for sys_def: SystemDefinition in registry.get_all_systems():
+		for gate: GateDefinition in sys_def.gates:
+			if gate.initial_state == "known":
+				var gid := str(gate.id)
+				_initial_known_gates[gid] = true
+				if not map_knowledge.is_empty():
+					var hidden: Array = map_knowledge.get("hidden_gate_ids", [])
+					if gid in hidden:
+						set_gate_knowledge(gid, "known")
 
 
 static func open(path: String) -> CampaignCheckpointStore:
@@ -113,6 +126,27 @@ func set_gate_knowledge(gate_id: String, state: String) -> bool:
 	return true
 
 
+func get_gate_state(gate_id: String) -> String:
+	if map_knowledge.is_empty():
+		return "unknown"
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		if gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			return state
+	if _initial_known_gates.has(gate_id):
+		return "known"
+	return "unknown"
+
+
+func get_all_gate_states() -> Dictionary:
+	var output := {}
+	if map_knowledge.is_empty():
+		return output
+	for state in ["known", "rumored", "hidden", "blocked", "damaged"]:
+		for gate_id in map_knowledge.get("%s_gate_ids" % state, []):
+			output[str(gate_id)] = state
+	return output
+
+
 func mark_gates_known(gate_ids: Array) -> bool:
 	for gate_id in gate_ids:
 		if not set_gate_knowledge(str(gate_id), "known"):
@@ -127,7 +161,7 @@ func capture_autosave(
 ) -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
-	if source_reason not in ["dock", "undock", "gate_arrival"]:
+	if source_reason not in ["dock", "undock", "gate_arrival", "investigation_accepted", "mission_settled"]:
 		return _failure("Unsupported safe checkpoint reason.")
 	if not _safe_location_matches_reason(safe_location, source_reason):
 		return _failure("Safe location does not match the checkpoint reason.")
@@ -832,16 +866,17 @@ static func _validate_checkpoint_pair(
 	return result
 
 
-static func _strip_tactical_state(value: Variant) -> void:
+static func _strip_tactical_state(value: Variant, path: Array = ["state"]) -> void:
 	if value is Dictionary:
 		for key in (value as Dictionary).keys():
-			if str(key) in TACTICAL_KEYS:
+			var child_path := path + [str(key)]
+			if str(key) in TACTICAL_KEYS and not SchemaType.is_investigation_site_position(child_path):
 				(value as Dictionary).erase(key)
 			else:
-				_strip_tactical_state((value as Dictionary)[key])
+				_strip_tactical_state((value as Dictionary)[key], child_path)
 	elif value is Array:
-		for item in value:
-			_strip_tactical_state(item)
+		for index in range(value.size()):
+			_strip_tactical_state(value[index], path + [index])
 
 
 static func _new_id(id_namespace: String, label: String) -> String:

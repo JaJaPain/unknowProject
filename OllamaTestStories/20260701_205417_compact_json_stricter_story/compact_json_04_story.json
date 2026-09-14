@@ -1,0 +1,98 @@
+{
+  "campaign_title": "Dust of the Reach",
+  "campaign_subtitle": "The Scarcity Crisis",
+  "campaign_logline": "A desperate pilot navigates a shrinking economy in a dying sector.",
+  "campaign_pitch": "Trade routes are collapsing under heavy taxes. You must navigate the friction between three competing powers.",
+  "campaign_story_summary": "Resource scarcity is strangling the frontier. Zenith demands total control of trade hubs. Aurelia seeks independence through privateer tactics. Vanguard maintains a strict military blockade. You find profit in the cracks of their conflict.",
+  "tone": "Dry, gritty frontier humor.",
+  "opening": {
+    "status_quo": "Trade routes are collapsing under heavy taxes.",
+    "visible_crisis": "The local economy is failing due to high tariffs and supply shortages.",
+    "hidden_crisis": "A massive logistics network failure is causing the scarcity.",
+    "why_now": "Fuel prices have spiked, making independent travel dangerous.",
+    "player_role": "An independent pilot seeking a steady paycheck."
+  },
+  "mystery": {
+    "question": "Why are the trade routes failing?",
+    "false_answer": "The routes are being sabotaged by pirates.",
+    "true_answer_hint": "Automated logistics systems have malfunctioned and locked out all but a few keys.",
+    "long_term_reveal_direction": "The system is slowly shutting down the entire sector's infrastructure."
+  },
+  "kaelen": {
+    "public_role": "Broker, fixer, and contract handler.",
+    "secret_angle": "She knows exactly where the logistics keys are hidden.",
+    "address_rule": "Refer to her as a broker or a contact.",
+    "never__reveal_rule": "Never reveal her role as a gate scientist or prophet."
+  },
+  "factions": {
+    "zenith_problem": "Zenith wants to monopolize the trade hubs to stabilize their economy.",
+    "aurelia_problem": "Aurelia is funding privateers to break the monopoly of others.",
+    "vanguard_problem": "Vanguard enforces a strict blockade to prevent smuggling and chaos.",
+    "conflict_triangle": "The three factions are locked in a resource war over trade routes.",
+    "neutral_space_pressure": "Independent pilots are being squeezed out by increasing surveillance."
+  },
+  "act_1": {
+    "name": "Broken Links",
+    "goal": "Secure enough supplies to establish a stable route.",
+    "opening_incident": "A shipment of high-grade fuel is intercepted by an Aurelia pirate ship.",
+    "midpoint_turn": "You discover that the supply shortage is not just caused by pirates, but by a system failure.",
+    "finale": "You successfully deliver a cargo haul to a secure zone.",
+    "player__takeaway": "The trade routes are becoming increasingly difficult and dangerous."
+  },
+  "starter_mission": {
+    "title": "The Rogue Hauler",
+    "reason": "A local smuggler's ship was damaged by an Aurelia pirate.",
+    "enemy_identity": "Reaver-class hauler.",
+    "enemy_knows": "The enemy is unaware of the larger conflict.",
+    "aftershock_1": "You find a log showing a failed delivery."
+  },
+  "recurring_clue": {
+    "name": "Ghost Signal",
+    "signal": "A repeating pulse from an abandoned mining site.",
+    "first_appearance": "Found in the logs of the rogue hauler.",
+    "escalation": "The signal becomes more frequent as you move towards trade hubs.",
+    "payoff_hint": "The signal is linked to the old logistics network."
+  },
+  "rumor__trail": {
+    "name": "The Ghost Route",
+    "trail_id": "rumor_trail.ghost_route",
+    "hint_theme": "Abandoned routes and hidden paths.",
+    "clue_templates": [
+      "A smuggler's map of a dead route.",
+      "A log about an automated gate."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "uncommon",
+    "payoff": "Unlock a secret passage to the next system."
+  },
+  "horizon": {
+    "gate_tease": "The gates are showing signs of instability.",
+    "new_system_reveal_rule": "New systems only appear when the player reaches a gate.",
+    "future_faction_tease": "Rumors of an outside force seeking to lure them in.",
+    "future_ore_or_upgrade_tease": "Rare minerals are found in unstable zones.",
+    "regeneration_trigger": {
+      "id": "regeneration_trigger.logistics_failure",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_horizon",
+      "description": "When the logistics failure is revealed, add new story elements."
+    }
+  },
+  "rules": {
+    "humor_rule": "Use dry, gritty frontier humor.",
+    "fallback_rule": "If a quest log is not clear, use Kaelen's guidance.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "ghost signal"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What are the consequences of the logistics failure?",
+    "Why is Kaelen's role in the system truly significant?",
+    "How does Vanguard's blockade policy change if they lose a single hub?",
+    "Who are the turn-key holders for the old logistics network?",
+    "Where is the hidden infrastructure of the sector?"
+  ]
+}

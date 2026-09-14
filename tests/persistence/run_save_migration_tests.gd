@@ -1,25 +1,29 @@
 extends SceneTree
 
-const MigratorType := preload(
-	"res://scripts/persistence/SaveMigrator.gd"
-)
-const RegistryType := preload(
-	"res://scripts/registry/SystemRegistry.gd"
-)
+var MigratorType: GDScript
+var RegistryType: GDScript
 
-const TEST_PATH := "user://save_migration_fixture.json"
+const TEST_PATH := "res://.tmp_godot_user/save_migration_fixture.json"
 
 var _failures: Array[String] = []
-var _registry: SystemRegistry
+var _registry
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	MigratorType = load("res://scripts/persistence/SaveMigrator.gd")
+	RegistryType = load("res://scripts/registry/SystemRegistry.gd")
 	_registry = RegistryType.load_default()
 	_expect(_registry.is_valid(), "System registry failed to load.")
 	_cleanup()
 
 	_test_in_memory_migration()
+	_test_consequence_system_aliases()
 	_test_file_migration_and_backup()
+	_test_generated_system_round_trip()
 	_test_damaged_source_is_untouched()
 	_test_unsupported_source_is_untouched()
 	_cleanup()
@@ -33,8 +37,25 @@ func _initialize() -> void:
 	quit(1)
 
 
+func _test_consequence_system_aliases() -> void:
+	var Outcome := load("res://scripts/domain/MissionOutcome.gd")
+	var Ledger := load("res://scripts/story/DesireProgressLedger.gd")
+	var quest := {"runtime_id": "m.alias", "system_id": "start_system", "objective_type": "INVESTIGATE_SIGNAL", "narrative_metadata": {"cause_faction_id": "faction.a", "desire_id": "desire.a", "cause_id": "cause.a"}, "investigation": {"outcome_tag": "preserved", "branch_id": "preserve", "scanned_site_ids": ["s1", "s2"]}}
+	var built: Dictionary = Outcome.build(quest, "completed", 400, 1)
+	var progress: Dictionary = Ledger.apply_outcome({}, built["outcome"])["state"]
+	var plan := {"version": 1, "id": "plan.alias", "status": "active", "premise_fact_ids": [], "interests": [{"id": "i", "system_id": "start_system", "faction_id": "faction.a", "desire_id": "desire.a", "supported_effect_ids": ["recorder_preserved_and_delivered"]}], "alternatives": [{"id": "a", "result": "success", "all_of": [{"kind": "desire_state", "system_id": "start_system", "desire_id": "desire.a", "state": "satisfied"}]}]}
+	var data := {"story_state": {"desire_progress": progress, "resolution_plan": plan}}
+	var original := data.duplicate(true)
+	_expect(MigratorType._map_local_pressures(data, _registry, false).get("ok", false), "Consequence alias encode failed.")
+	_expect(data.story_state.desire_progress.entries.has("system.start|faction.a|desire.a"), "Desire key was not canonicalized.")
+	_expect(data.story_state.resolution_plan.interests[0].system_id == "system.start", "Resolution interest not canonicalized.")
+	_expect(MigratorType._map_local_pressures(data, _registry, true).get("ok", false), "Consequence alias decode failed.")
+	_expect(data == original, "Consequence identity changed on alias roundtrip.")
+	data.story_state.resolution_plan.interests[0].system_id = "missing.system"
+	_expect(not MigratorType._map_local_pressures(data, _registry, false).get("ok", true), "Unknown consequence system accepted.")
+
 func _test_in_memory_migration() -> void:
-	var migrated := MigratorType.migrate_legacy_data(
+	var migrated: Dictionary = MigratorType.migrate_legacy_data(
 		_legacy_save(),
 		_registry
 	)
@@ -48,7 +69,7 @@ func _test_in_memory_migration() -> void:
 	)
 	_expect(
 		data.get("current_system_id") == "system.start"
-			and data.get("arrival_gate_id") == "gate.test.to_start",
+			and data.get("arrival_gate_id") == "gate.start.to_test",
 		"Migration did not canonicalize top-level IDs."
 	)
 	_expect(
@@ -68,13 +89,13 @@ func _test_in_memory_migration() -> void:
 		"Migrated save failed current-schema validation."
 	)
 
-	var decoded := MigratorType.decode_for_runtime(data, _registry)
+	var decoded: Dictionary = MigratorType.decode_for_runtime(data, _registry)
 	_expect(bool(decoded.get("ok", false)), decoded.get("error", ""))
 	if bool(decoded.get("ok", false)):
 		var runtime: Dictionary = decoded["data"]
 		_expect(
 			runtime.get("current_system_id") == "start_system"
-				and runtime.get("arrival_gate_id") == "test_to_start"
+				and runtime.get("arrival_gate_id") == "start_to_test"
 				and (runtime.get("systems", {}) as Dictionary).has(
 					"start_system"
 				),
@@ -85,7 +106,7 @@ func _test_in_memory_migration() -> void:
 func _test_file_migration_and_backup() -> void:
 	var original_text := JSON.stringify(_legacy_save())
 	_write_text(TEST_PATH, original_text)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(bool(loaded.get("ok", false)), loaded.get("error", ""))
 	_expect(
 		bool(loaded.get("migrated", false)),
@@ -118,7 +139,7 @@ func _test_file_migration_and_backup() -> void:
 func _test_damaged_source_is_untouched() -> void:
 	var damaged := "{\"version\":1,\"player\":"
 	_write_text(TEST_PATH, damaged)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(
 		not bool(loaded.get("ok", false)),
 		"Damaged save was accepted."
@@ -134,7 +155,7 @@ func _test_unsupported_source_is_untouched() -> void:
 	future["version"] = MigratorType.CURRENT_VERSION + 1
 	var future_text := JSON.stringify(future)
 	_write_text(TEST_PATH, future_text)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(
 		not bool(loaded.get("ok", false)),
 		"Unsupported future save was accepted."
@@ -145,11 +166,51 @@ func _test_unsupported_source_is_untouched() -> void:
 	)
 
 
+func _test_generated_system_round_trip() -> void:
+	var source_registry = RegistryType.load_default()
+	var generated := _register_generated_fixture(source_registry)
+	_expect(
+		bool(generated.get("ok", false)),
+		generated.get("error", "Generated fixture registration failed.")
+	)
+	if not bool(generated.get("ok", false)):
+		return
+	var prepared: Dictionary = MigratorType.prepare_for_save(
+		_generated_runtime_save(),
+		source_registry
+	)
+	_expect(bool(prepared.get("ok", false)), prepared.get("error", ""))
+	if not bool(prepared.get("ok", false)):
+		return
+	_write_text(TEST_PATH, JSON.stringify(prepared["data"]))
+	var fresh_registry = RegistryType.load_default()
+	_expect(
+		not fresh_registry.has_system("system.gen.persisted"),
+		"Fresh registry unexpectedly knew the generated fixture."
+	)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, fresh_registry)
+	_expect(bool(loaded.get("ok", false)), loaded.get("error", ""))
+	_expect(
+		fresh_registry.has_system("system.gen.persisted"),
+		"Generated system was not imported before save validation."
+	)
+	if bool(loaded.get("ok", false)):
+		var runtime: Dictionary = loaded["data"]
+		_expect(
+			runtime.get("current_system_id") == "system_gen_persisted",
+			"Generated current system did not decode to runtime ID."
+		)
+		_expect(
+			runtime.get("arrival_gate_id") == "gen_persisted_return",
+			"Generated arrival gate did not decode to runtime ID."
+		)
+
+
 func _legacy_save() -> Dictionary:
 	return {
 		"version": MigratorType.LEGACY_VERSION,
 		"current_system_id": "start_system",
-		"arrival_gate_id": "test_to_start",
+		"arrival_gate_id": "start_to_test",
 		"player": {
 			"health": 73.0,
 			"shield": 17.0,
@@ -179,6 +240,50 @@ func _legacy_save() -> Dictionary:
 				},
 			},
 		},
+	}
+
+
+func _generated_runtime_save() -> Dictionary:
+	return {
+		"version": MigratorType.CURRENT_VERSION,
+		"current_system_id": "system.gen.persisted",
+		"arrival_gate_id": "gate.gen.persisted.return",
+		"player": {
+			"health": 88.0,
+			"shield": 20.0,
+			"position": [4.0, 5.0, 6.0],
+			"rotation": [0.0, 0.25, 0.0],
+		},
+		"global": {
+			"credits": 900,
+			"cargo": 3.0,
+		},
+		"quest": {},
+		"systems": {
+			"system.gen.persisted": {},
+		},
+	}
+
+
+func _register_generated_fixture(registry) -> Dictionary:
+	var gates: Array[Dictionary] = [{
+			"id": "gate.gen.persisted.return",
+			"legacy_id": "gen_persisted_return",
+			"display_name": "Return Gate",
+			"destination_system_id": "system.start",
+			"destination_gate_id": "gate.start.to_test",
+			"initial_state": "known",
+			"discovery_action": "",
+			"discovery_cost": {},
+			"discovery_prerequisites": [],
+	}]
+	var result = registry.register_generated_system({
+		"id": "system.gen.persisted", "legacy_id": "system_gen_persisted",
+		"display_name": "Persisted Reach", "station_ids": [], "faction_ids": [],
+	}, gates)
+	return {
+		"ok": result.is_valid(),
+		"error": result.summary(),
 	}
 
 

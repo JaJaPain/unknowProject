@@ -1,0 +1,10 @@
+{
+  "valid": false,
+  "score": 95,
+  "errors": [
+    "closed_or_meta_question:future_generation_questions"
+  ],
+  "warnings": [
+    "avoid_motifs_may_be_too_sparse"
+  ]
+}

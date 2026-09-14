@@ -1,0 +1,41 @@
+{
+  "creative_lane": "Industrialized Decay and Resource Scarcity",
+  "freshness_rule": "Avoid tropes of mystical discovery; focus on the physical toll of heavy industry and localized logistical bottlenecks.",
+  "avoid_motifs": [
+    "Ancient Signal",
+    "Ancient Prophecy",
+    "Mysterious Pulse",
+    "Alien Ownership"
+  ],
+  "core_story_questions": [
+    "What is the economic cost of a shipment lost in deep space?",
+    "Why does the local trade hub have such high security for low-value cargo?",
+    "How much pressure does the scarcity of fuel cells create on neighboring systems?",
+    "Who holds the monopoly over the refining process?",
+    "Where are the clandestine smuggling routes hidden within legal trade lanes?"
+  ],
+  "starter_mission_questions": [
+    "What is the immediate physical consequence of a failed hull breach during combat?",
+    "How does the player's lack of funding force them to take high-risk maneuvers?",
+    "Why is this specific Reaver ship and its cargo valuable enough to justify an ambush?"
+  ],
+  "kaelen_questions": [
+    "What are the primary risks for Kaelen during a public negotiation?",
+    "How does Kaelen manage the secrecy of their illicit dealings while maintaining a facade of legality?",
+    "Why is Kaelen's reputation as a fixer necessary for survival in this sector?"
+  ],
+  "faction_questions": [
+    "What are the different ways Zenith and Aurelia compete for mining rights?",
+    "How does Vanguard defend its borders against smuggling operations?",
+    "Why do the factions have overlapping territories or conflicting interests?",
+    "Who is the primary contact within each faction's logistics chain?",
+    "Which of these three factions would most likely offer a contract for high-risk cargo?"
+  ],
+  "future_generation_questions": [
+    "What are the potential consequences of choosing to favor one faction over another?",
+    "How do different trade routes and supply chains evolve as the player's influence grows?",
+    "Why would a rogue group emerge from the industrial decay?",
+    "Who is the player\u2019s next major rival in player-chosen territory?",
+    "Which of these three factions will eventually become the most influential in the core sector?"
+  ]
+}

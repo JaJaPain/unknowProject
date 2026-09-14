@@ -1,0 +1,214 @@
+{
+	"schema_version": 1,
+
+	"_editing_guide": "This file controls the WORDS the game uses to steer NPC dialogue from the local LLM. Edit tone, examples, nickname rules, and fallback lines here WITHOUT touching GDScript. Code still owns all mechanics (rewards, ore amounts, kill counts, spawns) and validates output. See docs/llm_dialogue_content_editing.md for the full editing guide. JSON has no real comments, so any key starting with '_' is a note for humans and is ignored by the loader.",
+
+	"_rules_reminder": [
+		"Shiny is Kaelen ONLY. Never put Shiny in non-Kaelen sections.",
+		"Indy is spice, not salt. Most non-Kaelen lines use 'you', 'pilot', or no address.",
+		"Enemy pilots do not know the player. They never say Shiny, Indy, or the player name.",
+		"Only use placeholders code already supports (e.g. {ship}, {part}, {npc}, {outpost}).",
+		"Examples teach rhythm. Keep them short. 3-8 per bucket before adding more rules."
+	],
+
+	"global_rules": {
+		"_comment": "Cross-cutting nickname/address rules. Currently documentation for editors and future wiring; the live persona strings still live in LLMInterface.gd (see TODO markers there). Do not add gameplay numbers here.",
+		"kaelen_only_words": ["Shiny"],
+		"non_kaelen_address_guidance": "Do not use the pilot's private nickname. Use 'you' or 'pilot' only when a direct address is needed.",
+		"banned_non_kaelen_phrases": ["Shiny", "my best friend", "stay put", "sit tight", "I'll fetch"],
+		"allowed_rare_non_kaelen_addresses": ["Indy"],
+		"max_rare_address_uses": 1
+	},
+
+	"speakers": {
+		"_comment": "Tone cards and address rules per speaker archetype. Documentation for editors and future wiring; personas are still built in LLMInterface.request_quest_generation() for now.",
+		"kaelen": {
+			"voice_profile_id": "voice.kaelen.v1",
+			"address_rule": "Calls the player Shiny. This belongs only to Kaelen.",
+			"tone_card": "Cynical, profit-minded broker. Wry, sharp, never sentimental unless the subtext says otherwise. Always mentions his broker's cut."
+		},
+		"faction_agent": {
+			"_comment": "Voss / Ryn / Dask and generated station contacts.",
+			"address_rule": "Does not know the pilot's private nickname. May say Indy at most once; usually uses you, pilot, asset, or courier.",
+			"tone_card": "Faction-specific professional contact. Never imitates Kaelen, never says Shiny."
+		},
+		"mechanic": {
+			"voice_profile_id": "voice.jenna_kross.v1",
+			"address_rule": "Usually says you. May say Indy rarely. Never says Shiny.",
+			"tone_card": "Cocky mechanic (Jenna Kross). Observant, practical, a little too personal, but not Kaelen."
+		},
+		"lounge_local": {
+			"address_rule": "Casual station contact. Avoid player names unless a story fact explicitly allows it.",
+			"tone_card": "Local, grounded, useful even when casual."
+		},
+		"enemy_pilot": {
+			"address_rule": "Does not know the player. Never says Shiny, Indy, or the player name.",
+			"tone_card": "Hostile combatant. Kaelen combat lines are the only ones allowed to say Shiny."
+		}
+	},
+
+	"quest_generation": {
+		"_comment": "Few-shot example dialogues + choice responses fed to the LLM when generating a contract. These use DUMMY facts (George = pilot, Slithern = enemy, 3 ships, 25 m3 ore, Sable Mercer / Morrow Station / Sealed Data Drive). Code substitutes real mission facts at runtime and validates the result — so the numbers here are placeholders, not gameplay values. Edit phrasing/tone freely; keep the dummy facts intact so substitution keeps working. 'examples_by_agent' is keyed by faction agent voice: zenith=Voss, aurelia=Ryn, vanguard=Dask, neutral=Kaelen.",
+		"mission_types": {
+			"KILL_SHIPS": {
+				"dummy_constraints": "In your dialogue, always call the enemy 'Slithern'. Only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 3 ships. ",
+				"examples_by_agent": {
+					"zenith": {
+						"dialogues": [
+							"Resource allocation in Sector 7 has become critically inefficient, George. 3 Slithern ships are disrupting our supply corridor. Eliminate them.",
+							"Slithern operatives have compromised a logistics node, George. 3 hostiles confirmed. Remove them before throughput drops further.",
+							"Unauthorized Slithern vessels detected in our acquisition zone, George. 3 contacts on scope. Purge the interference.",
+							"A Slithern raiding cell has established a forward position, George. 3 ships. Dismantle them before they disrupt scheduled operations.",
+							"Slithern interdiction is costing Zenith 14% throughput, George. 3 vessels. Resolve this inefficiency permanently."
+						],
+						"response_1": "Confirmed, George. Your assignment is logged. Do not deviate from the directive.",
+						"response_2": "An advance against operational expenses. Noted. Expect elevated patrol resistance on your route, George.",
+						"response_3": "Bold negotiation, George. Payout is revised upward. Security escalation protocols are now active in your sector."
+					},
+					"aurelia": {
+						"dialogues": [
+							"Got a little opportunity, George. 3 Slithern ships rattling cages near our trade lane. Remove them quietly and credits flow.",
+							"Slithern crew is making noise near one of my routes, George. 3 ships. Make them disappear — clean, quiet, off the books.",
+							"Some Slithern hotheads are scaring off my couriers, George. 3 of them. Clear the lane and nobody has to know.",
+							"There's a Slithern problem blocking a very lucrative corridor, George. 3 ships. Handle it discreetly and the payout is yours.",
+							"Word is 3 Slithern ships are camping a junction I need open, George. Quiet removal. No witnesses, no paperwork."
+						],
+						"response_1": "Smooth, George. That's why I like working with you. Stay off their sensors.",
+						"response_2": "An advance? Smart move, George. Credits transferred. Riskier corridor to offset the cost.",
+						"response_3": "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
+					},
+					"vanguard": {
+						"dialogues": [
+							"Slithern hostiles spiking in the outer lanes, George. 3 contacts. Clear the zone before they dig in. No theatrics.",
+							"ROE is simple, George. 3 Slithern ships, hostile posture, outer perimeter. Engage and neutralize. Boots on hull if needed.",
+							"We've got 3 Slithern vessels breaching the buffer zone, George. Weapons hot. Clear them out before command notices.",
+							"Slithern incursion confirmed, George. 3 ships. Vanguard needs that lane secured yesterday. Move.",
+							"Intel flagged 3 Slithern raiders staging near our corridor, George. Intercept and destroy. No half-measures."
+						],
+						"response_1": "Copy that, George. ROE is clear: engage and eliminate. Don't make it complicated.",
+						"response_2": "You want an advance, George? Fine. Threat level is escalated. Don't embarrass us.",
+						"response_3": "Renegotiating under fire, George. Bold. Payout adjusted. Don't expect us to soften the zone."
+					},
+					"neutral": {
+						"dialogues": [
+							"Got a contract that needs muscle, George. 3 Slithern ships making trouble near the station. My cut's already factored in.",
+							"Client wants 3 Slithern ships gone, George. Paying well. I've already skimmed my broker's fee off the top.",
+							"Slithern crew is disrupting a lane my best clients use, George. 3 ships. Handle it and we both profit.",
+							"Three Slithern ships, George. My client wants them scrapped. The payout covers your fuel and my lifestyle.",
+							"Picked up a bounty contract, George. 3 Slithern vessels harassing local traffic. My cut's baked in — yours is what's left."
+						],
+						"response_1": "Excellent, George. My client is watching the clock, so don't waste my time.",
+						"response_2": "Taking a bite out of my margins, George? Fine. Credits wired. Contested lane ahead though.",
+						"response_3": "Hustling a hustler? I respect the nerve, George. Payout bumped. But enemies will be expecting you."
+					}
+				}
+			},
+			"DELIVER_ORE": {
+				"dummy_constraints": "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say 25 m³ of ore. ",
+				"examples_by_agent": {
+					"zenith": {
+						"dialogues": [
+							"Zenith requires 25 m³ of ore routed to this station, George. Extraction quotas are non-negotiable. Deliver promptly.",
+							"Our fabrication queue is stalled pending raw material, George. 25 m³ of ore. Acquire and deliver without delay.",
+							"A resource deficit has been flagged, George. 25 m³ of ore must reach this station before the next cycle closes.",
+							"Mining output in the outer ring has underperformed, George. Compensate with 25 m³ of ore delivered here.",
+							"Production schedules depend on timely inputs, George. 25 m³ of ore. Secure it and return. No excuses."
+						],
+						"response_1": "Acknowledged, George. Delivery window is logged. Do not fall behind schedule.",
+						"response_2": "An advance for fuel costs. Logged, George. Expect contested mining lanes on approach.",
+						"response_3": "Revised upward, George. The ore must still arrive on time. Zenith does not pay for delays."
+					},
+					"aurelia": {
+						"dialogues": [
+							"I've got a buyer who needs 25 m³ of ore off the books, George. Deliver it here and my cut stays quiet.",
+							"There's a quiet deal on the table, George. 25 m³ of ore, delivered to this station. No manifests, no questions.",
+							"A client of mine is short 25 m³ of ore, George. Bring it in clean and the credits are yours. I take my slice.",
+							"Opportunity knocking, George. 25 m³ of ore delivered here pays very nicely. I'll handle the paperwork — or lack of it.",
+							"Need 25 m³ of ore moved to this dock, George. My buyer is impatient and pays well for discretion."
+						],
+						"response_1": "Perfect, George. Deliver it clean and we both walk away richer.",
+						"response_2": "Advance wired, George. Mining lanes are contested lately — watch your back out there.",
+						"response_3": "Fine, George, payout bumped. But the ore had better arrive on time. My buyer doesn't do extensions."
+					},
+					"vanguard": {
+						"dialogues": [
+							"Vanguard supply chain is running dry, George. 25 m³ of ore, delivered to this station. No delays.",
+							"Logistics flagged a deficit, George. We need 25 m³ of ore here before the next rotation. Get it done.",
+							"Our forward base needs raw material, George. 25 m³ of ore. Mine it, haul it, deliver it. Standard resupply.",
+							"Supply requisition, George. 25 m³ of ore to this station. The fabricators don't run on goodwill.",
+							"Material shortfall on the books, George. 25 m³ of ore. Secure a source and bring it back. Clock's ticking."
+						],
+						"response_1": "Acknowledged, George. Delivery is expected on schedule. Don't waste time out there.",
+						"response_2": "Advance approved, George. Mining sectors are contested — stay sharp.",
+						"response_3": "Payout adjusted, George. The ore still needs to arrive. No excuses."
+					},
+					"neutral": {
+						"dialogues": [
+							"Got a buyer lined up for 25 m³ of ore, George. Deliver it here and I'll make sure we both get paid. My cut's already in the price.",
+							"There's a standing order for 25 m³ of ore at this station, George. Easy money — if you can haul it. I take my percentage.",
+							"A client needs 25 m³ of ore and they're paying above market, George. Bring it in and my broker's fee handles itself.",
+							"Ore run, George. 25 m³ delivered to this dock. Simple job, decent payout, and I skim my usual slice.",
+							"I've got a deal that practically prints credits, George. 25 m³ of ore, delivered here. My cut's already factored — yours is the rest."
+						],
+						"response_1": "Smart move, George. Deliver it clean and we both walk away happy. My margins depend on you.",
+						"response_2": "Advance? Fine, George. Credits wired. Mining lanes are rough lately — don't lose my investment out there.",
+						"response_3": "Pushing for more, George? Payout bumped. But the ore better show up. My reputation rides on delivery."
+					}
+				}
+			},
+			"PICKUP_SPECIAL": {
+				"dummy_constraints": "In your dialogue, only rarely call the pilot 'George' — most lines should use 'you' or 'pilot' and NOT the pilot's name. Always say the pickup is from Sable Mercer at Morrow Station for a Sealed Data Drive. ",
+				"examples_by_agent": {
+					"zenith": {
+						"dialogues": [
+							"A Sealed Data Drive is waiting at Morrow Station with Sable Mercer, George. Retrieve it and return here. Discretion is mandatory.",
+							"Zenith has arranged a retrieval from Sable Mercer at Morrow Station, George. One Sealed Data Drive. Handle it with operational security.",
+							"An asset transfer has been staged at Morrow Station, George. Contact Sable Mercer, collect the Sealed Data Drive, deliver it here.",
+							"Sable Mercer at Morrow Station is holding a Sealed Data Drive for Zenith, George. Retrieve it before the transfer window expires.",
+							"A classified pickup requires your involvement, George. Sable Mercer, Morrow Station, Sealed Data Drive. Return it to this station intact."
+						],
+						"response_1": "Logged, George. Maintain operational security throughout the retrieval.",
+						"response_2": "Advance approved for transit expenses, George. The item must arrive undamaged.",
+						"response_3": "Payout revised, George. Do not draw attention during the pickup. Zenith values discretion."
+					},
+					"aurelia": {
+						"dialogues": [
+							"Got a quiet job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Pick it up and bring it back here — no questions asked.",
+							"There's a package at Morrow Station, George. Sable Mercer is holding a Sealed Data Drive for me. Fetch it discreetly.",
+							"Need a courier I can trust, George. Sable Mercer, Morrow Station, Sealed Data Drive. Bring it here and forget you ever saw it.",
+							"A contact of mine — Sable Mercer, Morrow Station — has a Sealed Data Drive that needs moving, George. Clean pickup, clean delivery.",
+							"Simple retrieval, George. Sable Mercer at Morrow Station. One Sealed Data Drive. Bring it to me and the credits are yours."
+						],
+						"response_1": "Smooth, George. Quick pickup, no complications. That's how I like it.",
+						"response_2": "Advance wired, George. Don't let Sable Mercer give you the runaround.",
+						"response_3": "Bumped the payout, George. The drive better be intact when it gets here."
+					},
+					"vanguard": {
+						"dialogues": [
+							"We have a retrieval op, George. Sable Mercer at Morrow Station is holding a Sealed Data Drive. Secure it and bring it back.",
+							"Classified pickup, George. Contact Sable Mercer at Morrow Station. One Sealed Data Drive. Return it to this station. No detours.",
+							"Vanguard needs a Sealed Data Drive retrieved from Morrow Station, George. Sable Mercer has it. In and out, no complications.",
+							"Asset recovery tasking, George. Sable Mercer, Morrow Station, Sealed Data Drive. Get it here before the window closes.",
+							"Field retrieval, George. Sable Mercer is the contact at Morrow Station. One Sealed Data Drive. Standard chain-of-custody applies."
+						],
+						"response_1": "Acknowledged, George. Retrieve the item and return without incident.",
+						"response_2": "Advance cleared, George. Don't let the pickup drag. Time is a factor.",
+						"response_3": "Payout bumped, George. The drive is priority cargo. Treat it accordingly."
+					},
+					"neutral": {
+						"dialogues": [
+							"Got a pickup job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Bring it to me and I'll handle the rest. My fee's included.",
+							"Courier work, George. Sable Mercer at Morrow Station is sitting on a Sealed Data Drive my client wants. Fetch it and the credits flow.",
+							"Simple retrieval, George. Morrow Station, contact named Sable Mercer, one Sealed Data Drive. Bring it here — my cut's already baked in.",
+							"A client wants a Sealed Data Drive moved from Morrow Station, George. Sable Mercer has it. Quick grab, quick payout, and I take my slice.",
+							"Need your legs for this one, George. Sable Mercer, Morrow Station, Sealed Data Drive. Deliver it to me and everybody profits."
+						],
+						"response_1": "Perfect, George. Quick and clean — that's how I like my couriers. Don't keep Sable Mercer waiting.",
+						"response_2": "Advance wired, George. Don't let the pickup get complicated — complications eat into my margins.",
+						"response_3": "Bumped the payout, George. The drive better arrive in one piece. My client doesn't accept excuses and neither do I."
+					}
+				}
+			}
+		}
+	}
+}

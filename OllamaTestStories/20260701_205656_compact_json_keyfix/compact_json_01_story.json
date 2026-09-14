@@ -1,0 +1,99 @@
+{
+  "campaign_title": "Echoes of the Voided Gate",
+  "campaign_subtitle": "The Scavenger's Toll",
+  "campaign_logline": "A desperate pilot navigates a decaying trade route between three warring factions.",
+  "campaign_pitch": "You are a debt-ridden freelancer in a crumbling sector. Survive the skirmishes and find enough salvage to keep your ship flying.",
+  "campaign_story_summary": "The Zenith Corporation claims ownership of the primary gate. Aurelia seeks independence through blockade tactics. The Vanguard protects the trade routes from pirates. You must navigate their shifting alliances while scavenging for parts.",
+  "tone": "Dry, gritty frontier humor with a sense of industrial decay.",
+  "opening": {
+    "status_quo": "Trade routes are collapsing due to failing gate infrastructure.",
+    "visible_crisis": "Pirates and scavengers are raiding official shipments.",
+    "hidden_crisis": "The gates are losing power because the core stabilizers are being diverted elsewhere.",
+    "why_now": "A major shipment of stabilizer components has just vanished into the local sector.",
+    "player_role": "An independent pilot with a failing engine and mounting debts."
+  },
+  "mystery": {
+    "question": "Why is the gate infrastructure collapsing?",
+    "false_answer": "The infrastructure is decaying naturally due to age.",
+    "true_answer_hint": "A clandestine operation is siphoning power for a massive, unknown project.",
+    "long_term_reveal_direction": "The scope of the siphon is revealed through increasing gate instability."
+  },
+  "kaelen": {
+    "public_role": "Broker and contract handler.",
+    "secret_angle": "She knows about the power siphoning but remains silent.",
+    "address_rule": "Always refer to her as a broker or fixer.",
+    "never_reveal_rule": "Never reveal her true purpose or any knowledge of the gate's core."
+  },
+  "factions": {
+    "zenith_problem": "Zenith is struggling to maintain their monopoly on the trade routes.",
+    "aurelia__problem": "Aurelia is facing a shortage of essential mining materials.",
+    "vanguard_problem": "Vanguard is losing control over the security zones.",
+    "conflict_triangle": "The three factions are fighting over the remaining stable gate nodes.",
+    "neutral_space_pressure": "Pirates and scavengers thrive in the lawless gaps between faction territories."
+  },
+  "act_1": {
+    "name": "The Broken Circuit",
+    "goal": "Secure enough parts to repair a local jump-gate node.",
+    "opening_incident": "You find a derelict ship carrying high-value components and a pirate scavenger.",
+    "midpoint_turn": "Kaelen offers you a contract to secure the cargo from a rival faction's claim.",
+    "finale": "You successfully repair the node, but it triggers an alarm in a distant sector.",
+    "player_takeaway": "The local gate is now stable enough for your next jump."
+  },
+  "starter_mission": {
+    "title": "Scavenger's Toll",
+    "reason": "A pirate ship has intercepted your haul of scrap metal.",
+    "enemy_identity": "Reaver class scavenger vessel.",
+    "enemy_knows": "The pirate knows only that you have cargo.",
+    "aftershock": "You find a data-chip containing coordinates to a nearby derelict."
+  },
+  "recurring_clue": {
+    "name": "Static Pulse",
+    "signal": "A rhythmic pulse of static every time you enter a gate.",
+    "first_appearance": "First heard during the starter mission's aftermath.",
+    "escalation": "The frequency increases as you get closer to the core.",
+    "payoff_hint": "The pulse is actually an automated warning from a failing system."
+  },
+  "rumor_trail": {
+    "name": "Ghost of the Gate",
+    "trail_id": "rumor_trail.ghost_of_the_gate",
+    "hint_theme": "Reports of ships vanishing into the gate's core.",
+    "clue_templates": [
+      "A pilot reported a ship disappearing in the sector.",
+      "Rumors say the gate is unstable and dangerous."
+    ],
+    "discovery_type": "hidden_discovery",
+    "rarity": "local",
+    "rumor_trail_payoff": "You find a hidden cache of supplies and parts."
+  },
+  "horizon": {
+    "gate_tease": "The next gate is heavily guarded by the Vanguard.",
+    "new_system_reveal_rule": "New systems are revealed only after a jump.",
+    "future_faction_tease": "Rumors of an unknown group seeking the gate's power.",
+    "future_ore_or_upgrade_tease": "Rare minerals found in the outer rim are highly sought by all factions.",
+    "regeneration_trigger": {
+      "id": "regeneration_trigger.gate_stability",
+      "metric": "major_arc_state",
+      "threshold": 0,
+      "action": "append_story_arc",
+      "description": "When the first act is completed, a new story arc is added."
+    }
+  },
+  "rules": {
+    "humor_rule": "Dry, slightly dark humor.",
+    "fallback_rule": "If no contract is available, Kaelen gives you a task involving salvage.",
+    "banned_repeats": [
+      "chosen one",
+      "destiny",
+      "prophecy",
+      "signal_of_siren",
+      "scavenger_toll_mission"
+    ]
+  },
+  "story_questions_for_future_generation": [
+    "What is the source of the current gate power siphon?",
+    "Why are there still any ships in this sector?",
+    "How many factions involved in different secret agendas?",
+    "Who is the person behind the organization siphoning energy?",
+    "Where is the next stable jump point located?"
+  ]
+}

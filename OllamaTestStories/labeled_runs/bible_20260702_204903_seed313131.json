@@ -1,0 +1,74 @@
+{
+  "campaign_title": "The Arbitration Tax",
+  "campaign_logline": "A broke pilot must navigate the petty jurisdictional squabbles between three corporate entities to earn enough credits for fuel.",
+  "opening_situation": "The player arrives at the fringe edge of charted space, immediately flagged by a single, aggressive Reaver-class vessel that has little patience for independent operators.",
+  "main_mystery": "Uncovering which of the three major powers—Zenith, Aurelia, or Vanguard—is quietly manufacturing the most lucrative and dangerous jurisdictional loophole to exploit in the region's trade routes.",
+  "act_1_outline": [
+    "Take a low-paying salvage job mandated by Kaelen near Zenith jurisdiction lines.",
+    "Navigate an escalating dispute over contested resource claims involving Aurelia patrols.",
+    "Accept a high-risk transport contract that forces interaction with Vanguard security assets."
+  ],
+  "long_term_reveal": "The three corporations are not competing for resources, but rather are jointly enforcing outdated arbitration laws to maintain artificial scarcity and control the region's core transit lanes.",
+  "tone": "Grinding corporate bureaucracy set against vacuum decay.",
+  "core_pressure": "Maintaining sufficient operational credits to keep engines running and avoiding seizure by local enforcers.",
+  "factions": {
+    "zenith": "Zenith is enforcing draconian tariffs on any non-registered cargo manifest, regardless of actual content.",
+    "aurelia": "Aurelia has begun aggressively claiming navigational rights over established 'neutral' jump points.",
+    "vanguard": "Vanguard patrols are using outdated combat doctrine against modern smuggling methods, creating predictable but deadly bottlenecks."
+  },
+  "kaelen_rule": "Kaelen operates publicly as a contract handler who specializes in brokering difficult, legally ambiguous agreements between parties.",
+  "kaelen_angle": "She was instrumental in structuring the very arbitration laws that Zenith, Aurelia, and Vanguard are now using to control passage through this sector.",
+  "kaelen_hint_plan": [
+    "She always accepts payment in untraceable commodity credits rather than standard currency.",
+    "When discussing legal precedents, she uses overly specific, archaic jargon with unnecessary flourish.",
+    "She seems disproportionately interested in the maintenance records of older, decommissioned vessels.",
+    "She consistently mentions that 'paperwork is more valuable than plasma.'"
+  ],
+  "kaelen_hint_style": "over-precise-details",
+  "kaelen_never_reveal": "Her true association with the initial drafting board of sector transit law remains completely obscured.",
+  "faction_reveal_rule": "New factions are revealed when a gate jump deposits the player into a system where local enforcement or commerce is run by an entirely different, unaccounted-for corporate logo or livery.",
+  "humor_rule": "Humor must derive from bureaucratic overreach, pointless regulations, or the sheer tedium of criminal enterprise.",
+  "address_rule": "NPCs address the player as 'Pilot' unless they have a specific reason to treat them with thinly veiled contempt.",
+  "fallback_rule": "If no specific story element is available for a location/faction, the encountered threat should be an overzealous customs inspection or a minor equipment malfunction requiring payment to a local.",
+  "story_horizon_rule": "Future gates will introduce new jurisdictional bodies that treat the current three as mere regional subsidiaries, expanding the scope of petty control.",
+  "story_arcs": [
+    {
+      "name": "The Tariff Web",
+      "summary": "The player must fulfill escalating contracts designed not for profit, but to gather enough leverage against one of the three major powers to force a localized trade concession."
+    }
+  ],
+  "rumor_trails": [
+    {
+      "name": "The Unpaid Charter Fee",
+      "trail_id": "rumor_trail.jurisdiction_tax_waiver",
+      "clue_count": 2,
+      "hint_theme": "Proof that passage through this sector can be bought outright, bypassing all listed tariffs.",
+      "clue_templates": [
+        "A heavily damaged data chip found near a derelict station showing an obsolete fee structure.",
+        "A coded message fragment suggesting the existence of 'Pre-Charter' clearance rights held by a single entity."
+      ],
+      "discovery_type": "faction_secret",
+      "rarity": "rare",
+      "payoff": "The player discovers a black market broker who can temporarily spoof passage permits, bypassing immediate systemic taxation for short durations."
+    }
+  ],
+  "regeneration_triggers": [
+    {
+      "id": "major_arc_state",
+      "metric": "active_story_arcs_remaining",
+      "threshold": 0,
+      "action": "append_rumor_trail",
+      "description": "When the primary story arc concludes, the system generates a new, high-value rumor trail related to systemic loopholes."
+    }
+  ],
+  "expansion_rules": [
+    "New gates should introduce factions that dispute the *authority* of Zenith/Aurelia/Vanguard, rather than just their trade goods.",
+    "The core pressure shifts from credits to actionable legal documentation or counter-leverage assets."
+  ],
+  "banned_repeats": [
+    "chosen one",
+    "destiny",
+    "Great Silence",
+    "ancient signal"
+  ]
+}

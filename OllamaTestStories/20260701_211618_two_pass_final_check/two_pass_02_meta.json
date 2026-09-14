@@ -1,0 +1,39 @@
+{
+  "creative_lane": "Industrial Decay & Scavenger Economy",
+  "freshness_rule": "Focus on the physical weight of resources and the logistical chain of survival.",
+  "avoid_motifs": [
+    "ancient signal",
+    "alien owner",
+    "mysterious pulse",
+    "ghost signal"
+  ],
+  "core_story_questions": [
+    "What is the immediate cost of maintaining a ship's life support?",
+    "Why does the local trade hub offer varying prices based on cargo weight?",
+    "How many different ways can the player choose to sabotage a rival's supply line?",
+    "Who holds the monopoly over high-grade fuel cells?",
+    "Where is the nearest safe zone for repairing heavy machinery?"
+  ],
+  "starter_mission_questions": [
+    "What are the primary risks of engaging in an unauthorized scavenge?",
+    "How does the player navigate a situation where they have no credits to pay for repairs?",
+    "Why is the Reaver ship's hull integrity compromised and what is its value?"
+  ],
+  "kaelen_questions": [
+    "What are Kaelen's primary methods of information brokering?",
+    "How does Kaelen balance their role as a brief negotiator during high-stakes deals?",
+    "Why is Kaelen's reputation for discretion so vital to their clients?"
+  ],
+  "faction_questions": [
+    "What are the different ways Zenith and Aurelia compete for mining rights?",
+    "How does Vanguard offer protection in exchange for a sense of loyalty or profit?",
+    "Why is the scarcity of heavy metals a point of contention between all three factions?"
+  ],
+  "future_generation_questions": [
+    "What are the different ways the world can evolve if the player reaches a high-sateed status?",
+    "How does the game world change when new, non-overlapping territories are added?",
+    "Why is it important to have varied and diverse territories for future campaigns?",
+    "Who will be the first to claim the territory of the 'Void_Zone'?",
+    "Which of the following options provides a couple of different paths forward?"
+  ]
+}

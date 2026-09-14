@@ -2,7 +2,7 @@
 
 Connect AI assistants to a live Godot editor via the [Model Context Protocol](https://modelcontextprotocol.io/introduction) (MCP).
 
-Godot AI bridges Claude Code, Codex, Antigravity, and other MCP clients with your editor — inspect scenes, create nodes, modify properties, run tests, search project files, and more, all from a prompt.
+Godot AI bridges Claude Code, Codex, Antigravity, DeepSeek Harness, and other MCP clients with your editor — inspect scenes, create nodes, modify properties, run tests, search project files, and more, all from a prompt.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ The plugin auto-starts the MCP server and connects over WebSocket. No manual con
 
 ## Requirements
 
-- Godot 4.3+ (4.4+ recommended)
+- Godot 4.5+ (4.7+ recommended)
 - [uv](https://docs.astral.sh/uv/) (used to install the Python server)
   <details>
   <summary>Install uv</summary>

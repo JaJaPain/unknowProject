@@ -1,0 +1,184 @@
+{
+  "models": [
+    {
+      "file": "asteroid_00.glb",
+      "texture_cell": [
+        0,
+        2
+      ],
+      "fragments_file": "asteroid_00_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_01.glb",
+      "texture_cell": [
+        2,
+        0
+      ],
+      "fragments_file": "asteroid_01_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_02.glb",
+      "texture_cell": [
+        0,
+        1
+      ],
+      "fragments_file": "asteroid_02_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_03.glb",
+      "texture_cell": [
+        2,
+        0
+      ],
+      "fragments_file": "asteroid_03_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_04.glb",
+      "texture_cell": [
+        0,
+        1
+      ],
+      "fragments_file": "asteroid_04_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_05.glb",
+      "texture_cell": [
+        0,
+        1
+      ],
+      "fragments_file": "asteroid_05_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_06.glb",
+      "texture_cell": [
+        1,
+        2
+      ],
+      "fragments_file": "asteroid_06_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_07.glb",
+      "texture_cell": [
+        1,
+        0
+      ],
+      "fragments_file": "asteroid_07_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_08.glb",
+      "texture_cell": [
+        2,
+        1
+      ],
+      "fragments_file": "asteroid_08_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_09.glb",
+      "texture_cell": [
+        2,
+        2
+      ],
+      "fragments_file": "asteroid_09_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_10.glb",
+      "texture_cell": [
+        1,
+        0
+      ],
+      "fragments_file": "asteroid_10_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_11.glb",
+      "texture_cell": [
+        2,
+        0
+      ],
+      "fragments_file": "asteroid_11_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_12.glb",
+      "texture_cell": [
+        1,
+        0
+      ],
+      "fragments_file": "asteroid_12_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_13.glb",
+      "texture_cell": [
+        1,
+        2
+      ],
+      "fragments_file": "asteroid_13_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_14.glb",
+      "texture_cell": [
+        0,
+        1
+      ],
+      "fragments_file": "asteroid_14_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_15.glb",
+      "texture_cell": [
+        2,
+        2
+      ],
+      "fragments_file": "asteroid_15_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_16.glb",
+      "texture_cell": [
+        2,
+        0
+      ],
+      "fragments_file": "asteroid_16_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_17.glb",
+      "texture_cell": [
+        0,
+        2
+      ],
+      "fragments_file": "asteroid_17_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_18.glb",
+      "texture_cell": [
+        2,
+        1
+      ],
+      "fragments_file": "asteroid_18_fragments.glb",
+      "fragment_count": 25
+    },
+    {
+      "file": "asteroid_19.glb",
+      "texture_cell": [
+        0,
+        2
+      ],
+      "fragments_file": "asteroid_19_fragments.glb",
+      "fragment_count": 25
+    }
+  ]
+}
