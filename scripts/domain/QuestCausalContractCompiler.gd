@@ -84,6 +84,7 @@ static func compile(source: Dictionary) -> Dictionary:
 		"completion_effect_ids": ["desire_progress.%s" % desire_id],
 		"failure_effect_ids": [],
 		"branch_contracts": _string_keyed_branches(source.get("branch_contracts", [])),
+		"semantic_tokens": _semantic_tokens(desire, objective, objective_type),
 	}
 	return ContractType.normalize(contract)
 
@@ -467,3 +468,52 @@ static func _ids_with_visibility(facts: Dictionary, visibility: String) -> Array
 		if str((fact as Dictionary).get("visibility", "")) == visibility:
 			ids.append(str(fact_id))
 	return ids
+
+
+## Structural tokens for novelty comparison (plan P3 deliverable E).
+##
+## Derived from validated STRUCTURED desire fields, never from prose, names,
+## coordinates, quantities, random suffixes or private evidence values. A
+## campaign-specific ID suffix must never make two identical reasons look
+## different, and a shared suffix must never make two different motivations look
+## the same.
+static func _semantic_tokens(desire: Dictionary, objective: Dictionary, objective_type: String) -> Dictionary:
+	var recipe := str(objective.get("recipe", "")).strip_edges().to_lower()
+	return {
+		"goal": _slug(desire.get("goal", "")),
+		"need": _slug(desire.get("need", "")),
+		"obstacle": _slug(desire.get("obstacle_binding_id", "")),
+		"event": _slug(desire.get("triggering_event", "")),
+		"verb": objective_type.to_lower(),
+		"resolution": recipe,
+		# The PATTERN, not the secret: "two-site comparison" never reveals which
+		# of A or B is true, so a signature cannot leak the answer.
+		"evidence_pattern": _evidence_pattern(recipe),
+	}
+
+
+static func _evidence_pattern(recipe: String) -> String:
+	match recipe:
+		"survey_discrepancy", "transmitter_lure":
+			return "two_site_comparison"
+		"competing_claims":
+			return "ownership_record_comparison"
+		"unstable_archive":
+			return "single_source_recovery"
+	return "none" if recipe.is_empty() else "other"
+
+
+## Lowercase, punctuation-free, whitespace-joined. Stable across campaigns
+## because it reads the meaning, not an instance ID.
+static func _slug(value: Variant) -> String:
+	var text := str(value).strip_edges().to_lower()
+	if text.is_empty():
+		return "none"
+	var out := ""
+	for index in range(text.length()):
+		var ch := text[index]
+		if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+			out += ch
+		elif not out.ends_with("_"):
+			out += "_"
+	return out.strip_edges().trim_suffix("_").trim_prefix("_")

@@ -1,5 +1,53 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-14 (P3 slice E: novelty history) — Claude
+
+Deliverable E, the last of the handoff.
+
+**Signature v2.** `QuestCausalContract.semantic_signature_v2()` hashes normalized
+semantic tokens — goal, need, obstacle, triggering event, verb, capability,
+resolution method, evidence pattern, beneficiary relation, recipient role and
+consequence kind — written by the compiler as a new `semantic_tokens` block from
+validated STRUCTURED desire fields. No prose, names, coordinates, quantities or
+random suffixes. Fixes the recorded v1 defect: two different motivations that
+merely share an `f0` ID suffix no longer collide, and renaming a desire instance
+or a requester no longer makes an identical reason look new. The evidence PATTERN
+is signed ("two_site_comparison"), never the secret A/B truth. Signatures are
+prefixed `v1:`/`v2:` and `signatures_comparable()` refuses cross-version
+comparison, so an incomparable signature is never silently treated as fresh
+proven content.
+
+**Two bounded, resettable history files**, both with atomic temp-write + rename
+and injectable test paths. `NoveltyHistoryStore` (`user://quest_novelty_history.json`)
+keeps 128 published and 64 accepted signatures with separate ledgers, dedupes by
+publication/acceptance ID so a reload or panel refresh cannot double-record, and
+derives consecutive accepted pairs/triples from the bounded sequence. It stores
+only signature, exposure ID, campaign ID and sequence — asserted by test.
+`RunOpeningHistoryStore` (`user://run_opening_history.json`) upserts the current
+campaign so retries and restores never create a second opening, and filters recent
+pairs from the six ordered pairs using only OTHER campaigns.
+
+**Ranking** orders validated candidates by fewer repeated triples, then pairs,
+then least recently offered, then least recently accepted, then a stable
+campaign-seeded tie-break. It only REORDERS — no signature match bypasses
+capability, cause, payment, recipient or navigation validation, and every
+candidate survives. `variety_exhausted()` lets the caller offer less work instead
+of inventing a branch. With zero or one eligible kind the opening is recorded
+honestly as incomplete; no unsupported track is activated to manufacture a unique
+pair. Missing history starts empty; corrupt history logs a diagnostic and yields a
+fresh bounded history without touching campaign saves.
+
+Tests: new `tests/story/run_novelty_history_tests.gd` PASS, written and run in
+four increments. Three of my own assertions were wrong and were corrected against
+actual behaviour: the ranker scores CONTINUATIONS of a repeated run, which I had
+backwards twice. Regression PASS across 8 suites. Parse check: 383 scripts, 0
+failed.
+
+Not wired to a live consumer: nothing yet calls `record_published` /
+`record_accepted` from the board path, so no campaign writes a history file in
+play. The stores, signature and ranking are complete and tested; the call sites
+are the remaining step, alongside D's unwritten generated proposal.
+
 ## Session: 2026-09-14 (P3 slice D: campaign resolutions) — Claude
 
 Deliverable D. New `scripts/story/CampaignResolutionCompiler.gd` (pure: validate,

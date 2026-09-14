@@ -60,6 +60,7 @@ const DICTIONARY_FIELDS := [
 	"objective_binding",
 	"recipient_binding",
 	"facts",
+	"semantic_tokens",
 ]
 
 const ARRAY_OF_DICT_FIELDS := [
@@ -122,10 +123,24 @@ static func normalize(source: Variant) -> Dictionary:
 	contract["objective_binding"] = _normalize_binding(raw.get("objective_binding", {}))
 	contract["recipient_binding"] = _normalize_binding(raw.get("recipient_binding", {}))
 	contract["facts"] = _normalize_facts(raw.get("facts", {}))
+	contract["semantic_tokens"] = _normalize_tokens(raw.get("semantic_tokens", {}))
 	contract["branch_contracts"] = _normalize_branches(raw.get("branch_contracts", []))
 	if contract["semantic_signature"].is_empty():
 		contract["semantic_signature"] = semantic_signature(contract)
 	return contract
+
+
+## Structural tokens only: plain lowercase string values, no nesting, no prose.
+static func _normalize_tokens(value: Variant) -> Dictionary:
+	if not (value is Dictionary):
+		return {}
+	var out: Dictionary = {}
+	for key: Variant in (value as Dictionary):
+		var token: Variant = (value as Dictionary)[key]
+		if token is Dictionary or token is Array:
+			continue
+		out[str(key)] = str(token).strip_edges().to_lower()
+	return out
 
 
 static func _normalize_binding(value: Variant) -> Dictionary:
@@ -416,6 +431,50 @@ static func semantic_signature(source: Variant) -> String:
 		"consequence=%s" % _signature_effects(contract.get("completion_effect_ids", [])),
 	]
 	return "|".join(parts).sha256_text().substr(0, 16)
+
+
+const SIGNATURE_VERSION := 2
+
+
+## Version 2: normalized semantic tokens from validated structured facts.
+##
+## Returns "v2:<hash>" so an incomparable v1 signature is never silently treated
+## as fresh proven content -- a caller comparing versions must see the mismatch.
+## Falls back to the v1 signature (prefixed "v1:") when a contract predates the
+## structured tokens.
+static func semantic_signature_v2(source: Variant) -> String:
+	if not (source is Dictionary):
+		return ""
+	var contract: Dictionary = source
+	var tokens: Variant = contract.get("semantic_tokens", {})
+	if not tokens is Dictionary or (tokens as Dictionary).is_empty():
+		var legacy := semantic_signature(contract)
+		return "" if legacy.is_empty() else "v1:%s" % legacy
+	var t: Dictionary = tokens
+	var objective: Dictionary = contract.get("objective_binding", {}) 		if contract.get("objective_binding", {}) is Dictionary else {}
+	var recipient: Dictionary = contract.get("recipient_binding", {}) 		if contract.get("recipient_binding", {}) is Dictionary else {}
+	var parts: Array[String] = [
+		"goal=%s" % str(t.get("goal", "none")),
+		"need=%s" % str(t.get("need", "none")),
+		"obstacle=%s" % str(t.get("obstacle", "none")),
+		"event=%s" % str(t.get("event", "none")),
+		"verb=%s" % str(t.get("verb", "")),
+		"capability=%s" % str(objective.get("capability_id", "")).to_lower(),
+		"resolution=%s" % str(t.get("resolution", "none")),
+		"evidence=%s" % str(t.get("evidence_pattern", "none")),
+		"beneficiary=%s" % _beneficiary_relation(contract),
+		"recipient=%s" % str(recipient.get("role", "")).to_lower(),
+		"consequence=%s" % _signature_effects(contract.get("completion_effect_ids", [])),
+	]
+	return "v2:%s" % "|".join(parts).sha256_text().substr(0, 16)
+
+
+## Two signatures are comparable only when they share a version. Comparing
+## across versions proves nothing, so it must not count as proven novelty.
+static func signatures_comparable(a: String, b: String) -> bool:
+	if a.is_empty() or b.is_empty():
+		return false
+	return a.split(":", false)[0] == b.split(":", false)[0]
 
 
 ## Requester and beneficiary being the same party is a different story from
