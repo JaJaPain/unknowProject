@@ -14,6 +14,7 @@ func _run():
 	_test_ambiguity_and_loss()
 	_test_evaluation()
 	_test_legacy_campaign()
+	_test_composed_plan()
 	if failures.is_empty():
 		print("[PASS] Campaign resolution: validation, binding, guards, evaluation and factual record")
 	else:
@@ -206,3 +207,54 @@ func _test_legacy_campaign() -> void:
 	broken["resolution_plan"] = {"version": 1, "id": "", "status": "nonsense",
 		"premise_fact_ids": [], "interests": [], "alternatives": []}
 	_expect(not Store._validate_data(broken).is_valid(), "Story state accepted a malformed resolution plan.")
+
+func _test_composed_plan() -> void:
+	# Drive the REAL composer on the StoryManager autoload with actual generated
+	# agendas, so a plan that cannot bind fails here rather than in play.
+	var Desire := preload("res://scripts/persistence/GeneratedFactionDesire.gd")
+	var Store := preload("res://scripts/persistence/StoryStateStore.gd")
+	var manager: Node = root.get_node("StoryManager")
+	var previous: Dictionary = manager.story_state.duplicate(true)
+	var previous_store: Variant = manager._story_state_store
+	manager.story_state = Store._default_state()
+	manager._story_state_store = null
+	var agendas: Array = []
+	var found := {}
+	for i in range(6000):
+		var desire: Dictionary = Desire.build("resolution_fixture_%d" % i, "local", i)
+		var key := ""
+		if desire["need"] == "survey data from a drift it cannot reach": key = "survey"
+		if desire["need"] == "filed claim evidence": key = "claims"
+		if key.is_empty() or found.has(key): continue
+		found[key] = true
+		agendas.append({"faction_id": "faction.local." + key, "faction_name": "Local " + key, "desire": desire})
+		if found.size() == 2: break
+	var context := {"post_tutorial_unlocked": true, "system_id": "system.local",
+		"station_id": "station.local", "agendas": agendas}
+	var authored: Dictionary = manager.ensure_resolution_plan(context)
+	_expect(authored.get("ok", false), "The composer could not author a plan: %s" % authored.get("reason", ""))
+	if bool(authored.get("ok", false)):
+		var plan: Dictionary = manager.story_state["resolution_plan"]
+		_expect(str(plan.get("status", "")) == "active", "A composed plan did not activate against real interests.")
+		_expect((plan.get("interests", []) as Array).size() == found.size(), "Composed plan lost an interest.")
+		_expect(Plan.validate(plan).is_valid(), "A composed plan failed its own validation.")
+		_expect(Store._validate_data(manager.story_state).is_valid(), "A composed plan failed story-state validation.")
+		# Every interest must promise an implemented effect.
+		for interest: Dictionary in plan["interests"]:
+			for effect: Variant in interest["supported_effect_ids"]:
+				_expect(str(effect) in Outcome.SUPPORTED_EFFECTS, "A composed interest promised an unimplemented effect.")
+		# The tutorial guard holds.
+		var locked := context.duplicate(true)
+		locked["post_tutorial_unlocked"] = false
+		_expect(not manager.ensure_resolution_plan(locked).get("ok", true), "A plan was authored before tutorial completion.")
+		# Re-running is idempotent, not a reroll.
+		var again: Dictionary = manager.ensure_resolution_plan(context)
+		_expect(not again.get("changed", true), "Re-running the composer rerolled the plan.")
+	# With no supported interest, no plan is invented.
+	manager.story_state = Store._default_state()
+	var barren: Dictionary = manager.ensure_resolution_plan({"post_tutorial_unlocked": true,
+		"system_id": "system.local", "station_id": "station.local", "agendas": []})
+	_expect(not barren.get("ok", true), "A plan was invented with no supported interest.")
+	_expect((manager.story_state.get("resolution_plan", {}) as Dictionary).is_empty(), "A barren campaign stored a plan.")
+	manager.story_state = previous
+	manager._story_state_store = previous_store

@@ -1,5 +1,55 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-14 (wiring D and E to live call sites) — Claude
+
+The two deliverables that were built-but-inert now run in play.
+
+**E is recording.** `publish_investigation_board_offer()` calls
+`_record_novelty_publication()` only AFTER the story-state save succeeds, so a
+prefetch, a failed save, a reload or a panel refresh never reaches it, and the
+offer ID deduplicates a republish. `accept_local_investigation_board_offer()`
+calls `_record_novelty_acceptance()` after the acceptance checkpoint is durable,
+so the accepted sequence advances exactly once. Acceptance also records the first
+two accepted investigation shapes and upserts this campaign's opening (pressure
+pair in activation order) into `run_opening_history.json`. Both history files live
+OUTSIDE the campaign save, so a restored checkpoint cannot apply them as gameplay
+facts, and a history I/O failure is logged and ignored rather than invalidating a
+durable mission checkpoint.
+
+Verified with a probe before trusting it: a real posting carries its
+`causal_contract` and produces a `v2:` signature with a non-empty offer ID, so the
+call sites genuinely fire rather than silently no-op on an empty signature.
+
+**D is authoring plans.** New `ensure_resolution_plan()` runs on board
+preparation beside the pressure-slot refresh. Candidate interests are CODE-
+PROVIDED from the actual generated agendas, filtered to needs with an implemented
+closing effect (survey data -> verified survey evidence; filed claim evidence ->
+recorder preserved). It composes one success alternative requiring every selected
+interest to be satisfied, then validates and binds it; an unbindable reference
+leaves the plan pending and is retried on a later visit. With no supported
+interest, no plan is invented and nothing is stored.
+
+This closes the loop from slice B: an ACTIVE plan now supplies
+`_proven_desire_predicates()`, so a committed effect can finally move a desire to
+`satisfied`, which in turn can resolve the campaign.
+
+**Honest limit on D:** the director does not yet CHOOSE among candidates. The
+proposal is composed deterministically from the real generated interests; model-
+authored selection of premise and interests remains future work in the bible
+path. The plan is code-validated either way, and the composer is documented as
+such in the source.
+
+Tests: `run_campaign_resolution_tests.gd` gains a consumer test driving the real
+composer on the StoryManager autoload with actual generated agendas — it asserts
+the plan activates, every interest promises an implemented effect, the tutorial
+guard holds, re-running is idempotent rather than a reroll, and a barren campaign
+stores nothing. 11 regression suites pass. Parse check: 383 scripts, 0 failed.
+
+All five handoff deliverables (A-E) are now implemented, tested and wired.
+Remaining open items are unchanged: supply stays runtime-ineligible (no assay
+mechanic), the two prototype recipes stay unavailable, and no player session,
+prose-quality or hardware qualification has been run.
+
 ## Session: 2026-09-14 (P3 slice E: novelty history) — Claude
 
 Deliverable E, the last of the handoff.

@@ -19,6 +19,9 @@ const LocalPressureDirectorType := preload("res://scripts/story/LocalPressureDir
 const DesireProgressLedgerType := preload("res://scripts/story/DesireProgressLedger.gd")
 const MissionOutcomeType := preload("res://scripts/domain/MissionOutcome.gd")
 const CampaignResolutionType := preload("res://scripts/story/CampaignResolutionCompiler.gd")
+const NoveltyHistoryType := preload("res://scripts/persistence/NoveltyHistoryStore.gd")
+const RunOpeningHistoryType := preload("res://scripts/persistence/RunOpeningHistoryStore.gd")
+const QuestCausalContractType := preload("res://scripts/domain/QuestCausalContract.gd")
 
 ## Set when a terminal outcome was applied in flight and its consequences are
 ## not yet durable. Reported truthfully; retried only at a legal safe boundary.
@@ -1285,6 +1288,9 @@ func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary:
 	var context := _local_investigation_context(station)
 	if not context.is_empty():
 		refresh_local_pressure_slots(context)
+		# Author or advance the campaign's resolution plan against the interests
+		# that now actually exist. A pending plan is retried, never forced.
+		ensure_resolution_plan(context)
 		context = _local_investigation_context(station)
 	return prepare_investigation_board_offer(context)
 
@@ -1329,6 +1335,9 @@ func accept_local_investigation_board_offer(offer_id: String, station: Node3D) -
 		_investigation_accepting = false
 		return {"ok": false, "reason": "checkpoint_failed"}
 	_investigation_accepting = false
+	# Acceptance is durable now, so the accepted sequence advances exactly once.
+	# A history failure here never invalidates the checkpoint above.
+	_record_novelty_acceptance(checked["posting"], runtime_id)
 	QuestManager.announce_accepted_mission(runtime_id)
 	QuestManager.reconcile_investigation_sites()
 	_save_story_state()
@@ -1377,7 +1386,209 @@ func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary
 	if not bool(committed.get("ok", false)):
 		return {"ok": false, "reason": "story_save_failed"}
 	story_state = next
+	# The posting is now durably visible on the board. Record it ONCE here: a
+	# prefetch, a failed save, a reload or a panel refresh never reaches this
+	# point, and the offer ID deduplicates a republish of the same posting.
+	_record_novelty_publication(published.get("posting", {}))
 	return published
+
+
+## Author or advance this campaign's resolution plan (plan P3 deliverable D).
+##
+## Candidate interests are CODE-PROVIDED from the actual generated agendas, and
+## every predicate is validated and bound before the plan may activate. A plan
+## whose references the generation path has not created yet stays pending and is
+## retried on later system entry or board preparation.
+##
+## NOTE: the director does not yet CHOOSE among candidates; this composes the
+## proposal from the real generated interests deterministically. Model-authored
+## selection of premise and interests remains future work in the bible path.
+func ensure_resolution_plan(context: Dictionary) -> Dictionary:
+	if not bool(context.get("post_tutorial_unlocked", false)):
+		return {"ok": false, "reason": "tutorial_locked"}
+	var existing: Dictionary = story_state.get("resolution_plan", {}) if story_state.get("resolution_plan", {}) is Dictionary else {}
+	if str(existing.get("status", "")) == CampaignResolutionType.STATUS_RESOLVED:
+		return {"ok": true, "changed": false, "reason": "already_resolved"}
+	var candidates := _resolution_interest_candidates(context)
+	if candidates.is_empty():
+		return {"ok": false, "reason": "no_supported_interest"}
+	var plan := existing if not existing.is_empty() else _compose_resolution_plan(candidates)
+	if plan.is_empty():
+		return {"ok": false, "reason": "no_resolution_proposal"}
+	var bound: Dictionary = CampaignResolutionType.bind(plan, {
+		"desires": candidates, "system_ids": [str(context.get("system_id", ""))],
+		"station_ids": [str(context.get("station_id", ""))],
+		"known_fact_ids": _known_fact_ids(), "candidate_fact_ids": _known_fact_ids(),
+		"effect_ids": MissionOutcomeType.SUPPORTED_EFFECTS,
+	})
+	if not bool(bound.get("ok", false)):
+		# Fail closed and keep reporting: an invalid proposal is never activated.
+		push_warning("[StoryManager] Resolution plan rejected: %s" % bound.get("reason", ""))
+		return bound
+	if JSON.stringify(bound["plan"]) == JSON.stringify(existing):
+		return {"ok": true, "changed": false, "reason": "unchanged"}
+	story_state["resolution_plan"] = bound["plan"]
+	_save_story_state()
+	return {"ok": true, "changed": true, "plan": bound["plan"], "reason": str(bound.get("reason", ""))}
+
+
+## Only interests whose desire has an implemented effect that could close it.
+func _resolution_interest_candidates(context: Dictionary) -> Array:
+	var out: Array = []
+	var system_id := str(context.get("system_id", ""))
+	for raw: Variant in context.get("agendas", []):
+		if not raw is Dictionary:
+			continue
+		var agenda: Dictionary = raw
+		var desire: Dictionary = agenda.get("desire", {}) if agenda.get("desire", {}) is Dictionary else {}
+		if _supported_effect_for_need(str(desire.get("need", ""))).is_empty():
+			continue
+		if str(agenda.get("faction_id", "")).is_empty() or str(desire.get("id", "")).is_empty():
+			continue
+		out.append({"system_id": system_id, "faction_id": str(agenda["faction_id"]),
+			"desire_id": str(desire["id"]), "need": str(desire.get("need", ""))})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["desire_id"]) < str(b["desire_id"]))
+	return out
+
+
+## The exact implemented effect that can close a need. Anything absent here stays
+## open forever rather than being closed by an unsupported textual condition.
+func _supported_effect_for_need(need: String) -> String:
+	if need == "survey data from a drift it cannot reach":
+		return MissionOutcomeType.EFFECT_VERIFIED_SURVEY
+	if need == "filed claim evidence":
+		return MissionOutcomeType.EFFECT_RECORDER_PRESERVED
+	return ""
+
+
+func _known_fact_ids() -> Array:
+	var out: Array = []
+	var states: Dictionary = story_state.get("knowledge_states", {}) if story_state.get("knowledge_states", {}) is Dictionary else {}
+	for fact_id: Variant in states:
+		if str((states[fact_id] as Dictionary).get("state", "")) in ["known", "confirmed"]:
+			out.append(str(fact_id))
+	return out
+
+
+## One success alternative requiring every selected interest to be satisfied.
+## No invented failure alternative: one supported resolution is preferable.
+func _compose_resolution_plan(candidates: Array) -> Dictionary:
+	var interests: Array = []
+	var predicates: Array = []
+	for index in range(mini(2, candidates.size())):
+		var candidate: Dictionary = candidates[index]
+		var effect := _supported_effect_for_need(str(candidate["need"]))
+		if effect.is_empty():
+			continue
+		interests.append({"id": "interest.%d" % index, "system_id": str(candidate["system_id"]),
+			"faction_id": str(candidate["faction_id"]), "desire_id": str(candidate["desire_id"]),
+			"supported_effect_ids": [effect]})
+		predicates.append({"kind": CampaignResolutionType.KIND_DESIRE,
+			"desire_id": str(candidate["desire_id"]), "system_id": str(candidate["system_id"]),
+			"state": "satisfied"})
+	if interests.is_empty():
+		return {}
+	return {
+		"version": 1,
+		"id": "resolution.%s" % ("%s|%d" % [_campaign_id_for_history(), interests.size()]).sha256_text().substr(0, 16),
+		"status": CampaignResolutionType.STATUS_PENDING,
+		"premise_fact_ids": [],
+		"interests": interests,
+		"alternatives": [{"id": "alt.success", "result": CampaignResolutionType.RESULT_SUCCESS,
+			"all_of": predicates, "public_fact_ids": []}],
+	}
+
+
+## Cross-campaign novelty history. These files influence future SELECTION only:
+## a restored checkpoint must never apply them as gameplay facts, so they live
+## outside the campaign save entirely. A history failure is logged and ignored --
+## it must never invalidate a durable mission checkpoint.
+var _novelty_history: Dictionary = {}
+var _novelty_loaded := false
+
+
+func _novelty() -> Dictionary:
+	if not _novelty_loaded:
+		var loaded: Dictionary = NoveltyHistoryType.load_history()
+		_novelty_history = loaded["history"]
+		_novelty_loaded = true
+		if not bool(loaded.get("ok", true)):
+			push_warning("[StoryManager] Novelty history was %s; selection is degraded." % loaded.get("reason", "unavailable"))
+	return _novelty_history
+
+
+func _signature_for(posting: Dictionary) -> String:
+	var quest: Dictionary = posting.get("quest_data", {}) if posting.get("quest_data", {}) is Dictionary else {}
+	var contract: Variant = quest.get("causal_contract", {})
+	if not contract is Dictionary or (contract as Dictionary).is_empty():
+		return ""
+	return QuestCausalContractType.semantic_signature_v2(contract)
+
+
+func _record_novelty_publication(posting: Dictionary) -> void:
+	var signature := _signature_for(posting)
+	if signature.is_empty():
+		return
+	var recorded: Dictionary = NoveltyHistoryType.record_published(
+		_novelty(), str(posting.get("offer_id", "")), signature, _campaign_id_for_history())
+	if not bool(recorded.get("changed", false)):
+		return
+	_novelty_history = recorded["history"]
+	var saved: Dictionary = NoveltyHistoryType.save_history(_novelty_history)
+	if not bool(saved.get("ok", false)):
+		# Retry is idempotent by publication ID; degraded selection is acceptable.
+		push_warning("[StoryManager] Novelty history could not be saved: %s" % saved.get("reason", ""))
+
+
+func _record_novelty_acceptance(posting: Dictionary, runtime_id: String) -> void:
+	var signature := _signature_for(posting)
+	if signature.is_empty():
+		return
+	var recorded: Dictionary = NoveltyHistoryType.record_accepted(
+		_novelty(), runtime_id, signature, _campaign_id_for_history())
+	if not bool(recorded.get("changed", false)):
+		return
+	_novelty_history = recorded["history"]
+	var saved: Dictionary = NoveltyHistoryType.save_history(_novelty_history)
+	if not bool(saved.get("ok", false)):
+		push_warning("[StoryManager] Novelty history could not be saved: %s" % saved.get("reason", ""))
+	_record_opening_shape(str(posting.get("template_id", "")))
+
+
+func _campaign_id_for_history() -> String:
+	var scene := get_tree().current_scene if is_inside_tree() else null
+	if scene != null and "active_campaign_slot_id" in scene:
+		return str(scene.active_campaign_slot_id)
+	return str(GlobalState.campaign_seed)
+
+
+## The opening records the pressure pair in ACTIVATION order and the first two
+## ACCEPTED investigation shapes. A retry or restore upserts the same campaign.
+func _record_opening_shape(template_id: String) -> void:
+	if template_id.is_empty():
+		return
+	var shapes: Array = story_state.get("opening_accepted_shapes", []) if story_state.get("opening_accepted_shapes", []) is Array else []
+	if shapes.size() >= 2 or template_id in shapes:
+		return
+	shapes.append(template_id)
+	story_state["opening_accepted_shapes"] = shapes
+	_save_story_state()
+	_upsert_opening(shapes)
+
+
+func _upsert_opening(shapes: Array) -> void:
+	var pressures: Dictionary = story_state.get("local_pressures", {}) if story_state.get("local_pressures", {}) is Dictionary else {}
+	var pair: Array = []
+	for track: Variant in pressures.get("tracks", []):
+		if track is Dictionary:
+			var kind := str((track as Dictionary).get("kind", ""))
+			if not kind.is_empty() and kind not in pair:
+				pair.append(kind)
+	var loaded: Dictionary = RunOpeningHistoryType.load_history()
+	var updated: Dictionary = RunOpeningHistoryType.upsert_opening(
+		loaded["history"], _campaign_id_for_history(), pair, shapes)
+	if bool(updated.get("changed", false)):
+		RunOpeningHistoryType.save_history(updated["history"])
 
 
 ## Stage a committed terminal outcome into story state IN MEMORY. The caller

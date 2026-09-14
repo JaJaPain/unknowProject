@@ -173,6 +173,7 @@ static func _default_state() -> Dictionary:
 		"desire_progress": {},
 		"resolution_plan": {},
 		"resolution_record": {},
+		"opening_accepted_shapes": [],
 	}
 
 
@@ -367,6 +368,7 @@ static func _validate_data(value: Dictionary) -> ValidationResult:
 				dictionary_field
 			)
 	for field in [
+		"opening_accepted_shapes",
 		"active_tensions",
 		"player_knows",
 		"player_does_not_know_yet",
