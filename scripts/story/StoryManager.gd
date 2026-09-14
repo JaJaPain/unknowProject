@@ -18,6 +18,7 @@ const _SQ_DEBUG := false
 const LocalPressureDirectorType := preload("res://scripts/story/LocalPressureDirector.gd")
 const DesireProgressLedgerType := preload("res://scripts/story/DesireProgressLedger.gd")
 const MissionOutcomeType := preload("res://scripts/domain/MissionOutcome.gd")
+const CampaignResolutionType := preload("res://scripts/story/CampaignResolutionCompiler.gd")
 
 ## Set when a terminal outcome was applied in flight and its consequences are
 ## not yet durable. Reported truthfully; retried only at a legal safe boundary.
@@ -1412,8 +1413,60 @@ func stage_mission_outcome(outcome: Dictionary) -> Dictionary:
 		deltas.append_array(projected.get("deltas", []))
 	else:
 		push_warning("[StoryManager] Desire progress rejected an outcome: %s" % str(projected.get("reason", "")))
+	# Evaluate the resolution plan against the state this transaction just
+	# committed, so its record lands in the SAME checkpoint as those effects.
+	var resolution := _evaluate_resolution(outcome)
+	if not resolution.is_empty():
+		deltas.append(resolution)
 	story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
 	return {"ok": true, "changed": true, "reason": "", "deltas": deltas, "previous_story": previous}
+
+
+## Returns a delta when the campaign resolved on this transaction, else empty.
+func _evaluate_resolution(outcome: Dictionary) -> Dictionary:
+	var plan: Dictionary = story_state.get("resolution_plan", {}) if story_state.get("resolution_plan", {}) is Dictionary else {}
+	if plan.is_empty() or str(plan.get("status", "")) != CampaignResolutionType.STATUS_ACTIVE:
+		return {}
+	var committed: Array = []
+	for raw: Variant in outcome.get("effects", []):
+		if raw is Dictionary:
+			committed.append(str((raw as Dictionary).get("kind", "")))
+	var progress: Dictionary = story_state.get("desire_progress", {}) if story_state.get("desire_progress", {}) is Dictionary else {}
+	var known: Array = []
+	for fact_id: Variant in (story_state.get("knowledge_states", {}) as Dictionary):
+		if str((story_state["knowledge_states"][fact_id] as Dictionary).get("state", "")) in ["known", "confirmed"]:
+			known.append(str(fact_id))
+	var sources: Array = []
+	for entry: Variant in progress.get("entries", {}).values():
+		if entry is Dictionary:
+			for source: Variant in (entry as Dictionary).get("source_outcome_ids", []):
+				if str(source) not in sources:
+					sources.append(str(source))
+	var pressures: Dictionary = story_state.get("local_pressures", {}) if story_state.get("local_pressures", {}) is Dictionary else {}
+	var evaluated: Dictionary = CampaignResolutionType.evaluate(plan, {
+		"committed_effect_ids": committed, "desire_progress": progress, "known_fact_ids": known,
+		"source_outcome_ids": sources, "activity_step": int(pressures.get("activity_step", 0)),
+	})
+	if not bool(evaluated.get("resolved", false)):
+		return {}
+	var record: Dictionary = evaluated["record"]
+	story_state["resolution_plan"] = CampaignResolutionType.resolve(plan, record)
+	story_state["resolution_record"] = record
+	return {"kind": "campaign_resolved", "plan_id": str(record["plan_id"]),
+		"alternative_id": str(record["alternative_id"]), "result": str(record["result"])}
+
+
+## True once the primary arc has resolved. Free play continues; only the
+## resolved arc stops refilling.
+func is_primary_arc_resolved() -> bool:
+	var plan: Dictionary = story_state.get("resolution_plan", {}) if story_state.get("resolution_plan", {}) is Dictionary else {}
+	return str(plan.get("status", "")) == CampaignResolutionType.STATUS_RESOLVED
+
+
+func campaign_resolution_summary() -> Array:
+	if not is_primary_arc_resolved():
+		return []
+	return CampaignResolutionType.summary_lines(story_state.get("resolution_record", {}))
 
 
 ## Which effect kinds are allowed to CLOSE this outcome's desire. A supported

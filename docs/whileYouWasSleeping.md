@@ -1,5 +1,52 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-14 (P3 slice D: campaign resolutions) — Claude
+
+Deliverable D. New `scripts/story/CampaignResolutionCompiler.gd` (pure: validate,
+bind, evaluate, resolve, summarise) plus `resolution_plan` / `resolution_record`
+in story state.
+
+A plan is typed predicates only — `effect_committed`, `desire_state` (satisfied or
+failed), `fact_known`. No freeform code, expression strings, numeric scores or
+model-authored effects; invented kinds are rejected. An interest may only promise
+effect kinds that are actually implemented, and an empty success condition is
+refused because it would resolve instantly and mean nothing.
+
+`bind()` proves every reference against the real campaign before activation: a
+desire ID is valid only inside its OWNING faction and system, a predicate must
+reference one of the plan's own interests, and unknown facts or effects fail
+closed. References the generation path has not created yet leave the plan
+`pending_bindings` — no frontier system is conjured to satisfy one. Activation
+freezes the predicates.
+
+Two guards worth naming. Overlapping alternatives (one predicate set a subset of
+another with a different result) are refused rather than picking the first array
+element. A `partial`/`failure` alternative is refused unless a committed effect or
+a proven FAILED desire actually establishes the loss — reaching pressure level 3
+or refusing a mission is not campaign failure.
+
+Evaluation runs inside the committed staging transaction, so the resolution record
+lands in the same checkpoint as the effects that triggered it. The record keeps
+source outcome IDs, achieved effects and unresolved interests, so the ending is
+factual. `is_primary_arc_resolved()` stops the resolved arc refilling; free play,
+unrelated work and accepted missions continue untouched. Old campaigns keep their
+chapter/hook progression and simply have no plan — the old logline is never
+reinterpreted as executable conditions.
+
+This makes slice B's `_proven_desire_predicates()` live: until an ACTIVE plan binds
+an interest to an effect, nothing closes a desire.
+
+Tests: new `tests/story/run_campaign_resolution_tests.gd` PASS (validation,
+binding, pending bindings, wrong-owner desire, unknown fact/effect, ambiguity,
+unestablished loss, evaluation, factual record, double-resolve guard, legacy
+campaigns). Written and run in four increments. Regression PASS across 8 suites.
+Parse check: 380 scripts, 0 failed.
+
+Still open: deliverable E (novelty history). `supply` stays runtime-ineligible;
+prototypes stay unavailable; no generated plan is produced yet — the compiler and
+reducer are complete but the bible-generation path does not author a proposal, so
+no live campaign has an active plan. Mechanical tests only; no player session.
+
 ## Session: 2026-09-14 (P3 slice C: pressure cards and cause coverage) — Claude
 
 Deliverable C. A player can now SEE a pressure track on the public board.

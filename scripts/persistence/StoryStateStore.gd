@@ -25,6 +25,7 @@ const DOCUMENT_VERSION := 2
 const InvestigationBoardType := preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
 const LocalPressureDirectorType := preload("res://scripts/story/LocalPressureDirector.gd")
 const DesireProgressLedgerType := preload("res://scripts/story/DesireProgressLedger.gd")
+const CampaignResolutionType := preload("res://scripts/story/CampaignResolutionCompiler.gd")
 const STATE_PATH := "story_state.json"
 
 var campaign_path: String
@@ -170,6 +171,8 @@ static func _default_state() -> Dictionary:
 		"investigation_board": {},
 		"local_pressures": {},
 		"desire_progress": {},
+		"resolution_plan": {},
+		"resolution_record": {},
 	}
 
 
@@ -227,6 +230,9 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated["local_pressures"] = {}
 	if not migrated.get("desire_progress", {}) is Dictionary:
 		migrated["desire_progress"] = {}
+	for resolution_field in ["resolution_plan", "resolution_record"]:
+		if not migrated.get(resolution_field, {}) is Dictionary:
+			migrated[resolution_field] = {}
 	if not migrated.get("story_consequences", []) is Array:
 		migrated["story_consequences"] = []
 	_backfill_legacy_player_knows(migrated)
@@ -293,6 +299,12 @@ static func _kaelen_relationship_band_for_respect(respect: int) -> String:
 
 static func _validate_data(value: Dictionary) -> ValidationResult:
 	var result := ValidationResultType.new()
+	if not value.get("resolution_plan", {}) is Dictionary:
+		result.add_error("invalid_resolution_plan", "Resolution plan must be an object.")
+	else:
+		result.merge(CampaignResolutionType.validate(value.get("resolution_plan", {})), "resolution_plan")
+	if not value.get("resolution_record", {}) is Dictionary:
+		result.add_error("invalid_resolution_record", "Resolution record must be an object.")
 	if not value.get("desire_progress", {}) is Dictionary:
 		result.add_error("invalid_desire_progress", "Desire progress must be an object.")
 	else:
