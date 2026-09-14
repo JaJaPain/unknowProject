@@ -3,6 +3,44 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ---
 
+## Watch list -- NOT yet observed (P3, 2026-09-14)
+_These are not confirmed bugs. Nothing below has been seen in play; the P3
+systems are green in headless tests and have never been in front of a player.
+Recorded here so the next playtest knows where to look. Move an item into
+**Active** above only once it is actually reproduced._
+
+### Where P3 is most likely to fail first
+**Pressure card wording.** The card says "Escalates after N resolved jobs".
+Whether a player reads that as "N more jobs" versus "N total" is a wording
+question no test can answer.
+
+**Frozen terms vs. displayed terms.** Claims level-3 preserve pays 500 and report
+stays 200, snapshotted at publication. If the board card and the settlement
+payout ever disagree on screen, that is a real bug -- the test asserts they agree
+in data, not that the UI renders the same number.
+
+**A track with no actionable posting.** When a system's causes are exhausted, the
+track is meant to show without an offer rather than mint a reskin. In play this
+may just look like a broken or empty card.
+
+**First campaign resolution.** `ensure_resolution_plan()` now authors a plan on
+board preparation, and a satisfied desire can resolve the campaign. Nobody has
+seen a campaign actually resolve. Expected behaviour: a factual summary, the
+primary arc stops refilling, and free play continues with accepted missions
+intact. If the game instead locks travel or ends, that is a bug.
+
+**In-flight terminal pending save.** Abandoning a mission while undocked applies
+the change immediately but leaves the save pending until the next safe
+checkpoint. If a player quits in that window, the previous checkpoint restores
+BOTH the mission and its consequences together -- by design. If they come back
+mismatched, that is a serious bug and the rollback test missed a case.
+
+**Two history files in `user://`.** `quest_novelty_history.json` and
+`run_opening_history.json` are written outside the campaign save. They should
+never affect a restored campaign's facts, only future selection.
+
+---
+
 ## Active
 
 ### Local critic approves every line (no discriminative power)

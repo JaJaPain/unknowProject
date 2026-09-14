@@ -84,6 +84,65 @@ full implementation status table. Phases A-D landed 2026-09-11 (Claude)._
 
 ---
 
+## P3 pressure, resolutions and novelty (2026-09-14)
+_Handoff: `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md`._
+_Audit: `docs/cause_coverage_audit_2026_09_14.md`. All five deliverables A-E are
+implemented, tested and wired. Commits `31e685fa`, `d35de049`, `91e6ea11`,
+`b58c4f51`, `29ff002c`. Mechanical tests only -- no player session._
+
+- [x] **A -- local pressure reducer.** `LocalPressureDirector.gd` +
+  `data/content/local_pressure_tracks.json`. Tutorial latch, <=2 active tracks
+  bound to a validated system/station/faction/desire/cause, one activity step per
+  committed terminal outcome, bound delta before inactivity, two-step escalation,
+  level-zero resolution with a four-RESOLVED-JOB cooldown, least-recently-active
+  replacement by saved RNG, campaign-wide ledger rejecting duplicate AND
+  conflicting terminal IDs.
+- [x] **B -- terminal transaction and durable effects.** `MissionOutcome.gd`
+  (code-owned record, refuses UI-supplied payout/verification/consumed flags),
+  `DesireProgressLedger.gd`, the `mission_settled` checkpoint reason, and
+  QuestManager's guarded transaction: stage, checkpoint, then emit. A failed
+  checkpoint restores credits/pressure/inventory/mission and leaves it retryable.
+- [x] **C -- pressure cards and frozen terms.** Cards show the interest, level and
+  "Escalates after N resolved jobs". `branch_payouts` snapshot at publication as
+  the integer floor of each ordinary payout times the applicable MAXIMUM modifier,
+  never multiplied, honoured at settlement.
+- [x] **D -- campaign resolutions.** `CampaignResolutionCompiler.gd`: typed
+  predicates only, references proved against the real campaign, overlapping
+  alternatives refused, partial/failure requires an established loss.
+- [x] **E -- novelty history.** Signature v2 from structured tokens (fixes the
+  `f0`-suffix collision), two bounded resettable history files with atomic writes,
+  ranking that only reorders validated candidates.
+
+**What is left on this plan:**
+
+- [ ] **The director does not CHOOSE the resolution proposal.** `ensure_resolution_plan()`
+  composes the plan deterministically from real generated interests. The handoff
+  asks for the director to select bound references from code-provided candidates.
+  The validation half is done and applies regardless of who picks; the model call
+  and its generation contract in the bible path are not written. Serves claims 3
+  and 4 (unique end goal, unique outcome) -- a deterministic composer means two
+  campaigns with the same interests propose the same plan.
+- [ ] **`supply` track is runtime-ineligible, fixture-only.** The only ore-shaped
+  need in `GeneratedDesireConstraints` is `a clean ore assay`, and no assay
+  mechanic exists. Delivering raw ore is not an assay. **Do not add an assay
+  mechanic just to activate the track** -- that was explicitly ruled out. If ore
+  relief is wanted, it needs its own design decision first.
+- [ ] **`transmitter_lure` and `unstable_archive` remain prototypes.** Not exposed
+  at any pressure level, and `forced_forged` is never set. Gated on the two-shape
+  human playtest (H1), not on code.
+- [ ] **Delivery-shaped causes are audited but not wired.** Eight edges in the
+  audit can be played with existing courier/pickup verbs. Each needs its real
+  item, origin, destination and accepting local contact bound before it becomes
+  runtime-eligible. A delivery records only that the item ARRIVED -- never that a
+  lease transferred, an appeal succeeded or a route reopened.
+- [ ] **Novelty ranking is not consulted by the offer builders yet.** The history
+  records and `rank_candidates()` works, but no builder calls it to order its
+  candidates before prose generation. Until it does, novelty history is being
+  collected but not acted on.
+- [ ] **No settings action resets the two history files.** The handoff asks for a
+  narrow reset. `NoveltyHistoryStore.reset()` and `RunOpeningHistoryStore.reset()`
+  exist and are tested; no UI calls them.
+
 ## Awaiting a human playtest (code landed, eyes/ears pending)
 _Work that is committed and green in headless tests but that only a person can
 sign off on, because the failure mode is "it sounds wrong", not "it errors"._
