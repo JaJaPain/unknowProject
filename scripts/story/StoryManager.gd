@@ -1271,11 +1271,21 @@ func _local_investigation_context(station: Node3D) -> Dictionary:
 		"station_display": station_display,
 		"post_tutorial_unlocked": bool(story_state.get("first_contract_handed_in", false)),
 		"reward_budget": INVESTIGATION_BOARD_BUDGET,
-		"agendas": config.story_pack.get("faction_agendas", []), "world": world}
+		"agendas": config.story_pack.get("faction_agendas", []), "world": world,
+		"pressure_constraints": local_pressure_constraints(str(GlobalState.current_system_id)),
+		"retired_cause_ids": DesireProgressLedgerType.retired_cause_ids(
+			story_state.get("desire_progress", {}) if story_state.get("desire_progress", {}) is Dictionary else {}
+		)}
 
 
 func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary:
-	return prepare_investigation_board_offer(_local_investigation_context(station))
+	# Slots are filled before the context is read, so a newly activated track can
+	# publish its card in the same visit rather than one dock later.
+	var context := _local_investigation_context(station)
+	if not context.is_empty():
+		refresh_local_pressure_slots(context)
+		context = _local_investigation_context(station)
+	return prepare_investigation_board_offer(context)
 
 
 func publish_local_investigation_board_offer(prepared: Dictionary, station: Node3D) -> Dictionary:
@@ -1449,6 +1459,47 @@ func mark_consequence_save_pending() -> void:
 
 func has_pending_consequence_save() -> bool:
 	return _pending_consequence_save
+
+
+## Fill pending pressure slots from validated local causes. Called on board
+## preparation and normal system entry, never from a terminal outcome. With no
+## eligible cause the slot simply stays pending: nothing is fabricated to fill it.
+func refresh_local_pressure_slots(context: Dictionary) -> Dictionary:
+	var pressures: Dictionary = story_state.get("local_pressures", {}) if story_state.get("local_pressures", {}) is Dictionary else {}
+	var candidates: Array = []
+	var system_id := str(context.get("system_id", ""))
+	var station_id := str(context.get("station_id", ""))
+	for raw: Variant in context.get("agendas", []):
+		if not raw is Dictionary:
+			continue
+		var agenda: Dictionary = raw
+		var desire: Dictionary = agenda.get("desire", {}) if agenda.get("desire", {}) is Dictionary else {}
+		var kind := _pressure_kind_for_need(str(desire.get("need", "")), str(desire.get("goal", "")))
+		if kind.is_empty() or str(agenda.get("faction_id", "")).is_empty() or str(desire.get("id", "")).is_empty():
+			continue
+		candidates.append({"kind": kind, "system_id": system_id, "station_id": station_id,
+			"faction_id": str(agenda["faction_id"]), "desire_id": str(desire["id"]),
+			"cause_id": str(desire["id"])})
+	var refreshed: Dictionary = LocalPressureDirectorType.refresh_slots(pressures, {
+		"post_tutorial_unlocked": bool(context.get("post_tutorial_unlocked", false)),
+		"campaign_seed": int(context.get("campaign_seed", 0)),
+		"catalog": LocalPressureDirectorType.load_catalog(),
+		"candidates": candidates,
+	})
+	if bool(refreshed.get("ok", false)) and bool(refreshed.get("changed", false)):
+		story_state["local_pressures"] = refreshed["state"]
+		_save_story_state()
+	return refreshed
+
+
+## Maps an actual generated need to a pressure kind. Only needs with a proven
+## implemented verb map at all; see docs/cause_coverage_audit_2026_09_14.md.
+func _pressure_kind_for_need(need: String, goal: String) -> String:
+	if need == "survey data from a drift it cannot reach":
+		return "signals"
+	if need == "filed claim evidence" and goal == "clear its name on a salvage claim":
+		return "claims"
+	return ""
 
 
 func local_pressure_constraints(system_id: String) -> Array:

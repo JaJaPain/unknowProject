@@ -32,6 +32,14 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 		if str(entry["owner"]) == owner and str(entry["status"]) != "retired":
 			return _persistable({"ok": true, "state": state, "offer_id": entry["offer_id"], "posting": entry["posting"].duplicate(true)})
 	var candidates := _candidates(context)
+	# A retired fulfilled cause is never a fresh reason, under any new ID.
+	var retired: Array = context.get("retired_cause_ids", [])
+	if not retired.is_empty():
+		var fresh: Array = []
+		for candidate: Dictionary in candidates:
+			if _offer_id(context, candidate) not in retired and str(candidate["agenda"]["desire"]["id"]) not in retired:
+				fresh.append(candidate)
+		candidates = fresh
 	if candidates.is_empty():
 		return _failure("no_supported_local_cause")
 	var registry := Shapes.new()
@@ -77,8 +85,11 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 	var budget := int(context.get("reward_budget", 0))
 	if budget <= 0:
 		return _failure("missing_reward_budget")
+	var pressure := _pressure_for(context, selected)
+	var branch_payouts := _branch_payouts(str(shape.recipe), branches, budget, pressure)
 	var built := Builder.build_objective(offer_id, {"id": str(shape.id), "recipe": str(shape.recipe), "branch_ids": branches},
-		int(reservation["seed"]), placement, budget, str(context.get("station_id", "")), selected["claimants"], str(context["system_id"]))
+		int(reservation["seed"]), placement, budget, str(context.get("station_id", "")), selected["claimants"], str(context["system_id"]),
+		branch_payouts)
 	if not bool(built.get("ok", false)):
 		return built
 	var objective: Dictionary = built["objective"]
@@ -88,7 +99,7 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 	var checked := Placement.check_saved_sites(objective, world)
 	if not bool(checked.get("ok", false)):
 		return checked
-	var posting := _posting(offer_id, selected, objective, context)
+	var posting := _posting(offer_id, selected, objective, context, pressure)
 	if not Plausibility.validate(posting["quest_data"]["causal_contract"], {"system_id": context["system_id"]}).is_valid():
 		return _failure("invalid_causal_contract")
 	entries[offer_id] = {"offer_id": offer_id, "owner": owner, "status": "prepared", "reservation_key": reservation_key,
@@ -162,7 +173,52 @@ static func _candidates(context: Dictionary) -> Array:
 	result.sort_custom(func(a: Dictionary, b: Dictionary): return str(a["agenda"]["faction_id"]) < str(b["agenda"]["faction_id"]))
 	return result
 
-static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary) -> Dictionary:
+## The active pressure constraint this cause serves, or empty. Matched on the
+## exact bound desire/faction/system, never on a display name.
+static func _pressure_for(context: Dictionary, candidate: Dictionary) -> Dictionary:
+	var desire_id := str(candidate["agenda"]["desire"]["id"])
+	var faction_id := str(candidate["agenda"]["faction_id"])
+	for raw: Variant in context.get("pressure_constraints", []):
+		if not raw is Dictionary:
+			continue
+		var constraint: Dictionary = raw
+		if str(constraint.get("desire_id", "")) != desire_id or str(constraint.get("faction_id", "")) != faction_id:
+			continue
+		if str(constraint.get("system_id", "")) != str(context.get("system_id", "")):
+			continue
+		var shapes: Array = constraint.get("preferred_shape_ids", [])
+		if shapes.is_empty():
+			continue # A track with no implemented shape publishes no posting.
+		return constraint.duplicate(true)
+	return {}
+
+
+## Integer floor of each ordinary branch payout times the applicable MAXIMUM
+## modifier. Modifiers never multiply, and this is the only place they apply.
+static func _branch_payouts(recipe: String, branches: Array, budget: int, pressure: Dictionary) -> Dictionary:
+	if pressure.is_empty():
+		return {}
+	var Pressure = preload("res://scripts/story/LocalPressureDirector.gd")
+	var fractions := {
+		"report": [1, 2], "certify_match": [1, 1], "certify_mismatch": [1, 1],
+		"preserve": [1, 1], "liquidate": [3, 2],
+	}
+	var modifiers: Dictionary = pressure.get("branch_modifiers", {})
+	var default_num := int(pressure.get("payout_numerator", 1))
+	var default_den := int(pressure.get("payout_denominator", 1))
+	var out: Dictionary = {}
+	for branch: Variant in branches:
+		var key := str(branch)
+		if not fractions.has(key):
+			continue
+		var fraction: Array = fractions[key]
+		var ordinary := int(floor(float(budget) * float(fraction[0]) / float(fraction[1])))
+		var modifier: Dictionary = modifiers.get(key, {"numerator": default_num, "denominator": default_den})
+		out[key] = Pressure.snapshot_payout(ordinary, int(modifier["numerator"]), int(modifier["denominator"]))
+	return out
+
+
+static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary, pressure: Dictionary = {}) -> Dictionary:
 	var agenda: Dictionary = candidate["agenda"]
 	var desire: Dictionary = agenda["desire"]
 	var survey := str(candidate["recipe"]) == "survey_discrepancy"
@@ -182,9 +238,26 @@ static func _posting(id: String, candidate: Dictionary, objective: Dictionary, c
 	quest["causal_contract"] = contract
 	quest["narrative_metadata"] = {"cause_faction_id": agenda["faction_id"], "cause_id": id,
 		"desire_id": desire["id"], "public_because": desire["need_reason"], "causal_contract": contract.duplicate(true)}
-	return {"offer_id": id, "investigation_posting": true, "template_id": "investigation.%s" % candidate["recipe"], "enabled": true,
+	var posting := {"offer_id": id, "investigation_posting": true, "template_id": "investigation.%s" % candidate["recipe"], "enabled": true,
 		"title": title, "poster": str(agenda["faction_name"]), "body": body, "objective": task,
 		"base_reward": int(objective["reward_credits"]), "duration_minutes": 0, "urgent_multiplier": 1.0, "quest_data": quest}
+	if pressure.is_empty():
+		return posting
+	# Frozen pressure terms travel with the posting: publication, adapter, active
+	# mission, save and terminal record all read the SAME snapshot. A level change
+	# may replace an unaccepted offer, but never rewrites accepted terms.
+	for field: Array in [["pressure_id", "pressure_id"], ["pressure_revision", "pressure_revision"],
+			["level_at_offer", "level_at_offer"]]:
+		quest[field[0]] = pressure.get(field[1], 0 if field[0] != "pressure_id" else "")
+		posting[field[0]] = quest[field[0]]
+	quest["pressure_relief"] = true
+	posting["pressure_relief"] = true
+	posting["pressure_kind"] = str(pressure.get("kind", ""))
+	posting["pressure_label"] = str(pressure.get("public_label", ""))
+	posting["pressure_display_name"] = str(pressure.get("display_name", ""))
+	posting["escalates_after"] = int(pressure.get("escalates_after", 0))
+	quest["narrative_metadata"]["pressure_id"] = str(pressure.get("pressure_id", ""))
+	return posting
 
 static func _owner(context: Dictionary) -> String:
 	return "%s|%s|%s" % [context.get("campaign_id", ""), context.get("system_id", ""), context.get("station_id", "")]

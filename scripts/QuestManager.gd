@@ -651,8 +651,14 @@ func active_quest_payout() -> int:
 		payout *= float(active_quest.get("urgent_reward_multiplier", 1.0))
 	if str(active_quest.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
 		var investigation: Dictionary = active_quest.get("investigation", {})
+		var branch := str(investigation.get("branch_id", ""))
+		# Terms frozen at publication win: the player is paid what the card said,
+		# and no pressure modifier is reapplied here.
+		var frozen: Variant = investigation.get("branch_payouts", {})
+		if frozen is Dictionary and (frozen as Dictionary).has(branch):
+			return maxi(0, int((frozen as Dictionary)[branch]))
 		var capability = MissionCapabilityRegistryType.get_for_type("INVESTIGATE_SIGNAL")
-		var fraction: Array = capability._payout_for(investigation, str(investigation.get("branch_id", "")), {})
+		var fraction: Array = capability._payout_for(investigation, branch, {})
 		return int(floor(payout * float(fraction[0]) / float(fraction[1])))
 	return int(round(payout))
 

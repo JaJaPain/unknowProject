@@ -2234,6 +2234,28 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	objective.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
 	vbox.add_child(objective)
 
+	if not str(posting.get("pressure_id", "")).is_empty():
+		# The card states the actual local interest, its level and how many
+		# RESOLVED JOBS remain before it escalates. It does not imply offscreen
+		# social or economic damage that no code models.
+		var pressure := Label.new()
+		var escalates := int(posting.get("escalates_after", 0))
+		pressure.text = "%s — level %d of 3. Escalates after %d resolved job%s." % [
+			str(posting.get("pressure_display_name", "Local pressure")),
+			int(posting.get("level_at_offer", 1)),
+			escalates, "" if escalates == 1 else "s",
+		]
+		pressure.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		pressure.add_theme_color_override("font_color", Color(1.0, 0.78, 0.35))
+		vbox.add_child(pressure)
+		var label_text := str(posting.get("pressure_label", ""))
+		if not label_text.is_empty():
+			var situation := Label.new()
+			situation.text = label_text
+			situation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			situation.add_theme_color_override("font_color", Color(0.85, 0.8, 0.7))
+			vbox.add_child(situation)
+
 	var payout := Label.new()
 	var base_reward := int(posting.get("base_reward", 0))
 	var duration_minutes := int(posting.get("duration_minutes", 0))
@@ -2247,6 +2269,21 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	payout.text = "Payout: %s" % payout_text
 	payout.add_theme_color_override("font_color", Color(0.65, 1.0, 0.55))
 	vbox.add_child(payout)
+
+	# Frozen final terms, exactly as they will be paid at settlement.
+	var frozen: Variant = posting.get("quest_data", {}).get("objective", {}).get("investigation", {}).get("branch_payouts", {})
+	if frozen is Dictionary and not (frozen as Dictionary).is_empty():
+		var names := {"report": "File unverified report", "certify_match": "Certify match",
+			"certify_mismatch": "Certify mismatch", "preserve": "Preserve the recorder"}
+		var parts: Array = []
+		for branch: Variant in (frozen as Dictionary):
+			parts.append("%s %d SC" % [str(names.get(str(branch), str(branch))), int((frozen as Dictionary)[branch])])
+		parts.sort()
+		var terms := Label.new()
+		terms.text = "Agreed terms: %s" % ", ".join(parts)
+		terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		terms.add_theme_color_override("font_color", Color(0.6, 0.9, 0.75))
+		vbox.add_child(terms)
 
 	var accept := Button.new()
 	if _should_show_public_board_turn_in():

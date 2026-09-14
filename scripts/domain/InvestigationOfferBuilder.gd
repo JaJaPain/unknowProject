@@ -28,7 +28,8 @@ static func build_objective(
 	budget: int,
 	turn_in_station_id: String,
 	claimant_faction_ids: Array = [],
-	system_id: String = ""
+	system_id: String = "",
+	branch_payouts: Dictionary = {}
 ) -> Dictionary:
 	if not bool(placement.get("ok", false)):
 		return {"ok": false, "reason": str(placement.get("reason", "no_safe_sites"))}
@@ -67,6 +68,10 @@ static func build_objective(
 		# Derived once, here, so nothing downstream has to re-derive it from the
 		# codes and risk disagreeing about what "forged" meant.
 		"forged": _is_forged(recipe, sites),
+		# Frozen at publication: the absolute credits each branch pays under the
+		# terms the player was shown. Empty means "use the ordinary fraction".
+		# Nothing reapplies a pressure modifier at settlement.
+		"branch_payouts": branch_payouts.duplicate(true),
 	}
 	return {
 		"ok": true,

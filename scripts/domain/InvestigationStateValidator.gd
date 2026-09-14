@@ -97,6 +97,18 @@ static func validate(data: Dictionary) -> RefCounted:
 		evidence_ids[id] = true
 	if evidence_ids.size() != unique.size():
 		result.add_error("missing_scan_evidence", "A completed scan must carry its evidence.", "evidence")
+	# Frozen pressure terms: a branch payout snapshot may only name offered
+	# branches and may never be negative. Absent means ordinary fractions apply.
+	var payouts: Variant = state.get("branch_payouts", {})
+	if not payouts is Dictionary:
+		result.add_error("invalid_branch_payouts", "Frozen branch payouts must be an object.", "investigation")
+	else:
+		for branch: Variant in (payouts as Dictionary):
+			if str(branch) not in offered:
+				result.add_error("unoffered_branch_payout", "A frozen payout names a branch this contract does not offer.", "investigation")
+			var amount: Variant = (payouts as Dictionary)[branch]
+			if not (amount is int or amount is float) or float(amount) < 0.0 or not is_equal_approx(float(amount), floorf(float(amount))):
+				result.add_error("invalid_branch_payout", "A frozen branch payout must be a non-negative integer.", "investigation")
 	var phase := str(state.get("phase", ""))
 	var chosen := str(state.get("branch_id", ""))
 	if phase not in ["search", "identified", "ready", "closed"] or int(state.get("investigation_revision", -1)) < 0 or not state.get("applied_commands", {}) is Dictionary:

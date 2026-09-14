@@ -119,6 +119,11 @@ static func build_active_state(
 		if quest_data.has(key):
 			var value: Variant = quest_data[key]
 			state[key] = value.duplicate(true) if value is Dictionary else value
+	# Frozen pressure terms survive acceptance unchanged. Accepted terms are
+	# immutable: a later level change may replace an UNACCEPTED offer only.
+	for key in ["pressure_id", "pressure_revision", "level_at_offer", "pressure_relief"]:
+		if quest_data.has(key):
+			state[key] = quest_data[key]
 	state = NarrativeMetadataType.apply_to_state(
 		state,
 		definition.narrative_metadata

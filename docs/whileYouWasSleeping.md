@@ -1,5 +1,50 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-14 (P3 slice C: pressure cards and cause coverage) — Claude
+
+Deliverable C. A player can now SEE a pressure track on the public board.
+
+New `docs/cause_coverage_audit_2026_09_14.md`: a bounded audit of
+GeneratedDesireConstraints against the verbs, items, recipients and effects that
+actually exist. Two edges are live (survey data, filed claim evidence); eight are
+delivery-shaped and record only that the item arrived; five are rejected with the
+specific missing capability. `a clean ore assay` is the ONLY ore-shaped need in
+the table and no assay mechanic exists — that is why `supply` stays ineligible,
+and no assay was added to change it. Confirmed against the 29-item store
+catalogue: no medical stock, rations, permits, manifests or assay certificates,
+so those needs cannot use PURCHASE_DELIVERY. Investigation eligibility stays
+`dispatch_backlog`-only; the other five blockers describe moving existing cargo.
+
+Frozen terms now travel end to end. `branch_payouts` is snapshotted at
+publication as the integer floor of each ordinary branch payout times the
+applicable MAXIMUM modifier (never multiplied), stored in the investigation
+state, validated, preserved through MissionAdapter, saved with the mission and
+honoured at settlement. `active_quest_payout()` prefers the frozen snapshot, so
+no modifier is reapplied later. Verified: claims level-3 preserve pays 500,
+report stays 200, level 1 changes nothing, and the unfunded liquidate branch is
+never priced.
+
+Board cards show the actual interest, level, "Escalates after N resolved jobs"
+(counted in resolved jobs, not minutes) and the agreed per-branch terms. Pressure
+constraints and retired cause IDs are wired into the board context;
+`refresh_local_pressure_slots()` fills pending slots on board preparation, mapping
+only needs with a proven implemented verb. A retired fulfilled cause cannot be
+reposted under a new ID or station, and exhausted causes yield no posting rather
+than a reskin.
+
+Tests: new `tests/story/run_pressure_card_tests.gd` PASS. NOTE: its first version
+passed VACUOUSLY — the shape draw picked the survey cause, so the frozen-terms
+assertions never executed. Caught with a probe; the fixture now keeps two
+claimant factions but only one eligible cause, so the claims path is
+deterministic and the 500/200 assertions really run. Regression PASS across 11
+suites. Parse check: 378 scripts, 0 failed.
+
+Still open: `supply` remains runtime-ineligible and fixture-only; the prototypes
+remain unavailable at every level; nothing closes a desire until deliverable D
+binds an interest to an effect; deliverables D and E are unstarted. Mechanical
+tests only — no prose, critic or hardware claim, and no player session.
+Kaelen/N.O.V.A. untouched.
+
 ## Session: 2026-09-13 (P3 slice B: terminal transaction and durable effects) — Claude
 
 Deliverable B of `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md`.
