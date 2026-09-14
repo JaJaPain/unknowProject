@@ -2079,6 +2079,9 @@ func _render_public_board_offers() -> void:
 	public_board_current_offers = PublicBoardOfferBuilderType.build_offers(
 		CampaignClock.total_minutes
 	)
+	# Identity and terms are claimed and frozen BEFORE any prose is written, so
+	# the text a posting carries can never be what decides which job it is.
+	_claim_ordinary_board_postings()
 	for index in range(public_board_current_offers.size()):
 		public_board_current_offers[index] = (
 			PublicBoardTextGeneratorType.fallback_offer(
@@ -2086,6 +2089,14 @@ func _render_public_board_offers() -> void:
 				CampaignClock.total_minutes + index
 			)
 		)
+	# Collection postings come from bound local needs, so they are generated,
+	# validated and published BEFORE the investigation slot is considered: an
+	# edge the world actually backs should not lose its place on the board to a
+	# speculative investigation draft.
+	if current_station != null and public_board_panel.visible:
+		for collection_posting: Dictionary in StoryManager.collection_board_postings(current_station):
+			if not collection_posting.is_empty():
+				public_board_current_offers.append(collection_posting)
 	if not QuestManager.is_lane_occupied("BOARD") and current_station != null and public_board_panel.visible:
 		var prepared := StoryManager.prepare_local_investigation_board_offer(current_station)
 		if bool(prepared.get("ok", false)):
@@ -2099,18 +2110,56 @@ func _render_public_board_offers() -> void:
 				public_board_current_offers.append(unavailable)
 	_redraw_public_board_offers()
 	for index in range(public_board_current_offers.size()):
-		if bool(public_board_current_offers[index].get("enabled", false)) and not bool(public_board_current_offers[index].get("investigation_posting", false)):
-			_request_public_board_text_attempt(
-				index,
-				public_board_current_offers[index],
-				"",
-				0
-			)
+		var candidate: Dictionary = public_board_current_offers[index]
+		if not bool(candidate.get("enabled", false)):
+			continue
+		# An investigation posting and a collection posting both state a promise
+		# compiled from their own verified bindings. Regenerating that text would
+		# put the one sentence this package exists to bound back in a writer's
+		# hands, so neither goes through the board text generator.
+		if bool(candidate.get("investigation_posting", false)) 				or bool(candidate.get("collection_posting", false)):
+			continue
+		_request_public_board_text_attempt(index, candidate, "", 0)
+
+
+## Give every ordinary posting a persisted identity before it is shown: one
+## campaign-owned publication ID allocated once, with frozen objective and terms
+## that a panel refresh cannot redraw. A posting that cannot be claimed is shown
+## unowned exactly as before rather than withheld, so a history or save fault
+## never costs the player the board.
+func _claim_ordinary_board_postings() -> void:
+	if current_station == null or not is_instance_valid(StoryManager) 			or not StoryManager.has_method("publish_ordinary_board_offer"):
+		return
+	# Claiming IS publishing. A board the player cannot see has exposed nothing,
+	# so a hidden render must not allocate publication IDs or record exposure.
+	if public_board_panel == null or not public_board_panel.visible:
+		return
+	for index in range(public_board_current_offers.size()):
+		var offer: Dictionary = public_board_current_offers[index]
+		if bool(offer.get("investigation_posting", false)) or not bool(offer.get("enabled", false)):
+			continue
+		if not str(offer.get("publication_id", "")).is_empty():
+			continue
+		var claimed: Dictionary = StoryManager.publish_ordinary_board_offer(offer, current_station)
+		if not bool(claimed.get("ok", false)):
+			print("[UIManager] Ordinary posting kept unowned (%s): %s" % [
+				str(offer.get("template_id", "")), str(claimed.get("reason", "unknown"))])
+			continue
+		var posting: Dictionary = claimed.get("posting", {}) if claimed.get("posting", {}) is Dictionary else {}
+		if posting.is_empty():
+			continue
+		public_board_current_offers[index] = posting
 
 
 func _redraw_public_board_offers() -> void:
 	for child in public_board_list.get_children():
 		child.queue_free()
+	var resolution_lines: Array = StoryManager.campaign_resolution_summary()
+	if not resolution_lines.is_empty():
+		var summary := Label.new()
+		summary.text = "Campaign outcome\n" + "\n".join(resolution_lines)
+		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		public_board_list.add_child(summary)
 	for index in range(public_board_current_offers.size()):
 		_add_public_board_posting(public_board_current_offers[index], index)
 
@@ -2162,7 +2211,12 @@ func _request_public_board_text_attempt(
 			if str(public_board_current_offers[index].get("template_id", "")) \
 					!= str(offer.get("template_id", "")):
 				return
-			public_board_current_offers[index] = applied["offer"]
+			var rewritten: Dictionary = applied["offer"]
+			# Generated prose never reassigns a posting's identity or terms.
+			for owned in ["offer_id", "publication_id", "posting_kind"]:
+				if not str(public_board_current_offers[index].get(owned, "")).is_empty():
+					rewritten[owned] = public_board_current_offers[index][owned]
+			public_board_current_offers[index] = rewritten
 			if public_board_panel and public_board_panel.visible:
 				_redraw_public_board_offers()
 			return
@@ -2513,6 +2567,14 @@ func _create_pause_menu():
 	video_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
 	controls.add_child(video_title)
 	_add_bloom_row(controls)
+	var reset_history := Button.new()
+	reset_history.text = "Reset remembered quest variety"
+	reset_history.tooltip_text = "Clears only cross-campaign quest and opening history. Campaigns and character memories are preserved."
+	reset_history.pressed.connect(func():
+		var result: Dictionary = StoryManager.reset_novelty_histories()
+		reset_history.text = "Quest variety history reset" if result.get("ok", false) else "History reset failed — retry"
+	)
+	controls.add_child(reset_history)
 
 	pause_panel.visible = false
 	_create_campaign_manager()
@@ -8170,6 +8232,13 @@ func _on_public_board_offer_accept(index: int) -> void:
 			return
 	else:
 		accepted = QuestManager.accept_quest(quest_data, choices[0])
+		if accepted:
+			# Bind the published posting to the mission it actually became, so a
+			# reload can reconcile the two without guessing from the title.
+			var posting_id := str(offer.get("offer_id", ""))
+			if not posting_id.is_empty():
+				StoryManager.record_ordinary_board_acceptance(
+					posting_id, str(QuestManager.active_quest.get("runtime_id", "")))
 	if not accepted:
 		GlobalState.emit_chatter(
 			"SYSTEM WARNING",

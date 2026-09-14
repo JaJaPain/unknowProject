@@ -75,6 +75,11 @@ const CAPABILITY_PROFILES := {
 	"system_story_pack": "large_story",
 	"story_horizon": "large_story",
 	"chapter_plan": "large_story",
+	# Selects among CODE-SUPPLIED, already-verified collection opportunities and
+	# writes one public direction sentence. Structural planning over facts, like
+	# chapter_plan, so it runs on the large model. The packet it receives is the
+	# redacted writer view: no hidden site truth, no fixed-cast mystery.
+	"campaign_direction": "large_story",
 	# Director-privileged: the prompt carries nova_memory_flicker (a director-only
 	# bible secret), so this must NEVER be downgraded to the small-dialogue model.
 	"nova_glitch": "large_story",
@@ -115,6 +120,9 @@ const REQUEST_TIMEOUTS := {
 	"system_story_pack": 60.0,
 	"story_horizon": 60.0,
 	"chapter_plan": 120.0,
+	# Smaller output than a chapter plan: a few IDs, a handful of links and one
+	# sentence. Nothing is blocking the player while it runs.
+	"campaign_direction": 90.0,
 	"nova_glitch": 60.0,
 	# Background bank prefetch, nobody waiting — give a 10-field batch room
 	# to finish on a busy GPU.

@@ -45,8 +45,9 @@ func _run():
 		_test_store_and_manager(context)
 		_test_local_context(context)
 		_test_board_save_aliases(context)
+		_test_ordinary_posting_ownership(context)
 	if failures.is_empty():
-		print("[PASS] Investigation board lifecycle: local causes, publication, persistence, stale drafts and failed commits")
+		print("[PASS] Investigation board lifecycle: local causes, publication, persistence, stale drafts, failed commits and ordinary posting ownership")
 	else:
 		for message in failures: push_error("[FAIL] " + message)
 	quit(0 if failures.is_empty() else 1)
@@ -156,6 +157,82 @@ func _test_store_and_manager(context: Dictionary):
 		_expect(not stale.get("ok", false), "Stale pre-publication draft overwrote newer state.")
 	manager.story_state = before
 	manager._story_state_store = old_store
+
+## An ordinary posting owns its identity through the SAME board machinery: one
+## monotonic publication ID allocated once, frozen terms, a semantic signature
+## kept separate from identity, and the runtime mission ID recorded on
+## acceptance. Reopening the board allocates nothing.
+func _test_ordinary_posting_ownership(context: Dictionary):
+	var candidate := _ordinary_candidate("board.ore.local", "DELIVER_ORE")
+	var first: Dictionary = Board.claim_ordinary({}, context, candidate)
+	if not bool(first.get("ok", false)):
+		_expect(false, "An ordinary posting was refused: %s" % str(first.get("reason", "")))
+		return
+	_expect(str(first["publication_id"]) == "publication.ordinary.0",
+		"The first ordinary publication ID was not the first allocation: %s" % str(first["publication_id"]))
+	_expect(not bool(first.get("reused", true)), "A first publication reported itself as reused.")
+	var state: Dictionary = first["state"]
+	_expect(Board.validate(state).is_valid(),
+		"A board holding an ordinary posting failed validation: %s" % Board.validate(state).summary())
+	# Reopening returns the same ID and the same frozen posting.
+	var reopened: Dictionary = Board.claim_ordinary(state, context, candidate)
+	_expect(bool(reopened.get("reused", false)), "Reopening an ordinary posting did not reuse it.")
+	_expect(str(reopened["publication_id"]) == str(first["publication_id"]),
+		"Reopening an ordinary posting allocated another publication ID.")
+	_expect(int(reopened["state"].get("next_ordinary_publication_id", -1)) == 1,
+		"Reopening advanced the publication counter.")
+	_expect(JSON.stringify(reopened["posting"]) == JSON.stringify(first["posting"]),
+		"Reopening rewrote the frozen posting.")
+	# A different template is a different posting and gets the next ID.
+	var other: Dictionary = Board.claim_ordinary(reopened["state"], context, _ordinary_candidate("board.ore.other", "DELIVER_ORE"))
+	_expect(str(other.get("publication_id", "")) == "publication.ordinary.1",
+		"A second ordinary posting did not take the next monotonic ID: %s" % str(other.get("publication_id", "")))
+	_expect(str(other.get("offer_id", "")) != str(first.get("offer_id", "")),
+		"Two ordinary templates shared one posting identity.")
+	# Signature is semantic and separate from identity: a same-signature posting
+	# under a different template is still its own publication.
+	_expect(str(other["state"]["entries"][str(other["offer_id"])]["signature"]) 			== str(first["state"]["entries"][str(first["offer_id"])]["signature"]),
+		"The fixture postings should share a semantic signature.")
+	# Acceptance records the REAL runtime mission ID.
+	var accepted: Dictionary = Board.record_ordinary_acceptance(other["state"], str(first["offer_id"]), "mission.runtime.77")
+	_expect(bool(accepted.get("ok", false)), "Recording an ordinary acceptance failed: %s" % str(accepted.get("reason", "")))
+	if bool(accepted.get("ok", false)):
+		var entry: Dictionary = accepted["state"]["entries"][str(first["offer_id"])]
+		_expect(str(entry.get("runtime_mission_id", "")) == "mission.runtime.77",
+			"Acceptance did not record the runtime mission ID.")
+		_expect(str(entry.get("status", "")) == "retired",
+			"An accepted ordinary posting stayed on the board.")
+	# A posting with no objective is refused rather than half-published.
+	var broken := candidate.duplicate(true)
+	broken["quest_data"] = {"id": "x", "title": "x"}
+	var refused: Dictionary = Board.claim_ordinary(state, context, _named(broken, "board.broken"))
+	_expect(not bool(refused.get("ok", true)), "An ordinary posting with no objective was published.")
+	_expect(int(state.get("next_ordinary_publication_id", 0)) == 1,
+		"A refused ordinary posting still consumed a publication ID.")
+	# A legacy entry with no discriminator is still an investigation.
+	_expect(Board.posting_kind({}) == Board.POSTING_KIND_INVESTIGATION,
+		"An entry with no posting_kind was not treated as a legacy investigation.")
+
+
+func _named(candidate: Dictionary, template_id: String) -> Dictionary:
+	var copy := candidate.duplicate(true)
+	copy["template_id"] = template_id
+	return copy
+
+
+func _ordinary_candidate(template_id: String, objective_type: String) -> Dictionary:
+	var objective := {"type": objective_type, "amount_required": 10.0, "reward_credits": 250}
+	return {
+		"template_id": template_id, "enabled": true, "signature": "v2:ordinary.ore",
+		"title": "Ore for the yard", "poster": "Local Claims", "body": "Bring ore.",
+		"objective": "Deliver 10 ore.", "base_reward": 250, "duration_minutes": 0,
+		"urgent_multiplier": 1.0,
+		"quest_data": {"id": "mission.%s" % template_id.replace(".", "_"), "title": "Ore for the yard", "agent_name": "Local Claims",
+			"faction": "neutral", "dialogue": "Bring ore.", "objective_summary": "Deliver 10 ore.",
+			"objective": objective, "public_board": true,
+			"choices": [{"id": "choice.accept", "text": "Accept posting", "consequence": {}}]},
+	}
+
 
 func _expect(condition: bool, message: String):
 	if not condition: failures.append(message)

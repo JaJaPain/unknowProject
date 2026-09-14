@@ -477,6 +477,43 @@ static func _map_investigation_board(data: Dictionary, registry: SystemRegistry,
 static func _map_local_pressures(data: Dictionary, registry: SystemRegistry, to_runtime: bool) -> Dictionary:
 	var story: Variant = data.get("story_state", {})
 	if not story is Dictionary: return _failure("Invalid saved story state.")
+	var progress: Variant = story.get("desire_progress", {})
+	var ledger = preload("res://scripts/story/DesireProgressLedger.gd")
+	if not progress is Dictionary or not ledger.validate(progress).is_valid():
+		return _failure("Invalid desire progress state.")
+	if not progress.is_empty():
+		var mapped_entries := {}
+		for entry: Dictionary in progress["entries"].values():
+			var mapped := _mapped_system(entry["system_id"], registry, to_runtime)
+			if mapped.is_empty(): return _failure("Desire progress references an unknown system.")
+			entry["system_id"] = mapped
+			var key: String = ledger.key_for(mapped, entry["faction_id"], entry["desire_id"])
+			if mapped_entries.has(key): return _failure("Duplicate mapped desire progress.")
+			mapped_entries[key] = entry
+		progress["entries"] = mapped_entries
+	var plan: Variant = story.get("resolution_plan", {})
+	var compiler = preload("res://scripts/story/CampaignResolutionCompiler.gd")
+	if not plan is Dictionary or not compiler.validate(plan).is_valid():
+		return _failure("Invalid campaign resolution plan.")
+	if not plan.is_empty():
+		for interest: Dictionary in plan["interests"]:
+			var mapped := _mapped_system(interest["system_id"], registry, to_runtime)
+			if mapped.is_empty(): return _failure("Resolution interest references an unknown system.")
+			interest["system_id"] = mapped
+		for alternative: Dictionary in plan["alternatives"]:
+			for predicate: Dictionary in alternative["all_of"]:
+				if predicate.get("kind", "") == "desire_state":
+					var mapped := _mapped_system(predicate["system_id"], registry, to_runtime)
+					if mapped.is_empty(): return _failure("Resolution predicate references an unknown system.")
+					predicate["system_id"] = mapped
+		# A v2 interest also carries the collection it is about. The collection
+		# ID itself is campaign-scoped and is NOT rewritten; only its system is.
+		if int(plan.get("version", 0)) == compiler.PLAN_VERSION_V2:
+			for interest: Dictionary in plan["interests"]:
+				if str(interest.get("collection_id", "")).is_empty():
+					return _failure("A v2 resolution interest is missing its collection binding.")
+		if not compiler.validate(plan).is_valid():
+			return _failure("Mapped campaign resolution plan failed validation.")
 	var pressures: Variant = story.get("local_pressures", {})
 	if not pressures is Dictionary: return _failure("Invalid local pressure state.")
 	var director = preload("res://scripts/story/LocalPressureDirector.gd")

@@ -30,6 +30,11 @@ static func load_history(path: String = DEFAULT_PATH) -> Dictionary:
 			or not (parsed as Dictionary).get("openings", []) is Array:
 		push_warning("[RunOpeningHistory] %s is corrupt; using a fresh history." % path)
 		return {"ok": false, "history": empty_history(), "reason": "corrupt"}
+	for entry: Variant in parsed["openings"]:
+		if not entry is Dictionary or not entry.get("campaign_id") is String or not entry.get("pressure_pair") is Array or not entry.get("first_shapes") is Array:
+			return {"ok": false, "history": empty_history(), "reason": "corrupt"}
+	while parsed["openings"].size() > RETAINED_OPENINGS + 1:
+		parsed["openings"].pop_front()
 	return {"ok": true, "history": parsed, "reason": ""}
 
 
@@ -43,8 +48,6 @@ static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Di
 	var dir := DirAccess.open(path.get_base_dir())
 	if dir == null:
 		return {"ok": false, "reason": "missing_directory"}
-	if dir.file_exists(path.get_file()):
-		dir.remove(path.get_file())
 	if dir.rename(temp_path.get_file(), path.get_file()) != OK:
 		return {"ok": false, "reason": "rename_failed"}
 	return {"ok": true, "history": history}
@@ -65,6 +68,8 @@ static func upsert_opening(history: Dictionary, campaign_id: String, pressure_pa
 			next["openings"][index] = entry
 			return {"ok": true, "changed": true, "history": next, "reason": ""}
 	next["openings"].append(entry)
+	while next["openings"].size() > RETAINED_OPENINGS + 1:
+		next["openings"].pop_front()
 	return {"ok": true, "changed": true, "history": next, "reason": ""}
 
 

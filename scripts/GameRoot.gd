@@ -828,6 +828,23 @@ func request_safe_checkpoint(
 	source_reason: String,
 	safe_entity: Node = null
 ) -> bool:
+	# Knowledge can change independently of mission settlement. Evaluate from
+	# the cumulative ledger before capture and roll the projection back if saving
+	# fails, so an ending never becomes durable ahead of its supporting facts.
+	if restoring_safe_checkpoint:
+		return true
+	var prior_story := StoryManager.capture_story_state_for_checkpoint()
+	var resolution: Dictionary = StoryManager._evaluate_resolution({})
+	var saved := _request_safe_checkpoint_impl(source_reason, safe_entity)
+	if not saved and not resolution.is_empty():
+		StoryManager.restore_story_state_snapshot(prior_story)
+	return saved
+
+
+func _request_safe_checkpoint_impl(
+	source_reason: String,
+	safe_entity: Node = null
+) -> bool:
 	if restoring_safe_checkpoint:
 		return true
 	if transition_in_progress or jump_request_pending:
@@ -885,6 +902,8 @@ func request_safe_checkpoint(
 			true
 		)
 	pending_gate_discoveries.clear()
+	if StoryManager.has_pending_consequence_save():
+		StoryManager.commit_mission_outcome_finish()
 	_notify_autosave_success(source_reason, safe_location)
 	return true
 
@@ -5732,7 +5751,10 @@ func _on_quest_completed_chronicle(quest: Dictionary) -> void:
 
 func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission abandoned.")
-	StoryManager.record_mission_outcome_consequence(quest, "abandoned")
+	# The terminal transaction already staged this consequence when it built a
+	# typed outcome; only a legacy termination still records it here.
+	if not StoryManager.is_callback_outcome_applied(str(quest.get("terminal_outcome_id", ""))):
+		StoryManager.record_mission_outcome_consequence(quest, "abandoned")
 	_record_quest_giver_npc_outcome(quest, "abandoned")
 	if bool(quest.get("is_timed", false)):
 		_append_timed_quest_chronicle_event(
@@ -5747,7 +5769,10 @@ func _on_quest_abandoned_chronicle(quest: Dictionary) -> void:
 
 func _on_quest_expired_chronicle(quest: Dictionary) -> void:
 	_mark_story_offer_beat(quest, "failed", "Mission expired.")
-	StoryManager.record_mission_outcome_consequence(quest, "expired")
+	# The terminal transaction already staged this consequence when it built a
+	# typed outcome; only a legacy termination still records it here.
+	if not StoryManager.is_callback_outcome_applied(str(quest.get("terminal_outcome_id", ""))):
+		StoryManager.record_mission_outcome_consequence(quest, "expired")
 	_record_quest_giver_npc_outcome(quest, "expired")
 	_append_timed_quest_chronicle_event(
 		"timed_mission_expired",

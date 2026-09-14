@@ -15,8 +15,9 @@ func _run():
 	_test_history_store()
 	_test_ranking()
 	_test_opening_history()
+	_test_history_integrity()
 	if failures.is_empty():
-		print("[PASS] Novelty: signature v2, history, caps, corruption, ranking and opening separation")
+		print("[PASS] Novelty: signature v2, history, caps, corruption, ranking, opening separation and cross-campaign integrity")
 	else:
 		for message in failures: push_error("[FAIL] " + message)
 	quit(0 if failures.is_empty() else 1)
@@ -103,6 +104,7 @@ func _test_history_store() -> void:
 		big = Novelty.record_published(big, "pub.%d" % i, "v2:s%d" % i, "campaign.a")["history"]
 	_expect((big["published"] as Array).size() == Novelty.MAX_PUBLISHED, "Published cap was not enforced.")
 	_expect(str((big["published"] as Array)[-1]["id"]) == "pub.%d" % (Novelty.MAX_PUBLISHED + 9), "Cap dropped the newest entry.")
+	_expect(int(big["published"][-1]["sequence"]) == Novelty.MAX_PUBLISHED + 9, "Publication order stopped advancing at capacity.")
 	for i in range(Novelty.MAX_ACCEPTED + 5):
 		big = Novelty.record_accepted(big, "acc.%d" % i, "v2:s%d" % i, "campaign.a")["history"]
 	_expect((big["accepted"] as Array).size() == Novelty.MAX_ACCEPTED, "Accepted cap was not enforced.")
@@ -121,6 +123,7 @@ func _test_history_io() -> void:
 		"A missing history did not start empty.")
 	var seeded: Dictionary = Novelty.record_published(Novelty.empty_history(), "pub.1", "v2:aaa", "campaign.a")["history"]
 	_expect(Novelty.save_history(seeded, path).get("ok", false), "Atomic save failed.")
+	_expect(Novelty.save_history(seeded, path).get("ok", false), "Replacement over an existing file failed.")
 	var reloaded := Novelty.load_history(path)
 	_expect(reloaded.get("ok", false), "Saved history did not reload.")
 	_expect((reloaded["history"]["published"] as Array).size() == 1, "Reloaded history lost its entry.")
@@ -176,7 +179,56 @@ func _test_ranking() -> void:
 	_expect(not Novelty.variety_exhausted(Novelty.empty_history(), [{"id": "x", "signature": "v2:x"}]),
 		"An empty history reported exhaustion.")
 
+## Runs must not be concatenated across campaigns, this campaign's own recent
+## acceptances are what constrain it, and a damaged history degrades ranking
+## rather than crashing it.
+func _test_history_integrity() -> void:
+	var history := Novelty.empty_history()
+	history = Novelty.record_accepted(history, "a.0", "v2:a", "campaign.a#1")["history"]
+	history = Novelty.record_accepted(history, "a.1", "v2:b", "campaign.a#1")["history"]
+	history = Novelty.record_accepted(history, "b.0", "v2:c", "campaign.a#2")["history"]
+	history = Novelty.record_accepted(history, "b.1", "v2:d", "campaign.a#2")["history"]
+	var runs: Dictionary = Novelty.accepted_runs(history)
+	_expect(int((runs["pairs"] as Dictionary).get("v2:a>v2:b", 0)) == 1,
+		"A within-campaign pair was lost.")
+	_expect(not (runs["pairs"] as Dictionary).has("v2:b>v2:c"),
+		"A pair was fabricated across a campaign boundary.")
+	_expect(not (runs["triples"] as Dictionary).has("v2:a>v2:b>v2:c"),
+		"A triple was fabricated across a campaign boundary.")
+	# Reusing the same SLOT label for a new campaign must not merge the two.
+	_expect(Novelty.accepted_signatures_for(history, "campaign.a#2") == ["v2:c", "v2:d"],
+		"Accepted signatures leaked between two campaigns in the same slot.")
+	# Ranking is scoped to this campaign's own last two acceptances.
+	var candidates: Array = [{"id": "after_b", "signature": "v2:a"}, {"id": "after_d", "signature": "v2:c"}]
+	var for_first: Array = Novelty.rank_candidates(history, candidates, 7, "campaign.a#1")
+	var for_second: Array = Novelty.rank_candidates(history, candidates, 7, "campaign.a#2")
+	_expect(str(for_first[0]["id"]) != str(for_second[0]["id"]) 			or JSON.stringify(for_first) != JSON.stringify(for_second),
+		"Two campaigns with different recent acceptances ranked identically.")
+	# Malformed and oversized entries must not crash ranking.
+	var damaged := Novelty.empty_history()
+	damaged["accepted"] = [{"signature": "v2:a"}, "not a dictionary", {"campaign_id": "campaign.a#1"},
+		{"id": "ok", "signature": "v2:b", "campaign_id": "campaign.a#1", "sequence": 1}]
+	damaged["published"] = ["junk", {"signature": ""}, {"signature": "v2:b", "sequence": 3}]
+	var survived: Array = Novelty.rank_candidates(damaged, candidates, 7, "campaign.a#1")
+	_expect(survived.size() == candidates.size(),
+		"A damaged history dropped validated candidates instead of degrading ranking.")
+	_expect(not Novelty.accepted_runs(damaged).is_empty(),
+		"A damaged history produced no run structure at all.")
+	# An unknown or legacy signature is incomparable, not proven fresh: it must
+	# not outrank a candidate whose freshness the history can actually confirm.
+	var mixed: Array = [{"id": "unknown", "signature": ""}, {"id": "legacy", "signature": "claims|f0"},
+		{"id": "known_fresh", "signature": "v2:zzz"}]
+	var mixed_ranked: Array = Novelty.rank_candidates(history, mixed, 7, "campaign.a#1")
+	_expect(str(mixed_ranked[0]["id"]) == "known_fresh",
+		"An incomparable signature outranked a verifiably fresh one: %s" % str(mixed_ranked[0]["id"]))
+	_expect(mixed_ranked.size() == 3, "Ranking dropped an incomparable candidate instead of ordering it last.")
+
+
 func _test_opening_history() -> void:
+	var bounded := Openings.empty_history()
+	for index in range(9):
+		bounded = Openings.upsert_opening(bounded, "campaign.%d" % index, ["signals", "claims"], ["survey", "survey"])["history"]
+	_expect(bounded["openings"].size() == 3, "Opening history exceeded current plus two prior campaigns.")
 	var history := Openings.empty_history()
 	# A retry or restore upserts the SAME campaign rather than adding an opening.
 	history = Openings.upsert_opening(history, "campaign.a", ["signals", "claims"], ["mission_shape.survey_discrepancy"])["history"]

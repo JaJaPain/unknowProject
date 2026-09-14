@@ -26,6 +26,9 @@ const QuestCausalContractType := preload("res://scripts/domain/QuestCausalContra
 ## Set when a terminal outcome was applied in flight and its consequences are
 ## not yet durable. Reported truthfully; retried only at a legal safe boundary.
 var _pending_consequence_save := false
+## Presentation-only: outcome ID -> hooks left open when its hook was staged
+## closed. Transient by design; losing it costs a screenshot, never state.
+var _staged_hook_presentation: Dictionary = {}
 var _sq_debug_fired := false   # guard: only fires once per session
 
 const StoryStateStoreType := preload(
@@ -279,6 +282,10 @@ func seed_story_state_from_bible(bible_data: Dictionary) -> void:
 	story_state["player_does_not_know_yet"] = hidden
 	story_state["pending_hooks"] = hooks
 	story_state["bible_seeded"] = true
+	# Only a campaign generated from here on enters the direction-authoring path.
+	# A legacy save has no such marker and keeps its chapter/hook progression,
+	# which is exactly what the handoff requires.
+	story_state["campaign_direction_eligible"] = true
 	_save_story_state()
 	_update_kaelen_mood()
 	# Silent narrative-moment screenshot: the campaign's opening frame.
@@ -374,6 +381,11 @@ func restore_story_state_from_checkpoint(checkpoint_story_state: Dictionary) -> 
 		)
 		return false
 	story_state = restored.duplicate(true)
+	# A restored checkpoint carries its own prior mission and prior effects
+	# together. Any in-flight pending write from the abandoned timeline dies
+	# with it, and the newer loose store is overwritten, never merged.
+	_pending_consequence_save = false
+	_staged_hook_presentation.clear()
 	_save_story_state()
 	_push_context_to_llm()
 	_push_nova_campaign_flavor()
@@ -1276,10 +1288,14 @@ func _local_investigation_context(station: Node3D) -> Dictionary:
 		"post_tutorial_unlocked": bool(story_state.get("first_contract_handed_in", false)),
 		"reward_budget": INVESTIGATION_BOARD_BUDGET,
 		"agendas": config.story_pack.get("faction_agendas", []), "world": world,
+		"novelty_history": _novelty(), "campaign_history_id": _campaign_id_for_history(),
 		"pressure_constraints": local_pressure_constraints(str(GlobalState.current_system_id)),
 		"retired_cause_ids": DesireProgressLedgerType.retired_cause_ids(
 			story_state.get("desire_progress", {}) if story_state.get("desire_progress", {}) is Dictionary else {}
-		)}
+		),
+		# An investigation is the supported combat-free relief offer, so the
+		# family cap reports its exception rather than withholding it.
+		"family_pacing": may_publish_pressure_family("investigation", true, true)}
 
 
 func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary:
@@ -1291,6 +1307,11 @@ func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary:
 		# Author or advance the campaign's resolution plan against the interests
 		# that now actually exist. A pending plan is retried, never forced.
 		ensure_resolution_plan(context)
+		# A NEW campaign whose world now backs real collection work asks the
+		# director for its direction. This is fire-and-forget: the board is built
+		# and shown without waiting, and a campaign with no direction yet is
+		# completely playable.
+		maybe_author_campaign_direction_live(station)
 		context = _local_investigation_context(station)
 	return prepare_investigation_board_offer(context)
 
@@ -1377,6 +1398,8 @@ func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary
 	if not bool(published.get("ok", false)):
 		return published
 	if published["state"] == story_state.get("investigation_board", {}):
+		if _novelty_dirty:
+			_record_novelty_publication(published.get("posting", {}))
 		return published
 	if _story_state_store == null or not _story_state_store.is_valid():
 		return {"ok": false, "reason": "story_store_unavailable"}
@@ -1391,6 +1414,488 @@ func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary
 	# point, and the offer ID deduplicates a republish of the same posting.
 	_record_novelty_publication(published.get("posting", {}))
 	return published
+
+
+## A collection posting pays on the ordinary courier scale, because that is the
+## work it actually is. Matching the existing courier base keeps ordinary payout
+## authoritative rather than inventing a premium for a "story" job.
+const COLLECTION_POSTING_REWARD := 160
+
+
+## Board postings for every verified collection opportunity at this station.
+##
+## Each one is generated, validated and given a persisted identity BEFORE any
+## prose is written, then published through the same ordinary posting-ownership
+## machinery every other board job uses. A posting whose recipient has since
+## left, or whose terms will not validate, is withheld with its reason logged --
+## never published against a stale binding.
+##
+## Relief: a completed collection is NEUTRAL ACTIVITY. No declared pressure
+## track rule currently supports an `item_delivered` action, so no posting here
+## claims relief or a pressure-modified payout.
+func collection_board_postings(station: Node3D) -> Array:
+	var postings: Array = []
+	if station == null:
+		return postings
+	var compiled := collection_opportunities(station)
+	var opportunities: Array = compiled.get("opportunities", [])
+	if opportunities.is_empty():
+		return postings
+	var context := _local_investigation_context(station)
+	if context.is_empty():
+		return postings
+	var builder = preload("res://scripts/domain/CollectionPostingBuilder.gd")
+	for raw: Variant in opportunities:
+		if not raw is Dictionary:
+			continue
+		var opportunity: Dictionary = raw
+		var contract: Variant = opportunity.get("contract", {})
+		if not contract is Dictionary:
+			continue
+		var bound: Dictionary = contract
+		var destination := str(bound.get("destination_station_id", ""))
+		var person := collection_recipient_record(destination, str(bound.get("recipient_id", "")))
+		var built: Dictionary = builder.build(opportunity, {
+			"reward_credits": COLLECTION_POSTING_REWARD,
+			"station_display": str(context.get("station_display", "")),
+			"origin_display": _collection_station_display(str(bound.get("source_station_id", ""))),
+			"destination_display": _collection_station_display(destination),
+			"delegation": _collection_delegation(opportunity),
+			"source_contact_name": _collection_contact_name(
+				str(bound.get("source_station_id", "")), str(bound.get("source_contact_id", ""))),
+			"recipient": person,
+		})
+		if not bool(built.get("ok", false)):
+			print("[StoryManager] Collection posting withheld: collection=%s reason=%s missing=%s" % [
+				str(bound.get("id", "")), str(built.get("reason", "")), str(built.get("missing_binding", ""))])
+			continue
+		var published := publish_ordinary_board_offer(built["posting"], station)
+		if not bool(published.get("ok", false)):
+			print("[StoryManager] Collection posting not published: collection=%s reason=%s" % [
+				str(bound.get("id", "")), str(published.get("reason", ""))])
+			continue
+		var posting: Variant = published.get("posting", {})
+		postings.append(posting if posting is Dictionary and not (posting as Dictionary).is_empty() else built["posting"])
+	return postings
+
+
+## Why this faction is handing the collection to an outsider: its OWN recorded
+## obstacle, never an invented reason. Empty when no obstacle is recorded, and
+## the contract then simply carries no delegation fact.
+func _collection_delegation(opportunity: Dictionary) -> String:
+	var agenda: Variant = opportunity.get("agenda", {})
+	if not agenda is Dictionary:
+		return ""
+	var desire: Variant = (agenda as Dictionary).get("desire", {})
+	if not desire is Dictionary:
+		return ""
+	var obstacle := str((desire as Dictionary).get("obstacle", "")).strip_edges()
+	if obstacle.is_empty():
+		return ""
+	return "%s, so it is commissioning an independent pilot." % obstacle.capitalize()
+
+
+## The display name of the contact a pickup collects from, or "" when this
+## collection is not a pickup.
+func _collection_contact_name(station_id: String, contact_id: String) -> String:
+	var record := collection_recipient_record(station_id, contact_id)
+	return str(record.get("name", ""))
+
+
+func _collection_station_display(station_id: String) -> String:
+	if station_id.is_empty():
+		return ""
+	for node: Node in get_tree().get_nodes_in_group("station"):
+		if not node is Node3D:
+			continue
+		var world_id := str(node.get_world_id()) if node.has_method("get_world_id") else str(node.name)
+		if world_id != station_id and str(node.name) != station_id:
+			continue
+		var display := str(node.get("display_name")) if "display_name" in node else ""
+		return display if not display.is_empty() else str(node.name).replace("_", " ")
+	return station_id.replace("_", " ")
+
+
+## ---------------------------------------------------------------------------
+## Campaign direction (package 5).
+##
+## A board visit is a CONSUMER of a direction, never authorisation to replace an
+## existing story. Only new campaign generation, or an explicitly stored pending
+## proposal, enters this path; a legacy campaign stays on its chapter/hook
+## progression untouched.
+## ---------------------------------------------------------------------------
+
+const DIRECTION_PENDING := "direction_pending"
+## One proposal plus at most one schema/binding repair. There is no retry storm
+## and no generic static ending fallback.
+const DIRECTION_MAX_ATTEMPTS := 2
+
+
+## True when this campaign may be given a direction now.
+func may_author_campaign_direction() -> bool:
+	var plan: Dictionary = story_state.get("resolution_plan", {}) 		if story_state.get("resolution_plan", {}) is Dictionary else {}
+	if not plan.is_empty():
+		# An existing accepted plot is never rewritten, active or resolved.
+		return false
+	return not bool(story_state.get("campaign_direction_authored", false))
+
+
+## Whether this campaign may enter the LIVE authoring path at all. A campaign
+## created before directions existed keeps its chapter/hook progression: a board
+## visit is a consumer of a direction, never authorisation to replace a story
+## that is already under way.
+func campaign_direction_eligible() -> bool:
+	return bool(story_state.get("campaign_direction_eligible", false)) 		and may_author_campaign_direction()
+
+
+## Author a direction from `responder`, a Callable taking the writer-facing
+## packet and returning the proposal (or null). Offline fixtures and the live
+## model use the same entry point, which is what makes the trace test real.
+##
+## Returns {ok, plan} or {ok: false, reason}. On failure the campaign records
+## `direction_pending` with the reason and stays perfectly playable: ordinary
+## accepted gameplay does not depend on a direction existing.
+func author_campaign_direction(station: Node3D, responder: Callable) -> Dictionary:
+	var opened := _open_campaign_direction(station)
+	if not bool(opened.get("ok", false)):
+		return opened
+	var packet: Dictionary = opened["packet"]
+	var opportunities: Array = opened["opportunities"]
+	var contract = preload("res://scripts/story/CampaignDirectionContract.gd")
+	var last_reason := "no_proposal"
+	for attempt in range(DIRECTION_MAX_ATTEMPTS):
+		var response: Variant = responder.call(contract.writer_view(packet), last_reason if attempt > 0 else "")
+		var applied := _apply_campaign_direction(response, packet, opportunities, attempt + 1)
+		if bool(applied.get("ok", false)):
+			return applied
+		last_reason = str(applied.get("reason", "invalid_proposal"))
+	return _direction_pending(last_reason)
+
+
+## The live path: the same packet, the same validation and the same repair
+## budget, driven by the real writer instead of a fixture.
+##
+## `callback` receives exactly what the synchronous form returns. Ordinary
+## accepted gameplay never waits on this; a failure persists
+## `direction_pending` and the campaign stays fully playable.
+## Start live authoring if, and only if, this campaign is allowed to and no
+## request is already in flight. Returns true when a request was started.
+##
+## Deliberately silent about failure: a direction that cannot be written is a
+## `direction_pending` record and a log line, never a blocked dock.
+func maybe_author_campaign_direction_live(station: Node3D) -> bool:
+	if _direction_request_active or not campaign_direction_eligible():
+		return false
+	if (collection_opportunities(station).get("opportunities", []) as Array).is_empty():
+		return false
+	if _direction_premise_facts().is_empty():
+		return false
+	_direction_request_active = true
+	author_campaign_direction_live(station, func(result: Dictionary) -> void:
+		_direction_request_active = false
+		if bool(result.get("ok", false)):
+			print("[StoryManager] Campaign direction authored on attempt %d: %s" % [
+				int((result.get("provenance", {}) as Dictionary).get("attempt", 0)),
+				str((result.get("provenance", {}) as Dictionary).get("public_direction", ""))])
+	)
+	return true
+
+
+func author_campaign_direction_live(station: Node3D, callback: Callable) -> void:
+	var opened := _open_campaign_direction(station)
+	if not bool(opened.get("ok", false)):
+		callback.call(opened)
+		return
+	if not direction_requester_override_for_tests.is_valid() 			and (not is_instance_valid(LLMInterface) 				or not LLMInterface.has_method("request_campaign_direction")):
+		callback.call(_direction_pending("writer_unavailable"))
+		return
+	_request_campaign_direction_attempt(opened["packet"], opened["opportunities"], "", 1, callback)
+
+
+## One request per attempt, at most DIRECTION_MAX_ATTEMPTS attempts. The second
+## attempt carries the EXACT reason the first was rejected, which is the whole
+## point of the repair budget: a writer that invented a fact is told so.
+func _request_campaign_direction_attempt(packet: Dictionary, opportunities: Array,
+		correction_note: String, attempt: int, callback: Callable) -> void:
+	var contract = preload("res://scripts/story/CampaignDirectionContract.gd")
+	var requester := direction_requester_override_for_tests
+	if not requester.is_valid():
+		requester = func(view: Dictionary, note: String, done: Callable) -> void:
+			LLMInterface.request_campaign_direction(view, note, done)
+	requester.call(contract.writer_view(packet), correction_note,
+		func(result: Dictionary) -> void:
+			var reason := str(result.get("reason", "no_proposal"))
+			if bool(result.get("ok", false)):
+				var applied := _apply_campaign_direction(
+					result.get("proposal", {}), packet, opportunities, attempt)
+				if bool(applied.get("ok", false)):
+					callback.call(applied)
+					return
+				reason = str(applied.get("reason", "invalid_proposal"))
+			if attempt >= DIRECTION_MAX_ATTEMPTS:
+				callback.call(_direction_pending(reason))
+				return
+			_request_campaign_direction_attempt(packet, opportunities, reason, attempt + 1, callback)
+	)
+
+
+## Shared entry checks and packet construction. Returns {ok, packet,
+## opportunities} or the refusal/pending result the caller should report.
+func _open_campaign_direction(station: Node3D) -> Dictionary:
+	if not may_author_campaign_direction():
+		return {"ok": false, "reason": "campaign_direction_already_settled"}
+	var compiled := collection_opportunities(station)
+	var opportunities: Array = compiled.get("opportunities", [])
+	if opportunities.is_empty():
+		return _direction_pending("no_verified_collection_opportunity")
+	var premise_facts := _direction_premise_facts()
+	if premise_facts.is_empty():
+		# The schema requires the direction to cite a supplied fact, so with no
+		# known public facts the writer cannot produce a valid answer at all.
+		# Refusing here is honest and costs nothing; calling anyway would burn
+		# the whole repair budget on a request that could never succeed.
+		return _direction_pending("no_public_premise_facts")
+	var contract = preload("res://scripts/story/CampaignDirectionContract.gd")
+	return {"ok": true, "opportunities": opportunities,
+		"packet": contract.build_packet(_campaign_id_for_history(), opportunities,
+			premise_facts, [])}
+
+
+## Validate one proposal, compile it, bind it and store it. Every rejection
+## returns the exact reason so the repair attempt has something to act on, and
+## nothing is written until the plan actually binds.
+func _apply_campaign_direction(response: Variant, packet: Dictionary, opportunities: Array,
+		attempt: int) -> Dictionary:
+	var contract = preload("res://scripts/story/CampaignDirectionContract.gd")
+	var validated: Dictionary = contract.validate_proposal(response, packet)
+	if not bool(validated.get("ok", false)):
+		return {"ok": false, "reason": str(validated.get("reason", "invalid_proposal"))}
+	var plan_id := "resolution.%s" % ("%s|direction" % _campaign_id_for_history()).sha256_text().substr(0, 16)
+	var built: Dictionary = contract.compile_plan(validated["proposal"], packet, plan_id)
+	if not bool(built.get("ok", false)):
+		return {"ok": false, "reason": str(built.get("reason", "uncompilable_proposal"))}
+	var bound: Dictionary = CampaignResolutionType.bind(built["plan"], _direction_bind_context(opportunities))
+	if not bool(bound.get("ok", false)):
+		return {"ok": false, "reason": str(bound.get("reason", "unbound_plan"))}
+	story_state["resolution_plan"] = bound["plan"]
+	story_state["campaign_direction_authored"] = true
+	story_state["campaign_direction_provenance"] = {
+		"attempt": attempt,
+		"selected_collection_ids": (validated["proposal"]["selected_collection_ids"] as Array).duplicate(),
+		"premise_fact_ids": (validated["proposal"]["premise_fact_ids"] as Array).duplicate(),
+		"public_direction": str(validated["proposal"]["public_direction"]),
+		"at_minute": int(CampaignClock.total_minutes),
+	}
+	story_state.erase("campaign_direction_pending")
+	_save_story_state()
+	return {"ok": true, "plan": bound["plan"], "provenance": story_state["campaign_direction_provenance"]}
+
+
+## Record the failure and keep going. Nothing static is substituted for a
+## direction the writer could not produce.
+func _direction_pending(reason: String) -> Dictionary:
+	story_state["campaign_direction_pending"] = {"status": DIRECTION_PENDING, "reason": reason,
+		"at_minute": int(CampaignClock.total_minutes)}
+	_save_story_state()
+	print("[StoryManager] Campaign direction pending: %s" % reason)
+	return {"ok": false, "reason": reason, "status": DIRECTION_PENDING}
+
+
+func campaign_direction_pending_reason() -> String:
+	var pending: Variant = story_state.get("campaign_direction_pending", {})
+	return str((pending as Dictionary).get("reason", "")) if pending is Dictionary else ""
+
+
+## Retry only when new supported world opportunities exist, or when the player
+## uses the existing retry UI. Nothing here polls.
+func may_retry_campaign_direction(station: Node3D) -> bool:
+	if not may_author_campaign_direction() or campaign_direction_pending_reason().is_empty():
+		return false
+	return not (collection_opportunities(station).get("opportunities", []) as Array).is_empty()
+
+
+func _direction_premise_facts() -> Array:
+	var facts: Array = []
+	for fact_id: Variant in (story_state.get("knowledge_states", {}) as Dictionary):
+		var record: Variant = story_state["knowledge_states"][fact_id]
+		if record is Dictionary and str((record as Dictionary).get("state", "")) in ["known", "confirmed"]:
+			facts.append(str(fact_id))
+	facts.sort()
+	return facts
+
+
+func _direction_bind_context(opportunities: Array) -> Dictionary:
+	var desires: Array = []
+	var systems: Array = []
+	var collection_ids: Array = []
+	for raw: Variant in opportunities:
+		if not raw is Dictionary:
+			continue
+		var contract: Variant = (raw as Dictionary).get("contract", {})
+		if not contract is Dictionary:
+			continue
+		var bound: Dictionary = contract
+		desires.append({"system_id": str(bound.get("system_id", "")),
+			"faction_id": str(bound.get("faction_id", "")), "desire_id": str(bound.get("desire_id", ""))})
+		if str(bound.get("system_id", "")) not in systems:
+			systems.append(str(bound.get("system_id", "")))
+		collection_ids.append(str(bound.get("id", "")))
+	return {"desires": desires, "system_ids": systems, "station_ids": [],
+		"known_fact_ids": _direction_premise_facts(), "effect_ids": [],
+		"collection_ids": collection_ids}
+
+
+## Verified collection opportunities for THIS system, compiled from the real
+## world: registered stations, what each actually supplies or sells, and the
+## generated local contacts standing at the posting station.
+##
+## Returns {opportunities, withheld}. Every withheld edge names the binding that
+## is missing, and they are logged rather than silently dropped, because "no job
+## appeared" is the symptom the handoff asks us to be able to explain.
+func collection_opportunities(station: Node3D) -> Dictionary:
+	var context := _local_investigation_context(station)
+	if context.is_empty():
+		return {"opportunities": [], "withheld": [
+			{"desire_id": "", "need": "", "reason": "missing_scope", "missing_binding": "system_id"}]}
+	var compiler = preload("res://scripts/domain/CollectionOpportunityCompiler.gd")
+	var compiled: Dictionary = compiler.compile_opportunities({
+		"campaign_id": str(context.get("campaign_id", "")),
+		"system_id": str(context.get("system_id", "")),
+		"posting_station_id": str(context.get("station_id", "")),
+		"stations": _collection_station_capture(context),
+		"agendas": context.get("agendas", []),
+		"retired_cause_ids": context.get("retired_cause_ids", []),
+	})
+	for entry: Variant in (compiled.get("withheld", []) as Array):
+		if not entry is Dictionary:
+			continue
+		var withheld: Dictionary = entry
+		print("[StoryManager] Collection edge withheld: desire=%s need='%s' reason=%s missing=%s" % [
+			str(withheld.get("desire_id", "")), str(withheld.get("need", "")),
+			str(withheld.get("reason", "")), str(withheld.get("missing_binding", ""))])
+	return compiled
+
+
+## What each station in this system ACTUALLY offers. A station is a source only
+## when its own stock or store carries the item; a display name proves nothing.
+func _collection_station_capture(context: Dictionary) -> Dictionary:
+	var stations: Dictionary = {}
+	var world: Dictionary = context.get("world", {}) if context.get("world", {}) is Dictionary else {}
+	var registry = preload("res://scripts/economy/StoreRegistry.gd").shared()
+	var posting_station_id := str(context.get("station_id", ""))
+	for raw: Variant in (world.get("stations", []) as Array if world.get("stations", []) is Array else []):
+		if not raw is Dictionary:
+			continue
+		var station: Dictionary = raw
+		var station_id := str(station.get("id", ""))
+		if station_id.is_empty():
+			continue
+		var catalogue: Array = []
+		if registry != null:
+			for store: Variant in registry.get_stores_for_station(station_id):
+				if store != null and store.has_method("get_catalog_ids"):
+					for item_id: Variant in store.get_catalog_ids():
+						var definition = registry.get_item(str(item_id))
+						var label := str(definition.display_name) if definition != null and "display_name" in definition else str(item_id)
+						if label not in catalogue:
+							catalogue.append(label)
+		# CANONICAL contact IDs, so the collection contract and the posting that
+		# carries it name the same person. A display name is not an identity.
+		var recipients: Array = []
+		for npc_name: Variant in GlobalState.get_minor_npcs_at_outpost(station_id):
+			var contact_id := collection_recipient_id(str(npc_name))
+			if not contact_id.is_empty() and contact_id not in recipients:
+				recipients.append(contact_id)
+		# A generated outpost contact is the only recipient a collection may
+		# use. The tutorial home station's residents are explicitly excluded.
+		var generated := GlobalState.generated_outpost_npcs.has(station_id)
+		stations[station_id] = {
+			"registered": true,
+			"store_catalogue": catalogue,
+			"recipients": recipients if generated else [],
+			"tutorial_only": not generated,
+		}
+		if station_id == posting_station_id and not generated:
+			stations[station_id]["recipients"] = []
+	return stations
+
+
+## The canonical ID for a delivery contact. Matches the scheme the existing
+## public-board recipient binding already uses, so an ID minted here resolves in
+## the same place the ordinary delivery path looks.
+func collection_recipient_id(npc_name: String) -> String:
+	var clean := npc_name.strip_edges()
+	if clean.is_empty():
+		return ""
+	return "npc.%s" % clean.to_lower().replace(" ", "_")
+
+
+## Resolve a bound contact ID back to the real person standing at that station,
+## in the shape the causal contract's recipient binding expects. Returns {} when
+## that person is not actually there any more.
+func collection_recipient_record(station_id: String, recipient_id: String) -> Dictionary:
+	if station_id.is_empty() or recipient_id.is_empty():
+		return {}
+	for npc_name: Variant in GlobalState.get_minor_npcs_at_outpost(station_id):
+		if collection_recipient_id(str(npc_name)) != recipient_id:
+			continue
+		var data: Dictionary = GlobalState.get_minor_npc_data(str(npc_name))
+		var resident := str(npc_name)
+		return {
+			"id": recipient_id,
+			"name": resident,
+			"role": str(data.get("delivery_role", "station_contact")),
+			"station_id": station_id,
+			# Protected fixed cast are never reassigned as cargo recipients.
+			"protected": resident in ["Kaelen", "N.O.V.A."],
+		}
+	return {}
+
+
+
+
+## Claim the persisted identity for ONE ordinary board posting and publish it.
+##
+## Same contract as the investigation path: a failed save records no exposure,
+## reopening returns the same publication ID and the same frozen terms, and a
+## withheld posting reports the exact binding that is missing. The candidate is
+## expected to be already validated and already ranked; prose is not consulted.
+func publish_ordinary_board_offer(candidate: Dictionary, station: Node3D) -> Dictionary:
+	var context := _local_investigation_context(station)
+	if context.is_empty():
+		return {"ok": false, "reason": "missing_scope"}
+	var board = preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
+	var current: Dictionary = story_state.get("investigation_board", {}) 		if story_state.get("investigation_board", {}) is Dictionary else {}
+	var claimed: Dictionary = board.claim_ordinary(current, context, candidate)
+	if not bool(claimed.get("ok", false)):
+		return claimed
+	if bool(claimed.get("reused", false)) or claimed["state"] == current:
+		if _novelty_dirty:
+			_record_novelty_publication(claimed.get("posting", {}))
+		return claimed
+	if _story_state_store == null or not _story_state_store.is_valid():
+		return {"ok": false, "reason": "story_store_unavailable"}
+	var next := story_state.duplicate(true)
+	next["investigation_board"] = claimed["state"]
+	var committed: Dictionary = _story_state_store.save_state(next)
+	if not bool(committed.get("ok", false)):
+		# Nothing was written, so nothing was exposed.
+		return {"ok": false, "reason": "story_save_failed"}
+	story_state = next
+	_record_novelty_publication(claimed.get("posting", {}))
+	return claimed
+
+
+## Bind an accepted ordinary posting to the mission it actually became.
+func record_ordinary_board_acceptance(offer_id: String, runtime_mission_id: String) -> Dictionary:
+	var board = preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
+	var current: Dictionary = story_state.get("investigation_board", {}) 		if story_state.get("investigation_board", {}) is Dictionary else {}
+	var recorded: Dictionary = board.record_ordinary_acceptance(current, offer_id, runtime_mission_id)
+	if not bool(recorded.get("ok", false)):
+		return recorded
+	story_state["investigation_board"] = recorded["state"]
+	_save_story_state()
+	return recorded
 
 
 ## Author or advance this campaign's resolution plan (plan P3 deliverable D).
@@ -1409,10 +1914,16 @@ func ensure_resolution_plan(context: Dictionary) -> Dictionary:
 	var existing: Dictionary = story_state.get("resolution_plan", {}) if story_state.get("resolution_plan", {}) is Dictionary else {}
 	if str(existing.get("status", "")) == CampaignResolutionType.STATUS_RESOLVED:
 		return {"ok": true, "changed": false, "reason": "already_resolved"}
+	if str(existing.get("status", "")) == CampaignResolutionType.STATUS_ACTIVE:
+		return {"ok": true, "changed": false, "reason": "already_active"}
+	# A board visit cannot invent or replace the campaign's central premise.
+	# The director/bible integration must persist a validated proposal first.
+	if existing.is_empty():
+		return {"ok": false, "changed": false, "reason": "awaiting_campaign_proposal"}
 	var candidates := _resolution_interest_candidates(context)
 	if candidates.is_empty():
 		return {"ok": false, "reason": "no_supported_interest"}
-	var plan := existing if not existing.is_empty() else _compose_resolution_plan(candidates)
+	var plan := existing
 	if plan.is_empty():
 		return {"ok": false, "reason": "no_resolution_proposal"}
 	var bound: Dictionary = CampaignResolutionType.bind(plan, {
@@ -1436,10 +1947,8 @@ func ensure_resolution_plan(context: Dictionary) -> Dictionary:
 func _resolution_interest_candidates(context: Dictionary) -> Array:
 	var out: Array = []
 	var system_id := str(context.get("system_id", ""))
-	for raw: Variant in context.get("agendas", []):
-		if not raw is Dictionary:
-			continue
-		var agenda: Dictionary = raw
+	for candidate: Dictionary in preload("res://scripts/domain/InvestigationBoardLifecycle.gd")._candidates(context):
+		var agenda: Dictionary = candidate["agenda"]
 		var desire: Dictionary = agenda.get("desire", {}) if agenda.get("desire", {}) is Dictionary else {}
 		if _supported_effect_for_need(str(desire.get("need", ""))).is_empty():
 			continue
@@ -1505,6 +2014,16 @@ func _compose_resolution_plan(candidates: Array) -> Dictionary:
 ## it must never invalidate a durable mission checkpoint.
 var _novelty_history: Dictionary = {}
 var _novelty_loaded := false
+var _novelty_dirty := false
+## Set when an opening write failed; the next opening update retries it.
+var _opening_dirty := false
+## One live direction request at a time. A dock is not a reason to queue another.
+var _direction_request_active := false
+## Test seam, in the same spirit as PublicBoardOfferBuilder's config override:
+## a Callable(writer_view, correction_note, callback) standing in for the writer,
+## so the real async control flow -- repair budget, single-flight, pending
+## fallback -- is exercised without a network. Never set in normal play.
+var direction_requester_override_for_tests: Callable = Callable()
 
 
 func _novelty() -> Dictionary:
@@ -1515,6 +2034,25 @@ func _novelty() -> Dictionary:
 		if not bool(loaded.get("ok", true)):
 			push_warning("[StoryManager] Novelty history was %s; selection is degraded." % loaded.get("reason", "unavailable"))
 	return _novelty_history
+
+
+## Clears the two cross-campaign SELECTION history files and the cached
+## selection inputs and pending writes that were derived from them.
+##
+## Deliberately narrow. Campaign facts, published postings, accepted missions,
+## knowledge, pressure state and companion memories are gameplay, not selection
+## inputs, and none of them is touched here: forgetting what the player has been
+## offered must not change what the player currently has.
+func reset_novelty_histories() -> Dictionary:
+	var novelty := NoveltyHistoryType.reset()
+	var opening := RunOpeningHistoryType.reset()
+	if bool(novelty.get("ok", false)):
+		_novelty_history = NoveltyHistoryType.empty_history()
+		_novelty_loaded = true
+		_novelty_dirty = false
+	if bool(opening.get("ok", false)):
+		_opening_dirty = false
+	return {"ok": bool(novelty.get("ok", false)) and bool(opening.get("ok", false))}
 
 
 func _signature_for(posting: Dictionary) -> String:
@@ -1531,10 +2069,11 @@ func _record_novelty_publication(posting: Dictionary) -> void:
 		return
 	var recorded: Dictionary = NoveltyHistoryType.record_published(
 		_novelty(), str(posting.get("offer_id", "")), signature, _campaign_id_for_history())
-	if not bool(recorded.get("changed", false)):
+	if not bool(recorded.get("changed", false)) and not _novelty_dirty:
 		return
 	_novelty_history = recorded["history"]
 	var saved: Dictionary = NoveltyHistoryType.save_history(_novelty_history)
+	_novelty_dirty = not bool(saved.get("ok", false))
 	if not bool(saved.get("ok", false)):
 		# Retry is idempotent by publication ID; degraded selection is acceptable.
 		push_warning("[StoryManager] Novelty history could not be saved: %s" % saved.get("reason", ""))
@@ -1546,20 +2085,31 @@ func _record_novelty_acceptance(posting: Dictionary, runtime_id: String) -> void
 		return
 	var recorded: Dictionary = NoveltyHistoryType.record_accepted(
 		_novelty(), runtime_id, signature, _campaign_id_for_history())
-	if not bool(recorded.get("changed", false)):
+	if not bool(recorded.get("changed", false)) and not _novelty_dirty:
 		return
 	_novelty_history = recorded["history"]
 	var saved: Dictionary = NoveltyHistoryType.save_history(_novelty_history)
+	_novelty_dirty = not bool(saved.get("ok", false))
 	if not bool(saved.get("ok", false)):
 		push_warning("[StoryManager] Novelty history could not be saved: %s" % saved.get("reason", ""))
-	_record_opening_shape(str(posting.get("template_id", "")))
+	if bool(recorded.get("changed", false)):
+		_record_opening_shape(str(posting.get("template_id", "")))
 
 
+## Identity for the CROSS-CAMPAIGN history files. The slot label alone is wrong
+## here: starting a new campaign in slot 1 reuses that label, so the new
+## campaign would overwrite the old one's opening and then exempt itself from
+## its own separation rule. The campaign seed is what distinguishes two
+## campaigns in the same slot, so the identity combines both.
 func _campaign_id_for_history() -> String:
 	var scene := get_tree().current_scene if is_inside_tree() else null
+	var slot := ""
 	if scene != null and "active_campaign_slot_id" in scene:
-		return str(scene.active_campaign_slot_id)
-	return str(GlobalState.campaign_seed)
+		slot = str(scene.active_campaign_slot_id)
+	var seed_value := int(GlobalState.campaign_seed)
+	if slot.is_empty():
+		return "campaign#%d" % seed_value
+	return "%s#%d" % [slot, seed_value]
 
 
 ## The opening records the pressure pair in ACTIVATION order and the first two
@@ -1568,7 +2118,7 @@ func _record_opening_shape(template_id: String) -> void:
 	if template_id.is_empty():
 		return
 	var shapes: Array = story_state.get("opening_accepted_shapes", []) if story_state.get("opening_accepted_shapes", []) is Array else []
-	if shapes.size() >= 2 or template_id in shapes:
+	if shapes.size() >= 2:
 		return
 	shapes.append(template_id)
 	story_state["opening_accepted_shapes"] = shapes
@@ -1587,15 +2137,33 @@ func _upsert_opening(shapes: Array) -> void:
 	var loaded: Dictionary = RunOpeningHistoryType.load_history()
 	var updated: Dictionary = RunOpeningHistoryType.upsert_opening(
 		loaded["history"], _campaign_id_for_history(), pair, shapes)
-	if bool(updated.get("changed", false)):
-		RunOpeningHistoryType.save_history(updated["history"])
+	if not bool(updated.get("changed", false)) and not _opening_dirty:
+		return
+	var saved: Dictionary = RunOpeningHistoryType.save_history(updated["history"])
+	# Same contract as novelty: a failed write is retried on the next opening
+	# update, degrades selection only, and never invalidates a checkpoint.
+	_opening_dirty = not bool(saved.get("ok", false))
+	if _opening_dirty:
+		push_warning("[StoryManager] Opening history write failed (%s); selection is degraded until it retries."
+			% str(saved.get("reason", "")))
+
+
+## Retry a previously failed opening write without waiting for a new opening.
+func retry_dirty_opening_history() -> void:
+	if not _opening_dirty:
+		return
+	var shapes: Array = story_state.get("opening_accepted_shapes", []) 		if story_state.get("opening_accepted_shapes", []) is Array else []
+	if shapes.is_empty():
+		_opening_dirty = false
+		return
+	_upsert_opening(shapes)
 
 
 ## Stage a committed terminal outcome into story state IN MEMORY. The caller
 ## checkpoints the result and then calls `commit_mission_outcome_finish()`, or
 ## rolls back with `restore_story_state_snapshot()`. Nothing is saved here and no
 ## prose is generated: a half-staged transaction must never reach the player.
-func stage_mission_outcome(outcome: Dictionary) -> Dictionary:
+func stage_mission_outcome(outcome: Dictionary, quest: Dictionary = {}) -> Dictionary:
 	var validation := MissionOutcomeType.validate(outcome)
 	if not validation.is_valid():
 		return {"ok": false, "reason": str(validation.errors[0].get("code", "invalid_outcome"))}
@@ -1626,11 +2194,65 @@ func stage_mission_outcome(outcome: Dictionary) -> Dictionary:
 		push_warning("[StoryManager] Desire progress rejected an outcome: %s" % str(projected.get("reason", "")))
 	# Evaluate the resolution plan against the state this transaction just
 	# committed, so its record lands in the SAME checkpoint as those effects.
+	# Deterministic completion bookkeeping that durable progress depends on is
+	# staged HERE so it lands in the same checkpoint as the effects above. No
+	# model call, screenshot or chapter presentation happens in staging.
+	if not quest.is_empty():
+		deltas.append_array(_stage_completion_bookkeeping(outcome, quest))
 	var resolution := _evaluate_resolution(outcome)
 	if not resolution.is_empty():
 		deltas.append(resolution)
 	story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
 	return {"ok": true, "changed": true, "reason": "", "deltas": deltas, "previous_story": previous}
+
+
+const MAX_APPLIED_CALLBACK_OUTCOMES := 64
+
+## Staged, in-memory bookkeeping for one terminal outcome: activity step,
+## outcome memory, the first-turn-in latch, the visible consequence entry,
+## completion facts and the single hook this mission was stamped with. The
+## outcome ID is recorded so the post-commit callback cannot replay any of it.
+func _stage_completion_bookkeeping(outcome: Dictionary, quest: Dictionary) -> Array:
+	var outcome_id := str(outcome.get("id", ""))
+	if outcome_id.is_empty() or is_callback_outcome_applied(outcome_id):
+		return []
+	var terminal := str(outcome.get("terminal_state", ""))
+	var deltas: Array = []
+	if terminal == "completed":
+		story_state["local_outcome_step"] = int(story_state.get("local_outcome_step", 0)) + 1
+		var old_memories: Array = story_state.get("local_outcome_memories", []) 			if story_state.get("local_outcome_memories", []) is Array else []
+		var memories := OutcomeReactionProjector.remember_completed(
+			old_memories, quest, int(story_state.get("local_outcome_step", 0)))
+		if memories != old_memories:
+			story_state["local_outcome_memories"] = memories
+			deltas.append({"kind": "outcome_memory_recorded", "outcome_id": outcome_id})
+		if not bool(story_state.get("first_contract_handed_in", false)):
+			story_state["first_contract_handed_in"] = true
+			deltas.append({"kind": "first_contract_handed_in"})
+	if terminal in ["completed", "abandoned", "expired", "failed"]:
+		var recorded := record_mission_outcome_consequence(quest, terminal, false)
+		if bool(recorded.get("changed", false)):
+			deltas.append({"kind": "consequence_recorded", "outcome_id": outcome_id})
+	if terminal == "completed":
+		var hook := apply_hook_resolution_state(quest)
+		if bool(hook.get("resolved", false)):
+			_staged_hook_presentation[outcome_id] = int(hook.get("remaining_count", 0))
+			deltas.append({"kind": "story_hook_resolved", "outcome_id": outcome_id})
+	var applied: Array = story_state.get("applied_callback_outcome_ids", []) 		if story_state.get("applied_callback_outcome_ids", []) is Array else []
+	applied.append(outcome_id)
+	while applied.size() > MAX_APPLIED_CALLBACK_OUTCOMES:
+		applied.pop_front()
+	story_state["applied_callback_outcome_ids"] = applied
+	return deltas
+
+
+## True when this outcome's post-commit state effects are already in the record,
+## so a callback firing after commit (or after a reload) must not repeat them.
+func is_callback_outcome_applied(outcome_id: String) -> bool:
+	if outcome_id.is_empty():
+		return false
+	var applied: Variant = story_state.get("applied_callback_outcome_ids", [])
+	return applied is Array and outcome_id in (applied as Array)
 
 
 ## Returns a delta when the campaign resolved on this transaction, else empty.
@@ -1639,10 +2261,11 @@ func _evaluate_resolution(outcome: Dictionary) -> Dictionary:
 	if plan.is_empty() or str(plan.get("status", "")) != CampaignResolutionType.STATUS_ACTIVE:
 		return {}
 	var committed: Array = []
-	for raw: Variant in outcome.get("effects", []):
-		if raw is Dictionary:
-			committed.append(str((raw as Dictionary).get("kind", "")))
 	var progress: Dictionary = story_state.get("desire_progress", {}) if story_state.get("desire_progress", {}) is Dictionary else {}
+	for entry: Dictionary in progress.get("entries", {}).values():
+		for effect_id: String in entry.get("achieved_effect_ids", []):
+			if effect_id not in committed:
+				committed.append(effect_id)
 	var known: Array = []
 	for fact_id: Variant in (story_state.get("knowledge_states", {}) as Dictionary):
 		if str((story_state["knowledge_states"][fact_id] as Dictionary).get("state", "")) in ["known", "confirmed"]:
@@ -1733,10 +2356,8 @@ func refresh_local_pressure_slots(context: Dictionary) -> Dictionary:
 	var candidates: Array = []
 	var system_id := str(context.get("system_id", ""))
 	var station_id := str(context.get("station_id", ""))
-	for raw: Variant in context.get("agendas", []):
-		if not raw is Dictionary:
-			continue
-		var agenda: Dictionary = raw
+	for candidate: Dictionary in preload("res://scripts/domain/InvestigationBoardLifecycle.gd")._candidates(context):
+		var agenda: Dictionary = candidate["agenda"]
 		var desire: Dictionary = agenda.get("desire", {}) if agenda.get("desire", {}) is Dictionary else {}
 		var kind := _pressure_kind_for_need(str(desire.get("need", "")), str(desire.get("goal", "")))
 		if kind.is_empty() or str(agenda.get("faction_id", "")).is_empty() or str(desire.get("id", "")).is_empty():
@@ -1749,6 +2370,8 @@ func refresh_local_pressure_slots(context: Dictionary) -> Dictionary:
 		"campaign_seed": int(context.get("campaign_seed", 0)),
 		"catalog": LocalPressureDirectorType.load_catalog(),
 		"candidates": candidates,
+		"opening_history": RunOpeningHistoryType.load_history().get("history", {}),
+		"campaign_id": _campaign_id_for_history(),
 	})
 	if bool(refreshed.get("ok", false)) and bool(refreshed.get("changed", false)):
 		story_state["local_pressures"] = refreshed["state"]
@@ -2111,7 +2734,18 @@ func has_spoken_intro_first_dock_line() -> bool:
 	return bool(story_state.get("intro_first_dock_line_spoken", false))
 
 
+## Post-commit callback. When the terminal transaction already staged this
+## outcome's bookkeeping, only presentation runs here: repeating the staged
+## mutations would double-count the activity step and the consequence entry.
 func on_quest_completed(quest: Dictionary) -> void:
+	var outcome_id := str(quest.get("terminal_outcome_id", ""))
+	if is_callback_outcome_applied(outcome_id):
+		_check_delay_beats()
+		if _staged_hook_presentation.has(outcome_id):
+			var remaining := int(_staged_hook_presentation[outcome_id])
+			_staged_hook_presentation.erase(outcome_id)
+			present_hook_resolution(remaining)
+		return
 	advance_outcome_activity()
 	var old_memories: Array = story_state.get("local_outcome_memories", []) if story_state.get("local_outcome_memories", []) is Array else []
 	var memories := OutcomeReactionProjector.remember_completed(old_memories, quest, int(story_state.get("local_outcome_step", 0)))
@@ -2127,6 +2761,37 @@ func on_quest_completed(quest: Dictionary) -> void:
 		_save_story_state()
 	record_mission_outcome_consequence(quest, "completed")
 	_resolve_hooks_for_quest(quest)
+
+
+## Record one accepted discretionary job's family. Called from the acceptance
+## transaction in QuestManager, so investigation and ordinary jobs enter the
+## pacing window through exactly one path and exactly once.
+func record_accepted_discretionary_family(quest: Dictionary) -> Dictionary:
+	var family := LocalPressureDirectorType.family_for_mission(quest)
+	if family.is_empty():
+		return {"ok": true, "changed": false, "reason": "not_discretionary"}
+	var recorded: Dictionary = LocalPressureDirectorType.record_accepted_family(
+		story_state.get("local_pressures", {}), family)
+	if not bool(recorded.get("ok", false)):
+		push_warning("[StoryManager] Discretionary family not recorded: %s" % str(recorded.get("reason", "")))
+		return recorded
+	story_state["local_pressures"] = recorded["state"]
+	return {"ok": true, "changed": true, "family": family}
+
+
+## Whether an EXTRA pressure offer of this family may be published now.
+## Reports its reason so a withheld or excepted offer is visible rather than
+## silently missing.
+func may_publish_pressure_family(family: String, ordinary_alternatives: bool,
+		relief_exception: bool = false) -> Dictionary:
+	var decision: Dictionary = LocalPressureDirectorType.pacing_decision(
+		story_state.get("local_pressures", {}), family, ordinary_alternatives, relief_exception)
+	var reason := str(decision.get("reason", ""))
+	if reason == "pacing_relief_exception":
+		print("[StoryManager] pacing_relief_exception: %s offer kept as the supported combat-free relief." % family)
+	elif not bool(decision.get("allowed", true)):
+		print("[StoryManager] Pressure offer withheld for pacing: family=%s reason=%s" % [family, reason])
+	return decision
 
 
 func advance_outcome_activity(new_visit: bool = false) -> void:
@@ -2155,9 +2820,12 @@ func record_outcome_reaction_attempt(identity: String, phase: String, presented:
 	_save_story_state()
 
 
+## `save_now` false stages the consequence in memory for a terminal transaction
+## whose checkpoint has not run yet; the caller saves or rolls back.
 func record_mission_outcome_consequence(
 	quest: Dictionary,
-	outcome: String
+	outcome: String,
+	save_now: bool = true
 ) -> Dictionary:
 	var metadata := _mission_narrative_metadata(quest)
 	var consequence_text := _mission_consequence_text(quest, metadata, outcome)
@@ -2179,7 +2847,8 @@ func record_mission_outcome_consequence(
 	story_state["story_consequences"] = consequences
 	_promote_completion_facts_from_metadata(metadata, outcome)
 	story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
-	_save_story_state()
+	if save_now:
+		_save_story_state()
 	return {"ok": true, "changed": true, "consequence": entry}
 
 
@@ -2266,10 +2935,12 @@ func _promote_completion_facts_from_metadata(
 # If this quest was stamped with the hook that was open when it was generated,
 # close that hook out. Only ever resolves the one hook it was stamped with —
 # never mass-clears pending_hooks, so unrelated open threads survive.
-func _resolve_hooks_for_quest(quest: Dictionary) -> void:
+## Pure state half: closes only the hook this quest was stamped with, and never
+## saves or presents. Returns {resolved, remaining_count}.
+func apply_hook_resolution_state(quest: Dictionary) -> Dictionary:
 	var ref := str(quest.get("story_hook_ref", "")).strip_edges()
 	if ref.is_empty():
-		return
+		return {"resolved": false, "remaining_count": 0}
 	var hooks: Array = story_state.get("pending_hooks", [])
 	var remaining: Array = []
 	var resolved := false
@@ -2280,15 +2951,27 @@ func _resolve_hooks_for_quest(quest: Dictionary) -> void:
 			continue
 		remaining.append(hook)
 	if not resolved:
-		return
+		return {"resolved": false, "remaining_count": hooks.size()}
 	story_state["pending_hooks"] = remaining
-	_save_story_state()
+	return {"resolved": true, "remaining_count": remaining.size()}
+
+
+## Presentation half for an already-closed hook: screenshot and chapter refill.
+func present_hook_resolution(remaining_count: int) -> void:
 	# Screenshot the moment a story thread closes — but only when this was NOT
 	# the chapter's last hook, since advance_chapter captures its own frame and
 	# two near-identical shots in the same second help nobody.
-	if not remaining.is_empty():
+	if remaining_count > 0:
 		StoryScreenshotsType.capture_deferred(_campaign_path(), "hook_resolved")
 	_check_chapter_advance_after_hook_resolution()
+
+
+func _resolve_hooks_for_quest(quest: Dictionary) -> void:
+	var applied := apply_hook_resolution_state(quest)
+	if not bool(applied.get("resolved", false)):
+		return
+	_save_story_state()
+	present_hook_resolution(int(applied.get("remaining_count", 0)))
 
 
 # Campaign directory for narrative artifacts (screenshots, future PDF). ""
@@ -2306,6 +2989,8 @@ func _campaign_path() -> String:
 # regeneration_trigger LLM call that appends fresh content. Chapter count
 # climbs forever; nothing here can produce a "the story is over" state.
 func _check_chapter_advance_after_hook_resolution() -> void:
+	if is_primary_arc_resolved():
+		return
 	if not story_state.get("pending_hooks", []).is_empty():
 		return
 	if not _campaign_bible_store_ready():

@@ -84,7 +84,56 @@ full implementation status table. Phases A-D landed 2026-09-11 (Claude)._
 
 ---
 
+## Campaign completion handoff (2026-09-14)
+
+_Source: `docs/handoff_claude_gemini_campaign_completion_2026_09_14.md`._
+_Progress log: the 2026-09-14 Package 1 entry in `docs/whileYouWasSleeping.md`._
+
+- [x] **Package 1 -- terminal transaction coverage and consistency.** One
+  per-mission terminal guard across completion/abandonment/expiry, snapshot
+  before every mutation, abandoned-courier capability cleanup inside the
+  transaction, signal blocking on all three paths, compatibility handling no
+  longer claiming durability, typed outcome data failing closed, deterministic
+  completion knowledge/hook/consequence bookkeeping moved into staging with an
+  `applied_callback_outcome_ids` replay marker, and a restored checkpoint
+  dropping the abandoned timeline's pending write. Mechanical tests only.
+- [x] **Package 2 -- novelty selection completeness.** Selector bag record with
+  `remaining_shape_ids`/`cycle_index` and one-time migration; ordinary-job
+  publication ownership through the existing board machinery with a
+  `posting_kind` discriminator; discretionary family pacing; history integrity
+  (real campaign identity, opening dirty-retry, malformed-entry tolerance).
+- [x] **Package 3 -- bind the eight delivery-shaped edges.** Compiler, effect,
+  ledger, posting builder and live board wiring done and tested end to end:
+  offer -> acquisition -> named local recipient -> settlement -> reload. `collection_contract v1`
+  compiled from real world data, withheld with a diagnostic when a source,
+  recipient or path is missing. Adds the closed `item_delivered` effect kind.
+- [x] **Package 4 -- campaign collection milestones.** Resolution schema v2 with
+  the `collection_satisfied` predicate, kept separate from a faction's broad goal.
+- [x] **Package 5 -- director-authored direction.** Contract, validator, plan
+  compiler, lifecycle AND the live responder: `campaign_direction` capability
+  on the large model, prompt/parse in `CampaignDirectionContract`,
+  `request_campaign_direction` in `LLMInterface`, and a guarded
+  `maybe_author_campaign_direction_live` trigger that only a campaign
+  generated after directions existed can enter. **Live-fired against qwen3:8b**
+  (`tests/tools/run_campaign_direction_live_fire.gd`): 6/6 accepted and bound,
+  0 invented ids, 0 invented facts, after fixing four defects the live run
+  exposed. Prose quality and player feel remain unreviewed. Private packet of at most 8
+  verified collection opportunities; strict output schema; frozen v2 plan;
+  `direction_pending` on failure with no static ending fallback.
+- [x] **Package 6 -- `tests/story/run_campaign_direction_trace_tests.gd`** plus
+  separate reporting of structural validity, factual support, provenance and
+  (unqualified) prose quality.
+
+---
+
 ## P3 pressure, resolutions and novelty (2026-09-14)
+
+**Current corrective status:** see `docs/p3_corrections_2026_09_14.md` and the
+new `docs/handoff_claude_gemini_campaign_completion_2026_09_14.md`. Older A–E
+checkmarks below describe partial foundations, not full end-to-end completion.
+Board visits no longer author campaign endings; a validated persisted proposal
+is required. History reset and limited investigation cause/opening selection are
+now wired; full ordinary-job/shape-level novelty and campaign authoring remain.
 _Handoff: `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md`._
 _Audit: `docs/cause_coverage_audit_2026_09_14.md`. All five deliverables A-E are
 implemented, tested and wired. Commits `31e685fa`, `d35de049`, `91e6ea11`,

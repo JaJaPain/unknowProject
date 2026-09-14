@@ -124,6 +124,12 @@ static func build_active_state(
 	for key in ["pressure_id", "pressure_revision", "level_at_offer", "pressure_relief"]:
 		if quest_data.has(key):
 			state[key] = quest_data[key]
+	# The collection contract this posting was bound to at publication travels
+	# with the accepted mission unchanged, so posting, adapter, active mission,
+	# save and terminal record all read the SAME bindings.
+	var bound_collection: Variant = quest_data.get("collection_contract", {})
+	if bound_collection is Dictionary and not (bound_collection as Dictionary).is_empty():
+		state["collection_contract"] = (bound_collection as Dictionary).duplicate(true)
 	state = NarrativeMetadataType.apply_to_state(
 		state,
 		definition.narrative_metadata

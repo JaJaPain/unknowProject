@@ -164,9 +164,25 @@ static func refresh_slots(saved: Dictionary, context: Dictionary) -> Dictionary:
 			deltas.append({"kind": "cooldown_expired", "pressure_id": str(track["id"]), "track_kind": str(track["kind"])})
 			changed = true
 	var bound_causes: Dictionary = {}
+	if state["tracks"].is_empty() and not state.has("opening_pair"):
+		var kinds: Array = []
+		for candidate: Dictionary in context.get("candidates", []):
+			var kind := str(candidate.get("kind", ""))
+			if bool(catalog["kinds"].get(kind, {}).get("runtime_eligible", false)) and kind not in kinds:
+				kinds.append(kind)
+		var pairs := preload("res://scripts/persistence/RunOpeningHistoryStore.gd").preferred_pairs(context.get("opening_history", {}), kinds, str(context.get("campaign_id", "")))
+		if not pairs.is_empty():
+			state["opening_pair"] = pairs[_next_random(state, pairs.size())]
+			changed = true
 	for track: Dictionary in state["tracks"]:
 		bound_causes[str(track.get("cause_id", ""))] = true
 	while _active_tracks(state).size() < MAX_ACTIVE_TRACKS:
+		var occupied := _active_tracks(state).size()
+		for track: Dictionary in state["tracks"]:
+			if not is_active(track) and int(track.get("cooldown_until_step", 0)) > step:
+				occupied += 1
+		if occupied >= MAX_ACTIVE_TRACKS:
+			break
 		var chosen := _choose_candidate(state, context, catalog, bound_causes)
 		if chosen.is_empty():
 			break
@@ -208,6 +224,14 @@ static func _choose_candidate(state: Dictionary, context: Dictionary, catalog: D
 		eligible.append(candidate)
 	if eligible.is_empty():
 		return {}
+	var opening: Array = state.get("opening_pair", [])
+	if state["tracks"].size() < opening.size():
+		var preferred: Array = []
+		for candidate: Dictionary in eligible:
+			if candidate["kind"] == opening[state["tracks"].size()]:
+				preferred.append(candidate)
+		if not preferred.is_empty():
+			eligible = preferred
 	# Least-recently-active eligible kind first; a never-active kind counts as
 	# least recent. Stable candidate order breaks equal recency before the RNG.
 	var recency: Dictionary = state["kind_recency"]
@@ -460,6 +484,54 @@ static func snapshot_payout(base_credits: int, numerator: int, denominator: int)
 	if denominator <= 0:
 		return base_credits
 	return int(floor(float(base_credits) * float(numerator) / float(denominator)))
+
+
+## Fixed mapping from objective type to discretionary family. Closed on purpose:
+## a new objective type is unpaced until someone decides which family it is.
+const FAMILY_BY_OBJECTIVE := {
+	"INVESTIGATE_SIGNAL": "investigation",
+	"DELIVER_ORE": "delivery",
+	"DELIVERY_COURIER": "delivery",
+	"PURCHASE_DELIVERY": "delivery",
+	"PICKUP_SPECIAL": "delivery",
+	"KILL_SHIPS": "combat",
+	"TARGET_WITH_COMMS_REVERSAL": "combat",
+	"RECOVER_COMBAT_DROP": "combat",
+}
+
+
+## The family this mission counts as, or "" when it does not enter pacing at
+## all. A tutorial contract and a required story job are not discretionary: the
+## player did not choose them, so they cannot be evidence of the player's
+## choices repeating.
+static func family_for_mission(quest: Dictionary) -> String:
+	for tutorial_flag in ["intro_tutorial_contract", "is_intro_tutorial", "story_required"]:
+		if bool(quest.get(tutorial_flag, false)):
+			return ""
+	# The starter contract is identified by its own fixed shape, the same way
+	# QuestManager identifies it, because the accepted state does not always
+	# carry the offer's tutorial flag.
+	if str(quest.get("title", "")) == "Clean and Easy" 			and str(quest.get("objective_type", "")) == "KILL_SHIPS" 			and str(quest.get("target_faction", "")) == "reavers":
+		return ""
+	return str(FAMILY_BY_OBJECTIVE.get(str(quest.get("objective_type", "")), ""))
+
+
+## Whether an EXTRA pressure offer of `family` may be added right now.
+## `ordinary_alternatives` is true when the board can show something else
+## instead; with no alternative, withholding would just leave the player with
+## nothing, so the cap yields. `relief_exception` marks the sole supported
+## combat-free relief offer, which is never withheld.
+static func pacing_decision(saved: Dictionary, family: String, ordinary_alternatives: bool,
+		relief_exception: bool = false) -> Dictionary:
+	if family.is_empty():
+		return {"allowed": true, "reason": "not_discretionary"}
+	if may_offer_family(saved, family):
+		return {"allowed": true, "reason": ""}
+	if relief_exception:
+		return {"allowed": true, "reason": "pacing_relief_exception"}
+	if not ordinary_alternatives:
+		return {"allowed": true, "reason": "no_ordinary_alternative"}
+	return {"allowed": false, "reason": "family_cap_reached"}
 
 
 ## Pacing cap over the last four ACCEPTED discretionary families. Appending the

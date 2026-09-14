@@ -1,5 +1,34 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-14 (P3 corrections and fresh Claude/Gemini handoff) — Codex
+
+Fixed delivery rollback losing ore/items/courier cargo; stopped board visits from
+inventing campaign endings or downgrading active plans; added cumulative resolution
+evaluation, safe-checkpoint rollback, summary/refill consumers and consequence
+system/key conversion. Hardened history storage, connected within-shape cause
+ranking and initial pressure opening preference, retained cooldown slots and added
+a narrow history reset. Fixed-cast characterization and prototype gates unchanged.
+
+16 affected suites pass; 383 scripts compile. See `docs/p3_corrections_2026_09_14.md`
+for exact scope and limits. The full previous handoff is NOT complete. Remaining
+work is specified, with schemas and tests, in
+`docs/handoff_claude_gemini_campaign_completion_2026_09_14.md` for a fresh session.
+Player testing remains deferred.
+
+## Session: 2026-09-14 (high-level P3 review and next plan) — Codex
+
+Reviewed Claude's handoff implementation; no gameplay edits. Eight regression
+suites pass and all 383 scripts compile, but targeted probes reproduce cargo
+loss after failed delivery settlement and active resolution plans reverting to
+pending on another system visit. Source review finds unsupported ending bindings,
+missing resolution consumers/cumulative effect evaluation and unconnected novelty
+selection. The broad “all A–E wired” claim below is superseded by this review.
+
+See `docs/review_claude_p3_and_next_plan_2026_09_14.md` for evidence, priorities and
+the next sequence: correctness, live novelty selection, supported delivery causes,
+premise-driven campaign direction, then dialogue and multi-system trace evaluation.
+Player testing remains deferred; fixed-cast soul regression passed.
+
 ## Session: 2026-09-14 (wiring D and E to live call sites) — Claude
 
 The two deliverables that were built-but-inert now run in play.
@@ -3769,3 +3798,852 @@ so they stand as they are):
   cut.
 - contract_hit's bribe line still collides with the real comms-reversal
   mechanic (docs/bugs.md has the detail).
+
+---
+
+# 2026-09-14 — Campaign completion handoff, Package 1: terminal transaction
+
+Source: `docs/handoff_claude_gemini_campaign_completion_2026_09_14.md`.
+This entry covers PACKAGE 1 ONLY. Packages 2-6 are not started.
+
+## What actually changed
+
+`scripts/QuestManager.gd`
+- One per-mission terminal guard (`_terminal_in_progress` + `_terminal_depth`)
+  now covers completion, abandonment and expiry. `_completion_in_progress` is
+  gone. A synchronous cargo/reputation handler cannot reenter settlement;
+  `is_terminal_transaction_in_progress()` is the public check.
+- The settlement snapshot is now taken BEFORE any world mutation in all three
+  paths, including `clear_intro_tutorial_player_protection()` and capability
+  cleanup.
+- Abandoning a mission now runs `_cleanup_mission()` inside the transaction, so
+  an abandoned courier drops its crate — and a failed checkpoint gives the crate
+  back. Previously abandon skipped cleanup entirely and stranded the cargo.
+- `_investigation_runtime.reset()` moved from before the snapshot (abandon) /
+  after the signals (complete) to inside the committed branch, so a rolled-back
+  settlement no longer destroys live scan state.
+- Signal blocking, which only completion had, now wraps abandon and expiry too;
+  every path emits its cargo/reputation notifications only after commit.
+- `_settle_terminal` no longer returns `durable:true` for an unbuildable
+  outcome. A mission carrying typed story bindings (`pressure_id`,
+  `investigation`, or narrative `desire_id`/`cause_id`/`cause_faction_id`) now
+  FAILS CLOSED; a genuinely legacy mission terminates as
+  `compatibility:true, durable:false`, which is honest about persisting nothing.
+- Terminal paths stamp `terminal_outcome_id` on the emitted quest dictionary.
+
+`scripts/story/StoryManager.gd`
+- `stage_mission_outcome(outcome, quest)` now stages the deterministic
+  completion bookkeeping durable progress depends on, in the SAME transaction as
+  pressure/desire/resolution: activity step, outcome memory, the
+  first-turn-in latch, the visible consequence entry, completion-fact promotion
+  and the single hook the mission was stamped with. No model call and no
+  screenshot happens in staging.
+- `applied_callback_outcome_ids` (capped at 64) is the replay marker.
+  `is_callback_outcome_applied()` is the public check.
+- `on_quest_completed` now runs presentation only when the marker is present
+  (`_check_delay_beats`, hook screenshot, chapter refill). Replaying it — the
+  reload case — changes no state.
+- `_resolve_hooks_for_quest` split into `apply_hook_resolution_state()` (pure)
+  and `present_hook_resolution()` (screenshot + chapter refill).
+- `record_mission_outcome_consequence(quest, outcome, save_now)` can stage
+  without writing.
+- `restore_story_state_from_checkpoint` now clears the pending consequence save
+  and staged presentation, so a write pending from the timeline the player just
+  abandoned cannot commit onto the restored one.
+
+`scripts/GameRoot.gd`
+- The abandoned/expired chronicle handlers skip `record_mission_outcome_consequence`
+  when the terminal transaction already staged it.
+
+`scripts/persistence/StoryStateStore.gd`
+- `applied_callback_outcome_ids` added to the default state with a type guard in
+  the legacy migration.
+
+## Tests
+
+`tests/story/run_terminal_transaction_tests.gd` gained six cases against the
+real QuestManager: abandoned courier cleanup and its rollback, reentrant
+terminal signal, nonfocused expiry restoring the original focus on a failed
+checkpoint, compatibility-vs-durable reporting plus fail-closed typed data,
+staged callback applied exactly once including a replayed callback, and an older
+checkpoint beating a newer loose story cache with its pending write dropped.
+
+Passing, run one at a time: terminal transaction, story manager hook, outcome
+callback, outcome reaction projector, campaign resolution, novelty history, save
+migration, story state migration, narrative checkpoint state, campaign
+checkpoint store, investigation board lifecycle / offer / runtime / selector,
+board delivery recipient, local pressure, pressure cards, mission card delivery
+route, fixed-cast souls, intro handhold / dock gating / offer revisit.
+`tests/parse_check_scene_scripts.gd`: 383 scripts, 0 failed.
+
+## What this does and does not mean
+
+Reaches the player: abandoning a courier now actually frees the hold; a failed
+save no longer loses an investigation's scan state or silently double-counts a
+completion's activity step after a reload.
+
+Still open in Package 1's spirit: the "successful checkpoint plus failed
+compatibility cache" case is covered only at the `_settle_terminal` return-value
+level, not through a real store write failure. No player test has been run.
+
+## Next
+
+Package 2 (novelty selection completeness: `InvestigationSelector` bag record
+with `remaining_shape_ids`/`cycle_index`, ordinary-job posting ownership,
+discretionary family pacing, history integrity). Nothing from Packages 2-6 has
+been started.
+
+## Package 2, part 1 of 3: selector cycles and discretionary family pacing
+
+`scripts/domain/InvestigationSelector.gd` — the shape cycle is now EXPLICIT.
+- Each pool-signature record carries `remaining_shape_ids` + `cycle_index`.
+- A legacy seed/cursor bag migrates once by replaying a COPY of its saved
+  seed/cursor against the same sorted pool and keeping the unconsumed suffix.
+  Nothing is committed and no outstanding reservation is touched by the
+  conversion. An empty suffix opens the next complete cycle.
+- `_draw` now intersects the remaining set with the caller's argument ORDER
+  (which is the novelty ranker's preference, unchanged from `prepare`), and
+  takes the best-ranked shape still remaining. Skipping the just-offered shape
+  no longer burns it — it stays in the remaining set and comes round later in
+  the same cycle. The pool signature, last-shape rule and separate-bag policy
+  are unchanged.
+- Reservation carries `pending_remaining_shape_ids`/`pending_cycle_index`;
+  only publication commits them.
+- `InvestigationBoardLifecycle.validate` accepts the new optional fields and
+  rejects a malformed remaining list or a negative cycle index.
+
+`scripts/story/LocalPressureDirector.gd` — `FAMILY_BY_OBJECTIVE` is the fixed,
+closed mapping from the handoff (investigation / delivery / combat).
+`family_for_mission()` returns "" for a tutorial contract or a required story
+job, so neither enters discretionary pacing. `pacing_decision()` reports
+`family_cap_reached`, `no_ordinary_alternative`, `pacing_relief_exception` or
+`not_discretionary` rather than a bare boolean.
+
+Recording moved: `QuestManager.accept_quest` now records the family for EVERY
+discretionary acceptance through `StoryManager.record_accepted_discretionary_family`,
+and the investigation-specific call inside the investigation acceptance
+checkpoint was removed — so it is recorded once, on one path, inside the
+transaction that already rolls back on a failed checkpoint.
+`InvestigationBoardLifecycle.prepare` refuses with `withheld_family_pacing` when
+the caller's `family_pacing` decision says so; investigations pass
+`relief_exception: true`, which logs `pacing_relief_exception` and is never
+withheld.
+
+Tests: `run_investigation_selector_tests.gd` gained ranking-decides-within-cycle,
+exclusion-does-not-burn (full-cycle exhaustion), legacy mid-cycle migration built
+from a real TauntBag, and migration-leaves-an-outstanding-reservation-alone.
+`run_local_pressure_tests.gd` gained the fixed family mapping and the four
+pacing-decision reasons. Passing alongside: investigation board lifecycle,
+investigation runtime, novelty history, pressure cards, terminal transaction.
+Parse check 383/0.
+
+STILL OPEN in Package 2: ordinary-job publication ownership (`posting_kind`
+discriminator, campaign-owned monotonic publication IDs, exposure only on a
+successful write) and the history-integrity tasks (real campaign identity, no
+cross-campaign concatenation, opening dirty-retry, malformed-entry tolerance).
+
+## Package 2, parts 2 and 3: history integrity and ordinary posting ownership
+
+### History integrity
+
+`scripts/story/StoryManager.gd`
+- `_campaign_id_for_history()` no longer returns the reusable SLOT label. It
+  returns `"<slot>#<campaign_seed>"`. The old value was the defect the handoff
+  named: a new campaign started in slot 1 reused `campaign.slot_1`, so it
+  overwrote the previous campaign's opening entry AND exempted itself from its
+  own separation rule (`preferred_pairs` skips entries whose campaign_id
+  matches). Pre-existing entries with bare slot labels stay in the file and
+  simply read as other campaigns, which is what they are.
+- Opening writes now have the same dirty-retry contract as novelty:
+  `_opening_dirty`, a warning naming the failure reason, retry on the next
+  opening update, and `retry_dirty_opening_history()` for an explicit retry. A
+  failed opening write degrades selection only; it never invalidates a
+  checkpoint.
+- `reset_novelty_histories()` documents and enforces its narrow scope: the two
+  selection files plus the cached selection inputs and pending writes derived
+  from them. Campaign facts, published postings, accepted missions, knowledge,
+  pressure state and companion memories are untouched.
+
+`scripts/persistence/NoveltyHistoryStore.gd`
+- `accepted_runs()` no longer concatenates across campaigns. Pairs and triples
+  are built per campaign, so campaign A's last acceptance followed by campaign
+  B's first is no longer counted as an adjacency the player experienced — which
+  previously penalised a genuinely fresh opening.
+- New `accepted_signatures_for(history, campaign_id)`, and `rank_candidates`
+  takes an optional `campaign_id` so the "what did the player just accept" half
+  of the ranking is scoped to THIS campaign. Exposure counts stay cross-campaign.
+- Malformed entries (non-dictionaries, missing signature, missing campaign) are
+  skipped in both runs and ranking rather than crashing.
+- An unknown or legacy (non-`v2:`) signature now sorts as INCOMPARABLE — last —
+  instead of being indistinguishable from "never seen", which previously let a
+  missing signature win every ranking.
+
+### Ordinary posting ownership
+
+`scripts/domain/InvestigationBoardLifecycle.gd` — extended, not replaced. No
+second board manager.
+- `posting_kind(entry)`: `investigation` | `ordinary`; a missing discriminator
+  means a legacy investigation.
+- `claim_ordinary(saved, context, candidate)`: reuses the existing entry for
+  `owner|template_id`, or allocates `publication.ordinary.<n>` from the
+  campaign-owned monotonic `next_ordinary_publication_id` and freezes the
+  candidate's objective and terms. Reopening returns the same ID and the same
+  frozen posting and allocates nothing. A refused posting consumes no ID and
+  names the exact defect (`invalid_ordinary_objective:<code>`,
+  `missing_delivery_recipient`, …).
+- `record_ordinary_acceptance(...)` stores the REAL runtime mission ID and
+  retires the posting.
+- `_validate_ordinary` dispatches to the ordinary validators (mission
+  definition, causal contract, delivery recipient). Investigation site planning
+  and state validation are never run on an ordinary objective.
+- `validate()` branches on posting kind: an ordinary entry must own a
+  publication ID and is checked with the ordinary validators; an investigation
+  entry must still own a shape reservation.
+- `prepare`, `publish` and the preparing-draft scan now skip ordinary entries,
+  so an ordinary posting sharing the entries dictionary can never be mistaken
+  for the station's investigation offer.
+
+`scripts/story/StoryManager.gd` — `publish_ordinary_board_offer()` and
+`record_ordinary_board_acceptance()`, same contract as the investigation path:
+save first, and record exposure ONLY after a successful save.
+
+`scripts/UIManager.gd`
+- `_claim_ordinary_board_postings()` runs BEFORE the prose pass, so terms are
+  ranked and frozen before any text exists. It is gated on a VISIBLE board:
+  claiming is publishing, and a hidden render exposes nothing.
+- A posting that cannot be claimed is shown unowned with a diagnostic rather
+  than withheld, so a save or history fault never costs the player the board.
+- Accepting an ordinary posting records its runtime mission ID.
+- Async generated prose can no longer reassign `offer_id`, `publication_id` or
+  `posting_kind`.
+
+### Tests
+
+`run_investigation_board_lifecycle_tests.gd`: ordinary posting ownership —
+first allocation, reuse without reallocation, frozen terms unchanged on reopen,
+a second template taking the next monotonic ID, signature shared while identity
+is not, runtime mission ID on acceptance, a refused posting consuming no ID, and
+a missing discriminator reading as a legacy investigation.
+`run_novelty_history_tests.gd`: within-campaign pairs kept, cross-campaign pairs
+and triples not fabricated, same-slot campaigns not merged, ranking scoped per
+campaign, a damaged history degrading rather than crashing, and incomparable
+signatures ranking last.
+
+Passing: investigation board lifecycle / offer / runtime / selector, novelty
+history, local pressure, pressure cards, board delivery recipient, mission card
+delivery route, terminal transaction, campaign resolution, save migration, story
+state migration, intro offer revisit, story manager hook, outcome callback,
+store economy. Parse check 383/0.
+
+### What this does and does not mean
+
+Reaches the player: the shape cycle now actually exhausts before repeating even
+when the novelty ranker disagrees with the bag; an ordinary board job keeps one
+identity and one set of terms across panel refreshes, reloads and generated
+prose, instead of being rebuilt from scratch on every render.
+
+Not claimed: the ordinary postings still come from the same fixed
+`PublicBoardOfferBuilder` templates, so stable identity is not new variety. No
+player test has been run.
+
+### Next
+
+Package 3: compile `collection_contract v1` for the eight delivery-shaped edges
+in `docs/cause_coverage_audit_2026_09_14.md`, withholding any edge whose source,
+destination or recipient does not actually exist, and add the closed
+`item_delivered` effect kind.
+
+## Package 3: delivery-shaped needs bound to real world data
+
+New `scripts/domain/CollectionContract.gd` — `collection_contract v1`, exactly
+the schema in the handoff. `SUPPORTED_NEEDS` is the audit's eight delivery
+edges and nothing else; `REJECTED_NEEDS` carries the five refusals with the
+capability that is actually missing, so `a clean ore assay` reports
+`no_assay_mechanic` rather than a bare "unsupported". `compile()` refuses and
+NAMES the missing binding: `no_source_station`, `source_does_not_supply_item`,
+`item_not_in_store_catalogue`, `no_destination_station`,
+`destination_not_registered`, `no_local_recipient`,
+`recipient_is_not_a_generated_local_contact`, `no_bound_item`, `missing_scope`.
+Only the ship-part edge may be a `purchase_delivery`, and only with a real store
+catalogue entry. Contract IDs are stable, so reopening a posting resolves to the
+same collection; a different action is a different collection.
+
+New `scripts/domain/CollectionOpportunityCompiler.gd` — pure. Turns generated
+agendas plus a world capture into `{opportunities, withheld}`. It adds no item
+names: the candidate items come from the existing `ITEMS_BY_NEED` /
+`EXTRA_ITEMS` vocabulary, and the only question asked is whether a registered
+station actually stocks or sells one of them. The source may not be the
+destination. A fulfilled cause is never reposted under a new ID.
+
+`scripts/domain/MissionOutcome.gd` — closed `item_delivered` effect kind. It is
+emitted only when the mission carries a VALID collection contract AND completed
+the objective that contract declared, and it carries `collection_id`, the item,
+the quantity, the destination and — critically — the recipient who actually took
+delivery. An abandoned or mismatched mission records nothing.
+
+`scripts/story/DesireProgressLedger.gd` — a delivery record keeps the exact
+item/quantity/destination/recipient/cause/outcome ID.
+`fulfilled_collection_receipts()` reports them. `retired_cause_ids()` now also
+retires the cause of a fulfilled collection even though the desire is only
+`progressed`, so the same job cannot be reposted as a fresh reason.
+`SATISFYING_EFFECTS` deliberately does NOT list `item_delivered`.
+
+`scripts/domain/MissionAdapter.gd` carries the contract onto the accepted
+mission, so posting, adapter, active mission, save and terminal record all read
+the same bindings. `scripts/story/StoryManager.gd` gained
+`collection_opportunities(station)`, which captures the real stations, store
+catalogues and generated outpost contacts and LOGS every withheld edge with its
+missing binding.
+
+## Package 4: campaign collection milestones, separate from faction goals
+
+`scripts/story/CampaignResolutionCompiler.gd`
+- Plan version 2 alongside version 1. A v1 plan keeps its original predicates,
+  is marked `legacy_resolution` for diagnostics, and can never gain a v2
+  predicate by reinterpretation. No new v1 plan is written.
+- New closed predicate `{kind: collection_satisfied, collection_id}`, valid in
+  v2 only. A v2 interest must carry `collection_id`, `station_id`,
+  `recipient_id` and a `completion_kind` from exactly
+  `verified_survey_evidence_submitted`, `recorder_preserved_and_delivered`,
+  `item_delivered`.
+- Binding proves each collection ID belongs to a persisted contract or validated
+  opportunity (`unknown_collection_reference`) AND is one of the plan's own
+  interests (`collection_not_an_interest`).
+- Evaluation looks up a COMMITTED receipt scoped by collection, faction, system
+  and recipient — and the destination station when the interest names one. A
+  recorder handed to a different verified owner, or a delivery offered against a
+  verified-survey milestone, does not satisfy it.
+- Ending provenance now lists only the outcomes that produced the matching
+  receipts, not every mission in the campaign, and a summary may only cite
+  public fact IDs the knowledge ledger actually knows.
+
+`scripts/persistence/SaveMigrator.gd` validates v2 interests' collection
+bindings and revalidates the plan after system remapping. Collection IDs are
+campaign-scoped and are never rewritten.
+
+### Tests
+
+New `tests/story/run_collection_contract_tests.gd`: the eight supported edges
+and five named refusals, each missing binding withheld with its name, stable and
+action-distinct contract IDs, a contract claiming a legal outcome rejected, the
+`item_delivered` effect with its recipient, mismatched-objective and abandoned
+missions recording nothing, ledger receipts carrying every delivery fact, the
+desire staying `progressed`, the cause retired, duplicates applied once, and
+world-bound opportunity compilation with its withholding cases.
+
+`run_campaign_resolution_tests.gd` gained v2 binding (including
+`unknown_collection_reference` and `collection_not_an_interest`), v2 evaluation
+(wrong recipient / station / collection all fail closed, a delivery not
+satisfying a survey milestone, receipts surviving canonical conversion,
+provenance excluding unrelated missions), and v1 compatibility.
+
+Passing: collection contracts, campaign resolution, terminal transaction,
+investigation board lifecycle, board delivery recipient, mission card delivery
+route, save migration. Parse check 386/0.
+
+### What is NOT done in Package 3
+
+The compiler and the effect are real and tested, and `collection_opportunities()`
+runs against live world data — but no ordinary board posting is GENERATED from a
+collection opportunity yet, so no delivery edge currently reaches the player as a
+playable job. With today's world capture, a station is a source only through its
+store catalogue, which means the document edges are correctly withheld with
+`source_does_not_supply_item` until a station actually stocks one. That is the
+honest state: the binding machinery refuses to invent a source, and nothing
+fakes one. The remaining work is the posting generator plus the pressure/reward
+relief rule, and the acceptance-to-delivery-to-save trace in Package 6.
+
+## Package 5: direction authored through the existing director
+
+New `scripts/story/CampaignDirectionContract.gd` — pure, no new model family and
+no new planner.
+- `build_packet()` caps the private packet at 8 verified collection
+  opportunities and deduplicates premise facts. `writer_view()` is what actually
+  goes to the model: it strips the internal desire binding, and hidden site
+  truth and fixed-cast mysteries were never in the packet to begin with.
+- `validate_proposal()` enforces the handoff's exact schema. Refusals are
+  specific: `unknown_collection_selection`, `unknown_premise_fact`,
+  `duplicate_collection_selection`, `too_many_collections_selected`,
+  `no_collection_selected`, `no_premise_reference`, `empty_public_direction`,
+  `public_direction_too_long`. 1-3 is a cap, not a quota — a one-collection
+  campaign validates.
+- Links are accepted ONLY when a real dependency supports them: both ends
+  selected, a supplied dependency fact, no self-link, no duplicate, no cycle.
+  `unsupported_link_dependency` is the refusal for a dependency fact the packet
+  never supplied, which is what stops a structurally valid but invented link.
+  No link is ever forced when none exists.
+- `compile_plan()` freezes an accepted proposal into a v2 plan: ONE success
+  alternative ANDing the selected `collection_satisfied` predicates. No partial
+  or failure alternative is manufactured, because no implemented loss effect
+  justifies one. The public goal is completion of those specific collections.
+
+`scripts/story/StoryManager.gd` — the generation lifecycle.
+- `may_author_campaign_direction()` refuses when a plan already exists, so a
+  board visit is a consumer and never authorisation to rewrite an existing plot.
+  Legacy campaigns stay on their chapter/hook progression.
+- `author_campaign_direction(station, responder)` takes a Callable, so offline
+  fixtures and the live model use the SAME entry point. One proposal plus at
+  most one schema/binding repair (`DIRECTION_MAX_ATTEMPTS = 2`) — no retry storm.
+- On failure it persists `campaign_direction_pending` with the reason, prints
+  it, and leaves ordinary accepted gameplay fully usable. There is no generic
+  static ending fallback. `may_retry_campaign_direction()` returns true only
+  when new supported world opportunities exist; nothing polls.
+- Accepted proposals record their provenance: attempt number, selected
+  collections, cited premise facts, the public direction and the minute.
+
+Tests: new `tests/story/run_campaign_direction_tests.gd` — packet cap and
+redaction, an accepted proposal, a one-collection campaign, six schema
+rejections, an invented ID and an invented fact refused, six link refusals
+including a cycle, and a compiled plan that is v2, single-success, all
+`collection_satisfied`, keeps every recipient binding, and binds and freezes
+against its own campaign.
+
+## Package 6: the trace, and two real defects it found
+
+New `tests/story/run_campaign_direction_trace_tests.gd`. Fixed seeds (4242 /
+9191), offline director fixtures, and the REAL runtime paths: QuestManager's
+terminal transaction, StoryManager's staging, the knowledge ledger and a real
+`StoryStateStore` checkpoint on disk. Per campaign it traces tutorial completion
+(and proves the tutorial stays out of pressure, desires and pacing), two bound
+collections across two generated systems, a director proposal that is REFUSED
+for citing an invented fact and then repaired within the two-attempt budget,
+plan compilation and binding, a courier acquired and delivered through a failed
+save and its retry, a repeated settlement that pays once, and a restored
+checkpoint beating a newer loose cache without losing its delivery receipt.
+
+It reports IDs, effects and semantic signatures, and the divergence assertion is
+explicitly on signatures and selected collection IDs — not on names. It also
+asserts that both campaigns share the same supported effect vocabulary, and says
+in the trace output that this is correct and finite by design rather than a
+failure of variety.
+
+### Two defects the trace exposed, both now fixed
+
+1. **The tutorial contract was entering the pressure ledger.**
+   `MissionOutcome.build` set `tutorial` from `quest.intro_tutorial_contract`,
+   but nothing in the codebase ever sets that field, and `MissionAdapter` does
+   not carry it onto the accepted mission. So `stage_mission_outcome`'s
+   "tutorial_excluded" branch never fired for the real starter contract, and the
+   tutorial was being staged into pressure and desire progress. Both
+   `MissionOutcome` and `LocalPressureDirector.family_for_mission` now identify
+   it by the same fixed shape QuestManager uses ("Clean and Easy" / KILL_SHIPS /
+   reavers) as well as the flags.
+2. **The tutorial was also entering discretionary family pacing**, for the same
+   reason — the accepted state has no tutorial flag to check. Same fix.
+
+## Session status against the handoff
+
+- **Package 1 — complete**, with tests.
+- **Package 2 — complete**, with tests.
+- **Package 3 — partial.** The contract schema, the eight supported edges with
+  named refusals, the `item_delivered` effect, the ledger receipts, the cause
+  retirement, the adapter/save passthrough and the world-bound opportunity
+  compiler are all done and tested end to end, including through a real
+  settlement. What is NOT done: no ordinary board posting is generated FROM a
+  collection opportunity yet, so no delivery edge reaches the player as a
+  playable job through the live board. With the current world capture a station
+  is a source only through its store catalogue, so the document edges are
+  correctly withheld with `source_does_not_supply_item` — the machinery refuses
+  to invent a source and nothing fakes one. Also not done: the pressure/reward
+  relief rule for a completed collection (it is currently neutral activity,
+  which is the safe default the handoff asks for).
+- **Package 4 — complete**, with tests.
+- **Package 5 — complete as a contract and lifecycle**, with tests. The
+  responder is a Callable, so the offline fixture and a live model share one
+  entry point; the live `LLMInterface` request that would fill that Callable in
+  normal play is NOT wired, so no campaign currently authors a direction during
+  real play.
+- **Package 6 — complete for the structural trace.** Structural validity,
+  factual support and provenance are recorded separately and asserted.
+  Unqualified prose quality is NOT asserted and the critic was not changed. No
+  player test was run, so no subjective gate is marked passed.
+
+### Exact resume point
+
+Next task: generate an ordinary board posting from a verified collection
+opportunity (`StoryManager.collection_opportunities()` already returns them),
+publish it through `InvestigationBoardLifecycle.claim_ordinary()` with its
+`collection_contract` attached to `quest_data`, and extend
+`tests/story/run_collection_contract_tests.gd` with the offer-to-acceptance leg.
+Then wire `author_campaign_direction()`'s responder to the existing narrow
+writer request in `LLMInterface`.
+
+No test is currently failing. Modified/added this session:
+`scripts/QuestManager.gd`, `scripts/GameRoot.gd`, `scripts/UIManager.gd`,
+`scripts/story/StoryManager.gd`, `scripts/story/LocalPressureDirector.gd`,
+`scripts/story/DesireProgressLedger.gd`,
+`scripts/story/CampaignResolutionCompiler.gd`,
+`scripts/story/CampaignDirectionContract.gd` (new),
+`scripts/domain/CollectionContract.gd` (new),
+`scripts/domain/CollectionOpportunityCompiler.gd` (new),
+`scripts/domain/MissionOutcome.gd`, `scripts/domain/MissionAdapter.gd`,
+`scripts/domain/InvestigationSelector.gd`,
+`scripts/domain/InvestigationBoardLifecycle.gd`,
+`scripts/persistence/NoveltyHistoryStore.gd`,
+`scripts/persistence/StoryStateStore.gd`,
+`scripts/persistence/SaveMigrator.gd`, plus the test files named above and the
+regenerated `PROJECT_MAP.md`/`PROJECT_MAP.json`.
+
+---
+
+# 2026-09-14 (later) -- Package 3 finished: collection postings reach the player
+
+Follow-up session. Package 3's remaining leg -- a bound delivery edge actually
+appearing on the board as a playable job -- is now done, tested end to end.
+
+## The blocker, and what it actually was
+
+The previous entry reported delivery edges being withheld with
+`source_does_not_supply_item`. That was NOT the world being empty; it was the
+compiler modelling "this station can supply the item" as "this station's STORE
+sells it", for every verb. That is the wrong question for two of the three
+verbs, and it was quietly suppressing edges the game can already run:
+
+- `purchase_delivery` -- the player buys it, so a store catalogue entry is a
+  real requirement. Unchanged.
+- `courier` -- the origin issues a sealed consignment at acceptance.
+  `GlobalState.accept_special` IS that handover. Demanding a store entry
+  modelled a mechanic the courier path does not have.
+- `pickup` -- the player collects from a NAMED contact at the origin, which
+  `PickupSpecialCapability` checks, so the origin must actually have a contact.
+
+`CollectionOpportunityCompiler._bind` now asks each action for the thing its own
+capability enforces. This is not a loosening -- a pickup without a contact is
+now refused with the new `no_source_contact`, which the old store-only rule
+never checked, and `CollectionContract` carries `source_contact_id` (empty for
+the two verbs that do not collect from a person) so the pickup objective can
+name them.
+
+## New: `scripts/domain/CollectionPostingBuilder.gd`
+
+Pure. Turns one verified opportunity into a board posting and withholds with a
+named binding otherwise: `invalid_collection_contract`, `missing_reward_budget`,
+`no_local_recipient`, `recipient_does_not_match_contract`,
+`protected_character_recipient`, `implausible_causal_contract:<code>`,
+`invalid_collection_objective:<code>`.
+
+- The posting must address the SAME contact the contract bound -- not whoever is
+  standing at the destination now.
+- Objectives use the existing capability field names; no new objective shape.
+- The prose is deliberately narrow. One sentence of cause, one of task, one of
+  payment, and the task sentence is the entire promise: "Collect X at A and hand
+  it to <person> at B. Payment is for the delivery itself." Nothing says the
+  lease transfers, the claim clears, the debt settles or the roster is restored,
+  because none of those is an effect the game can record.
+- Delegation text comes from the faction's OWN recorded obstacle, or is omitted.
+- Template IDs are per collection, so two collections never share a board
+  cooldown or an ownership key.
+
+## Wiring
+
+`scripts/story/StoryManager.gd`
+- `collection_board_postings(station)` compiles opportunities from the real
+  world, builds each posting, and publishes it through the existing ordinary
+  posting-ownership path (`publish_ordinary_board_offer` -> `claim_ordinary`).
+  Withheld and unpublished postings are logged with their reason and missing
+  binding.
+- `collection_recipient_id()` / `collection_recipient_record()` mint and resolve
+  CANONICAL contact IDs (`npc.<name>`), matching the scheme the existing
+  public-board recipient binding uses. Previously the world capture handed the
+  compiler raw display names, so the contract and the posting could not agree on
+  who the recipient was.
+- `COLLECTION_POSTING_REWARD = 160` -- the same base the ordinary courier
+  posting pays. A collection job is the ordinary work it is; it gets no story
+  premium.
+- Relief: a completed collection is NEUTRAL ACTIVITY. No declared pressure track
+  rule supports an `item_delivered` action, so no posting claims relief or a
+  pressure-modified payout.
+
+`scripts/UIManager.gd`
+- Collection postings are generated, validated and published BEFORE the
+  investigation slot is considered, so an edge the world actually backs does not
+  lose its place to a speculative investigation draft.
+- Collection postings are excluded from the board text generator, for the same
+  reason investigations are: their promise is compiled from verified bindings,
+  and regenerating it would hand that one bounded sentence back to a writer.
+
+## Tests
+
+New `tests/story/run_collection_board_posting_tests.gd` -- a LIVE scene with two
+real outposts registered in `active_system_entities`, a generated local contact,
+and a generated faction whose need is one of the eight supported edges:
+
+- a hidden board publishes nothing; a visible board shows the posting once, with
+  a persisted publication ID, its collection contract, the real recipient name
+  and the real origin display;
+- reopening the board neither duplicates the posting nor reallocates its ID;
+- no collection posting reaches the generic board writer;
+- the posting is neutral activity and pays the ordinary courier base;
+- acceptance through the REAL board presenter puts the consignment in the hold
+  and records the real runtime mission ID on the posting, which retires;
+- a failed save leaves the job retryable with its cargo, pays nothing and
+  records no receipt; the retry commits exactly once; a repeat pays nothing;
+- the receipt carries the right collection, recipient, destination and source
+  outcome, the desire stays `progressed`, and the receipt survives a checkpoint
+  restore;
+- the fulfilled cause is retired and the job is not reposted as fresh work;
+- removing the local contact withholds the posting with `no_local_recipient` and
+  a named binding, and restoring the contact brings the edge back.
+
+`run_collection_contract_tests.gd` gained the posting-builder cases (generation,
+five withholding reasons, an implausible recipient role refused by the existing
+validator, no sentence claiming a broader effect) and the action-aware source
+cases (a stockless origin is a valid courier origin; a pickup without a contact
+is refused; a courier contract invents no source contact).
+
+Passing: collection contracts, collection board postings, campaign direction
+trace, campaign direction, campaign resolution, terminal transaction,
+investigation board lifecycle / runtime / offer, board delivery recipient,
+mission card delivery route, local pressure, novelty history, pressure cards,
+save migration, story state migration, intro offer revisit.
+Parse check 391/0. Project maps regenerated.
+
+## Package 3 status: complete
+
+A generated faction's delivery-shaped need now becomes a real board posting,
+accepted through the real board, carried, delivered to a named generated local
+contact, and recorded as an `item_delivered` receipt that proves the delivery
+and nothing more.
+
+Still true and still deliberate: the desire moves to `progressed`, never
+`satisfied`, because no typed predicate proves the legal or commercial outcome.
+`supply` stays runtime-ineligible -- raw ore is not an assay. No player test has
+been run, so no subjective gate is marked passed.
+
+## Next
+
+Package 5's live responder: wire `author_campaign_direction()`'s Callable to the
+existing narrow writer request in `LLMInterface` so a new campaign actually
+authors a direction in play. Everything it needs is in place -- the packet, the
+validator, the repair budget and the `direction_pending` fallback are all tested
+against offline fixtures through the same entry point.
+
+---
+
+# 2026-09-14 (later still) -- Package 5's live responder is wired
+
+`author_campaign_direction()` now has a real writer behind it. Offline fixtures
+and the live model go through the SAME validation, repair budget and pending
+fallback; only the responder differs.
+
+## The request
+
+`scripts/ai/LocalModelGateway.gd` -- new `campaign_direction` capability on
+`large_story` (structural planning over facts, like `chapter_plan`), timeout
+90s. The packet it receives is the redacted writer view, so no hidden site truth
+or fixed-cast mystery is exposed regardless of which model runs it.
+
+`scripts/story/CampaignDirectionContract.gd`
+- `build_prompt(writer_view, correction_note)` assembles the prompt HERE rather
+  than in LLMInterface, so it is testable without a network and the rule "only
+  supplied ids and facts exist" is stated in the file that enforces it.
+  The schema is described in PROSE and the demonstration is prose too, because
+  under `format:"json"` a prompt line shaped like `Label:` becomes a key in the
+  answer. The prompt also forbids claiming the campaign clears a name,
+  transfers a lease, settles a debt, wins a contract or reopens a route -- the
+  same overreach the posting layer refuses.
+  A repair prompt names the EXACT rejection reason.
+- `parse_response(inner_text)` is shape only: it unwraps a single-key wrapper
+  (small models do this), fills a missing `version`, and refuses junk with a
+  reason. What the claims MEAN is still `validate_proposal`'s job.
+
+`scripts/LLMInterface.gd` -- `request_campaign_direction(writer_view,
+correction_note, callback)` on the existing narrow `_request_small_inner_text`
+path, with GenerationDiagnostics events for started / failed / unparseable.
+Exactly ONE request per call: the repair budget lives with the caller, so this
+cannot retry-storm.
+
+## The lifecycle
+
+`scripts/story/StoryManager.gd` -- the authoring core is now shared.
+`_open_campaign_direction()` (entry checks + packet) and
+`_apply_campaign_direction()` (validate, compile, bind, store) are used by both
+the synchronous fixture form and the new async
+`author_campaign_direction_live()`, which chains at most
+`DIRECTION_MAX_ATTEMPTS` requests and passes each rejection reason into the next
+prompt.
+
+`maybe_author_campaign_direction_live(station)` is the guarded trigger, called
+from board preparation. It starts a request only when:
+- `campaign_direction_eligible` is set -- a marker written ONCE, in
+  `seed_story_state_from_bible`, so only a campaign generated from here on
+  enters this path. A legacy save has no marker and keeps its chapter/hook
+  progression, exactly as the handoff requires;
+- no plan exists yet (an accepted plot is never rewritten);
+- no request is already in flight;
+- the world actually backs verified collection opportunities;
+- and there is at least one known public fact to cite.
+
+It is fire-and-forget: the board is built and shown without waiting.
+
+`direction_requester_override_for_tests` is a test seam in the same spirit as
+`PublicBoardOfferBuilder.story_config_override_for_tests`, so the real async
+control flow runs without a network.
+
+## A defect this found
+
+The direction schema requires the proposal to cite a supplied premise fact. A
+campaign with no known public facts therefore CANNOT produce a valid answer --
+but the old flow would still call the writer and burn the entire repair budget
+on a request that could never succeed. `_open_campaign_direction` now refuses up
+front with `no_public_premise_facts`, and the trigger checks the same condition
+before starting. Honest, and it costs nothing.
+
+## Tests
+
+`run_campaign_direction_tests.gd` gained prompt and parsing coverage: the prompt
+carries every supplied id and fact, leaks no internal desire binding, uses no
+labelled block that `format:"json"` would turn into a key, forbids the
+unrecordable claims, and a repair prompt names the rejection reason while a
+first-attempt prompt does not pretend one happened. Parsing covers the wrapped
+answer, the missing version, and five kinds of junk.
+
+`run_collection_board_posting_tests.gd` gained the live lifecycle against a
+stubbed writer: a legacy campaign never calls the writer; an eligible new one
+calls it exactly once and gets an active v2 plan with provenance; a second board
+visit does not re-author; an invented fact costs exactly one repair whose note
+begins `unknown_premise_fact` and whose provenance records attempt 2; a failing
+writer is tried exactly twice, records the real failure reason as
+`direction_pending`, produces no plan, stays authorable and leaves ordinary
+collection postings on the board; and a campaign with no public facts calls the
+writer zero times.
+
+Passing: campaign direction, campaign direction trace, collection board
+postings, collection contracts, campaign resolution, investigation board
+lifecycle / runtime, terminal transaction, board delivery recipient, mission
+card delivery route, local pressure, novelty history, save migration, story
+state migration, narrative checkpoint state, intro offer revisit, story manager
+hook, chapter packet consumption. Parse check 391/0. Project maps regenerated.
+
+## Status
+
+Packages 1-6 of the handoff are now implemented. What remains unproven is what
+was always going to remain unproven from here: no live model has actually been
+asked for a direction (every test stubs the writer), and no player session has
+been run, so no subjective gate -- prose quality, pacing feel, whether a
+campaign reads as distinct -- is marked passed. The critic is still diagnostic
+and unqualified.
+
+---
+
+# 2026-09-14 (live fire) -- the director was asked for real, and it found four defects
+
+`qwen3:8b`, real Ollama, `tests/tools/run_campaign_direction_live_fire.gd`.
+New tool, deliberately separate from the deterministic suites: those stub the
+writer, which proves the control flow and proves nothing about whether the model
+can actually produce a compliant proposal. It builds a real packet from real
+generated desires and real bound collection contracts, asks the real model, and
+records every reply to `logs/campaign_direction_live_fire.json`.
+
+First run: **0 of 5 accepted.** Final run: **6 of 6 accepted and bound, zero
+invented ids, zero invented facts.** Four separate defects in between, none of
+which any offline test could have found.
+
+## 1. The prompt made the writer copy a label as the id
+
+`0/5 rejected: unknown_collection_selection:id collection.f30f...`
+
+The prompt wrote each job as `- id <ID>. The faction needs...`, so the writer
+dutifully returned `"id collection.f30f..."` as the identifier. The model was
+behaving correctly; my prompt was ambiguous. Jobs are now written
+`- <ID> = the faction needs...`, with the id as the first token and an explicit
+instruction to copy it exactly and add no prefix or label.
+
+## 2. The writer declared a dependency in EVERY proposal, for jobs that have none
+
+After fix 1: 5/5 accepted, and every single one declared a link, reusing one
+generic backlog fact to justify it.
+
+The validator only checked that the cited fact was *supplied*, which is much
+weaker than the handoff's rule that a link must be "already supported by a real
+dependency". Nothing in the packet expressed a prerequisite at all, so no link
+was ever supportable -- and the writer filled the gap with decoration.
+
+`build_packet` now takes CODE-DERIVED `prerequisites`
+(`{from_collection_id, to_collection_id, dependency_fact_id}`), and
+`_validated_links` accepts a link only when it matches a supplied edge exactly.
+A right pair citing the wrong fact is refused; a real prerequisite does not
+license its reverse. The prompt now states plainly that these jobs have no known
+dependencies and the links list must stay empty -- and with that, the writer
+stopped inventing them: 0 links in every subsequent run.
+
+## 3. An internal identifier reached player-facing prose
+
+The accepted directions read: *"deliver ... to the hub contacts at station.hub."*
+
+`public_direction` is shown to the player, so an internal id in it is a defect
+the code can catch. `validate_proposal` now refuses
+`identifier_in_public_direction` for `station.`, `npc.`, `collection.`, `fact.`,
+`faction.`, `desire.`, `cause.`, `mission.`, `system.`, `publication.` and
+`resolution.` prefixes, matching only when a word character follows the dot so
+ordinary prose ending "...never reached the station." still passes.
+
+## 4. Two structurally different campaigns read identically
+
+The real one. Seeds 4242 and 77001 produced different needs, different collection
+ids and different selections -- and near-identical prose:
+
+> "The hub is stuck with a backlog of deliveries and disputes over who owns
+> what. Moving these critical items will help stabilize the region..."
+
+The cause was visible in the artifact: the writer received bare opaque ids and
+fact ids with **no text**. It had nothing specific to say, so it said the same
+generic thing every time. That is the north-star failure inverted -- not the same
+mission renamed, but different missions described in the same words.
+
+The packet now carries each candidate's PUBLIC cause text -- the faction name,
+its goal, its `need_reason`, its `triggering_event` and its obstacle -- the same
+vocabulary its board posting already shows. This is supplied, verifiable data,
+so it strengthens grounding rather than loosening it. The prompt asks for the
+people's specific situations and explicitly rejects generic filler about
+backlogs and pressure.
+
+After that change, seed 4242 and seed 77001 produce recognisably different
+campaigns: a failed transport cradle, a lease buyout awaiting a signature and a
+ration shortage, versus a folded supplier, equipment failure losing a contract
+and a rival filing a faked manifest.
+
+## Final live numbers
+
+6 runs, seed 31337: 6 accepted and bound, 0 rejected, 0 transport or parse
+failures, 0 invented collection ids, 0 invented premise facts, 0 links,
+4.8-6.1s per call, 32s total. Selection size varied (2 and 3 jobs), so the 1-3
+cap is behaving as a cap and not a quota.
+
+## What is now wired
+
+- `LocalModelGateway`: `campaign_direction` -> `large_story`, 90s timeout.
+- `CampaignDirectionContract`: `build_prompt` / `parse_response` / the
+  prerequisite rule / the identifier-leak refusal.
+- `LLMInterface.request_campaign_direction()` on the existing narrow path.
+- `StoryManager.maybe_author_campaign_direction_live()`, gated on
+  `campaign_direction_eligible` (set once at bible seeding, so legacy saves
+  never enter), no plan existing, no request in flight, verified opportunities
+  present, and at least one known public fact to cite.
+
+## What is still NOT proven
+
+The direction sentence is **framing shown to the player, not a recorded claim**.
+`summary_lines` never prints it, so nothing in the ending record inherits it.
+That matters, because the model does still editorialise gently ("breaking free
+from the same bottleneck", "the system is failing them"). Left alone
+deliberately: policing that in code would be policing style, and the typed
+record is what the game actually asserts.
+
+Not proven, and not claimed:
+- prose QUALITY -- six samples read well to me, but the critic is still
+  diagnostic and unqualified, and no human has reviewed the output;
+- that this holds across many worlds -- three seeds is not a distribution;
+- anything about how it feels in a real session. No player test has been run.
+
+`"Local Account 0"` in the samples is the live-fire harness's own placeholder
+faction name, not a product string; real campaigns carry generated names.
+
+## Regression
+
+Parse check 392/0. Passing: campaign direction, campaign direction trace,
+collection board postings, collection contracts, campaign resolution, terminal
+transaction, investigation board lifecycle, board delivery recipient, save
+migration, story state migration, local pressure, novelty history, intro offer
+revisit. The trace test now supplies a real prerequisite so it still exercises
+the link path through the tightened rule.

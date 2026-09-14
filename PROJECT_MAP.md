@@ -2527,6 +2527,7 @@ Root: `SpaceGame`
       - 📄 [fixed_cast_souls.json](file:///C:/CodingProjects/SpaceGame/data/content/fixed_cast_souls.json)
       - 📄 [fixed_cast_voice_examples.json](file:///C:/CodingProjects/SpaceGame/data/content/fixed_cast_voice_examples.json)
       - 📄 [llm_dialogue_content.json](file:///C:/CodingProjects/SpaceGame/data/content/llm_dialogue_content.json)
+      - 📄 [local_pressure_tracks.json](file:///C:/CodingProjects/SpaceGame/data/content/local_pressure_tracks.json)
       - 📄 [mission_shapes.json](file:///C:/CodingProjects/SpaceGame/data/content/mission_shapes.json)
       - 📄 [npcs.json](file:///C:/CodingProjects/SpaceGame/data/content/npcs.json)
       - 📄 [portrait_sheets.json](file:///C:/CodingProjects/SpaceGame/data/content/portrait_sheets.json)
@@ -2551,7 +2552,9 @@ Root: `SpaceGame`
     - 📄 [autopilot_stabilization_checkpoint.md](file:///C:/CodingProjects/SpaceGame/docs/autopilot_stabilization_checkpoint.md)
     - 📄 [bugs.md](file:///C:/CodingProjects/SpaceGame/docs/bugs.md)
     - 📄 [campaign_bible_schema.md](file:///C:/CodingProjects/SpaceGame/docs/campaign_bible_schema.md)
+    - 📄 [cause_coverage_audit_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/cause_coverage_audit_2026_09_14.md)
     - 📄 [claude_handoff_after_critic_fix.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_after_critic_fix.md)
+    - 📄 [claude_handoff_pressure_resolutions_novelty_2026_09_13.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md)
     - 📄 [claude_handoff_to_codex_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_to_codex_2026_09_12.md)
     - 📄 [combat_overhaul_plan.md](file:///C:/CodingProjects/SpaceGame/docs/combat_overhaul_plan.md)
     - 📄 [controller_focus_notes.md](file:///C:/CodingProjects/SpaceGame/docs/controller_focus_notes.md)
@@ -2563,6 +2566,7 @@ Root: `SpaceGame`
     - 📄 [desire_coherence_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/desire_coherence_2026_09_12.md)
     - 📄 [future_contacts.md](file:///C:/CodingProjects/SpaceGame/docs/future_contacts.md)
     - 📄 [handoff_anomalies_bounties.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_anomalies_bounties.md)
+    - 📄 [handoff_claude_gemini_campaign_completion_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_claude_gemini_campaign_completion_2026_09_14.md)
     - 📄 [handoff_dialogue_alignment.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_dialogue_alignment.md)
     - 📄 [handoff_future_plans.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_future_plans.md)
     - 📄 [handoff_infinite_universe.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_infinite_universe.md)
@@ -2581,6 +2585,7 @@ Root: `SpaceGame`
         - 📄 [KAELEN.md](file:///C:/CodingProjects/SpaceGame/docs/narrative/character_souls/KAELEN.md)
         - 📄 [NOVA.md](file:///C:/CodingProjects/SpaceGame/docs/narrative/character_souls/NOVA.md)
     - 📄 [narrative_baseline_2026-07-10.md](file:///C:/CodingProjects/SpaceGame/docs/narrative_baseline_2026-07-10.md)
+    - 📄 [p3_corrections_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/p3_corrections_2026_09_14.md)
     - 📄 [phase_0_baseline_checks.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_checks.md)
     - 📄 [phase_0_baseline_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_plan.md)
     - 📄 [phase_0_gameplay_regression_2026-06-13.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_gameplay_regression_2026-06-13.md)
@@ -2861,6 +2866,7 @@ Root: `SpaceGame`
           - `def v2_baseline_norefs(ch, rng)`
           - `def v3_baseline_noboard(ch, rng)`
     - 📄 [review_claude_critic_and_plan_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/review_claude_critic_and_plan_2026_09_12.md)
+    - 📄 [review_claude_p3_and_next_plan_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/review_claude_p3_and_next_plan_2026_09_14.md)
     - 📄 [salvage_drone_plan.md](file:///C:/CodingProjects/SpaceGame/docs/salvage_drone_plan.md)
     - 📄 [segment_2_build_order.md](file:///C:/CodingProjects/SpaceGame/docs/segment_2_build_order.md)
     - 📄 [segment_3_build_order.md](file:///C:/CodingProjects/SpaceGame/docs/segment_3_build_order.md)
@@ -2894,6 +2900,7 @@ Root: `SpaceGame`
   - 📄 [godot-ai-LICENSE.txt](file:///C:/CodingProjects/SpaceGame/godot-ai-LICENSE.txt)
   - 📄 [godot_transition_plan.md](file:///C:/CodingProjects/SpaceGame/godot_transition_plan.md)
   - 📂 **logs/**
+    - 📄 [campaign_direction_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/campaign_direction_live_fire.json)
     - 📄 [fallback_events.jsonl](file:///C:/CodingProjects/SpaceGame/logs/fallback_events.jsonl)
     - 📄 [fallback_summary.json](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.json)
     - 📄 [fallback_summary.txt](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.txt)
@@ -3802,6 +3809,7 @@ Root: `SpaceGame`
       - `func get_pickup_special_data() -> Dictionary`
       - `func get_completed_count() -> int`
       - `func is_quest_completed() -> bool`
+      - `func _record_discretionary_family(quest_data: Dictionary) -> void`
       - `func announce_accepted_mission(runtime_id: String) -> void`
       - `func _create_runtime_mission_id(quest_data: Dictionary) -> String`
       - `func capture_active_quest() -> Dictionary`
@@ -3820,6 +3828,15 @@ Root: `SpaceGame`
       - `func set_pickup_handoff(line: String, voice_profile_id: String, is_fallback: bool, npc_name: String) -> void`
       - `func deliver_partial(amount: float) -> float`
       - `func mark_pickup_complete() -> bool`
+      - `func _capture_settlement_snapshot() -> Dictionary`
+      - `func _restore_settlement_snapshot(snapshot: Dictionary, instance = null, instance_state: int = -1) -> void`
+      - `func _settlement_station() -> Node3D`
+      - `func _settle_terminal(quest_data: Dictionary, terminal_state: String, credits_paid: int) -> Dictionary`
+      - `func _begin_terminal(runtime_id: String) -> bool`
+      - `func _end_terminal(runtime_id: String) -> void`
+      - `func is_terminal_transaction_in_progress() -> bool`
+      - `func _carries_typed_story_binding(quest_data: Dictionary) -> bool`
+      - `func _report_failed_settlement(title: String, reason: String) -> void`
       - `func complete_quest()`
       - `func _can_turn_in_investigation(data: Dictionary) -> bool`
       - `func abandon_quest()`
@@ -3944,6 +3961,7 @@ Root: `SpaceGame`
       - `func _create_inventory_panel() -> void`
       - `func _create_public_board_panel() -> void`
       - `func _render_public_board_offers() -> void`
+      - `func _claim_ordinary_board_postings() -> void`
       - `func _redraw_public_board_offers() -> void`
       - `func _add_public_board_posting(posting: Dictionary, index: int) -> void`
       - `func _create_context_menu()`
@@ -4641,6 +4659,27 @@ Root: `SpaceGame`
           - `static func cast_key(character: String, clean_text: String) -> String`
           - `static func orpheus_key(orpheus_voice: String, clean_text: String) -> String`
       - 📄 [BakedAudioIndex.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/BakedAudioIndex.gd.uid)
+      - 📄 [CollectionContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionContract.gd)
+        - `static func is_supported_need(need: String) -> bool`
+        - `static func unsupported_reason(need: String) -> String`
+        - `static func compile(source: Dictionary, bindings: Dictionary) -> Dictionary`
+        - `static func objective_type_for(contract: Dictionary) -> String`
+        - `static func validate(value: Dictionary) -> ValidationResult`
+        - `static func _contract_id(source: Dictionary, action: String, item: String) -> String`
+        - `static func _withheld(reason: String, missing_binding: String) -> Dictionary`
+      - 📄 [CollectionOpportunityCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionOpportunityCompiler.gd)
+        - `static func compile_opportunities(context: Dictionary) -> Dictionary`
+        - `static func _bind(source: Dictionary, need: String, stations: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func _local_recipient(station: Dictionary) -> String`
+        - `static func _cause_id(campaign_id: String, system_id: String, desire_id: String) -> String`
+        - `static func _missing(reason: String, binding: String) -> Dictionary`
+        - `static func _withheld(desire_id: String, need: String, reason: String, binding: String) -> Dictionary`
+      - 📄 [CollectionPostingBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionPostingBuilder.gd)
+        - `static func build(opportunity: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func template_id(contract: Dictionary) -> String`
+        - `static func _item_id(item_name: String) -> String`
+        - `static func _title(contract: Dictionary, requester: Dictionary) -> String`
+        - `static func _withheld(reason: String, missing_binding: String) -> Dictionary`
       - 📄 [DomainDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainDefinition.gd)
         - 🏛️ **global class DomainDefinition**
           - `func to_common_dict() -> Dictionary`
@@ -4673,10 +4712,17 @@ Root: `SpaceGame`
       - 📄 [InvestigationBoardLifecycle.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationBoardLifecycle.gd)
         - `static func empty_state(seed_value: int) -> Dictionary`
         - `static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func posting_kind(entry: Dictionary) -> String`
+        - `static func claim_ordinary(saved: Dictionary, context: Dictionary, candidate: Dictionary) -> Dictionary`
+        - `static func record_ordinary_acceptance(saved: Dictionary, offer_id: String, runtime_mission_id: String) -> Dictionary`
+        - `static func _ordinary_key(owner: String, template_id: String) -> String`
+        - `static func _validate_ordinary(quest: Dictionary, context: Dictionary) -> Dictionary`
         - `static func publish(saved: Dictionary, offer_id: String, context: Dictionary) -> Dictionary`
         - `static func release(saved: Dictionary, offer_id: String) -> Dictionary`
         - `static func _candidates(context: Dictionary) -> Array`
-        - `static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func _pressure_for(context: Dictionary, candidate: Dictionary) -> Dictionary`
+        - `static func _branch_payouts(recipe: String, branches: Array, budget: int, pressure: Dictionary) -> Dictionary`
+        - `static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary, pressure: Dictionary = {}) -> Dictionary`
         - `static func _owner(context: Dictionary) -> String`
         - `static func _offer_id(context: Dictionary, candidate: Dictionary) -> String`
         - `static func validate(value: Dictionary) -> ValidationResult`
@@ -4702,6 +4748,9 @@ Root: `SpaceGame`
           - `static func release(state: Dictionary, offer_id: String) -> void`
           - `static func _outstanding(state: Dictionary, offer_id: String) -> Dictionary`
           - `static func _replace_outstanding(state: Dictionary, updated: Dictionary) -> void`
+          - `static func _remaining_for(state: Dictionary, record: Dictionary, pool_ids: Array) -> Dictionary`
+          - `static func _migrate_remaining(record: Dictionary, pool_ids: Array) -> Array`
+          - `static func _cycle_order(state: Dictionary, pool_ids: Array, cycle_index: int) -> Array`
           - `static func _draw(state: Dictionary, eligible_shape_ids: Array) -> Dictionary`
           - `static func _commit(state: Dictionary, reservation: Dictionary) -> void`
           - `static func _pool(eligible_shape_ids: Array) -> Array`
@@ -4804,6 +4853,13 @@ Root: `SpaceGame`
           - `func load_from_dict(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
       - 📄 [MissionObjectiveDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionObjectiveDefinition.gd.uid)
+      - 📄 [MissionOutcome.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionOutcome.gd)
+        - `static func build(quest: Dictionary, terminal_state: String, credits_paid: int, at_minute: int, campaign_id: String = "") -> Dictionary`
+        - `static func _is_tutorial_contract(quest: Dictionary) -> bool`
+        - `static func _both_sites_scanned(investigation: Dictionary) -> bool`
+        - `static func _effects_for(outcome: Dictionary) -> Array`
+        - `static func _effect(outcome: Dictionary, kind: String) -> Dictionary`
+        - `static func validate(value: Dictionary) -> ValidationResult`
       - 📄 [MissionRewardDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionRewardDefinition.gd)
         - 🏛️ **global class MissionRewardDefinition**
           - `func load_from_objective(source: Dictionary) -> ValidationResult`
@@ -4924,12 +4980,15 @@ Root: `SpaceGame`
           - `static func empty() -> Dictionary`
           - `static func is_present(source: Variant) -> bool`
           - `static func normalize(source: Variant) -> Dictionary`
+          - `static func _normalize_tokens(value: Variant) -> Dictionary`
           - `static func _normalize_binding(value: Variant) -> Dictionary`
           - `static func _normalize_facts(value: Variant) -> Dictionary`
           - `static func _normalize_branches(value: Variant) -> Array`
           - `static func validate(source: Variant, path_prefix: String = "causal_contract") -> ValidationResult`
           - `static func _get_id_regex() -> RegEx`
           - `static func semantic_signature(source: Variant) -> String`
+          - `static func semantic_signature_v2(source: Variant) -> String`
+          - `static func signatures_comparable(a: String, b: String) -> bool`
           - `static func _beneficiary_relation(contract: Dictionary) -> String`
           - `static func _signature_token(value: Variant) -> String`
           - `static func _signature_effects(value: Variant) -> String`
@@ -4948,6 +5007,9 @@ Root: `SpaceGame`
           - `static func _fact(text: String, visibility: String, kind: String) -> Dictionary`
           - `static func _recipient_binding(source: Dictionary, objective_type: String) -> Dictionary`
           - `static func _string_keyed_branches(value: Variant) -> Array`
+          - `static func _semantic_tokens(desire: Dictionary, objective: Dictionary, objective_type: String) -> Dictionary`
+          - `static func _evidence_pattern(recipe: String) -> String`
+          - `static func _slug(value: Variant) -> String`
       - 📄 [QuestPlausibilityValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/QuestPlausibilityValidator.gd)
         - 🏛️ **global class QuestPlausibilityValidator**
           - `static func _check_identity(contract: Dictionary, result: ValidationResult) -> void`
@@ -5762,6 +5824,26 @@ Root: `SpaceGame`
           - `static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult`
           - `static func _failure(message: String) -> Dictionary`
       - 📄 [NarrativeCacheStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/NarrativeCacheStore.gd.uid)
+      - 📄 [NoveltyHistoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/NoveltyHistoryStore.gd)
+        - `static func empty_history() -> Dictionary`
+        - `static func load_history(path: String = DEFAULT_PATH) -> Dictionary`
+        - `static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Dictionary`
+        - `static func record_published(history: Dictionary, publication_id: String, signature: String, campaign_id: String) -> Dictionary`
+        - `static func record_accepted(history: Dictionary, acceptance_id: String, signature: String, campaign_id: String) -> Dictionary`
+        - `static func accepted_runs(history: Dictionary) -> Dictionary`
+        - `static func _accepted_runs_by_campaign(history: Dictionary) -> Dictionary`
+        - `static func accepted_signatures_for(history: Dictionary, campaign_id: String) -> Array`
+        - `static func reset(path: String = DEFAULT_PATH) -> Dictionary`
+        - `static func _opened(history: Dictionary) -> Dictionary`
+        - `static func _trimmed(history: Dictionary) -> Dictionary`
+        - `static func variety_exhausted(history: Dictionary, candidates: Array) -> bool`
+      - 📄 [RunOpeningHistoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/RunOpeningHistoryStore.gd)
+        - `static func empty_history() -> Dictionary`
+        - `static func load_history(path: String = DEFAULT_PATH) -> Dictionary`
+        - `static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Dictionary`
+        - `static func upsert_opening(history: Dictionary, campaign_id: String, pressure_pair: Array, first_shapes: Array) -> Dictionary`
+        - `static func preferred_pairs(history: Dictionary, eligible_kinds: Array, campaign_id: String) -> Array`
+        - `static func reset(path: String = DEFAULT_PATH) -> Dictionary`
       - 📄 [SaveMigrator.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/SaveMigrator.gd)
         - 🏛️ **global class SaveMigrator**
           - `static func write_current(path: String, saved_data: Dictionary) -> bool`
@@ -5769,6 +5851,7 @@ Root: `SpaceGame`
           - `static func _map_investigation_contracts(quest: Dictionary, registry: SystemRegistry, to_runtime: bool) -> void`
           - `static func _mapped_system(id: Variant, registry: SystemRegistry, to_runtime: bool) -> String`
           - `static func _map_investigation_board(data: Dictionary, registry: SystemRegistry, to_runtime: bool) -> Dictionary`
+          - `static func _map_local_pressures(data: Dictionary, registry: SystemRegistry, to_runtime: bool) -> Dictionary`
           - `static func _has_base_shape(data: Dictionary) -> bool`
           - `static func _available_backup_path(path: String) -> String`
           - `static func _success(data: Variant) -> Dictionary`
@@ -5925,6 +6008,34 @@ Root: `SpaceGame`
         - `func _deliver_lines(lines: Array, pair: Array) -> void`
         - `func _emit_line(sender: String, text: String, color: Color) -> void`
       - 📄 [AmbientChatGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/AmbientChatGenerator.gd.uid)
+      - 📄 [CampaignDirectionContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/CampaignDirectionContract.gd)
+        - `static func writer_view(packet: Dictionary) -> Dictionary`
+        - `static func validate_proposal(proposal: Variant, packet: Dictionary) -> Dictionary`
+        - `static func _leaked_identifier(text: String) -> String`
+        - `static func _validated_links(raw_links: Array, selected: Array, prerequisites: Array) -> Dictionary`
+        - `static func _has_cycle(links: Array, selected: Array) -> bool`
+        - `static func _visit(node: String, outgoing: Dictionary, visiting: Dictionary, done: Dictionary) -> bool`
+        - `static func _reject(reason: String) -> Dictionary`
+        - `static func compile_plan(proposal: Dictionary, packet: Dictionary, plan_id: String) -> Dictionary`
+        - `static func _effect_for_completion(completion_kind: String) -> String`
+        - `static func build_prompt(writer_view: Dictionary, correction_note: String = "") -> String`
+        - `static func _schema_description() -> String`
+        - `static func parse_response(inner_text: String) -> Dictionary`
+      - 📄 [CampaignResolutionCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/CampaignResolutionCompiler.gd)
+        - `static func plan_version(plan: Dictionary) -> int`
+        - `static func is_legacy_plan(plan: Dictionary) -> bool`
+        - `static func empty_plan() -> Dictionary`
+        - `static func validate(plan: Dictionary) -> ValidationResult`
+        - `static func _validate_predicate(raw: Variant, version: int = PLAN_VERSION) -> ValidationResult`
+        - `static func bind(plan: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func _overlapping_alternatives(alternatives: Array) -> Array`
+        - `static func _is_subset(inner: Array, outer: Array) -> bool`
+        - `static func _establishes_loss(alternative: Dictionary) -> bool`
+        - `static func _persistable(value: Dictionary) -> Dictionary`
+        - `static func evaluate(plan: Dictionary, world: Dictionary) -> Dictionary`
+        - `static func _record(plan: Dictionary, alternative: Dictionary, world: Dictionary) -> Dictionary`
+        - `static func resolve(plan: Dictionary, record: Dictionary) -> Dictionary`
+        - `static func summary_lines(record: Dictionary) -> Array`
       - 📄 [ChallengeBudget.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/ChallengeBudget.gd)
         - 🏛️ **global class ChallengeBudget**
           - `static func _deadline_for_band(duration: int, band: String) -> int`
@@ -5942,6 +6053,17 @@ Root: `SpaceGame`
           - `static func _combination_key(selected: Dictionary) -> String`
           - `static func _hash_index(key: String, count: int) -> int`
       - 📄 [CharacterDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/CharacterDirector.gd.uid)
+      - 📄 [DesireProgressLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DesireProgressLedger.gd)
+        - `static func empty_state() -> Dictionary`
+        - `static func key_for(system_id: String, faction_id: String, desire_id: String) -> String`
+        - `static func apply_outcome(saved: Dictionary, outcome: Dictionary, context: Dictionary = {}) -> Dictionary`
+        - `static func is_satisfied(saved: Dictionary, system_id: String, faction_id: String, desire_id: String) -> bool`
+        - `static func retired_cause_ids(saved: Dictionary) -> Array`
+        - `static func fulfilled_collection_receipts(saved: Dictionary) -> Array`
+        - `static func _new_entry(outcome: Dictionary) -> Dictionary`
+        - `static func validate(value: Dictionary) -> ValidationResult`
+        - `static func _open(saved: Dictionary) -> Dictionary`
+        - `static func _result(changed: bool, state: Dictionary, deltas: Array, reason: String, ok: bool = true) -> Dictionary`
       - 📄 [DialogueBundleValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueBundleValidator.gd)
         - 🏛️ **global class DialogueBundleValidator**
           - `static func _has_overlong_sentence(text: String, max_words: int) -> bool`
@@ -6115,6 +6237,32 @@ Root: `SpaceGame`
           - `func _sync_player_knows_for_record(state: String, record: Dictionary) -> void`
           - `func _failure(message: String) -> Dictionary`
       - 📄 [KnowledgeLedger.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/KnowledgeLedger.gd.uid)
+      - 📄 [LocalPressureDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/LocalPressureDirector.gd)
+        - `static func empty_state(seed_value: int) -> Dictionary`
+        - `static func load_catalog(path: String = CATALOG_PATH) -> Dictionary`
+        - `static func parse_catalog(raw: Dictionary) -> Dictionary`
+        - `static func validate(value: Dictionary) -> ValidationResult`
+        - `static func is_active(track: Dictionary) -> bool`
+        - `static func refresh_slots(saved: Dictionary, context: Dictionary) -> Dictionary`
+        - `static func _choose_candidate(state: Dictionary, context: Dictionary, catalog: Dictionary, bound_causes: Dictionary) -> Dictionary`
+        - `static func _track_id(state: Dictionary, candidate: Dictionary) -> String`
+        - `static func _active_tracks(state: Dictionary) -> Array`
+        - `static func _prune_tracks(state: Dictionary) -> void`
+        - `static func apply_outcome(saved: Dictionary, outcome: Dictionary, context: Dictionary = {}) -> Dictionary`
+        - `static func _check_outcome(outcome: Dictionary) -> Dictionary`
+        - `static func _bound_track(state: Dictionary, outcome: Dictionary) -> Dictionary`
+        - `static func _delta_for(kind: Dictionary, outcome: Dictionary) -> int`
+        - `static func offer_constraints(saved: Dictionary, system_id: String, context: Dictionary = {}) -> Array`
+        - `static func _max_modifier(kind: Dictionary, level: int, branch_id: String) -> Dictionary`
+        - `static func snapshot_payout(base_credits: int, numerator: int, denominator: int) -> int`
+        - `static func family_for_mission(quest: Dictionary) -> String`
+        - `static func may_offer_family(saved: Dictionary, family: String) -> bool`
+        - `static func record_accepted_family(saved: Dictionary, family: String) -> Dictionary`
+        - `static func _open(saved: Dictionary, seed_value: int) -> Dictionary`
+        - `static func _result(changed: bool, state: Dictionary, deltas: Array, reason: String, ok: bool = true) -> Dictionary`
+        - `static func _next_random(state: Dictionary, bound: int) -> int`
+        - `static func _is_non_negative_int(value: Variant) -> bool`
+        - `static func _persistable(value: Dictionary) -> Dictionary`
       - 📄 [LoungeConversation.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/LoungeConversation.gd)
         - 🏛️ **global class LoungeConversation**
           - `static func _shared_rules(npc: Dictionary, flavor_block: String) -> Array`
@@ -6446,6 +6594,55 @@ Root: `SpaceGame`
         - `func decline_local_investigation_board_offer(offer_id: String, station: Node3D) -> Dictionary`
         - `func prepare_investigation_board_offer(context: Dictionary) -> Dictionary`
         - `func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary) -> Dictionary`
+        - `func collection_board_postings(station: Node3D) -> Array`
+        - `func _collection_delegation(opportunity: Dictionary) -> String`
+        - `func _collection_contact_name(station_id: String, contact_id: String) -> String`
+        - `func _collection_station_display(station_id: String) -> String`
+        - `func may_author_campaign_direction() -> bool`
+        - `func campaign_direction_eligible() -> bool`
+        - `func author_campaign_direction(station: Node3D, responder: Callable) -> Dictionary`
+        - `func maybe_author_campaign_direction_live(station: Node3D) -> bool`
+        - `func author_campaign_direction_live(station: Node3D, callback: Callable) -> void`
+        - `func _open_campaign_direction(station: Node3D) -> Dictionary`
+        - `func _direction_pending(reason: String) -> Dictionary`
+        - `func campaign_direction_pending_reason() -> String`
+        - `func may_retry_campaign_direction(station: Node3D) -> bool`
+        - `func _direction_premise_facts() -> Array`
+        - `func _direction_bind_context(opportunities: Array) -> Dictionary`
+        - `func collection_opportunities(station: Node3D) -> Dictionary`
+        - `func _collection_station_capture(context: Dictionary) -> Dictionary`
+        - `func collection_recipient_id(npc_name: String) -> String`
+        - `func collection_recipient_record(station_id: String, recipient_id: String) -> Dictionary`
+        - `func publish_ordinary_board_offer(candidate: Dictionary, station: Node3D) -> Dictionary`
+        - `func record_ordinary_board_acceptance(offer_id: String, runtime_mission_id: String) -> Dictionary`
+        - `func ensure_resolution_plan(context: Dictionary) -> Dictionary`
+        - `func _resolution_interest_candidates(context: Dictionary) -> Array`
+        - `func _supported_effect_for_need(need: String) -> String`
+        - `func _known_fact_ids() -> Array`
+        - `func _compose_resolution_plan(candidates: Array) -> Dictionary`
+        - `func _novelty() -> Dictionary`
+        - `func reset_novelty_histories() -> Dictionary`
+        - `func _signature_for(posting: Dictionary) -> String`
+        - `func _record_novelty_publication(posting: Dictionary) -> void`
+        - `func _record_novelty_acceptance(posting: Dictionary, runtime_id: String) -> void`
+        - `func _campaign_id_for_history() -> String`
+        - `func _record_opening_shape(template_id: String) -> void`
+        - `func _upsert_opening(shapes: Array) -> void`
+        - `func retry_dirty_opening_history() -> void`
+        - `func stage_mission_outcome(outcome: Dictionary, quest: Dictionary = {}) -> Dictionary`
+        - `func _stage_completion_bookkeeping(outcome: Dictionary, quest: Dictionary) -> Array`
+        - `func is_callback_outcome_applied(outcome_id: String) -> bool`
+        - `func _evaluate_resolution(outcome: Dictionary) -> Dictionary`
+        - `func is_primary_arc_resolved() -> bool`
+        - `func campaign_resolution_summary() -> Array`
+        - `func _proven_desire_predicates(outcome: Dictionary) -> Array`
+        - `func commit_mission_outcome_finish() -> void`
+        - `func restore_story_state_snapshot(snapshot: Dictionary) -> void`
+        - `func mark_consequence_save_pending() -> void`
+        - `func has_pending_consequence_save() -> bool`
+        - `func refresh_local_pressure_slots(context: Dictionary) -> Dictionary`
+        - `func _pressure_kind_for_need(need: String, goal: String) -> String`
+        - `func local_pressure_constraints(system_id: String) -> Array`
         - `func _save_story_state() -> void`
         - `func _push_context_to_llm() -> void`
         - `func _generate_foreshadow() -> void`
@@ -6466,10 +6663,13 @@ Root: `SpaceGame`
         - `func claim_intro_first_dock_line() -> bool`
         - `func has_spoken_intro_first_dock_line() -> bool`
         - `func on_quest_completed(quest: Dictionary) -> void`
+        - `func record_accepted_discretionary_family(quest: Dictionary) -> Dictionary`
         - `func advance_outcome_activity(new_visit: bool = false) -> void`
         - `func outcome_reaction_candidate(speaker: String, system_id: String) -> Dictionary`
         - `func record_outcome_reaction_attempt(identity: String, phase: String, presented: bool) -> void`
         - `func _mission_narrative_metadata(quest: Dictionary) -> Dictionary`
+        - `func apply_hook_resolution_state(quest: Dictionary) -> Dictionary`
+        - `func present_hook_resolution(remaining_count: int) -> void`
         - `func _resolve_hooks_for_quest(quest: Dictionary) -> void`
         - `func _campaign_path() -> String`
         - `func _check_chapter_advance_after_hook_resolution() -> void`
@@ -7075,6 +7275,9 @@ Root: `SpaceGame`
         - `func _test_publication(context: Dictionary)`
         - `func _test_failures(context: Dictionary)`
         - `func _test_store_and_manager(context: Dictionary)`
+        - `func _test_ordinary_posting_ownership(context: Dictionary)`
+        - `func _named(candidate: Dictionary, template_id: String) -> Dictionary`
+        - `func _ordinary_candidate(template_id: String, objective_type: String) -> Dictionary`
         - `func _expect(condition: bool, message: String)`
         - `func _test_local_context(context: Dictionary)`
         - `func _finish_board_job(quests: Node, gs: Node, pilot: CharacterBody3D, ui: Control, station: Node3D)`
@@ -7125,6 +7328,10 @@ Root: `SpaceGame`
         - `func _test_reservation_does_not_burn_a_shape() -> void`
         - `func _test_pool_change_does_not_replay_immediately() -> void`
         - `func _test_cycle_survives_a_save() -> void`
+        - `func _test_ranking_decides_within_the_remaining_cycle() -> void`
+        - `func _test_exclusion_does_not_burn_a_shape() -> void`
+        - `func _test_legacy_bag_migrates_mid_cycle() -> void`
+        - `func _test_migration_leaves_outstanding_reservation_alone() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_investigation_selector_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_selector_tests.gd.uid)
       - 📄 [run_investigation_site_planner_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_site_planner_tests.gd)
@@ -7858,6 +8065,7 @@ Root: `SpaceGame`
       - 📄 [run_save_migration_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_save_migration_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
+        - `func _test_consequence_system_aliases() -> void`
         - `func _test_in_memory_migration() -> void`
         - `func _test_file_migration_and_backup() -> void`
         - `func _test_damaged_source_is_untouched() -> void`
@@ -7995,6 +8203,73 @@ Root: `SpaceGame`
         - `func _test_ineligible_branch_is_explained_not_removed() -> void`
         - `func _test_unknown_eligibility_does_not_revoke_an_option() -> void`
         - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_campaign_direction_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_direction_tests.gd)
+        - `func _initialize() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _opportunity(suffix: String) -> Dictionary`
+        - `func _packet(count: int = 3) -> Dictionary`
+        - `func _packet_with_prerequisite(count: int = 3) -> Dictionary`
+        - `func _proposal(overrides: Dictionary = {}) -> Dictionary`
+        - `func _test_packet() -> void`
+        - `func _test_accepted_proposal() -> void`
+        - `func _test_rejections() -> void`
+        - `func _test_links() -> void`
+        - `func _link_packet(case_name: String) -> Dictionary`
+        - `func _test_compiled_plan() -> void`
+        - `func _test_prompt() -> void`
+        - `func _test_response_parsing() -> void`
+      - 📄 [run_campaign_direction_trace_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_direction_trace_tests.gd)
+        - 🏛️ **World**
+          - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
+        - 🏛️ **Pilot**
+          - `func navigation_obstacle_snapshot() -> Array`
+        - 🏛️ **Station**
+          - `func get_world_id() -> String`
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _install() -> void`
+        - `func _ready()`
+        - `func _process(_delta)`
+        - `func _show_agent_portrait(_visible)`
+        - `func _reset_campaign() -> void`
+        - `func _teardown() -> void`
+        - `func _trace_campaign(campaign_seed: int, system_id: String, faction_prefix: String) -> Dictionary`
+        - `func _accept_tutorial() -> String`
+        - `func _opportunities(campaign_seed: int, system_id: String, faction_prefix: String) -> Array`
+        - `func _premise_facts(system_id: String) -> Array`
+        - `func _invalid_response(packet: Dictionary) -> Dictionary`
+        - `func _valid_response(packet: Dictionary) -> Dictionary`
+        - `func _author(packet: Dictionary, responder: Callable, opportunities: Array) -> Dictionary`
+        - `func _bind_context(opportunities: Array) -> Dictionary`
+        - `func _signatures(opportunities: Array) -> Array`
+        - `func _desire_state(progress: Dictionary, contract: Dictionary) -> String`
+        - `func _deliver(contract: Dictionary) -> Dictionary`
+        - `func _compare_traces(first: Dictionary, second: Dictionary) -> void`
+      - 📄 [run_campaign_resolution_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_resolution_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _interest() -> Dictionary`
+        - `func _plan(alternatives: Array = []) -> Dictionary`
+        - `func _test_validation() -> void`
+        - `func _context() -> Dictionary`
+        - `func _test_binding() -> void`
+        - `func _satisfied_predicate() -> Dictionary`
+        - `func _test_ambiguity_and_loss() -> void`
+        - `func _active_plan() -> Dictionary`
+        - `func _progress(state: String) -> Dictionary`
+        - `func _test_evaluation() -> void`
+        - `func _test_legacy_campaign() -> void`
+        - `func _test_composed_plan() -> void`
+        - `func _test_cumulative_consumer() -> void`
+        - `func _v2_interest(overrides: Dictionary = {}) -> Dictionary`
+        - `func _v2_plan(interest: Dictionary = {}) -> Dictionary`
+        - `func _delivery_progress(overrides: Dictionary = {}) -> Dictionary`
+        - `func _v2_context() -> Dictionary`
+        - `func _test_v2_binding() -> void`
+        - `func _test_v2_evaluation() -> void`
+        - `func _test_v1_stays_v1() -> void`
       - 📄 [run_challenge_budget_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_challenge_budget_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8019,6 +8294,50 @@ Root: `SpaceGame`
         - `func _test_recent_combinations_are_avoided_when_possible() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_character_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_character_director_tests.gd.uid)
+      - 📄 [run_collection_board_posting_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_collection_board_posting_tests.gd)
+        - 🏛️ **World**
+          - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
+        - 🏛️ **Pilot**
+          - `func navigation_obstacle_snapshot() -> Array`
+        - 🏛️ **Station**
+          - `func get_world_id() -> String`
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _agendas() -> Array`
+        - `func _install() -> void`
+        - `func _ready()`
+        - `func _process(_delta)`
+        - `func _request_public_board_text_attempt(_index, offer, _critique, _attempt)`
+        - `func _show_agent_portrait(_visible)`
+        - `func _teardown() -> void`
+        - `func _collection_index() -> int`
+        - `func _test_posting_reaches_the_board() -> void`
+        - `func _test_acceptance_and_settlement() -> void`
+        - `func _test_withheld_when_the_recipient_leaves() -> void`
+        - `func _seed_known_facts() -> void`
+        - `func _valid_direction(view: Dictionary) -> Dictionary`
+        - `func _test_live_direction_eligibility() -> void`
+        - `func _test_live_repair_budget() -> void`
+        - `func _test_live_pending_fallback() -> void`
+      - 📄 [run_collection_contract_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_collection_contract_tests.gd)
+        - `func _initialize() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _source(overrides: Dictionary = {}) -> Dictionary`
+        - `func _bindings(overrides: Dictionary = {}) -> Dictionary`
+        - `func _test_supported_catalogue() -> void`
+        - `func _test_missing_bindings_withhold() -> void`
+        - `func _test_compiled_contract() -> void`
+        - `func _quest(contract: Dictionary, objective_type: String) -> Dictionary`
+        - `func _test_item_delivered_effect() -> void`
+        - `func _test_ledger_records_the_delivery() -> void`
+        - `func _opportunity_context(overrides: Dictionary = {}) -> Dictionary`
+        - `func _test_opportunity_compilation() -> void`
+        - `func _test_opportunity_withholding() -> void`
+        - `func _opportunity_for_posting() -> Dictionary`
+        - `func _posting_context(overrides: Dictionary = {}) -> Dictionary`
+        - `func _test_posting_generation() -> void`
+        - `func _test_posting_withholding() -> void`
       - 📄 [run_conversation_slicing_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_conversation_slicing_tests.gd)
         - `func _initialize() -> void`
         - `func _plan(intent_count: int) -> Dictionary`
@@ -8030,6 +8349,17 @@ Root: `SpaceGame`
         - `func _test_slice_prompt_asks_for_one_thing_only() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_conversation_slicing_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_conversation_slicing_tests.gd.uid)
+      - 📄 [run_desire_progress_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_desire_progress_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _quest(tag: String = "verified", objective: String = "INVESTIGATE_SIGNAL") -> Dictionary`
+        - `func _outcome(tag: String = "verified", terminal: String = "completed") -> Dictionary`
+        - `func _entry(state: Dictionary) -> Dictionary`
+        - `func _test_open_and_progressed() -> void`
+        - `func _test_satisfaction_requires_a_predicate() -> void`
+        - `func _test_binding_and_idempotency() -> void`
+        - `func _test_validation() -> void`
       - 📄 [run_dialogue_bundle_validator_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_bundle_validator_tests.gd)
         - `func _initialize() -> void`
         - `func _test_valid_bundle_passes() -> void`
@@ -8175,6 +8505,24 @@ Root: `SpaceGame`
         - `func _test_nova_bank_seed_wiring() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_line_bank_refill_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_line_bank_refill_tests.gd.uid)
+      - 📄 [run_local_pressure_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_local_pressure_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _test_family_mapping_and_decision() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _candidate(kind: String, suffix: String = "a", system_id: String = "system.local") -> Dictionary`
+        - `func _context(candidates: Array, unlocked: bool = true) -> Dictionary`
+        - `func _outcome(mission_id: String, terminal: String, pressure_id: String = "", tag: String = "", relief: bool = false) -> Dictionary`
+        - `func _track_of(state: Dictionary, kind: String) -> Dictionary`
+        - `func _test_catalog() -> void`
+        - `func _test_activation() -> void`
+        - `func _two_track_state() -> Dictionary`
+        - `func _test_deltas() -> void`
+        - `func _test_inactivity_and_cooldown() -> void`
+        - `func _test_idempotency() -> void`
+        - `func _test_constraints_and_payouts() -> void`
+        - `func _test_determinism_and_persistence() -> void`
+        - `func _test_pacing_families() -> void`
       - 📄 [run_lounge_conversation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_conversation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_parse_turn() -> void`
@@ -8330,6 +8678,14 @@ Root: `SpaceGame`
         - `func _on_quest_declined(quest_data: Dictionary) -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_mission_history_revision_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_history_revision_tests.gd.uid)
+      - 📄 [run_mission_outcome_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_outcome_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _quest(overrides: Dictionary = {}) -> Dictionary`
+        - `func _test_identity() -> void`
+        - `func _test_code_owned_fields() -> void`
+        - `func _test_effects() -> void`
       - 📄 [run_narrative_cache_invalidation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_cache_invalidation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_store_and_scheduler_discard_stale_disposable_work() -> void`
@@ -8429,6 +8785,19 @@ Root: `SpaceGame`
         - `func _test_protected_and_legacy_kinds() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_nova_line_bank_category_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_nova_line_bank_category_tests.gd.uid)
+      - 📄 [run_novelty_history_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_novelty_history_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _source(overrides: Dictionary = {}) -> Dictionary`
+        - `func _signature(overrides: Dictionary = {}) -> String`
+        - `func _test_signature_v2() -> void`
+        - `func _test_history_store() -> void`
+        - `func _test_history_io() -> void`
+        - `func _accepted(signatures: Array) -> Dictionary`
+        - `func _test_ranking() -> void`
+        - `func _test_history_integrity() -> void`
+        - `func _test_opening_history() -> void`
       - 📄 [run_outcome_callback_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_outcome_callback_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
@@ -8454,6 +8823,19 @@ Root: `SpaceGame`
         - `func _test_leaves_ordinary_text_alone() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_player_address_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_player_address_tests.gd.uid)
+      - 📄 [run_pressure_card_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_pressure_card_tests.gd)
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _context() -> Dictionary`
+        - `func _claims_agenda() -> Dictionary`
+        - `func _constraint(level: int) -> Dictionary`
+        - `func _claims_only_context() -> Dictionary`
+        - `func _prepare(context: Dictionary) -> Dictionary`
+        - `func _test_unpressured_baseline() -> void`
+        - `func _test_frozen_terms() -> void`
+        - `func _test_retired_cause() -> void`
+        - `func _test_terms_survive_acceptance() -> void`
       - 📄 [run_quest_choice_policy_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_choice_policy_tests.gd)
         - `func _initialize() -> void`
         - `func _test_courier_stays_one_path() -> void`
@@ -8607,6 +8989,31 @@ Root: `SpaceGame`
         - `func _test_headless_capture_is_safe() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_story_screenshot_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_screenshot_tests.gd.uid)
+      - 📄 [run_terminal_transaction_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_terminal_transaction_tests.gd)
+        - 🏛️ **World**
+          - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
+        - 🏛️ **Pilot**
+          - `func navigation_obstacle_snapshot() -> Array`
+        - 🏛️ **Station**
+          - `func get_world_id() -> String`
+        - `func _initialize()`
+        - `func _run()`
+        - `func _expect(condition: bool, message: String) -> void`
+        - `func _install() -> void`
+        - `func _test_checkpoint_beats_newer_loose_cache() -> void`
+        - `func _teardown() -> void`
+        - `func _accept(title: String) -> String`
+        - `func _test_successful_settlement() -> void`
+        - `func _test_failed_checkpoint_rollback() -> void`
+        - `func _test_delivery_rollback() -> void`
+        - `func _test_item_delivery_rollback() -> void`
+        - `func _test_duplicate_terminal() -> void`
+        - `func _test_abandoned_courier_cleanup() -> void`
+        - `func _test_reentrant_terminal_signal() -> void`
+        - `func _test_nonfocused_expiry_focus_restore() -> void`
+        - `func _test_compatibility_is_not_durable() -> void`
+        - `func _test_staged_callback_applies_once() -> void`
+        - `func _test_in_flight_pending() -> void`
     - 📂 **systems/**
       - 📄 [run_illegal_mining_enforcement_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/systems/run_illegal_mining_enforcement_tests.gd)
         - `func _initialize() -> void`
@@ -8631,6 +9038,13 @@ Root: `SpaceGame`
       - 📄 [print_ambient_prompts.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/print_ambient_prompts.gd)
         - `func _initialize() -> void`
       - 📄 [print_ambient_prompts.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/print_ambient_prompts.gd.uid)
+      - 📄 [run_campaign_direction_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_campaign_direction_live_fire.gd)
+        - `func _initialize() -> void`
+        - `func _build_packet() -> Dictionary`
+        - `func _run_next(correction_note: String) -> void`
+        - `func _on_reply(result: Dictionary, correction_note: String) -> void`
+        - `func _bind_context() -> Dictionary`
+        - `func _finish() -> void`
       - 📄 [run_kaelen_curated_style_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_kaelen_curated_style_live_fire.gd)
         - `func _initialize() -> void`
         - `func _run_next() -> void`

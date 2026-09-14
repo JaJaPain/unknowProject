@@ -9,6 +9,7 @@ extends RefCounted
 ## than the one the player reached.
 
 const Validation := preload("res://scripts/domain/ValidationResult.gd")
+const CollectionContractType := preload("res://scripts/domain/CollectionContract.gd")
 const TERMINAL_STATES := ["completed", "abandoned", "failed", "expired"]
 
 ## Closed set of effect kinds a committed outcome may assert. A kind listed here
@@ -17,11 +18,16 @@ const EFFECT_VERIFIED_SURVEY := "verified_survey_evidence_submitted"
 const EFFECT_RECORDER_PRESERVED := "recorder_preserved_and_delivered"
 const EFFECT_MARKED_ORE_DELIVERED := "marked_ore_delivered"
 const EFFECT_PRESSURE_RELIEVED := "pressure_relieved"
+## Proves ONE thing: the bound item reached the bound recipient at the bound
+## station. Not ownership clearance, lease transfer, appeal success, survey
+## filing, an assay, a route opening or a faction's capacity to pay.
+const EFFECT_ITEM_DELIVERED := "item_delivered"
 const SUPPORTED_EFFECTS := [
 	EFFECT_VERIFIED_SURVEY,
 	EFFECT_RECORDER_PRESERVED,
 	EFFECT_MARKED_ORE_DELIVERED,
 	EFFECT_PRESSURE_RELIEVED,
+	EFFECT_ITEM_DELIVERED,
 ]
 
 
@@ -35,6 +41,8 @@ static func build(quest: Dictionary, terminal_state: String, credits_paid: int, 
 		return {"ok": false, "reason": "missing_runtime_mission_id"}
 	var investigation: Dictionary = quest.get("investigation", {}) if quest.get("investigation", {}) is Dictionary else {}
 	var metadata: Dictionary = quest.get("narrative_metadata", {}) if quest.get("narrative_metadata", {}) is Dictionary else {}
+	var raw_collection: Variant = quest.get("collection_contract", {})
+	var collection: Dictionary = raw_collection if raw_collection is Dictionary else {}
 	var completed := terminal_state == "completed"
 	var outcome := {
 		"id": "%s:%s" % [mission_id, terminal_state],
@@ -58,7 +66,10 @@ static func build(quest: Dictionary, terminal_state: String, credits_paid: int, 
 		"faction_id": str(metadata.get("cause_faction_id", "")),
 		"desire_id": str(metadata.get("desire_id", "")),
 		"cause_id": str(metadata.get("cause_id", "")),
-		"tutorial": bool(quest.get("intro_tutorial_contract", false)),
+		"tutorial": _is_tutorial_contract(quest),
+		# The collection this mission was bound to at publication, frozen. A
+		# mission with no contract simply records none.
+		"collection": collection.duplicate(true),
 		"effects": [],
 	}
 	outcome["effects"] = _effects_for(outcome)
@@ -66,6 +77,17 @@ static func build(quest: Dictionary, terminal_state: String, credits_paid: int, 
 	if not result.is_valid():
 		return {"ok": false, "reason": str(result.errors[0].get("code", "invalid_outcome")), "validation": result}
 	return {"ok": true, "outcome": outcome}
+
+
+## The starter contract is excluded from pressure and desires. It is identified
+## by the same fixed shape QuestManager uses, because the accepted mission state
+## does not carry the offer's tutorial flag through the adapter — relying on that
+## flag alone silently let the tutorial into the pressure ledger.
+static func _is_tutorial_contract(quest: Dictionary) -> bool:
+	for flag in ["intro_tutorial_contract", "is_intro_tutorial"]:
+		if bool(quest.get(flag, false)):
+			return true
+	return str(quest.get("title", "")) == "Clean and Easy" 		and str(quest.get("objective_type", "")) == "KILL_SHIPS" 		and str(quest.get("target_faction", "")) == "reavers"
 
 
 ## Verification means both sites were actually scanned, independently of which
@@ -92,6 +114,20 @@ static func _effects_for(outcome: Dictionary) -> Array:
 		effects.append(_effect(outcome, EFFECT_RECORDER_PRESERVED))
 	if bool(outcome["relief"]) and str(outcome["objective_type"]) == "DELIVER_ORE":
 		effects.append(_effect(outcome, EFFECT_MARKED_ORE_DELIVERED))
+	# A bound collection contract records the delivery of ITS item, and only
+	# when the mission that completed is the objective that contract declared.
+	var raw_bound: Variant = outcome.get("collection", {})
+	var collection: Dictionary = raw_bound if raw_bound is Dictionary else {}
+	if not collection.is_empty() 			and CollectionContractType.validate(collection).is_valid() 			and CollectionContractType.objective_type_for(collection) == str(outcome["objective_type"]):
+		var delivered := _effect(outcome, EFFECT_ITEM_DELIVERED)
+		delivered["collection_id"] = str(collection["id"])
+		delivered["item_id_or_special_name"] = str(collection["item_id_or_special_name"])
+		delivered["quantity"] = int(collection["quantity"])
+		delivered["destination_station_id"] = str(collection["destination_station_id"])
+		# Store who ACTUALLY received it: a recorder handed to a different
+		# verified owner must not satisfy the requester's claim.
+		delivered["recipient_id"] = str(collection["recipient_id"])
+		effects.append(delivered)
 	return effects
 
 

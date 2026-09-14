@@ -174,6 +174,11 @@ static func _default_state() -> Dictionary:
 		"resolution_plan": {},
 		"resolution_record": {},
 		"opening_accepted_shapes": [],
+		"applied_callback_outcome_ids": [],
+		# Only a campaign generated after directions existed authors one. A legacy
+		# save has no marker and keeps its chapter/hook progression.
+		"campaign_direction_eligible": false,
+		"campaign_direction_authored": false,
 	}
 
 
@@ -195,6 +200,9 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		migrated[revision_field] = maxi(0, int(migrated.get(revision_field, 0)))
 	if not migrated.get("knowledge_states", {}) is Dictionary:
 		migrated["knowledge_states"] = {}
+	# Terminal outcomes whose post-commit bookkeeping is already in the record.
+	if not migrated.get("applied_callback_outcome_ids", []) is Array:
+		migrated["applied_callback_outcome_ids"] = []
 	if not migrated.get("beat_states", {}) is Dictionary:
 		migrated["beat_states"] = {}
 	if not migrated.get("chapter_packet_generation_queued", {}) is Dictionary:

@@ -2,6 +2,7 @@ extends Node
 
 const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
+const CampaignDirectionContractType := preload("res://scripts/story/CampaignDirectionContract.gd")
 const ChapterNarrativeDirectorType := preload(
 	"res://scripts/ai/ChapterNarrativeDirector.gd"
 )
@@ -2296,6 +2297,55 @@ func _on_story_horizon_expansion_completed(
 		"story_horizon_expansion", "llm", "llm_interface", {"model": model_name}
 	)
 	callback.call(parsed)
+
+
+## Ask the director to choose among CODE-SUPPLIED collection opportunities.
+##
+## `writer_view` is already redacted by CampaignDirectionContract: it carries
+## public premise facts, real locations and recipients, and nothing hidden. The
+## model selects ids from that list and writes one public direction sentence; it
+## cannot introduce a job, a fact or a place that was not supplied.
+##
+## Callback receives {ok, proposal, reason}. Exactly ONE request is made per
+## call -- the repair budget lives with the caller, so this cannot retry-storm.
+func request_campaign_direction(
+	writer_view: Dictionary,
+	correction_note: String,
+	callback: Callable
+) -> void:
+	var capability := "campaign_direction"
+	var model_name := model_for_capability(capability)
+	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
+		GenerationDiagnostics.record_event(
+			"campaign_direction", "model_unavailable", "llm_interface", {"model": model_name}
+		)
+		callback.call({"ok": false, "reason": "model_unavailable"})
+		return
+	var prompt: String = CampaignDirectionContractType.build_prompt(writer_view, correction_note)
+	GenerationDiagnostics.record_event(
+		"campaign_direction", "request_started", "llm_interface",
+		{"model": model_name, "candidates": (writer_view.get("candidates", []) as Array).size(),
+			"repair": not correction_note.strip_edges().is_empty()}
+	)
+	_request_small_inner_text(capability, prompt, func(result: Dictionary) -> void:
+		if not bool(result.get("ok", false)):
+			GenerationDiagnostics.record_event(
+				"campaign_direction", "request_failed", "llm_interface",
+				{"model": model_name, "reason": str(result.get("reason", ""))}
+			)
+			callback.call({"ok": false, "reason": str(result.get("reason", "request_failed"))})
+			return
+		var parsed: Dictionary = CampaignDirectionContractType.parse_response(
+			str(result.get("inner_text", "")))
+		if not bool(parsed.get("ok", false)):
+			GenerationDiagnostics.record_event(
+				"campaign_direction", "unparseable_response", "llm_interface",
+				{"model": model_name, "reason": str(parsed.get("reason", ""))}
+			)
+			callback.call({"ok": false, "reason": str(parsed.get("reason", "unparseable_response"))})
+			return
+		callback.call({"ok": true, "proposal": parsed["proposal"]})
+	, {"temperature": 0.7, "num_predict": 700, "seed": randi()})
 
 
 func request_chapter_plan_generation(

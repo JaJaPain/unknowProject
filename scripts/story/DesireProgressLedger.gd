@@ -21,6 +21,11 @@ const SATISFYING_EFFECTS := {
 	Outcome.EFFECT_VERIFIED_SURVEY: "survey_evidence_delivered",
 	Outcome.EFFECT_RECORDER_PRESERVED: "recorder_delivered_to_verified_owner",
 	Outcome.EFFECT_MARKED_ORE_DELIVERED: "marked_ore_delivered",
+	# EFFECT_ITEM_DELIVERED is DELIBERATELY absent. A delivered document proves
+	# the document arrived; it does not complete a lease transfer, clear an
+	# impound, settle a debt, win a contract bid or restore a roster. The
+	# fulfilled collection is recorded separately and the desire stays
+	# progressed until an independently implemented predicate proves the goal.
 }
 
 
@@ -68,8 +73,15 @@ static func apply_outcome(saved: Dictionary, outcome: Dictionary, context: Dicti
 		if str(effect.get("id", "")) in entry["achieved_effect_ids"]:
 			continue
 		entry["achieved_effect_ids"].append(str(effect.get("id", "")))
-		entry["records"].append({"kind": kind, "effect_id": str(effect.get("id", "")), "outcome_id": outcome_id,
-			"at_minute": int(outcome.get("at_minute", 0))})
+		var record := {"kind": kind, "effect_id": str(effect.get("id", "")), "outcome_id": outcome_id,
+			"at_minute": int(outcome.get("at_minute", 0)), "cause_id": str(outcome.get("cause_id", ""))}
+		if kind == Outcome.EFFECT_ITEM_DELIVERED:
+			# The exact delivery, so a later milestone can check WHICH item went
+			# WHERE and to WHOM rather than trusting an effect kind alone.
+			for field in ["collection_id", "item_id_or_special_name", "quantity",
+					"destination_station_id", "recipient_id"]:
+				record[field] = effect.get(field, "" if field != "quantity" else 0)
+		entry["records"].append(record)
 		deltas.append({"kind": "effect_recorded", "effect_kind": kind, "effect_id": str(effect.get("id", "")), "desire_key": key})
 		if entry["state"] in ["open", "progressed"]:
 			# Only an explicitly proven predicate may close the interest.
@@ -107,12 +119,62 @@ static func retired_cause_ids(saved: Dictionary) -> Array:
 	for entry: Variant in saved.get("entries", {}).values():
 		if not entry is Dictionary:
 			continue
-		if str((entry as Dictionary).get("state", "")) == "satisfied":
-			var cause := str((entry as Dictionary).get("cause_id", ""))
-			if not cause.is_empty() and cause not in result:
+		var record_entry: Dictionary = entry
+		var cause := str(record_entry.get("cause_id", ""))
+		if cause.is_empty() or cause in result:
+			continue
+		if str(record_entry.get("state", "")) == "satisfied":
+			result.append(cause)
+			continue
+		# A fulfilled collection retires ITS cause even though the faction's
+		# broad goal is only progressed: the exact job has been done, and
+		# reposting it under a new ID would be a reskin.
+		for raw_record: Variant in record_entry.get("records", []):
+			if not raw_record is Dictionary:
+				continue
+			if str((raw_record as Dictionary).get("kind", "")) == Outcome.EFFECT_ITEM_DELIVERED:
 				result.append(cause)
+				break
 	result.sort()
 	return result
+
+
+## Every collection contract this campaign has actually delivered, with the
+## receipt that proves it. Scoped lookups (faction, system, recipient) are the
+## caller's job: this only reports what was committed.
+static func fulfilled_collection_receipts(saved: Dictionary) -> Array:
+	var receipts: Array = []
+	if not saved is Dictionary:
+		return receipts
+	for raw: Variant in saved.get("entries", {}).values():
+		if not raw is Dictionary:
+			continue
+		var entry: Dictionary = raw
+		for raw_record: Variant in entry.get("records", []):
+			if not raw_record is Dictionary:
+				continue
+			var record: Dictionary = raw_record
+			if str(record.get("kind", "")) != Outcome.EFFECT_ITEM_DELIVERED:
+				continue
+			if str(record.get("collection_id", "")).is_empty():
+				continue
+			receipts.append({
+				"collection_id": str(record["collection_id"]),
+				"system_id": str(entry.get("system_id", "")),
+				"faction_id": str(entry.get("faction_id", "")),
+				"desire_id": str(entry.get("desire_id", "")),
+				"cause_id": str(record.get("cause_id", entry.get("cause_id", ""))),
+				"item_id_or_special_name": str(record.get("item_id_or_special_name", "")),
+				"quantity": int(record.get("quantity", 0)),
+				"destination_station_id": str(record.get("destination_station_id", "")),
+				"recipient_id": str(record.get("recipient_id", "")),
+				"outcome_id": str(record.get("outcome_id", "")),
+				"effect_id": str(record.get("effect_id", "")),
+				"at_minute": int(record.get("at_minute", 0)),
+			})
+	receipts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["collection_id"]) < str(b["collection_id"]))
+	return receipts
 
 
 static func _new_entry(outcome: Dictionary) -> Dictionary:

@@ -60,7 +60,11 @@ const InvestigationPlacementType := preload("res://scripts/domain/InvestigationW
 var _investigation_runtime := InvestigationRuntimeType.new()
 var _investigation_world := preload("res://scripts/domain/InvestigationWorldRuntime.gd").new()
 var _investigation_world_elapsed := 0.0
-var _completion_in_progress := false
+## One guard per runtime mission covers completion, abandonment, expiry and
+## failure. `_terminal_depth` additionally blocks synchronous cargo/reputation
+## callbacks from reentering settlement while a transaction is open.
+var _terminal_in_progress: Dictionary = {}
+var _terminal_depth: int = 0
 signal investigation_scan_updated(report: Dictionary)
 
 func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary:
@@ -465,6 +469,9 @@ func accept_quest(
 				"recipient_name": str(active_quest.get("delivery_recipient_name", "")),
 			}
 
+	# Discretionary pacing is recorded once, here, in the acceptance transaction
+	# that just succeeded. Tutorial and required story jobs map to no family.
+	_record_discretionary_family(active_quest)
 	print(
 		"[QuestManager] Quest accepted: ",
 		active_quest["title"],
@@ -477,6 +484,15 @@ func accept_quest(
 	if not defer_acceptance_events:
 		announce_accepted_mission(str(active_quest["runtime_id"]))
 	return true
+
+## Append this mission's discretionary family to the pacing window. In memory
+## only: the acceptance checkpoint (or the next save) is what makes it durable,
+## and a rolled-back acceptance restores the story state that preceded it.
+func _record_discretionary_family(quest_data: Dictionary) -> void:
+	if not is_instance_valid(StoryManager) or not StoryManager.has_method("record_accepted_discretionary_family"):
+		return
+	StoryManager.record_accepted_discretionary_family(quest_data)
+
 
 func announce_accepted_mission(runtime_id: String) -> void:
 	var mission = _collection.get_by_id(runtime_id)
@@ -611,31 +627,45 @@ func is_active_quest_expired() -> bool:
 
 func check_active_quest_expiration() -> bool:
 	var any_expired := false
+	if _terminal_depth > 0:
+		return false
 	for m in _collection.get_all_active():
 		if not bool(m.data.get("is_timed", false)):
 			continue
 		if CampaignClock.total_minutes < int(m.data.get("deadline_time_minutes", 0)):
 			continue
+		var rid: String = m.runtime_id
+		if not _begin_terminal(rid):
+			continue
 		var expired_quest: Dictionary = m.data.duplicate(true)
 		expired_quest["expired_time_minutes"] = CampaignClock.total_minutes
 		var expired_title := str(m.data.get("title", "Contract"))
 		var expired_type := str(m.data.get("objective_type", "TIMED"))
-		# Nonfocused missions expire through this same guarded transaction.
+		# Nonfocused missions expire through this same guarded transaction, and
+		# the snapshot's focus is what a failed settlement restores.
 		var snapshot := _capture_settlement_snapshot()
+		var signals_were_blocked := GlobalState.is_blocking_signals()
+		GlobalState.set_block_signals(true)
 		var instance_state: int = int(m.state)
 		_record_board_cooldown(m.data)
 		_cleanup_mission(m)
 		m.transition_to(MissionInstanceType.State.EXPIRED)
-		var rid: String = m.runtime_id
 		_collection.remove(rid)
 		var settled := _settle_terminal(expired_quest, "expired", 0)
 		if not bool(settled.get("ok", false)):
 			_restore_settlement_snapshot(snapshot, m, instance_state)
 			_report_failed_settlement(expired_title, str(settled.get("reason", "")))
+			GlobalState.set_block_signals(signals_were_blocked)
+			_end_terminal(rid)
 			continue
+		GlobalState.set_block_signals(signals_were_blocked)
+		_end_terminal(rid)
+		GlobalState.cargo_changed.emit(GlobalState.cargo)
 		_log_quest_to_file(expired_title, expired_type, "Expired.")
 		print("[QuestManager] Quest expired: ", expired_title)
 		_increment_mission_history_revision("expired", expired_quest)
+		var expired_outcome: Dictionary = settled.get("outcome", {}) if settled.get("outcome", {}) is Dictionary else {}
+		expired_quest["terminal_outcome_id"] = str(expired_outcome.get("id", ""))
 		quest_expired.emit(expired_title)
 		quest_expired_details.emit(expired_quest)
 		any_expired = true
@@ -893,10 +923,17 @@ func _settle_terminal(quest_data: Dictionary, terminal_state: String, credits_pa
 		quest_data, terminal_state, credits_paid, int(CampaignClock.total_minutes), campaign_id
 	)
 	if not bool(built.get("ok", false)):
-		# A legacy or unbound mission still terminates; it simply records nothing.
-		return {"ok": true, "durable": true, "reason": str(built.get("reason", "unbuildable_outcome"))}
+		var build_reason := str(built.get("reason", "unbuildable_outcome"))
+		if _carries_typed_story_binding(quest_data):
+			# New-style data that will not validate fails closed. Terminating it
+			# anyway would silently drop a bound consequence.
+			return {"ok": false, "durable": false, "reason": "invalid_typed_outcome:" + build_reason}
+		# A legacy or unbound mission still terminates, but nothing was
+		# persisted, so this is compatibility handling and NOT a durable record.
+		return {"ok": true, "durable": false, "compatibility": true,
+			"reason": "legacy_unbuildable_outcome:" + build_reason}
 	var outcome: Dictionary = built["outcome"]
-	var staged: Dictionary = StoryManager.stage_mission_outcome(outcome)
+	var staged: Dictionary = StoryManager.stage_mission_outcome(outcome, quest_data)
 	if not bool(staged.get("ok", false)):
 		# A duplicate or conflicting terminal record refuses the whole settlement
 		# rather than paying twice for one mission.
@@ -916,33 +953,80 @@ func _settle_terminal(quest_data: Dictionary, terminal_state: String, credits_pa
 	return {"ok": true, "durable": false, "reason": "pending_safe_checkpoint", "outcome": outcome}
 
 
+## Open the terminal transaction for one mission. Refuses a second entry for the
+## same mission and any reentry while another settlement is open.
+func _begin_terminal(runtime_id: String) -> bool:
+	if _terminal_depth > 0 or _terminal_in_progress.has(runtime_id):
+		return false
+	_terminal_in_progress[runtime_id] = true
+	_terminal_depth += 1
+	return true
+
+
+func _end_terminal(runtime_id: String) -> void:
+	_terminal_in_progress.erase(runtime_id)
+	_terminal_depth = maxi(0, _terminal_depth - 1)
+
+
+## True while a settlement is staging or committing. Callers that mutate durable
+## state from a signal handler must consult this before acting.
+func is_terminal_transaction_in_progress() -> bool:
+	return _terminal_depth > 0
+
+
+## True when a mission carries the typed story bindings a new-style outcome is
+## built from. Such a mission must never fall through to legacy termination.
+func _carries_typed_story_binding(quest_data: Dictionary) -> bool:
+	if not str(quest_data.get("pressure_id", "")).is_empty():
+		return true
+	var investigation: Variant = quest_data.get("investigation", {})
+	if investigation is Dictionary and not (investigation as Dictionary).is_empty():
+		return true
+	var metadata: Variant = quest_data.get("narrative_metadata", {})
+	if not metadata is Dictionary:
+		return false
+	for field in ["desire_id", "cause_id", "cause_faction_id"]:
+		if not str((metadata as Dictionary).get(field, "")).is_empty():
+			return true
+	return false
+
+
 func _report_failed_settlement(title: String, reason: String) -> void:
 	push_warning("[QuestManager] Settlement rolled back for '%s': %s" % [title, reason])
 
 
 func complete_quest():
-	if _completion_in_progress or not is_quest_active() or not is_quest_completed():
+	if not is_quest_active() or not is_quest_completed():
+		return
+	if _terminal_depth > 0:
+		# A synchronous cargo/reputation callback cannot reenter settlement.
 		return
 	if str(active_quest.get("objective_type", "")) == "INVESTIGATE_SIGNAL" and not _can_turn_in_investigation(active_quest):
 		return
-	GlobalState.clear_intro_tutorial_player_protection()
 
 	var cap = MissionCapabilityRegistryType.get_for_type(
 		active_quest["objective_type"]
 	)
+	var completion_hints: Dictionary = {}
 	if cap:
 		var hints := cap.on_complete(active_quest)
 		if hints.has("block"):
 			print("[QuestManager] %s: cannot complete, %s" % [
 				active_quest["objective_type"], hints["block"]])
 			return
-		_apply_completion_hints(hints)
+		completion_hints = hints
 
-	_completion_in_progress = true
-	# Stage every durable effect before anything is announced or written.
-	var snapshot := _capture_settlement_snapshot()
-	var completed_quest: Dictionary = active_quest.duplicate(true)
 	var completed_id := str(active_quest.get("runtime_id", ""))
+	if not _begin_terminal(completed_id):
+		return
+	# Stage every durable effect before anything is announced or written. The
+	# snapshot is taken BEFORE any capability cleanup or world mutation.
+	var snapshot := _capture_settlement_snapshot()
+	var signals_were_blocked := GlobalState.is_blocking_signals()
+	GlobalState.set_block_signals(true)
+	GlobalState.clear_intro_tutorial_player_protection()
+	_apply_completion_hints(completion_hints)
+	var completed_quest: Dictionary = active_quest.duplicate(true)
 	var instance = _collection.get_by_id(completed_id)
 	var instance_state: int = int(instance.state) if instance != null else -1
 	var final_payout = active_quest_payout()
@@ -961,18 +1045,27 @@ func complete_quest():
 		# retry neither double-consumes it nor pays twice.
 		_restore_settlement_snapshot(snapshot, instance, instance_state)
 		_report_failed_settlement(str(completed_quest.get("title", "")), str(settled.get("reason", "")))
-		_completion_in_progress = false
+		GlobalState.set_block_signals(signals_were_blocked)
+		_end_terminal(completed_id)
 		return
+	_investigation_runtime.reset()
+	GlobalState.set_block_signals(signals_were_blocked)
+	_end_terminal(completed_id)
+	# Past this line the transaction is committed: everything below is
+	# notification, logging and presentation, never staged state.
+	GlobalState.cargo_changed.emit(GlobalState.cargo)
+	var settled_faction := str(completed_quest.get("faction", ""))
+	GlobalState.reputation_changed.emit(settled_faction, GlobalState.reputations.get(settled_faction, 0.0))
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + str(completed_quest.get("choice_text_selected", "")) + "'."
 	_log_quest_to_file(str(completed_quest["title"]), str(completed_quest["objective_type"]), detail)
 	print("[QuestManager] Quest completed successfully: ", completed_quest["title"])
 	if not bool(settled.get("durable", true)):
 		push_warning("[QuestManager] Completion consequences are live but their save is pending a safe checkpoint.")
 	_increment_mission_history_revision("completed", completed_quest)
+	var settled_outcome: Dictionary = settled.get("outcome", {}) if settled.get("outcome", {}) is Dictionary else {}
+	completed_quest["terminal_outcome_id"] = str(settled_outcome.get("id", ""))
 	quest_completed.emit()
 	quest_completed_details.emit(completed_quest)
-	_completion_in_progress = false
-	_investigation_runtime.reset()
 
 
 func _can_turn_in_investigation(data: Dictionary) -> bool:
@@ -988,12 +1081,19 @@ func _can_turn_in_investigation(data: Dictionary) -> bool:
 func abandon_quest():
 	if not is_quest_active():
 		return
-	_investigation_runtime.reset()
-	GlobalState.clear_intro_tutorial_player_protection()
-
-	var snapshot := _capture_settlement_snapshot()
-	var abandoned_quest: Dictionary = active_quest.duplicate(true)
+	if _terminal_depth > 0:
+		return
 	var abandoned_id := str(active_quest.get("runtime_id", ""))
+	if not _begin_terminal(abandoned_id):
+		return
+
+	# Snapshot first: capability cleanup below releases courier cargo, and a
+	# failed settlement has to give that cargo back with everything else.
+	var snapshot := _capture_settlement_snapshot()
+	var signals_were_blocked := GlobalState.is_blocking_signals()
+	GlobalState.set_block_signals(true)
+	GlobalState.clear_intro_tutorial_player_protection()
+	var abandoned_quest: Dictionary = active_quest.duplicate(true)
 	var instance = _collection.get_by_id(abandoned_id)
 	var instance_state: int = int(instance.state) if instance != null else -1
 	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
@@ -1001,16 +1101,29 @@ func abandon_quest():
 	_record_board_cooldown(active_quest)
 	var focused = _collection.get_focused()
 	if focused:
+		# Abandoning a courier drops its special cargo through the same
+		# capability cleanup that expiry uses, rather than stranding it.
+		_cleanup_mission(focused)
 		focused.transition_to(MissionInstanceType.State.ABANDONED)
 	_collection.remove(abandoned_id)
 	var settled := _settle_terminal(abandoned_quest, "abandoned", 0)
 	if not bool(settled.get("ok", false)):
 		_restore_settlement_snapshot(snapshot, instance, instance_state)
 		_report_failed_settlement(str(abandoned_quest.get("title", "")), str(settled.get("reason", "")))
+		GlobalState.set_block_signals(signals_were_blocked)
+		_end_terminal(abandoned_id)
 		return
+	_investigation_runtime.reset()
+	GlobalState.set_block_signals(signals_were_blocked)
+	_end_terminal(abandoned_id)
+	GlobalState.cargo_changed.emit(GlobalState.cargo)
+	var abandoned_faction := str(abandoned_quest.get("faction", ""))
+	GlobalState.reputation_changed.emit(abandoned_faction, GlobalState.reputations.get(abandoned_faction, 0.0))
 	_log_quest_to_file(str(abandoned_quest["title"]), str(abandoned_quest["objective_type"]), "Abandoned.")
 	print("[QuestManager] Quest abandoned: ", abandoned_quest["title"])
 	_increment_mission_history_revision("abandoned", abandoned_quest)
+	var abandoned_outcome: Dictionary = settled.get("outcome", {}) if settled.get("outcome", {}) is Dictionary else {}
+	abandoned_quest["terminal_outcome_id"] = str(abandoned_outcome.get("id", ""))
 	quest_abandoned.emit()
 	quest_abandoned_details.emit(abandoned_quest)
 

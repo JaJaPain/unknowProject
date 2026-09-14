@@ -21,11 +21,49 @@ func _run():
 		_test_constraints_and_payouts()
 		_test_determinism_and_persistence()
 		_test_pacing_families()
+		_test_family_mapping_and_decision()
 	if failures.is_empty():
-		print("[PASS] Local pressure reducer: activation, deltas, inactivity, cooldown, idempotency, payouts, determinism")
+		print("[PASS] Local pressure reducer: activation, deltas, inactivity, cooldown, idempotency, payouts, determinism, family mapping and pacing decisions")
 	else:
 		for message in failures: push_error("[FAIL] " + message)
 	quit(0 if failures.is_empty() else 1)
+
+## The family mapping is fixed and closed, and the pacing decision reports WHY
+## an extra pressure offer is allowed, excepted or withheld.
+func _test_family_mapping_and_decision() -> void:
+	var expected := {
+		"INVESTIGATE_SIGNAL": "investigation",
+		"DELIVER_ORE": "delivery", "DELIVERY_COURIER": "delivery",
+		"PURCHASE_DELIVERY": "delivery", "PICKUP_SPECIAL": "delivery",
+		"KILL_SHIPS": "combat", "TARGET_WITH_COMMS_REVERSAL": "combat",
+		"RECOVER_COMBAT_DROP": "combat",
+	}
+	for objective_type: String in expected:
+		_expect(Director.family_for_mission({"objective_type": objective_type}) == str(expected[objective_type]),
+			"Wrong discretionary family for %s." % objective_type)
+	_expect(Director.family_for_mission({"objective_type": "SOMETHING_NEW"}).is_empty(),
+		"An unmapped objective type entered discretionary pacing.")
+	_expect(Director.family_for_mission({"objective_type": "KILL_SHIPS", "intro_tutorial_contract": true}).is_empty(),
+		"A tutorial contract entered discretionary pacing.")
+	_expect(Director.family_for_mission({"objective_type": "KILL_SHIPS", "story_required": true}).is_empty(),
+		"A required story job entered discretionary pacing.")
+	var state := Director.empty_state(1)
+	_expect(bool(Director.pacing_decision(state, "combat", true).get("allowed", false)),
+		"An empty window withheld the first offer of a family.")
+	for family in ["combat", "combat"]:
+		state = Director.record_accepted_family(state, family)["state"]
+	var withheld: Dictionary = Director.pacing_decision(state, "combat", true)
+	_expect(not bool(withheld.get("allowed", true)) and str(withheld.get("reason", "")) == "family_cap_reached",
+		"A third combat job in four was not withheld: %s" % str(withheld))
+	var no_alternative: Dictionary = Director.pacing_decision(state, "combat", false)
+	_expect(bool(no_alternative.get("allowed", false)) and str(no_alternative.get("reason", "")) == "no_ordinary_alternative",
+		"The cap withheld an offer with nothing else to show instead.")
+	var relief: Dictionary = Director.pacing_decision(state, "combat", true, true)
+	_expect(bool(relief.get("allowed", false)) and str(relief.get("reason", "")) == "pacing_relief_exception",
+		"The supported combat-free relief offer was withheld by the family cap.")
+	_expect(str(Director.pacing_decision(state, "", true).get("reason", "")) == "not_discretionary",
+		"A non-discretionary mission was run through the family cap.")
+
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition: failures.append(message)

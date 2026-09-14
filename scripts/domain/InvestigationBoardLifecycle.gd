@@ -29,6 +29,9 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 	var entries: Dictionary = state["entries"]
 	var owner := _owner(context)
 	for entry: Dictionary in entries.values():
+		# Ordinary postings share this dictionary but are not investigations.
+		if posting_kind(entry) != POSTING_KIND_INVESTIGATION:
+			continue
 		if str(entry["owner"]) == owner and str(entry["status"]) != "retired":
 			return _persistable({"ok": true, "state": state, "offer_id": entry["offer_id"], "posting": entry["posting"].duplicate(true)})
 	var candidates := _candidates(context)
@@ -42,6 +45,23 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 		candidates = fresh
 	if candidates.is_empty():
 		return _failure("no_supported_local_cause")
+	# Discretionary family pacing. The caller decides; this only refuses to post
+	# what the pacing window already said it would withhold.
+	var pacing: Dictionary = context.get("family_pacing", {}) if context.get("family_pacing", {}) is Dictionary else {}
+	if not pacing.is_empty() and not bool(pacing.get("allowed", true)):
+		return _failure("withheld_family_pacing")
+	# Shape-bag eligibility remains authoritative; within each shape prefer the
+	# least-repeated real cause before constructing any site truth or posting.
+	var scored: Array = []
+	for candidate: Dictionary in candidates:
+		var objective := {"type": "INVESTIGATE_SIGNAL", "recipe": candidate["recipe"], "reward_credits": context.get("reward_budget", 0)}
+		var preview := _posting(_offer_id(context, candidate), candidate, objective, context)
+		var signature := preload("res://scripts/domain/QuestCausalContract.gd").semantic_signature_v2(preview["quest_data"]["causal_contract"])
+		scored.append({"id": _offer_id(context, candidate), "signature": signature, "candidate": candidate})
+	var ranked := preload("res://scripts/persistence/NoveltyHistoryStore.gd").rank_candidates(context.get("novelty_history", {}), scored, int(context.get("campaign_seed", 0)), str(context.get("campaign_history_id", "")))
+	candidates = []
+	for entry: Dictionary in ranked:
+		candidates.append(entry["candidate"])
 	var registry := Shapes.new()
 	if not registry.load_from_path().is_valid():
 		return _failure("invalid_shape_catalog")
@@ -57,7 +77,7 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 		return _failure("causes_already_used")
 	# Only one draft globally: two simultaneous peeks cannot commit the same bag.
 	for entry: Dictionary in entries.values():
-		if str(entry["status"]) == "prepared":
+		if posting_kind(entry) == POSTING_KIND_INVESTIGATION and str(entry["status"]) == "prepared":
 			return _failure("another_offer_preparing")
 	var reservation_key := "pending.%s" % owner
 	var reservation := Selector.reserve(state["selection"], by_shape.keys(), reservation_key)
@@ -106,12 +126,135 @@ static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
 		"eligible_shapes": by_shape.keys(), "cause": selected.duplicate(true), "posting": posting}
 	return _persistable({"ok": true, "state": state, "offer_id": offer_id, "posting": posting.duplicate(true)})
 
+## ---------------------------------------------------------------------------
+## Ordinary (non-investigation) postings.
+##
+## Same ownership machinery, same entries dictionary, same save. The only
+## differences are the `posting_kind` discriminator and which validators run:
+## an ordinary objective has no investigation sites, so site validation must not
+## be applied to it.
+## ---------------------------------------------------------------------------
+
+const POSTING_KIND_INVESTIGATION := "investigation"
+const POSTING_KIND_ORDINARY := "ordinary"
+
+
+## A missing discriminator means a posting written before ordinary jobs owned
+## their identity, and those were all investigations.
+static func posting_kind(entry: Dictionary) -> String:
+	var kind := str(entry.get("posting_kind", ""))
+	return kind if kind in [POSTING_KIND_INVESTIGATION, POSTING_KIND_ORDINARY] else POSTING_KIND_INVESTIGATION
+
+
+## Reuse or create the persisted identity for ONE ordinary posting.
+##
+## `candidate` is an already-validated, already-ranked offer whose objective and
+## terms are final. Reopening the board returns the same publication ID and the
+## same frozen posting: an ordinary publication ID is allocated exactly once.
+## The caller commits the returned state; a failed save means no exposure was
+## recorded, because nothing was written.
+static func claim_ordinary(saved: Dictionary, context: Dictionary, candidate: Dictionary) -> Dictionary:
+	if str(context.get("campaign_id", "")).is_empty() or str(context.get("system_id", "")).is_empty():
+		return _failure("missing_scope")
+	var template_id := str(candidate.get("template_id", "")).strip_edges()
+	if template_id.is_empty():
+		return _failure("missing_template_id")
+	var quest: Variant = candidate.get("quest_data", {})
+	if not quest is Dictionary or (quest as Dictionary).is_empty():
+		return _failure("missing_quest_data")
+	var objective: Variant = (quest as Dictionary).get("objective", {})
+	if not objective is Dictionary or (objective as Dictionary).is_empty():
+		return _failure("missing_objective")
+	var state := saved.duplicate(true) if not saved.is_empty() else empty_state(int(context.get("campaign_seed", 0)))
+	if not validate(state).is_valid():
+		return _failure("invalid_saved_board")
+	var entries: Dictionary = state["entries"]
+	var owner := _owner(context)
+	var key := _ordinary_key(owner, template_id)
+	var existing: Dictionary = entries.get(key, {}) if entries.get(key, {}) is Dictionary else {}
+	if not existing.is_empty() and str(existing.get("status", "")) != "retired":
+		# Reopening never allocates another ID and never rewrites frozen terms.
+		return _persistable({"ok": true, "state": state, "offer_id": key,
+			"publication_id": str(existing.get("publication_id", "")),
+			"reused": true, "posting": (existing["posting"] as Dictionary).duplicate(true)})
+	var checks := _validate_ordinary(quest, context)
+	if not bool(checks.get("ok", false)):
+		return checks
+	var next_id := maxi(0, int(state.get("next_ordinary_publication_id", 0)))
+	state["next_ordinary_publication_id"] = next_id + 1
+	var publication_id := "publication.ordinary.%d" % next_id
+	var frozen: Dictionary = candidate.duplicate(true)
+	frozen["offer_id"] = key
+	frozen["publication_id"] = publication_id
+	frozen["posting_kind"] = POSTING_KIND_ORDINARY
+	entries[key] = {
+		"offer_id": key,
+		"owner": owner,
+		"posting_kind": POSTING_KIND_ORDINARY,
+		"publication_id": publication_id,
+		# Semantic, and deliberately separate from identity: two postings may
+		# share a signature and still be two different published jobs.
+		"signature": str(candidate.get("signature", "")),
+		"status": "published",
+		"reservation_key": "",
+		"eligible_shapes": [],
+		"cause": (quest as Dictionary).get("narrative_metadata", {}) if (quest as Dictionary).get("narrative_metadata", {}) is Dictionary else {},
+		"posting": frozen,
+	}
+	return _persistable({"ok": true, "state": state, "offer_id": key,
+		"publication_id": publication_id, "reused": false, "posting": frozen.duplicate(true)})
+
+
+## The real runtime mission ID is recorded on ACCEPTANCE, so a published job and
+## the mission it became can be reconciled after a reload.
+static func record_ordinary_acceptance(saved: Dictionary, offer_id: String, runtime_mission_id: String) -> Dictionary:
+	var state := saved.duplicate(true)
+	var entries: Dictionary = state.get("entries", {}) if state.get("entries", {}) is Dictionary else {}
+	var entry: Dictionary = entries.get(offer_id, {}) if entries.get(offer_id, {}) is Dictionary else {}
+	if entry.is_empty() or posting_kind(entry) != POSTING_KIND_ORDINARY:
+		return _failure("offer_unavailable")
+	if runtime_mission_id.is_empty():
+		return _failure("missing_runtime_mission_id")
+	entry["runtime_mission_id"] = runtime_mission_id
+	entry["status"] = "retired"
+	entries[offer_id] = entry
+	state["entries"] = entries
+	return _persistable({"ok": true, "state": state, "offer_id": offer_id})
+
+
+static func _ordinary_key(owner: String, template_id: String) -> String:
+	return "mission.ordinary.%s" % ("%s|%s" % [owner, template_id]).sha256_text().substr(0, 24)
+
+
+## Ordinary objectives get the ordinary validators: mission definition, causal
+## contract and (for a delivery) its recipient. Investigation site planning and
+## state validation are NOT applicable and are never run here.
+static func _validate_ordinary(quest: Dictionary, context: Dictionary) -> Dictionary:
+	var definition := Definition.new().load_from_offer(quest)
+	if not definition.is_valid():
+		# Name the actual defect: a withheld posting must say what is missing.
+		return _failure("invalid_ordinary_objective:%s" % str(definition.errors[0].get("code", "unknown")))
+	var contract: Variant = quest.get("causal_contract", {})
+	if contract is Dictionary and not (contract as Dictionary).is_empty():
+		if not Plausibility.validate(contract, {"system_id": context.get("system_id", "")}).is_valid():
+			return _failure("invalid_causal_contract")
+	var objective: Dictionary = quest["objective"]
+	if str(objective.get("type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		var destination := str(objective.get("destination_station_id", "")).strip_edges()
+		if destination.is_empty():
+			return _failure("missing_delivery_destination")
+		var recipients: Dictionary = context.get("delivery_recipients", {}) if context.get("delivery_recipients", {}) is Dictionary else {}
+		if not recipients.is_empty() and str(recipients.get(destination, "")).is_empty():
+			return _failure("missing_delivery_recipient")
+	return {"ok": true}
+
+
 static func publish(saved: Dictionary, offer_id: String, context: Dictionary) -> Dictionary:
 	if not validate(saved).is_valid():
 		return _failure("invalid_saved_board")
 	var state := saved.duplicate(true)
 	var entry: Dictionary = state["entries"].get(offer_id, {})
-	if entry.is_empty() or str(entry["owner"]) != _owner(context) or str(entry["status"]) == "retired":
+	if entry.is_empty() or posting_kind(entry) != POSTING_KIND_INVESTIGATION 			or str(entry["owner"]) != _owner(context) or str(entry["status"]) == "retired":
 		return _failure("offer_unavailable")
 	if not bool(context.get("post_tutorial_unlocked", false)):
 		return _failure("tutorial_locked")
@@ -288,15 +431,39 @@ static func validate(value: Dictionary) -> ValidationResult:
 	for record: Variant in selection["bags"].values():
 		if not record is Dictionary or not record.get("bag") is Dictionary:
 			result.add_error("invalid_investigation_bag", "Invalid saved shape bag.")
+			continue
+		# Explicit cycle fields are optional: a pre-migration bag has neither.
+		var saved_record: Dictionary = record
+		if saved_record.has("remaining_shape_ids") and not saved_record["remaining_shape_ids"] is Array:
+			result.add_error("invalid_investigation_cycle", "Remaining shape IDs must be an array.")
+		if saved_record.has("cycle_index") and int(saved_record.get("cycle_index", 0)) < 0:
+			result.add_error("invalid_investigation_cycle", "Cycle index must not be negative.")
 	for key in value["entries"]:
 		var raw: Variant = value["entries"][key]
 		if not raw is Dictionary:
 			result.add_error("invalid_investigation_entry", "Offer entry must be an object.")
 			continue
 		var entry: Dictionary = raw
-		if str(entry.get("offer_id", "")) != str(key) or str(entry.get("owner", "")).is_empty() or str(entry.get("reservation_key", "")).is_empty() \
-				or str(entry.get("status", "")) not in ["prepared", "published", "retired"] or not entry.get("eligible_shapes") is Array or not entry.get("cause") is Dictionary or not entry.get("posting") is Dictionary:
+		var kind := posting_kind(entry)
+		if str(entry.get("offer_id", "")) != str(key) or str(entry.get("owner", "")).is_empty() 				or str(entry.get("status", "")) not in ["prepared", "published", "retired"] 				or not entry.get("eligible_shapes") is Array or not entry.get("cause") is Dictionary 				or not entry.get("posting") is Dictionary:
 			result.add_error("invalid_investigation_entry", "Invalid investigation offer identity or state.")
+			continue
+		if kind == POSTING_KIND_ORDINARY:
+			# An ordinary posting owns a monotonic publication ID instead of a
+			# shape reservation, and has no investigation sites to validate.
+			if str(entry.get("publication_id", "")).is_empty():
+				result.add_error("missing_ordinary_publication_id", "An ordinary posting must own a publication ID.")
+			var ordinary_quest: Variant = entry["posting"].get("quest_data")
+			if not ordinary_quest is Dictionary or not (ordinary_quest as Dictionary).get("objective") is Dictionary:
+				result.add_error("invalid_ordinary_posting", "Missing ordinary objective.")
+				continue
+			result.merge(Definition.new().load_from_offer(ordinary_quest), str(key))
+			var ordinary_contract: Variant = (ordinary_quest as Dictionary).get("causal_contract", {})
+			if ordinary_contract is Dictionary and not (ordinary_contract as Dictionary).is_empty():
+				result.merge(Plausibility.validate(ordinary_contract), str(key))
+			continue
+		if str(entry.get("reservation_key", "")).is_empty():
+			result.add_error("invalid_investigation_entry", "An investigation offer must own a shape reservation.")
 			continue
 		if str(entry["status"]) != "retired":
 			var reservation: Dictionary = reservations.get(str(entry["reservation_key"]), {})

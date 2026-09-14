@@ -21,6 +21,7 @@ func _run() -> void:
 	_cleanup()
 
 	_test_in_memory_migration()
+	_test_consequence_system_aliases()
 	_test_file_migration_and_backup()
 	_test_generated_system_round_trip()
 	_test_damaged_source_is_untouched()
@@ -35,6 +36,23 @@ func _run() -> void:
 		push_error("[FAIL] %s" % failure)
 	quit(1)
 
+
+func _test_consequence_system_aliases() -> void:
+	var Outcome := load("res://scripts/domain/MissionOutcome.gd")
+	var Ledger := load("res://scripts/story/DesireProgressLedger.gd")
+	var quest := {"runtime_id": "m.alias", "system_id": "start_system", "objective_type": "INVESTIGATE_SIGNAL", "narrative_metadata": {"cause_faction_id": "faction.a", "desire_id": "desire.a", "cause_id": "cause.a"}, "investigation": {"outcome_tag": "preserved", "branch_id": "preserve", "scanned_site_ids": ["s1", "s2"]}}
+	var built: Dictionary = Outcome.build(quest, "completed", 400, 1)
+	var progress: Dictionary = Ledger.apply_outcome({}, built["outcome"])["state"]
+	var plan := {"version": 1, "id": "plan.alias", "status": "active", "premise_fact_ids": [], "interests": [{"id": "i", "system_id": "start_system", "faction_id": "faction.a", "desire_id": "desire.a", "supported_effect_ids": ["recorder_preserved_and_delivered"]}], "alternatives": [{"id": "a", "result": "success", "all_of": [{"kind": "desire_state", "system_id": "start_system", "desire_id": "desire.a", "state": "satisfied"}]}]}
+	var data := {"story_state": {"desire_progress": progress, "resolution_plan": plan}}
+	var original := data.duplicate(true)
+	_expect(MigratorType._map_local_pressures(data, _registry, false).get("ok", false), "Consequence alias encode failed.")
+	_expect(data.story_state.desire_progress.entries.has("system.start|faction.a|desire.a"), "Desire key was not canonicalized.")
+	_expect(data.story_state.resolution_plan.interests[0].system_id == "system.start", "Resolution interest not canonicalized.")
+	_expect(MigratorType._map_local_pressures(data, _registry, true).get("ok", false), "Consequence alias decode failed.")
+	_expect(data == original, "Consequence identity changed on alias roundtrip.")
+	data.story_state.resolution_plan.interests[0].system_id = "missing.system"
+	_expect(not MigratorType._map_local_pressures(data, _registry, false).get("ok", true), "Unknown consequence system accepted.")
 
 func _test_in_memory_migration() -> void:
 	var migrated: Dictionary = MigratorType.migrate_legacy_data(
