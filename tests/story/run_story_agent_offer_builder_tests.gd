@@ -57,6 +57,15 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 		)
 		_assert_story_offer_identity(offer, objective_type)
 		_assert_story_offer_conversation_bundle(offer, objective_type)
+		var legacy := offer.duplicate(true)
+		legacy.erase("mission_dialogue_context")
+		legacy.erase("mission_dialogue_progress")
+		StoryAgentOfferBuilderType.prepare_saved_conversation_generation(legacy, profile)
+		_expect(
+			legacy.get("mission_dialogue_context", {}) == offer.get("mission_dialogue_context", {})
+				and legacy.get("mission_dialogue_bundle", {}) == offer.get("mission_dialogue_bundle", {}),
+			"Saved pre-LLM offers must migrate from their original facts without changing displayed text."
+		)
 		var choices: Array = offer.get("choices", []) if offer.get("choices", []) is Array else []
 		var adapted := MissionAdapterType.build_active_state(
 			offer,
@@ -69,6 +78,11 @@ func _test_template_backed_story_agent_offers_validate() -> void:
 			(adapted.get("validation") != null)
 				and adapted.get("validation").is_valid(),
 			"Built story agent offer failed validation for %s." % objective_type
+		)
+		_expect(
+			adapted.get("state", {}).get("mission_dialogue_bundle", {}) == offer.get("mission_dialogue_bundle", {})
+				and adapted.get("state", {}).get("mission_dialogue_bundle_source", "") == "deterministic_fallback",
+			"Accepted mission must retain conversation text and generation provenance."
 		)
 		_assert_story_offer_identity(
 			adapted.get("state", {}) if adapted.get("state", {}) is Dictionary else {},
@@ -160,7 +174,7 @@ func _assert_story_offer_conversation_bundle(
 				== "deterministic_fallback"
 			and bool(offer.get("mission_dialogue_bundle_degraded", false))
 			and str(offer.get("mission_dialogue_bundle_degraded_reason", ""))
-				== "template_safe_emergency_composer",
+				== "generation_pending_safe_template",
 		"Offer dialogue bundle fallback provenance was not explicit for %s." %
 			objective_type
 	)
@@ -172,12 +186,9 @@ func _assert_story_offer_conversation_bundle(
 		var by_reason: Dictionary = summary.get("by_reason", {}) \
 			if summary.get("by_reason", {}) is Dictionary else {}
 		_expect(
-			int(by_type.get("mission_conversation_bundle", 0)) > 0
-				and int(by_reason.get(
-					"template_safe_emergency_composer",
-					0
-				)) > 0,
-			"Offer dialogue fallback was not recorded in generation diagnostics."
+			int(by_type.get("mission_conversation_bundle", 0)) == 0
+				and int(by_reason.get("template_safe_emergency_composer", 0)) == 0,
+			"Pending generation must not be reported as a completed fallback."
 		)
 
 

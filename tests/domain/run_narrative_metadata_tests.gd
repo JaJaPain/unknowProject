@@ -22,6 +22,9 @@ func _initialize() -> void:
 
 func _test_allowed_field_contract() -> void:
 	var expected := [
+		"cause_faction_id",
+		"cause_rival_faction_id",
+		"desire_id",
 		"offer_id",
 		"story_thread_id",
 		"story_beat_id",
@@ -34,6 +37,7 @@ func _test_allowed_field_contract() -> void:
 		"conversation_cache_key",
 		"conversation_state",
 		"outcome_snapshot",
+		"causal_contract",
 	]
 	_expect(
 		NarrativeMetadataType.allowed_fields() == expected,

@@ -1,19 +1,21 @@
 extends SceneTree
 
-const MigratorType := preload(
-	"res://scripts/persistence/SaveMigrator.gd"
-)
-const RegistryType := preload(
-	"res://scripts/registry/SystemRegistry.gd"
-)
+var MigratorType: GDScript
+var RegistryType: GDScript
 
-const TEST_PATH := "user://save_migration_fixture.json"
+const TEST_PATH := "res://.tmp_godot_user/save_migration_fixture.json"
 
 var _failures: Array[String] = []
-var _registry: SystemRegistry
+var _registry
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	MigratorType = load("res://scripts/persistence/SaveMigrator.gd")
+	RegistryType = load("res://scripts/registry/SystemRegistry.gd")
 	_registry = RegistryType.load_default()
 	_expect(_registry.is_valid(), "System registry failed to load.")
 	_cleanup()
@@ -35,7 +37,7 @@ func _initialize() -> void:
 
 
 func _test_in_memory_migration() -> void:
-	var migrated := MigratorType.migrate_legacy_data(
+	var migrated: Dictionary = MigratorType.migrate_legacy_data(
 		_legacy_save(),
 		_registry
 	)
@@ -69,7 +71,7 @@ func _test_in_memory_migration() -> void:
 		"Migrated save failed current-schema validation."
 	)
 
-	var decoded := MigratorType.decode_for_runtime(data, _registry)
+	var decoded: Dictionary = MigratorType.decode_for_runtime(data, _registry)
 	_expect(bool(decoded.get("ok", false)), decoded.get("error", ""))
 	if bool(decoded.get("ok", false)):
 		var runtime: Dictionary = decoded["data"]
@@ -86,7 +88,7 @@ func _test_in_memory_migration() -> void:
 func _test_file_migration_and_backup() -> void:
 	var original_text := JSON.stringify(_legacy_save())
 	_write_text(TEST_PATH, original_text)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(bool(loaded.get("ok", false)), loaded.get("error", ""))
 	_expect(
 		bool(loaded.get("migrated", false)),
@@ -119,7 +121,7 @@ func _test_file_migration_and_backup() -> void:
 func _test_damaged_source_is_untouched() -> void:
 	var damaged := "{\"version\":1,\"player\":"
 	_write_text(TEST_PATH, damaged)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(
 		not bool(loaded.get("ok", false)),
 		"Damaged save was accepted."
@@ -135,7 +137,7 @@ func _test_unsupported_source_is_untouched() -> void:
 	future["version"] = MigratorType.CURRENT_VERSION + 1
 	var future_text := JSON.stringify(future)
 	_write_text(TEST_PATH, future_text)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, _registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, _registry)
 	_expect(
 		not bool(loaded.get("ok", false)),
 		"Unsupported future save was accepted."
@@ -147,7 +149,7 @@ func _test_unsupported_source_is_untouched() -> void:
 
 
 func _test_generated_system_round_trip() -> void:
-	var source_registry := RegistryType.load_default()
+	var source_registry = RegistryType.load_default()
 	var generated := _register_generated_fixture(source_registry)
 	_expect(
 		bool(generated.get("ok", false)),
@@ -155,7 +157,7 @@ func _test_generated_system_round_trip() -> void:
 	)
 	if not bool(generated.get("ok", false)):
 		return
-	var prepared := MigratorType.prepare_for_save(
+	var prepared: Dictionary = MigratorType.prepare_for_save(
 		_generated_runtime_save(),
 		source_registry
 	)
@@ -163,12 +165,12 @@ func _test_generated_system_round_trip() -> void:
 	if not bool(prepared.get("ok", false)):
 		return
 	_write_text(TEST_PATH, JSON.stringify(prepared["data"]))
-	var fresh_registry := RegistryType.load_default()
+	var fresh_registry = RegistryType.load_default()
 	_expect(
 		not fresh_registry.has_system("system.gen.persisted"),
 		"Fresh registry unexpectedly knew the generated fixture."
 	)
-	var loaded := MigratorType.load_for_runtime(TEST_PATH, fresh_registry)
+	var loaded: Dictionary = MigratorType.load_for_runtime(TEST_PATH, fresh_registry)
 	_expect(bool(loaded.get("ok", false)), loaded.get("error", ""))
 	_expect(
 		fresh_registry.has_system("system.gen.persisted"),
@@ -245,16 +247,8 @@ func _generated_runtime_save() -> Dictionary:
 	}
 
 
-func _register_generated_fixture(registry: SystemRegistry) -> Dictionary:
-	var result := registry.register_generated_system(
-		{
-			"id": "system.gen.persisted",
-			"legacy_id": "system_gen_persisted",
-			"display_name": "Persisted Reach",
-			"station_ids": [],
-			"faction_ids": [],
-		},
-		[{
+func _register_generated_fixture(registry) -> Dictionary:
+	var gates: Array[Dictionary] = [{
 			"id": "gate.gen.persisted.return",
 			"legacy_id": "gen_persisted_return",
 			"display_name": "Return Gate",
@@ -264,8 +258,11 @@ func _register_generated_fixture(registry: SystemRegistry) -> Dictionary:
 			"discovery_action": "",
 			"discovery_cost": {},
 			"discovery_prerequisites": [],
-		}]
-	)
+	}]
+	var result = registry.register_generated_system({
+		"id": "system.gen.persisted", "legacy_id": "system_gen_persisted",
+		"display_name": "Persisted Reach", "station_ids": [], "faction_ids": [],
+	}, gates)
 	return {
 		"ok": result.is_valid(),
 		"error": result.summary(),

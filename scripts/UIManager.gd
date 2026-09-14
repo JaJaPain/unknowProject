@@ -3,6 +3,12 @@
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
 )
+const QuestWorldSnapshotType := preload(
+	"res://scripts/domain/QuestWorldSnapshot.gd"
+)
+const QuestPlausibilityValidatorType := preload(
+	"res://scripts/domain/QuestPlausibilityValidator.gd"
+)
 const PublicBoardTextGeneratorType := preload(
 	"res://scripts/domain/PublicBoardTextGenerator.gd"
 )
@@ -305,7 +311,10 @@ var quest_tracker_title: Label
 var quest_tracker_progress: Label
 var quest_tracker_logo: TextureRect
 var quest_tracker_route_btn: Button
+var investigation_evidence_btn: Button
+var investigation_panel: PanelContainer
 var quest_tracker_turn_in_btn: Button
+var board_delivery_btn: Button
 var _first_turn_in_flash_on := false
 var quest_tracker_secondary_container: VBoxContainer
 var quest_tracker_nav_container: HBoxContainer
@@ -925,6 +934,16 @@ func _create_hud():
 	tracker_vbox.add_child(quest_tracker_progress)
 
 	quest_tracker_route_btn = Button.new()
+	investigation_evidence_btn = Button.new()
+	investigation_evidence_btn.text = "Investigation: evidence and actions"
+	investigation_evidence_btn.visible = false
+	investigation_evidence_btn.pressed.connect(func():
+		if investigation_panel == null:
+			investigation_panel = preload("res://scripts/ui/InvestigationPanel.gd").new()
+			add_child(investigation_panel)
+			investigation_panel.setup(self, QuestManager)
+		investigation_panel.open_mission(str(QuestManager.active_quest.get("runtime_id", ""))))
+	tracker_vbox.add_child(investigation_evidence_btn)
 	quest_tracker_route_btn.text = "Set Course"
 	quest_tracker_route_btn.visible = false
 	quest_tracker_route_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1705,6 +1724,10 @@ func _create_dock_menu():
 	public_board_btn.text = "Public Contract Board"
 	public_board_btn.pressed.connect(_on_public_board_pressed)
 	vbox.add_child(public_board_btn)
+	board_delivery_btn = Button.new()
+	board_delivery_btn.visible = false
+	board_delivery_btn.pressed.connect(_on_public_board_turn_in_pressed)
+	vbox.add_child(board_delivery_btn)
 
 	station_lounge_btn = Button.new()
 	station_lounge_btn.text = "Station Lounge"
@@ -2063,9 +2086,20 @@ func _render_public_board_offers() -> void:
 				CampaignClock.total_minutes + index
 			)
 		)
+	if not QuestManager.is_lane_occupied("BOARD") and current_station != null and public_board_panel.visible:
+		var prepared := StoryManager.prepare_local_investigation_board_offer(current_station)
+		if bool(prepared.get("ok", false)):
+			var published := StoryManager.publish_local_investigation_board_offer(prepared, current_station)
+			if bool(published.get("ok", false)):
+				public_board_current_offers.append(published["posting"])
+			elif str(prepared["state"]["entries"][prepared["offer_id"]]["status"]) == "published":
+				var unavailable: Dictionary = prepared["posting"].duplicate(true)
+				unavailable["enabled"] = false
+				unavailable["unavailable_reason"] = "Investigation unavailable: " + str(published.get("reason", "conditions changed")).replace("_", " ")
+				public_board_current_offers.append(unavailable)
 	_redraw_public_board_offers()
 	for index in range(public_board_current_offers.size()):
-		if bool(public_board_current_offers[index].get("enabled", false)):
+		if bool(public_board_current_offers[index].get("enabled", false)) and not bool(public_board_current_offers[index].get("investigation_posting", false)):
 			_request_public_board_text_attempt(
 				index,
 				public_board_current_offers[index],
@@ -2087,6 +2121,8 @@ func _request_public_board_text_attempt(
 	critique: String,
 	attempt: int
 ) -> void:
+	if bool(offer.get("investigation_posting", false)):
+		return # Saved evidence and terms never enter the generic board writer.
 	if attempt >= 2 or not LLMInterface.llm_connected:
 		return
 	var request := PublicBoardTextGeneratorType.build_generation_request(
@@ -2226,13 +2262,21 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		if cooldown_remaining > 0:
 			accept.text = "On Cooldown — %s" % CampaignClock.format_duration(cooldown_remaining)
 		else:
-			accept.text = "Template Coming Soon"
+			accept.text = str(posting.get("unavailable_reason", "Template Coming Soon"))
 		accept.disabled = true
 	else:
 		accept.text = "Accept Posting"
 		accept.disabled = false
 		accept.pressed.connect(func(): _on_public_board_offer_accept(index))
 	vbox.add_child(accept)
+	if bool(posting.get("investigation_posting", false)) and not QuestManager.is_lane_occupied("BOARD"):
+		var decline := Button.new()
+		decline.text = "Decline this investigation"
+		decline.pressed.connect(func():
+			var result := StoryManager.decline_local_investigation_board_offer(str(posting["offer_id"]), current_station)
+			if bool(result.get("ok", false)): _render_public_board_offers()
+			else: show_hud_warning("Could not save that decision. The posting remains available."))
+		vbox.add_child(decline)
 
 
 func _create_context_menu():
@@ -4007,16 +4051,25 @@ func _play_dock_clearance(station: Node3D) -> void:
 	var line := DOCK_CLEARANCE_LINES[randi() % DOCK_CLEARANCE_LINES.size()].replace(
 		"{call}", call_sign
 	)
-	# The station speaks in the voice of its own mechanic. A station talking in a
-	# generic voice is a vending machine; the person who works on your hull
-	# clearing you to dock makes it a place with someone in it. Falls back to the
-	# neutral profile only when a station has no mechanic on file -- never to a
-	# main-cast voice, which stay reserved (Kaelen = af_bella, N.O.V.A. = bf_emma).
-	var dock_voice := GlobalState.get_station_mechanic_voice(_current_station_contact_id())
-	if dock_voice.is_empty() or GlobalState.is_kaelen_voice(dock_voice):
-		dock_voice = "voice.neutral.v1"
-	SpeechService.play(line, dock_voice)
+	SpeechService.play(line, _dock_clearance_voice_for_station(station))
 	GlobalState.emit_chatter("Dock Control", line, Color(0.25, 0.82, 1.0))
+
+
+func _dock_clearance_voice_for_station(station: Node3D) -> String:
+	var station_id := _station_contact_id_for_node(station)
+	var candidates: Array[String] = [GlobalState.get_station_mechanic_voice(station_id)]
+	for npc_name in GlobalState.get_minor_npcs_at_outpost(station_id):
+		candidates.append(str(GlobalState.get_minor_npc_data(npc_name).get("voice_profile_id", "")))
+	for voice_id in candidates:
+		if not voice_id.is_empty() and not GlobalState.is_kaelen_voice(voice_id) \
+				and voice_id != "voice.nova.v1" and voice_id != "voice.neutral.v1":
+			return voice_id
+	if station == GlobalState.get_primary_station() and GlobalState.is_current_system_home():
+		return "voice.jenna_kross.v1"
+	# Unpopulated stations still get a stable local voice. The neutral profile
+	# shares Jenna's voice blend and makes distant docks sound like home.
+	var key := station_id if not station_id.is_empty() else str(station.name)
+	return GlobalState.GENERATED_CONTACT_VOICES[absi(key.hash()) % GlobalState.GENERATED_CONTACT_VOICES.size()]
 
 
 func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void:
@@ -4403,6 +4456,7 @@ func _reveal_dock_panel() -> void:
 # player clicks between Services and Maintenance. The Grease Monkeys
 # hangar image shows only while the maintenance submenu is active.
 func _render_dock_submenu() -> void:
+	_refresh_board_delivery_button()
 	# Clear any active docked message so a flavor line from the
 	# previous submenu doesn't bleed into the new one.
 	clear_dock_message()
@@ -4733,18 +4787,19 @@ func _render_station_contacts(should_show: bool) -> void:
 		_lounge_bartender_card(station_id),
 		{},
 		{},
-		_lounge_kaelen_card(),
+		_lounge_kaelen_card() if show_kaelen else {},
 	]
-	if not _contacts_with_rumor.has("kaelen"):
+	if show_kaelen and not _contacts_with_rumor.has("kaelen"):
 		_contacts_with_rumor["kaelen"] = true
 	var contact_slot := 1
+	var last_contact_slot := 2 if show_kaelen else 3
 	for agent_card in _lounge_station_agent_cards():
-		if contact_slot > 2:
+		if contact_slot > last_contact_slot:
 			break
 		cards[contact_slot] = agent_card
 		contact_slot += 1
 	for npc_name in visible_contacts:
-		if contact_slot > 2:
+		if contact_slot > last_contact_slot:
 			break
 		var npc_data := GlobalState.get_minor_npc_data(str(npc_name))
 		cards[contact_slot] = _lounge_npc_card(str(npc_name), npc_data)
@@ -4752,7 +4807,7 @@ func _render_station_contacts(should_show: bool) -> void:
 
 	# story_planted_npc: inject a one-visit story NPC into this station's contact list.
 	var planted: Dictionary = GlobalState.story_planted_npc
-	if not planted.is_empty() and contact_slot <= 2:
+	if not planted.is_empty() and contact_slot <= last_contact_slot:
 		var p_station: String = str(planted.get("station_id", ""))
 		if p_station == "" or p_station == station_id:
 			var p_name: String = str(planted.get("display_name", "Unknown Contact"))
@@ -4900,8 +4955,13 @@ func _lounge_bartender_card(station_id: String) -> Dictionary:
 	}
 
 
-func _lounge_station_agent_cards() -> Array[Dictionary]:
+func _lounge_station_agent_cards(station: Node3D = null) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
+	var lounge_station := station if station != null else current_station
+	# The system's faction representatives live at the primary station. Other
+	# stations use their own persisted/local resident roster instead.
+	if lounge_station == null or lounge_station != GlobalState.get_primary_station():
+		return result
 	var registry := GameContentRegistry.shared()
 	for faction_key in GlobalState.get_current_system_factions():
 		if result.size() >= 2:
@@ -5373,7 +5433,7 @@ func _prepare_lounge_bundles_for_station(station: Node3D) -> void:
 		var bartender_card := _lounge_bartender_card(station_id)
 		bartender_card["station_display_name"] = station_display_name
 		cards.append(bartender_card)
-	for agent_card in _lounge_station_agent_cards():
+	for agent_card in _lounge_station_agent_cards(station):
 		agent_card["station_display_name"] = station_display_name
 		cards.append(agent_card)
 	if not station_id.is_empty():
@@ -6637,15 +6697,12 @@ func _current_station_has_contacts() -> bool:
 
 
 func _station_contact_has_lounge_reason(
-	npc_name: String,
+	_npc_name: String,
 	npc_data: Dictionary
 ) -> bool:
-	if npc_data.is_empty():
-		return false
-	if not _station_contact_has_intel(npc_name, npc_data):
-		if str(npc_data.get("role", "")) != "Faction contact":
-			return false
-	return true
+	# Residence is enough to socialize. Rumor availability controls the rumor
+	# indicator, not whether a station's own people exist in its lounge.
+	return not npc_data.is_empty()
 
 
 func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool:
@@ -6661,7 +6718,7 @@ func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool:
 func _kaelen_lounge_available() -> bool:
 	if current_station == null or not is_instance_valid(current_station):
 		return false
-	if str(current_station.get("station_type")) == "outpost":
+	if current_station != GlobalState.get_primary_station():
 		return false
 	if GlobalState.is_current_system_home():
 		return true
@@ -7598,7 +7655,6 @@ func _on_back_to_services_pressed() -> void:
 
 func _on_public_board_pressed() -> void:
 	SpeechService.stop()
-	_render_public_board_offers()
 	dock_panel.visible = false
 	agent_panel.visible = false
 	if store_panel:
@@ -7606,6 +7662,7 @@ func _on_public_board_pressed() -> void:
 	if inventory_panel:
 		inventory_panel.visible = false
 	public_board_panel.visible = true
+	_render_public_board_offers()
 
 
 func _on_public_board_back_pressed() -> void:
@@ -8055,11 +8112,28 @@ func _on_public_board_offer_accept(index: int) -> void:
 		_render_public_board_offers()
 		return
 	var offer := public_board_current_offers[index]
+	if not bool(offer.get("enabled", false)): return
 	var quest_data: Dictionary = offer.get("quest_data", {})
 	var choices: Array = quest_data.get("choices", [])
 	if quest_data.is_empty() or choices.is_empty():
 		return
-	if not QuestManager.accept_quest(quest_data, choices[0]):
+	var objective: Dictionary = quest_data.get("objective", {})
+	if str(objective.get("type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		var destination := _quest_tracker_turn_in_target({"objective_type": objective.get("type"), "destination_station_id": objective.get("destination_station_id", "")})
+		if destination == null or GlobalState.get_delivery_recipient(str(objective.get("destination_station_id", ""))).is_empty():
+			show_hud_warning("Delivery unavailable: no verified recipient at the destination.")
+			return
+	var accepted := false
+	if bool(offer.get("investigation_posting", false)):
+		var result := StoryManager.accept_local_investigation_board_offer(str(offer["offer_id"]), current_station)
+		accepted = bool(result.get("ok", false))
+		if not accepted:
+			show_hud_warning("Investigation could not be accepted: " + str(result.get("reason", "unavailable")).replace("_", " "))
+			_render_public_board_offers()
+			return
+	else:
+		accepted = QuestManager.accept_quest(quest_data, choices[0])
+	if not accepted:
 		GlobalState.emit_chatter(
 			"SYSTEM WARNING",
 			"Public posting failed verification. It has been removed from consideration.",
@@ -8068,7 +8142,6 @@ func _on_public_board_offer_accept(index: int) -> void:
 		_render_public_board_offers()
 		return
 	if quest_data.get("objective", {}).get("type", "") == "PICKUP_SPECIAL":
-		var objective: Dictionary = quest_data["objective"]
 		_request_outpost_pickup_handoff_attempt(
 			str(objective.get("target_npc", "the contact")),
 			str(objective.get("part_name", "the part")),
@@ -8121,6 +8194,18 @@ func _should_show_public_board_turn_in() -> bool:
 func _on_public_board_turn_in_pressed() -> void:
 	if not _should_show_public_board_turn_in():
 		return
+	var investigation = QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD)
+	if investigation != null and str(investigation.data.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		var id: String = investigation.runtime_id
+		QuestManager.get_mission_collection().focus(id)
+		var payout := QuestManager.active_quest_payout()
+		QuestManager.complete_quest()
+		if QuestManager.get_mission_collection().get_by_id(id) == null:
+			GlobalState.emit_chatter("Contract Settlement", "Investigation report received. Payment: %d SC." % payout, Color(0.65, 1.0, 0.55))
+			_render_public_board_offers()
+		return
+	if _try_local_board_delivery():
+		return
 	var board_mission = QuestManager.get_mission_collection().get_by_lane(
 		MissionInstance.SourceLane.BOARD
 	)
@@ -8134,23 +8219,96 @@ func _on_public_board_turn_in_pressed() -> void:
 
 func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool:
 	var objective_type := str(mission_data.get("objective_type", ""))
+	if objective_type == "INVESTIGATE_SIGNAL":
+		return is_instance_valid(GlobalState.player) and bool(GlobalState.player.get("is_docked")) and current_station != null and is_instance_valid(current_station) and _quest_tracker_turn_in_target(mission_data) == current_station
 	if objective_type not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
 		return true
 	var expected := str(mission_data.get("destination_station_id", ""))
 	if expected.is_empty():
+		return false
+	return _normalize_station_contact_id(_current_turn_in_station_id()) == _normalize_station_contact_id(expected) \
+		or (current_station != null and _normalize_station_contact_id(_station_contact_id_for_node(current_station)) == _normalize_station_contact_id(expected))
+
+
+func _board_delivery_recipient() -> Dictionary:
+	var mission = QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD)
+	if mission == null or str(mission.data.get("objective_type", "")) not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		return {}
+	if not _should_show_public_board_turn_in():
+		return {}
+	var destination_id := str(mission.data.get("destination_station_id", ""))
+	if str(mission.data.get("objective_type", "")) == "DELIVERY_COURIER":
+		var assignment: Dictionary = GlobalState.cargo_special.get("delivery_assignment", {})
+		if not assignment.is_empty() and (
+			str(assignment.get("runtime_id", "")) != mission.runtime_id
+			or not _mission_can_turn_in_at_current_station({"objective_type": "DELIVERY_COURIER", "destination_station_id": assignment.get("destination_station_id", "")})
+			or str(assignment.get("recipient_name", "")) != str(mission.data.get("delivery_recipient_name", ""))
+		):
+			return {}
+	var recipient := GlobalState.get_delivery_recipient(destination_id, str(mission.data.get("delivery_recipient_name", "")))
+	if recipient.is_empty():
+		return {}
+	mission.data["delivery_recipient_name"] = str(recipient.get("name", ""))
+	if str(mission.data.get("objective_type", "")) == "DELIVERY_COURIER":
+		GlobalState.cargo_special["delivery_assignment"] = {
+			"runtime_id": mission.runtime_id,
+			"destination_station_id": destination_id,
+			"recipient_name": mission.data["delivery_recipient_name"],
+		}
+	return recipient
+
+
+func _refresh_board_delivery_button() -> void:
+	if board_delivery_btn == null:
+		return
+	var recipient := _board_delivery_recipient()
+	board_delivery_btn.visible = not recipient.is_empty()
+	board_delivery_btn.text = "Deliver to %s" % str(recipient.get("name", "local recipient"))
+
+
+func _try_local_board_delivery() -> bool:
+	var mission = QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD)
+	if mission == null or str(mission.data.get("objective_type", "")) not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		return false
+	# Revalidate the causal contract at the dock, against the residents actually
+	# present here rather than the roster that existed when the job was posted.
+	var causal_turn_in: Dictionary = QuestWorldSnapshotType.check_mission(
+		mission.data,
+		QuestPlausibilityValidatorType.STAGE_TURN_IN,
+		_current_turn_in_station_id()
+	)
+	if bool(causal_turn_in.get("checked", false)) and not bool(causal_turn_in.get("ok", false)):
+		# Cargo and contract are deliberately left untouched: a recipient who is
+		# not there is a recoverable mission state, not a failed delivery.
+		show_hud_warning("Delivery cannot be completed here. Your cargo and contract are unchanged.")
 		return true
-	return _current_turn_in_station_id() == expected
+	var recipient := _board_delivery_recipient()
+	if recipient.is_empty():
+		show_hud_warning("Delivery recipient unavailable. Your cargo and contract are unchanged.")
+		return true
+	var runtime_id: String = mission.runtime_id
+	QuestManager.get_mission_collection().focus(runtime_id)
+	var payout := QuestManager.active_quest_payout()
+	QuestManager.complete_quest()
+	if QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD) != null:
+		return true
+	if public_board_panel:
+		public_board_panel.visible = false
+	if agent_panel:
+		agent_panel.visible = false
+	dock_panel.visible = true
+	_render_dock_submenu()
+	var name := str(recipient.get("name", "Local recipient"))
+	_show_lounge_card_line(_lounge_npc_card(name, recipient), "Delivery received. Your payment of %d SC has cleared." % payout)
+	return true
 
 
 func _current_turn_in_station_id() -> String:
 	if not current_station or not is_instance_valid(current_station):
 		return ""
-	if str(current_station.get("station_type")) == "outpost":
-		return _current_station_contact_id()
-	var station_id := _current_station_contact_id()
-	if station_id.is_empty() or station_id.begins_with("station."):
+	if current_station == GlobalState.get_primary_station():
 		return str(GlobalState.current_system_id)
-	return station_id
+	return _current_station_contact_id()
 
 
 # ── Mechanic (Jenna Kross) dock greeting ───────────────────────────────────
@@ -9845,6 +10003,12 @@ func _mechanic_pickup_ready_to_deliver() -> bool:
 func _starter_contract_pending() -> bool:
 	return is_instance_valid(StoryManager) \
 		and not bool(StoryManager.story_state.get("first_contract_handed_in", false))
+
+
+func _should_offer_starter_contract() -> bool:
+	# Visiting/hearing/accepting the briefing is not tutorial completion.
+	# An occupied lane must still show its active contract and turn-in controls.
+	return _starter_contract_pending() and not QuestManager.is_lane_occupied("AGENT")
 
 
 func _intro_handhold_active() -> bool:
@@ -11580,7 +11744,6 @@ func _show_kaelen_return_briefing() -> void:
 	var accept_btn := Button.new()
 	accept_btn.text = "Yeah, let's do this."
 	accept_btn.pressed.connect(func():
-		GlobalState.kaelen_briefing_accepted = true
 		for child in agent_choices_container.get_children():
 			child.queue_free()
 		_refresh_agent_quest_board()
@@ -11596,6 +11759,8 @@ func _show_kaelen_return_briefing() -> void:
 
 
 func _show_kaelen_intro_quest_offer() -> void:
+	for child in agent_choices_container.get_children():
+		child.queue_free()
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "serious")
@@ -11645,14 +11810,16 @@ func _show_kaelen_intro_quest_offer() -> void:
 	take_btn.pressed.connect(func():
 		_set_npc_attention_button(take_btn, false)
 		SpeechService.stop()
+		if not QuestManager.accept_quest(quest_data, accept_choice):
+			push_warning("[UIManager] Intro quest rejected: " + QuestManager.last_validation_error)
+			_set_npc_attention_button(take_btn, true, Color(1.0, 0.88, 0.05, 1.0))
+			return
 		GlobalState.kaelen_briefing_accepted = true
 		if is_instance_valid(StoryManager):
 			StoryManager.story_state["intro_quest_delivered"] = true
 			StoryManager._save_story_state()
 		for child in agent_choices_container.get_children():
 			child.queue_free()
-		if not QuestManager.accept_quest(quest_data, accept_choice):
-			push_warning("[UIManager] Intro quest rejected: " + QuestManager.last_validation_error)
 		# Start LLM generating quest 2 in background now
 		_request_background_agent_quest()
 		agent_panel.visible = false
@@ -11671,6 +11838,11 @@ func _show_kaelen_intro_quest_offer() -> void:
 
 
 func _refresh_agent_quest_board():
+	# This also repairs saves from the old return-briefing bypass: even if its
+	# accepted flag is already true, ordinary cached work cannot skip the tutor.
+	if _should_offer_starter_contract():
+		_show_kaelen_intro_quest_offer()
+		return
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "neutral")
@@ -12169,6 +12341,10 @@ func _show_mission_conversation_briefing(
 	quest_data: Dictionary,
 	is_fallback: bool
 ) -> void:
+	var game_root := get_tree().current_scene
+	if game_root != null and game_root.has_method("queue_mission_conversation"):
+		game_root.call("queue_mission_conversation", quest_data)
+	is_fallback = str(quest_data.get("mission_dialogue_bundle_source", "deterministic_fallback")) == "deterministic_fallback"
 	var plan: Dictionary = quest_data.get("mission_conversation_plan", {})
 	var bundle: Dictionary = quest_data.get("mission_dialogue_bundle", {})
 	var screen: Dictionary = MissionConversationControllerType.start(plan, bundle)
@@ -12228,6 +12404,10 @@ func _on_mission_conversation_intent_selected(
 	intent_id: String
 ) -> void:
 	SpeechService.start_interaction("Mission Conversation: " + intent_id)
+	# Refresh only at the next player action: never replace/replay the line
+	# currently on screen. The plan and machine-owned choices stay unchanged.
+	state["bundle"] = quest_data.get("mission_dialogue_bundle", state.get("bundle", {})).duplicate(true)
+	is_fallback = str(quest_data.get("mission_dialogue_bundle_source", "deterministic_fallback")) == "deterministic_fallback"
 	var next_screen: Dictionary = MissionConversationControllerType.select_intent(
 		state,
 		intent_id
@@ -12626,6 +12806,10 @@ func _on_agent_back_pressed():
 	_render_dock_submenu()
 
 func _on_agent_complete_pressed():
+	if bool(QuestManager.active_quest.get("public_board", false)) \
+			and str(QuestManager.active_quest.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		_try_local_board_delivery()
+		return
 	SpeechService.start_interaction("Complete Contract")
 	
 	is_waiting_for_agent_board = false
@@ -12898,6 +13082,8 @@ func _tracker_suppressed_by_dock() -> bool:
 
 
 func _update_quest_tracker():
+	if investigation_evidence_btn:
+		investigation_evidence_btn.visible = str(QuestManager.active_quest.get("objective_type", "")) == "INVESTIGATE_SIGNAL"
 	# Layout edit mode still forces it visible so it can be repositioned; that
 	# check lives at the caller and must keep winning over this one.
 	if not QuestManager.is_quest_active() or _tracker_suppressed_by_dock():
@@ -12947,6 +13133,8 @@ func _update_quest_tracker():
 ## Captain, and it carries the same information — the job isn't closed until
 ## someone pays you.
 func _completed_contract_tracker_text(q: Dictionary) -> String:
+	if str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		return "Cargo ready for delivery.\nDeliver to %s to settle the contract." % str(q.get("destination_display", "the designated destination"))
 	if bool(q.get("public_board", false)):
 		return "Board job satisfied.\nPayment pending — dock and settle with the local agent."
 	var objective_text := "Contract satisfied."
@@ -12990,22 +13178,25 @@ func _update_quest_tracker_route_button(q: Dictionary) -> void:
 	quest_tracker_route_btn.visible = false
 	if quest_tracker_progress:
 		quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_ARROW
-	# Once the contract is complete, offer a one-click "dock at the home station" so
-	# the player (especially in the intro) knows exactly where to hand it in.
+	# Ready for hand-in does not mean delivered: courier cargo is ready as soon
+	# as it enters the hold. Route to the contract's destination, not its giver.
 	if QuestManager.is_quest_completed():
-		var home := GlobalState.get_primary_station()
-		if home and is_instance_valid(home):
-			quest_tracker_route_btn.text = "Dock at Station"
+		var destination := _quest_tracker_turn_in_target(q)
+		if destination and is_instance_valid(destination):
+			quest_tracker_route_btn.text = "Dock at %s" % str(q.get("destination_display", "Destination")) if str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"] else "Dock at Station"
 			quest_tracker_route_btn.disabled = false
 			quest_tracker_route_btn.visible = true
 			_update_first_turn_in_flash(true)
 			if quest_tracker_progress:
 				quest_tracker_progress.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		else:
+			quest_tracker_route_btn.text = "Destination Not In System"
+			quest_tracker_route_btn.disabled = true
+			quest_tracker_route_btn.visible = true
 			_update_first_turn_in_flash(false)
 		return
 	_update_first_turn_in_flash(false)
-	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
+	if str(q.get("objective_type", "")) not in ["PICKUP_SPECIAL", "INVESTIGATE_SIGNAL"]:
 		return
 	var target := _quest_tracker_route_target(q)
 	if target == null or not is_instance_valid(target):
@@ -13122,31 +13313,54 @@ func _on_quest_tracker_route_pressed() -> void:
 	if not QuestManager.is_quest_active():
 		return
 	var q := QuestManager.active_quest
-	# Completed contract: select the home station and dock to hand it in.
-	if QuestManager.is_quest_completed():
-		var home := GlobalState.get_primary_station()
-		if home and is_instance_valid(home):
-			GlobalState.active_target = home
-			if not _command_selected_target("DOCK"):
-				show_hud_warning("Could not set course to the station.")
-		else:
-			show_hud_warning("Home station is not in this system.")
-		return
 	var target := _quest_tracker_route_target(q)
 	if target == null or not is_instance_valid(target):
 		show_hud_warning("That mission target is not in this system.")
 		return
 	GlobalState.active_target = target
-	if not _command_selected_target("APPROACH"):
+	var command := "DOCK" if QuestManager.is_quest_completed() else "APPROACH"
+	if not _command_selected_target(command):
 		show_hud_warning("Could not set course to the mission target.")
 
 
 func _quest_tracker_route_target(q: Dictionary) -> Node3D:
+	if QuestManager.is_quest_completed():
+		return _quest_tracker_turn_in_target(q)
+	if str(q.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		var mission_id := str(q.get("runtime_id", ""))
+		var state: Dictionary = q.get("investigation", {})
+		for site: Dictionary in state.get("sites", []):
+			if str(site["id"]) in state.get("scanned_site_ids", []): continue
+			var target := QuestManager.investigation_site_target(mission_id, str(site["id"]))
+			if target != null: return target
+		for site: Dictionary in state.get("sites", []):
+			var target := QuestManager.investigation_site_target(mission_id, str(site["id"]))
+			if target != null: return target
+		return QuestManager.investigation_site_target(mission_id, "search")
 	if str(q.get("objective_type", "")) != "PICKUP_SPECIAL":
 		return null
 	if bool(q.get("picked_up", false)):
 		return GlobalState.get_primary_station()
 	return _find_station_by_contact_id(str(q.get("target_outpost", "")))
+
+
+func _quest_tracker_turn_in_target(q: Dictionary) -> Node3D:
+	if str(q.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		if str(q.get("system_id", "")) != str(GlobalState.current_system_id): return null
+		var expected := str(q.get("turn_in_station_id", ""))
+		for station in get_tree().get_nodes_in_group("station"):
+			if not station is Node3D: continue
+			if station.has_method("get_world_id") and str(station.get_world_id()) == expected: return station
+			if str(station.name) == expected or GlobalState.resolve_outpost_id(station) == expected: return station
+		return null
+	if str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		var destination_id := str(q.get("destination_station_id", "")).strip_edges()
+		# Public board main-station destinations use the system ID; outposts
+		# use contact IDs. An unresolved explicit destination must never silently
+		# send the ship to a different station.
+		if not destination_id.is_empty() and destination_id != str(GlobalState.current_system_id):
+			return _find_station_by_contact_id(destination_id)
+	return GlobalState.get_primary_station()
 
 
 func _find_station_by_contact_id(target_id: String) -> Node3D:
@@ -13260,9 +13474,13 @@ func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
 	quest_tracker_turn_in_btn.visible = is_public_board and is_ready
 	if not quest_tracker_turn_in_btn.visible:
 		return
-	if current_station and is_instance_valid(current_station):
+	if current_station and is_instance_valid(current_station) and _mission_can_turn_in_at_current_station(q):
 		quest_tracker_turn_in_btn.text = "Turn In To Local Agent"
 		quest_tracker_turn_in_btn.disabled = false
+		if str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+			var recipient := GlobalState.get_delivery_recipient(str(q.get("destination_station_id", "")), str(q.get("delivery_recipient_name", "")))
+			quest_tracker_turn_in_btn.disabled = recipient.is_empty()
+			quest_tracker_turn_in_btn.text = "Recipient unavailable" if recipient.is_empty() else "Deliver to %s" % str(recipient.get("name", ""))
 	else:
 		quest_tracker_turn_in_btn.text = "Dock To Turn In"
 		quest_tracker_turn_in_btn.disabled = true
@@ -13373,6 +13591,8 @@ func _update_quest_tracker_secondary_missions() -> void:
 
 func _on_quest_tracker_turn_in_pressed() -> void:
 	if not _should_show_public_board_turn_in():
+		return
+	if _try_local_board_delivery():
 		return
 	if not current_station or not is_instance_valid(current_station):
 		show_hud_warning("Dock at a local station to turn in this board job.")

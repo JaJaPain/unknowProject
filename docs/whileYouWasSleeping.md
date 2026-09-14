@@ -1,5 +1,962 @@
 # While You Was Sleeping — Session Changelog
 
+## Session: 2026-09-13 (P3 slice B: terminal transaction and durable effects) — Claude
+
+Deliverable B of `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md`.
+Slice A's reducer now has a real runtime consumer.
+
+New `scripts/domain/MissionOutcome.gd` builds the code-owned terminal record from
+the actual accepted mission and its capability state. It refuses UI-supplied
+facts: a panel's `verified` flag is overridden by the real scan evidence, an
+unspent consumable is never recorded as consumed, and a non-completed terminal
+carries no payout, branch, tag or effect. Effects are a closed set — verified
+survey evidence, recorder preserved, marked ore delivered, pressure relieved —
+and an invented kind fails validation.
+
+New `scripts/story/DesireProgressLedger.gd` adds the versioned campaign-owned
+projection keyed by (system, faction, desire). `satisfied`/`failed` are reachable
+ONLY through a typed bound predicate: a preserved recorder does not clear a
+faction's name, a certification does not file a survey or reopen a route, and an
+unsupported textual success condition stays open/progressed. A wrong answer or an
+abandoned job never permanently fails a desire. Until deliverable D binds an
+interest to an effect, nothing closes a desire at all.
+
+`QuestManager` terminal paths (complete, abandon, and the nonfocused expiry loop)
+are now one guarded transaction: capture before-state, stage payout/reputation/
+cargo/inventory/mission removal/board cooldown/pressure/desire progress in memory,
+checkpoint, then emit. A failed checkpoint restores everything and leaves the
+mission retryable — a kit consumed at resolution is restored with it, so a retry
+neither double-consumes nor double-pays. New `mission_settled` checkpoint reason
+added to GameRoot and both allowlists; it uses the actual docked station and does
+NOT advance dock-service time. In flight, the change applies once in the running
+state and keeps a pending-save record until the next legal safe boundary — it
+never pretends an in-flight save is docked.
+
+Tests: three new suites PASS — `run_mission_outcome_tests.gd`,
+`run_desire_progress_tests.gd`, and `run_terminal_transaction_tests.gd`, which
+drives the REAL accept/complete/abandon paths through actual mission validation
+(settlement checkpoint reason, full rollback of credits/pressure/inventory/mission,
+retry committing exactly once, no duplicate terminal record, in-flight pending).
+Regression PASS across 15 existing suites including mission contract/collection/
+capability, story-state and save migration, campaign schema, checkpoint store,
+investigation lifecycle and runtime, intro offer revisit, board delivery recipient
+and mission card routes. Parse check: 377 scripts, 0 failed. `git diff --check`
+clean. Logs in `.tmp_godot_user/test_logs/`.
+
+Remaining limits, stated plainly: supply is still runtime-ineligible (fixture-only)
+because no validated ore-consumption cause exists; `transmitter_lure` and
+`unstable_archive` remain prototypes and no pressure level offers them; no pressure
+card is published yet, so a player still cannot SEE a track (that is deliverable C);
+nothing closes a desire until deliverable D. Deliverables C, D and E are open. No
+player testing, prose-quality or hardware qualification claim. Kaelen/N.O.V.A.
+soul, canon, voice and line banks untouched.
+
+## Session: 2026-09-13 (P3 slice A: pure local pressure reducer) — Claude
+
+Implemented deliverable A of `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md`.
+New `scripts/story/LocalPressureDirector.gd` (pure reducer, no scene/clock/model
+input) and validated `data/content/local_pressure_tracks.json`. `local_pressures`
+is now an additive, strictly validated story-state field, and SaveMigrator maps
+track `system_id` through canonical/runtime IDs like the investigation board.
+
+Implemented rules: tutorial-completion latch, at most two active tracks bound to a
+validated system/station/faction/desire/cause, level 1 start, one activity step per
+committed terminal outcome, bound delta first (relief -1 / worsening +1, clamped
+0..3, either resets the untouched count and suppresses same-event inactivity),
+neutral steps for every other active track, two-step escalation, level-zero
+resolution with a four-resolved-job cooldown, least-recently-active replacement
+with saved RNG, six retained records with recency preserved across pruning,
+campaign-wide applied-outcome ledger rejecting duplicate AND conflicting terminal
+IDs, and the last-four accepted-family pacing cap.
+
+Effect table is data, not code: signals relieves on correct certification and
+worsens on incorrect, claims relieves on preserve, report is neutral for both, and
+abandon/fail/expire carry no direct delta for either. Supply is catalogued but
+**runtime-ineligible** (`no_validated_ore_consumption_cause`) and is proven with
+typed fixtures only — raw ore delivery is not an assay, and no ore need was added
+to activate it. No level offers `transmitter_lure` or `unstable_archive`, and
+`forced_forged` is never set; tests assert this at level 3 too.
+
+Payouts snapshot at publication as an integer floor of the ordinary branch payout
+times the applicable **maximum** modifier; modifiers never multiply. Verified:
+claims level-3 preserve = 500, report = 200, survey 400/100/200 unchanged.
+
+Tests: new `tests/story/run_local_pressure_tests.gd` PASS (catalog guard,
+activation/tutorial guard/pending slots/sparse eligibility, every delta-table row,
+clamp boundaries, double-escalation guard, unbound activity, tutorial exclusion,
+supply fixtures, two-step inactivity, four-step cooldown, replacement RNG
+save/load, retired-cause resurrection guard, duplicate/conflicting/malformed
+outcomes, malformed-state recoverable load, constraints/payouts, determinism,
+pacing window). Regression PASS: story-state migration, save migration, campaign
+schema, campaign checkpoint store, investigation board lifecycle. Parse check:
+372 scripts, 0 failed. Logs in `.tmp_godot_user/test_logs/`.
+
+NOT done in this slice: the reducer has no runtime consumer yet. QuestManager
+terminal paths, the guarded settlement transaction, desire-progress projection,
+pressure cards, campaign resolutions and novelty history are slices B–E and remain
+open. No player testing, prose-quality or hardware claim. Kaelen/N.O.V.A. soul,
+canon, voice and line banks untouched.
+
+## Session: 2026-09-13 (Claude handoff for next implementation) — Codex
+
+Created `docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md` at the
+user's request. It specifies P3 pressure, terminal transaction durability, bounded
+cause expansion, typed campaign resolutions and novelty history, with concrete
+integration decisions where the earlier plans lacked detail. The two remaining
+investigation recipes stay prototypes. Supply remains runtime-ineligible unless
+a real ore-consumption cause exists; raw ore is not an assay. This is a handoff
+only: no gameplay implementation or new test execution in this documentation turn.
+
+
+## Session: 2026-09-13 (investigation board-to-payment loop) — Codex
+
+Connected the first two recipes to the visible board, checkpointed acceptance,
+mission-owned site discovery, evidence/scan controls and assigned-station payment.
+Actual UI handler tests complete both recipes and reject failed checkpoints and
+duplicate payouts. Published investigations bypass the generic board writer.
+Fixed canonical ownership mapping and checkpoint cleanup erasing permanent site
+positions; real disk checkpoints now preserve them while clearing ship pose.
+
+Final affected persistence/runtime suites pass; all 370 scripts compile. No
+player/visual review or model qualification claim. Kaelen/N.O.V.A. unchanged by
+this slice. Next: P3 activity-based pressure and durable faction consequences,
+then campaign resolutions and novelty history. The other two recipes remain
+prototypes. See `docs/investigation_playable_loop_2026_09_13.md` for exact scope.
+Earlier entries below are historical, including their now-completed next steps.
+
+## Session: 2026-09-13 (persistent investigation posting lifecycle) — Codex
+
+Added InvestigationBoardLifecycle and local StoryManager preparation/publication
+entry points. They use actual local agendas, tutorial state, campaign seed,
+station/navigation data and a code-owned budget. Supported causes generate frozen
+postings; speculative preparation does not retire shapes. Publication saves
+posting/selector state before success; stale drafts and failed saves leave current
+state intact. StoryStateStore and checkpoint validation cover the additive field.
+
+Found/fixed a first-draw bug in InvestigationSelector: TauntBag's initial global
+random seed preceded campaign RNG injection. Saved bags are preserved. Narrow
+cause eligibility avoids forcing unrelated needs into investigations. Claims
+postings omit an unfunded liquidation alternative. Six suites pass; 368 scripts
+compile. Details: `docs/investigation_board_lifecycle_2026_09_13.md`.
+
+Still NOT connected to the visible board: next wire presenter, discoverable sites,
+evidence/choice controls, and acceptance/retirement checkpoint handling together.
+Generated-system unload/reload and canonical ownership mapping still need their
+integration tests. No player testing or model qualification claims; fixed cast
+unchanged.
+
+## Session: 2026-09-13 (investigation placement acceptance guard) — Codex
+
+PlayerShip now exposes a node-free snapshot of the actual autopilot obstacle
+records. InvestigationWorldPlacement captures live stations/gates and checks
+published site positions at QuestManager acceptance, before mission/reward effects.
+Missing navigation, missing turn-in station, wrong system and obstructed sites
+fail closed. Checks never regenerate evidence or move the saved sites. Restore
+does not run this acceptance gate, so an existing mission is not discarded when
+a moving obstacle temporarily enters its site.
+
+Runtime regression covers primary obstruction, verification gate overlap, missing
+station/navigation and identical truth after retry. Five suites passed (runtime,
+planner, offer builder, causal lifecycle, tangent navigation); 366 scripts parsed.
+No SCRIPT ERROR in final verification logs. Existing headless certificate/stats
+and shutdown warnings remain. No cast/personality or model changes.
+
+Still next: publish optional cause-backed investigation offers with persisted
+selector ownership, then reconcile discoverable world sites and add evidence UI.
+This continuation finishes acceptance placement safety, not the playable P2 loop.
+
+## Session: 2026-09-13 (investigation command and save integration) — Codex
+
+Connected the first two investigation recipes to actual mission validation,
+acceptance, QuestManager commands, scan holds, inventory spend and station payout.
+New InvestigationRuntime reads live pose/combat/inventory and derives command IDs;
+new InvestigationStateValidator validates saved sites, evidence and outcomes.
+MissionAdapter preserves the fields, and SaveMigrator maps nested system IDs.
+Duplicate commands and reentrant payout are guarded. Bad investigation restores
+do not clear the current mission collection. Existing saves/cast remain protected.
+
+13 suites passed; 365 scripts compiled, zero SCRIPT ERRORs in final runs.
+The migration suite required deferred loading/workspace fixtures and uncovered
+a missing-key crash in SystemConfig.from_dict, now fixed. Full evidence and next
+steps: `docs/investigation_runtime_2026_09_13.md`.
+
+NOT a completed playable P2 loop: automatic offers, navigation-based placement
+integration, world-site discovery/reconciliation and the evidence/choice panel
+remain next. P3 pressure, campaign resolutions and novelty history are still open.
+No player testing requested and no critic qualification or prose-quality claim.
+
+## Session: 2026-09-12 (compatible joint desire generation) — Codex
+
+Followed the pasted handoff after reading Claude's newer session notes. Fixed
+the next recorded source-fact defect: goal/need combinations such as fuel to
+prove a manifest false. New GeneratedDesireConstraints defines supported
+goal/need links, matching event/obstacle/remedy records, and holdings/payment
+pairs. Generation version 2 persists those bindings. Compiler includes the
+explanation; the actual board publication path withholds corrupt versioned
+desires. Legacy saved desires and accepted jobs are preserved.
+
+16 suites passed; 362 scripts compiled with zero failures. Includes a 1,000-case
+desire sweep, deliberate corruptions, actual publication rejection, normalization
+compatibility, tutorial/delivery/local identity and fixed-cast regression coverage.
+No Kaelen/N.O.V.A. personality, soul, voice or bank edits.
+
+Writer harness seed 67890: 11/24 accepted, all quality_unknown; p50 675ms,
+p95 1081ms. Accepted prose still includes unsupported exclusivity and task
+distortion. This is measurement, not prose approval or a controlled improvement
+claim. No writer/critic thresholds changed. Details and remaining D/E work:
+`docs/desire_coherence_2026_09_12.md`.
+
+Next: real action/effect bindings and the first two investigation gameplay loops,
+then P3 outcomes/pressure. Joint draws are constrained; complete causal coherence,
+runtime branches, campaign endings, novelty history and writer quality remain open.
+
+## Session: 2026-09-12 (A-C integration: shared packet, publication states, lifecycle) — Claude
+
+Picked up Codex's integration review and worked its P1 list in order. No
+gameplay-facing rewrite; this is the wiring that was missing under work already
+labeled done. Kaelen/N.O.V.A. soul, canon, voice and line banks untouched.
+
+FIRST, A CORRECTION I OWE. I previously wrote that the deterministic hard checks
+already caught the "eleven hours" invented deadline from the critic brief. That
+was WRONG -- `_check_numbers()` inspected digits only, so a spelled-out number
+walked straight through. Codex ran the exact line and proved it. The claim is
+withdrawn in the plan doc; Codex has since added written-number and duration-role
+checks. I should have run the line instead of reasoning about the code.
+
+WRITER AND VALIDATOR NOW SHARE ONE PACKET. `DialogueFactPacket.prompt_block()`
+had a test caller and no production caller: the packet was built only AFTER
+generation, so the gate was judging prose against facts the writer had never been
+shown. `prompt_for_job()` now renders a packet block per output field.
+  - Packets are DERIVED, never handed over. Both paths call the same pure
+    `slice_packets(context, slice)` on the same immutable context, so they cannot
+    silently diverge; a difference surfaces as a fingerprint mismatch.
+  - A mismatch returns `stale_fact_packet` and does NOT spend a rewrite attempt.
+    The writer was grounded in something no longer true; rewriting cannot fix it.
+  - The fingerprint covers facts, question, preceding line and required facts --
+    but NOT recent_phrases or attitude. Those are writing nudges that do not
+    change what is true, and letting them move the fingerprint would strand
+    in-flight slices for nothing. Pinned by a test.
+
+QUESTION-AWARE FACT SELECTION, which is the failure the review named directly:
+the fact that answers the player was being truncated away because six unrelated
+facts hit the cap first. Facts bearing on the actual question now rank first.
+Ranking only REORDERS -- it never removes one, so a missed keyword costs position
+rather than grounding. A private fact stays out even when the question asks about
+it by name; there is a test that asks about the secret directly.
+
+MY FIRST MUTATION CHECK HERE WAS WORTHLESS AND I CAUGHT IT. Disabling question
+ranking produced no failure, because the fixture's purpose-order already happened
+to rank the answering fact first. I wrote a dedicated packet suite with a fact
+deliberately buried past MAX_FACTS; disabling ranking now fails two assertions
+with the filler facts listed. A mutation check that does not fail is not a pass.
+
+ALSO: `git checkout` does not restore an UNTRACKED file, and I used it to undo a
+mutation. The mutated file stayed on disk and the suite went green on broken code
+for one run. Caught it by grepping for the mutation marker rather than trusting
+the restore. For the rest of the session I used `cp` backups only.
+
+CAUSAL PUBLICATION STATES ARE NOW EXPLICIT. A rejected contract used to be logged
+and the offer published anyway. Three states now:
+  - `validated` -- contract compiled and passed.
+  - `uncaused_legacy_compatible` -- no local faction caused this job. Legitimate;
+    the board has always posted work nobody in particular wants done.
+  - `withheld_invalid_contract` -- mechanics or cause are broken. WITHHELD, because
+    publishing it anyway is how an impossible job reaches the player.
+Withholding is a PUBLICATION decision, never data corruption: an accepted mission
+keeps its saved objective, recipient and terms and stays completable even if
+today's rules would no longer generate it. There is a test that adapts a
+withheld-shaped job into active state and asserts it still validates.
+
+THE EMPTY-ROSTER BUG IS FIXED. `world.get("residents", [])` could not tell "key
+absent" from "explicitly empty", so a station with NOBODY on it passed the
+delivery presence check for the same reason an unknown station did. Missing key
+is now unknown; an empty list is a finding.
+
+LIFECYCLE VALIDATION IS WIRED, not just available. New
+`scripts/domain/QuestWorldSnapshot.gd` is the one authoritative snapshot, used at
+acceptance (`QuestManager.accept_quest`) and turn-in
+(`UIManager._try_local_board_delivery`). A failed turn-in check leaves cargo and
+contract untouched -- an absent recipient is a recoverable state, not a failed
+delivery. `check_mission()` returns `checked:false` for contractless missions so a
+caller cannot mistake "we did not look" for "we approved".
+
+THE SNAPSHOT REFUSES TO INVENT. `capabilities` and `requester_funds` are
+deliberately NOT populated, because nothing live owns either as authoritative
+data. Faking them would turn "we do not know" into "we checked", which
+manufactures false passes AND false rejections. A test asserts they stay absent.
+
+CAPABILITY VALIDATION NOW ASKS THE REAL REGISTRY. `QuestPlausibilityValidator`
+had its own parallel allowlist; it calls `MissionCapabilityRegistry.has_type()`
+now, and the old list is kept as a comment marked documentation-only. The
+fixtures' invented `INVESTIGATE_SITE` is corrected to the real
+`INVESTIGATE_SIGNAL` everywhere. Verified against the live registry: the old
+alias is now correctly rejected, which it would not have been under the allowlist.
+
+- Green: 26 suites, run sequentially with unique workspace log files, all
+  pass fail=0 script_errors=0. Whole project: 359 scripts, 0 failed.
+- Mutation-checked this session: writer packet guidance, question ranking,
+  empty-roster distinction.
+- New: `tests/story/run_dialogue_fact_packet_tests.gd`,
+  `tests/domain/run_quest_lifecycle_validation_tests.gd`.
+
+STILL OPEN, and none of it is done:
+- Branch policy -> UI/command execution is NOT wired yet. `policy_branches` still
+  has no gameplay consumer. That is the next step.
+- D coherence: independent desire draws can still contradict each other, and the
+  compiler still asserts unproven causal links (delegation by mission type, "this
+  courier item is what they need", "purchase is the ONLY way"). A critic cannot
+  catch an invented reason that the compiler supplied as truth.
+- The universal adversarial-pair rule is still in place and still enforced by a
+  test; the plan now says a system may have problems without enemies.
+- E/F/G untouched this session.
+- NO WRITER MEASUREMENT YET. I measured the critic last session, not the writer.
+  Whether qwen3:4b produces good prose through the new packet prompt is unknown.
+  Semantic judging stays diagnostic; nothing was qualified.
+
+### Then the first real WRITER measurement, which was the point of all the wiring
+
+With the packet finally reaching the writer, the measurement Codex said should
+not wait on a perfect critic became possible. `tools/quality_eval/run_writer_eval.gd`
+drives the REAL path: real contracts, real packets, real prompt, real
+`accept_response()`. qwen3:4b, the game's own writer settings, seed 12345.
+
+  24 slices: 12 accepted, 7 rejected by the EXISTING validators, 2 by the new
+  quality gate, 1 parse failure. Latency p50 633ms, p95 962ms, max 1050ms.
+  Provenance recorded as quality_unknown x12, which is correct -- no critic is
+  qualified, and nothing pretended otherwise.
+
+LATENCY IS NOT THE PROBLEM. Under a second at p95 on a prefetch path with a
+25-second budget. The constraint is acceptance rate and prose, not speed.
+
+THE NEW GATE IS NOT THE BOTTLENECK EITHER -- only 2 of 10 rejections were mine.
+The biggest single cause is `missing_answer_anchor`, the exact-anchor rule the
+plan already flagged as a hazard for natural paraphrase. I recorded it as
+measured evidence and did NOT weaken it; loosening a check to raise a score is
+the specific thing section 11 forbids.
+
+THREE DEFECTS THE RUN FOUND THAT NO TEST WOULD HAVE:
+1. A BUG I INTRODUCED EARLIER THE SAME SESSION. Branch intents were being asked
+   for generated reply lines, and came back identical to the accept reply --
+   the difference between branches is MECHANICAL, not conversational, so the
+   model had nothing different to say. Branch options are now code-labelled
+   actions with no reply requested. duplicate_line went to zero.
+2. INVENTED URGENCY. The model appended "before it's too late" to jobs with no
+   deadline and no urgency fact, repeatedly, across independent generations.
+   That is an invented stake and the player acts on it. New hard check,
+   deliberately narrow: impatience is characterisation, "before the window
+   shuts" is a claim about the world. Both cases pinned.
+3. AN ENCODING ARTIFACT IN AN ACCEPTED LINE -- a U+FFFD replacement character
+   mid-sentence. TTS would read it aloud as a glitch. Same class as the curly
+   apostrophe caught during the taunt work, and it got all the way through.
+   New hard check; real em dashes and apostrophes still pass.
+
+WHAT THE ACCEPTED PROSE ACTUALLY LOOKS LIKE, because "12 of 24 accepted" reads
+like a quality result and is not one:
+  - An accept-path line opening "We don't need your help right now."
+  - "deliver TO Blacklist Yard" rendered as "pick up the cargo FROM Blacklist
+    Yard"; "will reach Blacklist Yard before we need it".
+  - GOAL/NEED INCOHERENCE, NOW EMPIRICALLY CONFIRMED. One contract paired the
+    need "fuel it can afford" with the goal "prove a rival's manifest is
+    fiction", and the model dutifully wrote "We need this fuel to prove the
+    rival's manifest is fake." The desire dimensions are drawn independently and
+    CAN contradict each other -- exactly the Phase D gap Codex predicted. It is
+    measured now rather than argued, and it is the strongest reason to constrain
+    the joint draw before widening anything else.
+
+NO PROSE QUALITY CLAIM IS MADE. Passing the hard checks means grounded and
+well-formed. Several accepted lines above are plainly not good. Human review
+stays pending, and semantic judging stays diagnostic.
+
+- Final: 31 suites sequential, unique workspace logs, all pass fail=0
+  script_errors=0. Whole project: 361 scripts, 0 failed. git diff --check clean.
+- Mutation-checked this session: writer packet guidance, question ranking,
+  empty-roster distinction, branch intent rendering, single-path guard, the
+  need/item binding requirement.
+- New: tools/quality_eval/run_writer_eval.gd, tests/story/run_dialogue_fact_packet_tests.gd,
+  tests/story/run_branch_policy_wiring_tests.gd,
+  tests/domain/run_quest_lifecycle_validation_tests.gd,
+  scripts/domain/QuestWorldSnapshot.gd. Raw run data under logs/quality_eval/.
+
+HANDOFF FOR CODEX: `docs/claude_handoff_to_codex_2026_09_12.md` lists what I did
+NOT finish and why, separating genuinely-unfinished work from things I refused
+on purpose (critic tuning, loosening missing_answer_anchor). Read that before
+picking anything up, so a deliberate refusal is not treated as a todo.
+
+NEXT CONCRETE STEP: constrain the JOINT draw in GeneratedFactionDesire so goal,
+need, obstacle, holdings and payment cannot contradict one another -- the "fuel
+to prove a manifest is fake" case above is the worked example, and it is a
+compiler-supplied falsehood no critic can catch. After that, E proper: the P2
+investigation runtime (offers, safe site placement, scans, evidence, branch
+commands, cleanup, saves) and then the P3 pressure reducer.
+
+Deliberately NOT next: tuning the critic, or loosening `missing_answer_anchor`
+to raise the writer acceptance rate. The first overfits an exposed corpus; the
+second trades truth for a green number.
+
+
+## Session: 2026-09-12 (critic correction and Claude handoff) — Codex
+
+Abe authorized fixing the critic problem, testing it, and producing a fresh
+implementation prompt. See `docs/critic_fix_2026_09_12.md` for exact scope/results;
+`docs/claude_handoff_after_critic_fix.md` is the complete copyable Claude prompt.
+
+Removed the completed-pass prompt/legacy approval protocol. Added shared
+`DialogueCritic` sentence/support/relevance protocol, strict parsing/coverage,
+configuration-bound qualification and constant-result regression checks. Unqualified
+semantic verdicts cannot approve or reject. Added written-number/duration checking,
+made word-overlap relevance/restatement advisory, and retained quality metadata
+through promotion/copy/mission save. Updated the evaluator to schema output,
+independent balanced sentinels, exact model/request records and nonzero failed
+qualification. Require both --baseline-offline and --llm-live-fire for live probes.
+
+Seven focused suites pass; whole-project compile checks 357 scripts with zero
+failures. Live tests show NONCONSTANT but still unqualified critic behavior: on
+the original full corpus, factual review misses 4/9 bad cases and accepts 12/12
+good cases; relevance falsely rejects 2/6 good answers. Two seeds of the new 16-case
+sentinels both miss 4/8 bad claims. Those measurements correctly fail qualification.
+Do not describe this as a solved human-quality judge or enable enforcement. The
+silent approval bug is guarded; remaining semantic quality is explicitly open.
+
+The eight original holdout cases have now been evaluated, not left pristine for
+further tuning. Existing baseline results remain unchanged. No manual edits to
+character/voice/taunt banks, no player tests and no hardware certification.
+Next: use the handoff to finish writer/validator packet integration and lifecycle
+causal/choice enforcement, then D coherence and actual E investigations/pressures.
+
+## Session: 2026-09-12 (critic experiments and implementation review) — Codex
+
+Reviewed Claude's problem brief and changes against the campaign uniqueness plan.
+Full findings, experiment results, proposed solution and phase status:
+`docs/review_claude_critic_and_plan_2026_09_12.md`.
+
+Reproduced the constant-pass prompt on local qwen3:4b. Removing the completed JSON
+example alone did not fix it. Evidence/claim review produced discrimination but
+too many false rejections. Code-selected sentence checks plus separate relevance
+were better on the 20 tuning cases (all four awkward-but-true cases passed), but
+still missed a deadline and rejected two valid answers. No holdout calls, no larger
+runtime model, no production critic patch. Exact requests/responses and probe
+scripts are retained under `.tmp_godot_user/critic_*`.
+
+Important corrections: the hard gate accepts the brief's written “eleven hours”
+deadline; the numeric check only handles digits. Word-overlap relevance rejects a
+valid grounded risk answer. The new fact packet is not connected to the live writer
+prompt. Causal publication failures retain the offer without its contract, branch
+results have no executable consumer, and quality state is not retained in promotion.
+The expanded factions still force one hostile pair per system. A–D are partial
+foundations; actual E investigation/pressure integration remains outstanding.
+
+Five relevant suites pass, showing these gaps need integration/regression coverage
+rather than another assertion that existing fixtures are green. No gameplay code,
+protected cast, voice files or existing baseline critic results were changed.
+
+## Session: 2026-09-12 (first real inference run — the critic has no signal) — Claude
+
+Abe asked me to run the local model against the quality gate. Ollama was up with
+`qwen3:4b` (the configured small model) and `qwen3:8b`. I built the harness so it
+calls `LocalModelGateway.generation_body()` rather than rolling its own request —
+if the two drift, the measurement quietly stops being about the game.
+
+THE RESULT IS DECISIVE AND IT IS BAD. Across 28 hand-labeled cases -- 12 that
+should pass, 16 that should be repaired -- the critic returned `pass` **28 times
+out of 28**, and the raw response was **byte-identical in every single case**:
+
+    {"verdict": "pass", "issues": [], "spans": []}
+
+That is exactly the example JSON from our own prompt, `"pass"` value included.
+It is not judging. It is copying the schema demo. Measured: 16 false passes,
+0 true repairs, 0 false rejections, 0 uncertain. Zero discriminative power.
+Latency was never the issue -- p50 305ms, p95 335ms, `done_reason: stop`, so it
+is not truncation either.
+
+HOW I KNOW IT IS NOT A HARNESS BUG: I counted DISTINCT raw responses before
+reading any score. One. Then I reproduced it with a bare `curl` outside the
+project on two opposite cases -- a line inventing survivors who do not exist,
+and a clean truthful line -- and got the same bytes for both. Both request
+bodies are committed at `tools/quality_eval/repro/` so anyone can rerun them.
+
+THE LESSON I ALMOST MISSED: a uniform or perfect result from a model-as-judge
+should be read as a constant function until proven otherwise. If I had only
+looked at the summary table, "every clean_pass and awkward_but_true case passed"
+reads like the critic working.
+
+THIS IS THE THIRD TIME THIS PROJECT HAS HIT THE SAME FAMILY, which is why I
+stopped instead of iterating on the prompt:
+  - the JSON label leak (format:"json" turned prompt labels into JSON keys),
+  - the prohibition that TAUGHT the phrase ("was not sold" -> "You were never
+    sold"), fixed in the parser rather than the prompt,
+  - added prompt rules collapsing into one shared template across categories.
+Common thread: on a 4b, concrete text in the prompt gets COPIED, not obeyed.
+Given that history, "just write a better prompt" is a guess, not a plan.
+
+Abe's call: write the problem up properly and put it to ChatGPT's new model.
+`docs/problem_critic_always_passes.md` is a self-contained brief for someone with
+NO repo access -- exact setup and sampling parameters, the verbatim prompt, the
+verbatim response, our hypothesis marked as unverified, the three prior
+occurrences, five ranked questions, the hard constraints (nothing bigger than the
+small model may become a player requirement; 8GB combined; must not become a
+style filter, because five corpus cases are deliberately awkward-but-true and
+MUST pass), the labeled corpus breakdown and four representative cases. It asks
+for a reason to believe one way or the other, explicitly not for reassurance
+that the prompt can be improved.
+
+WHAT THIS DOES NOT BREAK, and I checked rather than assumed: the deterministic
+hard checks are code, were unaffected, and already catch the invented-deadline
+example the critic waved through. `DialogueQualityGate.decide()` records an
+absent or failed critic as `quality_unknown`, never `quality_passed`, so nothing
+has shipped on the strength of this false approval. The runtime gate is exactly
+as strong today as it was yesterday; what is missing is the layer that was
+supposed to sit on top of it.
+
+- New: `tools/quality_eval/` (OllamaProbe transport, 28-case labeled corpus,
+  critic runner with holdout protection, standalone repro bodies).
+  Raw run data: `logs/quality_eval/critic_eval.json`.
+- The runner has a `--tuning-only` mode that excludes the 8 held-out cases, so
+  the holdout stays clean if anyone does tune the prompt later.
+- Logged in `docs/bugs.md`. No gameplay code changed this session.
+
+STILL UNMEASURED, and not to be confused with the above: generation quality
+itself. I measured the CRITIC, not the writer. Whether `qwen3:4b` produces good
+openings and answers through the real fact-packet prompt is still unknown, and
+is the next thing to measure once the critic question is settled.
+
+NEXT: wait on the external answer. If prompt/structure can produce real
+discrimination, wire it and re-measure against the same 28 cases, reporting
+per-category false-pass and false-rejection rates with the holdout kept
+separate. If a 4b critic cannot do this, say so in the plan, keep the
+deterministic checks as the runtime gate, and move the critic to an offline
+development tool on `qwen3:8b` -- allowed as development equipment, never as a
+player requirement.
+
+## Session: 2026-09-11 (Phases A-C: causal contracts, grounded options, quality gate) — Claude
+
+Implemented phases A-C of `docs/plan_campaign_uniqueness_and_dialogue_quality.md`.
+Kaelen and N.O.V.A.'s personalities, canon, soul projections, reviewed line banks
+and voice identities were not touched, and none of their protections were relaxed
+to improve a generic dialogue score.
+
+THE SHAPE OF IT. A quest now has a code-owned explanation of WHY it exists before
+anyone writes a word of its dialogue. `QuestCausalContract` records requester,
+beneficiary, desire, triggering event, the problem, how the objective addresses
+that problem, why this pilot, where the money comes from, and which facts are
+public versus private. `QuestPlausibilityValidator` then asks whether the game can
+actually do any of it -- supported objective, active capability, real quantity,
+reachable place, a recipient who could plausibly sign for cargo, an affordable
+reward, effects the reducer can record. Fluent nonsense and clumsy truth are
+treated identically at that layer, which is the point.
+
+ABE'S RULE IS ENFORCED AT ONE SEAM. `QuestChoicePolicy` runs inside
+`MissionConversationPlan.build_plan()`, which every offer builder already passes
+through. It only ever REMOVES: an option with no motive the player can see, an
+option the player has no information to understand, an option whose action this
+build cannot execute, and two buttons that do the same thing collapse to one.
+`single_path: true` is a normal reported outcome, not a failure. There is no code
+path by which a shortage of options causes one to be invented.
+Questions are filtered the same way -- no mandatory why/risk/connection trio.
+
+THE THREE VERTICAL EXAMPLES ARE REAL FIXTURES, not descriptions: a one-path
+courier job that must pass every gate WITHOUT growing a branch or a deadline; an
+investigation with one justified decision that survives intact; and the same
+investigation with a menu-filler third option that is correctly removed, leaving
+a valid two-option quest rather than a generation failure.
+
+THE FIXTURES FOUND TWO BUGS THE UNIT TESTS DID NOT. `_has_risk()` could not see a
+risk recorded in the contract, so a genuinely hazardous courier job lost its risk
+question. And the "why" check treated problem facts as a FALLBACK for
+action-justification facts rather than as part of the same question, which let a
+fully-explanatory opening keep a button that could only restate it. Both fixed
+and pinned.
+
+DIALOGUE. `DialogueFactPacket` is one speaker, one purpose, bounded public facts
+ordered by what that purpose actually needs. Private facts are never put in the
+prompt at all -- withholding beats detecting a leak afterwards, though the leak
+detector exists and is tested as the second line. `DialogueQualityGate` adds what
+the existing validator cannot establish: invented numbers, an answer that ignores
+the question, a line that restates the briefing, a habitual opening reused, a
+claim that contradicts what the speaker already said.
+
+THREE STATES, NOT ONE. `quality_passed`, `quality_unknown` and `quality_rejected`
+are recorded separately. With no reviewer available a line publishes as UNKNOWN,
+never as passed. An `uncertain` verdict publishes rather than rejects, because the
+critic is the same small model and treating its confusion as a fault throws away
+good lines. A hard failure rejects regardless of what the reviewer said, and that
+precedence is pinned by a test. Malformed critic output is uncertain, never pass.
+Nothing here is described as human approval.
+
+WIRED, NOT SHELVED. `PublicBoardOfferBuilder._attach_story_cause_metadata()` --
+the one seam all five board offer types already share -- now compiles, validates
+and attaches a contract. The gate runs inside the real
+`MissionConversationGeneration.accept_response()`. The contract rides inside
+existing narrative metadata, so it persists through every existing save path
+without a second persistence system.
+
+WHAT THE INTEGRATION TEST FOUND, and these are behaviours rather than bugs:
+- RECOVER_COMBAT_DROP compiles no contract in that seed BECAUSE no local faction
+  there wants recovery work. The offer publishes on its template. Inventing a
+  cause to fill the slot is the exact failure this work exists to prevent.
+- A delivery whose recipient cannot be resolved yet gets no contract and still
+  publishes as a complete, acceptable job. Withholding it would empty the board
+  for no player benefit. The test asserts that fallback rather than assuming it.
+- Rejections are reported to GenerationDiagnostics so a shortage is visible.
+
+ONE LATENT BUG FIXED ON THE WAY. `GlobalState.get_system_root()` dereferenced
+`get_tree()` with no null check, so any caller reaching it outside a live tree
+printed a SCRIPT ERROR underneath a PASSING suite. `get_ui_manager()` directly
+below it already guarded correctly; it and `get_primary_station()` now match.
+
+AND THE PARSE HARNESS ITSELF WAS LYING. Loading every script from `_init`
+compiles them before autoloads are registered, producing a wall of
+"Identifier not found: GlobalState" that has nothing to do with the code. It now
+defers a frame. Same lesson as the earlier false [PASS] entries: fix the harness,
+do not read past its noise.
+
+- Green, run sequentially with unique workspace log files, all zero SCRIPT ERRORs:
+  quest causal contract, quest choice policy, dialogue quality gate, narrative
+  metadata, public board validation, mission contract, mission state transition,
+  board delivery recipient, mission conversation generation/plan/compiler/
+  controller/flow, dialogue bundle validator, story agent offer builder.
+  Whole project: 352 scripts, 0 failed.
+- Mutation-checked: breaking the plausibility validator, the quality gate's
+  checks, or the gate's wiring into accept_response all make the suites fail.
+
+STILL OPEN, and none of it should be read as done:
+- Phase D: desires still come from four goal templates and two-faction systems
+  still get a forced rivalry. The compiler is ready for richer desires; the
+  generator has not been widened.
+- Phase E (P2 runtime integration, P3 reducer), F (endings), G (freshness
+  history and measurement) are not started.
+- NO INFERENCE WAS RUN THIS SESSION. The held-out corpus, critic false-pass and
+  false-rejection rates, generated-vs-fallback exposure, latency percentiles and
+  the 8GB memory figure are UNMEASURED, not merely unreported. The reviewer
+  prompt and parser are tested against fixtures only.
+- Human/voice review remains deferred. Nothing here is player-approved.
+- Uncommitted. Earlier sessions' working-tree changes, including the user edit to
+  `data/content/taunt_lines.json`, were left alone.
+
+### Phase D landed in the same session
+
+Widened the local faction generator past its four goal templates. A desire now
+has twelve dimensions -- goal, observable success condition, need, obstacle,
+triggering event, what it holds, what it can pay from, a limit it will not cross,
+what would change its mind, a private motive, mission intents and stake -- and
+each is drawn on its OWN seed so they combine instead of arriving as a set.
+Mission intents now follow the NEED rather than the goal, so the work the player
+is asked to do follows from the thing that is actually missing.
+
+THE FORCED RIVALRY IS GONE. The old generator hard-set standing to -65 between
+each faction and its neighbour, so every system was a ring of enemies.
+Relationships now span dependency, cooperation, indifference, friction and
+rivalry, weighted so the non-hostile kinds outnumber the hostile ones, and they
+are ASYMMETRIC -- how A sees B is drawn separately from how B sees A, so one side
+can depend on a party that is indifferent to it. Every opinion cites an actual
+local fact rather than carrying a bare number. What is still guaranteed is ONE
+adversarial pair per system, because a system with no tension has nothing to hang
+a mission on. The store's regression test asserted the old rule and was updated
+to the new contract rather than worked around.
+
+THE BUG THE VARIETY TEST CAUGHT, and this one is worth remembering. My first
+per-dimension draw used String.hash(). Godot's string hash is LINEAR, so two
+seeds of the same length differing only in a short suffix ("...|goal" vs
+"...|need") keep a CONSTANT difference modulo the option count. Across 60 sampled
+seeds, need perfectly predicted goal. That is the exact locked-template failure
+the class was written to remove, reintroduced one layer down, and completely
+invisible to reading the code -- it looks correct. Every draw is a sha256 digest
+now. The lesson: measure variety by counting distinct outcomes, do not assert
+that a generator "looks random".
+
+MEASURED across 40 seeds / 80 generated factions: 60+ distinct goal/need/obstacle
+situations, 4+ distinct intent sets, all three non-hostile relationship kinds
+present, hostile relations under 60% of the total. Thresholds sit below the
+observed values so the suite fails on a regression, not on luck. This is variety
+MEASUREMENT, not a uniqueness guarantee, and it says nothing about prose quality.
+
+Save compatibility: `_normalize_faction()` only fills missing fields, so existing
+saved rosters load unchanged and simply lack the new ones.
+
+- Final verification: 23 suites run sequentially with unique workspace log files,
+  all pass=1 fail=0 script_errors=0. Whole project: 354 scripts, 0 failed.
+
+### Then the first slice of Phase E, and what reading the output caught
+
+The contract compiler now justifies the SPECIFIC item, quantity, target, origin
+and destination instead of the mission verb -- the plan's named gap, "attaching
+a cause based mainly on mission verb is not enough to justify each specific item,
+target and destination." It returns nothing when the objective lacks the detail
+to make a real claim, because a sentence that fits any cargo is worse than no
+fact at all: the packet presents whatever it carries as grounding.
+
+THEN I DUMPED EVERY COMPILED FACT FROM THE REAL BOARD BUILDER AND READ THEM, and
+found four bugs that no test I had written would ever have caught:
+
+1. A RAW FACTION HASH IN PLAYER-VISIBLE TEXT. "Whatever gen_3753748b9ca0_f1 is
+   running in that lane..." -- target_faction holds a generated key, and the
+   existing display helper would have title-cased it into "3753748b9ca0 F1".
+   Now resolved through the real identity table, and when it cannot be resolved
+   the sentence omits the name rather than printing a prettified hash.
+2. A FACTION OBSTRUCTING ITSELF. "What X is running in that lane is what stands
+   between X and what X wants." The recovery target picker can land on the
+   requester. Guarded in the compiler so it holds whatever the caller picks.
+3. TWO MANGLED SENTENCES. The stake read "X is trying to nobody local will take
+   the run at the price it can pay" -- an obstacle glued to a change condition
+   and then wrapped in a goal phrase. The limit began lowercase mid-sentence.
+4. A FALSE CAUSAL CLAIM. "45 m3 of ore is what X needs to cover survey data from
+   a drift it cannot reach." Ore does not produce survey data. It now says the
+   ore is being SOLD TO PAY FOR the need, and two INTENTS_BY_NEED entries that
+   mapped a need to a verb that cannot serve it were fixed at the source.
+
+THE LESSON, and it is the same one the taunt pass taught: READ THE GENERATED
+CONTENT, NOT JUST THE TESTS. Every one of these passed structural validation,
+and the quality gate's hard checks would have passed them too -- they are all
+GROUNDED, faithful renderings of facts the contract genuinely holds. They are
+simply badly written or untrue, and only reading them shows that.
+
+`tests/domain/run_causal_fact_text_tests.gd` now pins all four BY SHAPE rather
+than by wording: no raw identifiers in any public fact, no faction named twice
+in its own obstruction, every fact sentence capitalised and terminated, ore never
+claiming to satisfy an immaterial need. Mutation-checked -- reverting the guards
+produces 26 failures.
+
+- FINAL VERIFICATION: 27 suites run sequentially with unique workspace log files,
+  all pass fail=0 script_errors=0. Whole project: 355 scripts, 0 failed, 0
+  SCRIPT ERRORs. PROJECT_MAP refreshed.
+- Mutation-checked: quest causal contract, quest choice policy, dialogue quality
+  gate, the gate's wiring into accept_response, and causal fact text.
+
+NEXT CONCRETE STEP: the rest of Phase E. `SystemConfig._apply_faction_story()`
+still emits ONE cause per mission INTENT, so two jobs sharing a verb still share
+a requester and a desire even though their facts now differ. It should emit a
+cause per objective INSTANCE. After that: P2 investigation runtime integration
+(offers, sites, scans, resolution commands, saves), then the P3 pressure reducer
+so committed outcomes change which offers appear next.
+
+AND BEFORE MUCH MORE OF THAT -- run the local model. Nothing in this session
+touched inference. The quality gate, the reviewer prompt and the fact packets are
+tested against fixtures only, and the whole point of them is prose no fixture can
+judge.
+
+
+## Session: 2026-09-11 (next-level campaign and dialogue plan) — Codex
+
+Added `docs/plan_campaign_uniqueness_and_dialogue_quality.md` at Abe's request.
+This is a proposed implementation plan, not implemented gameplay. It builds on
+the faction foundation with causal quest contracts, grounded optional branches,
+small-model fact packets and a measured dialogue quality gate, then runtime
+investigations, pressures, destination dependencies and campaign endings.
+
+Abe's explicit direction: quests do not need multiple choices when there is no
+valid reason for them. The plan permits one completion path, removes redundant
+questions, and requires concrete motives and supported effects for branches.
+It includes held-out evaluation, imperfect-critic handling, bounded generation
+budgets, save compatibility and deferred human review. Kaelen/N.O.V.A. remain
+protected. Next implementation starts with phases A–C and three vertical cases;
+older fixed branch/question quotas yield to this direction.
+
+## Session: 2026-09-11 (per-system faction foundation) — Codex
+
+Abe authorized continued implementation toward design_end_goal.md with player
+testing deferred. Frontier generation previously consumed a six-faction campaign
+pool, reused revealed factions after exhaustion, and randomly inserted tutorial
+factions. New destinations now persist their own deterministic roster of 2–4
+factions keyed by campaign seed and system ID. Retrying/revisiting returns the
+same roster; the old pool API and previously saved assignments remain readable.
+Existing generated configurations are retained by the normal matching-seed path.
+
+Each new faction has a home system, desire, required resource/interest, mission
+intents and directed opinions of its local peers. Persistence rejects foreign
+relationship targets. SystemConfig saves the identities and builds local mission
+causes from selected factions' desires/rivalries. Public board context and cause
+metadata consume those records; cause_faction_id, cause_rival_faction_id and
+desire_id survive normalization without overwriting the mission's faction_id.
+GlobalState can resolve identities from the active generated configuration.
+Malformed standalone rosters regenerate local factions, and minor ship spawning
+no longer falls back to the tutorial roster. Kaelen/N.O.V.A. personalities,
+canon, soul files, reviewed lines and voice banks were not changed.
+
+Seven focused suites pass: faction persistence (twelve systems beyond the former
+pool limit, retry/reload and invalid-peer rejection), system factory, system
+registry, NPC routes/local spawn fallback, public board validation, narrative
+metadata and mission state transitions. Headless fixture initialization was fixed
+where early registry loading produced script errors before a misleading PASS.
+All 342 scripts compile. Headless certificate/user-stat/shutdown warnings remain;
+the parse run could not launch Ollama. No live generation quality claim is made.
+
+This is a foundation, not completion of the end goal. Desire templates are finite;
+relationships currently feed mission reasons, not an evolving diplomacy system.
+Existing reputation behavior is retained. Next substantial work: connect the P2
+investigation prototype to runtime offers/sites/actions, then implement the P3
+pressure reducer so committed outcomes change later discretionary offers. Unique
+campaign endings and generative desire depth remain outstanding. Player/voice/
+hardware checks stay deferred rather than being marked passed.
+
+## Session: 2026-09-11 (P4 outcome reactions and later callbacks) — Codex
+
+Connected the saved public investigation memories to QuietMomentDirector's shared
+request slot and cooldown. GameRoot checks every ten seconds for an eligible safe
+window: N.O.V.A. in flight, Kaelen at the primary station's services screen. Combat,
+interaction queue, active speech, paused game and intro cinematic suppress this
+path. Generation uses the unchanged fixed-cast soul projection and validators;
+only the classified public outcome enters the prompt. Two attempts per activity
+step, persisted before waiting; stale system/step/visit/state responses cannot speak.
+
+Each speaker may deliver one initial reaction and one later reference per outcome,
+at most one reference per visit. Later references need another activity step;
+all expire after four steps. Docking, undocking, arriving in a system, accepting
+and completing contracts advance activity. Delivery flags persist on text
+presentation. Nova.speak now returns whether it emitted text, so suppressed lines
+do not retire memories. Existing callers still ignore the return value. No voice,
+personality, soul, canon or reviewed-line content changed.
+
+Outcome facts were removed from ordinary Kaelen packets: the dedicated path now
+owns their delivery and retirement. Investigation completion no longer also queues
+the generic payout aside. Legacy memories without a recorded activity step expire
+conservatively rather than producing unbounded old callbacks. Existing saves remain
+readable. Failed/suppressed/stale responses are diagnosed; no replacement speech.
+
+Deterministic tests cover eligibility/expiry, visit limits, save/load retirement,
+retries, stale/reset responses, real GameRoot/Nova delivery and suppression. Live
+model prose/voice review remains pending; automated tests do not establish quality.
+
+Final validation: seven relevant suites pass (callback consumer, projector,
+quiet-moment director, Nova, fixed-cast validator, player address, speech service).
+All 342 scripts compile; git diff --check is clean. The usual headless certificate,
+user-stat and shutdown warnings remain, and the parse run could not start Ollama.
+
+## Session: 2026-09-11 (Player review accepted; P4 outcome memory) — Codex
+
+Abe confirmed the conversation player tests complete and asked to continue.
+Recorded that acceptance in the mission-conversation plan. S6 quantitative
+generation-source/latency evidence remains open: the current fallback summary
+comes from headless board fixtures, not the player session.
+
+Continued P4 with committed investigation outcome memories. The existing projector
+now builds, deduplicates and normalizes at most 12 memories per fixed-cast speaker,
+evicting delivered callbacks first. StoryManager's completion hook persists them
+and advances story revision. StoryStateStore normalizes them on reload. Kaelen's
+existing interaction packet receives at most two newest same-system memories.
+Text is reconstructed from classified typed tags, not persisted free text;
+private mistaken certifications, unknown tags and uncompleted missions are omitted.
+No personality, canon, voice, dialogue-bank or model-routing changes.
+
+Validation: expanded outcome projector regression includes real packet assembly,
+bounded retention, duplicate events, JSON reload, cross-system exclusion and
+private-data exclusion. Next P4 slice: activity-step eligibility/retirement and
+N.O.V.A. consumption through existing quiet-moment arbitration; no new spontaneous
+speech or later-callback delivery is claimed by this slice.
+
+Final checks: outcome projector, Kaelen interaction bundle, player address and
+mission state-transition suites pass; 341 scripts compile; diff whitespace clean.
+The transition harness now defers registry/save-migrator loads until autoloads
+exist and writes its fixture in the workspace. Its expiration assertion follows
+the real time_changed signal instead of trying to expire the same mission twice.
+
+## Session: 2026-09-11 (Board delivery recipients and cargo assignment) — Codex
+
+Board courier/purchase acceptance now verifies a local resident can receive the
+delivery. UI acceptance also checks the destination node resolves. Courier cargo
+stores a delivery assignment (mission ID, destination, recipient), and the mission
+retains the recipient name. Docking checks destination, cargo and current resident
+roster before exposing a named Deliver button, including in an outpost's services
+and lounge. The local person acknowledges receipt; normal mission completion
+removes cargo and pays once. Board deliveries no longer enter Kaelen's completion
+presentation. Existing deliveries without assignments bind to a local resident
+when docked at their destination. Missing/mismatched recipients preserve cargo.
+
+Generated outpost and generated primary-station rosters use the same resolver.
+Kaelen/N.O.V.A. personality content and voice definitions remain unchanged.
+Regression covers acceptance rejection without side effects, cargo assignment,
+wrong dock, missing resident, legacy repair, save normalization, generated
+recipients and successful single payout. Live in-game retest remains pending.
+
+## Session: 2026-09-11 (Local lounge residents and docking voices) — Codex
+
+Fixed in working tree: outpost lounges now use their own resident roster in
+all three contact slots. System faction representatives and Kaelen remain at
+the primary station; local residents remain available without a rumor. Incoming
+station prefetch uses the same ownership rule. Dock clearance resolves the
+explicit destination's mechanic or resident voice; unpopulated stations get a
+stable local profile. The old neutral fallback blended the same voices as Jenna.
+Kaelen and N.O.V.A. personality content and voice definitions are unchanged.
+
+Validation: local roster/dock voice regression, lounge conversation and intent
+selector suites pass; all 340 scripts compile. Live lounge/audio retest pending.
+Headless runs retain environment certificate, stats-write and shutdown warnings;
+the parse run also could not reach/start Ollama. No live speech validation claimed.
+
+---
+
+## Session: 2026-09-11 (Board courier card destination) — Codex
+
+Fixed Abe's screenshot repro: cargo-ready courier cards said the job was
+satisfied and the Dock at Station command always targeted the primary station.
+The card now says cargo is ready for delivery, names the actual destination,
+and routes its button/progress click there. Courier/purchase destination IDs
+take priority; unresolved destinations disable the button rather than falling
+back to a different station. Turn-in is disabled at the wrong dock and accepts
+the existing canonical outpost aliases. Ordinary combat turn-ins are unchanged.
+
+New runtime UI click-path regression plus board validation, capability and
+tutorial-revisit suites pass. Parse check: 339 scripts, zero failed. Existing
+accepted missions work with their saved destination. Uncommitted; in-game
+retest pending. No fixed-cast or authored dialogue changes.
+
+---
+
+## Session: 2026-09-11 (Tutorial offer revisit) — Codex
+
+Abe found that declining Clean and Easy, then returning to Kaelen, skipped to
+normal missions. The return-briefing button was setting briefing acceptance and
+calling the normal board without routing back to the tutorial offer.
+
+- The board now prioritizes the unfinished tutorial whenever the agent lane is
+  empty, regardless of seen/accepted/delivered flags or cached generated work.
+- Active contracts retain progress/turn-in; abandonment allows the tutorial to
+  be offered again. Only the existing completion flag releases the gate.
+- Hearing the return briefing no longer marks mission acceptance. Failed mission
+  acceptance keeps the offer open and does not advance acceptance flags.
+- Kaelen/N.O.V.A. personalities and all authored dialogue are unchanged.
+- Regression exercises actual UI board routing without rendering/speech, plus
+  legacy flags, reload, stale cache, active mission and abandonment cases.
+  Existing dock test needed runtime GlobalState lookup to avoid an autoload
+  compile-order failure that misleadingly printed PASS. It now runs cleanly.
+- Four relevant suites pass; whole-project parse: 338 scripts, zero failures.
+
+Uncommitted; awaiting Abe's decline/leave/return in-game retest. Earlier mission
+conversation work and unrelated working-tree edits were preserved.
+
+---
+
+## Session: 2026-09-10 (Mission conversation LLM path) — Codex
+
+Completed the implementation slices S1–S5 of
+`docs/plan_mission_conversation_llm_path.md`, following `docs/design_end_goal.md`:
+campaign-specific mission prose around code-owned reasons, facts and choices.
+Kaelen's and N.O.V.A.'s personalities and canon files were not changed.
+
+- Offers keep their validated template immediately; a background callback worker
+  queues opening/answer slices on `small_dialogue` (25-second timeout).
+- Only requested fields are parsed and validated. Accepted fields survive later
+  failures. Full and partial bundles pass complete structural/voice/causal
+  validation before promotion. Fixed-cast lines use existing soul guidance and
+  validators, and generated lines pass the existing narrative quality gate.
+- Persisted offer context/progress preserves accepted fields and two-attempt
+  budgets across reload. Fixed a discovered integer/float JSON fingerprint
+  mismatch. Prefetch copies and subsequent UI choices see the accepted text.
+- Old cached offers migrate from their original saved candidate/budget, so
+  continuing an existing campaign does not leave them permanently templated.
+- A failed opening cannot strand answers. Late callbacks cannot mutate a new
+  campaign/system/cache context or an accepted/declined offer. Accepted missions
+  retain conversation text and source metadata.
+- Diagnostics count `generated` and `partial_generated` separately; a pending
+  template is no longer immediately recorded as a failed generation.
+- New deterministic transport and real GameRoot/cache tests pass, along with
+  the existing conversation, fixed-cast, mission-contract and cache regressions.
+  Final verification: 14 suites pass; 337 scripts parse with zero failures.
+
+**Still pending:** S6 with Abe in game (several missions, listen to generated
+dialogue, confirm responsiveness and fallback-volume improvement). The bug is
+marked implemented/awaiting review, not closed based on fake model responses.
+No live-model verification was performed. Changes are uncommitted. The existing
+user edit to `data/content/taunt_lines.json` was left alone.
+
 ---
 
 ## Session: 2026-07-28 (Quiet-Moment Curated Banks) — Codex

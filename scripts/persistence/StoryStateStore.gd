@@ -22,6 +22,9 @@ const FixedCastStateMachineType := preload(
 )
 
 const DOCUMENT_VERSION := 2
+const InvestigationBoardType := preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
+const LocalPressureDirectorType := preload("res://scripts/story/LocalPressureDirector.gd")
+const DesireProgressLedgerType := preload("res://scripts/story/DesireProgressLedger.gd")
 const STATE_PATH := "story_state.json"
 
 var campaign_path: String
@@ -160,7 +163,13 @@ static func _default_state() -> Dictionary:
 		"chapter_packet_generation_queued": {},
 		"declined_offer_cooldowns": {},
 		"story_consequences": [],
+		"local_outcome_memories": [],
+		"local_outcome_step": 0,
+		"local_outcome_visit": 0,
 		"asked_question_intents": [],
+		"investigation_board": {},
+		"local_pressures": {},
+		"desire_progress": {},
 	}
 
 
@@ -176,6 +185,8 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		"story_revision",
 		"knowledge_revision",
 		"mission_history_revision",
+		"local_outcome_step",
+		"local_outcome_visit",
 	]:
 		migrated[revision_field] = maxi(0, int(migrated.get(revision_field, 0)))
 	if not migrated.get("knowledge_states", {}) is Dictionary:
@@ -212,9 +223,14 @@ static func _migrate_legacy_state(source: Dictionary) -> Dictionary:
 		)
 	if not migrated.get("fixed_cast_voice_history", {}) is Dictionary:
 		migrated["fixed_cast_voice_history"] = {}
+	if not migrated.get("local_pressures", {}) is Dictionary:
+		migrated["local_pressures"] = {}
+	if not migrated.get("desire_progress", {}) is Dictionary:
+		migrated["desire_progress"] = {}
 	if not migrated.get("story_consequences", []) is Array:
 		migrated["story_consequences"] = []
 	_backfill_legacy_player_knows(migrated)
+	migrated["local_outcome_memories"] = OutcomeReactionProjector.normalize_memories(migrated.get("local_outcome_memories", []))
 	return migrated
 
 
@@ -277,6 +293,18 @@ static func _kaelen_relationship_band_for_respect(respect: int) -> String:
 
 static func _validate_data(value: Dictionary) -> ValidationResult:
 	var result := ValidationResultType.new()
+	if not value.get("desire_progress", {}) is Dictionary:
+		result.add_error("invalid_desire_progress", "Desire progress must be an object.")
+	else:
+		result.merge(DesireProgressLedgerType.validate(value.get("desire_progress", {})), "desire_progress")
+	if not value.get("local_pressures", {}) is Dictionary:
+		result.add_error("invalid_local_pressures", "Local pressures must be an object.")
+	else:
+		result.merge(LocalPressureDirectorType.validate(value.get("local_pressures", {})), "local_pressures")
+	if not value.get("investigation_board", {}) is Dictionary:
+		result.add_error("invalid_investigation_board", "Investigation board must be an object.")
+	else:
+		result.merge(InvestigationBoardType.validate(value.get("investigation_board", {})), "investigation_board")
 	if int(value.get("schema_version", 0)) != DOCUMENT_VERSION:
 		result.add_error(
 			"invalid_story_state_version",

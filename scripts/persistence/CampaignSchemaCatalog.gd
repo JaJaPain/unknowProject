@@ -419,6 +419,8 @@ static func _validate_checkpoint(data: Dictionary, result: ValidationResult) -> 
 		"dock",
 		"undock",
 		"gate_arrival",
+		"investigation_accepted",
+		"mission_settled",
 		"manual_copy",
 		"legacy_import",
 	]:
@@ -1111,11 +1113,14 @@ static func _reject_nested_keys(
 	data: Dictionary,
 	keys: Array[String],
 	path: String,
-	result: ValidationResult
+	result: ValidationResult,
+	segments: Array = []
 ) -> void:
+	if segments.is_empty(): segments = [path]
 	for key in data:
 		var child_path := str(key) if path.is_empty() else "%s.%s" % [path, key]
-		if str(key) in keys:
+		var child_segments := segments + [str(key)]
+		if str(key) in keys and not is_investigation_site_position(child_segments):
 			result.add_error(
 				"wrong_ownership",
 				"Disposable field '%s' cannot be persisted." % key,
@@ -1123,7 +1128,7 @@ static func _reject_nested_keys(
 			)
 		var value: Variant = data[key]
 		if value is Dictionary:
-			_reject_nested_keys(value as Dictionary, keys, child_path, result)
+			_reject_nested_keys(value as Dictionary, keys, child_path, result, child_segments)
 		elif value is Array:
 			for index in range(value.size()):
 				if value[index] is Dictionary:
@@ -1131,8 +1136,20 @@ static func _reject_nested_keys(
 						value[index] as Dictionary,
 						keys,
 						"%s.%d" % [child_path, index],
-						result
+						result,
+						child_segments + [index]
 					)
+
+## Fixed mission coordinates are durable facts, unlike a ship's tactical pose.
+## Match structural paths, not arbitrary dictionaries containing an investigation key.
+static func is_investigation_site_position(path: Array) -> bool:
+	if path.size() == 7 and path.slice(0, 2) == ["state", "quest"] and path[2] is int:
+		return path.slice(3, 5) == ["investigation", "sites"] and path[5] is int and path[6] == "position"
+	if path.size() == 6 and path.slice(0, 4) == ["state", "quest", "investigation", "sites"]:
+		return path[4] is int and path[5] == "position"
+	if path.size() == 12 and path.slice(0, 4) == ["state", "story_state", "investigation_board", "entries"]:
+		return path.slice(5, 10) == ["posting", "quest_data", "objective", "investigation", "sites"] and path[10] is int and path[11] == "position"
+	return false
 
 
 static func _is_whole_number(value: Variant) -> bool:

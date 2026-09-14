@@ -3,6 +3,74 @@
 **Written:** 2026-09-10, at the end of a session, for a fresh window to execute.
 **Goal:** every fact needed is in this file. Do not re-derive; verify and build.
 
+## Implementation handoff — 2026-09-10, Codex
+
+**2026-09-11: Abe reports the player conversation checklist complete and passed.**
+The follow-up-question test was explained, and Abe then confirmed completion.
+Character/interaction review is accepted. The separate numerical S6 source-rate
+and latency evidence remains unverified: current repository diagnostics were
+overwritten by headless fixtures and cannot stand in for the play session.
+
+**S1–S5 implemented; S6 player review passed, diagnostics measurement open.** The original
+plan below is retained as the design record. No live-model output or in-game
+latency measurement is claimed by the automated tests.
+
+Decisions used:
+
+- Show the validated template immediately. Generate in the background; update
+  the offer and use its latest validated answers on subsequent player actions.
+  Never replace or replay a line already being displayed/spoken.
+- Carry a serializable mission/speaker/conversation snapshot on each slice job.
+  Store accepted fields, attempts, and terminal slice status with the offer and
+  in the campaign narrative cache. Resume when that offer is requested after a
+  reload. Context fingerprints normalize JSON numeric types.
+- Retain partial generation as `partial_generated`; record it as a content
+  source, never as a whole-conversation fallback.
+
+Implementation:
+
+- Registered `mission_conversation` on `small_dialogue`, timeout 25 seconds;
+  added the flat-JSON LLM request wrapper.
+- `MissionConversationGeneration.gd` handles scoped parsing/validation,
+  canonical fixed-cast guidance, safe assembly, causal validation and promotion.
+- `MissionConversationWorker.gd` runs callback-based requests through the
+  existing slice scheduler. Two attempts per slice survive reload. Exhausted
+  openings release dependent answers while retaining the template floor.
+- GameRoot gates/dispatches the new capability and persists progress, including
+  updates to prefetched offer copies. MissionAdapter retains the conversation
+  and its provenance in accepted mission/save data.
+- Cached offers from before this change migrate from their saved candidate and
+  budget when requested, preserving their existing plan and displayed text.
+- Late callbacks cannot change retired offers or a different campaign, system,
+  scheduler, cache-store instance, or context. Acceptance/decline retires work.
+- Kaelen uses the existing soul projection and FixedCastLineValidator. N.O.V.A.
+  has no authored mission-giver situation, so this path does not invent one.
+  Their personality/canon/voice-bank data files are unchanged.
+
+Automated evidence:
+
+- New `tests/story/run_mission_conversation_generation_tests.gd`: capability,
+  requested-key parsing, malformed responses, immutable accepted fields,
+  full/partial promotion, retry budgets across JSON reload, dependency release,
+  pause/concurrency gating, stale callbacks, quality rejection, fixed-cast voice,
+  retirement, real GameRoot dispatch, on-disk cache reopening and diagnostics.
+- Existing slicing, scheduler slicing, field contract, outcome projection,
+  offer builder, bundle validator, compiler, controller, conversation flow,
+  fixed-cast soul/line validation, mission contract and narrative cache store
+  suites pass. Godot tests run sequentially with unique workspace log paths.
+- Final whole-project parse check: **337 scripts, zero failed**. In total,
+  **14 relevant test suites pass**; `git diff --check` is clean.
+- Logs: `.tmp_godot_user/test_logs/mission_path_*` and
+  `mission_conversation_generation_*.log`. Headless runs also emit environment
+  certificate/user-stat warnings and occasional shutdown resource warnings;
+  these also occur in the existing suites and are not test failures.
+
+**S6 next:** play several post-tutorial agent missions with the local model
+available; listen for character fidelity, confirm immediate panel opening,
+and compare `mission_conversation_bundle` generated/partial/fallback diagnostics.
+The bug stays pending that review; automated fake responses establish wiring
+and safety behavior, not generated prose quality or real inference latency.
+
 ---
 
 ## 1. The finding this exists to fix

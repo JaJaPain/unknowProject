@@ -23,6 +23,7 @@ var difficulty_multiplier: float = 1.0
 var faction_weights: Dictionary = {}
 var faction_id_lookup: Dictionary = {}
 var faction_ship_styles: Dictionary = {}
+var faction_identities: Dictionary = {}
 var npc_patrol_count: int = 6
 var npc_minor_chance: float = 0.15
 var npc_minor_max: int = 2
@@ -98,40 +99,31 @@ static func from_seed(
 	config.npc_patrol_count = 5 + config.difficulty_tier
 
 	var local_factions: Array[String] = []
-	for faction in frontier_factions:
+	var roster := frontier_factions
+	if roster.size() < 2:
+		roster = CampaignGeneratedFactionStore.generate_system_factions(str(seed_val), id, 2 + absi(seed_val) % 3)
+	for faction in roster:
 		if not faction is Dictionary:
 			continue
 		var legacy_id := str(faction.get("legacy_id", "")).strip_edges()
 		var faction_id := str(faction.get("id", "")).strip_edges()
-		if legacy_id.is_empty() or faction_id.is_empty():
+		if legacy_id.is_empty() or faction_id.is_empty() or legacy_id in local_factions:
 			continue
 		local_factions.append(legacy_id)
+		config.faction_identities[legacy_id] = faction.duplicate(true)
 		config.faction_id_lookup[legacy_id] = faction_id
 		if faction.get("ship_style", {}) is Dictionary:
 			config.faction_ship_styles[legacy_id] = (
 				faction.get("ship_style", {}) as Dictionary
 			).duplicate(true)
 	if local_factions.size() < 2:
-		local_factions = [
-		"reavers",
-		"obsidian",
-		"dustborn",
-		"wraiths",
-		"ironclad",
-		]
-		config.faction_id_lookup.clear()
-		config.faction_ship_styles.clear()
+		return from_seed(name, id, seed_val, CampaignGeneratedFactionStore.generate_system_factions(str(seed_val), id))
 	for faction_name in local_factions:
 		if not config.faction_id_lookup.has(faction_name):
 			config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
-	var major_factions: Array[String] = ["zenith", "aurelia", "vanguard"]
-	for faction_name in major_factions:
-		config.faction_id_lookup[faction_name] = "faction.%s" % faction_name
 	var primary_idx: int = rng.randi() % local_factions.size()
 	var primary_faction: String = local_factions[primary_idx]
 	var faction_pool := local_factions.duplicate()
-	if rng.randf() < 0.35:
-		faction_pool.append(major_factions[rng.randi() % major_factions.size()])
 	var selected_factions: Array[String] = [primary_faction]
 	faction_pool.erase(primary_faction)
 	var target_faction_count := 2
@@ -172,6 +164,7 @@ static func from_seed(
 	var _sun_dir := Vector3(cos(sun_angle), rng.randf_range(0.25, 0.5), sin(sun_angle)).normalized()
 
 	config.story_pack = _build_story_pack(config, rng)
+	config._apply_faction_story()
 
 	return config
 
@@ -200,6 +193,7 @@ func to_dict() -> Dictionary:
 		"faction_weights": faction_weights.duplicate(true),
 		"faction_id_lookup": faction_id_lookup.duplicate(true),
 		"faction_ship_styles": faction_ship_styles.duplicate(true),
+		"faction_identities": faction_identities.duplicate(true),
 		"npc_patrol_count": npc_patrol_count,
 		"npc_minor_chance": npc_minor_chance,
 		"npc_minor_max": npc_minor_max,
@@ -245,6 +239,8 @@ static func from_dict(data: Dictionary) -> SystemConfig:
 		config.faction_id_lookup = (data.get("faction_id_lookup", {}) as Dictionary).duplicate(true)
 	if data.get("faction_ship_styles", {}) is Dictionary:
 		config.faction_ship_styles = (data.get("faction_ship_styles", {}) as Dictionary).duplicate(true)
+	if data.get("faction_identities", {}) is Dictionary:
+		config.faction_identities = (data.get("faction_identities", {}) as Dictionary).duplicate(true)
 	config.npc_patrol_count = int(data.get("npc_patrol_count", config.npc_patrol_count))
 	config.npc_minor_chance = float(data.get("npc_minor_chance", config.npc_minor_chance))
 	config.npc_minor_max = int(data.get("npc_minor_max", config.npc_minor_max))
@@ -294,6 +290,50 @@ static func _color_from_variant(raw_color: Variant, fallback: Color) -> Color:
 			float(data.get("a", fallback.a))
 		)
 	return fallback
+
+
+func _apply_faction_story() -> void:
+	var agendas: Array = []
+	var causes: Dictionary = {}
+	var intents: Array[String] = []
+	for legacy_key in faction_weights:
+		var faction: Dictionary = faction_identities.get(legacy_key, {})
+		var desire: Dictionary = faction.get("desire", {})
+		if desire.is_empty():
+			continue
+		var relationships: Array = faction.get("relationships", [])
+		var rival: Dictionary = {}
+		for relationship in relationships:
+			if int(relationship.get("standing", 0)) >= 0:
+				continue
+			for local_key in faction_weights:
+				var other: Dictionary = faction_identities.get(local_key, {})
+				if other.get("id", "") == relationship.get("faction_id", ""):
+					rival = other
+					break
+			if not rival.is_empty():
+				break
+		var reason := "%s needs %s to %s in %s" % [faction["display_name"], desire["need"], desire["goal"], system_name]
+		if not rival.is_empty():
+			reason += "; %s is competing for the same access" % rival["display_name"]
+		agendas.append({"faction_id": faction["id"], "faction_name": faction["display_name"], "desire": desire.duplicate(true), "relationships": relationships.duplicate(true)})
+		for intent in desire.get("mission_intents", []):
+			if str(intent) not in intents:
+				intents.append(str(intent))
+			if not causes.has(str(intent)):
+				causes[str(intent)] = {"cause_id": "cause.%s.%s" % [str(desire["id"]).trim_prefix("desire."), intent],
+					"cause_faction_id": faction["id"], "cause_rival_faction_id": rival.get("id", ""),
+					"desire_id": desire["id"], "public_because": reason, "stake": desire["stake"]}
+	if agendas.is_empty():
+		return
+	story_pack["faction_agendas"] = agendas
+	story_pack["mission_causes"] = causes
+	story_pack["mission_intents"] = intents
+	var first_cause: Dictionary = causes.values()[0]
+	story_pack["station_economy_problem"] = first_cause["public_because"]
+	story_pack["active_tension"] = first_cause["public_because"]
+	story_pack["mission_seeds"] = causes.values().map(func(cause: Dictionary) -> String: return str(cause["public_because"]))
+	story_pack["local_rumors"] = story_pack["mission_seeds"].duplicate()
 
 
 func canonical_faction_id(faction_name: String) -> String:

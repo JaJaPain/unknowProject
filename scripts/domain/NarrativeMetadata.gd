@@ -5,9 +5,16 @@ const ValidationResultType := preload(
 	"res://scripts/domain/ValidationResult.gd"
 )
 
+const QuestCausalContractType := preload(
+	"res://scripts/domain/QuestCausalContract.gd"
+)
+
 const ID_PATTERN := "^[A-Za-z0-9_.:-]+$"
 
 const STRING_FIELDS := [
+	"cause_faction_id",
+	"cause_rival_faction_id",
+	"desire_id",
 	"offer_id",
 	"story_thread_id",
 	"story_beat_id",
@@ -26,9 +33,13 @@ const ARRAY_FIELDS := [
 
 const DICTIONARY_FIELDS := [
 	"outcome_snapshot",
+	"causal_contract",
 ]
 
 const ID_FIELDS := [
+	"cause_faction_id",
+	"cause_rival_faction_id",
+	"desire_id",
 	"offer_id",
 	"story_thread_id",
 	"story_beat_id",
@@ -38,6 +49,9 @@ const ID_FIELDS := [
 ]
 
 const ALLOWED_FIELDS := [
+	"cause_faction_id",
+	"cause_rival_faction_id",
+	"desire_id",
 	"offer_id",
 	"story_thread_id",
 	"story_beat_id",
@@ -50,6 +64,7 @@ const ALLOWED_FIELDS := [
 	"conversation_cache_key",
 	"conversation_state",
 	"outcome_snapshot",
+	"causal_contract",
 ]
 
 static var _id_regex: RegEx
@@ -173,6 +188,9 @@ static func _validate_fields(
 					"Narrative metadata field '%s' must be an object." % field,
 					path
 				)
+				continue
+			if field == "causal_contract" and QuestCausalContractType.is_present(value):
+				result.merge(QuestCausalContractType.validate(value, path))
 
 
 static func _validate_id_text(

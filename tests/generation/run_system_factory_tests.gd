@@ -5,9 +5,17 @@ const GeneratedGateBuilderType := preload(
 )
 
 var _failures: Array[String] = []
+var factory_type: GDScript
+var registry_type: GDScript
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	factory_type = load("res://scripts/generation/SystemFactory.gd")
+	registry_type = load("res://scripts/registry/SystemRegistry.gd")
 	_test_config_from_seed()
 	_test_config_deterministic()
 	_test_config_story_pack()
@@ -39,6 +47,10 @@ func _test_config_from_seed() -> void:
 	_expect(config.planet_count_min >= 2, "Planet min too low.")
 	_expect(config.planet_count_max >= config.planet_count_min, "Planet max < min.")
 	_expect(config.station_count >= 2, "Station count too low.")
+	var repaired := SystemConfig.from_seed("Broken roster", "system.gen.broken", 12345, [{}, {}])
+	_expect(repaired.faction_weights.size() >= 2, "Malformed roster must regenerate local factions.")
+	for faction in repaired.faction_weights:
+		_expect(str(faction).begins_with("gen_"), "Malformed roster must not fall back to tutorial factions.")
 
 
 func _test_config_deterministic() -> void:
@@ -79,16 +91,6 @@ func _test_config_story_pack() -> void:
 
 
 func _test_config_faction_weights() -> void:
-	var valid_factions := [
-		"zenith",
-		"aurelia",
-		"vanguard",
-		"reavers",
-		"obsidian",
-		"dustborn",
-		"wraiths",
-		"ironclad",
-	]
 	var found_local := false
 	for seed_val in [100, 200, 300, 400, 500]:
 		var config := SystemConfig.from_seed("FW_%d" % seed_val, "system.gen.fw%d" % seed_val, seed_val)
@@ -97,7 +99,7 @@ func _test_config_faction_weights() -> void:
 		_expect(config.faction_weights.size() <= 4, "Seed %d: too many active factions." % seed_val)
 		var weight_sum := 0.0
 		for faction_name: String in config.faction_weights:
-			_expect(faction_name in valid_factions, "Seed %d: invalid faction '%s'." % [seed_val, faction_name])
+			_expect(faction_name.begins_with("gen_") and config.faction_identities.has(faction_name), "Seed %d: missing local identity '%s'." % [seed_val, faction_name])
 			if faction_name not in ["zenith", "aurelia", "vanguard"]:
 				found_local = true
 			weight_sum += float(config.faction_weights[faction_name])
@@ -184,7 +186,7 @@ func _test_config_npc_count() -> void:
 func _test_generated_system_minimum_density() -> void:
 	for seed_val in [1, 2, 3, 42, 777, 9901]:
 		var config := SystemConfig.from_seed("Density", "system.gen.density%d" % seed_val, seed_val)
-		var result := SystemFactory.generate(config)
+		var result: Dictionary = factory_type.generate(config)
 		_expect(bool(result.get("ok", false)), "Seed %d: SystemFactory.generate failed." % seed_val)
 		if not bool(result.get("ok", false)):
 			continue
@@ -223,7 +225,7 @@ func _test_campaign_system_names() -> void:
 
 
 func _test_registry_generated_system() -> void:
-	var registry := SystemRegistry.load_default()
+	var registry = registry_type.load_default()
 	if not registry.is_valid():
 		_expect(false, "Default registry invalid, cannot test generated registration.")
 		return
@@ -232,7 +234,7 @@ func _test_registry_generated_system() -> void:
 	registry.set_generated_config("system.gen.gamma", config)
 	registry.set_generated_config(config.legacy_id, config)
 
-	var result := registry.register_generated_system(
+	var result = registry.register_generated_system(
 		{
 			"id": "system.gen.gamma",
 			"legacy_id": config.legacy_id,
@@ -240,7 +242,7 @@ func _test_registry_generated_system() -> void:
 			"station_ids": [],
 			"faction_ids": [],
 		},
-		[{
+		Array([{
 			"id": "gate.gen.gamma.to_start",
 			"legacy_id": "gen_gamma_to_start",
 			"display_name": "Gamma Return Gate",
@@ -250,26 +252,26 @@ func _test_registry_generated_system() -> void:
 			"discovery_action": "",
 			"discovery_cost": {},
 			"discovery_prerequisites": [],
-		}]
+		}], TYPE_DICTIONARY, "", null)
 	)
 	_expect(result.is_valid(), "register_generated_system failed: %s" % result.summary())
 	_expect(registry.has_system("system.gen.gamma"), "Generated system not found after registration.")
-	var sys_def := registry.get_system("system.gen.gamma")
+	var sys_def = registry.get_system("system.gen.gamma")
 	_expect(sys_def != null, "get_system returned null for generated system.")
 	if sys_def:
 		_expect(sys_def.display_name == "Gamma Station", "Generated system display_name wrong.")
 		_expect(sys_def.scene_path == "generated", "Generated system scene_path wrong.")
 		_expect(sys_def.gates.size() == 1, "Generated system gate count wrong.")
 
-	var exported := registry.export_generated_systems()
+	var exported = registry.export_generated_systems()
 	_expect(exported.size() == 1, "Generated system export count wrong.")
-	var imported_registry := SystemRegistry.load_default()
-	var import_result := imported_registry.import_generated_systems(exported)
+	var imported_registry = registry_type.load_default()
+	var import_result = imported_registry.import_generated_systems(exported)
 	_expect(import_result.is_valid(), "Generated system import failed: %s" % import_result.summary())
 	_expect(imported_registry.has_system("system.gen.gamma"), "Imported generated system not found.")
-	var imported_gate := imported_registry.get_gate("gate.gen.gamma.to_start")
+	var imported_gate = imported_registry.get_gate("gate.gen.gamma.to_start")
 	_expect(imported_gate != null, "Imported generated gate not found.")
-	var imported_config := imported_registry.get_generated_config("system.gen.gamma")
+	var imported_config = imported_registry.get_generated_config("system.gen.gamma")
 	_expect(imported_config != null, "Imported generated config not restored.")
 	if imported_config != null:
 		_expect(
@@ -277,7 +279,7 @@ func _test_registry_generated_system() -> void:
 			"Imported generated config did not preserve story pack."
 		)
 
-	var duplicate_result := registry.register_generated_system(
+	var duplicate_result = registry.register_generated_system(
 		{
 			"id": "system.gen.gamma",
 			"legacy_id": config.legacy_id,
@@ -285,7 +287,7 @@ func _test_registry_generated_system() -> void:
 			"station_ids": [],
 			"faction_ids": [],
 		},
-		[]
+		Array([], TYPE_DICTIONARY, "", null)
 	)
 	_expect(not duplicate_result.is_valid(), "Duplicate registration should fail.")
 

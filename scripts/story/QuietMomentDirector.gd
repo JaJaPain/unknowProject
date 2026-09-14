@@ -29,6 +29,76 @@ var _last_fired_msec: int = -1
 # per-beat, so a two-mode beat never repeats its announcement back to back
 var _last_base_line: Dictionary = {}
 var _in_flight: bool = false
+var _outcome_serial := 0
+
+
+## Optional outcome speech shares the existing request slot, cooldown and screen.
+## Caller rechecks gameplay eligibility and reports actual text presentation.
+func try_outcome(memory: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable) -> bool:
+	if _in_flight or (_last_fired_msec >= 0 and Time.get_ticks_msec() - _last_fired_msec < int(GLOBAL_COOLDOWN_SECONDS * 1000.0)):
+		return false
+	var speaker := str(memory.get("speaker_id", ""))
+	var soul := FixedCastSoulRegistry.public_prompt_projection(speaker, state_id, "quiet_moment")
+	var projected := OutcomeReactionProjector.project({"outcome_tag": memory.get("outcome_tag", "")})
+	if not _outcome_model_available() or not bool(soul.get("ok", false)) or not bool(projected.get("ok", false)):
+		return false
+	var fact := str(projected["consequence"]["summary"])
+	var brief := "React briefly to this completed investigation using only the supplied public fact."
+	if memory.get("phase", "") == "callback":
+		brief = "Briefly refer back to this earlier investigation using only the supplied public fact."
+	var built := {"speaker": speaker, "packet": fact, "brief": brief, "word_cap": 28,
+		"lead_in": "", "demos": [], "third_parties": []}
+	built["prompt"] = JSON.stringify(soul) + "\n" + brief + "\nPublic fact: " + fact \
+		+ "\nCertainty: " + str(projected["consequence"]["certainty"]) \
+		+ '\nUse at most 28 words. Return only {"line":"..."}.'
+	_in_flight = true
+	_outcome_serial += 1
+	_request_outcome(_outcome_serial, built, state_id, still_valid, deliver, finished, 1)
+	return true
+
+
+func _request_outcome(serial: int, built: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable, attempt: int) -> void:
+	_send_outcome_request(str(built["prompt"]), func(result: Dictionary) -> void:
+		if serial != _outcome_serial:
+			return
+		if not bool(still_valid.call()):
+			_give_up("outcome_reaction", ["stale_context"])
+			finished.call(false)
+			return
+		var line := _parse_line(str(result.get("inner_text", ""))) if bool(result.get("ok", false)) else ""
+		var errors: Array = _screen("outcome_reaction", built, line) if not line.is_empty() else ["empty_response"]
+		var quality := FixedCastLineValidator.validate_line(str(built["speaker"]), state_id, "quiet_moment", line)
+		if not bool(quality.get("ok", false)):
+			errors.append("fixed_cast_validation")
+		if not errors.is_empty():
+			if attempt < 2:
+				_request_outcome(serial, built, state_id, still_valid, deliver, finished, attempt + 1)
+			else:
+				_give_up("outcome_reaction", errors)
+				finished.call(false)
+			return
+		_in_flight = false
+		var presented := bool(deliver.call(line))
+		if presented:
+			_selector_for(str(built["speaker"])).accept(line)
+			_last_fired_msec = Time.get_ticks_msec()
+		else:
+			_give_up("outcome_reaction", ["presentation_suppressed"])
+		finished.call(presented)
+	)
+
+
+func _outcome_model_available() -> bool:
+	var llm := get_node_or_null("/root/LLMInterface")
+	return llm != null and bool(llm.get("small_model_verified"))
+
+
+func _send_outcome_request(prompt: String, callback: Callable) -> void:
+	var llm := get_node_or_null("/root/LLMInterface")
+	if llm == null:
+		callback.call({"ok": false, "reason": "llm_unavailable"})
+	else:
+		llm.call("request_quiet_moment", prompt, callback)
 
 
 func _ready() -> void:
@@ -222,6 +292,8 @@ func to_save_dict() -> Dictionary:
 
 
 func load_from_dict(data: Dictionary) -> void:
+	_outcome_serial += 1
+	_in_flight = false
 	_selectors.clear()
 	var stored: Dictionary = data.get("selectors", {})
 	for speaker in stored:
@@ -234,6 +306,8 @@ func load_from_dict(data: Dictionary) -> void:
 # A new campaign must not inherit the previous one's position in every
 # rotation cycle, or its first hour sounds like a continuation.
 func reset_for_new_campaign() -> void:
+	_outcome_serial += 1
+	_in_flight = false
 	_selectors.clear()
 	_anatomy.reset()
 	Beats.reset_rotation()

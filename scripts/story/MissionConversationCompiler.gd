@@ -30,6 +30,13 @@ static func plan_slices(conversation_plan: Dictionary) -> Array[Dictionary]:
 		var intent_id := str(intent.get("id", "")).strip_edges()
 		if intent_id.is_empty():
 			continue
+		# A branch is an ACTION the player commits, not a thing the speaker says
+		# in this conversation. Asking the writer for a reply per branch produced
+		# lines identical to the accept reply -- the model has nothing different
+		# to say, because the difference is mechanical, not conversational.
+		# Its outcome speech belongs to the outcome path, after it is chosen.
+		if _is_branch_intent(intent):
+			continue
 		batch.append(intent_id)
 		if batch.size() >= MAX_INTENTS_PER_SLICE:
 			slices.append({"kind": SLICE_INTENTS, "intent_ids": batch.duplicate()})
@@ -55,6 +62,12 @@ static func required_output_keys_for_slice(slice: Dictionary) -> Array[String]:
 		if not clean.is_empty():
 			keys.append("%s_response" % clean)
 	return keys
+
+
+## Branch options carry a code-owned label and commit an action. They are not
+## conversation turns and no generated reply is requested for them.
+static func _is_branch_intent(intent: Dictionary) -> bool:
+	return not str(intent.get("branch_id", "")).strip_edges().is_empty()
 
 
 ## Merge a validated slice result into the bundle assembled so far.
@@ -97,6 +110,8 @@ static func required_output_keys(conversation_plan: Dictionary) -> Array[String]
 			continue
 		var intent_id := str((raw_intent as Dictionary).get("id", "")).strip_edges()
 		if intent_id.is_empty():
+			continue
+		if _is_branch_intent(raw_intent as Dictionary):
 			continue
 		keys.append("%s_player" % intent_id)
 		keys.append("%s_response" % intent_id)
@@ -151,6 +166,11 @@ static func build_prompt(
 	lines.append("")
 	lines.append("CODE-APPROVED INTENTS:")
 	for intent in _intents(conversation_plan):
+		# Branch actions are buttons with code-owned labels that commit an
+		# effect. Listing them here made the writer emit keys for them, which
+		# scoped parsing then correctly refused as unrequested fields.
+		if _is_branch_intent(intent):
+			continue
 		var anchors := _string_array(intent.get("answer_anchors", []))
 		var anchor_note := ""
 		if not anchors.is_empty():
@@ -240,6 +260,8 @@ static func fallback_bundle(
 		"opening": " ".join(opening_parts),
 	}
 	for intent in _intents(conversation_plan):
+		if _is_branch_intent(intent):
+			continue
 		var intent_id := str(intent.get("id", ""))
 		var label := str(intent.get("label", intent_id))
 		bundle["%s_player" % intent_id] = label
@@ -264,7 +286,8 @@ static func _fallback_response_for_intent(
 
 static func parse_bundle(
 	inner_json_text: String,
-	conversation_plan: Dictionary
+	conversation_plan: Dictionary,
+	slice: Dictionary = {}
 ) -> Dictionary:
 	var parser := JSON.new()
 	if parser.parse(inner_json_text.strip_edges()) != OK:
@@ -274,6 +297,11 @@ static func parse_bundle(
 		return {"ok": false, "reason": "not_an_object", "bundle": {}}
 	var source: Dictionary = data
 	var required := required_output_keys(conversation_plan)
+	if not slice.is_empty():
+		required = required_output_keys_for_slice(slice)
+		for key in source:
+			if str(key) not in required:
+				return {"ok": false, "reason": "unexpected_key:%s" % key, "bundle": {}}
 	var bundle := {}
 	for key in required:
 		if not source.has(key):
@@ -282,7 +310,9 @@ static func parse_bundle(
 				"reason": "missing_key:%s" % key,
 				"bundle": {},
 			}
-		bundle[key] = str(source.get(key, "")).strip_edges()
+		if not source[key] is String:
+			return {"ok": false, "reason": "non_string:%s" % key, "bundle": {}}
+		bundle[key] = str(source[key]).strip_edges()
 	return {"ok": true, "bundle": bundle}
 
 

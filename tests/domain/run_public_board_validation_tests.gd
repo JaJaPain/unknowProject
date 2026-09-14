@@ -7,6 +7,10 @@ const TextGenType := preload(
 	"res://scripts/domain/PublicBoardTextGenerator.gd"
 )
 const AdapterType := preload("res://scripts/domain/MissionAdapter.gd")
+const CausalContractType := preload("res://scripts/domain/QuestCausalContract.gd")
+const PlausibilityType := preload(
+	"res://scripts/domain/QuestPlausibilityValidator.gd"
+)
 
 var _failures: Array[String] = []
 
@@ -20,6 +24,10 @@ func _initialize() -> void:
 	_test_generated_system_without_outpost_does_not_use_starter_pickup()
 	_test_generated_system_offers_use_story_pack()
 	_test_public_board_offers_carry_story_cause_metadata()
+	_test_generated_system_offers_compile_a_valid_causal_contract()
+	_test_causal_publication_states_are_explicit()
+	_test_invalid_contract_offers_are_withheld()
+	_test_incoherent_generated_causes_are_withheld()
 	_test_full_service_station_assigns_faction_contacts_and_mechanic()
 	_test_generated_contact_portrait_voice_gender_matches()
 	_test_generated_contact_flavor_lines_do_not_repeat_immediately()
@@ -45,6 +53,32 @@ func _initialize() -> void:
 	for failure in _failures:
 		push_error("[FAIL] %s" % failure)
 	quit(1)
+
+
+func _test_incoherent_generated_causes_are_withheld() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_id: String = gs.current_system_id
+	var config := SystemConfig.from_seed("Coherence", "system.coherence", 8080)
+	gs.current_system_id = "system.coherence"
+	OfferBuilderType.story_config_override_for_tests = config
+	var valid_offers := OfferBuilderType.build_offers(480)
+	_expect(not valid_offers.is_empty(), "Coherent system produced no offers to test.")
+	var ids: Array[String] = []
+	for agenda: Dictionary in config.story_pack.get("faction_agendas", []):
+		ids.append(str(agenda.get("faction_id", "")))
+		var desire: Dictionary = agenda.get("desire", {})
+		desire["goal"] = "prove a rival's manifest is fiction"
+		desire["need"] = "fuel it can afford"
+		var draft := {"objective": {"type": "DELIVERY_COURIER"}, "narrative_metadata": {}}
+		OfferBuilderType._attach_causal_contract(draft, {"cause_faction_id": agenda["faction_id"]})
+		_expect(draft.get("causal_publication_state", "") == OfferBuilderType.PUBLICATION_WITHHELD, "Broken goal/need published as uncaused compatibility.")
+		_expect("unsupported_goal_need" in draft.get("causal_withheld_issue_codes", []), "Withheld cause lost its diagnostic.")
+	_expect(not ids.is_empty(), "No generated factions exercised the publication guard.")
+	for offer in OfferBuilderType.build_offers(480):
+		var metadata: Dictionary = offer.get("quest_data", {}).get("narrative_metadata", {})
+		_expect(str(metadata.get("cause_faction_id", "")) not in ids, "Real board publication bypassed coherence rejection.")
+	OfferBuilderType.story_config_override_for_tests = null
+	gs.current_system_id = previous_id
 
 
 func _test_builder_produces_all_templates() -> void:
@@ -297,6 +331,249 @@ func _test_public_board_offers_carry_story_cause_metadata() -> void:
 		"story_metadata: narrative metadata did not survive active-state adaptation."
 	)
 
+
+
+## The integration that matters: a REAL offer built by the REAL builder in a
+## generated system must carry a causal contract that passes the plausibility
+## gate, and that contract must survive being adapted into active mission state.
+func _test_generated_system_offers_compile_a_valid_causal_contract() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_system_id: String = gs.current_system_id
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	var system_id := "system.gen.causal_contract_test"
+	# Specify the causal scenario this test needs. A random seed no longer owes
+	# us a recovery job: compatible needs may legitimately yield only deliveries,
+	# which this fixture's deliberately empty world cannot publish.
+	var store_type = load("res://scripts/persistence/CampaignGeneratedFactionStore.gd")
+	var desire_type = load("res://scripts/persistence/GeneratedFactionDesire.gd")
+	var factions: Array = store_type.generate_system_factions("causal.fixture", system_id, 2)
+	for faction: Dictionary in factions:
+		var desire: Dictionary = faction["desire"]
+		desire["goal"] = desire_type.GOALS[6]
+		desire["success_condition"] = desire_type.SUCCESS_CONDITIONS[6]
+		desire["need"] = "filed claim evidence"
+		desire["need_reason"] = desire_type.Constraints.need_reason(6, desire["need"])
+		desire["mission_intents"] = ["recovery", "pickup"]
+	var config := SystemConfig.from_seed("Causal Contract", system_id, 4242, factions)
+	OfferBuilderType.story_config_override_for_tests = config
+	gs.current_system_id = system_id
+	gs.active_system_entities.clear()
+	var offers := OfferBuilderType.build_offers(480)
+	OfferBuilderType.story_config_override_for_tests = null
+	gs.active_system_entities = previous_entities
+	gs.current_system_id = previous_system_id
+
+	var contracted := 0
+	for offer in offers:
+		var quest_data: Dictionary = offer.get("quest_data", {})
+		var contract: Variant = quest_data.get("causal_contract", {})
+		if not CausalContractType.is_present(contract):
+			continue
+		contracted += 1
+		var normalized := CausalContractType.normalize(contract)
+		# Whatever the builder attached must already have passed the gate.
+		var report: Dictionary = PlausibilityType.check(normalized, {})
+		_expect(
+			bool(report.get("ok", false)),
+			"causal_contract: published offer '%s' carries an invalid contract: %s" % [
+				str(offer.get("title", "")),
+				str(report.get("issue_codes", [])),
+			]
+		)
+		# The requester must be a LOCAL generated faction, not a tutorial one.
+		var requester := str(normalized.get("requester_id", ""))
+		_expect(
+			requester.begins_with("faction.generated."),
+			"causal_contract: offer '%s' was caused by a non-local faction '%s'." % [
+				str(offer.get("title", "")), requester
+			]
+		)
+		# Facts must be real, not placeholders.
+		_expect(
+			(normalized.get("facts", {}) as Dictionary).size() > 0,
+			"causal_contract: offer '%s' compiled a contract with no facts." % str(offer.get("title", ""))
+		)
+		_expect(
+			CausalContractType.missing_fact_ids(normalized).is_empty(),
+			"causal_contract: offer '%s' references facts it does not record." % str(offer.get("title", ""))
+		)
+		# Nothing may invent urgency the objective does not actually have.
+		var binding: Dictionary = normalized.get("objective_binding", {})
+		if int(binding.get("deadline_minutes", 0)) <= 0:
+			_expect(
+				(normalized.get("urgency_fact_ids", []) as Array).is_empty(),
+				"causal_contract: offer '%s' recorded urgency with no deadline." % str(offer.get("title", ""))
+			)
+		# And the contract must survive the real adapter into mission state.
+		var choices: Array = quest_data.get("choices", [])
+		if choices.is_empty():
+			continue
+		var adapted: Dictionary = AdapterType.build_active_state(
+			quest_data,
+			choices[0],
+			"mission.test.causal_contract",
+			system_id,
+			480
+		)
+		var validation = adapted.get("validation")
+		_expect(
+			validation != null and validation.is_valid(),
+			"causal_contract: a contracted offer failed mission adaptation."
+		)
+		var state: Dictionary = adapted.get("state", {})
+		var carried: Variant = state.get("narrative_metadata", {}).get("causal_contract", {})
+		_expect(
+			CausalContractType.is_present(carried),
+			"causal_contract: the contract was lost adapting offer '%s' into mission state." % str(offer.get("title", ""))
+		)
+
+	_expect(
+		contracted > 0,
+		"causal_contract: no generated-system board offer compiled a causal contract at all."
+	)
+	# The honest fallback, asserted rather than assumed: an offer whose cause no
+	# local faction actually holds -- or whose recipient cannot be resolved yet --
+	# publishes WITHOUT a contract and is still a complete, valid, acceptable job.
+	# Withholding those offers would empty the board for no player benefit.
+	for offer in offers:
+		var data: Dictionary = offer.get("quest_data", {})
+		if CausalContractType.is_present(data.get("causal_contract", {})):
+			continue
+		_expect(
+			not str(data.get("dialogue", "")).strip_edges().is_empty()
+				and not (data.get("objective", {}) as Dictionary).is_empty(),
+			"causal_contract: an offer without a contract lost its template content."
+		)
+		var uncontracted_choices: Array = data.get("choices", [])
+		if uncontracted_choices.is_empty():
+			continue
+		var adapted_plain: Dictionary = AdapterType.build_active_state(
+			data, uncontracted_choices[0], "mission.test.no_contract", system_id, 480
+		)
+		var plain_validation = adapted_plain.get("validation")
+		_expect(
+			plain_validation != null and plain_validation.is_valid(),
+			"causal_contract: an offer without a contract stopped being acceptable."
+		)
+
+
+## Every built offer must say WHY it is publishable. "No local cause" and
+## "contract failed validation" are different situations and must not share a
+## silent code path.
+func _test_causal_publication_states_are_explicit() -> void:
+	var gs = root.get_node("GlobalState")
+	var previous_system_id: String = gs.current_system_id
+	var previous_entities: Array = gs.active_system_entities.duplicate()
+	var system_id := "system.gen.publication_state_test"
+	var config := SystemConfig.from_seed("Publication State", system_id, 31337)
+	OfferBuilderType.story_config_override_for_tests = config
+	gs.current_system_id = system_id
+	gs.active_system_entities.clear()
+	var offers := OfferBuilderType.build_offers(480)
+	OfferBuilderType.story_config_override_for_tests = null
+	gs.active_system_entities = previous_entities
+	gs.current_system_id = previous_system_id
+
+	var valid_states := [
+		OfferBuilderType.PUBLICATION_VALIDATED,
+		OfferBuilderType.PUBLICATION_UNCAUSED,
+	]
+	for offer in offers:
+		var quest_data: Dictionary = offer.get("quest_data", {})
+		var state := str(quest_data.get("causal_publication_state", ""))
+		_expect(
+			state in valid_states,
+			"publication_state: offer '%s' published with state '%s'." % [
+				str(offer.get("title", "")), state
+			]
+		)
+		# A withheld offer must never reach the published list.
+		_expect(
+			state != OfferBuilderType.PUBLICATION_WITHHELD,
+			"publication_state: a withheld offer was published anyway."
+		)
+		if state == OfferBuilderType.PUBLICATION_VALIDATED:
+			_expect(
+				CausalContractType.is_present(quest_data.get("causal_contract", {})),
+				"publication_state: an offer marked validated carries no contract."
+			)
+		else:
+			_expect(
+				not CausalContractType.is_present(quest_data.get("causal_contract", {})),
+				"publication_state: an uncaused offer carries a contract."
+			)
+
+
+## An offer whose contract fails validation has broken mechanics or an unbound
+## cause. It must not become a new discretionary job -- but an ALREADY ACCEPTED
+## mission is governed by its saved terms and must stay completable.
+func _test_invalid_contract_offers_are_withheld() -> void:
+	var offers: Array[Dictionary] = [
+		{
+			"template_id": "keeps.validated",
+			"quest_data": {
+				"title": "Valid Job",
+				"causal_publication_state": OfferBuilderType.PUBLICATION_VALIDATED,
+			},
+		},
+		{
+			"template_id": "keeps.uncaused",
+			"quest_data": {
+				"title": "Ordinary Board Job",
+				"causal_publication_state": OfferBuilderType.PUBLICATION_UNCAUSED,
+			},
+		},
+		{
+			"template_id": "drops.invalid",
+			"quest_data": {
+				"title": "Impossible Job",
+				"causal_publication_state": OfferBuilderType.PUBLICATION_WITHHELD,
+				"causal_withheld_issue_codes": ["unreachable_location"],
+			},
+		},
+		{
+			"template_id": "keeps.legacy_no_state",
+			"quest_data": {"title": "Legacy Offer With No State At All"},
+		},
+	]
+	OfferBuilderType._withhold_invalid_offers(offers)
+	var ids: Array[String] = []
+	for offer in offers:
+		ids.append(str(offer.get("template_id", "")))
+	_expect(
+		"drops.invalid" not in ids,
+		"withhold: an offer with an invalid contract was still published."
+	)
+	for expected in ["keeps.validated", "keeps.uncaused", "keeps.legacy_no_state"]:
+		_expect(
+			expected in ids,
+			"withhold: '%s' was removed when it should have been kept." % expected
+		)
+	# An offer carrying no state at all is a legacy shape and must survive.
+	_expect(offers.size() == 3, "withhold: wrong number of offers survived.")
+
+	# The withheld offer must still be a complete, adaptable job -- withholding
+	# is a PUBLICATION decision, not corruption of the mission data. An already
+	# accepted copy of the same job must remain completable.
+	var accepted := {
+		"title": "Impossible Job",
+		"campaign_name": "Test",
+		"faction": "neutral",
+		"agent_name": "Board",
+		"agent_role": "Public Board",
+		"dialogue": "Saved terms from when this was accepted.",
+		"objective": {"type": "DELIVER_ORE", "amount_required": 20.0, "reward_credits": 100},
+		"choices": [{"id": "choice.accept", "label": "Accept", "action": "accept"}],
+		"causal_publication_state": OfferBuilderType.PUBLICATION_WITHHELD,
+	}
+	var adapted: Dictionary = AdapterType.build_active_state(
+		accepted, accepted["choices"][0], "mission.test.withheld_but_accepted", "start_system", 480
+	)
+	var validation = adapted.get("validation")
+	_expect(
+		validation != null and validation.is_valid(),
+		"withhold: an already-accepted job stopped being completable because today's rules would withhold it."
+	)
 
 func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void:
 	var gs = root.get_node("GlobalState")

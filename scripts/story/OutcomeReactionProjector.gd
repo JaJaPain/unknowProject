@@ -77,6 +77,119 @@ const MAX_CONSEQUENCES := 1
 ## Facts stay few on purpose; this is the whole point of narrowing.
 const MAX_FACTS := 3
 
+const MEMORY_KINDS := {
+	"verified": "verification_paid_off", "unverified": "verification_skipped",
+	"preserved": "evidence_preserved", "liquidated": "value_taken",
+	"copied": "evidence_preserved", "extracted": "risk_taken",
+}
+
+
+## Only committed, player-visible outcomes enter the persisted memory ledger.
+static func remember_completed(ledger: Array, mission: Dictionary, activity_step: int = 0) -> Array:
+	var result := normalize_memories(ledger)
+	if str(mission.get("objective_type", "")) != "INVESTIGATE_SIGNAL" \
+			or not mission.has("completed_time_minutes"):
+		return result
+	var investigation: Dictionary = mission.get("investigation", {}) if mission.get("investigation", {}) is Dictionary else {}
+	var tag := str(investigation.get("outcome_tag", ""))
+	var mission_id := str(mission.get("runtime_id", ""))
+	var system_id := str(mission.get("system_id", ""))
+	if not is_public(tag) or mission_id.is_empty() or system_id.is_empty() \
+			or str(investigation.get("phase", "")) not in ["ready", "closed"]:
+		return result
+	for speaker in ["kaelen", "nova"]:
+		var identity := "%s:%s" % [mission_id, speaker]
+		var exists := false
+		for entry in result:
+			if str(entry.get("id", "")) == identity:
+				exists = true
+		if not exists:
+			result.append({"id": identity, "outcome_id": mission_id, "mission_id": mission_id,
+				"speaker_id": speaker, "system_id": system_id, "outcome_tag": tag,
+				"public_fact_id": "outcome.%s" % tag, "kind": MEMORY_KINDS[tag],
+				"at_minute": int(mission["completed_time_minutes"]), "at_step": activity_step,
+				"callback_delivered": false})
+	return normalize_memories(result)
+
+
+static func normalize_memories(raw: Variant) -> Array:
+	var result: Array = []
+	if not raw is Array:
+		return result
+	for value in raw:
+		if not value is Dictionary:
+			continue
+		var tag := str(value.get("outcome_tag", ""))
+		var speaker := str(value.get("speaker_id", ""))
+		var mission_id := str(value.get("mission_id", ""))
+		if not is_public(tag) or speaker not in ["kaelen", "nova"] or mission_id.is_empty() or str(value.get("system_id", "")).is_empty():
+			continue
+		var identity := "%s:%s" % [mission_id, speaker]
+		if result.any(func(entry: Dictionary) -> bool: return entry["id"] == identity):
+			continue
+		result.append({"id": identity, "outcome_id": mission_id, "mission_id": mission_id,
+			"speaker_id": speaker, "system_id": str(value["system_id"]), "outcome_tag": tag,
+			"public_fact_id": "outcome.%s" % tag, "kind": MEMORY_KINDS[tag],
+			"at_minute": maxi(0, int(value.get("at_minute", 0))),
+			"callback_delivered": bool(value.get("callback_delivered", false)),
+			"immediate_delivered": bool(value.get("immediate_delivered", false)),
+			"at_step": int(value.get("at_step", -100)),
+			"delivered_step": int(value.get("delivered_step", -1)),
+			"delivered_visit": int(value.get("delivered_visit", -1)),
+			"attempted_step": int(value.get("attempted_step", -1))})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["at_minute"]) < int(b["at_minute"]))
+	for speaker in ["kaelen", "nova"]:
+		while result.filter(func(entry: Dictionary) -> bool: return entry["speaker_id"] == speaker).size() > 12:
+			var victim := -1
+			for index in result.size():
+				if result[index]["speaker_id"] == speaker:
+					if victim == -1:
+						victim = index
+					if bool(result[index]["callback_delivered"]):
+						victim = index
+						break
+			result.remove_at(victim)
+	return result
+
+
+## Rebuild wording from the typed tag; persisted free text is never prompt input.
+static func memory_context(raw: Variant, speaker: String, system_id: String) -> Array:
+	var result: Array = []
+	if system_id.is_empty():
+		return result
+	var memories := normalize_memories(raw)
+	memories.reverse()
+	for entry in memories:
+		if entry["speaker_id"] != speaker or entry["system_id"] != system_id:
+			continue
+		var projection := project({"outcome_tag": entry["outcome_tag"], "owner_id": entry["mission_id"]})
+		result.append({"id": entry["public_fact_id"], "mission_id": entry["mission_id"],
+			"certainty": projection["consequence"]["certainty"], "text": projection["consequence"]["summary"]})
+		if result.size() == 2:
+			break
+	return result
+
+
+static func eligible_reaction(raw: Variant, speaker: String, system_id: String, step: int, visit: int) -> Dictionary:
+	var memories := normalize_memories(raw)
+	memories.reverse()
+	# One outcome reference per speaker per visit, across all outcomes.
+	for entry in memories:
+		if entry["speaker_id"] == speaker and int(entry["delivered_visit"]) == visit:
+			return {}
+	for entry in memories:
+		var age := step - int(entry["at_step"])
+		if entry["speaker_id"] != speaker or entry["system_id"] != system_id \
+				or age < 0 or age > 4 or int(entry["attempted_step"]) == step:
+			continue
+		if not bool(entry["immediate_delivered"]):
+			entry["phase"] = "immediate"
+			return entry
+		if not bool(entry["callback_delivered"]) and age >= 1 and step > int(entry["delivered_step"]):
+			entry["phase"] = "callback"
+			return entry
+	return {}
+
 
 ## Project one typed outcome. Returns:
 ##   {ok: bool, reason: String, facts: Array, consequence: Dictionary}

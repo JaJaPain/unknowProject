@@ -3,22 +3,25 @@ extends SceneTree
 const FactionStoreType := preload(
 	"res://scripts/persistence/CampaignGeneratedFactionStore.gd"
 )
-const SlotRegistryType := preload(
-	"res://scripts/persistence/CampaignSlotRegistry.gd"
-)
-const SystemRegistryType := preload(
-	"res://scripts/registry/SystemRegistry.gd"
-)
+var SlotRegistryType: GDScript
+var SystemRegistryType: GDScript
 
-const TEST_ROOT := "user://campaign_generated_faction_fixture"
+const TEST_ROOT := "res://.tmp_godot_user/campaign_generated_faction_fixture"
 const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
 
 var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	SlotRegistryType = load("res://scripts/persistence/CampaignSlotRegistry.gd")
+	SystemRegistryType = load("res://scripts/registry/SystemRegistry.gd")
 	_cleanup()
 	_test_bootstrap_generate_reveal_and_reopen()
+	_test_per_system_rosters_and_desires()
 	_cleanup()
 	_test_old_faction_records_normalize_on_load()
 	_cleanup()
@@ -33,8 +36,8 @@ func _initialize() -> void:
 
 
 func _test_bootstrap_generate_reveal_and_reopen() -> void:
-	var slots := SlotRegistryType.open(TEST_ROOT)
-	var created := slots.create_campaign(
+	var slots = SlotRegistryType.open(TEST_ROOT)
+	var created: Dictionary = slots.create_campaign(
 		"slot_01",
 		"Faction Fixture",
 		"generated-faction-test",
@@ -100,13 +103,13 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 		"Faction lookup by revealed IDs failed."
 	)
 	_expect(
-		store.prompt_context(true).contains(str(store.all_factions()[0].get("display_name", ""))),
+		store.prompt_context(true).contains(str(store.revealed_factions()[0].get("display_name", ""))),
 		"Revealed-only prompt context did not include the first revealed faction."
 	)
 
 	var reopened := FactionStoreType.open(CAMPAIGN_PATH)
 	_expect(
-		reopened.is_valid() and reopened.all_factions().size() == 4,
+		reopened.is_valid() and reopened.all_factions().size() == 6,
 		"Generated faction records did not persist after reopening."
 	)
 	_expect(
@@ -115,9 +118,71 @@ func _test_bootstrap_generate_reveal_and_reopen() -> void:
 	)
 
 
+func _test_per_system_rosters_and_desires() -> void:
+	var store := FactionStoreType.open(CAMPAIGN_PATH)
+	var seen := {}
+	for index in range(12):
+		var system_id := "system.generated.fixture_%d" % index
+		var result := store.reveal_next_for_system(system_id, 3)
+		_expect(bool(result.get("ok", false)), "Per-system roster must persist beyond the former six-faction pool")
+		var ids: Array = result.get("revealed", [])
+		_expect(ids.size() == 3, "Each system must receive three local factions")
+		for id in ids:
+			_expect(not seen.has(id), "New systems must not reuse another system's factions")
+			seen[id] = true
+		var before := store.all_factions().size()
+		_expect(store.reveal_next_for_system(system_id, 4).get("revealed", []) == ids, "Retry/revisit must retain original roster even if requested count changes")
+		_expect(store.all_factions().size() == before, "Revisit must not generate extra records")
+		var records := store.factions_by_ids(ids)
+		var config_type = load("res://scripts/generation/SystemConfig.gd")
+		var config = config_type.from_seed("Fixture %d" % index, system_id, index + 10, records)
+		for key in config.faction_weights:
+			_expect(str(config.canonical_faction_id(key)).begins_with("faction.generated."), "Generated configuration must not inject tutorial factions")
+		_expect(not config.story_pack.get("mission_causes", {}).is_empty(), "Local desires must reach actual mission causes")
+		for cause in config.story_pack["mission_causes"].values():
+			_expect(cause.get("cause_faction_id", "") in ids and not str(cause.get("desire_id", "")).is_empty(), "Mission cause must name a local faction's actual desire")
+		var restored = config_type.from_dict(JSON.parse_string(JSON.stringify(config.to_dict())))
+		_expect(restored.faction_identities == JSON.parse_string(JSON.stringify(config.faction_identities)), "Faction desires and relations must survive config save/load")
+		var board = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+		board.story_config_override_for_tests = config
+		var intent: String = config.story_pack["mission_causes"].keys()[0]
+		_expect(board._story_cause_metadata(intent).get("desire_id", "") == config.story_pack["mission_causes"][intent]["desire_id"], "Real board builder must use local desire instead of unrelated campaign boilerplate")
+		board.story_config_override_for_tests = null
+		var metadata_type = load("res://scripts/domain/NarrativeMetadata.gd")
+		var cause: Dictionary = config.story_pack["mission_causes"][intent]
+		var metadata: Dictionary = metadata_type.from_source({"narrative_metadata": cause})
+		_expect(metadata["desire_id"] == cause["desire_id"] and metadata["cause_faction_id"] == cause["cause_faction_id"], "Mission normalization must preserve desire ownership")
+	var reopened := FactionStoreType.open(CAMPAIGN_PATH)
+	_expect(reopened.is_valid() and reopened.reveal_next_for_system("system.generated.fixture_0", 3)["created"] == 0, "Persisted roster must survive reopening")
+	var broken := reopened.data.duplicate(true)
+	for faction in broken["factions"]:
+		if faction.has("home_system_id"):
+			faction["relationships"][0]["faction_id"] = "faction.zenith"
+			break
+	_expect(not FactionStoreType._validate_data(broken, str(broken["campaign_id"])).is_valid(), "Persistence must reject foreign relationship targets")
+	var first := FactionStoreType.generate_system_factions("seed.a", "system.x", 3)
+	_expect(first == FactionStoreType.generate_system_factions("seed.a", "system.x", 3), "Generation must be deterministic")
+	_expect(first != FactionStoreType.generate_system_factions("seed.b", "system.x", 3), "Campaign seed must change identities and desires")
+	# Superseded 2026-09-11: this used to require EVERY faction to have a negative
+	# relationship, which is the forced-hostility pattern the campaign-uniqueness
+	# plan removes. Cooperation, dependency and indifference are now legitimate.
+	# What the system still owes us is ONE adversarial pair to hang a story on,
+	# plus a stated reason behind every opinion rather than a bare number.
+	# Superseded 2026-09-12: the forced adversarial pair is gone. A system may be
+	# entirely non-hostile; its work comes from obstacles and unmet needs, not
+	# from mandatory enemies. What every opinion still owes us is a stated reason
+	# and a recorded kind rather than a bare standing number.
+	for faction in first:
+		_expect(faction["relationships"].size() == 2, "Each faction needs opinions about both local peers")
+		_expect(not str(faction["desire"].get("obstacle", "")).strip_edges().is_empty(), "Each faction needs an obstacle so work exists without enemies")
+		for relation in faction["relationships"]:
+			_expect(not str(relation.get("reason", "")).strip_edges().is_empty(), "Every opinion must cite a concrete local reason")
+			_expect(not str(relation.get("kind", "")).strip_edges().is_empty(), "Every opinion must record what kind of relationship it is")
+
+
 func _test_old_faction_records_normalize_on_load() -> void:
-	var slots := SlotRegistryType.open(TEST_ROOT)
-	var created := slots.create_campaign(
+	var slots = SlotRegistryType.open(TEST_ROOT)
+	var created: Dictionary = slots.create_campaign(
 		"slot_01",
 		"Old Faction Fixture",
 		"old-generated-faction-test",

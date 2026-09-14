@@ -1,5 +1,42 @@
 # Playtest Checklist
 
+## New outcome reaction checks (2026-09-11; pending player review)
+
+- [ ] Complete an investigation with a public outcome, such as preserving a site.
+  During a quiet services moment at the main station, Kaelen may reference it.
+- [ ] Undock and allow a quiet flight interval: N.O.V.A. may react to that outcome.
+  Neither should invent damage, danger, rewards or hidden information.
+- [ ] After another activity and visit, listen for at most one later reference
+  per character. Staying in place must not produce repeated references.
+- [ ] Save/reload after hearing it: the same outcome reference must stay retired.
+- [ ] Combat and other dialogue must take priority. These comments are optional;
+  silence alone is not proof of failure—record the circumstances if one seems stuck.
+
+**2026-09-11 player report:** Abe confirmed the conversation test list complete
+after clarification of the optional reason/risk/connection questions. Player
+review passed; automated source-rate/performance qualification is separate.
+
+## Board delivery recipient checks (2026-09-11)
+
+- [ ] Accept a board courier job. Dock somewhere else first: no delivery option.
+- [ ] Dock at the destination: services show **Deliver to [local person's name]**.
+- [ ] Hand over the cargo: that person acknowledges it, cargo clears, and payment
+  happens once. Kaelen should not appear to accept an outpost delivery.
+- [ ] Load the older stuck courier save and dock again: a local handover appears.
+- [ ] Repeat a delivery in a generated system and a board purchase delivery.
+- [ ] Save/reload with courier cargo aboard: destination and recipient stay intact.
+
+## Local station regression checks (2026-09-11)
+
+- [ ] Restart the game, load your save, and dock at Kova. Dock Control should
+  sound like a local resident rather than Jenna, Kaelen, or N.O.V.A.
+- [ ] Open Kova's lounge: Cassen Vane, Korvin Shaw, and Dasha Invar should fill
+  the three resident slots. Talk to each, including residents with no rumor.
+- [ ] Dock at Iron Reach: confirm its own residents and a different docking voice.
+- [ ] Return to the main station: its faction agents and Kaelen should still be
+  present. Check that Kaelen and N.O.V.A. retain their established personalities.
+- [ ] Save/reload and revisit an outpost: its roster and docking voice stay stable.
+
 Ordered by the sequence you will actually hit things: dev-panel setup, then the
 tutorial in order, then everything after it. Each item says **what you are
 deciding** -- if you finish an item without a decision written down, it did not

@@ -1612,6 +1612,14 @@ const TangentNavigatorType := preload("res://scripts/navigation/TangentNavigator
 ## The obstacle field as plain data for TangentNavigator: centre, keep-out radius
 ## (body + comfort margin) and the real body radius. The navigation target is
 ## never its own obstacle.
+## Mission placement uses the live autopilot's radii, without retaining nodes.
+func navigation_obstacle_snapshot() -> Array:
+	var records := _navigator_obstacles(null)
+	for record: Dictionary in records:
+		record.erase("node")
+	return records
+
+
 func _navigator_obstacles(navigation_target: Node3D) -> Array:
 	var out: Array = []
 	for candidate in _tangent_obstacles():

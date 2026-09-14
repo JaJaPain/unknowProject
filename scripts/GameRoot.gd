@@ -5,6 +5,9 @@ signal startup_load_completed(save_loaded: bool)
 signal campaign_bible_generation_finished(ok: bool, status: String)
 signal chapter_plan_generation_finished(ok: bool, status: String)
 
+const MissionConversationGenerationType := preload("res://scripts/story/MissionConversationGeneration.gd")
+const MissionConversationWorkerType := preload("res://scripts/story/MissionConversationWorker.gd")
+
 const ARRIVAL_COOLDOWN_SECONDS := 2.5
 const JUMP_ENTRY_DURATION := 3.2
 const JUMP_EXIT_DURATION := 2.0
@@ -156,6 +159,7 @@ var campaign_agent_memory_store = null
 var campaign_narrative_cache_store = null
 var campaign_narrative_fingerprint_ledger = null
 var narrative_cache_scheduler = null
+var _mission_conversation_worker: Node = null
 var narrative_cache_scheduler_pause_reasons: Dictionary = {}
 var campaign_bible_generation_requested_slots: Dictionary = {}
 var campaign_bible_generation_in_flight: bool = false
@@ -1198,6 +1202,11 @@ func _init_quiet_moment_director() -> void:
 	add_child(quiet_moment_director)
 	quiet_moment_director.quiet_moment_ready.connect(_on_quiet_moment_ready)
 	quiet_moment_director.quiet_moment_silent.connect(_on_quiet_moment_silent)
+	var outcome_timer := Timer.new()
+	outcome_timer.wait_time = 10.0
+	outcome_timer.timeout.connect(_try_pending_outcome_reaction)
+	add_child(outcome_timer)
+	outcome_timer.start()
 	if is_instance_valid(CombatManager) and CombatManager.has_signal("combat_ended"):
 		CombatManager.combat_ended.connect(_on_quiet_moment_combat_ended)
 	if is_instance_valid(GlobalState) and GlobalState.has_signal("cargo_changed"):
@@ -1278,6 +1287,9 @@ var _pending_quiet_moment_beat: String = ""
 
 
 func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
+	# Typed investigation reactions have their own public-fact, one-time path.
+	if str(quest_data.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		return
 	if not is_instance_valid(quiet_moment_director):
 		return
 	var reward := int(quest_data.get("reward_credits", 0))
@@ -1306,6 +1318,7 @@ func _player_is_docked() -> bool:
 ## Called from UIManager.undock_player -- the beat is DELAYED, never dropped,
 ## because the commentary is good, it was just arriving over someone else.
 func flush_pending_quiet_moment() -> void:
+	StoryManager.advance_outcome_activity()
 	if _pending_quiet_moment_beat.is_empty():
 		return
 	var beat_id := _pending_quiet_moment_beat
@@ -1340,6 +1353,61 @@ func _on_quiet_moment_ready(speaker: String, _beat_id: String, line: String) -> 
 			"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
 			"line": line,
 		})
+
+
+func _outcome_reaction_window(speaker: String) -> bool:
+	if get_tree().paused or GlobalState.intro_cinematic_active or not is_instance_valid(player) or bool(player.get("destroyed")):
+		return false
+	if not bool(StoryManager.story_state.get("intro_quest_delivered", false)):
+		return false
+	if SpeechService.is_busy() or PlayerInteractionQueue.is_busy() or PlayerInteractionQueue.in_combat_window():
+		return false
+	if speaker == "nova":
+		return Nova.can_speak_in_flight()
+	# Kaelen's outcome comments belong at the dock, outside a conversation.
+	var ui_manager := GlobalState.get_ui_manager()
+	return _player_is_docked() and is_instance_valid(ui_manager) \
+		and ui_manager.current_station == GlobalState.get_primary_station() \
+		and not ui_manager.agent_panel.visible and not ui_manager.public_board_panel.visible \
+		and ui_manager.current_submenu == ui_manager.DockSubmenu.SERVICES
+
+
+func _try_pending_outcome_reaction() -> void:
+	if not is_instance_valid(quiet_moment_director):
+		return
+	var speaker := "kaelen" if _player_is_docked() else "nova"
+	if not _outcome_reaction_window(speaker):
+		return
+	var system_id := str(GlobalState.current_system_id)
+	var candidate := StoryManager.outcome_reaction_candidate(speaker, system_id)
+	if candidate.is_empty():
+		return
+	var identity := str(candidate["id"])
+	var phase := str(candidate["phase"])
+	var step := int(StoryManager.story_state.get("local_outcome_step", 0))
+	var visit := int(StoryManager.story_state.get("local_outcome_visit", 0))
+	var state_id := StoryManager.fixed_cast_state(speaker)
+	var valid := func() -> bool:
+		if str(GlobalState.current_system_id) != system_id or StoryManager.fixed_cast_state(speaker) != state_id \
+				or int(StoryManager.story_state.get("local_outcome_step", 0)) != step \
+				or int(StoryManager.story_state.get("local_outcome_visit", 0)) != visit:
+			return false
+		for entry in OutcomeReactionProjector.normalize_memories(StoryManager.story_state.get("local_outcome_memories", [])):
+			if entry["id"] == identity:
+				return not bool(entry["callback_delivered" if phase == "callback" else "immediate_delivered"])
+		return false
+	var deliver := func(line: String) -> bool:
+		if not bool(valid.call()) or not _outcome_reaction_window(speaker):
+			return false
+		if speaker == "nova":
+			return Nova.speak(line)
+		GlobalState.emit_npc_flavor({"npc_name": "Broker Kaelen", "voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID, "line": line})
+		return true
+	var finished := func(presented: bool) -> void:
+		if bool(valid.call()):
+			StoryManager.record_outcome_reaction_attempt(identity, phase, presented)
+	if quiet_moment_director.try_outcome(candidate, state_id, valid, deliver, finished):
+		StoryManager.record_outcome_reaction_attempt(identity, phase, false)
 
 
 # Safe, player-visible context stamped onto every semantic movement event.
@@ -3661,9 +3729,6 @@ func reveal_generated_factions_for_system(
 		_initialize_campaign_chronicle()
 	if campaign_generated_faction_store == null:
 		return {"ok": false, "error": "Generated faction store is unavailable."}
-	var ensured := ensure_generated_frontier_factions()
-	if not bool(ensured.get("ok", false)):
-		return ensured
 	return campaign_generated_faction_store.reveal_next_for_system(system_id, count)
 
 
@@ -3876,6 +3941,7 @@ static func _quest_source_lane_name(quest: Dictionary) -> String:
 
 
 func _on_quest_accepted_chronicle(quest: Dictionary) -> void:
+	StoryManager.advance_outcome_activity()
 	_queue_narrative_prefetch_jobs_for_event(
 		_narrative_prefetch_event_from_quest(quest, "mission_accepted")
 	)
@@ -4429,6 +4495,9 @@ func _ready_narrative_payload_for_requester(
 	var ready := _ready_narrative_result_for_requester(requester_id, content_type)
 	var payload: Dictionary = ready.get("result_payload", {}) \
 		if ready.get("result_payload", {}) is Dictionary else {}
+	if str(payload.get("content_type", "")) == "story_agent_offer":
+		queue_mission_conversation(payload.get("quest_data", {}), payload.get("agent_profile", {}))
+		_ensure_narrative_cache_scheduler().update_result_payload(str(ready.get("job_id", "")), payload)
 	return payload
 
 
@@ -4483,6 +4552,8 @@ func _narrative_station_offer_requester_id(station_id: String) -> String:
 
 func _narrative_cache_job_has_worker(job: Dictionary) -> bool:
 	match str(job.get("kind", "")):
+		"mission_conversation":
+			return true
 		"tts_cache":
 			return true
 		"system_contact_offer_bundle":
@@ -4513,6 +4584,10 @@ func _can_process_story_agent_offer_cache_jobs() -> bool:
 
 
 func _process_narrative_cache_job(job: Dictionary) -> Dictionary:
+	if str(job.get("kind", "")) == "mission_conversation":
+		if _mission_conversation_worker == null:
+			return {"ok": false, "processed": false, "status": "conversation_worker_unavailable"}
+		return _mission_conversation_worker.start_job(job)
 	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
 	var job_id := str(job.get("job_id", "")).strip_edges()
 	if job_id.is_empty():
@@ -4883,6 +4958,8 @@ func _voice_profile_for_narrative_payload(payload: Dictionary) -> String:
 
 func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary:
 	match str(job.get("kind", "")):
+		"mission_conversation":
+			return _mission_conversation_payload_for_cache_job(job)
 		"system_contact_offer_bundle":
 			return _system_contact_offer_payload_for_cache_job(job)
 		"current_station_agent_offer_bundle":
@@ -4981,6 +5058,68 @@ func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
 			"agent_profile": agent_profile,
 		},
 	}
+
+
+func queue_mission_conversation(quest: Dictionary, agent_profile: Dictionary = {}) -> void:
+	StoryAgentOfferBuilderType.prepare_saved_conversation_generation(quest, agent_profile)
+	if quest.get("mission_dialogue_context", {}).is_empty():
+		return
+	var key := "mission_conversation_state:%s" % MissionConversationGenerationType.fingerprint(quest)
+	if campaign_narrative_cache_store != null:
+		var entry: Dictionary = campaign_narrative_cache_store.entries().get(key, {})
+		var saved: Dictionary = entry.get("result_payload", {}).get("quest_data", {})
+		if not saved.is_empty():
+			MissionConversationGenerationType.copy_generation(saved, quest)
+	if _mission_conversation_worker == null:
+		_mission_conversation_worker = MissionConversationWorkerType.new()
+		add_child(_mission_conversation_worker)
+		_mission_conversation_worker.configure(self, LLMInterface.request_mission_conversation_slice)
+		QuestManager.quest_accepted_details.connect(_mission_conversation_worker.retire_offer)
+		QuestManager.quest_declined_details.connect(_mission_conversation_worker.retire_offer)
+	_mission_conversation_worker.queue_offer(quest)
+
+
+func mission_conversation_system_id() -> String:
+	return str(GlobalState.current_system_id)
+
+
+func _mission_conversation_payload_for_cache_job(job: Dictionary) -> Dictionary:
+	return MissionConversationGenerationType.prompt_for_job(job)
+
+
+func persist_mission_conversation_offer(quest: Dictionary) -> void:
+	var fingerprint := MissionConversationGenerationType.fingerprint(quest)
+	# Persist progress even for a direct offer with no prefetch parent. Reloads
+	# resume from this snapshot when the same offer is next requested.
+	_persist_narrative_ready_payload({
+		"cache_key": "mission_conversation_state:%s" % fingerprint,
+		"kind": "mission_conversation_state",
+		"system_id": mission_conversation_system_id(),
+		"context_fingerprint": fingerprint,
+	}, {"content_type": "mission_conversation_state", "quest_data": quest.duplicate(true)})
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	for job in scheduler.jobs():
+		var payload: Dictionary = job.get("result_payload", {})
+		var cached_offer: Dictionary = payload.get("quest_data", {})
+		if cached_offer.is_empty() or MissionConversationGenerationType.fingerprint(cached_offer) != fingerprint:
+			continue
+		MissionConversationGenerationType.copy_generation(quest, cached_offer)
+		scheduler.update_result_payload(str(job["job_id"]), payload)
+		_persist_narrative_cache_payload_update(str(job["cache_key"]), payload)
+
+
+func record_mission_conversation_result(quest: Dictionary) -> void:
+	var source := str(quest.get("mission_dialogue_bundle_source", "deterministic_fallback"))
+	var detail := {
+		"agent_name": str(quest.get("agent_name", "")),
+		"story_beat_id": str(quest.get("story_beat_id", "")),
+		"generated_fields": quest.get("mission_dialogue_progress", {}).get("accepted", {}).size(),
+	}
+	if source == "deterministic_fallback":
+		var reason := "offer_resolved_with_safe_template" if bool(quest.get("mission_dialogue_progress", {}).get("retired", false)) else "slice_attempts_exhausted"
+		GenerationDiagnostics.record_fallback("mission_conversation_bundle", reason, "GameRoot", detail)
+	else:
+		GenerationDiagnostics.record_content_source("mission_conversation_bundle", source, "GameRoot", detail)
 
 
 func _station_agent_offer_payload_for_cache_job(job: Dictionary) -> Dictionary:
@@ -5704,7 +5843,7 @@ func _safe_location_for(
 	var system_id := str(
 		system_registry.resolve_system_id(GlobalState.current_system_id)
 	)
-	if source_reason in ["dock", "undock"]:
+	if source_reason in ["dock", "undock", "investigation_accepted", "mission_settled"]:
 		if safe_entity == null or not is_instance_valid(safe_entity) \
 				or not safe_entity.has_method("get_world_id"):
 			return {}

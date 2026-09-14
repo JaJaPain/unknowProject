@@ -11,10 +11,13 @@ const MAX_LINE_LENGTH := 220
 static func validate_bundle(
 	bundle: Dictionary,
 	conversation_plan: Dictionary,
-	speaker_card: Dictionary = {}
+	speaker_card: Dictionary = {},
+	slice: Dictionary = {}
 ) -> Dictionary:
 	var errors: Array[String] = []
 	var required := CompilerType.required_output_keys(conversation_plan)
+	if not slice.is_empty():
+		required = CompilerType.required_output_keys_for_slice(slice)
 	var required_lookup := {}
 	for key in required:
 		required_lookup[key] = true
@@ -43,7 +46,7 @@ static func validate_bundle(
 		for tic in banned:
 			if _contains_wordish(text, tic):
 				errors.append("banned_tic:%s:%s" % [key, tic])
-	errors.append_array(_voice_contract_errors(bundle, required, speaker_card))
+	errors.append_array(_voice_contract_errors(bundle, required, speaker_card, slice.is_empty()))
 	var seen_line_fields := {}
 	for key in required:
 		if str(key).ends_with("_player"):
@@ -59,6 +62,8 @@ static func validate_bundle(
 		if str(intent.get("kind", "")) != "question":
 			continue
 		var intent_id := str(intent.get("id", "")).strip_edges()
+		if "%s_response" % intent_id not in required:
+			continue
 		if intent_id.is_empty():
 			continue
 		var anchors := _string_array(intent.get("answer_anchors", []))
@@ -131,7 +136,8 @@ static func _banned_tics(speaker_card: Dictionary) -> Array[String]:
 static func _voice_contract_errors(
 	bundle: Dictionary,
 	required_keys: Array[String],
-	speaker_card: Dictionary
+	speaker_card: Dictionary,
+	check_bundle_vocabulary: bool = true
 ) -> Array[String]:
 	var rules: Dictionary = speaker_card.get("voice_rules", {}) \
 		if speaker_card.get("voice_rules", {}) is Dictionary else {}
@@ -154,7 +160,7 @@ static func _voice_contract_errors(
 			if _contains_wordish(text, claim):
 				errors.append("forbidden_role_claim:%s:%s" % [key, claim])
 	var required_vocabulary := _string_array(rules.get("required_any_terms", []))
-	if not required_vocabulary.is_empty() \
+	if check_bundle_vocabulary and not required_vocabulary.is_empty() \
 			and not _contains_any_anchor(" ".join(all_text), required_vocabulary):
 		errors.append("missing_persona_vocabulary")
 	return errors

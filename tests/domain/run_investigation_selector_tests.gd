@@ -30,6 +30,7 @@ func _initialize() -> void:
 	_test_reservation_does_not_burn_a_shape()
 	_test_pool_change_does_not_replay_immediately()
 	_test_cycle_survives_a_save()
+	_test_first_draw_is_campaign_seeded()
 	if _failures.is_empty():
 		print("[PASS] Investigation selector tests")
 		quit(0)
@@ -40,6 +41,16 @@ func _initialize() -> void:
 
 
 # Opening the panel twice must not roll a different contract at the player.
+func _test_first_draw_is_campaign_seeded() -> void:
+	for seed_value in range(30):
+		var first := SelectorType.reserve(SelectorType.empty_state(seed_value), FOUR, "first")
+		for attempt in range(5):
+			var again := SelectorType.reserve(SelectorType.empty_state(seed_value), FOUR, "first")
+			if first != again:
+				_failures.append("Initial draw changed under identical campaign seed.")
+				return
+
+
 func _test_repeated_opens_return_the_same_offer() -> void:
 	var state: Dictionary = SelectorType.empty_state(1234)
 	var first: Dictionary = SelectorType.publish(state, FOUR, "offer.a")

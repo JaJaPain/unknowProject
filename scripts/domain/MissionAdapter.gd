@@ -114,12 +114,21 @@ static func build_active_state(
 		"station_errand": bool(quest_data.get("station_errand", false)),
 		"is_intro_tutorial": bool(quest_data.get("is_intro_tutorial", false)),
 	}
+	# Keep the exact conversation and its provenance with the accepted mission.
+	for key in ["mission_conversation_plan", "mission_dialogue_context", "mission_dialogue_progress", "mission_dialogue_bundle", "mission_dialogue_bundle_source", "mission_dialogue_bundle_degraded", "mission_dialogue_bundle_degraded_reason", "mission_dialogue_quality"]:
+		if quest_data.has(key):
+			var value: Variant = quest_data[key]
+			state[key] = value.duplicate(true) if value is Dictionary else value
 	state = NarrativeMetadataType.apply_to_state(
 		state,
 		definition.narrative_metadata
 	)
 
 	match definition.objective.type:
+		"INVESTIGATE_SIGNAL":
+			for key in preload("res://scripts/domain/InvestigationStateValidator.gd").COPY_FIELDS:
+				var value: Variant = objective.get(key)
+				state[key] = value.duplicate(true) if value is Dictionary or value is Array else value
 		"KILL_SHIPS":
 			state["target_faction"] = str(
 				objective.get("target_faction", "zenith")

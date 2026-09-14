@@ -355,7 +355,7 @@ func _pick_minor_faction_runtime() -> String:
 		if GlobalState.is_minor_faction(faction_name):
 			minor_factions.append(faction_name)
 	if minor_factions.is_empty():
-		minor_factions.assign(GlobalState.MINOR_FACTIONS.keys())
+		minor_factions.assign(config.faction_weights.keys())
 
 	var total := 0.0
 	for faction_name: String in minor_factions:

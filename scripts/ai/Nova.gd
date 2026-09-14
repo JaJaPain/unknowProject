@@ -441,20 +441,20 @@ func can_speak_in_flight() -> bool:
 # her own voice via emit_npc_flavor (which carries the TTS routing). Falls back to
 # text-only emit_chatter if the flavor path is unavailable. expression is advisory
 # (portrait UI TBD).
-func speak(text: String, severity: int = Severity.IDLE, expression: String = "neutral") -> void:
+func speak(text: String, severity: int = Severity.IDLE, expression: String = "neutral") -> bool:
 	var line := text.strip_edges()
 	if line.is_empty():
-		return
+		return false
 	if not is_instance_valid(GlobalState):
-		return
+		return false
 	var now := Time.get_ticks_msec()
 	# Verbatim repeat guard. Deliberately ABOVE the severity check: a THREAT
 	# line bypasses the speech budget entirely, so without this the highest
 	# priority lines are the ones most able to repeat themselves.
 	if line == _last_spoken_line and now - _last_spoken_line_ms < REPEAT_LINE_SUPPRESS_MS:
-		return
+		return false
 	if not _speech_budget_allows(severity, now):
-		return
+		return false
 	_last_spoken_line = line
 	_last_spoken_line_ms = now
 	# Only casual IDLE/NAV lines count toward the "spoken enough" budget.
@@ -473,6 +473,9 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 		})
 	elif GlobalState.has_method("emit_chatter"):
 		GlobalState.emit_chatter(NOVA_SENDER, line, NOVA_COLOR)
+	else:
+		return false
+	return true
 
 
 # True if a line at `severity` may be delivered at `now_ms` under the global

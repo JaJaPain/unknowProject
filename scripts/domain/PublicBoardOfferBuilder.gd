@@ -7,6 +7,16 @@ const TEMPLATE_DELIVERY_COURIER := MissionTemplateRegistry.TEMPLATE_DELIVERY_COU
 const TEMPLATE_PURCHASE_DELIVERY := MissionTemplateRegistry.TEMPLATE_PURCHASE_DELIVERY_PUBLIC
 const TEMPLATE_RECOVER_COMBAT_DROP := MissionTemplateRegistry.TEMPLATE_RECOVER_COMBAT_DROP
 const StoreRegistryScript = preload("res://scripts/economy/StoreRegistry.gd")
+const CausalCompilerType := preload(
+	"res://scripts/domain/QuestCausalContractCompiler.gd"
+)
+const CausalContractType := preload("res://scripts/domain/QuestCausalContract.gd")
+const GeneratedFactionDesireType := preload(
+	"res://scripts/persistence/GeneratedFactionDesire.gd"
+)
+const PlausibilityType := preload(
+	"res://scripts/domain/QuestPlausibilityValidator.gd"
+)
 
 const PART_NAMES: Array[String] = [
 	"Sealed Actuator",
@@ -39,6 +49,7 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	if not purchase_offer.is_empty():
 		offers.append(purchase_offer)
 	offers.append(_build_recovery_preview())
+	_withhold_invalid_offers(offers)
 	_apply_story_intent_priority(offers)
 	_apply_cooldowns(offers)
 	return offers
@@ -232,9 +243,15 @@ static func _build_courier_offer(current_time_minutes: int) -> Dictionary:
 	var destination_display := str(outpost.get("display", destination_id))
 	if destination_id.is_empty():
 		return {}
-	var package_name := COURIER_PACKAGE_NAMES[
-		int(current_time_minutes / 20) % COURIER_PACKAGE_NAMES.size()
-	]
+	# Prefer cargo that IS the thing the local cause actually needs, so the
+	# contract can state the link truthfully instead of asserting it. Falls back
+	# to the generic package list when no local desire caused this posting -- and
+	# the compiler then makes only the weaker claim it can support.
+	var package_name := _need_bound_package("delivery")
+	if package_name.is_empty():
+		package_name = COURIER_PACKAGE_NAMES[
+			int(current_time_minutes / 20) % COURIER_PACKAGE_NAMES.size()
+		]
 	var origin_id := _main_station_id()
 	var origin_display := _main_station_display()
 	var base_reward := 160
@@ -399,6 +416,9 @@ static func _build_recovery_preview() -> Dictionary:
 
 static func _story_board_context(_offer_kind: String) -> String:
 	var story_pack := _current_system_story_pack()
+	var causes: Dictionary = story_pack.get("mission_causes", {})
+	if causes.has(_offer_kind):
+		return str(causes[_offer_kind].get("public_because", ""))
 	if story_pack.is_empty():
 		return ""
 	var seeds: Array = story_pack.get("mission_seeds", [])
@@ -434,9 +454,318 @@ static func _attach_story_cause_metadata(
 	var hook := str(metadata.get("story_hook_ref", "")).strip_edges()
 	if not hook.is_empty():
 		quest_data["story_hook_ref"] = hook
+	_attach_causal_contract(quest_data, metadata)
+
+
+## Compile the causal contract for a board offer from the local faction data the
+## system already holds. New invalid offers are withheld; accepted jobs use
+## their persisted terms and never pass through this publication builder again.
+static func _attach_causal_contract(
+	quest_data: Dictionary,
+	metadata: Dictionary
+) -> void:
+	var objective: Dictionary = quest_data.get("objective", {}) if quest_data.get("objective", {}) is Dictionary else {}
+	if objective.is_empty():
+		return
+	var requester_id := str(metadata.get("cause_faction_id", "")).strip_edges()
+	var agenda := _faction_agenda(requester_id)
+	if _withhold_incoherent_desire(quest_data, agenda.get("desire", {})):
+		return
+	var contract := CausalCompilerType.compile({
+		"campaign_id": _campaign_id(),
+		"system_id": _current_system_id(),
+		"objective": objective,
+		"cause": metadata,
+		"agenda": agenda,
+		"requester_display": _faction_display_for_id(requester_id),
+		"rival_display": _faction_display_for_id(
+			str(metadata.get("cause_rival_faction_id", "")).strip_edges()
+		),
+		"recipient": _contract_recipient(objective),
+		# Resolve the objective's raw faction KEY to a display name before it can
+		# reach a player-visible fact.
+		"target_faction_display": _local_faction_display(
+			str(objective.get("target_faction", ""))
+		),
+		"delegation": _delegation_text(objective, requester_id),
+		"reward_source": _reward_source_text(requester_id),
+	})
+	if not CausalContractType.is_present(contract):
+		# Nothing local caused this job. That is a legitimate state -- the board
+		# has always posted work nobody in particular wants done -- so it
+		# publishes as an UNCAUSED offer rather than being withheld.
+		quest_data["causal_publication_state"] = PUBLICATION_UNCAUSED
+		return
+	var report: Dictionary = PlausibilityType.check(contract, _plausibility_world())
+	if not bool(report.get("ok", false)):
+		# A contract that FAILS its checks is different: the mechanics or the
+		# cause are wrong, and publishing it anyway is how an impossible job
+		# reaches the player. New discretionary offers are withheld.
+		_report_contract_rejection(quest_data, report)
+		quest_data["causal_publication_state"] = PUBLICATION_WITHHELD
+		quest_data["causal_withheld_issue_codes"] = report.get("issue_codes", [])
+		return
+	quest_data["narrative_metadata"]["causal_contract"] = contract
+	quest_data["causal_contract"] = contract
+	quest_data["causal_publication_state"] = PUBLICATION_VALIDATED
+
+
+static func _withhold_incoherent_desire(quest_data: Dictionary, desire: Dictionary) -> bool:
+	var coherence := GeneratedFactionDesireType.check_coherence(desire)
+	if not bool(coherence.get("checked", false)) or bool(coherence.get("ok", false)):
+		return false
+	quest_data["causal_publication_state"] = PUBLICATION_WITHHELD
+	quest_data["causal_withheld_issue_codes"] = coherence.get("errors", [])
+	_report_contract_rejection(quest_data, {"issue_codes": coherence.get("errors", [])})
+	return true
+
+
+## How a built offer stands with respect to its causal contract.
+##
+## The distinction the integration review asked for: an offer with no local cause
+## at all is fine and publishes; an offer whose contract FAILED validation has
+## broken mechanics or an unbound cause and must not become a new discretionary
+## job. Neither state touches missions the player has already accepted -- those
+## are governed by their saved terms, not by today's generation rules.
+const PUBLICATION_VALIDATED := "validated"
+const PUBLICATION_UNCAUSED := "uncaused_legacy_compatible"
+const PUBLICATION_WITHHELD := "withheld_invalid_contract"
+
+
+## Remove offers whose causal contract failed validation.
+##
+## Deliberately applied to NEWLY BUILT board offers only. It never inspects or
+## withdraws an accepted mission: an accepted job keeps its saved objective,
+## recipient and terms and stays completable even if today's rules would no
+## longer generate it.
+static func _withhold_invalid_offers(offers: Array[Dictionary]) -> void:
+	var kept: Array[Dictionary] = []
+	for offer in offers:
+		var quest_data: Dictionary = offer.get("quest_data", {}) \
+			if offer.get("quest_data", {}) is Dictionary else {}
+		if str(quest_data.get("causal_publication_state", "")) == PUBLICATION_WITHHELD:
+			continue
+		kept.append(offer)
+	if kept.size() == offers.size():
+		return
+	offers.clear()
+	for offer in kept:
+		offers.append(offer)
+
+
+## A rejected contract is a development signal AND a publication decision. The
+## reason is recorded so a shortage of offers is visible rather than silent.
+static func _report_contract_rejection(
+	quest_data: Dictionary,
+	report: Dictionary
+) -> void:
+	var diagnostics = _causal_generation_diagnostics()
+	if diagnostics == null or not diagnostics.has_method("record_event"):
+		return
+	var codes: Array = report.get("issue_codes", [])
+	diagnostics.call(
+		"record_event",
+		"mission_causal_contract",
+		"contract_rejected",
+		"public_board",
+		{
+			"title": str(quest_data.get("title", "")),
+			"issue_codes": codes,
+		}
+	)
+
+
+static func _causal_generation_diagnostics() -> Node:
+	var loop := Engine.get_main_loop()
+	if loop == null or not (loop is SceneTree):
+		return null
+	return (loop as SceneTree).root.get_node_or_null("GenerationDiagnostics")
+
+
+## The world snapshot the plausibility validator checks against. Keys that
+## cannot be resolved are LEFT OUT rather than guessed, because a missing key
+## means "unknown" to the validator and a wrong one means a false rejection.
+static func _plausibility_world() -> Dictionary:
+	var world := {
+		"system_id": _current_system_id(),
+	}
+	var gs := _global_state()
+	if gs == null:
+		return world
+	var station_ids: Array[String] = []
+	var main_station := _main_station_id()
+	if not main_station.is_empty():
+		station_ids.append(main_station)
+	if gs.has_method("get_current_pickup_outposts"):
+		for raw_outpost in gs.call("get_current_pickup_outposts"):
+			if not (raw_outpost is Dictionary):
+				continue
+			var outpost_id := str((raw_outpost as Dictionary).get("id", "")).strip_edges()
+			if not outpost_id.is_empty() and outpost_id not in station_ids:
+				station_ids.append(outpost_id)
+	if not station_ids.is_empty():
+		world["station_ids"] = station_ids
+	return world
+
+
+static func _campaign_id() -> String:
+	var loop := Engine.get_main_loop()
+	if loop == null or not (loop is SceneTree):
+		return ""
+	var game_root := (loop as SceneTree).root.get_node_or_null("GameRoot")
+	if game_root != null and "active_campaign_slot_id" in game_root:
+		return str(game_root.get("active_campaign_slot_id"))
+	return ""
+
+
+## GlobalState is an autoload, so it may be absent in a headless fixture. A
+## missing system id means "unknown" to the validator, which is correct.
+static func _current_system_id() -> String:
+	var gs := _global_state()
+	if gs == null or not ("current_system_id" in gs):
+		return ""
+	return str(gs.get("current_system_id"))
+
+
+static func _faction_agenda(faction_id: String) -> Dictionary:
+	if faction_id.is_empty():
+		return {}
+	for raw_agenda in (_current_system_story_pack().get("faction_agendas", []) as Array):
+		if not (raw_agenda is Dictionary):
+			continue
+		if str((raw_agenda as Dictionary).get("faction_id", "")) == faction_id:
+			return (raw_agenda as Dictionary).duplicate(true)
+	return {}
+
+
+static func _faction_display_for_id(faction_id: String) -> String:
+	if faction_id.is_empty():
+		return ""
+	return str(_faction_agenda(faction_id).get("faction_name", ""))
+
+
+## Resolve a faction KEY to the name a person would actually say. Generated keys
+## look like "gen_3753748b9ca0_f1"; `_story_faction_display` would title-case the
+## hash and produce "3753748b9ca0 F1", which reached player-visible text before
+## the compiled facts were printed and read. Returns empty rather than a
+## prettified hash, and the compiler then omits the name entirely.
+static func _local_faction_display(faction_key: String) -> String:
+	var clean := faction_key.strip_edges()
+	if clean.is_empty():
+		return ""
+	var config := _current_system_config()
+	if config != null:
+		var identities: Dictionary = config.faction_identities
+		if identities.has(clean):
+			var identity: Variant = identities[clean]
+			if identity is Dictionary:
+				var display := str((identity as Dictionary).get("display_name", "")).strip_edges()
+				if not display.is_empty():
+					return display
+		for key in identities.keys():
+			var record: Variant = identities[key]
+			if not (record is Dictionary):
+				continue
+			var entry: Dictionary = record
+			if str(entry.get("id", "")) != clean and str(entry.get("legacy_id", "")) != clean:
+				continue
+			var name := str(entry.get("display_name", "")).strip_edges()
+			if not name.is_empty():
+				return name
+	# Tutorial factions have authored names; generated keys that got this far are
+	# an unresolved hash and must not be shown.
+	if clean in ["reavers", "obsidian", "dustborn", "wraiths", "ironclad", "zenith", "aurelia", "vanguard"]:
+		return _story_faction_display(clean)
+	return ""
+
+
+## Only deliveries need one, and only a resident who is actually there counts.
+static func _contract_recipient(objective: Dictionary) -> Dictionary:
+	var objective_type := str(objective.get("type", "")).to_upper()
+	if objective_type not in CausalCompilerType.DELIVERY_TYPES:
+		return {}
+	var destination := str(objective.get("destination_station_id", "")).strip_edges()
+	if destination.is_empty():
+		return {}
+	var gs := _global_state()
+	if gs == null or not gs.has_method("get_delivery_recipient"):
+		return {}
+	var recipient: Dictionary = gs.call("get_delivery_recipient", destination)
+	if recipient.is_empty():
+		return {}
+	var resident_name := str(recipient.get("name", "")).strip_edges()
+	return {
+		"id": "npc.%s" % resident_name.to_lower().replace(" ", "_"),
+		"name": resident_name,
+		"role": str(recipient.get("delivery_role", "station_contact")),
+		"station_id": destination,
+		# Protected fixed cast are never reassigned as cargo recipients.
+		"protected": resident_name in ["Kaelen", "N.O.V.A."],
+	}
+
+
+## Cargo that satisfies the recorded need behind this offer kind, or "" when no
+## local desire caused it. The binding lives with the desire vocabulary so the
+## generator and the compiler cannot disagree about what satisfies what.
+static func _need_bound_package(offer_kind: String) -> String:
+	var metadata := _story_cause_metadata(offer_kind)
+	if metadata.is_empty():
+		return ""
+	var agenda := _faction_agenda(str(metadata.get("cause_faction_id", "")).strip_edges())
+	var desire: Dictionary = agenda.get("desire", {}) 		if agenda.get("desire", {}) is Dictionary else {}
+	var need := str(desire.get("need", "")).strip_edges()
+	if need.is_empty():
+		return ""
+	return GeneratedFactionDesireType.item_for_need(need, str(desire.get("id", "")))
+
+
+## Why this job is being handed to an outsider.
+##
+## The previous version invented a reason from the objective TYPE alone -- "no
+## free hull", "no armed hull" -- without consulting what the faction actually
+## holds or has available. That is a fabricated fact, and once it enters the
+## contract it is indistinguishable from a verified one.
+##
+## Now it uses the faction's own recorded obstacle, which IS the reason. When no
+## obstacle is recorded it returns empty, and the contract simply carries no
+## delegation fact rather than a plausible-sounding invention.
+static func _delegation_text(objective: Dictionary, requester_id: String) -> String:
+	if objective.is_empty():
+		return ""
+	var agenda := _faction_agenda(requester_id)
+	var desire: Dictionary = agenda.get("desire", {}) \
+		if agenda.get("desire", {}) is Dictionary else {}
+	var obstacle := str(desire.get("obstacle", "")).strip_edges()
+	if obstacle.is_empty():
+		return ""
+	return "They are hiring it out because %s." % _lower_first_word(obstacle.trim_suffix("."))
+
+
+static func _lower_first_word(text: String) -> String:
+	if text.is_empty():
+		return text
+	var first := text.substr(0, 1)
+	if first != first.to_upper():
+		return text
+	# Leave a proper noun alone.
+	var words := text.split(" ", false)
+	if words.size() > 1 and str(words[1]).length() > 0 \
+			and str(words[1])[0] == str(words[1])[0].to_upper():
+		return text
+	return first.to_lower() + text.substr(1)
+
+
+static func _reward_source_text(faction_id: String) -> String:
+	var display := _faction_display_for_id(faction_id).strip_edges()
+	if display.is_empty():
+		return "The board escrows the fee before the job is posted."
+	return "%s posts the fee against its own account before the job goes up." % display
 
 
 static func _story_cause_metadata(offer_kind: String) -> Dictionary:
+	var causes: Dictionary = _current_system_story_pack().get("mission_causes", {})
+	if causes.has(offer_kind):
+		return (causes[offer_kind] as Dictionary).duplicate(true)
 	var because := ""
 	var hook := ""
 	var main_loop := Engine.get_main_loop()

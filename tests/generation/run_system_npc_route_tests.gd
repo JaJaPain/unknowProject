@@ -4,6 +4,11 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	_test_local_faction_spawn_fallback()
 	_test_hostiles_use_shipping_lane_without_belt()
 	_test_hostiles_prefer_belt_over_shipping_lane()
 	_test_mission_targets_use_shipping_lane_without_belt()
@@ -104,6 +109,19 @@ func _make_station(label: String, pos: Vector3) -> Node3D:
 	station.add_to_group("station")
 	station.position = pos
 	return station
+
+
+func _test_local_faction_spawn_fallback() -> void:
+	var manager = _make_manager()
+	if manager == null:
+		return
+	var config := SystemConfig.new()
+	# Exercise fallback with local keys that aren't classified as minor.
+	config.faction_weights = {"local_fixture_one": 0.6, "local_fixture_two": 0.4}
+	manager.config = config
+	for index in range(80):
+		_expect(manager._pick_minor_faction_runtime() in config.faction_weights, "Minor spawn fallback must stay inside the current system roster.")
+	manager.free()
 
 
 func _make_asteroid(belt_id: String, pos: Vector3) -> Node3D:

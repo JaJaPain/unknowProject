@@ -8,11 +8,15 @@ const NAV_MORE_OPTIONS := "__more_options"
 
 static func start(
 	conversation_plan: Dictionary,
-	bundle: Dictionary
+	bundle: Dictionary,
+	mechanical: Dictionary = {}
 ) -> Dictionary:
 	var state := {
 		"conversation_plan": conversation_plan.duplicate(true),
 		"bundle": bundle.duplicate(true),
+		# What is currently true, for click-time eligibility rechecks. Empty
+		# means unknown, and unknown never revokes a promised option.
+		"mechanical": mechanical.duplicate(true),
 		"asked_intents": [],
 		"learned_fact_ids": [],
 		"mode": "opening",
@@ -56,6 +60,21 @@ static func select_intent(
 		next_state["mode"] = "answer"
 		next_state["current_intent_id"] = clean_intent_id
 		return _screen(next_state)
+	# Re-check a branch option at CLICK time. The world moves between rendering an
+	# option and choosing it. An option that has become unavailable is EXPLAINED,
+	# not silently dropped: the player was already shown it, and a promised
+	# resolution disappearing without a word reads as a bug.
+	var eligibility := PlanType.check_branch_eligibility(
+		intent, next_state.get("mechanical", {})
+	)
+	if not bool(eligibility.get("eligible", true)):
+		next_state["mode"] = "unavailable"
+		next_state["current_intent_id"] = clean_intent_id
+		next_state["unavailable_reason"] = str(eligibility.get("reason", ""))
+		next_state["unavailable_predicate"] = str(eligibility.get("missing_predicate", ""))
+		# Deliberately NOT complete: the conversation stays open so the player
+		# can pick something else instead of being dead-ended.
+		return _screen(next_state)
 	next_state["mode"] = "terminal"
 	next_state["current_intent_id"] = clean_intent_id
 	next_state["complete"] = true
@@ -65,6 +84,18 @@ static func select_intent(
 		next_state.get("bundle", {}),
 		next_state
 	)
+	# A branch terminal carries the executable action forward. Without this the
+	# policy's surviving branch would render as a button that commits nothing.
+	var branch_id := str(intent.get("branch_id", "")).strip_edges()
+	if not branch_id.is_empty():
+		next_state["selected_branch_id"] = branch_id
+		next_state["selected_action_id"] = str(intent.get("action_id", ""))
+		var terminal: Dictionary = next_state["terminal_choice"]
+		terminal["branch_id"] = branch_id
+		terminal["action_id"] = str(intent.get("action_id", ""))
+		terminal["effect_ids"] = intent.get("effect_ids", [])
+		terminal["outcome_id"] = str(intent.get("outcome_id", ""))
+		next_state["terminal_choice"] = terminal
 	return _screen(next_state)
 
 
@@ -82,6 +113,9 @@ static func _screen(state: Dictionary) -> Dictionary:
 		text = "What do you want to ask or change?"
 	elif mode == "invalid":
 		text = "That response is unavailable."
+	elif mode == "unavailable":
+		# Explained, not silently removed. The player was already shown this.
+		text = "That is not possible yet."
 	var choices := _choices_for_state(state)
 	return {
 		"ok": true,
@@ -93,6 +127,13 @@ static func _screen(state: Dictionary) -> Dictionary:
 		"terminal_choice_id": str(state.get("terminal_choice_id", "")),
 		"terminal_choice": state.get("terminal_choice", {}),
 		"selected_intent_id": current_intent_id,
+		# Branch execution and the unavailability explanation must be readable
+		# from the SCREEN, not only from the internal state, or a UI consumer
+		# would have to reach into state to find out what it just committed.
+		"selected_branch_id": str(state.get("selected_branch_id", "")),
+		"selected_action_id": str(state.get("selected_action_id", "")),
+		"unavailable_reason": str(state.get("unavailable_reason", "")),
+		"unavailable_predicate": str(state.get("unavailable_predicate", "")),
 	}
 
 

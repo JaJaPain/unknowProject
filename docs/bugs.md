@@ -5,6 +5,95 @@ _Confirmed issues spotted during playtesting. Move to todo.md or close with a co
 
 ## Active
 
+### Local critic approves every line (no discriminative power)
+**Spotted:** 2026-09-12, first real-inference run of the dialogue quality gate.
+**Severity:** High. Blocks Phase C calibration of
+`docs/plan_campaign_uniqueness_and_dialogue_quality.md`. It is also a silent
+failure: the critic reports `pass`, the pipeline records `quality_passed`, and
+nothing anywhere looks broken.
+**Status:** OPEN. Full self-contained problem brief, verified repro commands and
+measured numbers are in `docs/problem_critic_always_passes.md`. Handed to an
+external model for a second opinion 2026-09-12.
+
+`qwen3:4b` returned `pass` on **28 of 28** hand-labeled cases (12 should pass,
+16 should be repaired), and the raw response string was **byte-identical every
+time** -- it matches the example JSON in our own prompt, `"pass"` value included.
+It is copying the schema demo, not judging. Measured: 16 false passes, 0 true
+repairs, 0 false rejections, 0 uncertain. Latency was fine (p50 305ms).
+
+This is the THIRD instance of the same family in this project: the JSON label
+leak, the prohibition that taught the phrase, and the added prompt rules that
+collapsed into one shared template. On a 4B model, concrete text in the prompt
+tends to get COPIED rather than obeyed. That history is why the brief asks
+whether this is fixable by prompt design at all, rather than assuming it is.
+
+**Not affected:** the deterministic hard checks (invented numbers, private-fact
+leakage, restated briefing, reused stock phrases, self-contradiction). Those are
+code, they were unaffected by this, and they stay in the runtime path. The gate
+already treats a missing/failed critic as `quality_unknown` rather than
+`quality_passed`, so nothing shipped on the strength of this false approval.
+
+### Board delivery has nobody available to accept cargo at the outpost
+**Spotted:** 2026-09-11 (Abe).
+**Status:** Fixed in working tree; awaiting in-game retest.
+
+Acceptance now verifies a local recipient. Courier cargo carries destination and
+recipient metadata; docking exposes Deliver to [name] only at the matching dock
+with cargo and recipient available. Local handover replaces the Kaelen completion
+screen for courier/purchase board jobs. Existing unassigned deliveries are repaired
+from their saved mission and local roster. Covered by
+`tests/story/run_board_delivery_recipient_tests.gd`.
+
+### Outpost lounges show main-station agents; docking sounds like Jenna
+**Spotted:** 2026-09-11 (Abe, Kova screenshot and docking audio).
+**Status:** Fixed in working tree; awaiting in-game retest.
+
+Outpost residents now occupy the local lounge contact slots, with main-station
+agents and Kaelen restricted to the primary station. Residents remain available
+without intel. Dock clearance uses the destination's own mechanic/resident voice,
+with a stable local fallback instead of the neutral blend that sounded like Jenna.
+Regression coverage: `tests/story/run_lounge_station_roster_tests.gd`.
+
+### Courier mission card docks at the issuing station instead of the delivery outpost
+**Spotted:** 2026-09-11 (Abe, board courier screenshot).
+**Status:** Fixed in working tree; awaiting in-game retest.
+
+Courier capability readiness means the assigned cargo is aboard, not that the
+delivery has happened. The mission card treated this as a finished job and
+hardcoded the primary station for its docking command. Delivery/purchase cards
+now resolve `destination_station_id`, name `destination_display` on the button,
+and describe cargo as ready for delivery. Missing destinations disable routing
+instead of substituting the home station. Progress-text clicks use the same
+destination. Wrong-station turn-in stays disabled; canonical outpost ID aliases
+are normalized for both routing and turn-in. Other completed missions retain
+their primary-station route. No dialogue/personality changes.
+
+Regression tests cover the actual click command, label, destination gating,
+missing destinations, canonical aliases, purchase delivery and ordinary combat.
+Delivery-route, public-board validation, capability and tutorial-revisit suites
+pass; 339 scripts parse with zero failures. Existing accepted deliveries use
+their saved destination without needing a new mission.
+
+### Declining the first tutorial offer skips Clean and Easy on return
+**Spotted:** 2026-09-11 (Abe, tutorial playtest).
+**Severity:** High — skips the starter mission while completion-dependent
+features remain gated.
+**Status:** Fixed in working tree; awaiting in-game retest.
+
+The return briefing set `kaelen_briefing_accepted` and opened ordinary cached
+work without offering the tutorial. The board now checks actual starter
+completion (`first_contract_handed_in`) before serving normal offers. Until
+completion, an empty agent lane offers Clean and Easy again; an occupied lane
+retains its progress/turn-in flow. This also covers abandonment and old bypass
+flags in saved campaigns. Acceptance flags are set only after successful mission
+acceptance. No authored dialogue or character personality was changed.
+
+Validation: new intro-offer revisit regression, intro dock gating, intro
+handhold and mission contract suites pass; 338 scripts parse with zero failures.
+Retest: decline either the first briefing or the mission itself, leave, return,
+and agree to hear/take the job. Clean and Easy must be offered again, and its
+completion gates must remain locked until hand-in.
+
 ### Quest card disappears (after load, and after docking) until the layout is unlocked and relocked
 **Spotted:** 2026-09-09 (Abe, playtest). Reported for LOADING, then for DOCKING.
 **Severity:** Medium -- the player's active contract is invisible, and the only
@@ -199,7 +288,25 @@ game and its stated purpose.
 **Spotted:** 2026-09-10, while attempting the P4 dispatch switch.
 **Severity:** High by Abe's own rule -- "canned LLM responses = a failure to fix".
 This is that failure, standing, for every mission conversation in the game.
-**Status:** OPEN. Not a regression; the LLM path appears never to have been wired.
+**Status:** IMPLEMENTED, awaiting S6 live acceptance review (2026-09-10).
+Codex completed S1–S5 in `docs/plan_mission_conversation_llm_path.md`: background
+small-model slices, validated full/partial promotion, bounded retries, persisted
+progress, stale-result rejection, and truthful source accounting. Automated
+generation, real GameRoot dispatch/persistence, and regression tests pass.
+Character/canon files are unchanged. Close only after Abe's in-game review
+confirms voice, responsiveness and lower whole-conversation fallback volume.
+
+**Update 2026-09-11 (Claude, phases A-D):** the pipeline now has something to
+make dialogue *about*. A quest carries a `QuestCausalContract` -- requester,
+desire, triggering event, problem, why this action helps it, why this pilot,
+where the money comes from, and which facts are public versus private -- and
+`DialogueQualityGate` runs inside the real `accept_response()` to reject invented
+numbers, irrelevant answers, restated briefings and self-contradiction.
+This does NOT close the bug. It removes the reason the template was unavoidable;
+whether the generated prose actually sounds like a person is still unmeasured
+against real inference and still unreviewed by Abe. Keep open.
+
+**Original finding (before the implementation):**
 
 `StoryAgentOfferBuilder._attach_mission_conversation` builds every mission
 conversation with `MissionConversationCompiler.fallback_bundle()` -- the

@@ -579,6 +579,31 @@ static func get_station_mechanic_voice(outpost_id: String) -> String:
 	return ""
 
 
+func get_delivery_recipient(station_id: String, assigned_name: String = "") -> Dictionary:
+	if station_id.strip_edges().is_empty():
+		return {}
+	var contact_id := station_id
+	if station_id == current_system_id:
+		var station := get_primary_station()
+		if station == null:
+			return {}
+		contact_id = str(station.get("world_id")) if "world_id" in station else str(station.get_meta("world_id", ""))
+		if is_current_system_home():
+			if not assigned_name.is_empty() and assigned_name != "Jenna Kross":
+				return {}
+			var jenna := get_minor_npc_data("Jenna Kross")
+			jenna["name"] = "Jenna Kross"
+			return jenna
+	for npc_name in get_minor_npcs_at_outpost(contact_id):
+		if not assigned_name.is_empty() and assigned_name != npc_name:
+			continue
+		var data := get_minor_npc_data(npc_name)
+		if not data.is_empty():
+			data["name"] = npc_name
+			return data
+	return {}
+
+
 static func get_minor_npcs_at_outpost(outpost_id: String) -> Array:
 	if generated_outpost_npcs.has(outpost_id):
 		return generated_outpost_npcs[outpost_id].duplicate()
@@ -1045,6 +1070,11 @@ static func _generated_faction_record(faction_name: String) -> Dictionary:
 		return {}
 	var game_root := tree.current_scene
 	var factions: Array = []
+	if "system_registry" in game_root and game_root.system_registry != null:
+		var state := tree.root.get_node_or_null("GlobalState")
+		var config = game_root.system_registry.get_generated_config(str(state.current_system_id)) if state != null else null
+		if config != null:
+			factions.append_array(config.faction_identities.values())
 	if game_root.has_method("revealed_generated_factions"):
 		factions.append_array(game_root.revealed_generated_factions())
 	if game_root.has_method("generated_factions_for_ids") \
@@ -2227,7 +2257,14 @@ func _on_campaign_time_for_stores(total_minutes: int) -> void:
 func get_system_root() -> Node3D:
 	if active_system_root and is_instance_valid(active_system_root):
 		return active_system_root
-	return get_tree().current_scene
+	# Outside a live tree (headless fixtures, early boot) there is no scene to
+	# fall back to. get_ui_manager() directly below already guards this way.
+	if not is_inside_tree():
+		return null
+	var tree := get_tree()
+	if tree == null:
+		return null
+	return tree.current_scene as Node3D
 
 func get_ui_manager() -> Control:
 	if not is_inside_tree():
@@ -2244,7 +2281,10 @@ func get_primary_station() -> Node3D:
 	var system_root := get_system_root()
 	if not system_root:
 		return null
-	for node in get_tree().get_nodes_in_group("primary_station"):
+	var tree := get_tree()
+	if tree == null:
+		return system_root.get_node_or_null("Station") as Node3D
+	for node in tree.get_nodes_in_group("primary_station"):
 		if node is Node3D and system_root.is_ancestor_of(node):
 			return node as Node3D
 	return system_root.get_node_or_null("Station") as Node3D

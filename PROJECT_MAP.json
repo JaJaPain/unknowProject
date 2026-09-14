@@ -3018,9 +3018,10 @@
                   "functions": [
                     "func _init(dispatcher: McpDispatcher, undo_redo: EditorUndoRedoManager) -> void",
                     "func batch_execute(params: Dictionary) -> Dictionary",
-                    "func _capture_histories(histories: Array) -> void",
+                    "func _tracked_histories() -> Array",
+                    "func _record_committed(tracked: Array, before: Array, committed: Array) -> void",
                     "func _unknown_command_error(idx: int, cmd_name: String) -> Dictionary",
-                    "func _rollback(count: int, histories: Array) -> bool"
+                    "func _rollback(committed: Array) -> bool"
                   ]
                 },
                 {
@@ -3405,7 +3406,6 @@
                     "func add_to_group(params: Dictionary) -> Dictionary",
                     "func remove_from_group(params: Dictionary) -> Dictionary",
                     "func set_selection(params: Dictionary) -> Dictionary",
-                    "func _set_owner_recursive(node: Node, owner: Node) -> void",
                     "static func _check_coerced(value: Variant, target_type: int, prefix: String = \"\") -> Variant",
                     "static func _shape_hint(target_type: int) -> String",
                     "static func _check_dict_coerce_failed(value: Variant, target_type: int) -> Variant",
@@ -3531,6 +3531,7 @@
                     "func _init(connection: McpConnection = null, debugger_plugin = null, editor_log_buffer = null) -> void",
                     "func get_project_setting(params: Dictionary) -> Dictionary",
                     "func set_project_setting(params: Dictionary) -> Dictionary",
+                    "func set_main_scene(params: Dictionary) -> Dictionary",
                     "func run_project(params: Dictionary) -> Dictionary",
                     "func _editor_log_cursor() -> int",
                     "func _game_helper_autoload_expected() -> bool",
@@ -3617,6 +3618,7 @@
                     "static func _class_name_registered(cn: String) -> bool",
                     "func read_script(params: Dictionary) -> Dictionary",
                     "func _attach_gdscript_diagnostics(data: Dictionary, path: String, content: String) -> void",
+                    "static func _refresh_loaded_gdscript(data: Dictionary, path: String, content: String) -> void",
                     "static func _validate_gdscript_source(content: String) -> Dictionary",
                     "func _capture_gdscript_load_diagnostics(path: String) -> Dictionary",
                     "static func _fallback_gdscript_diagnostic(path: String, error_code: int, content: String) -> Dictionary",
@@ -3830,6 +3832,7 @@
                     "func _is_telemetry_disabled_via_env() -> Variant",
                     "func _load_telemetry_setting() -> void",
                     "func _on_telemetry_toggled(pressed: bool) -> void",
+                    "func _live_telemetry_tooltip(local_enabled: bool) -> String",
                     "func _load_dev_mode() -> bool",
                     "func _on_dev_mode_toggled(enabled: bool) -> void",
                     "func _apply_dev_mode_visibility() -> void",
@@ -5525,12 +5528,34 @@
           "children": [
             {
               "type": "directory",
+              "name": "cast_en",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "manifest.json",
+                  "path": "assets/audio/cast_en/manifest.json"
+                }
+              ]
+            },
+            {
+              "type": "directory",
               "name": "taunts",
               "children": [
                 {
                   "type": "file",
                   "name": "manifest.json",
                   "path": "assets/audio/taunts/manifest.json"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "taunts_orpheus",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "manifest.json",
+                  "path": "assets/audio/taunts_orpheus/manifest.json"
                 }
               ]
             }
@@ -6822,6 +6847,11 @@
             },
             {
               "type": "file",
+              "name": "mission_shapes.json",
+              "path": "data/content/mission_shapes.json"
+            },
+            {
+              "type": "file",
               "name": "npcs.json",
               "path": "data/content/npcs.json"
             },
@@ -6941,6 +6971,16 @@
         },
         {
           "type": "file",
+          "name": "claude_handoff_after_critic_fix.md",
+          "path": "docs/claude_handoff_after_critic_fix.md"
+        },
+        {
+          "type": "file",
+          "name": "claude_handoff_to_codex_2026_09_12.md",
+          "path": "docs/claude_handoff_to_codex_2026_09_12.md"
+        },
+        {
+          "type": "file",
           "name": "combat_overhaul_plan.md",
           "path": "docs/combat_overhaul_plan.md"
         },
@@ -6948,6 +6988,16 @@
           "type": "file",
           "name": "controller_focus_notes.md",
           "path": "docs/controller_focus_notes.md"
+        },
+        {
+          "type": "file",
+          "name": "critic_fix_2026_09_12.md",
+          "path": "docs/critic_fix_2026_09_12.md"
+        },
+        {
+          "type": "file",
+          "name": "design_end_goal.md",
+          "path": "docs/design_end_goal.md"
         },
         {
           "type": "file",
@@ -6963,6 +7013,11 @@
           "type": "file",
           "name": "design_station_lounge_social.md",
           "path": "docs/design_station_lounge_social.md"
+        },
+        {
+          "type": "file",
+          "name": "desire_coherence_2026_09_12.md",
+          "path": "docs/desire_coherence_2026_09_12.md"
         },
         {
           "type": "file",
@@ -7003,6 +7058,21 @@
           "type": "file",
           "name": "handoff_segment5_map_rework.md",
           "path": "docs/handoff_segment5_map_rework.md"
+        },
+        {
+          "type": "file",
+          "name": "investigation_board_lifecycle_2026_09_13.md",
+          "path": "docs/investigation_board_lifecycle_2026_09_13.md"
+        },
+        {
+          "type": "file",
+          "name": "investigation_playable_loop_2026_09_13.md",
+          "path": "docs/investigation_playable_loop_2026_09_13.md"
+        },
+        {
+          "type": "file",
+          "name": "investigation_runtime_2026_09_13.md",
+          "path": "docs/investigation_runtime_2026_09_13.md"
         },
         {
           "type": "file",
@@ -7188,6 +7258,11 @@
         },
         {
           "type": "file",
+          "name": "plan_campaign_uniqueness_and_dialogue_quality.md",
+          "path": "docs/plan_campaign_uniqueness_and_dialogue_quality.md"
+        },
+        {
+          "type": "file",
           "name": "plan_cheap_features.md",
           "path": "docs/plan_cheap_features.md"
         },
@@ -7233,6 +7308,16 @@
         },
         {
           "type": "file",
+          "name": "plan_mission_conversation_llm_path.md",
+          "path": "docs/plan_mission_conversation_llm_path.md"
+        },
+        {
+          "type": "file",
+          "name": "plan_replayability_local_inference.md",
+          "path": "docs/plan_replayability_local_inference.md"
+        },
+        {
+          "type": "file",
           "name": "plan_screenshot_triggers.md",
           "path": "docs/plan_screenshot_triggers.md"
         },
@@ -7243,8 +7328,18 @@
         },
         {
           "type": "file",
+          "name": "playtest_checklist.md",
+          "path": "docs/playtest_checklist.md"
+        },
+        {
+          "type": "file",
           "name": "polish_notes_misc.md",
           "path": "docs/polish_notes_misc.md"
+        },
+        {
+          "type": "file",
+          "name": "problem_critic_always_passes.md",
+          "path": "docs/problem_critic_always_passes.md"
         },
         {
           "type": "file",
@@ -8147,6 +8242,11 @@
         },
         {
           "type": "file",
+          "name": "review_claude_critic_and_plan_2026_09_12.md",
+          "path": "docs/review_claude_critic_and_plan_2026_09_12.md"
+        },
+        {
+          "type": "file",
           "name": "salvage_drone_plan.md",
           "path": "docs/salvage_drone_plan.md"
         },
@@ -8338,6 +8438,57 @@
           "type": "file",
           "name": "parallel_lounge_bundle_live_fire.json",
           "path": "logs/parallel_lounge_bundle_live_fire.json"
+        },
+        {
+          "type": "directory",
+          "name": "quality_eval",
+          "children": [
+            {
+              "type": "file",
+              "name": "critic_eval.json",
+              "path": "logs/quality_eval/critic_eval.json"
+            },
+            {
+              "type": "file",
+              "name": "critic_v2_all_12345_1789228134.json",
+              "path": "logs/quality_eval/critic_v2_all_12345_1789228134.json"
+            },
+            {
+              "type": "file",
+              "name": "critic_v2_sentinels_12345_1789228191.json",
+              "path": "logs/quality_eval/critic_v2_sentinels_12345_1789228191.json"
+            },
+            {
+              "type": "file",
+              "name": "critic_v2_sentinels_67890_1789228339.json",
+              "path": "logs/quality_eval/critic_v2_sentinels_67890_1789228339.json"
+            },
+            {
+              "type": "file",
+              "name": "critic_v2_tuning_12345_1789227893.json",
+              "path": "logs/quality_eval/critic_v2_tuning_12345_1789227893.json"
+            },
+            {
+              "type": "file",
+              "name": "writer_eval_12345_1789254934.json",
+              "path": "logs/quality_eval/writer_eval_12345_1789254934.json"
+            },
+            {
+              "type": "file",
+              "name": "writer_eval_12345_1789255022.json",
+              "path": "logs/quality_eval/writer_eval_12345_1789255022.json"
+            },
+            {
+              "type": "file",
+              "name": "writer_eval_12345_1789255066.json",
+              "path": "logs/quality_eval/writer_eval_12345_1789255066.json"
+            },
+            {
+              "type": "file",
+              "name": "writer_eval_67890_1789256554.json",
+              "path": "logs/quality_eval/writer_eval_67890_1789256554.json"
+            }
+          ]
         },
         {
           "type": "file",
@@ -8692,9 +8843,13 @@
             "func _capture_quiet_moment_state() -> Dictionary",
             "func _on_quiet_moment_silent(beat_id: String, reasons: Array) -> void",
             "func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void",
+            "func _player_is_docked() -> bool",
+            "func flush_pending_quiet_moment() -> void",
             "func _on_quiet_moment_quest_abandoned(_quest_data: Dictionary) -> void",
             "func _on_quiet_moment_quest_declined(_quest_data: Dictionary) -> void",
             "func _on_quiet_moment_ready(speaker: String, _beat_id: String, line: String) -> void",
+            "func _outcome_reaction_window(speaker: String) -> bool",
+            "func _try_pending_outcome_reaction() -> void",
             "func _ship_behavior_safe_context() -> Dictionary",
             "func _init_event_scheduler() -> void",
             "func _tick_events() -> void",
@@ -8806,6 +8961,7 @@
             "func _persist_narrative_tts_status(job: Dictionary, status: String) -> void",
             "func _persist_narrative_ready_payload(job: Dictionary, payload: Dictionary) -> void",
             "func _persist_narrative_cache_payload_update(cache_key: String, payload: Dictionary) -> void",
+            "func _known_entity_aliases() -> Array",
             "func validate_and_register_narrative_lines(lines: Array, kind: String) -> Dictionary",
             "func _text_bundle_for_narrative_payload(payload: Dictionary) -> Dictionary",
             "func _tts_required_fields_for_text_bundle(text_bundle: Dictionary) -> Array",
@@ -8813,6 +8969,11 @@
             "func _narrative_cache_payload_for_job(job: Dictionary) -> Dictionary",
             "func _kaelen_handoff_pool_refill_payload_for_cache_job(job: Dictionary) -> Dictionary",
             "func _system_contact_offer_payload_for_cache_job(job: Dictionary) -> Dictionary",
+            "func queue_mission_conversation(quest: Dictionary, agent_profile: Dictionary = {}) -> void",
+            "func mission_conversation_system_id() -> String",
+            "func _mission_conversation_payload_for_cache_job(job: Dictionary) -> Dictionary",
+            "func persist_mission_conversation_offer(quest: Dictionary) -> void",
+            "func record_mission_conversation_result(quest: Dictionary) -> void",
             "func _station_agent_offer_payload_for_cache_job(job: Dictionary) -> Dictionary",
             "func _line_bank_payload_for_cache_job(job: Dictionary, speaker_key: String) -> Dictionary",
             "func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Dictionary",
@@ -8928,6 +9089,8 @@
             "static func get_minor_npc_portrait(npc_name: String) -> AtlasTexture",
             "static func get_minor_npc_data(npc_name: String) -> Dictionary",
             "static func _canonical_minor_outpost_id(outpost_id: String) -> String",
+            "static func get_station_mechanic_voice(outpost_id: String) -> String",
+            "func get_delivery_recipient(station_id: String, assigned_name: String = \"\") -> Dictionary",
             "static func get_minor_npcs_at_outpost(outpost_id: String) -> Array",
             "static func _system_id_from_station_id(station_id: String) -> String",
             "static func _generated_contact_humor_style(role: String, faction_name: String) -> String",
@@ -9120,6 +9283,7 @@
             "func request_ambient_chat(prompt: String, callback: Callable) -> void",
             "func request_lounge_conversation_turn(prompt: String, callback: Callable) -> void",
             "func request_lounge_exchange_bundle(prompt: String, callback: Callable) -> void",
+            "func request_mission_conversation_slice(prompt: String, callback: Callable) -> void",
             "func request_lounge_exchange_bundle_review(prompt: String, callback: Callable) -> void",
             "func _handle_small_transport_failure(capability: String, result: int, response_code: int) -> void",
             "static func validate_nova_bank_line(text: String) -> String",
@@ -9429,6 +9593,7 @@
             "func planned_route_is_clear() -> bool",
             "func _keepout_radius(obstacle: Node3D) -> float",
             "func _physical_radius(obstacle: Node3D) -> float",
+            "func navigation_obstacle_snapshot() -> Array",
             "func _navigator_obstacles(navigation_target: Node3D) -> Array",
             "func _tangent_steer_from(from_pos: Vector3, destination: Vector3, navigation_target: Node3D) -> Vector3",
             "func autopilot_probe(destination: Vector3, navigation_target: Node3D) -> Dictionary",
@@ -9507,6 +9672,14 @@
           "path": "scripts/QuestManager.gd",
           "classes": [],
           "functions": [
+            "func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary",
+            "func cancel_investigation_scan() -> void",
+            "func dispatch_investigation_command(command: Dictionary) -> Dictionary",
+            "func _physics_process(delta: float) -> void",
+            "func reconcile_investigation_sites() -> void",
+            "func investigation_site_target(mission_id: String, site_id: String) -> Node3D",
+            "func investigation_revealed_sites(mission_id: String) -> Array",
+            "func investigation_panel_view(mission_id: String) -> Dictionary",
             "func _ready()",
             "func reset_for_restart()",
             "func _load_quest_history() -> String",
@@ -9520,6 +9693,7 @@
             "func get_pickup_special_data() -> Dictionary",
             "func get_completed_count() -> int",
             "func is_quest_completed() -> bool",
+            "func announce_accepted_mission(runtime_id: String) -> void",
             "func _create_runtime_mission_id(quest_data: Dictionary) -> String",
             "func capture_active_quest() -> Dictionary",
             "func clear_active_kaelen_reaction_bundle() -> void",
@@ -9538,6 +9712,7 @@
             "func deliver_partial(amount: float) -> float",
             "func mark_pickup_complete() -> bool",
             "func complete_quest()",
+            "func _can_turn_in_investigation(data: Dictionary) -> bool",
             "func abandon_quest()",
             "func _cleanup_expired_quest() -> void",
             "func _cleanup_mission(mission) -> void",
@@ -9634,9 +9809,14 @@
             "func _ready()",
             "func _schedule_tts_heartbeat() -> void",
             "func _run_tts_heartbeat() -> void",
+            "func _is_english_locale() -> bool",
+            "func _load_flat_manifest(path: String) -> Dictionary",
+            "func _flat_clips(path: String, cache: String) -> Dictionary",
+            "func _cast_character_for_voice(voice_id: String) -> String",
+            "func _lead_voice_of(voice_id: String) -> String",
+            "func cast_stream_for(character: String, clean_text: String) -> AudioStream",
+            "func orpheus_taunt_stream_for(lead_voice: String, clean_text: String) -> AudioStream",
             "func _load_baked_manifest() -> void",
-            "func baked_stream_for(voice_id: String, clean_text: String) -> AudioStream",
-            "func _delivery_cache_key(voice_id: String, clean_text: String, speed: float, pause: float) -> String",
             "func play_dialogue_audio(text: String, voice_id_override: Variant = \"neutral\", speed_override: float = -1.0, style_scale: float = 1.0, pause_seconds: float = -1.0)",
             "func cache_dialogue_audio(text: String, voice_id_or_faction: String = \"neutral\", speed: float = -1.0, style_scale: float = 1.0)",
             "func _drain_cache_queue() -> void",
@@ -9739,6 +9919,9 @@
             "func _unhandled_input(event: InputEvent)",
             "func update_overview_list(entities: Array)",
             "func _should_show_overview_entity(entity: Node) -> bool",
+            "func _gate_knowledge_state(entity: Node) -> String",
+            "func reset_sensor_reveal_latches() -> void",
+            "func _passes_sensor_reveal(entity: Node, distance: float) -> bool",
             "func _is_overview_mission_target(entity: Node) -> bool",
             "func _update_overview_distances(delta: float = 999.0)",
             "func _sort_overview_list()",
@@ -9750,6 +9933,7 @@
             "func _on_pause_changed(is_paused: bool)",
             "func begin_docking_procedure(station: Node3D, ship: Node3D) -> void",
             "func _play_dock_clearance(station: Node3D) -> void",
+            "func _dock_clearance_voice_for_station(station: Node3D) -> String",
             "func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void",
             "func _set_docking_procedure_stage(status: String, detail: String, progress: float) -> void",
             "func _ensure_docking_procedure_panel() -> void",
@@ -9845,6 +10029,7 @@
             "func _clear_cached_agent_quest_if_stale() -> void",
             "func _current_system_allows_major_agent_fallback() -> bool",
             "func _current_mechanic_profile() -> Dictionary",
+            "func _anomaly_display_name(anomaly: Node) -> String",
             "func _current_station_display_name() -> String",
             "func _mechanic_npc_id_for(candidate_id: String, station_id: String) -> String",
             "func _mechanic_destination_name(mechanic_profile: Dictionary = {}) -> String",
@@ -9880,6 +10065,9 @@
             "func _should_show_public_board_turn_in() -> bool",
             "func _on_public_board_turn_in_pressed() -> void",
             "func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool",
+            "func _board_delivery_recipient() -> Dictionary",
+            "func _refresh_board_delivery_button() -> void",
+            "func _try_local_board_delivery() -> bool",
             "func _current_turn_in_station_id() -> String",
             "func _worst_reputation_tier() -> String",
             "func _best_reputation_tier() -> String",
@@ -9924,6 +10112,8 @@
             "func _prefetch_lounge_bundles_for_station(station: Node3D) -> void",
             "func _on_boost_pressed() -> void",
             "func _refresh_attack_reach(target: Node) -> bool",
+            "func _refresh_mine_reach(target: Node) -> bool",
+            "func _apply_mine_reach(btn: Button, target: Node) -> void",
             "func _apply_attack_reach(btn: Button, target: Node) -> void",
             "func _update_target_command_feedback() -> void",
             "func _start_targeted_salvage(wreck: Node3D) -> bool",
@@ -9939,6 +10129,7 @@
             "func _mechanic_is_waiting_for_player() -> bool",
             "func _mechanic_pickup_ready_to_deliver() -> bool",
             "func _starter_contract_pending() -> bool",
+            "func _should_offer_starter_contract() -> bool",
             "func _intro_handhold_active() -> bool",
             "func _intro_popup_dismissed() -> bool",
             "func _update_intro_handhold() -> void",
@@ -10036,6 +10227,7 @@
             "func _on_quest_completed()",
             "func _on_quest_abandoned()",
             "func _on_quest_expired(title: String) -> void",
+            "func _watch_dock_state() -> void",
             "func _tracker_suppressed_by_dock() -> bool",
             "func _update_quest_tracker()",
             "func _completed_contract_tracker_text(q: Dictionary) -> String",
@@ -10048,6 +10240,7 @@
             "func _on_quest_tracker_progress_gui_input(event: InputEvent) -> void",
             "func _on_quest_tracker_route_pressed() -> void",
             "func _quest_tracker_route_target(q: Dictionary) -> Node3D",
+            "func _quest_tracker_turn_in_target(q: Dictionary) -> Node3D",
             "func _find_station_by_contact_id(target_id: String) -> Node3D",
             "func _station_contact_id_for_node(station: Node3D) -> String",
             "func _normalize_station_contact_id(station_id: String) -> String",
@@ -10306,7 +10499,7 @@
                 "func _mission_hunt_progression_stage() -> int",
                 "func _maybe_speak_quirk() -> bool",
                 "func can_speak_in_flight() -> bool",
-                "func speak(text: String, severity: int = Severity.IDLE, expression: String = \"neutral\") -> void",
+                "func speak(text: String, severity: int = Severity.IDLE, expression: String = \"neutral\") -> bool",
                 "func _speech_budget_allows(severity: int, now_ms: int) -> bool",
                 "func warn_targeted() -> void",
                 "func warn_hostile_engagement(enemy: Node = null) -> String",
@@ -10464,6 +10657,8 @@
                 {
                   "name": "global class TauntBag",
                   "methods": [
+                    "func set_rng(rng: RandomNumberGenerator) -> void",
+                    "func _next_seed() -> int",
                     "func _init(pool_size: int = 0, bag_seed: int = 0) -> void",
                     "func resize(pool_size: int) -> void",
                     "func _start_new_cycle(pool: Array) -> void",
@@ -10588,6 +10783,30 @@
           "children": [
             {
               "type": "file",
+              "name": "BakedAudioIndex.gd",
+              "path": "scripts/domain/BakedAudioIndex.gd",
+              "classes": [
+                {
+                  "name": "global class BakedAudioIndex",
+                  "methods": [
+                    "static func is_english(locale: String) -> bool",
+                    "static func cast_character_for_voice(voice_id: String, kaelen_voice_id: String) -> String",
+                    "static func lead_voice_of(voice_id: String) -> String",
+                    "static func orpheus_voice_for_lead(lead_voice: String) -> String",
+                    "static func cast_key(character: String, clean_text: String) -> String",
+                    "static func orpheus_key(orpheus_voice: String, clean_text: String) -> String"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "BakedAudioIndex.gd.uid",
+              "path": "scripts/domain/BakedAudioIndex.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "DomainDefinition.gd",
               "path": "scripts/domain/DomainDefinition.gd",
               "classes": [
@@ -10689,6 +10908,145 @@
               "type": "file",
               "name": "GateDefinition.gd.uid",
               "path": "scripts/domain/GateDefinition.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "InvestigationBoardLifecycle.gd",
+              "path": "scripts/domain/InvestigationBoardLifecycle.gd",
+              "classes": [],
+              "functions": [
+                "static func empty_state(seed_value: int) -> Dictionary",
+                "static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary",
+                "static func publish(saved: Dictionary, offer_id: String, context: Dictionary) -> Dictionary",
+                "static func release(saved: Dictionary, offer_id: String) -> Dictionary",
+                "static func _candidates(context: Dictionary) -> Array",
+                "static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary) -> Dictionary",
+                "static func _owner(context: Dictionary) -> String",
+                "static func _offer_id(context: Dictionary, candidate: Dictionary) -> String",
+                "static func validate(value: Dictionary) -> ValidationResult",
+                "static func _failure(reason: String) -> Dictionary",
+                "static func _persistable(value: Dictionary) -> Dictionary"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationOfferBuilder.gd",
+              "path": "scripts/domain/InvestigationOfferBuilder.gd",
+              "classes": [
+                {
+                  "name": "global class InvestigationOfferBuilder",
+                  "methods": [
+                    "static func _is_forged(recipe: String, sites: Array) -> bool"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "InvestigationOfferBuilder.gd.uid",
+              "path": "scripts/domain/InvestigationOfferBuilder.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "InvestigationRuntime.gd",
+              "path": "scripts/domain/InvestigationRuntime.gd",
+              "classes": [],
+              "functions": [
+                "func reset() -> void",
+                "func _mission(owner: Node, id: String)",
+                "func begin_scan(owner: Node, mission_id: String, site_id: String) -> Dictionary",
+                "func tick(owner: Node, delta: float) -> Dictionary",
+                "func _pose(owner: Node, data: Dictionary, site: Dictionary) -> Dictionary",
+                "func dispatch(owner: Node, command: Dictionary) -> Dictionary"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationSelector.gd",
+              "path": "scripts/domain/InvestigationSelector.gd",
+              "classes": [
+                {
+                  "name": "global class InvestigationSelector",
+                  "methods": [
+                    "static func empty_state(campaign_seed: int = 0) -> Dictionary",
+                    "static func signature_for(eligible_shape_ids: Array) -> String",
+                    "static func reserve(state: Dictionary, eligible_shape_ids: Array, offer_id: String) -> Dictionary",
+                    "static func publish(state: Dictionary, eligible_shape_ids: Array, offer_id: String) -> Dictionary",
+                    "static func release(state: Dictionary, offer_id: String) -> void",
+                    "static func _outstanding(state: Dictionary, offer_id: String) -> Dictionary",
+                    "static func _replace_outstanding(state: Dictionary, updated: Dictionary) -> void",
+                    "static func _draw(state: Dictionary, eligible_shape_ids: Array) -> Dictionary",
+                    "static func _commit(state: Dictionary, reservation: Dictionary) -> void",
+                    "static func _pool(eligible_shape_ids: Array) -> Array",
+                    "static func _rng_for(state: Dictionary) -> RandomNumberGenerator",
+                    "static func _seed_for(state: Dictionary, shape_id: String) -> int"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "InvestigationSelector.gd.uid",
+              "path": "scripts/domain/InvestigationSelector.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "InvestigationSitePlanner.gd",
+              "path": "scripts/domain/InvestigationSitePlanner.gd",
+              "classes": [
+                {
+                  "name": "global class InvestigationSitePlanner",
+                  "methods": [
+                    "static func _site(role: String, position: Vector3) -> Dictionary",
+                    "static func _offset(rng: RandomNumberGenerator, min_d: float, max_d: float) -> Vector3",
+                    "static func _point_of(raw: Variant) -> Vector3"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "InvestigationSitePlanner.gd.uid",
+              "path": "scripts/domain/InvestigationSitePlanner.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "InvestigationStateValidator.gd",
+              "path": "scripts/domain/InvestigationStateValidator.gd",
+              "classes": [],
+              "functions": [
+                "static func validate(data: Dictionary) -> RefCounted",
+                "static func _position(value: Variant) -> bool"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationWorldPlacement.gd",
+              "path": "scripts/domain/InvestigationWorldPlacement.gd",
+              "classes": [],
+              "functions": [
+                "static func capture(owner: Node) -> Dictionary",
+                "static func check_saved_sites(data: Dictionary, snapshot: Dictionary) -> Dictionary"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationWorldRuntime.gd",
+              "path": "scripts/domain/InvestigationWorldRuntime.gd",
+              "classes": [],
+              "functions": [
+                "func reset(owner: Node) -> void",
+                "func reconcile(owner: Node) -> bool",
+                "func target(mission_id: String, site_id: String) -> Node3D",
+                "func public_sites(mission_id: String) -> Array",
+                "func _remove(owner: Node, key: String) -> void",
+                "func _create_marker(record: Dictionary) -> Node3D",
+                "static func _vector(p: Array) -> Vector3",
+                "static func _key(mission_id: String, site_id: String) -> String"
+              ]
             },
             {
               "type": "file",
@@ -10907,6 +11265,49 @@
             },
             {
               "type": "file",
+              "name": "MissionShapeDefinition.gd",
+              "path": "scripts/domain/MissionShapeDefinition.gd",
+              "classes": [
+                {
+                  "name": "global class MissionShapeDefinition",
+                  "methods": [
+                    "func load_from_dict(data: Dictionary) -> ValidationResult",
+                    "func _unique_count(values: Array[String]) -> int"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "MissionShapeDefinition.gd.uid",
+              "path": "scripts/domain/MissionShapeDefinition.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "MissionShapeRegistry.gd",
+              "path": "scripts/domain/MissionShapeRegistry.gd",
+              "classes": [
+                {
+                  "name": "global class MissionShapeRegistry",
+                  "methods": [
+                    "func load_from_path(path: String = CATALOG_PATH) -> Variant",
+                    "func load_from_dict(data: Dictionary, result: Variant = null) -> Variant",
+                    "func get_shape(id: Variant) -> Variant",
+                    "func shape_for_recipe(recipe: String) -> Variant",
+                    "func eligible_shapes(story_flags: Dictionary) -> Array"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "MissionShapeRegistry.gd.uid",
+              "path": "scripts/domain/MissionShapeRegistry.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "MissionState.gd",
               "path": "scripts/domain/MissionState.gd",
               "classes": [
@@ -11097,6 +11498,20 @@
                     "static func _build_purchase_offer(current_time_minutes: int) -> Dictionary",
                     "static func _build_recovery_preview() -> Dictionary",
                     "static func _story_board_context(_offer_kind: String) -> String",
+                    "static func _withhold_incoherent_desire(quest_data: Dictionary, desire: Dictionary) -> bool",
+                    "static func _withhold_invalid_offers(offers: Array[Dictionary]) -> void",
+                    "static func _causal_generation_diagnostics() -> Node",
+                    "static func _plausibility_world() -> Dictionary",
+                    "static func _campaign_id() -> String",
+                    "static func _current_system_id() -> String",
+                    "static func _faction_agenda(faction_id: String) -> Dictionary",
+                    "static func _faction_display_for_id(faction_id: String) -> String",
+                    "static func _local_faction_display(faction_key: String) -> String",
+                    "static func _contract_recipient(objective: Dictionary) -> Dictionary",
+                    "static func _need_bound_package(offer_kind: String) -> String",
+                    "static func _delegation_text(objective: Dictionary, requester_id: String) -> String",
+                    "static func _lower_first_word(text: String) -> String",
+                    "static func _reward_source_text(faction_id: String) -> String",
                     "static func _story_cause_metadata(offer_kind: String) -> Dictionary",
                     "static func _story_recovery_target_faction() -> String",
                     "static func _current_system_story_pack() -> Dictionary",
@@ -11140,6 +11555,114 @@
             },
             {
               "type": "file",
+              "name": "QuestCausalContract.gd",
+              "path": "scripts/domain/QuestCausalContract.gd",
+              "classes": [
+                {
+                  "name": "global class QuestCausalContract",
+                  "methods": [
+                    "static func empty() -> Dictionary",
+                    "static func is_present(source: Variant) -> bool",
+                    "static func normalize(source: Variant) -> Dictionary",
+                    "static func _normalize_binding(value: Variant) -> Dictionary",
+                    "static func _normalize_facts(value: Variant) -> Dictionary",
+                    "static func _normalize_branches(value: Variant) -> Array",
+                    "static func validate(source: Variant, path_prefix: String = \"causal_contract\") -> ValidationResult",
+                    "static func _get_id_regex() -> RegEx",
+                    "static func semantic_signature(source: Variant) -> String",
+                    "static func _beneficiary_relation(contract: Dictionary) -> String",
+                    "static func _signature_token(value: Variant) -> String",
+                    "static func _signature_effects(value: Variant) -> String",
+                    "static func public_facts(source: Variant) -> Dictionary",
+                    "static func private_facts(source: Variant) -> Dictionary",
+                    "static func _facts_with_visibility(source: Variant, visibility: String) -> Dictionary",
+                    "static func fact_text(source: Variant, fact_id: String) -> String"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestCausalContractCompiler.gd",
+              "path": "scripts/domain/QuestCausalContractCompiler.gd",
+              "classes": [
+                {
+                  "name": "global class QuestCausalContractCompiler",
+                  "methods": [
+                    "static func compile(source: Dictionary) -> Dictionary",
+                    "static func _contract_id(source: Dictionary, cause_id: String, objective_type: String) -> String",
+                    "static func _upper_first(text: String) -> String",
+                    "static func _lower_first(text: String) -> String",
+                    "static func _objective_item_name(objective: Dictionary) -> String",
+                    "static func _triggering_event_id(desire: Dictionary, cause_id: String) -> String",
+                    "static func _fact(text: String, visibility: String, kind: String) -> Dictionary",
+                    "static func _recipient_binding(source: Dictionary, objective_type: String) -> Dictionary",
+                    "static func _string_keyed_branches(value: Variant) -> Array"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestPlausibilityValidator.gd",
+              "path": "scripts/domain/QuestPlausibilityValidator.gd",
+              "classes": [
+                {
+                  "name": "global class QuestPlausibilityValidator",
+                  "methods": [
+                    "static func _check_identity(contract: Dictionary, result: ValidationResult) -> void",
+                    "static func _check_fact_references(contract: Dictionary, result: ValidationResult) -> void",
+                    "static func _check_effects(contract: Dictionary, result: ValidationResult) -> void",
+                    "static func _is_supported_effect(effect: String) -> bool",
+                    "static func _check_urgency(contract: Dictionary, result: ValidationResult) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestWorldSnapshot.gd",
+              "path": "scripts/domain/QuestWorldSnapshot.gd",
+              "classes": [
+                {
+                  "name": "global class QuestWorldSnapshot",
+                  "methods": [
+                    "static func build(destination_station_id: String = \"\") -> Dictionary",
+                    "static func _residents_at(gs: Node, station_id: String) -> Array",
+                    "static func _global_state() -> Node"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ScanHoldController.gd",
+              "path": "scripts/domain/ScanHoldController.gd",
+              "classes": [
+                {
+                  "name": "global class ScanHoldController",
+                  "methods": [
+                    "func _blocking_reason(distance: float, speed: float, in_combat: bool) -> String",
+                    "func _report(state: String, reason: String) -> Dictionary",
+                    "func _issue_token(site_id: String) -> String",
+                    "func consume_token(token: String, site_id: String) -> bool",
+                    "func reset() -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "ScanHoldController.gd.uid",
+              "path": "scripts/domain/ScanHoldController.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "ShipDesignDefinition.gd",
               "path": "scripts/domain/ShipDesignDefinition.gd",
               "classes": [
@@ -11156,6 +11679,35 @@
               "type": "file",
               "name": "ShipDesignDefinition.gd.uid",
               "path": "scripts/domain/ShipDesignDefinition.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "SiteRevealModel.gd",
+              "path": "scripts/domain/SiteRevealModel.gd",
+              "classes": [
+                {
+                  "name": "global class SiteRevealModel",
+                  "methods": [
+                    "static func anomaly_reveal_range() -> float",
+                    "static func get_tuning(key: String) -> float",
+                    "static func set_tuning(key: String, value: float) -> void",
+                    "static func reset_tuning() -> void",
+                    "static func size_class_for_groups(groups: Array, gate_state: String = \"known\") -> String",
+                    "static func _tier_scale(tier: String) -> float",
+                    "static func range_for_tier(tier: String) -> float",
+                    "static func range_class_for_groups(groups: Array) -> String",
+                    "static func _pair_for(range_class: String) -> Dictionary",
+                    "static func _hidden() -> Dictionary",
+                    "static func _shown(state: String, label: String, alpha: float) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "SiteRevealModel.gd.uid",
+              "path": "scripts/domain/SiteRevealModel.gd.uid"
             },
             {
               "type": "file",
@@ -11300,6 +11852,33 @@
                   "type": "file",
                   "name": "DeliveryCourierCapability.gd.uid",
                   "path": "scripts/domain/capabilities/DeliveryCourierCapability.gd.uid"
+                },
+                {
+                  "type": "file",
+                  "name": "InvestigateSignalCapability.gd",
+                  "path": "scripts/domain/capabilities/InvestigateSignalCapability.gd",
+                  "classes": [],
+                  "functions": [
+                    "func capability_id() -> String",
+                    "func is_completed(data: Dictionary) -> bool",
+                    "func _state(data: Dictionary) -> Dictionary",
+                    "func _scanned(state: Dictionary) -> Array",
+                    "func _site(state: Dictionary, site_id: String) -> Dictionary",
+                    "func _role_scanned(state: Dictionary, role: String) -> bool",
+                    "func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Dictionary",
+                    "func _apply_scan(state: Dictionary, event_data: Dictionary) -> Dictionary",
+                    "func _apply_resolve(data: Dictionary, state: Dictionary, event_data: Dictionary) -> Dictionary",
+                    "func _apply_extract_complete(state: Dictionary) -> Dictionary",
+                    "func _payout_for(state: Dictionary, branch: String, event_data: Dictionary) -> Array",
+                    "func _certification_correct(state: Dictionary, branch: String) -> bool",
+                    "func _outcome_tag(state: Dictionary, branch: String, payout: Array) -> String",
+                    "func format_tracker_text(data: Dictionary) -> String"
+                  ]
+                },
+                {
+                  "type": "file",
+                  "name": "InvestigateSignalCapability.gd.uid",
+                  "path": "scripts/domain/capabilities/InvestigateSignalCapability.gd.uid"
                 },
                 {
                   "type": "file",
@@ -11908,6 +12487,7 @@
                     "static func from_dict(data: Dictionary) -> SystemConfig",
                     "static func _color_to_dict(color: Color) -> Dictionary",
                     "static func _color_from_variant(raw_color: Variant, fallback: Color) -> Color",
+                    "func _apply_faction_story() -> void",
                     "func canonical_faction_id(faction_name: String) -> String",
                     "func ship_style_for_faction(faction_name: String) -> Dictionary",
                     "static func _story_faction_display(faction_name: String) -> String",
@@ -12189,7 +12769,7 @@
                     "static func sanitize_manual_name(display_name: String) -> String",
                     "static func sanitize_runtime_state(runtime_state: Dictionary) -> Dictionary",
                     "func _load() -> void",
-                    "static func _strip_tactical_state(value: Variant) -> void",
+                    "static func _strip_tactical_state(value: Variant, path: Array = [\"state\"]) -> void",
                     "static func _new_id(id_namespace: String, label: String) -> String",
                     "static func _new_copy_token(slot_index: int) -> String",
                     "static func _stable_hash(value: Variant) -> String",
@@ -12249,6 +12829,7 @@
                     "func factions_by_ids(ids: Array) -> Array",
                     "func ensure_frontier_batch(seed_text: String, count: int = 6) -> Dictionary",
                     "func reveal_next_for_system(system_id: String, count: int = 2) -> Dictionary",
+                    "static func generate_system_factions(seed_text: String, system_id: String, count: int = 2) -> Array",
                     "func prompt_context(revealed_only: bool = false) -> String",
                     "func _load_or_create() -> void",
                     "func _commit(next_data: Dictionary, operation: String) -> Dictionary",
@@ -12501,6 +13082,7 @@
                     "static func _validate_checkpoint(data: Dictionary, result: ValidationResult) -> void",
                     "static func _validate_chronicle(data: Dictionary, result: ValidationResult) -> void",
                     "static func _validate_kaelen_meta(data: Dictionary, result: ValidationResult) -> void",
+                    "static func is_investigation_site_position(path: Array) -> bool",
                     "static func _is_whole_number(value: Variant) -> bool",
                     "static func _is_sha256_hex(value: String) -> bool"
                   ]
@@ -12610,6 +13192,38 @@
             },
             {
               "type": "file",
+              "name": "GeneratedDesireConstraints.gd",
+              "path": "scripts/persistence/GeneratedDesireConstraints.gd",
+              "classes": [],
+              "functions": [
+                "static func need_reason(goal_index: int, need: String) -> String"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "GeneratedFactionDesire.gd",
+              "path": "scripts/persistence/GeneratedFactionDesire.gd",
+              "classes": [
+                {
+                  "name": "global class GeneratedFactionDesire",
+                  "methods": [
+                    "static func item_for_need(need: String, salt: String = \"\") -> String",
+                    "static func binds_item_to_need(need: String, item_name: String) -> bool",
+                    "static func build(scope: String, scope_id: String, index: int) -> Dictionary",
+                    "static func _intents_for_need(need: String) -> Array",
+                    "static func check_coherence(desire: Dictionary) -> Dictionary",
+                    "static func _matches_binding(desire: Dictionary, bindings: Array, id_key: String, fields: Array) -> bool",
+                    "static func _pick(scope: String, index: int, dimension: String, size: int) -> int",
+                    "static func _digest(seed_text: String, dimension: String) -> int",
+                    "static func _draw(scope: String, index: int, dimension: String, options: Array) -> Variant",
+                    "static func build_relationships(scope: String, factions: Array) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
               "name": "KaelenHandoffStore.gd",
               "path": "scripts/persistence/KaelenHandoffStore.gd",
               "classes": [
@@ -12693,6 +13307,10 @@
                   "name": "global class SaveMigrator",
                   "methods": [
                     "static func write_current(path: String, saved_data: Dictionary) -> bool",
+                    "static func _map_investigation_sites(quest: Dictionary, registry: SystemRegistry, to_runtime: bool) -> void",
+                    "static func _map_investigation_contracts(quest: Dictionary, registry: SystemRegistry, to_runtime: bool) -> void",
+                    "static func _mapped_system(id: Variant, registry: SystemRegistry, to_runtime: bool) -> String",
+                    "static func _map_investigation_board(data: Dictionary, registry: SystemRegistry, to_runtime: bool) -> Dictionary",
                     "static func _has_base_shape(data: Dictionary) -> bool",
                     "static func _available_backup_path(path: String) -> String",
                     "static func _success(data: Variant) -> Dictionary",
@@ -13043,6 +13661,92 @@
             },
             {
               "type": "file",
+              "name": "DialogueCritic.gd",
+              "path": "scripts/story/DialogueCritic.gd",
+              "classes": [
+                {
+                  "name": "global class DialogueCritic",
+                  "methods": [
+                    "static func schema(kind: String = \"support\") -> Dictionary",
+                    "static func _job(kind: String, target: String, facts: Array[String], packet: Dictionary) -> Dictionary",
+                    "static func prompt(job: Dictionary) -> String",
+                    "static func parse(raw: String, job: Dictionary, done_reason: String = \"stop\") -> Dictionary",
+                    "static func aggregate(expected_jobs: Array[Dictionary], replies: Array[Dictionary], kind: String) -> Dictionary",
+                    "static func qualify(records: Array, fingerprint: String) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DialogueFactPacket.gd",
+              "path": "scripts/story/DialogueFactPacket.gd",
+              "classes": [
+                {
+                  "name": "global class DialogueFactPacket",
+                  "methods": [
+                    "static func _speaker_block(speaker: Dictionary) -> Dictionary",
+                    "static func _wants_right_now(contract: Dictionary, purpose: String) -> String",
+                    "static func _question_overlap(text: String, question_words: Array[String]) -> int",
+                    "static func prompt_block(packet: Dictionary) -> String",
+                    "static func fingerprint(packet: Dictionary) -> String"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DialogueFieldContract.gd",
+              "path": "scripts/story/DialogueFieldContract.gd",
+              "classes": [
+                {
+                  "name": "global class DialogueFieldContract",
+                  "methods": [
+                    "static func max_words_for(purpose: String) -> int",
+                    "static func max_chars_for(purpose: String) -> int",
+                    "static func validate_request(request: Dictionary) -> Dictionary",
+                    "static func _fail(reason: String) -> Dictionary",
+                    "static func validate_prepared(prepared: Dictionary, request: Dictionary) -> Dictionary",
+                    "static func is_still_applicable(prepared: Dictionary, current_fingerprint: String) -> bool"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DialogueFieldContract.gd.uid",
+              "path": "scripts/story/DialogueFieldContract.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "DialogueQualityGate.gd",
+              "path": "scripts/story/DialogueQualityGate.gd",
+              "classes": [
+                {
+                  "name": "global class DialogueQualityGate",
+                  "methods": [
+                    "static func advisory_checks(text: String, packet: Dictionary) -> Dictionary",
+                    "static func _report(issues: Array) -> Dictionary",
+                    "static func _check_encoding_artifacts(text: String, issues: Array[Dictionary]) -> void",
+                    "static func _numeric_text(text: String) -> String",
+                    "static func _word_after(text: String, phrase: String) -> String",
+                    "static func _packet_fact_text(packet: Dictionary, fact_id: String) -> String",
+                    "static func _overlap_ratio(text: String, reference: String) -> float",
+                    "static func review_prompt(text: String, packet: Dictionary) -> String",
+                    "static func parse_review(_raw_text: String) -> Dictionary",
+                    "static func _uncertain(reason: String) -> Dictionary",
+                    "static func decide(hard: Dictionary, review: Dictionary = {}, calibration: Dictionary = {}, fingerprint: String = \"\") -> Dictionary",
+                    "static func rewrite_allowed(attempts_used: int) -> bool"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
               "name": "FallbackLineBank.gd",
               "path": "scripts/story/FallbackLineBank.gd",
               "classes": [
@@ -13385,6 +14089,8 @@
                 {
                   "name": "global class MissionConversationCompiler",
                   "methods": [
+                    "static func _is_branch_intent(intent: Dictionary) -> bool",
+                    "static func merge_slice(bundle: Dictionary, slice_result: Dictionary) -> Dictionary",
                     "static func _fallback_response(intent_id: String, mission_plan: Dictionary) -> String",
                     "static func _objective_summary(mission_plan: Dictionary) -> String",
                     "static func _text(source: Dictionary, key: String, fallback: String) -> String",
@@ -13421,6 +14127,35 @@
             },
             {
               "type": "file",
+              "name": "MissionConversationGeneration.gd",
+              "path": "scripts/story/MissionConversationGeneration.gd",
+              "classes": [
+                {
+                  "name": "global class MissionConversationGeneration",
+                  "methods": [
+                    "static func attach(quest: Dictionary, mission: Dictionary, speaker: Dictionary) -> void",
+                    "static func fingerprint(quest: Dictionary) -> String",
+                    "static func fixed_cast_id(speaker: Dictionary) -> String",
+                    "static func prompt_for_job(job: Dictionary) -> Dictionary",
+                    "static func slice_packets(context: Dictionary, slice: Dictionary) -> Dictionary",
+                    "static func packet_fingerprints(packets: Dictionary) -> Dictionary",
+                    "static func _packet_guidance(packets: Dictionary) -> String",
+                    "static func accept_response(quest: Dictionary, job: Dictionary, response: Dictionary) -> Dictionary",
+                    "static func _intent_label(plan: Dictionary, field: String) -> String",
+                    "static func promote(quest: Dictionary, result: Dictionary) -> void",
+                    "static func copy_generation(source: Dictionary, target: Dictionary) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "MissionConversationGeneration.gd.uid",
+              "path": "scripts/story/MissionConversationGeneration.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "MissionConversationPlan.gd",
               "path": "scripts/story/MissionConversationPlan.gd",
               "classes": [
@@ -13428,6 +14163,7 @@
                   "name": "global class MissionConversationPlan",
                   "methods": [
                     "static func intent_registry() -> Dictionary",
+                    "static func _branch_label(branch: Dictionary) -> String",
                     "static func _has_any(source: Dictionary, keys: Array) -> bool",
                     "static func _has_text(source: Dictionary, keys: Array) -> bool",
                     "static func _has_risk(mission_plan: Dictionary) -> bool",
@@ -13441,6 +14177,33 @@
               "type": "file",
               "name": "MissionConversationPlan.gd.uid",
               "path": "scripts/story/MissionConversationPlan.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "MissionConversationWorker.gd",
+              "path": "scripts/story/MissionConversationWorker.gd",
+              "classes": [
+                {
+                  "name": "global class MissionConversationWorker",
+                  "methods": [
+                    "func configure(root_node: Node, transport: Callable) -> void",
+                    "func queue_offer(quest: Dictionary) -> void",
+                    "func pump() -> void",
+                    "func _applicable(job: Dictionary) -> bool",
+                    "func start_job(job: Dictionary) -> Dictionary",
+                    "func _finish(job: Dictionary, response: Dictionary, request_scheduler: RefCounted, request_epoch: int) -> void",
+                    "func retire_offer(quest: Dictionary) -> void",
+                    "func _report_result(id: String) -> void",
+                    "func _sync_offer(id: String) -> void"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "MissionConversationWorker.gd.uid",
+              "path": "scripts/story/MissionConversationWorker.gd.uid"
             },
             {
               "type": "file",
@@ -13498,6 +14261,8 @@
                   "name": "global class NarrativeCacheScheduler",
                   "methods": [
                     "func queue_job(job: Dictionary) -> Dictionary",
+                    "func queue_conversation_slices(base_job: Dictionary, slices: Array) -> Dictionary",
+                    "func dependencies_met(job: Dictionary) -> bool",
                     "func next_job() -> Dictionary",
                     "func pause(reason: String = \"large_model_gate\") -> Dictionary",
                     "func resume() -> Dictionary",
@@ -13577,6 +14342,7 @@
                 {
                   "name": "global class NarrativeQualityGate",
                   "methods": [
+                    "static func _starts_a_sentence(text: String, index: int) -> bool",
                     "static func _fail(reason: String, detail: Dictionary = {}) -> Dictionary"
                   ]
                 }
@@ -13659,6 +14425,50 @@
             },
             {
               "type": "file",
+              "name": "OutcomeReactionProjector.gd",
+              "path": "scripts/story/OutcomeReactionProjector.gd",
+              "classes": [
+                {
+                  "name": "global class OutcomeReactionProjector",
+                  "methods": [
+                    "static func remember_completed(ledger: Array, mission: Dictionary, activity_step: int = 0) -> Array",
+                    "static func normalize_memories(raw: Variant) -> Array",
+                    "static func memory_context(raw: Variant, speaker: String, system_id: String) -> Array",
+                    "static func eligible_reaction(raw: Variant, speaker: String, system_id: String, step: int, visit: int) -> Dictionary",
+                    "static func project(outcome: Dictionary) -> Dictionary",
+                    "static func payout_band(credits: int) -> String",
+                    "static func is_public(outcome_tag: String) -> bool",
+                    "static func _empty(reason: String) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "OutcomeReactionProjector.gd.uid",
+              "path": "scripts/story/OutcomeReactionProjector.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "QuestChoicePolicy.gd",
+              "path": "scripts/story/QuestChoicePolicy.gd",
+              "classes": [
+                {
+                  "name": "global class QuestChoicePolicy",
+                  "methods": [
+                    "static func filter_branches(contract_source: Variant, context: Dictionary = {}) -> Dictionary",
+                    "static func _equivalence_reason(branch: Dictionary, kept: Array[Dictionary]) -> String",
+                    "static func _branch_fingerprint(branch: Dictionary) -> String",
+                    "static func _substance_already_spoken(fact_text: String, opening_lower: String) -> bool",
+                    "static func contract_records_risk(contract_source: Variant) -> bool"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
               "name": "QuietMomentBeats.gd",
               "path": "scripts/story/QuietMomentBeats.gd",
               "classes": [
@@ -13717,6 +14527,10 @@
                 {
                   "name": "global class QuietMomentDirector",
                   "methods": [
+                    "func try_outcome(memory: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable) -> bool",
+                    "func _request_outcome(serial: int, built: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable, attempt: int) -> void",
+                    "func _outcome_model_available() -> bool",
+                    "func _send_outcome_request(prompt: String, callback: Callable) -> void",
                     "func _ready() -> void",
                     "func _selector_for(speaker: String)",
                     "func try_fire(beat_id: String, options: Dictionary = {}) -> bool",
@@ -13840,6 +14654,7 @@
                   "name": "global class StoryAgentOfferBuilder",
                   "methods": [
                     "static func can_build(agent_profile: Dictionary) -> bool",
+                    "static func _causal_contract_for(quest: Dictionary, candidate: Dictionary) -> Dictionary",
                     "static func _generation_diagnostics() -> Node",
                     "static func _speaker_card(agent_profile: Dictionary) -> Dictionary",
                     "static func _relationship_tier(agent_profile: Dictionary) -> String",
@@ -13917,6 +14732,13 @@
                 "static func glitch_line_leaks_flicker(line: String, flicker: String) -> bool",
                 "func _ensure_nova_glitch_hints(attempt: int = 0) -> void",
                 "func get_ambient_flavor_block() -> String",
+                "func _local_investigation_context(station: Node3D) -> Dictionary",
+                "func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary",
+                "func publish_local_investigation_board_offer(prepared: Dictionary, station: Node3D) -> Dictionary",
+                "func accept_local_investigation_board_offer(offer_id: String, station: Node3D) -> Dictionary",
+                "func decline_local_investigation_board_offer(offer_id: String, station: Node3D) -> Dictionary",
+                "func prepare_investigation_board_offer(context: Dictionary) -> Dictionary",
+                "func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary) -> Dictionary",
                 "func _save_story_state() -> void",
                 "func _push_context_to_llm() -> void",
                 "func _generate_foreshadow() -> void",
@@ -13937,6 +14759,9 @@
                 "func claim_intro_first_dock_line() -> bool",
                 "func has_spoken_intro_first_dock_line() -> bool",
                 "func on_quest_completed(quest: Dictionary) -> void",
+                "func advance_outcome_activity(new_visit: bool = false) -> void",
+                "func outcome_reaction_candidate(speaker: String, system_id: String) -> Dictionary",
+                "func record_outcome_reaction_attempt(identity: String, phase: String, presented: bool) -> void",
                 "func _mission_narrative_metadata(quest: Dictionary) -> Dictionary",
                 "func _resolve_hooks_for_quest(quest: Dictionary) -> void",
                 "func _campaign_path() -> String",
@@ -14267,6 +15092,9 @@
                     "func _ready() -> void",
                     "func _build_chrome() -> void",
                     "func _build_story_debug_tab() -> void",
+                    "func _refresh_sensor_reveal() -> void",
+                    "func _build_sensor_reveal_tab() -> void",
+                    "func _refresh_reveal_rows() -> void",
                     "func _build_combat_feel_tab() -> void",
                     "func _story_section_label(text: String) -> Label",
                     "func _story_readonly_text_edit(height: int) -> TextEdit",
@@ -14319,6 +15147,22 @@
               "type": "file",
               "name": "DevPanel.gd.uid",
               "path": "scripts/ui/DevPanel.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "InvestigationPanel.gd",
+              "path": "scripts/ui/InvestigationPanel.gd",
+              "classes": [],
+              "functions": [
+                "func setup(owner_ui: Control, quest_manager: Node) -> void",
+                "func open_mission(id: String) -> void",
+                "func _process(delta: float) -> void",
+                "func _refresh() -> void",
+                "func _scan_status(report: Dictionary) -> void",
+                "func _button(text: String, reason: String, action: Callable) -> void",
+                "func _label(text: String) -> void",
+                "static func _reason(reason: String) -> String"
+              ]
             },
             {
               "type": "file",
@@ -14996,6 +15840,26 @@
           "children": [
             {
               "type": "file",
+              "name": "run_baked_audio_index_tests.gd",
+              "path": "tests/domain/run_baked_audio_index_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_english_gate() -> void",
+                "func _test_cast_identification() -> void",
+                "func _test_no_one_else_is_mistaken_for_the_cast() -> void",
+                "func _test_lead_extraction() -> void",
+                "func _test_keys_never_match_on_empty_input() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_baked_audio_index_tests.gd.uid",
+              "path": "tests/domain/run_baked_audio_index_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_bounty_registry_tests.gd",
               "path": "tests/domain/run_bounty_registry_tests.gd",
               "classes": [],
@@ -15019,6 +15883,26 @@
               "type": "file",
               "name": "run_bounty_registry_tests.gd.uid",
               "path": "tests/domain/run_bounty_registry_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_causal_fact_text_tests.gd",
+              "path": "tests/domain/run_causal_fact_text_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_compiler_preserves_goal_need_explanation() -> void",
+                "func _compile(overrides: Dictionary = {}) -> Dictionary",
+                "func _test_no_raw_identifiers_in_player_facing_facts() -> void",
+                "func _test_a_faction_never_obstructs_itself() -> void",
+                "func _test_fact_sentences_are_well_formed() -> void",
+                "func _test_ore_does_not_claim_to_satisfy_an_immaterial_need() -> void",
+                "func _test_intents_only_name_verbs_that_can_serve_the_need() -> void",
+                "func _test_unbound_cargo_does_not_claim_to_be_the_need() -> void",
+                "func _test_delegation_cites_the_real_obstacle() -> void",
+                "func _test_no_unchecked_superlatives() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",
@@ -15063,6 +15947,190 @@
               "type": "file",
               "name": "run_intro_handhold_tests.gd.uid",
               "path": "tests/domain/run_intro_handhold_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_investigate_signal_tests.gd",
+              "path": "tests/domain/run_investigate_signal_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _mission(recipe: String, primary_code: String, verify_code: String) -> Dictionary",
+                "func _scan(cap, data: Dictionary, site_id: String, cmd: String = \"\") -> Dictionary",
+                "func _resolve(cap, data: Dictionary, branch: String, extras: Dictionary = {}) -> Dictionary",
+                "func _test_completion_is_never_inferred_from_scanning() -> void",
+                "func _test_verification_locked_until_primary() -> void",
+                "func _test_certification_pays_on_being_right() -> void",
+                "func _test_prerequisites_are_revalidated() -> void",
+                "func _test_commands_are_idempotent() -> void",
+                "func _test_extraction_commits_then_completes() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigate_signal_tests.gd.uid",
+              "path": "tests/domain/run_investigate_signal_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_board_lifecycle_tests.gd",
+              "path": "tests/domain/run_investigation_board_lifecycle_tests.gd",
+              "classes": [
+                {
+                  "name": "FailedStore",
+                  "methods": [
+                    "func is_valid() -> bool",
+                    "func save_state(_state: Dictionary) -> Dictionary"
+                  ]
+                },
+                {
+                  "name": "World",
+                  "methods": [
+                    "func request_safe_checkpoint(_reason: String, _station: Node) -> bool"
+                  ]
+                },
+                {
+                  "name": "Pilot",
+                  "methods": [
+                    "func navigation_obstacle_snapshot() -> Array"
+                  ]
+                },
+                {
+                  "name": "Station",
+                  "methods": [
+                    "func get_world_id() -> String"
+                  ]
+                },
+                {
+                  "name": "DockUI",
+                  "methods": []
+                }
+              ],
+              "functions": [
+                "func _initialize()",
+                "func _run()",
+                "func _context() -> Dictionary",
+                "func _test_publication(context: Dictionary)",
+                "func _test_failures(context: Dictionary)",
+                "func _test_store_and_manager(context: Dictionary)",
+                "func _expect(condition: bool, message: String)",
+                "func _test_local_context(context: Dictionary)",
+                "func _finish_board_job(quests: Node, gs: Node, pilot: CharacterBody3D, ui: Control, station: Node3D)",
+                "func _test_board_save_aliases(context: Dictionary)"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_offer_tests.gd",
+              "path": "tests/domain/run_investigation_offer_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _shape(recipe: String) -> Dictionary",
+                "func _placement(seed_value: int = 4242) -> Dictionary",
+                "func _build(recipe: String, seed_value: int, claimants: Array = []) -> Dictionary",
+                "func _code(objective: Dictionary, role: String) -> String",
+                "func _owner(objective: Dictionary, role: String) -> String",
+                "func _test_truth_is_reproducible_from_seed() -> void",
+                "func _test_survey_and_lure_codes() -> void",
+                "func _test_claims_owner_only_on_verification() -> void",
+                "func _test_archive_has_no_codes_or_owners() -> void",
+                "func _test_budget_is_mirrored_not_invented() -> void",
+                "func _test_failed_placement_produces_no_offer() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_offer_tests.gd.uid",
+              "path": "tests/domain/run_investigation_offer_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_runtime_tests.gd",
+              "path": "tests/domain/run_investigation_runtime_tests.gd",
+              "classes": [
+                {
+                  "name": "Pilot",
+                  "methods": [
+                    "func navigation_obstacle_snapshot() -> Array"
+                  ]
+                },
+                {
+                  "name": "DockUI",
+                  "methods": [
+                    "func _command_selected_target(value: String) -> bool"
+                  ]
+                },
+                {
+                  "name": "Dock",
+                  "methods": [
+                    "func get_world_id() -> String"
+                  ]
+                }
+              ],
+              "functions": [
+                "func _initialize()",
+                "func _run()",
+                "func _accept(recipe: String, expected := true) -> bool",
+                "func _test_acceptance_placement_guard()",
+                "func _site(role: String) -> Dictionary",
+                "func _test_world_discovery_and_panel()",
+                "func _panel_button(panel: Control, label: String) -> Button",
+                "func _move(site: Dictionary)",
+                "func _command(action: String, site: Dictionary, branch := \"\") -> Dictionary",
+                "func _scan(role: String)",
+                "func _test_scan_authority_and_survey()",
+                "func _test_wrong_certification_and_report_escape()",
+                "func _test_inventory_replay_and_turn_in()",
+                "func _test_corrupt_restore_is_atomic()",
+                "func _expect(ok: bool, message: String)",
+                "func _test_canonical_save_roundtrip()"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_selector_tests.gd",
+              "path": "tests/domain/run_investigation_selector_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_first_draw_is_campaign_seeded() -> void",
+                "func _test_repeated_opens_return_the_same_offer() -> void",
+                "func _test_shape_retires_when_shown_not_when_accepted() -> void",
+                "func _test_reservation_does_not_burn_a_shape() -> void",
+                "func _test_pool_change_does_not_replay_immediately() -> void",
+                "func _test_cycle_survives_a_save() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_selector_tests.gd.uid",
+              "path": "tests/domain/run_investigation_selector_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_site_planner_tests.gd",
+              "path": "tests/domain/run_investigation_site_planner_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _station(id: String, at: Vector3) -> Dictionary",
+                "func _hazard(at: Vector3, radius: float) -> Dictionary",
+                "func _pos(site: Dictionary) -> Vector3",
+                "func _test_places_within_bounds_and_clear_of_hazards() -> void",
+                "func _test_same_seed_reproduces_placement() -> void",
+                "func _test_reports_failure_rather_than_shrinking_margins() -> void",
+                "func _test_uses_the_navigator_radius_not_a_second_formula() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_site_planner_tests.gd.uid",
+              "path": "tests/domain/run_investigation_site_planner_tests.gd.uid"
             },
             {
               "type": "file",
@@ -15250,11 +16318,32 @@
             },
             {
               "type": "file",
+              "name": "run_mission_shape_registry_tests.gd",
+              "path": "tests/domain/run_mission_shape_registry_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_real_catalog_loads() -> void",
+                "func _catalog(shape_overrides: Dictionary = {}) -> Dictionary",
+                "func _test_broken_shape_rejects_catalog() -> void",
+                "func _test_report_branch_is_mandatory() -> void",
+                "func _test_eligibility_filters_on_flags() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_mission_shape_registry_tests.gd.uid",
+              "path": "tests/domain/run_mission_shape_registry_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_mission_state_transition_tests.gd",
               "path": "tests/domain/run_mission_state_transition_tests.gd",
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
                 "func _test_transition_rules() -> void",
                 "func _test_ready_state_round_trips_through_dict() -> void",
                 "func _test_objective_completion_marks_ready_and_persists() -> void",
@@ -15315,6 +16404,7 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _test_incoherent_generated_causes_are_withheld() -> void",
                 "func _test_builder_produces_all_templates() -> void",
                 "func _test_builder_offers_have_required_fields() -> void",
                 "func _test_courier_and_purchase_offers_adapt_to_active_state() -> void",
@@ -15323,6 +16413,9 @@
                 "func _test_generated_system_without_outpost_does_not_use_starter_pickup() -> void",
                 "func _test_generated_system_offers_use_story_pack() -> void",
                 "func _test_public_board_offers_carry_story_cause_metadata() -> void",
+                "func _test_generated_system_offers_compile_a_valid_causal_contract() -> void",
+                "func _test_causal_publication_states_are_explicit() -> void",
+                "func _test_invalid_contract_offers_are_withheld() -> void",
                 "func _test_full_service_station_assigns_faction_contacts_and_mechanic() -> void",
                 "func _test_generated_contact_portrait_voice_gender_matches() -> void",
                 "func _presentation_gender(presentation_id: String) -> String",
@@ -15348,6 +16441,92 @@
               "type": "file",
               "name": "run_public_board_validation_tests.gd.uid",
               "path": "tests/domain/run_public_board_validation_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_quest_causal_contract_tests.gd",
+              "path": "tests/domain/run_quest_causal_contract_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_one_path_courier_is_valid() -> void",
+                "func _test_justified_investigation_is_valid() -> void",
+                "func _test_unsupported_objective_and_effects_reject() -> void",
+                "func _test_impossible_delivery_rejects() -> void",
+                "func _test_protected_recipient_rejects() -> void",
+                "func _test_private_fact_leak_rejects() -> void",
+                "func _test_dangling_fact_reference_rejects() -> void",
+                "func _test_unexplained_deadline_rejects() -> void",
+                "func _test_recipient_presence_only_checked_when_docking() -> void",
+                "func _test_normalize_is_legacy_safe() -> void",
+                "func _test_narrative_metadata_roundtrip() -> void",
+                "func _test_semantic_signature_ignores_names_but_not_shape() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_quest_lifecycle_validation_tests.gd",
+              "path": "tests/domain/run_quest_lifecycle_validation_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _test_legacy_missions_are_not_checked() -> void",
+                "func _test_contract_is_found_in_either_location() -> void",
+                "func _test_snapshot_omits_what_it_cannot_resolve() -> void",
+                "func _test_stage_is_reported_back() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_scan_hold_tests.gd",
+              "path": "tests/domain/run_scan_hold_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _hold(controller, site: String, seconds: float, step: float = 0.5) -> Dictionary",
+                "func _test_completes_only_after_the_full_hold() -> void",
+                "func _test_each_condition_cancels_without_cost() -> void",
+                "func _test_progress_cannot_be_banked() -> void",
+                "func _test_token_is_required_and_one_shot() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_scan_hold_tests.gd.uid",
+              "path": "tests/domain/run_scan_hold_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_site_reveal_tests.gd",
+              "path": "tests/domain/run_site_reveal_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_hidden_beyond_sensor_range() -> void",
+                "func _test_better_sensors_see_further() -> void",
+                "func _test_contact_fades_in_and_stays_anonymous() -> void",
+                "func _test_large_objects_are_never_hidden() -> void",
+                "func _test_small_objects_drop_off_beyond_the_drop_range() -> void",
+                "func _test_unknown_tier_weakens_rather_than_blinds() -> void",
+                "func _test_drop_range_must_not_fall_below_detection() -> void",
+                "func _test_abes_tuned_ranges_are_what_ship() -> void",
+                "func _expect(condition: bool, message: String) -> void",
+                "func _test_mission_ships_are_detected_further_out() -> void",
+                "func _test_group_classification_protects_landmarks() -> void",
+                "func _test_gate_visibility_follows_discovery() -> void",
+                "func _test_live_tuning_moves_real_ranges() -> void",
+                "func _test_anomalies_are_gated_tightly() -> void",
+                "func _test_wreck_penalty_and_its_ordering() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_site_reveal_tests.gd.uid",
+              "path": "tests/domain/run_site_reveal_tests.gd.uid"
             },
             {
               "type": "file",
@@ -15605,6 +16784,33 @@
         },
         {
           "type": "directory",
+          "name": "fixtures",
+          "children": [
+            {
+              "type": "file",
+              "name": "QuestContractFixtures.gd",
+              "path": "tests/fixtures/QuestContractFixtures.gd",
+              "classes": [
+                {
+                  "name": "global class QuestContractFixtures",
+                  "methods": [
+                    "static func world() -> Dictionary",
+                    "static func courier_one_path() -> Dictionary",
+                    "static func investigation_one_choice() -> Dictionary",
+                    "static func investigation_unjustified_option() -> Dictionary",
+                    "static func unsupported_contract() -> Dictionary",
+                    "static func impossible_delivery_contract() -> Dictionary",
+                    "static func protected_recipient_contract() -> Dictionary",
+                    "static func leaking_contract() -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            }
+          ]
+        },
+        {
+          "type": "directory",
           "name": "generation",
           "children": [
             {
@@ -15614,6 +16820,7 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
                 "func _test_config_from_seed() -> void",
                 "func _test_config_deterministic() -> void",
                 "func _test_config_story_pack() -> void",
@@ -15641,11 +16848,13 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
                 "func _test_hostiles_use_shipping_lane_without_belt() -> void",
                 "func _test_hostiles_prefer_belt_over_shipping_lane() -> void",
                 "func _test_mission_targets_use_shipping_lane_without_belt() -> void",
                 "func _test_mission_targets_prefer_belt_over_shipping_lane() -> void",
                 "func _make_station(label: String, pos: Vector3) -> Node3D",
+                "func _test_local_faction_spawn_fallback() -> void",
                 "func _make_asteroid(belt_id: String, pos: Vector3) -> Node3D",
                 "func _make_manager() -> Node",
                 "func _expect(condition: bool, message: String) -> void"
@@ -15813,6 +17022,8 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
+                "func _test_permanent_site_position_scope() -> void",
                 "func _test_safe_capture_restore_and_recovery() -> void",
                 "func _story_state(label: String) -> Dictionary",
                 "func _npc_states(campaign_id: String, label: String) -> Dictionary",
@@ -15856,7 +17067,9 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
                 "func _test_bootstrap_generate_reveal_and_reopen() -> void",
+                "func _test_per_system_rosters_and_desires() -> void",
                 "func _test_old_faction_records_normalize_on_load() -> void",
                 "func _initial_state() -> Dictionary",
                 "func _write_generated_factions_fixture(data: Dictionary) -> void",
@@ -16112,6 +17325,26 @@
             },
             {
               "type": "file",
+              "name": "run_generated_faction_desire_tests.gd",
+              "path": "tests/persistence/run_generated_faction_desire_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_desire_dimensions_have_compatible_variety() -> void",
+                "func _test_joint_coherence_and_corrupt_bindings() -> void",
+                "func _test_desire_is_deterministic_for_a_seed() -> void",
+                "func _test_intents_follow_the_need_not_the_goal() -> void",
+                "func _test_relationships_are_not_all_hostile() -> void",
+                "func _test_relationships_are_asymmetric_and_reasoned() -> void",
+                "func _test_no_forced_hostility_and_work_still_exists() -> void",
+                "func _test_relationship_targets_stay_local() -> void",
+                "func _test_cross_seed_variety() -> void",
+                "func _relationship_between(factions: Array, from_id: String, to_id: String) -> Dictionary",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
               "name": "run_kaelen_handoff_store_tests.gd",
               "path": "tests/persistence/run_kaelen_handoff_store_tests.gd",
               "classes": [],
@@ -16227,6 +17460,7 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
+                "func _run() -> void",
                 "func _test_in_memory_migration() -> void",
                 "func _test_file_migration_and_backup() -> void",
                 "func _test_damaged_source_is_untouched() -> void",
@@ -16234,7 +17468,7 @@
                 "func _test_generated_system_round_trip() -> void",
                 "func _legacy_save() -> Dictionary",
                 "func _generated_runtime_save() -> Dictionary",
-                "func _register_generated_fixture(registry: SystemRegistry) -> Dictionary",
+                "func _register_generated_fixture(registry) -> Dictionary",
                 "func _write_text(path: String, text: String) -> void",
                 "func _cleanup() -> void",
                 "func _expect(condition: bool, message: String) -> void"
@@ -16339,8 +17573,9 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
-                "func _test_resolution(registry: SystemRegistry) -> void",
-                "func _test_scene_gate_metadata(registry: SystemRegistry) -> void",
+                "func _run() -> void",
+                "func _test_resolution(registry: RefCounted) -> void",
+                "func _test_scene_gate_metadata(registry: RefCounted) -> void",
                 "func _test_main_scene_has_no_embedded_system() -> void",
                 "func _test_invalid_pair() -> void",
                 "func _test_unknown_destination() -> void",
@@ -16469,6 +17704,40 @@
             },
             {
               "type": "file",
+              "name": "run_board_delivery_recipient_tests.gd",
+              "path": "tests/story/run_board_delivery_recipient_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(value: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_board_delivery_recipient_tests.gd.uid",
+              "path": "tests/story/run_board_delivery_recipient_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_branch_policy_wiring_tests.gd",
+              "path": "tests/story/run_branch_policy_wiring_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _plan_for(contract: Dictionary, mechanical: Dictionary = {}) -> Dictionary",
+                "func _intent_ids(plan: Dictionary) -> Array",
+                "func _test_surviving_branches_become_selectable_actions() -> void",
+                "func _test_dropped_branch_never_becomes_an_action() -> void",
+                "func _test_single_path_does_not_render_a_one_item_menu() -> void",
+                "func _test_branch_selection_carries_an_executable_action() -> void",
+                "func _test_ineligible_branch_is_explained_not_removed() -> void",
+                "func _test_unknown_eligibility_does_not_revoke_an_option() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
               "name": "run_challenge_budget_tests.gd",
               "path": "tests/story/run_challenge_budget_tests.gd",
               "classes": [],
@@ -16526,6 +17795,28 @@
             },
             {
               "type": "file",
+              "name": "run_conversation_slicing_tests.gd",
+              "path": "tests/story/run_conversation_slicing_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _plan(intent_count: int) -> Dictionary",
+                "func _test_opening_is_always_first() -> void",
+                "func _test_intents_are_batched_within_the_cap() -> void",
+                "func _test_slice_keys_drop_the_machine_owned_labels() -> void",
+                "func _test_validated_slices_are_never_overwritten() -> void",
+                "func _test_missing_keys_asks_only_for_what_is_absent() -> void",
+                "func _test_slice_prompt_asks_for_one_thing_only() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_conversation_slicing_tests.gd.uid",
+              "path": "tests/story/run_conversation_slicing_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_dialogue_bundle_validator_tests.gd",
               "path": "tests/story/run_dialogue_bundle_validator_tests.gd",
               "classes": [],
@@ -16549,6 +17840,81 @@
               "type": "file",
               "name": "run_dialogue_bundle_validator_tests.gd.uid",
               "path": "tests/story/run_dialogue_bundle_validator_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_critic_tests.gd",
+              "path": "tests/story/run_dialogue_critic_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func check(value: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_fact_packet_tests.gd",
+              "path": "tests/story/run_dialogue_fact_packet_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _buried_contract() -> Dictionary",
+                "func _test_answering_fact_survives_the_cap() -> void",
+                "func _test_question_ranking_is_stable_and_deterministic() -> void",
+                "func _test_no_question_keeps_purpose_order() -> void",
+                "func _test_private_facts_never_selected() -> void",
+                "func _test_fingerprint_tracks_facts_not_nudges() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_field_contract_tests.gd",
+              "path": "tests/story/run_dialogue_field_contract_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _req(purpose: String = \"opening\", options: Dictionary = {}) -> Dictionary",
+                "func _test_budgets_follow_purpose() -> void",
+                "func _test_request_validation_rejects_the_expensive_mistakes() -> void",
+                "func _test_prepared_must_answer_the_request_that_asked() -> void",
+                "func _test_length_budget_is_enforced_both_ways() -> void",
+                "func _test_stale_context_is_refused() -> void",
+                "func _test_attempts_are_bounded() -> void",
+                "func _test_line_identity_is_situation_specific() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_field_contract_tests.gd.uid",
+              "path": "tests/story/run_dialogue_field_contract_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_quality_gate_tests.gd",
+              "path": "tests/story/run_dialogue_quality_gate_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _packet(purpose: String = \"opening\", options: Dictionary = {}) -> Dictionary",
+                "func _test_packet_never_carries_private_facts() -> void",
+                "func _test_packet_is_bounded_and_prioritised() -> void",
+                "func _test_good_line_passes_hard_checks() -> void",
+                "func _test_invented_number_rejected() -> void",
+                "func _test_invented_urgency_rejected() -> void",
+                "func _test_encoding_artifact_rejected() -> void",
+                "func _test_private_leak_rejected() -> void",
+                "func _test_irrelevant_answer_rejected() -> void",
+                "func _test_restating_the_briefing_rejected() -> void",
+                "func _test_repeated_opening_phrase_rejected() -> void",
+                "func _test_contradiction_rejected() -> void",
+                "func _test_review_parsing_is_conservative() -> void",
+                "func _test_decide_separates_passed_from_unknown() -> void",
+                "func _test_rewrite_budget_is_bounded() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",
@@ -16668,6 +18034,22 @@
               "type": "file",
               "name": "run_intro_dock_gating_tests.gd.uid",
               "path": "tests/story/run_intro_dock_gating_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_intro_offer_revisit_tests.gd",
+              "path": "tests/story/run_intro_offer_revisit_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_intro_offer_revisit_tests.gd.uid",
+              "path": "tests/story/run_intro_offer_revisit_tests.gd.uid"
             },
             {
               "type": "file",
@@ -16803,6 +18185,43 @@
             },
             {
               "type": "file",
+              "name": "run_lounge_station_roster_tests.gd",
+              "path": "tests/story/run_lounge_station_roster_tests.gd",
+              "classes": [
+                {
+                  "name": "StationFixture",
+                  "methods": []
+                }
+              ],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_lounge_station_roster_tests.gd.uid",
+              "path": "tests/story/run_lounge_station_roster_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_mission_card_delivery_route_tests.gd",
+              "path": "tests/story/run_mission_card_delivery_route_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_mission_card_delivery_route_tests.gd.uid",
+              "path": "tests/story/run_mission_card_delivery_route_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_mission_conversation_compiler_tests.gd",
               "path": "tests/story/run_mission_conversation_compiler_tests.gd",
               "classes": [],
@@ -16869,6 +18288,58 @@
               "type": "file",
               "name": "run_mission_conversation_flow_tests.gd.uid",
               "path": "tests/story/run_mission_conversation_flow_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_mission_conversation_generation_tests.gd",
+              "path": "tests/story/run_mission_conversation_generation_tests.gd",
+              "classes": [
+                {
+                  "name": "QueueProbe",
+                  "methods": [
+                    "func queue_offer(quest: Dictionary) -> void"
+                  ]
+                },
+                {
+                  "name": "FakeHost",
+                  "methods": [
+                    "func _ensure_narrative_cache_scheduler() -> RefCounted",
+                    "func mission_conversation_system_id() -> String",
+                    "func _mission_conversation_payload_for_cache_job(job: Dictionary) -> Dictionary",
+                    "func transport(prompt: String, callback: Callable) -> void",
+                    "func persist_mission_conversation_offer(quest: Dictionary) -> void",
+                    "func record_mission_conversation_result(quest: Dictionary) -> void",
+                    "func validate_and_register_narrative_lines(_lines: Array, _kind: String) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _quest() -> Dictionary",
+                "func _opening() -> Dictionary",
+                "func _answers() -> Dictionary",
+                "func _job(quest: Dictionary, index: int = 0) -> Dictionary",
+                "func _test_parse_and_validation() -> void",
+                "func _setup() -> Array",
+                "func _reply(host: FakeHost, response: Dictionary) -> void",
+                "func _test_full_generation_and_resume() -> void",
+                "func _test_failed_opening_and_partial() -> void",
+                "func _test_late_callback_and_quality() -> void",
+                "func _test_retirement() -> void",
+                "func _contracted_quest() -> Dictionary",
+                "func _test_quality_gate_runs_in_the_real_generation_path() -> void",
+                "func _test_writer_prompt_carries_the_fact_packet() -> void",
+                "func _test_answer_packet_keeps_the_fact_that_answers_the_question() -> void",
+                "func _test_stale_fact_packet_is_refused() -> void",
+                "func _expect(condition: bool, message: String) -> void",
+                "func _test_runtime_persistence() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_mission_conversation_generation_tests.gd.uid",
+              "path": "tests/story/run_mission_conversation_generation_tests.gd.uid"
             },
             {
               "type": "file",
@@ -17077,8 +18548,12 @@
               "classes": [],
               "functions": [
                 "func _initialize() -> void",
-                "func _expect(condition: bool, message: String) -> void",
-                "func _test_quality_ledger_debug_view_wiring() -> void"
+                "func _warnings_for(text: String, aliases: Array = []) -> Array",
+                "func _test_sentence_openers_do_not_warn() -> void",
+                "func _test_real_entities_still_warn() -> void",
+                "func _test_known_aliases_are_accepted() -> void",
+                "func _test_mid_sentence_capitals_are_still_caught() -> void",
+                "func _expect(condition: bool, message: String) -> void"
               ]
             },
             {
@@ -17138,6 +18613,45 @@
             },
             {
               "type": "file",
+              "name": "run_outcome_callback_tests.gd",
+              "path": "tests/story/run_outcome_callback_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _test_game_root_delivery(mission: Dictionary) -> void",
+                "func _expect(value: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_outcome_callback_tests.gd.uid",
+              "path": "tests/story/run_outcome_callback_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_outcome_reaction_projector_tests.gd",
+              "path": "tests/story/run_outcome_reaction_projector_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_a_mistaken_certification_never_reaches_dialogue() -> void",
+                "func _test_public_outcomes_project_facts() -> void",
+                "func _test_unknown_outcomes_are_refused_not_guessed() -> void",
+                "func _test_facts_stay_few() -> void",
+                "func _test_payout_is_a_band_never_a_figure() -> void",
+                "func _test_refusal_is_not_an_error() -> void",
+                "func _test_persisted_outcome_memories() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_outcome_reaction_projector_tests.gd.uid",
+              "path": "tests/story/run_outcome_reaction_projector_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_player_address_tests.gd",
               "path": "tests/story/run_player_address_tests.gd",
               "classes": [],
@@ -17154,6 +18668,26 @@
               "type": "file",
               "name": "run_player_address_tests.gd.uid",
               "path": "tests/story/run_player_address_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_quest_choice_policy_tests.gd",
+              "path": "tests/story/run_quest_choice_policy_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _test_courier_stays_one_path() -> void",
+                "func _test_justified_investigation_keeps_both_options() -> void",
+                "func _test_unjustified_option_is_removed() -> void",
+                "func _test_equivalent_buttons_collapse() -> void",
+                "func _test_ineligible_and_unsupported_branches_drop() -> void",
+                "func _test_no_mandatory_question_trio() -> void",
+                "func _test_risk_question_needs_a_recorded_risk() -> void",
+                "func _test_question_dropped_when_opening_already_answers_it() -> void",
+                "func _test_plan_without_contract_is_unchanged() -> void",
+                "func _mission_plan_for(contract: Dictionary) -> Dictionary",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",
@@ -17299,6 +18833,29 @@
               "type": "file",
               "name": "run_quiet_moment_selector_tests.gd.uid",
               "path": "tests/story/run_quiet_moment_selector_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_scheduler_slice_tests.gd",
+              "path": "tests/story/run_scheduler_slice_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _plan(intent_count: int) -> Dictionary",
+                "func _base() -> Dictionary",
+                "func _queue(intent_count: int) -> Array",
+                "func _test_slices_queue_as_separate_jobs() -> void",
+                "func _test_opening_outranks_its_own_answers() -> void",
+                "func _test_intent_slices_wait_for_the_opening() -> void",
+                "func _test_a_failed_opening_does_not_block_forever() -> void",
+                "func _test_waiting_is_distinguishable_from_stalled() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_scheduler_slice_tests.gd.uid",
+              "path": "tests/story/run_scheduler_slice_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18306,6 +19863,111 @@
           "type": "file",
           "name": "measure_phase_2_storage.gd.uid",
           "path": "tools/measure_phase_2_storage.gd.uid"
+        },
+        {
+          "type": "directory",
+          "name": "quality_eval",
+          "children": [
+            {
+              "type": "file",
+              "name": "CriticCorpus.gd",
+              "path": "tools/quality_eval/CriticCorpus.gd",
+              "classes": [
+                {
+                  "name": "global class CriticCorpus",
+                  "methods": []
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "CriticSentinels.gd",
+              "path": "tools/quality_eval/CriticSentinels.gd",
+              "classes": [],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "OllamaProbe.gd",
+              "path": "tools/quality_eval/OllamaProbe.gd",
+              "classes": [
+                {
+                  "name": "global class OllamaProbe",
+                  "methods": [
+                    "func _ready() -> void",
+                    "func generate(capability: String, prompt: String, options: Dictionary) -> Dictionary",
+                    "func generate_text(capability: String, prompt: String, options: Dictionary) -> Dictionary",
+                    "func generate_review(job: Dictionary, model: String = \"qwen3:4b\", seed_value: int = 12345) -> Dictionary",
+                    "func _post(body: Dictionary) -> Dictionary",
+                    "func model_footprint() -> Dictionary",
+                    "func model_identity(model: String) -> Dictionary",
+                    "func _get_json(url: String) -> Dictionary"
+                  ]
+                }
+              ],
+              "functions": []
+            },
+            {
+              "type": "directory",
+              "name": "repro",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "repro_should_pass.json",
+                  "path": "tools/quality_eval/repro/repro_should_pass.json"
+                },
+                {
+                  "type": "file",
+                  "name": "repro_should_repair.json",
+                  "path": "tools/quality_eval/repro/repro_should_repair.json"
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_critic_eval.gd",
+              "path": "tools/quality_eval/run_critic_eval.gd",
+              "classes": [],
+              "functions": []
+            },
+            {
+              "type": "file",
+              "name": "run_critic_eval_v2.gd",
+              "path": "tools/quality_eval/run_critic_eval_v2.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _write(path: String, payload: Dictionary) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_smoke.gd",
+              "path": "tools/quality_eval/run_smoke.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_writer_eval.gd",
+              "path": "tools/quality_eval/run_writer_eval.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _quest_for(case: Dictionary) -> Dictionary",
+                "func _summarize(records: Array, latencies: Array[int]) -> Dictionary",
+                "func _percentile(sorted_values: Array[int], fraction: float) -> int",
+                "func _write(records: Array, summary: Dictionary) -> void",
+                "func _print_summary(summary: Dictionary, records: Array) -> void"
+              ]
+            }
+          ]
         },
         {
           "type": "file",

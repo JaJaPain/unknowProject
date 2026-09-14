@@ -4,6 +4,12 @@ const HISTORY_FILE_PATH = "user://quest_history.md"
 const MissionAdapterType := preload(
 	"res://scripts/domain/MissionAdapter.gd"
 )
+const QuestWorldSnapshotType := preload(
+	"res://scripts/domain/QuestWorldSnapshot.gd"
+)
+const QuestPlausibilityValidatorType := preload(
+	"res://scripts/domain/QuestPlausibilityValidator.gd"
+)
 const MissionInstanceType := preload(
 	"res://scripts/domain/MissionInstance.gd"
 )
@@ -47,6 +53,89 @@ var active_quest: Dictionary:
 			_collection.add(inst)
 var last_validation_error: String = ""
 var _board_cooldowns: Dictionary = {}
+const InvestigationRuntimeType := preload("res://scripts/domain/InvestigationRuntime.gd")
+const MissionOutcomeType := preload("res://scripts/domain/MissionOutcome.gd")
+const PlayerInventoryType := preload("res://scripts/economy/PlayerInventory.gd")
+const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
+var _investigation_runtime := InvestigationRuntimeType.new()
+var _investigation_world := preload("res://scripts/domain/InvestigationWorldRuntime.gd").new()
+var _investigation_world_elapsed := 0.0
+var _completion_in_progress := false
+signal investigation_scan_updated(report: Dictionary)
+
+func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary:
+	return _investigation_runtime.begin_scan(self, mission_id, site_id)
+
+func cancel_investigation_scan() -> void:
+	_investigation_runtime.reset()
+
+func dispatch_investigation_command(command: Dictionary) -> Dictionary:
+	return _investigation_runtime.dispatch(self, command)
+
+func _physics_process(delta: float) -> void:
+	var scan_mission_id := str(_investigation_runtime._scan.get("mission_id", ""))
+	var report := _investigation_runtime.tick(self, delta)
+	if not report.is_empty():
+		report["mission_id"] = scan_mission_id
+		investigation_scan_updated.emit(report)
+	_investigation_world_elapsed += delta
+	if _investigation_world_elapsed >= 0.2 and not get_tree().paused:
+		_investigation_world_elapsed = 0.0
+		reconcile_investigation_sites()
+
+func reconcile_investigation_sites() -> void:
+	if _investigation_world.reconcile(self):
+		quest_progress_updated.emit()
+
+func investigation_site_target(mission_id: String, site_id: String) -> Node3D:
+	return _investigation_world.target(mission_id, site_id)
+
+func investigation_revealed_sites(mission_id: String) -> Array:
+	return _investigation_world.public_sites(mission_id)
+
+## Only observed evidence reaches the panel. Hidden site codes/owners never do.
+func investigation_panel_view(mission_id: String) -> Dictionary:
+	var mission = _collection.get_by_id(mission_id)
+	if mission == null or str(mission.data.get("objective_type", "")) != "INVESTIGATE_SIGNAL": return {}
+	var data: Dictionary = mission.data
+	var state: Dictionary = data["investigation"]
+	var result := {"title": str(data["title"]), "recipe": str(data["recipe"]), "phase": str(state["phase"]), "revision": int(state["investigation_revision"]), "sites": [], "evidence": [], "branches": [], "resolve_site_id": ""}
+	var cap = MissionCapabilityRegistryType.get_for_type("INVESTIGATE_SIGNAL")
+	for public_site: Dictionary in investigation_revealed_sites(mission_id):
+		var row := public_site.duplicate(true)
+		row["scanned"] = str(row["site_id"]) in state["scanned_site_ids"]
+		row["scan_reason"] = "Search the marked area" if row["site_id"] == "search" else ""
+		if row["site_id"] != "search":
+			var site: Dictionary = cap._site(state, str(row["site_id"]))
+			var pose := _investigation_runtime._pose(self, data, site)
+			var reason := str(pose.get("reason", ""))
+			if bool(pose.get("ok", false)):
+				reason = preload("res://scripts/domain/ScanHoldController.gd").new()._blocking_reason(float(pose["distance"]), float(pose["speed"]), bool(pose["combat"]))
+			row["scan_reason"] = reason
+			if bool(row["scanned"]) and reason.is_empty(): result["resolve_site_id"] = row["site_id"]
+		result["sites"].append(row)
+	for evidence: Dictionary in state["evidence"]:
+		var site: Dictionary = cap._site(state, str(evidence["site_id"]))
+		var label := "Primary" if site.get("role", "") == "primary" else "Verification"
+		var code := str(evidence.get("observed_code", ""))
+		var owner_id := str(evidence.get("observed_owner_id", ""))
+		if not code.is_empty(): label += " route code: " + code
+		elif not owner_id.is_empty():
+			var owner_name: String = preload("res://scripts/domain/PublicBoardOfferBuilder.gd")._local_faction_display(owner_id)
+			label += " owner: " + (owner_name if not owner_name.is_empty() else "ownership record recovered")
+		else: label += ": recorder located; ownership not yet verified"
+		result["evidence"].append(label)
+	var labels := {"report": "File an unverified report — 50% reward", "certify_match": "Certify that the codes match", "certify_mismatch": "Certify that the codes differ", "preserve": "Preserve the verified claim records — full reward", "liquidate": "Salvage the hardware — destroy records, spend one salvage drone, 150% reward"}
+	if state["phase"] not in ["ready", "closed"]:
+		for branch: String in data["branch_ids"]:
+			var reason := ""
+			for role: String in cap.BRANCH_REQUIREMENTS[branch]:
+				if not cap._role_scanned(state, role): reason = "Scan the %s site first" % role
+			var item: String = cap.BRANCH_CONSUMABLE.get(branch, "")
+			if not item.is_empty() and not GlobalState.inventory.has_item(item): reason = "Requires one salvage drone"
+			if reason.is_empty() and str(result["resolve_site_id"]).is_empty(): reason = "Return within 300 m of a scanned site, below 10 m/s and out of combat"
+			result["branches"].append({"id": branch, "label": labels.get(branch, branch), "reason": reason})
+	return result
 const BOARD_COOLDOWN_MINUTES: int = 120
 const EMPTY_AGENT_MEMORY_CONTEXT := (
 	"No prior contracts with this agent are recorded yet. "
@@ -66,6 +155,8 @@ func _ready():
 	CampaignClock.time_changed.connect(_on_campaign_time_changed)
 
 func reset_for_restart():
+	_investigation_runtime.reset()
+	_investigation_world.reset(self)
 	_collection.clear()
 	_board_cooldowns.clear()
 	print("[QuestManager] State reset for new game.")
@@ -252,7 +343,8 @@ func request_new_quest(
 
 func accept_quest(
 	quest_data: Dictionary,
-	selected_choice: Dictionary
+	selected_choice: Dictionary,
+	defer_acceptance_events: bool = false
 ) -> bool:
 	var runtime_mission_id := _create_runtime_mission_id(quest_data)
 	var adapted := MissionAdapterType.build_active_state(
@@ -271,6 +363,34 @@ func accept_quest(
 		)
 		return false
 	var adapted_state: Dictionary = adapted["state"]
+	if str(adapted_state.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		var placement_check := InvestigationPlacementType.check_saved_sites(
+			adapted_state, InvestigationPlacementType.capture(self))
+		if not bool(placement_check.get("ok", false)):
+			last_validation_error = "Investigation unavailable: %s" % placement_check.get("reason", "unsafe_sites")
+			return false
+	if bool(adapted_state.get("public_board", false)) \
+			and str(adapted_state.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		var recipient := GlobalState.get_delivery_recipient(str(adapted_state.get("destination_station_id", "")))
+		if recipient.is_empty():
+			last_validation_error = "No local recipient is available at the delivery destination"
+			return false
+		adapted_state["delivery_recipient_name"] = str(recipient.get("name", ""))
+	# Revalidate the saved causal contract against the world as it is NOW. A job
+	# can be posted honestly and become impossible before the player accepts it.
+	# Missions with no contract are legacy-compatible and skip this entirely;
+	# their existing delivery guards above still apply.
+	var causal_check: Dictionary = QuestWorldSnapshotType.check_mission(
+		adapted_state,
+		QuestPlausibilityValidatorType.STAGE_ACCEPTANCE,
+		str(adapted_state.get("destination_station_id", ""))
+	)
+	if bool(causal_check.get("checked", false)) and not bool(causal_check.get("ok", false)):
+		last_validation_error = "This job is no longer possible: %s" % ", ".join(
+			causal_check.get("issue_codes", [])
+		)
+		push_warning("[QuestManager] %s" % last_validation_error)
+		return false
 	if str(adapted_state.get("objective_type", "")) == "DELIVERY_COURIER" \
 			and not GlobalState.can_accept_special():
 		last_validation_error = "Cargo hold must be empty before accepting courier cargo"
@@ -278,12 +398,17 @@ func accept_quest(
 		return false
 
 	var consequence = adapted["consequence"]
-	GlobalState.add_credits(consequence.credits_immediate)
-	for faction in consequence.reputation_change.keys():
-		GlobalState.adjust_reputation(
-			faction,
-			consequence.reputation_change[faction]
-		)
+	if defer_acceptance_events:
+		if str(adapted_state.get("objective_type", "")) != "INVESTIGATE_SIGNAL" or consequence.credits_immediate != 0 or not consequence.reputation_change.is_empty():
+			last_validation_error = "Checkpointed investigation acceptance cannot have immediate side effects"
+			return false
+	else:
+		GlobalState.add_credits(consequence.credits_immediate)
+		for faction in consequence.reputation_change.keys():
+			GlobalState.adjust_reputation(
+				faction,
+				consequence.reputation_change[faction]
+			)
 
 	var new_mission = MissionInstanceType.create_active(
 		(adapted["state"] as Dictionary).duplicate(true)
@@ -333,6 +458,12 @@ func accept_quest(
 			last_validation_error = "Cargo hold rejected courier package"
 			push_warning("[QuestManager] %s" % last_validation_error)
 			return false
+		if bool(active_quest.get("public_board", false)):
+			GlobalState.cargo_special["delivery_assignment"] = {
+				"runtime_id": new_mission.runtime_id,
+				"destination_station_id": str(active_quest.get("destination_station_id", "")),
+				"recipient_name": str(active_quest.get("delivery_recipient_name", "")),
+			}
 
 	print(
 		"[QuestManager] Quest accepted: ",
@@ -343,10 +474,16 @@ func accept_quest(
 		active_quest["combat_multiplier"],
 		")"
 	)
-	_increment_mission_history_revision("accepted", active_quest)
-	quest_accepted.emit()
-	quest_accepted_details.emit(active_quest.duplicate(true))
+	if not defer_acceptance_events:
+		announce_accepted_mission(str(active_quest["runtime_id"]))
 	return true
+
+func announce_accepted_mission(runtime_id: String) -> void:
+	var mission = _collection.get_by_id(runtime_id)
+	if mission == null: return
+	_increment_mission_history_revision("accepted", mission.data)
+	quest_accepted.emit()
+	quest_accepted_details.emit(mission.data.duplicate(true))
 
 
 func decline_quest(
@@ -483,12 +620,20 @@ func check_active_quest_expiration() -> bool:
 		expired_quest["expired_time_minutes"] = CampaignClock.total_minutes
 		var expired_title := str(m.data.get("title", "Contract"))
 		var expired_type := str(m.data.get("objective_type", "TIMED"))
+		# Nonfocused missions expire through this same guarded transaction.
+		var snapshot := _capture_settlement_snapshot()
+		var instance_state: int = int(m.state)
 		_record_board_cooldown(m.data)
 		_cleanup_mission(m)
-		_log_quest_to_file(expired_title, expired_type, "Expired.")
 		m.transition_to(MissionInstanceType.State.EXPIRED)
 		var rid: String = m.runtime_id
 		_collection.remove(rid)
+		var settled := _settle_terminal(expired_quest, "expired", 0)
+		if not bool(settled.get("ok", false)):
+			_restore_settlement_snapshot(snapshot, m, instance_state)
+			_report_failed_settlement(expired_title, str(settled.get("reason", "")))
+			continue
+		_log_quest_to_file(expired_title, expired_type, "Expired.")
 		print("[QuestManager] Quest expired: ", expired_title)
 		_increment_mission_history_revision("expired", expired_quest)
 		quest_expired.emit(expired_title)
@@ -504,6 +649,11 @@ func active_quest_payout() -> int:
 	payout *= float(active_quest.get("reward_credits_multiplier", 1.0))
 	if bool(active_quest.get("is_urgent", false)):
 		payout *= float(active_quest.get("urgent_reward_multiplier", 1.0))
+	if str(active_quest.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+		var investigation: Dictionary = active_quest.get("investigation", {})
+		var capability = MissionCapabilityRegistryType.get_for_type("INVESTIGATE_SIGNAL")
+		var fraction: Array = capability._payout_for(investigation, str(investigation.get("branch_id", "")), {})
+		return int(floor(payout * float(fraction[0]) / float(fraction[1])))
 	return int(round(payout))
 
 
@@ -519,7 +669,9 @@ func can_restore_active_quest(source: Dictionary) -> bool:
 
 
 func restore_active_quest(source: Dictionary) -> bool:
+	_investigation_runtime.reset()
 	if source.is_empty():
+		_investigation_world.reset(self)
 		_collection.clear()
 		last_validation_error = ""
 		return true
@@ -534,13 +686,22 @@ func restore_active_quest(source: Dictionary) -> bool:
 		return false
 	_collection.clear()
 	var inst = MissionInstanceType.from_dict(normalized)
+	_investigation_world.reset(self)
 	_collection.add(inst)
 	last_validation_error = ""
 	return true
 
 
 func restore_all_quests(source_array: Array) -> bool:
+	# Do not erase current missions or silently drop an invalid investigation.
+	# The caller can surface its recoverable load error with the old state intact.
+	for item in source_array:
+		if item is Dictionary and str(item.get("objective_type", "")) == "INVESTIGATE_SIGNAL":
+			if not can_restore_active_quest(item):
+				return false
+	_investigation_runtime.reset()
 	_collection.clear()
+	_investigation_world.reset(self)
 	last_validation_error = ""
 	for item in source_array:
 		if not item is Dictionary:
@@ -654,8 +815,109 @@ func mark_pickup_complete() -> bool:
 	quest_progress_updated.emit()
 	return true
 
+## ---------------------------------------------------------------------------
+## Guarded terminal transaction (plan P3 deliverable B)
+##
+## Every terminal path stages its durable effects in memory, checkpoints them at
+## a legal safe boundary, and rolls the whole thing back if that checkpoint
+## fails, leaving the mission retryable. No completion or reward signal is
+## emitted, and no prose is scheduled, until the result is committed.
+## ---------------------------------------------------------------------------
+
+func _capture_settlement_snapshot() -> Dictionary:
+	var instance = _collection.get_focused()
+	var story: Dictionary = {}
+	if is_instance_valid(StoryManager) and StoryManager.has_method("capture_story_state_for_checkpoint"):
+		story = StoryManager.capture_story_state_for_checkpoint()
+	return {
+		"credits": int(GlobalState.player_credits),
+		"reputations": GlobalState.reputations.duplicate(true),
+		"cargo": float(GlobalState.cargo),
+		"cargo_type": int(GlobalState.cargo_type),
+		"cargo_special": GlobalState.cargo_special.duplicate(true),
+		"inventory": GlobalState.inventory.to_dict(),
+		"board_cooldowns": _board_cooldowns.duplicate(true),
+		"story_state": story,
+		"focused_runtime_id": str(instance.runtime_id) if instance != null else "",
+	}
+
+
+func _restore_settlement_snapshot(snapshot: Dictionary, instance = null, instance_state: int = -1) -> void:
+	GlobalState.player_credits = int(snapshot.get("credits", GlobalState.player_credits))
+	GlobalState.reputations = (snapshot.get("reputations", {}) as Dictionary).duplicate(true)
+	GlobalState.cargo = float(snapshot.get("cargo", 0.0))
+	GlobalState.cargo_type = int(snapshot.get("cargo_type", GlobalState.CargoType.EMPTY))
+	GlobalState.cargo_special = (snapshot.get("cargo_special", {}) as Dictionary).duplicate(true)
+	GlobalState.inventory = PlayerInventoryType.from_dict(snapshot.get("inventory", {}))
+	GlobalState.cargo_changed.emit(GlobalState.cargo)
+	_board_cooldowns = (snapshot.get("board_cooldowns", {}) as Dictionary).duplicate(true)
+	if is_instance_valid(StoryManager) and StoryManager.has_method("restore_story_state_snapshot"):
+		StoryManager.restore_story_state_snapshot(snapshot.get("story_state", {}))
+	if instance != null:
+		# The mission goes back exactly as it was, so the player may retry it.
+		if instance_state >= 0:
+			instance.state = instance_state
+		_collection.add(instance)
+		var focus := str(snapshot.get("focused_runtime_id", ""))
+		if not focus.is_empty():
+			_collection.focus(focus)
+
+
+## The station the player is actually docked at, or null when in flight.
+func _settlement_station() -> Node3D:
+	if not is_instance_valid(GlobalState.player) or not bool(GlobalState.player.get("is_docked")):
+		return null
+	var ui = GlobalState.get_ui_manager()
+	if ui == null or not is_instance_valid(ui.current_station):
+		return null
+	return ui.current_station
+
+
+## Commit the staged result. Returns {ok, durable, reason, outcome}. `ok` false
+## means the caller must roll back; `durable` false with `ok` true means the
+## change is live but its save is pending a legal safe boundary.
+func _settle_terminal(quest_data: Dictionary, terminal_state: String, credits_paid: int) -> Dictionary:
+	if not is_instance_valid(StoryManager) or not StoryManager.has_method("stage_mission_outcome"):
+		return {"ok": true, "durable": false, "reason": "story_manager_unavailable"}
+	var scene = get_tree().current_scene
+	var campaign_id := ""
+	if scene != null and "active_campaign_slot_id" in scene:
+		campaign_id = str(scene.active_campaign_slot_id)
+	var built: Dictionary = MissionOutcomeType.build(
+		quest_data, terminal_state, credits_paid, int(CampaignClock.total_minutes), campaign_id
+	)
+	if not bool(built.get("ok", false)):
+		# A legacy or unbound mission still terminates; it simply records nothing.
+		return {"ok": true, "durable": true, "reason": str(built.get("reason", "unbuildable_outcome"))}
+	var outcome: Dictionary = built["outcome"]
+	var staged: Dictionary = StoryManager.stage_mission_outcome(outcome)
+	if not bool(staged.get("ok", false)):
+		# A duplicate or conflicting terminal record refuses the whole settlement
+		# rather than paying twice for one mission.
+		return {"ok": false, "durable": false, "reason": str(staged.get("reason", "outcome_rejected")), "outcome": outcome}
+	if not bool(staged.get("changed", false)):
+		return {"ok": true, "durable": true, "reason": str(staged.get("reason", "")), "outcome": outcome}
+	var station := _settlement_station()
+	if station != null and scene != null and scene.has_method("request_safe_checkpoint"):
+		if not bool(scene.request_safe_checkpoint("mission_settled", station)):
+			return {"ok": false, "durable": false, "reason": "checkpoint_failed", "outcome": outcome}
+		StoryManager.commit_mission_outcome_finish()
+		return {"ok": true, "durable": true, "reason": "", "outcome": outcome}
+	# In flight: apply once in the running state and keep a pending record. The
+	# next legal safe checkpoint carries the whole result; nothing here pretends
+	# an in-flight save is docked or persists tactical pose.
+	StoryManager.mark_consequence_save_pending()
+	return {"ok": true, "durable": false, "reason": "pending_safe_checkpoint", "outcome": outcome}
+
+
+func _report_failed_settlement(title: String, reason: String) -> void:
+	push_warning("[QuestManager] Settlement rolled back for '%s': %s" % [title, reason])
+
+
 func complete_quest():
-	if not is_quest_active() or not is_quest_completed():
+	if _completion_in_progress or not is_quest_active() or not is_quest_completed():
+		return
+	if str(active_quest.get("objective_type", "")) == "INVESTIGATE_SIGNAL" and not _can_turn_in_investigation(active_quest):
 		return
 	GlobalState.clear_intro_tutorial_player_protection()
 
@@ -670,44 +932,78 @@ func complete_quest():
 			return
 		_apply_completion_hints(hints)
 
+	_completion_in_progress = true
+	# Stage every durable effect before anything is announced or written.
+	var snapshot := _capture_settlement_snapshot()
+	var completed_quest: Dictionary = active_quest.duplicate(true)
+	var completed_id := str(active_quest.get("runtime_id", ""))
+	var instance = _collection.get_by_id(completed_id)
+	var instance_state: int = int(instance.state) if instance != null else -1
 	var final_payout = active_quest_payout()
 	GlobalState.add_credits(final_payout)
 	GlobalState.adjust_reputation(active_quest["faction"], 5.0)
-	var completed_quest: Dictionary = active_quest.duplicate(true)
 	completed_quest["completed_time_minutes"] = CampaignClock.total_minutes
 	completed_quest["final_payout"] = final_payout
-
-	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + active_quest["choice_text_selected"] + "'."
-	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], detail)
-
 	_record_board_cooldown(active_quest)
-	var completed_id := str(active_quest.get("runtime_id", ""))
-	print("[QuestManager] Quest completed successfully: ", active_quest["title"])
 	var focused = _collection.get_focused()
 	if focused:
 		_transition_to_completed(focused)
 	_collection.remove(completed_id)
+	var settled := _settle_terminal(completed_quest, "completed", int(final_payout))
+	if not bool(settled.get("ok", false)):
+		# The kit consumed at resolution is restored with everything else, so a
+		# retry neither double-consumes it nor pays twice.
+		_restore_settlement_snapshot(snapshot, instance, instance_state)
+		_report_failed_settlement(str(completed_quest.get("title", "")), str(settled.get("reason", "")))
+		_completion_in_progress = false
+		return
+	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + str(completed_quest.get("choice_text_selected", "")) + "'."
+	_log_quest_to_file(str(completed_quest["title"]), str(completed_quest["objective_type"]), detail)
+	print("[QuestManager] Quest completed successfully: ", completed_quest["title"])
+	if not bool(settled.get("durable", true)):
+		push_warning("[QuestManager] Completion consequences are live but their save is pending a safe checkpoint.")
 	_increment_mission_history_revision("completed", completed_quest)
 	quest_completed.emit()
 	quest_completed_details.emit(completed_quest)
+	_completion_in_progress = false
+	_investigation_runtime.reset()
+
+
+func _can_turn_in_investigation(data: Dictionary) -> bool:
+	if GlobalState.current_system_id != str(data.get("system_id", "")) or not is_instance_valid(GlobalState.player) or not bool(GlobalState.player.get("is_docked")):
+		return false
+	var ui = GlobalState.get_ui_manager()
+	if ui == null or not is_instance_valid(ui.current_station):
+		return false
+	var station = ui.current_station
+	var expected := str(data.get("turn_in_station_id", ""))
+	return (station.has_method("get_world_id") and str(station.get_world_id()) == expected) or GlobalState.resolve_outpost_id(station) == expected or str(station.name) == expected
 
 func abandon_quest():
 	if not is_quest_active():
 		return
+	_investigation_runtime.reset()
 	GlobalState.clear_intro_tutorial_player_protection()
 
-	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
-	_log_quest_to_file(active_quest["title"], active_quest["objective_type"], "Abandoned.")
+	var snapshot := _capture_settlement_snapshot()
 	var abandoned_quest: Dictionary = active_quest.duplicate(true)
-	abandoned_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
-
-	_record_board_cooldown(active_quest)
 	var abandoned_id := str(active_quest.get("runtime_id", ""))
-	print("[QuestManager] Quest abandoned: ", active_quest["title"])
+	var instance = _collection.get_by_id(abandoned_id)
+	var instance_state: int = int(instance.state) if instance != null else -1
+	GlobalState.adjust_reputation(active_quest["faction"], -3.0)
+	abandoned_quest["abandoned_time_minutes"] = CampaignClock.total_minutes
+	_record_board_cooldown(active_quest)
 	var focused = _collection.get_focused()
 	if focused:
 		focused.transition_to(MissionInstanceType.State.ABANDONED)
 	_collection.remove(abandoned_id)
+	var settled := _settle_terminal(abandoned_quest, "abandoned", 0)
+	if not bool(settled.get("ok", false)):
+		_restore_settlement_snapshot(snapshot, instance, instance_state)
+		_report_failed_settlement(str(abandoned_quest.get("title", "")), str(settled.get("reason", "")))
+		return
+	_log_quest_to_file(str(abandoned_quest["title"]), str(abandoned_quest["objective_type"]), "Abandoned.")
+	print("[QuestManager] Quest abandoned: ", abandoned_quest["title"])
 	_increment_mission_history_revision("abandoned", abandoned_quest)
 	quest_abandoned.emit()
 	quest_abandoned_details.emit(abandoned_quest)

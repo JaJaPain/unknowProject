@@ -4,7 +4,7 @@ const StoryStateStoreType := preload(
 	"res://scripts/persistence/StoryStateStore.gd"
 )
 
-const TEST_ROOT := "user://story_state_migration_fixture"
+const TEST_ROOT := "res://.tmp_godot_user/story_state_migration_fixture"
 
 var _failures: Array[String] = []
 
@@ -118,11 +118,7 @@ func _test_new_story_state_fields_validate_type_and_range() -> void:
 
 
 func _write_legacy_story_state() -> void:
-	var user_dir := DirAccess.open("user://")
-	if user_dir == null:
-		_expect(false, "Could not open user:// for story-state migration fixture.")
-		return
-	var mkdir_error := user_dir.make_dir_recursive("story_state_migration_fixture")
+	var mkdir_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TEST_ROOT))
 	if mkdir_error != OK:
 		_expect(false, "Could not create story-state migration fixture directory.")
 		return
@@ -149,6 +145,11 @@ func _cleanup() -> void:
 
 
 func _remove_tree(path: String) -> void:
+	var resolved := ProjectSettings.globalize_path(path).simplify_path()
+	var fixture_root := ProjectSettings.globalize_path(TEST_ROOT).simplify_path()
+	if resolved != fixture_root and not resolved.begins_with(fixture_root + "/"):
+		_expect(false, "Refusing cleanup outside the test fixture.")
+		return
 	var dir := DirAccess.open(path)
 	if dir == null:
 		return

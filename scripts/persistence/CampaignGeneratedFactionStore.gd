@@ -2,6 +2,7 @@ class_name CampaignGeneratedFactionStore
 extends RefCounted
 
 const DomainIdType := preload("res://scripts/domain/DomainId.gd")
+const DesireType := preload("res://scripts/persistence/GeneratedFactionDesire.gd")
 const DomainJsonType := preload("res://scripts/domain/DomainJson.gd")
 const TransactionStoreType := preload(
 	"res://scripts/persistence/CampaignTransactionStore.gd"
@@ -104,12 +105,21 @@ func ensure_frontier_batch(seed_text: String, count: int = 6) -> Dictionary:
 func reveal_next_for_system(system_id: String, count: int = 2) -> Dictionary:
 	if not is_valid():
 		return _failure("Generated faction store is invalid.")
+	if system_id.strip_edges().is_empty():
+		return _failure("A destination system is required.")
+	count = clampi(count, 2, 4)
+	# Revisit/retry must return the assigned roster, never consume more factions.
+	for record in data.get("reveal_history", []):
+		if record is Dictionary and str(record.get("system_id", "")) == system_id:
+			return {"ok": true, "revealed": record.get("faction_ids", []).duplicate(),
+				"revealed_faction_ids": revealed_faction_ids(), "created": 0}
+	var local_records := generate_system_factions(str(data.get("campaign_seed", "")), system_id, count)
 	var revealed := revealed_faction_ids()
 	var revealed_lookup := {}
 	for id in revealed:
 		revealed_lookup[id] = true
 	var newly_revealed: Array[String] = []
-	for faction in all_factions():
+	for faction in local_records:
 		if newly_revealed.size() >= count:
 			break
 		if not faction is Dictionary:
@@ -122,6 +132,9 @@ func reveal_next_for_system(system_id: String, count: int = 2) -> Dictionary:
 	if newly_revealed.is_empty():
 		return {"ok": true, "revealed": [], "revealed_faction_ids": revealed}
 	var prepared := data.duplicate(true)
+	var records: Array = prepared.get("factions", []).duplicate(true)
+	records.append_array(local_records)
+	prepared["factions"] = records
 	var next_revealed := revealed.duplicate()
 	next_revealed.append_array(newly_revealed)
 	prepared["revealed_faction_ids"] = next_revealed
@@ -138,9 +151,39 @@ func reveal_next_for_system(system_id: String, count: int = 2) -> Dictionary:
 	data = prepared
 	return {
 		"ok": true,
+		"created": local_records.size(),
 		"revealed": newly_revealed,
 		"revealed_faction_ids": next_revealed,
 	}
+
+
+## Stable per campaign and system, independent of exploration order.
+static func generate_system_factions(seed_text: String, system_id: String, count: int = 2) -> Array:
+	var scope := "%s|%s" % [seed_text, system_id]
+	var scope_id := scope.sha256_text().substr(0, 12)
+	var output: Array = []
+	var syllables := ["va", "ren", "ko", "tal", "esh", "mir", "dra", "sol", "an", "vek", "ru", "tor", "il", "nak", "zen", "or"]
+	for index in range(clampi(count, 2, 4)):
+		var faction := _generate_faction(scope, index)
+		var digest := (scope + "|" + str(index)).sha256_text()
+		var local_name := ""
+		for position in range(4):
+			local_name += syllables[digest.substr(position, 1).hex_to_int()]
+		faction["id"] = "%s%s.f%d" % [GENERATED_PREFIX, scope_id, index]
+		faction["legacy_id"] = "gen_%s_f%d" % [scope_id, index]
+		faction["display_name"] = "%s %s" % [local_name.capitalize(), str(faction["descriptor"])]
+		faction["abbreviation"] = local_name.left(3).to_upper()
+		faction["home_system_id"] = system_id
+		# Draw compatible reasons for newly created factions. Existing system
+		# rosters are loaded from their saved records, never regenerated here.
+		faction["desire"] = DesireType.build(scope, scope_id, index)
+		# Generated badges already carry identity; never reuse a tutorial crest.
+		faction["ship_style"]["emblem"] = "none"
+		output.append(faction)
+	# Directed and asymmetric: how A sees B is drawn separately from how B sees
+	# A, and dependency/cooperation/indifference are as likely as friction.
+	DesireType.build_relationships(scope, output)
+	return output
 
 
 func prompt_context(revealed_only: bool = false) -> String:
@@ -426,6 +469,39 @@ static func _validate_data(value: Dictionary, campaign_id: String) -> Validation
 			result.add_error("invalid_faction_record", "Faction record must be an object.", "factions.%d" % index)
 			continue
 		_validate_faction(faction, result, "factions.%d" % index, seen)
+	var homes := {}
+	for faction in value.get("factions", []):
+		if faction is Dictionary:
+			homes[str(faction.get("id", ""))] = str(faction.get("home_system_id", ""))
+	for faction in value.get("factions", []):
+		if not faction is Dictionary or not faction.has("home_system_id"):
+			continue # Existing campaign-wide records remain valid.
+		var home := str(faction.get("home_system_id", ""))
+		var desire: Variant = faction.get("desire", {})
+		if home.is_empty() or not desire is Dictionary:
+			result.add_error("invalid_local_desire", "Local faction requires a home and desire.", "factions")
+			continue
+		for field in ["id", "goal", "need", "stake"]:
+			if str(desire.get(field, "")).strip_edges().is_empty():
+				result.add_error("missing_local_desire_field", "Local desire field is required.", "factions.desire.%s" % field)
+		var intents: Variant = desire.get("mission_intents", [])
+		if not intents is Array or intents.is_empty():
+			result.add_error("invalid_local_intents", "Local desire needs mission intents.", "factions.desire")
+		var relations: Variant = faction.get("relationships", [])
+		if not relations is Array or relations.is_empty():
+			result.add_error("invalid_local_relationships", "Local faction needs peer opinions.", "factions.relationships")
+			continue
+		for relation in relations:
+			if not relation is Dictionary:
+				result.add_error("invalid_local_relationship", "Opinion must be an object.", "factions.relationships")
+				continue
+			var peer := str(relation.get("faction_id", ""))
+			if peer == str(faction.get("id", "")) or not homes.has(peer) or homes[peer] != home:
+				result.add_error("invalid_local_peer", "Opinion must reference another faction in this system.", "factions.relationships")
+			if not relation.get("standing") is float and not relation.get("standing") is int:
+				result.add_error("invalid_local_standing", "Opinion standing must be numeric.", "factions.relationships")
+			elif absf(float(relation["standing"])) > 100.0:
+				result.add_error("invalid_local_standing", "Opinion standing must be within -100 to 100.", "factions.relationships")
 	for id in value.get("revealed_faction_ids", []):
 		if not seen.has(str(id)):
 			result.add_error(

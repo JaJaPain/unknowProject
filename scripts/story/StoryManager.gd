@@ -14,6 +14,14 @@ extends Node
 # HOW TO FIND:    grep _SQ_DEBUG in scripts/story/StoryManager.gd
 # DO NOT SHIP with _SQ_DEBUG = true.
 const _SQ_DEBUG := false
+
+const LocalPressureDirectorType := preload("res://scripts/story/LocalPressureDirector.gd")
+const DesireProgressLedgerType := preload("res://scripts/story/DesireProgressLedger.gd")
+const MissionOutcomeType := preload("res://scripts/domain/MissionOutcome.gd")
+
+## Set when a terminal outcome was applied in flight and its consequences are
+## not yet durable. Reported truthfully; retried only at a legal safe boundary.
+var _pending_consequence_save := false
 var _sq_debug_fired := false   # guard: only fires once per session
 
 const StoryStateStoreType := preload(
@@ -1240,6 +1248,214 @@ func get_ambient_flavor_block() -> String:
 	return "\n".join(lines)
 
 
+## These commands are for the board presenter. Preparation does not retire a
+## shape; publication only returns a posting after its ownership is durable.
+## The local entry points derive authority from the current campaign/world.
+const INVESTIGATION_BOARD_BUDGET := 400
+var _investigation_accepting := false
+
+func _local_investigation_context(station: Node3D) -> Dictionary:
+	if not is_instance_valid(station) or not station.is_in_group("station"):
+		return {}
+	var board = preload("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var config = board._current_system_config()
+	if config == null:
+		return {}
+	var station_id := str(station.get_world_id()) if station.has_method("get_world_id") else str(station.name)
+	var station_display := str(station.get("display_name")) if "display_name" in station else ""
+	if station_display.is_empty():
+		station_display = str(station.name).replace("_", " ")
+	var world := preload("res://scripts/domain/InvestigationWorldPlacement.gd").capture(self)
+	return {"campaign_id": board._campaign_id(), "campaign_seed": GlobalState.campaign_seed,
+		"system_id": str(GlobalState.current_system_id), "station_id": station_id,
+		"station_display": station_display,
+		"post_tutorial_unlocked": bool(story_state.get("first_contract_handed_in", false)),
+		"reward_budget": INVESTIGATION_BOARD_BUDGET,
+		"agendas": config.story_pack.get("faction_agendas", []), "world": world}
+
+
+func prepare_local_investigation_board_offer(station: Node3D) -> Dictionary:
+	return prepare_investigation_board_offer(_local_investigation_context(station))
+
+
+func publish_local_investigation_board_offer(prepared: Dictionary, station: Node3D) -> Dictionary:
+	return publish_investigation_board_offer(prepared, _local_investigation_context(station))
+
+
+func accept_local_investigation_board_offer(offer_id: String, station: Node3D) -> Dictionary:
+	if _investigation_accepting or QuestManager.is_lane_occupied("BOARD"):
+		return {"ok": false, "reason": "board_job_already_active"}
+	var scene := get_tree().current_scene
+	if scene == null or not scene.has_method("request_safe_checkpoint") or not is_instance_valid(GlobalState.player) or not bool(GlobalState.player.get("is_docked")):
+		return {"ok": false, "reason": "dock_before_accepting"}
+	var ui := GlobalState.get_ui_manager()
+	if ui == null or ui.current_station != station:
+		return {"ok": false, "reason": "wrong_posting_station"}
+	var context := _local_investigation_context(station)
+	var board = preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
+	var current: Dictionary = story_state.get("investigation_board", {})
+	var entry: Dictionary = current.get("entries", {}).get(offer_id, {})
+	if entry.is_empty() or entry.get("status", "") != "published":
+		return {"ok": false, "reason": "posting_unavailable"}
+	var checked: Dictionary = board.publish(current, offer_id, context)
+	if not bool(checked.get("ok", false)): return checked
+	_investigation_accepting = true
+	var previous_story := story_state.duplicate(true)
+	var focused = QuestManager.get_mission_collection().get_focused()
+	var prior_focus := str(focused.runtime_id) if focused != null else ""
+	var quest: Dictionary = checked["posting"]["quest_data"]
+	if not QuestManager.accept_quest(quest, quest["choices"][0], true):
+		_investigation_accepting = false
+		return {"ok": false, "reason": QuestManager.last_validation_error}
+	var runtime_id := str(QuestManager.active_quest["runtime_id"])
+	story_state["investigation_board"] = board.release(current, offer_id)
+	# Both the active mission and retired posting are in this same checkpoint.
+	# No acceptance event escapes before it is durable.
+	if not bool(scene.request_safe_checkpoint("investigation_accepted", station)):
+		QuestManager.get_mission_collection().remove(runtime_id)
+		if not prior_focus.is_empty(): QuestManager.get_mission_collection().focus(prior_focus)
+		story_state = previous_story
+		_investigation_accepting = false
+		return {"ok": false, "reason": "checkpoint_failed"}
+	_investigation_accepting = false
+	QuestManager.announce_accepted_mission(runtime_id)
+	QuestManager.reconcile_investigation_sites()
+	_save_story_state()
+	return {"ok": true, "runtime_id": runtime_id}
+
+
+func decline_local_investigation_board_offer(offer_id: String, station: Node3D) -> Dictionary:
+	var board = preload("res://scripts/domain/InvestigationBoardLifecycle.gd")
+	var current: Dictionary = story_state.get("investigation_board", {})
+	var entry: Dictionary = current.get("entries", {}).get(offer_id, {})
+	if entry.is_empty() or str(entry.get("owner", "")) != board._owner(_local_investigation_context(station)):
+		return {"ok": false, "reason": "posting_unavailable"}
+	if _story_state_store == null or not _story_state_store.is_valid():
+		return {"ok": false, "reason": "story_store_unavailable"}
+	var next := story_state.duplicate(true)
+	next["investigation_board"] = board.release(current, offer_id)
+	var saved: Dictionary = _story_state_store.save_state(next)
+	if not bool(saved.get("ok", false)): return {"ok": false, "reason": "story_save_failed"}
+	story_state = next
+	return {"ok": true}
+
+
+func prepare_investigation_board_offer(context: Dictionary) -> Dictionary:
+	return preload("res://scripts/domain/InvestigationBoardLifecycle.gd").prepare(
+		story_state.get("investigation_board", {}), context)
+
+
+func publish_investigation_board_offer(prepared: Dictionary, context: Dictionary) -> Dictionary:
+	if not bool(prepared.get("ok", false)):
+		return prepared
+	# A stale async preparation must never overwrite newer publication/history.
+	var fresh := prepare_investigation_board_offer(context)
+	if not bool(fresh.get("ok", false)) or fresh.get("state", {}) != prepared.get("state", {}):
+		return {"ok": false, "reason": "stale_preparation"}
+	var published := preload("res://scripts/domain/InvestigationBoardLifecycle.gd").publish(
+		prepared["state"], str(prepared["offer_id"]), context)
+	if not bool(published.get("ok", false)):
+		return published
+	if published["state"] == story_state.get("investigation_board", {}):
+		return published
+	if _story_state_store == null or not _story_state_store.is_valid():
+		return {"ok": false, "reason": "story_store_unavailable"}
+	var next := story_state.duplicate(true)
+	next["investigation_board"] = published["state"]
+	var committed: Dictionary = _story_state_store.save_state(next)
+	if not bool(committed.get("ok", false)):
+		return {"ok": false, "reason": "story_save_failed"}
+	story_state = next
+	return published
+
+
+## Stage a committed terminal outcome into story state IN MEMORY. The caller
+## checkpoints the result and then calls `commit_mission_outcome_finish()`, or
+## rolls back with `restore_story_state_snapshot()`. Nothing is saved here and no
+## prose is generated: a half-staged transaction must never reach the player.
+func stage_mission_outcome(outcome: Dictionary) -> Dictionary:
+	var validation := MissionOutcomeType.validate(outcome)
+	if not validation.is_valid():
+		return {"ok": false, "reason": str(validation.errors[0].get("code", "invalid_outcome"))}
+	if bool(outcome.get("tutorial", false)):
+		# Tutorial missions are explicitly excluded from pressure and desires.
+		return {"ok": true, "changed": false, "reason": "tutorial_excluded", "deltas": []}
+	var previous := story_state.duplicate(true)
+	var deltas: Array = []
+	var pressures: Dictionary = story_state.get("local_pressures", {}) if story_state.get("local_pressures", {}) is Dictionary else {}
+	var applied: Dictionary = LocalPressureDirectorType.apply_outcome(pressures, outcome,
+		{"campaign_seed": int(story_state.get("campaign_seed", 0))})
+	if not bool(applied.get("ok", false)):
+		var reason := str(applied.get("reason", "pressure_rejected"))
+		# Idempotency and conflict are decisions, not crashes: leave state alone.
+		if reason in ["duplicate_outcome", "conflicting_terminal_outcome"]:
+			return {"ok": false, "reason": reason, "previous_story": previous}
+		push_warning("[StoryManager] Local pressure rejected an outcome: %s" % reason)
+	else:
+		story_state["local_pressures"] = applied["state"]
+		deltas.append_array(applied.get("deltas", []))
+	var progress: Dictionary = story_state.get("desire_progress", {}) if story_state.get("desire_progress", {}) is Dictionary else {}
+	var projected: Dictionary = DesireProgressLedgerType.apply_outcome(progress, outcome,
+		{"satisfying_effect_ids": _proven_desire_predicates(outcome)})
+	if bool(projected.get("ok", false)):
+		story_state["desire_progress"] = projected["state"]
+		deltas.append_array(projected.get("deltas", []))
+	else:
+		push_warning("[StoryManager] Desire progress rejected an outcome: %s" % str(projected.get("reason", "")))
+	story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
+	return {"ok": true, "changed": true, "reason": "", "deltas": deltas, "previous_story": previous}
+
+
+## Which effect kinds are allowed to CLOSE this outcome's desire. A supported
+## effect proves its own record; it does not automatically clear a faction's
+## name, file a legal survey or reopen a route. Until a campaign resolution plan
+## binds an interest to an effect (deliverable D), nothing closes a desire.
+func _proven_desire_predicates(outcome: Dictionary) -> Array:
+	var plan: Dictionary = story_state.get("resolution_plan", {}) if story_state.get("resolution_plan", {}) is Dictionary else {}
+	if plan.is_empty() or str(plan.get("status", "")) != "active":
+		return []
+	var proven: Array = []
+	for raw: Variant in plan.get("interests", []):
+		if not raw is Dictionary:
+			continue
+		var interest: Dictionary = raw
+		if str(interest.get("desire_id", "")) != str(outcome.get("desire_id", "")) 				or str(interest.get("system_id", "")) != str(outcome.get("system_id", "")) 				or str(interest.get("faction_id", "")) != str(outcome.get("faction_id", "")):
+			continue
+		for effect_id: Variant in interest.get("supported_effect_ids", []):
+			if str(effect_id) not in proven:
+				proven.append(str(effect_id))
+	return proven
+
+
+## Persist a staged outcome after its checkpoint succeeded.
+func commit_mission_outcome_finish() -> void:
+	_pending_consequence_save = false
+	_save_story_state()
+
+
+## Restore a pre-staging snapshot after a failed settlement checkpoint.
+func restore_story_state_snapshot(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	story_state = snapshot.duplicate(true)
+
+
+## An in-flight terminal change is applied once in the running state and stays
+## pending until the next legal safe checkpoint includes it. This never pretends
+## an in-flight save is docked and never persists tactical pose.
+func mark_consequence_save_pending() -> void:
+	_pending_consequence_save = true
+
+
+func has_pending_consequence_save() -> bool:
+	return _pending_consequence_save
+
+
+func local_pressure_constraints(system_id: String) -> Array:
+	var pressures: Dictionary = story_state.get("local_pressures", {}) if story_state.get("local_pressures", {}) is Dictionary else {}
+	return LocalPressureDirectorType.offer_constraints(pressures, system_id)
+
+
 func _save_story_state() -> void:
 	if _story_state_store == null or not _story_state_store.is_valid():
 		return
@@ -1435,6 +1651,7 @@ func schedule_beat_after_delay_min(beat_id: String, delay_min: float) -> void:
 # ── GameRoot event hooks ──────────────────────────────────────────────────────
 
 func on_system_arrived(system_id: String) -> void:
+	advance_outcome_activity(true)
 	if _record_fixed_cast_character_event("system_arrived", {"system_id": system_id}):
 		_save_story_state()
 	_check_delay_beats()
@@ -1474,6 +1691,7 @@ func _on_ship_destroyed(faction: String) -> void:
 
 
 func on_docked(station) -> void:
+	advance_outcome_activity(true)
 	if _record_fixed_cast_character_event("docked"):
 		_save_story_state()
 	_dock_count_session += 1
@@ -1579,6 +1797,13 @@ func has_spoken_intro_first_dock_line() -> bool:
 
 
 func on_quest_completed(quest: Dictionary) -> void:
+	advance_outcome_activity()
+	var old_memories: Array = story_state.get("local_outcome_memories", []) if story_state.get("local_outcome_memories", []) is Array else []
+	var memories := OutcomeReactionProjector.remember_completed(old_memories, quest, int(story_state.get("local_outcome_step", 0)))
+	if memories != old_memories:
+		story_state["local_outcome_memories"] = memories
+		story_state["story_revision"] = maxi(0, int(story_state.get("story_revision", 0))) + 1
+		_save_story_state()
 	_check_delay_beats()
 	# One-way latch for the mission card's first-turn-in flash. Set here rather
 	# than on the UI side so it covers every hand-in path.
@@ -1587,6 +1812,32 @@ func on_quest_completed(quest: Dictionary) -> void:
 		_save_story_state()
 	record_mission_outcome_consequence(quest, "completed")
 	_resolve_hooks_for_quest(quest)
+
+
+func advance_outcome_activity(new_visit: bool = false) -> void:
+	story_state["local_outcome_step"] = int(story_state.get("local_outcome_step", 0)) + 1
+	if new_visit:
+		story_state["local_outcome_visit"] = int(story_state.get("local_outcome_visit", 0)) + 1
+	_save_story_state()
+
+
+func outcome_reaction_candidate(speaker: String, system_id: String) -> Dictionary:
+	return OutcomeReactionProjector.eligible_reaction(story_state.get("local_outcome_memories", []),
+		speaker, system_id, int(story_state.get("local_outcome_step", 0)), int(story_state.get("local_outcome_visit", 0)))
+
+
+func record_outcome_reaction_attempt(identity: String, phase: String, presented: bool) -> void:
+	var memories := OutcomeReactionProjector.normalize_memories(story_state.get("local_outcome_memories", []))
+	for entry in memories:
+		if entry["id"] != identity:
+			continue
+		entry["attempted_step"] = int(story_state.get("local_outcome_step", 0))
+		if presented:
+			entry["callback_delivered" if phase == "callback" else "immediate_delivered"] = true
+			entry["delivered_step"] = int(story_state.get("local_outcome_step", 0))
+			entry["delivered_visit"] = int(story_state.get("local_outcome_visit", 0))
+	story_state["local_outcome_memories"] = memories
+	_save_story_state()
 
 
 func record_mission_outcome_consequence(

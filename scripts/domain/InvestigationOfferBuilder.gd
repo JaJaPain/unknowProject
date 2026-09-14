@@ -27,7 +27,8 @@ static func build_objective(
 	placement: Dictionary,
 	budget: int,
 	turn_in_station_id: String,
-	claimant_faction_ids: Array = []
+	claimant_faction_ids: Array = [],
+	system_id: String = ""
 ) -> Dictionary:
 	if not bool(placement.get("ok", false)):
 		return {"ok": false, "reason": str(placement.get("reason", "no_safe_sites"))}
@@ -39,6 +40,7 @@ static func build_objective(
 	var sites := _build_sites(mission_id, recipe, rng, placement, claimant_faction_ids)
 	var site_ids: Array[String] = []
 	for site in sites:
+		site["system_id"] = system_id
 		site_ids.append(str(site["id"]))
 
 	var investigation := {

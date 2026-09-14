@@ -75,6 +75,8 @@ func load_from_dict(source: Dictionary) -> ValidationResult:
 	)
 
 	match objective_type:
+		ObjectiveType.TYPE_INVESTIGATE_SIGNAL:
+			result.merge(ObjectiveType.InvestigationValidator.validate(source))
 		ObjectiveType.TYPE_KILL_SHIPS:
 			_require_positive(source, "count_required", result)
 			if int(source.get("current_count", -1)) < 0:

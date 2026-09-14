@@ -127,8 +127,12 @@ static func _draw(state: Dictionary, eligible_shape_ids: Array) -> Dictionary:
 	var bags: Dictionary = state.get("bags", {})
 	var record: Dictionary = bags.get(signature, {}) if bags.get(signature, {}) is Dictionary else {}
 	var pool := _pool(eligible_shape_ids)
-	var bag = BagType.from_dict(record.get("bag", {}), pool.size())
-	bag.set_rng(_rng_for(state))
+	var rng := _rng_for(state)
+	# from_dict({}) constructs with a global random seed before set_rng can run.
+	# Seed the first bag explicitly; otherwise repeated speculative preparation
+	# can disagree even though the campaign and eligible causes did not change.
+	var bag = BagType.from_dict(record["bag"], pool.size()) if record.has("bag") else BagType.new(pool.size(), maxi(1, int(rng.randi())))
+	bag.set_rng(rng)
 	var picked: Dictionary = bag.next(pool)
 	if picked.is_empty():
 		return {}

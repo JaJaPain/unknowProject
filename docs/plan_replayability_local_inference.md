@@ -33,9 +33,20 @@ my misreading and cost the gate nothing but delay.
 
 **Slice log:**
 
+**2026-09-11 — End-goal faction foundation:** Abe requested as much implementation
+as practical with player testing deferred. New generated systems now receive
+their own persisted 2–4 faction roster; the campaign pool no longer limits new
+identities. Tutorial factions are excluded from normal new-system generation and
+minor spawn fallback. Local desires/opinions generate board causes, with ownership
+IDs preserved through mission normalization. Saved configurations and old faction
+records remain compatible. Seven focused suites pass and all 342 scripts compile.
+This does not mark H1–H5 passed: finite desires are groundwork for P3, not a claim
+of fully unique reasons or endings. See whileYouWasSleeping.md for exact scope.
+
 | Slice | State | Notes |
 |---|---|---|
-| P4-5 dispatch switch | **BLOCKED -- no dispatch exists** | Attempting the switch found that the LLM mission-conversation path is DORMANT. `MissionConversationCompiler.build_prompt()` and `parse_bundle()` have **zero external call sites**; no `mission_conversation` job kind is handled by `GameRoot._process_narrative_cache_job`. Every mission conversation is produced by `StoryAgentOfferBuilder._attach_mission_conversation` via `fallback_bundle()` -- the deterministic template composer -- which unconditionally sets `mission_dialogue_bundle_degraded = true`, reason `template_safe_emergency_composer`, and records a `record_fallback` diagnostic every time. **By Abe's own "fallbacks are failures" rule, mission dialogue is in a standing, permanent failure state.** So there is nothing to switch: wiring slices into dispatch would mean BUILDING the LLM conversation path, not redirecting it -- a materially larger job that introduces live generation into a path which currently cannot fail. The slicing work (P4-3, P4-4) is complete and tested and remains correct preparation for that path; it is simply not yet reachable. **Decision needed from Abe** before proceeding. **Plan written 2026-09-10: `docs/plan_mission_conversation_llm_path.md`**, six ordered slices with every seam located, estimated 5-7 hours -- sized for one fresh window. |
+| P4-6 outcome memories and callbacks | **IMPLEMENTED; live author review pending, 2026-09-11** | Completed investigation memories feed the existing quiet-moment slot with unchanged fixed-cast souls. N.O.V.A. reacts in flight; Kaelen at primary-station services. Activity/visit eligibility, four-step expiry, persisted attempts and first-text retirement bound delivery. Dedicated callbacks replace ordinary-packet memory injection. Deterministic consumer tests pass; live quality and performance qualification remain open. |
+| P4-5 dispatch switch | **IMPLEMENTED; player review passed 2026-09-11** | S1-S5 are implemented by the mission-conversation path plan; Abe confirmed the player checklist complete. Quantitative source-rate/latency qualification remains open. |
 | P4-4 scheduler slice dependencies | **DONE** | `NarrativeCacheScheduler.queue_conversation_slices()` queues one job per slice with its own job_id and cache_key (distinct keys matter -- identical ones would be deduped back into a single job and the slicing would be silently undone). New `dependencies_met()` / `waiting_jobs()` gate selection: a queued job with unmet dependencies is WAITING, not pending, so an intent answer can never be generated before the opening it has to follow. The opening keeps the caller's priority and intent slices sit one band lower, so the player never waits on work they cannot see yet. Two deliberate escape hatches: a MISSING dependency counts as met (completed jobs are cleaned up, and treating absence as unmet would strand dependants forever), and a FAILED or CANCELED dependency releases its dependants rather than blocking (one bad opening should not produce a silent conversation). `waiting_jobs()` is separate from `pending_jobs()` so a blocked queue is visibly blocked rather than looking stalled. Mutation-checked (no dependency gate: 1 fail; failed dependency blocking forever: 1). **Not yet called from GameRoot** -- dispatch still queues whole bundles. |
 | P4-3 conversation slicing | **DONE** | `MissionConversationCompiler` gains `plan_slices`, `required_output_keys_for_slice`, `build_slice_prompt`, `merge_slice`, `missing_keys` + `tests/story/run_conversation_slicing_tests.gd`. The bundle was ONE request (opening + a label and a response per intent), so one malformed field discarded all of it including the good parts, and the retry paid for that work again. Now: opening first (if only one slice lands, it should be the one the player sees), then intents batched 2 at a time. `merge_slice` NEVER overwrites an accepted key -- that is what makes partial failure cheap. `missing_keys` asks only for what is genuinely absent, so a repair costs the field not the conversation. Slice keys DROP `*_player`: button labels are machine-owned and already in the approved intent list, so asking a model to restate one spends inference to introduce a chance of getting it wrong; legacy bundles keep `*_player` and stay readable. The slice prompt REPLACES the OUTPUT section rather than appending, since two sets of instructions is how a model answers the wrong question. **Mutation testing caught a tautology in my own test** -- the cap was asserted against the constant that produced it, so raising it to 99 passed; now pinned to a literal and a slice count. |
 | P4-2 outcome reaction projector | **DONE** | `scripts/story/OutcomeReactionProjector.gd` + `tests/story/run_outcome_reaction_projector_tests.gd`. Projects a TYPED outcome into the few facts dialogue may use, replacing keyword-inferred world effects: the outcome tag is the truth and text is derived from it, never the reverse. Classifies each of `InvestigateSignalCapability`'s terminal tags as public or private. **`mistaken` is PRIVATE** and carries no summary text at all -- a mistaken certification is one the player was PAID for and never corrected on, so they may not know they were wrong; an NPC referencing it would tell them by accident, in a bark, instead of through the beat that should. An unrecognised tag is REFUSED rather than guessed, because a new outcome must be classified by a person. Payout is projected as a BAND, never a figure: an NPC quoting exact credits reads as omniscient, and invites arithmetic a model cannot check. A refusal returns the full shape so callers need no special case. Mutation-checked (letting private outcomes through: 5 fails; unknown tags defaulting to public: 2). |
@@ -722,3 +733,45 @@ Recommendations below are the executable defaults unless explicitly rejected. Ch
 - No blanket static-pool extraction/refactor, localization implementation, new title/menu, campaign-ending PDF, general bug backlog clearance or addon changes. Those have their own trackers and budgets.
 - No token-to-audio streaming or unreviewed Kokoro style-transfer claims. Cache/preparation and utterance ownership address the evidenced latency and timing failures first.
 - No implementation code in this deliverable. Records, interfaces, numerical rules, parser contracts and gates specify the work; implementation belongs to the executing agent.
+
+## Implementation status — 2026-09-13 continuation
+
+P2's first two recipes now connect supported local causes to the visible board,
+durable acceptance, discoverable mission sites, evidence controls and settlement.
+Real checkpoint tests cover saved positions and canonical ownership conversion.
+See [implementation scope](investigation_playable_loop_2026_09_13.md). This does
+not close the two-shape human gate or the remaining recipes. Player testing is
+deferred by the user. Next implement P3 activity-based pressure and durable job
+effects, followed by campaign resolutions and novelty history. Do not infer
+prose, critic or hardware qualification from the mechanical test results.
+
+## Implementation status — 2026-09-13 P3 slices A and B
+
+P3's reducer and durable terminal transaction are implemented and tested.
+
+**Slice A** — `scripts/story/LocalPressureDirector.gd` plus validated
+`data/content/local_pressure_tracks.json`. Tutorial latch, at most two active
+tracks bound to a validated system/station/faction/desire/cause, one activity step
+per committed terminal outcome, bound delta first then inactivity, two-step
+escalation, level-zero resolution with a four-resolved-job cooldown,
+least-recently-active replacement by saved RNG, campaign-wide applied-outcome
+ledger rejecting duplicate AND conflicting terminal IDs, last-four accepted-family
+pacing cap. Payouts snapshot at publication as an integer floor of the ordinary
+branch payout times the applicable MAXIMUM modifier; modifiers never stack.
+Verified: claims level-3 preserve 500, report 200, survey 400/100/200 unchanged.
+
+**Slice B** — `scripts/domain/MissionOutcome.gd` (code-owned terminal record,
+closed effect set), `scripts/story/DesireProgressLedger.gd` (satisfied/failed only
+via a typed bound predicate), the `mission_settled` checkpoint reason, and the
+QuestManager guarded terminal transaction with full rollback on a failed
+settlement save and a truthful pending record for in-flight terminals.
+
+**Limits that remain open, and must not be read as complete:** `supply` is
+runtime-ineligible and fixture-only — no validated ore-consumption cause exists,
+and raw ore is not an assay. `transmitter_lure` and `unstable_archive` stay
+prototypes; no pressure level offers them and `forced_forged` is never set. No
+pressure card is published yet, so a player cannot see a track (deliverable C).
+Nothing closes a desire until a resolution plan binds one (deliverable D). Novelty
+history is unstarted (deliverable E). These are mechanical tests only: they
+establish no prose quality, critic qualification, subjective novelty or hardware
+claim, and no player session has been run.

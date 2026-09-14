@@ -8,6 +8,82 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## Campaign uniqueness: causal contracts and dialogue quality (2026-09-11)
+_Handoff of unfinished work: `docs/claude_handoff_to_codex_2026_09_12.md`._
+_Plan: `docs/plan_campaign_uniqueness_and_dialogue_quality.md`, which carries the
+full implementation status table. Phases A-D landed 2026-09-11 (Claude)._
+
+- [x] **A -- causal quest contracts.** `QuestCausalContract` +
+  `QuestPlausibilityValidator`. A quest records WHY it exists -- requester,
+  desire, triggering event, the problem, how the objective addresses it, why
+  this pilot, where the money comes from, public vs private facts -- and is
+  checked against what the game can actually do before anyone writes dialogue.
+  Persists inside existing narrative metadata; no second persistence system.
+- [x] **B -- grounded options and question eligibility.** `QuestChoicePolicy`,
+  applied inside `MissionConversationPlan.build_plan()`. No mandatory
+  why/risk/connection trio. Options with no visible motive, no player
+  information, an unsupported action or an identical recorded result are
+  removed. **One completion path is a correct outcome**, and nothing can invent
+  an option to fill a menu.
+- [x] **C -- fact packets and the quality gate.** `DialogueFactPacket` (private
+  facts never enter the prompt) + `DialogueQualityGate` (invented numbers,
+  irrelevant answers, restated briefings, reused habitual openings,
+  self-contradiction). Runs inside the real
+  `MissionConversationGeneration.accept_response()`. `quality_passed` /
+  `quality_unknown` / `quality_rejected` recorded separately.
+- [x] **D -- richer local causes.** Twelve-dimension faction desires drawn on
+  independent seeds; full relationship spectrum, directed and asymmetric; the
+  forced every-faction-hates-its-neighbour rivalry is gone.
+
+- [x] **E (first slice) -- justify the specific item, not the category.** The
+  contract compiler now writes `fact.action_helps` from the objective's actual
+  item, quantity, target, origin and destination, and returns nothing when there
+  is not enough detail to make a real claim. Reading the real compiled facts
+  caught four bugs no test would have: a raw faction hash in player-visible
+  text, a faction obstructing itself, two mangled sentences, and ore claiming to
+  satisfy a need it cannot. All pinned by
+  `tests/domain/run_causal_fact_text_tests.gd`.
+- [ ] **E (rest) -- per-objective causes, then playable consequences.** NEXT.
+  `SystemConfig._apply_faction_story()` still emits ONE cause per mission
+  *intent*, so two jobs sharing a verb still share a requester and desire. It
+  needs to emit a cause per objective INSTANCE. Then P2 investigation runtime
+  integration (offers, sites, scans, resolution commands, saves), then the P3
+  pressure reducer so committed outcomes change which offers appear next.
+- [ ] **F -- campaign direction and endings.** Not started.
+- [ ] **G -- freshness and performance qualification.** `semantic_signature()`
+  exists and is tested; the cross-campaign history store, batch runner and
+  measurement run do not.
+
+- [x] **Run the WRITER against the real local model.** Done 2026-09-12.
+  `tools/quality_eval/run_writer_eval.gd`, real dispatch path, qwen3:4b.
+  24 slices: 12 accepted, 7 rejected by existing validators, 2 by the new gate,
+  1 parse failure. Latency p50 633ms / p95 962ms -- comfortably inside budget.
+  Found three defects no test would have: branch replies duplicating the accept
+  reply (my bug, fixed), invented "before it's too late" urgency (new check),
+  and a U+FFFD encoding artifact in an ACCEPTED line (new check).
+  **No prose quality claim.** Several accepted lines are plainly not good.
+- [ ] **Constrain the joint desire draw.** NEXT, and the writer run is the
+  evidence: one contract paired need "fuel it can afford" with goal "prove a
+  rival's manifest is fiction", and the model wrote "we need this fuel to prove
+  the manifest is fake". Independent draws contradict each other, and a
+  compiler-supplied falsehood is invisible to every downstream check.
+- [~] **Critic calibration.** STARTED 2026-09-12.
+  The CRITIC was measured and it has zero discriminative power: `pass` on 28/28
+  labeled cases, byte-identical output, copying the JSON demo in our own prompt.
+  Blocked pending an external second opinion --
+  `docs/problem_critic_always_passes.md` is the self-contained brief.
+  Generation quality itself is still unmeasured; that is the next measurement
+  once the critic question is settled.
+- [ ] **(original) Run the quality gate against the real local model.** NOTHING in phases
+  A-D was measured against inference. The held-out corpus, critic
+  false-pass/false-rejection rates, generated-vs-fallback exposure, latency
+  percentiles and the 8GB memory figure are **unmeasured**, not merely
+  unreported. The reviewer prompt and parser are tested against fixtures only.
+- [ ] **Human review of generated openings and answers.** Deferred by Abe.
+  Nothing in this work is player-approved.
+
+---
+
 ## Awaiting a human playtest (code landed, eyes/ears pending)
 _Work that is committed and green in headless tests but that only a person can
 sign off on, because the failure mode is "it sounds wrong", not "it errors"._

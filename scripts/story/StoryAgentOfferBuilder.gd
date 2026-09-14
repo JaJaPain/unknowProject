@@ -28,6 +28,8 @@ const TEMPLATE_ONLY_OBJECTIVES := [
 	"PICKUP_SPECIAL",
 ]
 
+const ConversationGeneration := preload("res://scripts/story/MissionConversationGeneration.gd")
+
 
 static func can_build(agent_profile: Dictionary) -> bool:
 	var candidate := _candidate(agent_profile)
@@ -99,7 +101,33 @@ static func build_offer(
 	var validation_result = validation.get("validation")
 	if validation_result == null or not validation_result.is_valid():
 		return {}
+	var loop := Engine.get_main_loop() as SceneTree
+	if loop != null and loop.current_scene != null and loop.current_scene.has_method("queue_mission_conversation"):
+		loop.current_scene.call("queue_mission_conversation", quest)
 	return quest
+
+
+static func prepare_saved_conversation_generation(
+	quest: Dictionary, agent_profile: Dictionary = {}
+) -> void:
+	if not quest.get("mission_dialogue_context", {}).is_empty():
+		return
+	if quest.get("mission_conversation_plan", {}).is_empty() or quest.get("mission_dialogue_bundle", {}).is_empty():
+		return
+	# Pre-LLM cached offers already retain their original candidate/budget. Use
+	# those saved facts once to migrate them, never today's different candidate.
+	var snapshot: Dictionary = quest.get("narrative_metadata", {}).get("outcome_snapshot", {})
+	var candidate: Dictionary = snapshot.get("story_candidate", {})
+	if candidate.is_empty():
+		return
+	var profile := quest.duplicate(true)
+	profile.merge(agent_profile, true)
+	ConversationGeneration.attach(
+		quest,
+		_mission_conversation_plan_source(quest, candidate, snapshot.get("challenge_budget", {})),
+		_speaker_card(profile)
+	)
+	quest["mission_dialogue_bundle_degraded_reason"] = "generation_pending_safe_template"
 
 
 static func _attach_mission_conversation(
@@ -150,24 +178,10 @@ static func _attach_mission_conversation(
 		return
 	quest["mission_conversation_plan"] = conversation_plan
 	quest["mission_dialogue_bundle"] = bundle
+	ConversationGeneration.attach(quest, mission_plan, speaker_card)
 	quest["mission_dialogue_bundle_source"] = "deterministic_fallback"
 	quest["mission_dialogue_bundle_degraded"] = true
-	quest["mission_dialogue_bundle_degraded_reason"] = "template_safe_emergency_composer"
-	var diagnostics := _generation_diagnostics()
-	if diagnostics != null and diagnostics.has_method("record_fallback"):
-		diagnostics.record_fallback(
-			"mission_conversation_bundle",
-			"template_safe_emergency_composer",
-			"StoryAgentOfferBuilder",
-			{
-				"agent_id": str(agent_profile.get("agent_id", "")),
-				"agent_name": str(quest.get("agent_name", "")),
-				"objective_type": str(mission_plan.get("objective_type", "")),
-				"story_beat_id": str(candidate.get("beat_id", "")),
-				"cause_id": str(candidate.get("cause_id", "")),
-				"relationship_tier": str(speaker_card.get("relationship_tier", "")),
-			}
-		)
+	quest["mission_dialogue_bundle_degraded_reason"] = "generation_pending_safe_template"
 
 
 static func _mission_conversation_plan_source(
@@ -190,7 +204,26 @@ static func _mission_conversation_plan_source(
 		"question_fact_ids": _string_array(candidate.get("disclosure_fact_ids", [])),
 		"completion_fact_ids": _string_array(candidate.get("completion_fact_ids", [])),
 		"difficulty_band": str(budget.get("difficulty_band", "")),
+		# The causal contract travels with the plan so the choice policy and the
+		# dialogue quality gate have grounded facts to judge against.
+		"causal_contract": _causal_contract_for(quest, candidate),
 	}
+
+
+## Offers compiled with a contract carry it on the quest; older cached offers do
+## not, and get an empty one -- which both the policy and the gate read as
+## "abstain" rather than as a failure.
+static func _causal_contract_for(quest: Dictionary, candidate: Dictionary) -> Dictionary:
+	for source in [quest, candidate]:
+		var direct: Variant = source.get("causal_contract", {})
+		if direct is Dictionary and not (direct as Dictionary).is_empty():
+			return (direct as Dictionary).duplicate(true)
+	var metadata: Variant = quest.get("narrative_metadata", {})
+	if metadata is Dictionary:
+		var nested: Variant = (metadata as Dictionary).get("causal_contract", {})
+		if nested is Dictionary:
+			return (nested as Dictionary).duplicate(true)
+	return {}
 
 
 static func _generation_diagnostics() -> Node:
@@ -227,6 +260,8 @@ static func _knowledge_candidates(candidate: Dictionary) -> Array[Dictionary]:
 
 static func _speaker_card(agent_profile: Dictionary) -> Dictionary:
 	return {
+		"voice_profile_id": str(agent_profile.get("agent_voice_profile_id", "")),
+		"soul_state": str(agent_profile.get("soul_state", "broker_neutral")),
 		"name": str(agent_profile.get("agent_name", "Local Contact")),
 		"role": str(agent_profile.get("agent_role", "Station faction contact")),
 		"relationship_tier": _relationship_tier(agent_profile),

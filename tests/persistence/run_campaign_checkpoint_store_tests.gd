@@ -4,7 +4,7 @@ var CheckpointStoreType: GDScript = null
 var SlotRegistryType: GDScript = null
 var SystemRegistryType: GDScript = null
 
-const TEST_ROOT := "user://campaign_checkpoint_fixture"
+const TEST_ROOT := "res://.tmp_godot_user/campaign_checkpoint_fixture"
 const CAMPAIGN_PATH := TEST_ROOT + "/slot_01"
 const NPC_ID := "npc.gen.fixture.mara"
 
@@ -12,6 +12,9 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
 	CheckpointStoreType = load(
 		"res://scripts/persistence/CampaignCheckpointStore.gd"
 	)
@@ -24,6 +27,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	_cleanup()
+	_test_permanent_site_position_scope()
 	_test_safe_capture_restore_and_recovery()
 	_cleanup()
 
@@ -34,6 +38,25 @@ func _initialize() -> void:
 	for failure in _failures:
 		push_error("[FAIL] %s" % failure)
 	quit(1)
+
+
+func _test_permanent_site_position_scope() -> void:
+	var site := {"position": {"x": 10, "y": 0, "z": 30}, "velocity": {"x": 9}}
+	var investigation := {"sites": [site]}
+	var state := {
+		"quest": [{"investigation": investigation}],
+		"player": {"position": {"x": 99}, "investigation": investigation},
+		"story_state": {"investigation_board": {"entries": {"fixture": {
+			"posting": {"quest_data": {"objective": {"investigation": investigation}}}
+		}}}},
+	}
+	var safe: Dictionary = CheckpointStoreType.sanitize_runtime_state(state)
+	_expect(safe.quest[0].investigation.sites[0].has("position"), "Durable mission site position was stripped.")
+	_expect(not safe.quest[0].investigation.sites[0].has("velocity"), "Mission site exemption retained tactical velocity.")
+	_expect(not safe.player.has("position"), "Ship position survived sanitization.")
+	_expect(not safe.player.investigation.sites[0].has("position"), "An unrelated investigation-shaped dictionary bypassed sanitization.")
+	_expect(safe.story_state.investigation_board.entries.fixture.posting.quest_data.objective.investigation.sites[0].has("position"), "Published site position was stripped.")
+	_expect(state.player.has("position"), "Sanitization mutated the caller's state.")
 
 
 func _test_safe_capture_restore_and_recovery() -> void:
@@ -353,6 +376,14 @@ func _test_safe_capture_restore_and_recovery() -> void:
 		).get("ok", false)),
 		"Dead gameplay state created a safe checkpoint."
 	)
+	var accepted_state := _runtime_state(999, 80.0, "dock", campaign_id)
+	var investigation_checkpoint: Dictionary = store.capture_autosave(accepted_state, {
+		"type": "docked", "system_id": "system.start", "station_id": "station.start.main",
+	}, "investigation_accepted")
+	_expect(investigation_checkpoint.get("ok", false), "Investigation acceptance checkpoint reason was rejected: %s" % investigation_checkpoint.get("error", ""))
+	var accepted_bundle: Dictionary = store.load_active_bundle()
+	_expect(accepted_bundle.get("checkpoint", {}).get("source_reason", "") == "investigation_accepted", "Persisted checkpoint lost investigation acceptance reason.")
+	_expect(not store.capture_autosave(accepted_state, {"type": "gate_arrival", "system_id": "system.start", "gate_id": "gate.start.to_test"}, "investigation_accepted").get("ok", false), "Investigation acceptance allowed a non-station checkpoint.")
 
 
 func _runtime_state(
@@ -515,6 +546,11 @@ func _count_autosave_bundle_directories() -> int:
 
 
 func _remove_directory(path: String) -> void:
+	var resolved := ProjectSettings.globalize_path(path).simplify_path()
+	var fixture := ProjectSettings.globalize_path(TEST_ROOT).simplify_path()
+	if resolved != fixture and not resolved.begins_with(fixture + "/"):
+		_expect(false, "Refusing cleanup outside checkpoint fixture.")
+		return
 	var directory := DirAccess.open(path)
 	if directory == null:
 		return

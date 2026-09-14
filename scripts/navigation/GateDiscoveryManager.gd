@@ -219,15 +219,16 @@ func _ensure_destination_generated(gate_id: String) -> void:
 	if game_root.has_method("reveal_generated_factions_for_system"):
 		var revealed: Dictionary = game_root.reveal_generated_factions_for_system(
 			dest_sys_id,
-			2
+			2 + absi(seed_val) % 3
 		)
 		if bool(revealed.get("ok", false)) \
 				and game_root.has_method("generated_factions_for_ids"):
 			frontier_factions = game_root.generated_factions_for_ids(
 				revealed.get("revealed", [])
 			)
-	if frontier_factions.is_empty() and game_root.has_method("revealed_generated_factions"):
-		frontier_factions = game_root.revealed_generated_factions()
+	if frontier_factions.size() < 2:
+		push_warning("[GateDiscovery] Destination preparation needs its own persisted faction roster.")
+		return
 	var config := SystemConfig.from_seed(
 		sys_name,
 		dest_sys_id,

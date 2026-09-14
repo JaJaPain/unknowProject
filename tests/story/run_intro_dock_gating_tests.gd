@@ -107,7 +107,7 @@ func _test_filler_is_blocked_during_loading() -> void:
 	)
 	# Kaelen is covered by the same ban -- the old guard only wrapped N.O.V.A.
 	var kaelen_blocked: Dictionary = speech.latency_filler_clip_request(
-		"Broker Kaelen", GlobalState.KAELEN_VOICE_PROFILE_ID, "llm_generation", 0.8, false, 0
+		"Broker Kaelen", root.get_node("GlobalState").KAELEN_VOICE_PROFILE_ID, "llm_generation", 0.8, false, 0
 	)
 	_expect(
 		not bool(kaelen_blocked.get("ok", false)),

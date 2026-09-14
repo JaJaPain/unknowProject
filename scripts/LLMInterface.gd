@@ -1676,6 +1676,13 @@ func request_lounge_exchange_bundle(prompt: String, callback: Callable) -> void:
 	)
 
 
+func request_mission_conversation_slice(prompt: String, callback: Callable) -> void:
+	_request_small_inner_text(
+		"mission_conversation", prompt, callback,
+		{"temperature": 0.95, "num_predict": 520, "seed": randi()}
+	)
+
+
 # A deliberately fresh request: it receives the proposed bundle as an
 # artifact, never the writer prompt or prior completion context. This lets the
 # same local model act as a skeptical editor instead of reflexively endorsing

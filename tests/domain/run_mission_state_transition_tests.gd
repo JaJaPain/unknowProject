@@ -7,15 +7,21 @@ extends SceneTree
 
 const InstanceType := preload("res://scripts/domain/MissionInstance.gd")
 const AdapterType := preload("res://scripts/domain/MissionAdapter.gd")
-const MigratorType := preload("res://scripts/persistence/SaveMigrator.gd")
-const RegistryType := preload("res://scripts/registry/SystemRegistry.gd")
+var MigratorType: GDScript
+var RegistryType: GDScript
 
-const TEST_PATH := "user://mission_state_transition_fixture.json"
+const TEST_PATH := "res://.tmp_godot_user/mission_state_transition_fixture.json"
 
 var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	MigratorType = load("res://scripts/persistence/SaveMigrator.gd")
+	RegistryType = load("res://scripts/registry/SystemRegistry.gd")
 	_cleanup()
 	_test_transition_rules()
 	_test_ready_state_round_trips_through_dict()
@@ -115,8 +121,8 @@ func _test_objective_completion_marks_ready_and_persists() -> void:
 				== "READY_TO_TURN_IN",
 		"capture_all_quests did not carry the ready state."
 	)
-	var registry := RegistryType.load_default()
-	var prepared := MigratorType.prepare_for_save(
+	var registry = RegistryType.load_default()
+	var prepared: Dictionary = MigratorType.prepare_for_save(
 		_runtime_save(quest_array),
 		registry
 	)
@@ -129,7 +135,7 @@ func _test_objective_completion_marks_ready_and_persists() -> void:
 		return
 	_write_text(TEST_PATH, JSON.stringify(prepared["data"]))
 	qm.reset_for_restart()
-	var loaded := MigratorType.load_for_runtime(
+	var loaded: Dictionary = MigratorType.load_for_runtime(
 		TEST_PATH,
 		RegistryType.load_default()
 	)
@@ -190,10 +196,7 @@ func _test_timed_contract_expires_while_ready() -> void:
 		"Timed mission objective completion did not mark ready."
 	)
 	clock.advance_minutes(10)
-	_expect(
-		qm.check_active_quest_expiration(),
-		"Deadline passing did not expire the ready mission."
-	)
+	# The registered time_changed consumer expires it during advance_minutes.
 	_expect(
 		instance.state == InstanceType.State.EXPIRED,
 		"Expiration from READY_TO_TURN_IN did not land in EXPIRED."

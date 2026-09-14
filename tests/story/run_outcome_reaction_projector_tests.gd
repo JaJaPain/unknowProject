@@ -22,6 +22,7 @@ func _initialize() -> void:
 	_test_facts_stay_few()
 	_test_payout_is_a_band_never_a_figure()
 	_test_refusal_is_not_an_error()
+	_test_persisted_outcome_memories()
 	if _failures.is_empty():
 		print("[PASS] Outcome reaction projector tests")
 		quit(0)
@@ -130,6 +131,42 @@ func _test_refusal_is_not_an_error() -> void:
 		_expect(result.has("facts") and result.has("consequence"),
 			"A refusal must still return the full shape so callers need no special case.")
 		_expect((result["facts"] as Array).is_empty(), "A refusal must carry no facts.")
+
+
+func _test_persisted_outcome_memories() -> void:
+	var mission := {"runtime_id": "investigation.1", "system_id": "system.a",
+		"objective_type": "INVESTIGATE_SIGNAL", "completed_time_minutes": 10,
+		"investigation": {"phase": "ready", "outcome_tag": "preserved", "secret": "PRIVATE_SENTINEL"}}
+	var ledger := ProjectorType.remember_completed([], mission)
+	_expect(ledger.size() == 2, "One committed outcome must produce one memory per fixed-cast speaker")
+	_expect(ProjectorType.remember_completed(ledger, mission) == ledger, "Duplicate completion must not duplicate memories")
+	var unknown := mission.duplicate(true)
+	unknown["investigation"]["outcome_tag"] = "mistaken"
+	_expect(ProjectorType.remember_completed([], unknown).is_empty(), "Private mistaken certification must not enter either speaker's memory")
+	unknown = mission.duplicate(true)
+	unknown.erase("completed_time_minutes")
+	_expect(ProjectorType.remember_completed([], unknown).is_empty(), "Hypothetical or unfinished mission must not enter memory")
+	ledger[0]["text"] = "PRIVATE_SENTINEL"
+	var restored := ProjectorType.normalize_memories(JSON.parse_string(JSON.stringify(ledger)))
+	_expect(not JSON.stringify(restored).contains("PRIVATE_SENTINEL"), "Reload must drop unrecognized free text")
+	_expect(ProjectorType.memory_context(restored, "kaelen", "system.b").is_empty(), "Other system's memories must not enter prompt")
+	for index in range(2, 16):
+		mission["runtime_id"] = "investigation.%d" % index
+		mission["completed_time_minutes"] = index * 10
+		restored = ProjectorType.remember_completed(restored, mission)
+	_expect(restored.size() == 24, "Ledger must stay bounded to twelve memories per speaker")
+	var context := ProjectorType.memory_context(restored, "kaelen", "system.a")
+	_expect(context.size() == 2 and context[0]["mission_id"] == "investigation.15", "Context must select at most two newest matching memories")
+	restored[-2]["callback_delivered"] = true
+	mission["runtime_id"] = "investigation.16"
+	mission["completed_time_minutes"] = 160
+	var retired_id: String = restored[-2]["id"]
+	restored = ProjectorType.remember_completed(restored, mission)
+	_expect(not restored.any(func(entry: Dictionary) -> bool: return entry["id"] == retired_id), "Eviction must prefer delivered callbacks before older undelivered memories")
+	var builder = load("res://scripts/story/KaelenInteractionPacketBuilder.gd")
+	var packet: Dictionary = builder.build_packet("turn_in_clean", mission, {"local_outcome_memories": restored})
+	_expect(not packet.has("local_outcome_memory"), "Ordinary packets must not replay outcome memories owned by the one-time reaction path")
+	_expect(not JSON.stringify(packet.get("local_outcome_memory", [])).contains("PRIVATE_SENTINEL"), "Private fields must not reach packet memory")
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -67,6 +67,7 @@ const CAPABILITY_PROFILES := {
 	# Whole-exchange lounge bundle (Phase 9): prepared ahead of the click,
 	# player-safe context only.
 	"lounge_bundle": "small_dialogue",
+	"mission_conversation": "small_dialogue",
 	"lounge_bundle_review": "small_dialogue",
 	"system_names": "large_story",
 	"campaign_bible": "large_story",
@@ -106,6 +107,7 @@ const REQUEST_TIMEOUTS := {
 	# Bundles prepare in the background (flight-to-station prefetch); five
 	# fields need more room than a single turn and nobody is watching.
 	"lounge_bundle": 25.0,
+	"mission_conversation": 25.0,
 	"lounge_bundle_review": 12.0,
 	"system_names": 30.0,
 	"campaign_bible": 600.0,
@@ -172,7 +174,7 @@ static func generation_body(
 	capability: String,
 	prompt: String,
 	active_small_model: String,
-	response_format: String = "json",
+	response_format: Variant = "json",
 	options: Dictionary = {},
 	active_large_model: String = ""
 ) -> Dictionary:
@@ -188,7 +190,9 @@ static func generation_body(
 	# SMALL_NUM_CTX note). Callers may not override this per-request: a single
 	# odd num_ctx forces a full model reload and reintroduces the swap thrash.
 	(body["options"] as Dictionary)["num_ctx"] = LARGE_NUM_CTX if is_large else SMALL_NUM_CTX
-	if not response_format.strip_edges().is_empty():
+	if response_format is Dictionary:
+		body["format"] = response_format.duplicate(true)
+	elif response_format is String and not response_format.strip_edges().is_empty():
 		body["format"] = response_format
 	# Both default models are now Qwen3 (thinking models), for the small dialogue
 	# role AND the large story role. Disable Ollama's thinking for every call so

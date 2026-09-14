@@ -1,0 +1,253 @@
+extends RefCounted
+
+## Persisted offer ownership. Callers commit returned state before displaying it.
+## No model text, wall clock or scene iteration order can redraw a published job.
+const Selector := preload("res://scripts/domain/InvestigationSelector.gd")
+const Builder := preload("res://scripts/domain/InvestigationOfferBuilder.gd")
+const Planner := preload("res://scripts/domain/InvestigationSitePlanner.gd")
+const Placement := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
+const Shapes := preload("res://scripts/domain/MissionShapeRegistry.gd")
+const Desire := preload("res://scripts/persistence/GeneratedFactionDesire.gd")
+const StateValidator := preload("res://scripts/domain/InvestigationStateValidator.gd")
+const Validation := preload("res://scripts/domain/ValidationResult.gd")
+const Compiler := preload("res://scripts/domain/QuestCausalContractCompiler.gd")
+const Plausibility := preload("res://scripts/domain/QuestPlausibilityValidator.gd")
+const Definition := preload("res://scripts/domain/MissionDefinition.gd")
+
+static func empty_state(seed_value: int) -> Dictionary:
+	return {"version": 1, "selection": Selector.empty_state(seed_value), "entries": {}}
+
+## Preparing is speculative. Failed placement or unsupported causes consume nothing.
+static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary:
+	if not bool(context.get("post_tutorial_unlocked", false)):
+		return _failure("tutorial_locked")
+	if str(context.get("campaign_id", "")).is_empty() or str(context.get("system_id", "")).is_empty():
+		return _failure("missing_scope")
+	var state := saved.duplicate(true) if not saved.is_empty() else empty_state(int(context.get("campaign_seed", 0)))
+	if not validate(state).is_valid():
+		return _failure("invalid_saved_board")
+	var entries: Dictionary = state["entries"]
+	var owner := _owner(context)
+	for entry: Dictionary in entries.values():
+		if str(entry["owner"]) == owner and str(entry["status"]) != "retired":
+			return _persistable({"ok": true, "state": state, "offer_id": entry["offer_id"], "posting": entry["posting"].duplicate(true)})
+	var candidates := _candidates(context)
+	if candidates.is_empty():
+		return _failure("no_supported_local_cause")
+	var registry := Shapes.new()
+	if not registry.load_from_path().is_valid():
+		return _failure("invalid_shape_catalog")
+	var by_shape: Dictionary = {}
+	for candidate: Dictionary in candidates:
+		var id := _offer_id(context, candidate)
+		if entries.has(id):
+			continue # A retired cause is not a fresh reason for the same work.
+		var shape = registry.shape_for_recipe(str(candidate["recipe"]))
+		if shape != null and not by_shape.has(str(shape.id)):
+			by_shape[str(shape.id)] = candidate
+	if by_shape.is_empty():
+		return _failure("causes_already_used")
+	# Only one draft globally: two simultaneous peeks cannot commit the same bag.
+	for entry: Dictionary in entries.values():
+		if str(entry["status"]) == "prepared":
+			return _failure("another_offer_preparing")
+	var reservation_key := "pending.%s" % owner
+	var reservation := Selector.reserve(state["selection"], by_shape.keys(), reservation_key)
+	if reservation.is_empty():
+		return _failure("no_shape")
+	var selected: Dictionary = by_shape[str(reservation["shape_id"])]
+	var offer_id := _offer_id(context, selected)
+	var world: Dictionary = context.get("world", {})
+	var local_stations: Array = []
+	for station: Dictionary in world.get("stations", []):
+		if str(context.get("station_id", "")) in station.get("ids", [station.get("id", "")]):
+			local_stations.append(station)
+	var placement := Planner.plan_sites(int(reservation["seed"]), local_stations,
+		world.get("hazards", []), world.get("gates", []))
+	# Anchor at the posting station, but clear every other station too.
+	if bool(placement.get("ok", false)):
+		for site: Dictionary in placement["sites"]:
+			var p: Array = site["position"]
+			if not Planner.is_position_safe(Vector3(p[0], p[1], p[2]), world.get("hazards", []), world.get("stations", []), world.get("gates", [])):
+				return _failure("no_safe_sites")
+	var shape = registry.get_shape(reservation["shape_id"])
+	var branches: Array = shape.branch_ids.duplicate()
+	# A client seeking evidence has not funded its destruction. No invented buyer.
+	branches.erase("liquidate")
+	var budget := int(context.get("reward_budget", 0))
+	if budget <= 0:
+		return _failure("missing_reward_budget")
+	var built := Builder.build_objective(offer_id, {"id": str(shape.id), "recipe": str(shape.recipe), "branch_ids": branches},
+		int(reservation["seed"]), placement, budget, str(context.get("station_id", "")), selected["claimants"], str(context["system_id"]))
+	if not bool(built.get("ok", false)):
+		return built
+	var objective: Dictionary = built["objective"]
+	objective["system_id"] = str(context["system_id"])
+	if not StateValidator.validate(objective).is_valid():
+		return _failure("invalid_objective")
+	var checked := Placement.check_saved_sites(objective, world)
+	if not bool(checked.get("ok", false)):
+		return checked
+	var posting := _posting(offer_id, selected, objective, context)
+	if not Plausibility.validate(posting["quest_data"]["causal_contract"], {"system_id": context["system_id"]}).is_valid():
+		return _failure("invalid_causal_contract")
+	entries[offer_id] = {"offer_id": offer_id, "owner": owner, "status": "prepared", "reservation_key": reservation_key,
+		"eligible_shapes": by_shape.keys(), "cause": selected.duplicate(true), "posting": posting}
+	return _persistable({"ok": true, "state": state, "offer_id": offer_id, "posting": posting.duplicate(true)})
+
+static func publish(saved: Dictionary, offer_id: String, context: Dictionary) -> Dictionary:
+	if not validate(saved).is_valid():
+		return _failure("invalid_saved_board")
+	var state := saved.duplicate(true)
+	var entry: Dictionary = state["entries"].get(offer_id, {})
+	if entry.is_empty() or str(entry["owner"]) != _owner(context) or str(entry["status"]) == "retired":
+		return _failure("offer_unavailable")
+	if not bool(context.get("post_tutorial_unlocked", false)):
+		return _failure("tutorial_locked")
+	var cause_current := false
+	for candidate: Dictionary in _candidates(context):
+		if _persistable(candidate) == _persistable(entry["cause"]):
+			cause_current = true
+	if not cause_current:
+		return _failure("cause_changed")
+	var objective: Dictionary = entry["posting"]["quest_data"]["objective"]
+	var checked := Placement.check_saved_sites(objective, context.get("world", {}))
+	if not bool(checked.get("ok", false)):
+		return checked
+	Selector.publish(state["selection"], entry["eligible_shapes"], str(entry["reservation_key"]))
+	entry["status"] = "published"
+	return _persistable({"ok": true, "state": state, "offer_id": offer_id, "posting": entry["posting"].duplicate(true)})
+
+## Retiring a published offer preserves its exposure and cause history. Cancelling
+## a speculative draft returns the reservation without retiring anything.
+static func release(saved: Dictionary, offer_id: String) -> Dictionary:
+	var state := saved.duplicate(true)
+	if not validate(state).is_valid():
+		return state
+	var entry: Dictionary = state.get("entries", {}).get(offer_id, {})
+	if entry.is_empty():
+		return state
+	Selector.release(state["selection"], str(entry["reservation_key"]))
+	if str(entry["status"]) == "prepared":
+		state["entries"].erase(offer_id)
+	else:
+		entry["status"] = "retired"
+	return state
+
+static func _candidates(context: Dictionary) -> Array:
+	var result: Array = []
+	var agendas: Array = context.get("agendas", [])
+	var ids: Array = []
+	for agenda: Dictionary in agendas:
+		var id := str(agenda.get("faction_id", ""))
+		if not id.is_empty() and id not in ids:
+			ids.append(id)
+	ids.sort()
+	for agenda: Dictionary in agendas:
+		var desire: Dictionary = agenda.get("desire", {})
+		var check := Desire.check_coherence(desire)
+		if not bool(check.get("checked", false)) or not bool(check.get("ok", false)):
+			continue
+		# Other existing blockers describe moving cargo, not collecting new scans.
+		if str(desire.get("obstacle_binding_id", "")) != "dispatch_backlog":
+			continue
+		var recipe := ""
+		if str(desire.get("need", "")) == "survey data from a drift it cannot reach":
+			recipe = "survey_discrepancy"
+		elif str(desire.get("need", "")) == "filed claim evidence" and str(desire.get("goal", "")) == "clear its name on a salvage claim" and ids.size() >= 2:
+			recipe = "competing_claims"
+		if recipe.is_empty() or str(agenda.get("faction_name", "")).is_empty() or str(agenda.get("faction_id", "")).is_empty():
+			continue
+		result.append({"recipe": recipe, "agenda": {"faction_id": str(agenda["faction_id"]), "faction_name": str(agenda["faction_name"]), "desire": desire.duplicate(true)}, "claimants": ids.duplicate()})
+	result.sort_custom(func(a: Dictionary, b: Dictionary): return str(a["agenda"]["faction_id"]) < str(b["agenda"]["faction_id"]))
+	return result
+
+static func _posting(id: String, candidate: Dictionary, objective: Dictionary, context: Dictionary) -> Dictionary:
+	var agenda: Dictionary = candidate["agenda"]
+	var desire: Dictionary = agenda["desire"]
+	var survey := str(candidate["recipe"]) == "survey_discrepancy"
+	var task := "Compare the route codes at both survey beacons, then file your finding. An unverified report pays half; an incorrect certification pays a quarter." if survey else "Scan the recorder and its ownership record, then preserve the evidence. An unverified report pays half."
+	var body := "%s needs %s to %s. %s Its dispatch team has no capacity for another collection. %s Payment comes from %s; return to %s to settle." % [agenda["faction_name"], desire["need"], desire["goal"], desire["need_reason"], task, desire["payment_source"], context.get("station_display", "the posting station")]
+	var title := "Survey readings for %s" % agenda["faction_name"] if survey else "Claim records for %s" % agenda["faction_name"]
+	var quest := {"id": id, "title": title, "agent_name": str(agenda["faction_name"]), "faction": "neutral", "dialogue": body,
+		"objective_summary": task, "objective": objective, "public_board": true,
+		"choices": [{"id": "choice.accept", "text": "Accept posting", "consequence": {}}],
+		"investigation_cause": candidate.duplicate(true)}
+	var contract := Compiler.compile({"campaign_id": context["campaign_id"], "system_id": context["system_id"],
+		"agenda": agenda, "objective": objective, "cause": {"cause_id": id, "cause_faction_id": agenda["faction_id"], "desire_id": desire["id"]},
+		"requester_display": agenda["faction_name"], "action_helps": task,
+		"delegation": "Its dispatch team has no capacity for another collection, so it is commissioning an independent pilot."})
+	# Pressure reduction is not implemented yet; do not promise that effect.
+	contract["completion_effect_ids"] = []
+	quest["causal_contract"] = contract
+	quest["narrative_metadata"] = {"cause_faction_id": agenda["faction_id"], "cause_id": id,
+		"desire_id": desire["id"], "public_because": desire["need_reason"], "causal_contract": contract.duplicate(true)}
+	return {"offer_id": id, "investigation_posting": true, "template_id": "investigation.%s" % candidate["recipe"], "enabled": true,
+		"title": title, "poster": str(agenda["faction_name"]), "body": body, "objective": task,
+		"base_reward": int(objective["reward_credits"]), "duration_minutes": 0, "urgent_multiplier": 1.0, "quest_data": quest}
+
+static func _owner(context: Dictionary) -> String:
+	return "%s|%s|%s" % [context.get("campaign_id", ""), context.get("system_id", ""), context.get("station_id", "")]
+
+static func _offer_id(context: Dictionary, candidate: Dictionary) -> String:
+	# Independent of time and list order; moving stations cannot duplicate a cause.
+	return "mission.investigation.%s" % ("%s|%s|%s|%s" % [context.get("campaign_id", ""), context.get("system_id", ""), candidate["agenda"]["desire"]["id"], candidate["recipe"]]).sha256_text().substr(0, 24)
+
+static func validate(value: Dictionary) -> ValidationResult:
+	var result := Validation.new()
+	if value.is_empty():
+		return result # Additive: old campaigns have no investigation board.
+	if int(value.get("version", 0)) != 1 or not value.get("entries") is Dictionary or not value.get("selection") is Dictionary:
+		result.add_error("invalid_investigation_board", "Invalid investigation board envelope.")
+		return result
+	var selection: Dictionary = value["selection"]
+	if not selection.get("bags") is Dictionary or not selection.get("outstanding_offers") is Array:
+		result.add_error("invalid_investigation_selection", "Invalid investigation selection state.")
+		return result
+	var reservations := {}
+	for raw: Variant in selection["outstanding_offers"]:
+		if not raw is Dictionary or str(raw.get("offer_id", "")).is_empty() or not raw.get("pending_bag") is Dictionary:
+			result.add_error("invalid_investigation_reservation", "Invalid shape reservation.")
+			continue
+		if reservations.has(str(raw["offer_id"])):
+			result.add_error("duplicate_investigation_reservation", "Duplicate shape reservation.")
+		reservations[str(raw["offer_id"])] = raw
+	for record: Variant in selection["bags"].values():
+		if not record is Dictionary or not record.get("bag") is Dictionary:
+			result.add_error("invalid_investigation_bag", "Invalid saved shape bag.")
+	for key in value["entries"]:
+		var raw: Variant = value["entries"][key]
+		if not raw is Dictionary:
+			result.add_error("invalid_investigation_entry", "Offer entry must be an object.")
+			continue
+		var entry: Dictionary = raw
+		if str(entry.get("offer_id", "")) != str(key) or str(entry.get("owner", "")).is_empty() or str(entry.get("reservation_key", "")).is_empty() \
+				or str(entry.get("status", "")) not in ["prepared", "published", "retired"] or not entry.get("eligible_shapes") is Array or not entry.get("cause") is Dictionary or not entry.get("posting") is Dictionary:
+			result.add_error("invalid_investigation_entry", "Invalid investigation offer identity or state.")
+			continue
+		if str(entry["status"]) != "retired":
+			var reservation: Dictionary = reservations.get(str(entry["reservation_key"]), {})
+			if reservation.is_empty() or bool(reservation.get("published", false)) != (str(entry["status"]) == "published"):
+				result.add_error("missing_investigation_reservation", "Offer and shape publication disagree.")
+		var quest: Variant = entry["posting"].get("quest_data")
+		if not quest is Dictionary or not quest.get("objective") is Dictionary:
+			result.add_error("invalid_investigation_posting", "Missing investigation objective.")
+			continue
+		var objective_check := StateValidator.validate(quest["objective"])
+		result.merge(objective_check, str(key))
+		if not objective_check.is_valid():
+			continue
+		result.merge(Definition.new().load_from_offer(quest), str(key))
+		result.merge(Plausibility.validate(quest.get("causal_contract", {})), str(key))
+		if str(quest.get("id", "")) != str(key) or str(quest["objective"].get("investigation", {}).get("mission_id", "")) != str(key):
+			result.add_error("investigation_owner_mismatch", "Posting and objective identities disagree.")
+		if str(quest["objective"].get("investigation", {}).get("phase", "")) != "search":
+			result.add_error("resolved_board_offer", "A posting cannot already be resolved.")
+	return result
+
+static func _failure(reason: String) -> Dictionary:
+	return {"ok": false, "reason": reason}
+
+static func _persistable(value: Dictionary) -> Dictionary:
+	# Freeze JSON's numeric representation before first display, not on reload.
+	return JSON.parse_string(JSON.stringify(value))

@@ -161,7 +161,7 @@ func capture_autosave(
 ) -> Dictionary:
 	if not is_valid():
 		return _failure("Campaign checkpoint store is invalid.")
-	if source_reason not in ["dock", "undock", "gate_arrival"]:
+	if source_reason not in ["dock", "undock", "gate_arrival", "investigation_accepted", "mission_settled"]:
 		return _failure("Unsupported safe checkpoint reason.")
 	if not _safe_location_matches_reason(safe_location, source_reason):
 		return _failure("Safe location does not match the checkpoint reason.")
@@ -866,16 +866,17 @@ static func _validate_checkpoint_pair(
 	return result
 
 
-static func _strip_tactical_state(value: Variant) -> void:
+static func _strip_tactical_state(value: Variant, path: Array = ["state"]) -> void:
 	if value is Dictionary:
 		for key in (value as Dictionary).keys():
-			if str(key) in TACTICAL_KEYS:
+			var child_path := path + [str(key)]
+			if str(key) in TACTICAL_KEYS and not SchemaType.is_investigation_site_position(child_path):
 				(value as Dictionary).erase(key)
 			else:
-				_strip_tactical_state((value as Dictionary)[key])
+				_strip_tactical_state((value as Dictionary)[key], child_path)
 	elif value is Array:
-		for item in value:
-			_strip_tactical_state(item)
+		for index in range(value.size()):
+			_strip_tactical_state(value[index], path + [index])
 
 
 static func _new_id(id_namespace: String, label: String) -> String:
