@@ -373,13 +373,16 @@ func accept_quest(
 		if not bool(placement_check.get("ok", false)):
 			last_validation_error = "Investigation unavailable: %s" % placement_check.get("reason", "unsafe_sites")
 			return false
-	if bool(adapted_state.get("public_board", false)) \
-			and str(adapted_state.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+	if str(adapted_state.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
 		var recipient := GlobalState.get_delivery_recipient(str(adapted_state.get("destination_station_id", "")))
 		if recipient.is_empty():
-			last_validation_error = "No local recipient is available at the delivery destination"
-			return false
-		adapted_state["delivery_recipient_name"] = str(recipient.get("name", ""))
+			if bool(adapted_state.get("public_board", false)):
+				last_validation_error = "No local recipient is available at the delivery destination"
+				return false
+			# Legacy agent jobs can target an as-yet-unloaded station. Bind its
+			# resident on arrival; typed contracts still undergo validation below.
+		else:
+			adapted_state["delivery_recipient_name"] = str(recipient.get("name", ""))
 	# Revalidate the saved causal contract against the world as it is NOW. A job
 	# can be posted honestly and become impossible before the player accepts it.
 	# Missions with no contract are legacy-compatible and skip this entirely;
@@ -462,7 +465,7 @@ func accept_quest(
 			last_validation_error = "Cargo hold rejected courier package"
 			push_warning("[QuestManager] %s" % last_validation_error)
 			return false
-		if bool(active_quest.get("public_board", false)):
+		if not str(active_quest.get("delivery_recipient_name", "")).is_empty():
 			GlobalState.cargo_special["delivery_assignment"] = {
 				"runtime_id": new_mission.runtime_id,
 				"destination_station_id": str(active_quest.get("destination_station_id", "")),

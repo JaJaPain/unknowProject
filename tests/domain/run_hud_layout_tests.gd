@@ -11,6 +11,14 @@ func _initialize() -> void:
 func _run() -> void:
 	var ui_script = load("res://scripts/UIManager.gd")
 	_expect(ui_script != null and ui_script.can_instantiate(), "UIManager failed to compile.")
+	var combat_ui := root.get_node("CombatPanel")
+	var wheel: Control = combat_ui.get_wheel_panel()
+	var player_bar: Control = combat_ui.get("_player_bar")
+	var player_label: Control = combat_ui.get("_player_label")
+	var enemy_bar: Control = combat_ui.get("_enemy_bar")
+	_expect(player_bar.get_parent() == wheel and player_label.get_parent() == wheel, "Player combat health must follow the wheel, not the left HUD.")
+	_expect(not player_bar.get_global_rect().intersects(enemy_bar.get_global_rect()), "Player and enemy combat health overlap.")
+	_expect(player_bar.get_global_rect().position.y > wheel.get_global_rect().get_center().y, "Player health belongs below the wheel.")
 	# Exercise viewport sizes, all visibility combinations, and oversized content.
 	for viewport in [Vector2(640, 480), Vector2(1280, 720), Vector2(1920, 1080), Vector2(3840, 2160)]:
 		for mask in range(1 << Layout.DEFAULT_ORDER.size()):

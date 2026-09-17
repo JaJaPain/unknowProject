@@ -1731,7 +1731,7 @@ func _create_dock_menu():
 	vbox.add_child(public_board_btn)
 	board_delivery_btn = Button.new()
 	board_delivery_btn.visible = false
-	board_delivery_btn.pressed.connect(_on_public_board_turn_in_pressed)
+	board_delivery_btn.pressed.connect(_on_local_delivery_pressed)
 	vbox.add_child(board_delivery_btn)
 
 	station_lounge_btn = Button.new()
@@ -8342,10 +8342,33 @@ func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool:
 
 
 func _board_delivery_recipient() -> Dictionary:
-	var mission = QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD)
+	return _delivery_recipient(QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD))
+
+
+func _ready_local_delivery(mission) -> bool:
 	if mission == null or str(mission.data.get("objective_type", "")) not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
-		return {}
-	if not _should_show_public_board_turn_in():
+		return false
+	var cap = MissionCapabilityRegistry.get_for_type(str(mission.data.get("objective_type", "")))
+	return current_station != null and is_instance_valid(current_station) and cap != null and cap.is_completed(mission.data) and _mission_can_turn_in_at_current_station(mission.data)
+
+
+func _local_delivery_mission():
+	var collection = QuestManager.get_mission_collection()
+	var focused = collection.get_focused()
+	if _ready_local_delivery(focused):
+		return focused
+	for mission in collection.get_all_active():
+		if _ready_local_delivery(mission):
+			return mission
+	return null
+
+
+func _on_local_delivery_pressed() -> void:
+	_try_local_delivery(_local_delivery_mission())
+
+
+func _delivery_recipient(mission) -> Dictionary:
+	if not _ready_local_delivery(mission):
 		return {}
 	var destination_id := str(mission.data.get("destination_station_id", ""))
 	if str(mission.data.get("objective_type", "")) == "DELIVERY_COURIER":
@@ -8372,14 +8395,17 @@ func _board_delivery_recipient() -> Dictionary:
 func _refresh_board_delivery_button() -> void:
 	if board_delivery_btn == null:
 		return
-	var recipient := _board_delivery_recipient()
+	var recipient := _delivery_recipient(_local_delivery_mission())
 	board_delivery_btn.visible = not recipient.is_empty()
 	board_delivery_btn.text = "Deliver to %s" % str(recipient.get("name", "local recipient"))
 
 
 func _try_local_board_delivery() -> bool:
-	var mission = QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD)
-	if mission == null or str(mission.data.get("objective_type", "")) not in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+	return _try_local_delivery(QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD))
+
+
+func _try_local_delivery(mission) -> bool:
+	if not _ready_local_delivery(mission):
 		return false
 	# Revalidate the causal contract at the dock, against the residents actually
 	# present here rather than the roster that existed when the job was posted.
@@ -8393,7 +8419,7 @@ func _try_local_board_delivery() -> bool:
 		# not there is a recoverable mission state, not a failed delivery.
 		show_hud_warning("Delivery cannot be completed here. Your cargo and contract are unchanged.")
 		return true
-	var recipient := _board_delivery_recipient()
+	var recipient := _delivery_recipient(mission)
 	if recipient.is_empty():
 		show_hud_warning("Delivery recipient unavailable. Your cargo and contract are unchanged.")
 		return true
@@ -8401,7 +8427,7 @@ func _try_local_board_delivery() -> bool:
 	QuestManager.get_mission_collection().focus(runtime_id)
 	var payout := QuestManager.active_quest_payout()
 	QuestManager.complete_quest()
-	if QuestManager.get_mission_collection().get_by_lane(MissionInstance.SourceLane.BOARD) != null:
+	if QuestManager.get_mission_collection().get_by_id(runtime_id) != null:
 		return true
 	if public_board_panel:
 		public_board_panel.visible = false
@@ -12924,9 +12950,8 @@ func _on_agent_back_pressed():
 	_render_dock_submenu()
 
 func _on_agent_complete_pressed():
-	if bool(QuestManager.active_quest.get("public_board", false)) \
-			and str(QuestManager.active_quest.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
-		_try_local_board_delivery()
+	if str(QuestManager.active_quest.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		_try_local_delivery(QuestManager.get_mission_collection().get_focused())
 		return
 	SpeechService.start_interaction("Complete Contract")
 	
@@ -13589,7 +13614,7 @@ func _update_quest_tracker_turn_in_button(q: Dictionary) -> void:
 		return
 	var is_public_board := bool(q.get("public_board", false))
 	var is_ready := QuestManager.is_quest_completed()
-	quest_tracker_turn_in_btn.visible = is_public_board and is_ready
+	quest_tracker_turn_in_btn.visible = (is_public_board or str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]) and is_ready
 	if not quest_tracker_turn_in_btn.visible:
 		return
 	if current_station and is_instance_valid(current_station) and _mission_can_turn_in_at_current_station(q):
@@ -13708,6 +13733,10 @@ func _update_quest_tracker_secondary_missions() -> void:
 
 
 func _on_quest_tracker_turn_in_pressed() -> void:
+	var focused = QuestManager.get_mission_collection().get_focused()
+	if focused != null and str(focused.data.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
+		_try_local_delivery(focused)
+		return
 	if not _should_show_public_board_turn_in():
 		return
 	if _try_local_board_delivery():

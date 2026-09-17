@@ -13,6 +13,7 @@ func _run() -> void:
 	var script := GDScript.new()
 	script.source_code = 'extends "res://scripts/UIManager.gd"\nvar command := ""\nvar docked_id := ""\nfunc _command_selected_target(mode: String) -> bool:\n\tcommand = mode\n\treturn true\nfunc _update_first_turn_in_flash(_wanted: bool) -> void:\n\tpass\nfunc _station_contact_id_for_node(station: Node3D) -> String:\n\treturn str(station.get_meta("contact_id", ""))\nfunc _current_turn_in_station_id() -> String:\n\treturn docked_id\n'
 	script.source_code += "\nfunc _ready() -> void:\n\tpass\n"
+	script.source_code += "\nfunc _render_dock_submenu() -> void:\n\tpass\nfunc _lounge_npc_card(_name: String, _data: Dictionary) -> Dictionary:\n\treturn {}\nfunc _show_lounge_card_line(_card: Dictionary, _line: String, _speak: bool = true, _choices: Array = [], _memory: bool = false) -> void:\n\tpass\n"
 	var compiled := script.reload()
 	if compiled != OK or not script.can_instantiate():
 		push_error("[FAIL] Mission card UI probe did not compile")
@@ -80,6 +81,43 @@ func _run() -> void:
 	_expect(ui.call("_quest_tracker_turn_in_target", q) == outpost, "Purchase deliveries must obey their destination too")
 	q["objective_type"] = "KILL_SHIPS"
 	_expect(ui.call("_quest_tracker_turn_in_target", q) == home, "Ordinary combat turn-ins must retain their main-station route")
+	# Reproduce the saved faction-agent courier: no public_board flag and no
+	# recipient assignment (older agent deliveries never received one).
+	quests.active_quest = {
+		"runtime_id": "mission.test.agent_courier", "title": "Faction courier",
+		"_source_lane": "AGENT", "public_board": false,
+		"objective_type": "DELIVERY_COURIER", "cargo_loaded": true,
+		"item_name": "Firmware Brick", "destination_station_id": "iron_reach",
+		"destination_display": "Outpost Iron Reach", "faction": "aurelia",
+		"reward_credits": 220, "base_reward_credits": 220,
+	}
+	ui.dock_panel = Panel.new()
+	ui.add_child(ui.dock_panel)
+	ui.board_delivery_btn = Button.new()
+	ui.add_child(ui.board_delivery_btn)
+	ui.current_station = outpost
+	ui.docked_id = "iron_reach"
+	ui.call("_update_quest_tracker_turn_in_button", quests.active_quest)
+	_expect(ui.quest_tracker_turn_in_btn.visible and not ui.quest_tracker_turn_in_btn.disabled, "Agent courier needs a visible destination hand-in action.")
+	ui.call("_refresh_board_delivery_button")
+	_expect(ui.board_delivery_btn.visible, "Station services must offer agent cargo delivery.")
+	_expect(not gs.cargo_special.get("delivery_assignment", {}).is_empty(), "Legacy agent cargo must acquire a recipient binding.")
+	var agent_mission = quests.get_mission_collection().get_focused()
+	gs.cargo_special.delivery_assignment.runtime_id = "another.mission"
+	_expect(ui.call("_delivery_recipient", agent_mission).is_empty(), "Mismatched cargo assignment must block delivery.")
+	gs.cargo_special.delivery_assignment.runtime_id = agent_mission.runtime_id
+	ui.current_station = home
+	ui.docked_id = "start_system"
+	_expect(not ui.call("_try_local_delivery", agent_mission), "Agent cargo must not settle at the wrong station.")
+	ui.current_station = outpost
+	ui.docked_id = "iron_reach"
+	var before: int = gs.player_credits
+	ui.call("_on_quest_tracker_turn_in_pressed")
+	_expect(not quests.is_quest_active(), "Agent courier did not settle through its mission-card action.")
+	_expect(gs.player_credits == before + 220, "Agent courier must pay its agreed reward exactly once.")
+	_expect(gs.cargo_special.is_empty(), "Completed courier must remove delivered cargo.")
+	ui.call("_on_quest_tracker_turn_in_pressed")
+	_expect(gs.player_credits == before + 220, "Repeated hand-in must not pay twice.")
 	quests.active_quest = {}
 	gs.active_target = null
 	gs.active_system_entities.clear()

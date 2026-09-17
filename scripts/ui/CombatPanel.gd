@@ -734,21 +734,20 @@ func _set_ap_display(current: int, max_ap: int) -> void:
 
 # ── HP bars ───────────────────────────────────────────────────────────────────
 func _build_hp_bars() -> void:
+	# Both combat health displays belong to the wheel, not the left HUD dock.
+	var width := 220.0 * _ui_scale
+	var center := _wheel_panel.size * 0.5
+	var top := center.y + _wheel_px_size * 0.5 + 10.0 * _ui_scale
 	_player_label = _make_hp_label("YOU")
-	_player_label.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	_player_label.offset_left   =  30
-	_player_label.offset_right  =  200
-	_player_label.offset_top    = -80
-	_player_label.offset_bottom = -58
-	_root.add_child(_player_label)
+	_player_label.position = Vector2(center.x - width * 0.5, top)
+	_player_label.size = Vector2(width, 18.0 * _ui_scale)
+	_player_label.add_theme_font_size_override("font_size", int(11 * _ui_scale))
+	_wheel_panel.add_child(_player_label)
 
 	_player_bar = _make_hp_bar(Color(0.20, 0.80, 0.30))
-	_player_bar.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	_player_bar.offset_left   =  30
-	_player_bar.offset_right  =  200
-	_player_bar.offset_top    = -55
-	_player_bar.offset_bottom = -30
-	_root.add_child(_player_bar)
+	_player_bar.position = Vector2(center.x - width * 0.5, top + 18.0 * _ui_scale)
+	_player_bar.size = Vector2(width, 20.0 * _ui_scale)
+	_wheel_panel.add_child(_player_bar)
 
 	# _enemy_label and _enemy_bar are created inside _build_wheel() so they
 	# travel with the wheel when the player drags it.
